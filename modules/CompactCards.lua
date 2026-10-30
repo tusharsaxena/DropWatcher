@@ -281,7 +281,7 @@ end
 local function sides(drop, ctx, now)
     local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
     if drop.isMine then
-        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed), them
+        return MC.OwnOffer(drop, ctx.offerTone, ctx.alone), MC.OwnTrade(drop, ctx.revealed), them
     end
     return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop), them
 end
@@ -289,8 +289,8 @@ end
 --- A Drops card.
 --- @param drop table
 --- @param ctx table { now, equipped and classFile (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
----   WindowOwn.ToneStates) }
+---   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session), offerTone (the offer half of
+---   WindowOwn.ToneStates) and alone (WindowOwn.Alone: nobody to offer it to, DW-07) }
 --- @return table card
 function CC.Group(drop, ctx)
     ctx = ctx or {}

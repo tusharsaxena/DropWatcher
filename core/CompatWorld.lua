@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSetup.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
--- GUID, name, class and connection, where the player is (the instance, its difficulty and that
+-- GUID, name, class, connection and whether it is a player, where the player is (the instance, its difficulty and that
 -- difficulty's name, a keystone run in progress and its level), whether the player is fighting, and
 -- whether an optional addon (Pawn, CanIMogIt) is loaded. (The GlobalString reads are the root's,
 -- core/Compat.lua's Compat.GlobalString: they are not world reads.)
@@ -76,6 +76,15 @@ end
 function Compat.UnitIsConnected(unit)
     if not UnitIsConnected then return true end
     return UnitIsConnected(unit)
+end
+
+--- UnitIsPlayer(unit), raw (it may be secret): false for a follower, a delve companion or any other
+--- non-player unit in the group. Nil without the API.
+--- @param unit string
+--- @return any
+function Compat.UnitIsPlayer(unit)
+    if not UnitIsPlayer then return nil end
+    return UnitIsPlayer(unit)
 end
 
 --- IsInInstance(): inInstance (a plain boolean), instanceType ("none", "party", "raid", ...).

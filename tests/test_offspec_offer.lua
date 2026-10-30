@@ -220,6 +220,7 @@ end)
 -- The Offer panel as painted: your drop on Drops, its Offer pressed.
 local function openPanel(cands)
     local NS, _, m = T.enableAddon()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     m.specNames[HOLY], m.specNames[PROT] = "Holy", "Protection"
     NS.addon.db.char = { session = { start = m.time() - 86400 } }
     m.__now = NOW

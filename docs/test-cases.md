@@ -804,6 +804,23 @@ Total.
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 
+### test_offer_alone.lua (14)
+
+- offer alone: the roster reads who is a player: solo, followers and a companion are nobody
+- offer alone: a secret UnitIsPlayer falls back to the GUID's kind
+- offer alone: a player who changes into a follower in the same slot moves the roster
+- offer alone: MineCells.OwnOffer reads No action with the reason when nobody could take it
+- offer alone: WindowOwn.Alone: a test drop judges its own spec roster
+- offer alone: solo, your tradeable drop reads No action and says why (image-66)
+- offer alone: a follower dungeon's party of followers is nobody to offer to
+- offer alone: a delve with Brann is nobody to offer to
+- offer alone: a real party keeps the Offer
+- offer alone: a player joining brings the Offer back on the repaint; leaving takes it away
+- offer alone: the detail card's first action and the compact card read No action too
+- offer alone: the Offer panel does not open, and closes when the last player leaves
+- offer alone: Offer, Announce and Post my tradeables refuse and say why
+- offer alone: /dw offer says why and opens nothing
+
 ### test_mine_cells.lua (14)
 
 - mine cells: Clock reads h:mm:ss
@@ -2159,6 +2176,7 @@ Total.
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 21 |
+| test_offer_alone.lua | 14 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
@@ -2220,4 +2238,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1826** |
+| **Total** | **1840** |

@@ -48,7 +48,8 @@ local _, NS = ...
 -- rule holds: while it is an upgrade for you and not revealed, the count is not said and Them
 -- reads `Hidden`. Actions is Offer (MC.OwnOffer, WindowCells.Ask's shape), toned by the furthest
 -- offer sent (cyan while it is your move, feedback-6 spec §2); the gray No action with the reason
--- when it cannot be traded (WindowCells.NoAction, feedback-11 spec §1).
+-- when it cannot be traded (WindowCells.NoAction, feedback-11 spec §1), or when no other player is in
+-- your group to take it (DW-07: solo, followers, a delve companion).
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
@@ -399,15 +400,22 @@ MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an i
 --- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (cyan
 --- until an offer was sent, feedback-6 spec §2: `kind` "offer"; yellow once offered or queued,
 --- green once given away); No action with the reason on a drop that cannot be traded
---- (WindowCells.NoAction, feedback-11 spec §1).
+--- (WindowCells.NoAction, feedback-11 spec §1), or while no other player is in your group (DW-07).
 --- @param drop table one of your drops
 --- @param toneState string|nil the offer half of the tone states (`ready`, `queued`, `sent`, `failed`,
 ---   `tradedAway`)
+--- @param alone boolean|nil no other player in your group to take it (NS.WindowOwn.Alone)
 --- @return table { offered, offer = true, text, icon, enabled, tip, state, kind }
-function MC.OwnOffer(drop, toneState)
+function MC.OwnOffer(drop, toneState, alone)
     local t = tradeOf(drop)
+    local none
     if t.state == "no" then
-        local none = WC.NoAction(WC.Append({ row(L["Why"], L["not tradeable"]) }, WC.TradeRows(t, L["you"])))
+        none = WC.NoAction(WC.Append({ row(L["Why"], L["not tradeable"]) }, WC.TradeRows(t, L["you"])))
+    elseif alone then
+        none = WC.NoAction({ row(L["Why"], L["no other player in your group"]),
+            hint(L["Followers and companions cannot take it; a player joining brings Offer back."]) })
+    end
+    if none then
         none.offer = true
         return none
     end

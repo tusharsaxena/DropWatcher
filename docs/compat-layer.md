@@ -146,6 +146,8 @@ the simulator's own safety checks read the real world. `test_sim_core` holds all
 adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
 (`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
+`UnitIsPlayer` (since DW-07: false for a follower or a delve companion; raw, so a secret answer
+reaches the roster, which reads the GUID's kind instead),
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`; its fifth answer the instance map id, the
 client's eighth, since feedback-15 spec §0), `DifficultyKnown`
 (`GetDifficultyInfo`) and `ChallengeModeActive` (`C_ChallengeMode.IsChallengeModeActive`); since
@@ -226,7 +228,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | Caller | Shims |
 |---|---|
 | `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive`; `InCombatLockdown` (`core/CompatWorld.lua`) |
-| `modules/Roster.lua` | `NormalizedRealm`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected` (`core/CompatWorld.lua`) |
+| `modules/Roster.lua` | `NormalizedRealm`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`, `UnitIsPlayer` (`core/CompatWorld.lua`) |
 | `modules/GroupRoster.lua` | `NormalizedRealm` |
 | `modules/CharFilter.lua` | `NormalizedRealm`; `UnitName`, `UnitClass` (`core/CompatWorld.lua`: your own key and class) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |

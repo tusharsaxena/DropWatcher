@@ -201,6 +201,7 @@ end
 
 local function shown(mine)
     local NS, _, m = T.enableAddon()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     m.__now = 100
     local byId = { [1] = mine, [2] = other() }
     NS.LootFeed.Groups = function() return { GROUP } end

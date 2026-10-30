@@ -388,7 +388,7 @@ Blizzard's own dialogs (DW-62).
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
-slot are not read; your gear is a per-slot best, not a loadout planner; an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
+slot are not read; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
 (the session is the login); the History card shows only what a kept entry holds; an install

@@ -84,7 +84,7 @@ end
 -- GlobalStrings (`_G`: the settings panel's frames are read there too, never a simulated answer).
 local WORLD_READS = { "IsInInstance", "GetInstanceInfo", "GetDifficultyInfo", "C_ChallengeMode", "IsInGroup",
     "IsInRaid", "GetNumGroupMembers", "LE_PARTY_CATEGORY_%u+", "UnitName", "UnitGUID", "UnitClass",
-    "UnitIsConnected", "InCombatLockdown", "UnitAffectingCombat", "C_AddOns%.IsAddOnLoaded", "UNKNOWNOBJECT" }
+    "UnitIsConnected", "UnitIsPlayer", "InCombatLockdown", "UnitAffectingCombat", "C_AddOns%.IsAddOnLoaded", "UNKNOWNOBJECT" }
 
 -- The seam's own files, and the two that read GlobalStrings once at load, before any simulation.
 local SKIPPED = { ["core/Compat.lua"] = true, ["core/CompatWorld.lua"] = true, ["core/CompatItem.lua"] = true,
@@ -125,7 +125,7 @@ test("sim e2e: the seam wraps every world read, the combat flags and the GlobalS
     local wrapped = {}
     for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
     for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
-        "InstanceState", "InstanceInfo", "DifficultyKnown", "ChallengeModeActive", "InCombatLockdown", "PlayerInCombat",
+        "UnitIsPlayer", "InstanceState", "InstanceInfo", "DifficultyKnown", "ChallengeModeActive", "InCombatLockdown", "PlayerInCombat",
         "GlobalString", "IsAddOnLoaded" }) do
         assertTrue(wrapped[key], key .. " is answered through the seam")
     end

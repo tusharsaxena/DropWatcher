@@ -218,7 +218,8 @@ test("slash: `clear` empties this session's feed and leaves the test feed alone"
 end)
 
 test("slash: `clear` closes an Offer panel whose drop it took", function()
-    local NS = equipped()
+    local NS, m = equipped()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     local id = NS.LootFeed.Add(BAND)
     NS.ShowWindow()
     assertTrue(NS.OfferPanel.Open(id) ~= nil)
@@ -282,7 +283,8 @@ test("slash: `situation` prints the situation, its settings and the classifier's
 end)
 
 test("slash: `offer` opens the panel on your newest drop of that item", function()
-    local NS = equipped()
+    local NS, m = equipped()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     NS.LootFeed.Add(BAND)
     local newest = NS.LootFeed.Add(BAND)
     NS.addon:OnSlashCommand("offer " .. BAND)
@@ -292,6 +294,7 @@ end)
 
 test("slash: `offer` of a bag item the feed never saw adds it as yours first", function()
     local NS, m = equipped()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     m.bags[1] = { size = 4, [3] = BAND }
     NS.addon:OnSlashCommand("offer " .. BAND)
     local drops = NS.LootFeed.Drops()
@@ -301,6 +304,7 @@ end)
 
 test("slash: `offer` refuses an item not in your bags, and prints its usage without a link", function()
     local NS, m = equipped()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     NS.addon:OnSlashCommand("offer " .. BAND)
     assertTrue(printed(m, "is not in your bags"), tostring(m.prints[1]))
     assertEqual(#NS.LootFeed.Drops(), 0); assertFalse(NS.OfferPanel.IsShown())

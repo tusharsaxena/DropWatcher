@@ -70,7 +70,7 @@ files["core/CompatWorld.lua"] = {
   read_globals = {
     "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
     "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
-    "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
+    "UnitIsPlayer", "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
   },
 }
 

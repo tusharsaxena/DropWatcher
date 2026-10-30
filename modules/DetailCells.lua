@@ -665,12 +665,13 @@ end
 --- disabled one says why in its tooltip. Nothing hides a drop (feedback-4 spec §2).
 --- @param drop table
 --- @param ctx table { askState, askReason, inspect (the looter's entry), now, trade = { ok, reason, text },
---- transmogAsk (the `messages.transmogAsk` setting), offerTone (your own drop's: WindowOwn.ToneStates) }
+--- transmogAsk (the `messages.transmogAsk` setting), offerTone (your own drop's: WindowOwn.ToneStates),
+--- alone (your own drop's: WindowOwn.Alone, DW-07) }
 --- @return table list of actions
 function DC.Actions(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
     local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
-    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone)) or askAction(drop, ask)
+    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone, ctx.alone)) or askAction(drop, ask)
     return {
         first, editAction(ask), linkAction(drop),
         retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade),

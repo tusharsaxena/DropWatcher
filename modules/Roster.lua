@@ -6,7 +6,7 @@ local _, NS = ...
 -- THE EDGE. Refresh reads the client through NS.Compat (core/CompatWorld.lua, so a running
 -- simulation answers it): IsInRaid / IsInGroup / GetNumGroupMembers for the tokens (raid1..N in a
 -- raid, player and party1..N-1 in a party, player alone otherwise), then UnitGUID, UnitName,
--- UnitClass and UnitIsConnected per token. The realm of a same-realm member comes from
+-- UnitClass, UnitIsConnected and UnitIsPlayer per token. The realm of a same-realm member comes from
 -- NS.Compat.NormalizedRealm. It runs on GROUP_ROSTER_UPDATE (declared in NS.FEATURE_EVENTS, shared
 -- with modules/Situations.lua through core/DropWatcher.lua's dispatcher) and at the stand-up, and
 -- lazily on the first read.
@@ -14,7 +14,13 @@ local _, NS = ...
 -- SECRETS. Every unit answer is guarded before it is compared, concatenated or used as a key: a
 -- secret or missing GUID drops the token (it cannot key a member), a secret name leaves the member
 -- reachable by GUID only, a secret class leaves classFile nil and a secret online flag reads as
--- online. The client's "Unknown" placeholder name counts as no name.
+-- online, and a secret UnitIsPlayer falls back to the GUID's kind (a "Player-" GUID is a player). The
+-- client's "Unknown" placeholder name counts as no name.
+--
+-- WHO IS A PLAYER (DW-07, Addendum 08). `human` is false for a follower dungeon's followers, a delve
+-- companion (Brann) and any other non-player unit in the group. OtherPlayerPresent answers whether
+-- anyone besides you could take a drop: false solo and in a group of such units alone. Your own drop
+-- is offered only while it is true (modules/WindowOwn.lua's Alone).
 --
 -- RESOLVING. Resolve(query, classFile) takes a GUID, a "Name-Realm" or a bare "Name", compared
 -- without case, and with the realm normalized (spaces and hyphens dropped, as the client's
@@ -23,7 +29,8 @@ local _, NS = ...
 -- same-realm player without a realm. Still ambiguous, or no match, answers nil. A miss re-reads
 -- the client once, so a member whose name was still "Unknown" at the last event is found.
 --
---   member = { guid, name, realm, fullName, unit, classFile, online, isPlayer, specID }
+--   member = { guid, name, realm, fullName, unit, classFile, online, isPlayer (you), human (a player,
+--              not a follower or a companion), specID }
 
 NS.Roster = NS.Roster or {}
 local Ro = NS.Roster
@@ -77,6 +84,14 @@ local function onlineOf(unit)
     return online ~= false
 end
 
+-- Whether a unit is a player, not a follower or a companion. A secret or missing answer reads the
+-- GUID's kind instead: a player's GUID starts "Player-", a follower's or companion's "Creature-".
+local function humanOf(unit, guid)
+    local v = NS.Compat.UnitIsPlayer(unit)
+    if not NS.Compat.IsSecret(v) and type(v) == "boolean" then return v end
+    return guid:find("^Player%-") ~= nil
+end
+
 -- Name, realm and Name-Realm of a unit; the name and full name are nil when unreadable.
 local function identityOf(unit, ownRealm)
     local name, realm = NS.Compat.UnitName(unit)
@@ -94,6 +109,7 @@ local function readMember(unit, ownRealm, playerGUID)
     return {
         guid = guid, name = name, realm = realm, fullName = fullName, unit = unit,
         classFile = classFileOf(unit), online = onlineOf(unit), isPlayer = guid == playerGUID,
+        human = humanOf(unit, guid),
     }
 end
 
@@ -124,14 +140,14 @@ end
 local function signature(roster)
     local parts = {}
     for i, m in ipairs(roster.list) do
-        parts[i] = ("%s:%s:%s:%s"):format(m.guid, m.unit, m.fullName or "?", tostring(m.online))
+        parts[i] = ("%s:%s:%s:%s:%s"):format(m.guid, m.unit, m.fullName or "?", tostring(m.online), tostring(m.human))
     end
     return table.concat(parts, ",")
 end
 
 --- Re-read the group from the client.
 --- @param cause string|nil the event (or `standUp`, `lazy`, `miss`) that asked, for the debug line
---- @return boolean changed whether any member, token, name or online state moved
+--- @return boolean changed whether any member, token, name, online state or player flag moved
 function Ro.Refresh(cause)
     local prev = State.roster
     local roster = build(prev)
@@ -176,6 +192,16 @@ end
 --- @return number
 function Ro.Count()
     return #roster().list
+end
+
+--- Whether another player is in your group (DW-07): someone besides you who could take a drop. False
+--- solo, and in a group whose other members are all followers or companions (no player).
+--- @return boolean
+function Ro.OtherPlayerPresent()
+    for _, m in ipairs(roster().list) do
+        if m.human and not m.isPlayer and m.unit ~= "player" then return true end
+    end
+    return false
 end
 
 --- Record a member's specialization (the inspect broker, design spec §8). Kept across refreshes

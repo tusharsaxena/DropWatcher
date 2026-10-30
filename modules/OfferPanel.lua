@@ -28,8 +28,9 @@ local _, NS = ...
 -- THE UI LISTENS. One panel, built on its first Open; NS.State.offerPanel.dropId names the drop it
 -- shows. The window repaints it with the active tab (Window.Refresh), so the bus reaches it: the
 -- candidates' inspects (DropUpdated), the ask states (AskStateChanged) and the countdown
--- (TradeTimerTick). It closes itself when its drop is gone. Offer goes through NS.PressOffer,
--- Announce to group through NS.PressAnnounce.
+-- (TradeTimerTick). It closes itself when its drop is gone, and when no other player is left in your
+-- group to take it (DW-07: NS.WindowOwn.Alone; it will not open then either). Offer goes through
+-- NS.PressOffer, Announce to group through NS.PressAnnounce.
 
 NS.OfferPanel = NS.OfferPanel or {}
 local OP    = NS.OfferPanel
@@ -366,12 +367,13 @@ local function paintFoot(p, drop, n)
         TM.Row(L["Last"], L["no upgrade, can't use, checking, unavailable"]), TM.Hint(L["The list scrolls in a raid."]) }
 end
 
---- Repaint the panel from its drop, or close it when the drop is gone. Called by Window.Refresh.
+--- Repaint the panel from its drop, or close it when the drop is gone or nobody could take it
+--- (DW-07). Called by Window.Refresh.
 function OP.Refresh()
     if not (panel and panel:IsShown()) then return end
     local id = sink().dropId
     local drop = id ~= nil and NS.LootFeed.Get(id) or nil
-    if not (drop and drop.isMine) then return OP.Close() end
+    if not (drop and drop.isMine) or NS.WindowOwn.Alone(drop) then return OP.Close() end
     panel.dropId = id
     dock(panel)
     local now = GetTime()
@@ -385,10 +387,11 @@ end
 --- who the drop would help when it is an upgrade for you: the player chose to offer it
 --- (NS.WindowOwn.Reveal).
 --- @param dropID number
---- @return table|nil the panel, or nil before the window is built or for a drop that is not yours
+--- @return table|nil the panel, or nil before the window is built, for a drop that is not yours, or
+---   while no other player is in your group to take it (DW-07, NS.WindowOwn.Alone)
 function OP.Open(dropID)
     local drop = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
-    if not (drop and drop.isMine and NS.Window.Frame()) then return nil end
+    if not (drop and drop.isMine and NS.Window.Frame()) or NS.WindowOwn.Alone(drop) then return nil end
     panel = panel or build()
     sink().dropId = dropID
     NS.WindowOwn.Reveal(dropID)

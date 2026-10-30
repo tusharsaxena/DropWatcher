@@ -40,6 +40,13 @@ the code reads every case the design leaves open, module by module, is in
   (`Prune` tries every drop toasted this session), and on a copy without `Hold(true)` turning
   `toast.inCombat` off mid-combat sends the toast on screen back to the queue. TOAST-7 and
   DEGRADED-3 are the in-game checks.
+- **No Offer without another player** (DW-07, Addendum 08). Your own drop is offered only while
+  another player is in your group: solo, in a delve with only a companion (Brann) and in a follower
+  dungeon (its party all followers) its Actions reads No action, the Offer panel will not open, and
+  Offer, Announce, Post my tradeables and `/dw offer` refuse. A player is a unit the client answers
+  `UnitIsPlayer` for; where that answer is secret, the GUID's kind decides (`Player-` is a player). A
+  player in your group who is offline still counts, so the Offer stays while they are away. A test
+  drop keeps its Offer (it judges its own spec roster). ASK-13 is the in-game check.
 - **A drop you traded away** is `tradedAway` in the history and its Offer button on Drops reads
   `Traded`, but its Trade window cell reads as expired rather than `Traded to …`.
 - **A reload and a relog** (feedback-15 spec §0, DW-Q0). The session is the login: a `/reload`

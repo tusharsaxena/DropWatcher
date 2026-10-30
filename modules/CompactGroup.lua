@@ -563,7 +563,7 @@ local function cardCtx(drop, shared)
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm }
     if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn
-        ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
+        ctx.revealed, ctx.offerTone, ctx.alone = WO.IsRevealed(drop.id), (WO.ToneStates(drop)), WO.Alone(drop)
     end
     return ctx
 end

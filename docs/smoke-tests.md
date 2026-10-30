@@ -31,7 +31,7 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..12 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4) |
+| ASK-1..13 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4); no Offer without another player in your group: solo, a delve's companion, a follower dungeon (ASK-13, DW-07) |
 | SIT-1..7 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02); a fresh profile's Situations defaults (SIT-7, DW-06) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
@@ -2106,6 +2106,19 @@ card (click the row, then the card's Offer) and in the compact layout (`/dw comp
 Offer): each opens and then closes it. `/dw offer <item link>` with the panel already open on that
 drop leaves it open. Result: passed in the client, 2026-10-23 (the owner).
 
+**ASK-13. No Offer when no other player is in your group (DW-07; image-66).** The headless
+`test_offer_alone` covers it. Solo in the open world, loot a tradeable drop of your own (or add one
+with `/dw add <item link>`), Drops tab → its Actions reads the gray **No action**, not Offer; hover it
+→ `• Why: no other player in your group`. Its detail card's first action and its compact card read
+No action the same way. `/dw offer <item link>` prints `Not offered: There is no other player in
+your group.` and opens no panel, and Post my tradeables prints `Not announced: There is no other
+player in your group.`. Repeat in a delve with Brann and in a follower dungeon (its party all
+followers) → No action on every drop of yours, with the same tooltip. Then, with one of those drops
+still tradeable, join a party with another player (or have one join yours) → within a moment the
+row reads **Offer** again without a click, and the Offer panel opens from it; have that player
+leave with the panel open → the panel closes and the row reads No action again. `/dw test` keeps
+its own drops' Offer while solo. Result:
+
 ## Situations
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
@@ -3237,7 +3250,7 @@ D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tok
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
 
 Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04), TOAST-8 (DW-05) and SIT-7 (DW-06). Their `Result:` lines are empty until
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04), TOAST-8 (DW-05), SIT-7 (DW-06) and ASK-13 (DW-07). Their `Result:` lines are empty until
 the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
