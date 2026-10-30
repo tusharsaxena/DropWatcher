@@ -229,6 +229,33 @@ test("skin chrome: an item quality is the skin's q.* token, the client's own col
     m.ITEM_QUALITY_COLORS = nil
 end)
 
+test("skin chrome: the main window's resize grip takes the skin's icon.grip, live, like the tool windows'", function()
+    -- red under: the main window's MakeResizable without opts.owner (Core minor 14), so its grip
+    -- keeps the client's art under a skin that tints the tool windows' grips.
+    local _, f, m = shown()
+    local grip = f.resizeGrip
+    assertTrue(grip ~= nil, "the window has the library's grip")
+    -- The kit's Button answers GetNormalTexture with itself, not a Texture, so the grip's art is
+    -- stood in by one of the kit's Textures; the paint reads the getter at each skin switch. That
+    -- Texture keeps the vertex color, not the desaturation, so the tint is what is compared.
+    local art = grip:CreateTexture()
+    assertEqual(art:GetObjectType(), "Texture")
+    grip.GetNormalTexture = function() return art end
+    assertTrue(art.__vertex == nil, "Ka0s Default's icon.grip is false: the client's art, never tinted")
+    local Skin = skinOf(m)
+    local GRIP = "dw-grip"
+    if not Skin:GetSkin(GRIP) then
+        local tokens = {}
+        for name, v in pairs(Skin:ResolveSkin(Skin.DEFAULT)) do tokens[name] = v end
+        tokens["icon.grip"] = { 0.2, 0.4, 0.6, 1 }
+        Skin:RegisterSkin({ key = GRIP, label = "Grip (test)", tokens = tokens })
+    end
+    Skin:SetChoice(OWNER, "ka0s", GRIP)
+    near("grip tint", art.__vertex, { 0.2, 0.4, 0.6 })
+    Skin:SetChoice(OWNER, "ka0s", Skin.DEFAULT)
+    near("grip untinted", art.__vertex, { 1, 1, 1 })
+end)
+
 test("skin chrome: without the library the window's own colors are Ka0s Default's", function()
     -- The degraded facade's Text and the host copy answer every token the window reads, so a
     -- library-absent load colors what it builds as before.
