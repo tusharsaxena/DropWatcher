@@ -39,8 +39,8 @@ local floor = math.floor
 local DASH = "–"
 
 -- The verdict glyphs (design spec §11.2), drawn in the monospace face: the client's default face
--- has none of them.
-WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▼" }
+-- has none of them, nor do the skins' faces (the `glyph: mono` marker tells the kit's guard).
+WC.GLYPH = { upgrade = "▲", sidegrade = "≈", downgrade = "▼" }   -- glyph: mono
 
 local VERDICT_WORD = {
     upgrade = L["Upgrade"], sidegrade = L["Sidegrade"], downgrade = L["Downgrade"],

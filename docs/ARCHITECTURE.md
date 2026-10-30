@@ -306,6 +306,21 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   every string reads in Prototype (the library's Ka0s Default face since LibKa0s v1.82.0; Oxanium before) instead of Friz Quadrata, the title
   bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
   knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
+- **Fonts, outline and widths (LibKa0s v1.82.0).** Text is outlined by default (*All text*); the
+  Skin tab's Font outline (`skin.outline`) takes it off window text (*HUD text only*) or everywhere
+  (*Off*). The addon stores no font face, color or flags of its own: every string takes the skin's
+  face and flags through `S.Font` / `S.Text`, its color from the skin's tokens and the verdict tones,
+  and the verdict glyphs the mono role, which the skin never outlines. The one font-related setting
+  is Window › Layout › Tables' **Font size** (`window.fontSize`), a table metric beside Row height:
+  `NS.WindowRows.SetFontSize` changes only the size and keeps the face and flags the skin painted,
+  read again after every repaint, so the Font outline reaches the tables at any stored size
+  (`tests/test_window_group.lua`). Font settings check (D-07): there is no per-element font block to
+  carry size, color with class color, flags with *From skin*, and shadow, so no stored flag to
+  migrate; and the addon draws no HUD text, so `S.HudFontSize` (D-09) reaches nothing. Each skin's
+  body and title sizes are the library's, measured so every skin's text is as wide as Ka0s Default's.
+- **Characters every face draws.** `tests/test_locale.lua` runs the kit's display-glyph guard
+  (`T.assertDisplayGlyphs`, kit revision 45): a string outside the safe set fails unless it is drawn
+  in the mono role and marked `glyph: mono` (the verdict glyphs ▲ ≈ ▼ and ⊘).
 
 ### Intentional exceptions
 

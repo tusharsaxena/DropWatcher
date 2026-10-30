@@ -557,7 +557,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (50)
+### test_window_group.lua (51)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -583,6 +583,7 @@ Total.
 - rows: a stored row height and font size stay as the player set them
 - rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
 - table: the Window page's row height and font size lay out and size the drop rows
+- table: a sized text keeps the skin's flags, read again after a repaint (D-07 From skin)
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
 - table: every shown cell has a reason tooltip; nothing is blank
@@ -2027,7 +2028,7 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_locale.lua (6)
+### test_locale.lua (7)
 
 - locale: the enUS files are the TOC's, the base file first and its topic files after it
 - locale: every enUS key lives in exactly one enUS file
@@ -2035,6 +2036,7 @@ Total.
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
 - locale: every enUS key is still read by the addon's files
+- locale: display strings use only characters every shipped skin face draws
 
 ### test_eol.lua (2)
 
@@ -2127,7 +2129,7 @@ Total.
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 50 |
+| test_window_group.lua | 51 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
@@ -2190,11 +2192,11 @@ Total.
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
-| test_locale.lua | 6 |
+| test_locale.lua | 7 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1807** |
+| **Total** | **1809** |

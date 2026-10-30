@@ -60,7 +60,7 @@ local floor = math.floor
 local DASH = "–"
 
 --- The mark of a verdict the full view says in a word (cannot use, not wanted).
-CC.NO_GLYPH = "⊘"
+CC.NO_GLYPH = "⊘"   -- drawn in the mono role (NS.SkinMono), like the verdict glyphs  glyph: mono
 
 -- The header's pieces, each cut to its own number of characters (feedback-15), so a line with
 -- every piece at its limit fits HEADER_CHARS, about what a default-width pane (COMPACT_WIDTH 400; 440 until feedback-23)
