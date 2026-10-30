@@ -139,9 +139,10 @@ WR.MARK_GAP = 3
 --- A gold mark drawn right after `text` (hidden until WR.PlaceMark gives it a word).
 --- @param parent table the frame that owns `text`
 --- @param text table the FontString the mark follows
+--- @param scale number|nil its face's scale (NS.ScaledFontString: the upgrade toast's, DW-05)
 --- @return table the mark's FontString
-function WR.NewMark(parent, text)
-    local m = parent:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+function WR.NewMark(parent, text, scale)
+    local m = NS.ScaledFontString(parent, "OVERLAY", "GameFontHighlightSmall", scale)
     m:SetPoint("LEFT", text, "RIGHT", WR.MARK_GAP, 0)
     m:SetWordWrap(false)
     NS.Skin.Text(m, "accent")   -- the skin's accent (Ka0s Default gold) in its face

@@ -36,7 +36,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..7 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2) |
+| TOAST-1..8 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05) |
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
@@ -1297,7 +1297,8 @@ beside a four-row icon, painted` and the right-click cases) covers the parts, th
 Research `docs/superpowers/research/2026-10-13-feedback-9/01-toast-today.png` shows the old line, cut at
 `Likely trad…`, and `02-table-verdict-marks.png` the Me and Them cells' look. Settings › Alerts › Toast ›
 Show a toast on, then `/dw test` → the toast is 350 pixels wide and its item icon spans all four rows (about
-56 pixels square, the toast's insets even all round). Row 1: `Big upgrade for you` in gold, Ask and the close
+56 pixels square, the toast's insets even all round; superseded by DW-05, 2026-10-30: 426 wide, a 68-pixel
+icon, 90 tall; TOAST-8). Row 1: `Big upgrade for you` in gold, Ask and the close
 mark at its right. Row 2: the item's name in its quality color (purple for epic), then its item level in
 smaller gray text; with a long name the name is cut, never the level. Row 3: `Looted by Seta`, the name in
 its class color, then `You ▲19` and `Them` with its verdict, each glyph (`▲`, `≈`, `▼`) drawn in the
@@ -2389,6 +2390,24 @@ covers each check below; this is the client's word on it. Run TOAST-1 first and 
   names both; `/dw clear` → `toast: ... waiting=0`, and nothing toasts when combat ends.
 
 Result: passed in the client, 2026-10-30 (the owner).
+
+**TOAST-8. The toast as tall as DpsRace's new-best toast, every element scaled to match (DW-05).**
+Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, Addendum 03. The headless `test_toast`
+(`90 px tall, DpsRace's new-best toast`, `its icon, Ask and every face scaled`, `with CreateFont, each
+scaled face is a named font object`) covers the figures; this is the client's word on the look. Every
+size is the first release's times 90 / 74 (about 1.22): the toast 90 pixels tall (74 before) and at
+least 426 wide (350), the item icon 68 pixels square (56) with 11 pixels (9) above, below and left of
+it, and every face about a fifth larger. Toast on, Scale `100%`, with Ka0s DPS Race enabled:
+`/dw test` and DPS Race's General › New-best toast › Test toast, one placed above the other → the two toasts are
+the same height. On the Drop Watcher toast: the four rows still fit beside the icon, row 1's gold
+`Big upgrade for you` clear of Ask, row 4 sitting on the icon's bottom edge, no row overlapping the
+next; Ask is a little taller and wider, its chat mark and `Ask` word larger, still left of the close
+mark; the item name and its level, `Looted by Seta · You ▲19 · Them ▼13` with its monospace glyphs,
+and the trade line are all larger and none is cut where it was not before. A ring or trinket with
+both worn items read (two dual marks) still widens the toast so neither verdict is cut. Scale `150%`
+→ the larger toast grows about its anchor as before. Skin › Scope › Ignore fonts on → the toast keeps
+its larger size in the client's own font, never shrinking to the first release's. Under Obsidian and
+Glass → the same, in each skin's face. Result:
 
 ## Upgrade glow
 

@@ -100,12 +100,14 @@ end)
 
 -- Rough widths in the client's GameFontHighlightSmall: under 5 pixels a character (the owner's
 -- screenshot 01 draws `Looted by Seta · +19 ↑ · Likely trad…`, 37 characters, in about 170 of the
--- toast's then 340), and a 12-point monospace glyph about 7.
-local CHAR_W, GLYPH_W = 5, 7
+-- toast's then 340), and a 12-point monospace glyph about 7; both times the toast's SCALE (90 / 74,
+-- DW-05: its faces are drawn that much larger).
+local SCALE = 90 / 74
+local CHAR_W, GLYPH_W = 5 * SCALE, 7 * SCALE
 
 -- Row 3's drawn width: the looter's segment, then each verdict's glyph (when it has one) and text.
 local function row3Width(NS, t)
-    local TM, G, S = NS.TipMarks, NS.Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local TM, G, S = NS.TipMarks, NS.Toast.SEG_GAP, NS.Toast.GLYPH_GAP
     local function verdict(part)
         return G + (part.glyph and GLYPH_W + S or 0) + TM.Chars(part.text) * CHAR_W
     end
@@ -120,7 +122,7 @@ test("toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec �
         me = { verdict = "upgrade", ilvlDelta = 19 }, them = { verdict = "downgrade", ilvlDelta = -13 } })
     local t = Toast.Compose(long)
     local row4 = TM.Chars(t.trade) * CHAR_W + Toast.SEG_GAP + TM.Chars("· " .. t.reason) * CHAR_W
-    assertEqual(Toast.WIDTH, 350)
+    assertEqual(Toast.WIDTH, 426)
     local row3 = row3Width(NS, t)
     assertTrue(row3 <= Toast.RowWidth(), ("row 3: %d > %d"):format(row3, Toast.RowWidth()))
     -- red under: WIDTH 340 (an empty slot, `▲ empty`, then a Them word; 267 > 258)
@@ -132,6 +134,20 @@ test("toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec �
     end
     assertTrue(row4 <= Toast.RowWidth(), ("row 4: %d > %d"):format(row4, Toast.RowWidth()))
     assertEqual(Toast.HEIGHT, Toast.ICON + 2 * Toast.INSET, "the icon spans the rows; the frame keeps its insets")
+end)
+
+test("toast: 90 px tall, DpsRace's new-best toast, every size scaled to match (DW-05)", function()
+    local Toast = T.newAddon().Toast
+    -- red under: the first release's 74 (ICON 56 + 2 x INSET 9)
+    assertEqual(Toast.HEIGHT, 90, "DpsRace's BestToast.HEIGHT after DR-04")
+    assertEqual(Toast.SCALE, 90 / 74, "the first release's sizes times 90 / 74")
+    assertEqual(Toast.ICON, 68); assertEqual(Toast.INSET, 11)        -- 56, 9
+    assertEqual(Toast.HEIGHT, Toast.ICON + 2 * Toast.INSET)
+    assertEqual(Toast.WIDTH, 426); assertEqual(Toast.TEXT_GAP, 10)    -- 350, 8
+    assertEqual(Toast.ROW_Y[1], 0); assertEqual(Toast.ROW_Y[2], -18); assertEqual(Toast.ROW_Y[3], -36)
+    assertEqual(Toast.SEG_GAP, 5); assertEqual(Toast.GLYPH_GAP, 4)    -- 4, 3
+    assertEqual(Toast.ASK_W, 78)                                      -- 64
+    assertEqual(Toast.RowWidth(), 426 - 22 - 68 - 10)
 end)
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
@@ -245,7 +261,7 @@ test("toast: on a two-item slot read in full each verdict is the cells' dual mar
     assertNil(Toast.Compose(dualDrop({ facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 } }),
         { [1] = { link = link(605), ilvl = 300 } }).me.parts, "a single slot: the one mark")
     -- Row 3 at the harness's estimate: `Looted by Abcdefghijkl · You 321 ▼10 / 300 ▲11 · Them 324 ▼13 / 296 ▲15`.
-    local G, S = Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local G, S = Toast.SEG_GAP, Toast.GLYPH_GAP
     local function verdict(p)
         local a, b = p.parts[1], p.parts[2]
         return G + TM.Chars(a.level) * CHAR_W + G + GLYPH_W + S + TM.Chars(a.text) * CHAR_W + G + CHAR_W
@@ -292,7 +308,7 @@ test("toast edge: the widened toast holds the Them verdict too, not only up to `
     NS.Gear.Snapshot = function() return { equipped = MY_TRINKETS } end
     added(NS, 1)
     local f = NS.Toast.Frame()
-    local G, S = NS.Toast.SEG_GAP, NS.WindowGroup.SIDE.GLYPH_GAP
+    local G, S = NS.Toast.SEG_GAP, NS.Toast.GLYPH_GAP
     local function w(fs) return fs:GetUnboundedStringWidth() end
     local l = f.meLead
     local row3 = w(f.looted) + G + w(l.leadLevel) + G + w(l.leadGlyph) + S + w(l.leadText) + G + w(l.sep)
@@ -812,4 +828,59 @@ test("toast: the diagnostics' window section reports the toast", function()
     local text = table.concat(NS.DebugLog.buffer, "\n")
     assertTrue(text:find("toast: enabled=true built=true shown=true drop=1 waiting=0 held=false", 1, true) ~= nil, text)
     assertTrue(text:find("toast: point", 1, true) ~= nil)
+end)
+
+-- ── the scale (DW-05) ───────────────────────────────────────────────────────────────────────
+
+local function near(a, b, what) assertTrue(math.abs(a - b) < 0.01, ("%s: %s, not %s"):format(what, a, b)) end
+
+test("toast edge: 90 px tall, its icon, Ask and every face scaled to match DpsRace's toast (DW-05)", function()
+    local NS = enabled({ drop({ them = { verdict = "downgrade", ilvlDelta = -13 } }) })
+    added(NS, 1)
+    local f, Toast = NS.Toast.Frame(), NS.Toast
+    assertEqual(f:GetHeight(), 90); assertEqual(f:GetWidth(), 426)
+    assertEqual(f.icon:GetWidth(), 68); assertEqual(f.icon:GetHeight(), 68)
+    local pt = f.icon.__points[1]
+    assertEqual(pt[4], 11); assertEqual(pt[5], -11, "the inset above the icon equals the one below it")
+    assertEqual(f.ask:GetWidth(), 78); assertEqual(f.ask:GetHeight(), 24, "CONTROL_H 20, scaled")
+    assertEqual(f.ask.markNudge, 9, "the word's nudge past the mark, 7 scaled")
+    local lp = f.ask.label.__points[#f.ask.label.__points]
+    assertEqual(lp[1], "CENTER"); assertEqual(lp[4], 9)
+    local s = Toast.SCALE
+    -- The faces: GameFontNormalSmall's and GameFontHighlightSmall's 10 px, GameFontHighlight's 12, the
+    -- mono glyphs' 12, each times SCALE.
+    near(select(2, f.title:GetFont()), 10 * s, "row 1")
+    near(select(2, f.item:GetFont()), 12 * s, "row 2's name")
+    near(select(2, f.ilvl:GetFont()), 10 * s, "row 2's level")
+    near(select(2, f.looted:GetFont()), 10 * s, "row 3")
+    near(select(2, f.meText:GetFont()), 10 * s, "row 3's verdict")
+    near(select(2, f.meGlyph:GetFont()), 12 * s, "row 3's glyph")
+    near(select(2, f.trade:GetFont()), 10 * s, "row 4")
+    near(select(2, f.reason:GetFont()), 10 * s, "row 4's reason")
+    near(select(2, f.ask.label:GetFont()), 10 * s, "Ask's word")
+    assertEqual(f.meText.__points[1][4], Toast.GLYPH_GAP, "the glyph gap scaled too")
+end)
+
+test("toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)", function()
+    local NS, m = enabled({ drop() })
+    local made = {}
+    m.CreateFont = function(name)
+        local obj = { name = name }
+        function obj:GetName() return self.name end
+        function obj:CopyFontObject(base) self.base = base end
+        function obj:SetFont(p, size, flags) self.font = { p, size, flags } end
+        function obj:GetFont() return self.font[1], self.font[2], self.font[3] end
+        made[name] = obj
+        rawset(m, name, obj)
+        return obj
+    end
+    added(NS, 1)
+    local f, s = NS.Toast.Frame(), NS.Toast.SCALE
+    assertEqual(f.item.__template, "DropWatcher_GameFontHighlight_122")
+    assertEqual(f.trade.__template, "DropWatcher_GameFontHighlightSmall_122")
+    assertEqual(f.title.__template, "DropWatcher_GameFontNormalSmall_122")
+    near(made.DropWatcher_GameFontHighlight_122.font[2], 12 * s, "the name's object")
+    near(made.DropWatcher_GameFontHighlightSmall_122.font[2], 10 * s, "the small object")
+    assertEqual(NS.ScaledFont("GameFontHighlight", s), "DropWatcher_GameFontHighlight_122", "made once, then reused")
+    assertNil(NS.ScaledFont("GameFontNormalHuge", s), "a face with no known size is not scaled")
 end)

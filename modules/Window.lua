@@ -388,8 +388,8 @@ end
 --- the skin's fill and inner line, a catalog mark at the left (`icon` may be nil) and a centered
 --- label (`b.label`, `b.art`). `onClick(b)` runs on a click. Built by modules/WindowTitleBar.lua.
 --- @return table
-function Window.TextButton(parent, width, icon, text, onClick)
-    return NS.WindowTitleBar.TextButton(parent, width, icon, text, onClick)
+function Window.TextButton(parent, width, icon, text, onClick, scale)
+    return NS.WindowTitleBar.TextButton(parent, width, icon, text, onClick, scale)
 end
 
 --- A TextButton's label and mark (`icon` may be nil): WindowTitleBar.SetButtonMark.

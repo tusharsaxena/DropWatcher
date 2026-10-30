@@ -1674,12 +1674,13 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (45)
+### test_toast.lua (48)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
 - toast: Compose keeps the table's words, the empty slot and each trade reason
 - toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)
+- toast: 90 px tall, DpsRace's new-best toast, every size scaled to match (DW-05)
 - toast edge: on for a new profile; turned off, nothing is built or shown
 - toast edge: a qualifying drop shows at once, painted, and goes after its duration
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
@@ -1721,6 +1722,8 @@ Total.
 - toast edge: a profile switch mid-combat to one without Show in combat holds the next
 - toast edge: on a shell that names no waiting keys, the drops gone from the feed still leave the queue
 - toast: the diagnostics' window section reports the toast
+- toast edge: 90 px tall, its icon, Ask and every face scaled to match DpsRace's toast (DW-05)
+- toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)
 
 ### test_glow.lua (14)
 
@@ -2179,7 +2182,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 45 |
+| test_toast.lua | 48 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_layers.lua | 9 |
@@ -2203,4 +2206,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1813** |
+| **Total** | **1816** |

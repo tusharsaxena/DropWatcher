@@ -50,6 +50,10 @@ local addonName, NS = ...
 --   NS.SkinRepaint()        every skin switch (after the palette), weak-keyed. SkinRepaint re-runs all.
 --   NS.SkinMonoFont()       the skin's `font.mono` as a path; NS.SkinMono(fs, size) sets it on a glyph
 --   NS.SkinMono(fs, size)   string and keeps it there on a skin switch.
+--   NS.ScaledFontString(p, layer, font, scale) a FontString in `font` at `scale` times its height
+--   NS.ScaledFont(font, s)  (NS.FONT_SIZE), on a named copy of the font object (NS.ScaledFont) so
+--   NS.FONT_SIZE            the skin's face and its Ignore fonts both keep the scale: the upgrade
+--                           toast, drawn as tall as DpsRace's new-best toast (DW-05).
 --   NS.QualityColor(q)      an item quality's r, g, b: the skin's q.* token where it sets one (a
 --                           legibility override), else the client's ITEM_QUALITY_COLORS; nil for none.
 --   NS.SkinPaintAce(w)      an AceGUI widget this addon acquired itself, painted for this owner:
@@ -290,6 +294,70 @@ end
 --- @param size number
 function NS.SkinMono(fs, size)
     return NS.SkinPaint(fs, function(f) f:SetFont(NS.SkinMonoFont(), size, "") end)
+end
+
+-- ── a surface drawn larger (the upgrade toast, DW-05) ────────────────────────────────────────
+
+--- The pixel height of each font object a scaled surface draws at a multiple of, as the client
+--- defines them. A config table, never read off a string.
+NS.FONT_SIZE = {
+    GameFontNormalSmall    = 10,
+    GameFontHighlight      = 12,
+    GameFontHighlightSmall = 10,
+}
+
+-- The scaled copies, by "<font>@<scale>": the copy's global name, or false where the client has no
+-- CreateFont or `font` has no NS.FONT_SIZE height (the string then carries the size itself).
+local scaledFonts = {}
+
+--- A named copy of the font object `font` at `scale` times its NS.FONT_SIZE height, made once; nil
+--- when there is none. Named, so the skin's Ignore fonts puts a string back on THIS object, at the
+--- scaled size, rather than on the stock one (LibKa0s-Skin-1.0 hands back a named font object).
+--- @param font string a font object's global name
+--- @param scale number
+--- @return string|nil
+function NS.ScaledFont(font, scale)
+    local key = font .. "@" .. scale
+    if scaledFonts[key] == nil then
+        scaledFonts[key] = false
+        local size = NS.FONT_SIZE[font]
+        if size and type(CreateFont) == "function" then
+            local name = ("%s_%s_%d"):format(addonName, font, math.floor(scale * 100 + 0.5))
+            local obj = CreateFont(name)
+            if type(obj) == "table" then
+                local base = rawget(_G, font)
+                local path, flags
+                if type(base) == "table" and base.GetFont then
+                    if obj.CopyFontObject then obj:CopyFontObject(base) end
+                    local p, _, f = base:GetFont()
+                    path, flags = p, f
+                end
+                obj:SetFont(path or STANDARD_TEXT_FONT, size * scale, flags or "")
+                scaledFonts[key] = name
+            end
+        end
+    end
+    return scaledFonts[key] or nil
+end
+
+--- A FontString on `parent` in `font` at `scale` times its height: on NS.ScaledFont's copy, else
+--- (no CreateFont) on `font` with the scaled size set on the string. The skin's NS.Skin.Font reads
+--- the size off the string, so its face keeps the scale. A nil or 1 scale is the plain FontString.
+--- @param parent table
+--- @param layer string
+--- @param font string a font object's global name
+--- @param scale number|nil
+--- @return table
+function NS.ScaledFontString(parent, layer, font, scale)
+    if not scale or scale == 1 then return parent:CreateFontString(nil, layer, font) end
+    local obj = NS.ScaledFont(font, scale)
+    local fs = parent:CreateFontString(nil, layer, obj or font)
+    local size = NS.FONT_SIZE[font]
+    if not obj and size then
+        local path, _, flags = fs:GetFont()
+        fs:SetFont(path or STANDARD_TEXT_FONT, size * scale, flags or "")
+    end
+    return fs
 end
 
 -- The Font outline modes (LibKa0s-Skin-1.0 minor 9's OUTLINE_MODES), with the Skin tab's words.

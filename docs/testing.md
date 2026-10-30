@@ -437,7 +437,8 @@ layouts; the one tooltip; Drops' This session from the stored login in the clien
 `test_toast` (the toast: the pure qualifier, someone else's upgrade for you of `toast.minGain` or
 more (or into an empty slot, whatever the least gain) with a `likely` or `yes` trade, and every
 reason it refuses, and the board 06 C texts, `empty` for an empty slot, the dual marks on a two-item
-slot and the width they widen the toast to (feedback-21 H7); then
+slot and the width they widen the toast to (feedback-21 H7), the scaled figures (DW-05: 90 tall,
+DpsRace's new-best toast, every size times 90 / 74); then
 the edge: on for a new profile and nothing built while it is off, a qualifying drop shown and painted and gone after its duration, one at a
 time with each drop once, the queue's cap, a drop that turns likely on its `DropUpdated`, the hover
 pause and its resume, combat holding it and `toast.inCombat`, a drop asked for or gone skipped, the

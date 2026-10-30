@@ -80,6 +80,12 @@ files["core/CompatItem.lua"] = {
   read_globals = { "ItemLocation" },
 }
 
+-- core/SkinSetup.lua's NS.ScaledFont makes the named, scaled font objects the upgrade toast draws in
+-- (DW-05): the client's font-object constructor.
+files["core/SkinSetup.lua"] = {
+  read_globals = { "CreateFont" },
+}
+
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {
