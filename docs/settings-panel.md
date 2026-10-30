@@ -241,9 +241,12 @@ Compact view when it auto-opens in a run (`Open in compact view during a run` un
 default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
 title-bar toggle's tooltip names it while it holds). **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
-compact layout's cards size from their text) | Font size (all the way left, 0, is Default: the
-template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact
-spec §5).
+compact layout's cards size from their text), then the tables' font: the library's composed font
+block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font
+size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table;
+DW-A8; the compact cards follow it too, compact spec §5), Font color | Use class color (the tables'
+plain text; the skin's own while the swatch is at its default), Font flags (From skin, the default,
+or a picked flag) | Font shadow, then Use the skin's font (on by default; Font is not read while it is).
 
 **Columns:** the tab opens with a note, drawn by the page's `chrome` on this tab only
 (`PageEditors.ColumnsNote`): the checkboxes change the full layout's Drops table; History shows

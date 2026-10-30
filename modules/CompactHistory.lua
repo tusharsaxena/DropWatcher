@@ -104,7 +104,7 @@ local function paintCard(card, drop, _, m, st)
     card.dropId, card.entry = drop.id, drop.entry
     card:SetHeight(m.height)
     layout(card, m)
-    NS.WindowRows.ApplyRowFont(card, m.fontSize)
+    NS.WindowRows.ApplyRowFont(card, m.fontSize, m.font)
     local open = st.expanded == drop.entry
     card.selected:SetShown(open)
     WG.PaintChevron(card.chevron, open)

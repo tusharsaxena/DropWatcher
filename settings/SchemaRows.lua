@@ -96,6 +96,7 @@ local function repaintWindow()
     local W = NS.Window
     if W and W.IsShown and W.IsShown() then W.Refresh() end
 end
+Settings.RepaintWindow = repaintWindow   -- settings/ComposedRows.lua's tables font block too
 
 -- A glow row repaints every glowing icon: the window's surfaces (modules/Glow.lua).
 local function refreshGlow()
@@ -385,11 +386,9 @@ local function window()
     layout = with(layout, { subgroup = L["Tables"] })
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
         L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
-    -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
-    -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
-    slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
-        L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
-        with(layout, { zeroText = L["Default"] }))
+    -- The tables' font follows Row height: the whole font setting (DW-01, the lead's ruling on
+    -- D-07), the library's composed block, so settings/ComposedRows.lua declares it (it needs the
+    -- Options instance). `window.fontSize` keeps its path, its 0 (Default) and its range there.
 
     -- The full layout's Drops table columns, then the Trade window column's ending-soon mark (Trade ›
     -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else).

@@ -546,14 +546,14 @@ test("table: the Window page's row height and font size lay out and size the dro
     assertEqual(size, 12, "and the glyph's own")
 end)
 
-test("table: a sized text keeps the skin's flags, read again after a repaint (D-07 From skin)", function()
-    -- LibKa0s v1.82.0 (rulings D-06/D-07; DW-01): the tables' text stores no flags of its own; it
-    -- draws the flags the skin painted (font.outline, which the Skin tab's Font outline sets), so a
-    -- stored Font size keeps them, and a repaint to other flags (an outline or skin change, which
-    -- fires OnLooksChanged) is read anew. red under: WR.SetFontSize passing "" or a cached flag.
+test("table: a sized glyph keeps the skin's flags, read again after a repaint", function()
+    -- The verdict glyphs (the monospace face) store no flags of their own: they draw the flags the
+    -- skin painted, so a stored Font size keeps them, and a repaint to other flags (an outline or
+    -- skin change, which fires OnLooksChanged) is read anew. red under: WR.SetFontSize passing "" or
+    -- a cached flag. The tables' texts take the font block's own flags (tests/test_table_font.lua).
     local NS, drawn = shownTable()
     local WR = NS.WindowRows
-    local fs = rowFor(drawn, 1).cells.ilvl.text
+    local fs = rowFor(drawn, 1).cells.me.glyph
     fs:SetFont("Ka0s Prototype", 12, "OUTLINE")   -- what the skin painted under All text
     WR.SetFontSize(fs, 15)
     local file, size, flags = fs:GetFont()

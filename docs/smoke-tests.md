@@ -44,7 +44,7 @@ passed.
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
-| SKIN-25..29 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29) |
+| SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
 
 ## Before you start
 
@@ -3163,8 +3163,8 @@ dropdown grays out. The verdict glyphs ▲ ≈ ▼ and ⊘ are never outlined. R
 **SKIN-26. From skin flags at any Font size (DW-01; D-07).** Set Window › Layout › Tables' **Font
 size** to its largest, then walk *All text*, *HUD text only* and *Off* on the Skin tab → the tables'
 text keeps the large size and takes each outline, live; back to Default (0) → the template's size, still
-outlined under *All text*. Drop Watcher has no per-element font block (face, color, flags, shadow) to
-check: its text takes the skin's face, flags and colors (`docs/ARCHITECTURE.md`, Skins). Result:
+outlined under *All text*. (The tables' Font flags stay at their default, From skin, for this check;
+SKIN-30 walks the rest of their font setting.) Result:
 
 **SKIN-27. `/dw skin` (DW-01; D-16).** On a profile whose first-run picker was closed, `/dw skin` →
 the **Choose a skin** picker opens as a new profile shows it, whatever skin is worn; Escape closes it
@@ -3186,6 +3186,22 @@ Pick a Font override, then another skin → the override goes back to the new sk
 v1.82.0); **Reset font** does the same without a skin change. The Skin tab reads, in order, Skin
 source, Look (its note first), Font and texture, Scope, then **Other Ka0s addons** with the copy
 button. Result:
+
+**SKIN-30. The tables' whole font setting (DW-01; the lead's ruling on D-07).** Settings → Window →
+Layout → **Tables**: under Row height sit **Font** | **Font size**, **Font color** | **Use class
+color**, **Font flags** | **Font shadow**, then **Use the skin's font**, ticked. On a profile that never
+touched them, `/dw test` → the tables look exactly as before this run, under Ka0s Default and under
+another skin (the skin's face, the template's size, the skin's plain text color, outlined under *All
+text*, the skin's shadow). Font flags reads *From skin*. Then, with no reload, on Drops, History and
+the compact cards: untick Use the skin's font and pick another Font → every table text takes it, the
+verdict glyphs ▲ ≈ ▼ keep their monospace face; pick a Font color → the plain text (item levels,
+slots, types, `Name [YOU]`'s name) takes it, while the verdicts keep green, yellow and red, the item
+names their quality colors and the looters their class colors; tick Use class color → that plain text
+turns your class's color; Font flags *Thick outline* → the outline thickens whatever the Skin tab's
+Font outline says, *From skin* → it follows the Font outline again; untick Font shadow → the text's
+shadow goes, tick it → it is back. The detail card, the Offer panel and the toast are not tables and
+do not change. Settings → Window's **Defaults** → every row back to the first state. `/dw get
+window.tableFontFlags` prints `@skin`. Result:
 
 ## Pending sign-off
 
@@ -3212,7 +3228,7 @@ D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tok
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
 
 Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..29 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04) and TOAST-8 (DW-05). Their `Result:` lines are empty until
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04) and TOAST-8 (DW-05). Their `Result:` lines are empty until
 the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off

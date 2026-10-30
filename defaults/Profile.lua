@@ -149,6 +149,20 @@ NS.C = {
             -- while Trade window shows adds the room its countdown bar needs. A value the player stored stays as it is.
             rowHeight = 18,      -- one drop row, in pixels
             fontSize  = 0,       -- the tables' text: 0 is the template's own size, else 8 to 20
+            -- The rest of the tables' font setting (DW-01, the lead's ruling on D-07: every font
+            -- setting carries size, color with a class-color option, flags with From skin, and
+            -- shadow), Window › Layout › Tables' composed font block (settings/ComposedRows.lua). Each
+            -- default keeps the look the tables had before it: the skin's face (`tableFontFromSkin`;
+            -- `tableFont` waits for the player to turn it off), the swatch on Ka0s Default's plain text
+            -- color, which modules/WindowRows.lua reads as "the skin's" until another color is picked,
+            -- and the skin's shadow. Only the flags moved: From skin ("@skin"), resolved through the
+            -- Skin tab's Font outline as window text. Nothing stored before them, so no migration.
+            tableFont           = "Friz Quadrata TT",
+            tableFontFromSkin   = true,
+            tableFontColor      = { r = 0.92, g = 0.92, b = 0.92, a = 1 },   -- = dw.plain's Ka0s Default
+            tableFontClassColor = false,
+            tableFontFlags      = "@skin",
+            tableFontShadow     = true,
         },
 
         -- The upgrade toast (design spec §11.5). Its `point` is geometry, like the window's.

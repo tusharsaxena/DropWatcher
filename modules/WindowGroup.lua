@@ -297,10 +297,8 @@ end
 
 -- ── painting helpers ────────────────────────────────────────────────────────────────────────
 
-local function setTone(fs, tone)
-    local c = C.TONE[tone] or C.TONE.plain
-    fs:SetTextColor(c.r, c.g, c.b)
-end
+-- A table row's plain text takes the Tables font block's color (NS.WindowRows.SetTone, DW-01).
+local function setTone(fs, tone) NS.WindowRows.SetTone(fs, tone) end
 
 local function tipOf(frame)
     return unpack(frame.tipLines or {})
@@ -894,7 +892,7 @@ local function paintRow(row, drop, layout, now, metrics)
     WG.PaintChevron(row.chevron, open)
     row:SetHeight(metrics.rowH)
     placeCells(row, layout, metrics.rowH)
-    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize, metrics.font)
     NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
     paintItem(cells.item, drop)

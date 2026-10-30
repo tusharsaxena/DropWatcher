@@ -652,6 +652,14 @@ local PINNED_ROWS = {
     { "window.fontSize", "number", "0" },
     { "window.mode", "string", "\"full\"" },
     { "window.rowHeight", "number", "18" },
+    -- DW-01 (the lead's ruling on D-07): the tables' font gained the rest of the font setting, new
+    -- stored paths beside `window.fontSize`, whose path, type and default are unchanged.
+    { "window.tableFont", "string", "\"Friz Quadrata TT\"" },
+    { "window.tableFontClassColor", "bool", "false" },
+    { "window.tableFontColor", "color", "{[\"a\"]=1,[\"b\"]=0.92,[\"g\"]=0.92,[\"r\"]=0.92}" },
+    { "window.tableFontFlags", "string", "\"@skin\"" },
+    { "window.tableFontFromSkin", "bool", "true" },
+    { "window.tableFontShadow", "bool", "true" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()

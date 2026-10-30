@@ -22,12 +22,25 @@ local _, NS = ...
 -- Without the library the composer is hollow and the block has no rows: modules/IconStyle.lua then
 -- reads defaults/Profile.lua's values (feedback-21 H6: a Solid black border, 2 pixels, no class or
 -- quality color), which no row can change.
+--
+-- WINDOW › LAYOUT › TABLES' FONT (DW-01 of Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK,
+-- the lead's ruling on D-07: every font setting carries size, color with a class-color option, flags
+-- with From skin, and shadow). Helpers.FontGroup with `fromSkin` and `flagsFromSkin`, under `window.`,
+-- after SchemaRows' Row height: Font (`tableFont`) | Font size (`fontSize`, its path, range and
+-- `0 (Default)` unchanged), Font color (`tableFontColor`) | Use class color (`tableFontClassColor`),
+-- Font flags (`tableFontFlags`, From skin by default) | Font shadow (`tableFontShadow`), then Use the
+-- skin's font (`tableFontFromSkin`, on by default). modules/WindowRows.lua draws them on both tabs
+-- and in both layouts; the color is plain text's (a verdict, a quality or a class keeps its own) and
+-- reads as the skin's while it is the default. PLAYER-SCOPED like the icons. Without the library
+-- there is no row and WindowRows reads defaults/Profile.lua's values: today's look.
 
 local DW       = NS.addon
 local Settings = DW.Settings
 local Helpers  = Settings.Helpers
 local L        = NS.L
 local I        = NS.C.PROFILE.icons
+local W        = NS.C.PROFILE.window
+local K        = NS.Constants.WINDOW
 local Check    = Settings.Checks
 
 local function borderOff() return NS.Setting("icons.borderShow") ~= true end
@@ -82,3 +95,47 @@ for _, row in ipairs(BORDER) do
     row.onChange = Settings.RefreshIcons
 end
 NS.SchemaRuntime.AddRows(BORDER)
+
+-- ── Window › Layout › Tables' font ──────────────────────────────────────────────────────────
+
+local FONT = Helpers.FontGroup{
+    page = "window", group = L["Layout"], subgroup = L["Tables"], prefix = "window.",
+    fromSkin = true, flagsFromSkin = true,
+    keys = {
+        font = "tableFont", fontColor = "tableFontColor", useClassColorFont = "tableFontClassColor",
+        fontFlags = "tableFontFlags", fontShadow = "tableFontShadow",
+    },
+    defaults = {
+        font = W.tableFont, fontSize = W.fontSize, fontColor = W.tableFontColor,
+        useClassColorFont = W.tableFontClassColor, fontFlags = W.tableFontFlags,
+        fontShadow = W.tableFontShadow, fontFromSkin = W.tableFontFromSkin,
+    },
+    classColor = { source = "player" },
+}
+
+--- A flags value the row offers (its own value map, "From skin" first).
+local function flagsCheck(row)
+    return function(v) return type(v) == "string" and type(row.values) == "table" and row.values[v] ~= nil end
+end
+
+local FONT_DECORATE = {
+    ["window.tableFont"] = { validate = Check.nonEmptyString,
+        tooltip = L["The face the drop tables' text is drawn in, on both tabs. Not read while Use the skin's font is on."] },
+    ["window.fontSize"] = { validate = Check.inRange(0, K.FONT_MAX), min = 0, max = K.FONT_MAX,
+        zeroText = L["Default"], label = L["Font size"],
+        tooltip = L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."] },
+    ["window.tableFontColor"] = { validate = Check.isColor,
+        tooltip = L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] },
+    ["window.tableFontClassColor"] = { validate = Check.isBool },
+    ["window.tableFontShadow"] = { validate = Check.isBool,
+        tooltip = L["Draw a soft shadow behind the tables' text."] },
+    ["window.tableFontFromSkin"] = { validate = Check.isBool,
+        tooltip = L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] },
+}
+
+for _, row in ipairs(FONT) do
+    for k, v in pairs(FONT_DECORATE[row.path] or {}) do row[k] = v end
+    if row.path == "window.tableFontFlags" then row.validate = flagsCheck(row) end
+    row.onChange = Settings.RepaintWindow
+end
+NS.SchemaRuntime.AddRows(FONT)

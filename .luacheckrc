@@ -86,6 +86,12 @@ files["core/SkinSetup.lua"] = {
   read_globals = { "CreateFont" },
 }
 
+-- modules/WindowRows.lua's table font makes one named font object per look of the Tables font block
+-- (DW-01), so a 12.0.7 client draws its shadow: the same constructor.
+files["modules/WindowRows.lua"] = {
+  read_globals = { "CreateFont" },
+}
+
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {

@@ -210,6 +210,7 @@ Kit.run{
         "test_compact_chrome",
         "test_compact_modes",
         "test_window_group",
+        "test_table_font",
         "test_drops_layout",
         "test_side_cells",
         "test_detail_card",

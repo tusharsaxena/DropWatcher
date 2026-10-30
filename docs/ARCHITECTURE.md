@@ -308,15 +308,22 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
 - **Fonts, outline and widths (LibKa0s v1.82.0).** Text is outlined by default (*All text*); the
   Skin tab's Font outline (`skin.outline`) takes it off window text (*HUD text only*) or everywhere
-  (*Off*). The addon stores no font face, color or flags of its own: every string takes the skin's
-  face and flags through `S.Font` / `S.Text`, its color from the skin's tokens and the verdict tones,
-  and the verdict glyphs the mono role, which the skin never outlines. The one font-related setting
-  is Window › Layout › Tables' **Font size** (`window.fontSize`), a table metric beside Row height:
-  `NS.WindowRows.SetFontSize` changes only the size and keeps the face and flags the skin painted,
-  read again after every repaint, so the Font outline reaches the tables at any stored size
-  (`tests/test_window_group.lua`). Font settings check (D-07): there is no per-element font block to
-  carry size, color with class color, flags with *From skin*, and shadow, so no stored flag to
-  migrate; and the addon draws no HUD text, so `S.HudFontSize` (D-09) reaches nothing. Each skin's
+  (*Off*). Every string outside the drop tables takes the skin's face and flags through `S.Font` /
+  `S.Text`, its color from the skin's tokens and the verdict tones, and the verdict glyphs the mono
+  role, which the skin never outlines. The drop tables' text is the one font setting (D-07, the lead's
+  ruling on DW-01's review): Window › Layout › Tables carries the library's composed font block
+  (`H.FontGroup` with `fromSkin` and `flagsFromSkin`, `settings/ComposedRows.lua`): Font
+  (`window.tableFont`, read only while Use the skin's font, `window.tableFontFromSkin`, is off), Font
+  size (`window.fontSize`, 0 Default as before), Font color and Use class color
+  (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
+  skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
+  and Font shadow (`window.tableFontShadow`). `NS.WindowRows` draws it on both tabs and both layouts:
+  one named font object per look (a 12.0.7 client draws a font object's shadow, not a runtime one),
+  the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
+  read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
+  tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
+  flag was stored before the block, so none migrates; and the addon draws no HUD text, so
+  `S.HudFontSize` (D-09) reaches nothing. Each skin's
   body and title sizes are the library's, measured so every skin's text is as wide as Ka0s Default's.
 - **Characters every face draws.** `tests/test_locale.lua` runs the kit's display-glyph guard
   (`T.assertDisplayGlyphs`, kit revision 45): a string outside the safe set fails unless it is drawn

@@ -587,7 +587,7 @@ Total.
 - rows: a stored row height and font size stay as the player set them
 - rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
 - table: the Window page's row height and font size lay out and size the drop rows
-- table: a sized text keeps the skin's flags, read again after a repaint (D-07 From skin)
+- table: a sized glyph keeps the skin's flags, read again after a repaint
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
 - table: every shown cell has a reason tooltip; nothing is blank
@@ -614,6 +614,18 @@ Total.
 - table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
+
+### test_table_font.lua (9)
+
+- table font: Window › Layout › Tables carries the whole font setting, after Row height
+- table font: Font size keeps its stored path, its range and `0 (Default)`
+- table font: the defaults keep today's look; only the flags are From skin
+- table font: From skin flags draw the window text's outline, and a picked flag wins
+- table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
+- table font: the color is plain text's; a verdict, a class and a quality keep their own
+- table font: the shadow is drawn and taken off (no CreateFont: on the string)
+- table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font: History and the compact cards draw the same setting
 
 ### test_drops_layout.lua (10)
 
@@ -2138,6 +2150,7 @@ Total.
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
+| test_table_font.lua | 9 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
@@ -2207,4 +2220,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1817** |
+| **Total** | **1826** |

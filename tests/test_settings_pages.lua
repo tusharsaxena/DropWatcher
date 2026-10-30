@@ -700,7 +700,12 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     local mode, inRuns = find(drawn, "Dropdown", "Window layout"), find(drawn, "CheckBox", "Compact view when it auto-opens in a run")
     local rowH, font = find(drawn, "Slider", "Row height"), find(drawn, "Slider", "Font size")
     assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
-    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) == lineOf(drawn, font), "Row height | Font size")
+    -- DW-01 (the lead's ruling on D-07): Font size is the composed font block's, beside Font, on the
+    -- line after Row height.
+    local face
+    for _, w in ipairs(drawn) do if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end end
+    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) ~= lineOf(drawn, font), "Row height, then the font block")
+    assertTrue(face ~= nil and lineOf(drawn, face) == lineOf(drawn, font), "Font | Font size")
     assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
