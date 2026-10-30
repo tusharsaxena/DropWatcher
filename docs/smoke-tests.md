@@ -97,7 +97,7 @@ TOAST-7).
   a higher minor means a newer copy loaded first from another addon; record which addons were enabled.
   `/dw test` → the upgrade toast still shows as TOAST-1 describes.
 
-Result: not run yet (owed the owner's client pass at the end of the run).
+Result: passed in the client, 2026-10-30 (the owner).
 
 ## Slash
 
@@ -537,7 +537,7 @@ seam's stub answers`) and `test_surface_parity` (`the Toast stub`) cover it.
   `/dw test` → no toast and no Lua error; the window still shows the test drops. Restore the folder and
   `/reload`, `/dw test` → the toast is back.
 
-Result: not run yet (owed the owner's client pass at the end of the run).
+Result: passed in the client, 2026-10-30 (the owner).
 
 ## Feed
 
@@ -1744,7 +1744,7 @@ name does. A ring or trinket card with both rings on both sides (`You 298 ▲8 /
 covers History's cards: History → each card reads Trade on line 3 and You then Them on line 4, the same
 order as Drops; the outcome (`Seen`, `Asked`, `Offered`) sits at the right of line 2 and the date or
 time at the right of line 3, where Drops' button is, in the same colors as before; line 1's item name
-runs to the card's right edge, and Trade is cut before the date.
+runs to the card's right edge, and Trade is cut before the date. Result: passed in the client, 2026-10-30 (the owner).
 
 ## Roster
 
@@ -2380,7 +2380,7 @@ covers each check below; this is the client's word on it. Run TOAST-1 first and 
   `libs\LibKa0s\Toast.lua`, in combat with two drops waiting, `/dw diagnostics` → `toast: queue`
   names both; `/dw clear` → `toast: ... waiting=0`, and nothing toasts when combat ends.
 
-Result: not run yet (owed the owner's client pass at the end of the run).
+Result: passed in the client, 2026-10-30 (the owner).
 
 ## Upgrade glow
 
@@ -3106,9 +3106,10 @@ owner reported every check of the keybindings, settings layout and frame layerin
 (KEYBIND-1..3, LAYER-1..4 and LAYOUT-1..4, the one key button rewrite DW-RV3 included), and each
 one's `Result:` line records it.
 
-Owed in the client: FEED-103 (feedback-25, 2026-10-25), the compact cards' Trade on line 3 and You
-and Them on line 4 on both tabs, History's outcome and time at the right of lines 2 and 3. Owed for
-LibKa0s-Toast-1.0 (2026-10-28): INSTALL-6 (AT-A1), TOAST-7 and DEGRADED-3 (AT-A2).
+On 2026-10-30 the owner reported that FEED-103 (feedback-25, 2026-10-25: the compact cards' Trade on
+line 3 and You and Them on line 4 on both tabs, History's outcome and time at the right of lines 2 and
+3) and the LibKa0s-Toast-1.0 checks (2026-10-28): INSTALL-6 (AT-A1), TOAST-7 and DEGRADED-3 (AT-A2)
+passed, and each one's `Result:` line records it.
 
 On 2026-10-30 the owner reported that every check of the skinning rollout (2026-10-29, LibKa0s
 v1.80.0; Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`) and the skin library follow-ups
