@@ -6,7 +6,7 @@ local addonName, NS = ...
 --   NS.Skin                 the owner's facade, `Skin:For("DropWatcher")`: the painting vocabulary
 --                           (Shell, TitleBar, Button, ...) and Token / Color / Resolve /
 --                           OnLooksChanged. Every surface that draws reads its colors here.
---   NS.SKIN_TOKENS          this addon's owner tokens (LibKa0s v1.80.0, skinning-§1): each a color
+--   NS.SKIN_TOKENS          this addon's owner tokens (LibKa0s v1.81.0, skinning-§1): each a color
 --                           no library token holds exactly, named `dw.<name>`, with its Ka0s Default
 --                           value (the pixel the addon drew before skins, X1) and the library ROLE
 --                           token every other skin draws it in (X2).
