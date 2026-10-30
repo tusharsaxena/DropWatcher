@@ -146,7 +146,9 @@ settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.S
 It takes the look of Ka0s Loot History's Price sources table, without its drag handle, reorder list
 and status column: gold, left-aligned column headers (`GameFontNormalSmall`) in a band above
 fixed-height lines, every second line faintly striped, the cells' text in `GameFontHighlightSmall`,
-the panel's own CheckBox and Dropdown widgets. An untracked situation's `Auto-open`, `Quality` and
+the panel's own CheckBox and Dropdown widgets. The columns sit at fixed offsets, 8, 128, 188, 262
+and 424, with both dropdowns 150 wide, so the table ends at 574, clear of the panel's scroll gutter in
+every skin (DW-02, owner ruling D-18; it ended at 610 before, cutting Loot rule off). An untracked situation's `Auto-open`, `Quality` and
 `Loot rule` are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off.
 Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
 rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the

@@ -186,6 +186,35 @@ test("situations: five gold, left-aligned column headers, and a stripe on every 
     end
 end)
 
+test("situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)", function()
+    -- image-38: the Loot rule dropdown ran past the panel's scroll gutter (460 + 150 = 610 units,
+    -- about 600 usable). Owner ruling D-18: columns {8, 128, 188, 262, 424}, both dropdowns 150,
+    -- so the table ends at 574, clear of the gutter whatever the skin's face.
+    -- red under: SIT_COL.rule = 460 (the table ends at 610, past SIT_TABLE_W).
+    local NS, _, m = T.enableAddon()
+    local P = NS.addon.Settings.PageEditors
+    local C, W = P.SIT_COL, P.SIT_WIDTHS
+    local order = { "situation", "track", "autoOpen", "quality", "rule" }
+    local xs = {}
+    for i, k in ipairs(order) do xs[i] = C[k] end
+    assertEqual(table.concat(xs, ","), "8,128,188,262,424", "D-18's columns")
+    assertEqual(W.quality, 150); assertEqual(W.rule, 150)
+    for i = 2, #order do assertTrue(xs[i] > xs[i - 1], order[i] .. " sits right of " .. order[i - 1]) end
+    assertTrue(C.quality + W.quality < C.rule, "the Quality dropdown ends before Loot rule starts")
+    assertTrue(C.rule + W.rule <= P.SIT_TABLE_W, "the Loot rule dropdown ends inside the table")
+    assertTrue(P.SIT_TABLE_W <= 600, "the table fits the ~600 units the panel leaves beside its gutter")
+    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width.
+    local _, _, t = whenToShow(NS, m)
+    for i, k in ipairs(order) do
+        local x = t.headers[i].__points[1][4]   -- the mock's regions record their points
+        assertEqual(x, C[k], k .. "'s header sits over its cells")
+    end
+    local row = t.rows[1]
+    for _, k in ipairs({ "quality", "rule" }) do
+        assertEqual(row[k].width, W[k], k .. " dropdown width")   -- the kit's AceGUI fake records it
+    end
+end)
+
 test("situations: each cell paints its stored value, and a toggle writes its path", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)

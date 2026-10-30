@@ -115,9 +115,17 @@ end
 -- height rows, every second row striped as the window's tables are, the cells' text in
 -- GameFontHighlightSmall, the panel's own CheckBox and Dropdown widgets. No hover highlight, as there.
 -- Five columns since feedback-24 added the loot rule, so the cells sit closer than the four did.
+-- Measured since DW-02 (owner ruling D-18, image-38): the Loot rule dropdown ran past the panel's
+-- scroll gutter (it ended at 610 units, about 600 usable), so the columns moved left and Quality
+-- narrowed to Loot rule's 150: the table ends at 574, with room to spare in every skin's face. The
+-- longest label, "Follower dungeon", still clears Track, and "Auto-open" clears Quality.
 
-local SIT_COL = { situation = 8, track = 140, autoOpen = 205, quality = 285, rule = 460 }
-local SIT_QUALITY_W, SIT_RULE_W = 160, 150
+local SIT_COL = { situation = 8, track = 128, autoOpen = 188, quality = 262, rule = 424 }
+local SIT_QUALITY_W, SIT_RULE_W = 150, 150
+local SIT_TABLE_W = 576   -- the table's right edge: the Loot rule cell's, plus 2
+-- Published for the suite (tests/test_settings_pages.lua holds the fit).
+P.SIT_COL, P.SIT_TABLE_W = SIT_COL, SIT_TABLE_W
+P.SIT_WIDTHS = { quality = SIT_QUALITY_W, rule = SIT_RULE_W }
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
 -- The colors are the skin's (the table is a raw frame the page owns, built once a session, so each
 -- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in

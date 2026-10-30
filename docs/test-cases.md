@@ -133,7 +133,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (45)
+### test_settings_pages.lua (46)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -141,6 +141,7 @@ Total.
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
 - situations: the global Auto-open row, then one table line per situation and no per-situation rows
 - situations: five gold, left-aligned column headers, and a stripe on every second line
+- situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)
 - situations: each cell paints its stored value, and a toggle writes its path
 - situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off
 - situations: Defaults repaints the table
@@ -2110,7 +2111,7 @@ Total.
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
-| test_settings_pages.lua | 45 |
+| test_settings_pages.lua | 46 |
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 9 |
 | test_skin_chrome.lua | 11 |
@@ -2199,4 +2200,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1809** |
+| **Total** | **1810** |
