@@ -426,11 +426,11 @@ test("cells: Replaces reads the item level, then the icon, then the name in its 
     local rep = byKey(D.ForYou(drop(), true).rows, "replaces")
     assertEqual(rep.lead, "292"); assertEqual(rep.link, OLD)
     assertEqual(rep.text, "|cffa335eeOld Helm|r", "the link's own quality color")
-    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 } }
+    m.ITEM_QUALITY_COLORS = { [3] = { r = 0, g = 0x70 / 255, b = 0xdd / 255 } }
     local q = byKey(D.ForYou(drop({ me = { verdict = "upgrade", ilvlDelta = 19, reasons = {},
         baseline = { link = "|Hitem:300::|h[Old Helm]|h", ilvl = 292, quality = 3 } } }), true).rows, "replaces")
     m.ITEM_QUALITY_COLORS = nil
-    assertEqual(q.text, "|cff0070deOld Helm|r", "the baseline's quality color")
+    assertEqual(q.text, "|cff0070ddOld Helm|r", "the baseline's quality color")
 end)
 
 test("card: the glyphs are drawn in the monospace face; Replaces puts its item level before the icon", function()

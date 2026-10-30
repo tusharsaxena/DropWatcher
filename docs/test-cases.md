@@ -212,7 +212,7 @@ Total.
 - skin chrome: the shown toast repaints its rows' tones on a skin switch
 - skin chrome: a toast on screen repaints once on a skin switch, its tones in the new skin's
 - skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens
-- skin chrome: an item quality keeps the client's color unless the skin overrides it
+- skin chrome: an item quality is the skin's q.* token, the client's own color under Ka0s Default
 - skin chrome: without the library the window's own colors are Ka0s Default's
 
 ### test_skin_literals.lua (3)
@@ -221,7 +221,7 @@ Total.
 - every allow-list entry carries its reason
 - the gate is falsifiable: a planted literal of each shape is reported
 
-### test_skin_hud.lua (9)
+### test_skin_hud.lua (10)
 
 - skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
 - skin HUD: while the companion is on the stored style and thickness are not read; off, they are
@@ -231,7 +231,8 @@ Total.
 - skin HUD: without LibKa0s the stored picks draw and the companion's default changes nothing
 - migrate 10: every stored profile's icon border goes back on the skin once, its pick kept
 - migrate 10: it runs once; a player's later pick survives the next load
-- migrate 10: idempotent on a raw table, the companion seeded so no sentinel lands; without the library too
+- migrate 10: idempotent on a raw table, the companion set so no sentinel lands; without the library too
+- migrate 10: the library sets the companion itself (ResetToSkin's companions, LibKa0s v1.81.0)
 
 ### test_skin_picker.lua (17)
 
@@ -2089,7 +2090,7 @@ Total.
 | test_skin_setup.lua | 18 |
 | test_skin_chrome.lua | 10 |
 | test_skin_literals.lua | 3 |
-| test_skin_hud.lua | 9 |
+| test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
@@ -2172,4 +2173,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1790** |
+| **Total** | **1791** |

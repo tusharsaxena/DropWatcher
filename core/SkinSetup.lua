@@ -210,31 +210,17 @@ end
 -- heirloom, token) is the client's color under every skin.
 local QUALITY_TOKEN = { [0] = "q.poor", "q.common", "q.uncommon", "q.rare", "q.epic", "q.legendary" }
 
--- The library's Ka0s Default q.* values, read once from the skin library (nil without it).
-local qualityDefault
-local function defaultQuality(name)
-    if qualityDefault == nil then
-        local lib = LibStub and LibStub("LibKa0s-Skin-1.0", true)
-        qualityDefault = lib and type(lib.ResolveSkin) == "function" and lib:ResolveSkin(lib.DEFAULT) or false
-    end
-    return qualityDefault and qualityDefault[name]
-end
-
-local function sameColor(c, r, g, b)
-    return type(c) == "table" and c[1] == r and c[2] == g and c[3] == b
-end
-
---- An item quality's r, g, b. The q.* tokens: Ka0s Default writes the client's own colors out, a
---- skin may override them for legibility (skinning-§4: the hue keeps its meaning). A token that is
---- the library's Ka0s Default value (no override) draws the CLIENT's own color: the schema writes the
---- client's colors to two places (q.epic 0.64, 0.21, 0.93 against the client's a335ee), and the
---- client's is the pixel the addon drew before skins (X1). nil for a quality the client has no color
---- for and no skin overrides, so a caller keeps its own fallback (an item link's own color code).
+--- An item quality's r, g, b: the skin's q.* token. Ka0s Default's are the client's own colors byte
+--- for byte (LibKa0s v1.81.0, SkinDefs minor 16), so the pixel is the one the addon drew before
+--- skins (X1); a skin may override them for legibility (skinning-§4: the hue keeps its meaning).
+--- A quality outside q.poor .. q.legendary, and the degraded facade (which carries no q.*), draw
+--- the client's ITEM_QUALITY_COLORS. nil for a quality the client has no color for and no skin
+--- answers, so a caller keeps its own fallback (an item link's own color code).
 function NS.QualityColor(q)
     local name = QUALITY_TOKEN[q]
     if name then
         local r, g, b = NS.Skin.Color(name)
-        if r ~= nil and not sameColor(defaultQuality(name), r, g, b) then return r, g, b end
+        if r ~= nil then return r, g, b end
     end
     local c = ITEM_QUALITY_COLORS and q ~= nil and ITEM_QUALITY_COLORS[q]
     if c then return c.r, c.g, c.b end

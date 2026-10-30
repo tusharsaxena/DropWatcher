@@ -14,7 +14,7 @@ local EPIC = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
 local RARE = "|cff0070dd|Hitem:213::|h[Band of Embers]|h|r"
 local PLAIN = "|Hitem:214::|h[Uncolored Thing]|h"
 
-local QUALITY_COLORS = { [3] = { r = 0, g = 0.44, b = 0.87 }, [4] = { r = 0.64, g = 0.21, b = 0.93 } }
+local QUALITY_COLORS = { [3] = { r = 0, g = 0x70 / 255, b = 0xdd / 255 }, [4] = { r = 0xa3 / 255, g = 0x35 / 255, b = 0xee / 255 } }
 
 -- An item button as NS.IconStyle sees it: `art`, its texture, counting the crops it is given.
 local function fakeButton()
@@ -160,9 +160,9 @@ test("icon style: Color by item quality draws each item's quality color, the swa
     NS.IconStyle.Apply(b, EPIC)
     assertTrue(S("icons.borderShow", true)); assertTrue(S("icons.borderColor", { r = 1, g = 1, b = 1, a = 0.75 }))
     assertTrue(S("icons.borderQuality", true))
-    assertTrue(sameColor(b.iconBorder, 0.64, 0.21, 0.93, 0.75), "epic purple, from the item's quality")
+    assertTrue(sameColor(b.iconBorder, 0xa3 / 255, 0x35 / 255, 0xee / 255, 0.75), "epic purple, from the item's quality")
     assertTrue(S("icons.useClassColorBorder", true))
-    assertTrue(sameColor(b.iconBorder, 0.64, 0.21, 0.93, 0.75), "the quality wins over the class color")
+    assertTrue(sameColor(b.iconBorder, 0xa3 / 255, 0x35 / 255, 0xee / 255, 0.75), "the quality wins over the class color")
     b.link = RARE
     NS.IconStyle.Apply(b, RARE)   -- not cached: the link's own color, through LibKa0s-Item
     assertTrue(sameColor(b.iconBorder, 0, 0x70 / 255, 0xdd / 255, 0.75), "a new item, its color")
@@ -172,7 +172,7 @@ test("icon style: Color by item quality draws each item's quality color, the swa
     assertTrue(sameColor(b.iconBorder, mage.r, mage.g, mage.b, 0.75), "no quality known: the swatch's mode")
     assertNil(NS.IconStyle.QualityColor(nil))
     local r, g, bl = NS.IconStyle.QualityColor(EPIC)
-    assertTrue(near(r, 0.64) and near(g, 0.21) and near(bl, 0.93))
+    assertTrue(near(r, 0xa3 / 255) and near(g, 0x35 / 255) and near(bl, 0xee / 255))
 end)
 
 -- ── the surfaces ────────────────────────────────────────────────────────────────────────────
