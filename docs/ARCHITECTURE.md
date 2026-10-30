@@ -317,9 +317,14 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
-| GameTooltip's frame, StaticPopups, the launcher's button and menu, the resize grip | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
+| GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
 | The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |
 | The icon border's `IS.SOLID_EDGE` (WHITE8X8) and `IS.BORDER_FALLBACK` (UI-Tooltip-Border) in `modules/IconStyle.lua` | LibSharedMedia key resolution for the border's edge file, not a color: what a style name draws when LSM has no path for it |
+
+The resize grips are not on this list: every one, the main window's and the four tool windows', is
+LibKa0s's grip given this addon as its skin owner (Core minor 14, `opts.owner`), so it follows the
+skin's `icon.grip`, tinted under a skin that sets it and the client's own art under Ka0s Default and
+WoW Default.
 
 ## Taint Notes
 

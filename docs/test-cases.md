@@ -202,7 +202,7 @@ Total.
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
-### test_skin_chrome.lua (10)
+### test_skin_chrome.lua (11)
 
 - skin chrome: under Ka0s Default the window draws the pixels it drew before skins
 - skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
@@ -213,6 +213,7 @@ Total.
 - skin chrome: a toast on screen repaints once on a skin switch, its tones in the new skin's
 - skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens
 - skin chrome: an item quality is the skin's q.* token, the client's own color under Ka0s Default
+- skin chrome: the main window's resize grip takes the skin's icon.grip, live, like the tool windows'
 - skin chrome: without the library the window's own colors are Ka0s Default's
 
 ### test_skin_literals.lua (3)
@@ -2088,7 +2089,7 @@ Total.
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 45 |
 | test_skin_setup.lua | 18 |
-| test_skin_chrome.lua | 10 |
+| test_skin_chrome.lua | 11 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
@@ -2173,4 +2174,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1791** |
+| **Total** | **1792** |

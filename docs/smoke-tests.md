@@ -3016,8 +3016,8 @@ monospace face. Switch to **Ka0s Default** with the console open → it recolors
 LibKa0s v1.81.0 also: the console's title-bar labels (the toggle, Diagnostics, and Copy and Clear where
 drawn as words) and the perf panel's step and command columns are in the skin's face (Oxanium under
 Ka0s Default, where they were Friz Quadrata); under **Azeroth** the resize grip in each tool window's
-corner (the console, its Copy window, the perf and sim panels) is tinted, and under Ka0s Default and
-WoW Default it is the client's own grip art. Tick **Ignore fonts** → those labels go back to the
+corner (the console, its Copy window, the perf and sim panels) and in the main window's corner is
+tinted alike, and under Ka0s Default and WoW Default each is the client's own grip art. Tick **Ignore fonts** → those labels go back to the
 game's face, live; **Ignore settings panel** changes nothing on these windows (they are windows, not
 the settings panel). Result:
 
@@ -3118,7 +3118,8 @@ border's one-time reset); SKIN-2 also asks whether the title band stays (DropWat
 Owed for the skin library follow-ups (2026-10-30, LibKa0s v1.81.0; Ka0sAddonsCommonTasks
 `docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, DW-RV to DW-02): SKIN-1 on v1.81.0, and the changed
 expectations of SKIN-11 (the strips' line; the sim panel's labels, dropdowns and tooltips), SKIN-12
-(the tool windows' labels in the skin's face and under Ignore fonts; the grips), SKIN-16 (Ignore fonts
+(the tool windows' labels in the skin's face and under Ignore fonts; the grips, the main window's
+included), SKIN-16 (Ignore fonts
 reaching the menus, strips and tool windows; the verdict glyphs keeping their monospace face) and
 SKIN-19 (the picker titled "Choose a skin", the addon's name above the dropdown). No pixel of an item's
 quality color moves under Ka0s Default (its `q.*` tokens are now the client's own), and Drop Watcher
