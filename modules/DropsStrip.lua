@@ -16,7 +16,8 @@ local _, NS = ...
 -- right edge (NS.WindowFooter.SORT_INSET). Compact, the same buttons as their marks alone
 -- (K.FOOTER_ICON_W, FooterRow.SetCompact; feedback-16), their tooltips naming them: `[Post] [Scan
 -- group] [Expand all]` (Sort is in the Filters panel; Scan group is the title bar's icon too). Post,
--- the leftmost, shows only while one of your drops the tab lists can be traded; the summary ends
+-- the leftmost, shows only while one of your drops the tab lists can be traded and another player is
+-- in your group to read it (DS.Postable, DW-07; test mode always); the summary ends
 -- where the row starts, one line, cut with an ellipsis when the row is narrow.
 --
 -- THE COMPACT LAYOUT shortens the summary: `2 tradeable · next 0:08:41` (DS.SummaryText).
@@ -76,6 +77,16 @@ function DS.Row(tradeable, compact)
     row[#row + 1] = { key = "scan", w = w }
     row[#row + 1] = { key = "post", w = w, shown = tradeable }
     return row
+end
+
+--- Post my tradeables has someone to reach (DW-07, Addendum 08): another player is in your group
+--- (NS.WindowOwn.Alone), or test mode is on, where NS.PostTradeables prints instead of sending. Solo,
+--- with only followers or a delve companion, the strip leaves Post hidden.
+--- @return boolean
+function DS.Postable()
+    if NS.State and NS.State.testMode == true then return true end
+    local WO = NS.WindowOwn
+    return not (WO and WO.Alone and WO.Alone())
 end
 
 -- ── the frame ───────────────────────────────────────────────────────────────────────────────
@@ -199,7 +210,7 @@ function DS.Paint(pane, ctx, compact)
     strip:Show()
     pane.summaryData = tradeable and s or nil
     paintText(pane, s, compact)
-    placeButtons(strip, tradeable, compact)
+    placeButtons(strip, tradeable and DS.Postable(), compact)
     NS.FooterRow.PaintFold(strip.fold, pane.entries)
     local bottom = K.STRIP_H
     setBottom(pane.scroll, pane, pane.colHead, -2, bottom)

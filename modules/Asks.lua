@@ -471,13 +471,17 @@ end
 
 local function gone(a)
     if a.test then return false end
-    if a.target == A.GROUP then return A.AnnounceChannel() == nil end
+    if a.target == A.GROUP then
+        local WO = NS.WindowOwn   -- the last other player gone (DW-07): nobody left to read it
+        return A.AnnounceChannel() == nil or (WO ~= nil and WO.Alone() == true)
+    end
     return NS.Roster.Resolve(a.target) == nil
 end
 
 --- GROUP_ROSTER_UPDATE: every ask queued to a member who left is canceled (spec §9.2 step 6), and
 --- every queued announce once it has no channel (A.AnnounceChannel nil: out of a group, or out of
---- the stored channel's kind of group). Answers how many were canceled.
+--- the stored channel's kind of group) or no other player is in the group to read it
+--- (NS.WindowOwn.Alone, DW-07). A test ask is never canceled here. Answers how many were canceled.
 --- @return number
 function A.OnRosterChanged()
     local book, n = store().book, 0

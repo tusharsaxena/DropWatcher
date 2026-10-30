@@ -430,6 +430,20 @@ test("cancel: a queued announce to a stored channel is dropped once that kind of
     assertEqual(A.StateOf("announce", nil, id), "ready")
 end)
 
+test("cancel: a queued announce is dropped once the last other player leaves, the group kept (DW-07)", function()
+    local NS, m, A = party()
+    local id = drop(NS, m, 300, nil)
+    restrict(m)
+    assertEqual((A.Request("announce", nil, id)), "queued")
+    local brann = row("Creature-0-1-2-3-210005-00000005", "Brann Bronzebeard", nil, "WARRIOR")
+    brann.npc = true
+    m.setGroup({ brann })
+    NS.Roster.Refresh("test")
+    assertTrue(A.AnnounceChannel() ~= nil, "still in a group with a channel")
+    assertEqual(A.OnRosterChanged(), 1, "nobody left to read it")
+    assertEqual(A.StateOf("announce", nil, id), "ready")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Test mode
 -- ---------------------------------------------------------------------------------------------

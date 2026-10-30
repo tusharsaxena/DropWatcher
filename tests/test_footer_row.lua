@@ -35,6 +35,7 @@ end
 -- tradeable drop of yours in the newest.
 local function shownDrops(mode, mine)
     local NS, _, m = T.enableAddon()
+    T.withPlayer(m)   -- someone to post to (DW-07)
     NS.addon.db.char = { session = { start = m.time() - DAY } }   -- logged in a day ago (feedback-15 spec §1)
     m.__now = NOW
     local drops = { drop(1, false, NOW - 900), drop(2, false, NOW - 600), drop(3, mine == true, NOW - 300) }

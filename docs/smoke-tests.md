@@ -2111,12 +2111,13 @@ drop leaves it open. Result: passed in the client, 2026-10-23 (the owner).
 with `/dw add <item link>`), Drops tab → its Actions reads the gray **No action**, not Offer; hover it
 → `• Why: no other player in your group`. Its detail card's first action and its compact card read
 No action the same way. `/dw offer <item link>` prints `Not offered: There is no other player in
-your group.` and opens no panel, and Post my tradeables prints `Not announced: There is no other
-player in your group.`. Repeat in a delve with Brann and in a follower dungeon (its party all
+your group.` and opens no panel, and the strip under the table shows no **Post my tradeables**
+(Scan group and Expand all stay). Repeat in a delve with Brann and in a follower dungeon (its party all
 followers) → No action on every drop of yours, with the same tooltip. Then, with one of those drops
 still tradeable, join a party with another player (or have one join yours) → within a moment the
-row reads **Offer** again without a click, and the Offer panel opens from it; have that player
-leave with the panel open → the panel closes and the row reads No action again. `/dw test` keeps
+row reads **Offer** again without a click, Post my tradeables is back on the strip, and the Offer
+panel opens from it; have that player leave with the panel open → the panel closes, Post goes and
+the row reads No action again. `/dw test` keeps
 its own drops' Offer while solo. Result:
 
 ## Situations

@@ -218,6 +218,20 @@ test("offer alone: Offer, Announce and Post my tradeables refuse and say why", f
     assertEqual(#m.chatSent, 0)
 end)
 
+test("offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it", function()
+    local NS, m = shown(FOLLOWERS)
+    local strip = NS.WindowGroup.Drawn().pane.summary
+    assertTrue(strip:IsShown(), "the strip itself stays"); assertTrue(strip.scan:IsShown())
+    assertFalse(strip.post:IsShown(), "nobody to post to")
+    assertFalse(NS.DropsStrip.Postable())
+    m.setGroup({ human(2, "Seta") }); m.__fire(EVENT); m.advance(0)
+    assertTrue(strip.post:IsShown(), "a player joined")
+    m.setGroup(FOLLOWERS); m.__fire(EVENT); m.advance(0)
+    assertFalse(strip.post:IsShown(), "the player left")
+    NS.State.testMode = true
+    assertTrue(NS.DropsStrip.Postable(), "test mode prints, so Post stays")
+end)
+
 test("offer alone: /dw offer says why and opens nothing", function()
     local NS, m = shown(FOLLOWERS)
     NS.SlashVerbs.Offer(LINK)
