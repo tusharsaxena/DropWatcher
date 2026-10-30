@@ -1,0 +1,5 @@
+Independent review of DW-01..05 (87b2d52..4de5bfd), addressed in baf0a4f.
+Gate at review: 1816 passed / 0 failed / 1 skipped; luacheck 0/0 in 204 files; complexity green, max CCN 15; 1500-line cap held.
+Fixed: (4, low) NS.ScaledFont scales the base font object's own height, NS.FONT_SIZE only the fallback, test first; (2, low) TOAST-8 added to the smoke file's owed sign-off list; (5, info) TOAST-8 notes the shell's close mark keeps its size.
+Declined for the lead: (1, medium) the DW-01 font-settings reading (DW has only the Tables font size slider, no face/flags/color/shadow; D-07 says every font setting carries the minimum set) must be confirmed or ruled and recorded in the bundle's execution record or exceptions.tsv, which is outside this repo; (3, low) the Offset subgroup stays drawn under Button/Button because D-17 lists only Pixel border / Auto cast / Button / Proc; hiding it needs a lead ruling.
+Gate after: 1817 passed / 0 failed / 1 skipped; luacheck 0/0 in 204 files; complexity green, max CCN 15.
