@@ -302,7 +302,7 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   cells go back stock, and the table's own headers, labels and stripes read `NS.SkinPanelColor`, which
   answers the Ka0s Default value while the panel is ignored.
 - **What Ka0s Default changes.** Ka0s Default keeps every color, but three things look new under it:
-  every string reads in Oxanium (the library's Ka0s Default face) instead of Friz Quadrata, the title
+  every string reads in Prototype (the library's Ka0s Default face since LibKa0s v1.82.0; Oxanium before) instead of Friz Quadrata, the title
   bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
   knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
 

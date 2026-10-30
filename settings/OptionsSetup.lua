@@ -82,6 +82,10 @@ if not lib then
     H.AppearanceRows       = function() return nil end
     H.SkinPicker           = function() return nil end
     H.HideSkinPicker       = function() end
+    -- The reserved `/dw skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, O.SkinVerb):
+    -- without the library there is no picker, so it answers nil, "absent" and NS.RunSkinVerb prints
+    -- the library-absent line.
+    H.SkinVerb             = function() return nil, "absent" end
     H.PatchAlwaysShowScrollbar = function() end
     H.__pages              = function() return {} end
     H.__panels             = function() return {} end
