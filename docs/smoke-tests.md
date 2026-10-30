@@ -2508,7 +2508,7 @@ quality (unticked). Untick Show border → Border style, Border thickness and Co
 Border color and Use class color do not. Hover each → its tooltip. Result: passed in the client, 2026-10-23 (the owner).
 Amended by DW-03, 2026-10-29, after that pass: the Border block gains **Use the skin's border**, ticked
 on a new profile, and while it is ticked Border style and Border thickness are dimmed; SKIN-3 and
-SKIN-14 check it. Result for the amendment: pending.
+SKIN-14 check it. Result for the amendment: passed in the client, 2026-10-30 (the owner).
 
 **ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Alerts › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
@@ -2930,7 +2930,7 @@ taint warning.
 
 **SKIN-1. Loads clean on LibKa0s v1.81.0 (DW-RV).** Fresh client start with Drop Watcher alone →
 no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Skin-1.0"]` prints a number (not
-`nil`). Then with every Ka0s addon enabled → the same. Result:
+`nil`). Then with every Ka0s addon enabled → the same. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-2. Ka0s Default keeps its colors, with three visible changes (DW-01 to DW-04; X1, D2, D3).**
 On a profile that never touched the Skin tab (Ka0s Default), `/dw test`, then walk both tabs in both
@@ -2944,7 +2944,7 @@ of Friz Quadrata, the verdict glyphs ▲ ≈ ▼ keeping their monospace face; t
 **darker band** behind the title (the shell's top bar, D3); and the four scroll bars (Drops, History,
 compact, the Offer panel) are a **corridor with one flat knob** instead of Blizzard's art (D2). Record
 whether the owner keeps the title band (D3 asks). Fail: any other changed color, edge or spacing, text
-clipped or overlapping because the face is wider, or a glyph drawn as a box. Result:
+clipped or overlapping because the face is wider, or a glyph drawn as a box. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Before checking out
 the branch, set Window › Icons → Border style to something other than Solid (Blizzard Tooltip, say) and
@@ -2955,7 +2955,7 @@ ticked, Border style and Border thickness dimmed and still reading Blizzard Tool
 is expected (the owner's O2: every player meets the skin once). Untick Use the skin's border → your
 Blizzard Tooltip 6px border comes back at once. `/reload`, then a fresh client start → it stays
 unticked (the reset ran once). The second profile looks exactly as before. Fail: a border that
-vanished, a color that changed, the reset running again, or a stored style lost. Result:
+vanished, a color that changed, the reset running again, or a stored style lost. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-4. The Skin tab (DW-01).** Settings → General → the strip reads Master controls, Simulator,
 **Skin**, Keybindings → Skin shows **Skin source** (*Ka0s skins* chosen; *EllesmereUI* disabled with a
@@ -2964,7 +2964,7 @@ its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture
 on a new profile), the Scope (**Ignore settings panel** ticked and **Ignore fonts** unticked on a new
 profile), **Copy to every Ka0s addon…** and the note that skins change every visual element. Pick
 **Obsidian** → no reload; `/dw get skin.skin` prints `obsidian`. `/dw set skin.skin azeroth` → the
-window and the tab follow. Result:
+window and the tab follow. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-5. Each skin, live, on the window (DW-02).** With `/dw test` on and the window open on Drops,
 pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW Midnight, WoW
@@ -2974,31 +2974,31 @@ headers' rules, the rows' stripes and hover, the chevrons, the verdict tones, th
 countdown bar and track, the action buttons and their boxes, the badge, the footer buttons and the
 scroll bar all repaint in that skin and stay readable. Scroll so pooled rows come into view → they wear
 it too. Ka0s Default again → the first look comes back exactly. Fail: a surface that keeps the old skin
-until `/reload`. Result:
+until `/reload`. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-6. The detail card, the Offer panel and History (DW-02).** Under **Azeroth** and **WoW
 Forever**, expand a drop's detail card (its boxes, chips, the trade box, the stat names and arrows),
 open your own drop's Offer panel (its rows, stripes, Their eq column and buttons), then the History tab
 and a History detail card → each wears the skin. The four secondary stats' names keep their own hues
 (identity colors), and item names keep their quality color. Fail: a box, chip or row on the old skin.
-Result:
+Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-7. Compact mode (DW-02).** `/dw compact` under **Glass** and **Ember** → the cards, their lines
 and action buttons, the strip's icon buttons, the empty state and the **Filters ▾** panel (the skin's
-inset) wear the skin; switch skins with the compact window open → they repaint. Result:
+inset) wear the skin; switch skins with the compact window open → they repaint. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-8. The toast (DW-02).** Alerts › Toast on, `/dw test`, then show a toast; while it is on screen,
 switch from Ka0s Default to **Obsidian** → the toast's frame and its four rows (title, verdicts, trade
-reason, the icon's border) repaint in place, with no reload; Ka0s Default again → as before. Result:
+reason, the icon's border) repaint in place, with no reload; Ka0s Default again → as before. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-9. Tooltips (DW-02; X8).** Under **Azeroth** and **High Contrast**, hover a Drops row, a gear
 icon in Me and Them, the (Details) cell, a group header and a filter bar control → the lines Drop
 Watcher writes (labels, bullets, the gear grid, the hint line) take the skin's colors and are readable;
-the tooltip frame itself stays Blizzard's. Item links keep the game's quality color. Result:
+the tooltip frame itself stays Blizzard's. Item links keep the game's quality color. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-10. The verdict glyphs under every skin (DW-02; R5).** Walk all nine skins with `/dw test` on →
 every ▲ ≈ ▼ mark on the rows, the compact cards, the detail card and the tooltips draws as a glyph,
-never an empty square. Result:
+never an empty square. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-11. The test and simulation strips (DW-02).** Under a non-default skin, `/dw test` → the
 TEST MODE strip wears the skin's test strip; `/dw test` again, then `/dw sim start key` → the cyan
@@ -3007,7 +3007,7 @@ during each → the title word shows in the strip's color. On LibKa0s v1.81.0 al
 is drawn in the skin's body face and accent color (Ka0s Default's gold, in Oxanium); the step panel's
 row, command and button labels are in the skin's face, its scenario and size dropdowns wear the skin
 and open their menu in it, and its row and button tooltips take the skin's tooltip colors (the key
-column the skin's tooltip title color: Ka0s Default's tooltip gold). Result:
+column the skin's tooltip title color: Ka0s Default's tooltip gold). Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-12. The tool windows (DW-04).** Under **Azeroth**, open the debug console (`/dw debug`) and its
 **Copy** window, the perf panel (`/dw perf`) and the sim panel (`/dw sim start key`) → each wears Drop
@@ -3019,7 +3019,7 @@ Ka0s Default, where they were Friz Quadrata); under **Azeroth** the resize grip 
 corner (the console, its Copy window, the perf and sim panels) and in the main window's corner is
 tinted alike, and under Ka0s Default and WoW Default each is the client's own grip art. Tick **Ignore fonts** → those labels go back to the
 game's face, live; **Ignore settings panel** changes nothing on these windows (they are windows, not
-the settings panel). Result:
+the settings panel). Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-13. The settings panel follows the skin, and only when asked (DW-04).** On **Obsidian** with
 **Ignore settings panel** ticked → every Drop Watcher settings page is the client's own look. Untick it
@@ -3029,19 +3029,19 @@ Comparison weights editor, Messages › Templates and its Edit message box (the 
 still the chat font), Window › Icons, the Profiles page. Switch skins with Drops › Situations open →
 the table's cells repaint. Then open another Ka0s addon's and another AceGUI addon's settings and flip
 back and forth a few times → theirs stay stock every time. Fail: a control on the old skin, a skinned
-control with Ignore settings panel on, or another addon's widget wearing this skin. Result:
+control with Ignore settings panel on, or another addon's widget wearing this skin. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-14. The icon border follows each skin (DW-03).** With **Use the skin's border** ticked, walk all
 nine skins with `/dw test` on → the item icons' border takes each skin's icon border style and
 thickness (a skin whose icon border is None draws none), always in your Border color; the upgrade glow
-still draws over it. Untick it → your own style and thickness, under any skin. Result:
+still draws over it. Untick it → your own style and thickness, under any skin. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
 squares: Ka0s Default Oxanium, Obsidian Inter, Azeroth Vollkorn, Glass Nunito, High Contrast Atkinson
 Hyperlegible, Ember Bitter, WoW Midnight Philosopher, WoW Forever Fira Sans, WoW Default the client's
 Friz Quadrata. Then set Window › Layout's Font size to its largest and switch skins → the size holds in
 the new face; back to the default size → the face holds. Fail: a table, card or countdown that keeps
-the old face, or a size that resets on a switch. Result:
+the old face, or a size that resets on a switch. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Pick a clearly different font
 from **Font** → with no reload the window, cards, toast and tooltips' lines take it at their own sizes,
@@ -3052,16 +3052,16 @@ SIMULATION strips and the tool windows' labels included (LibKa0s v1.81.0), while
 ▲ ≈ ▼ keep their monospace face (chosen for glyph coverage: the follow-ups' D-10); untick → it
 returns. Drop Watcher draws no HUD text, so Ignore fonts reaching the HUD has nothing to show here.
 Pick a texture → nothing drawn as a bar
-of data changes look (the countdown bar is flat by design, D5). Result:
+of data changes look (the countdown bar is flat by design, D5). Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-17. EllesmereUI on (DW-01; skinning-§5).** With EllesmereUI loaded, its third-party skinning on
 and Drop Watcher on in its Third-Party list → Skin → **Skin source** offers **EllesmereUI**; choosing
-it repaints the window, compact cards, toast and settings in the EllesmereUI look, live. Result:
+it repaints the window, compact cards, toast and settings in the EllesmereUI look, live. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-18. EllesmereUI off (DW-01).** Turn Drop Watcher off in EllesmereUI's Third-Party list (or
 disable EllesmereUI) and `/reload` → the EllesmereUI choice is disabled, the failing condition and its
 fix are listed, and Drop Watcher wears its Ka0s skin. With EllesmereUI as the source, pick **Ka0s
-skins** → a reload is offered; after it the Ka0s skin shows. Result:
+skins** → a reload is offered; after it the Ka0s skin shows. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-19. The first-run skin picker (DW-04; O3, X6).** On a profile that has never closed it (any
 profile after the run, `skin.pickerSeen` false), fresh client start → about two seconds after login a
@@ -3073,30 +3073,30 @@ with the picker still on top. Press Escape → the stored skin comes back and no
 → the picker does not show again on this profile. Reset the profile (Profiles → Reset Profile) → it
 shows again; pick **Glass** and **Apply** → saved (`/dw get skin.skin` prints `glass`). Show it once
 more on a new profile and press the gear → the pick is saved and the settings open on General →
-**Skin**. Result:
+**Skin**. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-20. The picker waits (DW-04).** Disable the addon (`/dw disable`) on a profile that has not
 closed the picker, and start a fresh client → no picker; `/dw enable` → it shows about two seconds
 later. Start in combat on a target dummy (fresh client start, attack at once) → no picker while in
 combat; it shows when combat ends. With two Ka0s addons' pickers due → one shows, the other after it
-closes. Result:
+closes. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-21. Copy to every Ka0s addon (DW-01).** With another Ka0s addon that uses skins loaded, pick
 **WoW Midnight** on Drop Watcher's Skin tab and press **Copy to every Ka0s addon…** → a confirmation
-names the other addons; confirm → each of them wears WoW Midnight with no reload. Result:
+names the other addons; confirm → each of them wears WoW Midnight with no reload. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-22. Profiles (DW-01).** Give two profiles different skins and a different Ignore settings panel,
 switch between them on the Profiles page, then copy one into the other and reset one → the skin, the
-scope and the overrides follow the profile each time, with no reload. Result:
+scope and the overrides follow the profile each time, with no reload. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-23. Combat (R7).** In combat on a target dummy, try to change the skin on the Skin tab and in the
 picker → the change is refused as every setting is in combat, with no Lua error and no taint warning;
-the window, the toast and the countdown keep updating. Result:
+the window, the toast and the countdown keep updating. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-24. The minimap button, popups and other addons (X7).** Under every skin → the minimap button
 and its tooltip, the reset and Clear history confirmations and the `[DW]` chat lines look as before the
 run. With Drop Watcher on a non-default skin, open two other Ka0s addons' windows and settings → each
-looks as it did before. Result:
+looks as it did before. Result: passed in the client, 2026-10-30 (the owner).
 
 ## Pending sign-off
 
@@ -3110,20 +3110,16 @@ Owed in the client: FEED-103 (feedback-25, 2026-10-25), the compact cards' Trade
 and Them on line 4 on both tabs, History's outcome and time at the right of lines 2 and 3. Owed for
 LibKa0s-Toast-1.0 (2026-10-28): INSTALL-6 (AT-A1), TOAST-7 and DEGRADED-3 (AT-A2).
 
-Owed for the skinning rollout (2026-10-29, LibKa0s v1.80.0; Ka0sAddonsCommonTasks
-`docs/2026-10-29-SKINNING_ROLLOUT/`): SKIN-1..24, every one. SKIN-2 and SKIN-3 record the visible
-changes under Ka0s Default the owner's rulings bring (Oxanium, the title band, the scroll bars, the icon
-border's one-time reset); SKIN-2 also asks whether the title band stays (DropWatcher D3).
-
-Owed for the skin library follow-ups (2026-10-30, LibKa0s v1.81.0; Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, DW-RV to DW-02): SKIN-1 on v1.81.0, and the changed
-expectations of SKIN-11 (the strips' line; the sim panel's labels, dropdowns and tooltips), SKIN-12
-(the tool windows' labels in the skin's face and under Ignore fonts; the grips, the main window's
-included), SKIN-16 (Ignore fonts
-reaching the menus, strips and tool windows; the verdict glyphs keeping their monospace face) and
-SKIN-19 (the picker titled "Choose a skin", the addon's name above the dropdown). No pixel of an item's
-quality color moves under Ka0s Default (its `q.*` tokens are now the client's own), and Drop Watcher
-never asked for the retired stock look, so no stock-look row moves.
+On 2026-10-30 the owner reported that every check of the skinning rollout (2026-10-29, LibKa0s
+v1.80.0; Ka0sAddonsCommonTasks `docs/2026-10-29-SKINNING_ROLLOUT/`) and the skin library follow-ups
+(2026-10-30, LibKa0s v1.81.0; Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, DW-RV
+to DW-02) passed: SKIN-1..24, SKIN-1 on v1.81.0 and the changed expectations of SKIN-11, SKIN-12,
+SKIN-16 and SKIN-19 included, and the Window › Icons amendment (DW-03) beside ICON-1. Each one's
+`Result:` line records it as passed in the client, 2026-10-30 (the owner). SKIN-2 and SKIN-3 recorded
+the visible changes under Ka0s Default the owner's rulings brought (Oxanium, the title band, the scroll
+bars, the icon border's one-time reset); SKIN-2 also asked whether the title band stays (DropWatcher
+D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tokens are now the
+client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
 
 ### Review 2026-10-14 (M24) sign-off
 
