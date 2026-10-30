@@ -884,3 +884,28 @@ test("toast edge: with CreateFont, each scaled face is a named font object, so I
     assertEqual(NS.ScaledFont("GameFontHighlight", s), "DropWatcher_GameFontHighlight_122", "made once, then reused")
     assertNil(NS.ScaledFont("GameFontNormalHuge", s), "a face with no known size is not scaled")
 end)
+
+test("toast edge: a scaled face scales its client font object's own height, NS.FONT_SIZE only the fallback (DW-05 review)", function()
+    local NS, m = enabled({ drop() })
+    local made = {}
+    m.CreateFont = function(name)
+        local obj = { name = name }
+        function obj:CopyFontObject(base) self.base = base end
+        function obj:SetFont(p, size, flags) self.font = { p, size, flags } end
+        function obj:GetFont() return self.font[1], self.font[2], self.font[3] end
+        made[name] = obj
+        rawset(m, name, obj)
+        return obj
+    end
+    -- A locale whose font files define GameFontHighlight at 14, not enUS's 12.
+    rawset(m, "GameFontHighlight", { GetFont = function() return "Fonts\\LOCALE.TTF", 14, "" end })
+    rawset(m, "GameFontHighlightSmall", { GetFont = function() return "Fonts\\LOCALE.TTF", 0, "" end })
+    local s = NS.Toast.SCALE
+    NS.ScaledFont("GameFontHighlight", s)
+    NS.ScaledFont("GameFontHighlightSmall", s)
+    rawset(m, "GameFontHighlight", nil)
+    rawset(m, "GameFontHighlightSmall", nil)
+    near(made.DropWatcher_GameFontHighlight_122.font[2], 14 * s, "the base object's own height, scaled")
+    assertEqual(made.DropWatcher_GameFontHighlight_122.font[1], "Fonts\\LOCALE.TTF", "its own face")
+    near(made.DropWatcher_GameFontHighlightSmall_122.font[2], 10 * s, "no usable height: NS.FONT_SIZE's")
+end)

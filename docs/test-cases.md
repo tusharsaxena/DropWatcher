@@ -1674,7 +1674,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (48)
+### test_toast.lua (49)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
@@ -1724,6 +1724,7 @@ Total.
 - toast: the diagnostics' window section reports the toast
 - toast edge: 90 px tall, its icon, Ask and every face scaled to match DpsRace's toast (DW-05)
 - toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)
+- toast edge: a scaled face scales its client font object's own height, NS.FONT_SIZE only the fallback (DW-05 review)
 
 ### test_glow.lua (14)
 
@@ -2182,7 +2183,7 @@ Total.
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 48 |
+| test_toast.lua | 49 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_layers.lua | 9 |
@@ -2206,4 +2207,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1816** |
+| **Total** | **1817** |

@@ -2402,7 +2402,7 @@ it, and every face about a fifth larger. Toast on, Scale `100%`, with Ka0s DPS R
 the same height. On the Drop Watcher toast: the four rows still fit beside the icon, row 1's gold
 `Big upgrade for you` clear of Ask, row 4 sitting on the icon's bottom edge, no row overlapping the
 next; Ask is a little taller and wider, its chat mark and `Ask` word larger, still left of the close
-mark; the item name and its level, `Looted by Seta · You ▲19 · Them ▼13` with its monospace glyphs,
+mark (the close mark itself is the LibKa0s-Toast shell's and keeps its size, as on DPS Race's toast); the item name and its level, `Looted by Seta · You ▲19 · Them ▼13` with its monospace glyphs,
 and the trade line are all larger and none is cut where it was not before. A ring or trinket with
 both worn items read (two dual marks) still widens the toast so neither verdict is cut. Scale `150%`
 → the larger toast grows about its anchor as before. Skin › Scope › Ignore fonts on → the toast keeps
@@ -3212,7 +3212,7 @@ D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tok
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
 
 Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
-`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..29 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03) and GLOW-13 (DW-04). Their `Result:` lines are empty until
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..29 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04) and TOAST-8 (DW-05). Their `Result:` lines are empty until
 the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off

@@ -298,8 +298,9 @@ end
 
 -- ── a surface drawn larger (the upgrade toast, DW-05) ────────────────────────────────────────
 
---- The pixel height of each font object a scaled surface draws at a multiple of, as the client
---- defines them. A config table, never read off a string.
+--- The pixel height of each font object a scaled surface draws at a multiple of, as enUS defines
+--- them. NS.ScaledFont scales the client object's own height when it reads one; this table is the
+--- fallback (the harness, no CreateFont) and the list of faces that are scaled at all.
 NS.FONT_SIZE = {
     GameFontNormalSmall    = 10,
     GameFontHighlight      = 12,
@@ -310,7 +311,8 @@ NS.FONT_SIZE = {
 -- CreateFont or `font` has no NS.FONT_SIZE height (the string then carries the size itself).
 local scaledFonts = {}
 
---- A named copy of the font object `font` at `scale` times its NS.FONT_SIZE height, made once; nil
+--- A named copy of the font object `font` at `scale` times its height (the client object's own,
+--- else NS.FONT_SIZE's), made once; nil
 --- when there is none. Named, so the skin's Ignore fonts puts a string back on THIS object, at the
 --- scaled size, rather than on the stock one (LibKa0s-Skin-1.0 hands back a named font object).
 --- @param font string a font object's global name
@@ -329,8 +331,10 @@ function NS.ScaledFont(font, scale)
                 local path, flags
                 if type(base) == "table" and base.GetFont then
                     if obj.CopyFontObject then obj:CopyFontObject(base) end
-                    local p, _, f = base:GetFont()
+                    local p, h, f = base:GetFont()
                     path, flags = p, f
+                    -- The client's own height (a locale's font files may set another one).
+                    if type(h) == "number" and h > 0 then size = h end
                 end
                 obj:SetFont(path or STANDARD_TEXT_FONT, size * scale, flags or "")
                 scaledFonts[key] = name
