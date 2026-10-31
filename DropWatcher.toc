@@ -41,6 +41,9 @@ locales\enUS.lua
 # LOAD-BEARING: reads NS.L (locales\enUS.lua, the line above) at load and fills it with the settings
 # panel's strings: a topic file split out of enUS.lua at the layout-§1 cap (localization-§6).
 locales\enUS_Settings.lua
+# LOAD-BEARING: reads NS.L (locales\enUS.lua, above) at load and fills it with the tooltips' rows: a
+# topic file split out of enUS.lua (localization-§6).
+locales\enUS_Tooltips.lua
 
 # Core -- dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.
@@ -60,8 +63,11 @@ core\CompatWorld.lua
 # NS.Compat; it loads before core\SimSetup.lua (below), which wraps every member at load. Read
 # inside functions only.
 core\CompatItem.lua
+# LOAD-BEARING: adds the Encounter Journal's reads and selections to NS.Compat; it loads before
+# core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
+core\CompatJournal.lua
 # LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
-# CompatWorld.lua and CompatItem.lua; never cache a Compat member in a local before it. Publishes
+# CompatWorld.lua, CompatItem.lua and CompatJournal.lua; never cache a Compat member in a local before it. Publishes
 # NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
 # and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
 core\SimSetup.lua

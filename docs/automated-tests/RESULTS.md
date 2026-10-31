@@ -116,8 +116,8 @@ None.
 
 | Band | File | LOC | Disposition |
 |---|---|---|---|
-| 1000–1500 (on notice) | `core/Compat.lua` | 1051 | **Newly crossed** — feedback-17's journal shims took it from 960 to 1009 lines. Split the Encounter Journal shims into a family file (`core/CompatJournal.lua`) before it grows further. |
-| 1000–1500 (on notice) | `locales/enUS.lua` | 1331 | **Accepted** — a flat `L["..."] = "..."` string table with no logic; it grew past 1000 when DW-P19 added every routed enUS key (F07, D8). Split it by surface before it nears the 1500 cap. |
+| 1000–1500 (on notice) | `core/Compat.lua` | 1051 | **Split 2026-10-31** (FX-DW-SIZE): the Encounter Journal shims moved to `core/CompatJournal.lua`, 966 lines here; the next run drops this row. |
+| 1000–1500 (on notice) | `locales/enUS.lua` | 1331 | **Split 2026-10-31** (FX-DW-SIZE): the tooltips' rows moved to `locales/enUS_Tooltips.lua` (localization-§6), 798 lines here; the next run drops this row. |
 | 1000–1500 (on notice) | `modules/LootFeed.lua` | 1041 | **Newly crossed** (992 at 1.0.0). **Accepted** for 1.1.0: the feed's one owner, with its records and restore already split out (`FeedRecords`, `FeedRestore`); split the re-judge path out next if it passes 1100. |
 | 1000–1500 (on notice) | `modules/WindowCells.lua` | 1165 | **Newly crossed** (960 at 1.0.0), mostly feedback-21's tooltip rows (G6) and feedback-22's Trade reasons. Move the Trade cell's composers (`TradeShort`, `TradeText`, `TradeRows`) into their own file before it passes 1250. |
 | 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1138 | **Newly crossed** (983 at 1.0.0). **Accepted** for 1.1.0; split the action buttons' painting and tones out before it passes 1250. |

@@ -1017,13 +1017,13 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
-        if rel ~= "core/Compat.lua" then
+        if rel ~= "core/Compat.lua" and rel ~= "core/CompatJournal.lua" then
             local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", "")
             for _, api in ipairs(SEAM_ONLY) do
                 -- red under: a feature module calling C_TooltipInfo.GetBagItem directly
-                assertNil(code:find("[^%w_.]" .. api), rel .. " names " .. api .. " outside core/Compat.lua")
+                assertNil(code:find("[^%w_.]" .. api), rel .. " names " .. api .. " outside the compat family")
             end
         end
     end

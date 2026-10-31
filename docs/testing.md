@@ -546,11 +546,11 @@ combat refusal and the Defaults tooltip; on the kit's `tests/_kit/mock_bindings.
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
-entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed, and
+entry in `locales/enUS.lua`, `locales/enUS_Settings.lua` or `locales/enUS_Tooltips.lua`, the key-on-miss fallback bypassed, and
 every enUS key's text appears in an addon file, a loose reverse since some keys are reached
 dynamically; review F07, decision D8. Both read the union of the enUS files, listed from the TOC
-and loaded in its order (localization-§6), and it fails on a key written in two of them, on a topic
-file's key read outside its folder, and on a topic file misnamed, out of the block after
+and loaded in its order (localization-§6), and it fails on a key written in two of them, on a folder
+topic file's key read outside its folder, and on a topic file misnamed, out of the block after
 `enUS.lua`, or keeping its own table). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.

@@ -57,9 +57,16 @@ files["core/Compat.lua"] = {
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
     "DressUpLink", "GetSpecializationInfoByID", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT",
+    "C_ChallengeMode", "UnitName",
+  },
+}
+
+-- The Encounter Journal: core/CompatJournal.lua alone names it, for the simulator's item pool.
+files["core/CompatJournal.lua"] = {
+  read_globals = {
     "EncounterJournal", "C_EncounterJournal", "EJ_GetNumTiers", "EJ_GetCurrentTier", "EJ_SelectTier",
     "EJ_GetInstanceByIndex", "EJ_SelectInstance", "EJ_SelectEncounter", "EJ_GetDifficulty", "EJ_SetDifficulty",
-    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot", "EJ_GetInstanceInfo", "EJ_GetEncounterInfo", "C_ChallengeMode", "UnitName",
+    "EJ_GetLootFilter", "EJ_SetLootFilter", "EJ_GetNumLoot", "EJ_GetInstanceInfo", "EJ_GetEncounterInfo",
   },
 }
 

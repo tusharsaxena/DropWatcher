@@ -2074,7 +2074,7 @@ Total.
 
 - locale: the enUS files are the TOC's, the base file first and its topic files after it
 - locale: every enUS key lives in exactly one enUS file
-- locale: a topic file holds only what its folder alone reads
+- locale: a source folder's topic file holds only what that folder alone reads
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
 - locale: every enUS key is still read by the addon's files
