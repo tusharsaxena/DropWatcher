@@ -5,8 +5,8 @@
 Both MUST pass before every commit (testing-§4):
 
 ```sh
-lua tests/run.lua      # the headless suite, Lua 5.1
-luacheck .             # 0 warnings / 0 errors
+lua tests/run.lua                               # the headless suite, Lua 5.1
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .  # 0 warnings / 0 errors
 ```
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
@@ -600,7 +600,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
-| `lint` | `luacheck .` | **gates** | gates |
+| `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0, and no crashed run (a crashed or bounded lizard run is a fail, its files listed as crashedFiles) |

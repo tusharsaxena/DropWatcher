@@ -37,7 +37,8 @@ marked as such rather than listed as a requirement.
 | Tool | Version | Needed for | Evidence |
 |---|---|---|---|
 | `lua5.1` (+ `luac`) | **5.1 exactly** | the headless suite, `lua tests/run.lua`, and the offline scenarios, `lua tests/perf.lua` | `tests/_kit/loader.lua` uses `setfenv` |
-| `luacheck` | any recent | `luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `luacheck` | any recent | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`, the other half of the green gate | `.luacheckrc` at the repo root |
+| `~/.claude/dev-copilot/bin/ka0s-bounded` | the dev-copilot plugin's | bounds a run that loads no kit, `luacheck` above (testing-§15) | installed with the dev-copilot Claude Code plugin |
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh`, which runs it over a sanitized shadow and checks function-count parity, because `lizard` alone is blind in Lua (automated-tests-§3); also the headless suite's one end-to-end lizard case, which SKIPs when lizard is not on PATH | `tests/_kit/run-automated-tests.sh`, `tests/_kit/test_lizard_sighted.lua:187` |
 | `git` | any recent | vendoring, the vendored-payload gate (`tests/test_vendor_sync.lua` reads the index and compares against the sibling `../LibKa0s` checkout) and the line-ending gate (`git check-attr`) | `tests/_kit/vendor_sync.lua`, `tests/_kit/test_eol.lua` |
 | POSIX shell (`bash`) | any | `tests/_kit/run-automated-tests.sh` and the commands in this file | the runner's shebang |
@@ -92,7 +93,7 @@ python3 -c 'import PIL; print(PIL.__version__)'
 lua tests/run.lua                                     # the suite — must be green
 lua tests/run.lua -j auto                             # same, fanned across CPUs (testing-§14)
 # every run above is bounded by the vendored kit on load (testing-§15); KA0S_KIT_GUARD=off only under a debugger
-luacheck .                                            # must be 0 warnings / 0 errors
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .     # must be 0 warnings / 0 errors
 bash tests/_kit/run-automated-tests.sh --suite complexity   # the sighted complexity report (release-time);
                                                       # never raw `lizard`, which is blind in Lua (automated-tests-§3)
 ```
