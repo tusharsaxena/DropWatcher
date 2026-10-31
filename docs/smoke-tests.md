@@ -2843,9 +2843,9 @@ machine and the controls are LibKa0s-Sim-1.0's. Solo, outside an instance, out o
 Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-18. The item pool after the journal shims moved (FX-DW-SIZE).** The Encounter Journal's reads moved
-to `core/CompatJournal.lua`. `/reload` → no Lua error. Run SIM-6's first steps: `/dw sim start`, and the
-pool line prints with journal items; the journal's selection comes back as it was. Fail: a Lua error,
-or the fallback line with the journal closed. Result:
+to `core/CompatJournal.lua`. `/reload` → no Lua error. Run SIM-6's first steps: `/dw debug on`, then
+`/dw sim start key` → the debug log shows the `[SIM] pool:` line with journal items, and the journal's
+selection comes back as it was. Fail: a Lua error, or the fallback line with the journal closed. Result:
 
 ## Compact
 
