@@ -103,7 +103,7 @@ session asks for a reload (the library's popup). In combat the tab refuses every
 library there is no tab.
 
 **The first-run skin picker** (LibKa0s OptionsSkinPicker, the rollout's O3): a small window titled **Choose a
-skin**, with **Ka0s Drop Watcher** on its own line above a dropdown of the skins (the window widens
+skin**, with **Ka0s Drop Watcher** on its own line above a dropdown of the skins, each row three swatches and the skin's name in its own face (the window widens
 so the name is never cut off; LibKa0s v1.81.0, OptionsSkinPicker minor 2), an eye, a gear, and **Apply** (with **Apply
 to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.MaybeShowSkinPicker`
 (`core/SkinSetup.lua`) shows it while the profile's `skin.pickerSeen` is false: two seconds after
@@ -113,7 +113,8 @@ for combat's end. A pick previews; **Apply** saves; the close control and Escape
 back and save nothing. The eye opens the window in test mode, so the skin shows on this addon's own
 frames; the gear saves the pending pick and opens this tab. Any close the player makes sets
 `skin.pickerSeen`; a stand-down or a profile event takes it down without setting it. One picker is up
-at a time across Ka0s addons; the others wait in the library's queue.
+at a time across Ka0s addons; the others wait in the library's queue. `/dw skin` opens the same picker
+whatever `skin.pickerSeen` says.
 
 **The pages' own widgets wear the skin too** (DW-04): every AceGUI widget `settings/PageEditors.lua`
 acquires goes through `acquire()`, which paints it for this owner (`NS.SkinPaintAce`, restored stock

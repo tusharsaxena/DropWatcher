@@ -295,7 +295,8 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
   the window in test mode; its gear opens General → Skin. Its title is the library's "Choose a
   skin", the addon's name on its own line above the dropdown (LibKa0s v1.81.0). Only the player's
-  close writes `pickerSeen`. `tests/test_skin_picker.lua`.
+  close writes `pickerSeen`. `/dw skin` (`NS.RunSkinVerb`, `O.SkinVerb`) opens it on demand, whatever
+  `pickerSeen` says. `tests/test_skin_picker.lua`, `tests/test_skin_verb.lua`.
 - **The settings panel.** Every AceGUI widget the pages acquire themselves is painted for this owner
   (`NS.SkinPaintAce`, restored on release), the Situations table's session-held cells repaint on a
   switch, and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`).
@@ -419,11 +420,11 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 30 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 31 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 86 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 64, `core/CompatWorld.lua` 17, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 87 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 64, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

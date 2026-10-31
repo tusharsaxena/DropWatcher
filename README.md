@@ -46,7 +46,7 @@ It watches what your party or raid receives and compares each item with your gea
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key or raid the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
+Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key, raid, delve or scenario, or playing solo, the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
 
 **Drops** lists every drop, yours included, under the boss or key it came from.
 
@@ -54,15 +54,15 @@ Type `/dw show`, or right-click the minimap button. You often won't need to: in 
 - Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. Trade window is how long they have left.
 - **Ask** whispers the looter, once. In a boss fight it waits until the fight ends.
 
-Upgrades you could actually get glow, yellow for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
+Upgrades you could actually get glow, green for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
 
-Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
+Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. It needs another player in your group, so solo, or with only followers or a delve companion, the row reads No action. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
 
 **History** keeps 30 days of drops across logouts and alts, along with what became of each. Right-click a row to mark it declined. Retention and Clear history are in Settings › Window › Layout.
 
 When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
 
-The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in.
+The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 
 `/dw test` fills the window with sample drops if you want a look around first. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 
@@ -82,7 +82,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
 | Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level, with Pawn's own default settings and no setup. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
-| Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under Settings › Drops › Situations. |
+| Does it work in raids? | Yes. Keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched out of the box. PvP and open-world groups are off until you turn them on under Settings › Drops › Situations. |
 | Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin black one by default. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
 | Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
