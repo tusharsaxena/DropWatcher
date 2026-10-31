@@ -86,7 +86,7 @@ NS.WriteSkinChoice })` (`settings/Panel.lua`) as a host tab after Simulator and 
 Its key is `Appearance`, the group of the eight `skipRender` rows `skin.source`, `skin.skin`,
 `skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture`, `skin.outline` and
 `skin.pickerSeen` (the first-run picker's memory, which the tab does not draw); its label is
-**Skin**. Its body is the library's (LibKa0s v1.83.0): **Skin source** (*Ka0s skins*, or
+**Skin**. Its body is the library's (LibKa0s v1.84.0): **Skin source** (*Ka0s skins*, or
 *EllesmereUI*, disabled with the failing conditions listed while EllesmereUI cannot skin this addon),
 **Look** (the note first, then the nine skins three to a line with their swatches), **Font and
 texture** (a **Font** and a **Texture** picker, each listing *Skin's default* first and every row
