@@ -70,7 +70,7 @@ files["core/CompatWorld.lua"] = {
   read_globals = {
     "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
     "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
-    "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
+    "UnitIsPlayer", "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
   },
 }
 
@@ -78,6 +78,18 @@ files["core/CompatWorld.lua"] = {
 -- slot (DW-80).
 files["core/CompatItem.lua"] = {
   read_globals = { "ItemLocation" },
+}
+
+-- core/SkinSetup.lua's NS.ScaledFont makes the named, scaled font objects the upgrade toast draws in
+-- (DW-05): the client's font-object constructor.
+files["core/SkinSetup.lua"] = {
+  read_globals = { "CreateFont" },
+}
+
+-- modules/WindowRows.lua's table font makes one named font object per look of the Tables font block
+-- (DW-01), so a 12.0.7 client draws its shadow: the same constructor.
+files["modules/WindowRows.lua"] = {
+  read_globals = { "CreateFont" },
 }
 
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;

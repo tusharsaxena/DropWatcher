@@ -9,7 +9,7 @@ table, and `/dw profile [name]` lists or switches profiles.
   your characters) and auto-ask's one-time notice
   (`global.notices.autoAsk`).
 - A profile switch, copy or reset takes a shown first-run skin picker down (unmarked), runs the
-  migrations, applies the incoming profile's skin, scope and font and texture overrides
+  migrations, applies the incoming profile's skin, scope, font and texture overrides and Font outline
   (`NS.ApplySkinChoice`, a live repaint), refreshes the panels, re-reads the latch from
   the incoming profile's `enabled`, re-reads auto-ask's `enabled` (`NS.AutoAsk.OnProfileReloaded`:
   an incoming profile that turns it on counts drops from that moment, one that turns it off cancels

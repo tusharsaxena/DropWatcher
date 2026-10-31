@@ -138,14 +138,14 @@ test("Skin seam: C.TONE is filled from its tokens, and refilled in place by a sk
         local t, r, g, b = C.TONE[key], NS.Skin.Color(token)
         sameColor(key .. " (obsidian)", { t.r, t.g, t.b }, { r, g, b })
     end
-    assertTrue(C.TONE.statCrit.r == 1 and C.TONE.glowMain.g == 244 / 255,
+    assertTrue(C.TONE.statCrit.r == 1 and C.TONE.glowMain.r == 25 / 255,
         "the stat names' and the glows' colors are not the skin's (E5, E6)")
 end)
 
 -- ── the keys and the rows ────────────────────────────────────────────────────────────────────
 
 local PATHS = { "skin.source", "skin.skin", "skin.ignorePanel", "skin.ignoreFonts", "skin.font",
-                "skin.texture", "skin.pickerSeen" }
+                "skin.texture", "skin.outline", "skin.pickerSeen" }
 
 test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab", function()
     -- red under: a default other than today's look, or a row that renders itself on top of the
@@ -158,6 +158,7 @@ test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of G
     assertEqual(d.ignoreFonts, false)
     assertEqual(d.font, "")
     assertEqual(d.texture, "")
+    assertEqual(d.outline, "hud")
     assertEqual(d.pickerSeen, false)
     for _, path in ipairs(PATHS) do
         local row = NS.SchemaRuntime.FindRow(path)

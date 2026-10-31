@@ -189,3 +189,13 @@ test("locale: every enUS key is still read by the addon's files", function()
     assertTrue(#orphans == 0, #orphans .. " enUS key(s) nothing reads:\n"
         .. table.concat(orphans, "\n", 1, math.min(#orphans, 20)))
 end)
+
+-- The display-glyph guard (LibKa0s v1.82.0, kit revision 45's tests/_kit/glyphs.lua; DW-01 of
+-- Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, ruling D-19): nine skins draw this
+-- addon's text in a dozen faces, and a character one of them lacks is a box in that skin only. So
+-- every string literal outside libs/ and tests/ carries only characters every shipped face draws;
+-- the verdict glyphs, drawn in the mono role (NS.SkinMono, JetBrains Mono), carry `glyph: mono`.
+test("locale: display strings use only characters every shipped skin face draws", function()
+    -- red under: a ≈, →, ▼ or ▲ in a string the addon paints in a skin face, unmarked.
+    T.assertDisplayGlyphs{ label = "DropWatcher" }
+end)

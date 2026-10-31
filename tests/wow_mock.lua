@@ -481,6 +481,13 @@ local function installUnits(M)
         local r = row(unit)
         return r ~= nil and r.connected ~= false
     end
+    -- A row with `npc` set is a follower or a companion (a follower dungeon's party, a delve's Brann);
+    -- `isPlayer` overrides the answer outright (a secret, in the suites that test the guard).
+    M.UnitIsPlayer = function(unit)
+        local r = row(unit)
+        if r and r.isPlayer ~= nil then return r.isPlayer end
+        return r ~= nil and r.npc ~= true
+    end
     M.GetNormalizedRealmName = function() return M.normalizedRealm end
     M.UNKNOWNOBJECT = "Unknown"
 

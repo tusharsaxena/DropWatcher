@@ -48,18 +48,19 @@ NS.C = {
         locked     = false,      -- Lock frame: the window cannot be dragged or resized
         autoOpen   = true,       -- master auto-open: false keeps every situation from opening the window
 
-        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS.
+        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS. The owner's defaults
+        -- since DW-06: follower dungeons, delves, scenarios and solo tracked and auto-opening too.
         situations = {
             mythicPlus      = situation(true, true),
             dungeon         = situation(true, true),
-            followerDungeon = situation(false, false),
+            followerDungeon = situation(true, true),
             raidLFR         = situation(true, false),
             raid            = situation(true, true),
-            delve           = situation(false, false),
-            scenario        = situation(false, false),
+            delve           = situation(true, true),
+            scenario        = situation(true, true),
             pvp             = situation(false, false),
             openWorldGroup  = situation(false, false),
-            solo            = situation(false, false),
+            solo            = situation(true, true),
         },
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
@@ -94,12 +95,13 @@ NS.C = {
             undesired       = {},
         },
 
-        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2), the
+        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2; follower
+        -- dungeons `personal` since DW-06, the owner's default), the
         -- owner's override once changed (§7.3); `raid` is the conservative `personal` until smoke
         -- check TRADE-3 confirms it.
         trade = {
             rules = {
-                mythicPlus = "personal", dungeon = "personal", followerDungeon = "legacy",
+                mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
                 raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
                 pvp = "legacy", openWorldGroup = "personal", solo = "personal",
             },
@@ -149,6 +151,20 @@ NS.C = {
             -- while Trade window shows adds the room its countdown bar needs. A value the player stored stays as it is.
             rowHeight = 18,      -- one drop row, in pixels
             fontSize  = 0,       -- the tables' text: 0 is the template's own size, else 8 to 20
+            -- The rest of the tables' font setting (DW-01, the lead's ruling on D-07: every font
+            -- setting carries size, color with a class-color option, flags with From skin, and
+            -- shadow), Window › Layout › Tables' composed font block (settings/ComposedRows.lua). Each
+            -- default keeps the look the tables had before it: the skin's face (`tableFontFromSkin`;
+            -- `tableFont` waits for the player to turn it off), the swatch on Ka0s Default's plain text
+            -- color, which modules/WindowRows.lua reads as "the skin's" until another color is picked,
+            -- and the skin's shadow. Only the flags moved: From skin ("@skin"), resolved through the
+            -- Skin tab's Font outline as window text. Nothing stored before them, so no migration.
+            tableFont           = "Friz Quadrata TT",
+            tableFontFromSkin   = true,
+            tableFontColor      = { r = 0.92, g = 0.92, b = 0.92, a = 1 },   -- = dw.plain's Ka0s Default
+            tableFontClassColor = false,
+            tableFontFlags      = "@skin",
+            tableFontShadow     = true,
         },
 
         -- The upgrade toast (design spec §11.5). Its `point` is geometry, like the window's.
@@ -163,11 +179,13 @@ NS.C = {
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current
         -- spec, `offSpec` for one only another of your specs gains from, each with its own style.
-        -- Both pixel borders, in their own colors (feedback-21 H6, the owner's screenshot): the
-        -- main spec's yellow #FFF468, the off-spec's blue #3FC7EB.
+        -- Both Proc (flipbook), in their own colors (DW-03, owner ruling D-18, image-39; two pixel
+        -- borders and the main spec's #FFF468 from feedback-21 H6 until then): the main spec's green
+        -- #19FF19, the off-spec's blue #3FC7EB. AceDB's defaults carry a profile that never chose a
+        -- style or a color onto these; a stored choice stays, so no migration is owed.
         glow = {
-            main    = glow(true, "pixel", TONE.glowMain),
-            offSpec = glow(true, "pixel", TONE.glowOffSpec),
+            main    = glow(true, "proc", TONE.glowMain),
+            offSpec = glow(true, "proc", TONE.glowOffSpec),
         },
 
         -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The
@@ -205,7 +223,9 @@ NS.C = {
         -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. The
         -- Scope's two exceptions: a new profile leaves the settings panel the client's and skins
         -- the fonts (LootHistory's defaults). `font` and `texture` are the Skin tab's overrides, an
-        -- LSM key each, "" for the skin's own. `pickerSeen`: the first-run skin picker was closed
+        -- LSM key each, "" for the skin's own. `outline` (LibKa0s v1.82.0, Skin minor 9, ruling
+        -- D-06; v1.83.0 moved the default): the Font outline, "hud" text only, "all" text or "off";
+        -- the window, the cards and the toast are window text, so "hud" takes their outline. `pickerSeen`: the first-run skin picker was closed
         -- on this profile; false on every profile, old and new, so every player sees it once (the
         -- rollout's O3). New keys with defaults, so AceDB merges them into every existing profile
         -- and no migration is owed.
@@ -216,6 +236,7 @@ NS.C = {
             ignoreFonts = false,
             font        = "",
             texture     = "",
+            outline     = "hud",
             pickerSeen  = false,
         },
     },

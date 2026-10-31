@@ -598,7 +598,7 @@ function DCard.Paint(card, drop, width, now)
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
         transmogAsk = NS.Setting("messages.transmogAsk") == true,
-        offerTone = drop.isMine and (WO.ToneStates(drop)) or nil })
+        offerTone = drop.isMine and (WO.ToneStates(drop)) or nil, alone = drop.isMine and WO.Alone(drop) })
     return height
 end
 

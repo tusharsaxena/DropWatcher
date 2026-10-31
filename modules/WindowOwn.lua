@@ -70,11 +70,23 @@ function WO.Trade(drop)
     return NS.WindowCells.Trade(drop)
 end
 
---- Your own drop's Offer (MineCells.OwnOffer), toned by the offer half of WO.ToneStates.
+--- Nobody could take drop `drop` (DW-07, Addendum 08): no other player is in your group (solo, or
+--- only followers or a delve companion with you; NS.Roster.OtherPlayerPresent). A test drop judges its
+--- own spec roster, so it is never alone.
+--- @param drop table|nil one of your drops
+--- @return boolean
+function WO.Alone(drop)
+    if type(drop) == "table" and drop.test then return false end
+    local Ro = NS.Roster
+    return not (Ro and Ro.OtherPlayerPresent and Ro.OtherPlayerPresent())
+end
+
+--- Your own drop's Offer (MineCells.OwnOffer), toned by the offer half of WO.ToneStates; No action
+--- while nobody could take it (WO.Alone).
 --- @param drop table one of your drops
 --- @return table WindowCells.Ask's shape, with `offer` true
 function WO.Offer(drop)
-    return MC.OwnOffer(drop, (WO.ToneStates(drop)))
+    return MC.OwnOffer(drop, (WO.ToneStates(drop)), WO.Alone(drop))
 end
 
 --- A flat button whose look follows an ask's state (MineCells.OfferButton's or AnnounceButton's):
@@ -89,6 +101,18 @@ function WO.SetButtonLook(b, look)
     b.tipLines, b.state = look.tip, look.state
     NS.WindowGroup.ToneButton(b, look.toneState or look.state, look.kind)
 end
+
+-- A player joining or the last one leaving (DW-07) repaints the shown window on the next frame, so
+-- every own drop's Offer comes back or goes, and an open Offer panel closes (NS.OfferPanel.Refresh).
+local present
+local function onRosterChanged()
+    local now = not WO.Alone()
+    if now == present then return end
+    present = now
+    local W = NS.Window
+    if W and W.ScheduleRepaint then W.ScheduleRepaint() end
+end
+if NS.Roster and NS.Roster.AddChangeSink then NS.Roster.AddChangeSink(onRosterChanged) end
 
 --- An action button's click: Offer toggles the Offer panel (`b.offer`, NS.OfferPanel.Toggle: it
 --- closes the panel showing this drop, else opens it for the drop), else it is the Ask.

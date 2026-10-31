@@ -184,7 +184,8 @@ local function adopt(itemID, link)
 end
 
 --- `/dw offer <link>`: open the Offer panel for a bag item. Your drop of that item when the feed
---- holds one; otherwise the bag item is added as a drop of yours first.
+--- holds one; otherwise the bag item is added as a drop of yours first. Refused, with the reason,
+--- while no other player is in your group (DW-07, NS.WindowOwn.Alone).
 --- @param rest string
 --- @return boolean opened
 function V.Offer(rest)
@@ -192,6 +193,10 @@ function V.Offer(rest)
     local itemID = link and NS.Item.ItemIDFromLink(link)
     if not itemID then
         usage("offer <item link>")
+        return false
+    end
+    if NS.WindowOwn.Alone() then
+        NS.Print(L["Not offered: %s"]:format(L["There is no other player in your group."]))
         return false
     end
     local drop = newestMine(itemID) or adopt(itemID, link)

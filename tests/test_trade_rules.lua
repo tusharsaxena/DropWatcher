@@ -78,9 +78,9 @@ test("trade rules: a BoE or BoU drop is yes boe, in any situation and past the w
     check(TR.Estimate(drop({ bindType = B.ON_EQUIP, bonusRoll = true }), nil, ctx("raid")), "no", "bonusRoll")
 end)
 
-test("trade rules: the legacy rule is no legacy (follower dungeons and PvP)", function()
+test("trade rules: the legacy rule is no legacy (PvP by default)", function()
     local TR = load()
-    check(TR.Estimate(drop(), looter(-5), ctx("followerDungeon")), "no", "legacy", "rule")
+    check(TR.Estimate(drop(), looter(-5), ctx("pvp")), "no", "legacy", "rule")
     check(TR.Estimate(drop(), nil, ctx("pvp")), "no", "legacy", "rule")
     assertEqual(TR.Estimate(drop(), nil, ctx("pvp")).rule, "legacy")
 end)

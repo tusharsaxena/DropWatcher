@@ -149,10 +149,8 @@ end
 
 -- ── painting helpers ────────────────────────────────────────────────────────────────────────
 
-local function setTone(fs, tone)
-    local c = C.TONE[tone] or C.TONE.plain
-    fs:SetTextColor(c.r, c.g, c.b)
-end
+-- A table row's plain text takes the Tables font block's color (NS.WindowRows.SetTone, DW-01).
+local function setTone(fs, tone) NS.WindowRows.SetTone(fs, tone) end
 CG.SetTone = setTone
 
 local function tipOf(f) return unpack(f.tipLines or {}) end
@@ -565,7 +563,7 @@ local function cardCtx(drop, shared)
         askReason = reason, transmogAsk = shared.transmogAsk, ownRealm = shared.ownRealm }
     if drop.isMine then   -- your own drop's Offer and Upgrade for N (feedback-5 spec §2)
         local WO = NS.WindowOwn
-        ctx.revealed, ctx.offerTone = WO.IsRevealed(drop.id), (WO.ToneStates(drop))
+        ctx.revealed, ctx.offerTone, ctx.alone = WO.IsRevealed(drop.id), (WO.ToneStates(drop)), WO.Alone(drop)
     end
     return ctx
 end
@@ -575,7 +573,7 @@ local function paintCard(card, drop, width, m, shared)
     card.dwTradeInset = CG.TradeInset()
     card:SetHeight(m.height)
     layout(card, m)
-    NS.WindowRows.ApplyRowFont(card, m.fontSize)
+    NS.WindowRows.ApplyRowFont(card, m.fontSize, m.font)
     local open = NS.WindowGroup.Expanded() == drop.id
     card.selected:SetShown(open)
     NS.WindowGroup.PaintChevron(card.chevron, open)
@@ -720,6 +718,7 @@ end
 --- @param st table|nil
 function CG.Draw(cv, entries, width, spec, st)
     local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
+    m.font = NS.WindowRows.ReadFont()   -- the Tables font block, once per repaint (DW-01)
     local y, Pool = 0, NS.Pool
     local indent = spec.indent or 0
     local cardW = width - indent

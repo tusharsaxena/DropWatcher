@@ -29,6 +29,10 @@ local COMMANDS = {
         function() Sl:PrintHelp() end},
     {"config",   L["Open the Ka0s Drop Watcher settings panel"],
         function() runConfig() end},
+    -- The reserved `skin` verb (LibKa0s v1.82.0's O.SkinVerb, ruling D-16): a feature verb, so the
+    -- dispatcher refuses it while disabled; core/SkinSetup.lua's NS.RunSkinVerb is its act.
+    {"skin",     L["Choose a skin: open the skin picker"],
+        function() NS.RunSkinVerb() end},
     {"enable",   L["Enable the addon"],
         function() runEnabled(true) end},
     {"disable",  L["Disable the addon"],

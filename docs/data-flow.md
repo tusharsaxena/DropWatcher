@@ -143,7 +143,8 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
   │       bar (an estimate from drop.at for another player's drop), the row WindowRows.CountdownRowHeight
   │       tall while the column shows (feedback-5 §1);
   │     Actions: WindowGroup.Action (your own drop: WindowOwn.Offer ─> MineCells.OwnOffer, toned by
-  │       WindowOwn.ToneStates' offer half; else WindowCells.Ask; no action: WindowCells.NoAction(reason),
+  │       WindowOwn.ToneStates' offer half, No action while WindowOwn.Alone (DW-07: no other player
+  │       in your group, Roster.OtherPlayerPresent false); else WindowCells.Ask; no action: WindowCells.NoAction(reason),
   │       the gray `No action` with `ban`, state `none`, dimmed and not clickable, its reason in the
   │       tooltip, feedback-11 §1), the tone: WindowCells.ActionTone(state,
   │       kind) ─> WindowGroup.ToneButton (red your move, cyan for an Offer, yellow waiting, green

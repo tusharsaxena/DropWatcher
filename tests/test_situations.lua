@@ -97,11 +97,11 @@ end)
 
 test("situations: with nothing stored, every key takes the spec's track and auto-open", function()
     local Sit, C = load()
-    local SPEC = {   -- design spec §6.1, pinned as literals
-        mythicPlus = { true, true }, dungeon = { true, true }, followerDungeon = { false, false },
-        raidLFR = { true, false }, raid = { true, true }, delve = { false, false },
-        scenario = { false, false }, pvp = { false, false }, openWorldGroup = { false, false },
-        solo = { false, false },
+    local SPEC = {   -- design spec §6.1 with the owner's DW-06 defaults, pinned as literals
+        mythicPlus = { true, true }, dungeon = { true, true }, followerDungeon = { true, true },
+        raidLFR = { true, false }, raid = { true, true }, delve = { true, true },
+        scenario = { true, true }, pvp = { false, false }, openWorldGroup = { false, false },
+        solo = { true, true },
     }
     local n = 0
     for _, s in ipairs(C.SITUATIONS) do
@@ -247,7 +247,7 @@ test("situations: IsTracking, ShouldAutoOpen and QualityOverride read the profil
     place(m, HEROIC)
     m.__fire("PLAYER_ENTERING_WORLD")
     assertTrue(Sit.IsTracking()); assertTrue(Sit.ShouldAutoOpen()); assertNil(Sit.QualityOverride())
-    assertFalse(Sit.IsTracking("solo")); assertFalse(Sit.ShouldAutoOpen("raidLFR"))
+    assertFalse(Sit.IsTracking("pvp")); assertFalse(Sit.ShouldAutoOpen("raidLFR"))
     NS.db.profile.situations = { dungeon = { track = false, autoOpen = false, quality = "dynamicCharacter" } }
     assertFalse(Sit.IsTracking()); assertFalse(Sit.ShouldAutoOpen())
     assertEqual(Sit.QualityOverride(), "dynamicCharacter")

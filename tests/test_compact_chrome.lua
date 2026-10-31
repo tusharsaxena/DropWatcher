@@ -366,7 +366,10 @@ test("chrome: the compact sim strip takes a second line when its words wrap at 3
 end)
 
 test("chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included", function()
-    local NS = shown("compact")
+    local NS = T.enableAddon()
+    NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
+    NS.ShowWindow()
+    NS.SetWindowMode("compact")
     local segs = NS.WindowFooter.Parts()
     assertEqual(textOf(segs.inspect.text), "No group · Solo (not tracked)")
     for _, key in ipairs({ "loot", "situation", "pawn" }) do assertFalse(segs[key]:IsShown(), key) end

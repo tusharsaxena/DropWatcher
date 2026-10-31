@@ -60,7 +60,7 @@ local floor = math.floor
 local DASH = "–"
 
 --- The mark of a verdict the full view says in a word (cannot use, not wanted).
-CC.NO_GLYPH = "⊘"
+CC.NO_GLYPH = "⊘"   -- drawn in the mono role (NS.SkinMono), like the verdict glyphs  glyph: mono
 
 -- The header's pieces, each cut to its own number of characters (feedback-15), so a line with
 -- every piece at its limit fits HEADER_CHARS, about what a default-width pane (COMPACT_WIDTH 400; 440 until feedback-23)
@@ -281,7 +281,7 @@ end
 local function sides(drop, ctx, now)
     local them = CC.Half(L["Them"], SC.Them(drop, ctx.gear, now, ctx.revealed))
     if drop.isMine then
-        return MC.OwnOffer(drop, ctx.offerTone), MC.OwnTrade(drop, ctx.revealed), them
+        return MC.OwnOffer(drop, ctx.offerTone, ctx.alone), MC.OwnTrade(drop, ctx.revealed), them
     end
     return WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk), WC.Trade(drop), them
 end
@@ -289,8 +289,8 @@ end
 --- A Drops card.
 --- @param drop table
 --- @param ctx table { now, equipped and classFile (your gear snapshot's), gear (the looter's inspect gear),
----   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session) and offerTone (the offer half of
----   WindowOwn.ToneStates) }
+---   askState, askReason, transmogAsk, ownRealm; on your own drop revealed (its Offer panel was opened this session), offerTone (the offer half of
+---   WindowOwn.ToneStates) and alone (WindowOwn.Alone: nobody to offer it to, DW-07) }
 --- @return table card
 function CC.Group(drop, ctx)
     ctx = ctx or {}

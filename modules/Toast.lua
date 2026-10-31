@@ -93,16 +93,27 @@ local TAG = "UI"
 
 Toast.NAME = "DropWatcherToast"
 Toast.MAX_QUEUE = 5
+-- THE SCALE (DW-05, Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK Addendum 03): the
+-- toast is as tall as DpsRace's new-best toast after DR-04 (its BestToast.HEIGHT, 90), every element
+-- in it scaled to match. Each figure below is the first release's (in the comment) times SCALE, 90
+-- over the first release's 74, rounded to the pixel; the faces are their font objects' heights times
+-- SCALE (NS.ScaledFontString), the mono glyphs' 12 too, and Ask's height, mark and word with them.
+Toast.SCALE = 90 / 74
+local function px(n) return math.floor(n * Toast.SCALE + 0.5) end
 -- The icon spans the four rows; the frame keeps INSET all round (feedback-9 spec §0). TEXT_GAP is
 -- between the icon and the rows, ROW_Y each row's top under the icon's (row 4 sits on its bottom).
--- WIDTH is 350, not the spec's first 340: row 3 with a 12-character looter, an empty slot and a Them
--- word (`Not wanted`) needs 267 of the rows' width (test_toast). It is the least width: two dual
--- marks (feedback-21 H7) need about 364, and only such a toast is drawn wider (Toast.WidthFor).
-Toast.WIDTH, Toast.ICON, Toast.INSET, Toast.TEXT_GAP = 350, 56, 9, 8
-Toast.HEIGHT = Toast.ICON + 2 * Toast.INSET
-Toast.ROW_Y = { 0, -15, -30 }
--- Between row 3's and row 4's segments (a verdict after its label, a reason after its word).
-Toast.SEG_GAP = 4
+-- WIDTH was 350, not the spec's first 340: row 3 with a 12-character looter, an empty slot and a Them
+-- word (`Not wanted`) needs 267 of the rows' width at the first size (test_toast). It is the least
+-- width: two dual marks (feedback-21 H7) need more, and only such a toast is drawn wider
+-- (Toast.WidthFor).
+Toast.WIDTH, Toast.ICON, Toast.INSET, Toast.TEXT_GAP = px(350), px(56), px(9), px(8)   -- 426, 68, 11, 10
+Toast.HEIGHT = Toast.ICON + 2 * Toast.INSET                                             -- 90
+Toast.ROW_Y = { 0, px(-15), px(-30) }                                                   -- 0, -18, -36
+-- Between row 3's and row 4's segments (a verdict after its label, a reason after its word), and
+-- between a verdict's glyph and its difference (the window's NS.WindowGroup.SIDE.GLYPH_GAP, 3).
+Toast.SEG_GAP, Toast.GLYPH_GAP = px(4), px(3)                                           -- 5, 4
+-- Ask's width (64), and its gap to the close mark and to the title (6), or the corner's inset (4).
+Toast.ASK_W, Toast.ASK_GAP, Toast.CORNER = px(64), px(6), px(4)                         -- 78, 7, 5
 Toast.POINT = { "TOP", "TOP", 0, -160 }
 
 local TRADE_WORD = { likely = L["Likely tradeable"], yes = L["Tradeable"] }
@@ -259,7 +270,7 @@ end
 -- toast lives off the window, so the window's repaint never reaches it); the others are toned on
 -- each paint.
 local function text(f, template, tone)
-    local fs = f:CreateFontString(nil, "OVERLAY", template)
+    local fs = NS.ScaledFontString(f, "OVERLAY", template, Toast.SCALE)
     fs:SetJustifyH("LEFT")
     fs:SetWordWrap(false)
     NS.Skin.Font(fs)
@@ -270,7 +281,7 @@ end
 -- A verdict's glyph, in the skin's monospace face (the default face has no ▲ ≈ ▼).
 local function glyph(f)
     local fs = f:CreateFontString(nil, "OVERLAY")
-    NS.SkinMono(fs, 12)
+    NS.SkinMono(fs, 12 * Toast.SCALE)
     fs:SetWordWrap(false)
     return fs
 end
@@ -285,10 +296,10 @@ local function buildTop(f)
     f.title = text(f, "GameFontNormalSmall")
     NS.Skin.Text(f.title, "heading")   -- gold, in the skin's title face
     atRow(f.title, f, 1)
-    f.title:SetPoint("RIGHT", f.ask, "LEFT", -6, 0)
+    f.title:SetPoint("RIGHT", f.ask, "LEFT", -Toast.ASK_GAP, 0)
     f.item = text(f, "GameFontHighlight")
     atRow(f.item, f, 2)
-    f.ilvl = NS.WindowRows.NewMark(f, f.item)
+    f.ilvl = NS.WindowRows.NewMark(f, f.item, Toast.SCALE)
     NS.Skin.Text(f.ilvl, "muted")   -- the mark's own role replaced: muted, not the accent
 end
 
@@ -334,11 +345,11 @@ end
 local function makeRows(f)
     f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON)
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
-    f.ask = NS.Window.TextButton(f, 64, "chat", L["Ask"], function() Toast.Ask() end)
+    f.ask = NS.Window.TextButton(f, Toast.ASK_W, "chat", L["Ask"], function() Toast.Ask() end, Toast.SCALE)
     if f.close then
-        f.ask:SetPoint("RIGHT", f.close, "LEFT", -6, 0)
+        f.ask:SetPoint("RIGHT", f.close, "LEFT", -Toast.ASK_GAP, 0)
     else
-        f.ask:SetPoint("TOPRIGHT", f, "TOPRIGHT", -4, -4)
+        f.ask:SetPoint("TOPRIGHT", f, "TOPRIGHT", -Toast.CORNER, -Toast.CORNER)
     end
     buildTop(f)
     buildVerdicts(f)
@@ -385,7 +396,7 @@ local function paintVerdict(after, glyphFs, textFs, part, l, levelFs, w)
     local p = second or part
     levelFs:SetShown(second ~= nil)
     if second then
-        local G = NS.WindowGroup.SIDE.GLYPH_GAP
+        local G = Toast.GLYPH_GAP
         after, w = place(l.leadLevel, after, w)
         after, w = place(l.leadGlyph, after, w)
         after, w = place(l.leadText, after, w, G)
@@ -402,7 +413,7 @@ local function paintVerdict(after, glyphFs, textFs, part, l, levelFs, w)
     setTone(textFs, p.tone)
     if p.glyph then
         after, w = place(glyphFs, after, w)
-        return place(textFs, after, w, NS.WindowGroup.SIDE.GLYPH_GAP)
+        return place(textFs, after, w, Toast.GLYPH_GAP)
     end
     glyphFs:ClearAllPoints()
     return place(textFs, after, w)

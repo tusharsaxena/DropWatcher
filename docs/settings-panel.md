@@ -83,21 +83,27 @@ timeline.
 
 The library's own tab (skinning-§3), drawn by `O.AppearanceTab({ owner, get = NS.SkinChoice, set =
 NS.WriteSkinChoice })` (`settings/Panel.lua`) as a host tab after Simulator and before Keybindings.
-Its key is `Appearance`, the group of the seven `skipRender` rows `skin.source`, `skin.skin`,
-`skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture` and `skin.pickerSeen` (the
-first-run picker's memory, which the tab does not draw); its label is **Skin**. Its body is the
-library's: **Skin source** (*Ka0s skins*, or *EllesmereUI*, disabled with the failing conditions
-listed while EllesmereUI cannot skin this addon), **Look** (the nine skins three to a line with their
-swatches), **Font and texture** (a **Font** and a **Texture** dropdown, each listing the skin's own
-first), the Scope (**Ignore settings panel**, on for a new profile, and **Ignore fonts**), **Copy to
-every Ka0s addon…** and the note that skins change every visual element. A pick calls `Skin:SetChoice`
+Its key is `Appearance`, the group of the eight `skipRender` rows `skin.source`, `skin.skin`,
+`skin.ignorePanel`, `skin.ignoreFonts`, `skin.font`, `skin.texture`, `skin.outline` and
+`skin.pickerSeen` (the first-run picker's memory, which the tab does not draw); its label is
+**Skin**. Its body is the library's (LibKa0s v1.83.0): **Skin source** (*Ka0s skins*, or
+*EllesmereUI*, disabled with the failing conditions listed while EllesmereUI cannot skin this addon),
+**Look** (the note first, then the nine skins three to a line with their swatches), **Font and
+texture** (a **Font** and a **Texture** picker, each listing *Skin's default* first and every row
+drawn in its face or with its bar; under them **Reset font** and **Reset texture**; under those the
+**Font outline**, *HUD text only* by default, *All text* or *Off*, `skin.outline`, grayed while
+Ignore fonts is on), the Scope (**Ignore
+settings panel**, on for a new profile, and **Ignore fonts**) and, under **Other Ka0s addons**,
+**Copy to every Ka0s addon…**, which carries the outline too. Picking another skin gives the Font and
+Texture overrides back to that skin's default. The window, the cards and the toast are window text, so
+*HUD text only* takes their outline. A pick calls `Skin:SetChoice`
 first (the live repaint, no reload), then writes through the seam, so `/dw get|set skin.*` reaches the
 same values and every reset puts them back on Ka0s Default. Leaving EllesmereUI after it painted this
 session asks for a reload (the library's popup). In combat the tab refuses every change. Without the
 library there is no tab.
 
 **The first-run skin picker** (LibKa0s OptionsSkinPicker, the rollout's O3): a small window titled **Choose a
-skin**, with **Ka0s Drop Watcher** on its own line above a dropdown of the skins (the window widens
+skin**, with **Ka0s Drop Watcher** on its own line above a dropdown of the skins, each row three swatches and the skin's name in its own face (the window widens
 so the name is never cut off; LibKa0s v1.81.0, OptionsSkinPicker minor 2), an eye, a gear, and **Apply** (with **Apply
 to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.MaybeShowSkinPicker`
 (`core/SkinSetup.lua`) shows it while the profile's `skin.pickerSeen` is false: two seconds after
@@ -107,7 +113,8 @@ for combat's end. A pick previews; **Apply** saves; the close control and Escape
 back and save nothing. The eye opens the window in test mode, so the skin shows on this addon's own
 frames; the gear saves the pending pick and opens this tab. Any close the player makes sets
 `skin.pickerSeen`; a stand-down or a profile event takes it down without setting it. One picker is up
-at a time across Ka0s addons; the others wait in the library's queue.
+at a time across Ka0s addons; the others wait in the library's queue. `/dw skin` opens the same picker
+whatever `skin.pickerSeen` says.
 
 **The pages' own widgets wear the skin too** (DW-04): every AceGUI widget `settings/PageEditors.lua`
 acquires goes through `acquire()`, which paints it for this owner (`NS.SkinPaintAce`, restored stock
@@ -141,7 +148,9 @@ settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.S
 It takes the look of Ka0s Loot History's Price sources table, without its drag handle, reorder list
 and status column: gold, left-aligned column headers (`GameFontNormalSmall`) in a band above
 fixed-height lines, every second line faintly striped, the cells' text in `GameFontHighlightSmall`,
-the panel's own CheckBox and Dropdown widgets. An untracked situation's `Auto-open`, `Quality` and
+the panel's own CheckBox and Dropdown widgets. The columns sit at fixed offsets, 8, 128, 188, 262
+and 424, with both dropdowns 150 wide, so the table ends at 574, clear of the panel's scroll gutter in
+every skin (DW-02, owner ruling D-18; it ended at 610 before, cutting Loot rule off). An untracked situation's `Auto-open`, `Quality` and
 `Loot rule` are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off.
 Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
 rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the
@@ -234,9 +243,12 @@ Compact view when it auto-opens in a run (`Open in compact view during a run` un
 default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
 title-bar toggle's tooltip names it while it holds). **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
-compact layout's cards size from their text) | Font size (all the way left, 0, is Default: the
-template's own size, like Ka0s Loot History's table; DW-A8; the compact cards follow it too, compact
-spec §5).
+compact layout's cards size from their text), then the tables' font: the library's composed font
+block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font
+size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table;
+DW-A8; the compact cards follow it too, compact spec §5), Font color | Use class color (the tables'
+plain text; the skin's own while the swatch is at its default), Font flags (From skin, the default,
+or a picked flag) | Font shadow, then Use the skin's font (on by default; Font is not read while it is).
 
 **Columns:** the tab opens with a note, drawn by the page's `chrome` on this tab only
 (`PageEditors.ColumnsNote`): the checkboxes change the full layout's Drops table; History shows
@@ -288,8 +300,8 @@ the detail card's header (never the toast, History, the Offer panel or the Repla
 side by side, the main spec's in the left column and the off-spec's in the right on every line,
 each knob a main | off-spec pair. **Effect:** Main spec glow and Off-spec glow (both on), each
 glow's Style (Button (rotating rays), Proc (flipbook), Pixel border or Auto cast sparkles; both
-Pixel border by default, feedback-21 H6), then Main spec color | Off-spec color (color swatches
-with alpha; `#FFF468` and `#3FC7EB`, opaque) and below them **Use class color (main spec)** | **Use
+Proc (flipbook) by default since DW-03, owner ruling D-18, Pixel border until then), then Main spec
+color | Off-spec color (color swatches with alpha; `#19FF19` and `#3FC7EB`, opaque) and below them **Use class color (main spec)** | **Use
 class color (off-spec)** (off; the player's class color in place of the swatch above, its alpha
 kept). Each companion sits below its swatch, not immediately to its right: a documented
 options-ui-§17 deviation, the owner's choice (main spec left, off-spec right on every row;
@@ -297,6 +309,12 @@ options-ui-§17 deviation, the owner's choice (main spec left, off-spec right on
 first), then one subsection per style, in the order and the words the Style dropdown lists them
 (feedback-24): **Pixel border** (lines, frequency, line length with 0 Automatic, thickness, dark
 border), **Auto cast sparkles** (particles, frequency, scale), **Button (rotating rays)**
-(frequency), **Proc (flipbook)** (duration in seconds, start animation). A glow's Style is dimmed while it is off; a knob also while its glow is in a style the
-knob does not apply to. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
+(frequency), **Proc (flipbook)** (duration in seconds, start animation). A style's subsection is
+drawn only while either glow's Style selects it (DW-04, owner ruling D-17: `shownWhen = { any = ... }`
+on both rows of every pair, LibKa0s OptionsSwitch minor 1), so the defaults (both Proc) draw Effect,
+Offset and Proc (flipbook) alone, and two styles chosen draw both their subsections; a Style change
+re-renders the tab on the next frame. It follows the Style alone: a glow turned off still opens its
+style's subsection. Offset serves three styles and is always drawn. A glow's Style is dimmed while it
+is off; a drawn knob also while its glow is in a style the knob does not apply to (the other glow's
+column of a shown subsection). A hidden row is still a schema row, which `/dw set` and Defaults reach. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21).

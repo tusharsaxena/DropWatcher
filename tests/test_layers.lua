@@ -78,6 +78,7 @@ end)
 
 test("layers: the Offer panel stays in the window's strata; floating, it is W+30, docked W+1", function()
     local NS, win, m = shownWithDrop()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     local V = NS.Constants.LAYERS.LEVEL
     place(m, win, 200, 1200, 1920)
     NS.OfferPanel.Open(1)

@@ -546,6 +546,31 @@ test("table: the Window page's row height and font size lay out and size the dro
     assertEqual(size, 12, "and the glyph's own")
 end)
 
+test("table: a sized glyph keeps the skin's flags, read again after a repaint", function()
+    -- The verdict glyphs (the monospace face) store no flags of their own: they draw the flags the
+    -- skin painted, so a stored Font size keeps them, and a repaint to other flags (an outline or
+    -- skin change, which fires OnLooksChanged) is read anew. red under: WR.SetFontSize passing "" or
+    -- a cached flag. The tables' texts take the font block's own flags (tests/test_table_font.lua).
+    local NS, drawn = shownTable()
+    local WR = NS.WindowRows
+    local fs = rowFor(drawn, 1).cells.me.glyph
+    fs:SetFont("Ka0s Prototype", 12, "OUTLINE")   -- what the skin painted under All text
+    WR.SetFontSize(fs, 15)
+    local file, size, flags = fs:GetFont()
+    assertEqual(file, "Ka0s Prototype"); assertEqual(size, 15)
+    assertEqual(flags, "OUTLINE", "the skin's flags are kept at the stored size")
+    fs:SetFont("Ka0s Prototype", 12, "")           -- the repaint under HUD text only, or Off
+    WR.OnLooksChanged()
+    WR.SetFontSize(fs, 15)
+    file, size, flags = fs:GetFont()
+    assertEqual(file, "Ka0s Prototype")
+    assertEqual(size, 15, "the stored size survives the repaint")
+    assertEqual(flags, "", "and the new flags are read, never the cached ones")
+    WR.SetFontSize(fs, nil)
+    file, size = fs:GetFont()
+    assertEqual(size, 12, "Default puts the painted size back"); assertEqual(file, "Ka0s Prototype")
+end)
+
 test("table: built headless, one header and one row per drop, each column painted", function()
     local NS, drawn = shownTable()
     assertEqual(#drawn.headers, 1); assertEqual(#drawn.rows, 2)

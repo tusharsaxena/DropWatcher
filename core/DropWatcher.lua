@@ -374,10 +374,12 @@ function NS.TradeWithLooter(dropID)
 end
 
 -- Why an offer or an announce was not sent, in words (modules/Asks.lua's refusal reasons).
+-- `alone` is this file's own (DW-07): no other player is in your group to take the drop.
+local ALONE = NS.L["There is no other player in your group."]
 local SEND_REFUSAL = {
     offer = { alreadyAsked = NS.L["You already offered it to %s."], self = NS.L["You cannot offer it to yourself."],
-        noTarget = NS.L["That member is not known."] },
-    announce = { alreadyAsked = NS.L["You already announced it."], noDrop = NS.L["That drop is gone."],
+        noTarget = NS.L["That member is not known."], alone = ALONE },
+    announce = { alreadyAsked = NS.L["You already announced it."], noDrop = NS.L["That drop is gone."], alone = ALONE,
         noChannel = NS.L["You are not in a group, so there is no channel to post in."],
         noApi = NS.L["This client cannot send chat."] },
 }
@@ -395,7 +397,8 @@ end
 
 --- Offer one of your drops to a member (design spec §9.2, §11.4): the Offer panel's Offer button,
 --- through the messaging edge's Press, so a queued offer is canceled by a second click. A refusal is
---- said in chat. Refused while stood down. With `messages.editFirst` on, a press without `opts`
+--- said in chat. Refused while stood down, and while no other player is in your group (`alone`,
+--- DW-07: NS.WindowOwn.Alone). With `messages.editFirst` on, a press without `opts`
 --- opens the Edit message box instead (state `editing`).
 --- @param dropID number
 --- @param target string the member's "Name-Realm", name or GUID
@@ -408,6 +411,8 @@ function NS.PressOffer(dropID, target, opts)
         state, reason = "refused", NS.StoodDownReason()
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
+    elseif NS.WindowOwn.Alone(mineOf(dropID)) then
+        state, reason = "refused", "alone"
     elseif editFirst("offer", target, dropID, opts) then
         state = "editing"
     else
@@ -423,8 +428,9 @@ end
 
 --- Announce one of your drops to the group (design spec §9.2, §11.4): the Offer panel's Announce to
 --- group, through the messaging edge's Press. A refusal is said in
---- chat. Refused while stood down. With `messages.editFirst` on, a press without `opts` opens the
---- Edit message box instead (state `editing`). Post my tradeables never does: its lines are cut to
+--- chat. Refused while stood down, and while no other player is in your group (`alone`, DW-07). With
+--- `messages.editFirst` on, a press without `opts` opens the Edit message box instead (state
+--- `editing`). Post my tradeables never does: its lines are cut to
 --- fit the chat limit, so they are sent as they stand.
 --- @param dropID number
 --- @param opts table|nil { text = the edited message } (the Edit message box's Send)
@@ -436,6 +442,8 @@ function NS.PressAnnounce(dropID, opts)
         state, reason = "refused", NS.StoodDownReason()
     elseif not mineOf(dropID) then
         state, reason = "refused", "noDrop"
+    elseif NS.WindowOwn.Alone(mineOf(dropID)) then
+        state, reason = "refused", "alone"
     elseif editFirst("announce", nil, dropID, opts) then
         state = "editing"
     else
@@ -453,7 +461,8 @@ local postSeq = 0   -- each Post my tradeables files its lines under a key of it
 
 --- Post my tradeables (design spec §11.4): one announce listing every drop of yours you can still
 --- trade (in the feed on show), cut at the chat limit into several lines, each sent as an announce
---- through the messaging edge (queued under a restriction, printed in test mode).
+--- through the messaging edge (queued under a restriction, printed in test mode). Refused while no
+--- other player is in your group (DW-07), outside test mode.
 --- @return number lines posted (sent or queued)
 function NS.PostTradeables()
     local L = NS.L
@@ -462,8 +471,13 @@ function NS.PostTradeables()
         NS.Print(stoodDown)
         return 0
     end
+    local testMode = NS.State.testMode == true
+    if not testMode and NS.WindowOwn.Alone() then
+        NS.Print(L["Not announced: %s"]:format(ALONE))
+        return 0
+    end
     local links = {}
-    local feed = NS.State.testMode == true and "test" or "live"
+    local feed = testMode and "test" or "live"
     for _, d in ipairs(NS.LootFeed.Drops(feed)) do
         if NS.WindowFilterBar.IsTradeableMine(d) then links[#links + 1] = d.link end
     end

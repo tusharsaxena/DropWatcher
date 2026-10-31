@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.81.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.83.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -148,8 +148,8 @@ go with its drop. The payloads and consumers below are the code's.
 
 ## Slash Commands
 
-`/dw`, alias `/dropwatcher`. The reserved verbs (`help config enable disable version list get set
-reset resetall profile debug diagnostics perf`) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
+`/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
+reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
 add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
@@ -277,11 +277,12 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
   (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
   source (the Ka0s skins, or EllesmereUI's when it can skin this addon), the skin, the Font and
-  texture overrides and the Scope (Ignore settings panel, Ignore fonts). The seven `skin.*` rows are
+  texture overrides, the Font outline (`skin.outline`, LibKa0s v1.82.0: HUD text only by default since
+  v1.83.0, all text or off, applied with `Skin:SetOutline`) and the Scope (Ignore settings panel, Ignore fonts). The eight `skin.*` rows are
   `skipRender` rows of the one seam, so `/dw get|set` reaches the same values, and a pick calls
   `Skin:SetChoice` first: the repaint is live, with no reload. A profile switch, copy or reset applies
-  the incoming profile's skin, scope and overrides (`reloadProfile`). `tests/test_skin_setup.lua` and
-  `tests/test_skin_settings.lua` pin the seam and the rows.
+  the incoming profile's skin, scope, overrides and outline (`reloadProfile`). `tests/test_skin_setup.lua`,
+  `tests/test_skin_outline.lua` and `tests/test_skin_settings.lua` pin the seam and the rows.
 - **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
   border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
@@ -294,7 +295,8 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
   the window in test mode; its gear opens General → Skin. Its title is the library's "Choose a
   skin", the addon's name on its own line above the dropdown (LibKa0s v1.81.0). Only the player's
-  close writes `pickerSeen`. `tests/test_skin_picker.lua`.
+  close writes `pickerSeen`. `/dw skin` (`NS.RunSkinVerb`, `O.SkinVerb`) opens it on demand, whatever
+  `pickerSeen` says. `tests/test_skin_picker.lua`, `tests/test_skin_verb.lua`.
 - **The settings panel.** Every AceGUI widget the pages acquire themselves is painted for this owner
   (`NS.SkinPaintAce`, restored on release), the Situations table's session-held cells repaint on a
   switch, and the Profiles page paints the tree AceConfigDialog draws (`NS.SkinPaintAceTree`).
@@ -302,9 +304,31 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   cells go back stock, and the table's own headers, labels and stripes read `NS.SkinPanelColor`, which
   answers the Ka0s Default value while the panel is ignored.
 - **What Ka0s Default changes.** Ka0s Default keeps every color, but three things look new under it:
-  every string reads in Oxanium (the library's Ka0s Default face) instead of Friz Quadrata, the title
+  every string reads in Prototype (the library's Ka0s Default face since LibKa0s v1.82.0; Oxanium before) instead of Friz Quadrata, the title
   bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
   knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
+- **Fonts, outline and widths (LibKa0s v1.82.0, the default moved in v1.83.0).** Window text is
+  unoutlined by default (*HUD text only*, D-10); the Skin tab's Font outline (`skin.outline`) puts it
+  on all text (*All text*) or takes it off everywhere (*Off*), and a stored mode stays. Every string outside the drop tables takes the skin's face and flags through `S.Font` /
+  `S.Text`, its color from the skin's tokens and the verdict tones, and the verdict glyphs the mono
+  role, which the skin never outlines. The drop tables' text is the one font setting (D-07, the lead's
+  ruling on DW-01's review): Window › Layout › Tables carries the library's composed font block
+  (`H.FontGroup` with `fromSkin` and `flagsFromSkin`, `settings/ComposedRows.lua`): Font
+  (`window.tableFont`, read only while Use the skin's font, `window.tableFontFromSkin`, is off), Font
+  size (`window.fontSize`, 0 Default as before), Font color and Use class color
+  (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
+  skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
+  and Font shadow (`window.tableFontShadow`). `NS.WindowRows` draws it on both tabs and both layouts:
+  one named font object per look (a 12.0.7 client draws a font object's shadow, not a runtime one),
+  the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
+  read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
+  tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
+  flag was stored before the block, so none migrates; and the addon draws no HUD text, so
+  `S.HudFontSize` (D-09) reaches nothing. Each skin's
+  body and title sizes are the library's, measured so every skin's text is as wide as Ka0s Default's.
+- **Characters every face draws.** `tests/test_locale.lua` runs the kit's display-glyph guard
+  (`T.assertDisplayGlyphs`, kit revision 45): a string outside the safe set fails unless it is drawn
+  in the mono role and marked `glyph: mono` (the verdict glyphs ▲ ≈ ▼ and ⊘).
 
 ### Intentional exceptions
 
@@ -365,7 +389,7 @@ Blizzard's own dialogs (DW-62).
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
-slot are not read; your gear is a per-slot best, not a loadout planner; an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
+slot are not read; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
 (the session is the login); the History card shows only what a kept entry holds; an install
@@ -396,11 +420,11 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 30 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 31 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 86 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 64, `core/CompatWorld.lua` 17, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 87 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 64, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

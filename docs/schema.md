@@ -68,7 +68,8 @@ Every module reads a setting through `NS.Setting(path)`.
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
 | `skin.skin` | `"ka0s"` | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); `ka0s` is Ka0s Default, the look before skins |
 | `skin.ignorePanel`, `skin.ignoreFonts` | `true`, `false` | Skin › Scope (skipRender) | the two exceptions: the settings panel stays the client's; every font stays the game's (the skin still colors the text) |
-| `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's own |
+| `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's default |
+| `skin.outline` | `"hud"` | Skin › Font and texture (skipRender) | the Font outline (LibKa0s v1.82.0, ruling D-06; the default moved to `hud` in v1.83.0, D-10, and a stored mode stays): `hud` text only, `all` text, or `off`; applied with `Skin:SetOutline` at load, on every profile event and on the row's write. The window, the cards and the toast are window text |
 | `skin.pickerSeen` | `false` | none (skipRender) | the first-run skin picker was closed on this profile, so it shows once per profile (the rollout's O3) |
 
 ### Drops › Situations (page key `feed`)
@@ -80,14 +81,17 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 | Key | Default | Column | What it is |
 |---|---|---|---|
 | `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window |
-| `situations.<key>.track` | per design spec §6.1 | Track | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per design spec §6.1 | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
+| `situations.<key>.track` | per situation (below; the owner's defaults since DW-06) | Track | loot is watched in that situation |
+| `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
-| `trade.rules.<key>` | per design spec §7.2 (`personal`; `legacy` for follower dungeons and PvP) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
+| `trade.rules.<key>` | `personal`; `legacy` for PvP (follower dungeons were `legacy` too, design spec §7.2, until DW-06) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
-dungeons and raids, `track` alone for Raid Finder, and off elsewhere. The four per-situation rows
+dungeons, follower dungeons, raids, delves, scenarios and solo, `track` alone for Raid Finder, and off
+for PvP and the open-world group (the owner's defaults since DW-06; design spec §6.1 had follower
+dungeons, delves, scenarios and solo off). They are AceDB defaults, so a profile that never changed a
+cell takes them and a stored choice stays, with no migration. The four per-situation rows
 are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0; the loot rule since
 feedback-24): the Situations table draws them, one line per situation (`settings/PageEditors.lua`
 `SituationTable`, docs/settings-panel.md), and writes through the seam, so the CLI, the Defaults
@@ -144,6 +148,9 @@ toast Window › Toast until feedback-24.
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
 | `window.compactInRuns` | `true` | Layout (DW-C0) | Compact view when it auto-opens in a run (Open in compact view during a run until item 020): an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
+| `window.tableFont`, `window.tableFontFromSkin` | `"Friz Quadrata TT"`, `true` | Layout › Tables (DW-01) | the tables' face, a LibSharedMedia name, read only while Use the skin's font is off; on, the skin's face is drawn (the look before DW-01). The composed font block (`H.FontGroup`, `fromSkin`; the lead's ruling on D-07) |
+| `window.tableFontColor`, `window.tableFontClassColor` | `{ r = 0.92, g = 0.92, b = 0.92, a = 1 }`, `false` | Layout › Tables (DW-01) | the tables' plain text color and its class-color companion (the player's class); a verdict, a quality or a class keeps its own color. At the default swatch (Ka0s Default's `dw.plain`) the skin's plain color is drawn, so a new profile looks as before |
+| `window.tableFontFlags`, `window.tableFontShadow` | `"@skin"`, `true` | Layout › Tables (DW-01) | the tables' font flags (From skin, `@skin`, resolved through the Skin tab's Font outline as window text; a picked flag as stored) and shadow (one named font object per look, `modules/WindowRows.lua`). No flag was stored before, so nothing migrates |
 | `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
 | `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Starting view | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
 | `trade.warnAt` | `600` | Columns (Trade window) | Mark a trade window ending within: seconds left when your own drop's Trade window countdown takes its warning color (`modules/MineCells.lua`, `modules/TradeTimer.lua`), 0 to 1800; 0 is off |
@@ -173,8 +180,8 @@ an upgrade for you, whoever looted it. It resolves through `NS.ResolveColor` (Li
 | Key | Default | Style | What it is |
 |---|---|---|---|
 | `glow.<g>.enabled` | `true`, `true` | all | the glow on or off |
-| `glow.<g>.type` | `"pixel"`, `"pixel"` | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
-| `glow.<g>.color` | `C.TONE.glowMain`, `#FFF468` (`{ r = 1, g = 244/255, b = 104/255, a = 1 }`), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
+| `glow.<g>.type` | `"proc"`, `"proc"` (DW-03, owner ruling D-18; `"pixel"` until then, and a profile that never chose follows the new default through AceDB, no migration) | all | the style: `button` (rotating rays), `proc` (flipbook), `pixel` (pixel border) or `autocast` (auto cast sparkles) |
+| `glow.<g>.color` | `C.TONE.glowMain`, `#19FF19` (`{ r = 25/255, g = 1, b = 25/255, a = 1 }`; DW-03, D-18, `#FFF468` until then), and `C.TONE.glowOffSpec`, `#3FC7EB` (`{ r = 63/255, g = 199/255, b = 235/255, a = 1 }`), tokens of their own (feedback-21 H6) | all | the glow's color, typed `color` (`{ r, g, b, a }`, each 0 to 1; `/dw set` takes it in that shape); its alpha applies under Use class color too |
 | `glow.<g>.useClassColor` | `false`, `false` | all | Use class color: the glow in the player's class color instead of the swatch, the swatch's alpha kept (player-scoped, options-ui-§17) |
 | `glow.<g>.pixelLines` | `8` | pixel | how many lines, 1 to 20 |
 | `glow.<g>.pixelFrequency` | `0.1` | pixel | how fast they run, 0.05 to 2 by 0.05 |

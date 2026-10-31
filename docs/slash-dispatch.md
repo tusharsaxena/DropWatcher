@@ -8,6 +8,7 @@ The bare command opens the settings panel.
 |---|---|---|---|
 | `help` | reserved | yes | the library's index |
 | `config` | reserved | yes | `DW:OpenSettings` |
+| `skin` | reserved (LibKa0s v1.82.0, ruling D-16) | no | `NS.RunSkinVerb` (`core/SkinSetup.lua`): `O.SkinVerb` with the first-run spec, so the skin picker opens whatever `skin.pickerSeen` says; in combat the library's gray line on every call, `Another Ka0s addon's skin picker is open…` while another's is up, and without LibKa0s `/dw skin is unavailable: the LibKa0s library did not load.` |
 | `enable` / `disable` | reserved | yes | `runEnabled`, writing `enabled` through the seam |
 | `version` | reserved | yes | the library |
 | `list` / `get` / `set` / `reset` / `resetall` | reserved | yes | the library over the schema seam; `reset` takes a path, `resetall` asks first |
@@ -24,7 +25,7 @@ The bare command opens the settings panel.
 | `compact` | feature | no | `SlashVerbs.Compact`: `NS.ToggleWindowMode` (the `window.mode` row through the seam, the title-bar toggle's handler), then prints the layout, `Compact view.` or `Full view.` (compact spec §1) |
 | `full` | feature | no | `SlashVerbs.Full`: `NS.SetWindowMode("full")`, then prints `Full view.` |
 | `situation` | feature | no | `SlashVerbs.Situation`: three lines, the situation with its Track, Auto-open and Quality, then the classifier's inputs, read live |
-| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open` |
+| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open`; refused with the reason while no other player is in your group (`NS.WindowOwn.Alone`, DW-07) |
 | `add <link> [player]` | feature | no | `SlashVerbs.Add`: `NS.LootFeed.Add(link, player)`, you when no player is named; prints the drop's id, that it is loading, or why the feed refused it |
 | `sim [verb]` | feature | no | `NS.Sim:RunVerb` (simulator spec §4; DW-03): LibKa0s-Sim-1.0's grammar, `sim` alone (the status, the usage and the library's step panel), `status` (the library's status line, then `SimVerbs.StatusLine`), `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.Sim:Start`, refused per the simulator's safety rules), `run` / `step` / `pause` / `resume` / `restart` / `stop`, `panel` (the library's panel); plus DropWatcher's five verbs from `NS.SimVerbs.VERBS`: `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimReport.Loot`), `lockdown on\|off` (`NS.SimHost.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`); anything else prints the usage (no `help` verb) |
 

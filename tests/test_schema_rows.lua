@@ -123,7 +123,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     local S = NS.SchemaRuntime
     S.Set("trade.rules.dungeon", "group")
     S.Set("feed.minIlvlMode", "absolute")
-    S.Set("situations.delve.track", true)
+    S.Set("situations.openWorldGroup.track", true)   -- off its default (untracked)
     S.Set("situations.raid.quality", "dynamicSlot")
     S.Set("messages.oneAsk", false)
     S.Set("messages.announceChannel", "RAID")
@@ -132,7 +132,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertEqual(cfg.rules.dungeon, "group")
     assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
     assertEqual(cfg.minIlvlMode, "absolute")
-    assertTrue(NS.Situations.IsTracking("delve"))
+    assertTrue(NS.Situations.IsTracking("openWorldGroup"))
     assertEqual(NS.Situations.QualityOverride("raid"), "dynamicSlot")
     assertTrue(NS.Situations.QualityOverride("dungeon") == nil, "`global` means the feed's own mode")
     local a = NS.Asks.Settings()
@@ -201,8 +201,8 @@ test("rows: `/dw set` reaches a hand-written row", function()
     local NS = T.enableAddon()
     NS.addon:OnSlashCommand("set feed.quality.floor 3")
     assertEqual(NS.addon.db.profile.feed.quality.floor, 3)
-    NS.addon:OnSlashCommand("set situations.solo.track true")
-    assertEqual(NS.addon.db.profile.situations.solo.track, true)
+    NS.addon:OnSlashCommand("set situations.solo.track false")   -- off its default (tracked, DW-06)
+    assertEqual(NS.addon.db.profile.situations.solo.track, false)
 end)
 
 test("rows: degraded, the hand-written rows still read, write and refuse", function()
@@ -249,9 +249,10 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
         assertEqual(cc.classColorSource, "player", "the player's class, whoever looted the drop")
         assertEqual(S.FindRow(base .. "color").classColorSource, "player")
     end
-    -- feedback-21 H6, the owner's screenshot: both pixel borders, #FFF468 and #3FC7EB, opaque.
-    assertEqual(NS.Setting("glow.main.type"), "pixel")
-    assertEqual(NS.Setting("glow.offSpec.type"), "pixel")
+    -- DW-03 (owner ruling D-18, image-39; was feedback-21 H6's two pixel borders and #FFF468): both
+    -- Proc (flipbook), the main spec #19FF19 and the off-spec #3FC7EB, opaque.
+    assertEqual(NS.Setting("glow.main.type"), "proc")
+    assertEqual(NS.Setting("glow.offSpec.type"), "proc")
     local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
     assertTrue(main.r == TONE.glowMain.r and main.g == TONE.glowMain.g and main.b == TONE.glowMain.b and main.a == 1,
         "main is its own token, opaque")
@@ -259,7 +260,7 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
         and off.a == 1, "off-spec is its own token, opaque")
     local function byte(v) return math.floor(v * 255 + 0.5) end
     local function hex(c) return string.format("%02X%02X%02X", byte(c.r), byte(c.g), byte(c.b)) end
-    assertEqual(hex(TONE.glowMain), "FFF468"); assertEqual(hex(TONE.glowOffSpec), "3FC7EB")
+    assertEqual(hex(TONE.glowMain), "19FF19"); assertEqual(hex(TONE.glowOffSpec), "3FC7EB")
     assertTrue(TONE.glowMain ~= TONE.good and TONE.glowOffSpec ~= TONE.offspec, "no longer the verdicts' tones")
 end)
 
@@ -324,7 +325,8 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
     local function dim(path) return S.FindRow(path).disabledIf() == true end
-    -- both pixel by default (feedback-21 H6); main set to proc here
+    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here
+    assertTrue(S.Set("glow.offSpec.type", "pixel"))
     assertTrue(S.Set("glow.main.type", "proc"))
     assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
     assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
@@ -520,7 +522,7 @@ local PINNED_ROWS = {
     { "glow.main.autocastParticles", "number", "4" },
     { "glow.main.autocastScale", "number", "1" },
     { "glow.main.buttonFrequency", "number", "0.25" },
-    { "glow.main.color", "color", "{[\"a\"]=1,[\"b\"]=0.4078431372549,[\"g\"]=0.95686274509804,[\"r\"]=1}" },
+    { "glow.main.color", "color", "{[\"a\"]=1,[\"b\"]=0.098039215686275,[\"g\"]=1,[\"r\"]=0.098039215686275}" },
     { "glow.main.enabled", "bool", "true" },
     { "glow.main.pixelBorder", "bool", "true" },
     { "glow.main.pixelFrequency", "number", "0.1" },
@@ -529,7 +531,8 @@ local PINNED_ROWS = {
     { "glow.main.pixelThickness", "number", "1" },
     { "glow.main.procDuration", "number", "1" },
     { "glow.main.procStartAnim", "bool", "true" },
-    { "glow.main.type", "string", "\"pixel\"" },
+    -- DW-03 (owner ruling D-18): both glows default to Proc, the main spec to #19FF19.
+    { "glow.main.type", "string", "\"proc\"" },
     { "glow.main.useClassColor", "bool", "false" },
     { "glow.main.xOffset", "number", "0" },
     { "glow.main.yOffset", "number", "0" },
@@ -546,7 +549,7 @@ local PINNED_ROWS = {
     { "glow.offSpec.pixelThickness", "number", "1" },
     { "glow.offSpec.procDuration", "number", "1" },
     { "glow.offSpec.procStartAnim", "bool", "true" },
-    { "glow.offSpec.type", "string", "\"pixel\"" },
+    { "glow.offSpec.type", "string", "\"proc\"" },
     { "glow.offSpec.useClassColor", "bool", "false" },
     { "glow.offSpec.xOffset", "number", "0" },
     { "glow.offSpec.yOffset", "number", "0" },
@@ -580,19 +583,21 @@ local PINNED_ROWS = {
     { "skin.font", "string", "\"\"" },
     { "skin.ignoreFonts", "bool", "false" },
     { "skin.ignorePanel", "bool", "true" },
+    -- LibKa0s v1.82.0 (DW-01 of the skin fonts run, ruling D-06): the Font outline, a new row.
+    { "skin.outline", "string", "\"hud\"" },
     { "skin.pickerSeen", "bool", "false" },
     { "skin.skin", "string", "\"ka0s\"" },
     { "skin.source", "string", "\"ka0s\"" },
     { "skin.texture", "string", "\"\"" },
-    { "situations.delve.autoOpen", "bool", "false" },
+    { "situations.delve.autoOpen", "bool", "true" },
     { "situations.delve.quality", "string", "\"global\"" },
-    { "situations.delve.track", "bool", "false" },
+    { "situations.delve.track", "bool", "true" },
     { "situations.dungeon.autoOpen", "bool", "true" },
     { "situations.dungeon.quality", "string", "\"global\"" },
     { "situations.dungeon.track", "bool", "true" },
-    { "situations.followerDungeon.autoOpen", "bool", "false" },
+    { "situations.followerDungeon.autoOpen", "bool", "true" },
     { "situations.followerDungeon.quality", "string", "\"global\"" },
-    { "situations.followerDungeon.track", "bool", "false" },
+    { "situations.followerDungeon.track", "bool", "true" },
     { "situations.mythicPlus.autoOpen", "bool", "true" },
     { "situations.mythicPlus.quality", "string", "\"global\"" },
     { "situations.mythicPlus.track", "bool", "true" },
@@ -608,12 +613,12 @@ local PINNED_ROWS = {
     { "situations.raidLFR.autoOpen", "bool", "false" },
     { "situations.raidLFR.quality", "string", "\"global\"" },
     { "situations.raidLFR.track", "bool", "true" },
-    { "situations.scenario.autoOpen", "bool", "false" },
+    { "situations.scenario.autoOpen", "bool", "true" },
     { "situations.scenario.quality", "string", "\"global\"" },
-    { "situations.scenario.track", "bool", "false" },
-    { "situations.solo.autoOpen", "bool", "false" },
+    { "situations.scenario.track", "bool", "true" },
+    { "situations.solo.autoOpen", "bool", "true" },
     { "situations.solo.quality", "string", "\"global\"" },
-    { "situations.solo.track", "bool", "false" },
+    { "situations.solo.track", "bool", "true" },
     { "state.debugConsole", "bool", "false" },
     { "state.testMode", "bool", "nil" },
     { "toast.duration", "number", "8" },
@@ -624,7 +629,7 @@ local PINNED_ROWS = {
     { "toast.sound", "bool", "false" },
     { "trade.rules.delve", "string", "\"personal\"" },
     { "trade.rules.dungeon", "string", "\"personal\"" },
-    { "trade.rules.followerDungeon", "string", "\"legacy\"" },
+    { "trade.rules.followerDungeon", "string", "\"personal\"" },
     { "trade.rules.mythicPlus", "string", "\"personal\"" },
     { "trade.rules.openWorldGroup", "string", "\"personal\"" },
     { "trade.rules.pvp", "string", "\"legacy\"" },
@@ -647,6 +652,14 @@ local PINNED_ROWS = {
     { "window.fontSize", "number", "0" },
     { "window.mode", "string", "\"full\"" },
     { "window.rowHeight", "number", "18" },
+    -- DW-01 (the lead's ruling on D-07): the tables' font gained the rest of the font setting, new
+    -- stored paths beside `window.fontSize`, whose path, type and default are unchanged.
+    { "window.tableFont", "string", "\"Friz Quadrata TT\"" },
+    { "window.tableFontClassColor", "bool", "false" },
+    { "window.tableFontColor", "color", "{[\"a\"]=1,[\"b\"]=0.92,[\"g\"]=0.92,[\"r\"]=0.92}" },
+    { "window.tableFontFlags", "string", "\"@skin\"" },
+    { "window.tableFontFromSkin", "bool", "true" },
+    { "window.tableFontShadow", "bool", "true" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()

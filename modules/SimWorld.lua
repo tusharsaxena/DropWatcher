@@ -343,6 +343,12 @@ function P.UnitIsConnected(live, unit)
     return not mark(m, "offline")
 end
 
+-- The simulated group is players, every one (a follower or a companion is never invented).
+function P.UnitIsPlayer(live, unit)
+    if W.MemberOfUnit(unit) then return true end
+    return live(liveUnit(unit))
+end
+
 -- Where.
 
 function P.InstanceState(live)

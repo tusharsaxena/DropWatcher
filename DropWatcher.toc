@@ -358,8 +358,9 @@ modules\MineCells.lua
 modules\SideCells.lua
 # LOAD-BEARING: takes NS.MineCells (modules\MineCells.lua, above) at load. Publishes NS.WindowOwn,
 # your own drops on Drops (the session's reveal state, the Offer and Announce tone states, the
-# message buttons' look, the own-drop cell reads and the Ask-or-Offer click); takes NS.State at load.
-# NS.WindowCells, the asks, the history, the Offer panel and the host handlers are read at call time.
+# message buttons' look, the own-drop cell reads and the Ask-or-Offer click); takes NS.State at load,
+# and adds its repaint to NS.Roster's change sinks (modules\Roster.lua, above; DW-07). NS.WindowCells,
+# the asks, the history, the Offer panel and the host handlers are read at call time.
 modules\WindowOwn.lua
 # Conventional: publishes NS.RowTooltip, the one placement of a table row's tooltips (the row's top
 # right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells

@@ -22,7 +22,6 @@ L["A fresh tab lists only the drops that are an upgrade for you. With none ticke
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
-L["Off"] = "Off"
 L["Absolute"] = "Absolute"
 L["Relative to my gear"] = "Relative to my gear"
 L["Automatic"] = "Automatic"
@@ -124,10 +123,6 @@ L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve,
 L["Row height"] = "Row height"
 L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."] =
     "The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."
-L["Font size"] = "Font size"
-L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."] =
-    "The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."
-L["Default"] = "Default"
 L["Toast"] = "Toast"
 L["Show a toast"] = "Show a toast"
 L["Pop up a toast for a likely tradeable upgrade for you."] = "Pop up a toast for a likely tradeable upgrade for you."
@@ -240,6 +235,9 @@ L["The font this addon's text uses, over the skin's own. Empty keeps the skin's.
 L["Texture"] = "Texture"
 L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."] =
     "The texture this addon's bars use, over the skin's own. Empty keeps the skin's."
+L["Font outline"] = "Font outline"
+L["Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere. The window, the cards and the toast are window text."] =
+    "Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere. The window, the cards and the toast are window text."
 L["Skin picker seen"] = "Skin picker seen"
 L["Whether the first-run skin picker was closed on this profile."] =
     "Whether the first-run skin picker was closed on this profile."
@@ -258,6 +256,17 @@ L["The border's color. Not read while Use class color is on, except for its opac
 L["Use the skin's border"] = "Use the skin's border"
 L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] =
     "Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."
+L["The face the drop tables' text is drawn in, on both tabs. Not read while Use the skin's font is on."] =
+    "The face the drop tables' text is drawn in, on both tabs. Not read while Use the skin's font is on."
+L["Font size"] = "Font size"
+L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."] =
+    "The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."
+L["Default"] = "Default"
+L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] =
+    "The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."
+L["Draw a soft shadow behind the tables' text."] = "Draw a soft shadow behind the tables' text."
+L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] =
+    "Draw the tables' text in the skin's face. The Font row is not read while this is on."
 
 -- settings/Editors.lua
 L["Strength"] = "Strength"

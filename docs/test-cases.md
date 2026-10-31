@@ -133,7 +133,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (45)
+### test_settings_pages.lua (49)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -141,6 +141,7 @@ Total.
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
 - situations: the global Auto-open row, then one table line per situation and no per-situation rows
 - situations: five gold, left-aligned column headers, and a stripe on every second line
+- situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)
 - situations: each cell paints its stored value, and a toggle writes its path
 - situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off
 - situations: Defaults repaints the table
@@ -180,6 +181,9 @@ Total.
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
 - asks: TokenContext fills the tokens from a drop for who it goes to
+- glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)
+- glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)
+- glow sections: a glow turned off still opens its style's section, dimmed (DW-04)
 
 ### test_skin_setup.lua (18)
 
@@ -201,6 +205,20 @@ Total.
 - Skin seam: the window edge, dropdowns, search box and mode strips are built for the owner
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
+
+### test_skin_outline.lua (11)
+
+- outline: a fresh profile stores HUD text only, the library's default
+- outline: a stored All text stays, and is applied (D-10 migrates nothing)
+- outline: the schema row offers the library's three modes, in its order, on the Skin tab
+- outline: the write seam stores media.outline, and leaves it alone when it is nil
+- outline: another addon's copy reaches the store through WriteChoice
+- outline: the row's write applies the mode live
+- outline: /dw set refuses a mode the library does not know
+- outline: the stored mode is applied right after AceDB exists
+- outline: a profile switch and a reset apply the incoming profile's mode
+- outline: without the skin engine the apply is a quiet no-op and the store still takes it
+- outline: without the skin engine From skin answers the default mode, HUD text only
 
 ### test_skin_chrome.lua (11)
 
@@ -254,6 +272,15 @@ Total.
 - Skin picker: the stand-down with a preview pending puts the stored skin back, unsaved, unseen
 - Skin picker: a profile switch with a preview pending wears the new profile's skin
 - Skin picker: degraded, nothing shows and nothing raises
+
+### test_skin_verb.lua (6)
+
+- skin verb: the row sits right after config, with the library's help words
+- skin verb: /dw skin shows the library's picker on a profile that has closed it
+- skin verb: NS.RunSkinVerb hands O.SkinVerb this addon's first-run spec
+- skin verb: in combat every call prints the library's gray line and shows nothing
+- skin verb: refused while the addon is disabled, and the picker is never asked
+- skin verb: without LibKa0s the verb prints the library-absent line
 
 ### test_skin_settings.lua (10)
 
@@ -536,7 +563,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (50)
+### test_window_group.lua (51)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -562,6 +589,7 @@ Total.
 - rows: a stored row height and font size stay as the player set them
 - rows: Font size reads `0 (Default)` on the CLI, and its slider reaches 0
 - table: the Window page's row height and font size lay out and size the drop rows
+- table: a sized glyph keeps the skin's flags, read again after a repaint
 - table: built headless, one header and one row per drop, each column painted
 - table: the verdicts wear their tones, the looter their class color, the item its quality
 - table: every shown cell has a reason tooltip; nothing is blank
@@ -588,6 +616,18 @@ Total.
 - table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
+
+### test_table_font.lua (9)
+
+- table font: Window › Layout › Tables carries the whole font setting, after Row height
+- table font: Font size keeps its stored path, its range and `0 (Default)`
+- table font: the defaults keep today's look; only the flags are From skin
+- table font: From skin flags draw the window text's outline, and a picked flag wins
+- table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
+- table font: the color is plain text's; a verdict, a class and a quality keep their own
+- table font: the shadow is drawn and taken off (no CreateFont: on the string)
+- table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font: History and the compact cards draw the same setting
 
 ### test_drops_layout.lua (10)
 
@@ -765,6 +805,24 @@ Total.
 - offer panel: it keeps its own least height beside the compact window
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
+
+### test_offer_alone.lua (15)
+
+- offer alone: the roster reads who is a player: solo, followers and a companion are nobody
+- offer alone: a secret UnitIsPlayer falls back to the GUID's kind
+- offer alone: a player who changes into a follower in the same slot moves the roster
+- offer alone: MineCells.OwnOffer reads No action with the reason when nobody could take it
+- offer alone: WindowOwn.Alone: a test drop judges its own spec roster
+- offer alone: solo, your tradeable drop reads No action and says why (image-66)
+- offer alone: a follower dungeon's party of followers is nobody to offer to
+- offer alone: a delve with Brann is nobody to offer to
+- offer alone: a real party keeps the Offer
+- offer alone: a player joining brings the Offer back on the repaint; leaving takes it away
+- offer alone: the detail card's first action and the compact card read No action too
+- offer alone: the Offer panel does not open, and closes when the last player leaves
+- offer alone: Offer, Announce and Post my tradeables refuse and say why
+- offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
+- offer alone: /dw offer says why and opens nothing
 
 ### test_mine_cells.lua (14)
 
@@ -1142,7 +1200,7 @@ Total.
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
 - trade rules: a BoE or BoU drop is yes boe, in any situation and past the window
-- trade rules: the legacy rule is no legacy (follower dungeons and PvP)
+- trade rules: the legacy rule is no legacy (PvP by default)
 - trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect
 - trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade
 - trade rules: personal, an upgrade for the looter, is no upgradeForLooter
@@ -1525,7 +1583,7 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (26)
+### test_asks.lua (27)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
@@ -1551,6 +1609,7 @@ Total.
 - cancel: an ask queued to a looter who leaves is dropped; others stay
 - cancel: a queued announce is dropped once you leave the group
 - cancel: a queued announce to a stored channel is dropped once that kind of group is gone
+- cancel: a queued announce is dropped once the last other player leaves, the group kept (DW-07)
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
@@ -1648,12 +1707,13 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_toast.lua (45)
+### test_toast.lua (49)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
 - toast: Compose keeps the table's words, the empty slot and each trade reason
 - toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)
+- toast: 90 px tall, DpsRace's new-best toast, every size scaled to match (DW-05)
 - toast edge: on for a new profile; turned off, nothing is built or shown
 - toast edge: a qualifying drop shows at once, painted, and goes after its duration
 - toast edge: the four rows beside a four-row icon, painted (feedback-9 spec §0)
@@ -1695,6 +1755,9 @@ Total.
 - toast edge: a profile switch mid-combat to one without Show in combat holds the next
 - toast edge: on a shell that names no waiting keys, the drops gone from the feed still leave the queue
 - toast: the diagnostics' window section reports the toast
+- toast edge: 90 px tall, its icon, Ask and every face scaled to match DpsRace's toast (DW-05)
+- toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)
+- toast edge: a scaled face scales its client font object's own height, NS.FONT_SIZE only the fallback (DW-05 review)
 
 ### test_glow.lua (14)
 
@@ -2006,7 +2069,7 @@ Total.
 - tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
 
-### test_locale.lua (6)
+### test_locale.lua (7)
 
 - locale: the enUS files are the TOC's, the base file first and its topic files after it
 - locale: every enUS key lives in exactly one enUS file
@@ -2014,6 +2077,7 @@ Total.
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
 - locale: every enUS key is still read by the addon's files
+- locale: display strings use only characters every shipped skin face draws
 
 ### test_eol.lua (2)
 
@@ -2087,12 +2151,14 @@ Total.
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
-| test_settings_pages.lua | 45 |
+| test_settings_pages.lua | 49 |
 | test_skin_setup.lua | 18 |
+| test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 11 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
+| test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
@@ -2104,7 +2170,8 @@ Total.
 | test_history_card.lua | 15 |
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 50 |
+| test_window_group.lua | 51 |
+| test_table_font.lua | 9 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
@@ -2113,6 +2180,7 @@ Total.
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 21 |
+| test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
@@ -2144,13 +2212,13 @@ Total.
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 26 |
+| test_asks.lua | 27 |
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_toast.lua | 45 |
+| test_toast.lua | 49 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 10 |
 | test_layers.lua | 9 |
@@ -2167,11 +2235,11 @@ Total.
 | test_diagnostics.lua | 15 |
 | test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
-| test_locale.lua | 6 |
+| test_locale.lua | 7 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1792** |
+| **Total** | **1844** |

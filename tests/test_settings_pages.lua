@@ -186,16 +186,45 @@ test("situations: five gold, left-aligned column headers, and a stripe on every 
     end
 end)
 
+test("situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)", function()
+    -- image-38: the Loot rule dropdown ran past the panel's scroll gutter (460 + 150 = 610 units,
+    -- about 600 usable). Owner ruling D-18: columns {8, 128, 188, 262, 424}, both dropdowns 150,
+    -- so the table ends at 574, clear of the gutter whatever the skin's face.
+    -- red under: SIT_COL.rule = 460 (the table ends at 610, past SIT_TABLE_W).
+    local NS, _, m = T.enableAddon()
+    local P = NS.addon.Settings.PageEditors
+    local C, W = P.SIT_COL, P.SIT_WIDTHS
+    local order = { "situation", "track", "autoOpen", "quality", "rule" }
+    local xs = {}
+    for i, k in ipairs(order) do xs[i] = C[k] end
+    assertEqual(table.concat(xs, ","), "8,128,188,262,424", "D-18's columns")
+    assertEqual(W.quality, 150); assertEqual(W.rule, 150)
+    for i = 2, #order do assertTrue(xs[i] > xs[i - 1], order[i] .. " sits right of " .. order[i - 1]) end
+    assertTrue(C.quality + W.quality < C.rule, "the Quality dropdown ends before Loot rule starts")
+    assertTrue(C.rule + W.rule <= P.SIT_TABLE_W, "the Loot rule dropdown ends inside the table")
+    assertTrue(P.SIT_TABLE_W <= 600, "the table fits the ~600 units the panel leaves beside its gutter")
+    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width.
+    local _, _, t = whenToShow(NS, m)
+    for i, k in ipairs(order) do
+        local x = t.headers[i].__points[1][4]   -- the mock's regions record their points
+        assertEqual(x, C[k], k .. "'s header sits over its cells")
+    end
+    local row = t.rows[1]
+    for _, k in ipairs({ "quality", "rule" }) do
+        assertEqual(row[k].width, W[k], k .. " dropdown width")   -- the kit's AceGUI fake records it
+    end
+end)
+
 test("situations: each cell paints its stored value, and a toggle writes its path", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
-    local delve = t.rows[6]   -- K.SITUATIONS order: delve is sixth, untracked by default
-    assertEqual(delve.track.value, false)
+    local pvp = t.rows[8]   -- K.SITUATIONS order: PvP is eighth, untracked by default
+    assertEqual(pvp.track.value, false)
     assertEqual(t.rows[1].track.value, true, "Mythic+ is tracked by default")
     assertEqual(t.rows[1].quality.value, "global")
     assertEqual(t.rows[1].quality.list.global, "Use global", "the row's own value list")
-    delve.track:__fire("OnValueChanged", true)
-    assertEqual(NS.addon.db.profile.situations.delve.track, true)
+    pvp.track:__fire("OnValueChanged", true)
+    assertEqual(NS.addon.db.profile.situations.pvp.track, true)
     t.rows[1].quality:__fire("OnValueChanged", "dynamicSlot")
     assertEqual(NS.addon.db.profile.situations.mythicPlus.quality, "dynamicSlot")
     t.rows[1].autoOpen:__fire("OnValueChanged", false)
@@ -212,20 +241,20 @@ test("situations: an untracked situation's Auto-open, Quality and Loot rule are 
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
-    local mp, delve = t.rows[1], t.rows[6]
+    local mp, pvp = t.rows[1], t.rows[8]
     assertFalse(mp.autoOpen.disabled == true, "mythicPlus auto-open live")
     assertFalse(mp.quality.disabled == true)
-    assertFalse(delve.track.disabled == true, "Track is always live")
-    assertTrue(delve.autoOpen.disabled == true, "delve (untracked) auto-open dimmed")
-    assertTrue(delve.quality.disabled == true, "and its quality")
-    assertTrue(delve.rule.disabled == true, "and its loot rule")
+    assertFalse(pvp.track.disabled == true, "Track is always live")
+    assertTrue(pvp.autoOpen.disabled == true, "pvp (untracked) auto-open dimmed")
+    assertTrue(pvp.quality.disabled == true, "and its quality")
+    assertTrue(pvp.rule.disabled == true, "and its loot rule")
     assertFalse(mp.rule.disabled == true, "a tracked one's is live")
-    assertEqual(select(1, delve.label:GetTextColor()), 0.5, "its label dims")
-    Set("situations.delve.track", true)
-    assertFalse(delve.autoOpen.disabled == true, "tracking it lights it")
-    assertFalse(delve.quality.disabled == true)
-    assertFalse(delve.rule.disabled == true)
-    assertEqual(select(1, delve.label:GetTextColor()), 0.86)
+    assertEqual(select(1, pvp.label:GetTextColor()), 0.5, "its label dims")
+    Set("situations.pvp.track", true)
+    assertFalse(pvp.autoOpen.disabled == true, "tracking it lights it")
+    assertFalse(pvp.quality.disabled == true)
+    assertFalse(pvp.rule.disabled == true)
+    assertEqual(select(1, pvp.label:GetTextColor()), 0.86)
     Set("autoOpen", false)
     -- red under: a disabled rule that reads the situation's track alone
     assertTrue(mp.autoOpen.disabled == true, "the master off dims every situation's")
@@ -236,25 +265,25 @@ test("situations: Defaults repaints the table", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
-    Set("situations.delve.track", true)
+    Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
     Set("situations.mythicPlus.quality", "fixed")
-    assertEqual(t.rows[6].track.value, true)
+    assertEqual(t.rows[8].track.value, true)
     NS.addon.Settings.Helpers.RestoreAllDefaults()
-    assertEqual(t.rows[6].track.value, false)
+    assertEqual(t.rows[8].track.value, false)
     assertEqual(t.rows[1].quality.value, "global")
-    assertTrue(t.rows[6].autoOpen.disabled == true)
+    assertTrue(t.rows[8].autoOpen.disabled == true)
 end)
 
 test("situations: a profile switch repaints the table and re-hosts it", function()
     local NS, _, m = T.enableAddon()
     local ctx, _, t = whenToShow(NS, m)
-    NS.SchemaRuntime.Set("situations.delve.track", true)
-    assertEqual(t.rows[6].track.value, true)
+    NS.SchemaRuntime.Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
+    assertEqual(t.rows[8].track.value, true)
     NS.addon.db:SetProfile("Other")
     -- red under: a full re-render that builds a second table, or re-hosts nothing after the park
     assertTrue(ctx.dwSituations == t, "the same table")
-    assertEqual(t.rows[6].track.value, false, "the fresh profile's delve is untracked")
-    assertTrue(t.rows[6].autoOpen.disabled == true, "and its auto-open dims again")
+    assertEqual(t.rows[8].track.value, false, "the fresh profile's PvP is untracked")
+    assertTrue(t.rows[8].autoOpen.disabled == true, "and its auto-open dims again")
     assertTrue(t.host:IsShown() == true, "still on the page")
     assertTrue(t.host:GetParent() ~= ctx.panel, "re-hosted off the park")
 end)
@@ -278,8 +307,8 @@ test("situations: the table is built once, parked before each render, and re-hos
     for _, w in ipairs(drawn) do if w.type == "CheckBox" and w.labelText == "" then checks = checks + 1 end end
     assertEqual(checks, 0)
     assertTrue(t.host:IsShown() == true)
-    NS.SchemaRuntime.Set("situations.solo.track", true)
-    assertEqual(t.rows[10].track.value, true, "repainted after the re-host")
+    NS.SchemaRuntime.Set("situations.solo.track", false)   -- Solo is tracked by default (DW-06)
+    assertEqual(t.rows[10].track.value, false, "repainted after the re-host")
 end)
 
 test("situations: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
@@ -671,7 +700,12 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     local mode, inRuns = find(drawn, "Dropdown", "Window layout"), find(drawn, "CheckBox", "Compact view when it auto-opens in a run")
     local rowH, font = find(drawn, "Slider", "Row height"), find(drawn, "Slider", "Font size")
     assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
-    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) == lineOf(drawn, font), "Row height | Font size")
+    -- DW-01 (the lead's ruling on D-07): Font size is the composed font block's, beside Font, on the
+    -- line after Row height.
+    local face
+    for _, w in ipairs(drawn) do if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end end
+    assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) ~= lineOf(drawn, font), "Row height, then the font block")
+    assertTrue(face ~= nil and lineOf(drawn, face) == lineOf(drawn, font), "Font | Font size")
     assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
@@ -705,7 +739,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     local Set = NS.SchemaRuntime.Set
     Set("feed.gearOnly", false)
     Set("trade.warnAt", 120)
-    Set("situations.delve.track", true)
+    Set("situations.pvp.track", true)   -- off its default (PvP is untracked by default)
     Set("trade.rules.raid", "group")
     Set("autoOpen", false)
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
@@ -713,7 +747,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     ctx.panel.defaultsOnClick()
     assertEqual(NS.Setting("feed.gearOnly"), NS.C.PROFILE.feed.gearOnly)
     -- red under: the Situations rows left on a page of their own (item 020: Drops' Defaults owns them)
-    assertEqual(NS.Setting("situations.delve.track"), NS.C.PROFILE.situations.delve.track, "the situations table reset")
+    assertEqual(NS.Setting("situations.pvp.track"), NS.C.PROFILE.situations.pvp.track, "the situations table reset")
     assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")
     assertEqual(NS.Setting("autoOpen"), NS.C.PROFILE.autoOpen, "and the global auto-open")
     assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
@@ -849,3 +883,75 @@ test("asks: TokenContext fills the tokens from a drop for who it goes to", funct
     assertEqual(ctx.gain, -13)
     assertEqual(NS.Asks.TokenContext("announce", nil, nil).player, nil, "no drop, no recipient")
 end)
+
+-- ── Alerts › Upgrade glow: the style sections (DW-04) ───────────────────────────────────────
+
+-- The Upgrade glow tab drawn, with its headings in order. Answers the ctx, the drawn widgets and the
+-- headings joined with "|".
+local function glowTab(NS, m)
+    local ctx = open(NS, m, "alerts")
+    local drawn = tab(m, ctx, "Upgrade glow")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return ctx, drawn, table.concat(heads, "|")
+end
+
+-- Write a style, let the library's next-frame re-render run (the selector's watcher), and answer
+-- what the tab draws now: no tab click, so a page that did not re-render itself fails here.
+local function restyle(NS, m, ctx, path, style)
+    assertTrue(NS.SchemaRuntime.Set(path, style))
+    local before = #gui(m).__created
+    m.__fireTimers()
+    local drawn = created(m, before)
+    assertTrue(#drawn > 0, path .. ": the tab re-rendered itself on the next frame")
+    assertEqual(ctx.activeTab, "Upgrade glow")
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return drawn, table.concat(heads, "|")
+end
+
+test("glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)", function()
+    -- image-40/41, owner ruling D-17: a style's section shows while EITHER glow's style selects it
+    -- (shownWhen = { any = ... }, LibKa0s OptionsSwitch minor 1); the Offset rows serve three styles
+    -- and stay, dimmed as before when neither glow uses them.
+    -- red under: the knob rows with no shownWhen (all four sections drawn, dimmed).
+    local NS, _, m = T.enableAddon()
+    local _, drawn, heads = glowTab(NS, m)
+    assertEqual(heads, "Effect|Offset|Proc (flipbook)", "both glows on Proc, the default (DW-03)")
+    assertTrue(find(drawn, "Slider", "Main spec duration (seconds)") ~= nil)
+    assertTrue(find(drawn, "Slider", "Main spec lines") == nil, "the Pixel border section is not drawn")
+end)
+
+test("glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)", function()
+    local NS, _, m = T.enableAddon()
+    local ctx = glowTab(NS, m)
+    local drawn, heads = restyle(NS, m, ctx, "glow.offSpec.type", "pixel")
+    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)", "Proc for main, Pixel border for off-spec")
+    -- Within a shown section the other glow's column stays dimmed (knobOff, unchanged).
+    local mainLines, offLines = find(drawn, "Slider", "Main spec lines"), find(drawn, "Slider", "Off-spec lines")
+    assertTrue(mainLines ~= nil and offLines ~= nil, "both columns of the pair are drawn")
+    assertTrue(mainLines.disabled == true, "main is on Proc: its Pixel border column is dimmed")
+    assertFalse(offLines.disabled == true, "the off-spec column is live")
+    _, heads = restyle(NS, m, ctx, "glow.main.type", "button")
+    assertEqual(heads, "Effect|Offset|Pixel border|Button (rotating rays)")
+    _, heads = restyle(NS, m, ctx, "glow.offSpec.type", "button")
+    assertEqual(heads, "Effect|Offset|Button (rotating rays)", "both on Button")
+    drawn, heads = restyle(NS, m, ctx, "glow.main.type", "autocast")
+    assertEqual(heads, "Effect|Offset|Auto cast sparkles|Button (rotating rays)")
+    assertTrue(find(drawn, "Slider", "Main spec particles") ~= nil)
+end)
+
+test("glow sections: a glow turned off still opens its style's section, dimmed (DW-04)", function()
+    -- D-17: hiding follows the style alone, never the on/off check box.
+    local NS, _, m = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.type", "pixel"))
+    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+    local _, drawn, heads = glowTab(NS, m)
+    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)")
+    local off = find(drawn, "Slider", "Off-spec lines")
+    assertTrue(off ~= nil and off.disabled == true, "the off glow's section shows, dimmed")
+    -- The hidden rows stay in the schema: /dw set and Defaults still reach them.
+    assertTrue(NS.SchemaRuntime.Set("glow.main.buttonFrequency", 0.5))
+    assertEqual(NS.Setting("glow.main.buttonFrequency"), 0.5)
+end)
+

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1792%2F1792_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1844%2F1844_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -46,7 +46,7 @@ It watches what your party or raid receives and compares each item with your gea
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key or raid the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
+Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key, raid, delve or scenario, or playing solo, the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
 
 **Drops** lists every drop, yours included, under the boss or key it came from.
 
@@ -54,22 +54,22 @@ Type `/dw show`, or right-click the minimap button. You often won't need to: in 
 - Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. Trade window is how long they have left.
 - **Ask** whispers the looter, once. In a boss fight it waits until the fight ends.
 
-Upgrades you could actually get glow, yellow for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
+Upgrades you could actually get glow, green for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
 
-Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
+Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. It needs another player in your group, so solo, or with only followers or a delve companion, the row reads No action. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
 
 **History** keeps 30 days of drops across logouts and alts, along with what became of each. Right-click a row to mark it declined. Retention and Clear history are in Settings › Window › Layout.
 
 When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
 
-The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in.
+The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 
 `/dw test` fills the window with sample drops if you want a look around first. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 
 ## How the loot watching works
 
 - Drop Watcher reads your group's loot lines as they come in, along with the boss-loot and loot-history events, and merges the reports of one item into one drop.
-- Drops you don't care about stop there. Where you are (dungeons, keys and raids are watched by default), the minimum quality and the filters decide that before anyone is inspected.
+- Drops you don't care about stop there. Where you are (keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched by default), the minimum quality and the filters decide that before anyone is inspected.
 - Each drop is compared with what you wear in that slot, and with what the looter wears once their gear has been inspected. Inspects go one at a time and never in combat.
 - The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a looter can only trade an item that isn't an upgrade for them by item level.
 - Your own drops get an exact countdown read from the item's tooltip, and a list of who in the group would gain from them.
@@ -82,7 +82,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
 | Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level, with Pawn's own default settings and no setup. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
-| Does it work in raids? | Yes. Dungeons, keys and raids are watched out of the box. Delves, scenarios and the open world are off until you turn them on under Settings › Drops › Situations. |
+| Does it work in raids? | Yes. Keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched out of the box. PvP and open-world groups are off until you turn them on under Settings › Drops › Situations. |
 | Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin black one by default. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
 | Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
@@ -121,10 +121,4 @@ Please raise them on GitHub:
 
 ## Credits
 
-The debug console and the verdict marks use [JetBrains Mono](https://www.jetbrains.com/lp/mono/), licensed under the SIL Open Font License 1.1.
-
-Ka0s Default, the skin every profile starts on, draws [Oxanium](https://github.com/sevmeyer/oxanium) by The Oxanium Project Authors, also SIL Open Font License 1.1.
-
-The other skins draw on seven more SIL Open Font License 1.1 faces, one family per skin: [Inter](https://github.com/rsms/inter) by The Inter Project Authors, [Nunito](https://github.com/googlefonts/nunito) by The Nunito Project Authors, [Vollkorn](https://github.com/FAlthausen/Vollkorn-Typeface) by The Vollkorn Project Authors, [Bitter](https://github.com/solmatas/BitterPro) by The Bitter Project Authors, [Philosopher](https://github.com/alexeiva/philosopher) by The Philosopher Project Authors, [Fira Sans](https://github.com/mozilla/Fira) by The Mozilla Foundation and Telefonica S.A., and [Atkinson Hyperlegible](https://www.brailleinstitute.org/freefont/) by the Braille Institute of America. Inter, Nunito, Vollkorn, Bitter and Oxanium are static weights cut from upstream's variable fonts.
-
-The window's icons, and the skin picker's preview and settings buttons, are drawn from [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon draws are shipped. The fonts and the icons are bundled inside the LibKa0s payload, with their license text beside them.
+The window's icons, and the skin picker's preview and settings buttons, are drawn from [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon draws are shipped. The icons are bundled inside the LibKa0s payload, with their license text beside them.

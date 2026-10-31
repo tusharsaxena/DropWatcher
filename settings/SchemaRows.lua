@@ -96,6 +96,7 @@ local function repaintWindow()
     local W = NS.Window
     if W and W.IsShown and W.IsShown() then W.Refresh() end
 end
+Settings.RepaintWindow = repaintWindow   -- settings/ComposedRows.lua's tables font block too
 
 -- A glow row repaints every glowing icon: the window's surfaces (modules/Glow.lua).
 local function refreshGlow()
@@ -149,7 +150,8 @@ local CHANNELS = choices{
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
--- the Upgrade glow tab's style subsections read (the default, Pixel border, first; feedback-24).
+-- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
+-- Proc since DW-03, D-18, and the order did not move).
 local GLOW_STYLES = choices{
     "pixel", L["Pixel border"], "autocast", L["Auto cast sparkles"], "button", L["Button (rotating rays)"],
     "proc", L["Proc (flipbook)"],
@@ -384,11 +386,9 @@ local function window()
     layout = with(layout, { subgroup = L["Tables"] })
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
         L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
-    -- 0, all the way left, is Default: the template's own size, like Ka0s Loot History's table
-    -- (feedback-2 spec §8, FB2-9); 1 to 7 read as the least size (modules/WindowRows.lua).
-    slider("window.fontSize", W.fontSize, 0, K.WINDOW.FONT_MAX, 1, L["Font size"],
-        L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."],
-        with(layout, { zeroText = L["Default"] }))
+    -- The tables' font follows Row height: the whole font setting (DW-01, the lead's ruling on
+    -- D-07), the library's composed block, so settings/ComposedRows.lua declares it (it needs the
+    -- Options instance). `window.fontSize` keeps its path, its 0 (Default) and its range there.
 
     -- The full layout's Drops table columns, then the Trade window column's ending-soon mark (Trade ›
     -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else).
@@ -543,11 +543,25 @@ local function glow()
         bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
             with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
     end
+    -- A style's section is drawn only while EITHER glow's style selects it (DW-04, owner ruling D-17,
+    -- image-40/41; LibKa0s OptionsSwitch minor 1's `shownWhen = { any = ... }`): both rows of every
+    -- main | off-spec pair carry the same OR switch, so the pairing never breaks. It follows the
+    -- style alone, never the on/off box: a glow turned off still opens its section, dimmed by
+    -- knobOff, which also keeps dimming the column whose glow is in the other style. The Offset
+    -- rows serve three styles and are not one style's section (D-17 names the four), so they keep
+    -- the dimming alone. The hidden rows stay schema rows: `/dw set` and Defaults still reach them.
+    local function chosen(styles)
+        local list = {}
+        for style in pairs(styles) do list[#list + 1] = style end
+        table.sort(list)
+        return { any = { { path = "glow.main.type", equals = list }, { path = "glow.offSpec.type", equals = list } } }
+    end
     for _, knob in ipairs(GLOW_KNOBS) do
+        local switch = knob.heading ~= L["Offset"] and chosen(knob.styles) or nil
         for i, key in ipairs(GLOWS) do
             local path = "glow." .. key .. "." .. knob.key
             local extra = with(at, { subgroup = knob.heading, disabledIf = knobOff(key, knob.styles),
-                                     zeroText = knob.zeroText })
+                                     zeroText = knob.zeroText, shownWhen = switch })
             if knob.kind == "bool" then
                 bool(path, G[key][knob.key], knob.labels[i], knob.tip, extra)
             else
@@ -617,6 +631,12 @@ local function skin()
     add(with(at, { path = "skin.texture", type = "string", default = P.skin.texture, label = L["Texture"],
         tooltip = L["The texture this addon's bars use, over the skin's own. Empty keeps the skin's."],
         validate = isString, onChange = function(v) NS.ApplySkinOverride(nil, v) end }))
+    -- The Font outline (LibKa0s-Skin-1.0 minor 9, ruling D-06), drawn by the same tab as its "Font
+    -- outline" dropdown: where the skin outlines this addon's text. The library's three modes, in
+    -- its order; `/dw set skin.outline` validates against them.
+    pick("skin.outline", P.skin.outline, NS.SKIN_OUTLINE_OPTIONS, L["Font outline"],
+        L["Where the skin outlines this addon's text: all of it, its HUD text only, or nowhere. The window, the cards and the toast are window text."],
+        with(at, { onChange = function(v) NS.ApplySkinOutline(v) end }))
     -- The first-run skin picker's memory: set when the picker closes, so it shows once per
     -- profile (O3). Drawn by nothing; a reset puts it back to false.
     bool("skin.pickerSeen", P.skin.pickerSeen, L["Skin picker seen"],

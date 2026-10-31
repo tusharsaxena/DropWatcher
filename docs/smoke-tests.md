@@ -31,19 +31,21 @@ passed.
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
-| ASK-1..12 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4) |
-| SIT-1..5 | Situations | Where the addon is active (DW-13) |
+| ASK-1..13 | Ask | Sending and its confirmation, the queue and its flush, cancel, a whisper during an encounter (ASK-1..4, DW-2A); your own drops, the Offer panel and Post my tradeables (ASK-5..7, DW-33; on Drops since DW-E2/DW-E3); auto-ask (ASK-8, DW-54); auto-ask after leaving an encounter (ASK-9, DW-62); a stored announce channel refused without its group (ASK-10, DW-P17); Ask on an off-spec drop sends the off-spec whisper (ASK-11, DW-O2); the Offer button toggles the Offer panel (ASK-12, feedback-21 H4); no Offer without another player in your group: solo, a delve's companion, a follower dungeon (ASK-13, DW-07) |
+| SIT-1..7 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02); a fresh profile's Situations defaults (SIT-7, DW-06) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..7 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2) |
-| GLOW-1..11 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15) |
+| TOAST-1..8 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05) |
+| GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid black border) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..17 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01) |
 | COMPACT-1..9 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
+| SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
+| SKIN-31..33 | [Skins](#skins) | LibKa0s v1.83.0 (DW-F01, 2026-10-31): the window fits the new faces under both outline modes (SKIN-31), WoW Default differs from Ka0s Default (SKIN-32), the media pickers preview (SKIN-33); SKIN-4, SKIN-15 and SKIN-16 reopened |
 
 ## Before you start
 
@@ -1296,7 +1298,8 @@ beside a four-row icon, painted` and the right-click cases) covers the parts, th
 Research `docs/superpowers/research/2026-10-13-feedback-9/01-toast-today.png` shows the old line, cut at
 `Likely trad…`, and `02-table-verdict-marks.png` the Me and Them cells' look. Settings › Alerts › Toast ›
 Show a toast on, then `/dw test` → the toast is 350 pixels wide and its item icon spans all four rows (about
-56 pixels square, the toast's insets even all round). Row 1: `Big upgrade for you` in gold, Ask and the close
+56 pixels square, the toast's insets even all round; superseded by DW-05, 2026-10-30: 426 wide, a 68-pixel
+icon, 90 tall; TOAST-8). Row 1: `Big upgrade for you` in gold, Ask and the close
 mark at its right. Row 2: the item's name in its quality color (purple for epic), then its item level in
 smaller gray text; with a long name the name is cut, never the level. Row 3: `Looted by Seta`, the name in
 its class color, then `You ▲19` and `Them` with its verdict, each glyph (`▲`, `≈`, `▼`) drawn in the
@@ -2104,6 +2107,20 @@ card (click the row, then the card's Offer) and in the compact layout (`/dw comp
 Offer): each opens and then closes it. `/dw offer <item link>` with the panel already open on that
 drop leaves it open. Result: passed in the client, 2026-10-23 (the owner).
 
+**ASK-13. No Offer when no other player is in your group (DW-07; image-66).** The headless
+`test_offer_alone` covers it. Solo in the open world, loot a tradeable drop of your own (or add one
+with `/dw add <item link>`), Drops tab → its Actions reads the gray **No action**, not Offer; hover it
+→ `• Why: no other player in your group`. Its detail card's first action and its compact card read
+No action the same way. `/dw offer <item link>` prints `Not offered: There is no other player in
+your group.` and opens no panel, and the strip under the table shows no **Post my tradeables**
+(Scan group and Expand all stay). Repeat in a delve with Brann and in a follower dungeon (its party all
+followers) → No action on every drop of yours, with the same tooltip. Then, with one of those drops
+still tradeable, join a party with another player (or have one join yours) → within a moment the
+row reads **Offer** again without a click, Post my tradeables is back on the strip, and the Offer
+panel opens from it; have that player leave with the panel open → the panel closes, Post goes and
+the row reads No action again. `/dw test` keeps
+its own drops' Offer while solo. Result:
+
 ## Situations
 
 The classifier's truth table is headless-tested (`test_situations`); these checks confirm that the
@@ -2131,6 +2148,22 @@ these, record it: the ids live in `core/Constants.lua`. Result: passed in the cl
 **SIT-5. Disabled and back.** With `/dw debug on`, `/dw disable` in the open world, zone into a
 dungeon, `/dw enable` → one `[SIT] situation nil -> dungeon (standUp)` line, and no `[SIT]` line while
 disabled. Result: passed in the client, 2026-10-23 (the owner).
+
+**SIT-6. The Loot rule column fits (DW-02; D-18, image-38).** Settings › Drops › Situations at the
+default Settings window size → the five columns read Situation, Track, Auto-open, Quality and Loot
+rule, and every Loot rule dropdown shows whole, its arrow left of the scroll bar, with no cell
+overlapping the next ("Follower dungeon" clear of its Track box). Open a Loot rule dropdown and a
+Quality one → each list reads in full. Repeat under **Obsidian** and **Glass** with **Ignore settings
+panel** unticked, and under Ka0s Default with it ticked. Result:
+
+**SIT-7. The owner's Situations defaults (DW-06; image-64).** Settings › Profiles → create a new
+profile and switch to it (or log in a character that has never had one). Settings › Drops › Situations
+→ Auto-open the window is ticked, and the table reads: Mythic+, Dungeon, Follower dungeon, Raid,
+Delve, Scenario and Solo with Track and Auto-open ticked; Raid Finder with Track ticked and
+Auto-open unticked; PvP and Open world group with neither, their row dimmed. Quality is `Use global`
+on every line. Loot rule is `Personal loot` on every line but PvP, which reads `Legacy loot`
+(Follower dungeon now reads Personal). Switch back to your own profile → every cell you had set is
+as you left it. Result:
 
 ## Quality
 
@@ -2382,6 +2415,24 @@ covers each check below; this is the client's word on it. Run TOAST-1 first and 
 
 Result: passed in the client, 2026-10-30 (the owner).
 
+**TOAST-8. The toast as tall as DpsRace's new-best toast, every element scaled to match (DW-05).**
+Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, Addendum 03. The headless `test_toast`
+(`90 px tall, DpsRace's new-best toast`, `its icon, Ask and every face scaled`, `with CreateFont, each
+scaled face is a named font object`) covers the figures; this is the client's word on the look. Every
+size is the first release's times 90 / 74 (about 1.22): the toast 90 pixels tall (74 before) and at
+least 426 wide (350), the item icon 68 pixels square (56) with 11 pixels (9) above, below and left of
+it, and every face about a fifth larger. Toast on, Scale `100%`, with Ka0s DPS Race enabled:
+`/dw test` and DPS Race's General › New-best toast › Test toast, one placed above the other → the two toasts are
+the same height. On the Drop Watcher toast: the four rows still fit beside the icon, row 1's gold
+`Big upgrade for you` clear of Ask, row 4 sitting on the icon's bottom edge, no row overlapping the
+next; Ask is a little taller and wider, its chat mark and `Ask` word larger, still left of the close
+mark (the close mark itself is the LibKa0s-Toast shell's and keeps its size, as on DPS Race's toast); the item name and its level, `Looted by Seta · You ▲19 · Them ▼13` with its monospace glyphs,
+and the trade line are all larger and none is cut where it was not before. A ring or trinket with
+both worn items read (two dual marks) still widens the toast so neither verdict is cut. Scale `150%`
+→ the larger toast grows about its anchor as before. Skin › Scope › Ignore fonts on → the toast keeps
+its larger size in the client's own font, never shrinking to the first release's. Under Obsidian and
+Glass → the same, in each skin's face. Result:
+
 ## Upgrade glow
 
 The glow's decision, its settings and each surface's icon are headless-tested (`test_glow`,
@@ -2490,6 +2541,26 @@ wiring headless. Owed in the client, never marked passed by an agent:
   loop on an icon that already glowed.
 
 Result: passed in the client, 2026-10-23 (the owner).
+
+**GLOW-12. Proc by default, #19FF19 and #3FC7EB (DW-03; D-18, image-39).** Supersedes GLOW-10's
+defaults (a record, left as it was run). On a new profile, or after Defaults on the Alerts page:
+Settings › Alerts › Upgrade glow → Main spec style | Off-spec style both **Proc (flipbook)**, Main spec
+color a green, `#19FF19`, and Off-spec color the blue `#3FC7EB`, both opaque. `/dw test` → the
+main-spec upgrades' icons wear a green flipbook glow and the off-spec ones a blue one. On a profile that
+never chose a glow style or color before this build → it shows Proc and the new green too (AceDB's
+defaults; nothing is migrated); one that picked Pixel border or a color keeps its pick. Result:
+
+**GLOW-13. Only the chosen styles' sections show (DW-04; D-17, image-40..42).** Supersedes GLOW-8's
+"dimmed, never hidden" for the style sections (a record, left as it was run). Settings › Alerts ›
+Upgrade glow on the defaults (both Proc) → the tab reads Effect, Offset and Proc (flipbook), and no
+Pixel border, Auto cast sparkles or Button (rotating rays) section. Off-spec style → Pixel border →
+within a frame the tab redraws with Pixel border and Proc (flipbook) sections, in the dropdown's order;
+in Pixel border the main column is dimmed and the off-spec one live, in Proc the other way round. Main
+spec style → Button, then Off-spec style → Button → only Button (rotating rays) is left, Offset still
+shown (dimmed). Untick Off-spec glow with its style on Auto cast sparkles → the Auto cast section still
+shows, its off-spec column dimmed. With a dropdown's list open, change the other glow's style with
+`/dw set glow.main.type pixel` → the tab redraws once, no Lua error. Under **Obsidian** with **Ignore
+settings panel** unticked, the same. Result:
 
 ## Item icons
 
@@ -2960,11 +3031,11 @@ vanished, a color that changed, the reset running again, or a stored style lost.
 **SKIN-4. The Skin tab (DW-01).** Settings → General → the strip reads Master controls, Simulator,
 **Skin**, Keybindings → Skin shows **Skin source** (*Ka0s skins* chosen; *EllesmereUI* disabled with a
 line saying why, unless EllesmereUI can skin this addon), **Look** (nine skins three to a line, each with
-its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture**, both *Skin's own*
+its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture**, both *Skin's default*
 on a new profile), the Scope (**Ignore settings panel** ticked and **Ignore fonts** unticked on a new
 profile), **Copy to every Ka0s addon…** and the note that skins change every visual element. Pick
 **Obsidian** → no reload; `/dw get skin.skin` prints `obsidian`. `/dw set skin.skin azeroth` → the
-window and the tab follow. Result: passed in the client, 2026-10-30 (the owner).
+window and the tab follow. Result:
 
 **SKIN-5. Each skin, live, on the window (DW-02).** With `/dw test` on and the window open on Drops,
 pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW Midnight, WoW
@@ -3037,22 +3108,22 @@ thickness (a skin whose icon border is None draws none), always in your Border c
 still draws over it. Untick it → your own style and thickness, under any skin. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
-squares: Ka0s Default Oxanium, Obsidian Inter, Azeroth Vollkorn, Glass Nunito, High Contrast Atkinson
-Hyperlegible, Ember Bitter, WoW Midnight Philosopher, WoW Forever Fira Sans, WoW Default the client's
-Friz Quadrata. Then set Window › Layout's Font size to its largest and switch skins → the size holds in
+squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
+High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever Fira Sans, WoW Default
+Ka0s Friz Quadrata TT (reopened by LibKa0s v1.83.0, DW-F01). Then set Window › Layout's Font size to its largest and switch skins → the size holds in
 the new face; back to the default size → the face holds. Fail: a table, card or countdown that keeps
-the old face, or a size that resets on a switch. Result: passed in the client, 2026-10-30 (the owner).
+the old face, or a size that resets on a switch. Result:
 
 **SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Pick a clearly different font
 from **Font** → with no reload the window, cards, toast and tooltips' lines take it at their own sizes,
 and the verdict glyphs and the debug console keep their monospace face; switch skins → the override
-stays; *Skin's own* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
+stays; *Skin's default* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
 game's face (the override stays selected), the filter bar's dropdown menus, the TEST MODE and
 SIMULATION strips and the tool windows' labels included (LibKa0s v1.81.0), while the verdict glyphs
 ▲ ≈ ▼ keep their monospace face (chosen for glyph coverage: the follow-ups' D-10); untick → it
 returns. Drop Watcher draws no HUD text, so Ignore fonts reaching the HUD has nothing to show here.
 Pick a texture → nothing drawn as a bar
-of data changes look (the countdown bar is flat by design, D5). Result: passed in the client, 2026-10-30 (the owner).
+of data changes look (the countdown bar is flat by design, D5). Result:
 
 **SKIN-17. EllesmereUI on (DW-01; skinning-§5).** With EllesmereUI loaded, its third-party skinning on
 and Drop Watcher on in its Third-Party list → Skin → **Skin source** offers **EllesmereUI**; choosing
@@ -3098,6 +3169,88 @@ and its tooltip, the reset and Clear history confirmations and the `[DW]` chat l
 run. With Drop Watcher on a non-default skin, open two other Ka0s addons' windows and settings → each
 looks as it did before. Result: passed in the client, 2026-10-30 (the owner).
 
+### LibKa0s v1.82.0: fonts, outline and `/dw skin` (DW-01)
+
+The skin fonts and feedback run (Ka0sAddonsCommonTasks `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`,
+DW-01) re-vendors LibKa0s v1.82.0. Its faces supersede SKIN-2's and SKIN-15's face names (records,
+left as they were run): Ka0s Default draws Prototype, Obsidian Expressway, WoW Forever Fira Sans
+Medium for its body text. Start from a fresh client start, as above.
+
+**SKIN-25. The Font outline (DW-01; D-06).** General → **Skin** → Font and texture: under **Reset
+font** and **Reset texture** sits **Font outline**, *HUD text only* on a new profile (v1.83.0, D-10) →
+with `/dw test` on, the window's tables, the compact cards, the toast, the detail card and the strips'
+text are unoutlined under every skin (it is window text; Drop Watcher draws no HUD text). Pick *All
+text* → with no reload all of that text takes its outline; *Off* → it goes again; *HUD text only* →
+back. A profile that already stored *All text* keeps it. `/dw get skin.outline` prints the pick; switch profile and back → each profile's pick follows. Tick **Ignore fonts** → the
+dropdown grays out. The verdict glyphs ▲ ≈ ▼ and ⊘ are never outlined. Result:
+
+**SKIN-26. From skin flags at any Font size (DW-01; D-07).** Set Window › Layout › Tables' **Font
+size** to its largest, then walk *All text*, *HUD text only* and *Off* on the Skin tab → the tables'
+text keeps the large size and takes each outline, live; back to Default (0) → the template's size, still
+outlined while *All text* is picked. (The tables' Font flags stay at their default, From skin, for this check;
+SKIN-30 walks the rest of their font setting.) Result:
+
+**SKIN-27. `/dw skin` (DW-01; D-16).** On a profile whose first-run picker was closed, `/dw skin` →
+the **Choose a skin** picker opens as a new profile shows it, whatever skin is worn; Escape closes it
+and nothing is saved. `/dw help` lists `skin` right after `config` ("Choose a skin: open the skin
+picker"). In combat on a target dummy, `/dw skin` twice → a gray "cannot open the skin picker during
+combat" line each time and no picker. `/dw disable`, `/dw skin` → the one disabled line; `/dw enable`.
+Result:
+
+**SKIN-28. Width parity of the windows (DW-01; D-08).** With `/dw test` on, walk all nine skins with
+*All text* on → the full window's column headers and cells (Item, Item level, Slot, Armor, Looter, Me,
+Them, Trade, Trade window, the Ask buttons), the compact cards' four lines, the detail card, the Offer
+panel, History, the toast and the title bar's buttons and badge fit as they do under Ka0s Default: no
+text newly cut off or overlapping in any skin, Obsidian and Glass in particular. Result:
+
+**SKIN-29. The v1.82.0 faces and characters (DW-01; D-02, D-19).** On an English client: Ka0s Default
+draws Prototype, Obsidian Expressway, WoW Forever Fira Sans Medium (titles SemiBold), the rest as in
+SKIN-15 (as v1.83.0 restated it), with no fallback squares anywhere, the verdict glyphs ▲ ≈ ▼ and ⊘ included (the mono face).
+Pick a Font override, then another skin → the override goes back to the new skin's default (LibKa0s
+v1.82.0); **Reset font** does the same without a skin change. The Skin tab reads, in order, Skin
+source, Look (its note first), Font and texture, Scope, then **Other Ka0s addons** with the copy
+button. Result:
+
+**SKIN-30. The tables' whole font setting (DW-01; the lead's ruling on D-07).** Settings → Window →
+Layout → **Tables**: under Row height sit **Font** | **Font size**, **Font color** | **Use class
+color**, **Font flags** | **Font shadow**, then **Use the skin's font**, ticked. On a profile that never
+touched them, `/dw test` → the tables look exactly as before this run, under Ka0s Default and under
+another skin (the skin's face, the template's size, the skin's plain text color, unoutlined under the
+default *HUD text only* and outlined under *All text*, the skin's shadow). Font flags reads *From skin*. Then, with no reload, on Drops, History and
+the compact cards: untick Use the skin's font and pick another Font → every table text takes it, the
+verdict glyphs ▲ ≈ ▼ keep their monospace face; pick a Font color → the plain text (item levels,
+slots, types, `Name [YOU]`'s name) takes it, while the verdicts keep green, yellow and red, the item
+names their quality colors and the looters their class colors; tick Use class color → that plain text
+turns your class's color; Font flags *Thick outline* → the outline thickens whatever the Skin tab's
+Font outline says, *From skin* → it follows the Font outline again; untick Font shadow → the text's
+shadow goes, tick it → it is back. The detail card, the Offer panel and the toast are not tables and
+do not change. Settings → Window's **Defaults** → every row back to the first state. `/dw get
+window.tableFontFlags` prints `@skin`. Result:
+
+### LibKa0s v1.83.0: faces, outline and pickers (DW-F01, DW-F02)
+
+The font pickers and skin faces run (Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`) re-vendors LibKa0s v1.83.0. New font files need a full
+client restart, not a `/reload`.
+
+**SKIN-31. The window fits the new faces (DW-F01; D-06, D-07).** With `/dw test` on, walk Azeroth,
+Glass, High Contrast, Ember, WoW Midnight and WoW Default, each once under the default *HUD text only*
+and once under *All text* → the full window's column headers and cells, the compact cards' four lines,
+the detail card, the Offer panel, History, the toast and the title bar's buttons and badge fit as they
+do under Ka0s Default, in the face SKIN-15 names. Ember's Emblem and Glass's Avant Garde are the ones to
+watch. Fail: text newly cut off or overlapping, or a square where a glyph should be. Result:
+
+**SKIN-32. WoW Default is not Ka0s Default (DW-F01; D-01).** Switch between Ka0s Default and WoW
+Default on the Skin tab → the window's text visibly changes face, Prototype to Friz Quadrata. Then set
+the Skin tab's Font to *Ka0s Friz Quadrata TT* and back to *Skin's default* → the face follows. Result:
+
+**SKIN-33. The media pickers preview (DW-F01, DW-F02; D-08).** Open each: the Skin tab's **Font** and
+**Texture**, Window › Layout › Tables' **Font** (untick Use the skin's font first) and Window › Icons'
+**Border style** (with its skin companion off) → the closed row and every pull-out row show what they
+offer: fonts each in their own face, textures with their bar, borders with their swatch, and the Skin
+tab's lists start with *Skin's default (X)*. Pick one in each → it applies and survives a `/reload`.
+Fail: a list of plain names, a blank row, or a list holding only the no-media entry. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3121,6 +3274,17 @@ the visible changes under Ka0s Default the owner's rulings brought (Oxanium, the
 bars, the icon border's one-time reset); SKIN-2 also asked whether the title band stays (DropWatcher
 D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tokens are now the
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
+
+Reopened by LibKa0s v1.83.0 (DW-F01, 2026-10-31): SKIN-4 and SKIN-16 (the row reads *Skin's default*)
+and SKIN-15 (the faces); their earlier passes are in git history.
+
+Owed by the font pickers and skin faces run (2026-10-31, LibKa0s v1.83.0; Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-31..33, plus the three reopened above. Their
+`Result:` lines are empty until the owner runs them.
+
+Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
+`docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04), TOAST-8 (DW-05), SIT-7 (DW-06) and ASK-13 (DW-07). Their `Result:` lines are empty until
+the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

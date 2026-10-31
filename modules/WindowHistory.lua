@@ -52,7 +52,6 @@ local _, NS = ...
 NS.WindowHistory = NS.WindowHistory or {}
 local WH    = NS.WindowHistory
 local K     = NS.Constants.WINDOW
-local C     = NS.Constants
 local L     = NS.L
 local State = NS.State
 local WC    = NS.WindowCells
@@ -310,10 +309,8 @@ end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
 
-local function setTone(fs, tone)
-    local c = C.TONE[tone] or C.TONE.plain
-    fs:SetTextColor(c.r, c.g, c.b)
-end
+-- A table row's plain text takes the Tables font block's color (NS.WindowRows.SetTone, DW-01).
+local function setTone(fs, tone) NS.WindowRows.SetTone(fs, tone) end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
@@ -469,7 +466,7 @@ local function paintRow(row, drop, layout, metrics)
     NS.WindowGroup.PaintChevron(row.chevron, open)
     row:SetHeight(metrics.height)
     placeCells(row, layout, metrics.height)
-    NS.WindowRows.ApplyRowFont(row, metrics.fontSize)
+    NS.WindowRows.ApplyRowFont(row, metrics.fontSize, metrics.font)
     NS.WindowRows.ApplyRowIcon(row, metrics.icon)
     local cells = row.cells
     paintText(cells.item, WC.Item(drop))

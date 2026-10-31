@@ -192,22 +192,27 @@ local function paintTextButton(b)
 end
 
 --- A flat button: the skin's fill and inner line, a label kept centered and a mark beside it
---- (standalone-windows: a wide action button keeps its label). NS.Window.TextButton is this.
+--- (standalone-windows: a wide action button keeps its label). NS.Window.TextButton is this. A
+--- `scale` draws its height, mark, nudge and face that much larger (the upgrade toast's Ask, DW-05);
+--- `width` is the caller's, already scaled.
 --- @return table
-function TB.TextButton(parent, width, icon, text, onClick)
+function TB.TextButton(parent, width, icon, text, onClick, scale)
+    scale = scale or 1
+    local function px(n) return math.floor(n * scale + 0.5) end
     local b = CreateFrame("Button", nil, parent, "BackdropTemplate")
-    b:SetSize(width, K.CONTROL_H)
+    b:SetSize(width, px(K.CONTROL_H))
     local S = NS.SKIN
     if b.SetBackdrop and S.bgFile then
         b:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
         NS.SkinPaint(b, paintTextButton)
     end
+    b.markNudge = px(7)   -- the label's nudge right past the mark
     b.art = b:CreateTexture(nil, "ARTWORK")
-    b.art:SetSize(12, 12)
-    b.art:SetPoint("LEFT", b, "LEFT", 6, 0)
+    b.art:SetSize(px(12), px(12))
+    b.art:SetPoint("LEFT", b, "LEFT", px(6), 0)
     b.art:SetTexture(NS.Icon(icon))
-    b.label = b:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    b.label:SetPoint("CENTER", b, "CENTER", 7, 0)
+    b.label = NS.ScaledFontString(b, "OVERLAY", "GameFontHighlightSmall", scale)
+    b.label:SetPoint("CENTER", b, "CENTER", b.markNudge, 0)
     NS.Skin.Font(b.label)   -- the skin's face; the color is the state's (WindowGroup.ToneButton)
     b.label:SetText(text)
     b:SetScript("OnClick", onClick)
@@ -225,7 +230,7 @@ function TB.SetButtonMark(b, text, icon)
     b.art:SetTexture(icon and NS.Icon(icon) or nil)
     b.art:SetShown(icon ~= nil)
     b.label:ClearAllPoints()
-    b.label:SetPoint("CENTER", b, "CENTER", icon and 7 or 0, 0)
+    b.label:SetPoint("CENTER", b, "CENTER", icon and (b.markNudge or 7) or 0, 0)
 end
 
 -- ── construction ────────────────────────────────────────────────────────────────────────────

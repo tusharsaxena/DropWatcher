@@ -53,9 +53,9 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   default), the border's style and thickness are the skin's.
 - **Skins** (the 2026-10-29 skinning rollout, LibKa0s-Skin-1.0). Every surface the addon draws, the
   window, cards, Offer panel, toast, tooltip lines, tool windows and, when asked, the settings panel,
-  wears the skin picked on General → Skin (nine Ka0s skins, or EllesmereUI's), live, with font and
-  texture overrides; Ka0s Default keeps the colors drawn before skins. A first-run picker offers the
-  choice once per profile.
+  wears the skin picked on General → Skin (nine Ka0s skins, or EllesmereUI's), live, with font, texture and
+  outline settings; Ka0s Default keeps the colors drawn before skins. A first-run picker offers the
+  choice once per profile, and `/dw skin` opens it again.
 - **Compact mode** (M12, [`superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md`](superpowers/specs/2026-10-11-drop-watcher-compact-mode-design.md)).
   The same window in a second layout, about 400 pixels wide: each drop a four-line card on both
   tabs, a one-row filter bar with a Filters menu, a short title and a one-line footer. It reads

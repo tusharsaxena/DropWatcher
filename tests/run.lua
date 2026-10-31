@@ -141,6 +141,14 @@ local function cardText(m)
     return tipPlain(s)
 end
 
+-- Another player in the mock's group (DW-07: your own drop is offered only while one is): you and
+-- Seta, a same-realm priest, in a party, the roster re-read. Answers `m`.
+local function withPlayer(m)
+    m.setGroup({ { guid = "Player-1-0000000A", name = "Seta", class = "PRIEST", classFile = "PRIEST" } })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    return m
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -149,6 +157,7 @@ _G.DW_TEST = Kit.expose{
     enableAddon = enableAddon,
     loadAddon   = loadAddon,
     simBare     = simBare,
+    withPlayer  = withPlayer,
     marks       = marks,
     tipText     = tipText,
     tipJoined   = tipJoined,
@@ -192,10 +201,12 @@ Kit.run{
         "test_schema_rows",
         "test_settings_pages",
         "test_skin_setup",
+        "test_skin_outline",
         "test_skin_chrome",
         "test_skin_literals",
         "test_skin_hud",
         "test_skin_picker",
+        "test_skin_verb",
         "test_skin_settings",
         "test_slash",
         "test_window",
@@ -208,6 +219,7 @@ Kit.run{
         "test_compact_chrome",
         "test_compact_modes",
         "test_window_group",
+        "test_table_font",
         "test_drops_layout",
         "test_side_cells",
         "test_detail_card",
@@ -216,6 +228,7 @@ Kit.run{
         "test_drops_strip",
         "test_footer_row",
         "test_offer_panel",
+        "test_offer_alone",
         "test_mine_cells",
         "test_row_tooltip",
         "test_test_mode",

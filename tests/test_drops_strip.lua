@@ -88,6 +88,7 @@ end
 -- Your four drops on Drops (board 04's rows), every View value shown.
 local function shownMine(compact)
     local NS, _, m = T.enableAddon()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
     NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
     seed(NS, boardDrops(), { groupOf("Den of Nalorakk", NOW - 3000, { 1, 2, 3, 4 }, ROSTER) })
@@ -225,6 +226,7 @@ end)
 
 test("drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary", function()
     local NS, _, m = T.enableAddon()
+    T.withPlayer(m)   -- someone to post to (DW-07)
     NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
     local WF = NS.WindowFooter
