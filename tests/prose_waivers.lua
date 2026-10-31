@@ -16,7 +16,7 @@ return {
         -- it up by that key, and a respelling answers nil and draws the fallback character.
         ["modules/WindowTitleBar.lua"] = { minimis = true },
         -- The same catalog name in the `LibKa0s icons:` declaration under the provenance line
-        -- (library-stack-§7): the kit's parser and tools/prune-icons.lua match it against the
+        -- (library-stack-§7): the kit's parser and LibKa0s tools/prune-icons.lua match it against the
         -- catalog, so `minimize` there is an unknown name and the prune refuses it.
         ["CLAUDE.md"] = { minimis = true },
     },
