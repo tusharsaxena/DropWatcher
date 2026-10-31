@@ -18,7 +18,7 @@ passed.
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
-| PANEL-1..8 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21) |
+| PANEL-1..10 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
@@ -340,6 +340,16 @@ A situation's own Quality picks them too: with Minimum quality `Fixed minimum`, 
 to `Match each slot` and come back to Quality → both Fixed minimum and Quality floor are drawn, live.
 Back to `Use global` → Quality floor is gone. With Minimum quality `Match my gear` and Situations › Raid
 on `Fixed minimum` → both are drawn.
+Result:
+
+**PANEL-10. A font row and a border row on the Ka0sMedia picker (the owner's ruling, 2026-11-01).** Keep
+another addon that ships AceGUI-3.0-SharedMediaWidgets enabled if you have one. Window › Layout › Tables:
+untick Use the skin's font, open **Font** → the closed row sits in line with the rows around it, and the
+pull-out lists every LibSharedMedia font, each in its own face. Pick one → the tables take it. Window ›
+Icons: untick the skin companion, open **Border style** → the same bar, no 42-pixel tile pushing it to
+the right, each pull-out row showing its swatch, and Solid listed. Pick one → the icons take it. `/reload`
+→ both picks kept. With a skin that restyles the panel on, both rows wear it like the dropdowns beside
+them. Fail: a plain-name list, a row out of line, or a Lua error.
 Result:
 
 ## Profiles
@@ -3319,7 +3329,7 @@ and skin faces run (2026-10-31, LibKa0s v1.83.0; Ka0sAddonsCommonTasks
 TOAST-8 and ASK-13, plus the three reopened above. Each one's `Result:` line records it.
 
 Owed by the findings remediation (2026-10-31; Ka0sAddonsCommonTasks
-`docs/2026-10-31-FINDINGS_REMEDIATION/`): SKIN-34..36, SIM-18 and PANEL-9. Their `Result:` lines are empty
+`docs/2026-10-31-FINDINGS_REMEDIATION/`): SKIN-34..36, SIM-18, PANEL-9 and PANEL-10. Their `Result:` lines are empty
 until the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off

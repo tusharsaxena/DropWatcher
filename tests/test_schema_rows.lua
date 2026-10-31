@@ -429,6 +429,7 @@ test("icons: Window › Icons is the Zoom row then the composed Border block, wi
     end
     assertTrue(type(zoom.onChange) == "function")
     assertEqual(S.FindRow("icons.borderStyle").dialogControl, "Ka0sMedia_Border")
+    assertEqual(S.FindRow("window.tableFont").dialogControl, "Ka0sMedia_Font")
     -- feedback-21 H6: a Solid black border, 2 pixels, neither class nor quality color.
     assertEqual(I.borderShow, true, "a border by default"); assertEqual(I.borderQuality, false)
     assertEqual(I.borderStyle, "Solid"); assertEqual(I.borderSize, 2)
