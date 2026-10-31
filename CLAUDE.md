@@ -41,6 +41,6 @@ Green gate before every commit: `lua tests/run.lua` and
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.82.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.83.0 (MIT).
 LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, clock, close, confirm, copy, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, people, reset, settings, speech-bubble, transfer.
 

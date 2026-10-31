@@ -1,7 +1,7 @@
 # Module map — Ka0s Drop Watcher
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibCustomGlow, LibKa0s v1.81.0 (its media/icons pruned to the CLAUDE.md declaration)) and `tests/_kit/` are vendored and never edited.
+LibDataBroker, LibDBIcon, LibCustomGlow, LibKa0s v1.83.0 (its media/icons pruned to the CLAUDE.md declaration)) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
 

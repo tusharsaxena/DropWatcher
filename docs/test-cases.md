@@ -206,9 +206,10 @@ Total.
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
-### test_skin_outline.lua (9)
+### test_skin_outline.lua (11)
 
-- outline: a fresh profile stores All text, the library's default
+- outline: a fresh profile stores HUD text only, the library's default
+- outline: a stored All text stays, and is applied (D-10 migrates nothing)
 - outline: the schema row offers the library's three modes, in its order, on the Skin tab
 - outline: the write seam stores media.outline, and leaves it alone when it is nil
 - outline: another addon's copy reaches the store through WriteChoice
@@ -217,6 +218,7 @@ Total.
 - outline: the stored mode is applied right after AceDB exists
 - outline: a profile switch and a reset apply the incoming profile's mode
 - outline: without the skin engine the apply is a quiet no-op and the store still takes it
+- outline: without the skin engine From skin answers the default mode, HUD text only
 
 ### test_skin_chrome.lua (11)
 
@@ -804,7 +806,7 @@ Total.
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 
-### test_offer_alone.lua (14)
+### test_offer_alone.lua (15)
 
 - offer alone: the roster reads who is a player: solo, followers and a companion are nobody
 - offer alone: a secret UnitIsPlayer falls back to the GUID's kind
@@ -819,6 +821,7 @@ Total.
 - offer alone: the detail card's first action and the compact card read No action too
 - offer alone: the Offer panel does not open, and closes when the last player leaves
 - offer alone: Offer, Announce and Post my tradeables refuse and say why
+- offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
 - offer alone: /dw offer says why and opens nothing
 
 ### test_mine_cells.lua (14)
@@ -1580,7 +1583,7 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (26)
+### test_asks.lua (27)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
@@ -1606,6 +1609,7 @@ Total.
 - cancel: an ask queued to a looter who leaves is dropped; others stay
 - cancel: a queued announce is dropped once you leave the group
 - cancel: a queued announce to a stored channel is dropped once that kind of group is gone
+- cancel: a queued announce is dropped once the last other player leaves, the group kept (DW-07)
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
@@ -2149,7 +2153,7 @@ Total.
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 49 |
 | test_skin_setup.lua | 18 |
-| test_skin_outline.lua | 9 |
+| test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 11 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
@@ -2176,7 +2180,7 @@ Total.
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 21 |
-| test_offer_alone.lua | 14 |
+| test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
@@ -2208,7 +2212,7 @@ Total.
 | test_char_filter.lua | 19 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 26 |
+| test_asks.lua | 27 |
 | test_transmog.lua | 13 |
 | test_history.lua | 30 |
 | test_history_retention.lua | 16 |
@@ -2238,4 +2242,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1840** |
+| **Total** | **1844** |

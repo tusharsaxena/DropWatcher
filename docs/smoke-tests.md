@@ -45,6 +45,7 @@ passed.
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
 | SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
+| SKIN-31..33 | [Skins](#skins) | LibKa0s v1.83.0 (DW-F01, 2026-10-31): the window fits the new faces under both outline modes (SKIN-31), WoW Default differs from Ka0s Default (SKIN-32), the media pickers preview (SKIN-33); SKIN-4, SKIN-15 and SKIN-16 reopened |
 
 ## Before you start
 
@@ -3030,11 +3031,11 @@ vanished, a color that changed, the reset running again, or a stored style lost.
 **SKIN-4. The Skin tab (DW-01).** Settings → General → the strip reads Master controls, Simulator,
 **Skin**, Keybindings → Skin shows **Skin source** (*Ka0s skins* chosen; *EllesmereUI* disabled with a
 line saying why, unless EllesmereUI can skin this addon), **Look** (nine skins three to a line, each with
-its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture**, both *Skin's own*
+its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture**, both *Skin's default*
 on a new profile), the Scope (**Ignore settings panel** ticked and **Ignore fonts** unticked on a new
 profile), **Copy to every Ka0s addon…** and the note that skins change every visual element. Pick
 **Obsidian** → no reload; `/dw get skin.skin` prints `obsidian`. `/dw set skin.skin azeroth` → the
-window and the tab follow. Result: passed in the client, 2026-10-30 (the owner).
+window and the tab follow. Result:
 
 **SKIN-5. Each skin, live, on the window (DW-02).** With `/dw test` on and the window open on Drops,
 pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW Midnight, WoW
@@ -3107,22 +3108,22 @@ thickness (a skin whose icon border is None draws none), always in your Border c
 still draws over it. Untick it → your own style and thickness, under any skin. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
-squares: Ka0s Default Oxanium, Obsidian Inter, Azeroth Vollkorn, Glass Nunito, High Contrast Atkinson
-Hyperlegible, Ember Bitter, WoW Midnight Philosopher, WoW Forever Fira Sans, WoW Default the client's
-Friz Quadrata. Then set Window › Layout's Font size to its largest and switch skins → the size holds in
+squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
+High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever Fira Sans, WoW Default
+Ka0s Friz Quadrata TT (reopened by LibKa0s v1.83.0, DW-F01). Then set Window › Layout's Font size to its largest and switch skins → the size holds in
 the new face; back to the default size → the face holds. Fail: a table, card or countdown that keeps
-the old face, or a size that resets on a switch. Result: passed in the client, 2026-10-30 (the owner).
+the old face, or a size that resets on a switch. Result:
 
 **SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Pick a clearly different font
 from **Font** → with no reload the window, cards, toast and tooltips' lines take it at their own sizes,
 and the verdict glyphs and the debug console keep their monospace face; switch skins → the override
-stays; *Skin's own* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
+stays; *Skin's default* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
 game's face (the override stays selected), the filter bar's dropdown menus, the TEST MODE and
 SIMULATION strips and the tool windows' labels included (LibKa0s v1.81.0), while the verdict glyphs
 ▲ ≈ ▼ keep their monospace face (chosen for glyph coverage: the follow-ups' D-10); untick → it
 returns. Drop Watcher draws no HUD text, so Ignore fonts reaching the HUD has nothing to show here.
 Pick a texture → nothing drawn as a bar
-of data changes look (the countdown bar is flat by design, D5). Result: passed in the client, 2026-10-30 (the owner).
+of data changes look (the countdown bar is flat by design, D5). Result:
 
 **SKIN-17. EllesmereUI on (DW-01; skinning-§5).** With EllesmereUI loaded, its third-party skinning on
 and Drop Watcher on in its Third-Party list → Skin → **Skin source** offers **EllesmereUI**; choosing
@@ -3176,17 +3177,17 @@ left as they were run): Ka0s Default draws Prototype, Obsidian Expressway, WoW F
 Medium for its body text. Start from a fresh client start, as above.
 
 **SKIN-25. The Font outline (DW-01; D-06).** General → **Skin** → Font and texture: under **Reset
-font** and **Reset texture** sits **Font outline**, *All text* on a new profile → with `/dw test` on,
-the window's tables, the compact cards, the toast, the detail card and the strips' text are outlined
-under every skin. Pick *HUD text only* → with no reload all of that text loses its outline (it is window
-text; Drop Watcher draws no HUD text); *Off* → the same; *All text* → back. `/dw get skin.outline`
-prints the pick; switch profile and back → each profile's pick follows. Tick **Ignore fonts** → the
+font** and **Reset texture** sits **Font outline**, *HUD text only* on a new profile (v1.83.0, D-10) →
+with `/dw test` on, the window's tables, the compact cards, the toast, the detail card and the strips'
+text are unoutlined under every skin (it is window text; Drop Watcher draws no HUD text). Pick *All
+text* → with no reload all of that text takes its outline; *Off* → it goes again; *HUD text only* →
+back. A profile that already stored *All text* keeps it. `/dw get skin.outline` prints the pick; switch profile and back → each profile's pick follows. Tick **Ignore fonts** → the
 dropdown grays out. The verdict glyphs ▲ ≈ ▼ and ⊘ are never outlined. Result:
 
 **SKIN-26. From skin flags at any Font size (DW-01; D-07).** Set Window › Layout › Tables' **Font
 size** to its largest, then walk *All text*, *HUD text only* and *Off* on the Skin tab → the tables'
 text keeps the large size and takes each outline, live; back to Default (0) → the template's size, still
-outlined under *All text*. (The tables' Font flags stay at their default, From skin, for this check;
+outlined while *All text* is picked. (The tables' Font flags stay at their default, From skin, for this check;
 SKIN-30 walks the rest of their font setting.) Result:
 
 **SKIN-27. `/dw skin` (DW-01; D-16).** On a profile whose first-run picker was closed, `/dw skin` →
@@ -3204,8 +3205,8 @@ text newly cut off or overlapping in any skin, Obsidian and Glass in particular.
 
 **SKIN-29. The v1.82.0 faces and characters (DW-01; D-02, D-19).** On an English client: Ka0s Default
 draws Prototype, Obsidian Expressway, WoW Forever Fira Sans Medium (titles SemiBold), the rest as in
-SKIN-15, with no fallback squares anywhere, the verdict glyphs ▲ ≈ ▼ and ⊘ included (the mono face).
-Pick a Font override, then another skin → the override goes back to the new skin's own (LibKa0s
+SKIN-15 (as v1.83.0 restated it), with no fallback squares anywhere, the verdict glyphs ▲ ≈ ▼ and ⊘ included (the mono face).
+Pick a Font override, then another skin → the override goes back to the new skin's default (LibKa0s
 v1.82.0); **Reset font** does the same without a skin change. The Skin tab reads, in order, Skin
 source, Look (its note first), Font and texture, Scope, then **Other Ka0s addons** with the copy
 button. Result:
@@ -3214,8 +3215,8 @@ button. Result:
 Layout → **Tables**: under Row height sit **Font** | **Font size**, **Font color** | **Use class
 color**, **Font flags** | **Font shadow**, then **Use the skin's font**, ticked. On a profile that never
 touched them, `/dw test` → the tables look exactly as before this run, under Ka0s Default and under
-another skin (the skin's face, the template's size, the skin's plain text color, outlined under *All
-text*, the skin's shadow). Font flags reads *From skin*. Then, with no reload, on Drops, History and
+another skin (the skin's face, the template's size, the skin's plain text color, unoutlined under the
+default *HUD text only* and outlined under *All text*, the skin's shadow). Font flags reads *From skin*. Then, with no reload, on Drops, History and
 the compact cards: untick Use the skin's font and pick another Font → every table text takes it, the
 verdict glyphs ▲ ≈ ▼ keep their monospace face; pick a Font color → the plain text (item levels,
 slots, types, `Name [YOU]`'s name) takes it, while the verdicts keep green, yellow and red, the item
@@ -3225,6 +3226,30 @@ Font outline says, *From skin* → it follows the Font outline again; untick Fon
 shadow goes, tick it → it is back. The detail card, the Offer panel and the toast are not tables and
 do not change. Settings → Window's **Defaults** → every row back to the first state. `/dw get
 window.tableFontFlags` prints `@skin`. Result:
+
+### LibKa0s v1.83.0: faces, outline and pickers (DW-F01, DW-F02)
+
+The font pickers and skin faces run (Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`) re-vendors LibKa0s v1.83.0. New font files need a full
+client restart, not a `/reload`.
+
+**SKIN-31. The window fits the new faces (DW-F01; D-06, D-07).** With `/dw test` on, walk Azeroth,
+Glass, High Contrast, Ember, WoW Midnight and WoW Default, each once under the default *HUD text only*
+and once under *All text* → the full window's column headers and cells, the compact cards' four lines,
+the detail card, the Offer panel, History, the toast and the title bar's buttons and badge fit as they
+do under Ka0s Default, in the face SKIN-15 names. Ember's Emblem and Glass's Avant Garde are the ones to
+watch. Fail: text newly cut off or overlapping, or a square where a glyph should be. Result:
+
+**SKIN-32. WoW Default is not Ka0s Default (DW-F01; D-01).** Switch between Ka0s Default and WoW
+Default on the Skin tab → the window's text visibly changes face, Prototype to Friz Quadrata. Then set
+the Skin tab's Font to *Ka0s Friz Quadrata TT* and back to *Skin's default* → the face follows. Result:
+
+**SKIN-33. The media pickers preview (DW-F01, DW-F02; D-08).** Open each: the Skin tab's **Font** and
+**Texture**, Window › Layout › Tables' **Font** (untick Use the skin's font first) and Window › Icons'
+**Border style** (with its skin companion off) → the closed row and every pull-out row show what they
+offer: fonts each in their own face, textures with their bar, borders with their swatch, and the Skin
+tab's lists start with *Skin's default (X)*. Pick one in each → it applies and survives a `/reload`.
+Fail: a list of plain names, a blank row, or a list holding only the no-media entry. Result:
 
 ## Pending sign-off
 
@@ -3249,6 +3274,13 @@ the visible changes under Ka0s Default the owner's rulings brought (Oxanium, the
 bars, the icon border's one-time reset); SKIN-2 also asked whether the title band stays (DropWatcher
 D3). No pixel of an item's quality color moved under Ka0s Default (its `q.*` tokens are now the
 client's own), and Drop Watcher never asked for the retired stock look, so no stock-look row moved.
+
+Reopened by LibKa0s v1.83.0 (DW-F01, 2026-10-31): SKIN-4 and SKIN-16 (the row reads *Skin's default*)
+and SKIN-15 (the faces); their earlier passes are in git history.
+
+Owed by the font pickers and skin faces run (2026-10-31, LibKa0s v1.83.0; Ka0sAddonsCommonTasks
+`docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`): SKIN-31..33, plus the three reopened above. Their
+`Result:` lines are empty until the owner runs them.
 
 Owed by the skin fonts and feedback run (2026-10-30, LibKa0s v1.82.0; Ka0sAddonsCommonTasks
 `docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK/`): SKIN-25..30 (DW-01), SIT-6 (DW-02) and GLOW-12 (DW-03), GLOW-13 (DW-04), TOAST-8 (DW-05), SIT-7 (DW-06) and ASK-13 (DW-07). Their `Result:` lines are empty until

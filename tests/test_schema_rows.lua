@@ -584,7 +584,7 @@ local PINNED_ROWS = {
     { "skin.ignoreFonts", "bool", "false" },
     { "skin.ignorePanel", "bool", "true" },
     -- LibKa0s v1.82.0 (DW-01 of the skin fonts run, ruling D-06): the Font outline, a new row.
-    { "skin.outline", "string", "\"all\"" },
+    { "skin.outline", "string", "\"hud\"" },
     { "skin.pickerSeen", "bool", "false" },
     { "skin.skin", "string", "\"ka0s\"" },
     { "skin.source", "string", "\"ka0s\"" },

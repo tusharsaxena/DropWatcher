@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.81.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
+LibKa0s v1.83.0 payload (nineteen majors; media/icons pruned to the declared subset), all nineteen wired, one setup file each (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -277,8 +277,8 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
   (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
   source (the Ka0s skins, or EllesmereUI's when it can skin this addon), the skin, the Font and
-  texture overrides, the Font outline (`skin.outline`, LibKa0s v1.82.0: all text, HUD text only or
-  off, applied with `Skin:SetOutline`) and the Scope (Ignore settings panel, Ignore fonts). The eight `skin.*` rows are
+  texture overrides, the Font outline (`skin.outline`, LibKa0s v1.82.0: HUD text only by default since
+  v1.83.0, all text or off, applied with `Skin:SetOutline`) and the Scope (Ignore settings panel, Ignore fonts). The eight `skin.*` rows are
   `skipRender` rows of the one seam, so `/dw get|set` reaches the same values, and a pick calls
   `Skin:SetChoice` first: the repaint is live, with no reload. A profile switch, copy or reset applies
   the incoming profile's skin, scope, overrides and outline (`reloadProfile`). `tests/test_skin_setup.lua`,
@@ -306,9 +306,9 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   every string reads in Prototype (the library's Ka0s Default face since LibKa0s v1.82.0; Oxanium before) instead of Friz Quadrata, the title
   bar wears the shell's darker band, and the four scroll bars are the library's corridor and flat
   knob instead of the stock art (the rollout's DropWatcher calls D3 and D2). The smoke checks in `smoke-tests.md` → Skins say so.
-- **Fonts, outline and widths (LibKa0s v1.82.0).** Text is outlined by default (*All text*); the
-  Skin tab's Font outline (`skin.outline`) takes it off window text (*HUD text only*) or everywhere
-  (*Off*). Every string outside the drop tables takes the skin's face and flags through `S.Font` /
+- **Fonts, outline and widths (LibKa0s v1.82.0, the default moved in v1.83.0).** Window text is
+  unoutlined by default (*HUD text only*, D-10); the Skin tab's Font outline (`skin.outline`) puts it
+  on all text (*All text*) or takes it off everywhere (*Off*), and a stored mode stays. Every string outside the drop tables takes the skin's face and flags through `S.Font` /
   `S.Text`, its color from the skin's tokens and the verdict tones, and the verdict glyphs the mono
   role, which the skin never outlines. The drop tables' text is the one font setting (D-07, the lead's
   ruling on DW-01's review): Window › Layout › Tables carries the library's composed font block

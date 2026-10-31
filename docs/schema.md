@@ -68,8 +68,8 @@ Every module reads a setting through `NS.Setting(path)`.
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
 | `skin.skin` | `"ka0s"` | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); `ka0s` is Ka0s Default, the look before skins |
 | `skin.ignorePanel`, `skin.ignoreFonts` | `true`, `false` | Skin › Scope (skipRender) | the two exceptions: the settings panel stays the client's; every font stays the game's (the skin still colors the text) |
-| `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's own |
-| `skin.outline` | `"all"` | Skin › Font and texture (skipRender) | the Font outline (LibKa0s v1.82.0, ruling D-06): `all` text, `hud` text only, or `off`; applied with `Skin:SetOutline` at load, on every profile event and on the row's write. The window, the cards and the toast are window text |
+| `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's default |
+| `skin.outline` | `"hud"` | Skin › Font and texture (skipRender) | the Font outline (LibKa0s v1.82.0, ruling D-06; the default moved to `hud` in v1.83.0, D-10, and a stored mode stays): `hud` text only, `all` text, or `off`; applied with `Skin:SetOutline` at load, on every profile event and on the row's write. The window, the cards and the toast are window text |
 | `skin.pickerSeen` | `false` | none (skipRender) | the first-run skin picker was closed on this profile, so it shows once per profile (the rollout's O3) |
 
 ### Drops › Situations (page key `feed`)

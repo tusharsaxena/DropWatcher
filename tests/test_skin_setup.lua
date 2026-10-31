@@ -158,7 +158,7 @@ test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of G
     assertEqual(d.ignoreFonts, false)
     assertEqual(d.font, "")
     assertEqual(d.texture, "")
-    assertEqual(d.outline, "all")
+    assertEqual(d.outline, "hud")
     assertEqual(d.pickerSeen, false)
     for _, path in ipairs(PATHS) do
         local row = NS.SchemaRuntime.FindRow(path)

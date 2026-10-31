@@ -29,7 +29,7 @@ local addonName, NS = ...
 --                           skin's own; false, false before AceDB.
 --   NS.ApplySkinOverride(f,t) moves the applied overrides: `Skin:SetOverride`, live; no argument
 --                           applies the stored pair, a nil half keeps that half, false or "" clears.
---   NS.SkinOutline()        the stored Font outline, "all", "hud" or "off"; "all" before AceDB.
+--   NS.SkinOutline()        the stored Font outline, "all", "hud" or "off"; "hud" before AceDB.
 --   NS.ApplySkinOutline(m)  moves the applied Font outline: `Skin:SetOutline`, live; no argument
 --                           applies the stored mode (LibKa0s v1.82.0, Skin minor 9, ruling D-06).
 --   NS.SKIN_OUTLINE_OPTIONS the outline row's values: "all", "hud", "off", the library's order.
@@ -95,7 +95,7 @@ local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
 local SOURCE_PATH, SKIN_PATH = "skin.source", "skin.skin"
 local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
-local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "all"
+local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
 
 -- The owner tokens (LibKa0s-Skin-1.0 minor 7; Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
@@ -424,7 +424,7 @@ function NS.WriteSkinChoice(source, skin, ignore, media)
     end
 end
 
---- The stored Font outline, nil-safely: "all" until the profile store exists.
+--- The stored Font outline, nil-safely: "hud" until the profile store exists.
 function NS.SkinOutline()
     local v = stored(OUTLINE_PATH)
     return type(v) == "string" and v or OUTLINE_DEFAULT
@@ -660,11 +660,12 @@ if not Skin then
     S.ChartStyle = function() return {} end
     S.BarStyle = function() return {} end
     -- LibKa0s v1.82.0 (SkinPaintExtras minor 7): never nil, which SetFont would read as no flags or
-    -- refuse as a height. A picked flag as stored, "OUTLINE" for From skin (Ka0s Default's outline,
-    -- D-06); a positive size as stored, else 12.
-    S.FontFlags = function(v)
+    -- refuse as a height. A picked flag as stored; From skin answers the default Font outline, HUD
+    -- text only (LibKa0s v1.83.0, D-10), so "" for window text and "OUTLINE" for the HUD; a positive
+    -- size as stored, else 12.
+    S.FontFlags = function(v, where)
         if type(v) == "string" and v ~= S.FROM_SKIN then return v end
-        return "OUTLINE"
+        return where == "window" and "" or "OUTLINE"
     end
     S.HudFontSize = function(size)
         local n = tonumber(size)
@@ -740,7 +741,7 @@ function NS.ApplySkinOverride(font, texture)
 end
 
 --- The applied Font outline: Skin:SetOutline, live. No argument applies the stored mode; the library
---- reads an unknown mode as "all". A copy without SetOutline (before Skin minor 9) moves nothing.
+--- reads an unknown mode as "hud". A copy without SetOutline (before Skin minor 9) moves nothing.
 function NS.ApplySkinOutline(mode)
     if type(Skin.SetOutline) ~= "function" then return false end
     if mode == nil then mode = NS.SkinOutline() end

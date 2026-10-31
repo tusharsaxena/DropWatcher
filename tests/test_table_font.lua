@@ -134,10 +134,11 @@ test("table font: From skin flags draw the window text's outline, and a picked f
     local NS, row, m = shown()
     local S = NS.SchemaRuntime
     local _, _, flags = row.cells.ilvl.text:GetFont()
+    assertEqual(flags, "", "HUD text only, the default: the tables are window text")
+    quietly(m, function() S.Set("skin.outline", "all") end)
+    _, _, flags = redraw(NS).cells.ilvl.text:GetFont()
     assertEqual(flags, "OUTLINE", "All text: the window's outline")
     quietly(m, function() S.Set("skin.outline", "hud") end)
-    _, _, flags = redraw(NS).cells.ilvl.text:GetFont()
-    assertEqual(flags, "", "HUD text only: the tables are window text")
     S.Set("window.tableFontFlags", "THICKOUTLINE")
     _, _, flags = redraw(NS).cells.ilvl.text:GetFont()
     assertEqual(flags, "THICKOUTLINE", "a picked flag wins over the Font outline")
@@ -233,6 +234,7 @@ test("table font edge: with CreateFont, each look is a named font object that ca
     end
     local S = NS.SchemaRuntime
     local fs = modelText(row.cells.ilvl.text)
+    S.Set("window.tableFontFlags", "THICKOUTLINE")
     S.Set("window.tableFontShadow", false)
     redraw(NS)
     local obj = fs:GetFontObject()
@@ -240,7 +242,7 @@ test("table font edge: with CreateFont, each look is a named font object that ca
     assertTrue(obj.name:find("^DropWatcher_TableFont") ~= nil, "named for the addon: " .. tostring(obj.name))
     assertEqual(obj.offset[1], 0); assertEqual(obj.offset[2], 0)
     local _, _, flags = fs:GetFont()
-    assertEqual(flags, "OUTLINE", "the object carries the resolved flags")
+    assertEqual(flags, "THICKOUTLINE", "the object carries the resolved flags")
     local P = NS.Constants.TONE.plain
     sameColor(fs, P.r, P.g, P.b, "the painted color survives the font object")
     S.Set("window.tableFontShadow", true)
