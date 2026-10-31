@@ -454,6 +454,59 @@ test("feed: the fixed minimum is drawn in the fixed mode only, and the floor in 
     assertTrue(find(drawn, "Dropdown", "Quality floor") == nil)
 end)
 
+-- options-ui-§22: a situation's own Quality selector picks these values too, so a value in force in any
+-- situation stays drawn whatever the feed's mode is. The Situations table is another tab of this page,
+-- so coming back here renders the tab afresh (the library only watches a drawn selector row).
+test("feed: a situation's own quality draws the value it picks beside the feed mode's", function()
+    -- red under: the two rows switched on feed.quality.mode alone, the value in force dropped
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "feed")
+    tab(m, ctx, "Items")
+    assertTrue(NS.SchemaRuntime.Set("situations.dungeon.quality", "dynamicSlot"))
+    local drawn = tab(m, ctx, "Quality")
+    assertTrue(find(drawn, "Dropdown", "Fixed minimum") ~= nil, "the feed's fixed mode keeps its value")
+    local floor = find(drawn, "Dropdown", "Quality floor")
+    assertTrue(floor ~= nil and floor.disabled ~= true, "a matching situation draws the floor, live")
+    tab(m, ctx, "Items")
+    assertTrue(NS.SchemaRuntime.Set("situations.dungeon.quality", "global"))
+    drawn = tab(m, ctx, "Quality")
+    assertTrue(find(drawn, "Dropdown", "Quality floor") == nil, "no situation picks it: dropped")
+end)
+
+test("feed: a situation on the fixed mode draws Fixed minimum under a matching feed mode", function()
+    -- red under: the two rows switched on feed.quality.mode alone, the value in force dropped
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "feed")
+    tab(m, ctx, "Items")
+    assertTrue(NS.SchemaRuntime.Set("feed.quality.mode", "dynamicCharacter"))
+    assertTrue(NS.SchemaRuntime.Set("situations.raid.quality", "fixed"))
+    local drawn = tab(m, ctx, "Quality")
+    local fixed = find(drawn, "Dropdown", "Fixed minimum")
+    assertTrue(fixed ~= nil and fixed.disabled ~= true, "the raid's fixed mode draws its value, live")
+    assertTrue(find(drawn, "Dropdown", "Quality floor") ~= nil, "the feed's matching mode keeps the floor")
+end)
+
+test("feed: every situation's quality selector is watched by both value rows", function()
+    -- red under: a clause list that misses a situation added to K.SITUATIONS
+    local NS = T.enableAddon()
+    local function selectors(path)
+        for _, row in ipairs(NS.addon.Settings.Schema) do
+            if row.path == path then
+                local set = {}
+                for _, clause in ipairs(row.shownWhen.any) do set[clause.path] = clause.equals end
+                return set
+            end
+        end
+    end
+    for _, path in ipairs({ "feed.quality.fixed", "feed.quality.floor" }) do
+        local set = selectors(path)
+        assertTrue(set ~= nil and set["feed.quality.mode"] ~= nil, path .. ": the feed's mode")
+        for _, s in ipairs(NS.Constants.SITUATIONS) do
+            assertTrue(set["situations." .. s.key .. ".quality"] ~= nil, path .. ": " .. s.key)
+        end
+    end
+end)
+
 test("feed: an item level mode draws its own value only, and Off draws neither", function()
     -- red under: the two sliders on disabledIf (both drawn, dimmed in the other mode).
     local NS, _, m = T.enableAddon()

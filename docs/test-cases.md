@@ -133,7 +133,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (50)
+### test_settings_pages.lua (53)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -154,6 +154,9 @@ Total.
 - feed: the Quality tab pairs the mode with Always show upgrades, then the mode's own value
 - feed: Items draws Minimum item level alone, over the item kinds
 - feed: the fixed minimum is drawn in the fixed mode only, and the floor in the matching modes only
+- feed: a situation's own quality draws the value it picks beside the feed mode's
+- feed: a situation on the fixed mode draws Fixed minimum under a matching feed mode
+- feed: every situation's quality selector is watched by both value rows
 - feed: an item level mode draws its own value only, and Off draws neither
 - feed: the readout names the situation whose own quality setting is in force
 - comparison: Weights draws your class's specs as a sub-strip and one slider per stat
@@ -2153,7 +2156,7 @@ Total.
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
-| test_settings_pages.lua | 50 |
+| test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
@@ -2244,4 +2247,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1846** |
+| **Total** | **1849** |

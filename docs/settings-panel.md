@@ -176,8 +176,11 @@ The page key stays `feed` (a page key is no stored path, but it names the page's
 long it keeps it. Its Defaults resets every tab, Situations included.
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
-mode's own value: `Fixed minimum` in the fixed mode, `Quality floor` (`Floor` until feedback-24) in the
-two matching modes. The other is hidden and comes back when the mode picks it (LibKa0s#67). Then the closing
+value each picked mode uses: `Fixed minimum` while the feed's mode or any situation's own Quality is
+the fixed mode, `Quality floor` (`Floor` until feedback-24) while either is a matching mode. Both are
+drawn when the two differ, and a value nothing picks is hidden (LibKa0s#67, options-ui-§22). A
+situation's selector is a `skipRender` row the library does not watch: the Situations tab's change shows
+on coming back here, and a `/dw set` on one with this tab open shows on the next render. Then the closing
 line `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.

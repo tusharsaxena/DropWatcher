@@ -336,6 +336,10 @@ toggle one cell → it writes, and Defaults repaints it. No Lua error throughout
 `Match my gear` keeps it. Back to `Fixed minimum` → it returns with the value you left. Drops › Items:
 Minimum item level `Off` → neither value row; `Absolute` → Absolute minimum alone; `Relative to my gear`
 → Levels under my average alone. `/dw set feed.minIlvl 500` under `Off` still reads back with `/dw get`.
+A situation's own Quality picks them too: with Minimum quality `Fixed minimum`, set Situations › Dungeon
+to `Match each slot` and come back to Quality → both Fixed minimum and Quality floor are drawn, live.
+Back to `Use global` → Quality floor is gone. With Minimum quality `Match my gear` and Situations › Raid
+on `Fixed minimum` → both are drawn.
 Result:
 
 ## Profiles
