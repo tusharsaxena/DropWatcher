@@ -1,0 +1,17 @@
+Ka0s Drop Watcher — offline perf  (v1.1.0, label 'pre-merge')
+
+scenario                    iters     ms/iter notes/iter  bytes/iter
+refreshCaptureOff            1000     0.12710       0.00     14577.0
+refreshCaptureOn             1000     0.12955       1.00     14577.0
+refreshCompactCaptureOff     1000     0.15312       0.00     11345.0
+refreshCompactCaptureOn      1000     0.12060       1.00     11345.0
+showDecisionStoodDown        1000     0.00013       0.00         0.0
+parseCaptureOff              1000     0.01405       0.00       664.2
+parseCaptureOn               1000     0.01500       1.00       664.2
+
+timings are for orientation only — compare scenarios within a run, never across machines
+
+2 assertions FAILED:
+  - refreshCaptureOff allocated 14577.0 bytes/iter, over its 14500-byte ceiling
+  - refreshCaptureOn allocated 14577.0 bytes/iter, over its 14500-byte ceiling
+wrote docs/automated-tests/20261031-202124/perf.json
