@@ -576,6 +576,26 @@ Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client A
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
 the change that moves the count (testing-§5).
 
+## Members only the suites call
+
+A member with no shipped caller is removed, with one exception: a read or drive seam the suites use
+to pin shipped behavior they could not otherwise reach. These stay, each named here so a dead-export
+pass does not have to rule on it again (verified 2026-10-31: no string-keyed dispatch reaches them).
+
+| Member | What a suite does with it |
+|---|---|
+| `NS.HasWidgets` | tells the library-absent arm from the live one |
+| `A.IsFlushing` (`modules/Asks.lua`) | reads the private flush timer |
+| `CC.Plain` (`modules/CompactCards.lua`) | reads a card's four lines as text |
+| `DCard.Editor` (`modules/DetailCard.lua`) | reaches the private Edit message box |
+| `Host.IsSimGUID` (`modules/Sim.lua`) | reads the running simulation's private GUID set |
+| `E.Configure` (`modules/SimEvents.lua`) | shortens a simulated trade window |
+| `W.SetMember`, `W.BagItems` (`modules/SimWorld.lua`) | marks a simulated member, reads the simulated bag |
+| `Sit.LastInputs` (`modules/Situations.lua`) | reads what the edge last classified |
+| `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |
+| `TT.TickerPeriod` (`modules/TradeTimer.lua`) | reads the private ticker's period |
+| `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
+
 ## The four suites, and which checkpoint each gates
 
 | Suite | Command | Commit / run | Release (the tag) |

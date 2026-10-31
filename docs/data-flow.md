@@ -185,7 +185,7 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
 row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
                  RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
                  BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
-                 a line given as `{ text, wrap = false }` (TipMarks.NoWrap) is added unwrapped, so the
+                 a line given as `{ text, wrap = false }` is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
                  a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
                  fact, TipMarks.Row(label, value, tone) `• Label: value` (the bullet and label in

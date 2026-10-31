@@ -75,7 +75,6 @@ test("gear: each worn slot is a copy of its facts at the current level; an empty
     assertEqual(s.equipped[SLOT.NECK], false, "an empty slot")
     assertEqual(s.equipped[SLOT.CHEST].link, link(3002))
     assertEqual(s.loading, 0)
-    assertTrue(G.IsComplete())
 end)
 
 test("gear: the candidate carries the class, the spec and the hand flags from ClassData", function()
@@ -472,7 +471,7 @@ test("gear: an item still loading leaves its slot unknown, and its arrival rebui
     NS.State.gear = nil
     local s = G.Snapshot()
     assertNil(s.equipped[SLOT.HEAD], "unknown, not empty")
-    assertEqual(s.loading, 2); assertFalse(G.IsComplete())
+    assertEqual(s.loading, 2)
     assertNil(G.Qualities()[SLOT.HEAD])
     local seen = listen(NS)
     m.__fireTimers()   -- the loads answer, and arm the rebuild
@@ -481,7 +480,6 @@ test("gear: an item still loading leaves its slot unknown, and its arrival rebui
     assertEqual(seen.n, 1)
     s = G.Snapshot()
     assertEqual(s.equipped[SLOT.HEAD].ilvl, 600); assertEqual(s.owned[SLOT.FINGER1].ilvl, 620)
-    assertTrue(G.IsComplete())
 end)
 
 -- ---------------------------------------------------------------------------------------------

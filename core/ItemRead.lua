@@ -111,13 +111,6 @@ function IR.IdentityKey(link)
     return d.itemID .. "|" .. table.concat(bonus, ",")
 end
 
---- True when two links name the same item by identity (IdentityKey).
---- @return boolean
-function IR.SameItem(a, b)
-    local ka = IR.IdentityKey(a)
-    return ka ~= nil and ka == IR.IdentityKey(b)
-end
-
 -- ── level and quality ───────────────────────────────────────────────────────────────────────
 
 local function isGear(info)

@@ -165,26 +165,6 @@ function CD.SpecIndex(specID)
     return CD.SPEC_INDEX[specID]
 end
 
---- The classFile a spec belongs to, or nil.
-function CD.ClassOf(specID)
-    local row = CD.Spec(specID)
-    return row and row.class
-end
-
---- Whether `specID` dual wields; nil when the spec is unknown.
-function CD.IsDualWield(specID)
-    local row = CD.Spec(specID)
-    if row then return row.dualWield end
-    return nil
-end
-
---- Whether `specID` has Titan's Grip; nil when the spec is unknown.
-function CD.IsTitanGrip(specID)
-    local row = CD.Spec(specID)
-    if row then return row.titanGrip end
-    return nil
-end
-
 -- The spec row when it belongs to `classFile`; a spec of another class is ignored.
 local function ownSpec(classFile, specID)
     local row = CD.Spec(specID)

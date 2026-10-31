@@ -390,12 +390,6 @@ function G.Qualities()
     return out
 end
 
---- Whether every worn and bag item has loaded.
---- @return boolean
-function G.IsComplete()
-    return G.Snapshot().loading == 0
-end
-
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_EQUIPMENT_CHANGED", "OnGearEvent" }

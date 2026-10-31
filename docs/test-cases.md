@@ -1197,7 +1197,7 @@ Total.
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
 
-### test_trade_rules.lua (24)
+### test_trade_rules.lua (23)
 
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
@@ -1218,7 +1218,6 @@ Total.
 - trade rules: the override map replaces a situation's rule
 - trade rules: an override naming no rule, or equal to the default, is not an override
 - trade rules: an unknown or missing situation takes the default personal rule
-- trade rules: Rules lists every situation in order with its rule, default and override flag
 - trade rules: Reset clears the override map in place, restoring the defaults
 - trade rules: IsRule knows the three rule names and nothing else
 - trade rules: nil and garbage inputs never throw
@@ -1300,7 +1299,7 @@ Total.
 - item facts: a token naming classes is a tier token; class gear carries classes only
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
-- item facts: Get caches by link until invalidated
+- item facts: Get caches by link
 - item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
@@ -2198,7 +2197,7 @@ Total.
 | test_scoring.lua | 16 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
-| test_trade_rules.lua | 24 |
+| test_trade_rules.lua | 23 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
@@ -2244,4 +2243,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1846** |
+| **Total** | **1845** |

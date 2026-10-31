@@ -71,8 +71,7 @@ end)
 test("tip marks: a non-wrapping line and its text; names in class and quality colors", function()
     local NS, _, m = T.newAddon()
     local TM = NS.TipMarks
-    local line = TM.NoWrap("Seta wears 283")
-    assertEqual(line.text, "Seta wears 283"); assertEqual(line.wrap, false)
+    local line = { text = "Seta wears 283", wrap = false }
     assertEqual(TM.Text(line), "Seta wears 283"); assertEqual(TM.Text("plain"), "plain")
     assertEqual(TM.ClassName("Seta", "MAGE"), "|cff40c7ebSeta|r")
     assertEqual(TM.ClassName("Seta", nil), "Seta", "no class: plain")
@@ -250,7 +249,7 @@ test("tooltip: a non-wrapping line is added with wrap off; every other line stil
     end)
     local w = m.CreateFrame("Frame")
     NS.Window.AttachTooltip(w, function()
-        return "Them", NS.TipMarks.NoWrap("Seta wears 283"), "Nobody else in your group."
+        return "Them", { text = "Seta wears 283", wrap = false }, "Nobody else in your group."
     end)
     w:__fire("OnEnter")
     assertEqual(#added, 2)
@@ -286,7 +285,7 @@ test("grid: a member's rows, the name on the first, the arrow on the item it rep
     assertEqual(rows[2][3].text, "empty"); assertEqual(rows[2][3].tone, "muted"); assertEqual(rows[2][4].glyph, "▲")
     rows = TM.GearRows("Seta", {}, 0, "")
     assertEqual(#rows, 1, "nothing listed: one empty row"); assertEqual(rows[1][3].text, "empty")
-    assertTrue(TM.IsGrid(TM.Grid(rows))); assertFalse(TM.IsGrid(TM.NoWrap("x"))); assertFalse(TM.IsGrid("x"))
+    assertTrue(TM.IsGrid(TM.Grid(rows))); assertFalse(TM.IsGrid({ text = "x", wrap = false })); assertFalse(TM.IsGrid("x"))
     assertEqual(TM.Text(TM.Grid(rows)), "Seta  empty", "Text reads a grid as its drawn cells")
 end)
 

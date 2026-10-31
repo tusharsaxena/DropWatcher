@@ -65,7 +65,7 @@ test("item facts: a cached ring reads every field of spec §5.1", function()
 end)
 
 test("item facts: a chest reads its appearance, account binds and no specs or track", function()
-    local _, m, IF = enabled(function(m)
+    local _, _, IF = enabled(function(m)
         m.addItem(CHEST, chest({ specs = {} }))
         m.accountBoundUE[CHEST] = true
     end)
@@ -75,10 +75,11 @@ test("item facts: a chest reads its appearance, account binds and no specs or tr
     assertNil(f.specs, "an empty spec list names no spec")
     assertNil(f.track); assertNil(f.unique)
     assertTrue(f.warbound); assertTrue(f.warboundUntilEquip)
-    m.accountBoundUE[CHEST] = nil
-    m.accountBound[CHEST] = true
-    IF.Invalidate(CHEST)
-    f = IF.Get(CHEST)
+    local _, _, IF2 = enabled(function(m2)
+        m2.addItem(CHEST, chest({ specs = {} }))
+        m2.accountBound[CHEST] = true
+    end)
+    f = IF2.Get(CHEST)
     assertTrue(f.warbound); assertFalse(f.warboundUntilEquip)
 end)
 
@@ -189,17 +190,12 @@ end)
 -- The cache
 -- ---------------------------------------------------------------------------------------------
 
-test("item facts: Get caches by link until invalidated", function()
+test("item facts: Get caches by link", function()
     local _, m, IF = enabled(function(m) m.addItem(RING, ring()) end)
     local a = IF.Get(RING)
     m.items[RING].effectiveIlvl = 289
     assertTrue(IF.Get(RING) == a, "the cached table")
     assertEqual(IF.Counts(), 1)
-    IF.Invalidate(RING)
-    assertEqual(IF.Counts(), 0)
-    assertEqual(IF.Get(RING).ilvl, 289)
-    IF.Invalidate()
-    assertEqual(IF.Counts(), 0)
 end)
 
 test("item facts: at its cap the cache drops its least recently used quarter, never the whole", function()
@@ -229,7 +225,6 @@ test("item facts: garbage links answer nil and never raise", function()
     assertNil(IF.Get(T.secret(RING)))
     local f, status = IF.Request("no item here", function() error("never called") end)
     assertNil(f); assertEqual(status, "invalid")
-    IF.Invalidate(42)
 end)
 
 test("item facts: learning an appearance re-reads the flag on the cached facts", function()

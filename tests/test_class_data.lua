@@ -84,8 +84,8 @@ test("classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather d
     assertEqual(dev.class, "DEMONHUNTER")
     assertEqual(dev.stat, "ITEM_MOD_INTELLECT_SHORT")
     assertEqual(dev.dualWield, true)
-    assertEqual(CD.ClassOf(1480), "DEMONHUNTER")
-    assertEqual(CD.ARMOR[CD.ClassOf(1480)], C.ARMOR_SUBCLASS.LEATHER)
+    assertEqual(CD.Spec(1480).class, "DEMONHUNTER")
+    assertEqual(CD.ARMOR[CD.Spec(1480).class], C.ARMOR_SUBCLASS.LEATHER)
     assertEqual(CD.PrimaryStat("DEMONHUNTER", 1480), "ITEM_MOD_INTELLECT_SHORT")
     -- With Devourer, the class no longer shares one primary stat.
     assertEqual(CD.PrimaryStat("DEMONHUNTER", nil), nil)
@@ -97,12 +97,9 @@ test("classdata: dual wield and Titan's Grip are the right specs", function()
     local dual = { [251] = true, [577] = true, [581] = true, [1480] = true, [268] = true, [269] = true,
         [259] = true, [260] = true, [261] = true, [263] = true, [72] = true }
     for specID in pairs(CD.SPECS) do
-        assertEqual(CD.IsDualWield(specID), dual[specID] == true, "dualWield " .. specID)
-        assertEqual(CD.IsTitanGrip(specID), specID == 72, "titanGrip " .. specID)
+        assertEqual(CD.Spec(specID).dualWield, dual[specID] == true, "dualWield " .. specID)
+        assertEqual(CD.Spec(specID).titanGrip, specID == 72, "titanGrip " .. specID)
     end
-    assertEqual(CD.IsDualWield(nil), nil)
-    assertEqual(CD.IsDualWield(999999), nil)
-    assertEqual(CD.IsTitanGrip(nil), nil)
 end)
 
 test("classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees", function()
@@ -124,7 +121,7 @@ test("classdata: shields go to Protection, Holy, Elemental and Restoration Shama
     local CD = load()
     local shield = { [73] = true, [66] = true, [65] = true, [262] = true, [264] = true }
     for specID in pairs(CD.SPECS) do
-        assertEqual(CD.CanUseShield(CD.ClassOf(specID), specID), shield[specID] == true, "shield " .. specID)
+        assertEqual(CD.CanUseShield(CD.Spec(specID).class, specID), shield[specID] == true, "shield " .. specID)
     end
     -- Spec unknown: a class with some shield specs cannot tell; a class with none can.
     assertEqual(CD.CanUseShield("WARRIOR", nil), nil)
@@ -238,8 +235,6 @@ test("classdata: lookups never throw on junk input", function()
     for i = 1, 7 do
         local v = junk[i]
         assertTrue(pcall(CD.Spec, v), "Spec " .. i)
-        assertTrue(pcall(CD.ClassOf, v), "ClassOf " .. i)
-        assertTrue(pcall(CD.IsDualWield, v), "IsDualWield " .. i)
         assertTrue(pcall(CD.PrimaryStat, v, v), "PrimaryStat " .. i)
         assertTrue(pcall(CD.CanUseShield, v, v), "CanUseShield " .. i)
         assertTrue(pcall(CD.CanUseOffhand, v, v), "CanUseOffhand " .. i)
@@ -249,5 +244,4 @@ test("classdata: lookups never throw on junk input", function()
         assertTrue(pcall(CD.TitanGripFor, v, v), "TitanGripFor " .. i)
     end
     assertEqual(CD.Spec({}), nil)
-    assertEqual(CD.ClassOf("x"), nil)
 end)

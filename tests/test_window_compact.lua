@@ -25,7 +25,6 @@ test("compact: the layout in force is the stored one, compact while a run holds 
     assertEqual(WC.Effective("compact", false), "compact")
     assertEqual(WC.Effective("full", true), "compact", "the run override wins")
     assertEqual(WC.Effective(nil, false), "full"); assertEqual(WC.Effective("tiny", nil), "full")
-    assertTrue(WC.ValidMode("compact")); assertFalse(WC.ValidMode("Compact")); assertFalse(WC.ValidMode(nil))
     assertEqual(table.concat(WC.MODES, ","), "full,compact")
 end)
 
