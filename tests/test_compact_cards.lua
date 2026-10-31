@@ -62,7 +62,7 @@ end
 
 local function CC() return T.newAddon().CompactCards end
 
--- A tooltip's lines joined; a non-wrapping line (NS.TipMarks.NoWrap) by its text, a grid by its cells.
+-- A tooltip's lines joined; a non-wrapping line by its text, a grid by its cells.
 local function joined(tip) return T.tipJoined(tip) end
 
 -- Whether the tooltip, read plain (a row's colors out: feedback-21), carries `words`.

@@ -64,17 +64,6 @@ function TR.RuleFor(situation, rules)
     return default, false
 end
 
---- Settings › Trade's list: one row per situation in C.SITUATIONS order,
---- { situation, rule, default, overridden }.
-function TR.Rules(rules)
-    local out = {}
-    for _, s in ipairs(C.SITUATIONS) do
-        local rule, overridden = TR.RuleFor(s.key, rules)
-        out[#out + 1] = { situation = s.key, rule = rule, default = defaultRule(s.key), overridden = overridden }
-    end
-    return out
-end
-
 --- Empties the override map in place, so every situation takes its default again. Answers the
 --- map (nil when it is not a table).
 function TR.Reset(rules)

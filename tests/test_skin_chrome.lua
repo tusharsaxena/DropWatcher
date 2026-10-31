@@ -272,3 +272,29 @@ test("skin chrome: without the library the window's own colors are Ka0s Default'
     degraded.Skin.Text(fs, "dw.idle")
     near("degraded owner token", fs.c, { 0.62, 0.62, 0.64 })
 end)
+
+test("skin chrome: a tab's label is painted when its role changes, not on every repaint", function()
+    -- FX-DW-PERF: S.Text records and tints, so painting both labels per pass cost the refresh pair
+    -- 336 bytes from DW-02 on. The library replays the recorded role on a skin switch.
+    local NS, f, m = shown()
+    local real, painted = NS.Skin.Text, {}
+    NS.Skin.Text = function(fs, role, ...)
+        painted[#painted + 1] = { fs, role }
+        return real(fs, role, ...)
+    end
+    NS.Window.Refresh()
+    local tabLabels = 0
+    for _, p in ipairs(painted) do
+        if p[1] == f.tabs.group.label or p[1] == f.tabs.history.label then tabLabels = tabLabels + 1 end
+    end
+    assertEqual(tabLabels, 0, "a repaint with the same active tab paints no tab label")
+    NS.Window.SelectTab("history")
+    NS.Window.Refresh()
+    NS.Skin.Text = real
+    near("newly active tab", textColor(f.tabs.history.label), token(NS, "text.accent"))
+    near("newly idle tab", textColor(f.tabs.group.label), token(NS, "dw.idle"))
+    toSwitch(m)
+    NS.Window.Refresh()
+    near("active tab after a switch", textColor(f.tabs.history.label), token(NS, "text.accent"))
+    near("idle tab after a switch", textColor(f.tabs.group.label), token(NS, "dw.idle"))
+end)

@@ -1,9 +1,9 @@
 # Compat layer — Ka0s Drop Watcher
 
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
-(compat; design spec §4). It is the root of the addon's compat family: `core/CompatWorld.lua` and
-`core/CompatItem.lua` add stable reads to the same `NS.Compat` (below), and the root's header names
-both. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
+(compat; design spec §4). It is the root of the addon's compat family: `core/CompatWorld.lua`,
+`core/CompatItem.lua` and `core/CompatJournal.lua` add reads to the same `NS.Compat` (below), and the
+root's header names all three. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
 one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
 load, and is read inside functions only.
@@ -19,7 +19,7 @@ in; `test_compat` drives them through the shims.
 
 **Eighty-seven shims** across the family, counted the way documentation-§3 counts them
 (`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `87`): the
-root `core/Compat.lua` publishes 64, `core/CompatWorld.lua` 18 and `core/CompatItem.lua` 5. The three
+root `core/Compat.lua` publishes 59, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5 and `core/CompatJournal.lua` 5. The four
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -119,7 +119,7 @@ is out of combat.
 
 ## The simulator's seam
 
-`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua` and `core/CompatItem.lua`
+`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua`, `core/CompatItem.lua` and `core/CompatJournal.lua`
 (simulator spec §2, §5, DW-70; LibKa0s-Sim-1.0's `Sim:NewSeam` since DW-02). It names no client API
 and adds no shim, so the count above stands. At load it wraps every member here that answers for
 the client, which is every one but the secret guards and the pure text helpers (`IsSecret`,
@@ -181,7 +181,7 @@ the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBag
 
 ## The item reads at a location and the tooltip setters
 
-`core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/SimSetup.lua` (ui spec §0,
+`core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/CompatJournal.lua` and `core/SimSetup.lua` (ui spec §0,
 DW-80), on the same terms: none of its calls is version-variant, so they are not counted above, and
 they are `NS.Compat` members so the seam answers them.
 

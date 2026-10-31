@@ -234,22 +234,6 @@ test("trade rules: an unknown or missing situation takes the default personal ru
     check(TR.Estimate(drop(), looter(-1), ctx(nil)), "likely", "notUpgrade")
 end)
 
-test("trade rules: Rules lists every situation in order with its rule, default and override flag", function()
-    local TR, C, rules = load()
-    local list = TR.Rules({ raid = "group", dungeon = "bogus" })
-    assertEqual(#list, #C.SITUATIONS)
-    for i, s in ipairs(C.SITUATIONS) do
-        assertEqual(list[i].situation, s.key)
-        assertEqual(list[i].default, rules[s.key])
-    end
-    local byKey = {}
-    for _, row in ipairs(list) do byKey[row.situation] = row end
-    assertEqual(byKey.raid.rule, "group")
-    assertTrue(byKey.raid.overridden)
-    assertEqual(byKey.dungeon.rule, "personal")
-    assertFalse(byKey.dungeon.overridden)
-end)
-
 test("trade rules: Reset clears the override map in place, restoring the defaults", function()
     local TR = load()
     local rules = { raid = "group", pvp = "personal" }

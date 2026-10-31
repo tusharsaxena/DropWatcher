@@ -133,7 +133,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (49)
+### test_settings_pages.lua (53)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -151,9 +151,13 @@ Total.
 - situations: the per-situation rows are still schema rows, skipRender, with no subsection
 - situations: the pure rows carry each situation's label, values and live cells
 - feed: the Quality tab closes with the threshold in force now, repainted on a write
-- feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor
-- feed: Items draws Minimum item level alone, then Absolute minimum beside Levels under my average
-- feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only
+- feed: the Quality tab pairs the mode with Always show upgrades, then the mode's own value
+- feed: Items draws Minimum item level alone, over the item kinds
+- feed: the fixed minimum is drawn in the fixed mode only, and the floor in the matching modes only
+- feed: a situation's own quality draws the value it picks beside the feed mode's
+- feed: a situation on the fixed mode draws Fixed minimum under a matching feed mode
+- feed: every situation's quality selector is watched by both value rows
+- feed: an item level mode draws its own value only, and Off draws neither
 - feed: the readout names the situation whose own quality setting is in force
 - comparison: Weights draws your class's specs as a sub-strip and one slider per stat
 - comparison: a weight slider writes the whole map through the seam, for the spec on screen
@@ -220,7 +224,7 @@ Total.
 - outline: without the skin engine the apply is a quiet no-op and the store still takes it
 - outline: without the skin engine From skin answers the default mode, HUD text only
 
-### test_skin_chrome.lua (11)
+### test_skin_chrome.lua (12)
 
 - skin chrome: under Ka0s Default the window draws the pixels it drew before skins
 - skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
@@ -233,6 +237,7 @@ Total.
 - skin chrome: an item quality is the skin's q.* token, the client's own color under Ka0s Default
 - skin chrome: the main window's resize grip takes the skin's icon.grip, live, like the tool windows'
 - skin chrome: without the library the window's own colors are Ka0s Default's
+- skin chrome: a tab's label is painted when its role changes, not on every repaint
 
 ### test_skin_literals.lua (3)
 
@@ -617,7 +622,7 @@ Total.
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
 
-### test_table_font.lua (9)
+### test_table_font.lua (10)
 
 - table font: Window › Layout › Tables carries the whole font setting, after Row height
 - table font: Font size keeps its stored path, its range and `0 (Default)`
@@ -627,6 +632,7 @@ Total.
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
 - table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font: a read reuses its table, and a later read leaves nothing of the last look
 - table font: History and the compact cards draw the same setting
 
 ### test_drops_layout.lua (10)
@@ -1195,7 +1201,7 @@ Total.
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
 
-### test_trade_rules.lua (24)
+### test_trade_rules.lua (23)
 
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
@@ -1216,7 +1222,6 @@ Total.
 - trade rules: the override map replaces a situation's rule
 - trade rules: an override naming no rule, or equal to the default, is not an override
 - trade rules: an unknown or missing situation takes the default personal rule
-- trade rules: Rules lists every situation in order with its rule, default and override flag
 - trade rules: Reset clears the override map in place, restoring the defaults
 - trade rules: IsRule knows the three rule names and nothing else
 - trade rules: nil and garbage inputs never throw
@@ -1298,7 +1303,7 @@ Total.
 - item facts: a token naming classes is a tier token; class gear carries classes only
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
-- item facts: Get caches by link until invalidated
+- item facts: Get caches by link
 - item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
@@ -2073,7 +2078,7 @@ Total.
 
 - locale: the enUS files are the TOC's, the base file first and its topic files after it
 - locale: every enUS key lives in exactly one enUS file
-- locale: a topic file holds only what its folder alone reads
+- locale: a source folder's topic file holds only what that folder alone reads
 - locale: the scan finds routed literals in the addon's files
 - locale: enUS carries every string routed through NS.L
 - locale: every enUS key is still read by the addon's files
@@ -2151,10 +2156,10 @@ Total.
 | test_database.lua | 13 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
-| test_settings_pages.lua | 49 |
+| test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 11 |
-| test_skin_chrome.lua | 11 |
+| test_skin_chrome.lua | 12 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
@@ -2171,7 +2176,7 @@ Total.
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
-| test_table_font.lua | 9 |
+| test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
@@ -2196,7 +2201,7 @@ Total.
 | test_scoring.lua | 16 |
 | test_quality_gate.lua | 24 |
 | test_situations.lua | 14 |
-| test_trade_rules.lua | 24 |
+| test_trade_rules.lua | 23 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
@@ -2242,4 +2247,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1844** |
+| **Total** | **1849** |

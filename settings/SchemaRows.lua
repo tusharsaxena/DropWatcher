@@ -262,9 +262,22 @@ end
 
 -- ── Drops › Quality, Items and Retention (design spec §6.2, §6.3; feedback-24) ──────────────
 --
--- What the addon lists at all, and how long it keeps it. Each mode's dependents share the line
--- under it: Fixed minimum and Floor (never live together), Absolute minimum and Levels under my
--- average (feedback-24). The View, Content and Sort a fresh tab opens on are Window › Starting view's.
+-- What the addon lists at all, and how long it keeps it. A mode's own value is drawn only while a
+-- selector picks it (LibKa0s#67, options-ui-§22): the Quality values while the feed's mode or any
+-- situation's own Quality picks them, so both are drawn when the two differ; Absolute minimum or
+-- Levels under my average, or neither under Off. The hidden rows stay schema rows, so `/dw set` and
+-- Defaults still reach them. The View, Content and Sort a fresh tab opens on are Window › Starting view's.
+
+--- `shownWhen` for a Quality value: the feed's mode or any situation's own selector picking `modes`.
+--- The situation rows are skipRender, so the library watches only the feed's mode: their table sits
+--- on another tab, and coming back here renders afresh.
+local function qualityValueShown(modes)
+    local any = { { path = "feed.quality.mode", equals = modes } }
+    for _, s in ipairs(K.SITUATIONS) do
+        any[#any + 1] = { path = "situations." .. s.key .. ".quality", equals = modes }
+    end
+    return { any = any }
+end
 
 local function feed()
     local F, Q = P.feed, P.feed.quality
@@ -275,10 +288,10 @@ local function feed()
         L["A drop below the minimum still shows when it is an upgrade for you."], quality)
     pick("feed.quality.fixed", Q.fixed, FIXED_QUALITIES, L["Fixed minimum"],
         L["The least quality a drop needs in the fixed mode."],
-        with(quality, { disabledIf = unless("feed.quality.mode", "fixed") }))
+        with(quality, { shownWhen = qualityValueShown("fixed") }))
     pick("feed.quality.floor", Q.floor, FLOOR_QUALITIES, L["Quality floor"],
         L["The least quality the two matching modes ever ask for, and what an empty slot asks for."],
-        with(quality, { disabledIf = function() return NS.Setting("feed.quality.mode") == "fixed" end }))
+        with(quality, { shownWhen = qualityValueShown({ "dynamicSlot", "dynamicCharacter" }) }))
 
     local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
     bool("feed.gearOnly", F.gearOnly, L["Gear only"],
@@ -291,10 +304,10 @@ local function feed()
         with(ilvl, { solo = true }))
     slider("feed.minIlvl", F.minIlvl, 0, 1000, 1, L["Absolute minimum"],
         L["The least item level a drop needs in the absolute mode."],
-        with(ilvl, { disabledIf = unless("feed.minIlvlMode", "absolute") }))
+        with(ilvl, { shownWhen = { path = "feed.minIlvlMode", equals = "absolute" } }))
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
-        with(ilvl, { disabledIf = unless("feed.minIlvlMode", "relative") }))
+        with(ilvl, { shownWhen = { path = "feed.minIlvlMode", equals = "relative" } }))
 
     -- Keep history for first, so it is alone on its line and Clear history takes the right half
     -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.

@@ -19,8 +19,8 @@ local _, NS = ...
 -- A NON-WRAPPING LINE. A tooltip line is a string (it wraps at the tooltip's width) or
 -- `{ text, wrap = false }`, which does not wrap, so the tooltip grows to fit it
 -- (modules/Window.lua's showTooltip reads strings, these and TM.Grid's lines). TM.Text answers any
--- of them as its string. TM.NoWrap has no caller since the gear lines became grids: it is kept as
--- API, pinned by test_tip_marks.
+-- of them as its string. No line takes this shape since the gear lines became grids; the readers
+-- keep it, pinned by test_tip_marks.
 --
 -- THE COLORS. TM.ClassName and TM.ItemName put a name in its class or quality color, read at call
 -- time from the client's tables (NS.Compat.ClassColor; ITEM_QUALITY_COLORS, else the link's own
@@ -128,12 +128,7 @@ function TM.Chars(text)
     return #s + 2 * n
 end
 
---- A tooltip line that does not wrap: the tooltip grows to fit it.
---- @param text string
---- @return table { text, wrap = false }
-function TM.NoWrap(text) return { text = text, wrap = false } end
-
---- A tooltip line's text, whether it is a string, a TM.NoWrap table or a TM.Grid (its rows on lines
+--- A tooltip line's text, whether it is a string, a `{ text, wrap = false }` table or a TM.Grid (its rows on lines
 --- of their own, each row's drawn cells two spaces apart).
 --- @param line string|table
 --- @return string

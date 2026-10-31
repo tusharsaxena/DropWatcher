@@ -3,7 +3,7 @@ local _, NS = ...
 -- spec §2, §5): while a simulation runs, every client answer core/Compat.lua gives is asked of the
 -- simulator first.
 --
--- THE SEAM. At load, straight after core/Compat.lua, core/CompatWorld.lua and core/CompatItem.lua
+-- THE SEAM. At load, straight after core/Compat.lua, core/CompatWorld.lua, core/CompatItem.lua and core/CompatJournal.lua
 -- and before anything reads a member, Sim:NewSeam wraps every NS.Compat function but the pure ones
 -- (PURE) in place, once. While a session runs (modules/Sim.lua's NS.Sim) the call goes to the
 -- member's provider; otherwise straight to the member, so a session with no simulation costs one

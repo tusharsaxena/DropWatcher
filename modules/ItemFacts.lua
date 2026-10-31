@@ -278,18 +278,6 @@ function IF.Counts()
     return s.count, loading
 end
 
---- Forget one link's facts, or every link's when `link` is nil. Loads in flight carry on.
---- @param link string|nil
-function IF.Invalidate(link)
-    local s = store()
-    if link == nil then
-        s.cache, s.used, s.count = {}, {}, 0
-    elseif validLink(link) and s.cache[link] then
-        s.cache[link], s.used[link] = nil, nil
-        s.count = s.count - 1
-    end
-end
-
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated" }

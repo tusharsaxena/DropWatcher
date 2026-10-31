@@ -2,7 +2,7 @@
 -- (Lustrous Golden Plumage, item 159617, shown at its base level 19 and base quality Rare instead
 -- of 311 Epic). The reproduction with realistic 12.x links per loot source comes first, then
 -- core/ItemRead.lua (the library-shaped reads: LinkDetail, BetterLink, QualityOf,
--- EffectiveItemLevel, ItemLevelAt, QualityAt, SameItem), then the fixes it drives: the merge keeps
+-- EffectiveItemLevel, ItemLevelAt, QualityAt), then the fixes it drives: the merge keeps
 -- the most complete link, an own drop matched to its bag item reads its level and quality from
 -- that bag item, the bag match tolerates non-identity fields, and the `drops` diagnostics line.
 
@@ -225,10 +225,10 @@ end)
 test("ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count", function()
     local IR = T.newAddon().ItemRead
     assertEqual(IR.IdentityKey(FULL), "159617|1520,6652,10254,10383,10390")
-    assertTrue(IR.SameItem(FULL, BAGGED))
-    assertFalse(IR.SameItem(FULL, BARE), "other bonus ids: another item")
-    assertTrue(IR.SameItem(BARE, "item:159617"))
-    assertFalse(IR.SameItem(nil, nil))
+    assertEqual(IR.IdentityKey(FULL), IR.IdentityKey(BAGGED))
+    assertTrue(IR.IdentityKey(FULL) ~= IR.IdentityKey(BARE), "other bonus ids: another item")
+    assertEqual(IR.IdentityKey(BARE), IR.IdentityKey("item:159617"))
+    assertNil(IR.IdentityKey(nil))
 end)
 
 test("ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear", function()

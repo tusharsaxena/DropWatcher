@@ -114,10 +114,6 @@ local function isLocked() return setting("locked") == true end
 local function isMinimized() return geometry().minimized == true end
 local function feedName() return NS.State.testMode == true and "test" or "live" end
 
---- The feed the window shows: `test` in test mode, else `live`.
---- @return string
-function Window.FeedName() return feedName() end
-
 --- What the window shows: its feed (`test` in test mode, else `live`). The simulator's report
 --- places its drops by it (SimReport). Drops lists every drop, your own included
 --- (feedback-5 spec §2: `feed.showOwn` is retired).
@@ -207,7 +203,7 @@ local PLACERS = {
 }
 
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
--- (NS.TipMarks.NoWrap, feedback-6 spec §3) does not, so the tooltip grows to fit it; `{ grid = rows }`
+-- (feedback-6 spec §3) does not, so the tooltip grows to fit it; `{ grid = rows }`
 -- (NS.TipMarks.Grid, feedback-7 spec §3) reserves a line per row, painted as columns by NS.TipGrid.
 -- The lines are the skin's tooltip value color (Ka0s Default white) and the title its tooltip title
 -- (gold); GameTooltip's frame stays the client's (skinning-§7).
@@ -243,7 +239,7 @@ local function hideTooltip()
 end
 
 --- Give `widget` a tooltip: `fn()` answers the title, then each line (a string, which wraps,
---- `{ text, wrap = false }`, which does not: NS.TipMarks.NoWrap, or `{ grid = rows }`, columns:
+--- `{ text, wrap = false }`, which does not, or `{ grid = rows }`, columns:
 --- NS.TipMarks.Grid, painted by NS.TipGrid). Read on every hover, so it is
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
@@ -617,12 +613,16 @@ end
 -- The labels in text roles, not `tab.onText` / `tab.text`, which are colored for a tab's own backing
 -- (these have none): the active one in the skin's accent, an idle one in the idle gray `dw.idle`
 -- (Ka0s Default: today's gold and 0.62 gray), each in the skin's face (S.Text records it, so a skin
--- switch repaints it).
+-- switch repaints it, so a label is painted only when its role changes).
 local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
+        local role = active and "accent" or "dw.idle"
         tab.label:SetText(NS.CompactChrome.TabText(key))
-        NS.Skin.Text(tab.label, active and "accent" or "dw.idle")
+        if tab.dwRole ~= role then
+            tab.dwRole = role
+            NS.Skin.Text(tab.label, role)
+        end
         tab.underline:SetShown(active)
     end
 end

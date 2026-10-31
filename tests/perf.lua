@@ -92,7 +92,10 @@ local results = {}
 -- stack depth: the measured loop never grows the Lua stack past the warm-up's high-water mark,
 -- which once billed a one-time stack reallocation (about 1.8 KB) to whichever scenario ran first
 -- (bisected 2026-10-11 to DW-C2's deeper refresh path; the refresh pair read 14249.9 off against
--- 14248.1 on, the off run's first iteration alone 1.8 KB over).
+-- 14248.1 on, the off run's first iteration alone 1.8 KB over). The full collect shrinks the Lua
+-- stack again, and how far depends on what the load left it at (two files more in the TOC took the
+-- refresh pair to 13458.9 off against 13457.0 on, 2026-10-31), so one settling call runs with the
+-- collector stopped, and the measured loop pays no regrowth.
 local function loop(n, fn)
     for _ = 1, n do fn() end
 end
@@ -100,9 +103,10 @@ end
 --- Run `fn` n times after a warm-up, the collector stopped inside the loop.
 local function measure(name, n, fn)
     loop(50, fn)
-    notes = 0
     collectgarbage("collect"); collectgarbage("collect")
     collectgarbage("stop")
+    loop(1, fn)
+    notes = 0
     local before = collectgarbage("count")
     local t0 = os.clock()
     loop(n, fn)

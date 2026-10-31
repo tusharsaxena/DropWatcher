@@ -80,6 +80,23 @@ places itself only when what decides it changes (the layout, and on Drops whethe
 Re-run 2026-10-18 after feedback-21: `refreshCaptureOff`/`On` 13713.0 and `refreshCompactCaptureOff`/`On`
 10481.1, every pair matching and under its ceiling; the parse pair and `showDecisionStoodDown` unmoved.
 
+Re-run 2026-10-31: `refreshCaptureOff`/`On` had gone over the ceiling at 14577.0 and
+`refreshCompactCaptureOff`/`On` had risen to 11345.0 (recorded in `automated-tests/20261031-202124/`).
+Bisected to two commits. DW-02 of the skinning rollout (52b9951) added 336 bytes by painting both tab
+labels through `S.Text` on every pass (32 more came with the later skin work, 14081.0 at 0d9d843). DW-01 of the
+skin fonts run (bc3c5dc) added 496 by building a fresh table in `NS.WindowRows.ReadFont` and widening
+the metrics table. A tab label is now painted only when its role changes, since the library replays
+the recorded role on a skin switch, and `ReadFont` rewrites one table, pinned by `test_skin_chrome` and
+`test_table_font`. After it: `refreshCaptureOff`/`On` 13456.0 and `refreshCompactCaptureOff`/`On`
+10224.0 over repeated runs, every pair matching and under its ceiling, which did not move;
+`parseCaptureOff`/`On` 664.0 and `showDecisionStoodDown` 0.
+
+The same day the off bracket read 1.9 bytes over the on one once two files joined the TOC, a stack
+artifact rather than a cost: the full collect shrinks the Lua stack, how far depends on what the load
+left it at, and the first iteration after it pays the regrowth. `measure` now runs one settling call
+with the collector stopped, so the loop measures only what each iteration allocates, and the figures
+above are whole numbers.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

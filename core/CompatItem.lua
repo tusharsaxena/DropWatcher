@@ -8,7 +8,7 @@ local _, NS = ...
 -- WHY HERE. None of these APIs is version-variant (C_Item.GetCurrentItemLevel and GetItemQuality
 -- on an ItemLocation, GameTooltip's SetBagItem, SetInventoryItem and SetHyperlink), so the compat
 -- rule does not need them in core/Compat.lua, which keeps the variant ones under its 1000-line
--- cap; core/CompatWorld.lua is the same split. core/ItemRead.lua reads the location; the drop
+-- cap; core/CompatWorld.lua is the same split, and core/CompatJournal.lua keeps it there. core/ItemRead.lua reads the location; the drop
 -- tables' item buttons (modules/WindowGroup.lua) show the tooltip.
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret

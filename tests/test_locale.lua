@@ -1,13 +1,14 @@
 -- tests/test_locale.lua — locales/enUS.lua (with locales/enUS_Settings.lua, the settings panel's
--- topic file split out of it at the layout-§1 cap, localization-§6) carries every string the code
--- routes through NS.L (localization-§1, §3; review F07, decision D8). The key-on-miss fallback answers
+-- topic file split out of it at the layout-§1 cap, and locales/enUS_Tooltips.lua, the tooltips',
+-- localization-§6) carries every string the code routes through NS.L (localization-§1, §3; review F07, decision D8). The key-on-miss fallback answers
 -- an absent key with itself, so a missing entry renders fine on enUS and hides from the translator's
 -- base; this suite reads the table RAW so the fallback cannot answer for it.
 --
 -- The gates read the union of every enUS file (localization-§6): the list comes from the TOC, the
 -- files load in its order into one namespace, and a key written in two files fails, read from their
 -- text because the loaded table keeps only the last write. A topic file fills the base file's NS.L
--- and nothing else, and holds only what its folder alone reads.
+-- and nothing else, and a topic named for a source folder holds only what that folder alone reads
+-- (a feature's topic, enUS_Tooltips.lua, has no folder to hold it to).
 --
 -- Both directions: every literal `L["..."]` / `NS.L["..."]` in an addon file has an enUS entry,
 -- and every enUS key is a string literal somewhere in the addon's files (localization-§3: enUS
@@ -140,11 +141,12 @@ test("locale: every enUS key lives in exactly one enUS file", function()
         .. table.concat(dups, "\n", 1, math.min(#dups, 20)))
 end)
 
-test("locale: a topic file holds only what its folder alone reads", function()
+test("locale: a source folder's topic file holds only what that folder alone reads", function()
+    local FOLDER_TOPIC = { Settings = "settings/" }
     local home = {}   -- raw key -> the folder its topic file serves (enUS_Settings.lua -> settings/)
     for _, k in ipairs(keyLines()) do
         local topic = k.path:match("^locales/enUS_(%w+)%.lua$")
-        if topic then home[assert(loadstring("return " .. k.raw))()] = topic:lower() .. "/" end
+        if FOLDER_TOPIC[topic] then home[assert(loadstring("return " .. k.raw))()] = FOLDER_TOPIC[topic] end
     end
     local strays = {}
     for _, use in ipairs(routedKeys()) do

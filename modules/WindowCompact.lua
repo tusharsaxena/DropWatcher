@@ -26,7 +26,7 @@ local _, NS = ...
 -- lets go when it is next hidden, so it returns to the stored mode the next time it opens. The
 -- player's own choice (NS.SetWindowMode) lets go at once.
 --
--- PURE: ValidMode, IsRun, Effective, DefaultSize, Bounds, ClampSize, CornerPoint. The edge: the
+-- PURE: IsRun, Effective, DefaultSize, Bounds, ClampSize, CornerPoint. The edge: the
 -- reads through NS.Setting and the profile, Apply (the frame's bounds, size and point), and the
 -- override's bus receiver and visibility listener. In the compact layout the Drops tab draws cards
 -- (modules/CompactGroup.lua, DW-C2), and History its own (modules/CompactHistory.lua, DW-C3).
@@ -70,11 +70,6 @@ local FALLBACK_SCREEN = 4096
 local function num(v) return type(v) == "number" and v == v and v or nil end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
-
---- Whether `v` names a layout.
---- @param v any
---- @return boolean
-function WC.ValidMode(v) return MODE_SET[v] == true end
 
 --- Whether a situation key is a run (a dungeon, raid, key or delve), where the override applies.
 --- @param key string|nil

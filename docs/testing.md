@@ -5,8 +5,8 @@
 Both MUST pass before every commit (testing-§4):
 
 ```sh
-lua tests/run.lua      # the headless suite, Lua 5.1
-luacheck .             # 0 warnings / 0 errors
+lua tests/run.lua                               # the headless suite, Lua 5.1
+~/.claude/dev-copilot/bin/ka0s-bounded luacheck .  # 0 warnings / 0 errors
 ```
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
@@ -546,11 +546,11 @@ combat refusal and the Defaults tooltip; on the kit's `tests/_kit/mock_bindings.
 §14: a drop's item level and trade reason, a re-judged drop, the encounter and keystone edges, each
 hold and its release over an encounter or combat, the trade scan logged on change only, the search
 box once on focus lost, and the report's drop, toast-queue and auto-ask lines), `test_locale` (every literal `L["..."]` / `NS.L["..."]` in an addon file has a raw
-entry in `locales/enUS.lua` or `locales/enUS_Settings.lua`, the key-on-miss fallback bypassed, and
+entry in `locales/enUS.lua`, `locales/enUS_Settings.lua` or `locales/enUS_Tooltips.lua`, the key-on-miss fallback bypassed, and
 every enUS key's text appears in an addon file, a loose reverse since some keys are reached
 dynamically; review F07, decision D8. Both read the union of the enUS files, listed from the TOC
-and loaded in its order (localization-§6), and it fails on a key written in two of them, on a topic
-file's key read outside its folder, and on a topic file misnamed, out of the block after
+and loaded in its order (localization-§6), and it fails on a key written in two of them, on a folder
+topic file's key read outside its folder, and on a topic file misnamed, out of the block after
 `enUS.lua`, or keeping its own table). Kit suites,
 declared by directory: `test_eol`, `test_prose`, `test_layout_cap`, `test_diagnostics_contract`,
 `test_lizard_sighted`.
@@ -576,11 +576,31 @@ Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client A
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
 the change that moves the count (testing-§5).
 
+## Members only the suites call
+
+A member with no shipped caller is removed, with one exception: a read or drive seam the suites use
+to pin shipped behavior they could not otherwise reach. These stay, each named here so a dead-export
+pass does not have to rule on it again (verified 2026-10-31: no string-keyed dispatch reaches them).
+
+| Member | What a suite does with it |
+|---|---|
+| `NS.HasWidgets` | tells the library-absent arm from the live one |
+| `A.IsFlushing` (`modules/Asks.lua`) | reads the private flush timer |
+| `CC.Plain` (`modules/CompactCards.lua`) | reads a card's four lines as text |
+| `DCard.Editor` (`modules/DetailCard.lua`) | reaches the private Edit message box |
+| `Host.IsSimGUID` (`modules/Sim.lua`) | reads the running simulation's private GUID set |
+| `E.Configure` (`modules/SimEvents.lua`) | shortens a simulated trade window |
+| `W.SetMember`, `W.BagItems` (`modules/SimWorld.lua`) | marks a simulated member, reads the simulated bag |
+| `Sit.LastInputs` (`modules/Situations.lua`) | reads what the edge last classified |
+| `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |
+| `TT.TickerPeriod` (`modules/TradeTimer.lua`) | reads the private ticker's period |
+| `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
+
 ## The four suites, and which checkpoint each gates
 
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
-| `lint` | `luacheck .` | **gates** | gates |
+| `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
 | `tests` | `lua tests/run.lua` | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0, and no crashed run (a crashed or bounded lizard run is a fail, its files listed as crashedFiles) |

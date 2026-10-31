@@ -1,0 +1,13 @@
+Ka0s Drop Watcher — offline perf  (v1.1.0, label 'final-pre-merge')
+
+scenario                    iters     ms/iter notes/iter  bytes/iter
+refreshCaptureOff            1000     0.15733       0.00     13456.0
+refreshCaptureOn             1000     0.13061       1.00     13456.0
+refreshCompactCaptureOff     1000     0.12662       0.00     10224.0
+refreshCompactCaptureOn      1000     0.13194       1.00     10224.0
+showDecisionStoodDown        1000     0.00014       0.00         0.0
+parseCaptureOff              1000     0.01583       0.00       664.0
+parseCaptureOn               1000     0.01600       1.00       664.0
+
+timings are for orientation only — compare scenarios within a run, never across machines
+wrote docs/automated-tests/20261101-025807/perf.json

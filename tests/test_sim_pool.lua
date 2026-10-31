@@ -399,7 +399,7 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
             assertNil(names[mem.name], "distinct names"); names[mem.name] = true
             assertNil(guids[mem.guid], "distinct GUIDs"); guids[mem.guid] = true
             assertTrue(mem.guid:find("^Player%-%d+%-%x+$") ~= nil, "a client-shaped GUID")
-            assertEqual(CD.ClassOf(mem.specID), mem.classFile, "the spec is the class's")
+            assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
             assertEqual(mem.classID, CD.CLASS_ID[mem.classFile])
             assertEqual(mem.fullName, mem.name .. "-" .. mem.realm)
         end

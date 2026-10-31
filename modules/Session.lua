@@ -74,10 +74,6 @@ function S.MarkCleared() record().cleared = time() end
 --- @return number|nil
 function S.Cleared() return num(record().cleared) end
 
---- Whether this load is a /reload (PLAYER_ENTERING_WORLD's isReloadingUi). False before the event.
---- @return boolean
-function S.IsReload() return reloaded end
-
 --- PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi): a login starts the session now, a reload
 --- keeps it, a zone change moves nothing.
 function S.OnEnteringWorld(isInitialLogin, isReloadingUi)

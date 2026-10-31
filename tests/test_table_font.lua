@@ -254,6 +254,26 @@ test("table font edge: with CreateFont, each look is a named font object that ca
     assertEqual(#made, n, "one object per look, made once and reused")
 end)
 
+test("table font: a read reuses its table, and a later read leaves nothing of the last look", function()
+    -- FX-DW-PERF: one read per repaint; DW-01's fresh table a repaint took the refresh pair over its
+    -- ceiling. The reused table must not keep a color or a face the block no longer has.
+    local NS = shown()
+    local S, WR = NS.SchemaRuntime, NS.WindowRows
+    local first = WR.ReadFont()
+    assertEqual(first.plain, nil, "the swatch at its default draws the skin's plain color")
+    S.Set("window.tableFontColor", { r = 0.2, g = 0.4, b = 0.6, a = 0.5 })
+    local picked = WR.ReadFont()
+    assertTrue(picked == first, "one table, read after read")
+    assertTrue(near(picked.plain[1], 0.2) and near(picked.plain[2], 0.4) and near(picked.plain[3], 0.6)
+        and near(picked.plain[4], 0.5), "the picked color")
+    S.Set("window.tableFontColor", NS.C.PROFILE.window.tableFontColor)
+    assertEqual(WR.ReadFont().plain, nil, "back at the default: no color left behind")
+    local fs = NS.WindowGroup.Drawn().rows[1].cells.slot.text
+    WR.SetTone(fs, "plain")
+    local P = NS.Constants.TONE.plain
+    sameColor(fs, P.r, P.g, P.b, "and the next plain text draws the skin's")
+end)
+
 test("table font: History and the compact cards draw the same setting", function()
     local NS, _, m = shown()
     local S = NS.SchemaRuntime
