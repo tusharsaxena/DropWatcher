@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-025807`](20261101-025807/) | `18ddf3c` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54464 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-001631`](20261101-001631/) | `ec6b6c5` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54463 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261031-213421`](20261031-213421/) | `091e1b8` | clean | 1.1.0 | 0/0 | 208 | 1845/1/1846 | pass | 54377 | 6706 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261031-202124`](20261031-202124/) | `f799d32` | clean | 1.1.0 | 0/0 | 206 | 1844/1/1845 | fail | 54383 | 6712 | 7.4 | 2.4 | 15 | 0 | **amber** |
@@ -61,10 +62,10 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 ## Test suite
 
 **1850 cases** — 1849 passed, 0 failed, 1 skipped. The generated inventory
-[`20261101-001631/test-cases.md`](20261101-001631/test-cases.md) is the authority on which cases existed at this run;
+[`20261101-025807/test-cases.md`](20261101-025807/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **1846 → 1850** since the previous run.
+Unchanged from the previous run at 1850 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -81,24 +82,24 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261101-001631/perf.json`](20261101-001631/perf.json).
+[`20261101-025807/perf.json`](20261101-025807/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.08907 | 0.00 | 13456.0 |
-| `refreshCaptureOn` | 1000 | 0.08182 | 1.00 | 13456.0 |
-| `refreshCompactCaptureOff` | 1000 | 0.09206 | 0.00 | 10224.0 |
-| `refreshCompactCaptureOn` | 1000 | 0.09353 | 1.00 | 10224.0 |
-| `showDecisionStoodDown` | 1000 | 0.00012 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01157 | 0.00 | 664.0 |
-| `parseCaptureOn` | 1000 | 0.01200 | 1.00 | 664.0 |
+| `refreshCaptureOff` | 1000 | 0.15733 | 0.00 | 13456.0 |
+| `refreshCaptureOn` | 1000 | 0.13061 | 1.00 | 13456.0 |
+| `refreshCompactCaptureOff` | 1000 | 0.12662 | 0.00 | 10224.0 |
+| `refreshCompactCaptureOn` | 1000 | 0.13194 | 1.00 | 10224.0 |
+| `showDecisionStoodDown` | 1000 | 0.00014 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01583 | 0.00 | 664.0 |
+| `parseCaptureOn` | 1000 | 0.01600 | 1.00 | 664.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261101-001631`](20261101-001631/) — **this run's measurement, not its diff.** Max CCN **15** across 6714
+Current as of [`20261101-025807`](20261101-025807/) — **this run's measurement, not its diff.** Max CCN **15** across 6714
 functions, **0** of them warned on; 7 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
