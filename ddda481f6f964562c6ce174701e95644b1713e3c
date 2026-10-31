@@ -1,0 +1,7 @@
+ka0s-review: DW-F01 + DW-F02 (font pickers and skin faces, LibKa0s v1.83.0)
+
+Range e4dde41..ddda481. The independent review step returned no findings, so nothing was verified, fixed or rejected, and no DW-F02 review-fix commit was made.
+
+Re-checked at this head: lua tests/run.lua 1844 passed, 0 failed, 1 skipped; luacheck 0 warnings / 0 errors in 206 files; largest own Lua file 1331 lines; vendored complexity suite max CCN 15. Picker rows: settings/ComposedRows.lua uses Helpers.FontGroup and Helpers.BorderGroup; the library's Ka0sMedia_* fallback is not exercised in the client until SKIN-33.
+
+Smoke: SKIN-31..33 added and SKIN-4, SKIN-15, SKIN-16 reopened by this work; none marked passed.
