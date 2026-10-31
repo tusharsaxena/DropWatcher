@@ -286,13 +286,12 @@ Defaults button and accept → the scale is back to 1.0 and the minimap button s
 Messages, Window, Alerts and Profiles, in that order (feedback-24; FEED-99), and every page has a tab
 strip. Situations: Auto-open the window, then one table, a line per situation (Situation, Track,
 Auto-open, Quality, Loot rule; FEED-65); untick Delve's Track → its Auto-open, Quality and Loot rule
-dim, tick it → they light; untick the master row → every Auto-open dims. Drops › Quality: with Minimum
-quality `Fixed minimum` the Quality floor is dimmed; switch to `Match each slot` → Fixed minimum dims,
-Quality floor lights, and the closing line reads `In force now: Quality: Match slot`, as the window's
+dim, tick it → they light; untick the master row → every Auto-open dims. Drops › Quality: switch
+Minimum quality to `Match each slot` → the closing line reads `In force now: Quality: Match slot`, as the window's
 filter bar does, with a line under it pointing at the Situations page's Quality column. In a dungeon
-whose Quality is set on Situations, the line names it (`(Dungeon's own setting)`). Drops › Items: the
-absolute and relative item levels light only in their mode. Press the Drops page's Defaults → only its
-rows go back (a Window value you changed stays). Result: passed in the client, 2026-10-23 (the owner).
+whose Quality is set on Situations, the line names it (`(Dungeon's own setting)`). Press the Drops
+page's Defaults → only its rows go back (a Window value you changed stays). Result: passed in the client,
+2026-10-23 (the owner), when the rows PANEL-9 now covers were dimmed rather than hidden.
 
 **PANEL-5. Comparison.** Comparison › Weights opens on your current spec in a strip of your class's
 specs (no other class's), with a slider for your primary stat (no other primary), Stamina and the
@@ -330,6 +329,14 @@ Drops → no situation table anywhere on Drops. Back to Situations → the table
 Switch to General's Master controls and back three times, then open Comparison, Messages and Alerts in
 turn → the table shows only on Situations, never on another tab or page, never twice, never empty;
 toggle one cell → it writes, and Defaults repaints it. No Lua error throughout. Result: passed in the client, 2026-10-23 (the owner).
+
+**PANEL-9. A mode draws its own value (LibKa0s#67, options-ui-§22).** Drops › Quality: Minimum quality
+`Fixed minimum` → Fixed minimum is drawn, live, and there is no Quality floor row. Switch to
+`Match each slot` → the page redraws at once, Fixed minimum is gone and Quality floor is there, live;
+`Match my gear` keeps it. Back to `Fixed minimum` → it returns with the value you left. Drops › Items:
+Minimum item level `Off` → neither value row; `Absolute` → Absolute minimum alone; `Relative to my gear`
+→ Levels under my average alone. `/dw set feed.minIlvl 500` under `Off` still reads back with `/dw get`.
+Result:
 
 ## Profiles
 
@@ -1670,9 +1677,9 @@ page's strip, the pairings, the moved rows, the Columns note, the five-column si
 the layout; no stored value moved (`/dw get` reads every path as before). `/dw config` → the list
 reads General, Situations, Drops, Comparison, Messages, Window, Alerts, Profiles. General: Master
 controls, Simulator. Situations: Auto-open the window, then the table with a Loot rule column (no
-Trade page). Drops: Quality (`Minimum quality | Always show upgrades for me`, then `Fixed minimum |
-Quality floor`, the In force now line and the pointer to the Situations page), Items (Item kinds; Item
-level: Minimum item level alone, its two values paired under it), Retention (Keep history for with
+Trade page). Drops: Quality (`Minimum quality | Always show upgrades for me`, then the mode's own value
+(PANEL-9), the In force now line and the pointer to the Situations page), Items (Item kinds; Item
+level: Minimum item level alone, the mode's own value under it), Retention (Keep history for with
 Clear history beside it, then Clear on boss kill). Comparison: Scoring, Weights, Unwanted types.
 Messages opens on Sending (`Offer transmog asks | Ask once`, `Edit before sending | Announce
 channel`), then Auto-ask (Ask automatically alone), then Templates. Window: Layout (Window layout),
@@ -3308,7 +3315,7 @@ and skin faces run (2026-10-31, LibKa0s v1.83.0; Ka0sAddonsCommonTasks
 TOAST-8 and ASK-13, plus the three reopened above. Each one's `Result:` line records it.
 
 Owed by the findings remediation (2026-10-31; Ka0sAddonsCommonTasks
-`docs/2026-10-31-FINDINGS_REMEDIATION/`): SKIN-34..36 and SIM-18. Their `Result:` lines are empty
+`docs/2026-10-31-FINDINGS_REMEDIATION/`): SKIN-34..36, SIM-18 and PANEL-9. Their `Result:` lines are empty
 until the owner runs them; an agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off

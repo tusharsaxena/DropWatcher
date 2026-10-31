@@ -7,9 +7,9 @@ Every page after the landing page draws a tab strip, one tab per `group` of the 
 its key (`Settings.RowsForPage`, the descriptor's `rowsForPage`), in declaration order
 (options-ui-§13). Each page's Defaults button resets that page's rows and no other page's; on
 General it is the global reset instead. A row with nothing to do is drawn dimmed (its `disabledIf`
-predicate, `settings/SchemaRows.lua`), never hidden, and keeps its value. A switch with dependent
-knobs sits alone on its line (`solo`) and its knobs pair under it, and a mode's two exclusive values
-share a line (feedback-24).
+predicate, `settings/SchemaRows.lua`) and keeps its value. A row that belongs to a value a dropdown
+picks is hidden while the dropdown picks another (`shownWhen`, options-ui-§22), and keeps its value too.
+A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair under it (feedback-24).
 
 | Page | Covers |
 |---|---|
@@ -176,15 +176,15 @@ The page key stays `feed` (a page key is no stored path, but it names the page's
 long it keeps it. Its Defaults resets every tab, Situations included.
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
-mode's two values on one line, never live together: `Fixed minimum` (live in the fixed mode only) |
-`Quality floor` (`Floor` until feedback-24; live in the two matching modes only). Then the closing
+mode's own value: `Fixed minimum` in the fixed mode, `Quality floor` (`Floor` until feedback-24) in the
+two matching modes. The other is hidden and comes back when the mode picks it (LibKa0s#67). Then the closing
 line `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.
 
 **Items:** two subsections. **Item kinds:** Gear only | Include tier tokens (`Tier tokens` until item 020). **Item level:** Minimum item
-level alone on its line, then its two values, each live in its mode only: Absolute minimum | Levels
-under my average.
+level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
+under my average in the relative mode, and neither under Off (LibKa0s#67).
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,

@@ -398,41 +398,83 @@ test("feed: the Quality tab closes with the threshold in force now, repainted on
         "the pointer to the Situations tab's Quality column (feedback-24, item 020)")
 end)
 
--- feedback-24: the mode and Always show upgrades share line one, the mode's two dependents (never
--- live together) line two.
-test("feed: the Quality tab pairs the mode with Always show upgrades, then Fixed minimum with Quality floor", function()
+-- Write a selector, let the library's next-frame re-render run (the selector's watcher), and answer
+-- what the tab draws now: no tab click, so a page that did not re-render itself fails here.
+local function reselect(NS, m, path, value)
+    assertTrue(NS.SchemaRuntime.Set(path, value))
+    local before = #gui(m).__created
+    m.__fireTimers()
+    local drawn = created(m, before)
+    assertTrue(#drawn > 0, path .. ": the tab re-rendered itself on the next frame")
+    return drawn
+end
+
+-- feedback-24: the mode and Always show upgrades share line one; line two is the mode's own value
+-- (LibKa0s#67, options-ui-§22).
+test("feed: the Quality tab pairs the mode with Always show upgrades, then the mode's own value", function()
     local NS, _, m = T.enableAddon()
     local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local mode, always = find(drawn, "Dropdown", "Minimum quality"), find(drawn, "CheckBox", "Always show upgrades for me")
-    local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
+    local fixed = find(drawn, "Dropdown", "Fixed minimum")
     assertTrue(lineOf(drawn, mode) ~= nil and lineOf(drawn, mode) == lineOf(drawn, always), "line one")
-    assertTrue(lineOf(drawn, fixed) ~= nil and lineOf(drawn, fixed) == lineOf(drawn, floor), "line two")
+    assertTrue(fixed ~= nil and lineOf(drawn, fixed) ~= lineOf(drawn, mode), "line two")
 end)
 
--- feedback-24: Items' Minimum item level alone on its line, its two values paired under it.
-test("feed: Items draws Minimum item level alone, then Absolute minimum beside Levels under my average", function()
+-- feedback-24: Items' Minimum item level alone on its line.
+test("feed: Items draws Minimum item level alone, over the item kinds", function()
     local NS, _, m = T.enableAddon()
     local ctx = open(NS, m, "feed")
     local drawn = tab(m, ctx, "Items")
     local mode = find(drawn, "Dropdown", "Minimum item level")
-    local abs, rel = find(drawn, "Slider", "Absolute minimum"), find(drawn, "Slider", "Levels under my average")
-    assertTrue(mode ~= nil and abs ~= nil and rel ~= nil, "all three drawn")
+    assertTrue(mode ~= nil, "the mode is drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
-    assertTrue(lineOf(drawn, abs) == lineOf(drawn, rel), "its values paired")
     -- red under: the pre-020 "Tier tokens", which did not read as a switch (DRO-L10)
     local gear, tokens = find(drawn, "CheckBox", "Gear only"), find(drawn, "CheckBox", "Include tier tokens")
     assertTrue(gear ~= nil and tokens ~= nil and lineOf(drawn, gear) == lineOf(drawn, tokens), "Gear only | Include tier tokens")
 end)
 
-test("feed: the fixed minimum is live in the fixed mode only, and the floor in the matching modes only", function()
+-- LibKa0s#67, options-ui-§22: a mode's own value is drawn while the mode picks it, not dimmed.
+test("feed: the fixed minimum is drawn in the fixed mode only, and the floor in the matching modes only", function()
+    -- red under: the two rows on disabledIf (both drawn, one dimmed).
     local NS, _, m = T.enableAddon()
-    local drawn = tab(m, open(NS, m, "feed"), "Quality")
-    local fixed, floor = find(drawn, "Dropdown", "Fixed minimum"), find(drawn, "Dropdown", "Quality floor")
-    assertFalse(fixed.disabled == true)
-    assertTrue(floor.disabled == true)
-    NS.SchemaRuntime.Set("feed.quality.mode", "dynamicCharacter")
-    assertTrue(fixed.disabled == true)
-    assertFalse(floor.disabled == true)
+    local ctx = open(NS, m, "feed")
+    local drawn = tab(m, ctx, "Quality")
+    local fixed = find(drawn, "Dropdown", "Fixed minimum")
+    assertTrue(fixed ~= nil and fixed.disabled ~= true, "fixed: Fixed minimum is drawn, live")
+    assertTrue(find(drawn, "Dropdown", "Quality floor") == nil, "fixed: the floor is dropped")
+    drawn = reselect(NS, m, "feed.quality.mode", "dynamicCharacter")
+    assertEqual(ctx.activeTab, "Quality")
+    assertTrue(find(drawn, "Dropdown", "Fixed minimum") == nil, "matching: Fixed minimum is dropped")
+    local floor = find(drawn, "Dropdown", "Quality floor")
+    assertTrue(floor ~= nil and floor.disabled ~= true, "matching: the floor is drawn, live")
+    drawn = reselect(NS, m, "feed.quality.mode", "dynamicSlot")
+    assertTrue(find(drawn, "Dropdown", "Quality floor") ~= nil, "the other matching mode keeps the floor")
+    drawn = reselect(NS, m, "feed.quality.mode", "fixed")
+    assertTrue(find(drawn, "Dropdown", "Fixed minimum") ~= nil, "fixed again: it returns")
+    assertTrue(find(drawn, "Dropdown", "Quality floor") == nil)
+end)
+
+test("feed: an item level mode draws its own value only, and Off draws neither", function()
+    -- red under: the two sliders on disabledIf (both drawn, dimmed in the other mode).
+    local NS, _, m = T.enableAddon()
+    local ctx = open(NS, m, "feed")
+    local drawn = tab(m, ctx, "Items")
+    assertTrue(find(drawn, "Slider", "Absolute minimum") == nil, "off: no absolute minimum")
+    assertTrue(find(drawn, "Slider", "Levels under my average") == nil, "off: no relative level")
+    -- A hidden row stays a schema row: /dw set and Defaults still reach it.
+    assertTrue(NS.SchemaRuntime.Set("feed.minIlvl", 500))
+    assertEqual(NS.Setting("feed.minIlvl"), 500)
+    drawn = reselect(NS, m, "feed.minIlvlMode", "absolute")
+    assertEqual(ctx.activeTab, "Items")
+    local abs = find(drawn, "Slider", "Absolute minimum")
+    assertTrue(abs ~= nil and abs.disabled ~= true, "absolute: its value is drawn, live")
+    assertTrue(find(drawn, "Slider", "Levels under my average") == nil)
+    drawn = reselect(NS, m, "feed.minIlvlMode", "relative")
+    assertTrue(find(drawn, "Slider", "Absolute minimum") == nil)
+    local rel = find(drawn, "Slider", "Levels under my average")
+    assertTrue(rel ~= nil and rel.disabled ~= true, "relative: its value is drawn, live")
+    drawn = reselect(NS, m, "feed.minIlvlMode", "off")
+    assertTrue(find(drawn, "Slider", "Levels under my average") == nil, "off again: dropped")
 end)
 
 test("feed: the readout names the situation whose own quality setting is in force", function()
