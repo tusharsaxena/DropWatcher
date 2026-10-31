@@ -220,7 +220,7 @@ Total.
 - outline: without the skin engine the apply is a quiet no-op and the store still takes it
 - outline: without the skin engine From skin answers the default mode, HUD text only
 
-### test_skin_chrome.lua (11)
+### test_skin_chrome.lua (12)
 
 - skin chrome: under Ka0s Default the window draws the pixels it drew before skins
 - skin chrome: a skin switch repaints every surface in the new skin's colors, with no reload
@@ -233,6 +233,7 @@ Total.
 - skin chrome: an item quality is the skin's q.* token, the client's own color under Ka0s Default
 - skin chrome: the main window's resize grip takes the skin's icon.grip, live, like the tool windows'
 - skin chrome: without the library the window's own colors are Ka0s Default's
+- skin chrome: a tab's label is painted when its role changes, not on every repaint
 
 ### test_skin_literals.lua (3)
 
@@ -617,7 +618,7 @@ Total.
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
 
-### test_table_font.lua (9)
+### test_table_font.lua (10)
 
 - table font: Window › Layout › Tables carries the whole font setting, after Row height
 - table font: Font size keeps its stored path, its range and `0 (Default)`
@@ -627,6 +628,7 @@ Total.
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
 - table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font: a read reuses its table, and a later read leaves nothing of the last look
 - table font: History and the compact cards draw the same setting
 
 ### test_drops_layout.lua (10)
@@ -2154,7 +2156,7 @@ Total.
 | test_settings_pages.lua | 49 |
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 11 |
-| test_skin_chrome.lua | 11 |
+| test_skin_chrome.lua | 12 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
 | test_skin_picker.lua | 17 |
@@ -2171,7 +2173,7 @@ Total.
 | test_compact_chrome.lua | 23 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
-| test_table_font.lua | 9 |
+| test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_detail_card.lua | 30 |
@@ -2242,4 +2244,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1844** |
+| **Total** | **1846** |

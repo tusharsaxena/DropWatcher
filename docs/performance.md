@@ -80,6 +80,17 @@ places itself only when what decides it changes (the layout, and on Drops whethe
 Re-run 2026-10-18 after feedback-21: `refreshCaptureOff`/`On` 13713.0 and `refreshCompactCaptureOff`/`On`
 10481.1, every pair matching and under its ceiling; the parse pair and `showDecisionStoodDown` unmoved.
 
+Re-run 2026-10-31: `refreshCaptureOff`/`On` had gone over the ceiling at 14577.0 and
+`refreshCompactCaptureOff`/`On` had risen to 11345.0 (recorded in `automated-tests/20261031-202124/`).
+Bisected to two commits. DW-02 of the skinning rollout (52b9951) added 336 bytes by painting both tab
+labels through `S.Text` on every pass (32 more came with the later skin work, 14081.0 at 0d9d843). DW-01 of the
+skin fonts run (bc3c5dc) added 496 by building a fresh table in `NS.WindowRows.ReadFont` and widening
+the metrics table. A tab label is now painted only when its role changes, since the library replays
+the recorded role on a skin switch, and `ReadFont` rewrites one table, pinned by `test_skin_chrome` and
+`test_table_font`. After it: `refreshCaptureOff`/`On` 13457.0 and `refreshCompactCaptureOff`/`On`
+10225.0 over repeated runs, every pair matching and under its ceiling, which did not move; the parse
+pair and `showDecisionStoodDown` unmoved.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

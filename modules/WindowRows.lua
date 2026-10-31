@@ -85,13 +85,19 @@ end
 -- the skin's own plain color (C.TONE.plain), so the block changes nothing on a fresh profile.
 local COLOR_DEFAULT = NS.C.PROFILE.window.tableFontColor
 
+local CHANNELS = { "r", "g", "b" }
+
 local function sameColor(a, b)
     if type(a) ~= "table" or type(b) ~= "table" then return false end
-    for _, k in ipairs({ "r", "g", "b" }) do
+    for _, k in ipairs(CHANNELS) do
         if math.abs((tonumber(a[k]) or -1) - b[k]) > 0.002 then return false end
     end
     return math.abs((tonumber(a.a) or 1) - (b.a or 1)) <= 0.002
 end
+
+-- One table each, rewritten by every read: a repaint reads the block once, and nothing keeps its
+-- answer past the next read, so a pass allocates nothing here (performance-§9).
+local plainRead, fontRead = {}, {}
 
 --- The block's plain text color for one repaint: { r, g, b, a } picked or class-colored, or nil to
 --- draw the skin's plain color (the swatch at its default).
@@ -100,7 +106,8 @@ local function plainColor()
     if not class and (type(stored) ~= "table" or sameColor(stored, COLOR_DEFAULT)) then return nil end
     local r, g, b, a = NS.ResolveColor(stored, class, nil)
     if r == nil then return nil end
-    return { r, g, b, a or 1 }
+    plainRead[1], plainRead[2], plainRead[3], plainRead[4] = r, g, b, a or 1
+    return plainRead
 end
 
 --- A LibSharedMedia face's path, or nil (none named, no LSM, or not registered).
@@ -114,7 +121,8 @@ end
 local current
 
 --- The Tables font block, read once per repaint: { face (a path, nil = the skin's painted face),
---- flags, shadow, plain ({ r, g, b, a } or nil = the skin's), key (one string per look) }.
+--- flags, shadow, plain ({ r, g, b, a } or nil = the skin's), key (one string per look) }. The answer
+--- is one reused table: valid until the next read.
 --- @return table
 function WR.ReadFont()
     local face
@@ -123,8 +131,10 @@ function WR.ReadFont()
     local flags = S and S.FontFlags and S.FontFlags(NS.Setting("window.tableFontFlags"), "window")
     if type(flags) ~= "string" then flags = "" end
     local shadow = NS.Setting("window.tableFontShadow") == true
-    current = { face = face, flags = flags, shadow = shadow, plain = plainColor(),
-        key = (face or "") .. "|" .. flags .. "|" .. (shadow and "s" or "") }
+    fontRead.face, fontRead.flags, fontRead.shadow = face, flags, shadow
+    fontRead.plain = plainColor()
+    fontRead.key = (face or "") .. "|" .. flags .. "|" .. (shadow and "s" or "")
+    current = fontRead
     return current
 end
 

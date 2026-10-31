@@ -617,12 +617,16 @@ end
 -- The labels in text roles, not `tab.onText` / `tab.text`, which are colored for a tab's own backing
 -- (these have none): the active one in the skin's accent, an idle one in the idle gray `dw.idle`
 -- (Ka0s Default: today's gold and 0.62 gray), each in the skin's face (S.Text records it, so a skin
--- switch repaints it).
+-- switch repaints it, so a label is painted only when its role changes).
 local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
+        local role = active and "accent" or "dw.idle"
         tab.label:SetText(NS.CompactChrome.TabText(key))
-        NS.Skin.Text(tab.label, active and "accent" or "dw.idle")
+        if tab.dwRole ~= role then
+            tab.dwRole = role
+            NS.Skin.Text(tab.label, role)
+        end
         tab.underline:SetShown(active)
     end
 end
