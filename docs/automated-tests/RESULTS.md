@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-150352`](20261101-150352/) | `a2a1dbf` | clean | 1.1.0 | 0/0 | 210 | 1877/1/1878 | pass | 55132 | 6802 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-025807`](20261101-025807/) | `18ddf3c` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54464 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-001631`](20261101-001631/) | `ec6b6c5` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54463 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261031-213421`](20261031-213421/) | `091e1b8` | clean | 1.1.0 | 0/0 | 208 | 1845/1/1846 | pass | 54377 | 6706 | 7.4 | 2.4 | 15 | 0 | **green** |
@@ -61,18 +62,18 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1850 cases** — 1849 passed, 0 failed, 1 skipped. The generated inventory
-[`20261101-025807/test-cases.md`](20261101-025807/test-cases.md) is the authority on which cases existed at this run;
+**1878 cases** — 1877 passed, 0 failed, 1 skipped. The generated inventory
+[`20261101-150352/test-cases.md`](20261101-150352/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Unchanged from the previous run at 1850 cases.
+Moved **1850 → 1878** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
 
 ## Lint
 
-**0 warnings / 0 errors over 208 files** (`luacheck .`).
+**0 warnings / 0 errors over 210 files** (`luacheck .`).
 
 Read that figure with its scope attached: `.luacheckrc` excludes 6 path(s) from it — `libs/`, `docs/audits/`, `docs/reviews/`, `docs/revendor/`, `_dev/`, `tests/_kit/` —
 so nothing under them is in the count above. A `0/0` that never moves is partly a statement about
@@ -82,25 +83,25 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261101-025807/perf.json`](20261101-025807/perf.json).
+[`20261101-150352/perf.json`](20261101-150352/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.15733 | 0.00 | 13456.0 |
-| `refreshCaptureOn` | 1000 | 0.13061 | 1.00 | 13456.0 |
-| `refreshCompactCaptureOff` | 1000 | 0.12662 | 0.00 | 10224.0 |
-| `refreshCompactCaptureOn` | 1000 | 0.13194 | 1.00 | 10224.0 |
-| `showDecisionStoodDown` | 1000 | 0.00014 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01583 | 0.00 | 664.0 |
-| `parseCaptureOn` | 1000 | 0.01600 | 1.00 | 664.0 |
+| `refreshCaptureOff` | 1000 | 0.11754 | 0.00 | 13456.0 |
+| `refreshCaptureOn` | 1000 | 0.11587 | 1.00 | 13456.0 |
+| `refreshCompactCaptureOff` | 1000 | 0.11689 | 0.00 | 10224.0 |
+| `refreshCompactCaptureOn` | 1000 | 0.14277 | 1.00 | 10224.0 |
+| `showDecisionStoodDown` | 1000 | 0.00023 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01215 | 0.00 | 664.0 |
+| `parseCaptureOn` | 1000 | 0.01827 | 1.00 | 664.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261101-025807`](20261101-025807/) — **this run's measurement, not its diff.** Max CCN **15** across 6714
-functions, **0** of them warned on; 7 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261101-150352`](20261101-150352/) — **this run's measurement, not its diff.** Max CCN **15** across 6802
+functions, **0** of them warned on; 8 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -120,12 +121,13 @@ None.
 | Band | File | LOC | Disposition |
 |---|---|---|---|
 | 1000–1500 (on notice) | `modules/LootFeed.lua` | 1041 | **Newly crossed** (992 at 1.0.0). **Accepted** for 1.1.0: the feed's one owner, with its records and restore already split out (`FeedRecords`, `FeedRestore`); split the re-judge path out next if it passes 1100. |
+| 1000–1500 (on notice) | `modules/Window.lua` | 1005 | **Newly crossed** (998 before FS-DW-FIX), from the skin's tab arm and the row hover. **Accepted**: move the tab strip's build and paint into its own file before it passes 1100. |
 | 1000–1500 (on notice) | `modules/WindowCells.lua` | 1165 | **Newly crossed** (960 at 1.0.0), mostly feedback-21's tooltip rows (G6) and feedback-22's Trade reasons. Move the Trade cell's composers (`TradeShort`, `TradeText`, `TradeRows`) into their own file before it passes 1250. |
-| 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1138 | **Newly crossed** (983 at 1.0.0). **Accepted** for 1.1.0; split the action buttons' painting and tones out before it passes 1250. |
+| 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1146 | **Newly crossed** (983 at 1.0.0). **Accepted** for 1.1.0; split the action buttons' painting and tones out before it passes 1250. |
 | 1000–1500 (on notice) | `tests/test_compat.lua` | 1030 | **Newly crossed** (958 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by shim family before it nears the 1500 cap. |
 | 1000–1500 (on notice) | `tests/test_settings_pages.lua` | 1052 | **Newly crossed** (957 at the previous run), from the XX-67 settings cases. **Accepted**: a suite file that grows with its cases; split it by settings page before it nears the 1500 cap. |
 | 1000–1500 (on notice) | `tests/test_window_group.lua` | 1065 | **Newly crossed** (976 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by surface before it nears the 1500 cap. |
-| 1000–1500 (on notice) | `tests/test_window_shell.lua` | 1034 | **Newly crossed** (937 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by surface before it nears the 1500 cap. |
+| 1000–1500 (on notice) | `tests/test_window_shell.lua` | 1037 | **Newly crossed** (937 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by surface before it nears the 1500 cap. |
 
 `lizard` counts every `and`/`or` short-circuit as a decision, so in Lua a run of
 `t.k = rec.k or D.k` defaulting lines scores high with no visible branching at all: a large CCN
