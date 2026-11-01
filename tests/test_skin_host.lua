@@ -138,7 +138,126 @@ test("skin host: a row takes list.hover under the pointer, from a cell inside it
     assertFalse(wash:IsShown())
 end)
 
+-- Every row and card builder, from the rest and from the frames inside it the pointer moves onto.
+local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
+local RING = "|cffa335ee|Hitem:213::|h[Band of Embers]|h|r"
+
+local function assertWashes(Skin, row, label, inside)
+    hover(row, true)
+    local wash = Skin.painted[row].regions.hover
+    assertTrue(wash ~= nil and wash:IsShown(), label .. ": the row's own hover")
+    same(wash.__colorTexture, { 0.2, 0.4, 0.6 }, label .. ": list.hover")
+    hover(row, false)
+    assertFalse(wash:IsShown(), label .. ": off when the pointer leaves")
+    for name, frame in pairs(inside) do
+        hover(frame, true)
+        assertTrue(wash:IsShown(), label .. ": from " .. name)
+        hover(frame, false)
+        assertFalse(wash:IsShown(), label .. ": off, from " .. name)
+    end
+end
+
+local function drop(id, over)
+    local d = { id = id, at = 100, link = LINK, isMine = false, sources = { chat = 1 },
+        looter = { name = "Seta-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" },
+        facts = { ilvl = 311, equipLoc = "INVTYPE_HEAD", quality = 4 },
+        me = { verdict = "upgrade", ilvlDelta = 19, reasons = {}, baseline = { link = RING, ilvl = 292 } },
+        them = { verdict = "downgrade", ilvlDelta = -13, reasons = {} },
+        trade = { state = "likely", reasonKey = "notUpgrade", args = { 311, 324 }, basis = "inspect", age = 40 },
+        inspect = { status = "fresh", at = 60 } }
+    for k, v in pairs(over or {}) do d[k] = v end
+    return d
+end
+
+--- The Drops tab with `d` listed, in `mode`.
+local function shownDrop(d, mode)
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    T.withPlayer(m)
+    NS.LootFeed.Groups = function()
+        return { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { d.id } } }
+    end
+    NS.LootFeed.Get = function(id) return id == d.id and d or nil end
+    NS.LootFeed.Drops = function() return { d } end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    if mode then NS.SetWindowMode(mode) end
+    NS.ShowWindow()
+    return NS, NS.WindowGroup.Drawn().rows[1], toSkin(m)
+end
+
+--- The History tab with one kept entry, in `mode`.
+local function shownHistory(mode)
+    local NS, _, m = T.enableAddon()
+    local now = m.time()
+    NS.History.Store().groups = { { key = "new", label = "Boss", kind = "encounter", situation = "raid", at = now - 60,
+        drops = { { itemLink = LINK, itemID = 212, looter = "Brakk-Realm", class = "WARRIOR", outcome = "seen", at = now - 60,
+            seenBy = "Testchar-Testrealm", ilvl = 610, equipLoc = "INVTYPE_NECK", quality = 4,
+            me = { verdict = "downgrade", ilvlDelta = -4 }, them = { verdict = "sidegrade", ilvlDelta = 0 },
+            trade = { state = "likely", reasonKey = "notUpgrade", args = {} } } } } }
+    if mode then NS.SetWindowMode(mode) end
+    NS.ShowWindow()
+    NS.Window.SelectTab("history")
+    return NS.WindowHistory.Drawn().rows[1], toSkin(m)
+end
+
+test("skin host: a Drops row washes, from its item, its item's button and a worn icon too", function()
+    local _, row, Skin = shownDrop(drop(1))
+    assertWashes(Skin, row, "Drops row", { item = row.cells.item, button = row.cells.item.button,
+        worn = row.cells.me.icons[1] })
+end)
+
+test("skin host: WG.ItemHover's own frame washes its row, with no cell tooltip to do it", function()
+    local NS, f, m = shown()
+    local Skin = toSkin(m)
+    local row = m.CreateFrame("Button", nil, f)
+    row.tipRow = true
+    NS.WindowRows.HoverWash(row)
+    local name = m.CreateFrame("Frame", nil, row)
+    NS.WindowGroup.ItemHover(name, NS.WindowGroup.ItemButton(row, 16))
+    assertWashes(Skin, row, "a name beside an item", { name = name })
+end)
+
+test("skin host: a History row washes, from its item and its button too", function()
+    local row, Skin = shownHistory()
+    assertWashes(Skin, row, "History row", { item = row.cells.item, button = row.cells.item.button })
+end)
+
+test("skin host: a compact Drops card washes, from its icon too", function()
+    local _, card, Skin = shownDrop(drop(1), "compact")
+    assertWashes(Skin, card, "compact Drops card", { icon = card.icon })
+end)
+
+test("skin host: a compact History card washes, from its icon too", function()
+    local card, Skin = shownHistory("compact")
+    assertWashes(Skin, card, "compact History card", { icon = card.icon })
+end)
+
+test("skin host: an Offer panel row washes, from its Their eq icon too", function()
+    local NS, _, Skin = shownDrop(drop(1, { isMine = true,
+        looter = { name = "Me-Realm", guid = "Player-1-ME", classFile = "PALADIN", isSelf = true },
+        candidates = { ["Player-1-S"] = { guid = "Player-1-S", name = "Seta-Realm", classFile = "PRIEST", status = "ready",
+            eval = { verdict = "upgrade", ilvlDelta = 14, baseline = { ilvl = 291, link = RING }, reasons = {} } } } }))
+    NS.OfferPanel.Open(1)
+    local row = NS.OfferPanel.Drawn().rows[1]
+    assertWashes(Skin, row, "Offer row", { eq = row.eq, icon = row.eq.icons[1] })
+end)
+
 -- ── the title bar (L9) ───────────────────────────────────────────────────────────────────────
+
+test("skin host: title.bg is one layer, the bar's, and stays one through a skin switch", function()
+    local _, f, m = shown()
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local function oneLayer(label)
+        local top = Skin.painted[f].regions.top
+        assertTrue(top ~= nil and not top:IsShown(), label .. ": no Shell band under the bar")
+        -- The mock's frames all take a backdrop; a client's plain frame gets the `fill` region.
+        local bar = Skin.painted[f.titleBar].regions
+        assertTrue(bar.backdrop ~= nil or bar.fill ~= nil, label .. ": the bar's own box")
+    end
+    oneLayer("Ka0s Default")
+    toSkin(m)
+    oneLayer("switched")
+end)
 
 test("skin host: the title bar is placed by the skin's height and alignment", function()
     local _, f, m = shown()

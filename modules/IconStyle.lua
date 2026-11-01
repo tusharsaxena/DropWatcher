@@ -42,7 +42,8 @@ local _, NS = ...
 -- one-time step 10, O2), the style and the thickness are the skin's icon border family
 -- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Ka0s Default's being the
 -- look above, Solid 2px. `icons.borderColorFromSkin` (FS-DW-FLIP, cause D4) does the same for the
--- color with `icon.border`, Ka0s Default's being that black; a class or quality color comes first.
+-- color with `icon.border`, Ka0s Default's being that black; a class or quality color comes first,
+-- each at the swatch's alpha.
 -- Show border and the zoom stay the player's. A style of "None" draws no edge. A skin switch is a
 -- Refresh (the OnLooksChanged listener at the end of this file). The degraded facade answers no
 -- string token, so without the library the stored picks draw.
@@ -117,6 +118,7 @@ local function read()
                    edgeSize = math.max(1, tonumber(IS.Follow("icon.borderSize", "borderSize", fromSkin)) or 1) }
     local class = setting("useClassColorBorder") == true
     c.r, c.g, c.b, c.a = NS.ResolveColor(setting("borderColor"), class, nil)
+    c.swatchA = c.a   -- what a quality color draws at, under the skin's edge too (paintBorder)
     -- The skin's edge, behind the class color (and the quality, at paint). The degraded facade has no
     -- `icon.border`, so the stored color stands there.
     if not class and setting("borderColorFromSkin") == true then
@@ -162,15 +164,15 @@ local function paintBorder(b, c, link)
         f:SetFrameLevel(b:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.BORDER)
         b.iconBorderFrame = f
     end
-    local r, g, bl = c.r, c.g, c.b
+    local r, g, bl, a = c.r, c.g, c.b, c.a
     if c.quality then
         local qr, qg, qb = IS.QualityColor(link)
-        if qr then r, g, bl = qr, qg, qb end
+        if qr then r, g, bl, a = qr, qg, qb, c.swatchA end
     end
     f:SetBackdrop(c.backdrop)
-    f:SetBackdropBorderColor(r, g, bl, c.a)
+    f:SetBackdropBorderColor(r, g, bl, a)
     f:Show()
-    b.iconBorder = { r, g, bl, c.a }
+    b.iconBorder = { r, g, bl, a }
 end
 
 --- Give an item button the Window › Icons look for `link` (its zoom, its border, the border's color);

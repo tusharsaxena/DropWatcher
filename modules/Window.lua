@@ -556,6 +556,8 @@ local function build()
     NS.WindowTitleBar.Build(f, { onDragStart = onDragStart, onDragStop = onDragStop })
     buildBody(f)
     NS.ApplySkin(f)
+    -- The title bar paints its own title.bg (S.TitleBar), so the shell draws no second band under it.
+    NS.Skin.Shell(f, { noTopBar = true })
     makeResizable(f)
     NS.WindowFilterBar.Layout(f:GetWidth())
     -- Escape closes it (standalone-windows); the frame is named, so the name is what the list holds.

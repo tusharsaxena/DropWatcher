@@ -281,6 +281,10 @@ test("skin flip: a skin switch redraws the icon border's color; class and qualit
     e = frames[1].edge
     local qr, qg = NS.IconStyle.QualityColor(LINK)
     assertTrue(near(e[1], qr) and near(e[2], qg), "the quality color comes first")
+    assertTrue(S("icons.borderColor", { r = 1, g = 0, b = 0, a = 0.5 }))
+    assertEqual(frames[1].edge[4], 0.5, "a quality color draws the swatch's alpha, not the skin's")
+    assertTrue(S("icons.borderQuality", false))
+    assertEqual(frames[1].edge[4], 1, "the skin's own edge draws the skin's alpha")
     setSkin(m, "ka0s")
 end)
 
@@ -341,6 +345,21 @@ test("skin flip: without the library the stored glow color draws", function()
     NS.Glow.Refresh()
     NS.Glow.Apply(m.CreateFrame("Button"), glowDrop())
     assertEqual(calls[1][1], 1); assertEqual(calls[1][2], 0)
+end)
+
+test("skin flip: without the library S.HudFont writes both shadow arms, so turning the row off clears it", function()
+    local NS = T.bootAddon{ skip = T.loadAddon.libFiles }
+    local fs = {}
+    function fs:SetFont(face) self.face = face end
+    function fs:SetShadowOffset(x, y) self.offset = { x, y } end
+    function fs:SetShadowColor(_, _, _, a) self.alpha = a end
+    NS.Skin.HudFont(fs, { face = "Fonts\\A.ttf", size = 12, shadow = true })
+    assertEqual(fs.face, "Fonts\\A.ttf", "the one member that must draw")
+    assertEqual(fs.offset[1], 1); assertEqual(fs.offset[2], -1)
+    assertEqual(fs.alpha, 1, "on: an opaque shadow")
+    NS.Skin.HudFont(fs, { face = "Fonts\\A.ttf", size = 12, shadow = false })
+    assertEqual(fs.offset[1], 0); assertEqual(fs.offset[2], 0)
+    assertEqual(fs.alpha, 0, "off: a clear one")
 end)
 
 -- The table's shadow: S.HudFont is the drawing path, so a case reads the font object it set.

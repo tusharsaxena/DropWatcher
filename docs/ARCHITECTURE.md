@@ -304,8 +304,9 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
   in `btn.text`, `btn.hover` and `btn.icon`. The detail boxes are `S.Card`, the tabs `S.Tab` (decision
   D11 reversed: they gain the skin's backing, and an idle label reads `tab.text`), the column heads
-  `S.SortHeaderBar`, the footer `S.Footer`, the title bar `S.TitleBar` with `place`, and a row takes
-  `list.hover` through `S.ListRow`, from a cell inside it too (`NS.WindowRows.WashRowOf`). Without the
+  `S.SortHeaderBar`, the footer `S.Footer`, the title bar `S.TitleBar` with `place` (the one `title.bg`
+  layer: the window's `S.Shell` takes `noTopBar`), and a row takes `list.hover` through `S.ListRow`,
+  from a cell or an item button inside it too (`NS.WindowRows.WashRowOf`). Without the
   library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a

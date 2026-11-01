@@ -473,8 +473,14 @@ local function itemButton(parent, size)
     b:SetSize(size, size)
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetAllPoints(b)
-    b:SetScript("OnEnter", function(self) itemEnter(self) end)
-    b:SetScript("OnLeave", hideTooltip)
+    b:SetScript("OnEnter", function(self)
+        NS.WindowRows.WashRowOf(self, true)   -- the pointer left the row for this button, not the row's area
+        itemEnter(self)
+    end)
+    b:SetScript("OnLeave", function(self)
+        NS.WindowRows.WashRowOf(self, false)
+        hideTooltip()
+    end)
     b:SetScript("OnClick", WG.OnItemClick)
     NS.IconStyle.Apply(b, nil)   -- Window › Icons' look (modules/IconStyle.lua), from the start
     return b
