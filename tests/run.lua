@@ -207,6 +207,7 @@ Kit.run{
         "test_schema_rows",
         "test_settings_pages",
         "test_skin_setup",
+        "test_launcher_skin_entry",
         "test_skin_outline",
         "test_skin_chrome",
         "test_skin_hud",

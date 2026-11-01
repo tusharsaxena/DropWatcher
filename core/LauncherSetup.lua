@@ -92,6 +92,7 @@ NS.Launcher = lib:New({
 
     -- The stored `enabled` setting, the same accessor the Master controls row reads (launcher-§1),
     -- written through the same handler `/dw enable|disable` calls.
+    openSkinPicker = function() if NS.RunSkinVerb then NS.RunSkinVerb() end end,
     isEnabled  = function() return NS.SchemaRuntime ~= nil and NS.SchemaRuntime.Get("enabled") ~= false end,
     setEnabled = function(on) NS.addon:SlashEnabled(on) end,
 
