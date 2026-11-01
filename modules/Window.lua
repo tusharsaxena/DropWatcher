@@ -984,6 +984,7 @@ listen()
 -- Tracked by no bus: the skin is not this addon's, and it fires only on a player's pick.
 NS.Skin.OnLooksChanged(function()
     NS.WindowRows.OnLooksChanged()
+    NS.Glow.OnLooksChanged()
     repaint()
 end)
 

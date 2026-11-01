@@ -181,6 +181,7 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     local b = button(m)
     assertTrue(S("glow.main.type", "proc"))
     assertTrue(S("glow.offSpec.type", "pixel"))   -- its color is a positional argument (c[3])
+    assertTrue(S("glow.main.colorFromSkin", false))   -- the swatch: the skin's is tests/test_skin_flip.lua's
     assertTrue(S("glow.main.color", { r = 1, g = 0, b = 0, a = 0.5 }))
     G.Apply(b, drop())
     local c = lib.calls[1][3].color

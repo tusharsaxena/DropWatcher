@@ -41,7 +41,8 @@ local _, NS = ...
 -- skin companion `icons.borderStyleFromSkin` is on (by default, X3, and after core/Database.lua's
 -- one-time step 10, O2), the style and the thickness are the skin's icon border family
 -- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Ka0s Default's being the
--- look above, Solid 2px. Only those two follow (X4): the color, its class and quality companions,
+-- look above, Solid 2px. `icons.borderColorFromSkin` (FS-DW-FLIP, cause D4) does the same for the
+-- color with `icon.border`, Ka0s Default's being that black; a class or quality color comes first.
 -- Show border and the zoom stay the player's. A style of "None" draws no edge. A skin switch is a
 -- Refresh (the OnLooksChanged listener at the end of this file). The degraded facade answers no
 -- string token, so without the library the stored picks draw.
@@ -114,7 +115,14 @@ local function read()
     -- One backdrop table for every button: SetBackdrop keeps it and nothing here writes to it.
     c.backdrop = { edgeFile = borderTexture(style),
                    edgeSize = math.max(1, tonumber(IS.Follow("icon.borderSize", "borderSize", fromSkin)) or 1) }
-    c.r, c.g, c.b, c.a = NS.ResolveColor(setting("borderColor"), setting("useClassColorBorder") == true, nil)
+    local class = setting("useClassColorBorder") == true
+    c.r, c.g, c.b, c.a = NS.ResolveColor(setting("borderColor"), class, nil)
+    -- The skin's edge, behind the class color (and the quality, at paint). The degraded facade has no
+    -- `icon.border`, so the stored color stands there.
+    if not class and setting("borderColorFromSkin") == true then
+        local r, g, b, a = NS.Skin.Color("icon.border")
+        if r ~= nil then c.r, c.g, c.b, c.a = r, g, b, a or 1 end
+    end
     c.quality = setting("borderQuality") == true
     return c
 end

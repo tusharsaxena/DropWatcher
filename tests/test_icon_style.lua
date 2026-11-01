@@ -124,6 +124,7 @@ test("icon style: Show border draws the swatch over the icon; Use class color th
     assertEqual(f.drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "no LibSharedMedia here: Solid's flat edge")
     assertEqual(f.drawn.edgeSize, 2)
     assertTrue(sameColor(f.edge, 0, 0, 0, 1), "the black swatch")
+    assertTrue(S("icons.borderColorFromSkin", false))   -- the skin's is tests/test_skin_flip.lua's
     assertTrue(S("icons.borderColor", { r = 1, g = 0, b = 0, a = 0.5 })); assertTrue(S("icons.borderSize", 5))
     assertTrue(sameColor(b.iconBorder, 1, 0, 0, 0.5)); assertEqual(f.drawn.edgeSize, 5)
     assertTrue(S("icons.useClassColorBorder", true))
@@ -158,6 +159,7 @@ test("icon style: Color by item quality draws each item's quality color, the swa
     local b = fakeButton()
     b.link = EPIC   -- SetItem's, which Refresh repaints it for
     NS.IconStyle.Apply(b, EPIC)
+    assertTrue(S("icons.borderColorFromSkin", false))
     assertTrue(S("icons.borderShow", true)); assertTrue(S("icons.borderColor", { r = 1, g = 1, b = 1, a = 0.75 }))
     assertTrue(S("icons.borderQuality", true))
     assertTrue(sameColor(b.iconBorder, 0xa3 / 255, 0x35 / 255, 0xee / 255, 0.75), "epic purple, from the item's quality")

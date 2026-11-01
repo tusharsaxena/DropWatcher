@@ -1,4 +1,4 @@
-local addonName, NS = ...
+local _, NS = ...
 -- modules/WindowRows.lua — the drop tables' row metrics and font, shared by both tabs and both
 -- layouts (feedback-2 spec §8, FB2-9): Drops and History read their rows' height and font from the
 -- Window page's Layout rows, `window.rowHeight` and the Tables font block (`window.fontSize` and the
@@ -21,10 +21,11 @@ local addonName, NS = ...
 -- THE FONT BLOCK (DW-01, D-07). The face is the skin's while Use the skin's font is on (the face the
 -- skin painted, read off the string), else the picked LibSharedMedia face. The flags are From skin by
 -- default, resolved as window text (S.FontFlags(v, "window"): the Skin tab's Font outline), a picked
--- flag as stored. The shadow is the block's: a 12.0.7 client draws a font object's shadow and not a
--- runtime SetShadow* on a string (libs/LibKa0s/SkinPaint.lua), so with CreateFont each look is one
--- named font object, made once; without it (the harness) the string takes the face and the shadow
--- itself. The color is plain text's (SetTone): a text the tables drew in the `plain` tone takes the
+-- flag as stored. The shadow is the skin's while Use the skin's shadow is on: `dw.tableShadow` at
+-- `hud.shadowX`, `hud.shadowY` (FS-DW-FLIP, cause D6), which keeps the black 1, -1 under Ka0s Default,
+-- whose own `hud.shadow` is none; Ignore fonts and the companion off leave the stored row. S.HudFont
+-- draws all of it, a 12.0.7 client drawing only a font object's shadow: one per string, the library's,
+-- which writes the string itself where there is no CreateFont (the harness). The color is plain text's (SetTone): a text the tables drew in the `plain` tone takes the
 -- block's color, the player's class color while Use class color is on, and the skin's plain color
 -- while the swatch is at its default, so a fresh profile looks as it did before the block. A verdict,
 -- an item's quality and a looter's class keep their own colors. The glyphs (the monospace face) keep
@@ -97,7 +98,7 @@ end
 
 -- One table each, rewritten by every read: a repaint reads the block once, and nothing keeps its
 -- answer past the next read, so a pass allocates nothing here (performance-§9).
-local plainRead, fontRead = {}, {}
+local plainRead, fontRead, shadowRead = {}, {}, {}
 
 --- The block's plain text color for one repaint: { r, g, b, a } picked or class-colored, or nil to
 --- draw the skin's plain color (the swatch at its default).
@@ -120,9 +121,31 @@ end
 -- The last ReadFont: what SetTone reads between two repaints.
 local current
 
+--- The shadow the tables draw, as S.HudFont's `shadow` takes it: `true` or false, the stored row, or
+--- one reused { x, y, r, g, b, a } from the skin; false for a skin that draws none. With the library
+--- absent, or Ignore fonts on, S.HudShadow answers nil and the stored row stands.
+local function shadowOf()
+    local stored = NS.Setting("window.tableFontShadow") == true
+    if NS.Setting("window.tableFontShadowFromSkin") ~= true then return stored end
+    local S = NS.Skin
+    if S.HudShadow() == nil then return stored end
+    local r, g, b, a = S.Color("dw.tableShadow")
+    if r == nil then return false end
+    local t = shadowRead
+    t[1], t[2], t[3], t[4], t[5], t[6] = S.Token("hud.shadowX"), S.Token("hud.shadowY"), r, g, b, a or 1
+    return t
+end
+
+--- A shadow as the row signature signs it: the resolved one, so a skin's new shadow reaches a row
+--- already drawn (Options doc, Moving to, 5).
+local function shadowKey(s)
+    if type(s) ~= "table" then return s and "s" or "" end
+    return ("%s,%s,%.3f,%.3f,%.3f,%.3f"):format(s[1], s[2], s[3], s[4], s[5], s[6])
+end
+
 --- The Tables font block, read once per repaint: { face (a path, nil = the skin's painted face),
---- flags, shadow, plain ({ r, g, b, a } or nil = the skin's), key (one string per look) }. The answer
---- is one reused table: valid until the next read.
+--- flags, shadow (shadowOf's), plain ({ r, g, b, a } or nil = the skin's), key (one string per look)
+--- }. The answer is one reused table: valid until the next read.
 --- @return table
 function WR.ReadFont()
     local face
@@ -130,10 +153,10 @@ function WR.ReadFont()
     local S = NS.Skin
     local flags = S and S.FontFlags and S.FontFlags(NS.Setting("window.tableFontFlags"), "window")
     if type(flags) ~= "string" then flags = "" end
-    local shadow = NS.Setting("window.tableFontShadow") == true
+    local shadow = shadowOf()
     fontRead.face, fontRead.flags, fontRead.shadow = face, flags, shadow
     fontRead.plain = plainColor()
-    fontRead.key = (face or "") .. "|" .. flags .. "|" .. (shadow and "s" or "")
+    fontRead.key = (face or "") .. "|" .. flags .. "|" .. shadowKey(shadow)
     current = fontRead
     return current
 end
@@ -195,26 +218,6 @@ function WR.SetFontSize(fs, size)
     fs:SetFont(base[1], size or base[2], base[3])
 end
 
--- One named font object per look (CreateFont, the client's), keyed by face, size, flags and shadow.
-local objects, made = {}, 0
-
-local function fontObject(path, size, flags, shadow)
-    if type(CreateFont) ~= "function" then return nil end
-    local key = ("%s\0%.1f\0%s\0%s"):format(path, size, flags, shadow and "s" or "")
-    local obj = objects[key]
-    if obj == nil then
-        made = made + 1
-        obj = CreateFont(("%s_TableFont%d"):format(addonName, made)) or false
-        if obj then
-            obj:SetFont(path, size, flags)
-            obj:SetShadowOffset(shadow and 1 or 0, shadow and -1 or 0)
-            obj:SetShadowColor(0, 0, 0, shadow and 1 or 0)
-        end
-        objects[key] = obj
-    end
-    return obj or nil
-end
-
 --- The face, size and flags `fs` was painted in (the skin's, or its template's), read once per
 --- skin generation: a switch repaints the string, so the next read is the new skin's. Nil while the
 --- string has no font yet.
@@ -231,30 +234,23 @@ local function paintedFont(fs)
     return base
 end
 
--- The string's own shadow, where no font object carries it (the harness: no CreateFont).
-local function stringShadow(fs, on)
-    if not fs.SetShadowOffset then return end
-    fs:SetShadowOffset(on and 1 or 0, on and -1 or 0)
-    fs:SetShadowColor(0, 0, 0, on and 1 or 0)
-end
+-- One opts table, refilled before every call (S.HudFont keeps nothing of it). The block resolved
+-- the shadow already, so the library's companion is off and `shadow` is what draws.
+local hudOpts = { shadowFromSkin = false }
 
 --- A table text in the block's look at `size` (nil = the painted size): its face, the skin's or the
---- picked one, the resolved flags and the shadow. The painted color is kept: a font object would
---- otherwise hand the string its own.
+--- picked one, the resolved flags and the shadow, through S.HudFont. The painted color is kept: a
+--- font object would otherwise hand the string its own.
 --- @param fs table a FontString
 --- @param size number|nil
 --- @param font table WR.ReadFont's answer
 function WR.SetTableFont(fs, size, font)
     local base = paintedFont(fs)
     if not base then return end
-    local path, height = font.face or base[1], size or base[2]
-    local obj = fontObject(path, height, font.flags, font.shadow)
-    if not obj then
-        fs:SetFont(path, height, font.flags)
-        return stringShadow(fs, font.shadow)
-    end
+    hudOpts.face, hudOpts.size, hudOpts.flags, hudOpts.shadow =
+        font.face or base[1], size or base[2], font.flags, font.shadow
     local r, g, b, a = fs:GetTextColor()
-    fs:SetFontObject(obj)
+    NS.Skin.HudFont(fs, hudOpts)
     if r then fs:SetTextColor(r, g, b, a) end
 end
 

@@ -234,6 +234,55 @@ function NS.ResetIconBorderToSkin(profile)
     end
 end
 
+-- ── step 11: everything the skin can draw follows it, once (FS-DW-FLIP) ─────────────────────
+
+-- Every companion by name, dotted from the profile root, and the one flags key whose reader is on
+-- S.FontFlags (modules/WindowRows.lua). Never a stored color or pick, a class or quality color's
+-- toggle, or font size: those stay exactly as stored, for a player who turns a companion off.
+NS.FULL_SKIN_KEYS = {
+    "window.tableFontFromSkin", "window.tableFontShadowFromSkin", "window.tableFontFlags",
+    "icons.borderStyleFromSkin", "icons.borderColorFromSkin",
+    "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin",
+}
+
+--- The hand-written walk, for the no-Skin-major arm only: the listed keys' same write. A path through
+--- a missing table is skipped, and no table is made on the way.
+local function followByHand(profile)
+    for _, path in ipairs(NS.FULL_SKIN_KEYS) do
+        local node, leaf = profile, nil
+        for seg, rest in path:gmatch("([^.]+)(%.?)") do
+            if rest == "" then leaf = seg
+            else
+                node = type(node) == "table" and node[seg] or nil
+            end
+        end
+        if type(node) == "table" then
+            node[leaf] = leaf:match("FromSkin$") and true or "@skin"
+        end
+    end
+end
+
+--- Step 11's work on one profile (the owner's rulings of 2026-11-01: existing profiles follow the
+--- skin). The account's stamp cannot say which profiles went through it and following the skin leaves
+--- no shape to read, so the profile keeps its own record, `skin.fullSkinReset`, through
+--- Skin.FollowOnce; it runs from the ladder and after it on every load and profile event, so a
+--- profile that arrives with no record takes it and a companion turned off afterwards stays off. A
+--- profile reset runs it again against defaults, which shows nothing. Answers true when it ran.
+--- @param profile table a stored profile
+--- @return boolean
+function NS.ResetProfileToSkin(profile)
+    if type(profile) ~= "table" then return false end
+    local Skin = LibStub and LibStub("LibKa0s-Skin-1.0", true)
+    if Skin and type(Skin.FollowOnce) == "function" then
+        return Skin.FollowOnce(profile, NS.FULL_SKIN_KEYS)
+    end
+    if type(profile.skin) == "table" and profile.skin.fullSkinReset == true then return false end
+    followByHand(profile)
+    if type(profile.skin) ~= "table" then profile.skin = {} end
+    profile.skin.fullSkinReset = true
+    return true
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -255,6 +304,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireSimPanelPoint(profile) end },
     { to = 10, perProfile = true,        -- 9 -> 10: the icon border follows the skin, once (O2)
       run = function(_, profile) NS.ResetIconBorderToSkin(profile) end },
+    { to = 11, perProfile = true,        -- 10 -> 11: the border's color, the glows and the shadow too
+      run = function(_, profile) NS.ResetProfileToSkin(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.
@@ -284,4 +335,7 @@ function NS:RunMigrations()
     if from ~= g.schemaVersion and D and D.DebugAtEnable then
         D.DebugAtEnable("Migrate", "v%s -> v%s", from, g.schemaVersion)
     end
+    -- Past the ladder, step 11's record still answers for the active profile: one that arrived with
+    -- no record, restored from a backup or new since the stamp moved.
+    NS.ResetProfileToSkin(db.profile)
 end

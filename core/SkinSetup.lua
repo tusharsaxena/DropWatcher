@@ -97,6 +97,7 @@ local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
 local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
+local TONE = NS.Constants.TONE
 
 -- The owner tokens (LibKa0s-Skin-1.0 minor 7; Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
 -- the DW-G gaps). Each `default` is the value core/Constants.lua's palette (or the chrome literal the
@@ -141,6 +142,15 @@ NS.SKIN_TOKENS = {
     ["dw.cardBorder"] = { default = { 0.24, 0.24, 0.27, 0.85 }, follow = "card.border" },
     -- DW-G15: a tooltip row's label and bullet.
     ["dw.tipLabel"]   = { default = { 0.80, 0.68, 0.36, 1 }, follow = "gtip.title" },     -- C.TONE.mutedGold
+    -- FS-DW-FLIP, cause D5: the upgrade glows. Ka0s Default keeps this addon's two hues (owner ruling
+    -- D-18), not its `glow.color`; the off-spec glow follows the Warband blue dw.offSpec follows, so
+    -- the main spec and the off-spec stay apart in every skin (ruling E6: the hues tell them apart).
+    ["dw.glowMain"]    = { default = { TONE.glowMain.r, TONE.glowMain.g, TONE.glowMain.b, 1 }, follow = "glow.color" },
+    ["dw.glowOffSpec"] = { default = { TONE.glowOffSpec.r, TONE.glowOffSpec.g, TONE.glowOffSpec.b, 1 },
+                           follow = "sem.warband" },
+    -- FS-DW-FLIP, cause D6: the tables' text shadow. Ka0s Default keeps the black the tables drew,
+    -- where its `hud.shadow` is none; every other skin draws its own, or none where it states none.
+    ["dw.tableShadow"] = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
 }
 
 -- The Ka0s Default library tokens the DEGRADED facade answers, copied from the library and limited

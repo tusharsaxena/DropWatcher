@@ -30,6 +30,7 @@ local function glow(enabled, style, tone)
         type    = style,                                       -- button | proc | pixel | autocast
         color   = { r = tone.r, g = tone.g, b = tone.b, a = 1 },
         useClassColor = false,                                 -- the player's class color instead
+        colorFromSkin = true,                                  -- the skin's glow color instead of the swatch
         pixelLines = 8, pixelFrequency = 0.1, pixelLength = 0, pixelThickness = 1, pixelBorder = true,
         autocastParticles = 4, autocastFrequency = 0.125, autocastScale = 1,
         buttonFrequency = 0.25,
@@ -159,12 +160,17 @@ NS.C = {
             -- color, which modules/WindowRows.lua reads as "the skin's" until another color is picked,
             -- and the skin's shadow. Only the flags moved: From skin ("@skin"), resolved through the
             -- Skin tab's Font outline as window text. Nothing stored before them, so no migration.
-            tableFont           = "Friz Quadrata TT",
+            -- `tableFont` is the Ka0s pick (FS-DW-FLIP), where a player who turns the face's companion
+            -- off lands; a stored pick stays. `tableFontShadowFromSkin`, on: the skin's shadow in place
+            -- of `tableFontShadow`, whose value stands for the companion off (dw.tableShadow keeps the
+            -- black shadow under Ka0s Default). core/Database.lua's step 11 moves stored profiles.
+            tableFont           = "Ka0s Prototype",
             tableFontFromSkin   = true,
             tableFontColor      = { r = 0.92, g = 0.92, b = 0.92, a = 1 },   -- = dw.plain's Ka0s Default
             tableFontClassColor = false,
             tableFontFlags      = "@skin",
             tableFontShadow     = true,
+            tableFontShadowFromSkin = true,
         },
 
         -- The upgrade toast (design spec §11.5). Its `point` is geometry, like the window's.
@@ -207,9 +213,10 @@ NS.C = {
             -- `icon.borderSize`; Ka0s Default's are Solid 2px, the look above) and their two rows show
             -- the skin's values. TRUE by default (the rollout's X3), so a new or reset profile follows
             -- the skin exactly as a stored one does after core/Database.lua's one-time step 10 (O2).
-            -- Only style and thickness follow (X4): the color, its class and quality companions, Show
-            -- border and the zoom stay the player's.
+            -- Show border and the zoom stay the player's. `borderColorFromSkin` (FS-DW-FLIP, cause D4)
+            -- puts the color on the skin's `icon.border` too, behind its class and quality companions.
             borderStyleFromSkin = true,
+            borderColorFromSkin = true,
         },
 
         -- The simulator (feedback-2 spec §8): the seconds an automatic run waits between steps.
@@ -238,6 +245,9 @@ NS.C = {
             texture     = "",
             outline     = "hud",
             pickerSeen  = false,
+            -- The full-skinning step's record (core/Database.lua, step 11; LibKa0s Skin.FollowOnce).
+            -- No schema row, so nothing draws it and no Defaults path walks it (KickCD's convention).
+            fullSkinReset = false,
         },
     },
 
