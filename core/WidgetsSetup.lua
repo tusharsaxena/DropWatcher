@@ -77,7 +77,11 @@ end
 --- @return table|nil
 function NS.MakeTestStrip(parent, text, kind)
     if not W then return nil end
-    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName })
+    -- sim / onEnd (LibKa0s Widgets minor 21, SF-F1): the strip's right-click menu ends the mode.
+    local isSim = kind == "sim"
+    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName,
+        sim = isSim and NS.Sim or nil,
+        onEnd = (not isSim) and function() NS.SetTestMode(false) end or nil })
 end
 
 --- Close the shared popup menu behind every dropdown in the process, if one is open. Safe when none
