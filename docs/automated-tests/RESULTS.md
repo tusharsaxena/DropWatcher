@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261101-203422`](20261101-203422/) | `6074774` | clean | 1.1.0 | 0/0 | 210 | 1927/1/1928 | pass | 55305 | 6869 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-150352`](20261101-150352/) | `a2a1dbf` | clean | 1.1.0 | 0/0 | 210 | 1877/1/1878 | pass | 55132 | 6802 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-025807`](20261101-025807/) | `18ddf3c` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54464 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
 | [`20261101-001631`](20261101-001631/) | `ec6b6c5` | clean | 1.1.0 | 0/0 | 208 | 1849/1/1850 | pass | 54463 | 6714 | 7.4 | 2.4 | 15 | 0 | **green** |
@@ -62,11 +63,11 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 ## Test suite
 
-**1878 cases** — 1877 passed, 0 failed, 1 skipped. The generated inventory
-[`20261101-150352/test-cases.md`](20261101-150352/test-cases.md) is the authority on which cases existed at this run;
+**1928 cases** — 1927 passed, 0 failed, 1 skipped. The generated inventory
+[`20261101-203422/test-cases.md`](20261101-203422/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **1850 → 1878** since the previous run.
+Moved **1878 → 1928** since the previous run.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -83,24 +84,24 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **7 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261101-150352/perf.json`](20261101-150352/perf.json).
+[`20261101-203422/perf.json`](20261101-203422/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.11754 | 0.00 | 13456.0 |
-| `refreshCaptureOn` | 1000 | 0.11587 | 1.00 | 13456.0 |
-| `refreshCompactCaptureOff` | 1000 | 0.11689 | 0.00 | 10224.0 |
-| `refreshCompactCaptureOn` | 1000 | 0.14277 | 1.00 | 10224.0 |
-| `showDecisionStoodDown` | 1000 | 0.00023 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01215 | 0.00 | 664.0 |
-| `parseCaptureOn` | 1000 | 0.01827 | 1.00 | 664.0 |
+| `refreshCaptureOff` | 1000 | 0.11331 | 0.00 | 13456.0 |
+| `refreshCaptureOn` | 1000 | 0.08591 | 1.00 | 13456.0 |
+| `refreshCompactCaptureOff` | 1000 | 0.11080 | 0.00 | 10224.0 |
+| `refreshCompactCaptureOn` | 1000 | 0.11066 | 1.00 | 10224.0 |
+| `showDecisionStoodDown` | 1000 | 0.00012 | 0.00 | 0.0 |
+| `parseCaptureOff` | 1000 | 0.01152 | 0.00 | 664.0 |
+| `parseCaptureOn` | 1000 | 0.01173 | 1.00 | 664.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261101-150352`](20261101-150352/) — **this run's measurement, not its diff.** Max CCN **15** across 6802
+Current as of [`20261101-203422`](20261101-203422/) — **this run's measurement, not its diff.** Max CCN **15** across 6869
 functions, **0** of them warned on; 8 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
@@ -121,9 +122,9 @@ None.
 | Band | File | LOC | Disposition |
 |---|---|---|---|
 | 1000–1500 (on notice) | `modules/LootFeed.lua` | 1041 | **Newly crossed** (992 at 1.0.0). **Accepted** for 1.1.0: the feed's one owner, with its records and restore already split out (`FeedRecords`, `FeedRestore`); split the re-judge path out next if it passes 1100. |
-| 1000–1500 (on notice) | `modules/Window.lua` | 1005 | **Newly crossed** (998 before FS-DW-FIX), from the skin's tab arm and the row hover. **Accepted**: move the tab strip's build and paint into its own file before it passes 1100. |
+| 1000–1500 (on notice) | `modules/Window.lua` | 1007 | **Newly crossed** (998 before FS-DW-FIX), from the skin's tab arm and the row hover. **Accepted**: move the tab strip's build and paint into its own file before it passes 1100. |
 | 1000–1500 (on notice) | `modules/WindowCells.lua` | 1165 | **Newly crossed** (960 at 1.0.0), mostly feedback-21's tooltip rows (G6) and feedback-22's Trade reasons. Move the Trade cell's composers (`TradeShort`, `TradeText`, `TradeRows`) into their own file before it passes 1250. |
-| 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1146 | **Newly crossed** (983 at 1.0.0). **Accepted** for 1.1.0; split the action buttons' painting and tones out before it passes 1250. |
+| 1000–1500 (on notice) | `modules/WindowGroup.lua` | 1152 | **Newly crossed** (983 at 1.0.0). **Accepted** for 1.1.0; split the action buttons' painting and tones out before it passes 1250. |
 | 1000–1500 (on notice) | `tests/test_compat.lua` | 1030 | **Newly crossed** (958 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by shim family before it nears the 1500 cap. |
 | 1000–1500 (on notice) | `tests/test_settings_pages.lua` | 1052 | **Newly crossed** (957 at the previous run), from the XX-67 settings cases. **Accepted**: a suite file that grows with its cases; split it by settings page before it nears the 1500 cap. |
 | 1000–1500 (on notice) | `tests/test_window_group.lua` | 1065 | **Newly crossed** (976 at 1.0.0). **Accepted**: a suite file that grows with its cases; split it by surface before it nears the 1500 cap. |
