@@ -138,6 +138,10 @@ local function paintHeader(fs) fs:SetTextColor(NS.SkinPanelColor("text.headingAl
 local function paintLabel(fs) fs:SetTextColor(NS.SkinPanelColor(fs.dwActive and "text.bodyAlt" or "text.disabled")) end
 local function paintStripe(t) t:SetColorTexture(NS.SkinPanelColor("list.stripe")) end
 
+-- The heads' and labels' body face (FS-DW-FIX, cause L4), on the panel: S.Text gives it back while
+-- the Scope ignores the panel. The colors stay the paints' above, which run after it on a switch.
+local PANEL = { panel = true }
+
 local function situationEntries()
     return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel)
 end
@@ -209,6 +213,7 @@ local function situationLabel(rf, key)
     local fs = rf:CreateFontString(nil, "ARTWORK", "GameFontHighlightSmall")
     fs:SetPoint("LEFT", rf, "LEFT", SIT_COL.situation, 0)
     fs:SetJustifyH("LEFT")
+    NS.Skin.Text(fs, "text.bodyAlt", PANEL)
     local hit = CreateFrame("Frame", nil, rf)
     hit:SetPoint("TOPLEFT", rf, "TOPLEFT", SIT_COL.situation, 0)
     hit:SetPoint("BOTTOMRIGHT", rf, "BOTTOMLEFT", SIT_COL.track - 8, 0)
@@ -244,6 +249,7 @@ local function situationHeader(host, x, text)
     fs:SetPoint("TOPLEFT", host, "TOPLEFT", x, SIT_HEAD_Y)
     fs:SetJustifyH("LEFT")
     fs:SetText(text)
+    NS.Skin.Text(fs, "text.headingAlt", PANEL)
     NS.SkinPaint(fs, paintHeader)
     return fs
 end

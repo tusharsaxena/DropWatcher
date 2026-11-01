@@ -193,7 +193,7 @@ local function buildSegment(host, key, prev)
     s:SetHeight(K.FOOTER_H)
     s.text = s:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     s.text:SetPoint("LEFT", s, "LEFT", 0, 0)
-    NS.Skin.Text(s.text, "dw.idle")   -- the idle gray (Ka0s Default 0.62); not the skin's Footer band
+    NS.Skin.Text(s.text, "dw.idle")   -- the idle gray (Ka0s Default 0.62), over the Footer band (Window)
     if prev then s:SetPoint("LEFT", prev, "RIGHT", 12, 0) else s:SetPoint("LEFT", host, "LEFT", 2, 0) end
     -- The compact layout's line sets tipLines (NS.CompactChrome.PaintFooter); the full layout's
     -- segment keeps its read and builds its rows on the hover.

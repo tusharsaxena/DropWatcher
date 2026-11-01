@@ -53,15 +53,20 @@ end
 local function textColor(fs) return { fs:GetTextColor() } end
 local function token(NS, name) return { NS.Skin.Color(name) } end
 
+-- The line S.Tab drew under a selected tab (FS-DW-FIX), from the library's record of the tab.
+local function tabLine(m, tab)
+    return skinOf(m).painted[tab].regions.line
+end
+
 -- The surfaces both cases compare, each with its token: { label, read(), token }.
-local function surfaces(NS, f)
+local function surfaces(NS, f, m)
     local pane = f.panes.group
     local button = NS.Window.TextButton(f, 80, "chat", "Ask", function() end)
     local chevron = NS.WindowGroup.RowChevron(f)
     return {
-        { "tab underline", function() return f.tabs.group.underline.__colorTexture end, "tab.onLine" },
-        { "active tab", function() return textColor(f.tabs.group.label) end, "text.accent" },
-        { "idle tab", function() return textColor(f.tabs.history.label) end, "dw.idle" },
+        { "tab underline", function() return tabLine(m, f.tabs.group).__colorTexture end, "tab.onLine" },
+        { "active tab", function() return textColor(f.tabs.group.label) end, "tab.onText" },
+        { "idle tab", function() return textColor(f.tabs.history.label) end, "tab.text" },
         { "button fill", function() return button.__backdropColor end, "dw.btnBg" },
         { "button edge", function() return button.__backdropBorder end, "dw.btnBorder" },
         { "badge text", function() return textColor(f.badge.text) end, "dw.restricted" },
@@ -80,16 +85,16 @@ end
 test("skin chrome: under Ka0s Default the window draws the pixels it drew before skins", function()
     -- X1. red under: a surface left on a literal the skin cannot reach, or a token whose Ka0s Default
     -- value is not the one the surface typed (each pixel below is the old literal).
-    local NS, f = shown()
+    local NS, f, m = shown()
     local want = {
-        ["tab underline"] = { 1, 0.82, 0, 1 }, ["active tab"] = { 1, 0.82, 0 }, ["idle tab"] = { 0.62, 0.62, 0.64 },
+        ["tab underline"] = { 1, 0.82, 0, 1 }, ["active tab"] = { 1, 0.82, 0 }, ["idle tab"] = { 0.7, 0.7, 0.72 },
         ["button fill"] = { 0.12, 0.12, 0.14, 1 }, ["button edge"] = { 0.24, 0.24, 0.27, 0.85 },
         ["badge text"] = { 1, 0.6, 0.2 }, ["badge lock"] = { 1, 0.6, 0.2 }, ["TEST MODE"] = { 1, 0.15, 0.15 },
         ["column head"] = { 1, 0.82, 0 }, ["strip rule"] = { 1, 1, 1, 0.1 },
         ["detail box fill"] = { 0.08, 0.08, 0.10, 0.9 }, ["detail box edge"] = { 0.24, 0.24, 0.27, 0.85 },
         ["row chevron"] = { 1, 1, 1, 0.55 },
     }
-    for _, s in ipairs(surfaces(NS, f)) do near(s[1], s[2](), want[s[1]]) end
+    for _, s in ipairs(surfaces(NS, f, m)) do near(s[1], s[2](), want[s[1]]) end
     near("SIMULATION", textColor(f.simText.text), { 0.35, 0.80, 1.00, 1 })
 end)
 
@@ -99,7 +104,7 @@ test("skin chrome: a skin switch repaints every surface in the new skin's colors
     -- red under: a color set once at build and never repainted (NS.SkinPaint or the library's
     -- record missing), or a surface read from a token other than its role's.
     local NS, f, m = shown()
-    local list = surfaces(NS, f)
+    local list = surfaces(NS, f, m)
     toSwitch(m)
     for _, s in ipairs(list) do
         near(s[1] .. " (switched)", s[2](), token(NS, s[3]))
@@ -107,7 +112,7 @@ test("skin chrome: a skin switch repaints every surface in the new skin's colors
     -- The SIMULATION word: the strip's cyan at full opacity, in the new skin.
     local r, g, b = NS.Skin.Color("strip.sim")
     near("SIMULATION (switched)", textColor(f.simText.text), { r, g, b, 1 })
-    assertTrue(math.abs(f.tabs.group.underline.__colorTexture[1]) < 1e-6,
+    assertTrue(math.abs(tabLine(m, f.tabs.group).__colorTexture[1]) < 1e-6,
         "SWITCH inverts gold, so the underline's red channel is 0: the case compared moved values")
 end)
 
@@ -291,10 +296,10 @@ test("skin chrome: a tab's label is painted when its role changes, not on every 
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
     NS.Skin.Text = real
-    near("newly active tab", textColor(f.tabs.history.label), token(NS, "text.accent"))
-    near("newly idle tab", textColor(f.tabs.group.label), token(NS, "dw.idle"))
+    near("newly active tab", textColor(f.tabs.history.label), token(NS, "tab.onText"))
+    near("newly idle tab", textColor(f.tabs.group.label), token(NS, "tab.text"))
     toSwitch(m)
     NS.Window.Refresh()
-    near("active tab after a switch", textColor(f.tabs.history.label), token(NS, "text.accent"))
-    near("idle tab after a switch", textColor(f.tabs.group.label), token(NS, "dw.idle"))
+    near("active tab after a switch", textColor(f.tabs.history.label), token(NS, "tab.onText"))
+    near("idle tab after a switch", textColor(f.tabs.group.label), token(NS, "tab.text"))
 end)

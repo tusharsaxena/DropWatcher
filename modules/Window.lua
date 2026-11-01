@@ -256,6 +256,8 @@ function Window.AttachTooltip(widget, fn, place)
     if widget.SetMotionScriptsWhileDisabled then widget:SetMotionScriptsWhileDisabled(true) end
     widget:HookScript("OnEnter", showTooltip)
     widget:HookScript("OnLeave", hideTooltip)
+    widget:HookScript("OnEnter", function(self) NS.WindowRows.WashRowOf(self, true) end)
+    widget:HookScript("OnLeave", function(self) NS.WindowRows.WashRowOf(self, false) end)
 end
 
 --- What a hover over `widget` shows, as a list (title first), or an empty list.
@@ -403,13 +405,17 @@ local function buildTab(strip, key, i)
     tab.label = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     tab.label:SetPoint("CENTER", tab, "CENTER", 0, 0)
     tab.label:SetText(TAB_LABEL[key])
-    tab.underline = tab:CreateTexture(nil, "ARTWORK")
-    -- Composed, not the skin's Tab (D11): that adds a `tab.bg` backing these tabs never drew. The
-    -- underline is the skin's selected-tab line; the label's color is paintTabs'.
-    NS.SkinPaint(tab.underline, function(t) t:SetColorTexture(NS.SkinColor("tab.onLine")) end)
-    tab.underline:SetHeight(2)
-    tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
-    tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
+    if NS.Skin.IsEnabled() then
+        -- The skin's Tab (FS-DW-FIX, cause A1): its backing, edge, underline and label colors.
+        NS.Skin.Tab(tab, { text = tab.label, selected = false })
+    else
+        -- Without the library: the text roles (paintTabs) and this underline, as the window drew.
+        tab.underline = tab:CreateTexture(nil, "ARTWORK")
+        NS.SkinPaint(tab.underline, function(t) t:SetColorTexture(NS.SkinColor("tab.onLine")) end)
+        tab.underline:SetHeight(2)
+        tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
+        tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
+    end
     tab:SetScript("OnClick", function() Window.SelectTab(key) end)
     Window.AttachTooltip(tab, function() return tabTip(key) end)
     return tab
@@ -478,6 +484,7 @@ local function buildBody(f)
     f.footerHost:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", K.INSET, 0)
     f.footerHost:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", -K.INSET, 0)
     f.footerHost:SetHeight(K.FOOTER_H)
+    NS.Skin.Footer(f.footerHost)   -- its band, `foot.bg` (FS-DW-FIX, cause A1)
 
     buildPanes(f, body)
     NS.WindowFilterBar.Build(f.filterHost)
@@ -610,10 +617,9 @@ local function refreshActive()
     if spec and spec.refresh then spec.refresh(frame.panes[activeTab], Window.TabContext(activeTab)) end
 end
 
--- The labels in text roles, not `tab.onText` / `tab.text`, which are colored for a tab's own backing
--- (these have none): the active one in the skin's accent, an idle one in the idle gray `dw.idle`
--- (Ka0s Default: today's gold and 0.62 gray), each in the skin's face (S.Text records it, so a skin
--- switch repaints it, so a label is painted only when its role changes).
+-- The skin's selection (S.SetTabSelection, which keeps it through a skin switch), once per change.
+-- Without the library, the labels in text roles: the active one in the accent, an idle one in the
+-- idle gray `dw.idle`, with the window's own underline.
 local function paintTabs()
     for key, tab in pairs(frame.tabs) do
         local active = key == activeTab
@@ -621,9 +627,9 @@ local function paintTabs()
         tab.label:SetText(NS.CompactChrome.TabText(key))
         if tab.dwRole ~= role then
             tab.dwRole = role
-            NS.Skin.Text(tab.label, role)
+            if tab.underline then NS.Skin.Text(tab.label, role) else NS.Skin.SetTabSelection(tab, active) end
         end
-        tab.underline:SetShown(active)
+        if tab.underline then tab.underline:SetShown(active) end
     end
 end
 

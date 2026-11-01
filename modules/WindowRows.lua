@@ -297,6 +297,27 @@ function WR.ApplyRowIcon(row, size)
     if b then b:SetSize(size, size) end
 end
 
+-- ── the row under the pointer (FS-DW-FIX, cause A1) ─────────────────────────────────────────
+
+--- A row's `list.hover` wash on (`on`) or off, from the row or from anything inside it: a cell or a
+--- button takes the mouse from its row, so its tooltip hover reaches the row too (Window.AttachTooltip).
+--- The row is the nearest ancestor marked `tipRow`; a frame in none has no wash. The washes the rows
+--- own (the stripe, the expanded wash) are textures of their own, which S.ListRow leaves alone.
+--- @param owner table the hovered frame
+--- @param on boolean
+function WR.WashRowOf(owner, on)
+    local row = NS.RowTooltip.RowOf(owner)
+    if row.tipRow == true then NS.Skin.ListRow(row, on and "hover" or "normal") end
+end
+
+--- Wash `row` while the pointer is over it.
+--- @param row table a frame marked `tipRow`
+function WR.HoverWash(row)
+    if row.EnableMouse then row:EnableMouse(true) end
+    row:HookScript("OnEnter", function(self) WR.WashRowOf(self, true) end)
+    row:HookScript("OnLeave", function(self) WR.WashRowOf(self, false) end)
+end
+
 -- ── a mark after a cell's text (feedback-7 spec §2) ─────────────────────────────────────────
 
 --- The gap between a cell's text and its mark, in pixels.

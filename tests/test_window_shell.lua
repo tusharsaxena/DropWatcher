@@ -197,25 +197,28 @@ end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
+-- The line S.Tab drew under a selected tab, from the library's record of the tab.
+local function tabLine(m, tab) return m.LibStub("LibKa0s-Skin-1.0").painted[tab].regions.line end
+
 test("shell: two tabs, Drops active in gold with its underline, History gray", function()
-    local NS, f = shown()
+    local NS, f, m = shown()
     assertEqual(table.concat(NS.Window.TABS, ","), "group,history")
     assertEqual(NS.Window.ActiveTab(), "group")
     assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
     local r, g = f.tabs.group.label:GetTextColor()
     assertEqual(r .. "," .. g, "1,0.82")
-    assertTrue(f.tabs.group.underline:IsShown())
-    assertFalse(f.tabs.history.underline:IsShown())
+    assertTrue(tabLine(m, f.tabs.group):IsShown(), "the skin's line under the active tab")
+    assertTrue(tabLine(m, f.tabs.history) == nil or not tabLine(m, f.tabs.history):IsShown())
     assertTrue(f.panes.group:IsShown() and not f.panes.history:IsShown())
 end)
 
 test("shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused", function()
-    local NS, f = shown()
+    local NS, f, m = shown()
     f.tabs.history:__fire("OnClick")
     assertEqual(NS.Window.ActiveTab(), "history")
     assertTrue(f.panes.history:IsShown() and not f.panes.group:IsShown())
-    assertTrue(f.tabs.history.underline:IsShown() and not f.tabs.group.underline:IsShown())
+    assertTrue(tabLine(m, f.tabs.history):IsShown() and not tabLine(m, f.tabs.group):IsShown())
     assertFalse(NS.Window.SelectTab("nope"))
     assertEqual(NS.Window.ActiveTab(), "history")
 end)

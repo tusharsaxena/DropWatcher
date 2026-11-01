@@ -95,9 +95,11 @@ local function textWidth(fs, text)
     return w
 end
 
--- A box's fill and edge from the skin (DW-G13): the owner tokens `dw.cardBg` / `dw.cardBorder`
--- (Ka0s Default: today's 0.08 fill and the shared window edge's inner line), on the box's own
--- backdrop so its shape is today's, repainted on a skin switch.
+-- A box is the skin's Card (FS-DW-FIX, cause A1), its fill and edge remapped to the owner tokens
+-- `dw.cardBg` / `dw.cardBorder` (Ka0s Default: today's 0.08 fill and the shared window edge's inner
+-- line). paintBox is the degraded arm's, where S.Card draws nothing.
+local BOX_OPTS = { tokens = { bg = "dw.cardBg", border = "dw.cardBorder" } }
+
 local function paintBox(f)
     f:SetBackdropColor(NS.SkinColor("dw.cardBg"))
     f:SetBackdropBorderColor(NS.SkinColor("dw.cardBorder"))
@@ -110,6 +112,7 @@ local function box(parent)
         f:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
         NS.SkinPaint(f, paintBox)
     end
+    NS.Skin.Card(f, BOX_OPTS)
     return f
 end
 

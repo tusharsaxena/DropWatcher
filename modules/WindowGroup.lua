@@ -386,11 +386,14 @@ end
 function WG.ToneButton(b, state, kind)
     local tone = NS.WindowCells.ActionTone(state, kind)
     local c = tone and C.TONE[tone]
-    local r, g, bl
-    if c then r, g, bl = c.r, c.g, c.b else r, g, bl = NS.Skin.Color("btn.text") end   -- untoned: white
-    b.label:SetTextColor(r, g, bl)
-    if b.art then b.art:SetVertexColor(r, g, bl) end
-    b.tone = tone
+    b.tone = c and tone or nil
+    if not c then
+        -- Untoned: the skin's button look. A bare `{ label }` (a suite's) has no window button.
+        if b.art then return NS.WindowTitleBar.PaintButtonLook(b) end
+        return b.label:SetTextColor(NS.SkinColor("btn.text"))
+    end
+    b.label:SetTextColor(c.r, c.g, c.b)
+    if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
 end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
@@ -516,9 +519,13 @@ end
 function WG.ItemHover(frame, button)
     frame.itemButton = button
     frame:HookScript("OnEnter", function(self)
+        NS.WindowRows.WashRowOf(self, true)
         if self.showItem then itemEnter(self.itemButton, self) end
     end)
-    frame:HookScript("OnLeave", hideTooltip)
+    frame:HookScript("OnLeave", function(self)
+        NS.WindowRows.WashRowOf(self, false)
+        hideTooltip()
+    end)
 end
 
 -- ── building a row ──────────────────────────────────────────────────────────────────────────
@@ -660,6 +667,7 @@ local function newRow(content)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
     WG.PaintRowWashes(row)
+    NS.WindowRows.HoverWash(row)
     row.chevron = WG.RowChevron(row)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
@@ -934,12 +942,12 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        -- The skin's list header text (gold, as Loot History's: feedback-4 spec §4). Not the skin's
-        -- SortHeaderBar, which adds a `list.header.bg` band these heads never drew.
+        -- The skin's list header text (gold, as Loot History's: feedback-4 spec §4).
         NS.Skin.Text(f.text, "list.header.text")
         NS.Window.AttachTooltip(f, function() return f.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
+    NS.Skin.SortHeaderBar(head)   -- its band, `list.header.bg` (FS-DW-FIX, cause A1)
     pane.colHead = head
 end
 

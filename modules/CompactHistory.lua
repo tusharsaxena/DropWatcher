@@ -59,6 +59,7 @@ local function newCard(content)
     local CG, WG = NS.CompactGroup, NS.WindowGroup
     local card = CreateFrame("Button", nil, content)
     card.tipRow = true   -- its tooltips rise from its top right (modules/RowTooltip.lua)
+    NS.WindowRows.HoverWash(card)
     card.cells = {}
     card.onPiece = onPiece
     CG.Background(card)

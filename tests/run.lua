@@ -206,6 +206,7 @@ Kit.run{
         "test_skin_literals",
         "test_skin_hud",
         "test_skin_flip",
+        "test_skin_host",
         "test_skin_picker",
         "test_skin_verb",
         "test_skin_settings",

@@ -112,6 +112,7 @@ local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(K.OFFER_ROW_H)
     row.tipRow = true
+    NS.WindowRows.HoverWash(row)
     -- Every second row's faint stripe, as the main window's rows (WindowGroup, WindowHistory).
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
