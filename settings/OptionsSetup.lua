@@ -54,6 +54,7 @@ if not lib then
     H.BorderGroup          = function() return {} end
     H.BarGroup             = function() return {} end
     H.PositionBlock        = function() return {}, function() end end
+    H.LabelFont            = function() end   -- LibKa0s v1.85.0, OptionsWidgets minor 43
     H.MasterControls       = function() return {}, function() end end
     H.ChoiceGrid           = function() end
     H.IdInput              = function() end
