@@ -239,12 +239,6 @@ Total.
 - skin chrome: without the library the window's own colors are Ka0s Default's
 - skin chrome: a tab's label is painted when its role changes, not on every repaint
 
-### test_skin_literals.lua (3)
-
-- no color literal outside core/SkinSetup.lua and the named allow-list
-- every allow-list entry carries its reason
-- the gate is falsifiable: a planted literal of each shape is reported
-
 ### test_skin_hud.lua (10)
 
 - skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
@@ -258,7 +252,7 @@ Total.
 - migrate 10: idempotent on a raw table, the companion set so no sentinel lands; without the library too
 - migrate 10: the library sets the companion itself (ResetToSkin's companions, LibKa0s v1.81.0)
 
-### test_skin_flip.lua (19)
+### test_skin_flip.lua (21)
 
 - skin flip: every companion is a bool row, on by default in both places
 - skin flip: no swatch carries disabledIf, and a class color has no companion
@@ -276,11 +270,13 @@ Total.
 - skin flip: Ka0s Default keeps the glows' own colors; a skin switch restarts them in the skin's
 - skin flip: the two glows stay apart in every skin, and class and off stay as they were
 - skin flip: without the library the stored glow color draws
+- skin flip: without the library S.HudFont writes both shadow arms, so turning the row off clears it
 - skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redraws it
 - skin flip: the row signature signs the resolved shadow, so a skin's new shadow reaches a drawn row
 - skin flip: companion off draws the stored shadow; Ignore fonts leaves it standing
+- skin flip: with the library absent S.BarBorder answers the stored three and S.HoverArt draws nothing
 
-### test_skin_host.lua (9)
+### test_skin_host.lua (16)
 
 - skin host: an untoned button's label and mark read btn.text and btn.icon, live
 - skin host: hover draws btn.hover on an untoned label and leaves a state's tone alone
@@ -289,6 +285,13 @@ Total.
 - skin host: without the library the tabs keep their text roles and underline
 - skin host: the column heads wear list.header.bg and the footer foot.bg
 - skin host: a row takes list.hover under the pointer, from a cell inside it too
+- skin host: a Drops row washes, from its item, its item's button and a worn icon too
+- skin host: WG.ItemHover's own frame washes its row, with no cell tooltip to do it
+- skin host: a History row washes, from its item and its button too
+- skin host: a compact Drops card washes, from its icon too
+- skin host: a compact History card washes, from its icon too
+- skin host: an Offer panel row washes, from its Their eq icon too
+- skin host: title.bg is one layer, the bar's, and stays one through a skin switch
 - skin host: the title bar is placed by the skin's height and alignment
 - skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored
 
@@ -2180,6 +2183,56 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (41)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the window's title bar changes
+- skin switch: the window's title bar changes with the Scope ignored
+- skin switch: the active tab changes
+- skin switch: the active tab changes with the Scope ignored
+- skin switch: the idle tab changes
+- skin switch: the idle tab changes with the Scope ignored
+- skin switch: the restricted badge changes
+- skin switch: the restricted badge changes with the Scope ignored
+- skin switch: the test mode word changes
+- skin switch: the test mode word changes with the Scope ignored
+- skin switch: a flat button changes
+- skin switch: a flat button changes with the Scope ignored
+- skin switch: a row chevron changes
+- skin switch: a row chevron changes with the Scope ignored
+- skin switch: a column head changes
+- skin switch: a column head changes with the Scope ignored
+- skin switch: the column head band changes
+- skin switch: the column head band changes with the Scope ignored
+- skin switch: the summary strip's rule changes
+- skin switch: the summary strip's rule changes with the Scope ignored
+- skin switch: the detail card's box changes
+- skin switch: the detail card's box changes with the Scope ignored
+- skin switch: the footer band changes
+- skin switch: the footer band changes with the Scope ignored
+- skin switch: a Drops row's stripe and tone changes
+- skin switch: a Drops row's stripe and tone changes with the Scope ignored
+- skin switch: the tables' shadow changes
+- skin switch: an item's icon border changes
+- skin switch: the main spec's glow changes
+- skin switch: the off-spec glow changes
+- skin switch: a group header changes
+- skin switch: a group header changes with the Scope ignored
+- skin switch: History's column head changes
+- skin switch: History's column head changes with the Scope ignored
+- skin switch: the Offer panel changes
+- skin switch: the Offer panel changes with the Scope ignored
+- skin switch: a tooltip's title and lines changes
+- skin switch: a tooltip's title and lines changes with the Scope ignored
+- skin switch: the toast changes
+- skin switch: the toast changes with the Scope ignored
+
 ## Totals
 
 | Suite | Cases |
@@ -2194,10 +2247,9 @@ Total.
 | test_skin_setup.lua | 18 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
-| test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
-| test_skin_flip.lua | 19 |
-| test_skin_host.lua | 9 |
+| test_skin_flip.lua | 21 |
+| test_skin_host.lua | 16 |
 | test_skin_picker.lua | 17 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
@@ -2282,5 +2334,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1877** |
+| **Total** | **1927** |

@@ -3021,7 +3021,7 @@ DW-RV to DW-05, on LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the skin 
 (`docs/2026-10-30-SKIN_LIBRARY_FOLLOWUPS/`, DW-RV to DW-02), which moved the expectations of SKIN-1,
 SKIN-11, SKIN-12, SKIN-16 and SKIN-19. The palette, the tokens, the Skin tab's rows, the reset step and
 the picker's timing are headless-tested (`test_skin_setup`, `test_skin_settings`, `test_skin_chrome`,
-`test_skin_hud`, `test_skin_picker`, `test_skin_literals`); the suites draw no font and no texture, so
+`test_skin_hud`, `test_skin_picker`, `test_skin_values`, `test_skin_switch`); the suites draw no font and no texture, so
 what each skin looks like is checked here. Start from a **fresh client start**, not a `/reload`: the
 client reads new font files only when it starts, so a reload leaves the skins' faces as fallback
 squares. Pick skins on `/dw config` → General → **Skin**. Every check also fails on a Lua error or a
@@ -3302,7 +3302,7 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-39. The tables' shadow follows the skin (D6).** With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result:
 
-**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Under any skin but Ka0s Default, a main-spec glow draws the skin's gold `glow.color` and an off-spec one its blue `sem.warband`. These two tokens, and `icon.border`, hold one value in every shipped skin today, so the glows do not change between two non-default skins and the border stays black: a change is expected only leaving Ka0s Default. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue. Result:
+**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Each skin states its own `glow.color` and `icon.border` from its palette (the owner's ruling of 2026-11-01). Switch between two non-default skins with `/dw test` on → a main-spec glow takes each skin's `glow.color`, an off-spec one its `sem.warband`, and the item icon's border each skin's `icon.border`. Ka0s Default draws what SKIN-38 says. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue, or the border or the main glow keeps one color across skins. Result:
 
 **SKIN-41. The companions.** Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result:
 

@@ -24,7 +24,8 @@ local _, NS = ...
 -- flag as stored. The shadow is the skin's while Use the skin's shadow is on: `dw.tableShadow` at
 -- `hud.shadowX`, `hud.shadowY` (FS-DW-FLIP, cause D6), which keeps the black 1, -1 under Ka0s Default,
 -- whose own `hud.shadow` is none; Ignore fonts and the companion off leave the stored row. S.HudFont
--- draws all of it, a 12.0.7 client drawing only a font object's shadow: one per string, the library's,
+-- draws all of it through `opts.shadowToken`, a 12.0.7 client drawing only a font object's shadow: one
+-- per look, shared by every string that draws it, the library's,
 -- which writes the string itself where there is no CreateFont (the harness). The color is plain text's (SetTone): a text the tables drew in the `plain` tone takes the
 -- block's color, the player's class color while Use class color is on, and the skin's plain color
 -- while the swatch is at its default, so a fresh profile looks as it did before the block. A verdict,
@@ -98,7 +99,7 @@ end
 
 -- One table each, rewritten by every read: a repaint reads the block once, and nothing keeps its
 -- answer past the next read, so a pass allocates nothing here (performance-§9).
-local plainRead, fontRead, shadowRead = {}, {}, {}
+local plainRead, fontRead = {}, {}
 
 --- The block's plain text color for one repaint: { r, g, b, a } picked or class-colored, or nil to
 --- draw the skin's plain color (the swatch at its default).
@@ -121,30 +122,25 @@ end
 -- The last ReadFont: what SetTone reads between two repaints.
 local current
 
---- The shadow the tables draw, as S.HudFont's `shadow` takes it: `true` or false, the stored row, or
---- one reused { x, y, r, g, b, a } from the skin; false for a skin that draws none. With the library
---- absent, or Ignore fonts on, S.HudShadow answers nil and the stored row stands.
-local function shadowOf()
-    local stored = NS.Setting("window.tableFontShadow") == true
-    if NS.Setting("window.tableFontShadowFromSkin") ~= true then return stored end
-    local S = NS.Skin
-    if S.HudShadow() == nil then return stored end
-    local r, g, b, a = S.Color("dw.tableShadow")
-    if r == nil then return false end
-    local t = shadowRead
-    t[1], t[2], t[3], t[4], t[5], t[6] = S.Token("hud.shadowX"), S.Token("hud.shadowY"), r, g, b, a or 1
-    return t
-end
+-- The tables' shadow token: S.HudFont's `shadowToken`, and what the signature reads.
+local SHADOW_TOKEN = "dw.tableShadow"
 
---- A shadow as the row signature signs it: the resolved one, so a skin's new shadow reaches a row
---- already drawn (Options doc, Moving to, 5).
-local function shadowKey(s)
-    if type(s) ~= "table" then return s and "s" or "" end
-    return ("%s,%s,%.3f,%.3f,%.3f,%.3f"):format(s[1], s[2], s[3], s[4], s[5], s[6])
+--- The shadow as the row signature signs it: the resolved one, S.HudShadow's answer for the tables'
+--- token while the companion is on, so a skin's new shadow reaches a row already drawn (Options doc,
+--- Moving to, 5). With the library absent, or Ignore fonts on, it answers nil and the stored row stands.
+--- @param fromSkin boolean the companion
+--- @param stored boolean the stored row
+--- @return string
+local function shadowKey(fromSkin, stored)
+    local x, y, r, g, b, a
+    if fromSkin then x, y, r, g, b, a = NS.Skin.HudShadow(SHADOW_TOKEN) end
+    if x == false then return "" end
+    if x == nil then return stored and "s" or "" end
+    return ("%s,%s,%.3f,%.3f,%.3f,%.3f"):format(x, y, r, g, b, a)
 end
 
 --- The Tables font block, read once per repaint: { face (a path, nil = the skin's painted face),
---- flags, shadow (shadowOf's), plain ({ r, g, b, a } or nil = the skin's), key (one string per look)
+--- flags, shadow (the stored row), shadowFromSkin, plain ({ r, g, b, a } or nil = the skin's), key (one string per look)
 --- }. The answer is one reused table: valid until the next read.
 --- @return table
 function WR.ReadFont()
@@ -153,10 +149,12 @@ function WR.ReadFont()
     local S = NS.Skin
     local flags = S and S.FontFlags and S.FontFlags(NS.Setting("window.tableFontFlags"), "window")
     if type(flags) ~= "string" then flags = "" end
-    local shadow = shadowOf()
-    fontRead.face, fontRead.flags, fontRead.shadow = face, flags, shadow
+    local shadow = NS.Setting("window.tableFontShadow") == true
+    local shadowFromSkin = NS.Setting("window.tableFontShadowFromSkin") == true
+    fontRead.face, fontRead.flags = face, flags
+    fontRead.shadow, fontRead.shadowFromSkin = shadow, shadowFromSkin
     fontRead.plain = plainColor()
-    fontRead.key = (face or "") .. "|" .. flags .. "|" .. shadowKey(shadow)
+    fontRead.key = (face or "") .. "|" .. flags .. "|" .. shadowKey(shadowFromSkin, shadow)
     current = fontRead
     return current
 end
@@ -234,9 +232,9 @@ local function paintedFont(fs)
     return base
 end
 
--- One opts table, refilled before every call (S.HudFont keeps nothing of it). The block resolved
--- the shadow already, so the library's companion is off and `shadow` is what draws.
-local hudOpts = { shadowFromSkin = false }
+-- One opts table, refilled before every call (S.HudFont keeps nothing of it). `shadow` is the stored
+-- row and S.HudFont resolves the rest; a false companion draws `shadow` under every skin.
+local hudOpts = { shadowToken = SHADOW_TOKEN }
 
 --- A table text in the block's look at `size` (nil = the painted size): its face, the skin's or the
 --- picked one, the resolved flags and the shadow, through S.HudFont. The painted color is kept: a
@@ -247,8 +245,8 @@ local hudOpts = { shadowFromSkin = false }
 function WR.SetTableFont(fs, size, font)
     local base = paintedFont(fs)
     if not base then return end
-    hudOpts.face, hudOpts.size, hudOpts.flags, hudOpts.shadow =
-        font.face or base[1], size or base[2], font.flags, font.shadow
+    hudOpts.face, hudOpts.size, hudOpts.flags = font.face or base[1], size or base[2], font.flags
+    hudOpts.shadow, hudOpts.shadowFromSkin = font.shadow, font.shadowFromSkin
     local r, g, b, a = fs:GetTextColor()
     NS.Skin.HudFont(fs, hudOpts)
     if r then fs:SetTextColor(r, g, b, a) end

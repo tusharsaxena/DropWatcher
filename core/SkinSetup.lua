@@ -636,7 +636,7 @@ if not Skin then
         "BarTexture", "FontFlags", "HudFontSize", "Mark",
         -- LibKa0s v1.85.0: nil is each getter's degraded answer, so the stored value draws, and
         -- BarGloss draws nothing: no skin, no gloss.
-        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss",
+        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
     }) do S[name] = noop end
 
     S.Token = function(name)
@@ -686,6 +686,9 @@ if not Skin then
         local n = tonumber(size)
         return (n and n > 0) and n or 12
     end
+    -- The re-cut v1.85.0: the stored three as they came, or a host would lose its stored border. This
+    -- addon draws no bar border; the facade answers it because parity holds every member.
+    S.BarBorder = function(style, show, size) return style, show, size end
     -- LibKa0s v1.85.0 (SkinPaintExtras minor 9): a string a caller concatenates, so never nil. The
     -- same markup in the art's own color, there being no tint to read.
     S.MarkText = function(path, size)

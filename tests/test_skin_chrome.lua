@@ -8,7 +8,7 @@
 -- The switch goes to SWITCH, a test-only skin registered per addon: Ka0s Default with every color
 -- inverted, so each compared token moves whichever way a later round retunes the shipped skins
 -- (Ka0s Loot History's tests/skin_support.lua, the same idea). The literal gate is
--- tests/test_skin_literals.lua; the palette's refill is tests/test_skin_setup.lua.
+-- the kit's test_skin_values; the palette's refill is tests/test_skin_setup.lua.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue

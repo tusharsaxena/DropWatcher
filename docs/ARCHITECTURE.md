@@ -272,7 +272,7 @@ Ka0s Default each is the pixel the addon drew before skins. The drop tables' ton
 `NS.Constants.TONE[key]`, refilled from the tokens `C.TONE_TOKEN` names at load and first on every skin
 switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
 and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
-`tests/test_skin_chrome.lua` pins the chrome, `tests/test_skin_literals.lua` gates literals.
+`tests/test_skin_chrome.lua` pins the chrome. The kit gates typed colors and textures (`test_skin_values`) and proves each declared surface changes on a skin switch (`test_skin_switch`, `tests/skin_switch_facts.lua`).
 
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
   (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin

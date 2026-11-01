@@ -241,7 +241,7 @@ test("table font edge: with CreateFont, S.HudFont's named font object carries th
     redraw(NS)
     local obj = fs:GetFontObject()
     assertTrue(type(obj) == "table" and type(obj.name) == "string", "a named font object")
-    assertTrue(obj.name:find("^LibKa0sHud_DropWatcher_") ~= nil, "the library's, for this owner: " .. tostring(obj.name))
+    assertTrue(obj.name:find("^LibKa0sHud_") ~= nil, "the library's, one per look: " .. tostring(obj.name))
     assertEqual(obj.offset[1], 0); assertEqual(obj.offset[2], 0)
     local _, _, flags = fs:GetFont()
     assertEqual(flags, "THICKOUTLINE", "the object carries the resolved flags")
@@ -253,7 +253,7 @@ test("table font edge: with CreateFont, S.HudFont's named font object carries th
     local n = #made
     S.Set("window.tableFontShadow", false)
     S.Set("window.tableFontShadow", true)
-    assertEqual(#made, n, "one object per string, made once and reused")
+    assertEqual(#made, n, "one object per look, made once and reused")
 end)
 
 test("table font: a read reuses its table, and a later read leaves nothing of the last look", function()

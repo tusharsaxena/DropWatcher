@@ -400,7 +400,8 @@ test("skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redr
     WR.OnLooksChanged()
     WR.SetTableFont(fs, nil, WR.ReadFont())
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
-    local x, y, r, g, b, a = Skin:For(OWNER).HudShadow()
+    local x, y, r, g, b, a = Skin:For(OWNER).HudShadow("dw.tableShadow")
+    obj = fs.__fontObject
     assertEqual(obj.offset[1], x, "the skin's offset"); assertEqual(obj.offset[2], y)
     assertTrue(near(obj.shadow[1], r) and near(obj.shadow[2], g) and near(obj.shadow[3], b) and near(obj.shadow[4], a),
         "the skin's shadow color")
@@ -444,4 +445,11 @@ test("skin flip: companion off draws the stored shadow; Ignore fonts leaves it s
     assertEqual(fs.__fontObject.offset[1], 0, "Ignore fonts: the stored shadow stands")
     m.LibStub("LibKa0s-Skin-1.0"):SetIgnore(OWNER, true, false)
     setSkin(m, "ka0s")
+end)
+
+test("skin flip: with the library absent S.BarBorder answers the stored three and S.HoverArt draws nothing", function()
+    local NS = T.newAddon({ skip = T.loadAddon.libFiles })
+    local style, show, size = NS.Skin.BarBorder("Blizzard Tooltip", true, 3, true)
+    assertEqual(style, "Blizzard Tooltip"); assertEqual(show, true); assertEqual(size, 3)
+    assertNil(NS.Skin.HoverArt({}))
 end)
