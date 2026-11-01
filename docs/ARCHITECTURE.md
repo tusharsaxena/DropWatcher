@@ -286,10 +286,27 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
   border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
-  `icon.borderSize`); Ka0s Default's is today's Solid 2px. The border color, its class and quality
-  companions, Show border, the zoom and the glows' colors stay the player's. Migration step 10
-  (`NS.ResetIconBorderToSkin`) turns the companion on once per stored profile (the rollout's O2) and
-  keeps the stored style, so turning it off brings the player's own back. `tests/test_skin_hud.lua`.
+  `icon.borderSize`); Ka0s Default's is today's Solid 2px. Show border and the zoom stay the
+  player's. Migration step 10 (`NS.ResetIconBorderToSkin`) turned the companion on once per stored
+  profile (the rollout's O2) and kept the stored style. `tests/test_skin_hud.lua`.
+- **The colors and the shadow (FS-DW-FLIP, causes D4, D5, D6; the owner's rulings of 2026-11-01).** A
+  *Use the skin's ...* companion, on by default, stands in front of each stored value:
+  `icons.borderColorFromSkin` (`icon.border`), `glow.<g>.colorFromSkin` (`dw.glowMain`,
+  `dw.glowOffSpec`) and `window.tableFontShadowFromSkin` (`dw.tableShadow`). A class or quality color
+  comes first and has no companion. The three owner tokens keep this addon's pixels under Ka0s
+  Default, whose `glow.color` is gold and whose `hud.shadow` is none. Every shipped skin answers one
+  `glow.color`, `sem.warband` and `icon.border` today, so the border's color and the glows move only
+  once, leaving Ka0s Default; the shadow varies by skin. Migration step 11
+  (`NS.ResetProfileToSkin`, `Skin.FollowOnce`) moves stored profiles once, recorded per profile in
+  `skin.fullSkinReset`. `tests/test_skin_flip.lua`.
+- **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
+  its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
+  which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
+  in `btn.text`, `btn.hover` and `btn.icon`. The detail boxes are `S.Card`, the tabs `S.Tab` (decision
+  D11 reversed: they gain the skin's backing, and an idle label reads `tab.text`), the column heads
+  `S.SortHeaderBar`, the footer `S.Footer`, the title bar `S.TitleBar` with `place`, and a row takes
+  `list.hover` through `S.ListRow`, from a cell inside it too (`NS.WindowRows.WashRowOf`). Without the
+  library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
   profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
@@ -318,8 +335,9 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   size (`window.fontSize`, 0 Default as before), Font color and Use class color
   (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
   skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
-  and Font shadow (`window.tableFontShadow`). `NS.WindowRows` draws it on both tabs and both layouts:
-  one named font object per look (a 12.0.7 client draws a font object's shadow, not a runtime one),
+  and Font shadow (`window.tableFontShadow`, with Use the skin's shadow). `NS.WindowRows` draws it on
+  both tabs and both layouts through `S.HudFont`: one named font object per string (a 12.0.7 client
+  draws a font object's shadow, not a runtime one),
   the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
   read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
   tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
@@ -339,7 +357,7 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
 | `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
 | The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
-| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
+| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
 | The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |

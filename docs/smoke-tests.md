@@ -46,6 +46,7 @@ passed.
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
 | SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
 | SKIN-31..33 | [Skins](#skins) | LibKa0s v1.83.0 (DW-F01, 2026-10-31): the window fits the new faces under both outline modes (SKIN-31), WoW Default differs from Ka0s Default (SKIN-32), the media pickers preview (SKIN-33); SKIN-4, SKIN-15 and SKIN-16 reopened |
+| SKIN-37..43 | [Skins](#skins) | The full skinning run (LibKa0s v1.85.0, FS-DW-FLIP, FS-DW-FIX): Ka0s Default's pixels, the shadow, the border and glow colors, the companions, the one step, the record through Defaults, and the look changes |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -2529,14 +2530,14 @@ never hidden. Result: passed in the client, 2026-10-23 (the owner).
 
 **GLOW-9. Use class color (feedback-21).** Settings › Alerts › Upgrade glow: Main spec color | Off-spec
 color on one line, Use class color (main spec) | Use class color (off-spec) (both off) on the next, each
-below its own swatch (H6, the documented options-ui-§17 deviation). `/dw test`. Main spec color → a red with alpha half way, then tick its Use class color → every
+below its own swatch (H6, the documented options-ui-§17 deviation). `/dw test`. Untick Use the skin's color (main spec) and (off-spec), the line below. Main spec color → a red with alpha half way, then tick its Use class color → every
 main-spec upgrade icon's glow restarts at once in your character's class color, whoever looted the drop,
 as faint as the half alpha. The off-spec icons keep
 their blue. Untick it → back to the half-alpha red. Hover Main spec color → its tooltip says it is not
 read while Use class color is on, except for its opacity; hover Use class color (main spec) → it names
 Main spec color, the swatch above. Tick Use class color (off-spec) → the
 off-spec icons glow in your class color too, the main ones as their own pair says. Untick Off-spec glow
-→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result: passed in the client, 2026-10-23 (the owner).
+→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result:
 
 **GLOW-10. The defaults, and the color rows main left, off-spec right (feedback-21 H6).** On a profile
 that never touched the tab (or Defaults on the Alerts page): Settings › Alerts › Upgrade glow → Main
@@ -3036,13 +3037,13 @@ layouts, expand a detail card, open your own drop's Offer panel, the compact Fil
 and the settings pages → every color is the one drawn before the skinning run: the verdict tones
 (green upgrade, yellow sidegrade, red downgrade, cyan Offer and off-spec, dim red Can't use, gray Not
 wanted), the gold column labels and headings, the stripes and the open row's wash, the chevrons, the
-countdown bar and its track, the detail card's boxes and chips, the amber TEST MODE strip. Three
-things look new, all expected: every string reads in **Oxanium** (a squared, technical face) instead
+countdown bar and its track, the detail card's boxes and chips, the amber TEST MODE strip. The look changes of the full skinning run (SKIN-43, FS-DW-FIX) are expected too. Three
+things look new from the rollout, all expected: every string reads in **Oxanium** (a squared, technical face) instead
 of Friz Quadrata, the verdict glyphs ▲ ≈ ▼ keeping their monospace face; the title bar wears a
 **darker band** behind the title (the shell's top bar, D3); and the four scroll bars (Drops, History,
 compact, the Offer panel) are a **corridor with one flat knob** instead of Blizzard's art (D2). Record
 whether the owner keeps the title band (D3 asks). Fail: any other changed color, edge or spacing, text
-clipped or overlapping because the face is wider, or a glyph drawn as a box. Result: passed in the client, 2026-10-30 (the owner).
+clipped or overlapping because the face is wider, or a glyph drawn as a box. Result:
 
 **SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Before checking out
 the branch, set Window › Icons → Border style to something other than Solid (Blizzard Tooltip, say) and
@@ -3131,8 +3132,8 @@ control with Ignore settings panel on, or another addon's widget wearing this sk
 
 **SKIN-14. The icon border follows each skin (DW-03).** With **Use the skin's border** ticked, walk all
 nine skins with `/dw test` on → the item icons' border takes each skin's icon border style and
-thickness (a skin whose icon border is None draws none), always in your Border color; the upgrade glow
-still draws over it. Untick it → your own style and thickness, under any skin. Result: passed in the client, 2026-10-30 (the owner).
+thickness (a skin whose icon border is None draws none), in your Border color only with **Use the skin's color** unticked; the upgrade glow
+still draws over it. Untick it → your own style and thickness, under any skin. Result:
 
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
 squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
@@ -3240,7 +3241,7 @@ button. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-30. The tables' whole font setting (DW-01; the lead's ruling on D-07).** Settings → Window →
 Layout → **Tables**: under Row height sit **Font** | **Font size**, **Font color** | **Use class
-color**, **Font flags** | **Font shadow**, then **Use the skin's font**, ticked. On a profile that never
+color**, **Font flags** | **Font shadow**, then **Use the skin's font** and **Use the skin's shadow**, ticked. On a profile that never
 touched them, `/dw test` → the tables look exactly as before this run, under Ka0s Default and under
 another skin (the skin's face, the template's size, the skin's plain text color, unoutlined under the
 default *HUD text only* and outlined under *All text*, the skin's shadow). Font flags reads *From skin*. Then, with no reload, on Drops, History and
@@ -3249,10 +3250,10 @@ verdict glyphs ▲ ≈ ▼ keep their monospace face; pick a Font color → the 
 slots, types, `Name [YOU]`'s name) takes it, while the verdicts keep green, yellow and red, the item
 names their quality colors and the looters their class colors; tick Use class color → that plain text
 turns your class's color; Font flags *Thick outline* → the outline thickens whatever the Skin tab's
-Font outline says, *From skin* → it follows the Font outline again; untick Font shadow → the text's
+Font outline says, *From skin* → it follows the Font outline again; untick Use the skin's shadow, then untick Font shadow → the text's
 shadow goes, tick it → it is back. The detail card, the Offer panel and the toast are not tables and
 do not change. Settings → Window's **Defaults** → every row back to the first state. `/dw get
-window.tableFontFlags` prints `@skin`. Result: Owner reported pass, 2026-10-31.
+window.tableFontFlags` prints `@skin`. Result:
 
 ### LibKa0s v1.83.0: faces, outline and pickers (DW-F01, DW-F02)
 
@@ -3295,6 +3296,20 @@ Looter cells, the title bar's buttons, the filter bar and the footer → every t
 in English sentences. A key showing where a sentence should be is impossible on enUS; the failure to
 look for is a Lua error at login or a blank tooltip row. Result:
 
+**SKIN-37. LibKa0s v1.85.0 loads, and the look changes it brings for free (FS-DW-RV).** Fresh client start → no Lua error. `/dw sim` → the Steps panel's title band is 30 high with its title and close mark on the middle, a tooltip title on that panel takes the skin's tooltip title color, and the test and simulation strips' icons take the skin's icon tint. Result:
+
+**SKIN-38. Ka0s Default keeps the HUD's pixels (FS-DW-FLIP).** On a new profile on Ka0s Default, `/dw test` → item icons wear the flat black border, a main-spec upgrade glows #19FF19, an off-spec one #3FC7EB, and the tables' text has its soft black shadow. Fail: any of those moved. Result:
+
+**SKIN-39. The tables' shadow follows the skin (D6).** With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result:
+
+**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Under any skin but Ka0s Default, a main-spec glow draws the skin's gold `glow.color` and an off-spec one its blue `sem.warband`. These two tokens, and `icon.border`, hold one value in every shipped skin today, so the glows do not change between two non-default skins and the border stays black: a change is expected only leaving Ka0s Default. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue. Result:
+
+**SKIN-41. The companions.** Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result:
+
+**SKIN-42. The one step on an existing profile (schema 11).** Before updating, give a profile its own border color, glow colors, Font shadow off and Thick outline flags. Update and log in → it follows the skin, Font flags *From skin*. Untick each companion → your color and shadow come back. Tick nothing more, `/reload` and press Window's and Alerts' **Defaults**, untick one again, `/reload` → it stays unticked. Result:
+
+**SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3331,6 +3346,8 @@ TOAST-8 and ASK-13, plus the three reopened above. Each one's `Result:` line rec
 Owed by the findings remediation (2026-10-31; Ka0sAddonsCommonTasks
 `docs/2026-10-31-FINDINGS_REMEDIATION/`): SKIN-34..36, SIM-18, PANEL-9 and PANEL-10. Their `Result:` lines are empty
 until the owner runs them; an agent never marks one passed.
+
+Owed by the full skinning run (2026-11-01; Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`): SKIN-37..43, and SKIN-2, SKIN-14, SKIN-30 and GLOW-9, whose expected results moved and whose pass marks went with them. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

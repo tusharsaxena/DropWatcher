@@ -785,7 +785,8 @@ WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
                                      Solid (the default), else the tooltip's edge,
                           edgeSize = size }
              SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
-               (the player's class), else with icons.borderQuality the item's quality color
+               (the player's class), or the skin's icon.border while icons.borderColorFromSkin
+               and no class color, else with icons.borderQuality the item's quality color
                (ItemRead.QualityOf ─> ITEM_QUALITY_COLORS, else the link's |cAARRGGBB), the
                swatch's alpha kept; no quality known ─> the swatch's mode
 an icons.* row's write, a profile switch / copy / reset, a skin switch (NS.Skin.OnLooksChanged)

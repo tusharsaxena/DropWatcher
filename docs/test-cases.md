@@ -249,14 +249,48 @@ Total.
 
 - skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
 - skin HUD: while the companion is on the stored style and thickness are not read; off, they are
-- skin HUD: a skin switch restyles every item button; its None draws no edge; the color stays the player's
-- skin HUD: the glow's two colors are the player's under every skin (E6)
+- skin HUD: a skin switch restyles every item button; its None draws no edge; a companion off keeps the swatch
+- skin HUD: no skin switch touches the glow's two stored swatches
 - skin HUD: the companion is a composed row with a check, dimmed with Show border off, dimming style and size
 - skin HUD: without LibKa0s the stored picks draw and the companion's default changes nothing
 - migrate 10: every stored profile's icon border goes back on the skin once, its pick kept
 - migrate 10: it runs once; a player's later pick survives the next load
 - migrate 10: idempotent on a raw table, the companion set so no sentinel lands; without the library too
 - migrate 10: the library sets the companion itself (ResetToSkin's companions, LibKa0s v1.81.0)
+
+### test_skin_flip.lua (19)
+
+- skin flip: every companion is a bool row, on by default in both places
+- skin flip: no swatch carries disabledIf, and a class color has no companion
+- skin flip: the font pick's default moved to the Ka0s pick, in both places
+- skin flip: the panel's exception is not touched
+- skin flip: a stored partial profile moves, and nothing but companions and flags is written
+- skin flip: a sub-table the profile never stored is skipped, and the record still lands
+- skin flip: a second run writes nothing, so a companion turned off stays off
+- skin flip: without the library the same write, with the record written by hand
+- skin flip: the ladder moves every stored profile once, and a later off survives the next load
+- skin flip: a profile that arrives after the stamp moved still takes the step
+- skin flip: the record has no row, so no Defaults path walks it, and a companion stays off
+- skin flip: a profile reset runs the step against defaults, which show nothing a player sees
+- skin flip: a skin switch redraws the icon border's color; class and quality stay ahead
+- skin flip: Ka0s Default keeps the glows' own colors; a skin switch restarts them in the skin's
+- skin flip: the two glows stay apart in every skin, and class and off stay as they were
+- skin flip: without the library the stored glow color draws
+- skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redraws it
+- skin flip: the row signature signs the resolved shadow, so a skin's new shadow reaches a drawn row
+- skin flip: companion off draws the stored shadow; Ignore fonts leaves it standing
+
+### test_skin_host.lua (9)
+
+- skin host: an untoned button's label and mark read btn.text and btn.icon, live
+- skin host: hover draws btn.hover on an untoned label and leaves a state's tone alone
+- skin host: the button's and the detail box's frames are the library's primitives
+- skin host: the tabs are the skin's, and selection moves their label color
+- skin host: without the library the tabs keep their text roles and underline
+- skin host: the column heads wear list.header.bg and the footer foot.bg
+- skin host: a row takes list.hover under the pointer, from a cell inside it too
+- skin host: the title bar is placed by the skin's height and alignment
+- skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored
 
 ### test_skin_picker.lua (17)
 
@@ -631,7 +665,7 @@ Total.
 - table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
-- table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font edge: with CreateFont, S.HudFont's named font object carries the shadow
 - table font: a read reuses its table, and a later read leaves nothing of the last look
 - table font: History and the compact cards draw the same setting
 
@@ -2162,6 +2196,8 @@ Total.
 | test_skin_chrome.lua | 12 |
 | test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
+| test_skin_flip.lua | 19 |
+| test_skin_host.lua | 9 |
 | test_skin_picker.lua | 17 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
@@ -2247,4 +2283,4 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | Skipped | 1 |
-| **Total** | **1849** |
+| **Total** | **1877** |
