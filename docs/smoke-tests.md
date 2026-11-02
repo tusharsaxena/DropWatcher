@@ -2538,7 +2538,7 @@ their blue. Untick it → back to the half-alpha red. Hover Main spec color → 
 read while Use class color is on, except for its opacity; hover Use class color (main spec) → it names
 Main spec color, the swatch above. Tick Use class color (off-spec) → the
 off-spec icons glow in your class color too, the main ones as their own pair says. Untick Off-spec glow
-→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result:
+→ its color and Use class color stay live. `/reload` → the ticks are kept. Defaults → both off. Result: Passed (owner, 2026-11-02)
 
 **GLOW-10. The defaults, and the color rows main left, off-spec right (feedback-21 H6).** On a profile
 that never touched the tab (or Defaults on the Alerts page): Settings › Alerts › Upgrade glow → Main
@@ -3044,7 +3044,7 @@ of Friz Quadrata, the verdict glyphs ▲ ≈ ▼ keeping their monospace face; t
 **darker band** behind the title (the shell's top bar, D3); and the four scroll bars (Drops, History,
 compact, the Offer panel) are a **corridor with one flat knob** instead of Blizzard's art (D2). Record
 whether the owner keeps the title band (D3 asks). Fail: any other changed color, edge or spacing, text
-clipped or overlapping because the face is wider, or a glyph drawn as a box. Result:
+clipped or overlapping because the face is wider, or a glyph drawn as a box. Result: Passed (owner, 2026-11-02)
 
 **SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Before checking out
 the branch, set Window › Icons → Border style to something other than Solid (Blizzard Tooltip, say) and
@@ -3134,7 +3134,7 @@ control with Ignore settings panel on, or another addon's widget wearing this sk
 **SKIN-14. The icon border follows each skin (DW-03).** With **Use the skin's border** ticked, walk all
 nine skins with `/dw test` on → the item icons' border takes each skin's icon border style and
 thickness (a skin whose icon border is None draws none), in your Border color only with **Use the skin's color** unticked; the upgrade glow
-still draws over it. Untick it → your own style and thickness, under any skin. Result:
+still draws over it. Untick it → your own style and thickness, under any skin. Result: Failed (owner, 2026-11-02): re-opened as R3-L3
 
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
 squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
@@ -3254,7 +3254,7 @@ turns your class's color; Font flags *Thick outline* → the outline thickens wh
 Font outline says, *From skin* → it follows the Font outline again; untick Use the skin's shadow, then untick Font shadow → the text's
 shadow goes, tick it → it is back. The detail card, the Offer panel and the toast are not tables and
 do not change. Settings → Window's **Defaults** → every row back to the first state. `/dw get
-window.tableFontFlags` prints `@skin`. Result:
+window.tableFontFlags` prints `@skin`. Result: Passed (owner, 2026-11-02)
 
 ### LibKa0s v1.83.0: faces, outline and pickers (DW-F01, DW-F02)
 
@@ -3297,19 +3297,19 @@ Looter cells, the title bar's buttons, the filter bar and the footer → every t
 in English sentences. A key showing where a sentence should be is impossible on enUS; the failure to
 look for is a Lua error at login or a blank tooltip row. Result:
 
-**SKIN-37. LibKa0s v1.85.0 loads, and the look changes it brings for free (FS-DW-RV).** Fresh client start → no Lua error. `/dw sim` → the Steps panel's title band is 30 high with its title and close mark on the middle, a tooltip title on that panel takes the skin's tooltip title color, and the test and simulation strips' icons take the skin's icon tint. Result:
+**SKIN-37. LibKa0s v1.85.0 loads, and the look changes it brings for free (FS-DW-RV).** Fresh client start → no Lua error. `/dw sim` → the Steps panel's title band is 30 high with its title and close mark on the middle, a tooltip title on that panel takes the skin's tooltip title color, and the test and simulation strips' icons take the skin's icon tint. Result: Passed (owner, 2026-11-02)
 
-**SKIN-38. Ka0s Default keeps the HUD's pixels (FS-DW-FLIP).** On a new profile on Ka0s Default, `/dw test` → item icons wear the flat black border, a main-spec upgrade glows #19FF19, an off-spec one #3FC7EB, and the tables' text has its soft black shadow. Fail: any of those moved. Result:
+**SKIN-38. Ka0s Default keeps the HUD's pixels (FS-DW-FLIP).** On a new profile on Ka0s Default, `/dw test` → item icons wear the flat black border, a main-spec upgrade glows #19FF19, an off-spec one #3FC7EB, and the tables' text has its soft black shadow. Fail: any of those moved. Result: Failed (owner, 2026-11-02): re-opened as R3-L3
 
-**SKIN-39. The tables' shadow follows the skin (D6).** With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result:
+**SKIN-39. The tables' shadow follows the skin (D6).** With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result: Passed (owner, 2026-11-02)
 
-**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Each skin states its own `glow.color` and `icon.border` from its palette (the owner's ruling of 2026-11-01). Switch between two non-default skins with `/dw test` on → a main-spec glow takes each skin's `glow.color`, an off-spec one its `sem.warband`, and the item icon's border each skin's `icon.border`. Ka0s Default draws what SKIN-38 says. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue, or the border or the main glow keeps one color across skins. Result:
+**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Each skin states its own `glow.color` and `icon.border` from its palette (the owner's ruling of 2026-11-01). Switch between two non-default skins with `/dw test` on → a main-spec glow takes each skin's `glow.color`, an off-spec one its `sem.warband`, and the item icon's border each skin's `icon.border`. Ka0s Default draws what SKIN-38 says. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue, or the border or the main glow keeps one color across skins. Result: Failed (owner, 2026-11-02): re-opened as R3-L3
 
-**SKIN-41. The companions.** Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result:
+**SKIN-41. The companions.** Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result: Passed (owner, 2026-11-02)
 
-**SKIN-42. The one step on an existing profile (schema 11).** Before updating, give a profile its own border color, glow colors, Font shadow off and Thick outline flags. Update and log in → it follows the skin, Font flags *From skin*. Untick each companion → your color and shadow come back. Tick nothing more, `/reload` and press Window's and Alerts' **Defaults**, untick one again, `/reload` → it stays unticked. Result:
+**SKIN-42. The one step on an existing profile (schema 11).** Before updating, give a profile its own border color, glow colors, Font shadow off and Thick outline flags. Update and log in → it follows the skin, Font flags *From skin*. Untick each companion → your color and shadow come back. Tick nothing more, `/reload` and press Window's and Alerts' **Defaults**, untick one again, `/reload` → it stays unticked. Result: Passed (owner, 2026-11-02)
 
-**SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result:
+**SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result: Passed (owner, 2026-11-02)
 
 **SKIN-44. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema 12).** Before updating, set Window › Layout's table Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles and log out. Update and fully restart the client (a new font file) → the table draws in Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's own *Friz Quadrata TT* keeps it. Fail: the table on the game's default face, or a row still naming Ka0s Friz Quadrata TT. Result:
 
@@ -3353,6 +3353,8 @@ until the owner runs them; an agent never marks one passed.
 Owed by the full skinning run (2026-11-01; Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`): SKIN-37..43, and SKIN-2, SKIN-14, SKIN-30 and GLOW-9, whose expected results moved and whose pass marks went with them. An agent never marks one passed.
 
 Owed by the owner's third smoke round (2026-11-02; Ka0sAddonsCommonTasks `docs/2026-11-02-SMOKE_ROUND3/`, R3-FRIZ): SKIN-44, and SKIN-15 and SKIN-32, whose WoW Default face is now Ka0s Ubuntu and whose pass marks went with it.
+
+On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 
 ### Review 2026-10-14 (M24) sign-off
 
