@@ -47,6 +47,7 @@ passed.
 | SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
 | SKIN-31..33 | [Skins](#skins) | LibKa0s v1.83.0 (DW-F01, 2026-10-31): the window fits the new faces under both outline modes (SKIN-31), WoW Default differs from Ka0s Default (SKIN-32), the media pickers preview (SKIN-33); SKIN-4, SKIN-15 and SKIN-16 reopened |
 | SKIN-37..43 | [Skins](#skins) | The full skinning run (LibKa0s v1.85.0, FS-DW-FLIP, FS-DW-FIX): Ka0s Default's pixels, the shadow, the border and glow colors, the companions, the one step, the record through Defaults, and the look changes |
+| SKIN-44 | [Skins](#skins) | The owner's third smoke round (R3-FRIZ): a stored pick of the deleted Ka0s Friz Quadrata TT lands on Ka0s Ubuntu; SKIN-15 and SKIN-32 reopened |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -3138,9 +3139,9 @@ still draws over it. Untick it → your own style and thickness, under any skin.
 **SKIN-15. Fonts (DW-02; R4).** On an English client each skin draws its own family with no fallback
 squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
 High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever Fira Sans, WoW Default
-Ka0s Friz Quadrata TT (reopened by LibKa0s v1.83.0, DW-F01). Then set Window › Layout's Font size to its largest and switch skins → the size holds in
+Ka0s Ubuntu (reopened by LibKa0s v1.83.0, DW-F01, and by R3-FRIZ: Ka0s Friz Quadrata TT before). Then set Window › Layout's Font size to its largest and switch skins → the size holds in
 the new face; back to the default size → the face holds. Fail: a table, card or countdown that keeps
-the old face, or a size that resets on a switch. Result: Owner reported pass, 2026-10-31.
+the old face, or a size that resets on a switch. Result: not run (re-opened by R3-FRIZ).
 
 **SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Pick a clearly different font
 from **Font** → with no reload the window, cards, toast and tooltips' lines take it at their own sizes,
@@ -3269,8 +3270,8 @@ do under Ka0s Default, in the face SKIN-15 names. Ember's Emblem and Glass's Ava
 watch. Fail: text newly cut off or overlapping, or a square where a glyph should be. Result: Owner reported pass, 2026-10-31.
 
 **SKIN-32. WoW Default is not Ka0s Default (DW-F01; D-01).** Switch between Ka0s Default and WoW
-Default on the Skin tab → the window's text visibly changes face, Prototype to Friz Quadrata. Then set
-the Skin tab's Font to *Ka0s Friz Quadrata TT* and back to *Skin's default* → the face follows. Result: Owner reported pass, 2026-10-31.
+Default on the Skin tab → the window's text visibly changes face, Prototype to Ubuntu (R3-FRIZ). Then set
+the Skin tab's Font to *Ka0s Ubuntu* and back to *Skin's default* → the face follows. Result: not run (re-opened by R3-FRIZ).
 
 **SKIN-33. The media pickers preview (DW-F01, DW-F02; D-08).** Open each: the Skin tab's **Font** and
 **Texture**, Window › Layout › Tables' **Font** (untick Use the skin's font first) and Window › Icons'
@@ -3310,6 +3311,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result:
 
+**SKIN-44. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema 12).** Before updating, set Window › Layout's table Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles and log out. Update and fully restart the client (a new font file) → the table draws in Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's own *Friz Quadrata TT* keeps it. Fail: the table on the game's default face, or a row still naming Ka0s Friz Quadrata TT. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3348,6 +3351,8 @@ Owed by the findings remediation (2026-10-31; Ka0sAddonsCommonTasks
 until the owner runs them; an agent never marks one passed.
 
 Owed by the full skinning run (2026-11-01; Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`): SKIN-37..43, and SKIN-2, SKIN-14, SKIN-30 and GLOW-9, whose expected results moved and whose pass marks went with them. An agent never marks one passed.
+
+Owed by the owner's third smoke round (2026-11-02; Ka0sAddonsCommonTasks `docs/2026-11-02-SMOKE_ROUND3/`, R3-FRIZ): SKIN-44, and SKIN-15 and SKIN-32, whose WoW Default face is now Ka0s Ubuntu and whose pass marks went with it.
 
 ### Review 2026-10-14 (M24) sign-off
 

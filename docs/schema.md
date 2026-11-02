@@ -404,7 +404,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 11). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 12). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -423,5 +423,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 9 | 8 → 9, per profile: the simulation panel's position is session-only (DW-04, LibKa0s#54, OWNER_SCOPE C.11). The panel is LibKa0s-Sim-1.0's, which holds a dragged point for the session alone, so the retired `simPanel` key (the old panel's `point`, window state absent from defaults) is removed and a simulation writes nothing to SavedVariables; nothing else changes (`NS.RetireSimPanelPoint`) |
 | 10 | 9 → 10, per profile: the item icon's border meets the skin once (DW-03; the skinning rollout's O2, skinning-§6). For a profile that stored an `icons` table, LibKa0s-Skin-1.0's `ResetToSkin` turns `icons.borderStyleFromSkin` on (called with `{ companions = true }`, LibKa0s v1.81.0's Skin minor 8, so a missing companion is set too and the reset never writes the library's sentinel into `icons.borderStyle`); the stored style, thickness and color stay, so turning the companion off later brings the player's own style back, and the stamp keeps that later choice from being reset again. A profile with no stored `icons` keeps the defaults, whose companion is already on. Without the library the companion is set directly (`NS.ResetIconBorderToSkin`) |
 | 11 | 10 → 11, per profile: the full skinning step (FS-DW-FLIP; the owner's rulings of 2026-11-01, existing profiles follow the skin). `Skin.FollowOnce` puts `NS.FULL_SKIN_KEYS` on the skin: every companion is set true and `window.tableFontFlags` takes `@skin`, whatever the player picked. No stored color or pick moves, so a companion turned off brings the player's own back. The record is `skin.fullSkinReset`, per profile, in the AceDB defaults with no row, so no Defaults path walks it; a companion turned off afterwards stays off, and a profile reset runs the step again against defaults. `NS.ResetProfileToSkin` runs from the ladder and again after it on every load and profile event, for a profile that arrives with no record |
+| 12 | 11 → 12, per profile: the deleted Friz becomes Ka0s Ubuntu (R3-FRIZ). LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT` (R3-L7) and WoW Default draws `Ka0s Ubuntu` in its place (R3-L6). `NS.RetireFonts` moves every stored string naming the deleted face, at any depth (`window.tableFont`, the skin's Font override), to `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT` stays. |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

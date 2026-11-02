@@ -77,7 +77,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (13)
+### test_database.lua (14)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -92,6 +92,7 @@ Total.
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
+- database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (11)
 
@@ -209,6 +210,11 @@ Total.
 - Skin seam: the window edge, dropdowns, search box and mode strips are built for the owner
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
+
+### test_launcher_skin_entry.lua (2)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
+- mode strips pass sim or onEnd, so the right-click menu has something to end (SF-F1)
 
 ### test_skin_outline.lua (11)
 
@@ -2240,11 +2246,12 @@ Total.
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
-| test_database.lua | 13 |
+| test_database.lua | 14 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
+| test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
 | test_skin_hud.lua | 10 |
@@ -2337,4 +2344,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1927** |
+| **Total** | **1930** |
