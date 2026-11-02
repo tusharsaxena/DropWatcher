@@ -107,6 +107,13 @@ NS.Launcher = lib:New({
     debug         = function(tag, message) NS.Debug(tag, message) end,
     debugAtEnable = function(tag, message) NS.DebugAtEnable(tag, "%s", message) end,
 
+    isSimMode = function() local s = NS.Sim; return type(s) == "table" and type(s.IsActive) == "function" and s:IsActive() == true end,
+    toggleSim = function()
+        local s = NS.Sim
+        if type(s) ~= "table" or type(s.RunVerb) ~= "function" then return end
+        -- The typed verb's own acts: stop a running sim, otherwise the bare verb (status and the sim panel).
+        s:RunVerb(s:IsActive() and "stop" or "")
+    end,
     version = function()
         local v = NS.Version()
         return v ~= "?" and v or nil

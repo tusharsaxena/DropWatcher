@@ -319,7 +319,7 @@ test("launcher: the right-click menu is Enabled, Locked, Test mode, Show window,
     assertEqual(root.title, "Ka0s Drop Watcher")
     local labels = {}
     for i, box in ipairs(root.boxes) do labels[i] = box.label end
-    assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode,Show window")
+    assertEqual(table.concat(labels, ","), "Enabled,Locked,Test mode,Sim mode,Show window")
 end)
 
 test("launcher: each menu entry calls the same handler its verb and its row call", function()
@@ -331,7 +331,7 @@ test("launcher: each menu entry calls the same handler its verb and its row call
     assertTrue(NS.State.testMode, "Test mode turns test mode on")
     boxes[3].click()
     assertFalse(NS.State.testMode)
-    boxes[4].click()
+    boxes[5].click()
     assertTrue(NS.IsWindowShown(), "Show window opens the window")
     boxes[1].click()
     assertTrue(NS.IsStoodDown(), "Enabled off stands the addon down")
