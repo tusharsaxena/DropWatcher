@@ -999,6 +999,19 @@ test("compat: ContextMenu builds one button per entry through MenuUtil, else ans
     assertEqual(hit, 1)
 end)
 
+test("compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none", function()
+    local Compat, m = fresh()
+    m.GetMouseFoci, m.GetMouseFocus = nil, nil
+    assertEqual(#Compat.MouseFoci(), 0, "neither API")
+    local a, b = {}, {}
+    m.GetMouseFocus = function() return a end
+    local got = Compat.MouseFoci()
+    assertEqual(#got, 1); assertTrue(got[1] == a, "the older single focus")
+    m.GetMouseFoci = function() return { b, a } end
+    got = Compat.MouseFoci()
+    assertEqual(#got, 2); assertTrue(got[1] == b, "11.0's list, topmost first")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
@@ -1013,7 +1026,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
-    "GetTradeTargetItemLink", "MenuUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
+    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

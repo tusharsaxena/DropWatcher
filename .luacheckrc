@@ -56,7 +56,7 @@ files["core/Compat.lua"] = {
     "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
     "DressUpLink", "GetSpecializationInfoByID", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
-    "MenuUtil", "PlaySound", "SOUNDKIT",
+    "MenuUtil", "PlaySound", "SOUNDKIT", "GetMouseFoci", "GetMouseFocus",
     "C_ChallengeMode", "UnitName",
   },
 }

@@ -395,3 +395,63 @@ test("chrome: switching the chrome keeps every tab's filter state and builds no 
     NS.ToggleWindowMode()
     assertEqual(FB.State("group").search, "crown")
 end)
+
+-- ── the Filters panel closes on an outside press (R5-DD) ─────────────────────────────────────
+-- Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, feedback item 6 (the lead's call 7): the
+-- Filters panel is this addon's one hand-built pullout, and like the shared dropdown menu it LISTENS
+-- for GLOBAL_MOUSE_DOWN while shown. A press on the panel, on its Filters button (whose own click is
+-- the toggle) or on the shared menu one of its dropdowns dropped is not outside.
+
+local function openFilters()
+    local NS, _, m = shown("compact")
+    local p = NS.CompactChrome.Parts()
+    p.filters:__fire("OnClick")
+    assertTrue(p.panel:IsShown(), "open")
+    return NS, p, m
+end
+
+local function press(p) p.panel:__fire("OnEvent", "GLOBAL_MOUSE_DOWN", "LeftButton") end
+
+test("chrome: the Filters panel listens for a press only while it is open", function()
+    local _, p = openFilters()
+    assertTrue(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "registered on open")
+    p.filters:__fire("OnClick")
+    assertFalse(p.panel:IsShown())
+    assertFalse(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "dropped on close")
+end)
+
+test("chrome: a press outside the Filters panel closes it, and its dropdown's menu with it", function()
+    local NS, p = openFilters()
+    local closed = 0
+    local close = NS.CloseMenu
+    NS.CloseMenu = function() closed = closed + 1; return close() end
+    press(p)
+    assertFalse(p.panel:IsShown(), "the game world, the window body: closed")
+    assertTrue(closed > 0, "the shared menu goes with it")
+    assertFalse(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"))
+end)
+
+test("chrome: a press on the Filters panel or its button keeps it open, and the button still toggles", function()
+    local _, p = openFilters()
+    p.panel.__mouseOver = true
+    press(p)
+    assertTrue(p.panel:IsShown(), "a press on the panel (one of its dropdowns)")
+    p.panel.__mouseOver = false
+    p.filters.__mouseOver = true
+    press(p)
+    assertTrue(p.panel:IsShown(), "the press on the button leaves its click to toggle")
+    p.filters:__fire("OnClick")
+    assertFalse(p.panel:IsShown(), "and the click closes it")
+end)
+
+test("chrome: a press on the shared menu a panel dropdown dropped keeps the panel open", function()
+    local _, p, m = openFilters()
+    local menu = { GetFrameStrata = function() return "FULLSCREEN_DIALOG" end, GetParent = function() return nil end }
+    local row = { GetFrameStrata = function() return "FULLSCREEN_DIALOG" end, GetParent = function() return menu end }
+    m.GetMouseFoci = function() return { row } end
+    press(p)
+    assertTrue(p.panel:IsShown(), "a pick in the dropdown's menu")
+    m.GetMouseFoci = function() return { m.WorldFrame or {} } end
+    press(p)
+    assertFalse(p.panel:IsShown(), "the world under the pointer: closed")
+end)

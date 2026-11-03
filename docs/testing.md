@@ -130,7 +130,7 @@ tooltip, pure; then headless: the short title centered with its word, the badge 
 tooltip, Scan group as an icon button, the short tabs at their width with the full names in their
 tooltips, View, the search box and Filters on one row with Quality, Content, Character and Sort
 moved into the Filters panel and filtering as on the full bar, the panel closing on hide, minimize
-and the switch, the full layout taking every control back (Sort to the tab's strip, feedback-10
+and the switch and on a press outside it (R5-DD: not on the panel, its button or the shared menu), the full layout taking every control back (Sort to the tab's strip, feedback-10
 spec §3), the one-line footer
 under the ticker, and the filter state kept across a switch),
 `test_compact_modes` (the two layouts over one engine, DW-C5, compact spec §5: the same drop set, the

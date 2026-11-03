@@ -585,7 +585,7 @@ Total.
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
 
-### test_compact_chrome.lua (23)
+### test_compact_chrome.lua (27)
 
 - chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
@@ -610,6 +610,10 @@ Total.
 - chrome: the compact sim strip takes a second line when its words wrap at 380 px
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
+- chrome: the Filters panel listens for a press only while it is open
+- chrome: a press outside the Filters panel closes it, and its dropdown's menu with it
+- chrome: a press on the Filters panel or its button keeps it open, and the button still toggles
+- chrome: a press on the shared menu a panel dropdown dropped keeps the panel open
 
 ### test_compact_modes.lua (7)
 
@@ -959,7 +963,7 @@ Total.
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 
-### test_compat.lua (72)
+### test_compat.lua (73)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1032,6 +1036,7 @@ Total.
 - compat: TradePartnerName names the trade window's partner, with a realm when given
 - compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
+- compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_text_parse.lua (10)
@@ -2279,7 +2284,7 @@ Total.
 | test_compact_group.lua | 23 |
 | test_compact_history.lua | 11 |
 | test_history_card.lua | 15 |
-| test_compact_chrome.lua | 23 |
+| test_compact_chrome.lua | 27 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
 | test_table_font.lua | 10 |
@@ -2295,7 +2300,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
-| test_compat.lua | 72 |
+| test_compat.lua | 73 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
@@ -2355,4 +2360,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1937** |
+| **Total** | **1942** |

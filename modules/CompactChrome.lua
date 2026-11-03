@@ -254,7 +254,39 @@ function CC.CloseFilters()
     if parts.panel and parts.panel:IsShown() then
         NS.CloseMenu()
         parts.panel:Hide()
+        parts.panel:UnregisterEvent("GLOBAL_MOUSE_DOWN")   -- the outside press's listener (R5-DD)
     end
+end
+
+-- ── the outside press (R5-DD) ───────────────────────────────────────────────────────────────
+-- The panel is this addon's one hand-built pullout, so neither the shared dropdown menu's listener
+-- nor LibKa0s's AceGUI pullout watcher reaches it. Like the shared menu it LISTENS: GLOBAL_MOUSE_DOWN,
+-- registered while it shows and dropped on hide, fires for a press anywhere and the press goes on to
+-- whatever is under it. Three presses are not outside: on the panel, on its Filters button (whose
+-- click is the toggle; closing on the press would reopen it on the release), and on the shared menu
+-- one of its dropdowns dropped, which LibKa0s-Widgets parents to UIParent at FULLSCREEN_DIALOG, so a
+-- pick in it never closes the panel under the player.
+local MENU_STRATA = "FULLSCREEN_DIALOG"
+
+local function onMenu()
+    for _, fr in ipairs(NS.Compat.MouseFoci()) do
+        local x, depth = fr, 0
+        while type(x) == "table" and depth < 20 do
+            if x == parts.panel then return true end
+            if type(x.GetFrameStrata) == "function" and x:GetFrameStrata() == MENU_STRATA then return true end
+            x = type(x.GetParent) == "function" and x:GetParent() or nil
+            depth = depth + 1
+        end
+    end
+    return false
+end
+
+local function onPress()
+    local p, b = parts.panel, parts.filters
+    if not (p and p:IsShown()) then return end
+    if p:IsMouseOver() or (b and b:IsMouseOver()) or onMenu() then return end
+    CC.CloseFilters()
+    NS.Debug(TAG, "filters panel closed: a press outside it")
 end
 
 --- Open or close the Filters panel under its button.
@@ -264,6 +296,7 @@ function CC.ToggleFilters()
     if p:IsShown() then CC.CloseFilters() return end
     NS.CloseMenu()
     p:Show()
+    p:RegisterEvent("GLOBAL_MOUSE_DOWN")
     NS.Debug(TAG, "filters panel open")
 end
 
@@ -306,6 +339,8 @@ local function buildPanel(f, button)
     p:EnableMouse(true)
     p:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT", 0, -2)
     p:SetSize(CC.PANEL_W, 12 + #CC.PANEL_ROWS * (K.CONTROL_H + ROW_GAP) - ROW_GAP)
+    p:SetScript("OnEvent", function(_, event) if event == "GLOBAL_MOUSE_DOWN" then onPress() end end)
+    p:SetScript("OnHide", function(self) self:UnregisterEvent("GLOBAL_MOUSE_DOWN") end)
     p:Hide()
     return p
 end
