@@ -310,7 +310,7 @@ Total.
 - header band: the Edit message box keeps S.Shell's band and centers its title and close on it
 - header band: without the library no band is asked for and the headers keep their builders' anchors
 
-### test_skin_picker.lua (23)
+### test_skin_picker.lua (24)
 
 - Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
 - Skin picker: the spec names this owner, its seams, the Skin tab and the eye
@@ -328,6 +328,7 @@ Total.
 - Skin picker: shown with the window hidden, test mode turns on and the window opens
 - Skin picker: the eye toggles test mode off and on through the write seam
 - Skin picker: every close puts test mode and the window back as they were
+- Skin picker: the stand-down's close leaves no window the picker opened for the stand-up
 - Skin picker: test mode on at open, turned off by the eye, is on again after the close
 - Skin picker: a window already shown is left alone, and stays shown after the close
 - Skin picker: test mode the player turns on with /dw test while the picker is up stays on
@@ -2284,7 +2285,7 @@ Total.
 | test_skin_flip.lua | 21 |
 | test_skin_host.lua | 16 |
 | test_header_band.lua | 6 |
-| test_skin_picker.lua | 23 |
+| test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
@@ -2371,4 +2372,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1953** |
+| **Total** | **1954** |

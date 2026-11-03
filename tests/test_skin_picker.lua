@@ -360,6 +360,19 @@ test("Skin picker: every close puts test mode and the window back as they were",
     end
 end)
 
+test("Skin picker: the stand-down's close leaves no window the picker opened for the stand-up", function()
+    -- red under: a stand-down that ends test mode with a raw flag write, leaving the window it
+    -- opened marked open, so the stand-up shows a window the player never asked for.
+    local NS, m = onHiddenWindow()
+    assertTrue(NS.State.testMode == true and NS.IsWindowShown(), "the show entered test mode")
+    quietly(m, function() set(NS, "enabled", false) end)
+    assertFalse(NS.State.testMode == true, "the stand-down ended test mode")
+    quietly(m, function() set(NS, "enabled", true) end)
+    assertFalse(NS.State.testMode == true, "test mode stays off after the stand-up")
+    assertFalse(NS.IsWindowShown(), "the window test mode opened stays closed after the stand-up")
+    assertFalse(NS.State.windowOpen == true, "and is not marked open")
+end)
+
 test("Skin picker: test mode on at open, turned off by the eye, is on again after the close", function()
     local NS, m = enabled()
     quietly(m, function() NS.SetTestMode(true) end)

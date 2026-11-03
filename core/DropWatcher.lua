@@ -131,6 +131,7 @@ end
 function NS.StandDown()
     for _, event in ipairs(NS.FeatureEventNames()) do DW:UnregisterEvent(event) end
     NS.Bus:StandDown()
+    local wasTest = NS.State.testMode == true
     NS.State.testMode = false
     runAll(NS.STAND_DOWN)
     -- The first-run skin picker is a frame this addon shows (core/SkinSetup.lua): it goes down
@@ -138,7 +139,11 @@ function NS.StandDown()
     -- on the stand-up or the next login.
     if NS.HideSkinPicker then NS.HideSkinPicker() end
     if NS.ArmSkinPicker then NS.ArmSkinPicker(false) end
-    if NS.Window then NS.Window.UpdateVisibility() end
+    -- Test mode's end through the window's own hook, so a window test mode opened (the picker's
+    -- preview, R6-PV) is not left marked open for the stand-up to show; it runs the show decision.
+    if NS.Window then
+        if wasTest then NS.Window.OnTestModeChanged(false) else NS.Window.UpdateVisibility() end
+    end
 end
 
 --- The latch's standUp: rebuilt from CURRENT state, because settings may change while off.
