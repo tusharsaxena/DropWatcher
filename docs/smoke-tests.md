@@ -51,6 +51,7 @@ passed.
 | SKIN-46 | [Skins](#skins) | The owner's fourth smoke round (R4-SEP): no line under any window's title, the debug, copy and skin windows included |
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
+| SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -3189,6 +3190,8 @@ shows again; pick **Glass** and **Apply** → saved (`/dw get skin.skin` prints 
 more on a new profile and press the gear → the pick is saved and the settings open on General →
 **Skin**. Result: passed in the client, 2026-10-30 (the owner).
 
+Amended by R6-PV, 2026-11-04: the selector's preview is test mode through `spec.preview`, so with the window closed test mode turns on as the selector shows, the eye turns it off and on, and every close puts it back; SKIN-51 checks it.
+
 **SKIN-20. The picker waits (DW-04).** Disable the addon (`/dw disable`) on a profile that has not
 closed the picker, and start a fresh client → no picker; `/dw enable` → it shows about two seconds
 later. Start in combat on a target dummy (fresh client start, attack at once) → no picker while in
@@ -3339,6 +3342,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-50. LibKa0s v1.85.0, round 6 re-cut (R6-RV).** Only the skin selector moved (OptionsSkinPicker minor 11). `/dw skin` → the selector opens in front of everything, its skin list opens and closes, a pick previews live on the window, Apply keeps it, and reopening and closing with the close mark or Escape puts the stored skin back. `/dw debug` → no Lua error at login or on any of those steps. Fail: a Lua error, a selector behind the window, or a close that keeps an unapplied pick. Result:
 
+**SKIN-51. The skin selector's preview is test mode, and every close puts it back (R6-PV).** Images 62, 63 and 66 are the owner's ask. With test mode off and the window closed (`/dw hide`), `/dw skin` → test mode turns on: the window opens with its TEST MODE strip and placeholder drops, and the selector stays in front of it. The eye is lit; hover it → its tooltip says test mode is on. Click the eye → test mode turns off and the window closes; the eye dims and its tooltip says test mode is off. Click it again → on, the window back. Now close the selector, once by each route in turn, reopening it each time with the window closed: the close mark, Escape, **Apply**, the gear (it also opens General → Skin) → after each, test mode is off and the window closed, as before the selector opened; the Master controls Test mode box and the launcher's Test mode entry agree. Then `/dw test` (test mode on, window open), `/dw skin`, click the eye (off), close with Escape → test mode is on again, its window open. Then `/dw show` with test mode off, `/dw skin` → the window stays as it is, test mode stays off and the eye is dimmed; close → the window still open. In combat with the selector up and test mode off, click the eye → `Test mode is not available in combat.` and nothing moves; close → nothing changes. Fail: the selector behind the window, an eye that only turns test mode on, or test mode or the window left changed by any close. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3384,7 +3389,7 @@ Owed by the owner's fourth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/
 
 Owed by the owner's fifth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-47 (R5-RV), SKIN-48 (R5-WIN), COMPACT-10 (R5-DD), SKIN-49 (R5-ICON). An agent never marks one passed.
 
-Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-50 (R6-RV). An agent never marks one passed.
+Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-50 (R6-RV), SKIN-51 (R6-PV). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 

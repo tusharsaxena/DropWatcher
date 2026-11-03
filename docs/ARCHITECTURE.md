@@ -323,8 +323,13 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   out of the band. Without the library the builders' own anchors stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
-  profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
-  the window in test mode; its gear opens General → Skin. Its title is the library's "Choose a
+  profile event; never while stood down, and a start in combat waits for combat's end. Its preview
+  is test mode (`spec.preview`, LibKa0s OptionsSkinPicker 11, round 6): shown with the window hidden
+  and test mode off, the picker turns test mode on through `NS.SetTestMode`, the seam `/dw test`, the
+  launcher and the Master controls checkbox share; its eye toggles it (lit on, dimmed off); every
+  close (Apply, Apply to all, the gear, the close control, Escape, `NS.HideSkinPicker`) puts back what
+  the picker and the eye moved, and test mode's end closes the window only if its start opened it. A
+  window already shown, or test mode already on, is left alone. Its gear opens General → Skin. Its title is the library's "Choose a
   skin", the addon's name on its own line above the dropdown (LibKa0s v1.81.0). Only the player's
   close writes `pickerSeen`. `/dw skin` (`NS.RunSkinVerb`, `O.SkinVerb`) opens it on demand, whatever
   `pickerSeen` says. `tests/test_skin_picker.lua`, `tests/test_skin_verb.lua`.

@@ -42,10 +42,14 @@ local function bootAddon(opts)
 end
 
 -- ... plus OnEnable (PLAYER_LOGIN): events registered, settings category and launcher registered,
--- and the latch taken from the stored `enabled` path.
+-- and the latch taken from the stored `enabled` path. The first-run skin picker's login fuse is put
+-- out unless `opts.pickerFuse`: since R6-PV the picker shown with the window hidden turns test mode
+-- on (spec.preview), so a case that advances the clock past two seconds would find placeholder
+-- drops it never asked for. test_skin_picker's fuse cases light it.
 local function enableAddon(opts)
     local NS, env, m = bootAddon(opts)
     NS.addon:OnEnable()
+    if not (opts and opts.pickerFuse) and NS.ArmSkinPicker then NS.ArmSkinPicker(false) end
     return NS, env, m
 end
 

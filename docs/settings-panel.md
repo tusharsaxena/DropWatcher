@@ -110,8 +110,10 @@ to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.Ma
 login, at a stand-up when the session started stood down, and after every profile switch, copy or
 reset. Never while the addon stands down (disabled, or a perf capture), and a start in combat waits
 for combat's end. A pick previews; **Apply** saves; the close control and Escape put the stored skin
-back and save nothing. The eye opens the window in test mode, so the skin shows on this addon's own
-frames; the gear saves the pending pick and opens this tab. Any close the player makes sets
+back and save nothing. With the window hidden, the picker turns test mode on as it shows, so the skin
+shows on this addon's own frames; the eye turns test mode off and on (lit while on), and every close
+puts test mode and the window back as they were when the picker opened (a window already shown is
+left alone); the gear saves the pending pick and opens this tab. Any close the player makes sets
 `skin.pickerSeen`; a stand-down or a profile event takes it down without setting it. One picker is up
 at a time across Ka0s addons; the others wait in the library's queue. `/dw skin` opens the same picker
 whatever `skin.pickerSeen` says.

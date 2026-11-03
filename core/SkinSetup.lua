@@ -477,8 +477,10 @@ end
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all. The close control and Escape
 -- put back the stored choice as `get` reads it at the close, so the host re-applies nothing. A
 -- profile event takes the picker down FIRST, before the new profile's skin is applied, so the new
--- profile's whole pair is what stays worn. The eye opens the window in test mode; the library
--- raises its DIALOG window after onPreview returns, so the HIGH window cannot cover it.
+-- profile's whole pair is what stays worn. The preview is test mode (spec.preview, below): the
+-- picker shown with the window hidden turns it on, the eye toggles it, and every close (Apply, the
+-- close control, Escape, the gear, NS.HideSkinPicker) puts it back as it was at open; the library
+-- raises its DIALOG window after each, so the HIGH window cannot cover it.
 --
 -- QUEUED. One picker is up at a time across every Ka0s addon: while another addon's is up,
 -- O.SkinPicker queues this one and answers nil, "queued", which NS.MaybeShowSkinPicker passes
@@ -497,16 +499,20 @@ local function options()
     return S and S.Helpers
 end
 
---- The eye: the window in test mode, so the player sees the skin on this addon's own frames. Test
---- mode's start opens the window itself; a mode already on only needs the window shown. A refused
---- start (combat, a simulation) prints its own line.
-local function previewSkin()
-    if NS.State and NS.State.testMode then
-        if NS.ShowWindow then NS.ShowWindow() end
-    elseif NS.SetTestMode then
-        NS.SetTestMode(true)
-    end
-end
+--- The picker's preview (LibKa0s OptionsSkinPicker 11, spec.preview; the owner's rule, round 6):
+--- test mode, through NS.SetTestMode, the one seam /dw test, the launcher and the Master controls
+--- checkbox share, so all of them stay in step and its refusals (stood down, combat, a running
+--- simulation) print their own line and move nothing. The library enters it when the picker shows
+--- with the window hidden and test mode off, the eye toggles it, and every close puts back what
+--- the picker and its eye moved; test mode's end closes the window only when its start opened it
+--- (modules/Window.lua openedByTestMode), so the window comes back as it was too.
+local PREVIEW = {
+    mode = "test",
+    isActive = function() return NS.State ~= nil and NS.State.testMode == true end,
+    isShown = function() return NS.IsWindowShown ~= nil and NS.IsWindowShown() end,
+    enter = function() if NS.SetTestMode then NS.SetTestMode(true) end end,
+    exit = function() if NS.SetTestMode then NS.SetTestMode(false) end end,
+}
 
 --- The player's close: the picker seen, and nothing else (the library's put-back wears the stored
 --- choice already).
@@ -519,12 +525,12 @@ end
 
 --- The spec NS.MaybeShowSkinPicker hands O.SkinPicker: this owner, its read and write seams, the
 --- page key settings/Panel.lua registered and its Skin tab's key (the gear's default opens them),
---- the eye and the close.
+--- the preview (the eye) and the close.
 function NS.SkinPickerSpec()
     return {
         owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PREVIEW, onClose = pickerClosed,
     }
 end
 
