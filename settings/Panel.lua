@@ -50,6 +50,11 @@ local MASTER_ROWS, MASTER_TAIL = Helpers.MasterControls{
     debugConsolePath = "state.debugConsole",
     minimapPath      = Settings.MINIMAP_PATH,
     testModePath     = "state.testMode",
+    -- The Sim mode box beside Test mode (LibKa0s OptionsCompose minor 19): the launcher's own pair
+    -- (core/DropWatcher.lua), so ticking it is `/dw sim` and unticking it stops the sim. The row is
+    -- session-only at `state.sim` with these as its get / set; modules/Sim.lua's listener refreshes it.
+    isSimMode        = NS.IsSimMode,
+    toggleSim        = NS.ToggleSim,
     defaults         = {
         enabled = C.PROFILE.enabled, visibility = C.PROFILE.visibility, scale = C.PROFILE.scale,
         alpha = C.PROFILE.alpha, locked = C.PROFILE.locked, debugConsole = false,

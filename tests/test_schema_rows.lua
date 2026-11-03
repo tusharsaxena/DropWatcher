@@ -626,6 +626,8 @@ local PINNED_ROWS = {
     { "situations.solo.quality", "string", "\"global\"" },
     { "situations.solo.track", "bool", "true" },
     { "state.debugConsole", "bool", "false" },
+    -- R6-SIM: the Sim mode row (LibKa0s OptionsCompose minor 19), session-only, nothing stored.
+    { "state.sim", "bool", "false" },
     { "state.testMode", "bool", "nil" },
     { "toast.duration", "number", "8" },
     { "toast.enabled", "bool", "true" },   -- on for a new profile since 2026-10-25, no migration

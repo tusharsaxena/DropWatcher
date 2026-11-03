@@ -2073,6 +2073,15 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
+### test_sim_checkbox.lua (6)
+
+- sim checkbox: Master controls draws a session-only Sim mode row straight after Test mode
+- sim checkbox: the launcher's pair is one NS pair the row reads
+- sim checkbox: ticking it does what `/dw sim` does, the status and the sim panel
+- sim checkbox: unticking it stops a running sim; ticking a running sim changes nothing
+- sim checkbox: Reset all settings stops a running sim and never starts one
+- sim checkbox: a sim started or stopped elsewhere refreshes the open page
+
 ### test_bindings.lua (14)
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
@@ -2358,6 +2367,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
+| test_sim_checkbox.lua | 6 |
 | test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
@@ -2372,4 +2382,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1954** |
+| **Total** | **1960** |

@@ -54,6 +54,7 @@ canonical order (options-ui-§15):
 | Master scale (`scale`) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
+| Sim mode (`state.sim`, session) | |
 | Reset position (button) | Reset all settings (button, asks first) |
 
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one
@@ -61,7 +62,18 @@ the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `setti
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
-The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
+Sim mode (R6-SIM, LibKa0s OptionsCompose minor 19) is the library's row, drawn from the launcher's own
+pair, `NS.IsSimMode` and `NS.ToggleSim` (`core/DropWatcher.lua`): its get is whether a simulation
+runs and its set does what `/dw sim` does, so ticking it prints the sim's status and opens the
+Simulation panel, where the player picks a scenario (the box ticks as that scenario starts), and
+unticking it stops the running sim. Nothing is stored and a reload ends the sim. The box follows the
+live sim: `modules/Sim.lua`'s listener calls `RefreshScalars`, so a sim started or stopped from the
+slash verb, the panel, the launcher or its own end shows on an open page at once. Reset all settings
+writes the row's default, which stops a running sim and never starts one. The sim and test mode
+already refuse each other (`core/DropWatcher.lua`, `modules/Sim.lua`), so the boxes need no rule of
+their own.
+
+The launcher's right-click menu mirrors five of these: Enabled, Locked, Test mode, Sim mode and Show window
 (launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
 Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
 on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the

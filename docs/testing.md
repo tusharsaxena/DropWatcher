@@ -535,6 +535,10 @@ their bosses and loot counts, each kind's tooltip and Start's and Stop's, the sc
 raid's sizes in the picker, the done tick's texture, `/dw sim` and `panel` opening or toggling it,
 the dock beside the window, also once a slow pool opens it, a drag writing nothing to the profile
 and Reset position redocking, and the stand-down hiding it, idle or running),
+`test_sim_checkbox` (Master controls' Sim mode box, R6-SIM: the session-only row beside Test mode,
+the launcher's one `NS.IsSimMode` / `NS.ToggleSim` pair as its get and set, ticking it running
+`/dw sim`'s bare verb and unticking it stopping the sim, Reset all settings stopping a running sim and
+never starting one, and the sim's listener refreshing the open page),
 `test_bindings` (the Show window key binding, launcher-§6: `Bindings.xml` held to `NS.BINDINGS` by
 the kit's `Kit.assertBindingsXml`, its own category and no header, no default key and no TOC line,
 the plain hidden `AnyDown` button, one press per toggle, the two labels, and the button on a

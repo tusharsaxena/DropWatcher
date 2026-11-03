@@ -300,6 +300,14 @@ else
     NS.Sim = newSimStub(function(line) NS.Print(line) end)
 end
 
+-- Master controls' Sim mode box follows the live sim (R6-SIM, releasing.md's hosts-owe item 3): a
+-- start or stop from the slash verb, the sim panel, the launcher or the sim's own end re-reads an
+-- open page at once. Settings.Helpers is read at call time (settings/OptionsSetup.lua swaps it).
+NS.Sim:AddListener(function()
+    local H = NS.addon and NS.addon.Settings and NS.addon.Settings.Helpers
+    if H and H.RefreshScalars then H.RefreshScalars() end
+end)
+
 -- ── the stop ────────────────────────────────────────────────────────────────────────────────
 
 -- While the seam still guards the sender: a queued ask must never go out after the stop.

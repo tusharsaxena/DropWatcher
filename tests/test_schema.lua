@@ -38,7 +38,7 @@ test("schema: the Master controls rows are the canonical set, in the canonical o
         if row.group == rows[1].group then paths[#paths + 1] = row.path end
     end
     assertEqual(table.concat(paths, ","),
-        "enabled,visibility,scale,alpha,locked,state.debugConsole,global.minimap.shown,state.testMode")
+        "enabled,visibility,scale,alpha,locked,state.debugConsole,global.minimap.shown,state.testMode,state.sim")
 end)
 
 test("schema: an unknown path is refused and stores nothing", function()

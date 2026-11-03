@@ -205,6 +205,23 @@ function NS.ToggleTestMode()
     return NS.SetTestMode(not NS.State.testMode)
 end
 
+--- Whether a simulation runs, and the act of `/dw sim`: the one pair the launcher's Sim mode entry
+--- (core/LauncherSetup.lua) and Master controls' Sim mode box (settings/Panel.lua, LibKa0s
+--- OptionsCompose minor 19) both take, so the three are one act. NS.Sim is read at call time
+--- (modules/Sim.lua builds it later in the load).
+--- @return boolean
+function NS.IsSimMode()
+    local s = NS.Sim
+    return type(s) == "table" and type(s.IsActive) == "function" and s:IsActive() == true
+end
+
+--- The typed verb's own acts: stop a running sim, otherwise the bare verb (status and the sim panel).
+function NS.ToggleSim()
+    local s = NS.Sim
+    if type(s) ~= "table" or type(s.RunVerb) ~= "function" then return end
+    s:RunVerb(s:IsActive() and "stop" or "")
+end
+
 --- Lock or unlock the window through the write seam, the same write the Lock frame checkbox makes.
 --- @param locked boolean
 function NS.SetLocked(locked)
