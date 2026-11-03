@@ -50,6 +50,7 @@ passed.
 | SKIN-44 | [Skins](#skins) | The owner's third smoke round (R3-FRIZ): a stored pick of the deleted Ka0s Friz Quadrata TT lands on Ka0s Ubuntu; SKIN-15 and SKIN-32 reopened |
 | SKIN-46 | [Skins](#skins) | The owner's fourth smoke round (R4-SEP): no line under any window's title, the debug, copy and skin windows included |
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
+| SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -3336,6 +3337,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-49. Item icons: a gray 1-pixel outline in the window, black on the toast (R5-ICON).** Images 53 to 56 are the before. With Window › Icons at its defaults, `/dw test`, `/dw compact` → under Ka0s Default every card's big item icon has a thin mid-gray edge (#4D4D57), clearly visible against the dark card, one screen pixel wide and the same width on all four sides, its art cropped (no rough native rim); the same on the full layout's Drops rows and their Me and Them gear icons, the detail card's header and Replaces rows, History and the Offer panel. Show a toast (Alerts › Toast) → its icon keeps the black edge. Switch to WoW Forever → the window icons' edge is a warm gray-brown that stands out from the card (#5A5048), not the card-colored edge of image 56; the toast's is the skin's HUD edge. Change the UI scale (System › Graphics › UI Scale), the window's Scale and Alerts › Toast's Scale → the edge stays one pixel at once, before any new drop repaints a row. Tick Color by item quality → the quality colors still win; untick Use the skin's color → your swatch everywhere. Fail: a window icon edged in black under Ka0s Default, an edge two pixels or uneven, or the toast's icon gray. SKIN-38's black border now holds for the toast alone. Result:
 
+**SKIN-50. LibKa0s v1.85.0, round 6 re-cut (R6-RV).** Only the skin selector moved (OptionsSkinPicker minor 11). `/dw skin` → the selector opens in front of everything, its skin list opens and closes, a pick previews live on the window, Apply keeps it, and reopening and closing with the close mark or Escape puts the stored skin back. `/dw debug` → no Lua error at login or on any of those steps. Fail: a Lua error, a selector behind the window, or a close that keeps an unapplied pick. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3380,6 +3383,8 @@ Owed by the owner's third smoke round (2026-11-02; Ka0sAddonsCommonTasks `docs/2
 Owed by the owner's fourth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`, R4-SEP): SKIN-46. An agent never marks one passed.
 
 Owed by the owner's fifth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-47 (R5-RV), SKIN-48 (R5-WIN), COMPACT-10 (R5-DD), SKIN-49 (R5-ICON). An agent never marks one passed.
+
+Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-50 (R6-RV). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 
