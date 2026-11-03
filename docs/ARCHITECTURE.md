@@ -157,7 +157,10 @@ controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` 
 window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
 one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
 grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
-disabled like any other and has no launcher entry or key binding. A verb or
+disabled like any other and has no key binding. The launcher menu's Sim mode entry and Master
+controls' Sim mode box are its one other door: both take the same `NS.IsSimMode` / `NS.ToggleSim`
+pair (`core/DropWatcher.lua`), and `NS.ToggleSim` runs the verb itself (`stop` while a sim runs,
+else the bare `sim`: the status and the step panel). A verb or
 button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
 player to `/dw enable` an addon that is already enabled.
 
@@ -222,6 +225,7 @@ how many handlers it called.
 | `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | the window closed, completed or not: the trade waits `CLOSED_GRACE` (5) seconds for its "Trade complete."; alone it is a cancel or a failure and completes nothing. The client's second `TRADE_CLOSED` changes nothing |
 | `EJ_LOOT_DATA_RECIEVED` (the client's spelling) | `DW.OnSimPoolLoot` | a journal entry loaded: every item-pool build waiting for its data (a simulation's, or test mode's since DW-84) reads the journal again once the burst settles (`modules/SimPool.lua`); with no build waiting it does nothing |
 | `UI_INFO_MESSAGE` | `DW.OnHistoryInfoMessage` | the client's "Trade complete." (`Compat.IsTradeCompleteMessage`), before the close or within the grace after it, completes the trade: the offer's items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. Any other message, or no trade, returns at once |
+| `UI_SCALE_CHANGED`, `DISPLAY_SIZE_CHANGED` | `DW.OnIconScaleEvent` | the client's UI scale or display size moved every pixel: each item button made so far whose effective scale changed re-snaps its icon edge to one physical pixel (`NS.IconStyle.Resnap`, `modules/IconStyle.lua`; the window's and the toast's Scale rows call it too, R5-ICON) |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -244,7 +248,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
 | H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
-| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no launcher entry and no key binding |
+| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no key binding. Not slash-only any more: since LibKa0s v1.85.0 the launcher menu's Sim mode entry (`isSimMode` / `toggleSim`, `core/LauncherSetup.lua`; SG-RV) and Master controls' Sim mode box (R6-SIM) run that same verb through `NS.ToggleSim` (`core/DropWatcher.lua`), so a click prints what `/dw sim` or `/dw sim stop` prints |
 | H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIMULATION` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
@@ -272,7 +276,7 @@ Ka0s Default each is the pixel the addon drew before skins. The drop tables' ton
 `NS.Constants.TONE[key]`, refilled from the tokens `C.TONE_TOKEN` names at load and first on every skin
 switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
 and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
-`tests/test_skin_chrome.lua` pins the chrome, `tests/test_skin_literals.lua` gates literals.
+`tests/test_skin_chrome.lua` pins the chrome. The kit gates typed colors and textures (`test_skin_values`) and proves each declared surface changes on a skin switch (`test_skin_switch`, `tests/skin_switch_facts.lua`).
 
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
   (`O.AppearanceTab` over `NS.SkinChoice` / `NS.WriteSkinChoice`, `settings/Panel.lua`): the skin
@@ -286,14 +290,49 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
   border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
-  `icon.borderSize`); Ka0s Default's is today's Solid 2px. The border color, its class and quality
-  companions, Show border, the zoom and the glows' colors stay the player's. Migration step 10
-  (`NS.ResetIconBorderToSkin`) turns the companion on once per stored profile (the rollout's O2) and
-  keeps the stored style, so turning it off brings the player's own back. `tests/test_skin_hud.lua`.
+  `icon.borderSize`); every skin's is Solid 1px since LibKa0s v1.85.0's R3-FIX. The thickness is
+  physical pixels at the button's effective scale (`NS.Compat.PixelFactor`, as the library's
+  `S.IconBorder`), re-snapped on a Scale row's write and on `UI_SCALE_CHANGED` and `DISPLAY_SIZE_CHANGED` (`NS.IconStyle.Resnap`), and its color is a window's `icon.outline` (Ka0s Default's #4D4D57), the toast's
+  icon alone keeping the HUD's `icon.border` (`WG.ItemButton`'s `hud`; R5-ICON, the library's icon
+  rule in its docs/api). Show border and the zoom stay the player's. Migration step 10 (`NS.ResetIconBorderToSkin`) turned the companion on once per stored
+  profile (the rollout's O2) and kept the stored style. `tests/test_skin_hud.lua`.
+- **The colors and the shadow (FS-DW-FLIP, causes D4, D5, D6; the owner's rulings of 2026-11-01).** A
+  *Use the skin's ...* companion, on by default, stands in front of each stored value:
+  `icons.borderColorFromSkin` (`icon.outline` in a window, `icon.border` on the toast, R5-ICON), `glow.<g>.colorFromSkin` (`dw.glowMain`,
+  `dw.glowOffSpec`) and `window.tableFontShadowFromSkin` (`dw.tableShadow`). A class or quality color
+  comes first and has no companion. The three owner tokens keep this addon's pixels under Ka0s
+  Default, whose `glow.color` is gold and whose `hud.shadow` is none. Every shipped skin answers one
+  `glow.color`, `sem.warband` and `icon.border` today, so the border's color and the glows move only
+  once, leaving Ka0s Default; the shadow varies by skin. Migration step 11
+  (`NS.ResetProfileToSkin`, `Skin.FollowOnce`) moves stored profiles once, recorded per profile in
+  `skin.fullSkinReset`. `tests/test_skin_flip.lua`.
+- **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
+  its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
+  which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
+  in `btn.text`, `btn.hover` and `btn.icon`. The detail boxes are `S.Card`, the tabs `S.Tab` (decision
+  D11 reversed: they gain the skin's backing, and an idle label reads `tab.text`), the column heads
+  `S.SortHeaderBar`, the footer `S.Footer`, the title bar `S.TitleBar` with `place` (the one `title.bg`
+  layer: the window's `S.Shell` takes `noTopBar`), and a row takes `list.hover` through `S.ListRow`,
+  from a cell or an item button inside it too (`NS.WindowRows.WashRowOf`). Without the
+  library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
+- **Headers on the band (R5-WIN, LibKa0s v1.85.0's `S.Band` and `S.Header`).** Every window's
+  header sits on the title band S.Shell lays, flush inside the edge at its inset (`win.borderSize`
+  in from a flat edge, else 1) and `title.height` high, as Ka0s Loot History's. The main window's
+  title bar takes the band's rect (`S.Header` `bars`), so its title, mode words, badge and
+  controls, anchored to the bar at y 0, sit on the band's middle; minimized, the window is the band
+  and its two edges. The Offer panel and the Edit message box keep the band S.Shell draws, put
+  their title (by `title.align`) and close on it through `S.Header`, and start their content
+  `POPOVER_TOP` (36) down. The detail card is an expanded row with no header, and the toast opts
+  out of the band. Without the library the builders' own anchors stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
-  profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens
-  the window in test mode; its gear opens General → Skin. Its title is the library's "Choose a
+  profile event; never while stood down, and a start in combat waits for combat's end. Its preview
+  is test mode (`spec.preview`, LibKa0s OptionsSkinPicker 11, round 6): shown with the window hidden
+  and test mode off, the picker turns test mode on through `NS.SetTestMode`, the seam `/dw test`, the
+  launcher and the Master controls checkbox share; its eye toggles it (lit on, dimmed off); every
+  close (Apply, Apply to all, the gear, the close control, Escape, `NS.HideSkinPicker`) puts back what
+  the picker and the eye moved, and test mode's end closes the window only if its start opened it. A
+  window already shown, or test mode already on, is left alone. Its gear opens General → Skin. Its title is the library's "Choose a
   skin", the addon's name on its own line above the dropdown (LibKa0s v1.81.0). Only the player's
   close writes `pickerSeen`. `/dw skin` (`NS.RunSkinVerb`, `O.SkinVerb`) opens it on demand, whatever
   `pickerSeen` says. `tests/test_skin_picker.lua`, `tests/test_skin_verb.lua`.
@@ -318,8 +357,9 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   size (`window.fontSize`, 0 Default as before), Font color and Use class color
   (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
   skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
-  and Font shadow (`window.tableFontShadow`). `NS.WindowRows` draws it on both tabs and both layouts:
-  one named font object per look (a 12.0.7 client draws a font object's shadow, not a runtime one),
+  and Font shadow (`window.tableFontShadow`, with Use the skin's shadow). `NS.WindowRows` draws it on
+  both tabs and both layouts through `S.HudFont`: one named font object per string (a 12.0.7 client
+  draws a font object's shadow, not a runtime one),
   the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
   read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
   tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
@@ -339,7 +379,7 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
 | `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
 | The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
-| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | the player's stored swatches, and the two hues mean main spec against off-spec |
+| The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
 | The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |

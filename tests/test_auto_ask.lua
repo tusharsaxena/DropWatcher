@@ -284,10 +284,14 @@ test("auto-ask edge: turning it off cancels the waiting asks; turned on, older d
 end)
 
 -- A profile `name` saved with auto-ask `on`, then switched to (no row reaction runs).
+-- The profile has seen the skin picker and the account the one-time skin notice: either shows the
+-- picker on the switch, and since R6-PV the picker shown with the window hidden turns test mode on,
+-- which is not this case's subject.
 local function switchProfile(NS, name, on)
+    NS.addon.db.global.skinNotice = 1e6
     local sv = NS.addon.db.sv
     sv.profiles = sv.profiles or {}
-    sv.profiles[name] = { messages = { autoAsk = { enabled = on } } }
+    sv.profiles[name] = { messages = { autoAsk = { enabled = on } }, skin = { pickerSeen = true } }
     NS.addon.db:SetProfile(name)
 end
 

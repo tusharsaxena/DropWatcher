@@ -10,9 +10,11 @@ local _, NS = ...
 -- `icons.` (`borderShow`, `borderStyle`, `borderSize`, `borderColor`, `useClassColorBorder`), as
 -- ConsumableMaster's settings/MacroBar.lua builds its button border, then the composer's skin
 -- companion `icons.borderStyleFromSkin` (DW-03: `fromSkin = "icon"`, the skin's icon border style
--- and thickness, on by default), then the block's one extra
--- after the mandated four, never among them: `icons.borderQuality`, the item's quality color in
--- place of the swatch (AuraMaster's dispel-colored border is the precedent). PLAYER-SCOPED: the
+-- and thickness, on by default), then the block's two extras
+-- after the mandated four, never among them: `icons.borderColorFromSkin` (FS-DW-FLIP, the skin's
+-- `icon.outline` in a window and `icon.border` on the toast, R5-ICON, in place of the swatch, on by
+-- default) and `icons.borderQuality`, the item's quality
+-- color in place of the swatch (AuraMaster's dispel-colored border is the precedent). PLAYER-SCOPED: the
 -- icons are the player's own view of the loot, whoever looted it. Appended after SchemaRows' rows,
 -- so the block follows that file's Zoom row on the tab. Each row takes SchemaRows' checks
 -- (Settings.Checks; the composer emits none) and the one reaction, modules/IconStyle.lua's Refresh.
@@ -29,7 +31,8 @@ local _, NS = ...
 -- after SchemaRows' Row height: Font (`tableFont`) | Font size (`fontSize`, its path, range and
 -- `0 (Default)` unchanged), Font color (`tableFontColor`) | Use class color (`tableFontClassColor`),
 -- Font flags (`tableFontFlags`, From skin by default) | Font shadow (`tableFontShadow`), then Use the
--- skin's font (`tableFontFromSkin`, on by default). modules/WindowRows.lua draws them on both tabs
+-- skin's font (`tableFontFromSkin`, on by default) and Use the skin's shadow
+-- (`tableFontShadowFromSkin`, on by default, FS-DW-FLIP). modules/WindowRows.lua draws them on both tabs
 -- and in both layouts; the color is plain text's (a verdict, a quality or a class keeps its own) and
 -- reads as the skin's while it is the default. PLAYER-SCOPED like the icons. Without the library
 -- there is no row and WindowRows reads defaults/Profile.lua's values: today's look.
@@ -55,8 +58,8 @@ local BORDER = Helpers.BorderGroup{
     page = "window", group = L["Icons"], subgroup = L["Border"],
     show = true, prefix = "icons.",
     -- THE SKIN COMPANION (skinning-§6, LibKa0s-Options compose minor 13): `icons.borderStyleFromSkin`
-    -- follows `icon.borderStyle` and `icon.borderSize` (Ka0s Default's are today's Solid 2px). Its
-    -- default is defaults/Profile.lua's TRUE (X3); the color is never the skin's (X4).
+    -- follows `icon.borderStyle` and `icon.borderSize` (Solid 1px in every skin since LibKa0s v1.85.0's R3-FIX). Its
+    -- default is defaults/Profile.lua's TRUE (X3); the color has its own companion in `extra`.
     fromSkin = "icon",
     defaults = {
         borderShow          = I.borderShow,
@@ -68,6 +71,10 @@ local BORDER = Helpers.BorderGroup{
     },
     classColor = { source = "player" },
     extra = { {
+        path = "icons.borderColorFromSkin", type = "bool", default = I.borderColorFromSkin,
+        label = L["Use the skin's color"],
+        tooltip = L["Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."],
+    }, {
         path = "icons.borderQuality", type = "bool", default = I.borderQuality,
         label = L["Color by item quality"],
         tooltip = L["Draw each icon's border in its item's quality color (green, blue, purple ...) instead of the swatch. The swatch's alpha still applies; an item whose quality is not known keeps the swatch."],
@@ -83,9 +90,10 @@ local DECORATE = {
     ["icons.borderSize"] = { validate = Check.inRange(1, 16), min = 1, disabledIf = styleOff },
     ["icons.borderStyleFromSkin"] = { validate = Check.isBool, disabledIf = borderOff,
         label = L["Use the skin's border"],
-        tooltip = L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] },
+        tooltip = L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on. The Border color row has its own Use the skin's color."] },
     ["icons.borderColor"] = { validate = Check.isColor,
-        tooltip = L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] },
+        tooltip = L["The border's color. Not read while Use the skin's color is on, or while Use class color is on; nor, for an item whose quality is known, while Color by item quality is on. Its opacity still applies under Use class color and Color by item quality."] },
+    ["icons.borderColorFromSkin"] = { validate = Check.isBool },
     ["icons.useClassColorBorder"] = { validate = Check.isBool },
     ["icons.borderQuality"] = { validate = Check.isBool, disabledIf = borderOff },
 }
@@ -106,11 +114,15 @@ local FONT = Helpers.FontGroup{
         fontFlags = "tableFontFlags", fontShadow = "tableFontShadow",
     },
     defaults = {
-        font = W.tableFont, fontSize = W.fontSize, fontColor = W.tableFontColor,
-        useClassColorFont = W.tableFontClassColor, fontFlags = W.tableFontFlags,
+        fontSize = W.fontSize, fontColor = W.tableFontColor, useClassColorFont = W.tableFontClassColor,
         fontShadow = W.tableFontShadow, fontFromSkin = W.tableFontFromSkin,
     },
     classColor = { source = "player" },
+    extra = { {
+        path = "window.tableFontShadowFromSkin", type = "bool", default = W.tableFontShadowFromSkin,
+        label = L["Use the skin's shadow"],
+        tooltip = L["Draw the tables' text shadow as the skin draws it. The Font shadow row is not read while this is on."],
+    } },
 }
 
 --- A flags value the row offers (its own value map, "From skin" first).
@@ -128,7 +140,8 @@ local FONT_DECORATE = {
         tooltip = L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] },
     ["window.tableFontClassColor"] = { validate = Check.isBool },
     ["window.tableFontShadow"] = { validate = Check.isBool,
-        tooltip = L["Draw a soft shadow behind the tables' text."] },
+        tooltip = L["Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."] },
+    ["window.tableFontShadowFromSkin"] = { validate = Check.isBool },
     ["window.tableFontFromSkin"] = { validate = Check.isBool,
         tooltip = L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] },
 }

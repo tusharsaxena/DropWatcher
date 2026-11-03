@@ -75,7 +75,8 @@ test("Skin seam: every owner token is namespaced dw. and taken by the library", 
         n = n + 1
         assertTrue(name:sub(1, 3) == "dw.", name .. " is not in the dw. namespace")
         assertTrue(type(def.follow) == "string", name .. " follows a library role token")
-        assertTrue(type(Skin:ResolveSkin("ka0s")[def.follow]) == "table", name .. ": " .. def.follow .. " is a library color")
+        -- hud.shadow is the one optional color: Ka0s Default's is none, every other skin's a color.
+        assertTrue(type(Skin:ResolveSkin("obsidian")[def.follow]) == "table", name .. ": " .. def.follow .. " is a library color")
         assertTrue(NS.Skin.Color(name) ~= nil, name .. " does not resolve: refused by the library")
     end
     assertTrue(n > 0, "no owner token is declared")

@@ -343,7 +343,7 @@ end
 -- wired the frame's own hover pause, right-click and drag; the icon and Ask are attached here so
 -- hovering them holds the countdown and a right-click on them closes the toast too.
 local function makeRows(f)
-    f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON)
+    f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON, { hud = true })   -- a HUD icon: icon.border (R5-ICON)
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
     f.ask = NS.Window.TextButton(f, Toast.ASK_W, "chat", L["Ask"], function() Toast.Ask() end, Toast.SCALE)
     if f.close then
@@ -666,7 +666,10 @@ end
 --- The `toast.scale` row's reaction: a built toast, on screen or not, takes the new scale about its
 --- saved anchor (the point itself is unchanged). Before the first toast there is nothing to scale;
 --- the build applies it.
-function Toast.ApplyScale() toast:Refresh() end
+function Toast.ApplyScale()
+    toast:Refresh()
+    NS.IconStyle.Resnap()   -- the toast's icon edge stays one pixel at the new scale (R5-ICON)
+end
 
 --- Forget the saved position: the toast goes back under the top of the screen.
 function Toast.ResetPosition() toast:ResetPosition() end

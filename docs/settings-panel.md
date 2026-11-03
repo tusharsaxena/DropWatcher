@@ -54,6 +54,7 @@ canonical order (options-ui-§15):
 | Master scale (`scale`) | Master alpha (`alpha`) |
 | Lock frame (`locked`) | Debug console (`state.debugConsole`, session) |
 | Minimap button (`global.minimap.shown`) | Test mode (`state.testMode`, session) |
+| Sim mode (`state.sim`, session) | |
 | Reset position (button) | Reset all settings (button, asks first) |
 
 Every row writes through the one seam (`NS.SchemaRuntime.Set`), and its reaction is the same one
@@ -61,7 +62,18 @@ the CLI, the launcher and the host verbs trigger (`Settings.REACTIONS` in `setti
 The header's Defaults button and Reset all settings both open the confirmation popup; the global
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
-The launcher's right-click menu mirrors four of these: Enabled, Locked, Test mode and Show window
+Sim mode (R6-SIM, LibKa0s OptionsCompose minor 19) is the library's row, drawn from the launcher's own
+pair, `NS.IsSimMode` and `NS.ToggleSim` (`core/DropWatcher.lua`): its get is whether a simulation
+runs and its set does what `/dw sim` does, so ticking it prints the sim's status and opens the
+Simulation panel, where the player picks a scenario (the box ticks as that scenario starts), and
+unticking it stops the running sim. Nothing is stored and a reload ends the sim. The box follows the
+live sim: `modules/Sim.lua`'s listener calls `RefreshScalars`, so a sim started or stopped from the
+slash verb, the panel, the launcher or its own end shows on an open page at once. Reset all settings
+writes the row's default, which stops a running sim and never starts one. The sim and test mode
+already refuse each other (`core/DropWatcher.lua`, `modules/Sim.lua`), so the boxes need no rule of
+their own.
+
+The launcher's right-click menu mirrors five of these: Enabled, Locked, Test mode, Sim mode and Show window
 (launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
 Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
 on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
@@ -110,8 +122,10 @@ to all Ka0s addons** while another Ka0s addon that uses skins is loaded). `NS.Ma
 login, at a stand-up when the session started stood down, and after every profile switch, copy or
 reset. Never while the addon stands down (disabled, or a perf capture), and a start in combat waits
 for combat's end. A pick previews; **Apply** saves; the close control and Escape put the stored skin
-back and save nothing. The eye opens the window in test mode, so the skin shows on this addon's own
-frames; the gear saves the pending pick and opens this tab. Any close the player makes sets
+back and save nothing. With the window hidden, the picker turns test mode on as it shows, so the skin
+shows on this addon's own frames; the eye turns test mode off and on (lit while on), and every close
+puts test mode and the window back as they were when the picker opened (a window already shown is
+left alone); the gear saves the pending pick and opens this tab. Any close the player makes sets
 `skin.pickerSeen`; a stand-down or a profile event takes it down without setting it. One picker is up
 at a time across Ka0s addons; the others wait in the library's queue. `/dw skin` opens the same picker
 whatever `skin.pickerSeen` says.
@@ -251,7 +265,8 @@ block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D
 size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table;
 DW-A8; the compact cards follow it too, compact spec §5), Font color | Use class color (the tables'
 plain text; the skin's own while the swatch is at its default), Font flags (From skin, the default,
-or a picked flag) | Font shadow, then Use the skin's font (on by default; Font is not read while it is).
+or a picked flag) | Font shadow, then Use the skin's font (on by default; Font is not read while it is)
+and Use the skin's shadow (on by default; Font shadow is not read while it is; FS-DW-FLIP).
 
 **Columns:** the tab opens with a note, drawn by the page's `chrome` on this tab only
 (`PageEditors.ColumnsNote`): the checkboxes change the full layout's Drops table; History shows
@@ -279,13 +294,15 @@ feedback-21 H6; 0 is the whole icon). **Border:** the canonical border block (op
 `BorderGroup`: Show border (on), then Border style (a LibSharedMedia border; Solid, the flat edge
 `modules/IconStyle.lua` registers) |
 Border thickness (px) (1 to 16; 2), then Border color (black, opaque) | **Use class color** (off;
-the player's class color, the swatch's alpha kept, options-ui-§17), then the block's one extra,
+the player's class color, the swatch's alpha kept, options-ui-§17), then the block's two extras, Use the skin's color and
 **Color by item quality** (off: on, each border takes its item's quality color in place of the
 swatch, its alpha kept; an item with no quality known keeps the swatch). The block's skin companion,
 **Use the skin's border** (on; `icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`,
 DW-03), draws the border in the skin's icon border style and thickness and dims Border style and
-Border thickness while it is on; the color rows are always the player's. Style, thickness, Color by
-item quality and Use the skin's border are dimmed while Show border is off; the color pair never is. Every change
+Border thickness while it is on. Style, thickness, Color by
+item quality and Use the skin's border are dimmed while Show border is off; the color pair never is. **Use the skin's
+color** (on; `icons.borderColorFromSkin`, FS-DW-FLIP) draws the border in the skin's `icon.outline` (the toast's in its `icon.border`, a HUD icon), behind Use class color
+and Color by item quality. Every change
 restyles every icon at once (`NS.IconStyle.Refresh`); the upgrade glow draws over the border.
 Ranges and defaults: [`schema.md`](schema.md#window--icons-feedback-21-g11).
 
@@ -320,4 +337,4 @@ re-renders the tab on the next frame. It follows the Style alone: a glow turned 
 style's subsection. Offset serves three styles and is always drawn. A glow's Style is dimmed while it
 is off; a drawn knob also while its glow is in a style the knob does not apply to (the other glow's
 column of a shown subsection). A hidden row is still a schema row, which `/dw set` and Defaults reach. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
-(`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21).
+(`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21). Under each glow's Use class color, **Use the skin's color** (on; `glow.<g>.colorFromSkin`, FS-DW-FLIP) draws it in the skin's color; the swatch is not read while it is on, and is never dimmed.

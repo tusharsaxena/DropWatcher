@@ -203,8 +203,8 @@ L["Off-spec style"] = "Off-spec style"
 L["How the off-spec glow looks."] = "How the off-spec glow looks."
 L["Main spec color"] = "Main spec color"
 L["Off-spec color"] = "Off-spec color"
-L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."] =
-    "The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."
+L["The glow's color. Its alpha makes the glow fainter. Not read while Use the skin's color is on, or while Use class color is on, except for its opacity, which then applies."] =
+    "The glow's color. Its alpha makes the glow fainter. Not read while Use the skin's color is on, or while Use class color is on, except for its opacity, which then applies."
 L["Use class color (main spec)"] = "Use class color (main spec)"
 L["Use class color (off-spec)"] = "Use class color (off-spec)"
 L["Glow in your class color instead of Main spec color, the swatch above. The swatch's alpha still applies."] =
@@ -251,11 +251,23 @@ L["Draw a border around every item icon: the drop tables, the cards, the toast, 
     "Draw a border around every item icon: the drop tables, the cards, the toast, the Offer panel and History."
 L["The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."] =
     "The border's texture, from LibSharedMedia. Any border another addon registers shows up here too."
-L["The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."] =
-    "The border's color. Not read while Use class color is on, except for its opacity, which always applies; nor, for an item whose quality is known, while Color by item quality is on."
+L["The border's color. Not read while Use the skin's color is on, or while Use class color is on; nor, for an item whose quality is known, while Color by item quality is on. Its opacity still applies under Use class color and Color by item quality."] =
+    "The border's color. Not read while Use the skin's color is on, or while Use class color is on; nor, for an item whose quality is known, while Color by item quality is on. Its opacity still applies under Use class color and Color by item quality."
+L["Use the skin's color"] = "Use the skin's color"
+L["Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."] =
+    "Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."
+L["Use the skin's shadow"] = "Use the skin's shadow"
+L["Draw the tables' text shadow as the skin draws it. The Font shadow row is not read while this is on."] =
+    "Draw the tables' text shadow as the skin draws it. The Font shadow row is not read while this is on."
+L["Use the skin's color (main spec)"] = "Use the skin's color (main spec)"
+L["Use the skin's color (off-spec)"] = "Use the skin's color (off-spec)"
+L["Glow in the skin's color for the main spec. Main spec color, the swatch above, is not read while this is on. Use class color comes first."] =
+    "Glow in the skin's color for the main spec. Main spec color, the swatch above, is not read while this is on. Use class color comes first."
+L["Glow in the skin's color for the off-spec. Off-spec color, the swatch above, is not read while this is on. Use class color comes first."] =
+    "Glow in the skin's color for the off-spec. Off-spec color, the swatch above, is not read while this is on. Use class color comes first."
 L["Use the skin's border"] = "Use the skin's border"
-L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."] =
-    "Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on; the color always is."
+L["Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on. The Border color row has its own Use the skin's color."] =
+    "Draw the border in the skin's icon border style and thickness. The Border style and Border thickness rows are not read while this is on. The Border color row has its own Use the skin's color."
 L["The face the drop tables' text is drawn in, on both tabs. Not read while Use the skin's font is on."] =
     "The face the drop tables' text is drawn in, on both tabs. Not read while Use the skin's font is on."
 L["Font size"] = "Font size"
@@ -264,7 +276,7 @@ L["The size of the drop tables' text, on both tabs. All the way left (0) is Defa
 L["Default"] = "Default"
 L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] =
     "The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."
-L["Draw a soft shadow behind the tables' text."] = "Draw a soft shadow behind the tables' text."
+L["Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."] = "Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."
 L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] =
     "Draw the tables' text in the skin's face. The Font row is not read while this is on."
 

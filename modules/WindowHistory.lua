@@ -386,6 +386,7 @@ local function newRow(content)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
     NS.WindowGroup.PaintRowWashes(row)   -- the Drops rows' stripe and expanded wash, from the skin
+    NS.WindowRows.HoverWash(row)
     row.chevron = NS.WindowGroup.RowChevron(row)   -- the Drops rows' expand indicator (feedback-15 spec §4)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
@@ -508,6 +509,7 @@ local function buildHeads(pane)
         NS.Window.AttachTooltip(f, function() return col.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
+    NS.Skin.SortHeaderBar(head)   -- its band, `list.header.bg` (FS-DW-FIX, cause A1)
     pane.colHead = head
 end
 

@@ -42,10 +42,14 @@ local function bootAddon(opts)
 end
 
 -- ... plus OnEnable (PLAYER_LOGIN): events registered, settings category and launcher registered,
--- and the latch taken from the stored `enabled` path.
+-- and the latch taken from the stored `enabled` path. The first-run skin picker's login fuse is put
+-- out unless `opts.pickerFuse`: since R6-PV the picker shown with the window hidden turns test mode
+-- on (spec.preview), so a case that advances the clock past two seconds would find placeholder
+-- drops it never asked for. test_skin_picker's fuse cases light it.
 local function enableAddon(opts)
     local NS, env, m = bootAddon(opts)
     NS.addon:OnEnable()
+    if not (opts and opts.pickerFuse) and NS.ArmSkinPicker then NS.ArmSkinPicker(false) end
     return NS, env, m
 end
 
@@ -188,6 +192,12 @@ Kit.diagnostics = {
 -- The layout-§1 census lives in the hub; the repository has no generated data to carve out.
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
+-- The typed-value gate (skinning-§1, kit revision 50).
+Kit.skinValues = { calls = { Colored = { 2, 3, 4 }, Escape = { 2, 3, 4 }, tone = { 2, 3, 4 } } }
+
+-- The skin-switch test (skinning-§1, kit revision 50): the painted surfaces are declared there.
+Kit.skinSwitch = dofile("tests/skin_switch_facts.lua")(enableAddon, withPlayer)
+
 -- Order is stable. Kit.assertSuiteInventory (called by Kit.run) fails the run in both directions:
 -- a name here with no file, and a test_*.lua on disk (tests/ or tests/_kit/) with no name here.
 Kit.run{
@@ -201,10 +211,13 @@ Kit.run{
         "test_schema_rows",
         "test_settings_pages",
         "test_skin_setup",
+        "test_launcher_skin_entry",
         "test_skin_outline",
         "test_skin_chrome",
-        "test_skin_literals",
         "test_skin_hud",
+        "test_skin_flip",
+        "test_skin_host",
+        "test_header_band",
         "test_skin_picker",
         "test_skin_verb",
         "test_skin_settings",
@@ -278,6 +291,7 @@ Kit.run{
         "test_sim_e2e",
         "test_sim_report",
         "test_sim_panel",
+        "test_sim_checkbox",
         "test_bindings",
         "test_disabled",
         "test_diagnostics",
@@ -289,5 +303,7 @@ Kit.run{
         { name = "test_layout_cap",           dir = "tests/_kit/" },   -- layout-§1
         { name = "test_diagnostics_contract", dir = "tests/_kit/" },   -- debug-logging-§14
         { name = "test_lizard_sighted",       dir = "tests/_kit/" },   -- automated-tests-§3
+        { name = "test_skin_values",          dir = "tests/_kit/" },   -- skinning-§1
+        { name = "test_skin_switch",          dir = "tests/_kit/" },   -- skinning-§1
     },
 }

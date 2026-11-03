@@ -386,11 +386,14 @@ end
 function WG.ToneButton(b, state, kind)
     local tone = NS.WindowCells.ActionTone(state, kind)
     local c = tone and C.TONE[tone]
-    local r, g, bl
-    if c then r, g, bl = c.r, c.g, c.b else r, g, bl = NS.Skin.Color("btn.text") end   -- untoned: white
-    b.label:SetTextColor(r, g, bl)
-    if b.art then b.art:SetVertexColor(r, g, bl) end
-    b.tone = tone
+    b.tone = c and tone or nil
+    if not c then
+        -- Untoned: the skin's button look. A bare `{ label }` (a suite's) has no window button.
+        if b.art then return NS.WindowTitleBar.PaintButtonLook(b) end
+        return b.label:SetTextColor(NS.SkinColor("btn.text"))
+    end
+    b.label:SetTextColor(c.r, c.g, c.b)
+    if b.art then b.art:SetVertexColor(c.r, c.g, c.b) end
 end
 
 -- ── the item button ─────────────────────────────────────────────────────────────────────────
@@ -465,13 +468,21 @@ function WG.OnItemClick(self)
     end
 end
 
-local function itemButton(parent, size)
+local function itemButton(parent, size, opts)
     local b = CreateFrame("Button", nil, parent)
     b:SetSize(size, size)
+    -- A HUD icon (the toast's) keeps the HUD's icon.border edge; a window's takes icon.outline.
+    b.iconHud = type(opts) == "table" and opts.hud == true or nil
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetAllPoints(b)
-    b:SetScript("OnEnter", function(self) itemEnter(self) end)
-    b:SetScript("OnLeave", hideTooltip)
+    b:SetScript("OnEnter", function(self)
+        NS.WindowRows.WashRowOf(self, true)   -- the pointer left the row for this button, not the row's area
+        itemEnter(self)
+    end)
+    b:SetScript("OnLeave", function(self)
+        NS.WindowRows.WashRowOf(self, false)
+        hideTooltip()
+    end)
     b:SetScript("OnClick", WG.OnItemClick)
     NS.IconStyle.Apply(b, nil)   -- Window › Icons' look (modules/IconStyle.lua), from the start
     return b
@@ -492,11 +503,13 @@ end
 --- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
 --- the detail card too. `WG.SetItem(b, link, where)` shows an item on it, or hides it for nil;
 --- `where` is WG.Where(drop) for a drop, { unit, slot } for an item worn, nil for a link only.
---- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11).
+--- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11): a window's
+--- edge in the skin's icon.outline, a HUD one's (`opts.hud`, the toast's) in its icon.border.
 --- @param parent table
 --- @param size number
+--- @param opts table|nil { hud = true } for an icon over the game world
 --- @return table
-function WG.ItemButton(parent, size) return itemButton(parent, size) end
+function WG.ItemButton(parent, size, opts) return itemButton(parent, size, opts) end
 
 WG.SetItem = setItem
 
@@ -516,9 +529,13 @@ end
 function WG.ItemHover(frame, button)
     frame.itemButton = button
     frame:HookScript("OnEnter", function(self)
+        NS.WindowRows.WashRowOf(self, true)
         if self.showItem then itemEnter(self.itemButton, self) end
     end)
-    frame:HookScript("OnLeave", hideTooltip)
+    frame:HookScript("OnLeave", function(self)
+        NS.WindowRows.WashRowOf(self, false)
+        hideTooltip()
+    end)
 end
 
 -- ── building a row ──────────────────────────────────────────────────────────────────────────
@@ -660,6 +677,7 @@ local function newRow(content)
     row.selected = row:CreateTexture(nil, "BACKGROUND")
     row.selected:SetAllPoints(row)
     WG.PaintRowWashes(row)
+    NS.WindowRows.HoverWash(row)
     row.chevron = WG.RowChevron(row)
     row.chevron:SetPoint("LEFT", row, "LEFT", K.CHEVRON_X, 0)
     row.cells = {}
@@ -934,12 +952,12 @@ local function buildHeads(pane)
         local f = CreateFrame("Frame", nil, head)
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
-        -- The skin's list header text (gold, as Loot History's: feedback-4 spec §4). Not the skin's
-        -- SortHeaderBar, which adds a `list.header.bg` band these heads never drew.
+        -- The skin's list header text (gold, as Loot History's: feedback-4 spec §4).
         NS.Skin.Text(f.text, "list.header.text")
         NS.Window.AttachTooltip(f, function() return f.label, unpack(col.tip) end)
         head.labels[col.key] = f
     end
+    NS.Skin.SortHeaderBar(head)   -- its band, `list.header.bg` (FS-DW-FIX, cause A1)
     pane.colHead = head
 end
 

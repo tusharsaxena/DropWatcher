@@ -131,6 +131,7 @@ end
 function NS.StandDown()
     for _, event in ipairs(NS.FeatureEventNames()) do DW:UnregisterEvent(event) end
     NS.Bus:StandDown()
+    local wasTest = NS.State.testMode == true
     NS.State.testMode = false
     runAll(NS.STAND_DOWN)
     -- The first-run skin picker is a frame this addon shows (core/SkinSetup.lua): it goes down
@@ -138,7 +139,11 @@ function NS.StandDown()
     -- on the stand-up or the next login.
     if NS.HideSkinPicker then NS.HideSkinPicker() end
     if NS.ArmSkinPicker then NS.ArmSkinPicker(false) end
-    if NS.Window then NS.Window.UpdateVisibility() end
+    -- Test mode's end through the window's own hook, so a window test mode opened (the picker's
+    -- preview, R6-PV) is not left marked open for the stand-up to show; it runs the show decision.
+    if NS.Window then
+        if wasTest then NS.Window.OnTestModeChanged(false) else NS.Window.UpdateVisibility() end
+    end
 end
 
 --- The latch's standUp: rebuilt from CURRENT state, because settings may change while off.
@@ -198,6 +203,23 @@ end
 
 function NS.ToggleTestMode()
     return NS.SetTestMode(not NS.State.testMode)
+end
+
+--- Whether a simulation runs, and the act of `/dw sim`: the one pair the launcher's Sim mode entry
+--- (core/LauncherSetup.lua) and Master controls' Sim mode box (settings/Panel.lua, LibKa0s
+--- OptionsCompose minor 19) both take, so the three are one act. NS.Sim is read at call time
+--- (modules/Sim.lua builds it later in the load).
+--- @return boolean
+function NS.IsSimMode()
+    local s = NS.Sim
+    return type(s) == "table" and type(s.IsActive) == "function" and s:IsActive() == true
+end
+
+--- The typed verb's own acts: stop a running sim, otherwise the bare verb (status and the sim panel).
+function NS.ToggleSim()
+    local s = NS.Sim
+    if type(s) ~= "table" or type(s.RunVerb) ~= "function" then return end
+    s:RunVerb(s:IsActive() and "stop" or "")
 end
 
 --- Lock or unlock the window through the write seam, the same write the Lock frame checkbox makes.

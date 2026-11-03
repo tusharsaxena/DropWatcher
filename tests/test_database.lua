@@ -254,3 +254,28 @@ test("migrate 9: a stored simPanel point is retired, idempotently, and nothing e
     NS.RetireSimPanelPoint(nil); NS.RetireSimPanelPoint({}); NS.RetireSimPanelPoint(3)
     assertNil(NS.addon.db.profile.simPanel, "no default brings it back")
 end)
+
+-- R3-FRIZ: LibKa0s v1.85.0 deleted Ka0s Friz Quadrata TT (R3-L7); step 12 moves a stored pick of it to
+-- Ka0s Ubuntu in every stored profile, at any depth. red under: no step 12, one that reaches only the
+-- active profile or only the top level, or one that rewrites Blizzard's own "Friz Quadrata TT".
+test("database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept", function()
+    local NS = T.newAddon()
+    local FRIZ = "Ka0s Friz Quadrata TT"
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 11 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { skin = { fullSkinReset = true, font = FRIZ }, window = { tableFont = FRIZ } },
+            Alt = { skin = { fullSkinReset = true }, window = { tableFont = FRIZ } },
+            Plain = { skin = { fullSkinReset = true }, window = { tableFont = "Friz Quadrata TT" } },
+        },
+    }
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertEqual(p.Default.window.tableFont, "Ka0s Ubuntu", "the active profile's table font")
+    assertEqual(p.Default.skin.font, "Ka0s Ubuntu", "the skin override")
+    assertEqual(p.Alt.window.tableFont, "Ka0s Ubuntu", "another stored profile")
+    assertEqual(p.Plain.window.tableFont, "Friz Quadrata TT", "Blizzard's own Friz stays")
+    assertEqual(NS.addon.db.global.schemaVersion, 12)
+    assertEqual(NS.RetireFonts(p.Alt), 0, "a second pass moves nothing")
+end)

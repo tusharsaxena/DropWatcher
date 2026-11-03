@@ -548,13 +548,25 @@ local function glow()
     for i, key in ipairs(GLOWS) do
         add{ path = "glow." .. key .. ".color", type = "color", default = G[key].color, hasAlpha = true,
              label = i == 1 and L["Main spec color"] or L["Off-spec color"],
-             tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use class color is on, except for its opacity, which always applies."],
+             tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use the skin's color is on, or while Use class color is on, except for its opacity, which then applies."],
              validate = isColor, startsLine = i == 1 or nil, classColorSource = "player",
              page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow }
     end
     for i, key in ipairs(GLOWS) do
         bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
             with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
+    end
+    -- The skin's companions (FS-DW-FLIP, cause D5): the same two columns, one line down. No
+    -- `disabledIf`, as for the swatch above. Use class color comes first.
+    local FROM_SKIN = {
+        main    = { L["Use the skin's color (main spec)"],
+                    L["Glow in the skin's color for the main spec. Main spec color, the swatch above, is not read while this is on. Use class color comes first."] },
+        offSpec = { L["Use the skin's color (off-spec)"],
+                    L["Glow in the skin's color for the off-spec. Off-spec color, the swatch above, is not read while this is on. Use class color comes first."] },
+    }
+    for i, key in ipairs(GLOWS) do
+        bool("glow." .. key .. ".colorFromSkin", G[key].colorFromSkin, FROM_SKIN[key][1], FROM_SKIN[key][2],
+            with(at, { startsLine = i == 1 or nil }))
     end
     -- A style's section is drawn only while EITHER glow's style selects it (DW-04, owner ruling D-17,
     -- image-40/41; LibKa0s OptionsSwitch minor 1's `shownWhen = { any = ... }`): both rows of every

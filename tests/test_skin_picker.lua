@@ -7,8 +7,9 @@
 -- every profile event, never while the addon stands down, held through combat); and that only the
 -- player's close marks it seen. The trigger cases spy on O.SkinPicker; the later cases drive the
 -- library's real window: a pick previews unsaved, Apply saves through NS.WriteSkinChoice, the close
--- control puts the stored skin back, the gear saves and opens General on its Skin tab, the eye opens
--- the window in test mode, and the stand-down puts a pending preview back, unsaved and unseen. Each
+-- control puts the stored skin back, the gear saves and opens General on its Skin tab, the picker
+-- shown with the window hidden turns test mode on, the eye toggles it and every close puts it back
+-- (R6-PV), and the stand-down puts a pending preview back, unsaved and unseen. Each
 -- case builds its own addon, so no picker outlives a case.
 
 local T = _G.DW_TEST
@@ -78,7 +79,13 @@ test("Skin picker: the spec names this owner, its seams, the Skin tab and the ey
     assertEqual(spec.page, "general")
     assertEqual(spec.tab, "Appearance", "the Skin tab's key")
     assertTrue(options(NS).__panelFor("general") ~= nil, "\"general\" is the page O.SelectTab finds")
-    assertEqual(type(spec.onPreview), "function", "a test mode to preview in: the eye shows (X6)")
+    assertEqual(spec.onPreview, nil, "the one-shot eye is gone (R6-PV)")
+    local pv = spec.preview
+    assertTrue(type(pv) == "table", "a test mode to preview in: the eye shows (X6, R6-PV)")
+    assertEqual(pv.mode, "test", "DropWatcher previews in test mode (round 6, call 2)")
+    for _, k in ipairs({ "enter", "exit", "isActive", "isShown" }) do
+        assertEqual(type(pv[k]), "function", "spec.preview." .. k)
+    end
     assertEqual(type(spec.onClose), "function")
 end)
 
@@ -98,7 +105,7 @@ end)
 
 test("Skin picker: the login fuse shows it once a session, two seconds after OnEnable", function()
     -- red under: dropping NS.ArmSkinPicker from OnEnable, or a fuse that is lit again once burned.
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ pickerFuse = true }
     spying(NS, function(calls)
         assertEqual(#calls, 0, "nothing at OnEnable itself")
         m.advance(1.9)
@@ -114,7 +121,7 @@ end)
 test("Skin picker: the stand-down puts the fuse out; the stand-up lights it again", function()
     -- red under: a fuse the stand-down leaves burning (a disabled addon would show a window), or a
     -- session that started stood down never showing it.
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ pickerFuse = true }
     spying(NS, function(calls)
         quietly(m, function()
             set(NS, "enabled", false)
@@ -293,15 +300,140 @@ test("Skin picker: the gear saves the pick and opens General on its Skin tab", f
     assertEqual(get(NS, PATH), true, "and marks the picker seen")
 end)
 
-test("Skin picker: the eye opens the window in test mode and leaves the picker up", function()
-    local NS, m, f = onWindow()
-    quietly(m, function() f.preview:__fire("OnClick") end)
-    assertTrue(NS.State.testMode == true, "the eye did not start test mode")
-    assertTrue(NS.IsWindowShown(), "the eye did not show the window")
+-- ── the preview (R6-PV; LibKa0s OptionsSkinPicker 11, spec.preview) ─────────────────────────────
+--
+-- The owner's rule: the picker shown with the window hidden turns test mode on, the eye toggles it,
+-- and every close puts back what the picker and its eye moved. Every call goes through
+-- NS.SetTestMode, the seam /dw test, the launcher and the Master controls checkbox use.
+
+--- An enabled addon, its window hidden and test mode off, with the library's real picker up.
+local function onHiddenWindow()
+    local NS, m, f, pick = onWindow()
+    return NS, m, f, pick
+end
+
+--- `fn` with the eye clicked through the library, quiet.
+local function eye(m, f) quietly(m, function() f.preview:__fire("OnClick") end) end
+
+test("Skin picker: shown with the window hidden, test mode turns on and the window opens", function()
+    -- red under: an onPreview-only spec (nothing runs at show), or a preview whose enter is not
+    -- NS.SetTestMode (the placeholders and the window would not follow).
+    local NS, _, f = onHiddenWindow()
+    assertTrue(NS.State.testMode == true, "the picker's show did not start test mode")
+    assertTrue(NS.IsWindowShown(), "test mode's start did not open the window")
+    assertTrue(f:IsShown(), "the picker stays up over the window")
+    assertTrue(f.preview.lit == true, "the eye is lit while test mode is on")
+end)
+
+test("Skin picker: the eye toggles test mode off and on through the write seam", function()
+    -- red under: the old enter-only eye (a second click re-shows the window and never ends it).
+    local NS, m, f = onHiddenWindow()
+    eye(m, f)
+    assertFalse(NS.State.testMode == true, "the eye did not turn test mode off")
+    assertFalse(NS.IsWindowShown(), "test mode's end did not close the window it opened")
+    assertFalse(f.preview.lit == true, "the eye is dimmed while test mode is off")
     assertTrue(f:IsShown(), "the eye leaves the picker up")
-    NS.HideWindow()
-    quietly(m, function() NS.SkinPickerSpec().onPreview() end)
-    assertTrue(NS.IsWindowShown(), "with test mode already on, the eye still shows the window")
+    eye(m, f)
+    assertTrue(NS.State.testMode == true, "the eye did not turn test mode back on")
+    assertTrue(NS.IsWindowShown(), "and the window opens again")
+    assertTrue(f.preview.lit == true)
+end)
+
+test("Skin picker: every close puts test mode and the window back as they were", function()
+    -- red under: no restore (test mode and the window it opened outlive the picker).
+    local routes = {
+        ["the close control"] = function(_, _, f) f.close:__fire("OnClick") end,
+        ["Apply"] = function(_, _, f) f.apply:__fire("OnClick") end,
+        -- UISpecialFrames hides it; the client fires OnHide inside Hide(), the mock does not.
+        ["Escape"] = function(_, _, f) f:Hide(); f:__fire("OnHide") end,
+        ["the gear"] = function(_, m, f) quietly(m, function() f.settings:__fire("OnClick") end) end,
+        ["the stand-down"] = function(NS, m) quietly(m, function() set(NS, "enabled", false) end) end,
+        ["a profile event's hide"] = function(NS) NS.HideSkinPicker() end,
+    }
+    for name, close in pairs(routes) do
+        local NS, m, f = onHiddenWindow()
+        assertTrue(NS.State.testMode == true, name .. ": the show entered test mode")
+        quietly(m, function() close(NS, m, f) end)
+        assertFalse(f:IsShown(), name .. " did not close the picker")
+        assertFalse(NS.State.testMode == true, name .. " left test mode on")
+        assertFalse(NS.IsWindowShown(), name .. " left the window open")
+    end
+end)
+
+test("Skin picker: the stand-down's close leaves no window the picker opened for the stand-up", function()
+    -- red under: a stand-down that ends test mode with a raw flag write, leaving the window it
+    -- opened marked open, so the stand-up shows a window the player never asked for.
+    local NS, m = onHiddenWindow()
+    assertTrue(NS.State.testMode == true and NS.IsWindowShown(), "the show entered test mode")
+    quietly(m, function() set(NS, "enabled", false) end)
+    assertFalse(NS.State.testMode == true, "the stand-down ended test mode")
+    quietly(m, function() set(NS, "enabled", true) end)
+    assertFalse(NS.State.testMode == true, "test mode stays off after the stand-up")
+    assertFalse(NS.IsWindowShown(), "the window test mode opened stays closed after the stand-up")
+    assertFalse(NS.State.windowOpen == true, "and is not marked open")
+end)
+
+test("Skin picker: test mode on at open, turned off by the eye, is on again after the close", function()
+    local NS, m = enabled()
+    quietly(m, function() NS.SetTestMode(true) end)
+    local f
+    quietly(m, function() f = NS.MaybeShowSkinPicker() end)
+    assertTrue(f ~= nil and f:IsShown())
+    eye(m, f)
+    assertFalse(NS.State.testMode == true, "the eye turned it off")
+    f.close:__fire("OnClick")
+    assertTrue(NS.State.testMode == true, "the close put test mode back on")
+    assertTrue(NS.IsWindowShown(), "with its window")
+end)
+
+test("Skin picker: a window already shown is left alone, and stays shown after the close", function()
+    -- red under: an isShown that is not NS.IsWindowShown (test mode would be forced over a live window).
+    local NS, m = enabled()
+    NS.ShowWindow()
+    assertTrue(NS.IsWindowShown(), "the window opens")
+    local f
+    quietly(m, function() f = NS.MaybeShowSkinPicker() end)
+    assertTrue(f ~= nil and f:IsShown())
+    assertFalse(NS.State.testMode == true, "a shown window is not put into test mode")
+    assertFalse(f.preview.lit == true, "the eye is dimmed: test mode is off")
+    f.close:__fire("OnClick")
+    assertFalse(NS.State.testMode == true)
+    assertTrue(NS.IsWindowShown(), "the player's window stays open")
+end)
+
+test("Skin picker: test mode the player turns on with /dw test while the picker is up stays on", function()
+    -- red under: a close that ends test mode whatever moved it (the picker moved nothing here).
+    local NS, m = enabled()
+    NS.ShowWindow()
+    local f
+    quietly(m, function() f = NS.MaybeShowSkinPicker() end)
+    assertFalse(NS.State.testMode == true, "a shown window: the picker enters nothing")
+    quietly(m, function() NS.ToggleTestMode() end)
+    assertTrue(NS.State.testMode == true, "/dw test's handler turned it on")
+    f.close:__fire("OnClick")
+    assertTrue(NS.State.testMode == true, "the player's own test mode outlives the close")
+    assertTrue(NS.IsWindowShown())
+end)
+
+test("Skin picker: in combat the eye's start is refused and the close undoes nothing", function()
+    -- red under: an enter that bypasses NS.SetTestMode's combat refusal.
+    local NS, m, f = onHiddenWindow()
+    eye(m, f)
+    assertFalse(NS.State.testMode == true)
+    m.inCombat = true
+    local before = #m.prints
+    local ok, err = pcall(function()
+        f.preview:__fire("OnClick")
+        assertFalse(NS.State.testMode == true, "combat refuses test mode's start")
+        local said = m.prints[#m.prints]
+        assertTrue(#m.prints > before and said:find("not available in combat", 1, true) ~= nil,
+            "the refusal prints test mode's own line")
+        f.close:__fire("OnClick")
+    end)
+    m.inCombat = false
+    if not ok then error(err, 0) end
+    assertFalse(NS.State.testMode == true, "nothing moved, so nothing is put back")
+    assertFalse(NS.IsWindowShown())
 end)
 
 test("Skin picker: the stand-down with a preview pending puts the stored skin back, unsaved, unseen", function()

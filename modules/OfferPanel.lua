@@ -112,6 +112,7 @@ local function newRow(content)
     local row = CreateFrame("Frame", nil, content)
     row:SetHeight(K.OFFER_ROW_H)
     row.tipRow = true
+    NS.WindowRows.HoverWash(row)
     -- Every second row's faint stripe, as the main window's rows (WindowGroup, WindowHistory).
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
@@ -140,11 +141,15 @@ local function buildTitle(p)
     p.kind:SetText(L["YOUR DROP"])
     p.closeButton = NS.MakeCloseButton(p, function() OP.Close() end)
     if p.closeButton then p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6) end
+    -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and close sit on the
+    -- band's middle, the title by the skin's `title.align`, in every skin (R5-WIN, the lead's call 3).
+    -- With no library the anchors above stand.
+    NS.Skin.Header(p, { title = p.title, right = { p.closeButton } })
 end
 
 local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
-    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -32)
+    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.POPOVER_TOP)
     p.name = tipFrame(p, nil, "GameFontNormal")
     NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)

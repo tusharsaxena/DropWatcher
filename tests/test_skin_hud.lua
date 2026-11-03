@@ -2,8 +2,8 @@
 -- item icon's border (Window › Icons) and the upgrade glow. The border's style and thickness follow
 -- the skin's icon border family (`icon.borderStyle`, `icon.borderSize`) while the composer's
 -- `fromSkin = "icon"` companion is on, TRUE by default (the rollout's X3); only style and thickness
--- follow (X4), so the color and its class and quality companions stay the player's, and so do the
--- glow's two colors (E6). Under Ka0s Default the border is today's Solid 2px black. A skin switch
+-- follow here; the color and the glow's two colors have their own companions since FS-DW-FLIP
+-- (tests/test_skin_flip.lua). Every skin's border is Solid 1px (R3-FIX), black under Ka0s Default. A skin switch
 -- restyles every item button; "None" draws no edge; without the library the stored picks draw. The
 -- one-time reset (O2) is migration step 10: it turns the companion on in every stored profile once,
 -- keeps the stored pick, and a player's later "off" survives the next load.
@@ -55,19 +55,28 @@ end
 
 -- ── the drawing ─────────────────────────────────────────────────────────────────────────────
 
-test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black", function()
+test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px, gray in a window and black on the HUD", function()
+    -- 1 px in every skin since LibKa0s v1.85.0's R3-FIX, the owner's "exactly 1 px in every skin"
+    -- (Ka0s Default's icon family was DW's Solid 2px until then).
     local NS, _, m = T.enableAddon()
     assertEqual(NS.C.PROFILE.icons.borderStyleFromSkin, true, "X3: a new profile follows the skin")
     assertEqual(NS.Setting("icons.borderStyleFromSkin"), true)
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
     assertEqual(Skin:Token(OWNER, "icon.borderStyle"), "Solid", "Ka0s Default's icon family is DW's look")
-    assertEqual(Skin:Token(OWNER, "icon.borderSize"), 2)
+    assertEqual(Skin:Token(OWNER, "icon.borderSize"), 1)
     local frames, b = borderFrames(m), fakeButton()
     NS.IconStyle.Apply(b, EPIC)
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "the flat edge")
-    assertEqual(frames[1].drawn.edgeSize, 2)
-    assertTrue(near(b.iconBorder[1], 0) and near(b.iconBorder[2], 0) and near(b.iconBorder[3], 0)
-        and near(b.iconBorder[4], 1), "black, opaque: the player's swatch")
+    assertEqual(frames[1].drawn.edgeSize, 1)
+    -- A window's icon: Ka0s Default's icon.outline, #4D4D57 (R5-ICON); a HUD one: its black icon.border.
+    local g = 0x4d / 255
+    assertTrue(near(b.iconBorder[1], g) and near(b.iconBorder[2], g) and near(b.iconBorder[3], 0x57 / 255)
+        and near(b.iconBorder[4], 1), "the window's gray outline, opaque")
+    local hud = fakeButton()
+    hud.iconHud = true
+    NS.IconStyle.Apply(hud, EPIC)
+    assertTrue(near(hud.iconBorder[1], 0) and near(hud.iconBorder[2], 0) and near(hud.iconBorder[3], 0)
+        and near(hud.iconBorder[4], 1), "the HUD's black, opaque")
 end)
 
 test("skin HUD: while the companion is on the stored style and thickness are not read; off, they are", function()
@@ -79,37 +88,37 @@ test("skin HUD: while the companion is on the stored style and thickness are not
     assertTrue(S("icons.borderStyle", "Blizzard Tooltip")); assertTrue(S("icons.borderSize", 6))
     -- red under: IconStyle reading the stored style while the companion is on
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "the skin's Solid, not the stored pick")
-    assertEqual(frames[1].drawn.edgeSize, 2, "the skin's thickness")
+    assertEqual(frames[1].drawn.edgeSize, 1, "the skin's thickness")
     assertTrue(S("icons.borderStyleFromSkin", false))
     assertEqual(frames[1].drawn.edgeFile, "tex\\tooltip", "the player's pick, kept underneath")
     assertEqual(frames[1].drawn.edgeSize, 6)
     assertEqual(NS.addon.db.profile.icons.borderStyle, "Blizzard Tooltip", "the companion never wrote the pick")
 end)
 
-test("skin HUD: a skin switch restyles every item button; its None draws no edge; the color stays the player's", function()
+test("skin HUD: a skin switch restyles every item button; its None draws no edge; a companion off keeps the swatch", function()
     local NS, _, m = T.enableAddon()
     local frames = borderFrames(m)
     local b = fakeButton()
     NS.IconStyle.Apply(b, EPIC)
+    assertTrue(NS.SchemaRuntime.Set("icons.borderColorFromSkin", false))
     assertTrue(NS.SchemaRuntime.Set("icons.borderColor", { r = 1, g = 0, b = 0, a = 0.5 }))
     toSkin(m, "dw-hud-thick", "Solid", 4)
     assertEqual(frames[1].drawn.edgeSize, 4, "repainted on the switch, no write needed")
-    assertTrue(near(b.iconBorder[1], 1) and near(b.iconBorder[4], 0.5), "X4: the swatch is never the skin's")
+    assertTrue(near(b.iconBorder[1], 1) and near(b.iconBorder[4], 0.5), "the companion off: the swatch")
     toSkin(m, "dw-hud-none", "None", 1)
     assertNil(b.iconBorder, "the skin's None: no edge")
     assertTrue(frames[1].on == false, "the border frame hidden")
     m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "ka0s")
-    assertTrue(frames[1].on == true and frames[1].drawn.edgeSize == 2, "back on Ka0s Default")
+    assertTrue(frames[1].on == true and frames[1].drawn.edgeSize == 1, "back on Ka0s Default")
 end)
 
-test("skin HUD: the glow's two colors are the player's under every skin (E6)", function()
+test("skin HUD: no skin switch touches the glow's two stored swatches", function()
     local NS, _, m = T.enableAddon()
     local main = NS.Setting("glow.main.color")
     local off = NS.Setting("glow.offSpec.color")
     toSkin(m, "dw-hud-thick", "Solid", 4)
     assertTrue(NS.Setting("glow.main.color") == main and NS.Setting("glow.offSpec.color") == off,
         "no skin switch touches the stored swatches")
-    assertNil(NS.SchemaRuntime.FindRow("glow.main.colorFromSkin"), "and no companion follows a glow color")
 end)
 
 test("skin HUD: the companion is a composed row with a check, dimmed with Show border off, dimming style and size", function()
@@ -166,7 +175,7 @@ test("migrate 10: every stored profile's icon border goes back on the skin once,
     assertEqual(p.Default.icons.borderStyleFromSkin, true, "the companion on")
     assertEqual(p.Default.icons.borderStyle, "Blizzard Tooltip", "the pick kept, never the sentinel")
     assertEqual(p.Default.icons.borderSize, 3, "the thickness is not listed")
-    assertEqual(p.Default.icons.borderColor.r, 1, "X4: the color stays the player's")
+    assertEqual(p.Default.icons.borderColor.r, 1, "the stored color stays")
     assertEqual(p.Default.icons.borderShow, false, "a bool the player set is never switched on")
     assertNil(p.Alt.icons, "a profile that stored no icons keeps the defaults, no table made")
     assertEqual(p.Off.icons.borderStyleFromSkin, true, "a stored off before the reset is reset too (O2)")

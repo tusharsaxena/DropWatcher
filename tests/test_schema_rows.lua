@@ -397,10 +397,10 @@ end)
 
 -- The tab's rows in order: the Zoom row, then the composed Border block (options-ui-§16: Show
 -- border leads, the mandated four in order, the skin companion after them (DW-03, the composer's
--- `fromSkin = "icon"`), then the quality extra).
+-- `fromSkin = "icon"`), then the two extras, the color's skin companion and the quality).
 local ICON_ROWS = {
     "icons.zoom", "icons.borderShow", "icons.borderStyle", "icons.borderSize", "icons.borderColor",
-    "icons.useClassColorBorder", "icons.borderStyleFromSkin", "icons.borderQuality",
+    "icons.useClassColorBorder", "icons.borderStyleFromSkin", "icons.borderColorFromSkin", "icons.borderQuality",
 }
 
 test("icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults", function()
@@ -555,6 +555,11 @@ local PINNED_ROWS = {
     { "glow.offSpec.xOffset", "number", "0" },
     { "glow.offSpec.yOffset", "number", "0" },
     { "icons.borderColor", "color", "{[\"a\"]=1,[\"b\"]=0,[\"g\"]=0,[\"r\"]=0}" },
+    -- FS-DW-FLIP's companions: new rows, not layout moves, defaulting TRUE.
+    { "icons.borderColorFromSkin", "bool", "true" },
+    { "glow.main.colorFromSkin", "bool", "true" },
+    { "glow.offSpec.colorFromSkin", "bool", "true" },
+    { "window.tableFontShadowFromSkin", "bool", "true" },
     { "icons.borderQuality", "bool", "false" },
     { "icons.borderShow", "bool", "true" },
     { "icons.borderSize", "number", "2" },
@@ -621,6 +626,8 @@ local PINNED_ROWS = {
     { "situations.solo.quality", "string", "\"global\"" },
     { "situations.solo.track", "bool", "true" },
     { "state.debugConsole", "bool", "false" },
+    -- R6-SIM: the Sim mode row (LibKa0s OptionsCompose minor 19), session-only, nothing stored.
+    { "state.sim", "bool", "false" },
     { "state.testMode", "bool", "nil" },
     { "toast.duration", "number", "8" },
     { "toast.enabled", "bool", "true" },   -- on for a new profile since 2026-10-25, no migration
@@ -655,7 +662,7 @@ local PINNED_ROWS = {
     { "window.rowHeight", "number", "18" },
     -- DW-01 (the lead's ruling on D-07): the tables' font gained the rest of the font setting, new
     -- stored paths beside `window.fontSize`, whose path, type and default are unchanged.
-    { "window.tableFont", "string", "\"Friz Quadrata TT\"" },
+    { "window.tableFont", "string", "\"Ka0s Prototype\"" },
     { "window.tableFontClassColor", "bool", "false" },
     { "window.tableFontColor", "color", "{[\"a\"]=1,[\"b\"]=0.92,[\"g\"]=0.92,[\"r\"]=0.92}" },
     { "window.tableFontFlags", "string", "\"@skin\"" },

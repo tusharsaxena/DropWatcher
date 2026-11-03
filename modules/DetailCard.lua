@@ -95,9 +95,11 @@ local function textWidth(fs, text)
     return w
 end
 
--- A box's fill and edge from the skin (DW-G13): the owner tokens `dw.cardBg` / `dw.cardBorder`
--- (Ka0s Default: today's 0.08 fill and the shared window edge's inner line), on the box's own
--- backdrop so its shape is today's, repainted on a skin switch.
+-- A box is the skin's Card (FS-DW-FIX, cause A1), its fill and edge remapped to the owner tokens
+-- `dw.cardBg` / `dw.cardBorder` (Ka0s Default: today's 0.08 fill and the shared window edge's inner
+-- line). paintBox is the degraded arm's, where S.Card draws nothing.
+local BOX_OPTS = { tokens = { bg = "dw.cardBg", border = "dw.cardBorder" } }
+
 local function paintBox(f)
     f:SetBackdropColor(NS.SkinColor("dw.cardBg"))
     f:SetBackdropBorderColor(NS.SkinColor("dw.cardBorder"))
@@ -110,6 +112,7 @@ local function box(parent)
         f:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
         NS.SkinPaint(f, paintBox)
     end
+    NS.Skin.Card(f, BOX_OPTS)
     return f
 end
 
@@ -657,7 +660,7 @@ end
 
 local function editorBox(e)
     local frame = box(e)
-    frame:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -30)
+    frame:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -K.POPOVER_TOP)
     frame:SetPoint("BOTTOMRIGHT", e, "BOTTOMRIGHT", -10, 40)
     e.box = CreateFrame("EditBox", nil, frame)
     e.box:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, -6)
@@ -686,6 +689,8 @@ local function buildEditor()
     NS.Skin.Text(e.title, "heading")   -- gold, in the skin's title face
     e.closeButton = NS.MakeCloseButton(e, function() e:Hide() end)
     if e.closeButton then e.closeButton:SetPoint("TOPRIGHT", e, "TOPRIGHT", -6, -6) end
+    -- Its title and close on the band S.Shell draws (R5-WIN), as the Offer panel's.
+    NS.Skin.Header(e, { title = e.title, right = { e.closeButton } })
     editorBox(e)
     e.counter = faced(e, "GameFontDisableSmall")
     e.counter:SetPoint("BOTTOMLEFT", e, "BOTTOMLEFT", 12, 16)

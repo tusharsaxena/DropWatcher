@@ -203,6 +203,7 @@ test("table font: the shadow is drawn and taken off (no CreateFont: on the strin
     local NS, row = shown()
     local S = NS.SchemaRuntime
     local fs = modelText(row.cells.ilvl.text)
+    S.Set("window.tableFontShadowFromSkin", false)   -- the stored row: the skin's is tests/test_skin_flip.lua's
     S.Set("window.tableFontShadow", false)
     redraw(NS)
     local x, y = fs:GetShadowOffset()
@@ -217,7 +218,7 @@ test("table font: the shadow is drawn and taken off (no CreateFont: on the strin
     assertEqual(a, 1)
 end)
 
-test("table font edge: with CreateFont, each look is a named font object that carries the shadow", function()
+test("table font edge: with CreateFont, S.HudFont's named font object carries the shadow", function()
     -- A 12.0.7 client draws a font object's shadow, not a runtime SetShadow* on a FontString
     -- (libs/LibKa0s/SkinPaint.lua), so the client path hands the text a font object; the text keeps
     -- the color it was painted in.
@@ -235,11 +236,12 @@ test("table font edge: with CreateFont, each look is a named font object that ca
     local S = NS.SchemaRuntime
     local fs = modelText(row.cells.ilvl.text)
     S.Set("window.tableFontFlags", "THICKOUTLINE")
+    S.Set("window.tableFontShadowFromSkin", false)
     S.Set("window.tableFontShadow", false)
     redraw(NS)
     local obj = fs:GetFontObject()
     assertTrue(type(obj) == "table" and type(obj.name) == "string", "a named font object")
-    assertTrue(obj.name:find("^DropWatcher_TableFont") ~= nil, "named for the addon: " .. tostring(obj.name))
+    assertTrue(obj.name:find("^LibKa0sHud_") ~= nil, "the library's, one per look: " .. tostring(obj.name))
     assertEqual(obj.offset[1], 0); assertEqual(obj.offset[2], 0)
     local _, _, flags = fs:GetFont()
     assertEqual(flags, "THICKOUTLINE", "the object carries the resolved flags")

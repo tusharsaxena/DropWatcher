@@ -77,7 +77,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (13)
+### test_database.lua (14)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -92,6 +92,7 @@ Total.
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
+- database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 
 ### test_schema.lua (11)
 
@@ -210,6 +211,11 @@ Total.
 - Skin seam: the TOC loads the seam after Core and before the widgets, and names EllesmereUI
 - Skin seam: without the library the facade answers Ka0s Default, owner tokens included
 
+### test_launcher_skin_entry.lua (2)
+
+- launcher descriptor passes openSkinPicker, which runs the skin verb
+- mode strips pass sim or onEnd, so the right-click menu has something to end (SF-F1)
+
 ### test_skin_outline.lua (11)
 
 - outline: a fresh profile stores HUD text only, the library's default
@@ -239,18 +245,12 @@ Total.
 - skin chrome: without the library the window's own colors are Ka0s Default's
 - skin chrome: a tab's label is painted when its role changes, not on every repaint
 
-### test_skin_literals.lua (3)
-
-- no color literal outside core/SkinSetup.lua and the named allow-list
-- every allow-list entry carries its reason
-- the gate is falsifiable: a planted literal of each shape is reported
-
 ### test_skin_hud.lua (10)
 
-- skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
+- skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px, gray in a window and black on the HUD
 - skin HUD: while the companion is on the stored style and thickness are not read; off, they are
-- skin HUD: a skin switch restyles every item button; its None draws no edge; the color stays the player's
-- skin HUD: the glow's two colors are the player's under every skin (E6)
+- skin HUD: a skin switch restyles every item button; its None draws no edge; a companion off keeps the swatch
+- skin HUD: no skin switch touches the glow's two stored swatches
 - skin HUD: the companion is a composed row with a check, dimmed with Show border off, dimming style and size
 - skin HUD: without LibKa0s the stored picks draw and the companion's default changes nothing
 - migrate 10: every stored profile's icon border goes back on the skin once, its pick kept
@@ -258,7 +258,59 @@ Total.
 - migrate 10: idempotent on a raw table, the companion set so no sentinel lands; without the library too
 - migrate 10: the library sets the companion itself (ResetToSkin's companions, LibKa0s v1.81.0)
 
-### test_skin_picker.lua (17)
+### test_skin_flip.lua (21)
+
+- skin flip: every companion is a bool row, on by default in both places
+- skin flip: no swatch carries disabledIf, and a class color has no companion
+- skin flip: the font pick's default moved to the Ka0s pick, in both places
+- skin flip: the panel's exception is not touched
+- skin flip: a stored partial profile moves, and nothing but companions and flags is written
+- skin flip: a sub-table the profile never stored is skipped, and the record still lands
+- skin flip: a second run writes nothing, so a companion turned off stays off
+- skin flip: without the library the same write, with the record written by hand
+- skin flip: the ladder moves every stored profile once, and a later off survives the next load
+- skin flip: a profile that arrives after the stamp moved still takes the step
+- skin flip: the record has no row, so no Defaults path walks it, and a companion stays off
+- skin flip: a profile reset runs the step against defaults, which show nothing a player sees
+- skin flip: a skin switch redraws the icon border's color; class and quality stay ahead
+- skin flip: Ka0s Default keeps the glows' own colors; a skin switch restarts them in the skin's
+- skin flip: the two glows stay apart in every skin, and class and off stay as they were
+- skin flip: without the library the stored glow color draws
+- skin flip: without the library S.HudFont writes both shadow arms, so turning the row off clears it
+- skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redraws it
+- skin flip: the row signature signs the resolved shadow, so a skin's new shadow reaches a drawn row
+- skin flip: companion off draws the stored shadow; Ignore fonts leaves it standing
+- skin flip: with the library absent S.BarBorder answers the stored three and S.HoverArt draws nothing
+
+### test_skin_host.lua (16)
+
+- skin host: an untoned button's label and mark read btn.text and btn.icon, live
+- skin host: hover draws btn.hover on an untoned label and leaves a state's tone alone
+- skin host: the button's and the detail box's frames are the library's primitives
+- skin host: the tabs are the skin's, and selection moves their label color
+- skin host: without the library the tabs keep their text roles and underline
+- skin host: the column heads wear list.header.bg and the footer foot.bg
+- skin host: a row takes list.hover under the pointer, from a cell inside it too
+- skin host: a Drops row washes, from its item, its item's button and a worn icon too
+- skin host: WG.ItemHover's own frame washes its row, with no cell tooltip to do it
+- skin host: a History row washes, from its item and its button too
+- skin host: a compact Drops card washes, from its icon too
+- skin host: a compact History card washes, from its icon too
+- skin host: an Offer panel row washes, from its Their eq icon too
+- skin host: title.bg is one layer, the bar's, and stays one through a skin switch
+- skin host: the title bar is placed by the skin's height and alignment
+- skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored
+
+### test_header_band.lua (6)
+
+- header band: the main window's title bar is the band, flush at Shell's inset, in every edge width
+- header band: the main window draws one band, the bar's, through a switch
+- header band: minimized, the window is the band and its two edges
+- header band: the Offer panel keeps S.Shell's band and centers its title and close on it
+- header band: the Edit message box keeps S.Shell's band and centers its title and close on it
+- header band: without the library no band is asked for and the headers keep their builders' anchors
+
+### test_skin_picker.lua (24)
 
 - Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
 - Skin picker: the spec names this owner, its seams, the Skin tab and the eye
@@ -273,7 +325,14 @@ Total.
 - Skin picker: a pick previews, unsaved; Apply saves it and marks the picker seen
 - Skin picker: the close control puts the stored skin back, saves nothing, and marks it seen
 - Skin picker: the gear saves the pick and opens General on its Skin tab
-- Skin picker: the eye opens the window in test mode and leaves the picker up
+- Skin picker: shown with the window hidden, test mode turns on and the window opens
+- Skin picker: the eye toggles test mode off and on through the write seam
+- Skin picker: every close puts test mode and the window back as they were
+- Skin picker: the stand-down's close leaves no window the picker opened for the stand-up
+- Skin picker: test mode on at open, turned off by the eye, is on again after the close
+- Skin picker: a window already shown is left alone, and stays shown after the close
+- Skin picker: test mode the player turns on with /dw test while the picker is up stays on
+- Skin picker: in combat the eye's start is refused and the close undoes nothing
 - Skin picker: the stand-down with a preview pending puts the stored skin back, unsaved, unseen
 - Skin picker: a profile switch with a preview pending wears the new profile's skin
 - Skin picker: degraded, nothing shows and nothing raises
@@ -351,9 +410,10 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (62)
+### test_window_shell.lua (63)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
+- shell: no line shows under the title bar, in any skin or without the library
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
 - shell: the default size is 1080 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
@@ -532,7 +592,7 @@ Total.
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
 
-### test_compact_chrome.lua (23)
+### test_compact_chrome.lua (27)
 
 - chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
@@ -557,6 +617,10 @@ Total.
 - chrome: the compact sim strip takes a second line when its words wrap at 380 px
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
+- chrome: the Filters panel listens for a press only while it is open
+- chrome: a press outside the Filters panel closes it, and its dropdown's menu with it
+- chrome: a press on the Filters panel or its button keeps it open, and the button still toggles
+- chrome: a press on the shared menu a panel dropdown dropped keeps the panel open
 
 ### test_compact_modes.lua (7)
 
@@ -631,7 +695,7 @@ Total.
 - table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
-- table font edge: with CreateFont, each look is a named font object that carries the shadow
+- table font edge: with CreateFont, S.HudFont's named font object carries the shadow
 - table font: a read reuses its table, and a later read leaves nothing of the last look
 - table font: History and the compact cards draw the same setting
 
@@ -906,7 +970,7 @@ Total.
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 
-### test_compat.lua (72)
+### test_compat.lua (74)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -979,6 +1043,8 @@ Total.
 - compat: TradePartnerName names the trade window's partner, with a realm when given
 - compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
+- compat: PixelFactor answers PixelUtil's factor, else nil
+- compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_text_parse.lua (10)
@@ -1781,9 +1847,13 @@ Total.
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 
-### test_icon_style.lua (10)
+### test_icon_style.lua (14)
 
-- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick
+- icon style: by default an item icon is cropped 0.1 a side in a Solid icon.outline border 1 pixel thick
+- icon style: a window's item icon is edged in icon.outline, a HUD one (the toast's) in icon.border
+- icon style: a skin with no icon.outline edges a window icon in its icon.border
+- icon style: the edge is physical pixels, snapped at the button's scale, and re-snapped when it moves
+- icon style: a scale change re-snaps every icon on screen with no row repaint
 - icon style: zoom 0 and no border draw an item icon as it was before G11
 - icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
 - icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
@@ -2003,6 +2073,15 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
+### test_sim_checkbox.lua (6)
+
+- sim checkbox: Master controls draws a session-only Sim mode row straight after Test mode
+- sim checkbox: the launcher's pair is one NS pair the row reads
+- sim checkbox: ticking it does what `/dw sim` does, the status and the sim panel
+- sim checkbox: unticking it stops a running sim; ticking a running sim changes nothing
+- sim checkbox: Reset all settings stops a running sim and never starts one
+- sim checkbox: a sim started or stopped elsewhere refreshes the open page
+
 ### test_bindings.lua (14)
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
@@ -2146,6 +2225,56 @@ Total.
 - lizard sighted: parity names every file whose counts differ, and only those
 - lizard sighted: lizard lists every function of a hazard fixture once it is sanitized
 
+### test_skin_values.lua (3)
+
+- skin values: every host row carries its file, substring, why and cause id
+- skin values: no typed value outside the kit's categories and the host's rows
+- skin values: the check is falsifiable, a planted value of each shape is reported
+
+### test_skin_switch.lua (41)
+
+- skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the window's title bar changes
+- skin switch: the window's title bar changes with the Scope ignored
+- skin switch: the active tab changes
+- skin switch: the active tab changes with the Scope ignored
+- skin switch: the idle tab changes
+- skin switch: the idle tab changes with the Scope ignored
+- skin switch: the restricted badge changes
+- skin switch: the restricted badge changes with the Scope ignored
+- skin switch: the test mode word changes
+- skin switch: the test mode word changes with the Scope ignored
+- skin switch: a flat button changes
+- skin switch: a flat button changes with the Scope ignored
+- skin switch: a row chevron changes
+- skin switch: a row chevron changes with the Scope ignored
+- skin switch: a column head changes
+- skin switch: a column head changes with the Scope ignored
+- skin switch: the column head band changes
+- skin switch: the column head band changes with the Scope ignored
+- skin switch: the summary strip's rule changes
+- skin switch: the summary strip's rule changes with the Scope ignored
+- skin switch: the detail card's box changes
+- skin switch: the detail card's box changes with the Scope ignored
+- skin switch: the footer band changes
+- skin switch: the footer band changes with the Scope ignored
+- skin switch: a Drops row's stripe and tone changes
+- skin switch: a Drops row's stripe and tone changes with the Scope ignored
+- skin switch: the tables' shadow changes
+- skin switch: an item's icon border changes
+- skin switch: the main spec's glow changes
+- skin switch: the off-spec glow changes
+- skin switch: a group header changes
+- skin switch: a group header changes with the Scope ignored
+- skin switch: History's column head changes
+- skin switch: History's column head changes with the Scope ignored
+- skin switch: the Offer panel changes
+- skin switch: the Offer panel changes with the Scope ignored
+- skin switch: a tooltip's title and lines changes
+- skin switch: a tooltip's title and lines changes with the Scope ignored
+- skin switch: the toast changes
+- skin switch: the toast changes with the Scope ignored
+
 ## Totals
 
 | Suite | Cases |
@@ -2153,27 +2282,30 @@ Total.
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
-| test_database.lua | 13 |
+| test_database.lua | 14 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 23 |
 | test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
+| test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
-| test_skin_literals.lua | 3 |
 | test_skin_hud.lua | 10 |
-| test_skin_picker.lua | 17 |
+| test_skin_flip.lua | 21 |
+| test_skin_host.lua | 16 |
+| test_header_band.lua | 6 |
+| test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 62 |
+| test_window_shell.lua | 63 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
 | test_compact_history.lua | 11 |
 | test_history_card.lua | 15 |
-| test_compact_chrome.lua | 23 |
+| test_compact_chrome.lua | 27 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
 | test_table_font.lua | 10 |
@@ -2189,7 +2321,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
-| test_compat.lua | 72 |
+| test_compat.lua | 74 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
@@ -2225,7 +2357,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
 | test_glow.lua | 14 |
-| test_icon_style.lua | 10 |
+| test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
@@ -2235,6 +2367,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
+| test_sim_checkbox.lua | 6 |
 | test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
@@ -2246,5 +2379,7 @@ Total.
 | test_layout_cap.lua | 13 |
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
+| test_skin_values.lua | 3 |
+| test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1849** |
+| **Total** | **1960** |

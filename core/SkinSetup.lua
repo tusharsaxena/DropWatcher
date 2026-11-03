@@ -97,6 +97,7 @@ local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
 local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
 local DEFAULT = "ka0s"
+local TONE = NS.Constants.TONE
 
 -- The owner tokens (LibKa0s-Skin-1.0 minor 7; Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
 -- the DW-G gaps). Each `default` is the value core/Constants.lua's palette (or the chrome literal the
@@ -141,6 +142,15 @@ NS.SKIN_TOKENS = {
     ["dw.cardBorder"] = { default = { 0.24, 0.24, 0.27, 0.85 }, follow = "card.border" },
     -- DW-G15: a tooltip row's label and bullet.
     ["dw.tipLabel"]   = { default = { 0.80, 0.68, 0.36, 1 }, follow = "gtip.title" },     -- C.TONE.mutedGold
+    -- FS-DW-FLIP, cause D5: the upgrade glows. Ka0s Default keeps this addon's two hues (owner ruling
+    -- D-18), not its `glow.color`; the off-spec glow follows the Warband blue dw.offSpec follows, so
+    -- the main spec and the off-spec stay apart in every skin (ruling E6: the hues tell them apart).
+    ["dw.glowMain"]    = { default = { TONE.glowMain.r, TONE.glowMain.g, TONE.glowMain.b, 1 }, follow = "glow.color" },
+    ["dw.glowOffSpec"] = { default = { TONE.glowOffSpec.r, TONE.glowOffSpec.g, TONE.glowOffSpec.b, 1 },
+                           follow = "sem.warband" },
+    -- FS-DW-FLIP, cause D6: the tables' text shadow. Ka0s Default keeps the black the tables drew,
+    -- where its `hud.shadow` is none; every other skin draws its own, or none where it states none.
+    ["dw.tableShadow"] = { default = { 0, 0, 0, 1 }, follow = "hud.shadow" },
 }
 
 -- The Ka0s Default library tokens the DEGRADED facade answers, copied from the library and limited
@@ -172,6 +182,8 @@ NS.SKIN_FALLBACK = {
     ["icon.hot"]         = { 1, 1, 1, 1 },
     ["icon.tint"]        = { 0.7, 0.7, 0.72, 1 },
     ["btn.text"]         = { 1, 1, 1, 1 },
+    ["btn.icon"]         = { 0.85, 0.85, 0.85, 1 },
+    ["btn.hover"]        = { 1, 0.82, 0, 1 },
     ["input.bg"]         = { 0.1, 0.1, 0.12, 0.9 },
     ["input.border"]     = { 0.24, 0.24, 0.27, 0.9 },
     ["sem.modeTest"]     = { 1, 0.15, 0.15, 1 },
@@ -465,8 +477,10 @@ end
 -- (NS.WriteSkinChoice) runs only on Apply, the gear or Apply to all. The close control and Escape
 -- put back the stored choice as `get` reads it at the close, so the host re-applies nothing. A
 -- profile event takes the picker down FIRST, before the new profile's skin is applied, so the new
--- profile's whole pair is what stays worn. The eye opens the window in test mode; the library
--- raises its DIALOG window after onPreview returns, so the HIGH window cannot cover it.
+-- profile's whole pair is what stays worn. The preview is test mode (spec.preview, below): the
+-- picker shown with the window hidden turns it on, the eye toggles it, and every close (Apply, the
+-- close control, Escape, the gear, NS.HideSkinPicker) puts it back as it was at open; the library
+-- raises its DIALOG window after each, so the HIGH window cannot cover it.
 --
 -- QUEUED. One picker is up at a time across every Ka0s addon: while another addon's is up,
 -- O.SkinPicker queues this one and answers nil, "queued", which NS.MaybeShowSkinPicker passes
@@ -485,16 +499,20 @@ local function options()
     return S and S.Helpers
 end
 
---- The eye: the window in test mode, so the player sees the skin on this addon's own frames. Test
---- mode's start opens the window itself; a mode already on only needs the window shown. A refused
---- start (combat, a simulation) prints its own line.
-local function previewSkin()
-    if NS.State and NS.State.testMode then
-        if NS.ShowWindow then NS.ShowWindow() end
-    elseif NS.SetTestMode then
-        NS.SetTestMode(true)
-    end
-end
+--- The picker's preview (LibKa0s OptionsSkinPicker 11, spec.preview; the owner's rule, round 6):
+--- test mode, through NS.SetTestMode, the one seam /dw test, the launcher and the Master controls
+--- checkbox share, so all of them stay in step and its refusals (stood down, combat, a running
+--- simulation) print their own line and move nothing. The library enters it when the picker shows
+--- with the window hidden and test mode off, the eye toggles it, and every close puts back what
+--- the picker and its eye moved; test mode's end closes the window only when its start opened it
+--- (modules/Window.lua openedByTestMode), so the window comes back as it was too.
+local PREVIEW = {
+    mode = "test",
+    isActive = function() return NS.State ~= nil and NS.State.testMode == true end,
+    isShown = function() return NS.IsWindowShown ~= nil and NS.IsWindowShown() end,
+    enter = function() if NS.SetTestMode then NS.SetTestMode(true) end end,
+    exit = function() if NS.SetTestMode then NS.SetTestMode(false) end end,
+}
 
 --- The player's close: the picker seen, and nothing else (the library's put-back wears the stored
 --- choice already).
@@ -507,12 +525,12 @@ end
 
 --- The spec NS.MaybeShowSkinPicker hands O.SkinPicker: this owner, its read and write seams, the
 --- page key settings/Panel.lua registered and its Skin tab's key (the gear's default opens them),
---- the eye and the close.
+--- the preview (the eye) and the close.
 function NS.SkinPickerSpec()
     return {
         owner = addonName, get = NS.SkinChoice, set = NS.WriteSkinChoice,
         page = "general", tab = "Appearance",
-        onPreview = previewSkin, onClose = pickerClosed,
+        preview = PREVIEW, onClose = pickerClosed,
     }
 end
 
@@ -551,6 +569,51 @@ function NS.MaybeShowSkinPicker()
     end
     pickerHeld = false
     return O.SkinPicker(NS.SkinPickerSpec())
+end
+
+-- ── the one-time skin notice (LibKa0s OptionsSkinPicker minor 9, SG-L3) ────────────────────────
+-- A release that wants every account to learn skins exist raises lib.SKIN_NOTICE_VERSION. The first
+-- addon to ask in a session claims the notice and shows the picker; every other addon records the
+-- version and stays quiet. The record is `db.global.skinNotice`, a number: account-wide, so a profile
+-- switch never shows it twice. In combat nothing is claimed; it asks again every NOTICE_RETRY seconds until combat ends.
+local NOTICE_RETRY = 5   -- seconds between asks while the player is in combat
+local noticeWaiting = false
+
+local function noticeGlobal()
+    local d = NS.db or (NS.addon and NS.addon.db)
+    return d and d.global or nil
+end
+
+local noticeStore = {
+    get = function() local g = noticeGlobal(); return g and g.skinNotice or nil end,
+    set = function(v) local g = noticeGlobal(); if g then g.skinNotice = v end end,
+}
+
+function NS.MaybeShowSkinNotice()
+    local O = options()
+    if not (O and type(O.SkinNotice) == "function" and noticeGlobal()) then return nil, "unavailable" end
+    if NS.IsStoodDown and NS.IsStoodDown() then
+        -- A stood-down addon shows nothing, but a seen record still silences the rest (SG-L3).
+        O.SkinNotice(nil, noticeStore, true)
+        return nil, "standdown"
+    end
+    local spec = NS.SkinPickerSpec()
+    local frame, why = O.SkinNotice(spec, noticeStore)
+    if why == "combat" and not noticeWaiting and type(_G.C_Timer) == "table" and _G.C_Timer.After then
+        noticeWaiting = true
+        _G.C_Timer.After(NOTICE_RETRY, function()
+            noticeWaiting = false
+            NS.MaybeShowSkinNotice()
+        end)
+    end
+    return frame, why
+end
+
+local pickerFirstRun = NS.MaybeShowSkinPicker
+function NS.MaybeShowSkinPicker()
+    local frame, why = NS.MaybeShowSkinNotice()
+    if frame or why == "queued" then return frame, why end
+    return pickerFirstRun()
 end
 
 --- The reserved `/dw skin` verb's act (LibKa0s v1.82.0, OptionsSkinPicker minor 3, ruling D-16):
@@ -621,7 +684,13 @@ if not Skin then
         "GetAccentColor", "GetPanelColor", "GetFont",
         "TitleBar", "Divider", "Footer", "Card", "Slider", "NavItem", "Drawer", "ListRow", "MenuFrame",
         "Tooltip", "Strip", "Cover", "Text", "ChartStyle", "BarStyle", "IconBorder", "GlowColor",
-        "BarTexture", "FontFlags", "HudFontSize",
+        "BarTexture", "FontFlags", "HudFontSize", "Mark",
+        -- LibKa0s v1.85.0: nil is each getter's degraded answer, so the stored value draws, and
+        -- BarGloss draws nothing: no skin, no gloss.
+        "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
+        -- R5-L3: with no library there is no band, so Band answers nil and Header places nothing;
+        -- the header children keep the anchors their builders gave them.
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = function(name)
@@ -670,6 +739,29 @@ if not Skin then
     S.HudFontSize = function(size)
         local n = tonumber(size)
         return (n and n > 0) and n or 12
+    end
+    -- The re-cut v1.85.0: the stored three as they came, or a host would lose its stored border. This
+    -- addon draws no bar border; the facade answers it because parity holds every member.
+    S.BarBorder = function(style, show, size) return style, show, size end
+    -- LibKa0s v1.85.0 (SkinPaintExtras minor 9): a string a caller concatenates, so never nil. The
+    -- same markup in the art's own color, there being no tint to read.
+    S.MarkText = function(path, size)
+        size = size or 14
+        return ("|T%s:%d:%d|t"):format(path, size, size)
+    end
+    -- The re-cut v1.85.0 (SkinPaintExtras minor 14): the one member that must draw, or a string has
+    -- no face. Flags pass S.FontFlags, so "@skin" never reaches SetFont; both shadow arms are
+    -- written, so turning the row off clears it. A stored shadow does not draw here on a 12.0.7
+    -- client, which draws only a font object's, and that is accepted (Options doc, Moving to, 7).
+    S.HudFont = function(fs, opts)
+        opts = type(opts) == "table" and opts or {}
+        local face = opts.face
+        if type(face) ~= "string" or face == "" then face = STANDARD_TEXT_FONT end
+        if type(face) ~= "string" then return nil end
+        fs:SetFont(face, S.HudFontSize(opts.size), S.FontFlags(opts.flags))
+        local on = opts.shadow and true or false
+        fs:SetShadowColor(0, 0, 0, on and 1 or 0)
+        fs:SetShadowOffset(on and 1 or 0, on and -1 or 0)
     end
 
     NS.Skin = S

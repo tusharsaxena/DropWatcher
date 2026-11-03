@@ -50,7 +50,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   Window › Icons: a zoom that crops its edges, and the standard border block (style, thickness,
   color and Use class color) with Color by item quality. The defaults (feedback-21 H6) trim the icon's
   baked-in edge and draw a Solid black border 2 pixels thick; while Use the skin's border is on (by
-  default), the border's style and thickness are the skin's.
+  default), the border's style and thickness are the skin's, Solid 1 pixel in every skin.
 - **Skins** (the 2026-10-29 skinning rollout, LibKa0s-Skin-1.0). Every surface the addon draws, the
   window, cards, Offer panel, toast, tooltip lines, tool windows and, when asked, the settings panel,
   wears the skin picked on General → Skin (nine Ka0s skins, or EllesmereUI's), live, with font, texture and

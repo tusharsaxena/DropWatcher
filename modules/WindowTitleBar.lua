@@ -182,13 +182,32 @@ local function iconButton(parent, icon, glyph, onClick)
     return b
 end
 
--- The flat button's box from the skin (DW-G10, decision D1): composed, not the skin's Button, whose
--- hover recolors the label, which carries a state tone here (WindowGroup.ToneButton). The fill and
--- edge are the owner tokens `dw.btnBg` / `dw.btnBorder` (Ka0s Default: today's 0.12 fill and the
--- shared window edge's inner line), repainted on a skin switch.
+-- The flat button's box is the skin's Button (FS-DW-FIX, cause A1), so `btn.borderStyle` and
+-- `btn.borderSize` reach it, with the fill and edge remapped to the owner tokens `dw.btnBg` /
+-- `dw.btnBorder` (Ka0s Default: today's 0.12 fill and the shared window edge's inner line). The
+-- primitive does not know `b.label` or `b.art`, on purpose: they carry a state tone here (decision
+-- D1, WindowGroup.ToneButton), so TB.PaintButtonLook draws them. paintTextButton is the degraded
+-- arm's box, where S.Button draws nothing.
+local BUTTON_OPTS = { tokens = { bg = "dw.btnBg", border = "dw.btnBorder" } }
+
 local function paintTextButton(b)
     b:SetBackdropColor(NS.SkinColor("dw.btnBg"))
     b:SetBackdropBorderColor(NS.SkinColor("dw.btnBorder"))
+end
+
+--- An untoned flat button's look (cause L8): the label in `btn.text`, or `btn.hover` under the
+--- pointer, the mark in `btn.icon`. A toned one is WindowGroup.ToneButton's, and keeps its tone
+--- under the pointer (D1). Run at build, on the hover, on a skin switch and when a tone is dropped.
+--- @param b table a TB.TextButton
+function TB.PaintButtonLook(b)
+    if b.tone then return end
+    b.label:SetTextColor(NS.SkinColor(b.dwHot and "btn.hover" or "btn.text"))
+    if b.art then b.art:SetVertexColor(NS.SkinColor("btn.icon")) end
+end
+
+local function buttonHot(b, on)
+    b.dwHot = on
+    TB.PaintButtonLook(b)
 end
 
 --- A flat button: the skin's fill and inner line, a label kept centered and a mark beside it
@@ -206,6 +225,7 @@ function TB.TextButton(parent, width, icon, text, onClick, scale)
         b:SetBackdrop({ bgFile = S.bgFile, edgeFile = S.edgeFile, edgeSize = S.edgeSize })
         NS.SkinPaint(b, paintTextButton)
     end
+    NS.Skin.Button(b, BUTTON_OPTS)
     b.markNudge = px(7)   -- the label's nudge right past the mark
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetSize(px(12), px(12))
@@ -215,7 +235,10 @@ function TB.TextButton(parent, width, icon, text, onClick, scale)
     b.label:SetPoint("CENTER", b, "CENTER", b.markNudge, 0)
     NS.Skin.Font(b.label)   -- the skin's face; the color is the state's (WindowGroup.ToneButton)
     b.label:SetText(text)
+    NS.SkinPaint(b.label, function() TB.PaintButtonLook(b) end)
     b:SetScript("OnClick", onClick)
+    b:HookScript("OnEnter", function(self) buttonHot(self, true) end)
+    b:HookScript("OnLeave", function(self) buttonHot(self, false) end)
     return b
 end
 
@@ -234,6 +257,9 @@ function TB.SetButtonMark(b, text, icon)
 end
 
 -- ── construction ────────────────────────────────────────────────────────────────────────────
+
+-- The px a LEFT or RIGHT title stays clear of the bar's controls.
+TB.TITLE_RESERVE = 8
 
 -- A double-click on the bar expands a minimized window (board 06 A).
 local function onTitleClick(_, button)
@@ -322,8 +348,8 @@ local function buildControls(f, bar)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
---- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider). The drag goes
---- through `host`, the shell, which owns the geometry it writes.
+--- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
+--- anchor under the bar). The drag goes through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
 function TB.Build(f, host)
@@ -338,20 +364,27 @@ function TB.Build(f, host)
     bar:SetScript("OnMouseUp", onTitleClick)
     f.titleBar = bar
 
-    -- Centered and gold (ApplySkin tints `frame.title`), as Ka0s Loot History's title.
+    -- Gold and centered under Ka0s Default, as Ka0s Loot History's title. S.TitleBar places it by
+    -- the skin's `title.height` and `title.align` (FS-DW-FIX, cause L9), clear of the controls.
     f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
+    NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
     f.simText = buildModeText(bar, f.title, L["SIMULATION"], TB.SIM_TOKEN, TB.SimTip)
     buildNewChip(f, bar)
     buildControls(f, bar)
 
+    -- The body's anchor under the bar, never a line (R4-SEP of Ka0sAddonsCommonTasks
+    -- docs/2026-11-03-SMOKE_ROUND4: no window draws a separator under its title, as the Skin
+    -- Tester's showroom). Hidden here so the library-absent window draws none either; with the
+    -- library, Core.ApplySkin hides it again on every call.
     f.divider = f:CreateTexture(nil, "ARTWORK")
     f.divider:SetHeight(1)
     f.divider:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, 0)
     f.divider:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+    f.divider:Hide()
 end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────

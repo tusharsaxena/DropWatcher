@@ -69,17 +69,26 @@ function Glow.KindOf(drop)
     return nil
 end
 
+-- Each glow's owner token (core/SkinSetup.lua): Ka0s Default's are the two swatches' defaults.
+local COLOR_TOKEN = { main = "dw.glowMain", offSpec = "dw.glowOffSpec" }
+
 -- A glow's settings as the driver takes them: `color` as { r, g, b, a }; false while it is off.
--- The color is resolved here, through its Use class color companion (NS.ResolveColor,
--- options-ui-§17): THE PLAYER'S CLASS, hence the nil unit, since the glow says the drop is an
--- upgrade for you, whoever looted it. The swatch's alpha survives the mode. A write to either row
--- moves the generation on (Refresh), so the icons restart in the new color.
+-- The color is resolved here. Use class color comes first (NS.ResolveColor, options-ui-§17): THE
+-- PLAYER'S CLASS, hence the nil unit, since the glow says the drop is an upgrade for you, whoever
+-- looted it. The swatch's alpha survives that mode. Then Use the skin's color (FS-DW-FLIP, cause D5),
+-- the owner token; S.GlowColor answers nothing without the library, so the swatch stands there. A
+-- write to any of these rows moves the generation on (Refresh), so the icons restart in the new color.
 local function read(kind)
     local base = "glow." .. kind .. "."
     if NS.Setting(base .. "enabled") ~= true then return false end
     local cfg = {}
     for key in pairs(NS.C.PROFILE.glow[kind]) do cfg[key] = NS.Setting(base .. key) end
-    cfg.color = { NS.ResolveColor(cfg.color, cfg.useClassColor == true, nil) }
+    local S = NS.Skin
+    if cfg.useClassColor ~= true and cfg.colorFromSkin == true and S.GlowColor() then
+        cfg.color = { S.Color(COLOR_TOKEN[kind]) }
+    else
+        cfg.color = { NS.ResolveColor(cfg.color, cfg.useClassColor == true, nil) }
+    end
     return cfg
 end
 
@@ -144,6 +153,13 @@ end
 --- @param buttonOf function object -> its item button
 function Glow.StopFree(pool, buttonOf)
     for _, o in ipairs(pool and pool.free or {}) do Glow.Stop(buttonOf(o)) end
+end
+
+--- A skin switch (modules/Window.lua's listener, ahead of its repaint): every icon restarts in the
+--- new skin's color on its next paint.
+function Glow.OnLooksChanged()
+    gen = gen + 1
+    configs = {}
 end
 
 --- The glow settings changed (a glow row's write, a profile switch): every icon restarts with the

@@ -92,6 +92,7 @@ NS.Launcher = lib:New({
 
     -- The stored `enabled` setting, the same accessor the Master controls row reads (launcher-§1),
     -- written through the same handler `/dw enable|disable` calls.
+    openSkinPicker = function() if NS.RunSkinVerb then NS.RunSkinVerb() end end,
     isEnabled  = function() return NS.SchemaRuntime ~= nil and NS.SchemaRuntime.Get("enabled") ~= false end,
     setEnabled = function(on) NS.addon:SlashEnabled(on) end,
 
@@ -106,6 +107,9 @@ NS.Launcher = lib:New({
     debug         = function(tag, message) NS.Debug(tag, message) end,
     debugAtEnable = function(tag, message) NS.DebugAtEnable(tag, "%s", message) end,
 
+    -- The one pair Master controls' Sim mode box takes too (core/DropWatcher.lua, R6-SIM).
+    isSimMode = NS.IsSimMode,
+    toggleSim = NS.ToggleSim,
     version = function()
         local v = NS.Version()
         return v ~= "?" and v or nil
