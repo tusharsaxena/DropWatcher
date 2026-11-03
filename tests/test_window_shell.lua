@@ -54,6 +54,26 @@ test("shell: the title bar holds the centered gold title, the badge, minimize an
     assertTrue(NS.HasWidgets())
 end)
 
+-- R4-SEP (Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND4, the owner's "no separator line below
+-- header", like the Skin Tester's showroom): the texture under the bar stays, since the body anchors
+-- to it, but it never shows: not under Ka0s Default, not after a skin switch, not without the library.
+test("shell: no line shows under the title bar, in any skin or without the library", function()
+    local _, f, m = shown()
+    assertTrue(f.divider ~= nil, "the anchor the body hangs from is still made")
+    assertFalse(f.divider:IsShown(), "Ka0s Default: no line under the title")
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    for _, key in ipairs({ "obsidian", "glass", "ka0s" }) do
+        if Skin:GetSkin(key) then
+            Skin:SetChoice("DropWatcher", "ka0s", key)
+            assertFalse(f.divider:IsShown(), key .. ": no line under the title")
+        end
+    end
+    local bare = shown({ skip = T.loadAddon.libFiles })
+    local g = bare.Window.Frame()
+    assertTrue(g ~= nil and g.divider ~= nil, "the window builds without the library")
+    assertFalse(g.divider:IsShown(), "without the library: no line under the title")
+end)
+
 -- Feedback spec §1 (FB-3): a mode's words sit 10px right of the title in GameFontNormalLarge, in
 -- their own color, with no box: the frame that carries their tooltip draws nothing.
 local function assertModeText(m, word, r, g, b, title)

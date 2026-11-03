@@ -48,6 +48,7 @@ passed.
 | SKIN-31..33 | [Skins](#skins) | LibKa0s v1.83.0 (DW-F01, 2026-10-31): the window fits the new faces under both outline modes (SKIN-31), WoW Default differs from Ka0s Default (SKIN-32), the media pickers preview (SKIN-33); SKIN-4, SKIN-15 and SKIN-16 reopened |
 | SKIN-37..43 | [Skins](#skins) | The full skinning run (LibKa0s v1.85.0, FS-DW-FLIP, FS-DW-FIX): Ka0s Default's pixels, the shadow, the border and glow colors, the companions, the one step, the record through Defaults, and the look changes |
 | SKIN-44 | [Skins](#skins) | The owner's third smoke round (R3-FRIZ): a stored pick of the deleted Ka0s Friz Quadrata TT lands on Ka0s Ubuntu; SKIN-15 and SKIN-32 reopened |
+| SKIN-46 | [Skins](#skins) | The owner's fourth smoke round (R4-SEP): no line under any window's title, the debug, copy and skin windows included |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -3317,6 +3318,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-45. Item icon borders are 1 pixel in every skin (R3-FIX).** With Window › Icons → *Use the skin's border* ticked, `/dw test` on, pick Ka0s Default, Azeroth, Ember, WoW Midnight and WoW Default → every item icon (the Drops rows, the cards, the toast) has a flat 1-pixel edge, never 2 pixels and never the tooltip-style edge WoW Default drew before. Untick the box → your stored style and thickness come back. Fail: a 2-pixel or tooltip edge under any skin. Result: not run
 
+**SKIN-46. No line under any window's title (R4-SEP).** The Skin Tester's showroom is the reference: its title band meets the body with no rule between them. Under Ka0s Default, `/dw show` → the title band is a dark gold gradient and the body starts right under it with no gray line, in the full and the compact layout and minimized. Switch to Obsidian, Glass and WoW Midnight → still no line. Then open `/dw debug`, its Copy window, the skin selector (`/dw skin` or the Skin tab's picker) and `/dw sim`'s Steps panel → none draws a line under its title. The thin rules above the Drops and History bottom strips are body rules and stay. Fail: a 1-pixel line under any of those titles in any skin. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3357,6 +3360,8 @@ until the owner runs them; an agent never marks one passed.
 Owed by the full skinning run (2026-11-01; Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/`): SKIN-37..43, and SKIN-2, SKIN-14, SKIN-30 and GLOW-9, whose expected results moved and whose pass marks went with them. An agent never marks one passed.
 
 Owed by the owner's third smoke round (2026-11-02; Ka0sAddonsCommonTasks `docs/2026-11-02-SMOKE_ROUND3/`, R3-FRIZ): SKIN-44, and SKIN-15 and SKIN-32, whose WoW Default face is now Ka0s Ubuntu and whose pass marks went with it.
+
+Owed by the owner's fourth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`, R4-SEP): SKIN-46. An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 

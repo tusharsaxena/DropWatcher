@@ -348,8 +348,8 @@ local function buildControls(f, bar)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
---- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider). The drag goes
---- through `host`, the shell, which owns the geometry it writes.
+--- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
+--- anchor under the bar). The drag goes through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
 function TB.Build(f, host)
@@ -376,10 +376,15 @@ function TB.Build(f, host)
     buildNewChip(f, bar)
     buildControls(f, bar)
 
+    -- The body's anchor under the bar, never a line (R4-SEP of Ka0sAddonsCommonTasks
+    -- docs/2026-11-03-SMOKE_ROUND4: no window draws a separator under its title, as the Skin
+    -- Tester's showroom). Hidden here so the library-absent window draws none either; with the
+    -- library, Core.ApplySkin hides it again on every call.
     f.divider = f:CreateTexture(nil, "ARTWORK")
     f.divider:SetHeight(1)
     f.divider:SetPoint("TOPLEFT", bar, "BOTTOMLEFT", 0, 0)
     f.divider:SetPoint("TOPRIGHT", bar, "BOTTOMRIGHT", 0, 0)
+    f.divider:Hide()
 end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────

@@ -394,9 +394,10 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (62)
+### test_window_shell.lua (63)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
+- shell: no line shows under the title bar, in any skin or without the library
 - shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
 - shell: the default size is 1080 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
@@ -2262,7 +2263,7 @@ Total.
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 26 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 62 |
+| test_window_shell.lua | 63 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
@@ -2344,4 +2345,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1930** |
+| **Total** | **1931** |
