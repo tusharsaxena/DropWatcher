@@ -660,7 +660,7 @@ end
 
 local function editorBox(e)
     local frame = box(e)
-    frame:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -30)
+    frame:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -K.POPOVER_TOP)
     frame:SetPoint("BOTTOMRIGHT", e, "BOTTOMRIGHT", -10, 40)
     e.box = CreateFrame("EditBox", nil, frame)
     e.box:SetPoint("TOPLEFT", frame, "TOPLEFT", 6, -6)
@@ -689,6 +689,8 @@ local function buildEditor()
     NS.Skin.Text(e.title, "heading")   -- gold, in the skin's title face
     e.closeButton = NS.MakeCloseButton(e, function() e:Hide() end)
     if e.closeButton then e.closeButton:SetPoint("TOPRIGHT", e, "TOPRIGHT", -6, -6) end
+    -- Its title and close on the band S.Shell draws (R5-WIN), as the Offer panel's.
+    NS.Skin.Header(e, { title = e.title, right = { e.closeButton } })
     editorBox(e)
     e.counter = faced(e, "GameFontDisableSmall")
     e.counter:SetPoint("BOTTOMLEFT", e, "BOTTOMLEFT", 12, 16)

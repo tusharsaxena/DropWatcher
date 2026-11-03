@@ -301,6 +301,15 @@ Total.
 - skin host: the title bar is placed by the skin's height and alignment
 - skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored
 
+### test_header_band.lua (6)
+
+- header band: the main window's title bar is the band, flush at Shell's inset, in every edge width
+- header band: the main window draws one band, the bar's, through a switch
+- header band: minimized, the window is the band and its two edges
+- header band: the Offer panel keeps S.Shell's band and centers its title and close on it
+- header band: the Edit message box keeps S.Shell's band and centers its title and close on it
+- header band: without the library no band is asked for and the headers keep their builders' anchors
+
 ### test_skin_picker.lua (17)
 
 - Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
@@ -2258,6 +2267,7 @@ Total.
 | test_skin_hud.lua | 10 |
 | test_skin_flip.lua | 21 |
 | test_skin_host.lua | 16 |
+| test_header_band.lua | 6 |
 | test_skin_picker.lua | 17 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
@@ -2345,4 +2355,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1931** |
+| **Total** | **1937** |

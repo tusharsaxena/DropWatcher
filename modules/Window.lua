@@ -333,11 +333,22 @@ local function anchorTopLeft()
     savePoint()
 end
 
+-- Minimized, the window is its band and the edge above and below it (R5-WIN): the band's height
+-- and its inset from the top, as S.Shell lays it for the skin in force (2 + 30 + 2 under a 2 px
+-- edge), so the bottom edge never covers the band. With no library, the 1 px edge's 32.
+local function minimizedHeight()
+    local band = NS.Skin.Band(frame)
+    local h = band and band:GetHeight()
+    local y = band and select(5, band:GetPoint(1))
+    if type(h) ~= "number" or h <= 0 or type(y) ~= "number" then return K.TITLE_H + 2 end
+    return h - 2 * y
+end
+
 -- The layout's bounds and size (modules/WindowCompact.lua). Minimized, the window is its title bar
 -- alone; the stored height is kept for the expand.
 local function applySize()
     local width, height = NS.WindowCompact.Fit(frame)
-    frame:SetSize(width, isMinimized() and (K.TITLE_H + 2) or height)
+    frame:SetSize(width, isMinimized() and minimizedHeight() or height)
 end
 
 local function applyLook()
@@ -558,6 +569,9 @@ local function build()
     NS.ApplySkin(f)
     -- The title bar paints its own title.bg (S.TitleBar), so the shell draws no second band under it.
     NS.Skin.Shell(f, { noTopBar = true })
+    -- The bar takes the band's rect, flush inside the edge at Shell's inset in every skin, as Ka0s Loot
+    -- History's (R5-WIN): its title and controls, anchored to the bar at y 0, sit on the band's middle.
+    NS.Skin.Header(f, { bars = { f.titleBar } })
     makeResizable(f)
     NS.WindowFilterBar.Layout(f:GetWidth())
     -- Escape closes it (standalone-windows); the frame is named, so the name is what the list holds.
@@ -993,6 +1007,7 @@ listen()
 NS.Skin.OnLooksChanged(function()
     NS.WindowRows.OnLooksChanged()
     NS.Glow.OnLooksChanged()
+    if frame and isMinimized() then applySize() end   -- the band's inset moves with the skin's edge
     repaint()
 end)
 

@@ -49,7 +49,7 @@ passed.
 | SKIN-37..43 | [Skins](#skins) | The full skinning run (LibKa0s v1.85.0, FS-DW-FLIP, FS-DW-FIX): Ka0s Default's pixels, the shadow, the border and glow colors, the companions, the one step, the record through Defaults, and the look changes |
 | SKIN-44 | [Skins](#skins) | The owner's third smoke round (R3-FRIZ): a stored pick of the deleted Ka0s Friz Quadrata TT lands on Ka0s Ubuntu; SKIN-15 and SKIN-32 reopened |
 | SKIN-46 | [Skins](#skins) | The owner's fourth smoke round (R4-SEP): no line under any window's title, the debug, copy and skin windows included |
-| SKIN-47 | [Skins](#skins) | The owner's fifth smoke round, LibKa0s re-cut (R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header |
+| SKIN-47..48 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -3323,6 +3323,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-47. LibKa0s v1.85.0, round 5 re-cut (R5-RV).** Under Ka0s Default, `/dw show` → the title band is darker than round 4's, the same olive-gold gradient with its gold title. Open the skin selector (`/dw skin` or the Skin tab's picker) and open its skin list, then press in turn: the selector's own body, the game world, and its Font dropdown → each press closes the list, and the last also opens the Font list. Open `/dw debug`, its Copy window and `/dw sim`'s Steps panel under Ka0s Default and WoW Midnight → each has its title band flush inside the edge, the title and the close mark centered on it top to bottom. Fail: the band as light as round 4's, a skin list left open after any of the three presses, or a title or close mark sitting above or below the band's middle. Result:
 
+**SKIN-48. Every window's header on the band, like Ka0s Loot History's (R5-WIN).** Under Ka0s Default, `/dw test`, then `/dw show` → the title band sits flush inside the window's edge with no dark strip between the edge and the band, and the title, the TEST MODE word, the minimize, layout and close marks are centered on the band top to bottom; in the compact layout and minimized the same, and minimized the window is the band and its edges alone. Open your own drop's Offer panel and the Edit message box (a drop's detail card → Edit message) → each has the same full band across its top, its title and close mark centered on it, and its content starting below the band, not touching it. Switch to WoW Midnight (a 2 px edge), Obsidian and EllesmereUI if installed → still flush, still centered, the minimized window showing the whole band. Fail: a strip of body color between the edge and a band, a band clipped by the edge, or a title or close mark above or below the band's middle. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -3366,7 +3368,7 @@ Owed by the owner's third smoke round (2026-11-02; Ka0sAddonsCommonTasks `docs/2
 
 Owed by the owner's fourth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND4/`, R4-SEP): SKIN-46. An agent never marks one passed.
 
-Owed by the owner's fifth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-47 (R5-RV). An agent never marks one passed.
+Owed by the owner's fifth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND5/`): SKIN-47 (R5-RV), SKIN-48 (R5-WIN). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 

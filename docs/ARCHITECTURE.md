@@ -308,6 +308,15 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   layer: the window's `S.Shell` takes `noTopBar`), and a row takes `list.hover` through `S.ListRow`,
   from a cell or an item button inside it too (`NS.WindowRows.WashRowOf`). Without the
   library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
+- **Headers on the band (R5-WIN, LibKa0s v1.85.0's `S.Band` and `S.Header`).** Every window's
+  header sits on the title band S.Shell lays, flush inside the edge at its inset (`win.borderSize`
+  in from a flat edge, else 1) and `title.height` high, as Ka0s Loot History's. The main window's
+  title bar takes the band's rect (`S.Header` `bars`), so its title, mode words, badge and
+  controls, anchored to the bar at y 0, sit on the band's middle; minimized, the window is the band
+  and its two edges. The Offer panel and the Edit message box keep the band S.Shell draws, put
+  their title (by `title.align`) and close on it through `S.Header`, and start their content
+  `POPOVER_TOP` (36) down. The detail card is an expanded row with no header, and the toast opts
+  out of the band. Without the library the builders' own anchors stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
   profile event; never while stood down, and a start in combat waits for combat's end. Its eye opens

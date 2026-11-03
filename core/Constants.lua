@@ -105,6 +105,9 @@ C.WINDOW = {
     ACTION_H    = 22,     -- an action button
     EDITOR_W    = 380,    -- the Edit message box
     EDITOR_H    = 156,
+    -- A popover's content top (the Edit message box's field, the Offer panel's item): under its
+    -- title band (1 + TITLE_H, 2 + TITLE_H under a 2 px edge) with a gap, as Ka0s Loot History (R5-WIN).
+    POPOVER_TOP = 36,
     -- The Drops table's empty state (board 06 D): its title and line (its two buttons gone, feedback-16).
     EMPTY_W     = 360,
     EMPTY_H     = 50,
