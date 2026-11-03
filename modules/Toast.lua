@@ -343,7 +343,7 @@ end
 -- wired the frame's own hover pause, right-click and drag; the icon and Ask are attached here so
 -- hovering them holds the countdown and a right-click on them closes the toast too.
 local function makeRows(f)
-    f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON)
+    f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON, { hud = true })   -- a HUD icon: icon.border (R5-ICON)
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
     f.ask = NS.Window.TextButton(f, Toast.ASK_W, "chat", L["Ask"], function() Toast.Ask() end, Toast.SCALE)
     if f.close then

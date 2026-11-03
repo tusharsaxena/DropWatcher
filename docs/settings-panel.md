@@ -287,7 +287,7 @@ swatch, its alpha kept; an item with no quality known keeps the swatch). The blo
 DW-03), draws the border in the skin's icon border style and thickness and dims Border style and
 Border thickness while it is on. Style, thickness, Color by
 item quality and Use the skin's border are dimmed while Show border is off; the color pair never is. **Use the skin's
-color** (on; `icons.borderColorFromSkin`, FS-DW-FLIP) draws the border in the skin's `icon.border`, behind Use class color
+color** (on; `icons.borderColorFromSkin`, FS-DW-FLIP) draws the border in the skin's `icon.outline` (the toast's in its `icon.border`, a HUD icon), behind Use class color
 and Color by item quality. Every change
 restyles every icon at once (`NS.IconStyle.Refresh`); the upgrade glow draws over the border.
 Ranges and defaults: [`schema.md`](schema.md#window--icons-feedback-21-g11).

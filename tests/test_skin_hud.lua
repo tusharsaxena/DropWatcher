@@ -55,7 +55,7 @@ end
 
 -- ── the drawing ─────────────────────────────────────────────────────────────────────────────
 
-test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px black", function()
+test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px, gray in a window and black on the HUD", function()
     -- 1 px in every skin since LibKa0s v1.85.0's R3-FIX, the owner's "exactly 1 px in every skin"
     -- (Ka0s Default's icon family was DW's Solid 2px until then).
     local NS, _, m = T.enableAddon()
@@ -68,8 +68,15 @@ test("skin HUD: the icon border's companion is on by default, and Ka0s Default d
     NS.IconStyle.Apply(b, EPIC)
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "the flat edge")
     assertEqual(frames[1].drawn.edgeSize, 1)
-    assertTrue(near(b.iconBorder[1], 0) and near(b.iconBorder[2], 0) and near(b.iconBorder[3], 0)
-        and near(b.iconBorder[4], 1), "black, opaque: the player's swatch")
+    -- A window's icon: Ka0s Default's icon.outline, #4D4D57 (R5-ICON); a HUD one: its black icon.border.
+    local g = 0x4d / 255
+    assertTrue(near(b.iconBorder[1], g) and near(b.iconBorder[2], g) and near(b.iconBorder[3], 0x57 / 255)
+        and near(b.iconBorder[4], 1), "the window's gray outline, opaque")
+    local hud = fakeButton()
+    hud.iconHud = true
+    NS.IconStyle.Apply(hud, EPIC)
+    assertTrue(near(hud.iconBorder[1], 0) and near(hud.iconBorder[2], 0) and near(hud.iconBorder[3], 0)
+        and near(hud.iconBorder[4], 1), "the HUD's black, opaque")
 end)
 
 test("skin HUD: while the companion is on the stored style and thickness are not read; off, they are", function()

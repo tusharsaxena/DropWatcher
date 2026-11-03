@@ -204,7 +204,8 @@ NS.C = {
             zoom                = 0.1,                      -- 0 to 0.25, cropped off each side
             borderShow          = true,
             borderStyle         = "Solid",
-            borderSize          = 2,                        -- the edge's width, in pixels
+            borderSize          = 2,                        -- the edge's width in physical pixels, read only
+                                                            -- with borderStyleFromSkin off (the skin's is 1)
             borderColor         = { r = 0, g = 0, b = 0, a = 1 },
             useClassColorBorder = false,                    -- the player's class color instead
             borderQuality       = false,                    -- the item's quality color instead
@@ -214,7 +215,8 @@ NS.C = {
             -- the skin's values. TRUE by default (the rollout's X3), so a new or reset profile follows
             -- the skin exactly as a stored one does after core/Database.lua's one-time step 10 (O2).
             -- Show border and the zoom stay the player's. `borderColorFromSkin` (FS-DW-FLIP, cause D4)
-            -- puts the color on the skin's `icon.border` too, behind its class and quality companions.
+            -- puts the color on the skin's too, behind its class and quality companions: `icon.outline`
+            -- for a window's icon, `icon.border` for the toast's, a HUD icon (R5-ICON).
             borderStyleFromSkin = true,
             borderColorFromSkin = true,
         },

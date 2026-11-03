@@ -783,9 +783,11 @@ WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
                  skin's "None" ─> no edge); off, or no string token (degraded) ─> the stored picks
              SetBackdrop{ edgeFile = LSM:Fetch("border", style), else WHITE8X8 for
                                      Solid (the default), else the tooltip's edge,
-                          edgeSize = size }
+                          edgeSize = size physical pixels: size × NS.Compat.PixelFactor()
+                                     over the button's effective scale (R5-ICON) }
              SetBackdropBorderColor: NS.ResolveColor(icons.borderColor, icons.useClassColorBorder)
-               (the player's class), or the skin's icon.border while icons.borderColorFromSkin
+               (the player's class), or the skin's icon.outline (the toast's icon.border, a HUD
+               icon; R5-ICON) while icons.borderColorFromSkin
                and no class color, else with icons.borderQuality the item's quality color
                (ItemRead.QualityOf ─> ITEM_QUALITY_COLORS, else the link's |cAARRGGBB), the
                swatch's alpha kept; no quality known ─> the swatch's mode

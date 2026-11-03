@@ -254,8 +254,8 @@ L["The border's texture, from LibSharedMedia. Any border another addon registers
 L["The border's color. Not read while Use the skin's color is on, or while Use class color is on; nor, for an item whose quality is known, while Color by item quality is on. Its opacity still applies under Use class color and Color by item quality."] =
     "The border's color. Not read while Use the skin's color is on, or while Use class color is on; nor, for an item whose quality is known, while Color by item quality is on. Its opacity still applies under Use class color and Color by item quality."
 L["Use the skin's color"] = "Use the skin's color"
-L["Draw the border in the skin's icon border color. The Border color row is not read while this is on. Use class color and Color by item quality come first."] =
-    "Draw the border in the skin's icon border color. The Border color row is not read while this is on. Use class color and Color by item quality come first."
+L["Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."] =
+    "Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."
 L["Use the skin's shadow"] = "Use the skin's shadow"
 L["Draw the tables' text shadow as the skin draws it. The Font shadow row is not read while this is on."] =
     "Draw the tables' text shadow as the skin draws it. The Font shadow row is not read while this is on."

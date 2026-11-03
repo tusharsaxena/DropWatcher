@@ -244,6 +244,7 @@ local function tintedSkin(m)
         local tokens = {}
         for name, v in pairs(Skin:ResolveSkin(Skin.DEFAULT)) do tokens[name] = v end
         tokens["icon.border"] = { 0.2, 0.3, 0.4, 1 }
+        tokens["icon.outline"] = { 0.4, 0.3, 0.2, 1 }   -- a window's icon edge (R5-ICON)
         tokens["glow.color"] = { 0.9, 0.1, 0.8, 1 }
         tokens["sem.warband"] = { 0.1, 0.9, 0.2, 1 }
         Skin:RegisterSkin({ key = "dw-flip", label = "dw-flip", tokens = tokens })
@@ -260,11 +261,12 @@ test("skin flip: a skin switch redraws the icon border's color; class and qualit
     m.addItem(LINK, { name = "Crown of Roaring Storms", quality = 4, ilvl = 311 })
     b.link = LINK
     local e = frames[1].edge
-    assertTrue(near(e[1], 0) and near(e[2], 0) and near(e[3], 0) and e[4] == 1, "Ka0s Default's black")
+    local o = Skin:Token(OWNER, "icon.outline")
+    assertTrue(near(e[1], o[1]) and near(e[2], o[2]) and near(e[3], o[3]) and e[4] == 1, "Ka0s Default's outline")
     setSkin(m, tintedSkin(m))
-    local want = Skin:Token(OWNER, "icon.border")
+    local want = Skin:Token(OWNER, "icon.outline")
     e = frames[1].edge
-    assertTrue(want[1] == 0.2, "the case's skin has an edge of its own")
+    assertTrue(want[1] == 0.4, "the case's skin has an outline of its own")
     assertTrue(near(e[1], want[1]) and near(e[2], want[2]) and near(e[3], want[3]), "the setter took the token")
     local S = NS.SchemaRuntime.Set
     assertTrue(S("icons.borderColor", { r = 1, g = 0, b = 0, a = 1 }))

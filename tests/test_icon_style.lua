@@ -1,5 +1,6 @@
 -- tests/test_icon_style.lua — every item icon's look (feedback-21 G11, Window › Icons): the
--- defaults (feedback-21 H6: zoom 0.1, a Solid black border 2 pixels thick, the Solid name registered
+-- defaults (feedback-21 H6: zoom 0.1, a Solid border 1 pixel thick in the skin's window outline, the
+-- toast's in its HUD edge, R5-ICON; the Solid name registered
 -- with LibSharedMedia and drawn without it) and zoom 0 with no border drawing the icons as before
 -- G11, the zoom's crop, the composed
 -- border (the swatch, its Use class color companion with the player's class and the swatch's
@@ -49,7 +50,7 @@ end
 
 -- ── one button ──────────────────────────────────────────────────────────────────────────────
 
-test("icon style: by default an item icon is cropped 0.1 a side in a Solid black border 1 pixel thick", function()
+test("icon style: by default an item icon is cropped 0.1 a side in a Solid icon.outline border 1 pixel thick", function()
     -- The skin's icon family, which the border follows by default, is 1 px in every skin since
     -- LibKa0s v1.85.0's R3-FIX; it was 2.
     local NS, _, m = T.enableAddon()
@@ -62,8 +63,64 @@ test("icon style: by default an item icon is cropped 0.1 a side in a Solid black
     assertEqual(#frames, 1, "the border's frame made at the first paint")
     assertEqual(frames[1].drawn.edgeFile, IS.SOLID_EDGE, "no LibSharedMedia here: Solid still draws the flat edge")
     assertEqual(frames[1].drawn.edgeSize, 1)
-    assertTrue(sameColor(b.iconBorder, 0, 0, 0, 1), "black, opaque")
+    -- A window's icon outline (R5-ICON): Ka0s Default's #4D4D57, not the HUD's black.
+    assertTrue(sameColor(b.iconBorder, 0x4d / 255, 0x4d / 255, 0x57 / 255, 1), "icon.outline, opaque")
     IS.Apply(nil, EPIC); IS.Apply({}, EPIC)   -- no button, or no texture: nothing
+end)
+
+-- R5-ICON of Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5 (feedback item 7, images 53 to 56; the
+-- lead's call 9): an icon in a window or on a settings page is edged in `icon.outline`, one on the HUD
+-- or a toast in `icon.border`, each one physical pixel.
+
+local function skinToken(m, name) return m.LibStub("LibKa0s-Skin-1.0"):Token("DropWatcher", name) end
+
+test("icon style: a window's item icon is edged in icon.outline, a HUD one (the toast's) in icon.border", function()
+    local NS, _, m = T.enableAddon()
+    local IS = NS.IconStyle
+    borderFrames(m)
+    local win, hud = fakeButton(), fakeButton()
+    hud.iconHud = true
+    IS.Apply(win, EPIC); IS.Apply(hud, EPIC)
+    local o, k = skinToken(m, "icon.outline"), skinToken(m, "icon.border")
+    assertTrue(sameColor(win.iconBorder, o[1], o[2], o[3]), "the window's outline")
+    assertTrue(sameColor(hud.iconBorder, k[1], k[2], k[3]), "the HUD's edge")
+    assertTrue(not sameColor(win.iconBorder, k[1], k[2], k[3]), "Ka0s Default: the two differ (gray, black)")
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice("DropWatcher", "ka0s", "forever")
+    o, k = skinToken(m, "icon.outline"), skinToken(m, "icon.border")
+    assertTrue(sameColor(win.iconBorder, o[1], o[2], o[3]), "WoW Forever's outline, not its card-colored edge")
+    assertTrue(sameColor(hud.iconBorder, k[1], k[2], k[3]), "WoW Forever's HUD edge")
+end)
+
+test("icon style: a skin with no icon.outline edges a window icon in its icon.border", function()
+    local NS, _, m = T.enableAddon()
+    borderFrames(m)
+    local color = NS.Skin.Color
+    NS.Skin.Color = function(name)
+        if name == "icon.outline" then return nil end
+        if name == "icon.border" then return 0.3, 0.2, 0.1, 1 end
+        return color(name)
+    end
+    NS.IconStyle.Refresh()
+    local b = fakeButton()
+    NS.IconStyle.Apply(b, EPIC)
+    assertTrue(sameColor(b.iconBorder, 0.3, 0.2, 0.1, 1), "the outline, else the HUD edge")
+    NS.Skin.Color = color
+end)
+
+test("icon style: the edge is physical pixels, snapped at the button's scale, and re-snapped when it moves", function()
+    local NS, _, m = T.enableAddon()
+    local frames = borderFrames(m)
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return 0.5 end }
+    local b, scale = fakeButton(), 0.8
+    b.GetEffectiveScale = function() return scale end
+    NS.IconStyle.Apply(b, EPIC)
+    assertTrue(near(frames[1].drawn.edgeSize, 0.625), "1 px = 0.5 / 0.8 UI units, not 1 UI unit: " .. tostring(frames[1].drawn.edgeSize))
+    scale = 1.25
+    NS.IconStyle.Apply(b, EPIC)
+    assertTrue(near(frames[1].drawn.edgeSize, 0.4), "a new scale re-snaps at the next paint")
+    assertTrue(NS.SchemaRuntime.Set("icons.borderStyleFromSkin", false))
+    assertTrue(NS.SchemaRuntime.Set("icons.borderSize", 3))
+    assertTrue(near(frames[1].drawn.edgeSize, 1.2), "a stored thickness is pixels too")
 end)
 
 test("icon style: zoom 0 and no border draw an item icon as it was before G11", function()
@@ -125,7 +182,7 @@ test("icon style: Show border draws the swatch over the icon; Use class color th
     assertTrue(f.on == true)
     assertEqual(f.drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "no LibSharedMedia here: Solid's flat edge")
     assertEqual(f.drawn.edgeSize, 2)
-    assertTrue(sameColor(f.edge, 0, 0, 0, 1), "the black swatch")
+    assertTrue(sameColor(f.edge, 0x4d / 255, 0x4d / 255, 0x57 / 255, 1), "the skin's window outline")
     assertTrue(S("icons.borderColorFromSkin", false))   -- the skin's is tests/test_skin_flip.lua's
     assertTrue(S("icons.borderColor", { r = 1, g = 0, b = 0, a = 0.5 })); assertTrue(S("icons.borderSize", 5))
     assertTrue(sameColor(b.iconBorder, 1, 0, 0, 0.5)); assertEqual(f.drawn.edgeSize, 5)
@@ -248,6 +305,8 @@ test("icon style: the compact card's icon and the toast's icon wear it too", fun
     local f = NS.Toast.Frame()
     assertEqual(NS.Toast.Stats().dropId, 1)
     assertTrue(near(crop(f.icon), 0.2), "the toast, built after the write")
+    assertTrue(f.icon.iconHud == true, "the toast's icon is a HUD icon (R5-ICON): its edge stays icon.border")
+    assertTrue(cards[1].icon.iconHud ~= true, "the card's is a window icon")
 end)
 
 test("icon style: the glow starts over the border, and a profile switch re-reads the look", function()

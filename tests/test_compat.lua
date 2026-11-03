@@ -999,6 +999,16 @@ test("compat: ContextMenu builds one button per entry through MenuUtil, else ans
     assertEqual(hit, 1)
 end)
 
+test("compat: PixelFactor answers PixelUtil's factor, else nil", function()
+    local Compat, m = fresh()
+    m.PixelUtil = nil
+    assertNil(Compat.PixelFactor(), "no PixelUtil")
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return 0.71 end }
+    assertEqual(Compat.PixelFactor(), 0.71)
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return 0 end }
+    assertNil(Compat.PixelFactor(), "no usable factor")
+end)
+
 test("compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none", function()
     local Compat, m = fresh()
     m.GetMouseFoci, m.GetMouseFocus = nil, nil
@@ -1026,7 +1036,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
-    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
+    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

@@ -12,7 +12,8 @@ local _, NS = ...
 -- companion `icons.borderStyleFromSkin` (DW-03: `fromSkin = "icon"`, the skin's icon border style
 -- and thickness, on by default), then the block's two extras
 -- after the mandated four, never among them: `icons.borderColorFromSkin` (FS-DW-FLIP, the skin's
--- `icon.border` in place of the swatch, on by default) and `icons.borderQuality`, the item's quality
+-- `icon.outline` in a window and `icon.border` on the toast, R5-ICON, in place of the swatch, on by
+-- default) and `icons.borderQuality`, the item's quality
 -- color in place of the swatch (AuraMaster's dispel-colored border is the precedent). PLAYER-SCOPED: the
 -- icons are the player's own view of the loot, whoever looted it. Appended after SchemaRows' rows,
 -- so the block follows that file's Zoom row on the tab. Each row takes SchemaRows' checks
@@ -72,7 +73,7 @@ local BORDER = Helpers.BorderGroup{
     extra = { {
         path = "icons.borderColorFromSkin", type = "bool", default = I.borderColorFromSkin,
         label = L["Use the skin's color"],
-        tooltip = L["Draw the border in the skin's icon border color. The Border color row is not read while this is on. Use class color and Color by item quality come first."],
+        tooltip = L["Draw the border in the skin's color: its icon outline in the window, its HUD icon edge on the toast. The Border color row is not read while this is on. Use class color and Color by item quality come first."],
     }, {
         path = "icons.borderQuality", type = "bool", default = I.borderQuality,
         label = L["Color by item quality"],

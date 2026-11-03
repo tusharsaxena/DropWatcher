@@ -468,9 +468,11 @@ function WG.OnItemClick(self)
     end
 end
 
-local function itemButton(parent, size)
+local function itemButton(parent, size, opts)
     local b = CreateFrame("Button", nil, parent)
     b:SetSize(size, size)
+    -- A HUD icon (the toast's) keeps the HUD's icon.border edge; a window's takes icon.outline.
+    b.iconHud = type(opts) == "table" and opts.hud == true or nil
     b.art = b:CreateTexture(nil, "ARTWORK")
     b.art:SetAllPoints(b)
     b:SetScript("OnEnter", function(self)
@@ -501,11 +503,13 @@ end
 --- A real item button (the game's tooltip on hover, shift-click links, ctrl-click tries on), for
 --- the detail card too. `WG.SetItem(b, link, where)` shows an item on it, or hides it for nil;
 --- `where` is WG.Where(drop) for a drop, { unit, slot } for an item worn, nil for a link only.
---- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11).
+--- Every one wears Window › Icons' zoom and border (NS.IconStyle, feedback-21 G11): a window's
+--- edge in the skin's icon.outline, a HUD one's (`opts.hud`, the toast's) in its icon.border.
 --- @param parent table
 --- @param size number
+--- @param opts table|nil { hud = true } for an icon over the game world
 --- @return table
-function WG.ItemButton(parent, size) return itemButton(parent, size) end
+function WG.ItemButton(parent, size, opts) return itemButton(parent, size, opts) end
 
 WG.SetItem = setItem
 

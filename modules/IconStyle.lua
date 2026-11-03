@@ -17,7 +17,7 @@ local _, NS = ...
 -- border takes a dispel color. The quality is the link's (NS.ItemRead.QualityOf: the client's answer,
 -- else the link's color), in ITEM_QUALITY_COLORS, else the link's own color code: TipMarks.ItemName's
 -- source. An item with no quality known keeps the swatch. Off by default; the border is on, Solid,
--- black, 2 pixels (feedback-21 H6).
+-- in the skin's color, 1 pixel (feedback-21 H6, then the skin's family below).
 --
 -- SOLID, the default style, is a flat edge: the client's WHITE8X8 stretched to the border's
 -- thickness and tinted by its color. It is no file this addon ships, so this file registers it with
@@ -42,8 +42,16 @@ local _, NS = ...
 -- one-time step 10, O2), the style and the thickness are the skin's icon border family
 -- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Solid 1px in every skin
 -- since LibKa0s v1.85.0's R3-FIX (the stored pick above stays 2). `icons.borderColorFromSkin` (FS-DW-FLIP, cause D4) does the same for the
--- color with `icon.border`, Ka0s Default's being that black; a class or quality color comes first,
--- each at the swatch's alpha.
+-- color: a window's icon (the rows, the cards, the detail card, History, the Offer panel) takes
+-- `icon.outline`, Ka0s Default's #4D4D57 gray, else `icon.border`; a HUD icon (the toast's,
+-- `b.iconHud`, WG.ItemButton's `hud` option) keeps `icon.border`, Ka0s Default's black (R5-ICON of
+-- Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, the lead's call 9, LibKa0s docs/api's icon
+-- rule). A class or quality color comes first, each at the swatch's alpha.
+--
+-- PHYSICAL PIXELS. The thickness, the skin's or the stored one, is pixels: drawn at the client's
+-- pixel factor over the button's effective scale (NS.Compat.PixelFactor, as LibKa0s's S.IconBorder
+-- draws its edge), so 1 is one pixel at any UI scale and window Scale. A button whose scale moved is
+-- re-snapped at its next paint, and a skin switch or a row's write re-snaps every one.
 -- Show border and the zoom stay the player's. A style of "None" draws no edge. A skin switch is a
 -- Refresh (the OnLooksChanged listener at the end of this file). The degraded facade answers no
 -- string token, so without the library the stored picks draw.
@@ -114,19 +122,44 @@ local function read()
     c.style = style
     if style == "None" then c.show = false; return c end   -- the skin's "no edge"
     -- One backdrop table for every button: SetBackdrop keeps it and nothing here writes to it.
-    c.backdrop = { edgeFile = borderTexture(style),
-                   edgeSize = math.max(1, tonumber(IS.Follow("icon.borderSize", "borderSize", fromSkin)) or 1) }
+    c.edgeFile = borderTexture(style)
+    c.px = math.max(1, tonumber(IS.Follow("icon.borderSize", "borderSize", fromSkin)) or 1)
+    c.backdrops = {}   -- one table per drawn edge size (paintBorder); SetBackdrop keeps it
     local class = setting("useClassColorBorder") == true
     c.r, c.g, c.b, c.a = NS.ResolveColor(setting("borderColor"), class, nil)
     c.swatchA = c.a   -- what a quality color draws at, under the skin's edge too (paintBorder)
-    -- The skin's edge, behind the class color (and the quality, at paint). The degraded facade has no
-    -- `icon.border`, so the stored color stands there.
+    -- The skin's edge, behind the class color (and the quality, at paint): a window's icon outline,
+    -- else its HUD edge, and the HUD's own edge for a HUD button (`hud`). The degraded facade has
+    -- neither token, so the stored color stands there.
+    c.hud = { c.r, c.g, c.b, c.a }
     if not class and setting("borderColorFromSkin") == true then
         local r, g, b, a = NS.Skin.Color("icon.border")
-        if r ~= nil then c.r, c.g, c.b, c.a = r, g, b, a or 1 end
+        if r ~= nil then c.hud = { r, g, b, a or 1 } end
+        local or_, og, ob, oa = NS.Skin.Color("icon.outline")
+        if or_ ~= nil then c.r, c.g, c.b, c.a = or_, og, ob, oa or 1
+        elseif r ~= nil then c.r, c.g, c.b, c.a = r, g, b, a or 1 end
     end
     c.quality = setting("borderQuality") == true
     return c
+end
+
+-- The thickness in physical pixels as the button's UI units (LibKa0s's P.px): the client's pixel
+-- factor over the button's effective scale, so a 1 px edge is one pixel at any UI scale or window
+-- Scale; the pixel count itself where the client or the button answers no scale.
+local function edgeSize(b, c)
+    local scale = type(b.GetEffectiveScale) == "function" and b:GetEffectiveScale() or nil
+    local factor = NS.Compat.PixelFactor()
+    if type(scale) ~= "number" or scale <= 0 or factor == nil then return c.px, nil end
+    return c.px * factor / scale, scale
+end
+
+local function backdropFor(c, size)
+    local bd = c.backdrops[size]
+    if not bd then
+        bd = { edgeFile = c.edgeFile, edgeSize = size }
+        c.backdrops[size] = bd
+    end
+    return bd
 end
 
 local function config()
@@ -165,11 +198,13 @@ local function paintBorder(b, c, link)
         b.iconBorderFrame = f
     end
     local r, g, bl, a = c.r, c.g, c.b, c.a
+    if b.iconHud then r, g, bl, a = c.hud[1], c.hud[2], c.hud[3], c.hud[4] end
     if c.quality then
         local qr, qg, qb = IS.QualityColor(link)
         if qr then r, g, bl, a = qr, qg, qb, c.swatchA end
     end
-    f:SetBackdrop(c.backdrop)
+    local size = edgeSize(b, c)
+    f:SetBackdrop(backdropFor(c, size))
     f:SetBackdropBorderColor(r, g, bl, a)
     f:Show()
     b.iconBorder = { r, g, bl, a }
@@ -184,8 +219,9 @@ function IS.Apply(b, link)
     made[b] = true
     local c = config()
     local q = c.quality and link or nil
-    if b.iconGen == gen and b.iconLink == q then return end
-    b.iconGen, b.iconLink = gen, q
+    local _, scale = edgeSize(b, c)
+    if b.iconGen == gen and b.iconLink == q and b.iconScale == scale then return end
+    b.iconGen, b.iconLink, b.iconScale = gen, q, scale
     local z = c.zoom
     b.art:SetTexCoord(z, 1 - z, z, 1 - z)
     b.iconZoom = z

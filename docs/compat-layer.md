@@ -102,6 +102,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell.
 | | `IsTradeCompleteMessage(messageType, message)` | whether a `UI_INFO_MESSAGE` is the client's "Trade complete.": its type is `LE_GAME_ERR_TRADE_COMPLETE`, or, without that constant, its text is `ERR_TRADE_COMPLETE`; a secret value is no match | `false` |
 | Row menu | `ContextMenu(owner, entries)` | `MenuUtil.CreateContextMenu(owner, generator)`, one `CreateButton(text, fn)` per entry; `true` when built | `false` (the caller acts at once) |
 | Pointer | `MouseFoci()` | `GetMouseFoci` (11.0) → the older single `GetMouseFocus`, as a list; a secret frame is skipped. The compact Filters panel's outside press (R5-DD) reads it to keep a pick in the shared dropdown menu from closing the panel | `{}` |
+| Pixels | `PixelFactor()` | `PixelUtil.GetPixelToUIUnitFactor`: one physical pixel in UI units at scale 1; the item icons' edge divides it by the button's effective scale (R5-ICON) | `nil` (the edge draws its size in UI units) |
 | Drop tables | `ItemIcon(item)` | `C_Item.GetItemIconByID` (an id or a link; needs no item cache); a secret or non-texture answer is nil | `nil` |
 | | `ClassColor(classFile)` | `C_ClassColor.GetClassColor` → the `RAID_CLASS_COLORS` table; answers `r, g, b`; a secret answer is nil | `nil` |
 | | `InsertChatLink(link)` | `ChatFrameUtil.InsertLink`, the newer spelling → the `ChatEdit_InsertLink` global (an item button's shift-click); `true` when called | `false` |
@@ -257,6 +258,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/CompactHistory.lua` | `NormalizedRealm` |
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
 | `modules/CompactChrome.lua` | `MouseFoci` (the Filters panel's outside press, R5-DD) |
+| `modules/IconStyle.lua` | `PixelFactor` (the item icons' 1 px edge, R5-ICON) |
 | `modules/WindowFooter.lua` | `PawnIsReady` |
 | `modules/TipGrid.lua` | `IsSecret` (a grid cell's width and the tooltip's line count, read in combat; feedback-14 spec §0); `TooltipLeftLine` (`core/CompatItem.lua`) |
 | `modules/Toast.lua` | `InCombatLockdown` (`core/CompatWorld.lua`; the alert sound is LibKa0s-Toast-1.0's since AT-A2, `Compat.PlayAlertSound` retired) |

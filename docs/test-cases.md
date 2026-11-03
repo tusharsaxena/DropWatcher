@@ -247,7 +247,7 @@ Total.
 
 ### test_skin_hud.lua (10)
 
-- skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px black
+- skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px, gray in a window and black on the HUD
 - skin HUD: while the companion is on the stored style and thickness are not read; off, they are
 - skin HUD: a skin switch restyles every item button; its None draws no edge; a companion off keeps the swatch
 - skin HUD: no skin switch touches the glow's two stored swatches
@@ -963,7 +963,7 @@ Total.
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 
-### test_compat.lua (73)
+### test_compat.lua (74)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1036,6 +1036,7 @@ Total.
 - compat: TradePartnerName names the trade window's partner, with a realm when given
 - compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
+- compat: PixelFactor answers PixelUtil's factor, else nil
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
@@ -1839,9 +1840,12 @@ Total.
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 
-### test_icon_style.lua (10)
+### test_icon_style.lua (13)
 
-- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 1 pixel thick
+- icon style: by default an item icon is cropped 0.1 a side in a Solid icon.outline border 1 pixel thick
+- icon style: a window's item icon is edged in icon.outline, a HUD one (the toast's) in icon.border
+- icon style: a skin with no icon.outline edges a window icon in its icon.border
+- icon style: the edge is physical pixels, snapped at the button's scale, and re-snapped when it moves
 - icon style: zoom 0 and no border draw an item icon as it was before G11
 - icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
 - icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
@@ -2300,7 +2304,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
-| test_compat.lua | 73 |
+| test_compat.lua | 74 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 12 |
 | test_class_data.lua | 13 |
@@ -2336,7 +2340,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
 | test_glow.lua | 14 |
-| test_icon_style.lua | 10 |
+| test_icon_style.lua | 13 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
@@ -2360,4 +2364,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1942** |
+| **Total** | **1946** |

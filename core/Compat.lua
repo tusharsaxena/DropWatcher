@@ -901,6 +901,19 @@ function Compat.ContextMenu(owner, entries)
     return true
 end
 
+--- The client's physical-pixel-to-UI-unit factor (PixelUtil.GetPixelToUIUnitFactor: 768 over the
+--- screen's pixel height), or nil with no PixelUtil. Over a frame's effective scale it is one pixel
+--- in that frame's units (the item icons' edge, R5-ICON).
+--- @return number|nil
+function Compat.PixelFactor()
+    local pu = PixelUtil
+    local fn = type(pu) == "table" and pu.GetPixelToUIUnitFactor
+    if type(fn) ~= "function" then return nil end
+    local v = fn()
+    if type(v) ~= "number" or Compat.IsSecret(v) or v <= 0 then return nil end
+    return v
+end
+
 --- The frames under the pointer, as a list: GetMouseFoci (11.0) → the older single GetMouseFocus.
 --- A secret answer is skipped. The compact Filters panel reads it on an outside press (R5-DD).
 --- @return table
