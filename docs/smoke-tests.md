@@ -3049,13 +3049,14 @@ clipped or overlapping because the face is wider, or a glyph drawn as a box. Res
 **SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Before checking out
 the branch, set Window › Icons → Border style to something other than Solid (Blizzard Tooltip, say) and
 Border thickness to 6 on one profile; leave a second profile untouched. Fresh client start on the
-branch → on the first profile every item icon's border is now the skin's thin flat edge, 2 pixels
-(Ka0s Default's icon border), in the color you had; Window › Icons shows **Use the skin's border**
+branch → on the first profile every item icon's border is now the skin's thin flat edge, 1 pixel
+(Ka0s Default's icon border; 2 until LibKa0s v1.85.0's R3-FIX), in the color you had; Window › Icons shows **Use the skin's border**
 ticked, Border style and Border thickness dimmed and still reading Blizzard Tooltip and 6. This change
 is expected (the owner's O2: every player meets the skin once). Untick Use the skin's border → your
 Blizzard Tooltip 6px border comes back at once. `/reload`, then a fresh client start → it stays
 unticked (the reset ran once). The second profile looks exactly as before. Fail: a border that
-vanished, a color that changed, the reset running again, or a stored style lost. Result: passed in the client, 2026-10-30 (the owner).
+vanished, a color that changed, the reset running again, or a stored style lost. Re-opened by R3-FIX: the
+skin's edge is 1 pixel. Result: not run
 
 **SKIN-4. The Skin tab (DW-01).** Settings → General → the strip reads Master controls, Simulator,
 **Skin**, Keybindings → Skin shows **Skin source** (*Ka0s skins* chosen; *EllesmereUI* disabled with a
@@ -3312,6 +3313,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 **SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result: Passed (owner, 2026-11-02)
 
 **SKIN-44. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema 12).** Before updating, set Window › Layout's table Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles and log out. Update and fully restart the client (a new font file) → the table draws in Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's own *Friz Quadrata TT* keeps it. Fail: the table on the game's default face, or a row still naming Ka0s Friz Quadrata TT. Result:
+
+**SKIN-45. Item icon borders are 1 pixel in every skin (R3-FIX).** With Window › Icons → *Use the skin's border* ticked, `/dw test` on, pick Ka0s Default, Azeroth, Ember, WoW Midnight and WoW Default → every item icon (the Drops rows, the cards, the toast) has a flat 1-pixel edge, never 2 pixels and never the tooltip-style edge WoW Default drew before. Untick the box → your stored style and thickness come back. Fail: a 2-pixel or tooltip edge under any skin. Result: not run
 
 ## Pending sign-off
 

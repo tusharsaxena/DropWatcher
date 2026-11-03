@@ -40,8 +40,8 @@ local _, NS = ...
 -- THE SKIN'S BORDER (skinning-§6; DW-03 of the 2026-10-29 skinning rollout). While the block's
 -- skin companion `icons.borderStyleFromSkin` is on (by default, X3, and after core/Database.lua's
 -- one-time step 10, O2), the style and the thickness are the skin's icon border family
--- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Ka0s Default's being the
--- look above, Solid 2px. `icons.borderColorFromSkin` (FS-DW-FLIP, cause D4) does the same for the
+-- (`icon.borderStyle`, `icon.borderSize`, read through NS.Skin.Resolve), Solid 1px in every skin
+-- since LibKa0s v1.85.0's R3-FIX (the stored pick above stays 2). `icons.borderColorFromSkin` (FS-DW-FLIP, cause D4) does the same for the
 -- color with `icon.border`, Ka0s Default's being that black; a class or quality color comes first,
 -- each at the swatch's alpha.
 -- Show border and the zoom stay the player's. A style of "None" draws no edge. A skin switch is a

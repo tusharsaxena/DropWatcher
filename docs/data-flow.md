@@ -779,7 +779,7 @@ WindowGroup.SetItem(button, link) ─> IconStyle.Apply(button, link)
        icons.borderShow off ─> the border frame (if any) hidden
        on ─> the BackdropTemplate child frame (made on first use, one level over the button)
              the style and size: icons.borderStyleFromSkin on (the default, DW-03) ─> the skin's
-                 icon.borderStyle / icon.borderSize (NS.Skin.Resolve; Ka0s Default Solid 2px; a
+                 icon.borderStyle / icon.borderSize (NS.Skin.Resolve; Solid 1px in every skin; a
                  skin's "None" ─> no edge); off, or no string token (degraded) ─> the stored picks
              SetBackdrop{ edgeFile = LSM:Fetch("border", style), else WHITE8X8 for
                                      Solid (the default), else the tooltip's edge,

@@ -286,7 +286,7 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
 - **The HUD.** Drop Watcher's HUD is the item icon's border (Window › Icons). While **Use the skin's
   border** (`icons.borderStyleFromSkin`, the composer's `fromSkin = "icon"`, on by default) is on,
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
-  `icon.borderSize`); Ka0s Default's is today's Solid 2px. Show border and the zoom stay the
+  `icon.borderSize`); every skin's is Solid 1px since LibKa0s v1.85.0's R3-FIX. Show border and the zoom stay the
   player's. Migration step 10 (`NS.ResetIconBorderToSkin`) turned the companion on once per stored
   profile (the rollout's O2) and kept the stored style. `tests/test_skin_hud.lua`.
 - **The colors and the shadow (FS-DW-FLIP, causes D4, D5, D6; the owner's rulings of 2026-11-01).** A

@@ -204,7 +204,7 @@ One look for every item icon the addon draws (`modules/IconStyle.lua`, applied f
 `NS.WindowGroup.ItemButton` and `SetItem`): the Drops rows and their Me and Them gear icons, the
 compact cards, the detail card's header and Replaces rows, the toast, History and the Offer panel.
 The defaults (feedback-21 H6, the owner's choice) trim the baked-in edge (zoom 0.1) and draw a
-Solid black border 2 pixels thick, neither class nor quality colored; zoom 0 with Show border off
+Solid black border 2 pixels thick (1 while Use the skin's border is on, the default), neither class nor quality colored; zoom 0 with Show border off
 draws them as before G11. A profile that stored a value keeps it (AceDB fills only what is unset;
 no migration). The Zoom row is
 hand-written (`settings/SchemaRows.lua`); the Border block is LibKa0s-Options' composed
@@ -224,7 +224,7 @@ can change it.
 | `icons.borderShow` | `true` | Show border: a BackdropTemplate child frame over the button, made the first time it is shown |
 | `icons.borderStyle` | `"Solid"` | Border style: a LibSharedMedia border name (`Ka0sMedia_Border`); a name nothing registers draws the tooltip's edge. `Solid` is the flat edge `modules/IconStyle.lua` registers at load (`Interface\Buttons\WHITE8X8`, AuraMaster's name for it), drawn even where the media library does not know it |
 | `icons.borderSize` | `2` | Border thickness (px): the backdrop's edge size, 1 to 16 (the composer's 0 floor raised to 1) |
-| `icons.borderStyleFromSkin` | `true` | Use the skin's border: the composer's skin companion (`fromSkin = "icon"`, skinning-§6, DW-03). While on, the border's style and thickness are the skin's `icon.borderStyle` and `icon.borderSize` (Ka0s Default's are the flat edge at 2 pixels, today's Solid 2px, so the look is the one above), the two rows are not read and are dimmed, and the stored picks stay where they were; off, the player's own style and thickness. Dimmed while Show border is off. The color has its own companion, `icons.borderColorFromSkin`. Step 10 turned it on once per stored profile, and step 11 does again |
+| `icons.borderStyleFromSkin` | `true` | Use the skin's border: the composer's skin companion (`fromSkin = "icon"`, skinning-§6, DW-03). While on, the border's style and thickness are the skin's `icon.borderStyle` and `icon.borderSize` (every skin's is the flat edge at 1 pixel since LibKa0s v1.85.0's R3-FIX, so the default draws 1 pixel where the stored pick is 2), the two rows are not read and are dimmed, and the stored picks stay where they were; off, the player's own style and thickness. Dimmed while Show border is off. The color has its own companion, `icons.borderColorFromSkin`. Step 10 turned it on once per stored profile, and step 11 does again |
 | `icons.borderColor` | `{ r = 0, g = 0, b = 0, a = 1 }` | Border color, typed `color`; its alpha applies under Use class color and Color by item quality |
 | `icons.borderColorFromSkin` | `true` | Use the skin's color (FS-DW-FLIP, cause D4): the skin's `icon.border` in place of the swatch, behind Use class color and Color by item quality. Step 11 turns it on once per stored profile |
 | `icons.useClassColorBorder` | `false` | Use class color: the border in the **player's** class color (`classColorSource = "player"`: the icons are the player's own view of the loot), through `NS.ResolveColor`, the swatch's alpha kept, the swatch for a class with no color |
