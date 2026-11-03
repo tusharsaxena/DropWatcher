@@ -682,6 +682,9 @@ if not Skin then
         -- LibKa0s v1.85.0: nil is each getter's degraded answer, so the stored value draws, and
         -- BarGloss draws nothing: no skin, no gloss.
         "HudTextColor", "HudLabelColor", "BarFillColor", "HudShadow", "BarGloss", "HoverArt",
+        -- R5-L3: with no library there is no band, so Band answers nil and Header places nothing;
+        -- the header children keep the anchors their builders gave them.
+        "Band", "Header",
     }) do S[name] = noop end
 
     S.Token = function(name)
