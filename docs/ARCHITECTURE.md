@@ -157,7 +157,10 @@ controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` 
 window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
 one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
 grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
-disabled like any other and has no launcher entry or key binding. A verb or
+disabled like any other and has no key binding. The launcher menu's Sim mode entry and Master
+controls' Sim mode box are its one other door: both take the same `NS.IsSimMode` / `NS.ToggleSim`
+pair (`core/DropWatcher.lua`), and `NS.ToggleSim` runs the verb itself (`stop` while a sim runs,
+else the bare `sim`: the status and the step panel). A verb or
 button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
 player to `/dw enable` an addon that is already enabled.
 
@@ -245,7 +248,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
 | H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
-| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no launcher entry and no key binding |
+| H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no key binding. Not slash-only any more: since LibKa0s v1.85.0 the launcher menu's Sim mode entry (`isSimMode` / `toggleSim`, `core/LauncherSetup.lua`; SG-RV) and Master controls' Sim mode box (R6-SIM) run that same verb through `NS.ToggleSim` (`core/DropWatcher.lua`), so a click prints what `/dw sim` or `/dw sim stop` prints |
 | H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIMULATION` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
