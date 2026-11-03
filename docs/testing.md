@@ -204,7 +204,7 @@ drawn color with and without Use class color (the player's class, the swatch's a
 a class with no color), each
 of the three surfaces' icons, the toast's never, a reused or unused pooled row losing it, a glow row's write and a profile
 copy re-applying), `test_icon_style` (every item icon's look, feedback-21 G11: the H6 defaults (0.1
-cropped a side, the Solid flat edge 2 pixels thick, black, drawn without LibSharedMedia too), Solid
+cropped a side, the Solid flat edge 1 pixel thick (the skin's, R3-FIX; the stored pick is 2), black, drawn without LibSharedMedia too), Solid
 registered with LibSharedMedia at load, zoom 0 with no border drawing the whole texture with no frame
 made, the zoom's crop and its clamp, an unchanged repaint making
 no call, a row's write restyling every button made so far (one showing nothing too), the border's child

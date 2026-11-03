@@ -2604,6 +2604,7 @@ Border color and Use class color do not. Hover each → its tooltip. Result: pas
 Amended by DW-03, 2026-10-29, after that pass: the Border block gains **Use the skin's border**, ticked
 on a new profile, and while it is ticked Border style and Border thickness are dimmed; SKIN-3 and
 SKIN-14 check it. Result for the amendment: passed in the client, 2026-10-30 (the owner).
+Amended by R3-FIX, 2026-11-03: with Use the skin's border ticked (the default) the edge is the skin's 1 pixel, not 2; SKIN-45 checks it.
 
 **ICON-2. Icon zoom on every surface.** `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Alerts › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag

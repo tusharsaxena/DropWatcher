@@ -57,7 +57,7 @@ local BORDER = Helpers.BorderGroup{
     page = "window", group = L["Icons"], subgroup = L["Border"],
     show = true, prefix = "icons.",
     -- THE SKIN COMPANION (skinning-§6, LibKa0s-Options compose minor 13): `icons.borderStyleFromSkin`
-    -- follows `icon.borderStyle` and `icon.borderSize` (Ka0s Default's are today's Solid 2px). Its
+    -- follows `icon.borderStyle` and `icon.borderSize` (Solid 1px in every skin since LibKa0s v1.85.0's R3-FIX). Its
     -- default is defaults/Profile.lua's TRUE (X3); the color has its own companion in `extra`.
     fromSkin = "icon",
     defaults = {

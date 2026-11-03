@@ -3,7 +3,7 @@
 -- the skin's icon border family (`icon.borderStyle`, `icon.borderSize`) while the composer's
 -- `fromSkin = "icon"` companion is on, TRUE by default (the rollout's X3); only style and thickness
 -- follow here; the color and the glow's two colors have their own companions since FS-DW-FLIP
--- (tests/test_skin_flip.lua). Under Ka0s Default the border is today's Solid 2px black. A skin switch
+-- (tests/test_skin_flip.lua). Every skin's border is Solid 1px (R3-FIX), black under Ka0s Default. A skin switch
 -- restyles every item button; "None" draws no edge; without the library the stored picks draw. The
 -- one-time reset (O2) is migration step 10: it turns the companion on in every stored profile once,
 -- keeps the stored pick, and a player's later "off" survives the next load.

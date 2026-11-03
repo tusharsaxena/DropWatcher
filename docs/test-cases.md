@@ -247,7 +247,7 @@ Total.
 
 ### test_skin_hud.lua (10)
 
-- skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black
+- skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px black
 - skin HUD: while the companion is on the stored style and thickness are not read; off, they are
 - skin HUD: a skin switch restyles every item button; its None draws no edge; a companion off keeps the swatch
 - skin HUD: no skin switch touches the glow's two stored swatches
@@ -1826,7 +1826,7 @@ Total.
 
 ### test_icon_style.lua (10)
 
-- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick
+- icon style: by default an item icon is cropped 0.1 a side in a Solid black border 1 pixel thick
 - icon style: zoom 0 and no border draw an item icon as it was before G11
 - icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
 - icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
