@@ -892,7 +892,10 @@ end
 
 --- Scale, alpha, the layout's geometry and the minimized state, with no show decision (WC.Apply).
 function Window.ApplyLayout()
-    if frame then applyLook(); applySize(); applyPoint() end
+    if frame then
+        applyLook(); applySize(); applyPoint()
+        NS.IconStyle.Resnap()   -- the Scale moved under the icons on screen: one pixel again (R5-ICON)
+    end
 end
 
 --- Window.ApplyLayout, then the show decision. Run at stand-up, on a profile change and by the

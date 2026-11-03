@@ -666,7 +666,10 @@ end
 --- The `toast.scale` row's reaction: a built toast, on screen or not, takes the new scale about its
 --- saved anchor (the point itself is unchanged). Before the first toast there is nothing to scale;
 --- the build applies it.
-function Toast.ApplyScale() toast:Refresh() end
+function Toast.ApplyScale()
+    toast:Refresh()
+    NS.IconStyle.Resnap()   -- the toast's icon edge stays one pixel at the new scale (R5-ICON)
+end
 
 --- Forget the saved position: the toast goes back under the top of the screen.
 function Toast.ResetPosition() toast:ResetPosition() end

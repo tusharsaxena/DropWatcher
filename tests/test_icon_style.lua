@@ -123,6 +123,33 @@ test("icon style: the edge is physical pixels, snapped at the button's scale, an
     assertTrue(near(frames[1].drawn.edgeSize, 1.2), "a stored thickness is pixels too")
 end)
 
+test("icon style: a scale change re-snaps every icon on screen with no row repaint", function()
+    -- The window's Scale row, the toast's Scale row, the client's UI scale and display size each move
+    -- the effective scale under icons already painted; none of them repaints a row, so each re-snaps.
+    local NS, _, m = T.enableAddon()
+    local frames = borderFrames(m)
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return 0.5 end }
+    local b, scale = fakeButton(), 1
+    b.GetEffectiveScale = function() return scale end
+    NS.IconStyle.Apply(b, EPIC)
+    assertTrue(near(frames[1].drawn.edgeSize, 0.5), "1 px at scale 1")
+    NS.ShowWindow()
+    scale = 2
+    assertTrue(NS.SchemaRuntime.Set("scale", 2))
+    assertTrue(near(frames[1].drawn.edgeSize, 0.25), "the window's Scale re-snaps: " .. tostring(frames[1].drawn.edgeSize))
+    scale = 0.5
+    NS.Toast.ApplyScale()
+    assertTrue(near(frames[1].drawn.edgeSize, 1), "the toast's Scale re-snaps")
+    local rows = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do rows[row[1]] = row[2] end
+    for _, event in ipairs({ "UI_SCALE_CHANGED", "DISPLAY_SIZE_CHANGED" }) do
+        assertEqual(rows[event], "OnIconScaleEvent", event .. " is declared")
+        scale = scale * 2
+        NS.addon.OnIconScaleEvent()
+        assertTrue(near(frames[1].drawn.edgeSize, 0.5 / scale), event .. " re-snaps")
+    end
+end)
+
 test("icon style: zoom 0 and no border draw an item icon as it was before G11", function()
     local NS, _, m = T.enableAddon()
     local S, frames = NS.SchemaRuntime.Set, borderFrames(m)

@@ -236,6 +236,19 @@ function IS.Refresh()
     for b in pairs(made) do IS.Apply(b, b.link) end
 end
 
+--- A scale moved under icons already painted (the window's Scale row, Window.ApplyLayout; the
+--- toast's, Toast.ApplyScale; the client's UI scale or display size, below): every item button made
+--- so far whose effective scale changed re-snaps its edge to its pixels now, with no row repaint.
+--- The others return at IS.Apply's first check.
+function IS.Resnap()
+    for b in pairs(made) do IS.Apply(b, b.link) end
+end
+
+-- The client's UI scale and display size move every button's pixel at once (R5-ICON).
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "UI_SCALE_CHANGED", "OnIconScaleEvent" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "DISPLAY_SIZE_CHANGED", "OnIconScaleEvent" }
+NS.addon.OnIconScaleEvent = function() IS.Resnap() end
+
 -- A skin switch: the border's style and thickness may be the skin's, so every item button made so
 -- far takes the new skin's now (after the library's repaint; the degraded facade never fires).
 if NS.Skin and NS.Skin.OnLooksChanged then NS.Skin.OnLooksChanged(function() IS.Refresh() end) end

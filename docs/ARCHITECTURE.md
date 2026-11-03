@@ -222,6 +222,7 @@ how many handlers it called.
 | `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | the window closed, completed or not: the trade waits `CLOSED_GRACE` (5) seconds for its "Trade complete."; alone it is a cancel or a failure and completes nothing. The client's second `TRADE_CLOSED` changes nothing |
 | `EJ_LOOT_DATA_RECIEVED` (the client's spelling) | `DW.OnSimPoolLoot` | a journal entry loaded: every item-pool build waiting for its data (a simulation's, or test mode's since DW-84) reads the journal again once the burst settles (`modules/SimPool.lua`); with no build waiting it does nothing |
 | `UI_INFO_MESSAGE` | `DW.OnHistoryInfoMessage` | the client's "Trade complete." (`Compat.IsTradeCompleteMessage`), before the close or within the grace after it, completes the trade: the offer's items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. Any other message, or no trade, returns at once |
+| `UI_SCALE_CHANGED`, `DISPLAY_SIZE_CHANGED` | `DW.OnIconScaleEvent` | the client's UI scale or display size moved every pixel: each item button made so far whose effective scale changed re-snaps its icon edge to one physical pixel (`NS.IconStyle.Resnap`, `modules/IconStyle.lua`; the window's and the toast's Scale rows call it too, R5-ICON) |
 
 AceDB's `OnProfileChanged`, `OnProfileCopied` and `OnProfileReset` callbacks are setup and stay up
 while disabled. Events the client refuses are kept in `NS.rejectedEvents` and reported by the
@@ -288,7 +289,7 @@ and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksC
   the border's style and thickness are the skin's icon border family (`icon.borderStyle`,
   `icon.borderSize`); every skin's is Solid 1px since LibKa0s v1.85.0's R3-FIX. The thickness is
   physical pixels at the button's effective scale (`NS.Compat.PixelFactor`, as the library's
-  `S.IconBorder`), and its color is a window's `icon.outline` (Ka0s Default's #4D4D57), the toast's
+  `S.IconBorder`), re-snapped on a Scale row's write and on `UI_SCALE_CHANGED` and `DISPLAY_SIZE_CHANGED` (`NS.IconStyle.Resnap`), and its color is a window's `icon.outline` (Ka0s Default's #4D4D57), the toast's
   icon alone keeping the HUD's `icon.border` (`WG.ItemButton`'s `hud`; R5-ICON, the library's icon
   rule in its docs/api). Show border and the zoom stay the player's. Migration step 10 (`NS.ResetIconBorderToSkin`) turned the companion on once per stored
   profile (the rollout's O2) and kept the stored style. `tests/test_skin_hud.lua`.

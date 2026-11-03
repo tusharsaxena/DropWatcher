@@ -1840,12 +1840,13 @@ Total.
 - glow: a glow row's write re-applies every drawn icon at once
 - glow: a profile switch re-reads the glow settings
 
-### test_icon_style.lua (13)
+### test_icon_style.lua (14)
 
 - icon style: by default an item icon is cropped 0.1 a side in a Solid icon.outline border 1 pixel thick
 - icon style: a window's item icon is edged in icon.outline, a HUD one (the toast's) in icon.border
 - icon style: a skin with no icon.outline edges a window icon in its icon.border
 - icon style: the edge is physical pixels, snapped at the button's scale, and re-snapped when it moves
+- icon style: a scale change re-snaps every icon on screen with no row repaint
 - icon style: zoom 0 and no border draw an item icon as it was before G11
 - icon style: Solid is registered with LibSharedMedia as the flat white texture, so the dropdown offers it
 - icon style: a repaint that changes nothing costs nothing; a row's write restyles every button made so far
@@ -2340,7 +2341,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
 | test_glow.lua | 14 |
-| test_icon_style.lua | 13 |
+| test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
@@ -2364,4 +2365,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1946** |
+| **Total** | **1947** |
