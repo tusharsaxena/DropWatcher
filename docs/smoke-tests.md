@@ -2892,8 +2892,9 @@ box ticks; `/dw sim stop` → it unticks. Close the settings, `/dw sim start key
 → the box is ticked; the launcher's right-click Sim mode entry agrees, and clicking it stops the sim and
 unticks the box. In combat, tick it → it stays unticked and nothing starts. With a sim running, Reset
 all settings (accept the popup) → the sim stops; with none running, Reset all settings → no sim starts
-and no Simulation panel opens. With test mode on, tick it → the panel opens and the sim refuses to start
-(`Turn test mode off before starting a simulation.`). With a sim running, `/reload` → the box is
+and no Simulation panel opens. With test mode on, tick it → the panel opens and nothing starts; start `key`
+from the panel → the sim refuses (`Turn test mode off before starting a simulation.`) and the box stays
+unticked. With a sim running, `/reload` → the box is
 unticked. Fail: a tick that starts something `/dw sim` would not, an untick that leaves the sim running,
 a box that disagrees with the running sim, a reset that starts a sim, or a Lua error.
 Result:
