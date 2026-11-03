@@ -49,7 +49,9 @@ end
 
 -- ── one button ──────────────────────────────────────────────────────────────────────────────
 
-test("icon style: by default an item icon is cropped 0.1 a side in a Solid black border 2 pixels thick", function()
+test("icon style: by default an item icon is cropped 0.1 a side in a Solid black border 1 pixel thick", function()
+    -- The skin's icon family, which the border follows by default, is 1 px in every skin since
+    -- LibKa0s v1.85.0's R3-FIX; it was 2.
     local NS, _, m = T.enableAddon()
     local IS, frames = NS.IconStyle, borderFrames(m)
     local b = fakeButton()
@@ -59,7 +61,7 @@ test("icon style: by default an item icon is cropped 0.1 a side in a Solid black
     assertEqual(b.iconZoom, 0.1)
     assertEqual(#frames, 1, "the border's frame made at the first paint")
     assertEqual(frames[1].drawn.edgeFile, IS.SOLID_EDGE, "no LibSharedMedia here: Solid still draws the flat edge")
-    assertEqual(frames[1].drawn.edgeSize, 2)
+    assertEqual(frames[1].drawn.edgeSize, 1)
     assertTrue(sameColor(b.iconBorder, 0, 0, 0, 1), "black, opaque")
     IS.Apply(nil, EPIC); IS.Apply({}, EPIC)   -- no button, or no texture: nothing
 end)
@@ -233,7 +235,7 @@ test("icon style: the Drops row's icon, its Me icons and the detail card's heade
     assertNil(row.cells.item.button.iconBorder); assertNil(card.icon.iconBorder)
     assertTrue(NS.SchemaRuntime.Set("icons.borderShow", true))
     assertTrue(row.cells.item.button.iconBorder ~= nil and card.icon.iconBorder ~= nil)
-    assertEqual(row.cells.item.button.iconBorderFrame.__backdrop.edgeSize, 2, "drawn on the decorated frame")
+    assertEqual(row.cells.item.button.iconBorderFrame.__backdrop.edgeSize, 1, "drawn on the decorated frame")
 end)
 
 test("icon style: the compact card's icon and the toast's icon wear it too", function()

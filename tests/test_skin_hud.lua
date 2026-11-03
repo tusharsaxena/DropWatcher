@@ -55,17 +55,19 @@ end
 
 -- ── the drawing ─────────────────────────────────────────────────────────────────────────────
 
-test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws today's Solid 2px black", function()
+test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px black", function()
+    -- 1 px in every skin since LibKa0s v1.85.0's R3-FIX, the owner's "exactly 1 px in every skin"
+    -- (Ka0s Default's icon family was DW's Solid 2px until then).
     local NS, _, m = T.enableAddon()
     assertEqual(NS.C.PROFILE.icons.borderStyleFromSkin, true, "X3: a new profile follows the skin")
     assertEqual(NS.Setting("icons.borderStyleFromSkin"), true)
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
     assertEqual(Skin:Token(OWNER, "icon.borderStyle"), "Solid", "Ka0s Default's icon family is DW's look")
-    assertEqual(Skin:Token(OWNER, "icon.borderSize"), 2)
+    assertEqual(Skin:Token(OWNER, "icon.borderSize"), 1)
     local frames, b = borderFrames(m), fakeButton()
     NS.IconStyle.Apply(b, EPIC)
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "the flat edge")
-    assertEqual(frames[1].drawn.edgeSize, 2)
+    assertEqual(frames[1].drawn.edgeSize, 1)
     assertTrue(near(b.iconBorder[1], 0) and near(b.iconBorder[2], 0) and near(b.iconBorder[3], 0)
         and near(b.iconBorder[4], 1), "black, opaque: the player's swatch")
 end)
@@ -79,7 +81,7 @@ test("skin HUD: while the companion is on the stored style and thickness are not
     assertTrue(S("icons.borderStyle", "Blizzard Tooltip")); assertTrue(S("icons.borderSize", 6))
     -- red under: IconStyle reading the stored style while the companion is on
     assertEqual(frames[1].drawn.edgeFile, NS.IconStyle.SOLID_EDGE, "the skin's Solid, not the stored pick")
-    assertEqual(frames[1].drawn.edgeSize, 2, "the skin's thickness")
+    assertEqual(frames[1].drawn.edgeSize, 1, "the skin's thickness")
     assertTrue(S("icons.borderStyleFromSkin", false))
     assertEqual(frames[1].drawn.edgeFile, "tex\\tooltip", "the player's pick, kept underneath")
     assertEqual(frames[1].drawn.edgeSize, 6)
@@ -100,7 +102,7 @@ test("skin HUD: a skin switch restyles every item button; its None draws no edge
     assertNil(b.iconBorder, "the skin's None: no edge")
     assertTrue(frames[1].on == false, "the border frame hidden")
     m.LibStub("LibKa0s-Skin-1.0"):SetChoice(OWNER, "ka0s", "ka0s")
-    assertTrue(frames[1].on == true and frames[1].drawn.edgeSize == 2, "back on Ka0s Default")
+    assertTrue(frames[1].on == true and frames[1].drawn.edgeSize == 1, "back on Ka0s Default")
 end)
 
 test("skin HUD: no skin switch touches the glow's two stored swatches", function()
