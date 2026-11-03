@@ -112,7 +112,12 @@ return function(enableAddon, withPlayer)
         skin  = function() return m.LibStub("LibKa0s-Skin-1.0") end,
         reset = fresh,
         surfaces = {
-            { name = "the window's title bar", build = function() return window().titleBar end },
+            -- The band's backdrop and its gradient: Ka0s Default's band is a gradient since R4-L2,
+            -- so the backdrop is clear under every skin that sets one and only the gradient moves.
+            { name = "the window's title bar", build = function()
+                local bar = window().titleBar
+                return bar, m.LibStub("LibKa0s-Skin-1.0").painted[bar].regions.grad
+            end },
             { name = "the active tab", build = function() return window().tabs.group.label end },
             { name = "the idle tab", build = function() return window().tabs.history.label end },
             { name = "the restricted badge", build = function()
