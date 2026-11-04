@@ -36,7 +36,7 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..8 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05) |
+| TOAST-1..9 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05); three upgrades at once, stacked (TOAST-9, DW-T2, issue #14) |
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid border, the skin's color since R5-ICON) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
@@ -2412,7 +2412,8 @@ off-spec ask about 5 s after it, never before it. Result: passed in the client, 
 
 **TOAST-6. The toast's Scale (feedback-21 G10).** The headless `test_toast` (`toast.scale scales a toast
 on screen live`, `the first toast is built at toast.scale`) and `test_schema_rows` (`toast scale`) cover
-it. Settings › Alerts › Toast: Scale is the tab's last row, under Play a sound, reads `100%` and dims
+it. Settings › Alerts › Toast: Scale is the tab's last row, under Play a sound (since DW-T2, under the
+stack's two rows: TOAST-9), reads `100%` and dims
 while Show a toast is unticked. Tick Show a toast, `/dw test` → the test toast shows at today's size under
 the top of the screen. Drag Scale to `150%` → the toast on screen grows as you release, its top edge's
 middle staying where it was; `50%` → half size, same anchor; `200%` → double, still on screen. Drag the
@@ -2475,6 +2476,28 @@ both worn items read (two dual marks) still widens the toast so neither verdict 
 → the larger toast grows about its anchor as before. Skin › Scope › Ignore fonts on → the toast keeps
 its larger size in the client's own font, never shrinking to the first release's. Under Obsidian and
 Glass → the same, in each skin's face. Result: Owner reported pass, 2026-10-31.
+
+**TOAST-9. Three upgrades at once, stacked (DW-T2, issue #14).** The headless `test_toast_stack`
+covers the shape (min(N, stack) toasts, the re-flow, the queue past the stack, the combat hold, Up and
+Down, the rows live, Prune and Ask on a toast below the first) and `test_schema_rows` (`toast stack`)
+the rows; this is the client's word on it. Settings › Alerts › Toast: Toasts at once reads `3` and
+Stack direction `Down`, both under Show in combat | Play a sound and above Scale, both dimmed while Show
+a toast is unticked. With Show a toast on and Least gain at `1` (so more drops qualify), `/dw sim start
+raid`, `/dw sim pull`, `/dw sim kill`, then `/dw sim loot 8` (again if fewer than three of the drops on
+Drops read Me ▲ with Trade Likely or Yes) → three toasts are on screen at once, the first under the top
+of the screen and each of the others just below the one before, a small gap between them, none
+overlapping; any more wait. Each one has its own countdown (hover the second → it stays while the
+other two go after Duration and the waiting ones come up below it), its own hover pause, its own Ask
+(press the third's Ask → only the third's button reads `Queued` or `Asked`, and the whisper names the
+third's item) and its own close mark (close the middle one → the one below closes the gap, and a
+waiting drop comes up at the bottom). Set Stack direction to `Up` with toasts on screen → they re-stack
+above the first at once; Toasts at once `1` → only the first stays and the others wait their turn, `5`
+→ the waiting ones come up. Pull a mob with three on screen and Show in combat off → all three go, and
+all three come back when combat ends. `/dw test` → the placeholders that qualify stack the same way
+and stay until closed; drag any of them → the whole stack moves with the first, and its place survives
+`/reload`. `/dw diagnostics` → `toast: stack=3 grow=DOWN visible=3` and a `toast: on screen` line naming
+the three drop ids. `/dw set toast.stack 2.5` and `/dw set toast.stackGrow left` are refused. Result:
+not run
 
 ## Upgrade glow
 
@@ -3440,7 +3463,7 @@ Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2
 
 Owed by the owner's seventh smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-04-SMOKE_ROUND7/`): SIM-20 (R7-SIM), and SIM-19, whose expected results moved with it. An agent never marks one passed. On 2026-11-04 the owner reported that every check of the round passed (R7-SMOKE); SIM-19 and SIM-20 record it on their `Result:` lines as `Passed (owner, 2026-11-04)`.
 
-Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11). An agent never marks one passed.
+Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 

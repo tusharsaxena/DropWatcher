@@ -367,7 +367,7 @@ end)
 
 -- ── Alerts › Toast: Scale (feedback-21 G10; Window's until feedback-24) ─────────────────────
 
-test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on", function()
+test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after the stack's rows, live only with the toast on", function()
     local NS = T.enableAddon()
     local S = NS.SchemaRuntime
     local row = S.FindRow("toast.scale")
@@ -390,7 +390,38 @@ test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a soun
         if r.group == "Toast" then order[#order + 1] = r.path end
     end
     assertEqual(order[#order], "toast.scale", "the tab's last row")
-    assertEqual(order[#order - 1], "toast.sound")
+    assertEqual(order[#order - 1], "toast.stackGrow")
+    assertEqual(order[#order - 2], "toast.stack")
+    assertEqual(order[#order - 3], "toast.sound")
+end)
+
+-- ── Alerts › Toast: the stack (issue #14, DW-T2) ────────────────────────────────────────────
+
+test("toast stack: Toasts at once is a 1-5 slider by 1, default 3, and Stack direction picks Down or Up, default Down", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    local n, g = S.FindRow("toast.stack"), S.FindRow("toast.stackGrow")
+    assertTrue(n ~= nil and g ~= nil, "both have a row")
+    assertEqual(n.page, "alerts"); assertEqual(n.group, "Toast"); assertEqual(n.label, "Toasts at once")
+    assertEqual(n.type, "number"); assertEqual(n.min, 1); assertEqual(n.max, 5); assertEqual(n.step, 1)
+    assertEqual(n.default, 3); assertEqual(NS.C.PROFILE.toast.stack, 3)
+    assertEqual(g.page, "alerts"); assertEqual(g.group, "Toast"); assertEqual(g.label, "Stack direction")
+    assertEqual(g.type, "string"); assertEqual(g.default, "down"); assertEqual(NS.C.PROFILE.toast.stackGrow, "down")
+    assertEqual(#g.values, 2)
+    assertEqual(g.values[1].value, "down"); assertEqual(g.values[1].text, "Down")
+    assertEqual(g.values[2].value, "up"); assertEqual(g.values[2].text, "Up")
+    assertTrue(type(n.onChange) == "function" and type(g.onChange) == "function", "applied live (NS.Toast.ApplyStack)")
+    assertFalse(S.Set("toast.stack", 0)); assertFalse(S.Set("toast.stack", 6))
+    assertFalse(S.Set("toast.stack", 2.5), "a whole number of toasts")
+    assertFalse(S.Set("toast.stackGrow", "left")); assertFalse(S.Set("toast.stackGrow", "UP"))
+    assertTrue(S.Set("toast.stack", 5)); assertEqual(NS.addon.db.profile.toast.stack, 5)
+    assertTrue(S.Set("toast.stackGrow", "up")); assertEqual(NS.addon.db.profile.toast.stackGrow, "up")
+    -- The CLI reaches both through the same seam (panel/CLI parity).
+    NS.addon:OnSlashCommand("set toast.stack 2")
+    NS.addon:OnSlashCommand("set toast.stackGrow down")
+    assertEqual(NS.addon.db.profile.toast.stack, 2); assertEqual(NS.addon.db.profile.toast.stackGrow, "down")
+    assertTrue(S.Set("toast.enabled", false))
+    assertTrue(n.disabledIf() and g.disabledIf(), "dimmed while the toast is off")
 end)
 
 -- ── Window › Icons (feedback-21 G11) ────────────────────────────────────────────────────────
@@ -635,6 +666,9 @@ local PINNED_ROWS = {
     { "toast.minGain", "number", "10" },
     { "toast.scale", "number", "1" },
     { "toast.sound", "bool", "false" },
+    -- DW-T2 (issue #14): the stack, new stored paths; 1 is the one-at-a-time toast.
+    { "toast.stack", "number", "3" },
+    { "toast.stackGrow", "string", "\"down\"" },
     { "trade.rules.delve", "string", "\"personal\"" },
     { "trade.rules.dungeon", "string", "\"personal\"" },
     { "trade.rules.followerDungeon", "string", "\"personal\"" },

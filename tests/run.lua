@@ -280,6 +280,7 @@ Kit.run{
         "test_feed_restore",
         "test_content_tabs",
         "test_toast",
+        "test_toast_stack",
         "test_glow",
         "test_icon_style",
         "test_layers",

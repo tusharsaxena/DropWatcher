@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1967%2F1967_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1984%2F1984_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -60,7 +60,7 @@ Your own drops get **Offer** instead. It ranks the group by how much each person
 
 **History** keeps 30 days of drops across logouts and alts, along with what became of each. Right-click a row to mark it declined. Retention and Clear history are in Settings › Window › Layout.
 
-When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
+When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. When several drops qualify at once, up to three toasts stack on screen, each with its own Ask and close; the same tab sets how many (one to five) and whether they stack down or up. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
 
 The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. In the picker, hovering or selecting a skin previews it on the addon and **Apply** keeps it; close it any other way and your old skin comes back. The eye turns test mode on or off, so there are sample drops in the window to look at, and if the window is hidden when the picker opens, test mode comes on by itself and goes off again when you close it. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 

@@ -43,13 +43,19 @@ local _, NS = ...
 -- content (the builder below), the qualifier and the triggers, the combat hold, the settings it
 -- reads and the saved point. Without the library the seam's stub answers and no toast shows.
 --
--- ONE AT A TIME. Qualifying drops wait in the shell's queue, keyed by drop id (MAX_QUEUE, the oldest
--- dropped first); the next shows when the current one goes. A toast goes after `toast.duration`
--- seconds (default 8), when its close mark is clicked, or on a right-click anywhere on it, its icon
--- and its Ask included (the close mark's path: the drop is not asked for and does not toast again);
--- the countdown pauses while the pointer is over it and resumes with the time it had left. A drop
--- asked for meanwhile, or no longer qualifying, is skipped when its turn comes (the builder answers
--- false).
+-- A STACK (issue #14, the shell's `stack`, Toast-1.0 minor 4). Up to `toast.stack` toasts (1 to 5,
+-- default 3; 1 is the one-at-a-time toast) are on screen at once, the first at the saved point and
+-- each after it below the one before, or above it (`toast.stackGrow`, `down` or `up`). Qualifying
+-- drops past the stack wait in the shell's queue, keyed by drop id (MAX_QUEUE, the oldest dropped
+-- first); the next shows when one on screen goes, and the rest close the gap. Each toast has its own
+-- frame, countdown, hover pause, Ask and close mark, so every path that acts on a toast names its
+-- drop (the shell's FrameFor and Remove): there is no single current toast. A toast goes after
+-- `toast.duration` seconds (default 8), when its close mark is clicked, or on a right-click anywhere
+-- on it, its icon and its Ask included (the close mark's path: the drop is not asked for and does
+-- not toast again); the countdown pauses while the pointer is over it and resumes with the time it
+-- had left. A drop asked for meanwhile, or no longer qualifying, is skipped when its turn comes (the
+-- builder answers false). The two rows' reactions apply a change live (ApplyStack, the shell's
+-- SetStack): a smaller stack sends its last toasts back to the head of the queue.
 --
 -- IT FOLLOWS ITS DROP AND ITS SWITCH. A drop that leaves the feed (a Clear or the cap's trim: the
 -- feed's removal sink, Prune) takes its toast and its place in the queue with it (the shell's
@@ -58,16 +64,18 @@ local _, NS = ...
 -- takes the toast down and empties the queue (the shell's Clear).
 --
 -- COMBAT. Unless `toast.inCombat` is set, nothing shows in combat: the shell's Hold on
--- PLAYER_REGEN_DISABLED (a toast on screen goes back to the head of the queue) and its Release on
--- PLAYER_REGEN_ENABLED, and the same hold is checked before each drop is queued and whenever
--- `toast.inCombat` can change (its row's reaction, a profile switch): syncHold, which leaves a toast
--- already on screen up and holds only what follows it, as the old live check did.
+-- PLAYER_REGEN_DISABLED (every toast on screen goes back to the head of the queue, in order) and its
+-- Release on PLAYER_REGEN_ENABLED, and the same hold is checked before each drop is queued and whenever
+-- `toast.inCombat` can change (its row's reaction, a profile switch): syncHold, which leaves the
+-- toasts already on screen up and holds only what follows them, as the old live check did.
 --
 -- TEST MODE. Test mode's placeholders toast like live drops (with `toast.enabled` on), so the toast
 -- can be seen and placed: only in test mode can it be dragged (with the left button; the shell's
 -- `draggable`), and its position is saved in the profile's `toast.point` (named state, like the
 -- window's point). A test drop's toast is sticky (the shell's Show with `sticky`): it stays until it
--- is closed or test mode ends, since placing it takes longer than its duration.
+-- is closed or test mode ends, since placing it takes longer than its duration. The placeholders
+-- that qualify stack as live drops do, so the stack's direction can be seen where it was placed; a
+-- drag on any of them moves the first, and the rest follow it.
 --
 -- SCALE. `toast.scale` (0.5 to 2, Alerts › Toast's Scale, feedback-21 G10) is the frame's own scale,
 -- read by the shell at each toast, by the row's reaction (ApplyScale, live on a toast on screen) and
@@ -256,8 +264,15 @@ local function held()
     return inCombat() and setting("inCombat") ~= true
 end
 
--- The drop on screen (its id is the payload and the key it was queued under), or nil.
-local function shownId() return (toast:Current()) end
+-- The drops on screen, first (the head) first: each one's id is its payload and the key it was
+-- queued under. A stack has no single current toast, so a path acting on one names its drop.
+local function visibleIds() return toast:Visible() end
+
+-- The frame carrying `id`'s toast on screen, or nil (waiting, gone, or never queued).
+local function frameOf(id)
+    if id == nil then return nil end
+    return toast:FrameFor(id)
+end
 
 -- ── the rows ────────────────────────────────────────────────────────────────────────────────
 
@@ -345,7 +360,8 @@ end
 local function makeRows(f)
     f.icon = NS.WindowGroup.ItemButton(f, Toast.ICON, { hud = true })   -- a HUD icon: icon.border (R5-ICON)
     f.icon:SetPoint("TOPLEFT", f, "TOPLEFT", Toast.INSET, -Toast.INSET)
-    f.ask = NS.Window.TextButton(f, Toast.ASK_W, "chat", L["Ask"], function() Toast.Ask() end, Toast.SCALE)
+    -- Each frame's Ask asks for the drop that frame carries (`f.dropId`, set at each paint).
+    f.ask = NS.Window.TextButton(f, Toast.ASK_W, "chat", L["Ask"], function() Toast.Ask(f.dropId) end, Toast.SCALE)
     if f.close then
         f.ask:SetPoint("RIGHT", f.close, "LEFT", -Toast.ASK_GAP, 0)
     else
@@ -470,18 +486,27 @@ local function wanted(id)
     return rec
 end
 
--- The shell's builder: each time a drop's turn comes, its rows painted on the shell's frame, the
--- frame as wide as row 3 needs; `false` skips a drop no longer wanted, and the next one is tried.
+-- The shell's builder: each time a drop's turn comes, its rows painted on the frame the shell gives
+-- it (one of the stack's pool, its rows made on its first toast), the frame as wide as row 3 needs;
+-- `false` skips a drop no longer wanted, and the next one is tried.
 local function build(f, id)
     local rec = wanted(id)
     if not rec then return false end
     if not f.ask then makeRows(f) end
+    f.dropId = id
     paint(f, rec)
     NS.Debug(TAG, "toast shown: drop %s %s", tostring(rec.id), tostring(rec.link))
     return f:GetWidth(), Toast.HEIGHT
 end
 
 -- ── the shell ───────────────────────────────────────────────────────────────────────────────
+
+--- Where each toast after the first goes, as the shell reads it: `UP` for `toast.stackGrow` `up`,
+--- else `DOWN`.
+--- @return string
+function Toast.Grow()
+    return setting("stackGrow") == "up" and "UP" or "DOWN"
+end
 
 -- The saved point, a copy, so the shell never holds the profile's own table. It is { point,
 -- relativePoint, x, y } in UIParent's units, as the shell hands it over and as it always was here.
@@ -505,6 +530,10 @@ toast = NS.NewToast({
     width           = Toast.WIDTH,
     height          = Toast.HEIGHT,
     maxQueue        = Toast.MAX_QUEUE,
+    -- How many show at once and which way they grow (issue #14): the rows' reaction is SetStack,
+    -- and a profile reload's Refresh reads these again.
+    stack           = function() return setting("stack") end,
+    stackGrow       = Toast.Grow,
     defaultPosition = Toast.POINT,
     duration        = function() return setting("duration") end,
     scale           = function() return setting("scale") end,
@@ -518,7 +547,7 @@ toast = NS.NewToast({
 -- Combat holds the toast unless `toast.inCombat`: the shell's Hold and Release, set here before a
 -- drop is queued and when `toast.inCombat` can change, as well as on the combat edges, so a drop met
 -- in combat with no hold in place (a stand-down's or a switch's Clear released it) waits,
--- `toast.inCombat` turned on mid-combat shows what waits, and turned off mid-combat leaves the toast
+-- `toast.inCombat` turned on mid-combat shows what waits, and turned off mid-combat leaves the toasts
 -- on screen up (Hold(true)) while the next one waits for combat's end.
 local function syncHold()
     local want = held()
@@ -545,8 +574,13 @@ function Toast.Consider(id)
     return true
 end
 
---- Take the toast off screen and show the next one.
-function Toast.Dismiss() toast:Dismiss() end
+--- Take drop `id`'s toast off screen (with no id, the first one on screen); the rest close the gap
+--- and the next one waiting shows.
+--- @param id number|nil
+function Toast.Dismiss(id)
+    if id == nil then return toast:Dismiss() end
+    toast:Remove(id)
+end
 
 --- The pointer is over the toast: its countdown stops, keeping the time it had left.
 function Toast.Pause() toast:Pause() end
@@ -554,44 +588,53 @@ function Toast.Pause() toast:Pause() end
 --- The pointer left the toast: its countdown resumes with the time it had left.
 function Toast.Resume() toast:Resume() end
 
---- The toast's Ask: the shared host handler, so a second click cancels a queued ask.
-function Toast.Ask()
-    local id = shownId()
-    if not id then return end
-    if not NS.LootFeed.Get(id) then return Toast.Dismiss() end
+--- A toast's Ask, for drop `id` (its frame's; with no id, the first toast on screen's): the shared
+--- host handler, so a second click cancels a queued ask. A drop already gone takes only its own
+--- toast down.
+--- @param id number|nil
+function Toast.Ask(id)
+    if id == nil then id = (toast:Current()) end
+    if not frameOf(id) then return end
+    if not NS.LootFeed.Get(id) then return Toast.Dismiss(id) end
     NS.PressAsk(id)
-    local rec, f = NS.LootFeed.Get(id), toast:Frame()
+    local rec, f = NS.LootFeed.Get(id), frameOf(id)
     if rec and f then paintAsk(f, rec) end
 end
 
 -- ── edges ───────────────────────────────────────────────────────────────────────────────────
 
+-- Drop `id`'s toast on screen, if it is up, repaints its Ask.
+local function repaintAsk(id)
+    local f = frameOf(id)
+    local rec = f and NS.LootFeed.Get(id)
+    if rec then paintAsk(f, rec) end
+end
+
 local function onUpdated(id)
-    local f = toast:Frame()
-    if id == shownId() and f then
-        local rec = NS.LootFeed.Get(id)
-        if rec then paintAsk(f, rec) end
-    end
+    repaintAsk(id)
     Toast.Consider(id)
 end
 
--- A skin switch (OnLooksChanged, after the palette is refilled): the toast on screen repaints its
--- rows' tones, which are set on each paint (the frame and its fixed tones the library and
+-- A skin switch (OnLooksChanged, after the palette is refilled): every toast on screen repaints its
+-- rows' tones, which are set on each paint (the frames and their fixed tones the library and
 -- NS.SkinPaint repaint themselves). The toast lives off the window, so the window's repaint never
 -- reaches it (inventory R10).
 NS.Skin.OnLooksChanged(function()
-    local id, f = shownId(), toast and toast:Frame()
-    local rec = id and f and f.ask and NS.LootFeed.Get(id)
-    if rec then paint(f, rec) end
+    if not toast then return end
+    for _, id in ipairs(visibleIds()) do
+        local f = frameOf(id)
+        local rec = f and f.ask and NS.LootFeed.Get(id)
+        if rec then paint(f, rec) end
+    end
 end)
 
---- PLAYER_REGEN_DISABLED: a toast on screen goes back to the head of the queue and nothing shows
---- until combat ends, unless toasts may show in combat.
+--- PLAYER_REGEN_DISABLED: every toast on screen goes back to the head of the queue, in order, and
+--- nothing shows until combat ends, unless toasts may show in combat.
 function Toast.OnCombatStart()
     if setting("inCombat") == true then return end
-    local id = shownId()
+    local ids = visibleIds()
     toast:Hold()
-    if id then NS.Debug(TAG, "toast held for combat: drop %s", tostring(id)) end
+    for _, id in ipairs(ids) do NS.Debug(TAG, "toast held for combat: drop %s", tostring(id)) end
 end
 
 --- PLAYER_REGEN_ENABLED: what combat held shows now.
@@ -612,13 +655,21 @@ local function waitingIds(s)
     return ids
 end
 
---- Drops gone from the feed leave the queue, and a toast whose drop is gone goes (the next one
---- shows). The feed's removal sink: a Clear or the cap's trim. Answers how many it let go.
+-- The drop ids on screen: the shell's `visibleKeys`, else (a shell before the stack) its one `key`.
+local function shownIds(s)
+    if type(s.visibleKeys) == "table" then return s.visibleKeys end
+    return { s.key or false }
+end
+
+--- Drops gone from the feed leave the queue, and each toast on screen whose drop is gone goes (the
+--- rest close the gap and the next one shows). The feed's removal sink: a Clear or the cap's trim.
+--- Answers how many it let go.
 --- @return number
 function Toast.Prune()
     local s = toast:Stats()
     local ids = waitingIds(s)
-    ids[#ids + 1] = s.key or false   -- the one on screen last, so the next one shown is never gone
+    -- The ones on screen last, so the next one shown is never gone.
+    for _, id in ipairs(shownIds(s)) do ids[#ids + 1] = id end
     local n = 0
     for _, id in ipairs(ids) do
         if id and not NS.LootFeed.Get(id) then n = n + toast:Remove(id) end
@@ -627,7 +678,7 @@ function Toast.Prune()
     return n
 end
 
--- Toasts turned off: the one on screen goes and nothing waits.
+-- Toasts turned off: every one on screen goes and nothing waits.
 local function stopAll(why)
     local s = toast:Stats()
     if s.waiting == 0 and not s.shown then return end
@@ -663,6 +714,14 @@ function Toast.OnTestModeChanged(on)
     Toast.Prune()
 end
 
+--- The `toast.stack` and `toast.stackGrow` rows' reaction: the shell's SetStack, live on the toasts
+--- on screen (a smaller stack sends its last ones back to the head of the queue, a larger one fills
+--- from it, and the stack re-anchors).
+function Toast.ApplyStack()
+    local n, grow = toast:SetStack(setting("stack"), Toast.Grow())
+    NS.Debug(TAG, "toast stack: %s %s", tostring(n), tostring(grow))
+end
+
 --- The `toast.scale` row's reaction: a built toast, on screen or not, takes the new scale about its
 --- saved anchor (the point itself is unchanged). Before the first toast there is nothing to scale;
 --- the build applies it.
@@ -674,17 +733,24 @@ end
 --- Forget the saved position: the toast goes back under the top of the screen.
 function Toast.ResetPosition() toast:ResetPosition() end
 
---- The toast's state, for the diagnostics report and the suites: { built, shown, dropId, waiting,
---- queue (the waiting drop ids, oldest first), held, point }.
+--- The toast's state, for the diagnostics report and the suites: { built, shown, dropId (the first
+--- on screen's), waiting, queue (the waiting drop ids, oldest first), visible (the drop ids on
+--- screen, first first), stack, grow (in force), held, point }.
 --- @return table
 function Toast.Stats()
     local s = toast:Stats()
     return { built = s.built, shown = s.shown, dropId = s.key, waiting = s.waiting, queue = s.keys or {},
+        visible = s.visibleKeys or (s.key and { s.key } or {}), stack = s.stack or 1, grow = s.grow or "DOWN",
         held = s.held, point = store().point }
 end
 
---- The built frame, or nil before the first toast. For the suites.
-function Toast.Frame() return toast:Frame() end
+--- The first toast's frame (or the first built with none on screen), or nil before the first toast;
+--- with an id, the frame carrying that drop's toast on screen. For the suites.
+--- @param id number|nil
+function Toast.Frame(id)
+    if id ~= nil then return frameOf(id) end
+    return toast:Frame()
+end
 
 --- The shell's instance. For the suites.
 function Toast.Shell() return toast end
@@ -711,7 +777,7 @@ local function listen()
     local M = NS.MSG
     target:RegisterMessage(M.DROP_ADDED, function(_, id) Toast.Consider(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function(_, id) onUpdated(id) end)
-    target:RegisterMessage(M.ASK_STATE_CHANGED, function(_, id) if id == shownId() then onUpdated(id) end end)
+    target:RegisterMessage(M.ASK_STATE_CHANGED, function(_, id) if frameOf(id) then onUpdated(id) end end)
 end
 listen()
 

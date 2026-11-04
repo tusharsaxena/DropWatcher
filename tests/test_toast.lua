@@ -152,9 +152,12 @@ end)
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
--- An enabled instance whose feed answers `drops` by id, the toast turned on unless `off`.
+-- An enabled instance whose feed answers `drops` by id, the toast turned on unless `off`. Its stack
+-- is 1, the one-at-a-time toast these cases pin (issue #14: a stack of 1 is unchanged); the stack of
+-- the default 3 is tests/test_toast_stack.lua's.
 local function enabled(drops, off)
     local NS, _, m = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("toast.stack", 1))
     local byId = {}
     for _, d in ipairs(drops or {}) do byId[d.id] = d end
     NS.LootFeed.Get = function(id) return byId[id] end

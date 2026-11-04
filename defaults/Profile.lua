@@ -181,6 +181,8 @@ NS.C = {
             inCombat = false,
             sound    = false,
             scale    = 1,       -- the frame's scale, 0.5 to 2 (Window › Toast's Scale, 50 to 200 %)
+            stack    = 3,       -- toasts on screen at once, 1 to 5 (1: one at a time; issue #14)
+            stackGrow = "down", -- where each toast after the first goes: "down" or "up"
         },
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current

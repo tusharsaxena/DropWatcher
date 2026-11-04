@@ -51,6 +51,12 @@ local function oneOf(list)
     return function(v) return v ~= nil and ok[v] == true end
 end
 
+-- A whole number from lo to hi: a count, where the slider's step alone would let the CLI store 2.5.
+local function wholeIn(lo, hi)
+    local within = inRange(lo, hi)
+    return function(v) return within(v) and v == math.floor(v) end
+end
+
 local function nonEmptyString(v) return type(v) == "string" and v:match("%S") ~= nil end
 
 local function unit(n) return type(n) == "number" and n == n and n >= 0 and n <= 1 end
@@ -149,6 +155,8 @@ local CHANNELS = choices{
 }
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
+-- Where each stacked toast after the first goes (issue #14): the shell's DOWN and UP.
+local STACK_GROW = choices{ "down", L["Down"], "up", L["Up"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
 -- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
 -- Proc since DW-03, D-18, and the order did not move).
@@ -447,6 +455,14 @@ local function toast()
     bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."],
         with(at, { onChange = function() NS.Toast.OnInCombatChanged() end }))
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], at)
+    -- The stack (issue #14): how many show at once (1 is one at a time) and which way they grow,
+    -- both live on the toasts on screen (NS.Toast.ApplyStack, the shell's SetStack).
+    local restack = with(at, { onChange = function() NS.Toast.ApplyStack() end })
+    slider("toast.stack", T.stack, 1, 5, 1, L["Toasts at once"],
+        L["How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."],
+        with(restack, { validate = wholeIn(1, 5) }))
+    pick("toast.stackGrow", T.stackGrow, STACK_GROW, L["Stack direction"],
+        L["Where each toast after the first goes: below the one before it, or above it."], restack)
     -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
     slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],
         L["The toast's size, from half to double. It grows or shrinks about the place you put it."],

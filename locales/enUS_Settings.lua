@@ -133,6 +133,14 @@ L["Show in combat"] = "Show in combat"
 L["Show toasts in combat too."] = "Show toasts in combat too."
 L["Play a sound"] = "Play a sound"
 L["Play a sound with each toast."] = "Play a sound with each toast."
+L["Down"] = "Down"
+L["Up"] = "Up"
+L["Toasts at once"] = "Toasts at once"
+L["How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."] =
+    "How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."
+L["Stack direction"] = "Stack direction"
+L["Where each toast after the first goes: below the one before it, or above it."] =
+    "Where each toast after the first goes: below the one before it, or above it."
 L["Scale"] = "Scale"
 L["The toast's size, from half to double. It grows or shrinks about the place you put it."] =
     "The toast's size, from half to double. It grows or shrinks about the place you put it."

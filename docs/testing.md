@@ -455,7 +455,16 @@ shell placed with no migration, the icon and Ask holding the countdown, a drop m
 switch's Clear still held and `toast.inCombat` turned on mid-combat showing the next, a toast
 held for combat coming back with its full duration, `toast.inCombat` turned off mid-combat (by its
 row or a profile switch) keeping the toast on screen up and holding the next (AT-A3), and the
-drops gone from the feed leaving the queue on a shell whose `Stats` names no waiting keys),
+drops gone from the feed leaving the queue on a shell whose `Stats` names no waiting keys; its edge
+cases run at a stack of 1, the one-at-a-time toast),
+`test_toast_stack` (the stack, DW-T2, issue #14: at the default `toast.stack` of 3, N qualifying drops
+give min(N, 3) toasts on frames of their own, each painted with its drop; past the stack they queue
+under the queue's cap; Down and Up hang each toast under or over the one before from the saved
+point; a closed toast re-flows the rest and the next waiting comes up; each its own countdown and
+hover pause; the combat hold sending every toast back in order and bringing them all again, and
+`Hold(true)` keeping the stack up; the two rows applied live (`SetStack`) and a profile switch's
+incoming stack; `Prune`, Ask and the Ask repaint acting on a toast below the first; the skin repaint
+of every toast on screen; test mode's placeholders stacking; the diagnostics' stack lines),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
 read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,

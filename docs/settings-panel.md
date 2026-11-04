@@ -315,8 +315,11 @@ Window › Toast and Window › Upgrade glow until feedback-24: both say an upgr
 is part of the window.
 
 **Toast:** Show a toast alone on its line, then Least gain | Duration, Show in combat | Play a sound,
-and its Scale (feedback-21 G10: a 50-200 % slider by 5, `isPercent` on the stored 0.5-2, applied
-live to a toast on screen about the place it was put), each live only while it is on.
+Toasts at once | Stack direction (DW-T2, issue #14: a 1-5 slider by 1, default 3, 1 the
+one-at-a-time toast; a Down | Up dropdown, default Down; both applied live to the toasts on screen,
+`NS.Toast.ApplyStack`), and its Scale (feedback-21 G10: a 50-200 % slider by 5, `isPercent` on the
+stored 0.5-2, applied live to a toast on screen about the place it was put), each live only while it
+is on.
 
 **Upgrade glow** (feedback-21; on the Window page until feedback-24): the glow on a drop's icon in the Drops table, the compact card and
 the detail card's header (never the toast, History, the Offer panel or the Replaces rows), two glows

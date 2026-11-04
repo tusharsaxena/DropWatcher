@@ -75,6 +75,8 @@ local function window(out)
     out:add(TAG, "toast: enabled=%s built=%s shown=%s drop=%s waiting=%s held=%s", NS.Setting("toast.enabled"),
         t.built, t.shown, t.dropId or "none", t.waiting, t.held)
     out:joined(TAG, "toast: point", type(t.point) == "table" and t.point or { "default" })
+    out:add(TAG, "toast: stack=%s grow=%s visible=%d", t.stack, t.grow, #t.visible)
+    if #t.visible > 0 then out:joined(TAG, "toast: on screen", t.visible) end
     if t.waiting > 0 then out:joined(TAG, "toast: queue", t.queue) end
 end
 

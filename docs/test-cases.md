@@ -108,7 +108,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (23)
+### test_schema_rows.lua (24)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -128,7 +128,8 @@ Total.
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
-- toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on
+- toast scale: a 50-200 % slider by 5 on Alerts › Toast, after the stack's rows, live only with the toast on
+- toast stack: Toasts at once is a 1-5 slider by 1, default 3, and Stack direction picks Down or Up, default Down
 - icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
@@ -1832,6 +1833,25 @@ Total.
 - toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)
 - toast edge: a scaled face scales its client font object's own height, NS.FONT_SIZE only the fallback (DW-05 review)
 
+### test_toast_stack.lua (16)
+
+- toast stack: the default is 3; N drops give min(N, 3) toasts, each on its own painted frame
+- toast stack: past the stack the drops queue, and the queue still keeps the newest MAX_QUEUE
+- toast stack: Down hangs each toast under the one before, from the saved point
+- toast stack: Up hangs each toast above the one before
+- toast stack: a toast that closes re-flows the rest onto the head, and the next waiting comes up
+- toast stack: each toast has its own countdown and its own hover pause
+- toast stack: the combat hold sends every toast back in order and brings them all again
+- toast stack: Show in combat turned off mid-combat keeps the whole stack up
+- toast stack: the two rows apply live, smaller sending the tail back, larger filling
+- toast stack: a profile switch reads the incoming stack and direction
+- toast stack: Prune takes only the toasts whose drops left the feed, wherever they sit
+- toast stack: Ask on a toast below the head asks for its own drop and repaints its own button
+- toast stack: Ask on a toast below the head whose drop is gone takes only that toast down
+- toast stack: a skin switch repaints every toast on screen, not only the head
+- toast stack: in test mode the sticky placeholders stack too
+- toast stack: the diagnostics name the stack and every toast on screen
+
 ### test_glow.lua (14)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
@@ -2291,7 +2311,7 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 14 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 23 |
+| test_schema_rows.lua | 24 |
 | test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2363,6 +2383,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
+| test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
@@ -2389,4 +2410,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1967** |
+| **Total** | **1984** |

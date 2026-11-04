@@ -909,34 +909,45 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> syncHold (combat without toast.inCombat: shell:Hold(true), the toast on screen kept up;
        otherwise a hold left: shell:Release); also the toast.inCombat row's reaction and the
        profile reload
-    ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): nothing on screen, not held
+    ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): shown at once while
+       fewer than toast.stack (1 to 5, default 3; DW-T2, issue #14) are on screen and not held
     ─> its turn: the builder, next still wanted (in the feed, qualifying, not asked; else false and
-       the shell tries the next) ─> the rows made once on the shell's frame (icon and Ask
-       attached) ─> Compose(rec, your gear,
+       the shell tries the next) ─> on the frame the shell gives it (its pool: one per toast on
+       screen, DropWatcherToast, DropWatcherToast2, ...), the rows made once (icon and Ask
+       attached), f.dropId = id (that frame's Ask asks for it) ─> Compose(rec, your gear,
        their inspect gear) (the four rows' parts, feedback-9 spec §0) ─> paint: title; item
        (quality color) + item level; Looted by <looter> (class color) · You <glyph n> · Them
        <glyph n> (segments, mono glyphs, toned; on a two-item slot read in full the cells' dual
        mark, `321 ▼10 / 300 ▲11`, and the frame Toast.WidthFor(row 3) wide, never under WIDTH:
        feedback-21 H7);
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
-       ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky)
-    ─> expired ─> the shell's next
-close mark / right-click anywhere on it (frame, icon, Ask) ─> the shell's dismiss (not asked,
-    never toasts again) ─> its next
-hover (frame or an attached control) ─> pause (seconds left kept)   leave ─> resume (at least 1s)
-PLAYER_REGEN_DISABLED ─> shell:Hold: the shown toast back to the queue's head (full duration again)
-PLAYER_REGEN_ENABLED ─> shell:Release
-Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)
-AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
+       ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky), placed: the
+          first (the head) at the saved point, each after it under the one before (toast.stackGrow
+          down) or above it (up), a gap between
+    ─> expired ─> the shell's re-flow (the rest close up on the head) and next (at the tail)
+close mark / right-click anywhere on one (frame, icon, Ask) ─> the shell's dismiss of that toast
+    (not asked, never toasts again) ─> re-flow and next
+hover (a frame or its attached control) ─> pause that toast (seconds left kept)   leave ─> resume (at least 1s)
+PLAYER_REGEN_DISABLED ─> shell:Hold: every toast on screen back to the queue's head, in order (full
+    duration again)
+PLAYER_REGEN_ENABLED ─> shell:Release (the stack fills again)
+a frame's Ask ─> Toast.Ask(f.dropId) ─> NS.PressAsk(id), that frame's Ask repainted (a drop already
+    gone: only its toast goes, Toast.Dismiss(id) = shell:Remove(id), nothing asked)
+AskStateChanged / DropUpdated of a drop on screen ─> shell:FrameFor(id) ─> repaint its Ask
+skin switch (NS.Skin.OnLooksChanged) ─> for each shell:Visible() id ─> repaint its frame
 LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: shell:Remove(id) for each waiting
-    drop gone, then the shown one if gone ─> its next
+    drop gone, then each drop on screen gone (the stats' visibleKeys) ─> re-flow and next
+toast.stack / toast.stackGrow (the rows' reaction, Toast.ApplyStack) ─> shell:SetStack(n, grow): a
+    smaller stack's tail back to the queue's head in order, a larger one filled, re-anchored
 toast.enabled off (the row's reaction) / a profile with it off / the stand-down ─> shell:Clear: the
     toast goes, the queue empties, the hold is let go
-drag (test mode only: the shell's draggable) ─> setPosition ─> profile.toast.point (offsets x
+drag (test mode only: the shell's draggable; on any toast, it moves the head and the rest follow)
+    ─> setPosition ─> profile.toast.point (offsets x
     toast.scale: UIParent's units, the shape it always had)
 Reset position ─> Toast.ResetPosition ─> shell:ResetPosition ─> setPosition(nil)
 toast.scale (the row's reaction, Toast.ApplyScale) / each toast / profile reload
-    ─> shell:Refresh: SetScale(toast.scale), then SetPoint(getPosition's offsets / toast.scale)
+    ─> shell:Refresh: SetScale(toast.scale), then SetPoint(getPosition's offsets / toast.scale);
+       it reads toast.stack and toast.stackGrow again too (a profile reload's incoming stack)
        (the anchor stays where it was put; toast.point is never rewritten)
 ```
 
