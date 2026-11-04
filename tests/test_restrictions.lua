@@ -200,3 +200,19 @@ test("restrictions: stood down, nothing is heard; the stand-up announces what is
     assertEqual(#heard, before + 1, "the replayed receiver heard the stand-up")
     assertEqual(heard[#heard][1], "chat")
 end)
+
+test("restrictions: [I11] both combat edges announce even under the Combat restriction type", function()
+    local NS, m, heard, RT, RS = live()
+    m.inCombat = false
+    m.__fire(EVENT, RT.Combat, RS.Activating)
+    assertEqual(NS.Restrictions.ActiveReason(), "combat", "the type alone puts combat in the set")
+    assertFalse(NS.Restrictions.InCombat(), "the type alone is not the edge")
+    local before = #heard
+    m.__fire("PLAYER_REGEN_DISABLED")
+    -- red under: a signature built from the four answers alone, which the Combat type already holds
+    assertEqual(#heard, before + 1, "REGEN_DISABLED under the Combat type is announced")
+    assertTrue(NS.Restrictions.InCombat())
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertEqual(#heard, before + 2, "REGEN_ENABLED under the Combat type is announced")
+    assertFalse(NS.Restrictions.InCombat())
+end)

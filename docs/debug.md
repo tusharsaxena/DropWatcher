@@ -32,7 +32,7 @@ The addon's sections (`modules/Diagnostics.lua`), in order:
 | `settings` | every setting that differs from its default, and `enabled` always |
 | `window` | built, shown and the show decision; the player's choice, test mode, visibility, lock; the stored point and size; the active tab, whether it is minimized and its `n new` count; the toast: on or off, built, shown and its drop, how many wait, whether combat holds them, and its stored point; while toasts wait, their drop ids in queue order (`toast: queue 4, 7`) |
 | `situation` | the situation classified now and the last one announced, its track, auto-open and quality settings, and the classifier inputs read live |
-| `restrictions` | the four answers now (reason, can send chat, can inspect, can trade), every reason in effect (the Map type included) and the answers last announced |
+| `restrictions` | the four answers now (reason, can send chat, can inspect, can trade), every reason in effect (the Map type included) and the answers last announced, the combat flag last |
 | `roster` | the group as last read (stored state, so the report never triggers a read): the member count, then per member the Name-Realm, unit token, classFile, online state, specID and whether it is the player |
 | `inspect` | the inspect broker (stored state): the queue's length, the GUID in flight, whether it is parked and the spacing left, then per member asked about the status, reason, spec, slots read, age and whether it is stale |
 | `gear` | your gear snapshot as last read (stored state, so the report never triggers a read): your class, spec, hand flags and the items still loading, then per slot the worn item level and quality (or `empty`, `loading`) and the best owned level when it is not the worn item |

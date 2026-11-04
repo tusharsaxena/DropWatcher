@@ -1322,7 +1322,7 @@ Total.
 - messaging: garbage never throws
 - messaging: FurthestState is the furthest state any ask of a kind reached for one drop (feedback-4 §1)
 
-### test_restrictions.lua (15)
+### test_restrictions.lua (16)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
 - restrictions: an encounter stops chat and is the reason; its lift is announced
@@ -1339,6 +1339,7 @@ Total.
 - restrictions: a client without the restriction APIs restricts nothing but combat
 - restrictions: Refresh announces a lift no event reported
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+- restrictions: [I11] both combat edges announce even under the Combat restriction type
 
 ### test_roster.lua (13)
 
@@ -2341,7 +2342,7 @@ Total.
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 23 |
 | test_messaging.lua | 26 |
-| test_restrictions.lua | 15 |
+| test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 21 |
 | test_item_read.lua | 25 |
@@ -2388,4 +2389,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1966** |
+| **Total** | **1967** |

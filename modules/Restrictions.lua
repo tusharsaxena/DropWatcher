@@ -14,10 +14,12 @@ local _, NS = ...
 --
 -- A type is active when its hint OR the client says so: a restriction is never assumed lifted
 -- until both agree. The answers are read live on every call, so a caller is never behind the
--- client; RESTRICTION_CHANGED (reason, canSendChat) is sent when the four answers move, from the
--- event, both combat edges and the stand-up. A lockdown that lifts with no event of its own is
--- picked up by the next read, and by Refresh, which the messaging edge (modules/Asks.lua) calls on
--- ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
+-- client; RESTRICTION_CHANGED (reason, canSendChat) is sent when the four answers or the combat
+-- flag (InCombat: the edge, else the client's flag) move, from the event, both combat edges and the
+-- stand-up. The flag is signed on its own because the Combat type can put `combat` in the set
+-- before the edge does, and both edges must still announce then. A lockdown that lifts with no
+-- event of its own is picked up by the next read, and by Refresh, which the messaging edge
+-- (modules/Asks.lua) calls on ENCOUNTER_END and CHALLENGE_MODE_COMPLETED.
 --
 -- Reasons, in the badge's priority order: encounter, challengeMode, pvpMatch, chat (the Chat
 -- type), chatLockdown, combat. The Map type is tracked and reported but blocks nothing: it is
@@ -134,16 +136,20 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
--- Slash-separated: a pipe would read as a UI escape (`|t`) in the debug log and the diagnostics.
-local UNRESTRICTED = "none/true/true/true"
+-- The four answers, then the combat flag: what RESTRICTION_CHANGED announces a move of. The flag
+-- is signed on its own so both PLAYER_REGEN edges announce even while the Combat type already
+-- holds `combat` (and so inspect and trade) closed. Slash-separated: a pipe would read as a UI
+-- escape (`|t`) in the debug log and the diagnostics.
+local UNRESTRICTED = "none/true/true/true/false"
 
 local function signature(s)
-    return ("%s/%s/%s/%s"):format(s.reason or "none", tostring(s.canSendChat),
-        tostring(s.canInspect), tostring(s.canTrade))
+    return ("%s/%s/%s/%s/%s"):format(s.reason or "none", tostring(s.canSendChat),
+        tostring(s.canInspect), tostring(s.canTrade), tostring(inCombat() == true))
 end
 
 --- Re-read the client. Sends RESTRICTION_CHANGED (reason, canSendChat) when any of the four
---- answers moved since the last send (before the first, since "nothing restricted").
+--- answers or the combat flag moved since the last send (before the first, since "nothing
+--- restricted, not in combat").
 --- @param cause string|nil the event (or `standUp`) that asked, for the debug line
 --- @return boolean changed
 function R.Refresh(cause)
