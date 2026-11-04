@@ -212,6 +212,17 @@ test("ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and h
     assertNil(IR.LinkDetail("|Hspell:42|h[Spell]|h")); assertNil(IR.LinkDetail(nil))
 end)
 
+-- Issue #10: a bonus count of 2 with its second id field empty. The modifier count sits after the
+-- two declared fields, not after the one id read, and the bonus ids stay a list with no hole.
+test("ItemRead: an empty bonus id field keeps the bonus list dense and the modifiers read at the declared count", function()
+    local IR = T.newAddon().ItemRead
+    local d = IR.LinkDetail("item:159617::::::::80:577::35:2:10390::1:28:2462:::::")
+    assertEqual(table.concat(d.bonusIDs, ","), "10390"); assertEqual(#d.bonusIDs, 1)
+    assertEqual(d.numModifiers, 1); assertEqual(d.modifiers[28], 2462)
+    assertTrue(d.complete)
+    assertEqual(IR.IdentityKey("item:159617::::::::80:577::35:2:10390::1:28:2462"), "159617|10390")
+end)
+
 test("ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item", function()
     local IR = T.newAddon().ItemRead
     assertEqual(IR.BetterLink(BARE, FULL), FULL)

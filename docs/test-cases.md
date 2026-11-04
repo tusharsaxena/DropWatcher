@@ -1380,7 +1380,7 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_item_read.lua (24)
+### test_item_read.lua (25)
 
 - BUG-1 repro: chat first, the drop reads 311 Epic
 - BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
@@ -1393,6 +1393,7 @@ Total.
 - BUG-1: the history's Refresh never trades a complete link for a bare one
 - BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
 - ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
+- ItemRead: an empty bonus id field keeps the bonus list dense and the modifiers read at the declared count
 - ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
 - ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count
 - ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear
@@ -2343,7 +2344,7 @@ Total.
 | test_restrictions.lua | 15 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 21 |
-| test_item_read.lua | 24 |
+| test_item_read.lua | 25 |
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
 | test_inspect.lua | 33 |
@@ -2387,4 +2388,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1965** |
+| **Total** | **1966** |
