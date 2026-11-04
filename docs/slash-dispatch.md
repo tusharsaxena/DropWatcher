@@ -64,8 +64,9 @@ refusal. There is no simulator key binding (OWNER_SCOPE C.11). The slash verbs a
 its interface, and every click on the panel runs one of these verbs through `NS.Sim:RunVerb`, so a
 click prints what the typed verb prints. The launcher menu's Sim mode entry and Master controls' Sim
 mode box (since LibKa0s v1.85.0; SG-RV, R6-SIM) are the two other doors, on one pair,
-`NS.IsSimMode` / `NS.ToggleSim` (`core/DropWatcher.lua`): either one runs `sim stop` while a sim
-runs, else the bare `sim` (the status and the step panel, where a scenario is picked).
+`NS.IsSimMode` / `NS.ToggleSim` (`core/DropWatcher.lua`). Both read ticked while the step panel is
+shown or a sim runs (R7-SIM). From unticked either one runs the bare `sim` (the status and the step
+panel, where a scenario is picked); from ticked it runs `sim stop` if a sim runs and closes the panel.
 
 With the library absent, the stub in `settings/Slash.lua` dispatches the same table, keeps the
 same live list, and the schema CLI verbs say the library is missing.

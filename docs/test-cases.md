@@ -2073,7 +2073,7 @@ Total.
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
 
-### test_sim_checkbox.lua (6)
+### test_sim_checkbox.lua (11)
 
 - sim checkbox: Master controls draws a session-only Sim mode row straight after Test mode
 - sim checkbox: the launcher's pair is one NS pair the row reads
@@ -2081,6 +2081,11 @@ Total.
 - sim checkbox: unticking it stops a running sim; ticking a running sim changes nothing
 - sim checkbox: Reset all settings stops a running sim and never starts one
 - sim checkbox: a sim started or stopped elsewhere refreshes the open page
+- sim checkbox R7: the window open and idle reads ticked; closing it reads unticked
+- sim checkbox R7: a sim running with the window hidden reads ticked
+- sim checkbox R7: unticking a running sim stops it and closes the window
+- sim checkbox R7: unticking with the window open and idle closes it, and ticking reopens it
+- sim checkbox R7: the window's show and hide refresh the open page
 
 ### test_bindings.lua (14)
 
@@ -2367,7 +2372,7 @@ Total.
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 16 |
 | test_sim_panel.lua | 13 |
-| test_sim_checkbox.lua | 6 |
+| test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 15 |
@@ -2382,4 +2387,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1960** |
+| **Total** | **1965** |

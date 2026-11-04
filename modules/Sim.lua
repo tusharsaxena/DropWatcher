@@ -303,10 +303,40 @@ end
 -- Master controls' Sim mode box follows the live sim (R6-SIM, releasing.md's hosts-owe item 3): a
 -- start or stop from the slash verb, the sim panel, the launcher or the sim's own end re-reads an
 -- open page at once. Settings.Helpers is read at call time (settings/OptionsSetup.lua swaps it).
-NS.Sim:AddListener(function()
+local function refreshBox()
     local H = NS.addon and NS.addon.Settings and NS.addon.Settings.Helpers
     if H and H.RefreshScalars then H.RefreshScalars() end
-end)
+end
+NS.Sim:AddListener(refreshBox)
+
+-- The box reads "the Simulation panel is shown or a sim runs" since R7-SIM (core/DropWatcher.lua's
+-- NS.IsSimMode), so the panel's own show and hide re-read an open page too, by every route: the
+-- slash verb, the box, the launcher, the panel's close button and Escape (which hide the frame
+-- directly). The library builds the frame, a named global (read through NS.SimPanelFrame in
+-- core/DropWatcher.lua, since no module reads _G), on its first ShowPanel and publishes no hook. So
+-- a wrap of this instance's own ShowPanel (an addon table: no secure code is involved, and the wrap
+-- keeps ShowPanel's answer) finds the frame once built, hooks its OnShow and OnHide once, and
+-- refreshes for that first show, whose OnShow ran before the hook existed. The library's own verbs
+-- reach it as sim:ShowPanel(), so the bare verb and `panel` pass through the wrap. The launcher's
+-- menu needs nothing: it asks isSimMode() each time it is drawn.
+local panelHooked = false
+local function hookPanel()
+    if panelHooked then return end
+    local frame = NS.SimPanelFrame()
+    if type(frame) ~= "table" or type(frame.HookScript) ~= "function" then return end
+    panelHooked = true
+    frame:HookScript("OnShow", refreshBox)
+    frame:HookScript("OnHide", refreshBox)
+    refreshBox()
+end
+if Lib and type(NS.Sim.ShowPanel) == "function" then
+    local show = NS.Sim.ShowPanel
+    NS.Sim.ShowPanel = function(...)
+        local shown = show(...)
+        hookPanel()
+        return shown
+    end
+end
 
 -- ── the stop ────────────────────────────────────────────────────────────────────────────────
 
