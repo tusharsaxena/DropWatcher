@@ -71,7 +71,7 @@ local EVAL_REASON = {
     primaryStat = L["its primary stat doesn't suit the spec"],
     classRestricted = L["for other classes"],
     specList = L["not for this spec"],
-    tierToken = L["a tier token whose slot is not read yet"],
+    tierToken = L["a tier token whose slot could not be read"],
     notGear = L["not gear that is compared"],
     noBaseline = L["the item it would replace is not read"],
     noIlvl = L["its item level is not read"],
@@ -234,6 +234,7 @@ local function verdictTip(title, eval, ilvl, who)
     lines[#lines + 1] = compareGrid(eval, ilvl, who)
     lines[#lines + 1] = NS.TipMarks.Row(L["Means"], VERDICT_MEANS[v] or VERDICT_MEANS.unknown)
     lines[#lines + 1] = WC.TrackRow(eval.trackDelta)
+    if SLOT_LABEL[eval.tokenSlot] then lines[#lines + 1] = row(L["Best in"], SLOT_LABEL[eval.tokenSlot]) end   -- a Curio
     local sd = num(eval.scoreDelta)
     if sd then lines[#lines + 1] = NS.TipMarks.Row(L["Score"], ("%+.1f"):format(sd)) end
     if hasReasons(eval) then WC.ReasonRows(eval.reasons, lines) end
@@ -734,6 +735,7 @@ end
 --- @param drop table
 --- @return table cell
 function WC.Slot(drop)
+    if facts(drop).isTierToken then return NS.CollectCells.TokenSlot(facts(drop)) end   -- `Token: Head`
     local loc = facts(drop).equipLoc
     local label = SLOT_LABEL[loc]
     if not label then return cell(DASH, "muted", L["Slot"], row(L["Item"], L["not worn, or not loaded"])) end
@@ -774,6 +776,7 @@ local function typeTitle(word) return L["Type: %s"]:format(word) end
 --- @return table cell, with `known` (false for the dash)
 function WC.ArmorType(drop)
     local f = facts(drop)
+    if f.isTierToken then return NS.CollectCells.TokenType(f) end   -- its classes
     local loc = f.equipLoc
     local fixed = LOC_TYPE[loc]
     if fixed then

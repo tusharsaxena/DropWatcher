@@ -20,7 +20,15 @@ local _, NS = ...
 -- CC.NO_OFFER are the Why rows' values of its No action (modules/WindowCells.lua's Ask,
 -- modules/MineCells.lua's Offer, modules/OfferPanel.lua).
 --
--- PURE: plain tables in, plain tables out; the rows are NS.TipMarks', taken at load.
+-- TIER TOKENS (DW-CAT4, categories design spec §6.1). A token is judged as gear, not collected, but
+-- its Slot and Type cells are its own: CC.TokenSlot reads `Token: Head`, `Token: any slot` (an omni
+-- Curio) or `Token` (the slot not read), and CC.TokenType lists its classes in their colors, or
+-- `Any class` for a Curio. CC.TokenMakes is the slot word and the class list the detail card's
+-- `Makes:` chip reads (modules/DetailCells.lua).
+--
+-- PURE: plain tables in, plain tables out; the rows are NS.TipMarks', taken at load. A class's name
+-- is the client's (NS.Compat.ClassDisplayName), and NS.ClassData and NS.WindowCells (the slot
+-- words) are read at call time.
 
 NS.CollectCells = NS.CollectCells or {}
 local CC = NS.CollectCells
@@ -118,4 +126,58 @@ end
 --- @return table cell
 function CC.Nobody(title)
     return { text = DASH, tone = "muted", collect = true, tip = { title, TM.Hint(L["Collectible: nobody is judged for it."]) } }
+end
+
+-- ── tier tokens (DW-CAT4) ───────────────────────────────────────────────────────────────────
+
+-- The token's classes in the client's class order, each in its color, and the plain names.
+local function tokenClasses(f)
+    if type(f.classes) ~= "table" then return nil end
+    local ids, files = NS.ClassData.CLASS_ID, {}
+    for classFile in pairs(f.classes) do
+        if type(classFile) == "string" then files[#files + 1] = classFile end
+    end
+    if #files == 0 then return nil end
+    table.sort(files, function(a, b) return (ids[a] or 99) < (ids[b] or 99) end)
+    local colored, plain = {}, {}
+    for i, classFile in ipairs(files) do
+        plain[i] = NS.Compat.ClassDisplayName(classFile) or classFile
+        colored[i] = TM.ClassName(plain[i], classFile)
+    end
+    return table.concat(colored, ", "), table.concat(plain, ", ")
+end
+
+--- What a tier token makes: the slot's word (`Head`, `any slot`, or nil when not read) and its
+--- classes, colored (nil for a Curio, which names none).
+--- @param f table the token's facts
+--- @return string|nil slot, string|nil classes
+function CC.TokenMakes(f)
+    local slot = f.tokenSlot
+    local word = slot == "any" and L["any slot"] or (slot and NS.WindowCells.SlotLabel(slot)) or nil
+    return word, (tokenClasses(f))
+end
+
+--- The Slot column of a tier token: `Token: Head`, `Token: any slot`, or a muted `Token`.
+--- @param f table the token's facts
+--- @return table cell { text, tone, tip }
+function CC.TokenSlot(f)
+    local word = CC.TokenMakes(f)
+    if not word then
+        return { text = L["Token"], tone = "muted", tip = { L["Tier token"], TM.Row(L["Makes"], L["a slot that could not be read"]) } }
+    end
+    local text = L["Token: %s"]:format(word)
+    local with = f.tokenSlot == "any" and L["the tier slot it helps most"] or L["what is worn there"]
+    return { text = text, tone = "plain", tip = { text, TM.Row(L["Makes"], word), TM.Row(L["Compared with"], with) } }
+end
+
+--- The Type column of a tier token: its classes in their colors, or `Any class` for a Curio.
+--- @param f table the token's facts
+--- @return table cell { text, tone, tip, known = true }
+function CC.TokenType(f)
+    local colored, plain = tokenClasses(f)
+    local title = L["Type: %s"]:format(L["Tier token"])
+    if not colored then
+        return { text = L["Any class"], tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], L["every class"]) } }
+    end
+    return { text = colored, tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], plain) } }
 end

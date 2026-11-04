@@ -2,14 +2,16 @@ local _, NS = ...
 -- core/CompatCollect.lua — the collection reads (issue #13, categories design spec §2): mounts,
 -- battle pets, toys, the cosmetic flag, a recipe's "Already known" line and the player's
 -- professions, published on NS.Compat like the rest of the compat family, split out of
--- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller.
+-- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller of
+-- those; the tier-token reads (the slot a token's tooltip names, a class's name) are
+-- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4).
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
 -- meets nothing but IsSecret first, a missing API answers its documented absent value and never
--- raises. GlobalStrings are read through Compat.GlobalString. The recipe line is read through the
--- ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7: a new consumer, not a new
--- reader); core/Compat.lua's tooltipData helper is file-local, so this compat file asks
--- C_TooltipInfo.GetHyperlink itself.
+-- raises. GlobalStrings are read through Compat.GlobalString. The recipe line and the token's slot
+-- line are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7: new
+-- consumers, not a new reader); core/Compat.lua's tooltipData helper is file-local, so this compat
+-- file asks C_TooltipInfo.GetHyperlink itself.
 
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
@@ -159,4 +161,44 @@ function Compat.ProfessionSkillLines()
         end
     end
     return out
+end
+
+-- ── Tier tokens (DW-CAT4) ───────────────────────────────────────────────────────────────────
+
+-- The slots a tier token can make, by the GlobalString that names each on a tooltip.
+local TOKEN_SLOT_STRINGS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
+
+-- The slot names as the client writes them now: { [localized name] = "INVTYPE_*" }.
+local function tokenSlotNames()
+    local out = {}
+    for _, key in ipairs(TOKEN_SLOT_STRINGS) do
+        local text = plainString(Compat.GlobalString(key))
+        if text and text ~= "" then out[text] = key end
+    end
+    return out
+end
+
+--- The slot a tier token makes, read off its hyperlink tooltip: the INVTYPE_* key of the first line
+--- whose left text EQUALS one of the localized INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND or _LEGS
+--- GlobalStrings (never a substring of another line), or nil: no API, no such line, or a secret or
+--- malformed answer (categories design spec §7.1, rung 2; smoke check ITEM-6).
+--- @param link string
+--- @return string|nil
+function Compat.TierTokenSlot(link)
+    local tip = C_TooltipInfo
+    if not (plainString(link) and tip and tip.GetHyperlink) then return nil end
+    local data = tip.GetHyperlink(link)
+    if Compat.IsSecret(data) or type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
+    local names = tokenSlotNames()
+    return Compat.ReadTooltipLine(data, "None", function(text) return names[text] end)
+end
+
+--- A class's name as the client writes it (LOCALIZED_CLASS_NAMES_MALE), or nil: no table, an
+--- unknown class or a secret answer. A tier token's Type cell lists its classes by these names.
+--- @param classFile string
+--- @return string|nil
+function Compat.ClassDisplayName(classFile)
+    local names = LOCALIZED_CLASS_NAMES_MALE
+    if not (plainString(classFile) and type(names) == "table") then return nil end
+    return plainString(names[classFile])
 end

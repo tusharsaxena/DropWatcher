@@ -53,6 +53,19 @@ A version-variant, deprecated or optional client API is called from `core/Compat
 4. Add the row to [`compat-layer.md`](compat-layer.md) (and its shim count), and a row to
    [`midnight-quirks.md`](midnight-quirks.md) when the shim works around a client change.
 
+## Add a season's tier tokens
+
+A tier token is judged as the piece it makes (categories design spec §7). The slot comes from the
+curated `C.TIER_TOKENS` in `core/Constants.lua` first, then from the token's tooltip.
+
+1. In the client, read each of the season's tokens with `/dump C_Item.GetItemInfo(<itemID>)` and its
+   tooltip (`/dump C_TooltipInfo.GetItemByID(<itemID>)`): note the slot it makes and whether it
+   names classes (an omni Curio names none).
+2. Add one row per token, `[itemID] = { slot = "INVTYPE_HEAD" }` (`INVTYPE_SHOULDER`,
+   `INVTYPE_CHEST`, `INVTYPE_HAND`, `INVTYPE_LEGS`), or `{ slot = "any" }` for a Curio, with the
+   season in a comment. Never guess an id into the table.
+3. Add the ids to smoke check `ITEM-6`'s record in [`smoke-tests.md`](smoke-tests.md).
+
 ## Add a perf bucket
 
 Declare `{ key = "..." }` in `core/PerfSetup.lua` and bracket the hot path with the gated form

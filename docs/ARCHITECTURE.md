@@ -64,7 +64,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
   pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
-  collection events) and the scorers; the edges
+  collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, and an omni
+  token's best slot, so a token is judged as gear) and the scorers; the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, its content on LibKa0s-Toast-1.0's shell, and
@@ -432,8 +433,8 @@ Blizzard's own dialogs (DW-62).
 
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
-unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
-slot are not read; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
+unconfirmed; a non-English client shows no upgrade-track change; a delve's tier is not read, and a
+tier token whose slot neither the per-season table nor its tooltip names stays unknown; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
 (the session is the login); the History card shows only what a kept entry holds; an install
@@ -468,7 +469,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 98 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 9 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 100 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 11 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

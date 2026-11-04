@@ -45,10 +45,11 @@ end
 --- The feed's filters, in order (categories design spec §4.1): heirlooms always out; an item in no
 --- watched category (facts.category nil: NS.Collectibles.CategoryOf's answer) out as `notWatched`;
 --- an item kind turned off (`cfg.categories[category] == false`, the `feed.categories.<key>` rows)
---- out as `category`; then equipment alone takes the minimum item level by `minIlvlMode`
---- (`absolute` against `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`): a tier token
---- and a collectible skip it. A kind with no entry in `cfg.categories` is on. Pure. Facts that
---- could not be read pass, so the feed never hides what it could not judge.
+--- out as `category`; then equipment and tier tokens take the minimum item level by `minIlvlMode`
+--- (`absolute` against `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`): a token's level
+--- is compared with your gear's (categories design spec Q3); a collectible skips it, its level
+--- meaningless. A kind with no entry in `cfg.categories` is on. Pure. Facts that could not be read
+--- pass, so the feed never hides what it could not judge.
 --- @param facts table|nil
 --- @param cfg table|nil NS.LootFeed.Config()'s fields
 --- @param ctx table|nil { myIlvl }
@@ -61,6 +62,6 @@ function FF.Filter(facts, cfg, ctx)
     if category == nil then return false, "notWatched" end
     local kinds = type(cfg.categories) == "table" and cfg.categories or {}
     if kinds[category] == false then return false, "category" end
-    if category ~= "equipment" then return true end
+    if category ~= "equipment" and category ~= "tierToken" then return true end
     return ilvlCheck(facts, cfg, type(ctx) == "table" and ctx or {})
 end

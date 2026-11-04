@@ -151,6 +151,10 @@ defaults\Profile.lua
 # NS.FEATURE_EVENTS and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua) at load;
 # every module below is read at call time.
 modules\Sim.lua
+# Conventional: publishes NS.TierTokens, the pure tier-token pass (the slot a token makes, an omni
+# token's best slot); read by modules\ItemFacts.lua and NS.Evaluate's run at call time only, and
+# itself reads NS.Constants (core\, above) at load.
+modules\TierTokens.lua
 # Conventional: publishes NS.Evaluate, the pure verdict kernel; read by the feature modules at call
 # time only, and itself reads NS.Constants and NS.ClassData (core\, above) at load.
 modules\Evaluate.lua
@@ -229,7 +233,8 @@ modules\CharFilter.lua
 # LOAD-BEARING: its NS.STAND_DOWN step runs in TOC order, after those of the modules above. Publishes
 # NS.ItemFacts, the cached item facts; appends its TRANSMOG_COLLECTION_UPDATED row (no other file
 # handles it) to NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load,
-# and reads NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.
+# and reads NS.Constants and NS.State at load. NS.Compat, NS.Item, NS.TierTokens and NS.Debug are read at
+# call time.
 modules\ItemFacts.lua
 # LOAD-BEARING: appends its PLAYER_REGEN_ENABLED row to NS.FEATURE_EVENTS after
 # core\DropWatcher.lua's and before modules\Gear.lua's, modules\Inspect.lua's and modules\Toast.lua's

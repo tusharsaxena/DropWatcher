@@ -1,7 +1,8 @@
 -- tests/test_compat_collect.lua — core/CompatCollect.lua, the collection reads on NS.Compat (issue
 -- #13, categories design spec §2): each member's answer, its absent value with the API missing, a
--- secret answer reading as absent, never a raise; the recipe's known line matched only by its whole
--- text; the simulator's seam wrapping every member; and no other shipped file naming the APIs.
+-- secret answer reading as absent, never a raise; the recipe's known line and a tier token's slot
+-- line matched only by their whole text; a class's client name; the simulator's seam wrapping every
+-- member; and no other shipped file naming the APIs.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -176,16 +177,66 @@ test("compat collect: ProfessionSkillLines maps every profession slot to its ski
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- Tier tokens (DW-CAT4)
+-- ---------------------------------------------------------------------------------------------
+
+local TOKEN = "|cnIQ4:|Hitem:5003::::::::90:::::|h[Dreadful Helm Module]|h|r"
+
+test("compat collect: TierTokenSlot reads a slot line by its whole text", function()
+    local Compat, m = fresh()
+    m.tooltips.hyperlink[TOKEN] = lines("Dreadful Helm Module", "Classes: Mage", "Legs")
+    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_LEGS")
+    -- red under: a substring match, which a flavor text naming a slot would fool
+    m.tooltips.hyperlink[TOKEN] = lines("Dreadful Helm Module", "\"Hands of the fallen.\"")
+    assertNil(Compat.TierTokenSlot(TOKEN), "a line that only contains the word")
+    m.tooltips.hyperlink[TOKEN] = lines("Feet")
+    assertNil(Compat.TierTokenSlot(TOKEN), "not a tier slot")
+    m.INVTYPE_HEAD = "Kopf"
+    m.tooltips.hyperlink[TOKEN] = lines("Kopf")
+    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_HEAD", "the localized GlobalString, read at call time")
+end)
+
+test("compat collect: TierTokenSlot answers nil when it cannot tell", function()
+    local Compat, m = fresh()
+    assertNil(Compat.TierTokenSlot(TOKEN), "no tooltip data")
+    m.tooltips.hyperlink[TOKEN] = { lines = "nope" }
+    assertNil(Compat.TierTokenSlot(TOKEN), "a malformed answer")
+    m.tooltips.hyperlink[TOKEN] = lines(T.secret("Head"))
+    assertNil(Compat.TierTokenSlot(TOKEN), "a secret line")
+    m.tooltips.hyperlink[TOKEN] = T.secret(lines("Head"))
+    assertNil(Compat.TierTokenSlot(TOKEN), "a secret answer")
+    m.tooltips.hyperlink[TOKEN] = lines("Head")
+    assertNil(Compat.TierTokenSlot(T.secret(TOKEN)), "a secret link")
+    m.INVTYPE_HEAD = nil
+    assertNil(Compat.TierTokenSlot(TOKEN), "no GlobalString for the slot")
+    m.INVTYPE_HEAD = "Head"
+    m.C_TooltipInfo = nil
+    assertNil(Compat.TierTokenSlot(TOKEN), "no C_TooltipInfo")
+end)
+
+test("compat collect: ClassDisplayName answers the client's name for a class, else nil", function()
+    local Compat, m = fresh()
+    assertEqual(Compat.ClassDisplayName("DEATHKNIGHT"), "Death Knight")
+    assertNil(Compat.ClassDisplayName("NOBODY"))
+    assertNil(Compat.ClassDisplayName(nil))
+    m.LOCALIZED_CLASS_NAMES_MALE.MAGE = T.secret("Mage")
+    assertNil(Compat.ClassDisplayName("MAGE"), "a secret name")
+    m.LOCALIZED_CLASS_NAMES_MALE = nil
+    assertNil(Compat.ClassDisplayName("WARRIOR"), "no table")
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The seam and the family
 -- ---------------------------------------------------------------------------------------------
 
 local MEMBERS = { "MountFromItem", "MountCollected", "PetSpeciesFromItem", "PetCollected", "IsToy",
-    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines" }
+    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ClassDisplayName" }
 
 test("compat collect: no member raises with every API gone", function()
     local Compat, m = fresh()
     m.C_MountJournal, m.C_PetJournal, m.C_ToyBox, m.PlayerHasToy = nil, nil, nil, nil
     m.C_TooltipInfo, m.GetProfessions, m.GetProfessionInfo, m.C_Item.IsCosmeticItem = nil, nil, nil, nil
+    m.LOCALIZED_CLASS_NAMES_MALE = nil
     for _, name in ipairs(MEMBERS) do
         for _, arg in ipairs({ 1, RECIPE, false, {} }) do
             assertTrue(pcall(Compat[name], arg), name .. " raised")

@@ -1063,7 +1063,7 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_collect.lua (13)
+### test_compat_collect.lua (16)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
 - compat collect: MountCollected answers isCollected, the 11th return, else nil
@@ -1075,6 +1075,9 @@ Total.
 - compat collect: RecipeKnown reads the Already known line by its whole text
 - compat collect: RecipeKnown answers nil when it cannot tell
 - compat collect: ProfessionSkillLines maps every profession slot to its skill line
+- compat collect: TierTokenSlot reads a slot line by its whole text
+- compat collect: TierTokenSlot answers nil when it cannot tell
+- compat collect: ClassDisplayName answers the client's name for a class, else nil
 - compat collect: no member raises with every API gone
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
@@ -1180,6 +1183,24 @@ Total.
 - offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
+
+### test_tier_token.lua (15)
+
+- tier token: the slot is read off the tooltip, and becomes the equipLoc
+- tier token: the curated table beats the tooltip, and lists a Curio with no class line
+- tier token: a slot line is matched by its whole text; none read leaves the slot nil
+- tier token: the tooltip is not read when the table answers
+- tier token: a concrete slot is upgrade, sidegrade or downgrade against what is worn there
+- tier token: another class's token is cantUse; a slot not read is unknown, reason tierToken
+- tier token: a Curio with no class line folds to its best slot
+- tier token: a Curio of another class is cantUse, naming no slot
+- tier token: the scorer is skipped, and neither the opts nor the facts are written
+- tier token: the looter is judged on their own class and gear
+- tier token: through the feed, a token is judged against the head you wear
+- tier token: the minimum item level applies to a token
+- tier token: the Slot and Type cells name the slot and the classes
+- tier token: the detail card's Makes chip, and no type chip
+- tier token: the Me cell names a Curio's best slot; an unread slot's reason says so
 
 ### test_offspec_cells.lua (23)
 
@@ -2426,12 +2447,13 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
 | test_compat.lua | 74 |
-| test_compat_collect.lua | 13 |
+| test_compat_collect.lua | 16 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 13 |
 | test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
+| test_tier_token.lua | 15 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
@@ -2490,4 +2512,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2048** |
+| **Total** | **2066** |

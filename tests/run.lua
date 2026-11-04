@@ -253,6 +253,7 @@ Kit.run{
         "test_class_data",
         "test_evaluate",
         "test_offspec",
+        "test_tier_token",
         "test_offspec_cells",
         "test_offspec_ask",
         "test_offspec_offer",

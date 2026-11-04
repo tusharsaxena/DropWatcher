@@ -20,8 +20,11 @@ the code reads every case the design leaves open, module by module, is in
   gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
   name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
   what the client gives.
-- **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
-  `unknown` until the tier-token follow-up (design spec §14).
+- **Tier tokens** are judged as the piece they make: the slot is read from a per-season table
+  (`C.TIER_TOKENS`, which ships empty until the season's ids are read in the client, smoke check
+  `ITEM-6`) and, failing that, from a tooltip line naming the slot. An unlisted token whose tooltip
+  names no slot stays `unknown` (categories design spec §7, DW-CAT4). A token is judged by item
+  level alone, never by a scorer, and the History keeps the slot it made, not its classes.
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
   two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
   bank are not read.

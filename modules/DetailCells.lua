@@ -140,7 +140,17 @@ end
 
 -- ── the header's chips ──────────────────────────────────────────────────────────────────────
 
+-- A tier token's slot chip: `Makes: Head · Warrior, Paladin` (NS.CollectCells.TokenMakes).
+local function makesChip(f)
+    local slot, classes = NS.CollectCells.TokenMakes(f)
+    local word = slot or "?"
+    local text = L["Makes: %s"]:format(classes and ("%s · %s"):format(word, classes) or word)
+    return chip(text, L["Tier token"], trow(L["Makes"], slot or L["a slot that could not be read"]),
+        trow(L["Usable by"], classes or L["every class"]))
+end
+
 local function slotChip(f)
+    if f.isTierToken then return makesChip(f) end
     local label = WC.SlotLabel(f.equipLoc)
     if not label then return chip(DASH, L["Slot"], trow(L["Item"], L["not worn, or not loaded"])) end
     return chip(label, L["Slot"], trow(L["Worn in"], label))
@@ -149,6 +159,7 @@ end
 -- The Type column's answer as a chip (feedback-4 spec §3: Cloth … Plate, Jewelry, Trinkets, Cloak,
 -- Weapons); none when the type is not known.
 local function armorChip(f)
+    if f.isTierToken then return nil end   -- its classes are on the Makes chip
     local t = WC.ArmorType({ facts = f })
     if not t.known then return nil end
     return chip(t.text, L["Type"], t.tip[2])
@@ -226,7 +237,7 @@ end
 
 --- The item header's chips (board 02, callout 1): slot, armor type, bind, track and rank, the look
 --- (transmog), primary stat, socket and tertiary stats. A chip with nothing to say is left out; the
---- slot always shows.
+--- slot always shows. A tier token's slot chip is `Makes: Head · <classes>`, and it has no type chip.
 --- @param drop table
 --- @return table list of chips
 function DC.Chips(drop)

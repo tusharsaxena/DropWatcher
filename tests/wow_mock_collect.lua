@@ -17,6 +17,8 @@
 --                archaeology, fishing, cooking); a false entry is a slot with no profession.
 --                GetProfessionInfo(index) answers the skill line seventh
 --   ITEM_SPELL_KNOWN  the enUS "Already known" line a known recipe's tooltip carries
+--   INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND, _LEGS  the enUS slot names a tier token's tooltip may
+--                carry (Compat.TierTokenSlot, DW-CAT4)
 --
 -- The categories' Enum tables (ItemClass's Recipe, ItemMiscellaneousSubclass, ItemRecipeSubclass)
 -- are left out on purpose, as the item ones are: core/Constants.lua then takes its documented
@@ -72,4 +74,6 @@ return function(M)
     end
 
     M.ITEM_SPELL_KNOWN = "Already known"
+    M.INVTYPE_HEAD, M.INVTYPE_SHOULDER, M.INVTYPE_CHEST = "Head", "Shoulder", "Chest"
+    M.INVTYPE_HAND, M.INVTYPE_LEGS = "Hands", "Legs"
 end

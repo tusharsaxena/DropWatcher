@@ -574,8 +574,12 @@ test("filter: every rule of spec §6.3 and the item kinds (pure)", function()
     check(with({ classID = 15, isTierToken = true, category = "tierToken" }), { categories = { tierToken = false } },
         {}, false, "category")
     check(with({ quality = C.QUALITY.HEIRLOOM, category = NONE }), {}, {}, false, "heirloom")
-    -- The minimum item level is equipment's alone here: a tier token and a collectible skip it.
-    check(with({ category = "tierToken", isTierToken = true }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, true, nil)
+    -- The minimum item level is equipment's and a tier token's (categories design spec Q3): a
+    -- collectible skips it, its level meaningless.
+    -- red under: FeedFilter returning before ilvlCheck for a tier token
+    check(with({ category = "tierToken", isTierToken = true }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, false,
+        "minIlvl")
+    check(with({ category = "tierToken", isTierToken = true }), { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
     check(with({ category = "toy" }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, true, nil)
     check(gear, { minIlvlMode = "absolute", minIlvl = 601 }, {}, false, "minIlvl")
     check(gear, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)

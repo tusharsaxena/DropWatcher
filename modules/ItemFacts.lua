@@ -7,7 +7,8 @@ local _, NS = ...
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
---             transmogKnown = true | false | nil, rawEquipLoc, category, collect }
+--             transmogKnown = true | false | nil, rawEquipLoc, category, collect,
+--             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "tooltip" | nil }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
 -- effective level and the quality through NS.ItemRead (core/ItemRead.lua: the detailed level, else
@@ -24,9 +25,13 @@ local _, NS = ...
 -- own carries `{ cat = "item:<itemID>", max }`, so two copies of it share a category.
 --
 -- TIER TOKENS. An item that names its classes (the RestrictedRaceClass tooltip line) and is not
--- gear (no slot plan for its equipLoc) is a tier token, with `classes` set. Class-restricted gear
--- carries `classes` too, without the flag. Which slot a token makes is not read in v1, so the
--- token's verdict is the kernel's `unknown` for the slot (a follow-up, design spec §14).
+-- gear (no slot plan for its raw equipLoc) is a tier token, with `classes` set; so is an item the
+-- curated C.TIER_TOKENS lists (an omni Curio names no class). Class-restricted gear carries
+-- `classes` too, without the flag. NS.TierTokens.SlotOf (modules/TierTokens.lua) reads the slot the
+-- token makes, `tokenSlot`: the table's, else the tooltip's (NS.Compat.TierTokenSlot), with
+-- `tokenSlotSource` saying which. A concrete slot then becomes the facts' `equipLoc`, so the kernel
+-- and every gear reader judge the token as the piece it makes; `any` (a Curio) keeps the raw slot
+-- and the kernel folds over the tier slots (categories design spec §3.1, §7).
 --
 -- CATEGORIES (issue #13). `rawEquipLoc` is the client's own equipLoc, kept on every item: the
 -- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
@@ -117,10 +122,19 @@ local function readTransmog(link, equipLoc)
     return NS.Compat.PlayerHasTransmog(link)
 end
 
--- The tier-token flag and the class set.
+-- The tier-token flag and the class set, from the raw slot or the curated table.
 local function readClasses(facts)
     facts.classes = NS.Compat.ItemClassRestriction(facts.link)
-    facts.isTierToken = facts.classes ~= nil and C.SLOT_PLAN[facts.equipLoc or ""] == nil
+    facts.isTierToken = (facts.classes ~= nil and C.SLOT_PLAN[facts.rawEquipLoc or ""] == nil)
+        or NS.TierTokens.Listed(facts.itemID)
+end
+
+-- The slot a tier token makes; a concrete one becomes the equipLoc every gear reader takes.
+local function readTokenSlot(facts)
+    if not facts.isTierToken then return end
+    local slot, source = NS.TierTokens.SlotOf(facts, function() return NS.Compat.TierTokenSlot(facts.link) end)
+    facts.tokenSlot, facts.tokenSlotSource = slot, source
+    if slot and slot ~= "any" then facts.equipLoc = slot end
 end
 
 -- GetItemStats answers the primary stat of the spec playing alone; the tooltip's lines add the
@@ -178,6 +192,7 @@ function IF.Read(link)
     readSpecs(facts)
     readBinds(facts)
     readClasses(facts)
+    readTokenSlot(facts)
     if NS.Collectibles then NS.Collectibles.Read(facts) end
     return facts
 end

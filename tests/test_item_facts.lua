@@ -162,7 +162,10 @@ test("item facts: a token naming classes is a tier token; class gear carries cla
     assertTrue(t.classes.WARRIOR); assertTrue(t.classes.PALADIN); assertTrue(t.classes.DEATHKNIGHT)
     assertNil(t.classes.MAGE)
     assertNil(t.transmogKnown, "no equipLoc, no appearance")
+    -- No slot line and not in C.TIER_TOKENS: the slot it makes is not read (tests/test_tier_token.lua)
+    assertNil(t.tokenSlot); assertEqual(t.equipLoc, "", "the raw slot stays")
     local c = IF.Get(CHEST)
+    assertNil(c.tokenSlot, "gear makes no slot")
     assertFalse(c.isTierToken); assertTrue(c.classes.HUNTER)
 end)
 

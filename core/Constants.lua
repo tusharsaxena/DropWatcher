@@ -371,8 +371,10 @@ C.CATEGORIES = {
 -- The slots a tier token can make, in the order an omni token's slots are tried.
 C.TIER_SLOTS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
 
--- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: the season's tier tokens, curated. Empty until
--- the token ids are read in the client (smoke check ITEM-6; categories design spec Q4).
+-- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: the season's tier tokens, curated; the first rung
+-- of NS.TierTokens.SlotOf, ahead of the tooltip, and the one that names an omni Curio (`any`), which
+-- carries no class line. Empty until the token ids are read in the client (smoke check ITEM-6;
+-- categories design spec Q4; docs/common-tasks.md, "Add a season's tier tokens").
 C.TIER_TOKENS = {}
 
 -- ---------------------------------------------------------------------------------------------
