@@ -23,6 +23,7 @@ local function specPaths()
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
+        "feed.whitelist", "feed.blacklist",   -- the item lists (issue #13, DW-CAT5)
         "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",
@@ -101,6 +102,29 @@ test("rows: a value outside a row's list or range is refused and stores nothing"
     assertFalse(S.Set("window.columns.slot", "no"))
     assertTrue(S.Set("trade.rules.raid", "group"))
     assertEqual(p.trade.rules.raid, "group")
+end)
+
+-- DW-CAT5 (issue #13, categories design spec §5.1): the item lists are map rows on Drops › Item
+-- lists whose validate checks the shape alone; the two lists' overlap is the writer's to refuse.
+-- red under: validItemSet missing (any table stored), or refusing an ID that is on the other list
+test("rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    for _, path in ipairs({ "feed.whitelist", "feed.blacklist" }) do
+        local row = S.FindRow(path)
+        assertEqual(row.type, "map"); assertEqual(row.page, "feed"); assertEqual(row.group, "Item lists", path)
+        assertTrue(row.skipRender == true, path .. " is drawn by its tab's editor")
+        assertTrue(next(NS.C.PROFILE.feed[path:match("%.(%w+)$")]) == nil, path .. " defaults empty")
+        assertTrue(S.Set(path, { [19019] = true, [12345] = true }))
+        assertFalse(S.Set(path, { [19019] = 1 }), "a value that is not true")
+        assertFalse(S.Set(path, { ["19019"] = true }), "a key that is not a number")
+        assertFalse(S.Set(path, { [0] = true }), "a key that is no itemID")
+        assertFalse(S.Set(path, { [1.5] = true }), "a fractional key")
+        assertFalse(S.Set(path, "19019"), "not a table")
+    end
+    assertTrue(NS.Setting("feed.whitelist")[19019] and NS.Setting("feed.blacklist")[19019], "an overlap is stored")
+    assertEqual(NS.addon.Settings.FormatValue(S.FindRow("feed.whitelist"), NS.Setting("feed.whitelist"),
+        function() return "lib" end), "{2}", "the CLI renders a list as its entry count")
 end)
 
 test("rows: the per-spec maps take keyed values whole, and refuse a malformed one", function()
@@ -569,6 +593,9 @@ local PINNED_ROWS = {
     { "feed.categories.recipe", "bool", "true" },
     { "feed.categories.tierToken", "bool", "true" },
     { "feed.categories.toy", "bool", "true" },
+    -- DW-CAT5 (issue #13): the Always watch and Never watch item lists, new stored paths.
+    { "feed.blacklist", "map", "{}" },
+    { "feed.whitelist", "map", "{}" },
     { "feed.content", "string", "\"session\"" },
     { "feed.minIlvl", "number", "0" },
     { "feed.minIlvlMode", "string", "\"off\"" },

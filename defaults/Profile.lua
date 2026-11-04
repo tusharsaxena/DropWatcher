@@ -84,6 +84,11 @@ NS.C = {
                 equipment = true, tierToken = true, mount = true, pet = true, toy = true, recipe = true,
                 cosmetic  = false,       -- a look to collect, never gear: off
             },
+            -- The Always watch and Never watch item lists (issue #13, categories design spec §5.3):
+            -- { [itemID] = true }, written whole by NS.ItemLists alone. An ID sits on one list only;
+            -- the page's Defaults keeps both (plan #13, Q9).
+            whitelist = {},
+            blacklist = {},
             minIlvlMode     = "off",     -- off | absolute | relative
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be

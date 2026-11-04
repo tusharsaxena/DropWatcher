@@ -319,7 +319,14 @@ trade sweep dropping someone else's and keeping your own; `newCollect` through t
 override; the collection events coalesced into one re-read that re-judges only a moved verdict, the
 regen pass for `collectUnknown` alone, a learned appearance, the stand-down's cancel and
 `RereadCollections` the cache's one writer; and the refusals at the edges: Asks, the Offer panel and
-`/dw offer`, auto-ask), `test_collect_cells` (DW-CAT3, pure: `NS.CollectCells`' words, tones and
+`/dw offer`, auto-ask), `test_item_lists` (DW-CAT5: `NS.ItemLists`' `ParseId`, Add, Remove and
+List, the refusal of an ID on the other list both ways, every write a whole copy through the seam,
+`/dw whitelist|blacklist` and their refusal while disabled, `/dw get` and a named reset; Never
+watch hiding gear and winning an overlap, Always watch showing an item of no kind as a feed-only
+`unknown`, passing a kind turned off and the quality gate, never the situation gate),
+`test_item_lists_panel` (Drops › Item lists: the tab after Items, its secondary strip and healed
+pointer, the IdList's entries, candidates and writes, a refusal raised, and the page's Defaults
+keeping both lists), `test_collect_cells` (DW-CAT3, pure: `NS.CollectCells`' words, tones and
 tooltip, the `WindowCells.Verdict` and `Them` hooks, the merged cells with no gear part, your own
 collectible's Them and Offer, History's stored verdict, and the refusals: the Ask button, the ask
 template's transmog fallback, the toast, Post my tradeables and the glow; a tier token not refused),

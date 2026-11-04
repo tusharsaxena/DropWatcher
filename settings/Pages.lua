@@ -11,7 +11,7 @@ local addonName, NS = ...
 -- hooks, Drops › Retention's Keep history for has Clear history beside it through `pairWith`
 -- (feedback-15 spec §3), and Window › Columns opens with a note through the page's `chrome`. Each
 -- page's Defaults button resets that page's rows only (options-ui-§13), so Drops' Defaults resets the
--- situations table too. Registered here, in the order the settings list shows them: General
+-- situations table too, though not Drops › Item lists, whose two lists it keeps (plan #13, Q9). Registered here, in the order the settings list shows them: General
 -- (settings/Panel.lua) before, Profiles (settings/Profiles.lua) after. The Drops page's key stays
 -- `feed`: a page key is no stored path, but it names the page's section in `/dw list`, which since
 -- item 020 holds the situation rows as well.
@@ -21,13 +21,17 @@ local Settings = DW.Settings
 local Helpers  = Settings.Helpers
 local L        = NS.L
 local PE       = Settings.PageEditors
+local LE       = Settings.ListEditors
 
 --- The pages after General, in list order: key, title, the Defaults tooltip, and the render's
 --- host tabs, afterGroup hooks, pairWith partners, `chrome` (drawn under the strip, before the
 --- tab's rows) and `beforeClear` (run before each render's ClearScroll).
 local PAGES = {
     { key = "feed", title = L["Drops"],
-      tip = L["Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."],
+      tip = L["Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept."],
+      -- Item lists' two map rows (feed.whitelist, feed.blacklist) are drawn by this host tab, and the
+      -- page's Defaults keeps them (settings/Schema.lua's resetExempt; plan #13, Q9).
+      tabs = { { key = LE.TAB, render = function(ctx) LE.ItemListsTab(ctx) end } },
       afterGroup = {
           [L["Situations"]] = function(ctx) PE.SituationTable(ctx) end,
           [L["Quality"]]    = function(ctx) PE.QualityReadout(ctx) end,

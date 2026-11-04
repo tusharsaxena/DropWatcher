@@ -109,13 +109,14 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (25)
+### test_schema_rows.lua (26)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
 - rows: NS.Setting answers the default before the database, and the stored value after
 - rows: a value outside a row's list or range is refused and stores nothing
+- rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order
@@ -192,6 +193,14 @@ Total.
 - glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)
 - glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)
 - glow sections: a glow turned off still opens its style's section, dimmed (DW-04)
+
+### test_item_lists_panel.lua (5)
+
+- item lists panel: the tab follows Items, with an Always watch | Never watch strip, Always watch first
+- item lists panel: a sub-tab click draws the other list, and a stale pointer heals to the first
+- item lists panel: the IdList's entries, candidates and writes go through NS.ItemLists
+- item lists panel: a refused add is raised as its sentence, and nothing is written
+- item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
 ### test_skin_setup.lua (18)
 
@@ -1279,7 +1288,7 @@ Total.
 - scoring: with weights, a higher item level that scores lower is a sidegrade
 - scoring: the feed judges your drop with your weights once they are set
 
-### test_quality_gate.lua (25)
+### test_quality_gate.lua (26)
 
 - quality gate: fixed passes at or above the threshold and hides below it
 - quality gate: fixed defaults to Rare, and the floor does not apply to it
@@ -1306,6 +1315,7 @@ Total.
 - quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
 - quality gate: nil and garbage inputs never throw
 - quality gate: the upgrade override lets a drop new to your collection through, never a collected one
+- quality gate: an Always watch item passes below the threshold, as whitelisted
 
 ### test_situations.lua (14)
 
@@ -1584,7 +1594,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (51)
+### test_feed.lua (52)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1617,6 +1627,7 @@ Total.
 - gates: the filters run after the situation and before the verdict
 - gates: an item kind turned off hides its drops as category, and Config reads every kind
 - filter: every rule of spec §6.3 and the item kinds (pure)
+- filter: Never watch beats everything, Always watch beats the kinds, heirlooms and min ilvl (pure)
 - gates: the relative minimum item level reads your average equipped level
 - load: an uncached item waits for its facts; a second source merges meanwhile
 - load: an item that never loads is shown, judged unknown
@@ -1666,6 +1677,20 @@ Total.
 - collect feed: Asks refuses an ask, an offer and an announce for a collectible
 - collect feed: the Offer panel never opens for your collectible, and /dw offer says why
 - collect feed: auto-ask never schedules a collectible
+
+### test_item_lists.lua (11)
+
+- item lists: ParseId reads a number, a link, item:<id> and a number as text, and nothing else
+- item lists: Add, Remove, List and Contains, in ID order, with already and notListed
+- item lists: an ID on one list is refused by the other, both ways, and never moved
+- item lists: every write is a whole copy through the seam, at the list's own path
+- item lists: `/dw whitelist add|remove|list` writes through the writer and says what it did
+- item lists: the verbs are in NS.COMMANDS and the help, and refused while disabled
+- item lists: `/dw get` shows a list as its size, and a named `/dw reset` empties it
+- item lists: Never watch hides gear as blacklist, and beats Always watch on an overlap
+- item lists: Always watch shows an item of no kind as a feed-only unknown on its list
+- item lists: Always watch passes a kind turned off and the quality gate, gear judged as gear
+- item lists: Always watch never overrides the situation gate
 
 ### test_group_roster.lua (13)
 
@@ -2408,8 +2433,9 @@ Total.
 | test_setup.lua | 24 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 25 |
+| test_schema_rows.lua | 26 |
 | test_settings_pages.lua | 53 |
+| test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 18 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
@@ -2458,7 +2484,7 @@ Total.
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
 | test_scoring.lua | 16 |
-| test_quality_gate.lua | 25 |
+| test_quality_gate.lua | 26 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
 | test_messaging.lua | 26 |
@@ -2470,9 +2496,10 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 51 |
+| test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 13 |
+| test_item_lists.lua | 11 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
@@ -2512,4 +2539,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2066** |
+| **Total** | **2085** |

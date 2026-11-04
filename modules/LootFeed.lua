@@ -167,6 +167,7 @@ end
 function LF.Config()
     return {
         categories = categories(), minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
+        whitelist = get("feed.whitelist"), blacklist = get("feed.blacklist"),
         relativeIlvl = get("feed.relativeIlvl"),
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
@@ -264,10 +265,19 @@ end
 
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
 -- judged plainly, so a real upgrade for them never reads as one they would give away. A
--- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's.
+-- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's, and so
+-- is an item of no kind on the Always watch list. The list is read from `cfg` at every judge (the
+-- score retry, a gear change, a refresh, a restored drop), never from the drop; Never watch wins.
+local function whitelisted(cfg, f)
+    local id = type(f) == "table" and f.itemID or nil
+    return id ~= nil and type(cfg.whitelist) == "table" and cfg.whitelist[id] == true
+        and not (type(cfg.blacklist) == "table" and cfg.blacklist[id])
+end
+
 local function judgeMe(rec, cfg)
-    if NS.Collectibles.IsCollectible(rec.facts) then
-        rec.me = NS.Collectibles.Verdict(rec.facts)
+    local f, forced = rec.facts, whitelisted(cfg, rec.facts)
+    if NS.Collectibles.IsCollectible(f) or (forced and f.category == nil) then
+        rec.me = NS.Collectibles.Verdict(f, forced)
         return
     end
     local opts = evalOpts(cfg)
@@ -284,7 +294,7 @@ local function qualityGate(rec, cfg)
     local mode = QG.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation))
     local ctx = { fixed = cfg.fixed, floor = cfg.floor, upgradeOverride = cfg.upgradeOverride,
         gear = NS.Gear.Qualities(), baselineSlot = rec.me.baselineSlot, equipLoc = f.equipLoc,
-        verdict = rec.me.verdict }
+        verdict = rec.me.verdict, forced = rec.forced or whitelisted(cfg, f) }
     local pass, threshold, reason = QG.Passes(f.quality, mode, ctx)
     rec.quality = { mode = mode, threshold = threshold, reason = reason }
     if t0 then Perf.Note("quality.gate", debugprofilestop() - t0, parent()) end
@@ -571,8 +581,9 @@ local function judge(rec, facts)
     local cfg = LF.Config()
     if not rec.test and rec.source ~= "restore" then
         local ctx = { myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil }
-        local ok, why = NS.FeedFilter.Filter(facts, cfg, ctx)
+        local ok, why, forced = NS.FeedFilter.Filter(facts, cfg, ctx)
         if not ok then return hide(rec, why) end
+        rec.forced = forced or nil   -- the Always watch list let it through (the quality gate's pass)
     end
     judgeMe(rec, cfg)
     if not rec.test and not qualityGate(rec, cfg) then return hide(rec, "quality") end

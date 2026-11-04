@@ -363,3 +363,19 @@ test("quality gate: the upgrade override lets a drop new to your collection thro
     pass, _, reason = Q.Passes(COMMON, "dynamicSlot", { verdict = "collected", gear = gearAt(EPIC) })
     assertTrue(not pass); assertEqual(reason, "belowThreshold", "no slot: the floor (Uncommon)")
 end)
+
+-- DW-CAT5 (categories design spec §4.3): an item on the Always watch list passes whatever its
+-- quality, as `whitelisted`, in every mode and with the upgrade override off.
+-- red under: Passes ignoring ctx.forced
+test("quality gate: an Always watch item passes below the threshold, as whitelisted", function()
+    local Q = load()
+    for _, mode in ipairs({ "fixed", "dynamicSlot", "dynamicCharacter" }) do
+        local pass, threshold, reason = Q.Passes(POOR, mode, { fixed = EPIC, floor = EPIC, gear = gearAt(EPIC),
+            forced = true, upgradeOverride = false })
+        assertTrue(pass, mode); assertEqual(reason, "whitelisted", mode); assertEqual(threshold, EPIC, mode)
+    end
+    local pass, _, reason = Q.Passes(nil, "fixed", { forced = true })
+    assertTrue(pass); assertEqual(reason, "whitelisted")
+    pass, _, reason = Q.Passes(POOR, "fixed", { fixed = EPIC, forced = "yes" })
+    assertEqual(pass, false); assertEqual(reason, "belowThreshold", "only true forces")
+end)

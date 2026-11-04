@@ -372,13 +372,27 @@ L["Window"] = "Window"
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."] =
-    "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."
+L["Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept."] =
+    "Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept."
 L["Quality floor"] = "Quality floor"
 L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
     "A situation can set a quality of its own: the Quality column on the Situations tab."
 L["Items"] = "Items"
 L["Item kinds"] = "Item kinds"
+
+-- settings/SchemaRows.lua and settings/ListEditors.lua: Drops › Item lists (issue #13)
+L["Item lists"] = "Item lists"
+L["The items always watched, whatever their kind."] = "The items always watched, whatever their kind."
+L["The items never watched, gear included."] = "The items never watched, gear included."
+L["Always watched, whatever its kind, its quality or the minimum item level; the Situations tab still decides where drops are watched. Applies to drops from now on. An item can be on one list only: remove it from the other first."] =
+    "Always watched, whatever its kind, its quality or the minimum item level; the Situations tab still decides where drops are watched. Applies to drops from now on. An item can be on one list only: remove it from the other first."
+L["Never watched, gear included, whatever would show it otherwise. Applies to drops from now on. An item can be on one list only: remove it from the other first."] =
+    "Never watched, gear included, whatever would show it otherwise. Applies to drops from now on. An item can be on one list only: remove it from the other first."
+L["Names work for items you carry (or carried this session), items on either list and items in this session's drops; otherwise use the ID or shift-click a link."] =
+    "Names work for items you carry (or carried this session), items on either list and items in this session's drops; otherwise use the ID or shift-click a link."
+L["Add an item by ID, link or name"] = "Add an item by ID, link or name"
+L["Type an item ID or an item's name, or shift-click an item link into the box."] =
+    "Type an item ID or an item's name, or shift-click an item link into the box."
 L["Retention"] = "Retention"
 L["Session"] = "Session"
 L["Unwanted types"] = "Unwanted types"

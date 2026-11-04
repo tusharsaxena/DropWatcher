@@ -86,6 +86,24 @@ L["%s is not in your bags."] = "%s is not in your bags."
 L["%s is loading: run |cffFFFF00%s|r again in a moment."] = "%s is loading: run |cffFFFF00%s|r again in a moment."
 L["Collectibles are watched, not offered."] = "Collectibles are watched, not offered."
 
+-- The item lists (modules/ItemLists.lua, settings/SlashVerbs.lua; issue #13)
+L["Always watch"] = "Always watch"
+L["Never watch"] = "Never watch"
+L["That is not an item ID or an item link."] = "That is not an item ID or an item link."
+L["That item is already on %s."] = "That item is already on %s."
+L["That item is on %s: remove it there first."] = "That item is on %s: remove it there first."
+L["That item is not on %s."] = "That item is not on %s."
+L["The list could not be saved."] = "The list could not be saved."
+L["item %d"] = "item %d"
+L["%s (%d):"] = "%s (%d):"
+L["(none)"] = "(none)"
+L["Added %s to %s."] = "Added %s to %s."
+L["Removed %s from %s."] = "Removed %s from %s."
+L["Always watch an item — `/dw whitelist add|remove <id or link>`, or `list`"] =
+    "Always watch an item — `/dw whitelist add|remove <id or link>`, or `list`"
+L["Never watch an item — `/dw blacklist add|remove <id or link>`, or `list`"] =
+    "Never watch an item — `/dw blacklist add|remove <id or link>`, or `list`"
+
 -- Minimum quality (modules/QualityGate.lua): the quality names and the filter bar label
 L["Artifact"] = "Artifact"
 L["Common"] = "Common"
@@ -305,6 +323,7 @@ L["%d groups, %d drops · kept forever"] = "%d groups, %d drops · kept forever"
 L["not tracked here"] = "not tracked here"
 L["an heirloom"] = "an heirloom"
 L["not a kind of item that is watched"] = "not a kind of item that is watched"
+L["on the Never watch list"] = "on the Never watch list"
 L["an item kind turned off"] = "an item kind turned off"
 L["below the minimum item level"] = "below the minimum item level"
 L["below the quality gate"] = "below the quality gate"

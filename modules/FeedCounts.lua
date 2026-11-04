@@ -3,8 +3,8 @@ local _, NS = ...
 -- receipt is dropped silently.
 --
 -- HIDDEN is a receipt the feed took and judged, then kept out of every table by a gate: the
--- situation (`notTracking`), a filter of spec §6.3 and the item kinds of issue #13 (`heirloom`,
--- `notWatched`: in no watched category; `category`: an item kind turned off, logged with its key as
+-- situation (`notTracking`), a filter of spec §6.3 and the item kinds and lists of issue #13
+-- (`blacklist`: on the Never watch list; `heirloom`; `notWatched`: in no watched category; `category`: an item kind turned off, logged with its key as
 -- `category=<key>`; `minIlvl`) or the quality gate (`quality`). REFUSED is a receipt the feed
 -- never took: the addon stood down (`stoodDown`), no item link (`notItem`), your own pushed line
 -- (`pushed`), no looter named (`noLooter`), a C_LootHistory drop with no winner yet (`noWinner`)

@@ -65,7 +65,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
   pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
   collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, and an omni
-  token's best slot, so a token is judged as gear) and the scorers; the edges
+  token's best slot, so a token is judged as gear) and the scorers; the item lists' one writer
+  (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
   after a reload, `FeedRestore.lua`; the toast, its content on LibKa0s-Toast-1.0's shell, and
@@ -82,7 +83,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
-  `ComposedRows.lua`), the options pages and their editors, the slash table,
+  `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in
+  `ListEditors.lua`), the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
@@ -98,7 +100,11 @@ later pages (`settings/ComposedRows.lua`: Window › Icons' border, options-ui-�
 which take SchemaRows' checks. Each row's `group` is its tab on
 its page, a `disabledIf` predicate dims a row with nothing to do, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value before the seam stores it. The two
-specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
+specID-keyed tables are whole-value `map` rows (architecture-§5's value route), and so are the two
+item lists, `feed.whitelist` and `feed.blacklist` (issue #13): flat `{ [itemID] = true }` sets
+whose one writer, `NS.ItemLists` (`modules/ItemLists.lua`), the panel's Item lists tab and
+`/dw whitelist|blacklist` both call, so an ID on one list is refused by the other on both surfaces.
+The seam's `resetExempt` keeps them out of the Drops page's Defaults (plan #13, Q9).
 
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
@@ -154,7 +160,9 @@ toast on screen or waiting go with its drop. The payloads and consumers below ar
 `/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
 reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
-add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
+add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
+issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through the item
+lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
 window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is

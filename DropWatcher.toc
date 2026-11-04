@@ -192,6 +192,10 @@ modules\TradeRules.lua
 # modules\LootFeed.lua); read by the feed at call time only, and itself reads NS.Constants (core\,
 # above) at load.
 modules\FeedFilter.lua
+# Conventional: publishes NS.ItemLists, the one writer of the Always watch and Never watch item lists
+# (feed.whitelist, feed.blacklist; issue #13), which settings\ListEditors.lua and settings\SlashVerbs.lua
+# (below) call; reads NS.L at load. NS.Item, NS.Setting and NS.SchemaRuntime are read at call time.
+modules\ItemLists.lua
 # Conventional: publishes NS.FeedRecords, the feed's pure record logic (the dedupe match, the link a
 # merge keeps, the encounter and run in force, the groups, a test drop's record, the bag item's
 # overlay; peeled out of modules\LootFeed.lua); read by the feed at call time only. NS.ItemRead
@@ -568,6 +572,10 @@ settings\Editors.lua
 # settings\Panel.lua (above) reaches at render time (When to show's table); takes Settings.Editors
 # (above) at load and the engine modules at call time.
 settings\PageEditors.lua
+# LOAD-BEARING: publishes Settings.ListEditors (Drops › Item lists, issue #13), which settings\Pages.lua
+# (below) takes at load; reads NS.L at load, and NS.ItemLists, NS.LootFeed and Settings.Helpers at
+# call time.
+settings\ListEditors.lua
 # LOAD-BEARING: registers the Feed, Comparison, Trade, Messages and Window pages after General's
 # (settings\Panel.lua, above) and before Profiles' (below), the order the settings list shows.
 settings\Pages.lua

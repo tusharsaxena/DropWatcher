@@ -30,7 +30,7 @@ local L = NS.L
 
 -- The words for each gate that hides a drop (modules/FeedCounts.lua's reasons).
 local GATE = {
-    notTracking = L["not tracked here"], heirloom = L["an heirloom"],
+    notTracking = L["not tracked here"], blacklist = L["on the Never watch list"], heirloom = L["an heirloom"],
     notWatched = L["not a kind of item that is watched"], category = L["an item kind turned off"],
     minIlvl = L["below the minimum item level"],
     quality = L["below the quality gate"],

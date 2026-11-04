@@ -24,7 +24,15 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   before the seam stores it.
 - `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
-  their own editors (`skipRender`); the CLI shows them as their entry count. The
+  their own editors (`skipRender`); the CLI shows them as their entry count. So are the two item
+  lists, `feed.whitelist` and `feed.blacklist` (issue #13), flat `{ [itemID] = true }` sets on the
+  same value route, whose one writer is `NS.ItemLists` (`modules/ItemLists.lua`): the panel's Item
+  lists tab and `/dw whitelist|blacklist` both call it, so the two surfaces share one refusal rule
+  (an ID on the other list is refused, never moved). Their `validate` checks the shape alone; the
+  overlap a copied profile may carry is resolved at read time, where Never watch wins. They are
+  the seam's `resetExempt` beside the minimap row, so the Drops page's Defaults keeps them (plan
+  #13, Q9); Reset all settings, a profile reset, empties them, and `/dw reset feed.whitelist` still
+  resets one. The
   `situations.<key>.*` and `trade.rules.<key>` rows are `skipRender` too (since DW-H0; the loot
   rules since feedback-24): the Drops › Situations table draws them, a line per situation, and writes
   through the seam.
@@ -106,6 +114,8 @@ button and profiles reach them as any row.
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
 | `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |
+| `feed.whitelist` | `{}` | Item lists › Always watch (`map`) | `{ [itemID] = true }`: always watched, past the item kinds, the heirloom rule, the minimum item level and the quality gate, never past the situation gate; an item of no kind reads `unknown` and is feed-only (categories design spec §4.2) |
+| `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 

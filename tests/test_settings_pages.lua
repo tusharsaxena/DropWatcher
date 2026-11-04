@@ -17,7 +17,7 @@ local PAGES = {
     -- "Appearance" is the Skin tab's key (the library labels it "Skin"; tests/test_skin_setup.lua).
     { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Appearance", "Keybindings" } },
     -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
-    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Retention" } },
+    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Item lists", "Retention" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
     { key = "messages",   title = "Messages",   strip = { "Sending", "Auto-ask", "Templates" } },
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
@@ -865,7 +865,7 @@ test("pages: the Drops page's Defaults tooltip names the situations it now reset
     local NS = T.enableAddon()
     local tip = NS.addon.Settings.Helpers.__panelFor("feed").panel.defaultsTooltip
     -- red under: the pre-020 tooltip, which left the situations out
-    assertEqual(tip, "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults.")
+    assertEqual(tip, "Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept.")
     assertTrue(NS.addon.Settings.Helpers.__panelFor("situations") == nil, "no Situations page")
 end)
 

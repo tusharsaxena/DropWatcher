@@ -209,6 +209,22 @@ tokens, schema step 13). A change applies to drops from then on. **Item level:**
 level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
 under my average in the relative mode, and neither under Off (LibKa0s#67).
 
+**Item lists** (DW-CAT5, issue #13): a host tab (`settings/ListEditors.lua`,
+`Settings.ListEditors.ItemListsTab`) keyed by the `feed.whitelist` and `feed.blacklist` rows' group,
+so it follows Items in the strip. A secondary strip, **Always watch | Never watch**, picks the list
+shown; its selection is `ctx.activeSubTab["Item lists"]`, session state, healed to Always watch
+when stale (options-ui-§13). Under it, the list's blurb (each closes with *Applies to drops from now
+on. An item can be on one list only: remove it from the other first.*), then one LibKa0s `IdList`
+(`kind = "item"`, `columns = 2`, `removeStyle = "icon"`): its add box takes an item ID, a
+shift-clicked link or a name the client knows or the candidates hold (both lists' IDs, then the
+live feed's items), and each entry is drawn with its icon and name. Its add and Remove call
+`NS.ItemLists`, the lists' one writer that `/dw whitelist|blacklist` shares; a refusal (the ID is on
+the other list, or already on this one) is raised again as its sentence, so the box keeps the typed
+text and says why. The write repaints the scalar widgets only, and IdList redraws this page alone
+through `ctx.rebuild`. The page's Defaults keeps both lists (the seam's `resetExempt`; plan #13, Q9),
+which its tooltip says: *Reset the Drops page's settings (situations, quality, item kinds and how
+long drops are kept) to their defaults. The item lists are kept.*
+
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
 since item 020; a shorter time that would delete groups asks first, and No puts the

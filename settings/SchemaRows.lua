@@ -83,6 +83,17 @@ local function validWeights(v)
     return true
 end
 
+-- An item list (feed.whitelist, feed.blacklist): { [itemID] = true }. The shape alone: the two lists
+-- exclude each other in their one writer (modules/ItemLists.lua) and at read time, never here, so a
+-- profile with one overlapping ID keeps both lists (categories design spec §5.1).
+local function validItemSet(v)
+    if type(v) ~= "table" then return false end
+    for id, on in pairs(v) do
+        if type(id) ~= "number" or id < 1 or id ~= math.floor(id) or on ~= true then return false end
+    end
+    return true
+end
+
 -- undesired: { [specID] = { ["<classID>:<subClassID>"] = true } }, Evaluate's prefs key.
 local function validUndesired(v)
     if type(v) ~= "table" then return false end
@@ -328,6 +339,14 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(ilvl, { shownWhen = { path = "feed.minIlvlMode", equals = "relative" } }))
+
+    -- Drops › Item lists (categories design spec §5.1): the two lists, drawn by the tab's own editor
+    -- (settings/ListEditors.lua). Declared after Items, so the tab follows it in the strip.
+    local lists = { page = "feed", group = L["Item lists"] }
+    map("feed.whitelist", F.whitelist, validItemSet, L["Always watch"],
+        L["The items always watched, whatever their kind."], lists)
+    map("feed.blacklist", F.blacklist, validItemSet, L["Never watch"],
+        L["The items never watched, gear included."], lists)
 
     -- Keep history for first, so it is alone on its line and Clear history takes the right half
     -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.

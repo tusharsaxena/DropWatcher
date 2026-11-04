@@ -590,6 +590,30 @@ test("filter: every rule of spec §6.3 and the item kinds (pure)", function()
     check(gear, "junk", "junk", true, nil)
 end)
 
+-- DW-CAT5 (categories design spec §4.1, §4.2): Never watch first, gear and Always watch included;
+-- Always watch next, past the kinds, the heirloom rule and the minimum item level, answering forced.
+-- red under: the lists read after the kinds, or the whitelist checked before the blacklist
+test("filter: Never watch beats everything, Always watch beats the kinds, heirlooms and min ilvl (pure)", function()
+    local NS = T.newAddon()
+    local F = NS.FeedFilter.Filter
+    local gear = { itemID = 500, quality = 4, ilvl = 600, category = "equipment" }
+    local function check(facts, cfg, pass, why, forced)
+        local ok, reason, f = F(facts, cfg, {})
+        assertEqual(ok, pass); assertEqual(reason, why); assertEqual(f, forced)
+    end
+    local white, black = { whitelist = { [500] = true } }, { blacklist = { [500] = true } }
+    check(gear, black, false, "blacklist", nil)
+    check(gear, { whitelist = { [500] = true }, blacklist = { [500] = true } }, false, "blacklist", nil)
+    check(gear, white, true, nil, true)
+    check({ itemID = 500, quality = 4, category = nil }, white, true, nil, true)
+    check({ itemID = 500, quality = NS.Constants.QUALITY.HEIRLOOM, category = "equipment" }, white, true, nil, true)
+    check(gear, { whitelist = { [500] = true }, categories = { equipment = false } }, true, nil, true)
+    check(gear, { whitelist = { [500] = true }, minIlvlMode = "absolute", minIlvl = 700 }, true, nil, true)
+    check(gear, { whitelist = { [501] = true }, blacklist = { [501] = true } }, true, nil, nil)
+    check({ quality = 4, category = "equipment" }, white, true, nil, nil)
+    check(gear, { whitelist = "junk", blacklist = "junk" }, true, nil, nil)
+end)
+
 test("gates: the relative minimum item level reads your average equipped level", function()
     local NS, m, LF = party()
     NS.addon.db.profile.feed = { minIlvlMode = "relative", relativeIlvl = 10 }
