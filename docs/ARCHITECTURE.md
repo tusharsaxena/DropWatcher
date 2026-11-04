@@ -31,7 +31,7 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
-| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and six verbs (DW-02..DW-04) |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
 | Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-one `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
@@ -59,7 +59,7 @@ one-line responsibility and why its position is load-bearing or conventional is 
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
-  world providers, event drivers, restriction model and five verbs); the login session (`Session.lua`, the session start and This
+  world providers, event drivers, restriction model and six verbs); the login session (`Session.lua`, the session start and This
   instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
@@ -167,7 +167,7 @@ lists' one writer, `NS.ItemLists`, which the settings panel shares); the full ta
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
 window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
 one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
-grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
+grammar plus DropWatcher's six verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
 disabled like any other and has no key binding. The launcher menu's Sim mode entry and Master
 controls' Sim mode box are its one other door: both take the same `NS.IsSimMode` / `NS.ToggleSim`
 pair (`core/DropWatcher.lua`). `NS.IsSimMode` answers whether the step panel is shown or a sim runs
@@ -247,7 +247,7 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 ### The simulator on LibKa0s-Sim-1.0
 
 The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world providers, event drivers,
-restriction model and five verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
+restriction model and six verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
 session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
 panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
 (LibKa0s `docs/api/Sim/version-2.2.2-docs.md`, *The host contract (H1–H10)*; the standard's
@@ -265,6 +265,13 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIMULATION` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
+
+The pool also keeps the journal's drops that are not gear, by item kind (`NS.SimPool.Extras`: the
+tier tokens, mounts, pets, toys, recipes and cosmetics), so a loot burst draws one line in eight from
+them and `/dw sim drop <kind> [player|me]` sends one item of a named kind (`NS.SimEvents.Drop`); a
+kind the journal lists none of falls back to `NS.SimPool.COLLECTIBLE_SAMPLES`, curated ids that ship
+empty until each is checked in the client (issue #13, DW-CAT6, smoke check COLL-8). Test mode's sixth
+boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 
 ## Frame layering
 
@@ -477,7 +484,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 100 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 11 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 101 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 12 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

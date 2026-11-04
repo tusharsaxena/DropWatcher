@@ -17,10 +17,10 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `100`): the
+**One hundred and one shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `101`): the
 root `core/Compat.lua` publishes 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and
-`core/CompatCollect.lua` 11. The four
+`core/CompatCollect.lua` 12. The four
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -227,9 +227,10 @@ recipe's known line and a tier token's slot line are read through the ratified `
 | `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }`, and `{}` for a character with no profession | `nil` (no API, or a slot whose index or skill line is secret or unreadable: no answer is never read as "no profession") |
 | `TierTokenSlot(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** one of the localized `INVTYPE_HEAD`, `INVTYPE_SHOULDER`, `INVTYPE_CHEST`, `INVTYPE_HAND` or `INVTYPE_LEGS` GlobalStrings: that `INVTYPE_*` key (DW-CAT4; whether the client's token tooltip carries such a line is smoke check `ITEM-6`) | `nil` (no API, no such line, a secret or malformed answer) |
 | `ClassDisplayName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE[classFile]`, the client's name for a class (a tier token's Type cell) | `nil` (no table, an unknown class, a secret name) |
+| `ItemLinkByID(itemID)` | `C_Item.GetItemInfo(itemID)`'s second return, a `\|Hitem:` link: a curated simulator sample's link by its id (DW-CAT6) | `nil` (no API, not cached yet, a secret or non-hyperlink answer) |
 
 `modules/Collectibles.lua` is the one caller of the collection reads; `modules/ItemFacts.lua` reads
-`TierTokenSlot` and `modules/CollectCells.lua` `ClassDisplayName`. `test_compat_collect` drives every member with its
+`TierTokenSlot`, `modules/CollectCells.lua` `ClassDisplayName` and `modules/SimPool.lua` `ItemLinkByID`. `test_compat_collect` drives every member with its
 answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped
 file that names one of these APIs.
 
@@ -302,7 +303,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
 | `modules/Sim.lua` | `RestrictionTypes` |
-| `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
+| `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `ItemLinkByID` (`core/CompatCollect.lua`: a curated sample's link); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
 | `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
 | `modules/SimWorld.lua` | `NormalizedRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads; `TooltipHyperlink` (`core/CompatItem.lua`: a member's item level read off the tooltip) |
 | `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |

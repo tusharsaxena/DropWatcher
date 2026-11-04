@@ -952,7 +952,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (40)
+### test_test_mode.lua (44)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -963,6 +963,9 @@ Total.
 - test mode data: off-spec samples show every off-spec verdict, an empty slot, a bag item and a worn one
 - test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade
 - test mode data: History holds an off-spec entry you asked for and one you received
+- test mode data: the sixth boss drops every item kind, each with its collection verdict (issue #13)
+- test mode data: an item kind draws on the pool's items of that kind before any stand-in
+- test mode data: History holds a world boss's mount new to you and a pet of yours you have (issue #13)
 - window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row
 - test mode data: a key run and four bosses, every item a pool item that keeps its slot
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
@@ -979,7 +982,7 @@ Total.
 - test mode: the Drops tab shows View: All while on, and the player's View comes back
 - history: test mode shows its sample groups, every outcome, and never writes the account's history
 - history: the account's kept groups come back when test mode ends
-- window: test mode draws every sample, under the two key runs and the five bosses, with real icons
+- window: test mode draws every sample, under the two key runs and the six bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
 - window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Yes
@@ -994,6 +997,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
+- window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
 ### test_compat.lua (74)
 
@@ -1072,7 +1076,7 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_collect.lua (16)
+### test_compat_collect.lua (17)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
 - compat collect: MountCollected answers isCollected, the 11th return, else nil
@@ -1087,6 +1091,7 @@ Total.
 - compat collect: TierTokenSlot reads a slot line by its whole text
 - compat collect: TierTokenSlot answers nil when it cannot tell
 - compat collect: ClassDisplayName answers the client's name for a class, else nil
+- compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
 - compat collect: no member raises with every API gone
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
@@ -2077,7 +2082,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (21)
+### test_sim_pool.lua (23)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2085,6 +2090,8 @@ Total.
 - compat journal: world bosses are flagged, bosses named, the keys' preview level set and put back (fb17)
 - sim pool: each situation reads its side and difficulty; the class filter is yours or none
 - sim pool: a loot burst draws the pool's gear, and every drop only when it has none
+- sim pool: its extras are the drops that are not gear, by kind, in the pool's order (issue #13)
+- sim pool: a kind the pool has none of draws the curated samples, once the client has them
 - sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
 - sim pool: the selection is restored even when a read raises
 - sim pool: the journal is not read while its frame is shown
@@ -2101,7 +2108,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (21)
+### test_sim_events.lua (23)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2111,6 +2118,8 @@ Total.
 - sim world: the stop puts the real world back
 - sim loot: a member's line goes through the parser into the feed, under their GUID
 - sim loot: n random lines, and nothing without a running simulation or a pool
+- sim lines: about one line in eight is one of the pool's extras, and without them nothing moves (issue #13)
+- sim drop: one drop of a named kind goes through the parser into the feed, judged for your collection
 - sim inspect: a looter is read through the broker's queue after the reply, never the fast path
 - sim inspect: a failing member times out; a member out of range waits and gives up
 - sim inspect: the reply delay is the session's seeded random source
@@ -2127,7 +2136,7 @@ Total.
 
 ### test_sim_scenario.lua (31)
 
-- sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
 - sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage
@@ -2472,9 +2481,9 @@ Total.
 | test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 40 |
+| test_test_mode.lua | 44 |
 | test_compat.lua | 74 |
-| test_compat_collect.lua | 16 |
+| test_compat_collect.lua | 17 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 13 |
@@ -2519,8 +2528,8 @@ Total.
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 21 |
-| test_sim_events.lua | 21 |
+| test_sim_pool.lua | 23 |
+| test_sim_events.lua | 23 |
 | test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 17 |
@@ -2540,4 +2549,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2086** |
+| **Total** | **2095** |

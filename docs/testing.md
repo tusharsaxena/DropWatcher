@@ -249,7 +249,7 @@ every cell, button and header of both tabs placed by it, the column labels and t
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate status covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; feedback-17's realism: each group the
-size its content brings (five, twenty, twenty-five), the session's seven groups and twenty-nine drops (feedback-22: the unique ring on both sides, every
+size its content brings (five, twenty, twenty-five), the session's eight groups and thirty-five drops, the sixth boss's six the item kinds of issue #13 with their collection verdicts, no inspect and the pool's item of each kind before a stand-in, and History's world boss with a mount and a pet (feedback-22: the unique ring on both sides, every
 short trade reason, an upgrade that glows and ones that cannot),
 History's twenty-plus groups across every content within 30 days, each group one real place whose
 loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
@@ -272,7 +272,7 @@ tooltip line reader, the trade window's items and partner, the row menu, the opt
 the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
 first, R4), and each shim's fallback with its API absent), `test_compat_collect` (`core/CompatCollect.lua`'s
 collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
-by its whole text, the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
@@ -515,14 +515,18 @@ answers, the world-boss flag, the boss names and the keys' preview level set and
 `everything` read covering both sides (feedback-17), each situation's side and difficulty, a read of every instance of the newest tier at every
 difficulty with the player's selection restored, even when a read raises, no read while the
 journal's frame is shown, the wait for `EJ_LOOT_DATA_RECIEVED` and its timeout keeping what loaded,
-the class filter, the own-items fallback reported once, the stop ending a waiting build; the seeded
+the class filter, the own-items fallback reported once, the stop ending a waiting build; the
+pool's extras (its drops that are not gear, by kind, issue #13) and a kind with none falling back to
+the curated samples once the client has them; the seeded
 random source, a party of four and a raid of nine to nineteen with distinct names and GUIDs and
 each spec its class's, the gear drawn inside the band from what the class can wear with the rest
 left empty and the off hand empty behind a two-hander, and the group kept on the session and
 forgotten by the stop),
 `test_sim_events` (the simulator's event drivers and its world: every `LOOT_ITEM*` shape written
 from its GlobalString and read back by the parser, a reordering locale written in its own order, a
-burst's size, your own lines and its looter from another realm; the roster, the situation and the
+burst's size, your own lines and its looter from another realm; one line in eight from the pool's
+extras and none moved without them, and `drop <kind>` reaching the feed judged for your collection,
+with its refusals (issue #13); the roster, the situation and the
 announce channel reading the invented party or raid while a live read sees the real world, and the
 stop putting it back; a member's line, bare or Name-Realm, reaching the feed under their GUID with
 saved history untouched; an inspect read through the broker's queue after the reply, never the
@@ -603,7 +607,7 @@ stay as integration over this addon's host half: `test_sim_core` (the seam's mem
 the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
 every scenario through the real engine), `test_sim_events` (the event drivers and the world
 providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
-`test_sim_scenario` (the scenarios, the timeline's steps, the five verbs through `/dw sim`) and
+`test_sim_scenario` (the scenarios, the timeline's steps, the six verbs through `/dw sim`, `drop <kind>` included) and
 `test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.

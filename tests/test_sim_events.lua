@@ -4,7 +4,8 @@
 -- announce channel); inspect replies through the broker's real queue after a seeded random delay;
 -- boss pulls and kills with their combat edge and restriction, the ask queued meanwhile and
 -- flushed after; a keystone run; your own drops' trade windows read by the trade timer; a
--- simulated completed trade settled by the history's own reader; and the stop that ends what the
+-- simulated completed trade settled by the history's own reader; the item kinds (issue #13): one
+-- burst line in eight from the pool's extras and `drop <kind>`; and the stop that ends what the
 -- drivers raised (modules/SimWorld.lua, modules/SimEvents.lua, core/CompatWorld.lua).
 
 local T = _G.DW_TEST
@@ -227,6 +228,62 @@ test("sim loot: n random lines, and nothing without a running simulation or a po
     assertTrue(#drops(NS) >= before + 1, "the lines became drops (a multiple of one item merges no line)")
     NS.Sim:Stop()
     local n, why = NS.SimEvents.Loot(1)
+    assertEqual(n, 0); assertEqual(why, "notRunning")
+end)
+
+test("sim lines: about one line in eight is one of the pool's extras, and without them nothing moves (issue #13)", function()
+    local NS = T.newAddon()
+    local E, R = NS.SimEvents, NS.SimRoster
+    local members = R.Members({ kind = "raid", size = 12, ownRealm = "Testrealm" }, R.Random(3))
+    local gear, extras = { { link = "a" }, { link = "b" } }, { { link = "reins" } }
+    local fromExtras, total = 0, 0
+    for seed = 1, 200 do
+        local plain = E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm")
+        local none = E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm", {})
+        for i, line in ipairs(plain) do
+            assertTrue(line.entry == none[i].entry and line.looter == none[i].looter, "no extras: the same seeded burst")
+        end
+        for _, line in ipairs(E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm", extras)) do
+            total = total + 1
+            if line.entry == extras[1] then fromExtras = fromExtras + 1 end
+        end
+    end
+    local share = fromExtras / total
+    assertTrue(share > 0.07 and share < 0.19, "about one in eight: " .. share)
+end)
+
+-- A mount in the Mythic dungeon's loot, not yet collected.
+local function withMount(NS, m)
+    local l = link(7001, 0)
+    m.addItem(l, { name = "Reins", quality = 4, ilvl = 1, equipLoc = "", classID = 15, subClassID = 5, bindType = 1,
+        stats = {} })
+    m.mounts.byItem[7001], m.mounts.collected[77] = 77, false
+    local loot = m.journal.loot[101][NS.Constants.DIFFICULTY.MYTHIC_DUNGEON]
+    loot[#loot + 1] = { itemID = 7001, link = l, encounterID = 2009 }
+end
+
+test("sim drop: one drop of a named kind goes through the parser into the feed, judged for your collection", function()
+    -- red under: no `drop` entry point, so a mount could only come by chance in a burst
+    local NS, m, members = sim({ before = withMount })
+    local E = NS.SimEvents
+    assertEqual(E.Drop("mount", "me"), 1)
+    m.advance(0)
+    local rec = lastDrop(NS)
+    assertEqual(rec.itemID, 7001); assertTrue(rec.isMine and rec.sim)
+    assertEqual(rec.facts.category, "mount")
+    assertEqual(rec.me.verdict, "newCollect", "judged for your collection")
+    assertEqual(E.Drop("mount", members[1].name), 1)
+    m.advance(0)
+    assertEqual(lastDrop(NS).looter.guid, members[1].guid)
+    assertEqual(E.Drop("equipment", "me"), 1)
+    m.advance(0)
+    assertEqual(lastDrop(NS).facts.category, "equipment")
+    local n, why = E.Drop("toy")
+    assertEqual(n, 0); assertEqual(why, "noSample")
+    n, why = E.Drop("mount", "Nobody")
+    assertEqual(n, 0); assertEqual(why, "noLooter")
+    NS.Sim:Stop()
+    n, why = E.Drop("mount")
     assertEqual(n, 0); assertEqual(why, "notRunning")
 end)
 

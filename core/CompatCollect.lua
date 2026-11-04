@@ -4,7 +4,8 @@ local _, NS = ...
 -- professions, published on NS.Compat like the rest of the compat family, split out of
 -- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller of
 -- those; the tier-token reads (the slot a token's tooltip names, a class's name) are
--- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4).
+-- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
+-- the link of a curated sample's id is modules/SimPool.lua's (spec §8, DW-CAT6).
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
 -- meets nothing but IsSecret first, a missing API answers its documented absent value and never
@@ -201,4 +202,20 @@ function Compat.ClassDisplayName(classFile)
     local names = LOCALIZED_CLASS_NAMES_MALE
     if not (plainString(classFile) and type(names) == "table") then return nil end
     return plainString(names[classFile])
+end
+
+-- ── The simulator's samples (DW-CAT6) ───────────────────────────────────────────────────────
+
+--- An item's link from its id (C_Item.GetItemInfo's second return), or nil: no API, an item the
+--- client has not cached yet, or a secret answer. The simulator's curated collectible samples
+--- (NS.SimPool.COLLECTIBLE_SAMPLES) are ids, and a loot line needs the link.
+--- @param itemID number
+--- @return string|nil
+function Compat.ItemLinkByID(itemID)
+    local item = C_Item
+    if not (plainId(itemID) and item and item.GetItemInfo) then return nil end
+    local _, link = item.GetItemInfo(itemID)
+    link = plainString(link)
+    if not (link and link:find("|Hitem:", 1, true)) then return nil end
+    return link
 end

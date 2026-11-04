@@ -319,7 +319,7 @@ NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with th
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 /dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
-                   loot, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   loot, drop, lockdown, trade; else the usage) ─> no simulation running: "No simulation
                    is running: …" (but the bare form, status, start and panel)
 /dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
                    scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
@@ -338,7 +338,12 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    in chat and on the panel row, TipLines (pure, { left, right } lines) ─> the
                    row's tooltip: each drop, its looter, Drops or the gate that hid it (feedback-3 §0);
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
-                   not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
+                   not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2);
+                   a burst's line is one of the pool's extras about one time in eight (SimPool.Extras:
+                   its mounts, pets, toys, recipes, cosmetics and tier tokens; issue #13)
+/dw sim drop <kind> [player|me] ─> NS.SimReport.Drop: Mark ─> SimEvents.Drop ─> SimPool.KindDrops
+                   (the pool's items of that kind, else the curated COLLECTIBLE_SAMPLES; none:
+                   `noSample`) ─> one line through the same delivery ─> Collect ─> `Simulated drop: 1 drop.`
 the armed run ─> a step, then one every stepDelay seconds (the descriptor's
                    SimScenario.StepDelay(): `sim.stepDelay`, 1 by default, read as each next step is
                    set) on the session's own timers (the stop ends it) ─> at the last step the

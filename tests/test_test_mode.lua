@@ -3,10 +3,13 @@
 -- (modules/TestData.lua, pure), the test feed fills from the item pool and clears with test mode
 -- (modules/TestMode.lua, NS.LootFeed.AddTest), the History tab shows session-only sample groups that
 -- never reach the account's history, the window built headless draws every state with a reason and
--- never a blank cell or an unknown item, no button label ends in an ellipsis, and a send is printed.
+-- never a blank cell or an unknown item, no button label ends in an ellipsis, and a send is printed;
+-- and the item kinds (issue #13): a mount, pet, toy, recipe, cosmetic and tier token among the
+-- samples, and a collectible group in the History sample.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse,
+    T.assertNil
 
 local function textOf(region) return region and region:GetText() end
 
@@ -105,9 +108,10 @@ test("test mode data: the session drops what such groups see; History holds far 
         local n = #s.yours + #s.theirs
         sessionDrops = sessionDrops + n
         if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
+        elseif s.n == 6 then assertEqual(n, 6, "the boss with the item kinds: its gear and six of them")
         else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
     end
-    assertEqual(#TD.SESSION, 7); assertEqual(sessionDrops, 29)
+    assertEqual(#TD.SESSION, 8); assertEqual(sessionDrops, 35)
     local total = 0
     for _, g in ipairs(TD.HISTORY) do
         per[g.content] = true
@@ -193,8 +197,12 @@ test("test mode data: every trade estimate, inspect state and ask state is there
     local trade, insp, ask = {}, {}, {}
     for _, s in ipairs(others(specs)) do
         trade[s.trade.state] = true
-        insp[s.testInspect.status] = true
-        assertEqual(s.inspect.status, s.testInspect.status, "the drop's inspect matches its entry")
+        if s.me.collect then
+            assertTrue(s.testInspect == nil and s.inspect == nil, "a collectible asks for no inspect")
+        else
+            insp[s.testInspect.status] = true
+            assertEqual(s.inspect.status, s.testInspect.status, "the drop's inspect matches its entry")
+        end
         ask[s.testAsk and s.testAsk.state or "ready"] = true
     end
     hasAll(trade, { "yes", "likely", "unknown", "no" }, "trade")
@@ -308,6 +316,75 @@ test("test mode data: History holds an off-spec entry you asked for and one you 
     hasAll(outcomes, { "asked", "received" }, "off-spec outcome")
 end)
 
+-- ── the item kinds (issue #13, categories design spec §8) ───────────────────────────────────
+
+-- The samples of each item kind, by kind.
+local function byKind(specs)
+    local out = {}
+    for _, s in ipairs(specs) do
+        if s.facts.category then out[s.facts.category] = s end
+    end
+    return out
+end
+
+test("test mode data: the sixth boss drops every item kind, each with its collection verdict (issue #13)", function()
+    -- red under: TestData with no item-kind rows, so test mode never showed a collectible
+    local _, specs = placeholders()
+    local k = byKind(specs)
+    local mount, pet, toy, recipe, look, token = k.mount, k.pet, k.toy, k.recipe, k.cosmetic, k.tierToken
+    assertEqual(mount.me.verdict, "newCollect"); assertFalse(mount.looter.isSelf, "someone else's mount")
+    assertEqual(mount.trade.reasonKey, "collectible"); assertFalse(mount.facts.collect.known)
+    assertEqual(pet.me.verdict, "collected"); assertEqual(pet.me.count, 1); assertEqual(pet.me.limit, 3)
+    assertEqual(pet.me.reasons[2].key, "petPartial"); assertEqual(pet.me.reasons[2].detail, "1/3")
+    assertEqual(toy.me.verdict, "collectUnknown"); assertNil(toy.facts.collect.known, "no answer")
+    assertEqual(recipe.me.verdict, "cantUse"); assertEqual(recipe.me.reasons[1].key, "notYourProfession")
+    assertTrue(recipe.looter.isSelf, "your own recipe"); assertFalse(recipe.facts.collect.hasProfession)
+    assertEqual(next(recipe.candidates), nil, "a collectible has no candidates")
+    assertEqual(look.me.verdict, "newCollect"); assertFalse(look.facts.transmogKnown, "a New look")
+    assertTrue(look.facts.equipLoc ~= "", "a cosmetic keeps its slot")
+    for _, s in ipairs({ mount, pet, toy, recipe, look }) do
+        assertTrue(s.me.collect and s.me.equip == "collect", s.facts.category .. ": a collection verdict")
+        assertEqual(s.me.category, s.facts.category)
+        assertNil(s.testInspect, s.facts.category .. ": no inspect"); assertNil(s.them)
+        assertEqual(next(s.testGear), nil, s.facts.category .. ": no worn gear beside it")
+    end
+    for _, s in ipairs({ mount, pet, toy, recipe }) do assertEqual(s.facts.equipLoc, "", s.facts.category .. ": no slot") end
+    assertTrue(token.facts.isTierToken); assertEqual(token.facts.tokenSlot, "INVTYPE_HEAD")
+    assertEqual(token.facts.equipLoc, "INVTYPE_HEAD", "judged as the piece it makes")
+    assertEqual(token.me.verdict, "upgrade"); assertEqual(token.me.ilvlDelta, 7)
+    assertNil(token.me.collect, "a token is judged as gear"); assertEqual(token.testInspect.status, "fresh")
+    assertEqual(token.group.key, mount.group.key, "one boss drops them all")
+end)
+
+test("test mode data: an item kind draws on the pool's items of that kind before any stand-in", function()
+    local NS = T.newAddon()
+    local drops, gear = fakePool()
+    local reins = { link = poolLink(7001, 1), itemID = 7001, equipLoc = "", ilvl = 1 }
+    local function factsOf(e) return { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = 4, name = "f" .. e.itemID } end
+    local src = NS.TestData.Source(drops, gear, factsOf, { mount = { reins } })
+    local mount = byKind(NS.TestData.Placeholders(1000, YOU, src)).mount
+    assertEqual(mount.link, reins.link, "the pool's own mount")
+    assertEqual(mount.facts.name, "f7001", "its own facts, copied")
+    assertEqual(mount.facts.category, "mount")
+end)
+
+test("test mode data: History holds a world boss's mount new to you and a pet of yours you have (issue #13)", function()
+    local NS = T.newAddon()
+    local src = source(NS)
+    local entries = {}
+    for _, g in ipairs(NS.TestData.History(5000000, YOU, src).groups) do
+        for _, e in ipairs(g.drops) do
+            if e.me and e.me.collect then entries[e.category] = { e = e, g = g } end
+        end
+    end
+    local mount, pet = entries.mount, entries.pet
+    assertEqual(mount.e.me.verdict, "newCollect"); assertNil(mount.e.isMine)
+    assertEqual(pet.e.me.verdict, "collected"); assertTrue(pet.e.isMine)
+    assertEqual(pet.e.me.count, 2); assertEqual(pet.e.me.limit, 3); assertEqual(pet.e.me.category, "pet")
+    assertEqual(mount.g.key, pet.g.key, "one group")
+    assertEqual(mount.g.situation, "openWorldGroup", "a world boss")
+end)
+
 test("window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row", function()
     local NS, _, m = T.enableAddon()
     m.specNames[65], m.specNames[66] = "Holy", "Protection"
@@ -345,7 +422,7 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
     end
     hasAll(groups, { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
-    assertEqual(#specs, 29)
+    assertEqual(#specs, 35)
     assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
 end)
 
@@ -396,7 +473,7 @@ test("test mode data: an empty pool gives no sample, and a pool short of a slot 
     assertEqual(#TD.History(1000, YOU, TD.Source({}, {}, nil)).groups, 0)
     local src, ids = source(NS, { "INVTYPE_FINGER" })
     local specs = TD.Placeholders(1000, YOU, src)
-    assertEqual(#specs, 29, "every state still shows")
+    assertEqual(#specs, 35, "every state still shows")
     for _, s in ipairs(specs) do assertTrue(ids[idOf(s.link)] == true) end
 end)
 
@@ -484,7 +561,7 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     local LF = NS.LootFeed
     m.seedGearJournal()
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 29)
+    assertEqual(#LF.Drops("test"), 35)
     assertEqual(#LF.Drops("live"), 0)
     assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
     assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
@@ -493,13 +570,17 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
         assertTrue(ids[rec.itemID] == true, "a journal item, never an unknown id: " .. tostring(rec.link))
         assertTrue(rec.link:find("[Vault ", 1, true) ~= nil or rec.link:find("[Spire ", 1, true) ~= nil, rec.link)
         -- feedback-17: the key run's loot is its dungeon's at Mythic Keystone, the bosses' their raid's at Heroic
-        assertEqual(rec.facts.ilvl, rec.situation == "mythicPlus" and 300 or 295, "the drop's own level")
+        -- an item kind's stand-in (issue #13) is any unused pool item once the place has none of it
+        local standIn = rec.facts.category ~= nil and rec.facts.category ~= "equipment"
+        if not standIn then
+            assertEqual(rec.facts.ilvl, rec.situation == "mythicPlus" and 300 or 295, "the drop's own level")
+        end
         assertTrue(NS.Compat.ItemIcon(rec.link) ~= 134400, "a real icon, not the question mark")
     end
     NS.SetTestMode(false)
     assertEqual(#LF.Drops("test"), 0)
     NS.SetTestMode(true)
-    assertEqual(#LF.Drops("test"), 29, "turned on again: filled again, not doubled")
+    assertEqual(#LF.Drops("test"), 35, "turned on again: filled again, not doubled")
 end)
 
 test("test mode: while the pool loads the tab says so and holds no drop; the drops fill in when it is ready", function()
@@ -516,7 +597,7 @@ test("test mode: while the pool loads the tab says so and holds no drop; the dro
     m.loadJournal()
     m.advance(1)
     assertFalse(NS.TestMode.IsLoading())
-    assertEqual(#NS.LootFeed.Drops("test"), 29)
+    assertEqual(#NS.LootFeed.Drops("test"), 35)
 end)
 
 test("test mode: turned off while the pool loads, nothing arrives later", function()
@@ -632,7 +713,7 @@ local function shownTest()
     return NS, NS.WindowGroup.Drawn(), m
 end
 
-test("window: test mode draws every sample, under the two key runs and the five bosses, with real icons", function()
+test("window: test mode draws every sample, under the two key runs and the six bosses, with real icons", function()
     local NS, drawn = shownTest()
     local f = NS.Window.Frame()
     assertTrue(f.banner:IsShown()); assertFalse(f.testText:IsShown(), "the strip is the marker (DW-10)")
@@ -640,7 +721,7 @@ test("window: test mode draws every sample, under the two key runs and the five 
     assertTrue(textOf(f.banner.text):find("Nothing is whispered") ~= nil)
     assertTrue(textOf(f.banner.text):find("real items", 1, true) ~= nil)
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
-    assertEqual(#drawn.headers, 7)
+    assertEqual(#drawn.headers, 8)
     local mine = 0
     for _, d in ipairs(NS.LootFeed.Drops("test")) do
         if d.isMine then mine = mine + 1 end
@@ -780,7 +861,9 @@ end
 -- A gear map's levels as the Me cell writes them: `292`, `331/335`.
 local function levelsOf(NS, drop)
     local WC = NS.WindowCells
-    local items = WC.SlotItems(NS.TestMode.GearOf(drop), WC.EqSlots(drop.facts.equipLoc))
+    local slots = WC.EqSlots(drop.facts.equipLoc)
+    if not slots then return nil end   -- not worn: a mount, a pet, a toy, a recipe
+    local items = WC.SlotItems(NS.TestMode.GearOf(drop), slots)
     return #items > 0 and WC.Levels(items) or nil
 end
 
@@ -848,9 +931,10 @@ test("window: Drops lists your samples with the others, and its strip counts the
     for _, e in ipairs(drawn.entries) do
         if e.kind == "drop" and e.drop.isMine then mine = mine + 1 end
     end
-    assertEqual(#drawn.pane.ownDrops, 8, "every sample of yours is listed")
-    assertTrue(mine <= 8)
-    assertEqual(drawn.summary.count, 5, "the tradeable ones")
+    assertEqual(#drawn.pane.ownDrops, 9, "every sample of yours is listed")
+    assertTrue(mine <= 9)
+    -- your BoE recipe (issue #13) can be traded, so it counts, though Post my tradeables leaves it out
+    assertEqual(drawn.summary.count, 6, "the tradeable ones")
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)
@@ -983,4 +1067,22 @@ test("window: test mode's unique ring reads both rings, and only a tradeable upg
         "Not their upgrade", "Their upgrade", "Your upgrade", "Not inspected", "Can't use" }) do
         assertTrue(reasons[want] == true, want .. " is one of the samples' trade reasons")
     end
+end)
+
+test("window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)", function()
+    local NS, drawn = shownTest()
+    local words, asks = {}, {}
+    for _, r in ipairs(drawn.rows) do
+        local d = NS.LootFeed.Get(r.dropId)
+        local kind = d.facts.category
+        if kind and kind ~= "equipment" then
+            words[kind] = textOf(r.cells.me.text)
+            asks[kind] = textOf(r.cells.actions.ask.label)
+        end
+    end
+    assertEqual(words.mount, "New"); assertEqual(words.pet, "Collected 1/3"); assertEqual(words.toy, "?")
+    assertEqual(words.recipe, "Can't use"); assertEqual(words.cosmetic, "New look")
+    for _, kind in ipairs({ "mount", "pet", "toy", "cosmetic" }) do assertEqual(asks[kind], "No action", kind) end
+    assertEqual(asks.recipe, "No action", "your own recipe: no Offer")
+    assertEqual(asks.tierToken, "Ask", "a tier token is asked for as gear")
 end)

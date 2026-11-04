@@ -1,7 +1,8 @@
 local _, NS = ...
 -- settings/SimVerbs.lua — `/dw sim`'s host half (simulator spec §4; OWNER_SCOPE C.7, C.10): the
--- five verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`,
--- `lockdown on|off` and `trade <dropID>`, the lines that say why one did nothing, their usage
+-- six verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`,
+-- `drop <kind> [player|me]` (one item of a kind: equipment, token, mount, pet, toy, recipe or
+-- cosmetic; issue #13), `lockdown on|off` and `trade <dropID>`, the lines that say why one did nothing, their usage
 -- lines and the status line's host part. settings/Slash.lua's `sim` row hands the whole argument
 -- to NS.Sim:RunVerb (a feature verb, so the dispatcher refuses it while the addon is disabled), and
 -- LibKa0s-Sim-1.0 owns the generic grammar: the bare form (the status, the usage and the step
@@ -36,6 +37,18 @@ local function parseLoot(w)
     if n and (n < 1 or n ~= math.floor(n)) then return nil end
     local who = table.concat(w, " ", n and 3 or 2)
     return { n = n, who = who ~= "" and who or nil }
+end
+
+-- `drop <kind> [player|me]`: the kind as the verb names it, the rest a looter's name.
+local DROP_KIND = { equipment = "equipment", token = "tierToken", mount = "mount", pet = "pet", toy = "toy",
+    recipe = "recipe", cosmetic = "cosmetic" }
+V.DROP_KIND = DROP_KIND
+
+local function parseDrop(w)
+    local kind = DROP_KIND[(w[2] or ""):lower()]
+    if not kind then return nil end
+    local who = table.concat(w, " ", 3)
+    return { kind = kind, who = who ~= "" and who or nil }
 end
 
 local function parseLockdown(w)
@@ -73,6 +86,14 @@ local function runLoot(c)
     return true
 end
 
+local function runDrop(c)
+    local R = NS.SimReport
+    local n, code, report = R.Drop(c.kind, c.who)
+    if n == 0 then return false, code end
+    NS.Print(L["Simulated drop: %s."]:format(R.Summarize(report, NS.LootFeed.Get, R.View()).text))
+    return true
+end
+
 local function runLockdown(c)
     NS.SimHost.SetLockdown(c.on)
     NS.Print(c.on and L["Simulated chat lockdown on."] or L["Simulated chat lockdown off."])
@@ -90,6 +111,7 @@ for verb, spec in pairs({
     pull     = { parse = bare,          run = runPull },
     kill     = { parse = bare,          run = runKill },
     loot     = { parse = parseLoot,     run = runLoot },
+    drop     = { parse = parseDrop,     run = runDrop },
     lockdown = { parse = parseLockdown, run = runLockdown },
     trade    = { parse = parseTrade,    run = runTrade },
 }) do V.VERBS[verb] = spec end
@@ -99,6 +121,7 @@ for verb, spec in pairs({
 -- Why a host verb did nothing, by the code its entry point answered.
 for code, line in pairs({
     noPool     = L["The simulation has no items to drop."],
+    noSample   = L["The simulation has no item of that kind to drop."],
     noLooter   = L["No one by that name is in the simulated group."],
     engaged    = L["A simulated boss is already engaged: /dw sim kill first."],
     notEngaged = L["No simulated boss is engaged: /dw sim pull first."],
@@ -116,6 +139,7 @@ do
         L["%s pull: engage the next simulated boss."]:format(s),
         L["%s kill: kill the engaged simulated boss."]:format(s),
         L["%s loot [n] [player|me]: a burst of n simulated drops."]:format(s),
+        L["%s drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: one simulated drop of that kind."]:format(s),
         L["%s lockdown on|off: turn the simulated chat lockdown on or off."]:format(s),
         L["%s trade <drop id>: complete a simulated trade of that drop."]:format(s),
     }

@@ -1,7 +1,8 @@
 -- tests/test_compat_collect.lua — core/CompatCollect.lua, the collection reads on NS.Compat (issue
 -- #13, categories design spec §2): each member's answer, its absent value with the API missing, a
 -- secret answer reading as absent, never a raise; the recipe's known line and a tier token's slot
--- line matched only by their whole text; a class's client name; the simulator's seam wrapping every
+-- line matched only by their whole text; a class's client name; a curated sample's link by its id
+-- (DW-CAT6); the simulator's seam wrapping every
 -- member; and no other shipped file naming the APIs.
 
 local T = _G.DW_TEST
@@ -225,12 +226,32 @@ test("compat collect: ClassDisplayName answers the client's name for a class, el
     assertNil(Compat.ClassDisplayName("WARRIOR"), "no table")
 end)
 
+test("compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)", function()
+    local Compat, m = fresh()
+    m.addItem(RECIPE, { name = "Pattern: Cloak", quality = 3, ilvl = 1, classID = 9, subClassID = 2 })
+    local byLink = m.C_Item.GetItemInfo
+    m.C_Item.GetItemInfo = function(x)
+        if x == 5001 then return byLink(RECIPE) end
+        if x == 5003 then return "Odd", T.secret(RECIPE) end
+        if x == 5004 then return "Odd", "item:5004" end
+        return nil
+    end
+    assertEqual(Compat.ItemLinkByID(5001), RECIPE)
+    assertNil(Compat.ItemLinkByID(5002), "not cached")
+    assertNil(Compat.ItemLinkByID(5003), "a secret link")
+    assertNil(Compat.ItemLinkByID(5004), "not a hyperlink")
+    assertNil(Compat.ItemLinkByID(0), "no item id")
+    m.C_Item.GetItemInfo = nil
+    assertNil(Compat.ItemLinkByID(5001), "no API")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The seam and the family
 -- ---------------------------------------------------------------------------------------------
 
 local MEMBERS = { "MountFromItem", "MountCollected", "PetSpeciesFromItem", "PetCollected", "IsToy",
-    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ClassDisplayName" }
+    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ClassDisplayName",
+    "ItemLinkByID" }
 
 test("compat collect: no member raises with every API gone", function()
     local Compat, m = fresh()

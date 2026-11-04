@@ -77,8 +77,12 @@ The triage of [`superpowers/specs/2026-11-05-drop-watcher-categories-design.md`]
 the order below, through the collection reads of `core/CompatCollect.lua`. The feed watches the
 kinds turned on under Drops › Items › Item kinds (the `feed.categories.<key>` rows, defaults below;
 they replaced Gear only and Include tier tokens, DW-CAT2): an item in no category is not watched.
-The collection verdict and the item lists are the next items of the issue. Enum values are resolved
-by name (the brackets are the 12.x numbers).
+Two item-ID lists override the kinds (Drops › Item lists, or `/dw whitelist|blacklist`): Always watch
+lets an item through whatever its kind, the minimum item level and the quality gate say, but not the
+situation gate; Never watch hides it, gear included, and wins over Always watch. An ID sits on one
+list at a time. The simulator (`/dw sim drop <kind>`, one burst line in eight) and test mode (a
+sixth boss's samples) produce every kind. Enum values are resolved by name (the brackets are the
+12.x numbers).
 
 | Category | Default | Detection | Collected or known | Shown as |
 |---|---|---|---|---|

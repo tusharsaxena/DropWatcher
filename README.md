@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2086%2F2086_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2095%2F2095_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -54,6 +54,8 @@ Type `/dw show`, or right-click the minimap button. You often won't need to: in 
 - Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. Trade window is how long they have left.
 - **Ask** whispers the looter, once. In a boss fight it waits until the fight ends.
 
+It isn't only gear. Mounts, battle pets, toys and recipes are watched too, and Me says whether each one is **New** to your collection or already **Collected** (a pet shows how many you have, `Collected 1/3`; a recipe for a profession you don't have reads Can't use). They're there to see, not to ask for: no Ask, no toast. Tier tokens are judged like the piece they turn into, against what you wear in that slot, and can be asked for like gear. Cosmetics are off by default. Settings › Drops › Items › Item kinds turns each kind on or off, and Drops › Item lists keeps two lists of items by ID or shift-clicked link: **Always watch** shows an item whatever the other filters say, and **Never watch** hides it, gear included. `/dw whitelist add <id or link>` and `/dw blacklist add <id or link>` do the same from chat (`remove` and `list` too).
+
 Upgrades you could actually get glow, green for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
 
 Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. It needs another player in your group, so solo, or with only followers or a delve companion, the row reads No action. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
@@ -64,11 +66,12 @@ When someone loots a big upgrade you could ask for, a toast pops up. It's on by 
 
 The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. In the picker, hovering or selecting a skin previews it on the addon and **Apply** keeps it; close it any other way and your old skin comes back. The eye turns test mode on or off, so there are sample drops in the window to look at, and if the window is hidden when the picker opens, test mode comes on by itself and goes off again when you close it. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 
-`/dw test` fills the window with sample drops if you want a look around first. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
+`/dw test` fills the window with sample drops if you want a look around first, a mount, a pet, a toy, a recipe, a cosmetic and a tier token among them. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing, and `/dw sim drop mount` (or `token`, `pet`, `toy`, `recipe`, `cosmetic`, `equipment`) drops one item of that kind into it. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 
 ## How the loot watching works
 
 - Drop Watcher reads your group's loot lines as they come in, along with the boss-loot and loot-history events, and merges the reports of one item into one drop.
+- Every item gets a kind (gear, tier token, mount, pet, toy, recipe or cosmetic) and a kind you've turned off goes no further, nor does anything on Never watch. Quest items, reagents, containers and the like aren't watched at all, unless you put them on Always watch.
 - Drops you don't care about stop there. Where you are (keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched by default), the minimum quality and the filters decide that before anyone is inspected.
 - Each drop is compared with what you wear in that slot, and with what the looter wears once their gear has been inspected. Inspects go one at a time and never in combat.
 - The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a looter can only trade an item that isn't an upgrade for them by item level.
