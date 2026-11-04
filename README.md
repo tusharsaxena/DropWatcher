@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-1960%2F1960_passing-green)
+![Tests](https://img.shields.io/badge/Tests-1965%2F1965_passing-green)
 
 When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -62,7 +62,7 @@ Your own drops get **Offer** instead. It ranks the group by how much each person
 
 When someone loots a big upgrade you could ask for, a toast pops up. It's on by default, and Settings › Alerts › Toast turns it off or resizes it. Auto-ask is the other way round: off until you turn it on. Then it sends the whisper for you after the boss dies, main-spec asks first.
 
-The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
+The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. In the picker, hovering or selecting a skin previews it on the addon and **Apply** keeps it; close it any other way and your old skin comes back. The eye turns test mode on or off, so there are sample drops in the window to look at, and if the window is hidden when the picker opens, test mode comes on by itself and goes off again when you close it. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 
 `/dw test` fills the window with sample drops if you want a look around first. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 

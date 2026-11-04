@@ -63,12 +63,15 @@ The header's Defaults button and Reset all settings both open the confirmation p
 reset is a profile reset and never touches the minimap button (options-ui-§12, launcher-§3).
 
 Sim mode (R6-SIM, LibKa0s OptionsCompose minor 19) is the library's row, drawn from the launcher's own
-pair, `NS.IsSimMode` and `NS.ToggleSim` (`core/DropWatcher.lua`): its get is whether a simulation
-runs and its set does what `/dw sim` does, so ticking it prints the sim's status and opens the
-Simulation panel, where the player picks a scenario (the box ticks as that scenario starts), and
-unticking it stops the running sim. Nothing is stored and a reload ends the sim. The box follows the
-live sim: `modules/Sim.lua`'s listener calls `RefreshScalars`, so a sim started or stopped from the
-slash verb, the panel, the launcher or its own end shows on an open page at once. Reset all settings
+pair, `NS.IsSimMode` and `NS.ToggleSim` (`core/DropWatcher.lua`). Its get is the owner's round 7
+rule (R7-SIM): ticked while the Simulation panel is shown or a simulation runs, unticked when neither.
+Its set does what `/dw sim` does, so ticking it prints the sim's status and opens the Simulation panel,
+where the player picks a scenario, and the box stays ticked. Unticking it stops a running sim and
+closes the panel. Nothing is stored and a reload ends the sim. The box follows the live state:
+`modules/Sim.lua`'s listener calls `RefreshScalars`, so a sim started or stopped from the slash verb,
+the panel, the launcher or its own end shows on an open page at once, and so do the panel's own
+`OnShow` and `OnHide` (hooked once the library builds the frame), so opening or closing the panel by
+any route, its close button and Escape included, re-reads the box. Reset all settings
 writes the row's default, which stops a running sim and never starts one. The sim and test mode
 already refuse each other (`core/DropWatcher.lua`, `modules/Sim.lua`), so the boxes need no rule of
 their own.

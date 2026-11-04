@@ -205,21 +205,43 @@ function NS.ToggleTestMode()
     return NS.SetTestMode(not NS.State.testMode)
 end
 
---- Whether a simulation runs, and the act of `/dw sim`: the one pair the launcher's Sim mode entry
+--- Whether the simulation is on, and the act of `/dw sim`: the one pair the launcher's Sim mode entry
 --- (core/LauncherSetup.lua) and Master controls' Sim mode box (settings/Panel.lua, LibKa0s
---- OptionsCompose minor 19) both take, so the three are one act. NS.Sim is read at call time
+--- OptionsCompose minor 19) both take, so the three are one act. "On" is the owner's round 7 rule
+--- (R7-SIM, LibKa0s releasing.md's R7-L1 list): the Simulation panel is shown OR a sim runs, so the
+--- box and the entry read ticked with the panel open and idle, and with a run whose panel was closed.
+--- modules/Sim.lua refreshes an open page on the panel's show and hide. NS.Sim is read at call time
 --- (modules/Sim.lua builds it later in the load).
 --- @return boolean
 function NS.IsSimMode()
     local s = NS.Sim
-    return type(s) == "table" and type(s.IsActive) == "function" and s:IsActive() == true
+    if type(s) ~= "table" then return false end
+    local running = type(s.IsActive) == "function" and s:IsActive() == true
+    local shown = type(s.IsPanelShown) == "function" and s:IsPanelShown() == true
+    return running or shown
 end
 
---- The typed verb's own acts: stop a running sim, otherwise the bare verb (status and the sim panel).
+--- The library's Simulation panel frame, a named global it builds on its first ShowPanel, or nil
+--- before then. Read here because no module reads _G (tests/test_sim_e2e.lua); modules/Sim.lua
+--- hooks its OnShow / OnHide so the Sim mode box follows the panel (R7-SIM).
+--- @return table|nil
+function NS.SimPanelFrame()
+    local f = _G.DropWatcherSimPanel
+    if type(f) == "table" then return f end
+    return nil
+end
+
+--- The bare verb's toggle, on IsSimMode's meaning: from off it runs the bare verb (the status, the
+--- usage and the Simulation panel opened), so a tick stays ticked; from on it stops a running sim
+--- and closes the panel, so one untick, or one click on the launcher's entry, leaves it unticked.
+--- Starting stays the panel's (or `/dw sim start`), so the start's refusals (test mode, combat, an
+--- instance, a real group) are untouched.
 function NS.ToggleSim()
     local s = NS.Sim
     if type(s) ~= "table" or type(s.RunVerb) ~= "function" then return end
-    s:RunVerb(s:IsActive() and "stop" or "")
+    if not NS.IsSimMode() then return s:RunVerb("") end
+    if s:IsActive() then s:RunVerb("stop") end
+    s:HidePanel()
 end
 
 --- Lock or unlock the window through the write seam, the same write the Lock frame checkbox makes.

@@ -3,6 +3,9 @@
 -- launcher's own pair (NS.IsSimMode / NS.ToggleSim, core/DropWatcher.lua), so the box, the
 -- launcher's Sim mode entry and `/dw sim` are one act; the box follows the live state through the
 -- sim's listener; Reset all settings stops a running sim and never starts one; nothing is stored.
+-- Since R7-SIM (Ka0sAddonsCommonTasks docs/2026-11-04-SMOKE_ROUND7, call 2) the box reads "the
+-- Simulation panel is shown or a sim runs": ticking opens the panel and the box stays ticked,
+-- unticking stops a running sim and closes the panel, and the panel's OnShow / OnHide refresh it.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse =
@@ -52,7 +55,8 @@ test("sim checkbox: ticking it does what `/dw sim` does, the status and the sim 
     NS.SchemaRuntime.Set("state.sim", true)
     assertTrue(Sim:IsPanelShown(), "the bare verb's panel")
     assertFalse(Sim:IsActive(), "no scenario picked for the player")
-    assertEqual(NS.SchemaRuntime.Get("state.sim"), false, "the box stays unticked until a scenario starts")
+    -- red under: isSimMode answering the running sim alone (R7-SIM: window shown or running)
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), true, "the open window keeps the box ticked")
     assertTrue(NS.addon.db.profile.state == nil or NS.addon.db.profile.state.sim == nil, "nothing stored")
 end)
 
@@ -94,6 +98,95 @@ test("sim checkbox: a sim started or stopped elsewhere refreshes the open page",
         local after = n
         Sim:Stop()
         assertTrue(n > after, "the stop refreshed the page")
+    end)
+    H.RefreshScalars = was
+    assert(ok, err)
+end)
+
+-- R7-SIM. The library's panel frame is a named global in the client (`DropWatcherSimPanel`); the
+-- kit's CreateFrame sets no global, so these cases register it as the client would.
+local function withPanelGlobal(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(kind, name, ...)
+        local f = create(kind, name, ...)
+        if name == "DropWatcherSimPanel" then m.DropWatcherSimPanel = f end
+        return f
+    end
+end
+
+local function simAddon()
+    local NS, _, m = T.enableAddon()
+    withPanelGlobal(m)
+    return NS, T.simBare(NS), m
+end
+
+test("sim checkbox R7: the window open and idle reads ticked; closing it reads unticked", function()
+    local NS, Sim, m = simAddon()
+    NS.Sim:RunVerb("")
+    assertTrue(Sim:IsPanelShown(), "`/dw sim` opened the window")
+    assertFalse(Sim:IsActive())
+    -- red under: isSimMode answering the running sim alone
+    assertTrue(NS.IsSimMode(), "window shown, idle")
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), true)
+    -- The window's own close button hides the frame directly, never through toggleSim.
+    m.DropWatcherSimPanel:Hide()
+    assertFalse(NS.IsSimMode(), "window closed, nothing running")
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), false)
+end)
+
+test("sim checkbox R7: a sim running with the window hidden reads ticked", function()
+    local NS, Sim = simAddon()
+    NS.Sim:RunVerb("")
+    assertTrue(Sim:Start({ scenario = "test" }))
+    Sim:HidePanel()
+    assertFalse(Sim:IsPanelShown())
+    assertTrue(NS.IsSimMode(), "running, window hidden")
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), true)
+end)
+
+test("sim checkbox R7: unticking a running sim stops it and closes the window", function()
+    local NS, Sim = simAddon()
+    NS.Sim:RunVerb("")
+    assertTrue(Sim:Start({ scenario = "test" }))
+    assertTrue(Sim:IsPanelShown())
+    NS.SchemaRuntime.Set("state.sim", false)
+    assertFalse(Sim:IsActive(), "stopped")
+    -- red under: an untick that only stops the sim
+    assertFalse(Sim:IsPanelShown(), "the window closed")
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), false)
+end)
+
+test("sim checkbox R7: unticking with the window open and idle closes it, and ticking reopens it", function()
+    local NS, Sim = simAddon()
+    NS.SchemaRuntime.Set("state.sim", true)
+    assertTrue(Sim:IsPanelShown())
+    NS.SchemaRuntime.Set("state.sim", false)
+    -- red under: the old toggle, whose idle branch only re-ran the bare verb
+    assertFalse(Sim:IsPanelShown(), "one untick closed the window")
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), false)
+    NS.ToggleSim()
+    assertTrue(Sim:IsPanelShown(), "the launcher's click opens it again")
+    assertTrue(NS.IsSimMode())
+end)
+
+test("sim checkbox R7: the window's show and hide refresh the open page", function()
+    local NS, _, m = simAddon()
+    local H = NS.addon.Settings.Helpers
+    local was, n = H.RefreshScalars, 0
+    H.RefreshScalars = function(...) n = n + 1; return was(...) end
+    local ok, err = pcall(function()
+        NS.Sim:RunVerb("")
+        -- red under: no refresh from the window's show (modules/Sim.lua's ShowPanel hook)
+        assertTrue(n > 0, "the first show refreshed the page")
+        local frame = m.DropWatcherSimPanel
+        assertTrue(frame ~= nil, "the panel frame was built")
+        -- The client runs OnHide / OnShow on every hide and show, the close button and Escape too.
+        local before = n
+        frame:Hide(); frame:__fire("OnHide")
+        assertTrue(n > before, "the hide refreshed the page")
+        before = n
+        frame:Show(); frame:__fire("OnShow")
+        assertTrue(n > before, "a later show refreshed the page")
     end)
     H.RefreshScalars = was
     assert(ok, err)
