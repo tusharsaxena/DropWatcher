@@ -14,16 +14,19 @@ local addonName, NS = ...
 
 local Toast = LibStub and LibStub("LibKa0s-Toast-1.0", true)
 
--- The instance's surface, each member a no-op (docs/api/Toast/version-1-docs.md in LibKa0s, The
+-- The instance's surface, each member a no-op (docs/api/Toast/version-4-docs.md in LibKa0s, The
 -- degradation stub).
 NS.ToastStub = {
     Show = function() return false end, Dismiss = function() end, Remove = function() return 0 end,
     Clear = function() end, Hold = function() end, Release = function() end,
     Preview = function() end, Pause = function() end, Resume = function() end,
     Attach = function() end, Refresh = function() end, ResetPosition = function() end,
+    SetStack = function() return 1, "DOWN" end, Visible = function() return {} end,
+    FrameFor = function() return nil end,
     Current = function() return nil end, Frame = function() return nil end,
     Stats = function() return { built = false, shown = false, waiting = 0, held = false,
-        paused = false, sticky = false, keys = {} } end,
+        paused = false, sticky = false, keys = {}, visible = 0, visibleKeys = {},
+        stack = 1, grow = "DOWN" } end,
 }
 
 --- A toast for descriptor `d` (the library's Toast:New; `d.owner` defaults to this addon), or the
