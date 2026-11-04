@@ -2,8 +2,8 @@
 
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
 (compat; design spec §4). It is the root of the addon's compat family: `core/CompatWorld.lua`,
-`core/CompatItem.lua` and `core/CompatJournal.lua` add reads to the same `NS.Compat` (below), and the
-root's header names all three. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
+`core/CompatItem.lua`, `core/CompatJournal.lua` and `core/CompatCollect.lua` add reads to the same
+`NS.Compat` (below), and the root's header names all four. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
 one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
 load, and is read inside functions only.
@@ -17,9 +17,10 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**Eighty-seven shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `87`): the
-root `core/Compat.lua` publishes 59, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5 and `core/CompatJournal.lua` 5. The four
+**Ninety-eight shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `98`): the
+root `core/Compat.lua` publishes 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and
+`core/CompatCollect.lua` 9. The four
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -121,7 +122,8 @@ is out of combat.
 
 ## The simulator's seam
 
-`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua`, `core/CompatItem.lua` and `core/CompatJournal.lua`
+`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua`, `core/CompatItem.lua`, `core/CompatJournal.lua`
+and `core/CompatCollect.lua`
 (simulator spec §2, §5, DW-70; LibKa0s-Sim-1.0's `Sim:NewSeam` since DW-02). It names no client API
 and adds no shim, so the count above stands. At load it wraps every member here that answers for
 the client, which is every one but the secret guards and the pure text helpers (`IsSecret`,
@@ -202,6 +204,32 @@ simulation runs, `modules/SimWorld.lua` answers `BagItemLevelQuality` (the link'
 quality) and `TooltipBagItem` (the link's tooltip) for a simulated bag slot, which the client does
 not have. `test_item_read` and `test_sim_events` hold these.
 
+## The collection reads
+
+`core/CompatCollect.lua` loads after `core/CompatJournal.lua` and before `core/SimSetup.lua`
+(issue #13, categories design spec §2), so the seam wraps its members, on the same rules: globals
+read bare at call time, `IsSecret` first on every answer, enums by name, GlobalStrings through
+`GlobalString`, never a raise. It is a split of the root, which sits at the 1000-line band. The
+recipe's known line is read through the ratified `ReadTooltipLine` (library-stack-§7: a new
+consumer, not a new reader, as `ItemClassRestriction` is); the file asks `C_TooltipInfo.GetHyperlink`
+itself, because the root's `tooltipData` helper is file-local.
+
+| Member | Client call | Absent answer |
+|---|---|---|
+| `MountFromItem(itemID)` | `C_MountJournal.GetMountFromItem` | `nil` (not a mount item, a secret answer) |
+| `MountCollected(mountID)` | `C_MountJournal.GetMountInfoByID`'s 11th return, `isCollected` | `nil` (also while journal data is not loaded) |
+| `PetSpeciesFromItem(itemID)` | `C_PetJournal.GetPetInfoByItemID`'s 13th return, `speciesID` | `nil` |
+| `PetCollected(speciesID)` | `C_PetJournal.GetNumCollectedInfo` → `count, limit` | `nil, nil` |
+| `IsToy(itemID)` | `C_ToyBox.GetToyInfo` answers the item | `false` |
+| `ToyCollected(itemID)` | `PlayerHasToy` | `nil` |
+| `IsCosmeticItem(link)` | `C_Item.IsCosmeticItem` (cosmetic armor and the Weapon-class cosmetic weapons) | `false` |
+| `RecipeKnown(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** `ITEM_SPELL_KNOWN` ("Already known"): `true`, else `false` once the tooltip was read | `nil` (no API, no GlobalString, no or malformed tooltip, a secret answer or a secret line, which could hide the line) |
+| `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }` | `{}` |
+
+`modules/Collectibles.lua` is the one caller. `test_compat_collect` drives every member with its
+answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped
+file that names one of these APIs.
+
 ## The duration decoder
 
 The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted
@@ -236,6 +264,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `ItemPrimaryStats`, `PlayerHasTransmog`; `UnitClass` (`core/CompatWorld.lua`: the class a spec list was read for) |
+| `modules/Collectibles.lua` | `MountFromItem`, `MountCollected`, `PetSpeciesFromItem`, `PetCollected`, `IsToy`, `ToyCollected`, `IsCosmeticItem`, `RecipeKnown`, `ProfessionSkillLines` (`core/CompatCollect.lua`) |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
 | `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |

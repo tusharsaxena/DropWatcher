@@ -66,8 +66,12 @@ core\CompatItem.lua
 # LOAD-BEARING: adds the Encounter Journal's reads and selections to NS.Compat; it loads before
 # core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatJournal.lua
+# LOAD-BEARING: adds the collection reads (mounts, battle pets, toys, the cosmetic flag, a recipe's
+# known line, the player's professions) to NS.Compat; it loads before core\SimSetup.lua (below),
+# which wraps every member at load. Read inside functions only.
+core\CompatCollect.lua
 # LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
-# CompatWorld.lua, CompatItem.lua and CompatJournal.lua; never cache a Compat member in a local before it. Publishes
+# CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
 # NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
 # and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
 core\SimSetup.lua
@@ -227,6 +231,10 @@ modules\CharFilter.lua
 # handles it) to NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load,
 # and reads NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.
 modules\ItemFacts.lua
+# Conventional: publishes NS.Collectibles, a drop's category and the collection verdict (issue
+# #13); reads NS.Constants at load. NS.Compat (core\CompatCollect.lua, above) is read at call
+# time; modules\ItemFacts.lua (the line above) calls its Read while it builds the facts.
+modules\Collectibles.lua
 # LOAD-BEARING: appends its rows to NS.FEATURE_EVENTS where other files share the event:
 # BAG_UPDATE_DELAYED before modules\TradeTimer.lua's, and PLAYER_REGEN_ENABLED after
 # core\DropWatcher.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN

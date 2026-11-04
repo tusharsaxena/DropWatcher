@@ -235,6 +235,31 @@ test("item facts: learning an appearance re-reads the flag on the cached facts",
     assertTrue(IF.Get(CHEST).transmogKnown)
 end)
 
+test("item facts: rawEquipLoc and the category are filled on every item (issue #13)", function()
+    local _, _, IF = enabled(function(m)
+        m.addItem(RING, ring()); m.addItem(CHEST, chest())
+        m.addItem(TOKEN, { name = "Dreadful Helm Module", quality = 4, ilvl = 263, equipLoc = "",
+            classID = 15, subClassID = 0, bindType = 1 })
+        m.tooltips.hyperlink[TOKEN] = { lines = { { type = 21, leftText = "Classes: Warrior" } } }
+    end)
+    local r, c, t = IF.Get(RING), IF.Get(CHEST), IF.Get(TOKEN)
+    assertEqual(r.rawEquipLoc, "INVTYPE_FINGER"); assertEqual(c.rawEquipLoc, "INVTYPE_CHEST")
+    assertEqual(t.rawEquipLoc, "", "the client's own, empty for a token")
+    assertEqual(r.category, "equipment"); assertEqual(c.category, "equipment")
+    assertEqual(t.category, "tierToken"); assertNil(r.collect, "gear has no collection state")
+end)
+
+test("item facts: the appearance event reads the raw equipLoc, not a slot set later", function()
+    local _, m, IF = enabled(function(m) m.addItem(CHEST, chest()) end)
+    local f = IF.Get(CHEST)
+    -- Stands for a later step that overrides equipLoc (a token's made slot): the raw slot decides.
+    f.equipLoc = "INVTYPE_NECK"
+    m.items[CHEST].transmog = true
+    m.__fire("TRANSMOG_COLLECTION_UPDATED")
+    -- red under: the handler reading facts.equipLoc, which has no appearance
+    assertTrue(IF.Get(CHEST).transmogKnown)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Loading an uncached item
 -- ---------------------------------------------------------------------------------------------

@@ -270,7 +270,9 @@ secret guards on both load paths, the localized duration decoder in three client
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
 `IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
 the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
-first, R4), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+first, R4), and each shim's fallback with its API absent), `test_compat_collect` (`core/CompatCollect.lua`'s
+collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
+by its whole text, the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
@@ -306,8 +308,11 @@ settled by classFile and by the player's realm, the re-read on a miss, the share
 `GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down), `test_item_facts` (the item facts: every field of a
 cached item, the track tier by string id and by name, the tooltip track, uniqueness, tier tokens and
 class gear, the link-color quality, the facts feeding the verdict kernel, the cache and its cap, the
-appearance event, the load with its retries, the give-up, a client that cannot load, and the
-stand-down), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
+appearance event (read from the raw equipLoc), the raw equipLoc and the category on every item, the load
+with its retries, the give-up, a client that cannot load, and the stand-down), `test_collectibles`
+(`modules/Collectibles.lua`, issue #13: `CategoryOf` for each category, its precedence and the classes
+not watched, `Verdict`'s new, collected, unknown, pet partial, recipe without the profession and
+whitelisted answers, and `Read` spending the probes only where they decide), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
 realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
 complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,
 identity, effective level, location reads and quality, the bag match by identity, an own drop read

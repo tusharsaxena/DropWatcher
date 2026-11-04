@@ -7,7 +7,7 @@ local _, NS = ...
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
---             transmogKnown = true | false | nil }
+--             transmogKnown = true | false | nil, rawEquipLoc, category, collect }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
 -- effective level and the quality through NS.ItemRead (core/ItemRead.lua: the detailed level, else
@@ -28,6 +28,11 @@ local _, NS = ...
 -- carries `classes` too, without the flag. Which slot a token makes is not read in v1, so the
 -- token's verdict is the kernel's `unknown` for the slot (a follow-up, design spec §14).
 --
+-- CATEGORIES (issue #13). `rawEquipLoc` is the client's own equipLoc, kept on every item: the
+-- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
+-- (modules/Collectibles.lua) fills `category` and, for a collectible, `collect` on the facts being
+-- built, before they are cached. Nothing reads them yet (DW-CAT1).
+--
 -- THE CACHE AND THE LOAD. Get(link) answers the cached facts, or builds them when the client has
 -- the item cached, or nil. Request(link, callback) does the same and, on a miss, asks the client
 -- to load the item through LibKa0s-Item-1.0's LoadItem; its callback is the retry: it reads again
@@ -36,7 +41,7 @@ local _, NS = ...
 -- at most CACHE_CAP links; when it would pass that, the least recently used EVICT_SHARE of it is
 -- dropped (a hit or a store marks a link used), so a raid's inspected gear and your own, read on
 -- every judgment, stay while old drops and bag clutter go. Learning an appearance re-reads
--- `transmogKnown` on the cached facts.
+-- `transmogKnown` on the cached facts, from the raw equipLoc.
 -- Stood down, the cache and every load are dropped, and a load that answers late is ignored.
 --
 -- The tables answered are the cache's own: read them, never write them.
@@ -164,7 +169,7 @@ function IF.Read(link)
     local facts = {
         link = link, itemID = itemID, name = info.name, baseIlvl = info.itemLevel,
         ilvl = ilvl, ilvlSource = ilvlSource,
-        equipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
+        equipLoc = info.equipLoc, rawEquipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
         quality = quality, qualitySource = qualitySource, bindType = info.bindType,
         setID = info.setID, track = readTrack(link), stats = readStats(link),
         unique = readUnique(link, itemID), transmogKnown = readTransmog(link, info.equipLoc),
@@ -172,6 +177,7 @@ function IF.Read(link)
     readSpecs(facts)
     readBinds(facts)
     readClasses(facts)
+    if NS.Collectibles then NS.Collectibles.Read(facts) end
     return facts
 end
 
@@ -285,7 +291,7 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "On
 -- An appearance was learned (or lost): re-read the flag on every cached link.
 function NS.addon.OnTransmogCollectionUpdated()
     for link, facts in pairs(store().cache) do
-        facts.transmogKnown = readTransmog(link, facts.equipLoc)
+        facts.transmogKnown = readTransmog(link, facts.rawEquipLoc)
     end
 end
 

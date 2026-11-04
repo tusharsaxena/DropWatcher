@@ -1040,7 +1040,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
-        if rel ~= "core/Compat.lua" and rel ~= "core/CompatJournal.lua" then
+        if rel ~= "core/Compat.lua" and rel ~= "core/CompatJournal.lua" and rel ~= "core/CompatCollect.lua" then
             local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", "")

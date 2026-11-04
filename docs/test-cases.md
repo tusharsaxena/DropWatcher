@@ -1048,6 +1048,22 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
+### test_compat_collect.lua (13)
+
+- compat collect: MountFromItem answers the journal's mount id, else nil
+- compat collect: MountCollected answers isCollected, the 11th return, else nil
+- compat collect: PetSpeciesFromItem answers the 13th return, the species id, else nil
+- compat collect: PetCollected answers the count and the limit, else nil, nil
+- compat collect: IsToy answers whether GetToyInfo knows the item, false without
+- compat collect: ToyCollected answers PlayerHasToy, else nil
+- compat collect: IsCosmeticItem answers the client's flag, false without
+- compat collect: RecipeKnown reads the Already known line by its whole text
+- compat collect: RecipeKnown answers nil when it cannot tell
+- compat collect: ProfessionSkillLines maps every profession slot to its skill line
+- compat collect: no member raises with every API gone
+- compat collect: the simulator's seam wraps every collection member (the TOC order)
+- compat collect: no other shipped file names a collection API in code
+
 ### test_text_parse.lua (10)
 
 - textparse: the module is pure — it names no client global and reads no _G
@@ -1061,10 +1077,13 @@ Total.
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
 
-### test_constants.lua (12)
+### test_constants.lua (15)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
+- constants: the category ids fall back to the 12.x literals and read Enum by name (issue #13)
+- constants: each recipe subclass names its profession's skill line; book and first aid none
+- constants: the categories in display order, the tier slots and the empty token table
 - constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
 - constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
@@ -1358,7 +1377,7 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (21)
+### test_item_facts.lua (23)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
@@ -1375,12 +1394,31 @@ Total.
 - item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
+- item facts: rawEquipLoc and the category are filled on every item (issue #13)
+- item facts: the appearance event reads the raw equipLoc, not a slot set later
 - item facts: Request answers a cached item at once and never calls back
 - item facts: an uncached item loads, and every waiter is called back once
 - item facts: the callback retries until the item arrives
 - item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
+
+### test_collectibles.lua (14)
+
+- collectibles: CategoryOf names each category
+- collectibles: CategoryOf's precedence
+- collectibles: the out-of-scope classes are not watched
+- collectibles: IsCollectible is true for the collectible categories alone
+- collectibles: Verdict reads new, collected and no answer
+- collectibles: a pet carries its count, and a partial collection says n/limit
+- collectibles: a recipe for a profession you lack is can't use
+- collectibles: a cosmetic reads its live transmogKnown
+- collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
+- collectibles: Read fills a mount's, a pet's and a toy's collection state
+- collectibles: Read fills a recipe's profession and known line
+- collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
+- collectibles: Read leaves a tier token's category to its flag and probes nothing
+- collectibles: Read answers its argument and survives no facts
 
 ### test_item_read.lua (25)
 
@@ -2349,8 +2387,9 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 40 |
 | test_compat.lua | 74 |
+| test_compat_collect.lua | 13 |
 | test_text_parse.lua | 10 |
-| test_constants.lua | 12 |
+| test_constants.lua | 15 |
 | test_class_data.lua | 13 |
 | test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
@@ -2364,7 +2403,8 @@ Total.
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
-| test_item_facts.lua | 21 |
+| test_item_facts.lua | 23 |
+| test_collectibles.lua | 14 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
@@ -2410,4 +2450,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **1984** |
+| **Total** | **2016** |

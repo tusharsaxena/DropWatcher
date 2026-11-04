@@ -70,6 +70,31 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   Alerts and Profiles; feedback-24, with Situations a Drops tab since item 020), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
 
+## Item categories (issue #13)
+
+The triage of [`superpowers/specs/2026-11-05-drop-watcher-categories-design.md`](superpowers/specs/2026-11-05-drop-watcher-categories-design.md)
+§1. Every item the client reads gets a category from `NS.Collectibles.CategoryOf`, first match in
+the order below, through the collection reads of `core/CompatCollect.lua`. The category is computed
+on every item's facts today; the feed's toggles, the collection verdict and the item lists that read
+it are the next items of the issue. Enum values are resolved by name (the brackets are the 12.x
+numbers).
+
+| Category | Default | Detection | Collected or known | Shown as |
+|---|---|---|---|---|
+| Tier tokens | on | the `RestrictedRaceClass` tooltip line on an item with no slot plan for its raw equipLoc (usually Miscellaneous [15] › Junk [0] or Reagent [1]); a curated `C.TIER_TOKENS`, empty until the ids are read in game | n/a: judged as gear against the slot it makes | the slot it makes and its classes |
+| Equipment | on | Armor [4] or Weapon [2], not a tier token, not cosmetic | n/a: the gear verdict | unchanged |
+| Mounts | on | `C_MountJournal.GetMountFromItem`, else Miscellaneous › Mount [5] (Mount Equipment [6] is not a mount) | the journal's `isCollected` | New or Collected |
+| Battle pets | on | `C_PetJournal.GetPetInfoByItemID`'s species, else Miscellaneous › Companion Pet [2] | `GetNumCollectedInfo`: none is new, else collected with `n/limit` | New or Collected 1/3 |
+| Toys | on | `C_ToyBox.GetToyInfo` answers the item | `PlayerHasToy` | New or Collected |
+| Recipes | on | Recipe [9]; its subclass names the profession's skill line (`C.RECIPE_SKILL_LINE`; Book and First Aid none) | the tooltip's whole `ITEM_SPELL_KNOWN` line; a profession you lack is can't use | New, Known or Can't use |
+| Cosmetics | off | Armor › Cosmetic [5], or `C_Item.IsCosmeticItem` on armor or a weapon (cosmetic weapons are Weapon-class) | the appearance, as today | New look or Look known |
+
+A collectible (mount, pet, toy, recipe, cosmetic) is feed-only: no Ask, toast, AutoAsk, Offer,
+Announce, Post my tradeables or glow. Not watched: quest starters, reagents (high quality included),
+containers, keystones, currencies (never `|Hitem:` loot lines), profession tools and accessories,
+gems, trade goods, item enhancements, consumables and housing decor. A caged battle pet arrives as
+a `|Hbattlepet:` link and is never watched; only companion items are.
+
 ## What it deliberately does not do (v1)
 
 - Loot council, voting and rolls.

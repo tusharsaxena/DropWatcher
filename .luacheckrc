@@ -70,6 +70,13 @@ files["core/CompatJournal.lua"] = {
   },
 }
 
+-- The collection reads (issue #13): core/CompatCollect.lua alone names the mount, pet and toy
+-- journals, the toy and profession globals and the hyperlink tooltip it reads a recipe's line from.
+files["core/CompatCollect.lua"] = {
+  read_globals = { "C_MountJournal", "C_PetJournal", "C_ToyBox", "PlayerHasToy", "C_TooltipInfo",
+    "GetProfessions", "GetProfessionInfo" },
+}
+
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):
 -- core/CompatWorld.lua alone names them, so a module that reads one directly fails lint as well as
 -- tests/test_sim_e2e.lua's scan.

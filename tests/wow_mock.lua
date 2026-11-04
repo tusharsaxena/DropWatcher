@@ -921,6 +921,7 @@ local function build()
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     installCompatSurface(M)
+    dofile("tests/wow_mock_collect.lua")(M)   -- the collection reads (core/CompatCollect.lua)
     installUnits(M)
     installInspect(M)
     installClock(M)
