@@ -538,7 +538,9 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
                                                       then every waiter with nil
 ```
 
-`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts. The stand-down drops the
+`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
+calls `Collectibles.Changed`. `RereadCollections` runs `Collectibles.Read` again on every cached
+collectible, for the collection re-read. The stand-down drops the
 cache and the loads; a load that answers after it is ignored.
 
 ## The gear snapshot
@@ -634,7 +636,10 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   FeedFilter.Filter (heirloom, no watched kind, a kind turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
+    a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
+      { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
+    (the upgrade override lets `upgrade` and `newCollect` through below the threshold)
     ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
@@ -642,6 +647,10 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   your own drop:  TradeRules.Estimate(…, drop.me) ─> drop.trade
       ─> every other member: Evaluate when their read exists, else checking / unavailable
          (their inspects asked for at offer priority while the trade is not `no`)
+  a collectible, either side: no inspect, no Them, no candidates (none, also when the trade
+      re-estimate moves your own off `no`); TradeRules.Estimate with ctx.collectible: the bind and rule
+      answers kept, the looter's item-level check `unknown collectible`; someone else's collectible
+      stays out of the trade sweep, your own stays in (the trade timer's exact read)
   ─> State.feed.live (200 drops, oldest out) ─> DropAdded(id)
 InspectDone(guid) ─> that looter's drops and your drops' candidate re-judged ─> DropUpdated(id, "inspect")
 GearChanged ─> you re-judged on every drop (and your drops' trade) ─> DropUpdated(id, "gear")
@@ -649,10 +658,22 @@ TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read
     (the bag item's link when more complete; ItemRead.ItemLevelAt / QualityAt, exact, laid over the
     cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
+NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED,
+  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read) ─> Collectibles.Changed
+  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown ─> the same, for those alone
+    ─> one 0.5s timer per burst ─> ItemFacts.RereadCollections (the cache's one writer)
+    ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
+       ─> re-judged ─> DropUpdated(id, "collection")
 ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
 ```
 
-The stand-down unregisters the events and the bus receivers, cancels the score timer, and drops the
+A collectible is feed-only: no Ask (WindowCells' No action, `Messaging.AskTemplate` nil, so no
+transmog ask for a cosmetic either), no toast and so no auto-ask (`Toast.Qualifies`: `collectible`),
+no Offer panel (`OfferPanel.Open` nil; `/dw offer` says why), no Announce or Offer request
+(`Asks.Request` refuses `collectible`), not in Post my tradeables (`FB.IsTradeableMine`), no glow (its
+verdict is never `upgrade`). A tier token is gear and is not refused.
+
+The stand-down unregisters the events and the bus receivers, cancels the score timer and the collection re-read, and drops the
 dedupe window, the context and any drop still loading; the recorded drops are kept for the session.
 
 ## Your own drops' trade timer (design spec §7.4)
@@ -841,6 +862,9 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
+                          (the entry keeps the item kind, `category`, and a tier token's `tokenSlot`;
+                           a collectible's `me` its collection verdict: `collect`, `category`,
+                           `count`, `limit`, `reasonKey`)
 PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin
                           ─> char.session.start = time(), cleared dropped; isReloadingUi ─> kept;
                           neither ─> nothing

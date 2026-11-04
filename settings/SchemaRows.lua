@@ -306,7 +306,7 @@ local function feed()
     pick("feed.quality.mode", Q.mode, QUALITY_MODES, L["Minimum quality"],
         L["Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."], quality)
     bool("feed.quality.upgradeOverride", Q.upgradeOverride, L["Always show upgrades for me"],
-        L["A drop below the minimum still shows when it is an upgrade for you."], quality)
+        L["A drop below the minimum still shows when it is an upgrade for you or new to your collection."], quality)
     pick("feed.quality.fixed", Q.fixed, FIXED_QUALITIES, L["Fixed minimum"],
         L["The least quality a drop needs in the fixed mode."],
         with(quality, { shownWhen = qualityValueShown("fixed") }))

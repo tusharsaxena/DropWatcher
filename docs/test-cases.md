@@ -744,6 +744,19 @@ Total.
 - table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
+### test_collect_cells.lua (10)
+
+- collect cells: each collection verdict's word and tone
+- collect cells: the tooltip's title, Means and one Why row per reason
+- collect cells: WindowCells.Verdict hands a collection verdict to CollectCells, never a glyph
+- collect cells: History's stored collection verdict renders through the same cell
+- collect cells: Them on someone else's collectible is a dash, never an inspect's `?`
+- collect cells: the merged Me and Them cells carry no gear part
+- collect cells: your own collectible has no candidates, a dash for Them and no Offer
+- collect cells: the Ask button is No action for a collectible, a cosmetic's transmog ask too
+- collect cells: no toast, no Post my tradeables and no glow for a collectible
+- collect cells: a tier token is not feed-only: it still asks and toasts as gear
+
 ### test_detail_card.lua (30)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
@@ -1245,7 +1258,7 @@ Total.
 - scoring: with weights, a higher item level that scores lower is a sidegrade
 - scoring: the feed judges your drop with your weights once they are set
 
-### test_quality_gate.lua (24)
+### test_quality_gate.lua (25)
 
 - quality gate: fixed passes at or above the threshold and hides below it
 - quality gate: fixed defaults to Rare, and the floor does not apply to it
@@ -1271,6 +1284,7 @@ Total.
 - quality gate: every quality id has a display name
 - quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
 - quality gate: nil and garbage inputs never throw
+- quality gate: the upgrade override lets a drop new to your collection through, never a collected one
 
 ### test_situations.lua (14)
 
@@ -1289,7 +1303,7 @@ Total.
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
 
-### test_trade_rules.lua (23)
+### test_trade_rules.lua (24)
 
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
@@ -1314,6 +1328,7 @@ Total.
 - trade rules: IsRule knows the three rule names and nothing else
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
+- trade rules: a collectible keeps the bind and rule answers, and is unknown collectible otherwise
 
 ### test_messaging.lua (26)
 
@@ -1615,6 +1630,22 @@ Total.
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 
+### test_collect_feed.lua (13)
+
+- collect feed: someone else's mount reads its collection verdict, asks no inspect and has no Them
+- collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no
+- collect feed: the trade sweep drops someone else's collectible and keeps your own
+- collect feed: a mount new to your collection passes the quality gate's override; a collected one does not
+- collect feed: a burst of collection events reads once, and re-judges only the drop that moved
+- collect feed: combat's end reads again only the drops still at collectUnknown
+- collect feed: combat's end with no unknown collectible arms nothing
+- collect feed: a learned appearance re-judges a live cosmetic through the same re-read
+- collect feed: the stand-down cancels a waiting re-read
+- collect feed: RereadCollections is the cache's one writer and reads the collectibles alone
+- collect feed: Asks refuses an ask, an offer and an announce for a collectible
+- collect feed: the Offer panel never opens for your collectible, and /dw offer says why
+- collect feed: auto-ask never schedules a collectible
+
 ### test_group_roster.lua (13)
 
 - roster entry: the short name, the realm only when it is not yours, the class, you marked
@@ -1745,7 +1776,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (30)
+### test_history.lua (32)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1777,6 +1808,8 @@ Total.
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 - history tab: rows draw the Drops rows' chevron and indent; the headers' chevrons are gold
+- history: Snapshot keeps the category, the token slot and a collectible's verdict
+- history: a collection verdict that moves refreshes the entry; one that does not changes nothing
 
 ### test_history_retention.lua (16)
 
@@ -2381,6 +2414,7 @@ Total.
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
+| test_collect_cells.lua | 10 |
 | test_detail_card.lua | 30 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -2402,9 +2436,9 @@ Total.
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
 | test_scoring.lua | 16 |
-| test_quality_gate.lua | 24 |
+| test_quality_gate.lua | 25 |
 | test_situations.lua | 14 |
-| test_trade_rules.lua | 23 |
+| test_trade_rules.lua | 24 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
@@ -2416,6 +2450,7 @@ Total.
 | test_inspect.lua | 33 |
 | test_feed.lua | 51 |
 | test_feed_counts.lua | 10 |
+| test_collect_feed.lua | 13 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
@@ -2423,7 +2458,7 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 30 |
+| test_history.lua | 32 |
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
@@ -2455,4 +2490,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2021** |
+| **Total** | **2048** |

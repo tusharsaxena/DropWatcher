@@ -75,7 +75,7 @@ NS.C = {
                 mode            = "fixed",   -- fixed | dynamicSlot | dynamicCharacter
                 fixed           = 3,         -- Rare (Enum.ItemQuality.Rare)
                 floor           = 2,         -- Uncommon: the dynamic modes' least threshold
-                upgradeOverride = true,      -- an upgrade for me shows below the threshold
+                upgradeOverride = true,      -- an upgrade for me (or new to my collection) shows below it
             },
             -- The item kinds the feed watches (issue #13, categories design spec §1, §5.1), keyed as
             -- C.CATEGORIES; each is a `feed.categories.<key>` row. Step 13 replaced Gear only and

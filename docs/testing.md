@@ -312,7 +312,18 @@ appearance event (read from the raw equipLoc), the raw equipLoc and the category
 with its retries, the give-up, a client that cannot load, and the stand-down), `test_collectibles`
 (`modules/Collectibles.lua`, issue #13: `CategoryOf` for each category, its precedence and the classes
 not watched, `Verdict`'s new, collected, unknown, pet partial, recipe without the profession and
-whitelisted answers, and `Read` spending the probes only where they decide), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
+whitelisted answers, and `Read` spending the probes only where they decide), `test_collect_feed`
+(DW-CAT3: a collectible through the feed: judged by its collection verdict, no looter inspect, no
+Them and no candidates, also through the trade re-estimate; the trade estimate's `collectible`; the
+trade sweep dropping someone else's and keeping your own; `newCollect` through the quality gate's
+override; the collection events coalesced into one re-read that re-judges only a moved verdict, the
+regen pass for `collectUnknown` alone, a learned appearance, the stand-down's cancel and
+`RereadCollections` the cache's one writer; and the refusals at the edges: Asks, the Offer panel and
+`/dw offer`, auto-ask), `test_collect_cells` (DW-CAT3, pure: `NS.CollectCells`' words, tones and
+tooltip, the `WindowCells.Verdict` and `Them` hooks, the merged cells with no gear part, your own
+collectible's Them and Offer, History's stored verdict, and the refusals: the Ask button, the ask
+template's transmog fallback, the toast, Post my tradeables and the glow; a tier token not refused),
+`test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
 realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
 complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,
 identity, effective level, location reads and quality, the bag match by identity, an own drop read

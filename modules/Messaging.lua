@@ -57,12 +57,13 @@ local USEFUL = { upgrade = true, sidegrade = true }
 --- cannot use it but another spec of your class gains (NS.OffSpec.Of: an upgrade or a sidegrade);
 --- else `transmog` when `transmogAsk` is on and you have not collected its appearance
 --- (facts.transmogKnown is false, not merely unknown); else nil, no ask is offered. Main spec
---- always comes first. Reads the drop record alone.
+--- always comes first. A collectible (feed-only, NS.Collectibles.IsFeedOnly) is never asked for,
+--- so a cosmetic gets no transmog ask either. Reads the drop record alone.
 --- @param drop table a feed record
 --- @param transmogAsk boolean the `messages.transmogAsk` setting
 --- @return string|nil
 function M.AskTemplate(drop, transmogAsk)
-    if not isTable(drop) then return nil end
+    if not isTable(drop) or NS.Collectibles.IsFeedOnly(drop) then return nil end
     local v = isTable(drop.me) and drop.me.verdict or nil
     if USEFUL[v] then return "ask" end
     local off = NS.OffSpec.Of(drop.me)

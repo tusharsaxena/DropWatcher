@@ -170,10 +170,12 @@ end
 --- gain tested on the off-spec difference; the third value then says so.
 --- @param drop table a feed record
 --- @param minGain number
---- @return boolean ok, string|nil why (`mine`, `notUpgrade`, `gain` or `trade`) when not,
+--- A collectible (feed-only, issue #13) never toasts, so auto-ask never sends for one either.
+--- @return boolean ok, string|nil why (`mine`, `collectible`, `notUpgrade`, `gain` or `trade`) when not,
 --- string|nil how (`offSpec` when it qualifies through the off-spec result)
 function Toast.Qualifies(drop, minGain)
     if type(drop) ~= "table" or drop.isMine then return false, "mine" end
+    if NS.Collectibles.IsFeedOnly(drop) then return false, "collectible" end
     local eval, how = upgradeOf(type(drop.me) == "table" and drop.me or {})
     if not eval then return false, "notUpgrade" end
     if not gainPasses(eval, minGain) then return false, "gain" end

@@ -337,11 +337,13 @@ function FB.IsInteresting(drop)
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
---- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts).
+--- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts); never
+--- a collectible (feed-only, issue #13).
 --- @param drop table
 --- @return boolean
 function FB.IsTradeableMine(drop)
     return type(drop) == "table" and drop.isMine == true and TRADEABLE[tradeState(drop)] == true
+        and not NS.Collectibles.IsFeedOnly(drop)
 end
 
 local function itemName(drop)

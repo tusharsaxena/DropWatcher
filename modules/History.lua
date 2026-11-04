@@ -7,7 +7,9 @@ local _, NS = ...
 --       { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
 --         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
---             me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
+--             category, tokenSlot,
+--             me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
+--                    reasonKey? }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
@@ -20,6 +22,13 @@ local _, NS = ...
 -- `seenBy` is the character that saw the drop (Name-Realm) and `seenByClass` its classFile, for the
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
+-- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
+-- mount, pet, toy, recipe, cosmetic) and `tokenSlot` a tier token's made slot; an entry kept before
+-- they existed has neither and reads as equipment. A collectible's `me` keeps its collection verdict
+-- (`collect` true, the `category`, a pet's `count` and `limit`, and `reasonKey` = notYourProfession
+-- for a recipe of a profession you lack), so History draws it with no live drop; an entry keeps the
+-- verdict its drop last had while live, and an older entry is a record, never judged again. The
+-- fields are additive: `v` stays 1.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
 -- `declined` replaced, so clearing it puts that back; `beforeExpired` the one an automatic `expired`
 -- replaced (feedback-15 spec §0), so a live timer read can put that back. The table is the
@@ -119,9 +128,22 @@ local function offSnap(eval)
 end
 
 -- A verdict, kept small: the verdict and its deltas, nothing that names a frame or a table.
+-- A collection verdict's part (issue #13): its flag, category, a pet's count and limit (plain
+-- numbers only) and the one reason a cell names, a recipe of a profession you lack.
+local function collectSnap(snap, eval)
+    if eval.collect ~= true then return snap end
+    snap.collect, snap.count, snap.limit = true, num(eval.count), num(eval.limit)
+    snap.category = type(eval.category) == "string" and eval.category or nil
+    for _, r in ipairs(type(eval.reasons) == "table" and eval.reasons or {}) do
+        if r.key == "notYourProfession" then snap.reasonKey = r.key end
+    end
+    return snap
+end
+
 local function verdictSnap(eval)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then return nil end
-    return { verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta), offSpec = offSnap(eval) }
+    return collectSnap({ verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta),
+        offSpec = offSnap(eval) }, eval)
 end
 
 -- The trade estimate, kept small: its arguments only when they are plain numbers or strings.
@@ -152,6 +174,8 @@ function H.Snapshot(rec, now)
     local e = {
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
+        category = type(facts.category) == "string" and facts.category or nil,
+        tokenSlot = type(facts.tokenSlot) == "string" and facts.tokenSlot or nil,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
         seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }

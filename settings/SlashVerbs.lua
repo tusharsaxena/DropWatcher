@@ -185,7 +185,8 @@ end
 
 --- `/dw offer <link>`: open the Offer panel for a bag item. Your drop of that item when the feed
 --- holds one; otherwise the bag item is added as a drop of yours first. Refused, with the reason,
---- while no other player is in your group (DW-07, NS.WindowOwn.Alone).
+--- while no other player is in your group (DW-07, NS.WindowOwn.Alone), and for a collectible
+--- (feed-only, issue #13).
 --- @param rest string
 --- @return boolean opened
 function V.Offer(rest)
@@ -201,6 +202,10 @@ function V.Offer(rest)
     end
     local drop = newestMine(itemID) or adopt(itemID, link)
     if not drop then return false end
+    if NS.Collectibles.IsFeedOnly(drop) then
+        NS.Print(L["Collectibles are watched, not offered."])
+        return false
+    end
     if not V.OpenTab("group") then return false end
     return NS.OfferPanel.Open(drop.id) ~= nil
 end

@@ -508,3 +508,36 @@ test("history tab: rows draw the Drops rows' chevron and indent; the headers' ch
     end
     assertEqual(select(2, drawn.headers[1].chevron:GetVertexColor()), G.g)
 end)
+
+-- issue #13, categories design spec §3.3: the category, the token slot and a collection verdict.
+test("history: Snapshot keeps the category, the token slot and a collectible's verdict", function()
+    local Hi = H()
+    local pet = rec({ facts = { ilvl = 1, equipLoc = "", quality = 3, category = "pet", tokenSlot = nil },
+        me = { verdict = "collected", equip = "collect", collect = true, category = "pet", count = 1, limit = 3,
+            reasons = { { key = "collectKnown" }, { key = "petPartial", detail = "1/3" } } }, them = false })
+    local e = Hi.Snapshot(pet, 1)
+    assertEqual(e.category, "pet")
+    -- red under: verdictSnap keeping only the verdict and its deltas
+    assertTrue(e.me.collect); assertEqual(e.me.category, "pet")
+    assertEqual(e.me.count, 1); assertEqual(e.me.limit, 3); assertNil(e.me.reasonKey)
+    assertNil(e.me.reasons, "no reasons table kept")
+    local recipe = rec({ facts = { category = "recipe" }, me = { verdict = "cantUse", collect = true, category = "recipe",
+        reasons = { { key = "notYourProfession" } } } })
+    assertEqual(Hi.Snapshot(recipe, 1).me.reasonKey, "notYourProfession")
+    local token = Hi.Snapshot(rec({ facts = { ilvl = 620, equipLoc = "INVTYPE_HEAD", category = "tierToken",
+        tokenSlot = "INVTYPE_HEAD" } }), 1)
+    assertEqual(token.category, "tierToken"); assertEqual(token.tokenSlot, "INVTYPE_HEAD")
+    local gear = Hi.Snapshot(rec(), 1)
+    assertNil(gear.category, "facts without a category"); assertNil(gear.me.collect)
+end)
+
+test("history: a collection verdict that moves refreshes the entry; one that does not changes nothing", function()
+    local Hi = H()
+    local r = rec({ facts = { category = "mount" }, me = { verdict = "newCollect", collect = true, category = "mount" } })
+    local e = Hi.Snapshot(r, 1)
+    r.me = { verdict = "newCollect", collect = true, category = "mount" }
+    assertFalse(select(2, Hi.Refresh(e, r)), "the same verdict")
+    r.me = { verdict = "collected", collect = true, category = "mount" }
+    assertTrue(select(2, Hi.Refresh(e, r)))
+    assertEqual(e.me.verdict, "collected")
+end)

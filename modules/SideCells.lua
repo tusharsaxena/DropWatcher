@@ -33,6 +33,8 @@ local _, NS = ...
 -- its spec's name, `▲20 Holy`, in the offspec cyan, and the Me cell's gear part is the item it was
 -- compared with (OffSpecCells.Eq: a bag item, a worn one or `empty`), not what you wear. The looter's
 -- Them cell does the same (a worn item or `empty`), keeping the inspect's age.
+-- A COLLECTIBLE (NS.CollectCells, issue #13) has no slot: its Me and Them cells are the verdict
+-- part alone, `New` or a dash, with no gear part.
 -- YOUR OWN DROP'S THEM is MineCells.Details's `Upgrade for N` (or `No upgrades`, `Hidden`), its tones and its tooltip.
 -- History keeps no worn items, so its cells are the verdict part alone (SC.Merge with no gear).
 -- THE OFFER PANEL'S THEIR EQ (feedback-7 spec §0) is the same cell for one candidate (SC.Candidate):
@@ -223,6 +225,7 @@ end
 --- @return table cell
 function SC.Me(drop, equipped, classFile)
     local v = WC.Me(drop, classFile)
+    if v.collect then return SC.Merge(v) end
     return SC.Merge(v, v.offSpec and OC.Eq(v) or WC.MyEq(drop, equipped))
 end
 
@@ -237,6 +240,7 @@ end
 function SC.Them(drop, gear, now, revealed)
     if drop.isMine then return SC.Merge(MC.Details(drop, revealed, L["Them"])) end
     local v = WC.Them(drop, now)
+    if v.collect then return SC.Merge(v) end
     if not v.offSpec then return SC.Merge(v, WC.TheirEq(drop, gear, now)) end
     local eq = OC.Eq(v)
     WC.Append(eq.tip, WC.InspectRows(drop.inspect, now))

@@ -31,7 +31,8 @@ local _, NS = ...
 -- CATEGORIES (issue #13). `rawEquipLoc` is the client's own equipLoc, kept on every item: the
 -- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
 -- (modules/Collectibles.lua) fills `category` and, for a collectible, `collect` on the facts being
--- built, before they are cached. Nothing reads them yet (DW-CAT1).
+-- built, before they are cached. A collection event re-reads them on every cached collectible
+-- (RereadCollections, the cache's one writer; modules/Collectibles.lua arms it).
 --
 -- THE CACHE AND THE LOAD. Get(link) answers the cached facts, or builds them when the client has
 -- the item cached, or nil. Request(link, callback) does the same and, on a miss, asks the client
@@ -288,11 +289,28 @@ end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated" }
 
--- An appearance was learned (or lost): re-read the flag on every cached link.
+-- An appearance was learned (or lost): re-read the flag on every cached link, then let the live
+-- cosmetics be judged again (NS.Collectibles.Changed).
 function NS.addon.OnTransmogCollectionUpdated()
     for link, facts in pairs(store().cache) do
         facts.transmogKnown = readTransmog(link, facts.rawEquipLoc)
     end
+    if NS.Collectibles then NS.Collectibles.Changed() end
+end
+
+--- Read the collection state again on every cached collectible (NS.Collectibles.Read on the
+--- cache's own tables: ItemFacts stays their one writer). Answers how many were read.
+--- @return number
+function IF.RereadCollections()
+    local CO, n = NS.Collectibles, 0
+    if not CO then return 0 end
+    for _, facts in pairs(store().cache) do
+        if CO.IsCollectible(facts) then
+            CO.Read(facts)
+            n = n + 1
+        end
+    end
+    return n
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

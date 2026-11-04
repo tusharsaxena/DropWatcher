@@ -231,13 +231,19 @@ modules\CharFilter.lua
 # handles it) to NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load,
 # and reads NS.Constants and NS.State at load. NS.Compat, NS.Item and NS.Debug are read at call time.
 modules\ItemFacts.lua
-# Conventional: publishes NS.Collectibles, a drop's category and the collection verdict (issue
-# #13); reads NS.Constants at load. NS.Compat (core\CompatCollect.lua, above) is read at call
-# time; modules\ItemFacts.lua (the line above) calls its Read while it builds the facts.
+# LOAD-BEARING: appends its PLAYER_REGEN_ENABLED row to NS.FEATURE_EVENTS after
+# core\DropWatcher.lua's and before modules\Gear.lua's, modules\Inspect.lua's and modules\Toast.lua's
+# (its other rows, NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED and
+# SKILL_LINES_CHANGED, no other file handles), and its NS.STAND_DOWN step runs in TOC order, after
+# those of the modules above. Publishes NS.Collectibles, a drop's category, the collection verdict
+# and its re-read on collection events (issue #13); reads NS.Constants at load and adds its handlers
+# to NS.addon (core\DropWatcher.lua, above). NS.Compat (core\CompatCollect.lua, above), NS.ItemFacts
+# and NS.LootFeed are read at call time; modules\ItemFacts.lua (above) calls its Read while it builds
+# the facts.
 modules\Collectibles.lua
 # LOAD-BEARING: appends its rows to NS.FEATURE_EVENTS where other files share the event:
 # BAG_UPDATE_DELAYED before modules\TradeTimer.lua's, and PLAYER_REGEN_ENABLED after
-# core\DropWatcher.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN
+# core\DropWatcher.lua's and modules\Collectibles.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN
 # / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes NS.Gear, the
 # player's gear snapshot and candidate; appends its handlers to NS.addon (core\DropWatcher.lua,
 # above) and reads NS.Constants, NS.ClassData and NS.State at load. NS.Compat, NS.ItemFacts and
@@ -353,6 +359,11 @@ modules\TipMarks.lua
 # cell's gear half from the off-spec baseline, the cards' Spec row, the legend's line); reads NS.L at
 # load, and NS.OffSpec and NS.Compat (a spec's name) at call time. NS.WindowCells calls it at call time.
 modules\OffSpecCells.lua
+# LOAD-BEARING: takes NS.TipMarks (modules\TipMarks.lua, above) at load. Publishes NS.CollectCells,
+# how a collectible looks (issue #13, categories design spec §6.1: the Me cell's collection word,
+# its tone and tooltip, the Them dash, the refusals' words); reads NS.L at load. NS.WindowCells,
+# NS.MineCells and NS.OfferPanel call it at call time.
+modules\CollectCells.lua
 # LOAD-BEARING: reads NS.TipMarks (modules\TipMarks.lua, above) at load. Publishes NS.TipGrid, the
 # frame edge that paints a tooltip's grid (feedback-7 spec §3: columns on a pooled child frame of
 # GameTooltip); reads NS.Constants at load. modules\Window.lua (above) calls it at hover time.

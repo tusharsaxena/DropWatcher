@@ -84,6 +84,7 @@ L["Added %s for %s (drop %s)."] = "Added %s for %s (drop %s)."
 L["Not added: %s."] = "Not added: %s."
 L["%s is not in your bags."] = "%s is not in your bags."
 L["%s is loading: run |cffFFFF00%s|r again in a moment."] = "%s is loading: run |cffFFFF00%s|r again in a moment."
+L["Collectibles are watched, not offered."] = "Collectibles are watched, not offered."
 
 -- Minimum quality (modules/QualityGate.lua): the quality names and the filter bar label
 L["Artifact"] = "Artifact"
@@ -466,6 +467,7 @@ L["Sort"] = "Sort"
 -- modules/WindowCells.lua
 -- the Trade cell's short reasons (feedback-22)
 L["Group loot"] = "Group loot"
+L["Collectible"] = "Collectible"
 L["Window open"] = "Window open"
 L["Not their upgrade"] = "Not their upgrade"
 L["Not your upgrade"] = "Not your upgrade"
@@ -524,6 +526,8 @@ L["Group loot: its winner may trade it for four hours."] = "Group loot: its winn
 L["The item's details have not loaded yet."] = "The item's details have not loaded yet."
 L["The trade window (%s) has passed."] = "The trade window (%s) has passed."
 L["Your own item: %s left to trade it."] = "Your own item: %s left to trade it."
+L["A collectible: its looter's side of the game's rule is not judged."] =
+    "A collectible: its looter's side of the game's rule is not judged."
 L["The estimate failed: %s"] = "The estimate failed: %s"
 L["Personal loot: %d is not an upgrade over the %d %s wears, so they may trade it."] =
     "Personal loot: %d is not an upgrade over the %d %s wears, so they may trade it."
@@ -593,6 +597,13 @@ L["an empty slot"] = "an empty slot"
 L["Your best %s item"] = "Your best %s item"
 L["%s (off-spec): %s can't use it"] = "%s (off-spec): %s can't use it"
 L["Ask for off-spec"] = "Ask for off-spec"
+-- modules/CollectCells.lua (issue #13, categories design spec §6.1)
+L["New"] = "New"
+L["Collected"] = "Collected"
+L["Known"] = "Known"
+L["New to your collection"] = "New to your collection"
+L["Already collected"] = "Already collected"
+L["Collection unknown"] = "Collection unknown"
 -- modules/MineCells.lua
 L["Bonus roll"] = "Bonus roll"
 L["Warbound"] = "Warbound"

@@ -10,7 +10,7 @@ local _, NS = ...
 --   facts      = { ilvl, bindType = Enum.ItemBind, warbound = bool, bonusRoll = bool }  -- ItemFacts
 --   looterEval = Evaluate's output for the looter, or nil while they are not inspected
 --   ctx        = { situation, rules = { [situation] = ruleName }, now, droppedAt,
---                  inspectAge, inspectReason }
+--                  inspectAge, inspectReason, collectible }
 --
 -- The answer: { state, reasonKey, args, basis, age, expiresAt, rule }, where state is "yes",
 -- "likely", "unknown" or "no" and basis "bind", "rule" or "inspect" (`age` is the inspect's age).
@@ -18,6 +18,9 @@ local _, NS = ...
 --
 -- The looter check reads the evaluation's ilvlDelta, not its verdict: the game's rule compares
 -- item levels, so a scored sidegrade at a higher item level is still an upgrade for the looter.
+-- A collectible (`ctx.collectible`, categories design spec §4.5) keeps the bind checks and the
+-- rule's legacy, expired and group-loot answers; only the looter check, which an item level cannot
+-- answer for a mount or a recipe, is `unknown collectible` (basis `rule`) instead.
 --
 -- It NEVER THROWS: garbage in answers `unknown` with a reason, and the public entry point runs
 -- under pcall as the last line of defense.
@@ -132,6 +135,7 @@ local function estimate(facts, looterEval, ctx)
     if not out and rule.tradeable == false then out = result("no", "legacy", "rule") end
     out = out or expiryCheck(rule, ctx)
     if not out and rule.ilvlRule == "none" then out = result("likely", "groupLoot", "rule") end
+    if not out and ctx.collectible == true then out = result("unknown", "collectible", "rule") end
     out = out or looterCheck(facts, looterEval, ctx)
     out.rule = ruleName
     return out

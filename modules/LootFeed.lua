@@ -59,7 +59,8 @@ local _, NS = ...
 -- scorer answering "pending" is retried on one shared SCORE_RETRY timer, SCORE_TRIES times per
 -- drop; your own drop the trade timer matched to its bag item is read from it on each
 -- TradeTimerTick (ReadBagItems: the exact level and quality). Each sends DropUpdated(id, cause):
--- `source`, `inspect`, `gear`, `score` or `bag`. A new drop sends DropAdded(id). Updates re-judge
+-- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/Collectibles.lua's re-read,
+-- through Refresh). A new drop sends DropAdded(id). Updates re-judge
 -- the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.
 --
@@ -262,8 +263,13 @@ local function myCandidate(cfg)
 end
 
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
--- judged plainly, so a real upgrade for them never reads as one they would give away.
+-- judged plainly, so a real upgrade for them never reads as one they would give away. A
+-- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's.
 local function judgeMe(rec, cfg)
+    if NS.Collectibles.IsCollectible(rec.facts) then
+        rec.me = NS.Collectibles.Verdict(rec.facts)
+        return
+    end
     local opts = evalOpts(cfg)
     opts.heirloomProtect = cfg.heirloomProtect == true
     rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
@@ -299,7 +305,8 @@ local function estimate(rec, looterEval, cfg, insp)
     local f = rec.facts
     local facts = f and { ilvl = f.ilvl, bindType = f.bindType, warbound = f.warbound, bonusRoll = rec.bonusRoll }
     local t = now()
-    local ctx = { situation = rec.situation, rules = cfg.rules, now = t, droppedAt = rec.at }
+    local ctx = { situation = rec.situation, rules = cfg.rules, now = t, droppedAt = rec.at,
+        collectible = NS.Collectibles.IsFeedOnly(rec) }
     if insp then
         if looterEval then
             ctx.inspectAge = insp.at and t - insp.at
@@ -353,8 +360,13 @@ local function candidateEntry(rec, m, cfg, ask)
     return e
 end
 
--- Your own drop: every other member judged; their inspects asked for only while it may trade.
+-- Your own drop: every other member judged; their inspects asked for only while it may trade. A
+-- collectible is judged for nobody (none asked for, here and through reestimate alike).
 local function judgeCandidates(rec, cfg, request)
+    if NS.Collectibles.IsFeedOnly(rec) then
+        rec.candidates = {}
+        return
+    end
     local ask = request and not rec.test and rec.trade.state ~= "no"
     local out = {}
     for _, m in ipairs(NS.Roster.Members()) do
@@ -372,6 +384,10 @@ local function judgeLooter(rec, cfg, request)
     if rec.isMine then
         estimate(rec, rec.me, cfg, nil)
         return judgeCandidates(rec, cfg, request)
+    end
+    if NS.Collectibles.IsFeedOnly(rec) then   -- judged for you alone: no inspect, no Them
+        rec.them = nil
+        return estimate(rec, nil, cfg, nil)
     end
     local guid = rec.looter.guid
     local inGroup = guid and NS.Roster.Get(guid) ~= nil
@@ -437,8 +453,10 @@ local function reestimate(rec, cfg)
     return true
 end
 
+-- Someone else's collectible stays out: its `unknown` would keep the sweep ticking all session.
 local function mayChange(rec)
-    return not rec.test and rec.trade ~= nil and (rec.isMine or rec.trade.state ~= "no")
+    if rec.test or rec.trade == nil then return false end
+    return rec.isMine or (rec.trade.state ~= "no" and not NS.Collectibles.IsFeedOnly(rec))
 end
 
 --- Re-estimate the live drops' trade (your own only, with `mineOnly`), sending DropUpdated(id,

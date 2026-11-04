@@ -299,6 +299,7 @@ end
 -- A member it is not an upgrade or equal for, or a drop that cannot be traded: the gray No action
 -- with its reason (feedback-11 spec §1).
 local function noOffer(drop)
+    if NS.Collectibles.IsFeedOnly(drop) then return NS.WindowCells.NoAction({ TM.Row(L["Why"], NS.CollectCells.NO_OFFER) }) end
     if drop.trade and drop.trade.state == "no" then
         local WC = NS.WindowCells
         return WC.NoAction(WC.Append({ TM.Row(L["Why"], L["not tradeable"]) }, WC.TradeRows(drop.trade, L["you"])))
@@ -378,7 +379,7 @@ function OP.Refresh()
     if not (panel and panel:IsShown()) then return end
     local id = sink().dropId
     local drop = id ~= nil and NS.LootFeed.Get(id) or nil
-    if not (drop and drop.isMine) or NS.WindowOwn.Alone(drop) then return OP.Close() end
+    if not (drop and drop.isMine) or NS.WindowOwn.Alone(drop) or NS.Collectibles.IsFeedOnly(drop) then return OP.Close() end
     panel.dropId = id
     dock(panel)
     local now = GetTime()
@@ -392,11 +393,13 @@ end
 --- who the drop would help when it is an upgrade for you: the player chose to offer it
 --- (NS.WindowOwn.Reveal).
 --- @param dropID number
---- @return table|nil the panel, or nil before the window is built, for a drop that is not yours, or
----   while no other player is in your group to take it (DW-07, NS.WindowOwn.Alone)
+--- @return table|nil the panel, or nil before the window is built, for a drop that is not yours, a
+---   collectible (feed-only, issue #13), or while no other player is in your group to take it
+---   (DW-07, NS.WindowOwn.Alone)
 function OP.Open(dropID)
     local drop = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
     if not (drop and drop.isMine and NS.Window.Frame()) or NS.WindowOwn.Alone(drop) then return nil end
+    if NS.Collectibles.IsFeedOnly(drop) then return nil end
     panel = panel or build()
     sink().dropId = dropID
     NS.WindowOwn.Reveal(dropID)

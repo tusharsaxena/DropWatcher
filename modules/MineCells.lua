@@ -50,6 +50,9 @@ local _, NS = ...
 -- offer sent (cyan while it is your move, feedback-6 spec §2); the gray No action with the reason
 -- when it cannot be traded (WindowCells.NoAction, feedback-11 spec §1), or when no other player is in
 -- your group to take it (DW-07: solo, followers, a delve companion).
+--
+-- A COLLECTIBLE (issue #13, NS.Collectibles.IsFeedOnly) is judged for nobody: no candidates, Them a
+-- dash (NS.CollectCells.Nobody) and Offer the No action, `collectibles are watched, not offered`.
 
 NS.MineCells = NS.MineCells or {}
 local MC = NS.MineCells
@@ -260,6 +263,7 @@ end
 --- @return table
 function MC.Candidates(drop)
     local out = {}
+    if NS.Collectibles.IsFeedOnly(drop) then return out end
     for _, c in pairs(type(drop.candidates) == "table" and drop.candidates or {}) do
         if type(c) == "table" then out[#out + 1] = entryOf(c) end
     end
@@ -357,6 +361,7 @@ end
 --- @return table cell, with `upgrades` and `hidden`
 function MC.Details(drop, revealed, title)
     title = title or L["Them"]
+    if NS.Collectibles.IsFeedOnly(drop) then return NS.CollectCells.Nobody(title) end
     if tradeOf(drop).state == "no" then
         return cell(DASH, "muted", title, row(L["Tradeable"], L["no"]), row(L["Offered to"], L["nobody"]))
     end
@@ -409,7 +414,9 @@ MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an i
 function MC.OwnOffer(drop, toneState, alone)
     local t = tradeOf(drop)
     local none
-    if t.state == "no" then
+    if NS.Collectibles.IsFeedOnly(drop) then
+        none = WC.NoAction({ row(L["Why"], NS.CollectCells.NO_OFFER) })
+    elseif t.state == "no" then
         none = WC.NoAction(WC.Append({ row(L["Why"], L["not tradeable"]) }, WC.TradeRows(t, L["you"])))
     elseif alone then
         none = WC.NoAction({ row(L["Why"], L["no other player in your group"]),

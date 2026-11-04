@@ -276,3 +276,19 @@ test("trade rules: bad facts are unknown badFacts", function()
     check(TR.Estimate(nil, looter(-1), ctx("dungeon")), "unknown", "badFacts")
     check(TR.Estimate("link", looter(-1), ctx("dungeon")), "unknown", "badFacts")
 end)
+
+-- issue #13, categories design spec §4.5: a collectible keeps the bind checks and the rule's own
+-- answers; only the looter's item-level check becomes `unknown collectible`.
+test("trade rules: a collectible keeps the bind and rule answers, and is unknown collectible otherwise", function()
+    local TR = load()
+    local col = { collectible = true }
+    check(TR.Estimate(drop({ bindType = B.ON_EQUIP }), nil, ctx("raid", 60, col)), "yes", "boe", "bind")
+    check(TR.Estimate(drop({ warbound = true }), nil, ctx("raid", 60, col)), "no", "warbound", "bind")
+    check(TR.Estimate(drop(), nil, ctx("pvp", 60, col)), "no", "legacy", "rule")
+    check(TR.Estimate(drop(), nil, ctx("raid", 99999, col)), "no", "expired", "rule")
+    check(TR.Estimate(drop(), nil, ctx("raid", 60, { collectible = true, rules = { raid = "group" } })),
+        "likely", "groupLoot", "rule")
+    -- red under: the looter check run for a collectible (a `likely` claim an item level cannot back)
+    check(TR.Estimate(drop(), looter(-20), ctx("raid", 60, col)), "unknown", "collectible", "rule")
+    check(TR.Estimate(drop(), looter(-20), ctx("raid", 60)), "likely", "notUpgrade", "inspect", "gear unchanged")
+end)

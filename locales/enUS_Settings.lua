@@ -48,8 +48,8 @@ L["The least quality a drop needs in the fixed mode."] = "The least quality a dr
 L["The least quality the two matching modes ever ask for, and what an empty slot asks for."] =
     "The least quality the two matching modes ever ask for, and what an empty slot asks for."
 L["Always show upgrades for me"] = "Always show upgrades for me"
-L["A drop below the minimum still shows when it is an upgrade for you."] =
-    "A drop below the minimum still shows when it is an upgrade for you."
+L["A drop below the minimum still shows when it is an upgrade for you or new to your collection."] =
+    "A drop below the minimum still shows when it is an upgrade for you or new to your collection."
 L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."] =
     "Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."

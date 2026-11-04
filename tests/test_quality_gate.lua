@@ -349,3 +349,17 @@ test("quality gate: nil and garbage inputs never throw", function()
     _, threshold = Q.Passes(RARE, "dynamicCharacter", { gear = { [S.HEAD] = "Epic", [S.NECK] = {} } })
     assertEqual(threshold, UNCOMMON)
 end)
+
+-- issue #13, categories design spec §4.3: new to your collection passes like an upgrade.
+test("quality gate: the upgrade override lets a drop new to your collection through, never a collected one", function()
+    local Q = load()
+    local pass, _, reason = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "newCollect" })
+    -- red under: the override honoring `upgrade` alone
+    assertTrue(pass); assertEqual(reason, "upgradeOverride")
+    pass, _, reason = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "collected" })
+    assertTrue(not pass); assertEqual(reason, "belowThreshold")
+    pass = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "newCollect", upgradeOverride = false })
+    assertTrue(not pass, "the override off")
+    pass, _, reason = Q.Passes(COMMON, "dynamicSlot", { verdict = "collected", gear = gearAt(EPIC) })
+    assertTrue(not pass); assertEqual(reason, "belowThreshold", "no slot: the floor (Uncommon)")
+end)
