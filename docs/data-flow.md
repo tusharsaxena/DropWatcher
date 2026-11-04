@@ -361,6 +361,8 @@ the step panel (DW-04: LibKa0s-Sim-1.0's; `/dw sim` and `/dw sim panel` open it,
                    (dragged: held for the session; Reset position: NS.Sim:ResetPanelPosition), and
                    nothing reaches SavedVariables; a pool that opens the window later re-places a
                    shown panel beside it (SimScenario's ready: NS.Sim:ShowPanel); standing down hides it
+                   ─> its OnShow / OnHide (hooked by modules/Sim.lua's ShowPanel wrap, R7-SIM) and the
+                   sim's listener re-read Master controls' Sim mode box (NS.IsSimMode: shown or running)
 the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
