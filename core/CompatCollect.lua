@@ -143,16 +143,20 @@ function Compat.RecipeKnown(link)
 end
 
 --- The skill lines of the player's professions (GetProfessions' indices, cooking and fishing
---- included; GetProfessionInfo's 7th return), as { [skillLine] = true }. Empty without the API.
---- @return table
+--- included; GetProfessionInfo's 7th return), as { [skillLine] = true }: empty for a character
+--- with no profession, nil for no answer (no API, or a slot whose index or skill line is secret or
+--- unreadable), so "none of yours" is never claimed from a read that could not be made.
+--- @return table|nil
 function Compat.ProfessionSkillLines()
-    local out = {}
-    if not (GetProfessions and GetProfessionInfo) then return out end
-    local indices = { GetProfessions() }
+    if not (GetProfessions and GetProfessionInfo) then return nil end
+    local indices, out = { GetProfessions() }, {}
     for i = 1, 5 do
-        local index = plainId(indices[i])
-        local line = index and plainId((select(7, GetProfessionInfo(index))))
-        if line then out[line] = true end
+        if indices[i] ~= nil then
+            local index = plainId(indices[i])
+            local line = index and plainId((select(7, GetProfessionInfo(index))))
+            if not line then return nil end
+            out[line] = true
+        end
     end
     return out
 end

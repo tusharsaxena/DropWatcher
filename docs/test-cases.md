@@ -1403,7 +1403,7 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_collectibles.lua (14)
+### test_collectibles.lua (15)
 
 - collectibles: CategoryOf names each category
 - collectibles: CategoryOf's precedence
@@ -1417,6 +1417,7 @@ Total.
 - collectibles: Read fills a mount's, a pet's and a toy's collection state
 - collectibles: Read fills a recipe's profession and known line
 - collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
+- collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
 - collectibles: Read leaves a tier token's category to its flag and probes nothing
 - collectibles: Read answers its argument and survives no facts
 
@@ -2404,7 +2405,7 @@ Total.
 | test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
 | test_item_facts.lua | 23 |
-| test_collectibles.lua | 14 |
+| test_collectibles.lua | 15 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
@@ -2450,4 +2451,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2016** |
+| **Total** | **2017** |

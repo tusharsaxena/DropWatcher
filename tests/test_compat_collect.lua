@@ -163,12 +163,16 @@ test("compat collect: ProfessionSkillLines maps every profession slot to its ski
     for _, line in ipairs({ 197, 165, 356, 185 }) do assertTrue(got[line], "skill line " .. line) end
     assertNil(got[202])
     m.professions = {}
-    assertNil(next(Compat.ProfessionSkillLines()), "no professions")
+    got = Compat.ProfessionSkillLines()
+    -- red under: an empty table for no API too, so "no profession" could not be told from "no answer"
+    assertEqual(type(got), "table", "no professions is an answer"); assertNil(next(got), "and it is empty")
     m.GetProfessionInfo = function() return "x", 0, 1, 1, 0, 0, T.secret(197) end
     m.professions = { 197 }
-    assertNil(next(Compat.ProfessionSkillLines()), "a secret skill line")
+    assertNil(Compat.ProfessionSkillLines(), "a secret skill line is no answer")
+    m.GetProfessions = function() return T.secret(1) end
+    assertNil(Compat.ProfessionSkillLines(), "a secret index is no answer")
     m.GetProfessions = nil
-    assertNil(next(Compat.ProfessionSkillLines()), "no API")
+    assertNil(Compat.ProfessionSkillLines(), "no API")
 end)
 
 -- ---------------------------------------------------------------------------------------------

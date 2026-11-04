@@ -4,7 +4,8 @@ local _, NS = ...
 --
 --   facts.category = "equipment" | "tierToken" | "mount" | "pet" | "toy" | "recipe" | "cosmetic" | nil
 --   facts.collect  = { kind, mountID?, speciesID?, known = true | false | nil, count?, limit?,
---                      skillLine?, hasProfession? } | nil   (collectibles only)
+--                      skillLine?, hasProfession? } | nil   (collectibles only; a cosmetic's
+--                      known is always nil: its state is facts.transmogKnown)
 --
 -- THE PURE HALF. CategoryOf(facts, probe) reads the facts and the probe's collection answers
 -- ({ mountID, speciesID, toy, cosmetic }, all optional) and names the category, first match wins:
@@ -22,7 +23,8 @@ local _, NS = ...
 -- included), none on a tier token; the recipe's known line and the professions on recipes alone.
 -- modules/ItemFacts.lua calls it on the facts it is building, before they are cached: the cached
 -- tables stay ItemFacts' to write. A cosmetic's collection state is its `transmogKnown`, which
--- ItemFacts keeps current, so Verdict reads that rather than a copy.
+-- ItemFacts keeps current: its `collect.known` stays nil (a copy would go stale once the
+-- appearance is learned), and Verdict and every later reader read `transmogKnown`.
 --
 -- Not read by the feed yet (DW-CAT1): the category is computed for the next items to consume.
 
@@ -141,12 +143,12 @@ local function probeOf(facts)
     return probe
 end
 
--- Whether you have the profession a skill line names: nil when the client named no profession at
--- all (no answer is not "none of yours").
+-- Whether you have the profession a skill line names: false with no profession at all (a real
+-- answer, common on alts), nil only when the client gave no answer (not "none of yours").
 local function hasProfession(skillLine)
     if not skillLine then return nil end
     local lines = NS.Compat.ProfessionSkillLines()
-    if next(lines) == nil then return nil end
+    if type(lines) ~= "table" then return nil end
     return lines[skillLine] == true
 end
 
@@ -174,8 +176,7 @@ local function collectOf(category, facts, probe)
     if category == "mount" then readMount(collect, probe)
     elseif category == "pet" then readPet(collect, probe)
     elseif category == "toy" then collect.known = NS.Compat.ToyCollected(facts.itemID)
-    elseif category == "recipe" then readRecipe(collect, facts)
-    else collect.known = facts.transmogKnown end
+    elseif category == "recipe" then readRecipe(collect, facts) end
     return collect
 end
 

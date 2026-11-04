@@ -224,7 +224,7 @@ itself, because the root's `tooltipData` helper is file-local.
 | `ToyCollected(itemID)` | `PlayerHasToy` | `nil` |
 | `IsCosmeticItem(link)` | `C_Item.IsCosmeticItem` (cosmetic armor and the Weapon-class cosmetic weapons) | `false` |
 | `RecipeKnown(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** `ITEM_SPELL_KNOWN` ("Already known"): `true`, else `false` once the tooltip was read | `nil` (no API, no GlobalString, no or malformed tooltip, a secret answer or a secret line, which could hide the line) |
-| `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }` | `{}` |
+| `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }`, and `{}` for a character with no profession | `nil` (no API, or a slot whose index or skill line is secret or unreadable: no answer is never read as "no profession") |
 
 `modules/Collectibles.lua` is the one caller. `test_compat_collect` drives every member with its
 answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped

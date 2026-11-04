@@ -197,7 +197,11 @@ test("collectibles: Read fills a recipe's profession and known line", function()
     assertTrue(f.collect.known)
     assertEqual(NS.Collectibles.Verdict(f).verdict, "cantUse")
     m.professions = {}
-    assertNil(IF.Read(PATTERN).collect.hasProfession, "no professions answered: not claimed")
+    -- red under: an empty profession set read as no answer, so a professionless alt read New
+    assertFalse(IF.Read(PATTERN).collect.hasProfession, "no profession at all: not yours")
+    assertEqual(NS.Collectibles.Verdict(IF.Read(PATTERN)).verdict, "cantUse")
+    m.GetProfessions = nil
+    assertNil(IF.Read(PATTERN).collect.hasProfession, "no answer: not claimed")
     m.items[PATTERN].subClassID = BOOK_SUB
     assertNil(IF.Read(PATTERN).collect.skillLine, "a book needs no profession")
 end)
@@ -212,11 +216,26 @@ test("collectibles: Read tells cosmetics from gear, and spends the probes only w
         m.C_MountJournal.GetMountFromItem = function(id) calls[#calls + 1] = id; return mj(id) end
     end)
     local f = IF.Get(LOOK)
-    assertEqual(f.category, "cosmetic"); assertFalse(f.collect.known, "its appearance, not collected")
+    assertEqual(f.category, "cosmetic"); assertFalse(f.transmogKnown, "its appearance, not collected")
+    assertNil(f.collect.known, "no copy of the appearance flag to go stale")
     assertEqual(IF.Get(HELM).category, "equipment")
     assertNil(IF.Get(POTION).category, "not watched"); assertNil(IF.Get(POTION).collect)
     -- red under: the mount probe asked for every item, plain gear included
     assertEqual(table.concat(calls, ","), "6005,6007", "the cosmetic and the potion; never the helm")
+end)
+
+test("collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy", function()
+    local IF, m, NS = facts(function(m)
+        m.addItem(LOOK, item(ARMOR, COSMETIC_SUB, { equipLoc = "INVTYPE_HEAD", transmog = false }))
+    end)
+    local f = IF.Get(LOOK)
+    assertEqual(NS.Collectibles.Verdict(f).verdict, "newCollect")
+    m.items[LOOK].transmog = true
+    NS.addon.OnTransmogCollectionUpdated()
+    f = IF.Get(LOOK)
+    assertTrue(f.transmogKnown); assertEqual(NS.Collectibles.Verdict(f).verdict, "collected")
+    -- red under: Read copying transmogKnown into collect.known, which the event never refreshes
+    assertNil(f.collect.known, "the state lives in transmogKnown alone")
 end)
 
 test("collectibles: Read leaves a tier token's category to its flag and probes nothing", function()
