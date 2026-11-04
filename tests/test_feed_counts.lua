@@ -1,7 +1,7 @@
 -- tests/test_feed_counts.lua — the owner's two-Yoke run (feedback-2 spec §0): the exact chat lines of
 -- research/2026-10-11-feedback-2/03-chat-loot-lines.png through the real parser and the real feed.
--- Both Yokes are separate drops with the right looters; the reagent and the altar are hidden by
--- the gear-only rule (the reagent by the quality rule once gear-only is off) and counted by reason;
+-- Both Yokes are separate drops with the right looters; the reagent and the altar are in no watched
+-- item kind and are hidden (both Yokes by the kind rule once Equipment is off) and counted by reason;
 -- the currency and money lines never reach the feed. Every receipt the feed refuses is counted by
 -- reason too, the diagnostics report both, and /dw debug logs each under the FEED tag. A group
 -- header counts every drop: `2 drops · 1 shown`, its tooltip naming the hidden drop and its filter.
@@ -126,22 +126,24 @@ test("two yokes: both Yokes are separate drops with the right looters, the accen
     assertEqual(NS.LootParser.Stats().hits, 4, "four loot lines, no currency or money line")
 end)
 
-test("two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost", function()
+test("two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost", function()
     local _, m, LF = run()
     playLines(m)
     local st = LF.Stats()
-    assertEqual(st.hidden.notGear, 2, "Fading Voidwhisper x50 and Amani Ritual Altar")
+    assertEqual(st.hidden.notWatched, 2, "Fading Voidwhisper x50 and Amani Ritual Altar")
     assertNil(st.hidden.quality)
     assertEqual(next(st.refused), nil, "nothing refused")
 end)
 
-test("two yokes: with gear-only off, the common reagent is hidden by the quality rule", function()
+test("two yokes: with Equipment off, both Yokes are hidden by the item kind rule, the rest still unwatched", function()
     local NS, m, LF = run()
-    NS.addon.db.profile.feed.gearOnly = false
+    NS.addon.db.profile.feed.categories.equipment = false
     playLines(m)
     local st = LF.Stats()
-    assertEqual(st.hidden.quality, 1, "Fading Voidwhisper is Common")
-    assertNil(st.hidden.notGear)
+    assertEqual(#LF.Drops(), 0)
+    assertEqual(st.hidden.category, 2, "both Yokes")
+    assertEqual(st.hidden.notWatched, 2, "every item kind but Equipment on: a reagent and an altar are none of them")
+    assertNil(st.hidden.quality)
 end)
 
 test("two yokes: each hidden drop is logged with its reason under the FEED tag", function()
@@ -156,7 +158,7 @@ test("two yokes: each hidden drop is logged with its reason under the FEED tag",
     NS.Debug = debug
     local hits = 0
     for _, l in ipairs(lines) do
-        if l:find("hidden", 1, true) and l:find("notGear", 1, true) then hits = hits + 1 end
+        if l:find("hidden", 1, true) and l:find("notWatched", 1, true) then hits = hits + 1 end
     end
     assertEqual(hits, 2)
 end)
@@ -203,7 +205,7 @@ test("diagnostics: the drops section reports the hidden and the refused counts b
     NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("diagnostics")
     local text = table.concat(NS.DebugLog.buffer, "\n")
-    assertTrue(text:find("drops: hidden notGear=2", 1, true) ~= nil, text)
+    assertTrue(text:find("drops: hidden notWatched=2", 1, true) ~= nil, text)
     assertTrue(text:find("drops: refused pushed=1", 1, true) ~= nil, text)
 end)
 

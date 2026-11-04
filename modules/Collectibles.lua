@@ -26,7 +26,8 @@ local _, NS = ...
 -- ItemFacts keeps current: its `collect.known` stays nil (a copy would go stale once the
 -- appearance is learned), and Verdict and every later reader read `transmogKnown`.
 --
--- Not read by the feed yet (DW-CAT1): the category is computed for the next items to consume.
+-- The feed's filter reads `category` against the item kinds (NS.FeedFilter, DW-CAT2); the verdict
+-- is not in the judge path yet, so a collectible is still judged as gear (`unknown`).
 
 NS.Collectibles = NS.Collectibles or {}
 local CO = NS.Collectibles

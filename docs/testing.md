@@ -58,7 +58,7 @@ within `feed.add`, observed inside it on a Receive-only capture, mixed with top 
 load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
-into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
+into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles, step 12 retiring the deleted Friz, step 13 turning Gear only and Include tier tokens into the item kinds in every stored profile; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load; the item-020 guard,
@@ -352,7 +352,7 @@ member a candidate, no inspects for an untradeable one, pushed items; `GearChang
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
 stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
-altar hidden by the gear-only rule and the reagent by the quality rule with it off, the currency
+altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Drops and History),

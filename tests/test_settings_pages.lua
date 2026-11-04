@@ -428,9 +428,19 @@ test("feed: Items draws Minimum item level alone, over the item kinds", function
     local mode = find(drawn, "Dropdown", "Minimum item level")
     assertTrue(mode ~= nil, "the mode is drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
-    -- red under: the pre-020 "Tier tokens", which did not read as a switch (DRO-L10)
-    local gear, tokens = find(drawn, "CheckBox", "Gear only"), find(drawn, "CheckBox", "Include tier tokens")
-    assertTrue(gear ~= nil and tokens ~= nil and lineOf(drawn, gear) == lineOf(drawn, tokens), "Gear only | Include tier tokens")
+    -- DW-CAT2 (issue #13): the seven item kinds, two to a line in C.CATEGORIES' order.
+    -- red under: Gear only and Include tier tokens still drawn, or a kind left out.
+    assertTrue(find(drawn, "CheckBox", "Gear only") == nil and find(drawn, "CheckBox", "Include tier tokens") == nil)
+    local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics" }
+    local boxes = {}
+    for i, label in ipairs(labels) do
+        boxes[i] = find(drawn, "CheckBox", label)
+        assertTrue(boxes[i] ~= nil, label .. " is drawn")
+    end
+    for i = 1, #labels - 1, 2 do
+        assertTrue(lineOf(drawn, boxes[i]) == lineOf(drawn, boxes[i + 1]), labels[i] .. " | " .. labels[i + 1])
+    end
+    assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics on a line of its own")
 end)
 
 -- LibKa0s#67, options-ui-§22: a mode's own value is drawn while the mode picks it, not dimmed.
@@ -832,7 +842,7 @@ end)
 test("pages: a page's Defaults resets that page's rows and no other page's", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
-    Set("feed.gearOnly", false)
+    Set("feed.categories.mount", false)
     Set("trade.warnAt", 120)
     Set("situations.pvp.track", true)   -- off its default (PvP is untracked by default)
     Set("trade.rules.raid", "group")
@@ -840,7 +850,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
     local ctx = open(NS, m, "feed")
     ctx.panel.defaultsOnClick()
-    assertEqual(NS.Setting("feed.gearOnly"), NS.C.PROFILE.feed.gearOnly)
+    assertEqual(NS.Setting("feed.categories.mount"), NS.C.PROFILE.feed.categories.mount)
     -- red under: the Situations rows left on a page of their own (item 020: Drops' Defaults owns them)
     assertEqual(NS.Setting("situations.pvp.track"), NS.C.PROFILE.situations.pvp.track, "the situations table reset")
     assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")

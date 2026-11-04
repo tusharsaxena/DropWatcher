@@ -303,6 +303,30 @@ function NS.RetireFonts(t)
     return n
 end
 
+-- ── step 13: Gear only and Include tier tokens become the item kinds (DW-CAT2, issue #13) ────
+
+-- Frozen: the categories as of step 13. A category added later is not turned on by this step.
+local STEP13_CATEGORIES = { "equipment", "tierToken", "mount", "pet", "toy", "recipe", "cosmetic" }
+
+--- Step 13's work on one stored profile (categories design spec §5.2): `feed.gearOnly` and
+--- `feed.includeTokens` are replaced by the `feed.categories.<key>` rows. A stored `gearOnly =
+--- false` (every item class let through) turns every category on, cosmetics too (the owner's call:
+--- every category on); a stored `includeTokens` then carries into the Tier tokens kind, so a stored
+--- `false` still turns tokens off. Both keys go. Idempotent; a fresh profile, which stores neither
+--- (AceDB strips a default), passes through unchanged.
+--- @param profile table a raw stored profile
+function NS.MigrateItemKinds(profile)
+    local feed = type(profile) == "table" and profile.feed
+    if type(feed) ~= "table" then return end
+    local cats = type(feed.categories) == "table" and feed.categories or {}
+    if feed.gearOnly == false then
+        for _, key in ipairs(STEP13_CATEGORIES) do cats[key] = true end
+    end
+    if feed.includeTokens ~= nil then cats.tierToken = feed.includeTokens == true end
+    if next(cats) then feed.categories = cats end
+    feed.gearOnly, feed.includeTokens = nil, nil
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -328,6 +352,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.ResetProfileToSkin(profile) end },
     { to = 12, perProfile = true,        -- 11 -> 12: a stored Ka0s Friz Quadrata TT becomes Ka0s Ubuntu
       run = function(_, profile) NS.RetireFonts(profile) end },
+    { to = 13, perProfile = true,        -- 12 -> 13: Gear only and Include tier tokens become the item kinds
+      run = function(_, profile) NS.MigrateItemKinds(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

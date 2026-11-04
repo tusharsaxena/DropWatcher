@@ -202,7 +202,10 @@ line `In force now: Quality: Rare+`: the filter bar's label for where you stand,
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.
 
-**Items:** two subsections. **Item kinds:** Gear only | Include tier tokens (`Tier tokens` until item 020). **Item level:** Minimum item
+**Items:** two subsections. **Item kinds:** one switch per watched kind, two to a line in
+`C.CATEGORIES`' order: Equipment | Tier tokens, Mounts | Battle pets, Toys | Recipes and patterns,
+then Cosmetics (off by default) alone (DW-CAT2, issue #13; they replaced Gear only | Include tier
+tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item
 level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
 under my average in the relative mode, and neither under Off (LibKa0s#67).
 

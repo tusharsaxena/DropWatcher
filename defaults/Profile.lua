@@ -77,8 +77,13 @@ NS.C = {
                 floor           = 2,         -- Uncommon: the dynamic modes' least threshold
                 upgradeOverride = true,      -- an upgrade for me shows below the threshold
             },
-            gearOnly        = true,      -- armor, weapons, jewelry and trinkets only
-            includeTokens   = true,      -- tier tokens pass the gear-only filter
+            -- The item kinds the feed watches (issue #13, categories design spec §1, §5.1), keyed as
+            -- C.CATEGORIES; each is a `feed.categories.<key>` row. Step 13 replaced Gear only and
+            -- Include tier tokens with them.
+            categories = {
+                equipment = true, tierToken = true, mount = true, pet = true, toy = true, recipe = true,
+                cosmetic  = false,       -- a look to collect, never gear: off
+            },
             minIlvlMode     = "off",     -- off | absolute | relative
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be

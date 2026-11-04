@@ -244,7 +244,7 @@ long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot 
 press Defaults → both go back, with the Quality tab's rows; a Window value stays.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
 section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
-Turned on in row reads `Settings > Drops > Situations`. Items: `Gear only` | `Include tier tokens` on one line. Retention: the tab is still
+Turned on in row reads `Settings > Drops > Situations`. Items: the seven item kinds two to a line, `Equipment` | `Tier tokens` first and `Cosmetics` alone last (`Gear only` | `Include tier tokens` before DW-CAT2). Retention: the tab is still
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
@@ -629,7 +629,7 @@ minutes of its kill), `/dw diagnostics` shows `feed: encounter=<boss name>`; aft
 `[QUAL] hidden <link>: quality <q> below 3 (fixed, belowThreshold)` line and **no** `[INSPECT]`
 line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSPECT] inspect
 <Name-Realm>: cached` or `fresh` line within a few seconds (out of combat), then `[EVAL] re-judged
-1 drops after an inspect`. A potion or a reagent shows `[FEED] hidden <link> by <name>: notGear`.
+1 drops after an inspect`. A potion or a reagent shows `[FEED] hidden <link> by <name>: notWatched` (`notGear` before DW-CAT2).
 An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
 is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
 no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
@@ -813,9 +813,9 @@ each, both looters spelled as in chat; the group header reads `<run> · Mythic+ 
 Switch View to All → both rows show and the header reads `2 drops`. A boss whose every drop View:
 Interesting hides → its header still shows, `n drops · 0 shown`, with no row under it; Search for
 an item it does not hold → that group leaves the table. A reagent and a non-gear item
-(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
+(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notWatched` line each (`notGear` before DW-CAT2), no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
-`/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
+`/dw diagnostics` → its `drops` section reads `drops: hidden notWatched=2` (plus any others) and
 `drops: refused pushed=1`. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a

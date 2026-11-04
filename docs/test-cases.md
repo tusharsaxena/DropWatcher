@@ -77,7 +77,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (14)
+### test_database.lua (15)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -93,6 +93,7 @@ Total.
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
 
 ### test_schema.lua (11)
 
@@ -108,7 +109,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (24)
+### test_schema_rows.lua (25)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
@@ -117,6 +118,7 @@ Total.
 - rows: a value outside a row's list or range is refused and stores nothing
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
 - rows: the feed, the situations and the messaging edge read the rows
+- rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order
 - rows: the filter bar seeds a fresh tab from the rows
 - rows: the Quality control and the window's layout write through the seam (handoff from M3)
 - rows: Keep history for is account-wide, and a profile reset leaves it
@@ -1546,7 +1548,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (50)
+### test_feed.lua (51)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1577,7 +1579,8 @@ Total.
 - comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade
 - comparison: heirloom protection is yours alone; the looter's verdict is plain
 - gates: the filters run after the situation and before the verdict
-- filter: every rule of spec §6.3 (pure)
+- gates: an item kind turned off hides its drops as category, and Config reads every kind
+- filter: every rule of spec §6.3 and the item kinds (pure)
 - gates: the relative minimum item level reads your average equipped level
 - load: an uncached item waits for its facts; a second source merges meanwhile
 - load: an item that never loads is shown, judged unknown
@@ -1602,8 +1605,8 @@ Total.
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
-- two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost
-- two yokes: with gear-only off, the common reagent is hidden by the quality rule
+- two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost
+- two yokes: with Equipment off, both Yokes are hidden by the item kind rule, the rest still unwatched
 - two yokes: each hidden drop is logged with its reason under the FEED tag
 - refused: every receipt the feed turns away is counted by reason and logged under FEED
 - refused: a C_LootHistory drop already taken is counted as seen
@@ -2099,7 +2102,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (16)
+### test_sim_report.lua (17)
 
 - sim report: the owner's key run: the second drop is yours, on Drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -2107,6 +2110,7 @@ Total.
 - sim report: each drop's place: Drops (yours too), hidden by its gate, loading, cleared
 - sim report: the detail counts the drops and says which are hidden or otherwise placed
 - sim report: the tooltip names each drop, its looter and its tab or gate
+- sim report: the item kinds' gates are named, and the retired ones are gone
 - sim report: a Drops header no longer counts drops of yours apart
 - sim report regression key: Drops + hidden = every loot step's drops
 - sim report regression dungeon: Drops + hidden = every loot step's drops
@@ -2348,9 +2352,9 @@ Total.
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
-| test_database.lua | 14 |
+| test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 24 |
+| test_schema_rows.lua | 25 |
 | test_settings_pages.lua | 53 |
 | test_skin_setup.lua | 18 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2410,7 +2414,7 @@ Total.
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 50 |
+| test_feed.lua | 51 |
 | test_feed_counts.lua | 10 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -2434,7 +2438,7 @@ Total.
 | test_sim_events.lua | 21 |
 | test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
-| test_sim_report.lua | 16 |
+| test_sim_report.lua | 17 |
 | test_sim_panel.lua | 13 |
 | test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
@@ -2451,4 +2455,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2017** |
+| **Total** | **2021** |

@@ -153,13 +153,19 @@ local function tradeRules()
     return rules
 end
 
+-- The item kinds (`feed.categories.<key>`, issue #13) as the map FeedFilter reads.
+local function categories()
+    local kinds = {}
+    for _, cat in ipairs(C.CATEGORIES) do kinds[cat.key] = get("feed.categories." .. cat.key) end
+    return kinds
+end
+
 --- The settings the feed reads: `feed.*`, `comparison.*` and `trade.rules.*`, each through the
 --- schema seam (`feed.clearOnBossKill` is read at each kill instead).
 --- @return table cfg
 function LF.Config()
     return {
-        gearOnly = get("feed.gearOnly"), includeTokens = get("feed.includeTokens"),
-        minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
+        categories = categories(), minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
         relativeIlvl = get("feed.relativeIlvl"),
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),

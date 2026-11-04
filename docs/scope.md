@@ -74,10 +74,11 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
 
 The triage of [`superpowers/specs/2026-11-05-drop-watcher-categories-design.md`](superpowers/specs/2026-11-05-drop-watcher-categories-design.md)
 §1. Every item the client reads gets a category from `NS.Collectibles.CategoryOf`, first match in
-the order below, through the collection reads of `core/CompatCollect.lua`. The category is computed
-on every item's facts today; the feed's toggles, the collection verdict and the item lists that read
-it are the next items of the issue. Enum values are resolved by name (the brackets are the 12.x
-numbers).
+the order below, through the collection reads of `core/CompatCollect.lua`. The feed watches the
+kinds turned on under Drops › Items › Item kinds (the `feed.categories.<key>` rows, defaults below;
+they replaced Gear only and Include tier tokens, DW-CAT2): an item in no category is not watched.
+The collection verdict and the item lists are the next items of the issue. Enum values are resolved
+by name (the brackets are the 12.x numbers).
 
 | Category | Default | Detection | Collected or known | Shown as |
 |---|---|---|---|---|

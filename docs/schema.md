@@ -105,7 +105,7 @@ button and profiles reach them as any row.
 | `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
-| `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Items | armor, weapons, jewelry and trinkets only; tier tokens too |
+| `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
@@ -406,7 +406,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 12). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 13). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -426,5 +426,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 10 | 9 → 10, per profile: the item icon's border meets the skin once (DW-03; the skinning rollout's O2, skinning-§6). For a profile that stored an `icons` table, LibKa0s-Skin-1.0's `ResetToSkin` turns `icons.borderStyleFromSkin` on (called with `{ companions = true }`, LibKa0s v1.81.0's Skin minor 8, so a missing companion is set too and the reset never writes the library's sentinel into `icons.borderStyle`); the stored style, thickness and color stay, so turning the companion off later brings the player's own style back, and the stamp keeps that later choice from being reset again. A profile with no stored `icons` keeps the defaults, whose companion is already on. Without the library the companion is set directly (`NS.ResetIconBorderToSkin`) |
 | 11 | 10 → 11, per profile: the full skinning step (FS-DW-FLIP; the owner's rulings of 2026-11-01, existing profiles follow the skin). `Skin.FollowOnce` puts `NS.FULL_SKIN_KEYS` on the skin: every companion is set true and `window.tableFontFlags` takes `@skin`, whatever the player picked. No stored color or pick moves, so a companion turned off brings the player's own back. The record is `skin.fullSkinReset`, per profile, in the AceDB defaults with no row, so no Defaults path walks it; a companion turned off afterwards stays off, and a profile reset runs the step again against defaults. `NS.ResetProfileToSkin` runs from the ladder and again after it on every load and profile event, for a profile that arrives with no record |
 | 12 | 11 → 12, per profile: the deleted Friz becomes Ka0s Ubuntu (R3-FRIZ). LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT` (R3-L7) and WoW Default draws `Ka0s Ubuntu` in its place (R3-L6). `NS.RetireFonts` moves every stored string naming the deleted face, at any depth (`window.tableFont`, the skin's Font override), to `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT` stays. |
+| 13 | 12 → 13, per profile: Gear only and Include tier tokens become the item kinds (DW-CAT2, issue #13, categories design spec §5.2). A stored `feed.gearOnly = false` (every item class let through) turns every `feed.categories.<key>` on, cosmetics included; a stored `feed.includeTokens` then carries into `feed.categories.tierToken`, so a stored `false` still turns tokens off; both keys go. The key list is a frozen literal, so a kind added later is not turned on by this step. A fresh profile stores neither and passes through (`NS.MigrateItemKinds`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

@@ -145,6 +145,19 @@ local VIEW_ROWS = {
     { key = "upgrade", label = L["Upgrade for me"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] },
 }
+-- Drops › Items › Item kinds (issue #13, categories design spec §5.1): one switch per category, in
+-- C.CATEGORIES' order (test_schema_rows pins the two lists to each other).
+local CATEGORY_ROWS = {
+    { key = "equipment", label = L["Equipment"], tip = L["Armor, weapons, jewelry and trinkets."] },
+    { key = "tierToken", label = L["Tier tokens"],
+      tip = L["Tokens you turn in for a tier piece, judged against what you wear in that slot."] },
+    { key = "mount", label = L["Mounts"], tip = L["Mount items, marked new or already collected."] },
+    { key = "pet", label = L["Battle pets"], tip = L["Companion pet items, marked new or already collected."] },
+    { key = "toy", label = L["Toys"], tip = L["Toys, marked new or already collected."] },
+    { key = "recipe", label = L["Recipes and patterns"],
+      tip = L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] },
+    { key = "cosmetic", label = L["Cosmetics"], tip = L["Cosmetic armor and weapons: a look to collect, never gear."] },
+}
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
 local SORTS    = choices{ "newest", L["Newest"], "oldest", L["Oldest"], "ilvl", L["Item level"], "gain", L["Gain"] }
@@ -302,10 +315,9 @@ local function feed()
         with(quality, { shownWhen = qualityValueShown({ "dynamicSlot", "dynamicCharacter" }) }))
 
     local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
-    bool("feed.gearOnly", F.gearOnly, L["Gear only"],
-        L["List armor, weapons, jewelry and trinkets only."], kinds)
-    bool("feed.includeTokens", F.includeTokens, L["Include tier tokens"],
-        L["List tier tokens too."], kinds)
+    for _, row in ipairs(CATEGORY_ROWS) do
+        bool("feed.categories." .. row.key, F.categories[row.key], row.label, row.tip, kinds)
+    end
     local ilvl = with(kinds, { subgroup = L["Item level"] })
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
         L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."],

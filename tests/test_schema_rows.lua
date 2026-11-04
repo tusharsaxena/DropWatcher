@@ -21,7 +21,7 @@ local function specPaths()
         "autoOpen",
         "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
-        "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
+        "feed.quality.upgradeOverride", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
         "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
@@ -142,6 +142,31 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertEqual(NS.TradeTimer.WarnAt(), 120)
 end)
 
+-- DW-CAT2 (issue #13, categories design spec §5.1): one Item kinds switch per category, in
+-- C.CATEGORIES' order, on Drops › Items; Gear only and Include tier tokens are gone.
+-- red under: a category with no row, the rows out of order, or a retired row left behind.
+test("rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order", function()
+    local NS = T.newAddon()
+    local L = NS.L
+    local order = {}
+    for _, row in ipairs(NS.addon.Settings.Rows) do
+        local key = row.path:match("^feed%.categories%.(.+)$")
+        if key then
+            order[#order + 1] = key
+            assertEqual(row.type, "bool", key)
+            assertEqual(row.page, "feed", key); assertEqual(row.group, L["Items"], key)
+            assertEqual(row.subgroup, L["Item kinds"], key)
+            assertEqual(row.default, NS.C.PROFILE.feed.categories[key], key .. ": the profile's default")
+        end
+    end
+    assertEqual(#order, #NS.Constants.CATEGORIES)
+    for i, cat in ipairs(NS.Constants.CATEGORIES) do assertEqual(order[i], cat.key, "row " .. i) end
+    assertFalse(NS.C.PROFILE.feed.categories.cosmetic, "cosmetics off by default")
+    assertNil(NS.SchemaRuntime.FindRow("feed.gearOnly")); assertNil(NS.SchemaRuntime.FindRow("feed.includeTokens"))
+    assertNil(NS.C.PROFILE.feed.gearOnly); assertNil(NS.C.PROFILE.feed.includeTokens)
+    assertFalse(NS.SchemaRuntime.Set("feed.categories.mount", "no"), "a switch takes a boolean alone")
+end)
+
 test("rows: the filter bar seeds a fresh tab from the rows", function()
     local NS = T.bootAddon()
     local FB = NS.WindowFilterBar
@@ -203,6 +228,9 @@ test("rows: `/dw set` reaches a hand-written row", function()
     assertEqual(NS.addon.db.profile.feed.quality.floor, 3)
     NS.addon:OnSlashCommand("set situations.solo.track false")   -- off its default (tracked, DW-06)
     assertEqual(NS.addon.db.profile.situations.solo.track, false)
+    NS.addon:OnSlashCommand("set feed.categories.cosmetic true")   -- an item kind, from the CLI (DW-CAT2)
+    assertEqual(NS.Setting("feed.categories.cosmetic"), true)
+    assertEqual(NS.LootFeed.Config().categories.cosmetic, true, "the feed reads what the CLI wrote")
 end)
 
 test("rows: degraded, the hand-written rows still read, write and refuse", function()
@@ -533,9 +561,15 @@ local PINNED_ROWS = {
     { "comparison.weights", "map", "{}" },
     { "enabled", "bool", "true" },
     { "feed.clearOnBossKill", "bool", "false" },
+    -- DW-CAT2 (issue #13): the item kinds replace Gear only and Include tier tokens (step 13).
+    { "feed.categories.cosmetic", "bool", "false" },
+    { "feed.categories.equipment", "bool", "true" },
+    { "feed.categories.mount", "bool", "true" },
+    { "feed.categories.pet", "bool", "true" },
+    { "feed.categories.recipe", "bool", "true" },
+    { "feed.categories.tierToken", "bool", "true" },
+    { "feed.categories.toy", "bool", "true" },
     { "feed.content", "string", "\"session\"" },
-    { "feed.gearOnly", "bool", "true" },
-    { "feed.includeTokens", "bool", "true" },
     { "feed.minIlvl", "number", "0" },
     { "feed.minIlvlMode", "string", "\"off\"" },
     { "feed.quality.fixed", "number", "3" },
