@@ -344,7 +344,7 @@ Tier tokens are **not** refused. They are judged as gear, so Ask, toast, AutoAsk
 
 ---
 
-## 7. Tier tokens (DW-C4)
+## 7. Tier tokens (DW-CAT4)
 
 ### 7.1 Which slot the token makes (`NS.TierTokens.SlotOf`, called from ItemFacts)
 
@@ -368,7 +368,7 @@ The rungs run in order, and the first that answers wins:
 
 ---
 
-## 8. Simulator and test mode (DW-C6)
+## 8. Simulator and test mode (DW-CAT6)
 
 - **SimPool.** It drops non-gear journal entries today (`C.SLOT_PLAN[e.equipLoc]` filters, lines 121 and 152). It now keeps them in an `extras` bucket keyed by category: `EJ_GetLootInfoByIndex` lists mounts, pets, toys and recipes with an empty slot. `P.COLLECTIBLE_SAMPLES` is a curated item-ID list per category, plus tier tokens, used when the journal yields none. **Verify every ID in the client with `/dw add item:<id>` at implementation.** IDs must not be guessed into the code. Sim drops run through the real engine, so their facts come from ItemFacts and CompatCollect. The seam's live fallback answers the collection reads.
 - **SimEvents loot bursts.** `E.Plan` draws one drop in eight from `extras` when it is non-empty, through the simulation's own random source.
@@ -458,12 +458,12 @@ Each item is one commit that passes the gate, with the subject opening `DW-Cn: `
 
 The original C3 touched about 20 modules and their suites, too much for one reviewable commit, so it is split. This needs **one new row in `items.tsv`, `DW-C7`**, and two dependency corrections. Those are the orchestrator's edits:
 
-- `DW-C7`: milestone M3, depends on `DW-C3`.
-- `DW-C4` depends on `DW-C3`, not `DW-C2`: it extends `CollectCells`.
-- `DW-C5` depends on `DW-C3`: the whitelisted uncategorized verdict needs `CollectCells` to render.
-- `DW-C6` depends on `DW-C3,DW-C4,DW-C5,DW-C7`.
+- `DW-C7`: milestone M3, depends on `DW-CAT3`.
+- `DW-CAT4` depends on `DW-CAT3`, not `DW-CAT2`: it extends `CollectCells`.
+- `DW-CAT5` depends on `DW-CAT3`: the whitelisted uncategorized verdict needs `CollectCells` to render.
+- `DW-CAT6` depends on `DW-CAT3,DW-CAT4,DW-CAT5,DW-C7`.
 
-**DW-C1: triage, detection, Compat**
+**DW-CAT1: triage, detection, Compat**
 - Add `core/CompatCollect.lua` (nine members: everything but `TierTokenSlot`), with its TOC line before `core/SimSetup.lua` and its LOAD-BEARING annotation. Update the SimSetup TOC annotation and the `core/SimSetup.lua` header.
 - `core/Constants.lua`: `ITEM_CLASS.RECIPE`, `MISC_SUBCLASS`, `RECIPE_SUBCLASS`, `RECIPE_SKILL_LINE`, `CATEGORIES` (the ordered `{ key, collectible }` list), `TIER_SLOTS` and an empty `TIER_TOKENS`.
 - Add `modules/Collectibles.lua` with `CategoryOf`, `Verdict` and `IsCollectible` (pure) and `Read` (edge), and its TOC line and annotation after `ItemFacts`.
@@ -472,7 +472,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Docs: `docs/compat-layer.md`, `docs/scope.md` (the triage table).
 - No behavior changes yet: the category is computed but not read.
 
-**DW-C2: category toggles replacing gearOnly, migration, FeedFilter, CLI parity**
+**DW-CAT2: category toggles replacing gearOnly, migration, FeedFilter, CLI parity**
 - Rows: `defaults/Profile.lua`, `settings/SchemaRows.lua`.
 - The migration step in `core/Database.lua`.
 - `modules/FeedFilter.lua`: the category part of section 4.1. The lists come in C5.
@@ -483,7 +483,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Docs: `docs/schema.md`, `docs/settings-panel.md`, `docs/module-map.md`.
 - **The interim state.** In this commit collectibles pass the filter but are still judged by `Evaluate`, so they read `unknown` / `notGear`. Ask stays off because `AskTemplate` finds no useful verdict. That is acceptable on the branch: with the default categories, mounts and the rest show as `unknown`. If an interim build must never show them, set the four collectible defaults to off in C2 and on in C3 (Q6).
 
-**DW-C3: the collection verdict in the judge path, feed-only refusals, Me and Them cells, history**
+**DW-CAT3: the collection verdict in the judge path, feed-only refusals, Me and Them cells, history**
 - The edge half of `modules/Collectibles.lua` (events, coalescing, `Changed`), and `IF.RereadCollections` in `modules/ItemFacts.lua`.
 - `modules/LootFeed.lua`: the `judgeMe`, `judgeCandidates`, `judgeLooter`, `estimate` and `mayChange` hooks, about 20 lines.
 - `modules/TradeRules.lua` and `modules/QualityGate.lua` (`newCollect` override).
@@ -504,7 +504,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Tests: `test_window*.lua`, `test_side_cells.lua`, `test_compact_cards.lua`, `test_detail_card.lua`, `test_row_tooltip.lua`, `test_history_card.lua`, `test_drops_strip.lua`, `test_diagnostics.lua`, `test_schema_rows.lua`.
 - Docs: `docs/settings-panel.md` (the View row), `docs/module-map.md`.
 
-**DW-C4: tier token slot, class and level verdict**
+**DW-CAT4: tier token slot, class and level verdict**
 - Add `modules/TierTokens.lua` (pure: `SlotOf`, `Fold`; TOC before `Evaluate`, with its annotation).
 - `modules/ItemFacts.lua`: `tokenSlot`, `isTierToken` from the table, and the `equipLoc` override, in the order of section 3.1.
 - `modules/Evaluate.lua`: the `usable` token branch, the scorer skip in `compare`, and the `any` fold hook in `run`.
@@ -515,7 +515,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Tests: `tests/test_tier_token.lua`, `test_evaluate.lua`, `test_item_facts.lua`, `test_feed.lua`, `test_gear.lua` (line 213 still holds).
 - Docs: `docs/known-limitations.md`, `docs/common-tasks.md`, `docs/compat-layer.md` (the count, now 10).
 
-**DW-C5: whitelist and blacklist**
+**DW-CAT5: whitelist and blacklist**
 - Add `modules/ItemLists.lua`.
 - Add `settings/ListEditors.lua`: the IdList host tab with its secondary strip. It stays out of `PageEditors.lua` (593 lines) and goes in the TOC after it, with its annotation.
 - `settings/Pages.lua`: the Drops page's `tabs` and its Defaults tooltip.
@@ -528,7 +528,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Tests: `tests/test_item_lists.lua`, `tests/test_item_lists_panel.lua`, `test_feed.lua`, `test_quality_gate.lua`, `test_slash.lua`, `test_schema_rows.lua`, `tests/run.lua`.
 - Docs: `docs/schema.md` (the value route), `docs/settings-panel.md`, `docs/slash-dispatch.md`, `docs/ARCHITECTURE.md` (Slash Commands, Settings Schema).
 
-**DW-C6: simulator and test-mode samples, smoke tests, docs**
+**DW-CAT6: simulator and test-mode samples, smoke tests, docs**
 - `modules/SimPool.lua` (`extras`, `COLLECTIBLE_SAMPLES`), `modules/SimEvents.lua` (the burst mix), `settings/SimVerbs.lua` (`drop`), `modules/TestData.lua` (`ev` carrying the collect fields; the six rows and the history group), `modules/TestMode.lua`.
 - Tests: `test_sim_pool.lua`, `test_sim_events.lua`, `test_test_mode.lua`.
 - Docs: `docs/smoke-tests.md` (`COLL-*`, `ITEM-6..7`, the Index), `docs/testing.md`, `docs/test-cases.md`, `README.md`, `docs/ARCHITECTURE.md` and `docs/slash-dispatch.md` (the sim verb count).
@@ -617,5 +617,5 @@ These are the changes the review made to the original draft, checked against the
 18. **TOC and SimSetup.** The SimSetup TOC annotation and the `core/SimSetup.lua` header both name the wrapped compat files and must be updated. Every new TOC line needs its annotation (2, 13).
 19. **TestData** rows are never judged, so the collect verdict must be in `me` (through `ev`), not only in the facts (8).
 20. **Smoke IDs.** `TOKEN-*` became `ITEM-6..7`, continuing the Item facts range. Index rows were added, along with `docs/slash-dispatch.md` and `docs/midnight-quirks.md` (10).
-21. **Commit size.** C3 was too large and was split into DW-C3 and the new DW-C7. C4 and C5 depend on C3 (`CollectCells`). The `items.tsv` changes are flagged for the orchestrator (11, 13).
+21. **Commit size.** C3 was too large and was split into DW-CAT3 and the new DW-C7. C4 and C5 depend on C3 (`CollectCells`). The `items.tsv` changes are flagged for the orchestrator (11, 13).
 22. **Smaller fixes.** `Config` builds `categories` like `tradeRules()`. Filtering applies to new drops only, and restored drops skip the filter (0, 4.2, 14). First Aid maps to nil. Profession tools, gems and other classes were added to the out-of-scope list. `Battlepet [17]` was dropped as a detection rung. The `dynamicSlot` reason `emptySlot` and the `dynamicCharacter` behavior for collectibles are noted (4.3). A perf run was added to C1. Q8 was added, because Offer, Announce and Post go beyond the owner's "no Ask, toast, AutoAsk".

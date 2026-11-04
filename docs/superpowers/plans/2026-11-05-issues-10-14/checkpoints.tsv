@@ -1,1 +1,3 @@
 date	milestone	evidence
+2026-11-05	M1	DW-I10 655d19d + DW-I11 9275503; review clean; suite 1967/0/1, lint 0/0
+2026-11-05	M2	LK-T1 3844153..8b27da4 (stack, 27+ cases, 4 review fixes) + LK-T2 afd2aba,dab6407 (v1.87.0, no tag); LibKa0s suite 4167+/0/3 green

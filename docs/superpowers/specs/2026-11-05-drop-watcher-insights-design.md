@@ -18,7 +18,7 @@ Inputs:
 - the tab names the period it covers (`history.retentionDays`);
 - built after #13.
 
-**Pre-flight at DW-N1 start:** confirm that the DW-T1 re-vendor (v1.87.0) left `Charts.lua` at minor 1 and `ChartsRender.lua` at render minor 1. If either moved, re-read the API doc before DW-N2. Also confirm the field name and key set DW-C3 writes on a History entry for #13's category. This design assumes `e.category`.
+**Pre-flight at DW-N1 start:** confirm that the DW-T1 re-vendor (v1.87.0) left `Charts.lua` at minor 1 and `ChartsRender.lua` at render minor 1. If either moved, re-read the API doc before DW-N2. Also confirm the field name and key set DW-CAT3 writes on a History entry for #13's category. This design assumes `e.category`.
 
 ---
 
@@ -75,7 +75,7 @@ Three findings shape the definitions below.
 | `difficulty(g)` | `g.difficulty` | nil: the key `"none"`, shown as "No difficulty" |
 | `situation(g)` | `g.situation` | nil: `"unknown"` |
 | `quality(e)` | `e.quality` | nil: `"unknown"` |
-| `category(e)` | `e.category` (the key DW-C3 writes) | nil: **`"equipment"`** (see Q3) |
+| `category(e)` | `e.category` (the key DW-CAT3 writes) | nil: **`"equipment"`** (see Q3) |
 | `day(e)` | local midnight of `e.at`: `date("*t")`, then `time{...hour=0}`. This is DST-safe, as DPS Race's `midnight` is | |
 | `mine(e)` | `e.isMine == true` | |
 | `upgradeForMe(e)` | `e.me.verdict == "upgrade"` or `NS.OffSpec.Of(e.me).verdict == "upgrade"` | |
@@ -517,7 +517,7 @@ The run's resume tooling marks an item done when a commit whose subject opens wi
 - **DW-N1:** the pure modules.
   - New: `modules/InsightsFilters.lua`, `modules/InsightsStats.lua`, `tests/test_insights_filters.lua`, `tests/test_insights_stats.lua`.
   - Edit: `DropWatcher.toc` (both modules after `modules\HistoryRetention.lua`, each with its TOC comment); `tests/run.lua`; `tests/perf.lua` (`insights.compute`).
-- Depends on #13 (DW-C6) for `category` and the collectible verdict keys. Read them from #13's constants, falling back to `equipment`.
+- Depends on #13 (DW-CAT6) for `category` and the collectible verdict keys. Read them from #13's constants, falling back to `equipment`.
 
 ### DW-N2: tab shell, filter bar, cards, period caption
 - **DW-N2.1** (only if needed) peel the tab registry to `modules/WindowTabs.lua` (§4.1).
@@ -644,7 +644,7 @@ These are corrections made against the code at `655d19d` and against issue #12:
     - localization-§6 placement: shared keys go with their first reader (`enUS.lua`, `enUS_Tooltips.lua`), the topic file gets a `LOAD-BEARING` TOC line, and the below-threshold split is flagged as Q8;
     - TOC comments for every new line.
 12. **Items too large for one commit.** DW-N1, N2, N3 and N4 are split into `<ID>.<n>:` sub-commits, which the resume tooling's `<ID>: ` check does not count, with the plain ID on the last commit.
-13. **Owner decisions:** every issue candidate is still built (the owner's "build every candidate"). Q3's "owner" attribution is not in the run plan's Decisions, so it is marked to confirm and record. A pre-flight was added to confirm the Charts minor after the DW-T1 re-vendor and the field name DW-C3 writes for `category`.
+13. **Owner decisions:** every issue candidate is still built (the owner's "build every candidate"). Q3's "owner" attribution is not in the run plan's Decisions, so it is marked to confirm and record. A pre-flight was added to confirm the Charts minor after the DW-T1 re-vendor and the field name DW-CAT3 writes for `category`.
 14. **Smaller fixes:**
     - `DEPENDENCIES.md` does not list majors, so it needs no change;
     - `State.insightsFilters` is declared in `core/State.lua`;
