@@ -1678,7 +1678,7 @@ Total.
 - collect feed: the Offer panel never opens for your collectible, and /dw offer says why
 - collect feed: auto-ask never schedules a collectible
 
-### test_item_lists.lua (11)
+### test_item_lists.lua (12)
 
 - item lists: ParseId reads a number, a link, item:<id> and a number as text, and nothing else
 - item lists: Add, Remove, List and Contains, in ID order, with already and notListed
@@ -1687,6 +1687,7 @@ Total.
 - item lists: `/dw whitelist add|remove|list` writes through the writer and says what it did
 - item lists: the verbs are in NS.COMMANDS and the help, and refused while disabled
 - item lists: `/dw get` shows a list as its size, and a named `/dw reset` empties it
+- item lists: `/dw set` on a list is refused by the generic verb, and the list is unchanged
 - item lists: Never watch hides gear as blacklist, and beats Always watch on an overlap
 - item lists: Always watch shows an item of no kind as a feed-only unknown on its list
 - item lists: Always watch passes a kind turned off and the quality gate, gear judged as gear
@@ -2499,7 +2500,7 @@ Total.
 | test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 13 |
-| test_item_lists.lua | 11 |
+| test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
@@ -2539,4 +2540,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2085** |
+| **Total** | **2086** |

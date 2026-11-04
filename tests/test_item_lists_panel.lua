@@ -62,7 +62,7 @@ test("item lists panel: a sub-tab click draws the other list, and a stale pointe
     assertEqual(ids(specs[#specs].entries()), "400", "Never watch's own entries")
     NS.addon.Settings.ListEditors.ItemListsTab(ctx)
     assertEqual(ctx.activeSubTab[TAB], "blacklist", "kept across a render")
-    ctx.activeSubTab[TAB] = "greylist"
+    ctx.activeSubTab[TAB] = "otherlist"
     NS.addon.Settings.ListEditors.ItemListsTab(ctx)
     -- red under: the pointer trusted as it stands
     assertEqual(ctx.activeSubTab[TAB], "whitelist")

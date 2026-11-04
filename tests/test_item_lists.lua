@@ -1,9 +1,10 @@
 -- tests/test_item_lists.lua — the Always watch and Never watch item lists (issue #13, categories
 -- design spec §4.1-§4.3, §5.3): NS.ItemLists, their one writer (ParseId, Add, Remove, List, the
 -- refusals, every write a whole copy through the seam); the CLI's `/dw whitelist|blacklist`
--- (add, remove, list, the refusals, the disabled refusal, `/dw get` and a named reset); and the
--- lists through the feed (Never watch hides gear and beats Always watch; Always watch shows an item
--- of no kind as a feed-only `unknown`, passes the kinds and the quality gate, never the situation).
+-- (add, remove, list, the refusals, the disabled refusal, `/dw get`, `/dw set`'s refusal and a
+-- named reset); and the lists through the feed (Never watch hides gear and beats Always watch;
+-- Always watch shows an item of no kind as a feed-only `unknown`, passes the kinds and the quality
+-- gate, never the situation).
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -74,10 +75,10 @@ test("item lists: Add, Remove, List and Contains, in ID order, with already and 
     assertFalse(ok); assertEqual(why, "notListed")
     ok, why = IL.Add("whitelist", "junk")
     assertFalse(ok); assertEqual(why, "badId")
-    ok, why = IL.Add("greylist", 1)
+    ok, why = IL.Add("otherlist", 1)
     assertFalse(ok); assertEqual(why, "badList")
     assertEqual(table.concat(IL.List("whitelist"), ","), "200,300")
-    assertEqual(#IL.List("greylist"), 0)
+    assertEqual(#IL.List("otherlist"), 0)
 end)
 
 -- red under: Add moving the ID across, or not checking the other list at all
@@ -187,6 +188,20 @@ test("item lists: `/dw get` shows a list as its size, and a named `/dw reset` em
     NS.addon:OnSlashCommand("reset feed.whitelist")
     -- red under: resetExempt vetoing a named single-row reset as well as the page's sweep
     assertEqual(#NS.ItemLists.List("whitelist"), 0)
+end)
+
+test("item lists: `/dw set` on a list is refused by the generic verb, and the list is unchanged", function()
+    local NS, _, m = T.enableAddon()
+    NS.ItemLists.Add("whitelist", 301)
+    m.prints = {}
+    NS.addon:OnSlashCommand("set feed.whitelist 300")
+    -- The library's parser has no reading for a `map` row: the generic verb refuses, and the list's
+    -- one writer (NS.ItemLists, its `onOther` check included) stays the only way in (spec §5.3).
+    -- red under: a parse or set that wrote the row past NS.ItemLists
+    assertEqual(#m.prints, 2, table.concat(m.prints, " || "))
+    assertTrue(printed(m, "Invalid value for feed.whitelist"), tostring(m.prints[1]))
+    assertTrue(printed(m, "unknown setting type 'map'"), tostring(m.prints[2]))
+    assertEqual(table.concat(NS.ItemLists.List("whitelist"), ","), "301")
 end)
 
 -- ---------------------------------------------------------------------------------------------
