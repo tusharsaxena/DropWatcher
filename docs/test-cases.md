@@ -1982,7 +1982,7 @@ Total.
 - insights rows: the period caption names the kept window, Never delete and a shorter range
 - insights rows: the empty line says how long drops are kept, or that the filters match nothing
 
-### test_window_insights.lua (17)
+### test_window_insights.lua (19)
 
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
@@ -1995,9 +1995,11 @@ Total.
 - insights tab: an unrelated repaint computes nothing; HistoryChanged and test mode off do
 - insights tab: a resize lays out again without computing
 - insights tab: the strip names the period, and follows the retention
+- insights tab: a retention change that deletes nothing repaints the caption on its own
 - insights tab: test mode fills the cards from the sample history
 - insights tab: with no history the cards hide and one line says how long drops are kept
 - insights tab: each recompute logs one line under UI
+- insights tab: compact's empty line wraps inside the pane's width
 - insights tab: without LibKa0s-Charts-1.0 the bar and the strip draw and one line says why
 - insights tab: without LibKa0s-Widgets-1.0 no dropdown draws and the cards still do
 - insights tab: compact lays the cards out two to a row and wraps the bar
@@ -2620,7 +2622,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 9 |
-| test_window_insights.lua | 17 |
+| test_window_insights.lua | 19 |
 | test_toast.lua | 49 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
@@ -2649,4 +2651,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2175** |
+| **Total** | **2177** |

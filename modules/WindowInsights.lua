@@ -152,7 +152,11 @@ local function build(p)
     buildScroll(p)
     p.empty = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     NS.Skin.Text(p.empty, "text.muted")
-    p.empty:SetPoint("CENTER", p.scroll, "CENTER", 0, 0)
+    -- Held between both sides of the scroll and wrapped, so a long line fits compact's width.
+    p.empty:SetPoint("LEFT", p.scroll, "LEFT", 2 * PAD, 0)
+    p.empty:SetPoint("RIGHT", p.scroll, "RIGHT", -2 * PAD, 0)
+    p.empty:SetJustifyH("CENTER")
+    p.empty:SetWordWrap(true)
     p.empty:Hide()
     if NS.Charts then
         p.ctx = NS.Charts:New(p.content, NS.ChartsHost())

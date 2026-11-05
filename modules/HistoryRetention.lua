@@ -276,6 +276,14 @@ function R.Answer(data, accepted)
     return true
 end
 
+-- A window taken: what shows it (the History footer, the Insights caption and Date ranges) repaints
+-- on the next frame, even when it deleted nothing and no HistoryChanged went out.
+local function take(days)
+    confirmed = days
+    local W = NS.Window
+    if W and W.ScheduleRepaint then W.ScheduleRepaint() end
+end
+
 --- The row's onChange: a window that deletes nothing is taken at once; one that would delete asks
 --- first (prunes at once when nothing can ask), and until it is answered the store keeps the agreed
 --- window, so a popup that is never answered deletes nothing, now or at the next login.
@@ -284,10 +292,10 @@ function R.OnChanged(days)
     if restoring then return end
     local groups, drops = R.CountAll(days)
     retirePending()
-    if groups == 0 then confirmed = days; return end
+    if groups == 0 then take(days); return end
     if type(StaticPopup_Show) ~= "function" then
         R.PruneAll(days)
-        confirmed = days
+        take(days)
         return
     end
     writeQuietly(confirmed or R.DEFAULT_DAYS)
@@ -305,7 +313,7 @@ function R.Confirm(days, accepted)
     if accepted and num(days) then
         if R.Days() ~= days then writeQuietly(days) end
         R.PruneAll(days)
-        confirmed = days
+        take(days)
         return
     end
     local keep = confirmed or R.DEFAULT_DAYS

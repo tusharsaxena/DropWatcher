@@ -169,21 +169,39 @@ end)
 test("insights tab: a resize lays out again without computing", function()
     local NS, f, _, d = insights({ samples = true })
     local n = d.computes
+    local w, x2 = d.cards[1].frame:GetWidth(), d.cards[2].frame.__points[1][4]
+    local key = d.pane.layoutKey
     f:SetWidth(1200)
     NS.Window.Refresh()
-    assertEqual(NS.WindowInsights.Drawn().computes, n)
+    d = NS.WindowInsights.Drawn()
+    assertEqual(d.computes, n, "the data is not computed again")
+    assertTrue(d.pane.layoutKey ~= key, "a fresh layout key")
+    assertTrue(d.cards[1].frame:GetWidth() > w, "the cards widen: " .. w .. " -> " .. d.cards[1].frame:GetWidth())
+    assertTrue(d.cards[2].frame.__points[1][4] > x2, "the second card moves right")
 end)
 
 -- ── the strip, the cards and the empty lines ────────────────────────────────────────────────
 
 test("insights tab: the strip names the period, and follows the retention", function()
-    local NS, _, _, d = insights({ samples = true })
+    local NS, _, m, d = insights({ samples = true })
     assertTrue(d.strip.info:GetText():find("^Kept for 30 days: ") ~= nil, d.strip.info:GetText())
     assertEqual(d.strip.reset.label and d.strip.reset.label:GetText() or "Reset filters", "Reset filters")
     NS.SchemaRuntime.Set("global.history.retentionDays", 0)
-    NS.Window.Refresh()
+    m.advance(0.1)
     d = NS.WindowInsights.Drawn()
     assertTrue(d.strip.info:GetText():find("^Every kept day: since ") ~= nil, d.strip.info:GetText())
+end)
+
+-- No test mode here: its own bus traffic repaints the window and would hide a missing repaint.
+test("insights tab: a retention change that deletes nothing repaints the caption on its own", function()
+    local NS, _, m, d = insights()
+    assertTrue(d.strip.info:GetText():find("^Kept for 30 days: ") ~= nil, d.strip.info:GetText())
+    assertEqual(NS.HistoryRetention.CountAll(180), 0, "a longer window deletes nothing")
+    NS.SchemaRuntime.Set("global.history.retentionDays", 180)
+    m.advance(0.1)
+    d = NS.WindowInsights.Drawn()
+    assertTrue(d.strip.info:GetText():find("^Kept for 180 days: ") ~= nil, d.strip.info:GetText())
+    assertEqual(d.empty:GetText(), "No history yet. Drops your group receives are kept for 180 days.")
 end)
 
 test("insights tab: test mode fills the cards from the sample history", function()
@@ -214,6 +232,19 @@ test("insights tab: each recompute logs one line under UI", function()
         if l:find("insights: 0 drops, 0 after filters", 1, true) then n = n + 1 end
     end
     assertEqual(n, 1)
+end)
+
+test("insights tab: compact's empty line wraps inside the pane's width", function()
+    local _, _, _, d = insights({ mode = "compact" })
+    local e = d.empty
+    assertTrue(e:IsShown())
+    local anchors = {}
+    for _, pt in ipairs(e.__points) do anchors[pt[1]] = pt end
+    assertTrue(anchors.LEFT ~= nil and anchors.RIGHT ~= nil, "held between both sides")
+    assertEqual(anchors.LEFT[2], d.pane.scroll); assertEqual(anchors.RIGHT[2], d.pane.scroll)
+    assertTrue(anchors.LEFT[4] > 0 and anchors.RIGHT[4] < 0, "inset from both sides")
+    assertTrue(e.__wordWrap == true, "wraps")
+    assertEqual(e:GetJustifyH(), "CENTER")
 end)
 
 -- ── degraded ────────────────────────────────────────────────────────────────────────────────
