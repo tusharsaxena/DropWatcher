@@ -499,6 +499,34 @@ test("sim trade: your drop traded away and another's received land in the sessio
     assertEqual(#m.tradeCalls, 0, "no real trade")
 end)
 
+test("sim trade: a sent ask and offer, then the trades, stamp the session's entries and fill Insights' cards", function()
+    -- issue #12 (Insights design spec §4.3): the simulation exercises the stamps, settledAt and got end to end
+    local NS, m, members = sim()
+    local E, H = NS.SimEvents, NS.History
+    E.Configure({ endingSoonCount = 0 })
+    E.Loot(1, "me")
+    E.Loot(1, members[2].name)
+    m.advance(3)
+    local mine, theirs
+    for _, rec in ipairs(drops(NS)) do
+        if rec.isMine then mine = rec else theirs = rec end
+    end
+    NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, theirs.id, "sent", "ask")
+    NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, mine.id, "sent", "offer")
+    local asked, offered = H.EntryOf(theirs.id), H.EntryOf(mine.id)
+    assertTrue(asked.askedAt ~= nil and offered.offeredAt ~= nil, "both sends stamped")
+    assertTrue(E.Trade(theirs.id)); assertTrue(E.Trade(mine.id))
+    assertTrue(asked.settledAt ~= nil and asked.got ~= nil, "received: settled, its verdict frozen")
+    assertTrue(offered.settledAt ~= nil and offered.got == nil, "traded away: settled, nothing frozen")
+    local IF, IS = NS.InsightsFilters, NS.InsightsStats
+    local rows = IF.Rows(NS.SimHost.HistoryLog().groups)
+    local t = IS.Compute(rows, IF.Period(rows, 30, "all", m.time())).totals
+    assertEqual(t.asks, 1); assertEqual(t.received, 1); assertEqual(t.askHits, 1); assertEqual(t.success, 1)
+    assertEqual(t.offers, 1); assertEqual(t.tradedAway, 1)
+    assertEqual(t.asksLegacy, 0); assertEqual(t.offersLegacy, 0, "nothing inferred: every entry is stamped")
+    assertEqual(#(NS.addon.db.global.history.groups or {}), 0, "saved history untouched")
+end)
+
 test("sim trade: refused for an unknown drop, a real one and an expired own drop", function()
     local realID
     local NS, m = sim({ before = function(NS0, m0)

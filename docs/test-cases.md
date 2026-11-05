@@ -975,7 +975,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (44)
+### test_test_mode.lua (47)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -989,6 +989,9 @@ Total.
 - test mode data: the sixth boss drops every item kind, each with its collection verdict (issue #13)
 - test mode data: an item kind draws on the pool's items of that kind before any stand-in
 - test mode data: History holds a world boss's mount new to you and a pet of yours you have (issue #13)
+- test mode data: History's sent and settled entries carry the stamps a live one does
+- test mode data: one received sample is legacy, and one member traded you twice
+- test mode data: History holds every item kind, and a boss kill with an upgrade for you
 - window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row
 - test mode data: a key run and four bosses, every item a pool item that keeps its slot
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
@@ -1993,7 +1996,7 @@ Total.
 - insights rows: G and H bucket each day, the zero days kept, the hover naming the counts
 - insights rows: the mixes read their words and colors, a token under its category and Can't use's off-spec count
 
-### test_window_insights.lua (19)
+### test_window_insights.lua (20)
 
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
@@ -2008,6 +2011,7 @@ Total.
 - insights tab: the strip names the period, and follows the retention
 - insights tab: a retention change that deletes nothing repaints the caption on its own
 - insights tab: test mode fills the cards from the sample history
+- insights tab: test mode fills every card and every section, none with its empty line (DW-N4)
 - insights tab: with no history the cards hide and one line says how long drops are kept
 - insights tab: each recompute logs one line under UI
 - insights tab: compact's empty line wraps inside the pane's width
@@ -2227,7 +2231,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (23)
+### test_sim_events.lua (24)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2250,6 +2254,7 @@ Total.
 - sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)
 - sim own drops: the scenario sets the window and the ending-soon count
 - sim trade: your drop traded away and another's received land in the session's history log
+- sim trade: a sent ask and offer, then the trades, stamp the session's entries and fill Insights' cards
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
@@ -2609,7 +2614,7 @@ Total.
 | test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 44 |
+| test_test_mode.lua | 47 |
 | test_compat.lua | 74 |
 | test_compat_collect.lua | 17 |
 | test_text_parse.lua | 10 |
@@ -2652,7 +2657,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
-| test_window_insights.lua | 19 |
+| test_window_insights.lua | 20 |
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 49 |
 | test_toast_stack.lua | 16 |
@@ -2662,7 +2667,7 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 24 |
-| test_sim_events.lua | 23 |
+| test_sim_events.lua | 24 |
 | test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 17 |
@@ -2682,4 +2687,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2204** |
+| **Total** | **2209** |

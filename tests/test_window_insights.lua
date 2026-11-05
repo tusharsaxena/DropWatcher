@@ -214,6 +214,23 @@ test("insights tab: test mode fills the cards from the sample history", function
     for _, c in ipairs(d.cards) do assertTrue(c.frame:IsShown()) end
 end)
 
+test("insights tab: test mode fills every card and every section, none with its empty line (DW-N4)", function()
+    -- red under: samples with no stamps (Offers sent 0), no expired ask, one category, no legacy entry
+    local NS, _, _, d = insights({ samples = true })
+    local s = d.sections
+    for _, key in ipairs({ "outcomes", "verdicts", "tradeStates", "byInstance", "byBoss", "topRate", "generous",
+        "gain", "asks", "drops", "byClass", "byQuality", "bySlot", "byCategory" }) do
+        assertTrue((s[key] or 0) > 0, key .. " drew rows")
+    end
+    for i, c in ipairs(d.cards) do
+        local v = cardValue(d, i)
+        assertTrue(v ~= "-" and v ~= "0", c.caption .. " reads " .. tostring(v))
+    end
+    assertTrue(s.byCategory >= 7, "every item kind: equipment, the token and the five collectibles")
+    local _, empties = NS.Pool.Counts(d.ctx:Pool("empty"))
+    assertEqual(empties, 0, "no section says it has nothing")
+end)
+
 test("insights tab: with no history the cards hide and one line says how long drops are kept", function()
     local _, _, _, d = insights()
     assertTrue(d.empty:IsShown())

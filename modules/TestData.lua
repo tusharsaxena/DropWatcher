@@ -81,8 +81,12 @@ local _, NS = ...
 -- Mythic and Raid Finder raids and world bosses, mostly drops you only saw and every outcome among
 -- them (seen, asked, offered, expired, declined, received, traded away), and one seen by an invented
 -- alt on your realm (ALT), so the Character dropdown (feedback-2 spec §4) lists two characters and
--- Current hides the alt's group, and a world boss's mount new to your collection beside a pet of yours
--- you already have (issue #13). The alt's group is ten days old, so a Keep history for of 7 days
+-- Current hides the alt's group, a world boss's mount new to your collection beside a pet of yours
+-- you already have and a toy, and a raid boss's cosmetic, your recipe and a tier token (issue #13). For the
+-- Insights tab (issue #12) the entries carry the stamps a live one does (`askedAt`, `offeredAt`,
+-- `settledAt`, `got`), one ask expired unanswered, one received item is legacy (no stamps: its ask
+-- inferred, its gain as last judged), Kragmar traded you twice, and the raid bosses' upgrades fill
+-- Upgrades for me by boss. The alt's group is ten days old, so a Keep history for of 7 days
 -- (feedback-2 spec §5) asks to delete it with the older ones. modules/TestMode.lua holds it while
 -- test mode is on; it is never written to the account's history.
 
@@ -786,16 +790,39 @@ local THEIRS = {
     { me = { "upgrade", 5 }, them = { "sidegrade", 1 }, trade = { "no", "bonusRoll" }, outcome = "seen" },
     { me = { "upgrade", 8 }, them = { "downgrade", -6 }, trade = { "yes", "boe" }, outcome = "asked" },
     { me = { "sidegrade", 2 }, them = { "upgrade", 5 }, trade = { "no", "warbound" }, outcome = "seen" },
-    { me = { "upgrade", 4 }, trade = { "unknown", "noInspect" }, outcome = "seen" },
+    { me = { "upgrade", 4 }, trade = { "unknown", "noInspect" }, outcome = "expired", beforeExpired = "asked" },
     { me = { "downgrade", -5 }, them = { "sidegrade", 0 }, trade = { "likely", "groupLoot" }, outcome = "seen" },
     { me = { "upgrade", 6 }, them = { "downgrade", -2 }, trade = { "no", "legacy" }, outcome = "seen" },
 }
 
--- A world boss's collectibles (issue #13): its mount, new to your collection, and a pet of yours you
--- already have (`mine`).
+-- A world boss's collectibles (issue #13): its mount, new to your collection, a pet of yours you
+-- already have (`mine`), and a toy the game gave no answer for.
 local COLLECTED = {
     { me = { "newCollect", collect = "mount" }, trade = { "unknown", "collectible" }, outcome = "seen" },
     { me = { "collected", collect = "pet", count = 2, limit = 3 }, trade = { "yes", "boe" }, outcome = "seen", mine = true },
+    { me = { "collectUnknown", collect = "toy" }, trade = { "unknown", "collectible" }, outcome = "seen" },
+}
+
+-- A Heroic raid boss's other item kinds: a cosmetic with a new look, your recipe for a profession
+-- you lack, and a tier token that makes a Head, an upgrade you asked for.
+local RAID_KINDS = {
+    { me = { "newCollect", collect = "cosmetic" }, trade = { "unknown", "collectible" }, outcome = "seen" },
+    { me = { "cantUse", collect = "recipe" }, trade = { "yes", "boe" }, outcome = "seen", mine = true },
+    { kind = "tierToken", slot = "INVTYPE_HEAD", me = { "upgrade", 7 }, them = { "downgrade", -3 },
+      trade = { "likely", "notUpgrade" }, outcome = "asked" },
+}
+
+-- Two old raid nights' boss drops Kragmar traded you (the Most generous section's member who gave
+-- twice): the older one from before asks and trades were stamped (`legacy`: its ask inferred from
+-- the item received, its gain as last judged), the other stamped and frozen as a trade now is.
+local LEGACY_NIGHT = {
+    { me = { "upgrade", 6 }, them = { "downgrade", -3 }, trade = { "likely", "notUpgrade" }, outcome = "received",
+      legacy = true, giver = "kragmar" },
+    { me = { "downgrade", -4 }, them = { "upgrade", 6 }, trade = { "no", "upgradeForLooter" }, outcome = "seen" },
+}
+local SECOND_TRADE = {
+    { me = { "upgrade", 10 }, them = { "sidegrade", 1 }, trade = { "likely", "notUpgrade" }, outcome = "received",
+      giver = "kragmar" },
 }
 
 -- Your own drops in turn.
@@ -808,8 +835,9 @@ local YOURS = {
 }
 
 -- The last four weeks, newest first: the content, how long ago, how many drops, which of them was
--- yours (`mine`, its place in the group's drops), and `alt` for the group the alt saw. A raid night
--- is bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
+-- yours (`mine`, its place in the group's drops), `alt` for the group the alt saw, and `rows` for a
+-- group whose drops are its own list rather than the turn of THEIRS and YOURS. A raid night is
+-- bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
 local HISTORY = {
     { content = "raidHeroic", ago = DAY + 2 * HOUR, drops = 5, mine = 2 },
     { content = "raidHeroic", ago = DAY + 2 * HOUR + 25 * MIN, drops = 4 },
@@ -833,7 +861,10 @@ local HISTORY = {
     { content = "worldBoss", ago = 15 * DAY, drops = 2 },
     { content = "key", ago = 20 * DAY, drops = 2 },
     { content = "key", ago = 27 * DAY, drops = 2, mine = 1 },
-    { content = "worldBoss", ago = 4 * DAY, drops = 2, collect = true },
+    { content = "worldBoss", ago = 4 * DAY, drops = #COLLECTED, rows = COLLECTED },
+    { content = "raidHeroic", ago = 13 * DAY, drops = #RAID_KINDS, rows = RAID_KINDS },
+    { content = "raidHeroic", ago = 24 * DAY, drops = #LEGACY_NIGHT, rows = LEGACY_NIGHT },
+    { content = "raidHeroic", ago = 17 * DAY, drops = #SECOND_TRADE, rows = SECOND_TRADE },
 }
 TD.HISTORY = HISTORY
 
@@ -857,20 +888,36 @@ local function snap(spec, plain)
         offSpec = off and { specID = off[1], mainSpecID = OFF_MAIN, verdict = off[2], ilvlDelta = off[3] } or nil }
 end
 
+-- THE STAMPS (issue #12, Insights design spec §1.2), as NS.History writes them on a live entry: an
+-- ask or offer held in the outcome (or under an expiry) was sent SENT_AFTER the drop; a received
+-- or traded-away one was sent then and settled SETTLED_AFTER it (`settledAt`, and `got` on an item
+-- received). A `legacy` row keeps none, as an entry recorded before the stamps.
+TD.SENT_AFTER, TD.SETTLED_AFTER = 2 * MIN, 6 * MIN
+local SENT_KIND = { asked = "ask", received = "ask", offered = "offer", tradedAway = "offer" }
+local SETTLES = { received = true, tradedAway = true }
+
+local function stamp(e, row)
+    if row.legacy then return e end
+    local kind = SENT_KIND[row.beforeExpired or row.outcome]
+    if kind then NS.History.Stamp(e, kind, e.at + TD.SENT_AFTER) end
+    if SETTLES[row.outcome] then NS.History.Settle(e, row.outcome, e.at + TD.SETTLED_AFTER) end
+    return e
+end
+
 -- `seer` is whoever saw the group: you, or the alt (`seenBy`, its recorder key, and its class).
 local function historyEntry(src, seer, row, who, at, where)
-    local item = src:Drop({ armor = row.armor, strict = row.armor, me = row.me }, where)
+    local item = src:Drop({ armor = row.armor, strict = row.armor, me = row.me, kind = row.kind, slot = row.slot }, where)
     if not item then return nil end
     local f, m = item.facts, who and MEMBERS[who]
-    return {
+    return stamp({
         itemLink = item.link, itemID = item.itemID or NS.Item.ItemIDFromLink(item.link),
         category = f.category, tokenSlot = f.tokenSlot,
         looter = m and m.name or seer.name, class = m and m.classFile or seer.classFile, isMine = m == nil or nil,
         ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me, seer.alt), them = snap(row.them),
         trade = { state = row.trade[1], reasonKey = row.trade[2], basis = "rule", args = {} },
-        outcome = row.outcome, before = row.before, at = at, test = true,
+        outcome = row.outcome, before = row.before, beforeExpired = row.beforeExpired, at = at, test = true,
         seenBy = seer.seenBy, seenByClass = seer.classFile,
-    }
+    }, row)
 end
 
 -- The alt as a seer: on your realm (the one in your recorder key), else realm-less.
@@ -900,9 +947,9 @@ function TD.History(nowEpoch, you, src)
         group.seenBy, group.seenByClass = seer.seenBy, seer.classFile
         for i = 1, g.drops do
             local row, who
-            if g.collect then
-                row = COLLECTED[i]
-                who = not row.mine and members[(gi + i - 1) % #members + 1] or nil
+            if g.rows then
+                row = g.rows[i]
+                who = not row.mine and (row.giver or members[(gi + i - 1) % #members + 1]) or nil
             elseif i == g.mine then
                 yours = yours + 1
                 row = YOURS[(yours - 1) % #YOURS + 1]

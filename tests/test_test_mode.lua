@@ -385,6 +385,76 @@ test("test mode data: History holds a world boss's mount new to you and a pet of
     assertEqual(mount.g.situation, "openWorldGroup", "a world boss")
 end)
 
+-- ── the Insights tab's data (issue #12, Insights design spec §8 DW-N4.1) ────────────────────
+
+-- Every History sample entry, with its group.
+local function sampleEntries(NS)
+    local out = {}
+    for _, g in ipairs(NS.TestData.History(5000000, YOU, (source(NS))).groups) do
+        for _, e in ipairs(g.drops) do out[#out + 1] = { e = e, g = g } end
+    end
+    return out
+end
+
+test("test mode data: History's sent and settled entries carry the stamps a live one does", function()
+    -- red under: samples with no askedAt / offeredAt / settledAt / got, so Insights read them all as legacy
+    local NS = T.newAddon()
+    local H, TD = NS.History, NS.TestData
+    local seen = {}
+    for _, r in ipairs(sampleEntries(NS)) do
+        local e = r.e
+        if e.settledAt then
+            seen[e.outcome] = true
+            assertEqual(e.settledAt, e.at + TD.SETTLED_AFTER)
+            if e.outcome == "received" then
+                assertEqual(e.askedAt, e.at + TD.SENT_AFTER); assertTrue(H.WasAsked(e))
+                assertTrue(e.got ~= nil and e.got.verdict == e.me.verdict, "the verdict frozen at the trade")
+                assertEqual(e.got.at, e.settledAt)
+            else
+                assertEqual(e.offeredAt, e.at + TD.SENT_AFTER); assertTrue(H.WasOffered(e)); assertNil(e.got)
+            end
+        elseif e.outcome == "asked" then
+            assertEqual(e.askedAt, e.at + TD.SENT_AFTER)
+        elseif e.outcome == "offered" then
+            assertEqual(e.offeredAt, e.at + TD.SENT_AFTER)
+        end
+        if e.beforeExpired == "asked" then seen.expiredAsk = true; assertEqual(e.askedAt, e.at + TD.SENT_AFTER) end
+        if e.outcome == "seen" or e.outcome == "declined" then assertNil(e.askedAt); assertNil(e.offeredAt) end
+    end
+    hasAll(seen, { "received", "tradedAway", "expiredAsk" }, "stamped")
+end)
+
+test("test mode data: one received sample is legacy, and one member traded you twice", function()
+    local NS = T.newAddon()
+    local legacy, givers = {}, {}
+    for _, r in ipairs(sampleEntries(NS)) do
+        local e = r.e
+        if e.outcome == "received" then
+            givers[e.looter] = (givers[e.looter] or 0) + 1
+            if e.settledAt == nil then legacy[#legacy + 1] = e end
+        end
+    end
+    assertEqual(#legacy, 1)
+    local e = legacy[1]
+    assertNil(e.askedAt); assertNil(e.got)
+    assertTrue(NS.History.WasAsked(e), "its ask inferred from the item received")
+    local _, isLegacy = NS.InsightsStats.Gain(e)
+    assertTrue(isLegacy, "its gain as last judged")
+    assertTrue((givers.Kragmar or 0) >= 2, "Kragmar traded you twice")
+end)
+
+test("test mode data: History holds every item kind, and a boss kill with an upgrade for you", function()
+    -- red under: History's world boss with only a mount and a pet (Drops by category: three rows)
+    local NS = T.newAddon()
+    local kinds, bossUpgrade = {}, false
+    for _, r in ipairs(sampleEntries(NS)) do
+        kinds[NS.InsightsFilters.CategoryOf(r.e)] = true
+        if r.g.kind == "encounter" and NS.InsightsStats.UpgradeForMe(r.e) then bossUpgrade = true end
+    end
+    hasAll(kinds, { "equipment", "tierToken", "mount", "pet", "toy", "recipe", "cosmetic" }, "category")
+    assertTrue(bossUpgrade, "Upgrades for me by boss has a row")
+end)
+
 test("window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row", function()
     local NS, _, m = T.enableAddon()
     m.specNames[65], m.specNames[66] = "Holy", "Protection"
