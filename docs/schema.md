@@ -112,7 +112,7 @@ button and profiles reach them as any row.
 | `feed.quality.mode` | `"fixed"` | Quality; the filter bar's Quality control (`NS.SetQualityMode`) | the minimum-quality mode new drops are gated with |
 | `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
-| `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
+| `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you, or a collectible new to your collection, shows below the threshold (issue #13); an Always watch item passes whatever its quality (`whitelisted`) |
 | `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |
 | `feed.whitelist` | `{}` | Item lists › Always watch (`map`) | `{ [itemID] = true }`: always watched, past the item kinds, the heirloom rule, the minimum item level and the quality gate, never past the situation gate; an item of no kind reads `unknown` and is feed-only (categories design spec §4.2) |
 | `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |

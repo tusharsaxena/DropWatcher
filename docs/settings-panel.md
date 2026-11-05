@@ -15,7 +15,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
-| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Retention` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -190,7 +190,8 @@ since LibKa0s has no grid composer for mixed controls;
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
 `/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
-long it keeps it. Its Defaults resets every tab, Situations included.
+long it keeps it. Its Defaults resets every tab, Situations included, except Item lists, whose two
+lists it keeps (plan #13, Q9).
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
 value each picked mode uses: `Fixed minimum` while the feed's mode or any situation's own Quality is
