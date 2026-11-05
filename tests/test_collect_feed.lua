@@ -5,7 +5,8 @@
 -- kept in; `newCollect` through the quality gate's override; the collection events coalesced into
 -- one re-read that re-judges only the drops whose verdict moved, the regen pass for the unknown ones
 -- alone, and the stand-down canceling the timer; and the feed-only refusals at the edges (Asks,
--- the Offer panel and `/dw offer`, auto-ask).
+-- the Offer panel and `/dw offer`, auto-ask); and an Always watch drop of no kind keeping the list's
+-- answer from its admission through a later re-judge.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -290,6 +291,27 @@ test("collect feed: /dw offer refuses a bag collectible the feed never saw, and 
     assertEqual(printed[#printed], NS.L["Collectibles are watched, not offered."])
     -- red under: the refusal after adopt (the bag mount added to the feed as one of your drops)
     assertEqual(#LF.Drops(), 0, "no drop added")
+end)
+
+-- A trade good: no watched kind (category nil), so only the Always watch list lets it in.
+local function tradeGood()
+    return { name = "Ore", quality = 1, ilvl = 1, equipLoc = "", classID = 7, subClassID = 0, bindType = 0, stats = {} }
+end
+
+test("collect feed: an Always watch drop of no kind stays feed-only after the list changes", function()
+    local NS, m, LF = party()
+    m.addItem(link(303), tradeGood())
+    assertTrue(NS.ItemLists.Add("whitelist", 303))
+    brakkLoots(m, 303)
+    local rec = LF.Drops()[1]
+    assertTrue(NS.Collectibles.IsFeedOnly(rec)); assertNil(rec.inspect); assertNil(rec.them)
+    assertTrue(NS.ItemLists.Remove("whitelist", 303))
+    assertTrue(NS.ItemLists.Add("blacklist", 303))
+    LF.OnGearChanged()
+    -- red under: judgeMe reading the list from cfg (the gear kernel's `unknown notGear`, Them `?`)
+    assertTrue(NS.Collectibles.IsFeedOnly(rec), "still feed-only: list changes apply to new drops")
+    assertNil(rec.inspect); assertNil(rec.them)
+    assertEqual(NS.Inspect.QueueState().queued, 0, "no looter inspect")
 end)
 
 test("collect feed: auto-ask never schedules a collectible", function()

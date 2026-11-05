@@ -1688,7 +1688,7 @@ Total.
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 
-### test_collect_feed.lua (14)
+### test_collect_feed.lua (15)
 
 - collect feed: someone else's mount reads its collection verdict, asks no inspect and has no Them
 - collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no
@@ -1703,6 +1703,7 @@ Total.
 - collect feed: Asks refuses an ask, an offer and an announce for a collectible
 - collect feed: the Offer panel never opens for your collectible, and /dw offer says why
 - collect feed: /dw offer refuses a bag collectible the feed never saw, and adds no drop
+- collect feed: an Always watch drop of no kind stays feed-only after the list changes
 - collect feed: auto-ask never schedules a collectible
 
 ### test_item_lists.lua (12)
@@ -2532,7 +2533,7 @@ Total.
 | test_inspect.lua | 33 |
 | test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
-| test_collect_feed.lua | 14 |
+| test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -2573,4 +2574,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2115** |
+| **Total** | **2116** |

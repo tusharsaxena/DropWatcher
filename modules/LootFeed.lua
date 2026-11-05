@@ -266,8 +266,10 @@ end
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
 -- judged plainly, so a real upgrade for them never reads as one they would give away. A
 -- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's, and so
--- is an item of no kind on the Always watch list. The list is read from `cfg` at every judge (the
--- score retry, a gear change, a refresh, a restored drop), never from the drop; Never watch wins.
+-- is an item of no kind on the Always watch list. The list is read once, when the drop is admitted
+-- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
+-- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a
+-- list change applies to new drops only, so a shown drop never leaves the collect path untold.
 local function whitelisted(cfg, f)
     local id = type(f) == "table" and f.itemID or nil
     return id ~= nil and type(cfg.whitelist) == "table" and cfg.whitelist[id] == true
@@ -275,7 +277,7 @@ local function whitelisted(cfg, f)
 end
 
 local function judgeMe(rec, cfg)
-    local f, forced = rec.facts, whitelisted(cfg, rec.facts)
+    local f, forced = rec.facts, rec.forced == true
     if NS.Collectibles.IsCollectible(f) or (forced and f.category == nil) then
         rec.me = NS.Collectibles.Verdict(f, forced)
         return
@@ -294,7 +296,7 @@ local function qualityGate(rec, cfg)
     local mode = QG.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation))
     local ctx = { fixed = cfg.fixed, floor = cfg.floor, upgradeOverride = cfg.upgradeOverride,
         gear = NS.Gear.Qualities(), baselineSlot = rec.me.baselineSlot, equipLoc = f.equipLoc,
-        verdict = rec.me.verdict, forced = rec.forced or whitelisted(cfg, f) }
+        verdict = rec.me.verdict, forced = rec.forced == true }
     local pass, threshold, reason = QG.Passes(f.quality, mode, ctx)
     rec.quality = { mode = mode, threshold = threshold, reason = reason }
     if t0 then Perf.Note("quality.gate", debugprofilestop() - t0, parent()) end
@@ -584,6 +586,8 @@ local function judge(rec, facts)
         local ok, why, forced = NS.FeedFilter.Filter(facts, cfg, ctx)
         if not ok then return hide(rec, why) end
         rec.forced = forced or nil   -- the Always watch list let it through (the quality gate's pass)
+    else
+        rec.forced = whitelisted(cfg, facts) or nil   -- read once here too (no filter runs)
     end
     judgeMe(rec, cfg)
     if not rec.test and not qualityGate(rec, cfg) then return hide(rec, "quality") end
