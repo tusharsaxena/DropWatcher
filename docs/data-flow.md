@@ -535,7 +535,7 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   Compat.GetItemSpecs ─> specs, specsClass (the class playing: the list covers it alone)
   Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
   Compat.ItemUseText (not gear only; TT-1) ─> useText, useSpellLoading (a use spell not loaded yet)
-  Compat.ItemClassRestriction ─> classes; TierTokens.Listed / Users / IsCurio ─> isTierToken, tokenUsers
+  Compat.ItemClassRestriction ─> classes; TierTokens.Listed / Users (IsCurio, UseNamesClass) ─> isTierToken, tokenUsers
   TierTokens.SlotOf (table, use (else Compat.TierTokenSlot), name, else any) ─> tokenSlot +
                     tokenSlotSource; a concrete slot becomes equipLoc
   Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
