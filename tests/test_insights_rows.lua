@@ -128,9 +128,9 @@ test("insights rows: the period caption names the kept window, Never delete and 
     assertEqual(R.PeriodText({ range = "7", days = 30, from = NOW - 6 * DAY, to = NOW, drops = 84, groups = 31 }),
         "Last 7 days (Oct 30 – Nov 5) of 30 kept · 84 drops in 31 groups")
     assertEqual(R.PeriodText({ range = "7", days = 0, from = NOW - 6 * DAY, to = NOW, drops = 1, groups = 1 }),
-        "Last 7 days (Oct 30 – Nov 5) · 1 drops in 1 groups")
+        "Last 7 days (Oct 30 – Nov 5) · 1 drop in 1 group")
     assertEqual(R.PeriodText({ range = "today", days = 30, from = NOW - 3600, to = NOW, drops = 2, groups = 1 }),
-        "Today (Nov 5) of 30 kept · 2 drops in 1 groups")
+        "Today (Nov 5) of 30 kept · 2 drops in 1 group")
     assertEqual(R.PeriodText({ range = "all", days = 0, drops = 0, groups = 0 }), "Every kept day · 0 drops in 0 groups")
     assertEqual(R.PeriodText(nil), "Every kept day · 0 drops in 0 groups")
 end)

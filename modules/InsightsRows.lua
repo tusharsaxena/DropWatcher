@@ -55,6 +55,11 @@ for _, c in ipairs(IR.CARDS) do CAPTION[c.key] = c.caption end
 
 local function n(v) return type(v) == "number" and v or 0 end
 
+local function plural(count, one, many)
+    if count == 1 then return one end
+    return many:format(count)
+end
+
 --- A day as the strip and the hovers name it: `Nov 5`.
 --- @param t number|nil
 --- @return string
@@ -196,7 +201,8 @@ end
 --- @return string
 function IR.PeriodText(period)
     local p = type(period) == "table" and period or {}
-    return L["%s · %d drops in %d groups"]:format(head(p), n(p.drops), n(p.groups))
+    return L["%s · %s in %s"]:format(head(p), plural(n(p.drops), L["1 drop"], L["%d drops"]),
+        plural(n(p.groups), L["1 group"], L["%d groups"]))
 end
 
 --- The line a tab with nothing to draw shows: no history at all (saying how long drops are kept), or
@@ -266,11 +272,6 @@ end
 -- `n` of `total` as a hover line's share: `8 (3%)`.
 local function share(count, total)
     return L["%d (%s)"]:format(count, IR.Percent(total > 0 and count / total or nil))
-end
-
-local function plural(count, one, many)
-    if count == 1 then return one end
-    return many:format(count)
 end
 
 local function firstOf(list, max)
