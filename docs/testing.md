@@ -457,6 +457,33 @@ shorter one asking first with Yes pruning and No writing the agreed window back,
 at once; the login prune once per session, deferred, taken back by the stand-down and armed again
 by the stand-up, Never delete keeping everything; test mode's ten-day-old alt sample pruned by a
 7-day window while the account's log is kept),
+`test_insights_filters` (the Insights tab's rows and filters, issue #12, DW-N1: each facet's legacy
+fallback; `Options`, where a dropdown counts the rows the other six filters keep, a row failing two
+counts nowhere, the pick is kept at 0 and the head carries its count and choices; `Normalize` in
+ORDER with `keep` spared and the input never written; the date ranges by the retention, the local
+midnights across a DST change, each dropdown's order, the period and the closed label),
+`test_insights_stats` (the one stats pass, DW-N1: every spec §1 definition on fixture logs, asks and
+offers from the stamps, the held outcomes and the legacy trades, the success rate, the outcome rows,
+upgrades with the off-spec part, by instance, by boss and per visit with its 2-visit floor, the most
+generous members ordered by count and then by the latest trade's settle stamp, the gain from `got`
+against the legacy one, the days and weeks, the mixes, the empty pass, and each reducer seeing each
+row once in one pass),
+`test_insights_rows` (what the tab draws as plain data, DW-N2 and DW-N3: the eight cards' figures,
+hovers and tone with `IR.DASH` when there is nothing to show, the card grid at 4 and 2 columns,
+`BarPlan`'s wrap at the full, a middle and the compact width, the period caption in the singular and
+the plural, the empty lines, and every section builder's rows and colors),
+`test_insights_sections` (the chart sections on screen, DW-N3: the spec's order under its four
+dividers, a section with no rows drawing its heading and one muted line and never calling its
+renderer, the two list panels side by side and stacked in compact, the hover numbers, a second pass
+building no new frame, the empty state hiding every section, a skin switch re-laying
+them out) and
+`test_window_insights` (the tab in the window, DW-N2 to DW-N4: the `ownBar` plumbing that hides the
+shared bar and the footer's Sort and moves the mode strips; the seven dropdowns, a pick and Reset;
+the cache, where an unrelated repaint computes nothing, HistoryChanged and test mode off recompute,
+a resize lays out alone, a hidden window computes nothing (combat start ending test mode) and the
+show draws it afresh, and a skin switch recomputes the Quality rows' colors; the period strip and
+the retention; test mode filling every card and section; the degraded loads without Charts and
+without Widgets; compact's two-column cards and wrapped bar),
 `test_feed_restore` (the session is the login and the Drops tab survives a reload, feedback-15
 spec §0: the per-character session start an initial login sets, a reload keeps and a zone change
 leaves, stable with no stored value; after a reload this session's drops back in the feed under
@@ -631,7 +658,9 @@ DropWatcher case to library case.
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
-The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails.
+The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
+
+The offline perf scenario `insightsCompute` (`lua tests/perf.lua`, [`performance.md`](performance.md)) measures the Insights recompute's pure pass over a log at the 5,000-drop safety ceiling.
 
 `lua tests/run.lua --list` prints the case inventory; it is committed as
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
