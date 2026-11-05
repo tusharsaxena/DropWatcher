@@ -26,6 +26,10 @@ data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, b
 answers, the trade action, the enums it resolves by name and the enUS GlobalStrings it parses),
 and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
 `C_Timer.NewTicker` is a repeating ticker on the same queue (its handle carries `ticker`).
+`tests/wow_mock_collect.lua`, which `tests/wow_mock.lua`'s builder calls, holds the collection reads
+`core/CompatCollect.lua` wraps (the mount and pet journals, the toy box, the cosmetic flag, the
+professions, the recipe's known line and a tier token's slot names), split out to keep
+`tests/wow_mock.lua` out of the 1000-line band.
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
@@ -624,8 +628,8 @@ providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the lo
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
 
-Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API, never
-`tests/_kit/`.
+Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
+read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
 The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails.
 
