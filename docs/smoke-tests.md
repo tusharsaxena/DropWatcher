@@ -243,21 +243,22 @@ them, and after each check `/reload` and confirm they read the same.
 
 **LAYOUT-1. Drops (DRO-L01..L03, DRO-L10, DRO-L11, DRO-L-new3).** The settings list reads General, Drops,
 Comparison, Messages, Window, Alerts, Profiles: no Situations page. Drops' strip reads Situations,
-Quality, Items, Retention, and the page opens on Situations: Auto-open the window, then the
+Quality, Items, Item lists, Retention (Item lists since issue #13), and the page opens on Situations: Auto-open the window, then the
 per-situation table (Situation, Track, Auto-open, Quality, Loot rule) with every value you had set
 before the update. Click Quality → the table is gone and the In force now line is drawn, with
 `A situation can set a quality of its own: the Quality column on the Situations tab.` under it.
 Click Items, Retention, then Situations again → the table is there once, never on another tab.
-Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, items and how
-long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot rule to Group loot,
-press Defaults → both go back, with the Quality tab's rows; a Window value stays.
+Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, item kinds and
+item level, and how long drops are kept) to their defaults. The item lists are kept.` Tick Delve's
+Track, set Mythic+'s Loot rule to Group loot, put an item on Always watch, press Defaults → both go
+back, with the Quality tab's rows; the Always watch entry and a Window value stay.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
 section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
 Turned on in row reads `Settings > Drops > Situations`. Items: the seven item kinds two to a line, `Equipment` | `Tier tokens` first and `Cosmetics` alone last (`Gear only` | `Include tier tokens` before DW-CAT2). Retention: the tab is still
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
-Result: passed in the client, 2026-10-24 (the owner).
+Result: not run (reopened by the issues #10-#14 run, DW-CAT2 and DW-CAT5: its expected results moved; passed in the client, 2026-10-24 (the owner), before).
 
 **LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** General's strip still reads Master
 controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
@@ -651,7 +652,7 @@ line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSP
 An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
 is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
 no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
-`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: passed in the client, 2026-10-23 (the owner).
+`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **FEED-5. The upgrade track on someone else's link.** After FEED-2, shift-click a member's drop
 (a piece with an upgrade track, from the loot window or chat) into `/dump
@@ -834,7 +835,7 @@ an item it does not hold → that group leaves the table. A reagent and a non-ge
 (a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notWatched` line each (`notGear` before DW-CAT2), no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
 `/dw diagnostics` → its `drops` section reads `drops: hidden notWatched=2` (plus any others) and
-`drops: refused pushed=1`. Result: passed in the client, 2026-10-23 (the owner).
+`drops: refused pushed=1`. Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
 character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
@@ -2633,7 +2634,7 @@ toast somewhere else at `200%`, set Scale back to `100%` → it shrinks about wh
 under the top. `/reload`, `/dw test` → it comes back at the stored scale, in the same place. General ›
 Master controls › Reset position → back under the top, at the stored scale. Switch to a profile whose Scale is
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
-`150%`); `/dw set toast.scale 3` is refused. Result: passed in the client, 2026-10-23 (the owner).
+`150%`); `/dw set toast.scale 3` is refused. Result: not run (reopened by the issues #10-#14 run, DW-T2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** The shell (the queue,
 the countdown and its pause, the close mark and right-click, the drag, the scale and the sound) moved
@@ -3087,7 +3088,7 @@ Result: passed in the client, 2026-10-23 (the owner).
 each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
 `Unknown scenario 'nosuch'. Scenarios: …` with the scenario names, the library's line (accepted
 change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
-disabled refusal line. Result: passed in the client, 2026-10-23 (the owner).
+disabled refusal line. Result: not run (reopened by the issues #10-#14 run, DW-CAT6, the sixth verb `drop <kind>` in the usage: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** The headless
 `test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
@@ -3683,7 +3684,7 @@ Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2
 
 Owed by the owner's seventh smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-04-SMOKE_ROUND7/`): SIM-20 (R7-SIM), and SIM-19, whose expected results moved with it. An agent never marks one passed. On 2026-11-04 the owner reported that every check of the round passed (R7-SMOKE); SIM-19 and SIM-20 record it on their `Result:` lines as `Passed (owner, 2026-11-04)`.
 
-Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12). An agent never marks one passed.
+Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12), and the checks it reopened, whose expected results moved and whose pass marks went with them: LAYOUT-1 (DW-CAT2, DW-CAT5), FEED-4 and FEED-19 (DW-CAT2), TOAST-6 (DW-T2) and SIM-15 (DW-CAT6). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 
