@@ -5,9 +5,9 @@ local _, NS = ...
 --
 -- PURE, like the kernel it serves: plain tables in, plain tables out, no WoW API, no saved
 -- variable, no state but the word lists it builds once from NS.L. modules/ItemFacts.lua calls
--- Listed, Users, IsCurio and SlotOf while it builds the facts, and hands SlotOf the tooltip's
--- slot line as a reader (NS.Compat.TierTokenSlot); NS.Evaluate's run calls Fold at call time,
--- inside its own pcall.
+-- Listed, Users (which asks IsCurio and UseNamesClass) and SlotOf while it builds the facts, and
+-- hands SlotOf the tooltip's slot line as a reader (NS.Compat.TierTokenSlot); NS.Evaluate's run
+-- calls Fold at call time, inside its own pcall.
 --
 -- THE WORDS (TT-1). A token's Use text and its name are read against English words the enUS locale
 -- table holds (locales/enUS.lua, the TT-1 block), parsed by core/TextParse.lua: the class phrase

@@ -239,11 +239,6 @@ local CHIP = {
     cantUse = L["CAN'T USE"], unknown = L["UNKNOWN"],
 }
 
---- A category's word (`Mount`, `Tier token`), or nil for none.
---- @param category string|nil
---- @return string|nil
-function CC.KindWord(category) return KIND[category] end
-
 -- A collectible's facts: its category is one with a collection verdict.
 local function collectible(f) return COLLECTIBLE[f.category] == true end
 

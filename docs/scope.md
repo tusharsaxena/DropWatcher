@@ -95,7 +95,7 @@ sixth boss's samples) produce every kind. Enum values are resolved by name (the 
 
 | Category | Default | Detection | Collected or known | Shown as |
 |---|---|---|---|---|
-| Tier tokens | on | an item with no slot plan for its raw equipLoc (usually Miscellaneous [15] › Junk [0] or Reagent [1]) that carries the `RestrictedRaceClass` tooltip line, or whose Use text says `appropriate for your class` (TT-1), or an epic `... Curio`; or one the `C.TIER_TOKENS` override lists, empty by default | n/a: judged as gear against the slot it makes | the slot it makes and its classes |
+| Tier tokens | on | an item with no slot plan for its raw equipLoc (usually Miscellaneous [15] › Junk [0] or Reagent [1]) that carries the `RestrictedRaceClass` tooltip line, or whose Use text says `appropriate for your class` (TT-1), or an epic `... Curio`; or one the `C.TIER_TOKENS` override lists, empty by default | n/a: judged as gear against the slot it makes | the slot it makes (or `any slot`, judged in its best tier slot) and its classes (`Any class` for a Curio, `Your class` for a token whose Use text alone names your class) |
 | Equipment | on | Armor [4] or Weapon [2], not a tier token, not cosmetic | n/a: the gear verdict | unchanged |
 | Mounts | on | `C_MountJournal.GetMountFromItem`, else Miscellaneous › Mount [5] (Mount Equipment [6] is not a mount) | the journal's `isCollected` | New or Collected |
 | Battle pets | on | `C_PetJournal.GetPetInfoByItemID`'s species, else Miscellaneous › Companion Pet [2] | `GetNumCollectedInfo`: none is new, else collected with `n/limit` | New or Collected 1/3 |

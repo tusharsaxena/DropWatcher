@@ -35,7 +35,7 @@ lists the toolchain):
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
-| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-one `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
+| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-four `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
@@ -65,8 +65,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
   pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
-  collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, and an omni
-  token's best slot, so a token is judged as gear) and the scorers; the item lists' one writer
+  collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, read from its
+  Use text, else its name (TT-1), and the best tier slot of a token whose slot it cannot read or an
+  omni Curio, so a token is judged as gear) and the scorers; the item lists' one writer
   (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
@@ -206,8 +207,11 @@ General page's last tab, Keybindings, is LibKa0s's `O.KeybindingsTab` over it (o
 
 ## Event Subscriptions
 
-Every game event is declared in `NS.FEATURE_EVENTS` and registered through `NS.SafeRegisterEvent`,
-so `OnEnable` and the stand-up register exactly that list and the stand-down unregisters it. Two
+Every game event but one is declared in `NS.FEATURE_EVENTS` and registered through
+`NS.SafeRegisterEvent`, so `OnEnable` and the stand-up register exactly that list and the
+stand-down unregisters it. The exception is UI-local: compact mode's Filters panel registers
+`GLOBAL_MOUSE_DOWN` on its own frame only while it is open, to close on a press outside it, and
+unregisters it when it hides (`modules/CompactChrome.lua`). Two
 modules may declare the same event: AceEvent keeps one handler per event, so such an event is
 registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
 TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
@@ -263,7 +267,7 @@ The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world provider
 restriction model and six verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
 session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
 panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
-(LibKa0s `docs/api/Sim/version-2.2.2-docs.md`, *The host contract (H1–H10)*; the standard's
+(LibKa0s `docs/api/Sim/version-2.3.10.3-docs.md`, *The host contract (H1–H10)*; the standard's
 preview-mode, *The in-game simulator*) binds this addon, and each obligation is met here:
 
 | | Obligation | Where DropWatcher meets it |
@@ -453,8 +457,9 @@ stop runs each `OnStop` step under `pcall`, so one that raises never skips the r
 failure is a `SIM` debug line. While its combat edge is up, the simulator answers
 `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
 caller that must not act in combat is never told it may (DW-90).
-The addon's two confirmations, Clear history (`modules/History.lua`'s `AskClear`, since DW-Q3) and Reset all settings
-(`settings/Schema.lua`), set `preferredIndex = 3`, so neither shares a StaticPopup slot with
+The addon's three confirmations, Clear history (`modules/History.lua`'s `AskClear`, since DW-Q3), a
+shorter Keep history for (`modules/HistoryRetention.lua`, since DW-A5) and Reset all settings
+(`settings/Schema.lua`), set `preferredIndex = 3`, so none shares a StaticPopup slot with
 Blizzard's own dialogs (DW-62).
 
 ## Known Limitations
@@ -504,7 +509,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 101 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 12 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 104 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 15 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

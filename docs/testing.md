@@ -339,13 +339,18 @@ template's transmog fallback, the toast, Post my tradeables and the glow; a tier
 cells, a kept token's Type a dash, the detail card's chips, FOR YOU and looter boxes, the History row
 and card from the kept verdict, the item tooltip's Kind rows, the Drops strip's `n new`, the compact
 cards with no ⊘, the diagnostics' `collect:` lines, and the View's New to my collection beside the
-other values' answers and its `feed.view.newCollect` row), `test_tier_token` (DW-CAT4: a token's
-slot from the curated table, then the tooltip (matched by its whole line, none read leaving it nil,
-the tooltip not read when the table answers), the concrete-slot verdicts against what is worn there
-(upgrade, sidegrade, downgrade), another class's token `cantUse` and an unread slot `unknown`, the
-Curio folded to its best slot and another class's Curio `cantUse`, the scorer skipped with the opts
-and the facts left untouched, the looter judged on their own class and gear, a token through the
-feed, the minimum item level, and the Slot, Type, Makes and Me cells),
+other values' answers and its `feed.view.newCollect` row), `test_tier_token` (DW-CAT4, TT-1: a
+token's slot by rung, the curated table, then its Use text, else a tooltip line matched by its whole
+text, then a slot noun in its name, else `any`, in that order and in the enUS locale table's words;
+the tooltip not read when the table answers; a Use text's class phrase making a token with no class
+line; an omni Curio told by its name and judged in any slot; a use spell not loaded yet waited for,
+re-read on SPELL_TEXT_UPDATE and given up after MAX_LOAD_TRIES; the concrete-slot verdicts against
+what is worn there (upgrade, sidegrade, downgrade), another class's token `cantUse` and an unread
+slot `unknown`, a token judged in any slot folded to its best tier slot and another class's Curio
+`cantUse`, who may use a classless token from its kept `tokenUsers`, the scorer skipped with the
+opts and the facts left untouched, the looter judged on their own class and gear, a token through
+the feed, the drops diagnostics' token line, the minimum item level, and the Slot, Type, Makes and
+Me cells),
 `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
 realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
 complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,

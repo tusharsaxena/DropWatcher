@@ -10,7 +10,7 @@ load, and is read inside functions only.
 
 The text parsing behind the pattern, duration and tooltip-line shims (`FormatToPattern`, the
 duration decoder, the tooltip line scan (`ScanLines`, handed this file's secret guards), and the
-item level, upgrade track and class list lines), and a tier token's words (`WordMap`, `FirstWord`,
+item level, upgrade track, class list and primary stat lines), and a tier token's words (`WordMap`, `FirstWord`,
 `EndsWithWord`, `TokenUseSlot`; TT-1, read by `modules/TierTokens.lua`) lives in
 `core/TextParse.lua` (`NS.TextParse`, DW-61). That module is pure: it calls no client API and
 reads no global, so it is not a compat file. `core/Compat.lua` reads the localized GlobalStrings
@@ -18,10 +18,10 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred and two shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `102`): the
+**One hundred and four shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `104`): the
 root `core/Compat.lua` publishes 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and
-`core/CompatCollect.lua` 13. The four
+`core/CompatCollect.lua` 15. The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
@@ -234,8 +234,10 @@ recipe's known line, a tier token's slot line and an item's tooltip use line are
 | `ClassDisplayName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE[classFile]`, the client's name for a class (a tier token's Type cell) | `nil` (no table, an unknown class, a secret name) |
 | `ItemLinkByID(itemID)` | `C_Item.GetItemInfo(itemID)`'s second return, a `\|Hitem:` link: a curated simulator sample's link by its id (DW-CAT6) | `nil` (no API, not cached yet, a secret or non-hyperlink answer) |
 
-`modules/Collectibles.lua` is the one caller of the collection reads; `modules/ItemFacts.lua` reads
-`TierTokenSlot`, `modules/CollectCells.lua` `ClassDisplayName` and `modules/SimPool.lua` `ItemLinkByID`. `test_compat_collect` drives every member with its
+`modules/Collectibles.lua` reads the collection members; `modules/SimPool.lua` also reads
+`IsCosmeticItem` (plain gear) and `ItemLinkByID`; `modules/ItemFacts.lua` reads `ItemUseText`,
+`CanRequestSpellLoad`, `RequestSpellLoad` and `TierTokenSlot` (TT-1); `modules/CollectCells.lua` and
+`modules/InsightsRows.lua` read `ClassDisplayName`. `test_compat_collect` drives every member with its
 answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped
 file that names one of these APIs.
 
@@ -272,9 +274,11 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/CharFilter.lua` | `NormalizedRealm`; `UnitName`, `UnitClass` (`core/CompatWorld.lua`: your own key and class) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
-| `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `ItemPrimaryStats`, `PlayerHasTransmog`; `UnitClass` (`core/CompatWorld.lua`: the class a spec list was read for); `TierTokenSlot` (`core/CompatCollect.lua`: the slot a tier token makes) |
+| `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `ItemPrimaryStats`, `PlayerHasTransmog`; `UnitClass` (`core/CompatWorld.lua`: the class a spec list was read for); `TierTokenSlot`, `ItemUseText`, `CanRequestSpellLoad`, `RequestSpellLoad` (`core/CompatCollect.lua`: the slot a tier token makes, an item's use text, and the wait on a use spell not loaded yet, TT-1) |
 | `modules/Collectibles.lua` | `MountFromItem`, `MountCollected`, `PetSpeciesFromItem`, `PetCollected`, `IsToy`, `ToyCollected`, `IsCosmeticItem`, `RecipeKnown`, `ProfessionSkillLines` (`core/CompatCollect.lua`) |
 | `modules/CollectCells.lua` | `ClassDisplayName` (`core/CompatCollect.lua`: a tier token's classes) |
+| `modules/InsightsRows.lua` | `ClassColor`; `ClassDisplayName` (`core/CompatCollect.lua`: the By class rows' names) |
+| `modules/WindowInsights.lua` | `ClassColor` |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
 | `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
@@ -302,13 +306,14 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/TipGrid.lua` | `IsSecret` (a grid cell's width and the tooltip's line count, read in combat; feedback-14 spec §0); `TooltipLeftLine` (`core/CompatItem.lua`) |
 | `modules/Toast.lua` | `InCombatLockdown` (`core/CompatWorld.lua`; the alert sound is LibKa0s-Toast-1.0's since AT-A2, `Compat.PlayAlertSound` retired) |
 | `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
+| `core/SkinSetup.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: the first-run skin picker waits out combat) |
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
 | `modules/TestMode.lua` | `UnitName`, `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
 | `modules/Diagnostics.lua` | `PawnIsReady`, `PawnVisibleScale`, `PawnScaleForSpec`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
 | `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
-| `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item) |
+| `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item); `GetItemInfo` (an item list entry's name) |
 | `modules/Sim.lua` | `RestrictionTypes` |
-| `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `ItemLinkByID` (`core/CompatCollect.lua`: a curated sample's link); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
+| `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `IsCosmeticItem`, `ItemLinkByID` (`core/CompatCollect.lua`: plain gear, a curated sample's link); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
 | `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
 | `modules/SimWorld.lua` | `NormalizedRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads; `TooltipHyperlink` (`core/CompatItem.lua`: a member's item level read off the tooltip) |
 | `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |

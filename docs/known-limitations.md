@@ -8,11 +8,11 @@ the code reads every case the design leaves open, module by module, is in
 
 ## For the player
 
-- **Unconfirmed in game.** Nearly every in-game check in `smoke-tests.md` is owed: only
-  STATE-6 and FEED-79 have a recorded client pass (2026-10-16). The readings most at risk are whether `CHAT_MSG_LOOT` is readable
-  mid-encounter (COMBAT-1), whether a whisper goes out during an encounter (ASK-4), the raid trade
-  rule (TRADE-3, `personal` until confirmed) and whether the game counts the looter's bags as well
-  as their worn gear (TRADE-4, worn gear only today).
+- **Confirmed in game, apart from a few.** The owner has recorded a client pass for nearly every
+  in-game check in `smoke-tests.md`, among them COMBAT-1 (`CHAT_MSG_LOOT` mid-encounter), ASK-4 (a
+  whisper during an encounter), TRADE-3 (the raid rule, kept at `personal`) and TRADE-4 (worn gear
+  only). Still owed: ITEM-6 and ITEM-7 (reopened by TT-1), SKIN-3, SKIN-15, SKIN-32 and SKIN-45,
+  and SKIN-14, SKIN-38 and SKIN-40 (failed 2026-11-02, re-opened as R3-L3).
 - **Localized clients.** Loot lines and the trade-time sentence are read with the client's own
   GlobalStrings, but an upgrade track's tier comes from its enUS name until FEED-5 records the
   client's track ids, so a non-English client shows no track change (LOC-1), and a tier token's slot
@@ -36,7 +36,7 @@ the code reads every case the design leaves open, module by module, is in
   tooltip line: under an addon restriction that line can read secret, and the drop then reads
   `collectUnknown` until it is read again when combat ends. Someone else's bound collectible reads
   trade `unknown`; your own reads the trade timer's exact answer once its bag item is matched
-  (COLL-6). The collection APIs' answers are unconfirmed in game (COLL-1).
+  (COLL-6). The collection APIs' answers were confirmed in game on 2026-11-05 (COLL-1).
 - **Item kinds and item lists apply to drops from then on.** Turning an item kind off, or putting an
   item on Always watch or Never watch, filters the drops that arrive after; a drop already in the
   feed stays, and a drop restored after a `/reload` is not filtered by a Never watch entry added
@@ -91,14 +91,13 @@ the code reads every case the design leaves open, module by module, is in
 - **The trade-time warning** can arrive up to a minute late while the window is closed (the ticker
   slows to once a minute).
 - **A keystone chest** has no `ENCOUNTER_END`, so auto-ask times its drops from the drop itself.
-- **Compact mode** (M12, compact spec) is a second layout of the same window, unconfirmed in game
-  like the rest (COMPACT-1..7). A switch carries the scroll offset as the same fraction of the
+- **Compact mode** (M12, compact spec) is a second layout of the same window (COMPACT-1..7 passed
+  in game, 2026-10-23). A switch carries the scroll offset as the same fraction of the
   scroll range, so the drop at the top can move by a card or two; the Columns rows and Row height
   shape the full layout's tables only. The run override reads the situation edge, so a run ends
   when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
   not on a boss kill or a wipe.
-- **Insights** (issue #12) reads only the kept history, unconfirmed in game like the rest
-  (INSIGHT-1..8):
+- **Insights** (issue #12) reads only the kept history (INSIGHT-1..8 passed in game, 2026-11-05):
   - **Legacy entries.** An entry settled before the ask, offer and settle stamps existed (before
     DW-N1.1) keeps no record of an ask or offer that a trade replaced. Insights counts someone
     else's drop you received as an ask, and your own drop traded away as an offer, so Asks sent and

@@ -36,8 +36,9 @@ battery in [`automated-tests/`](../automated-tests/RESULTS.md).
 
 ## Captures
 
-Two captures so far. Smoke check DIAG-4 (the `feed.add` nesting) is still waiting for one that
-observes loot inside the clean arm.
+Two captures so far. Smoke check DIAG-4 (the `feed.add` nesting) records the owner's pass of
+2026-10-23, but neither capture here observes loot inside the clean arm, so the bundle DIAG-4 asks
+for is still owed.
 
 | Stamp | Addon version | Label | What it measured | Bundle |
 |---|---|---|---|---|
