@@ -10,22 +10,24 @@ load, and is read inside functions only.
 
 The text parsing behind the pattern, duration and tooltip-line shims (`FormatToPattern`, the
 duration decoder, the tooltip line scan (`ScanLines`, handed this file's secret guards), and the
-item level, upgrade track and class list lines) lives in
+item level, upgrade track and class list lines), and a tier token's words (`WordMap`, `FirstWord`,
+`EndsWithWord`, `TokenUseSlot`; TT-1, read by `modules/TierTokens.lua`) lives in
 `core/TextParse.lua` (`NS.TextParse`, DW-61). That module is pure: it calls no client API and
 reads no global, so it is not a compat file. `core/Compat.lua` reads the localized GlobalStrings
 at call time, guards them, and passes them in; its members of the same names are one-line
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred and one shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `101`): the
+**One hundred and two shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `102`): the
 root `core/Compat.lua` publishes 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and
-`core/CompatCollect.lua` 12. The four
+`core/CompatCollect.lua` 13. The four
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
 members, and `test_surface_parity` lists them as unwired on purpose: the two spec readers are
-called on the library inside `PlayerSpecID` only, and nothing reads a spell.
+called on the library inside `PlayerSpecID` only, and nothing reads a spell through them
+(`ItemUseText` reads an item's use spell's description from the client's `C_Spell`, TT-1).
 
 ## The rules every shim keeps
 
@@ -210,7 +212,7 @@ not have. `test_item_read` and `test_sim_events` hold these.
 (issue #13, categories design spec §2), so the seam wraps its members, on the same rules: globals
 read bare at call time, `IsSecret` first on every answer, enums by name, GlobalStrings through
 `GlobalString`, never a raise. It is a split of the root, which sits at the 1000-line band. The
-recipe's known line and a tier token's slot line are read through the ratified `ReadTooltipLine`
+recipe's known line, a tier token's slot line and an item's tooltip use line are read through the ratified `ReadTooltipLine`
 (library-stack-§7: new consumers, not a new reader, as `ItemClassRestriction` is); the file asks
 `C_TooltipInfo.GetHyperlink` itself, because the root's `tooltipData` helper is file-local.
 
@@ -225,7 +227,8 @@ recipe's known line and a tier token's slot line are read through the ratified `
 | `IsCosmeticItem(link)` | `C_Item.IsCosmeticItem` (cosmetic armor and the Weapon-class cosmetic weapons) | `false` |
 | `RecipeKnown(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** `ITEM_SPELL_KNOWN` ("Already known"): `true`, else `false` once the tooltip was read | `nil` (no API, no GlobalString, no or malformed tooltip, a secret answer or a secret line, which could hide the line) |
 | `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }`, and `{}` for a character with no profession | `nil` (no API, or a slot whose index or skill line is secret or unreadable: no answer is never read as "no profession") |
-| `TierTokenSlot(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** one of the localized `INVTYPE_HEAD`, `INVTYPE_SHOULDER`, `INVTYPE_CHEST`, `INVTYPE_HAND` or `INVTYPE_LEGS` GlobalStrings: that `INVTYPE_*` key (DW-CAT4); none found, a second pass for the use line (`Use: Create a soulbound set hand item appropriate for your class.`): a line behind the client's `ITEM_SPELL_TRIGGER_ONUSE` (`Use:` when unreadable) carrying the class phrase and `set <slot> item` as whole words, case-insensitively, its `head`, `shoulder`, `chest`, `hand` or `leg` word mapped to the `INVTYPE_*` key (TT-1; the words are the enUS locale table's, parsed by `core/TextParse.lua`'s `TokenUseSlot`, so another locale's line reads nil, a documented localization-§4 deviation). What the client's token tooltip carries is smoke check `ITEM-6` | `nil` (no API, no such line, a secret or malformed answer) |
+| `TierTokenSlot(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** one of the localized `INVTYPE_HEAD`, `INVTYPE_SHOULDER`, `INVTYPE_CHEST`, `INVTYPE_HAND` or `INVTYPE_LEGS` GlobalStrings: that `INVTYPE_*` key (DW-CAT4; since TT-1 the second read of `NS.TierTokens.SlotOf`'s `use` rung, after the Use text) | `nil` (no API, no such line, a secret or malformed answer) |
+| `ItemUseText(link)` | `C_Item.GetItemSpell(link)`'s spell id → `C_Spell.GetSpellDescription`: what the item does when used (`Create a soulbound set hand item appropriate for your class.`); no use spell answers `nil` without a tooltip read. When the description cannot be read (no API, a secret spell id, a secret or empty text), `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` for the first line that starts with the client's `ITEM_SPELL_TRIGGER_ONUSE` (the locale table's `Use:` when unreadable), case-insensitively, its rest trimmed (TT-1; read once per item that is not gear, when its facts are built) | `nil` (no use spell, a secret link, no API, no use line, a secret line) |
 | `ClassDisplayName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE[classFile]`, the client's name for a class (a tier token's Type cell) | `nil` (no table, an unknown class, a secret name) |
 | `ItemLinkByID(itemID)` | `C_Item.GetItemInfo(itemID)`'s second return, a `\|Hitem:` link: a curated simulator sample's link by its id (DW-CAT6) | `nil` (no API, not cached yet, a secret or non-hyperlink answer) |
 

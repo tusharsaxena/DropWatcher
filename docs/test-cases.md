@@ -1102,7 +1102,7 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_collect.lua (21)
+### test_compat_collect.lua (20)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
 - compat collect: MountCollected answers isCollected, the 11th return, else nil
@@ -1116,17 +1116,16 @@ Total.
 - compat collect: ProfessionSkillLines maps every profession slot to its skill line
 - compat collect: TierTokenSlot reads a slot line by its whole text
 - compat collect: TierTokenSlot answers nil when it cannot tell
-- compat collect: TierTokenSlot reads the slot a token's use line names (TT-1)
-- compat collect: TierTokenSlot's use-line read refuses lines that only look like one (TT-1)
-- compat collect: TierTokenSlot prefers a whole slot line, and reads the client's Use: (TT-1)
-- compat collect: TierTokenSlot's use-line words are the locale table's (TT-1)
+- compat collect: ItemUseText answers the use spell's description, once per call
+- compat collect: ItemUseText falls back to the tooltip's use line when the spell cannot be read
+- compat collect: ItemUseText answers nil when it cannot tell
 - compat collect: ClassDisplayName answers the client's name for a class, else nil
 - compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
 - compat collect: no member raises with every API gone
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_text_parse.lua (10)
+### test_text_parse.lua (12)
 
 - textparse: the module is pure — it names no client global and reads no _G
 - textparse: EscapePattern makes every magic character literal
@@ -1138,6 +1137,8 @@ Total.
 - textparse: StatLine reads a primary stat line's value, grouping marks dropped
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
+- textparse: WordMap, FirstWord and EndsWithWord read whole words, any case (TT-1)
+- textparse: TokenUseSlot reads the class phrase and the set <slot> item, in the words it is handed (TT-1)
 
 ### test_constants.lua (15)
 
@@ -1228,11 +1229,11 @@ Total.
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
 
-### test_tier_token.lua (15)
+### test_tier_token.lua (25)
 
-- tier token: the slot is read off the tooltip, and becomes the equipLoc
+- tier token: the slot is read off the tooltip's slot line (the use rung), and becomes the equipLoc
 - tier token: the curated table beats the tooltip, and lists a Curio with no class line
-- tier token: a slot line is matched by its whole text; none read leaves the slot nil
+- tier token: a slot line is matched by its whole text; none read judges the token in any slot
 - tier token: the tooltip is not read when the table answers
 - tier token: a concrete slot is upgrade, sidegrade or downgrade against what is worn there
 - tier token: another class's token is cantUse; a slot not read is unknown, reason tierToken
@@ -1240,7 +1241,17 @@ Total.
 - tier token: a Curio of another class is cantUse, naming no slot
 - tier token: the scorer is skipped, and neither the opts nor the facts are written
 - tier token: the looter is judged on their own class and gear
+- tier token: the Use text names the slot (Midnight's tokens), source use
+- tier token: an older token's name names the slot, source name; else any
+- tier token: the rungs run in order: table, then use, then name
+- tier token: a secret, missing or non-string text reads no slot, never raises
+- tier token: every word is the locale table's, read from NS.L
+- tier token: a Use text with the class phrase is a token without a class line
+- tier token: an omni Curio is a token by its name, judged in any slot
+- tier token: gear, recipes, mounts, pets, toys and a common Curio are not tokens
+- tier token: a token judged in any slot folds to its best tier slot
 - tier token: through the feed, a token is judged against the head you wear
+- tier token: the drops diagnostics name a token's slot and the rung that read it (TT-1)
 - tier token: the minimum item level applies to a token
 - tier token: the Slot and Type cells name the slot and the classes
 - tier token: the detail card's Makes chip, and no type chip
@@ -1471,7 +1482,7 @@ Total.
 - item facts: the track falls back to the tooltip's upgrade line
 - item facts: an item unique on its own takes its item id as the category
 - item facts: a token naming classes is a tier token; class gear carries classes only
-- item facts: a tier token's use line names the slot it makes, read once; gear's never (TT-1)
+- item facts: a tier token's use text names the slot it makes, read once; gear's never (TT-1)
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
 - item facts: Get caches by link
@@ -2627,13 +2638,13 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
 | test_compat.lua | 74 |
-| test_compat_collect.lua | 21 |
-| test_text_parse.lua | 10 |
+| test_compat_collect.lua | 20 |
+| test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 13 |
 | test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
-| test_tier_token.lua | 15 |
+| test_tier_token.lua | 25 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
@@ -2698,4 +2709,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2220** |
+| **Total** | **2231** |

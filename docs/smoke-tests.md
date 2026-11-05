@@ -1891,15 +1891,20 @@ stat does not suit the spec`. A genuinely single-stat item (an Agility trinket) 
 unusable for a Strength spec. Record any multi-stat item judged by your own primary stat alone, with
 its link. Result: passed in the client, 2026-10-23 (the owner).
 
-**ITEM-6. What a tier token's tooltip carries (DW-CAT4, issue #13).** With a current-season tier token
-in your bags (or its link), `/dump C_TooltipInfo.GetHyperlink(<link>)` → record whether any line's
-`leftText` is exactly the slot's name (`Head`, `Shoulder`, `Chest`, `Hands`, `Legs`), whether a
-`Use: Create` or `Use: Synthesize a soulbound ... set <slot> item appropriate for your class.` line
-names it (TT-1; tokens such as 270913 and 249366), and whether a class line names its classes; `/dump C_Item.GetItemInfoInstant(<link>)` → record its class,
-subclass and equip location. Then `/dw add <link>` → the row's Slot reads `Token: Head` (or the slot
-it makes) and Type its classes; `Token` alone means the slot was not read. Record each season token's
-item ID and slot: they seed `C.TIER_TOKENS` (`docs/common-tasks.md`, "Add a season's tier tokens").
-Result: Passed (owner, 2026-11-05)
+**ITEM-6. A tier token's slot, read from its own text (DW-CAT4, issue #13; TT-1).** On an English
+client, with `/dw debug` on, take a current-season tier token (or its link: the Midnight tokens 270913
+*Venomforged Idol* and 249366 *Voidforged Unraveled Nullcore*) and `/dump C_Item.GetItemSpell(<link>)`,
+then `/dump C_Spell.GetSpellDescription(<spellID>)` → record the text (`Create a soulbound set hand item
+appropriate for your class.`, `Synthesize a soulbound set shoulder item ...`). `/dw add <link>` → the
+row's Slot reads `Token: <slot>` (`Token: Hands`, `Token: Shoulder`) and the drop is judged against
+what you wear there; `/dw diagnostics` → its drop has a `token slot=INVTYPE_HAND source=use` line.
+Then an omni Curio (an epic `... Curio`) → `/dw add <link>` → Slot reads `Token: any slot`, Type `Any
+class`, and the diagnostics line reads `source=any`. If you have an older class-group token
+(`Gauntlets of the Foreseen Conqueror`), add it too → `Token: Hands`, `source=name`. Fail: a token
+read as a slot it does not make, a Curio not seen as a token, or a slot read only through a
+`C.TIER_TOKENS` row. Record any token whose text reads another slot or none, with its item ID: it
+gets an override row (`docs/common-tasks.md`, "Add a season's tier tokens").
+Result: not run
 
 **ITEM-7. A token judged against your worn piece (DW-CAT4, issue #13).** `/dw add <a token for your
 class>` → Me reads ▲, ≈ or ▼ with the item-level change against what you wear in the slot it makes
@@ -3686,6 +3691,8 @@ Owed by the owner's seventh smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs
 Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12), and the checks it reopened, whose expected results moved and whose pass marks went with them: LAYOUT-1 (DW-CAT2, DW-CAT5), FEED-4 and FEED-19 (DW-CAT2), TOAST-6 (DW-T2) and SIM-15 (DW-CAT6). An agent never marks one passed. On 2026-11-05 the owner reported that every check the run owed passed, the reopened ones included; each one's `Result:` line records it as `Passed (owner, 2026-11-05)`.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
+
+Owed by TT-1 (2026-11-05: a tier token's slot read from its Use text and its name, the omni Curio by its name, no per-season id table): ITEM-6, whose expected results moved and whose pass mark went with them. An agent never marks it passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

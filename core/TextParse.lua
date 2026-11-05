@@ -220,6 +220,14 @@ function TextParse.FirstWord(text, words)
     return nil
 end
 
+--- True when `text`'s last whole word is `word` (case-insensitive; trailing spaces ignored).
+--- @return boolean
+function TextParse.EndsWithWord(text, word)
+    if word == "" then return false end
+    local pattern = "%f" .. WORD .. TextParse.EscapePattern(word:lower()) .. "%s*$"
+    return text:lower():find(pattern) ~= nil
+end
+
 --- The slot a tier token's Use text names, or nil (TT-1). The text must carry `vocab.phrase` ("appropriate
 --- for your class") and `vocab.template` ("set %s item") as whole words, whose `%s` word
 --- `vocab.slots` (a WordMap) knows. Case-insensitive; every word is the caller's.

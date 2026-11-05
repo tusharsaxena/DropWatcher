@@ -15,17 +15,22 @@ the code reads every case the design leaves open, module by module, is in
   as their worn gear (TRADE-4, worn gear only today).
 - **Localized clients.** Loot lines and the trade-time sentence are read with the client's own
   GlobalStrings, but an upgrade track's tier comes from its enUS name until FEED-5 records the
-  client's track ids, so a non-English client shows no track change (LOC-1).
+  client's track ids, so a non-English client shows no track change (LOC-1), and a tier token's slot
+  is read in English words (below).
 - **A delve's tier** is not in its group header: the header names the difficulty as the client
   gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
   name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
   what the client gives.
-- **Tier tokens** are judged as the piece they make: the slot is read from a per-season table
-  (`C.TIER_TOKENS`, which ships empty until the season's ids are read in the client, smoke check
-  `ITEM-6`) and, failing that, from a tooltip line naming the slot or the token's `Use: Create|Synthesize
-  a soulbound ... set <slot> item appropriate for your class.` line (TT-1). That use line is read in
-  its enUS wording only. An unlisted token whose tooltip names no slot stays `unknown` (categories design spec §7, DW-CAT4). A token is judged by item
-  level alone, never by a scorer, and the History keeps the slot it made, not its classes.
+- **Tier tokens** are judged as the piece they make, by item level alone, never by a scorer, and the
+  History keeps the slot it made, not its classes. The slot is read from the token's own text against
+  English words in the enUS locale table (TT-1; a documented localization-§4 deviation): its Use text
+  (`... set hand item appropriate for your class.`), else a tooltip line that is exactly a slot's name,
+  else a slot noun in its item name. A token none of these reads, and every token on a non-English
+  client, is judged in its best tier slot (`Token: any slot`), never a wrong one. An omni Curio is
+  told by its name ending in `Curio` (an epic Miscellaneous or Reagent item), so on a non-English
+  client an unlisted Curio is not seen as a token. Legion's cloak tokens are not a tier slot here: a
+  cloak noun names no slot, and such a token reads `any`. `C.TIER_TOKENS` overrides any of this per
+  item id, and ships empty (categories design spec §7, DW-CAT4).
 - **Collectibles** (issue #13). A caged battle pet arrives as a `|Hbattlepet:` link and is never
   watched; only companion items are. A recipe's "known" state is the client's `ITEM_SPELL_KNOWN`
   tooltip line: under an addon restriction that line can read secret, and the drop then reads

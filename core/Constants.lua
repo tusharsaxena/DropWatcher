@@ -255,6 +255,7 @@ C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
     CONSUMABLE    = { "Consumable", 0 },
     WEAPON        = { "Weapon", 2 },
     ARMOR         = { "Armor", 4 },
+    REAGENT       = { "Reagent", 5 },
     RECIPE        = { "Recipe", 9 },
     MISCELLANEOUS = { "Miscellaneous", 15 },
 })
@@ -376,10 +377,10 @@ C.CATEGORY_WATCHED = "watched"
 -- The slots a tier token can make, in the order an omni token's slots are tried.
 C.TIER_SLOTS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
 
--- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: the season's tier tokens, curated; the first rung
--- of NS.TierTokens.SlotOf, ahead of the tooltip, and the one that names an omni Curio (`any`), which
--- carries no class line. Empty until the token ids are read in the client (smoke check ITEM-6;
--- categories design spec Q4; docs/common-tasks.md, "Add a season's tier tokens").
+-- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: an override for a token whose own text misreads;
+-- the first rung of NS.TierTokens.SlotOf, ahead of the Use text and the name, and a token on its own
+-- (TierTokens.Listed). Empty by default: since TT-1 a token's slot is read from its text, so no
+-- table is kept up per season (docs/common-tasks.md, "Add a season's tier tokens").
 C.TIER_TOKENS = {}
 
 -- ---------------------------------------------------------------------------------------------

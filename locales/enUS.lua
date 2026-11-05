@@ -597,11 +597,13 @@ L["Tier token"] = "Tier token"
 L["Any class"] = "Any class"
 L["Makes: %s"] = "Makes: %s"
 L["any slot"] = "any slot"
--- A tier token's own text, matched against the client's (TT-1; core/CompatCollect.lua, the words for
--- core/TextParse.lua). INPUT, not display: a documented localization-§4 deviation (docs/ARCHITECTURE.md,
--- Documented deviations). `Use:` stands in for ITEM_SPELL_TRIGGER_ONUSE when the client's cannot be read.
--- A translation keeps each value's shape: the class phrase, the slot template
--- with its one %s, and a space-separated list of the slot words that fill it.
+-- A tier token's own text, matched against the client's (TT-1; modules/TierTokens.lua and
+-- core/CompatCollect.lua, parsed by core/TextParse.lua). INPUT, not display: a documented
+-- localization-§4 deviation (docs/ARCHITECTURE.md, Documented deviations). `Use:` stands in for
+-- ITEM_SPELL_TRIGGER_ONUSE when the client's cannot be read. A translation keeps each value's shape:
+-- the class phrase; the Use text's slot template with its one %s, and a space-separated list of the
+-- words that fill it, per slot; a space-separated list of the slot nouns of a token's name, per slot
+-- (head, shoulder, chest, hand, legs); the last word of an omni Curio's name.
 L["Use:"] = "Use:"
 L["appropriate for your class"] = "appropriate for your class"
 L["set %s item"] = "set %s item"
@@ -610,6 +612,15 @@ L["shoulder shoulders"] = "shoulder shoulders"
 L["chest"] = "chest"
 L["hand hands"] = "hand hands"
 L["leg legs"] = "leg legs"
+L["Helm Crown Hood Headpiece Circlet Cowl Helmet Faceguard"] = "Helm Crown Hood Headpiece Circlet Cowl Helmet Faceguard"
+L["Shoulders Shoulderpads Mantle Pauldrons Spaulders Shoulderguards Amice"] =
+    "Shoulders Shoulderpads Mantle Pauldrons Spaulders Shoulderguards Amice"
+L["Chest Chestguard Chestpiece Breastplate Robe Robes Vest Tunic Raiment Hauberk Jerkin"] =
+    "Chest Chestguard Chestpiece Breastplate Robe Robes Vest Tunic Raiment Hauberk Jerkin"
+L["Gauntlets Gloves Handguards Grips Handwraps Grasps"] = "Gauntlets Gloves Handguards Grips Handwraps Grasps"
+L["Leggings Legguards Legplates Pants Kilt Trousers Breeches Legwraps"] =
+    "Leggings Legguards Legplates Pants Kilt Trousers Breeches Legwraps"
+L["Curio"] = "Curio"
 L["chat"] = "chat"
 L["the encounter"] = "the encounter"
 L["the loot history"] = "the loot history"

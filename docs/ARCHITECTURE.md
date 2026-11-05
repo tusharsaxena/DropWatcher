@@ -461,7 +461,7 @@ Blizzard's own dialogs (DW-62).
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier is not read, and a
-tier token whose slot neither the per-season table nor its tooltip names stays unknown; a caged
+tier token's slot is read from its English text (TT-1), and a token it misses is judged in any slot; a caged
 battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
 *Already known* tooltip line (`ITEM_SPELL_KNOWN`), and the item kinds and item lists apply to new
 drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the

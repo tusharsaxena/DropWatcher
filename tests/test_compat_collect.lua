@@ -1,8 +1,8 @@
 -- tests/test_compat_collect.lua — core/CompatCollect.lua, the collection reads on NS.Compat (issue
 -- #13, categories design spec §2): each member's answer, its absent value with the API missing, a
 -- secret answer reading as absent, never a raise; the recipe's known line and a tier token's slot
--- line matched only by their whole text, and the token's use line (TT-1) only by its class phrase and
--- its "set <slot> item", in the locale table's words; a class's client name; a curated sample's link by its id
+-- line matched only by their whole text; an item's use text (TT-1), its use spell's description else
+-- its tooltip's use line; a class's client name; a curated sample's link by its id
 -- (DW-CAT6); the simulator's seam wrapping every
 -- member; and no other shipped file naming the APIs.
 
@@ -216,66 +216,51 @@ test("compat collect: TierTokenSlot answers nil when it cannot tell", function()
     assertNil(Compat.TierTokenSlot(TOKEN), "no C_TooltipInfo")
 end)
 
-test("compat collect: TierTokenSlot reads the slot a token's use line names (TT-1)", function()
+test("compat collect: ItemUseText answers the use spell's description, once per call", function()
     local Compat, m = fresh()
-    local function slotOf(text)
-        m.tooltips.hyperlink[TOKEN] = lines("Voidglass Token", "Classes: Mage", text)
-        return Compat.TierTokenSlot(TOKEN)
-    end
-    -- red under: the whole-line read alone, which no current token's tooltip answers
-    assertEqual(slotOf("Use: Create a soulbound Voidglass set chest item appropriate for your class."),
-        "INVTYPE_CHEST", "Create, with a raid name")
-    assertEqual(slotOf("Use: Synthesize a soulbound set hand item appropriate for your class."),
-        "INVTYPE_HAND", "Synthesize, no raid name")
-    assertEqual(slotOf("Use: Create a soulbound Liberation of Undermine set leg item appropriate for your class"),
-        "INVTYPE_LEGS", "a raid name of several words, no full stop")
-    assertEqual(slotOf("USE: CREATE A SOULBOUND SET SHOULDER ITEM APPROPRIATE FOR YOUR CLASS."),
-        "INVTYPE_SHOULDER", "any case")
-    assertEqual(slotOf("Use: Create a soulbound Sunset set head item appropriate for your class."),
-        "INVTYPE_HEAD", "a raid name ending in set")
+    local HAND = "Create a soulbound set hand item appropriate for your class."
+    m.itemSpells[TOKEN], m.spellTexts[900] = 900, HAND
+    local tipReads = 0
+    m.C_TooltipInfo.GetHyperlink = function() tipReads = tipReads + 1 return lines("Use: something else") end
+    assertEqual(Compat.ItemUseText(TOKEN), HAND)
+    assertEqual(tipReads, 0, "the tooltip is not read when the spell answers")
+    m.itemSpells[TOKEN] = nil
+    -- red under: a missing use spell falling through to the tooltip
+    assertNil(Compat.ItemUseText(TOKEN), "no use spell: nothing to read")
+    assertEqual(tipReads, 0)
 end)
 
-test("compat collect: TierTokenSlot's use-line read refuses lines that only look like one (TT-1)", function()
+test("compat collect: ItemUseText falls back to the tooltip's use line when the spell cannot be read", function()
     local Compat, m = fresh()
-    local function slotOf(text)
-        m.tooltips.hyperlink[TOKEN] = lines("Voidglass Token", text)
-        return Compat.TierTokenSlot(TOKEN)
+    local function useOf(...)
+        m.tooltips.hyperlink[TOKEN] = lines("Voidglass Token", ...)
+        return Compat.ItemUseText(TOKEN)
     end
-    assertNil(slotOf("Use: Create a soulbound set feet item appropriate for your class."), "not a tier slot")
-    assertNil(slotOf("Create a soulbound set chest item appropriate for your class."), "no Use: prefix")
-    assertNil(slotOf("\"Use: Create a soulbound set chest item appropriate for your class.\""), "flavor text")
-    assertNil(slotOf("Use: Create a soulbound set chest item."), "no class clause")
-    assertNil(slotOf("Use: Create a soulbound Voidset chest item appropriate for your class."), "no set word")
-    assertNil(slotOf("Use: Create a soulbound Tier 19 item appropriate for your class."), "no set <slot> item")
-    assertNil(slotOf("Use: Create a soulbound set chestpiece item appropriate for your class."), "a longer word")
-    m.tooltips.hyperlink[TOKEN] = lines(T.secret("Use: Create a soulbound set chest item appropriate for your class."))
-    assertNil(Compat.TierTokenSlot(TOKEN), "a secret line")
-end)
-
-test("compat collect: TierTokenSlot prefers a whole slot line, and reads the client's Use: (TT-1)", function()
-    local Compat, m = fresh()
-    m.tooltips.hyperlink[TOKEN] = lines("Use: Create a soulbound set chest item appropriate for your class.", "Legs")
-    -- red under: one pass over both reads, where the earlier use line would win
-    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_LEGS", "the whole-line read runs first")
+    m.itemSpells[TOKEN] = 900
+    m.spellTexts[900] = T.secret("Create a soulbound set chest item appropriate for your class.")
+    assertEqual(useOf("Use: Create a soulbound set chest item."), "Create a soulbound set chest item.", "a secret description")
+    m.spellTexts[900] = ""
+    assertEqual(useOf("use:   Synthesize it.  "), "Synthesize it.", "an empty description; any case, trimmed")
+    m.itemSpells[TOKEN] = T.secret(900)
+    assertEqual(useOf("Use: A."), "A.", "a secret spell id")
+    m.C_Spell = nil
+    assertEqual(useOf("\"Use: flavor\"", "Use: B."), "B.", "no C_Spell; flavor text is no use line")
+    assertNil(useOf("Equip: C."), "no use line")
+    assertNil(useOf(T.secret("Use: D.")), "a secret line")
     m.ITEM_SPELL_TRIGGER_ONUSE = "Benutzen:"
-    m.tooltips.hyperlink[TOKEN] = lines("Benutzen: Create a soulbound set chest item appropriate for your class.")
-    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_CHEST", "ITEM_SPELL_TRIGGER_ONUSE, read at call time")
-    m.tooltips.hyperlink[TOKEN] = lines("Use: Create a soulbound set chest item appropriate for your class.")
-    assertNil(Compat.TierTokenSlot(TOKEN), "the client's own prefix, not a hard-coded one")
-    m.ITEM_SPELL_TRIGGER_ONUSE = T.secret("Use:")
-    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_CHEST", "a secret GlobalString falls back to Use:")
+    assertEqual(useOf("Use: E.", "Benutzen: F."), "F.", "the client's ITEM_SPELL_TRIGGER_ONUSE, read at call time")
+    m.ITEM_SPELL_TRIGGER_ONUSE = T.secret("Benutzen:")
+    assertEqual(useOf("Use: G."), "G.", "a secret GlobalString falls back to the locale table's Use:")
 end)
 
-test("compat collect: TierTokenSlot's use-line words are the locale table's (TT-1)", function()
-    local Compat, m, NS = fresh()
-    local L = NS.L
-    L["appropriate for your class"], L["set %s item"] = "passend fuer eure Klasse", "Setteil %s"
-    L["hand hands"] = "Haende Hand"
-    -- red under: the class phrase, the template or the slot words written in the matcher itself
-    m.tooltips.hyperlink[TOKEN] = lines("Use: Erschafft ein Setteil Hand, passend fuer eure Klasse.")
-    assertEqual(Compat.TierTokenSlot(TOKEN), "INVTYPE_HAND", "the table's words, read")
-    m.tooltips.hyperlink[TOKEN] = lines("Use: Create a soulbound set hand item appropriate for your class.")
-    assertNil(Compat.TierTokenSlot(TOKEN), "the enUS words, no longer the table's, never matched")
+test("compat collect: ItemUseText answers nil when it cannot tell", function()
+    local Compat, m = fresh()
+    assertNil(Compat.ItemUseText(TOKEN), "no spell, no tooltip")
+    m.itemSpells[TOKEN], m.spellTexts[900] = 900, "X."
+    assertNil(Compat.ItemUseText(T.secret(TOKEN)), "a secret link")
+    assertNil(Compat.ItemUseText(nil), "no link")
+    m.C_Spell, m.C_TooltipInfo = nil, nil
+    assertNil(Compat.ItemUseText(TOKEN), "no API")
 end)
 
 test("compat collect: ClassDisplayName answers the client's name for a class, else nil", function()
@@ -313,14 +298,14 @@ end)
 -- ---------------------------------------------------------------------------------------------
 
 local MEMBERS = { "MountFromItem", "MountCollected", "PetSpeciesFromItem", "PetCollected", "IsToy",
-    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ClassDisplayName",
-    "ItemLinkByID" }
+    "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ItemUseText",
+    "ClassDisplayName", "ItemLinkByID" }
 
 test("compat collect: no member raises with every API gone", function()
     local Compat, m = fresh()
     m.C_MountJournal, m.C_PetJournal, m.C_ToyBox, m.PlayerHasToy = nil, nil, nil, nil
     m.C_TooltipInfo, m.GetProfessions, m.GetProfessionInfo, m.C_Item.IsCosmeticItem = nil, nil, nil, nil
-    m.LOCALIZED_CLASS_NAMES_MALE = nil
+    m.LOCALIZED_CLASS_NAMES_MALE, m.C_Spell, m.C_Item.GetItemSpell = nil, nil, nil
     for _, name in ipairs(MEMBERS) do
         for _, arg in ipairs({ 1, RECIPE, false, {} }) do
             assertTrue(pcall(Compat[name], arg), name .. " raised")
@@ -336,7 +321,8 @@ test("compat collect: the simulator's seam wraps every collection member (the TO
 end)
 
 local COLLECT_APIS = { "C_MountJournal", "C_PetJournal", "C_ToyBox", "PlayerHasToy", "IsCosmeticItem",
-    "GetProfessions%f[^%w_]", "GetProfessionInfo", "ITEM_SPELL_KNOWN" }
+    "GetProfessions%f[^%w_]", "GetProfessionInfo", "ITEM_SPELL_KNOWN", "C_Spell", "GetItemSpell",
+    "GetSpellDescription", "ITEM_SPELL_TRIGGER_ONUSE" }
 
 test("compat collect: no other shipped file names a collection API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

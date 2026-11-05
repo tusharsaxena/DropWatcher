@@ -55,19 +55,29 @@ A version-variant, deprecated or optional client API is called from `core/Compat
 
 ## Add a season's tier tokens
 
-A tier token is judged as the piece it makes (categories design spec §7). The slot comes from the
-curated `C.TIER_TOKENS` in `core/Constants.lua` first, then from the token's tooltip: a line that is
-exactly the slot's name, else its `Use: Create|Synthesize a soulbound ... set <slot> item appropriate
-for your class.` line (TT-1). A token whose enUS tooltip carries that line needs no row; list the
-ones it does not (a Curio, another locale).
+Normally there is nothing to do. A tier token is judged as the piece it makes (categories design spec
+§7), and since TT-1 its slot is read from its own text (`modules/TierTokens.lua`, `SlotOf`): its Use
+text's `set <slot> item ... appropriate for your class`, else a tooltip line that is exactly the slot's
+name, else a slot noun in its item name (`Gauntlets of the Foreseen Conqueror`), else it is judged in
+its best tier slot (`any`). An omni Curio is told by its name. The words are the enUS locale table's
+(`locales/enUS.lua`, the TT-1 block; a documented localization-§4 deviation in
+[`ARCHITECTURE.md`](ARCHITECTURE.md)).
 
-1. In the client, read each of the season's tokens with `/dump C_Item.GetItemInfo(<itemID>)` and its
-   tooltip (`/dump C_TooltipInfo.GetItemByID(<itemID>)`): note the slot it makes and whether it
-   names classes (an omni Curio names none).
-2. Add one row per token, `[itemID] = { slot = "INVTYPE_HEAD" }` (`INVTYPE_SHOULDER`,
-   `INVTYPE_CHEST`, `INVTYPE_HAND`, `INVTYPE_LEGS`), or `{ slot = "any" }` for a Curio, with the
-   season in a comment. Never guess an id into the table.
-3. Add the ids to smoke check `ITEM-6`'s record in [`smoke-tests.md`](smoke-tests.md).
+To check a new season's wording:
+
+1. In the client, for each of the season's tokens, `/dump C_Item.GetItemSpell(<itemID>)`, then
+   `/dump C_Spell.GetSpellDescription(<spellID>)`, and note the text.
+2. Still `appropriate for your class` with `set <slot> item`, and the slot word one of the table's
+   (`head`, `shoulder`, `chest`, `hand`, `leg` and their plurals): nothing to do. Run smoke check
+   `ITEM-6` to confirm.
+3. New wording, or a new slot word or name noun: change the words in `locales/enUS.lua`'s TT-1 block
+   (never in the code), and add a case with the season's real text to `tests/test_tier_token.lua`.
+
+The override table, for an oddity the text misreads: `C.TIER_TOKENS` in `core/Constants.lua`, one
+row per token, `[itemID] = { slot = "INVTYPE_HEAD" }` (`INVTYPE_SHOULDER`, `INVTYPE_CHEST`,
+`INVTYPE_HAND`, `INVTYPE_LEGS`), or `{ slot = "any" }`, with the season and the reason in a comment.
+It is the first rung and makes the item a token on its own. Never guess an id into it; record the id
+in smoke check `ITEM-6`'s notes.
 
 ## Add a perf bucket
 

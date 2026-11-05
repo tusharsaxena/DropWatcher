@@ -162,39 +162,42 @@ test("item facts: a token naming classes is a tier token; class gear carries cla
     assertTrue(t.classes.WARRIOR); assertTrue(t.classes.PALADIN); assertTrue(t.classes.DEATHKNIGHT)
     assertNil(t.classes.MAGE)
     assertNil(t.transmogKnown, "no equipLoc, no appearance")
-    -- No slot line and not in C.TIER_TOKENS: the slot it makes is not read (tests/test_tier_token.lua)
-    assertNil(t.tokenSlot); assertEqual(t.equipLoc, "", "the raw slot stays")
+    -- No Use text, no slot line, not in C.TIER_TOKENS: its name's slot noun, Helm (TT-1; the rungs
+    -- are tests/test_tier_token.lua's)
+    assertEqual(t.tokenSlot, "INVTYPE_HEAD"); assertEqual(t.tokenSlotSource, "name")
+    assertEqual(t.equipLoc, "INVTYPE_HEAD")
     local c = IF.Get(CHEST)
     assertNil(c.tokenSlot, "gear makes no slot")
     assertFalse(c.isTierToken); assertTrue(c.classes.HUNTER)
 end)
 
-test("item facts: a tier token's use line names the slot it makes, read once; gear's never (TT-1)", function()
-    local USE = "Use: Synthesize a soulbound Voidglass set chest item appropriate for your class."
-    local reads = 0
+test("item facts: a tier token's use text names the slot it makes, read once; gear's never (TT-1)", function()
+    local USE = "Synthesize a soulbound Voidglass set chest item appropriate for your class."
+    local reads = { item = 0, gear = 0 }
     local _, m, IF = enabled(function(m)
-        m.addItem(TOKEN, { name = "Voidglass Chest Token", quality = 4, ilvl = 263, equipLoc = "",
+        m.addItem(TOKEN, { name = "Voidglass Idol", quality = 4, ilvl = 263, equipLoc = "",
             classID = 15, subClassID = 0, bindType = 1 })
-        m.tooltips.hyperlink[TOKEN] = { lines = { { type = 21, leftText = "Classes: Warrior" },
-            { type = 0, leftText = USE } } }
+        m.tooltips.hyperlink[TOKEN] = { lines = { { type = 21, leftText = "Classes: Warrior" } } }
+        m.itemSpells[TOKEN], m.spellTexts[77] = 77, USE
         m.addItem(CHEST, chest())
-        m.tooltips.hyperlink[CHEST] = { lines = { { type = 21, leftText = "Classes: Hunter" },
-            { type = 0, leftText = (USE:gsub("chest", "hand")) } } }
+        m.tooltips.hyperlink[CHEST] = { lines = { { type = 21, leftText = "Classes: Hunter" } } }
+        m.itemSpells[CHEST], m.spellTexts[78] = 78, (USE:gsub("chest", "hand"))
     end)
-    local get = m.C_TooltipInfo.GetHyperlink
-    m.C_TooltipInfo.GetHyperlink = function(link)
-        if link == TOKEN then reads = reads + 1 end
-        return get(link)
+    local spellOf = m.C_Item.GetItemSpell
+    m.C_Item.GetItemSpell = function(link)
+        if link == TOKEN then reads.item = reads.item + 1 elseif link == CHEST then reads.gear = reads.gear + 1 end
+        return spellOf(link)
     end
     local t = IF.Get(TOKEN)
-    -- red under: TierTokenSlot reading whole slot lines alone
-    assertEqual(t.tokenSlot, "INVTYPE_CHEST"); assertEqual(t.tokenSlotSource, "tooltip")
+    -- red under: no Use-text rung, so the token reads any
+    assertEqual(t.tokenSlot, "INVTYPE_CHEST"); assertEqual(t.tokenSlotSource, "use")
+    assertEqual(t.useText, USE)
     assertEqual(t.equipLoc, "INVTYPE_CHEST", "the made slot is the equipLoc")
-    local first = reads
     IF.Get(TOKEN); IF.Get(TOKEN)
-    assertEqual(reads, first, "the facts are cached: the tooltip is not read again")
+    assertEqual(reads.item, 1, "read once: the facts are cached")
     local c = IF.Get(CHEST)
     assertFalse(c.isTierToken); assertNil(c.tokenSlot, "class gear is never parsed for a made slot")
+    assertEqual(reads.gear, 0, "gear's use text is never read"); assertNil(c.useText)
     assertEqual(c.equipLoc, "INVTYPE_CHEST", "its own slot stays")
 end)
 

@@ -7,8 +7,8 @@ local _, NS = ...
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
---             transmogKnown = true | false | nil, rawEquipLoc, category, collect,
---             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "tooltip" | nil }
+--             transmogKnown = true | false | nil, rawEquipLoc, category, collect, useText | nil,
+--             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "use" | "name" | "any" | nil }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
 -- effective level and the quality through NS.ItemRead (core/ItemRead.lua: the detailed level, else
@@ -24,14 +24,18 @@ local _, NS = ...
 -- UNIQUE. An item unique in a category carries `{ cat = categoryID, max }`; an item unique on its
 -- own carries `{ cat = "item:<itemID>", max }`, so two copies of it share a category.
 --
--- TIER TOKENS. An item that names its classes (the RestrictedRaceClass tooltip line) and is not
--- gear (no slot plan for its raw equipLoc) is a tier token, with `classes` set; so is an item the
--- curated C.TIER_TOKENS lists (an omni Curio names no class). Class-restricted gear carries
--- `classes` too, without the flag. NS.TierTokens.SlotOf (modules/TierTokens.lua) reads the slot the
--- token makes, `tokenSlot`: the table's, else the tooltip's (NS.Compat.TierTokenSlot), with
--- `tokenSlotSource` saying which. A concrete slot then becomes the facts' `equipLoc`, so the kernel
--- and every gear reader judge the token as the piece it makes; `any` (a Curio) keeps the raw slot
--- and the kernel folds over the tier slots (categories design spec §3.1, §7).
+-- TIER TOKENS. An item that is not gear (no slot plan for its raw equipLoc) is a tier token when it
+-- names its classes (the RestrictedRaceClass tooltip line, `classes` set), when its use text makes a
+-- piece "appropriate for your class" (TT-1), or when it is an omni Curio (an epic Miscellaneous or
+-- Reagent item named "... Curio", which names no class; NS.TierTokens.IsCurio); so is an item the
+-- C.TIER_TOKENS override lists. Class-restricted gear carries `classes` too, without the flag. The
+-- use text (`useText`, NS.Compat.ItemUseText) is read once here, for an item that is not gear only.
+-- NS.TierTokens.SlotOf (modules/TierTokens.lua) reads the slot the token makes, `tokenSlot`, with
+-- `tokenSlotSource` naming the rung: `table`, `use` (its use text, else a tooltip slot line,
+-- NS.Compat.TierTokenSlot), `name`, else `any`. A concrete slot then becomes the facts' `equipLoc`,
+-- so the kernel and every gear reader judge the token as the piece it makes; `any` (a Curio, or a
+-- token whose text named no slot) keeps the raw slot and the kernel folds over the tier slots
+-- (categories design spec §3.1, §7).
 --
 -- CATEGORIES (issue #13). `rawEquipLoc` is the client's own equipLoc, kept on every item: the
 -- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
@@ -122,11 +126,21 @@ local function readTransmog(link, equipLoc)
     return NS.Compat.PlayerHasTransmog(link)
 end
 
--- The tier-token flag and the class set, from the raw slot or the curated table.
+-- An item that is not gear: no slot plan for its raw slot.
+local function notGear(facts) return C.SLOT_PLAN[facts.rawEquipLoc or ""] == nil end
+
+-- The use text, read once for an item that is not gear (TT-1); gear's is never read.
+local function readUseText(facts)
+    if notGear(facts) then facts.useText = NS.Compat.ItemUseText(facts.link) end
+end
+
+-- The tier-token flag and the class set (see the header): an item that is not gear and names its
+-- classes, or whose use text makes a piece for your class, or an omni Curio; or a listed item.
 local function readClasses(facts)
+    local TT = NS.TierTokens
     facts.classes = NS.Compat.ItemClassRestriction(facts.link)
-    facts.isTierToken = (facts.classes ~= nil and C.SLOT_PLAN[facts.rawEquipLoc or ""] == nil)
-        or NS.TierTokens.Listed(facts.itemID)
+    local token = notGear(facts) and (facts.classes ~= nil or TT.UseNamesClass(facts.useText) or TT.IsCurio(facts))
+    facts.isTierToken = token or TT.Listed(facts.itemID)
 end
 
 -- The slot a tier token makes; a concrete one becomes the equipLoc every gear reader takes.
@@ -191,6 +205,7 @@ function IF.Read(link)
     }
     readSpecs(facts)
     readBinds(facts)
+    readUseText(facts)
     readClasses(facts)
     readTokenSlot(facts)
     if NS.Collectibles then NS.Collectibles.Read(facts) end

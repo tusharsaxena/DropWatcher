@@ -297,6 +297,9 @@ local function itemLine(out, rec)
     out:add(TAG, "drops: %s sources=%s item=%s complete=%s kind=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s",
         rec.id, sourcesOf(rec), d and d.itemString or "?", d ~= nil and d.complete, f.category or "none", f.ilvl,
         f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
+    if f.isTierToken then   -- the slot a token makes and the rung that read it (TT-1)
+        out:add(TAG, "drops: %s token slot=%s source=%s", rec.id, f.tokenSlot or "none", f.tokenSlotSource or "none")
+    end
 end
 
 local function dropLine(out, rec)

@@ -1,12 +1,12 @@
 -- tests/test_text_parse.lua — core/TextParse.lua, the pure text parsers behind core/Compat.lua's
 -- tooltip and duration readers (DW-61): pattern building and the plural grammar, the duration
 -- decoder (design spec §7.4) with its templates passed in, and the item level, upgrade track and
--- class list lines. Every localized string is an argument here; tests/test_compat.lua drives the
+-- class list lines, and a tier token's words (TT-1). Every localized string is an argument here; tests/test_compat.lua drives the
 -- same parsers through the Compat members that read the client's GlobalStrings.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertNil =
-    T.test, T.assertEqual, T.assertTrue, T.assertNil
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local cached
 local function TP()
@@ -120,4 +120,42 @@ test("textparse: ScanLines answers the first parse over the wanted type, through
     seen = {}
     assertNil(TP().ScanLines(lines, nil, function(text) seen[#seen + 1] = text end, str, num))
     assertEqual(table.concat(seen, ","), "a,c,d", "every plain line when no type is wanted")
+end)
+
+-- The enUS words modules/TierTokens.lua hands over (TT-1).
+local function useVocab()
+    return { phrase = "appropriate for your class", template = "set %s item",
+        slots = TP().WordMap({ INVTYPE_HAND = "hand hands", INVTYPE_LEGS = "leg legs", INVTYPE_HEAD = "head" }) }
+end
+
+test("textparse: WordMap, FirstWord and EndsWithWord read whole words, any case (TT-1)", function()
+    local map = TP().WordMap({ HAND = "Gauntlets Gloves", HEAD = "Helm" })
+    assertEqual(map.gauntlets, "HAND"); assertEqual(map.helm, "HEAD"); assertNil(map.Helm, "keys are lowercase")
+    assertEqual(TP().FirstWord("GAUNTLETS of the Foreseen Conqueror", map), "HAND")
+    assertEqual(TP().FirstWord("Helm, then Gloves", map), "HEAD", "the first known word")
+    assertNil(TP().FirstWord("Helmsman's Gloveshaft", map), "never part of a word")
+    assertTrue(TP().EndsWithWord("Chiming Void curio  ", "Curio"))
+    assertFalse(TP().EndsWithWord("Chiming Void Curio Box", "Curio"), "not the last word")
+    assertFalse(TP().EndsWithWord("Chiming Voidcurio", "Curio"), "not a whole word")
+    assertFalse(TP().EndsWithWord("Curio", ""), "no word")
+end)
+
+test("textparse: TokenUseSlot reads the class phrase and the set <slot> item, in the words it is handed (TT-1)", function()
+    local v = useVocab()
+    assertEqual(TP().TokenUseSlot("Create a soulbound set hand item appropriate for your class.", v), "INVTYPE_HAND")
+    assertEqual(TP().TokenUseSlot("Synthesize a soulbound Manaforge Omega set leg item appropriate for your class.", v),
+        "INVTYPE_LEGS", "a raid name of two words")
+    assertEqual(TP().TokenUseSlot("Create a soulbound Sunset set head item appropriate for your class", v),
+        "INVTYPE_HEAD", "a raid name ending in set, no full stop")
+    assertEqual(TP().TokenUseSlot("CREATE A SOULBOUND SET HANDS ITEM APPROPRIATE FOR YOUR CLASS.", v), "INVTYPE_HAND")
+    -- red under: a slot word matched without the class phrase, or inside a longer word
+    assertNil(TP().TokenUseSlot("Create a soulbound set hand item.", v), "no class phrase")
+    assertNil(TP().TokenUseSlot("Create a soulbound Tier 19 item appropriate for your class.", v), "no set <slot> item")
+    assertNil(TP().TokenUseSlot("Create a soulbound set feet item appropriate for your class.", v), "not a tier slot")
+    assertNil(TP().TokenUseSlot("Create a soulbound Voidset hand item appropriate for your class.", v), "set inside a word")
+    assertNil(TP().TokenUseSlot("Create a soulbound set handy item appropriate for your class.", v), "a longer word")
+    local de = { phrase = "passend fuer eure Klasse", template = "Setteil %s", slots = TP().WordMap({ HAND = "Haende" }) }
+    assertEqual(TP().TokenUseSlot("Erschafft ein Setteil Haende, passend fuer eure Klasse.", de), "HAND",
+        "another locale's words, handed over")
+    assertNil(TP().TokenUseSlot("Create a soulbound set hand item appropriate for your class.", de), "the enUS line")
 end)

@@ -19,6 +19,9 @@
 --   ITEM_SPELL_KNOWN  the enUS "Already known" line a known recipe's tooltip carries
 --   INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND, _LEGS  the enUS slot names a tier token's tooltip may
 --                carry (Compat.TierTokenSlot, DW-CAT4)
+--   itemSpells   C_Item.GetItemSpell(link) answers "Spell", itemSpells[link] (its spell id; nothing for
+--                an item with no use spell); spellTexts[spellID] is C_Spell.GetSpellDescription's
+--                answer (Compat.ItemUseText, TT-1)
 --
 -- The categories' Enum tables (ItemClass's Recipe, ItemMiscellaneousSubclass, ItemRecipeSubclass)
 -- are left out on purpose, as the item ones are: core/Constants.lua then takes its documented
@@ -72,6 +75,14 @@ return function(M)
         if not line then return nil end
         return "Profession " .. line, 134400, 1, 100, 0, 0, line
     end
+
+    M.itemSpells, M.spellTexts = {}, {}
+    M.C_Item.GetItemSpell = function(item)
+        local id = M.itemSpells[item]
+        if id == nil then return nil end
+        return "Spell", id
+    end
+    M.C_Spell = { GetSpellDescription = function(spellID) return M.spellTexts[spellID] end }
 
     M.ITEM_SPELL_KNOWN = "Already known"
     M.INVTYPE_HEAD, M.INVTYPE_SHOULDER, M.INVTYPE_CHEST = "Head", "Shoulder", "Chest"
