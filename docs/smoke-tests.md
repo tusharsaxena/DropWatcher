@@ -161,7 +161,7 @@ watch an item*) and `blacklist` (*Never watch an item*), each with its `add|remo
 `list` form. `/dw whitelist` alone and `/dw blacklist list` each print the list, one `12345 [Name]`
 line per entry, or `(none)`. `/dw disable`, then `/dw whitelist list` → exactly the one disabled
 refusal line and no list; `/dw enable`. `/dw get feed.whitelist` prints the list as `{n}`, its entry
-count. Fail: a verb missing from help, a list printed while disabled, or a Lua error. Result: not run
+count. Fail: a verb missing from help, a list printed while disabled, or a Lua error. Result: Passed (owner, 2026-11-05)
 
 ## Keybindings
 
@@ -258,7 +258,7 @@ Turned on in row reads `Settings > Drops > Situations`. Items: the seven item ki
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
-Result: not run (reopened by the issues #10-#14 run, DW-CAT2 and DW-CAT5: its expected results moved; passed in the client, 2026-10-24 (the owner), before).
+Result: Passed (owner, 2026-11-05)
 
 **LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** General's strip still reads Master
 controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
@@ -538,7 +538,7 @@ active → the console shows a `RES` line `restrictions <prev> -> combat/true/fa
 second `RES` line ending `(PLAYER_REGEN_ENABLED)` whose signature's last field is `false`, even if
 the Combat type has not lifted yet (the reason may still read `combat`). Record whether each edge
 gave its own `RES` line, and whether the Combat type's own event came before or after the edge.
-Result: not run
+Result: Passed (owner, 2026-11-05)
 
 ## Diagnostics
 
@@ -601,7 +601,7 @@ why`) and `test_surface_parity` cover it. In the client: move `libs\LibKa0s\Char
 no Lua error; the tab shows its seven dropdowns and the strip with the period caption, and one line
 reads `The charts need LibKa0s-Charts-1.0, which did not load.` The console has one line saying the
 library is absent. The Drops and History tabs work as before. Restore both files and `/reload` → the
-cards and charts are back. Result: not run
+cards and charts are back. Result: Passed (owner, 2026-11-05)
 
 ## Feed
 
@@ -652,7 +652,7 @@ line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSP
 An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
 is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
 no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
-`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
+`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: Passed (owner, 2026-11-05)
 
 **FEED-5. The upgrade track on someone else's link.** After FEED-2, shift-click a member's drop
 (a piece with an upgrade track, from the loot window or chat) into `/dump
@@ -835,7 +835,7 @@ an item it does not hold → that group leaves the table. A reagent and a non-ge
 (a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notWatched` line each (`notGear` before DW-CAT2), no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
 `/dw diagnostics` → its `drops` section reads `drops: hidden notWatched=2` (plus any others) and
-`drops: refused pushed=1`. Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
+`drops: refused pushed=1`. Result: Passed (owner, 2026-11-05)
 
 **FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
 character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
@@ -1898,7 +1898,7 @@ class line names its classes; `/dump C_Item.GetItemInfoInstant(<link>)` → reco
 subclass and equip location. Then `/dw add <link>` → the row's Slot reads `Token: Head` (or the slot
 it makes) and Type its classes; `Token` alone means the slot was not read. Record each season token's
 item ID and slot: they seed `C.TIER_TOKENS` (`docs/common-tasks.md`, "Add a season's tier tokens").
-Result: not run
+Result: Passed (owner, 2026-11-05)
 
 **ITEM-7. A token judged against your worn piece (DW-CAT4, issue #13).** `/dw add <a token for your
 class>` → Me reads ▲, ≈ or ▼ with the item-level change against what you wear in the slot it makes
@@ -1906,7 +1906,7 @@ class>` → Me reads ▲, ≈ or ▼ with the item-level change against what you
 another class group>` → Me reads Can't use. An omni Curio, once listed in `C.TIER_TOKENS` with slot
 `any` → Me's tooltip names the tier slot it helps most (*Best in: Legs*) and Slot reads `Token: any
 slot`. Fail:
-a scorer's number on a token, a wrong slot, or `?` on a token whose slot ITEM-6 read. Result: not run
+a scorer's number on a token, a wrong slot, or `?` on a token whose slot ITEM-6 read. Result: Passed (owner, 2026-11-05)
 
 ## Collectibles
 
@@ -1923,31 +1923,30 @@ C_PetJournal.GetNumCollectedInfo(<species>)`, `/dump C_ToyBox.GetToyInfo(<toy id
 PlayerHasToy(<toy id>)`, `/dump C_Item.IsCosmeticItem(<cosmetic link>)`, `/dump GetProfessions()` and
 `/dump GetProfessionInfo(<each index>)` (the 7th return is the skill line), and `/dump ITEM_SPELL_KNOWN`
 → record each answer's shape, and any that answers nil or secret right after login or in combat (it
-goes in `docs/midnight-quirks.md`). Result: not run
+goes in `docs/midnight-quirks.md`). Result: Passed (owner, 2026-11-05)
 
 **COLL-2. A mount, new then collected.** `/dw add <a mount item you have not learned> Somebody` → the
 row's Me reads `New` in green, its tooltip `For you: New to your collection`, Them a dash
 (*Collectibles are judged for you alone.*), Ask `No action` (*collectibles are watched, not asked
 for*), the detail card's Retry inspect grayed (*collectibles are judged for you alone, not
 inspected*), and no toast. Learn that mount (or use one you have) → within a second the same row reads
-`Collected` in gray, with no `/reload`. Result: not run
+`Collected` in gray, with no `/reload`. Result: Passed (owner, 2026-11-05)
 
 **COLL-3. A pet's count.** `/dw add <a companion pet item>` for a species you have none of → `New`;
 for one you have 1 of 3 → `Collected 1/3`, its tooltip's Why naming `you have 1/3`. Learn one more
-→ the count moves. Result: not run
+→ the count moves. Result: Passed (owner, 2026-11-05)
 
-**COLL-4. A toy.** `/dw add <a toy you lack>` → `New`; one you own → `Collected`. Result: not run
+**COLL-4. A toy.** `/dw add <a toy you lack>` → `New`; one you own → `Collected`. Result: Passed (owner, 2026-11-05)
 
 **COLL-5. A recipe.** On a character with that profession, `/dw add <a recipe you know>` → `Known`;
 `<one you have not learned>` → `New`. On a character without the profession → `Can't use` in dim
 red, Why *not one of your professions*. Fail: `?` on a recipe whose tooltip shows *Already known*.
-Result: not run
+Result: Passed (owner, 2026-11-05)
 
 **COLL-6. A bound collectible's trade.** Loot a bind-on-pickup mount or pet yourself in a group →
 the Trade window counts down the real trade time once the bag item is read (the trade timer's exact
 answer); Offer reads No action (*collectibles are watched, not offered*), and `/dw offer <link>` prints
-*Collectibles are watched, not offered.* Someone else's → Trade reads `?` *Collectible*. Result: not
-run
+*Collectibles are watched, not offered.* Someone else's → Trade reads `?` *Collectible*. Result: Passed (owner, 2026-11-05)
 
 **COLL-7. Always watch and Never watch.** Settings › Drops › Item lists → the strip reads Always watch
 | Never watch. On Always watch, shift-click a reagent's link into the add box → it is listed with its
@@ -1958,7 +1957,7 @@ piece of gear's ID to Never watch → `/dw add <that gear>` adds no row to Drops
 `blacklist`, which `/dw diagnostics` counts). `/dw whitelist add <id>`, `/dw whitelist remove <id>` and `/dw blacklist list` do the
 same from chat and the panel shows the change on its next render. Drops' Defaults button → the item
 kinds and quality reset, both lists kept (its tooltip says so). Turning Mounts off under Item kinds
-→ a new mount drop is hidden, one already in the feed stays. Result: not run
+→ a new mount drop is hidden, one already in the feed stays. Result: Passed (owner, 2026-11-05)
 
 **COLL-8. The simulator and test mode make every kind.** `/dw sim start raid`, then `/dw sim drop
 mount me`, `drop pet`, `drop toy`, `drop recipe`, `drop cosmetic` (with Cosmetics turned on), `drop
@@ -1971,7 +1970,7 @@ guessed. `/dw sim drop reagent` → the usage. `/dw test` → a sixth Heroic bos
 Ask No action), a pet (`Collected 1/3`), a toy (`?`), a cosmetic (`New look`, no For transmog ask), a
 tier token (`Token: Head`, ▲ +7, Ask offered) and your own recipe (`Can't use`, no Offer); a kind the
 journal lacks is drawn on another item, named for its kind. History in test mode holds a world boss
-with a mount at `New` and your pet at `Collected 2/3`. Result: not run
+with a mount at `New` and your pet at `Collected 2/3`. Result: Passed (owner, 2026-11-05)
 
 **COLL-9. New to my collection, and a collectible on every surface.** `/dw test` → on Drops, the
 sixth boss's mount reads Slot `Mount`, Type a dash, and the recipe Slot `Recipe`, Type its profession
@@ -1989,7 +1988,7 @@ test log's mount row reads Slot `Mount`, Me `New`, Them a dash, and its card the
 › Window › Starting view → a New to my collection checkbox; tick it, `/reload` → a fresh Drops tab
 opens on New to my collection; untick it. `/dw diagnostics` → the Feed section has `collect: on
 equipment tierToken mount pet toy recipe` (cosmetic only when turned on) and `collect: whitelist=n
-blacklist=n`, and each drop line names its `kind=`. Result: not run
+blacklist=n`, and each drop line names its `kind=`. Result: Passed (owner, 2026-11-05)
 
 ## Gear
 
@@ -2500,7 +2499,7 @@ and the period the kept history covers. The strip at the bottom reads `Kept for 
 history for to 14 days (confirm if asked) → the caption reads `Kept for 14 days: …` at once, with no
 `/reload`, and the tab's tooltip agrees. Never delete → `Every kept day: since <first day> · …`. Put the
 retention back after. Fail: no third tab, a caption that keeps the old window, or a Lua error.
-Result: not run
+Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-2. The filters.** On real history, open each of the seven dropdowns (Character, Instance,
 Difficulty, Situation, Date, Quality, Category) → each lists only the values present in the kept
@@ -2515,7 +2514,7 @@ tab. The Date dropdown lists All kept days, Today and the shorter windows under 
 retention (Last 7 days and Last 14 days at 30). Reset filters on the strip → every dropdown back to
 All. Switch to History and back → the picks are kept for the session. Fail: a value with no drops
 listed, a count that does not match the cards, a pick that leaves the tab empty with no way back, or a
-Lua error. Result: not run
+Lua error. Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-3. Cards and sections on real history.** With every filter on All → eight cards in two
 rows of four (Drops seen, Upgrades for me, Asks sent, Items received, Ask success, Active days,
@@ -2531,7 +2530,7 @@ Mythic+ for Upgrades for me by boss) → the section keeps its heading with one 
 Date range with no drops at all → the cards and sections hide and one line reads `No drops match these
 filters.` The footer shows no Sort on Insights, and Sort is back on History. The shared filter bar is
 hidden on Insights and back on History. Fail: an overlapping section, a hover with no numbers, a
-blank section with no line, a Sort in the Insights footer, or a Lua error. Result: not run
+blank section with no line, a Sort in the Insights footer, or a Lua error. Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-4. An ask that ends in a trade, then equip the item.** Needs a group member and a tradeable
 drop that is an upgrade for you, as HIST-1. Note Asks sent, Items received and Ask success. Press its
@@ -2541,7 +2540,7 @@ with the gain the Me verdict showed before the trade (`+n`), and Most generous g
 the member. Now equip the item and wait for the gear rebuild → the History row's Me reads the item as
 equal to itself (sidegrade 0), but the Insights row still shows the gain from before (it is the
 verdict kept at the trade). Fail: the gain drops to 0 after equipping, or Asks sent does not move.
-Result: not run
+Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-5. Test mode.** `/dw test`, then the Insights tab → the amber test-mode strip sits directly
 under the tabs (not one bar's height lower), and every card has a number: Offers sent and Traded away
@@ -2552,15 +2551,14 @@ with more than one item, Item level gained from items received has one row marke
 and Cosmetic. Hover Asks sent → one ask is counted from an item received before asks were
 stamped. The Character dropdown lists you and Emberwick. Turn test mode off → the tab shows your own
 account's history again at once, with the filters corrected against it. Fail: an empty section, the
-strip a bar's height below the tabs, or the samples left behind. Result: not run
+strip a bar's height below the tabs, or the samples left behind. Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-6. The simulator.** With some real history kept, `/dw sim start dungeon`, `/dw sim pause`,
 `/dw sim loot 2 me`, then a member's drop, and `/dw sim trade <its id>` for one of each (as SIM-5)
 → the Insights tab shows only the simulation's drops (Drops seen counts them, not your real
 history), the cyan simulation strip sits under the tabs, and Items received or Traded away moves with
 the trade. `/dw sim stop` → the tab is back on your real history; `/dw history` shows no simulated
-drop. Fail: the real history mixed into the simulation's, or left behind after the stop. Result: not
-run
+drop. Fail: the real history mixed into the simulation's, or left behind after the stop. Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-7. Compact layout, a skin switch, a resize.** Switch to the compact layout (`/dw compact`)
 at its 400-pixel minimum on Insights → the filter bar wraps to several rows, the cards are two to a
@@ -2569,7 +2567,7 @@ Switch skins on General → Skin (Ka0s Default, then another) with the tab shown
 headings repaint in the new skin at once, and the class colors (Drops by looter class, Most generous)
 and quality colors (Drops by quality, the item names in Item level gained) stay right. Back in the
 full layout, drag the window's resize grip → the sections lay out again to the new width. Fail:
-clipped or overlapping charts, colors that keep the old skin, or a Lua error. Result: not run
+clipped or overlapping charts, colors that keep the old skin, or a Lua error. Result: Passed (owner, 2026-11-05)
 
 **INSIGHT-8. The slot of an item you cannot equip, and a Watched item.** Hold a mount, pet or toy
 item and a tier token in your bags, and run `/dump C_Item.GetItemInfoInstant(<itemID>)` for each →
@@ -2579,7 +2577,7 @@ otherwise correct the note and modules/InsightsFilters.lua's header. Then put a 
 watch (`/dw whitelist add <link>`), loot one (or `/dw sim` with it) and open Insights → the Category
 dropdown lists `Watched item (1)` last, and Drops by category counts it there, not under Equipment
 or Tier token. Fail: a different slot than the note says, the reagent under Equipment or Tier token,
-or a Lua error. Result: not run
+or a Lua error. Result: Passed (owner, 2026-11-05)
 
 ## Toast
 
@@ -2634,7 +2632,7 @@ toast somewhere else at `200%`, set Scale back to `100%` → it shrinks about wh
 under the top. `/reload`, `/dw test` → it comes back at the stored scale, in the same place. General ›
 Master controls › Reset position → back under the top, at the stored scale. Switch to a profile whose Scale is
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
-`150%`); `/dw set toast.scale 3` is refused. Result: not run (reopened by the issues #10-#14 run, DW-T2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
+`150%`); `/dw set toast.scale 3` is refused. Result: Passed (owner, 2026-11-05)
 
 **TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** The shell (the queue,
 the countdown and its pause, the close mark and right-click, the drag, the scale and the sound) moved
@@ -2709,7 +2707,7 @@ above the first at once; Toasts at once `1` → only the first stays and the oth
 all three come back when combat ends. `/dw test` → the placeholders that qualify stack the same way
 and stay until closed; drag any of them → the whole stack moves with the first, and its place survives
 `/reload`. `/dw diagnostics` → `toast: stack=3 grow=DOWN visible=3` and a `toast: on screen` line naming
-the three drop ids. `/dw set toast.stack 2.5` and `/dw set toast.stackGrow left` are refused. Result:
+the three drop ids. `/dw set toast.stack 2.5` and `/dw set toast.stackGrow left` are refused. Result: Passed (owner, 2026-11-05)
 not run
 
 ## Upgrade glow
@@ -3088,7 +3086,7 @@ Result: passed in the client, 2026-10-23 (the owner).
 each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
 `Unknown scenario 'nosuch'. Scenarios: …` with the scenario names, the library's line (accepted
 change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
-disabled refusal line. Result: not run (reopened by the issues #10-#14 run, DW-CAT6, the sixth verb `drop <kind>` in the usage: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
+disabled refusal line. Result: Passed (owner, 2026-11-05)
 
 **SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** The headless
 `test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
@@ -3165,7 +3163,7 @@ lists `/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]` a
 <a member's name>` → that member's; `/dw sim drop mount Nobody` → *No one by that name is in the
 simulated group.* Play a whole run (`/dw sim start raid`, let it finish): when the journal lists any
 mount, pet, toy, recipe or token, about one line in eight of the loot bursts is one of them. Nothing
-is whispered and saved history is untouched (SIM-1). Result: not run
+is whispered and saved history is untouched (SIM-1). Result: Passed (owner, 2026-11-05)
 
 ## Compact
 
@@ -3684,7 +3682,7 @@ Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2
 
 Owed by the owner's seventh smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-04-SMOKE_ROUND7/`): SIM-20 (R7-SIM), and SIM-19, whose expected results moved with it. An agent never marks one passed. On 2026-11-04 the owner reported that every check of the round passed (R7-SMOKE); SIM-19 and SIM-20 record it on their `Result:` lines as `Passed (owner, 2026-11-04)`.
 
-Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12), and the checks it reopened, whose expected results moved and whose pass marks went with them: LAYOUT-1 (DW-CAT2, DW-CAT5), FEED-4 and FEED-19 (DW-CAT2), TOAST-6 (DW-T2) and SIM-15 (DW-CAT6). An agent never marks one passed.
+Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12), and the checks it reopened, whose expected results moved and whose pass marks went with them: LAYOUT-1 (DW-CAT2, DW-CAT5), FEED-4 and FEED-19 (DW-CAT2), TOAST-6 (DW-T2) and SIM-15 (DW-CAT6). An agent never marks one passed. On 2026-11-05 the owner reported that every check the run owed passed, the reopened ones included; each one's `Result:` line records it as `Passed (owner, 2026-11-05)`.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 
