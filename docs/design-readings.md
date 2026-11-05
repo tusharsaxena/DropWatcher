@@ -337,7 +337,12 @@ each `DropUpdated` until it has toasted, so one whose trade turns `likely` after
 inspect still toasts. **The queue** keeps the newest five; a drop asked for meanwhile, gone from the
 feed or no longer qualifying is skipped when its turn comes. **Combat** holds the queue until
 `PLAYER_REGEN_ENABLED`, and a toast on screen when combat starts goes back to the head of the
-queue with its full duration. **The pause** keeps the seconds left while the pointer is over the
+queue with its full duration. **The stack** (issue #14, DW-T2): up to `toast.stack` toasts (1 to
+5, default 3; 1 is the one-at-a-time toast) show at once, each after the first below or above the
+one before (`toast.stackGrow`). Each has its own countdown, hover pause, Ask and close. Drops past
+the stack wait in the queue (`Toast.MAX_QUEUE`, 5, the oldest dropped first). A smaller stack set
+live sends its last toasts back to the head of the queue, and combat sends every toast on screen
+back. **The pause** keeps the seconds left while the pointer is over the
 toast or its buttons, and resumes with them (at least one). **Test mode**'s placeholders toast
 like live drops (with `toast.enabled` on); a test drop's toast has no countdown, so it stays to be
 dragged into place until it is closed or test mode ends. Only in test mode can it be dragged, and
@@ -602,7 +607,7 @@ bar's room while the Trade window column shows.
 ## The compat seam
 
 Three of the compat seam's (`core/Compat.lua`)
-readings are unconfirmed in game and owed as COMPAT-1..3: the enum member names it resolves, the
+readings were confirmed in game on 2026-10-23 (COMPAT-1..3): the enum member names it resolves, the
 shape of the trade-time and item-level tooltip lines (whether the `ItemLevel` line carries a
 numeric field), and that Pawn's `PawnIsReady()` answers true once it has initialized (feedback-21 H1:
 its `PawnIsInitialized` is a file local, never a global). A secret chat-lockdown or

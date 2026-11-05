@@ -117,5 +117,6 @@ The nesting of `evaluate` and `quality.gate` is confirmed in game, not headless:
 whose report reads each bucket observed inside `feed.add` and at top level (an item judged later,
 once it loads, is judged outside the bracket) is smoke check DIAG-4, recorded with
 `/dev-copilot:wow-perf-analysis` as a `docs/perf-analysis/<YYYYMMDD-HHMMSS>/` bundle. The
-`within = "feed.add"` declarations it confirms landed with DW-P24 (LibKa0s Perf 15); until a capture
-is supplied by the owner the check stays pending, and none is ever invented.
+`within = "feed.add"` declarations it confirms landed with DW-P24 (LibKa0s Perf 15). DIAG-4 records
+the owner's pass (2026-10-23), but no capture in `perf-analysis/` observes the nesting yet; the
+bundle is owed until the owner supplies one, and none is ever invented.

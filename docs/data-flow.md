@@ -534,14 +534,23 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   Compat.GetItemStats + ItemPrimaryStats ─> stats (every primary stat, off the tooltip)
   Compat.GetItemSpecs ─> specs, specsClass (the class playing: the list covers it alone)
   Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
-  Compat.ItemClassRestriction ─> classes, isTierToken
+  Compat.ItemUseText (not gear only; TT-1) ─> useText, useSpellLoading (a use spell not loaded yet)
+  Compat.ItemClassRestriction ─> classes; TierTokens.Listed / Users / IsCurio ─> isTierToken, tokenUsers
+  TierTokens.SlotOf (table, use (else Compat.TierTokenSlot), name, else any) ─> tokenSlot +
+                    tokenSlotSource; a concrete slot becomes equipLoc
   Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
+  Collectibles.Read ─> category, collect
 
 ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per link:
   NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back
                                                   └─> still uncached: LoadItem again, up to 5,
                                                       then every waiter with nil
+  cached facts waiting on a use spell (useSpellLoading, Compat.CanRequestSpellLoad):
+    Compat.RequestSpellLoad(spellID) ─> C_Timer.After(SPELL_LOAD_WAIT 0.4 s) ─> the use text, token
+    flag, slot and category read again (rereadToken); up to 5 tries, then the facts as read
 ```
+
+`SPELL_TEXT_UPDATE` re-reads every cached item whose `useSpellLoading` is that spell (rereadToken).
 
 `TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
 calls `Collectibles.Changed`. `RereadCollections` runs `Collectibles.Read` again on every cached

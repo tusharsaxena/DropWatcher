@@ -68,7 +68,7 @@ To check a new season's wording:
 1. In the client, for each of the season's tokens, `/dump C_Item.GetItemSpell(<itemID>)`, then
    `/dump C_Spell.GetSpellDescription(<spellID>)`, and note the text.
 2. Still `appropriate for your class` with `set <slot> item`, and the slot word one of the table's
-   (`head`, `shoulder`, `chest`, `hand`, `leg` and their plurals): nothing to do. Run smoke check
+   (`head`, `shoulder` or `shoulders`, `chest`, `hand` or `hands`, `leg` or `legs`): nothing to do. Run smoke check
    `ITEM-6` to confirm.
 3. New wording, or a new slot word or name noun: change the words in `locales/enUS.lua`'s TT-1 block
    (never in the code), and add a case with the season's real text to `tests/test_tier_token.lua`.

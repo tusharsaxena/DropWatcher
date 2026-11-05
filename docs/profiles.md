@@ -3,11 +3,11 @@
 AceDB profiles are user-visible: the Profiles page (`settings/Profiles.lua`) draws AceDBOptions'
 table, and `/dw profile [name]` lists or switches profiles.
 
-- Every setting lives in the profile except three account-wide ones in `global`: the minimap
+- Every setting lives in the profile except four account-wide ones in `global`: the minimap
   button (`global.minimap`, a per-installation preference, launcher-§3), the history and how long it is
   kept (`global.history`, its Keep history for in `global.history.retentionDays`; one log for all
-  your characters) and auto-ask's one-time notice
-  (`global.notices.autoAsk`).
+  your characters), auto-ask's one-time notice (`global.notices.autoAsk`) and the one-time skin
+  notice's seen version (`global.skinNotice`, LibKa0s OptionsSkinPicker minor 9, SG-L3).
 - A profile switch, copy or reset takes a shown first-run skin picker down (unmarked), runs the
   migrations, applies the incoming profile's skin, scope, font and texture overrides and Font outline
   (`NS.ApplySkinChoice`, a live repaint), refreshes the panels, re-reads the latch from

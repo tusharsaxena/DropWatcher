@@ -126,4 +126,4 @@ Please raise them on GitHub:
 
 ## Credits
 
-The window's icons, and the skin picker's preview and settings buttons, are drawn from [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon draws are shipped. The icons are bundled inside the LibKa0s payload, with their license text beside them.
+The window's icons, and the skin picker's preview and settings buttons, are drawn from [Open Iconic](https://github.com/iconic/open-iconic) by Waybury (MIT). Only the icons the addon draws are shipped, with their license text beside them.

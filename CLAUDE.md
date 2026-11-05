@@ -33,7 +33,8 @@ Start here, then read the docs:
   `data-flow.md`, `common-tasks.md`, `smoke-tests.md`, …), registered in `docs/ARCHITECTURE.md` ->
   `## Documentation map`.
 - **`DEPENDENCIES.md`** — the toolchain contract: what to install to build, run, test or release.
-- The v1 design spec and its checkpointed plan live in `docs/superpowers/`.
+- The design specs and checkpointed plans of every run, v1 onward (`specs/`, `plans/`, `research/`),
+  live in `docs/superpowers/` (frozen; read as evidence, never edited).
 
 Green gate before every commit: `lua tests/run.lua` and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
