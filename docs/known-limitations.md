@@ -11,8 +11,9 @@ the code reads every case the design leaves open, module by module, is in
 - **Confirmed in game, apart from a few.** The owner has recorded a client pass for nearly every
   in-game check in `smoke-tests.md`, among them COMBAT-1 (`CHAT_MSG_LOOT` mid-encounter), ASK-4 (a
   whisper during an encounter), TRADE-3 (the raid rule, kept at `personal`) and TRADE-4 (worn gear
-  only). Still owed: ITEM-6 and ITEM-7 (reopened by TT-1), SKIN-3, SKIN-15, SKIN-32 and SKIN-45,
-  and SKIN-14, SKIN-38 and SKIN-40 (failed 2026-11-02, re-opened as R3-L3).
+  only). Nine are marked passed only provisionally (2026-11-05), not yet run in the client and
+  tracked in issue #15: ITEM-6 and ITEM-7 (reopened by TT-1), SKIN-3, SKIN-15, SKIN-32 and
+  SKIN-45, and SKIN-14, SKIN-38 and SKIN-40 (failed 2026-11-02, re-opened as R3-L3).
 - **Localized clients.** Loot lines and the trade-time sentence are read with the client's own
   GlobalStrings, but an upgrade track's tier comes from its enUS name until FEED-5 records the
   client's track ids, so a non-English client shows no track change (LOC-1), and a tier token's slot
