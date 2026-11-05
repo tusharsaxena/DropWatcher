@@ -270,7 +270,7 @@ test("insights tab: test mode fills every card and every section, none with its 
     end
     for i, c in ipairs(d.cards) do
         local v = cardValue(d, i)
-        assertTrue(v ~= "-" and v ~= "0", c.caption .. " reads " .. tostring(v))
+        assertTrue(v ~= NS.InsightsRows.DASH and v ~= "0", c.caption .. " reads " .. tostring(v))
     end
     assertTrue(s.byCategory >= 7, "every item kind: equipment, the token and the five collectibles")
     local _, empties = NS.Pool.Counts(d.ctx:Pool("empty"))
