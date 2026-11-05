@@ -219,6 +219,7 @@ L["compared with the two-hander it would replace"] = "compared with the two-hand
 L["details not loaded yet"] = "details not loaded yet"
 L["Estimate"] = "Estimate"
 L["every class"] = "every class"
+L["your class"] = "your class"
 L["failed (%s)"] = "failed (%s)"
 L["fills an empty slot, so they can't trade it"] = "fills an empty slot, so they can't trade it"
 L["fills an empty slot, so you can't trade it"] = "fills an empty slot, so you can't trade it"

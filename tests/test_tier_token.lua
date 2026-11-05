@@ -1,6 +1,8 @@
 -- tests/test_tier_token.lua — tier tokens judged as gear (issue #13, categories design spec §3.1,
 -- §7; modules/TierTokens.lua, the token path of modules/ItemFacts.lua and modules/Evaluate.lua):
--- the slot from the curated table, then the tooltip, else none and `unknown`; a concrete slot
+-- the slot from the curated table, then the token's Use text or tooltip slot line, then its name,
+-- else `any` (TT-1); which item is a token (a class line, the Use text's class phrase, an omni Curio)
+-- and which is not; a concrete slot
 -- becoming the equipLoc and judged upgrade, sidegrade or downgrade against what is worn there; the
 -- wrong class `cantUse`; an omni Curio with no class line reaching `ok` and folded to its best slot;
 -- the scorer skipped and the caller's opts untouched; the looter's verdict on their own gear; the
@@ -38,13 +40,13 @@ end
 -- The slot a token makes (ItemFacts and NS.TierTokens.SlotOf)
 -- ---------------------------------------------------------------------------------------------
 
-test("tier token: the slot is read off the tooltip, and becomes the equipLoc", function()
+test("tier token: the slot is read off the tooltip's slot line (the use rung), and becomes the equipLoc", function()
     local NS, m = T.enableAddon()
     m.addItem(link(700), token())
     m.tooltips.hyperlink[link(700)] = tip("Mage, Priest", "Head")
     local f = NS.ItemFacts.Get(link(700))
     assertTrue(f.isTierToken); assertEqual(f.category, "tierToken")
-    assertEqual(f.tokenSlot, "INVTYPE_HEAD"); assertEqual(f.tokenSlotSource, "tooltip")
+    assertEqual(f.tokenSlot, "INVTYPE_HEAD"); assertEqual(f.tokenSlotSource, "use")
     -- red under: ItemFacts leaving the raw slot, so the kernel finds no slot plan
     assertEqual(f.equipLoc, "INVTYPE_HEAD", "the slot the token makes")
     assertEqual(f.rawEquipLoc, "", "the client's own slot is kept")
@@ -66,7 +68,7 @@ test("tier token: the curated table beats the tooltip, and lists a Curio with no
     assertEqual(curio.tokenSlot, "any"); assertEqual(curio.equipLoc, "", "any slot keeps the raw one")
 end)
 
-test("tier token: a slot line is matched by its whole text; none read leaves the slot nil", function()
+test("tier token: a slot line is matched by its whole text; none read judges the token in any slot", function()
     local NS, m = T.enableAddon()
     m.addItem(link(703), token()); m.addItem(link(704), token())
     -- red under: a substring match, which the flavor text would fool
@@ -74,10 +76,15 @@ test("tier token: a slot line is matched by its whole text; none read leaves the
     m.tooltips.hyperlink[link(704)] = tip("Mage")
     for _, id in ipairs({ 703, 704 }) do
         local f = NS.ItemFacts.Get(link(id))
-        assertTrue(f.isTierToken); assertNil(f.tokenSlot); assertEqual(f.equipLoc, "")
+        -- red under: SlotOf answering nil when no rung reads a slot (TT-1: `any`, never unknown)
+        assertTrue(f.isTierToken); assertEqual(f.tokenSlot, "any"); assertEqual(f.tokenSlotSource, "any")
+        assertEqual(f.equipLoc, "", "any slot keeps the raw one")
     end
-    assertNil(NS.TierTokens.SlotOf({ itemID = 9 }, function() return "INVTYPE_FEET" end), "not a tier slot")
-    assertNil(NS.TierTokens.SlotOf({ itemID = 9 }, function() return "any" end), "the tooltip never says any")
+    local slot, source = NS.TierTokens.SlotOf({ itemID = 9 }, function() return "INVTYPE_FEET" end)
+    assertEqual(slot, "any", "not a tier slot"); assertEqual(source, "any")
+    slot, source = NS.TierTokens.SlotOf({ itemID = 9 }, function() return "any" end)
+    assertEqual(slot, "any", "the tooltip never says any"); assertEqual(source, "any")
+    assertNil(NS.TierTokens.SlotOf(nil), "no facts")
 end)
 
 test("tier token: the tooltip is not read when the table answers", function()
@@ -191,6 +198,230 @@ test("tier token: the looter is judged on their own class and gear", function()
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The token's own text (TT-1): the Use text, the name, the Curio
+-- ---------------------------------------------------------------------------------------------
+
+local MIDNIGHT_HAND = "Create a soulbound set hand item appropriate for your class."
+local NULLCORE = "Synthesize a soulbound set shoulder item appropriate for your class."
+local MANAFORGE = "Synthesize a soulbound Manaforge Omega set leg item appropriate for your class."
+local TIER19 = "Create a soulbound Tier 19 item appropriate for your class."
+
+test("tier token: the Use text names the slot (Midnight's tokens), source use", function()
+    local TT = T.newAddon().TierTokens
+    local function slotOf(id, name, text) return TT.SlotOf({ itemID = id, name = name, useText = text }) end
+    local slot, source = slotOf(270913, "Venomforged Idol", MIDNIGHT_HAND)
+    assertEqual(slot, "INVTYPE_HAND"); assertEqual(source, "use")
+    slot, source = slotOf(249366, "Voidforged Unraveled Nullcore", NULLCORE)
+    assertEqual(slot, "INVTYPE_SHOULDER"); assertEqual(source, "use")
+    assertEqual((slotOf(1, "Token", MANAFORGE)), "INVTYPE_LEGS", "a raid name of two words")
+    assertEqual((slotOf(1, "Token", "Create a soulbound Sunset set head item appropriate for your class.")),
+        "INVTYPE_HEAD", "a raid name ending in set")
+    assertEqual((slotOf(1, "Token", "CREATE A SOULBOUND SET CHEST ITEM APPROPRIATE FOR YOUR CLASS.")),
+        "INVTYPE_CHEST", "any case")
+end)
+
+test("tier token: an older token's name names the slot, source name; else any", function()
+    local TT = T.newAddon().TierTokens
+    local function slotOf(name, text) return TT.SlotOf({ itemID = 1, name = name, useText = text }) end
+    local slot, source = slotOf("Gauntlets of the Foreseen Conqueror", TIER19)
+    -- red under: the name rung missing, so a Tier 19 token reads any
+    assertEqual(slot, "INVTYPE_HAND"); assertEqual(source, "name")
+    assertEqual((slotOf("Helm of the Forgotten Vanquisher")), "INVTYPE_HEAD")
+    assertEqual((slotOf("Shoulders of the Foreseen Protector")), "INVTYPE_SHOULDER")
+    assertEqual((slotOf("Chestguard of the Forgotten Protector")), "INVTYPE_CHEST")
+    assertEqual((slotOf("leggings of the lost conqueror")), "INVTYPE_LEGS", "any case")
+    slot, source = slotOf("Cloak of the Foreseen Conqueror", TIER19)
+    assertEqual(slot, "any", "a cloak is not a tier slot"); assertEqual(source, "any")
+    assertEqual((slotOf("Helmsman's Badge")), "any", "a slot noun only as a whole word")
+    slot, source = slotOf("Venomforged Idol", "Teaches you a thing.")
+    assertEqual(slot, "any", "neither"); assertEqual(source, "any")
+end)
+
+test("tier token: the rungs run in order: table, then use, then name", function()
+    local NS = T.newAddon()
+    local TT = NS.TierTokens
+    NS.Constants.TIER_TOKENS[720] = { slot = "INVTYPE_LEGS" }
+    local asked = 0
+    local function reader() asked = asked + 1 return "INVTYPE_CHEST" end
+    local both = { name = "Gauntlets of the Foreseen Conqueror", useText = NULLCORE }
+    local slot, source = TT.SlotOf({ itemID = 720, name = both.name, useText = both.useText }, reader)
+    assertEqual(slot, "INVTYPE_LEGS"); assertEqual(source, "table")
+    -- red under: the name read before the Use text
+    slot, source = TT.SlotOf({ itemID = 721, name = both.name, useText = both.useText }, reader)
+    assertEqual(slot, "INVTYPE_SHOULDER"); assertEqual(source, "use")
+    assertEqual(asked, 0, "the tooltip slot line is not read when the Use text answers")
+    slot, source = TT.SlotOf({ itemID = 721, name = both.name, useText = TIER19 }, reader)
+    assertEqual(slot, "INVTYPE_CHEST", "the tooltip slot line, the use rung's second read"); assertEqual(source, "use")
+    slot, source = TT.SlotOf({ itemID = 721, name = both.name, useText = TIER19 })
+    assertEqual(slot, "INVTYPE_HAND"); assertEqual(source, "name")
+end)
+
+test("tier token: a secret, missing or non-string text reads no slot, never raises", function()
+    local TT = T.newAddon().TierTokens
+    for _, v in ipairs({ T.secret(MIDNIGHT_HAND), 42, "", {} }) do
+        local ok, slot, source = pcall(TT.SlotOf, { itemID = 1, name = v, useText = v })
+        assertTrue(ok, "raised"); assertEqual(slot, "any"); assertEqual(source, "any")
+        assertFalse(TT.UseNamesClass(v)); assertFalse(TT.IsCurio({ quality = 4, classID = MISC, name = v }))
+    end
+    assertFalse(TT.UseNamesClass(nil)); assertNil(TT.UseSlot(nil)); assertNil(TT.NameSlot(nil))
+end)
+
+test("tier token: every word is the locale table's, read from NS.L", function()
+    local NS = T.newAddon()
+    local L, TT = NS.L, NS.TierTokens
+    L["appropriate for your class"], L["set %s item"], L["hand hands"] = "fuer eure Klasse", "Setteil %s", "Haende"
+    L["Gauntlets Gloves Handguards Grips Handwraps Grasps"], L["Curio"] = "Stulpen", "Kuriositaet"
+    -- red under: any of the words written in the matcher itself
+    assertEqual((TT.SlotOf({ itemID = 1, useText = "Erschafft ein Setteil Haende fuer eure Klasse." })), "INVTYPE_HAND")
+    assertTrue(TT.UseNamesClass("... fuer eure Klasse."))
+    assertEqual((TT.SlotOf({ itemID = 1, name = "Stulpen des Eroberers" })), "INVTYPE_HAND")
+    assertTrue(TT.IsCurio({ quality = 4, classID = MISC, subClassID = JUNK_SUB, rawEquipLoc = "", name = "Leere Kuriositaet" }))
+    local slot, source = TT.SlotOf({ itemID = 1, name = "Gauntlets of the Foreseen Conqueror", useText = MIDNIGHT_HAND })
+    assertEqual(slot, "any", "the enUS words, no longer the table's, never match"); assertEqual(source, "any")
+end)
+
+-- An item's definition for the mock, its use spell's text seeded (spell id = item id).
+local function useItem(m, id, def, useText)
+    m.addItem(link(id), def)
+    if useText then m.itemSpells[link(id)], m.spellTexts[id] = id, useText end
+end
+
+local function item(name, extra)
+    local def = { name = name, quality = 4, ilvl = 620, equipLoc = "", classID = MISC, subClassID = JUNK_SUB,
+        bindType = 1, stats = {} }
+    for k, v in pairs(extra or {}) do def[k] = v end
+    return def
+end
+
+test("tier token: a Use text with the class phrase is a token without a class line", function()
+    local NS, m = T.enableAddon()
+    useItem(m, 730, item("Venomforged Idol"), MIDNIGHT_HAND)
+    local f = NS.ItemFacts.Get(link(730))
+    -- red under: isTierToken from the class line alone
+    assertTrue(f.isTierToken); assertNil(f.classes); assertEqual(f.category, "tierToken")
+    assertEqual(f.tokenSlot, "INVTYPE_HAND"); assertEqual(f.tokenSlotSource, "use")
+    assertEqual(f.equipLoc, "INVTYPE_HAND"); assertEqual(f.useText, MIDNIGHT_HAND)
+    assertEqual(NS.WindowCells.Slot({ facts = f }).text, "Token: Hands")
+    -- red under: a class-less token's Type keyed on its slot (a dash, `Usable by: not read`)
+    assertEqual(f.tokenUsers, "yours"); assertEqual(NS.WindowCells.ArmorType({ facts = f }).text, "Your class")
+end)
+
+test("tier token: an omni Curio is a token by its name, judged in any slot", function()
+    local NS, m = T.enableAddon()
+    useItem(m, 731, item("Chiming Void Curio"))
+    useItem(m, 732, item("Mystic Curio", { classID = 5, subClassID = 0, quality = 5 }))
+    local f = NS.ItemFacts.Get(link(731))
+    -- red under: no Curio rung, so an unlisted Curio is no token
+    assertTrue(f.isTierToken); assertNil(f.classes)
+    assertEqual(f.tokenSlot, "any"); assertEqual(f.tokenSlotSource, "any"); assertEqual(f.equipLoc, "")
+    assertEqual(NS.WindowCells.Slot({ facts = f }).text, "Token: any slot")
+    assertEqual(f.tokenUsers, "every"); assertEqual(NS.WindowCells.ArmorType({ facts = f }).text, "Any class")
+    assertTrue(NS.ItemFacts.Get(link(732)).isTierToken, "a Reagent-class Curio")
+end)
+
+test("tier token: a token with a class line and no slot read is `any`, kept with no users, never a Curio", function()
+    local NS, m = T.enableAddon()
+    useItem(m, 733, item("Mystery Token"))
+    m.tooltips.hyperlink[link(733)] = tip("Mage", "Priest")
+    local f = NS.ItemFacts.Get(link(733))
+    assertTrue(f.isTierToken); assertEqual(f.tokenSlot, "any"); assertNil(f.tokenUsers, "it names its classes")
+    local e = NS.History.Snapshot({ link = f.link, facts = f, looter = { name = "Brakk" } }, 1000)
+    assertEqual(e.tokenSlot, "any"); assertNil(e.tokenUsers)
+    local kept = NS.WindowHistory.AsDrop(e, 1)
+    -- red under: History's `any` token read as a Curio (`Any class`) for want of its classes
+    assertEqual(NS.WindowCells.ArmorType(kept).text, "–")
+    useItem(m, 734, item("Chiming Void Curio"))
+    local curio = NS.History.Snapshot({ link = link(734), facts = NS.ItemFacts.Get(link(734)), looter = {} }, 1000)
+    assertEqual(curio.tokenUsers, "every", "History keeps who may use it")
+    assertEqual(NS.WindowCells.ArmorType(NS.WindowHistory.AsDrop(curio, 1)).text, "Any class")
+end)
+
+test("tier token: a use spell not loaded yet is waited for, then the token read (TT-1)", function()
+    local NS, m = T.enableAddon()
+    local IF = NS.ItemFacts
+    useItem(m, 760, item("Venomforged Idol"), "")
+    local early = IF.Get(link(760))
+    -- the description is empty until the spell loads: no token yet, its spell named as loading
+    assertFalse(early.isTierToken); assertEqual(early.useSpellLoading, 760)
+    local got
+    local f, status = IF.Request(link(760), function(facts) got = facts end)
+    -- red under: the empty description cached as the answer, `ready` at once
+    assertNil(f); assertEqual(status, "loading"); assertEqual(m.spellLoadRequests[1], 760)
+    m.spellTexts[760] = MIDNIGHT_HAND
+    m.__fireTimers()
+    assertTrue(got == early, "the cached facts, read again in place")
+    assertTrue(got.isTierToken); assertEqual(got.tokenSlot, "INVTYPE_HAND"); assertEqual(got.equipLoc, "INVTYPE_HAND")
+    assertEqual(got.category, "tierToken"); assertEqual(got.tokenUsers, "yours"); assertNil(got.useSpellLoading)
+    local again, ready = IF.Request(link(760))
+    assertTrue(again == got); assertEqual(ready, "ready")
+end)
+
+test("tier token: SPELL_TEXT_UPDATE re-reads a cached item waiting on that spell", function()
+    local NS, m = T.enableAddon()
+    local IF = NS.ItemFacts
+    useItem(m, 761, item("Venomforged Idol"), "")
+    local f = IF.Get(link(761))
+    assertFalse(f.isTierToken)
+    m.spellTexts[761] = NULLCORE
+    m.__fire("SPELL_TEXT_UPDATE", 999)
+    assertFalse(f.isTierToken, "another spell's text is not this item's")
+    m.__fire("SPELL_TEXT_UPDATE", 761)
+    -- red under: the use text read once and never again
+    assertTrue(f.isTierToken); assertEqual(f.tokenSlot, "INVTYPE_SHOULDER"); assertNil(f.useSpellLoading)
+end)
+
+test("tier token: a use spell that never loads is given up after MAX_LOAD_TRIES, with the facts as read", function()
+    local NS, m = T.enableAddon()
+    local IF = NS.ItemFacts
+    useItem(m, 763, item("Venomforged Idol"), "")
+    local calls, got = 0, nil
+    IF.Request(link(763), function(facts) calls, got = calls + 1, facts end)
+    for _ = 1, IF.MAX_LOAD_TRIES do m.__fireTimers() end
+    assertEqual(calls, 1); assertEqual(#m.spellLoadRequests, IF.MAX_LOAD_TRIES)
+    assertFalse(got.isTierToken); assertNil(got.useSpellLoading, "no longer waited on")
+    local _, status = IF.Request(link(763))
+    assertEqual(status, "ready")
+    -- with no way to load a spell, the facts answer at once
+    useItem(m, 764, item("Venomforged Idol"), "")
+    m.C_Spell.RequestLoadSpellData = nil
+    local now, ready = IF.Request(link(764))
+    assertEqual(ready, "ready"); assertEqual(now.useSpellLoading, 764)
+end)
+
+test("tier token: gear, recipes, mounts, pets, toys and a common Curio are not tokens", function()
+    local NS, m = T.enableAddon()
+    useItem(m, 740, { name = "Robe of the Conqueror", quality = 4, ilvl = 620, equipLoc = "INVTYPE_ROBE",
+        classID = 4, subClassID = CLOTH, bindType = 1, stats = {} }, MIDNIGHT_HAND)
+    m.tooltips.hyperlink[link(740)] = tip("Mage")
+    useItem(m, 741, item("Pattern: Gloves", { classID = 9, subClassID = 2 }), "Teaches you how to sew Gloves.")
+    useItem(m, 742, item("Reins of the Curio", { subClassID = 5 }), "Teaches you how to summon this mount.")
+    useItem(m, 743, item("Hooded Curio", { subClassID = 2 }), "Teaches you how to summon this companion.")
+    m.toys[744] = true
+    useItem(m, 744, item("Toy Helm"), "Puts on a silly hat.")
+    useItem(m, 745, item("Dusty Curio", { quality = 0 }))
+    useItem(m, 746, item("Curious Trinket"))
+    local gear = NS.ItemFacts.Get(link(740))
+    -- red under: the class phrase or the Curio name read on gear and collectibles
+    assertFalse(gear.isTierToken); assertTrue(gear.classes.MAGE); assertNil(gear.useText, "gear's use text is never read")
+    assertEqual(gear.equipLoc, "INVTYPE_ROBE")
+    for id = 741, 746 do
+        local f = NS.ItemFacts.Get(link(id))
+        assertFalse(f.isTierToken, f.name); assertNil(f.tokenSlot, f.name)
+    end
+end)
+
+test("tier token: a token judged in any slot folds to its best tier slot", function()
+    local NS, m = T.enableAddon()
+    useItem(m, 750, item("Mystery Token"), "Create a soulbound item appropriate for your class.")
+    local f = NS.ItemFacts.Get(link(750))
+    assertTrue(f.isTierToken); assertEqual(f.tokenSlot, "any")
+    local C = NS.Constants
+    local res = NS.Evaluate.Evaluate(f, mage(C, { 630, 625, 600, 640, 610 }))
+    -- red under: an `any` token left unknown instead of folded
+    assertEqual(res.verdict, "upgrade"); assertEqual(res.tokenSlot, "INVTYPE_CHEST"); assertEqual(res.ilvlDelta, 20)
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- Through the feed, and the cells
 -- ---------------------------------------------------------------------------------------------
 
@@ -224,6 +455,34 @@ test("tier token: through the feed, a token is judged against the head you wear"
     assertEqual(rec.me.verdict, "upgrade"); assertEqual(rec.me.ilvlDelta, 20)
 end)
 
+-- The `drops` diagnostics section's lines, formatted.
+local function dropsReport(NS)
+    local lines = {}
+    for _, sec in ipairs(NS.Diagnostics.Sections()) do
+        if sec[1] == "drops" then
+            sec[2]({ add = function(_, _, fmt, ...)
+                local args = { ... }
+                for i = 1, select("#", ...) do args[i] = tostring(args[i]) end
+                lines[#lines + 1] = fmt:format(unpack(args))
+            end, joined = function() end })
+        end
+    end
+    return table.concat(lines, "\n")
+end
+
+test("tier token: the drops diagnostics name a token's slot and the rung that read it (TT-1)", function()
+    local NS, m = party()
+    m.addItem(link(713), token(620))
+    m.itemSpells[link(713)], m.spellTexts[713] = 713, MIDNIGHT_HAND
+    m.addItem(link(714), item("Chiming Void Curio"))
+    iLoot(m, 713); iLoot(m, 714)
+    local text = dropsReport(NS)
+    -- red under: a drop line with no token line
+    assertTrue(text:find("token slot=INVTYPE_HAND source=use", 1, true) ~= nil, text)
+    assertTrue(text:find("token slot=any source=any", 1, true) ~= nil, text)
+    assertEqual(select(2, text:gsub("token slot=", "")), 2, "one line per token, none for gear")
+end)
+
 test("tier token: the minimum item level applies to a token", function()
     local NS, m = party()
     NS.SchemaRuntime.Set("feed.minIlvlMode", "absolute")
@@ -247,6 +506,7 @@ test("tier token: the Slot and Type cells name the slot and the classes", functi
     assertEqual(T.tipPlain(kind.text), "Priest, Mage, Warlock"); assertTrue(kind.known)
     assertTrue(kind.text:find("|c", 1, true) ~= nil, "colored")
     local curio = tokenFacts(620, "any", nil)
+    curio.tokenUsers = "every"
     assertEqual(WC.Slot({ facts = curio }).text, "Token: any slot")
     assertEqual(WC.ArmorType({ facts = curio }).text, "Any class")
     local unread = WC.Slot({ facts = tokenFacts(620, nil, { MAGE = true }) })
@@ -261,6 +521,27 @@ test("tier token: the detail card's Makes chip, and no type chip", function()
     for _, c in ipairs(chips) do assertTrue(T.tipPlain(c.text) ~= "Priest, Mage", "no type chip") end
     chips = NS.DetailCells.Chips({ facts = tokenFacts(620, nil, nil) })
     assertEqual(chips[1].text, "Makes: ?")
+end)
+
+test("tier token: who may use a token naming no classes is its kept tokenUsers, never its any slot", function()
+    local NS = T.newAddon()
+    local WC, DC = NS.WindowCells, NS.DetailCells
+    -- a token whose text named no slot reads `any` too: with no tokenUsers it is not read
+    local unread = tokenFacts(620, "any", nil)
+    local cell = WC.ArmorType({ facts = unread })
+    -- red under: CC.TokenType answering `Any class` for every `any`-slot token with no class list
+    assertEqual(cell.text, "–"); assertFalse(cell.known)
+    assertTrue(T.tipPlainJoined(DC.Chips({ facts = unread })[1].tip):find("Usable by: not read", 1, true) ~= nil,
+        "the Makes chip never claims every class for it")
+    -- a token flagged by its Use text alone: your class, never a dash
+    local yours = tokenFacts(620, "INVTYPE_HAND", nil)
+    yours.tokenUsers = "yours"
+    cell = WC.ArmorType({ facts = yours })
+    assertEqual(cell.text, "Your class"); assertTrue(cell.known)
+    assertTrue(T.tipPlainJoined(cell.tip):find("Usable by: your class", 1, true) ~= nil)
+    local every = tokenFacts(620, "any", nil)
+    every.tokenUsers = "every"
+    assertTrue(T.tipPlainJoined(DC.Chips({ facts = every })[1].tip):find("Usable by: every class", 1, true) ~= nil)
 end)
 
 test("tier token: the Me cell names a Curio's best slot; an unread slot's reason says so", function()

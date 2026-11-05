@@ -7,7 +7,7 @@ local _, NS = ...
 --       { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
 --         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
---             category, tokenSlot,
+--             category, tokenSlot, tokenUsers,
 --             me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
 --                    reasonKey? }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
@@ -24,7 +24,9 @@ local _, NS = ...
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
 -- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
--- mount, pet, toy, recipe, cosmetic) and `tokenSlot` a tier token's made slot; an entry kept before
+-- mount, pet, toy, recipe, cosmetic), `tokenSlot` a tier token's made slot and `tokenUsers` who may
+-- use a token naming no classes (`every`, a Curio; `yours`, a Use text alone; modules/ItemFacts.lua),
+-- since TT-1 (an older token entry has none, and its Type reads a dash); an entry kept before
 -- they existed has neither and reads as equipment (Insights: a tier token for the slot
 -- INVTYPE_NON_EQUIP_IGNORE). An Always watch item of no kind (a reagent, a quest item) is kept as
 -- `watched` (NS.Constants.CATEGORY_WATCHED), a History-only kind, so it never reads as one of those
@@ -200,6 +202,7 @@ function H.Snapshot(rec, now)
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
         category = categoryOf(rec, facts),
         tokenSlot = type(facts.tokenSlot) == "string" and facts.tokenSlot or nil,
+        tokenUsers = type(facts.tokenUsers) == "string" and facts.tokenUsers or nil,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
         seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }

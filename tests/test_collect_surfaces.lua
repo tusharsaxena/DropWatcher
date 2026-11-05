@@ -97,7 +97,10 @@ test("collect surfaces: a token kept with no classes reads a dash, never Any cla
     local c = NS.WindowCells.ArmorType({ facts = { isTierToken = true, category = "tierToken", tokenSlot = "INVTYPE_HEAD" } })
     -- red under: CC.TokenType answering `Any class` for every token with no class list
     assertEqual(c.text, DASH); assertFalse(c.known)
-    local curio = NS.WindowCells.ArmorType({ facts = { isTierToken = true, tokenSlot = "any" } })
+    -- red under: the `any` slot taken as a Curio (since TT-1 a token whose text named no slot is `any`)
+    local anySlot = NS.WindowCells.ArmorType({ facts = { isTierToken = true, category = "tierToken", tokenSlot = "any" } })
+    assertEqual(anySlot.text, DASH); assertFalse(anySlot.known)
+    local curio = NS.WindowCells.ArmorType({ facts = { isTierToken = true, tokenSlot = "any", tokenUsers = "every" } })
     assertEqual(curio.text, NS.L["Any class"], "a Curio still names every class")
 end)
 

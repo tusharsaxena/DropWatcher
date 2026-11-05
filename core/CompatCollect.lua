@@ -3,16 +3,18 @@ local _, NS = ...
 -- battle pets, toys, the cosmetic flag, a recipe's "Already known" line and the player's
 -- professions, published on NS.Compat like the rest of the compat family, split out of
 -- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller of
--- those; the tier-token reads (the slot a token's tooltip names, a class's name) are
+-- those; the tier-token reads (the slot a token's tooltip names, an item's use text, a class's name) are
 -- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
 -- the link of a curated sample's id is modules/SimPool.lua's (spec §8, DW-CAT6).
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
 -- meets nothing but IsSecret first, a missing API answers its documented absent value and never
 -- raises. GlobalStrings are read through Compat.GlobalString. The recipe line and the token's slot
--- line are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7: new
--- consumers, not a new reader); core/Compat.lua's tooltipData helper is file-local, so this compat
--- file asks C_TooltipInfo.GetHyperlink itself.
+-- and use lines are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7:
+-- new consumers, not a new reader); core/Compat.lua's tooltipData helper is file-local, so this
+-- compat file asks C_TooltipInfo.GetHyperlink itself. An item's use text (ItemUseText, TT-1) is its
+-- use spell's description (C_Item.GetItemSpell, C_Spell.GetSpellDescription), else that use line;
+-- a description not loaded yet is asked for (RequestSpellLoad, C_Spell.RequestLoadSpellData).
 
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
@@ -166,6 +168,16 @@ end
 
 -- ── Tier tokens (DW-CAT4) ───────────────────────────────────────────────────────────────────
 
+-- An item's hyperlink tooltip data (C_TooltipInfo.GetHyperlink), or nil: no API, a secret link or
+-- a secret or malformed answer.
+local function hyperlinkData(link)
+    local tip = C_TooltipInfo
+    if not (plainString(link) and tip and tip.GetHyperlink) then return nil end
+    local data = tip.GetHyperlink(link)
+    if Compat.IsSecret(data) or type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
+    return data
+end
+
 -- The slots a tier token can make, by the GlobalString that names each on a tooltip.
 local TOKEN_SLOT_STRINGS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
 
@@ -179,19 +191,83 @@ local function tokenSlotNames()
     return out
 end
 
---- The slot a tier token makes, read off its hyperlink tooltip: the INVTYPE_* key of the first line
---- whose left text EQUALS one of the localized INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND or _LEGS
---- GlobalStrings (never a substring of another line), or nil: no API, no such line, or a secret or
---- malformed answer (categories design spec §7.1, rung 2; smoke check ITEM-6).
+--- The slot a tier token's tooltip names, or nil: the INVTYPE_* key of the first line whose left
+--- text EQUALS one of the localized INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND or _LEGS GlobalStrings
+--- (never a substring of another line); nil for no API, no such line, or a secret or malformed
+--- answer (categories design spec §7.1; NS.TierTokens.SlotOf's `use` rung, after the Use text).
 --- @param link string
 --- @return string|nil
 function Compat.TierTokenSlot(link)
-    local tip = C_TooltipInfo
-    if not (plainString(link) and tip and tip.GetHyperlink) then return nil end
-    local data = tip.GetHyperlink(link)
-    if Compat.IsSecret(data) or type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
+    local data = hyperlinkData(link)
+    if not data then return nil end
     local names = tokenSlotNames()
     return Compat.ReadTooltipLine(data, "None", function(text) return names[text] end)
+end
+
+-- The text of an item's use spell (C_Item.GetItemSpell, then C_Spell.GetSpellDescription): the
+-- text, false for an item with no use spell, or nil when it could not be read (no API, a secret
+-- or empty answer). An empty description is a spell the client has not loaded yet: its id is the
+-- second return then.
+local function spellUseText(link)
+    local item, spell = C_Item, C_Spell
+    if not (item and item.GetItemSpell and spell and spell.GetSpellDescription) then return nil end
+    local _, spellID = item.GetItemSpell(link)
+    if Compat.IsSecret(spellID) then return nil end
+    if spellID == nil then return false end
+    spellID = plainId(spellID)
+    local text = spellID and plainString(spell.GetSpellDescription(spellID))
+    if text == "" then return nil, spellID end
+    return text
+end
+
+-- The rest of the tooltip's first line that starts with the client's ITEM_SPELL_TRIGGER_ONUSE
+-- ("Use:", the locale table's when unreadable), case-insensitively; nil for none.
+local function tooltipUseText(link)
+    local data = hyperlinkData(link)
+    if not data then return nil end
+    local prefix = (plainString(Compat.GlobalString("ITEM_SPELL_TRIGGER_ONUSE")) or NS.L["Use:"]):lower()
+    return Compat.ReadTooltipLine(data, "None", function(text)
+        if text:lower():sub(1, #prefix) ~= prefix then return nil end
+        local rest = text:sub(#prefix + 1):match("^%s*(.-)%s*$")
+        return rest ~= "" and rest or nil
+    end)
+end
+
+--- What an item does when used, as the client writes it, without the "Use:" prefix (TT-1: a tier
+--- token's "Create a soulbound set hand item appropriate for your class."), or nil: no use spell,
+--- or none readable. The use spell's description first; when that cannot be read, the tooltip's
+--- use line. With no text, the second return is the use spell's id when its description came back
+--- empty: a spell the client has not loaded yet (Compat.RequestSpellLoad, then read again; the
+--- caller is modules/ItemFacts.lua).
+--- @param link string
+--- @return string|nil text, number|nil loadingSpellID
+function Compat.ItemUseText(link)
+    if not plainString(link) then return nil end
+    local text, loading = spellUseText(link)
+    if text == false then return nil end
+    text = text or tooltipUseText(link)
+    if text then return text end
+    return nil, loading
+end
+
+--- True when the client can be asked to load a spell's data and a timer can wait for it
+--- (C_Spell.RequestLoadSpellData, C_Timer.After).
+--- @return boolean
+function Compat.CanRequestSpellLoad()
+    local spell, timer = C_Spell, C_Timer
+    return (spell and spell.RequestLoadSpellData and timer and timer.After) and true or false
+end
+
+--- Ask the client to load a spell's data (its description then answers on a later read, and
+--- SPELL_TEXT_UPDATE fires). Answers whether it asked: false for no API or no plain id.
+--- @param spellID number
+--- @return boolean
+function Compat.RequestSpellLoad(spellID)
+    local spell = C_Spell
+    spellID = plainId(spellID)
+    if not (spellID and spell and spell.RequestLoadSpellData) then return false end
+    spell.RequestLoadSpellData(spellID)
+    return true
 end
 
 --- A class's name as the client writes it (LOCALIZED_CLASS_NAMES_MALE), or nil: no table, an

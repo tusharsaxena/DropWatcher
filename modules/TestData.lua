@@ -911,7 +911,7 @@ local function historyEntry(src, seer, row, who, at, where)
     local f, m = item.facts, who and MEMBERS[who]
     return stamp({
         itemLink = item.link, itemID = item.itemID or NS.Item.ItemIDFromLink(item.link),
-        category = f.category, tokenSlot = f.tokenSlot,
+        category = f.category, tokenSlot = f.tokenSlot, tokenUsers = f.tokenUsers,
         looter = m and m.name or seer.name, class = m and m.classFile or seer.classFile, isMine = m == nil or nil,
         ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me, seer.alt), them = snap(row.them),
         trade = { state = row.trade[1], reasonKey = row.trade[2], basis = "rule", args = {} },

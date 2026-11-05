@@ -149,8 +149,9 @@ local function makesChip(f)
     local slot, classes = NS.CollectCells.TokenMakes(f)
     local word = slot or "?"
     local text = L["Makes: %s"]:format(classes and ("%s · %s"):format(word, classes) or word)
+    local _, users = NS.CollectCells.TokenUsers(f)
     return chip(text, L["Tier token"], trow(L["Makes"], slot or L["a slot that could not be read"]),
-        trow(L["Usable by"], classes or L["every class"]))
+        trow(L["Usable by"], users or L["not read"]))
 end
 
 local function slotChip(f)

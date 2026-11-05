@@ -26,8 +26,9 @@ local _, NS = ...
 -- (modules/ItemFacts.lua sets it from `tokenSlot`), so it is judged as gear against what is worn
 -- there, by item level alone: the scorer is skipped (Pawn cannot value a token), and armor type and
 -- primary stat are not checked (the piece suits the class). Its class list still refuses other
--- classes. A token whose slot was not read answers `unknown`, reason `tierToken`; an omni token
--- (`tokenSlot == "any"`) is judged in its best tier slot (NS.TierTokens.Fold, read at call time).
+-- classes. Facts with no `tokenSlot` (an old History entry) answer `unknown`, reason `tierToken`;
+-- a token judged in any slot (`tokenSlot == "any"`: a Curio, or since TT-1 a token whose text named
+-- no slot) in its best tier slot (NS.TierTokens.Fold, read at call time).
 --
 -- A `cantUse` that depends on the spec also carries `offSpec`, the best verdict for another spec of
 -- the class (modules/OffSpec.lua); the verdict itself stays `cantUse`.

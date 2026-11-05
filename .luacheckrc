@@ -72,10 +72,11 @@ files["core/CompatJournal.lua"] = {
 
 -- The collection reads (issue #13): core/CompatCollect.lua alone names the mount, pet and toy
 -- journals, the toy and profession globals, the hyperlink tooltip it reads a recipe's line and a
--- tier token's slot line from, and the client's class names (a tier token's classes, DW-CAT4).
+-- tier token's slot line from, the client's class names (a tier token's classes, DW-CAT4), and the
+-- spell namespace an item's use text is read from (TT-1).
 files["core/CompatCollect.lua"] = {
   read_globals = { "C_MountJournal", "C_PetJournal", "C_ToyBox", "PlayerHasToy", "C_TooltipInfo",
-    "GetProfessions", "GetProfessionInfo", "LOCALIZED_CLASS_NAMES_MALE" },
+    "GetProfessions", "GetProfessionInfo", "LOCALIZED_CLASS_NAMES_MALE", "C_Spell" },
 }
 
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):
