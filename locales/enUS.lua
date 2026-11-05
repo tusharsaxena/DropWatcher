@@ -597,6 +597,19 @@ L["Tier token"] = "Tier token"
 L["Any class"] = "Any class"
 L["Makes: %s"] = "Makes: %s"
 L["any slot"] = "any slot"
+-- A tier token's own text, matched against the client's (TT-1; core/CompatCollect.lua, the words for
+-- core/TextParse.lua). INPUT, not display: a documented localization-§4 deviation (docs/ARCHITECTURE.md,
+-- Documented deviations). `Use:` stands in for ITEM_SPELL_TRIGGER_ONUSE when the client's cannot be read.
+-- A translation keeps each value's shape: the class phrase, the slot template
+-- with its one %s, and a space-separated list of the slot words that fill it.
+L["Use:"] = "Use:"
+L["appropriate for your class"] = "appropriate for your class"
+L["set %s item"] = "set %s item"
+L["head"] = "head"
+L["shoulder shoulders"] = "shoulder shoulders"
+L["chest"] = "chest"
+L["hand hands"] = "hand hands"
+L["leg legs"] = "leg legs"
 L["chat"] = "chat"
 L["the encounter"] = "the encounter"
 L["the loot history"] = "the loot history"

@@ -1102,7 +1102,7 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_collect.lua (17)
+### test_compat_collect.lua (21)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
 - compat collect: MountCollected answers isCollected, the 11th return, else nil
@@ -1116,6 +1116,10 @@ Total.
 - compat collect: ProfessionSkillLines maps every profession slot to its skill line
 - compat collect: TierTokenSlot reads a slot line by its whole text
 - compat collect: TierTokenSlot answers nil when it cannot tell
+- compat collect: TierTokenSlot reads the slot a token's use line names (TT-1)
+- compat collect: TierTokenSlot's use-line read refuses lines that only look like one (TT-1)
+- compat collect: TierTokenSlot prefers a whole slot line, and reads the client's Use: (TT-1)
+- compat collect: TierTokenSlot's use-line words are the locale table's (TT-1)
 - compat collect: ClassDisplayName answers the client's name for a class, else nil
 - compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
 - compat collect: no member raises with every API gone
@@ -1456,7 +1460,7 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (23)
+### test_item_facts.lua (24)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
@@ -1467,6 +1471,7 @@ Total.
 - item facts: the track falls back to the tooltip's upgrade line
 - item facts: an item unique on its own takes its item id as the category
 - item facts: a token naming classes is a tier token; class gear carries classes only
+- item facts: a tier token's use line names the slot it makes, read once; gear's never (TT-1)
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
 - item facts: Get caches by link
@@ -2622,7 +2627,7 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
 | test_compat.lua | 74 |
-| test_compat_collect.lua | 17 |
+| test_compat_collect.lua | 21 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 13 |
@@ -2639,7 +2644,7 @@ Total.
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
-| test_item_facts.lua | 23 |
+| test_item_facts.lua | 24 |
 | test_collectibles.lua | 15 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 27 |
@@ -2693,4 +2698,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2215** |
+| **Total** | **2220** |

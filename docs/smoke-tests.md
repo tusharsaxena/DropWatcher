@@ -1893,8 +1893,9 @@ its link. Result: passed in the client, 2026-10-23 (the owner).
 
 **ITEM-6. What a tier token's tooltip carries (DW-CAT4, issue #13).** With a current-season tier token
 in your bags (or its link), `/dump C_TooltipInfo.GetHyperlink(<link>)` → record whether any line's
-`leftText` is exactly the slot's name (`Head`, `Shoulder`, `Chest`, `Hands`, `Legs`) and whether a
-class line names its classes; `/dump C_Item.GetItemInfoInstant(<link>)` → record its class,
+`leftText` is exactly the slot's name (`Head`, `Shoulder`, `Chest`, `Hands`, `Legs`), whether a
+`Use: Create` or `Use: Synthesize a soulbound ... set <slot> item appropriate for your class.` line
+names it (TT-1; tokens such as 270913 and 249366), and whether a class line names its classes; `/dump C_Item.GetItemInfoInstant(<link>)` → record its class,
 subclass and equip location. Then `/dw add <link>` → the row's Slot reads `Token: Head` (or the slot
 it makes) and Type its classes; `Token` alone means the slot was not read. Record each season token's
 item ID and slot: they seed `C.TIER_TOKENS` (`docs/common-tasks.md`, "Add a season's tier tokens").

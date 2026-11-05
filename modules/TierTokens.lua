@@ -9,7 +9,8 @@ local _, NS = ...
 --
 -- THE SLOT (SlotOf), first rung that answers wins:
 --   1. the curated table, C.TIER_TOKENS[itemID].slot: one of C.TIER_SLOTS, or "any" (a Curio);
---   2. the tooltip: a line naming one of the tier slots (read only when the table has no answer);
+--   2. the tooltip: a line naming one of the tier slots, else the token's "Use: Create|Synthesize a
+--      soulbound [<raid>] set <slot> item" line (TT-1; read only when the table has no answer);
 --   3. nothing: the slot stays nil and the kernel's verdict `unknown`, reason `tierToken`.
 -- ItemFacts then sets the facts' equipLoc to a concrete slot, so every gear reader works unchanged.
 --

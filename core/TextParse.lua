@@ -2,7 +2,8 @@ local _, NS = ...
 -- core/TextParse.lua — the pure text parsers behind core/Compat.lua's tooltip and duration readers
 -- (DW-61): Lua patterns from printf-style GlobalStrings, the `|4a:b;` plural grammar, the localized
 -- duration decoder (design spec §7.4), the tooltip line scan and the item level, upgrade track and
--- class list lines.
+-- class list lines, and a tier token's words (TT-1: its Use text and its name, read against the
+-- enUS locale table's vocabulary the caller passes in).
 --
 -- PURE. Nothing here calls a client API or reads a global: every localized GlobalString arrives as
 -- an argument, already read and secret-guarded by core/Compat.lua, whose compat family stays the only code
@@ -188,4 +189,50 @@ function TextParse.ScanLines(lines, wanted, parse, plainString, plainNumber)
         end
     end
     return nil
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Tier token text (TT-1; the words are the caller's, from the enUS locale table)
+-- ---------------------------------------------------------------------------------------------
+
+-- A word: letters, digits and any UTF-8 byte, so a localized vocabulary reads whole words too.
+local WORD = "[%w\128-\255]"
+
+--- A word list per key, `{ [key] = "Helm Crown Hood" }`, as one lowercase lookup,
+--- `{ ["helm"] = key, ... }`. The lists are the caller's (localized vocabularies).
+--- @param lists table
+--- @return table
+function TextParse.WordMap(lists)
+    local out = {}
+    for key, list in pairs(lists) do
+        for word in list:lower():gmatch(WORD .. "+") do out[word] = key end
+    end
+    return out
+end
+
+--- The key the first whole word of `text` that `words` (a WordMap) knows maps to, or nil;
+--- case-insensitive.
+--- @return any
+function TextParse.FirstWord(text, words)
+    for word in text:lower():gmatch(WORD .. "+") do
+        if words[word] ~= nil then return words[word] end
+    end
+    return nil
+end
+
+--- The slot a tier token's Use text names, or nil (TT-1). The text must carry `vocab.phrase` ("appropriate
+--- for your class") and `vocab.template` ("set %s item") as whole words, whose `%s` word
+--- `vocab.slots` (a WordMap) knows. Case-insensitive; every word is the caller's.
+--- @param text string
+--- @param vocab table { phrase, template, slots }
+--- @return any
+function TextParse.TokenUseSlot(text, vocab)
+    local lower = text:lower()
+    if not lower:find(vocab.phrase:lower(), 1, true) then return nil end
+    local head, tail = vocab.template:lower():match("^(.-)%%s(.*)$")
+    if not head then return nil end
+    local pattern = "%f" .. WORD .. TextParse.EscapePattern(head) .. "(" .. WORD .. "+)"
+        .. TextParse.EscapePattern(tail) .. "%f[^%w\128-\255]"
+    local word = lower:match(pattern)
+    return word and vocab.slots[word] or nil
 end

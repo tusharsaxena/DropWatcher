@@ -22,8 +22,9 @@ the code reads every case the design leaves open, module by module, is in
   what the client gives.
 - **Tier tokens** are judged as the piece they make: the slot is read from a per-season table
   (`C.TIER_TOKENS`, which ships empty until the season's ids are read in the client, smoke check
-  `ITEM-6`) and, failing that, from a tooltip line naming the slot. An unlisted token whose tooltip
-  names no slot stays `unknown` (categories design spec §7, DW-CAT4). A token is judged by item
+  `ITEM-6`) and, failing that, from a tooltip line naming the slot or the token's `Use: Create|Synthesize
+  a soulbound ... set <slot> item appropriate for your class.` line (TT-1). That use line is read in
+  its enUS wording only. An unlisted token whose tooltip names no slot stays `unknown` (categories design spec §7, DW-CAT4). A token is judged by item
   level alone, never by a scorer, and the History keeps the slot it made, not its classes.
 - **Collectibles** (issue #13). A caged battle pet arrives as a `|Hbattlepet:` link and is never
   watched; only companion items are. A recipe's "known" state is the client's `ITEM_SPELL_KNOWN`

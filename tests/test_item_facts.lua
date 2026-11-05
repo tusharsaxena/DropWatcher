@@ -169,6 +169,35 @@ test("item facts: a token naming classes is a tier token; class gear carries cla
     assertFalse(c.isTierToken); assertTrue(c.classes.HUNTER)
 end)
 
+test("item facts: a tier token's use line names the slot it makes, read once; gear's never (TT-1)", function()
+    local USE = "Use: Synthesize a soulbound Voidglass set chest item appropriate for your class."
+    local reads = 0
+    local _, m, IF = enabled(function(m)
+        m.addItem(TOKEN, { name = "Voidglass Chest Token", quality = 4, ilvl = 263, equipLoc = "",
+            classID = 15, subClassID = 0, bindType = 1 })
+        m.tooltips.hyperlink[TOKEN] = { lines = { { type = 21, leftText = "Classes: Warrior" },
+            { type = 0, leftText = USE } } }
+        m.addItem(CHEST, chest())
+        m.tooltips.hyperlink[CHEST] = { lines = { { type = 21, leftText = "Classes: Hunter" },
+            { type = 0, leftText = (USE:gsub("chest", "hand")) } } }
+    end)
+    local get = m.C_TooltipInfo.GetHyperlink
+    m.C_TooltipInfo.GetHyperlink = function(link)
+        if link == TOKEN then reads = reads + 1 end
+        return get(link)
+    end
+    local t = IF.Get(TOKEN)
+    -- red under: TierTokenSlot reading whole slot lines alone
+    assertEqual(t.tokenSlot, "INVTYPE_CHEST"); assertEqual(t.tokenSlotSource, "tooltip")
+    assertEqual(t.equipLoc, "INVTYPE_CHEST", "the made slot is the equipLoc")
+    local first = reads
+    IF.Get(TOKEN); IF.Get(TOKEN)
+    assertEqual(reads, first, "the facts are cached: the tooltip is not read again")
+    local c = IF.Get(CHEST)
+    assertFalse(c.isTierToken); assertNil(c.tokenSlot, "class gear is never parsed for a made slot")
+    assertEqual(c.equipLoc, "INVTYPE_CHEST", "its own slot stays")
+end)
+
 test("item facts: the quality falls back to the link's color", function()
     local _, _, IF = enabled(function(m) m.addItem(RING, ring({ quality = nil })) end)
     assertEqual(IF.Get(RING).quality, 4)

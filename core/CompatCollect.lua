@@ -10,7 +10,7 @@ local _, NS = ...
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
 -- meets nothing but IsSecret first, a missing API answers its documented absent value and never
 -- raises. GlobalStrings are read through Compat.GlobalString. The recipe line and the token's slot
--- line are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7: new
+-- and use lines are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7: new
 -- consumers, not a new reader); core/Compat.lua's tooltipData helper is file-local, so this compat
 -- file asks C_TooltipInfo.GetHyperlink itself.
 
@@ -179,10 +179,36 @@ local function tokenSlotNames()
     return out
 end
 
---- The slot a tier token makes, read off its hyperlink tooltip: the INVTYPE_* key of the first line
---- whose left text EQUALS one of the localized INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND or _LEGS
---- GlobalStrings (never a substring of another line), or nil: no API, no such line, or a secret or
---- malformed answer (categories design spec §7.1, rung 2; smoke check ITEM-6).
+-- The words a token's use line is read with, from the enUS locale table (TT-1; a documented
+-- localization-§4 deviation): built once, on the first read.
+local useVocab
+local function tokenUseVocab()
+    if useVocab then return useVocab end
+    local L = NS.L
+    useVocab = {
+        phrase = L["appropriate for your class"], template = L["set %s item"],
+        slots = NS.TextParse.WordMap({
+            INVTYPE_HEAD = L["head"], INVTYPE_SHOULDER = L["shoulder shoulders"], INVTYPE_CHEST = L["chest"],
+            INVTYPE_HAND = L["hand hands"], INVTYPE_LEGS = L["leg legs"],
+        }),
+    }
+    return useVocab
+end
+
+-- The slot a token's use line names, or nil: a line that starts with `prefix` (the lowercased
+-- ITEM_SPELL_TRIGGER_ONUSE, "use:") and whose text carries the class phrase and "set <slot> item"
+-- (core/TextParse.lua's TokenUseSlot). The words are enUS: another locale's line never matches.
+local function useLineSlot(text, prefix)
+    if text:lower():sub(1, #prefix) ~= prefix then return nil end
+    return NS.TextParse.TokenUseSlot(text:sub(#prefix + 1), tokenUseVocab())
+end
+
+--- The slot a tier token makes, read off its hyperlink tooltip, or nil: no API, no such line, or a
+--- secret or malformed answer (categories design spec §7.1, rung 2; smoke check ITEM-6). Two reads,
+--- the first that answers wins: (a) the INVTYPE_* key of the first line whose left text EQUALS one
+--- of the localized INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND or _LEGS GlobalStrings (never a
+--- substring of another line); (b) the slot a use line names: "Use:", then text carrying "set <slot>
+--- item" and "appropriate for your class", in the enUS locale table's words (TT-1).
 --- @param link string
 --- @return string|nil
 function Compat.TierTokenSlot(link)
@@ -191,7 +217,10 @@ function Compat.TierTokenSlot(link)
     local data = tip.GetHyperlink(link)
     if Compat.IsSecret(data) or type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
     local names = tokenSlotNames()
-    return Compat.ReadTooltipLine(data, "None", function(text) return names[text] end)
+    local slot = Compat.ReadTooltipLine(data, "None", function(text) return names[text] end)
+    if slot then return slot end
+    local prefix = (plainString(Compat.GlobalString("ITEM_SPELL_TRIGGER_ONUSE")) or NS.L["Use:"]):lower()
+    return Compat.ReadTooltipLine(data, "None", function(text) return useLineSlot(text, prefix) end)
 end
 
 --- A class's name as the client writes it (LOCALIZED_CLASS_NAMES_MALE), or nil: no table, an

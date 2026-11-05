@@ -56,7 +56,10 @@ A version-variant, deprecated or optional client API is called from `core/Compat
 ## Add a season's tier tokens
 
 A tier token is judged as the piece it makes (categories design spec §7). The slot comes from the
-curated `C.TIER_TOKENS` in `core/Constants.lua` first, then from the token's tooltip.
+curated `C.TIER_TOKENS` in `core/Constants.lua` first, then from the token's tooltip: a line that is
+exactly the slot's name, else its `Use: Create|Synthesize a soulbound ... set <slot> item appropriate
+for your class.` line (TT-1). A token whose enUS tooltip carries that line needs no row; list the
+ones it does not (a Curio, another locale).
 
 1. In the client, read each of the season's tokens with `/dump C_Item.GetItemInfo(<itemID>)` and its
    tooltip (`/dump C_TooltipInfo.GetItemByID(<itemID>)`): note the slot it makes and whether it
