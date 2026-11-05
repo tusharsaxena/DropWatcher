@@ -232,6 +232,16 @@ test("cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Re
     for _, a in ipairs(acts) do assertTrue(#a.tip >= 2, a.key .. " says why") end
 end)
 
+test("cells: a collectible's Retry inspect is disabled: it is judged for you alone, so no inspect is asked for", function()
+    local D = DC()
+    local pet = drop({ me = { verdict = "newCollect", collect = true, category = "pet", reasons = {} },
+        them = NONE, inspect = NONE })
+    local retry = byKey(D.Actions(pet, { askState = "ready", now = 100, trade = OK_TRADE }), "retry")
+    -- red under: drop the IsFeedOnly guard from DetailCells' noRetryReason
+    assertFalse(retry.enabled)
+    assertEqual(T.tipPlainJoined(retry.tip), "Retry inspect | • Why: collectibles are judged for you alone, not inspected")
+end)
+
 test("cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked", function()
     local D = DC()
     local acts = D.Actions(drop(), { askState = "sent", inspect = { status = "pending" }, now = 100, trade = FAR })
@@ -641,4 +651,16 @@ test("card: RetryInspect and TradeWithLooter say why they did nothing", function
     assertTrue(m.prints[#m.prints]:find("You cannot trade in combat.", 1, true) ~= nil)
     NS.SchemaRuntime.Set("enabled", false)
     assertNil(NS.RetryInspect(1))
+end)
+
+test("card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected", function()
+    local NS, _, m = T.enableAddon()
+    seed(NS, { GROUP }, { drop({ me = { verdict = "newCollect", collect = true, category = "pet", reasons = {} },
+        them = NONE, inspect = NONE }) })
+    local asked = 0
+    NS.Inspect.Request = function() asked = asked + 1; return "pending" end
+    -- red under: drop the IsFeedOnly guard from NS.RetryInspect
+    assertNil(NS.RetryInspect(1))
+    assertEqual(asked, 0, "no inspect is queued")
+    assertTrue(m.prints[#m.prints]:find("Collectibles are judged for you alone.", 1, true) ~= nil)
 end)

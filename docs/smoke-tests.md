@@ -1917,7 +1917,8 @@ goes in `docs/midnight-quirks.md`). Result: not run
 **COLL-2. A mount, new then collected.** `/dw add <a mount item you have not learned> Somebody` → the
 row's Me reads `New` in green, its tooltip `For you: New to your collection`, Them a dash
 (*Collectibles are judged for you alone.*), Ask `No action` (*collectibles are watched, not asked
-for*), and no toast. Learn that mount (or use one you have) → within a second the same row reads
+for*), the detail card's Retry inspect grayed (*collectibles are judged for you alone, not
+inspected*), and no toast. Learn that mount (or use one you have) → within a second the same row reads
 `Collected` in gray, with no `/reload`. Result: not run
 
 **COLL-3. A pet's count.** `/dw add <a companion pet item>` for a species you have none of → `New`;

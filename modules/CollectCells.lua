@@ -18,7 +18,8 @@ local _, NS = ...
 --
 -- THE REFUSALS' WORDS. A feed-only drop (NS.Collectibles.IsFeedOnly) has no action; CC.NO_ASK and
 -- CC.NO_OFFER are the Why rows' values of its No action (modules/WindowCells.lua's Ask,
--- modules/MineCells.lua's Offer, modules/OfferPanel.lua).
+-- modules/MineCells.lua's Offer, modules/OfferPanel.lua); CC.NO_INSPECT is the Why row of the detail
+-- card's disabled Retry inspect (modules/DetailCells.lua).
 --
 -- TIER TOKENS (DW-CAT4, categories design spec §6.1). A token is judged as gear, not collected, but
 -- its Slot and Type cells are its own: CC.TokenSlot reads `Token: Head`, `Token: any slot` (an omni
@@ -68,6 +69,7 @@ local REASON = {
 
 CC.NO_ASK = L["collectibles are watched, not asked for"]
 CC.NO_OFFER = L["collectibles are watched, not offered"]
+CC.NO_INSPECT = L["collectibles are judged for you alone, not inspected"]
 
 local function num(v)
     if type(v) == "number" and v == v then return v end

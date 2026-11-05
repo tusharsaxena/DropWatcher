@@ -767,7 +767,7 @@ Total.
 - collect cells: your own tradeable collectible is not counted by the Drops strip, nor Interesting
 - collect cells: a tier token is not feed-only: it still asks and toasts as gear
 
-### test_detail_card.lua (30)
+### test_detail_card.lua (32)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -780,6 +780,7 @@ Total.
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
 - cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+- cells: a collectible's Retry inspect is disabled: it is judged for you alone, so no inspect is asked for
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
 - cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason
 - card: a row click expands it inline; the rows below move down by the card's height
@@ -799,6 +800,7 @@ Total.
 - card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
+- card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
 ### test_own_drops.lua (16)
 
@@ -2474,7 +2476,7 @@ Total.
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_collect_cells.lua | 11 |
-| test_detail_card.lua | 30 |
+| test_detail_card.lua | 32 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -2551,4 +2553,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2097** |
+| **Total** | **2099** |

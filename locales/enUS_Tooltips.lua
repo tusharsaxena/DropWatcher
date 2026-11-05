@@ -329,6 +329,7 @@ L["you have %s"] = "you have %s"
 L["on your Always watch list"] = "on your Always watch list"
 L["collectibles are watched, not asked for"] = "collectibles are watched, not asked for"
 L["collectibles are watched, not offered"] = "collectibles are watched, not offered"
+L["collectibles are judged for you alone, not inspected"] = "collectibles are judged for you alone, not inspected"
 L["Collectibles are judged for you alone."] = "Collectibles are judged for you alone."
 L["Collectible: nobody is judged for it."] = "Collectible: nobody is judged for it."
 

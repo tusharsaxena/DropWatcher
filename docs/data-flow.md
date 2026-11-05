@@ -678,8 +678,9 @@ ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the group
 A collectible is feed-only: no Ask (WindowCells' No action, `Messaging.AskTemplate` nil, so no
 transmog ask for a cosmetic either), no toast and so no auto-ask (`Toast.Qualifies`: `collectible`),
 no Offer panel (`OfferPanel.Open` nil; `/dw offer` says why), no Announce or Offer request
-(`Asks.Request` refuses `collectible`), not in Post my tradeables (`FB.IsTradeableMine`), no glow (its
-verdict is never `upgrade`). A tier token is gear and is not refused.
+(`Asks.Request` refuses `collectible`), not in Post my tradeables (`FB.IsTradeableMine`), no Retry
+inspect (the detail card's is grayed; `NS.RetryInspect` prints why), no glow (its verdict is never
+`upgrade`). A tier token is gear and is not refused.
 
 The stand-down unregisters the events and the bus receivers, cancels the score timer and the collection re-read, and drops the
 dedupe window, the context and any drop still loading; the recorded drops are kept for the session.

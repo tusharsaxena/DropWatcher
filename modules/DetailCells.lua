@@ -629,6 +629,7 @@ end
 -- Why a retry would do nothing (its tooltip rows), or nil when it would queue the looter.
 local function noRetryReason(drop, inspect, now)
     if drop.isMine then return { trow(L["Why"], L["your own drop"]), trow(L["Your gear"], L["always read"]) } end
+    if NS.Collectibles.IsFeedOnly(drop) then return { trow(L["Why"], NS.CollectCells.NO_INSPECT) } end
     local guid = type(drop.looter) == "table" and drop.looter.guid or nil
     if not guid then return { trow(L["Why"], L["the looter is not known well enough to inspect"]) } end
     if type(inspect) == "table" and RETRY_BUSY[inspect.status] then return { trow(L["Inspect"], L["already queued"]) } end
