@@ -25,7 +25,10 @@ local _, NS = ...
 -- has neither.
 -- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
 -- mount, pet, toy, recipe, cosmetic) and `tokenSlot` a tier token's made slot; an entry kept before
--- they existed has neither and reads as equipment. A collectible's `me` keeps its collection verdict
+-- they existed has neither and reads as equipment (Insights: a tier token for the slot
+-- INVTYPE_NON_EQUIP_IGNORE). An Always watch item of no kind (a reagent, a quest item) is kept as
+-- `watched` (NS.Constants.CATEGORY_WATCHED), a History-only kind, so it never reads as one of those
+-- older entries. A collectible's `me` keeps its collection verdict
 -- (`collect` true, the `category`, a pet's `count` and `limit`, and `reasonKey` = notYourProfession
 -- for a recipe of a profession you lack), so History draws it with no live drop; an entry keeps the
 -- verdict its drop last had while live, and an older entry is a record, never judged again. The
@@ -171,6 +174,15 @@ local function tradeSnap(t)
     return { state = t.state, reasonKey = t.reasonKey, basis = t.basis, args = args }
 end
 
+-- The drop's item kind: its own, else Watched item for one the Always watch list let in with none
+-- (a forced drop, or its collection verdict), so Insights never files it as an entry from before #13.
+local function categoryOf(rec, facts)
+    if type(facts.category) == "string" then return facts.category end
+    local me = rec.me
+    if rec.forced == true or (type(me) == "table" and me.collect == true) then return NS.Constants.CATEGORY_WATCHED end
+    return nil
+end
+
 local function itemIDOf(rec)
     if num(rec.itemID) then return rec.itemID end
     return type(rec.link) == "string" and tonumber(rec.link:match("item:(%d+)")) or nil
@@ -186,7 +198,7 @@ function H.Snapshot(rec, now)
     local e = {
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
-        category = type(facts.category) == "string" and facts.category or nil,
+        category = categoryOf(rec, facts),
         tokenSlot = type(facts.tokenSlot) == "string" and facts.tokenSlot or nil,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
         seenBy = rec.seenBy, seenByClass = rec.seenByClass,

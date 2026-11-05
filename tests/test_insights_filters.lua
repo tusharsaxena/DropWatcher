@@ -69,6 +69,22 @@ test("insights filters: Rows reads each facet once, with its legacy fallback", f
     assertEqual(#F.Rows(nil), 0)
 end)
 
+-- DW-N1 (review 2026-11-05): an Always watch item of no kind, recorded `watched` by History, is its
+-- own Watched item in the Category dropdown, after every category, never equipment or a token.
+test("insights filters: a Watched item is its own category, listed last", function()
+    local F = IF()
+    local rows = F.Rows({ group(nil, {
+        drop({ category = "watched", equipLoc = "INVTYPE_NON_EQUIP_IGNORE" }), drop({ category = "toy" }),
+        drop(), drop({ category = "watched", equipLoc = "" }),
+    }) })
+    assertEqual(rows[1].category, "watched", "never the pre-#13 token fallback")
+    local o = F.Options(rows, nil, NOW, {})
+    assertEqual(counts(o.category), "all=4,equipment=1,toy=1,watched=2")
+    assertEqual(o.category[4].name, "Watched item"); assertEqual(o.category[4].label, "Watched item (2)")
+    local only = F.Filter(rows, { category = "watched" }, NOW)
+    assertEqual(#only, 2)
+end)
+
 test("insights filters: a drop with no time on it or its group is skipped, never read as the epoch", function()
     local F = IF()
     local rows = F.Rows({

@@ -531,6 +531,23 @@ test("history: Snapshot keeps the category, the token slot and a collectible's v
     assertNil(gear.category, "facts without a category"); assertNil(gear.me.collect)
 end)
 
+-- DW-N1 (review 2026-11-05): an Always watch item that fits no kind is kept as `watched`, so
+-- Insights never files a drop recorded today as one from before #13 (equipment or a tier token).
+test("history: Snapshot records an Always watch item of no kind as Watched item", function()
+    local NS = T.newAddon()
+    local Hi = NS.History
+    local forced = rec({ forced = true, facts = { equipLoc = "INVTYPE_NON_EQUIP_IGNORE", quality = 1 },
+        me = { verdict = "unknown", equip = "collect", collect = true, reasons = { { key = "whitelisted" } } } })
+    local e = Hi.Snapshot(forced, 1)
+    assertEqual(e.category, "watched"); assertEqual(e.category, NS.Constants.CATEGORY_WATCHED)
+    assertTrue(e.me.collect); assertNil(e.me.category, "the verdict names no kind")
+    local byVerdict = rec({ facts = { quality = 1 }, me = { verdict = "unknown", collect = true } })
+    assertEqual(Hi.Snapshot(byVerdict, 1).category, "watched", "a restored drop: its collection verdict")
+    local listedGear = rec({ forced = true, facts = { ilvl = 610, equipLoc = "INVTYPE_FINGER", category = "equipment" } })
+    assertEqual(Hi.Snapshot(listedGear, 1).category, "equipment", "a kind of its own is kept")
+    assertNil(Hi.Snapshot(rec(), 1).category, "unforced facts with none")
+end)
+
 test("history: a collection verdict that moves refreshes the entry; one that does not changes nothing", function()
     local Hi = H()
     local r = rec({ facts = { category = "mount" }, me = { verdict = "newCollect", collect = true, category = "mount" } })

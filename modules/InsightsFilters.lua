@@ -7,8 +7,11 @@ local _, NS = ...
 -- difficulty, situation, quality, category, at, day }), each facet read with its legacy fallback:
 -- the recorder is the drop's, else the group's, else `unknown` (Not recorded); the instance the
 -- group's, else Open world for an area, else the group's label; no difficulty is `none`; no
--- situation or quality is `unknown`; an entry with no category reads `equipment`, unless its slot is
--- INVTYPE_NON_EQUIP_IGNORE, which only a tier token has (the run plan's #12 Q3). `day` is the local
+-- situation or quality is `unknown`; an entry with no category (one from before issue #13) reads
+-- `equipment`, unless its slot is INVTYPE_NON_EQUIP_IGNORE, which reads `tierToken` (the run plan's
+-- #12 Q3). The client gives every non-equippable item that slot, so such a pre-#13 mount, pet, toy
+-- or recipe reads as a tier token too. An Always watch item that fits no kind is recorded `watched`
+-- (NS.Constants.CATEGORY_WATCHED), sorted after every category. `day` is the local
 -- midnight of `at`, from the calendar, so a DST change never moves a day. `at` is the drop's, else
 -- the group's; a drop with neither is skipped, so a malformed row never reaches back to the epoch.
 --
@@ -79,7 +82,8 @@ local function instanceOf(g)
     return str(g.label) or "unknown"
 end
 
---- A drop's category: its own, else `equipment`, or `tierToken` for a slot only a token has.
+--- A drop's category: its own, else (an entry from before #13) `equipment`, or `tierToken` for the
+--- INVTYPE_NON_EQUIP_IGNORE slot.
 --- @param e table a History entry
 --- @return string
 function IF.CategoryOf(e)
@@ -290,7 +294,11 @@ local SORT = {
     difficulty = function() return byDifficulty end,
     situation = function() return byPosition(positionsOf(NS.Constants.SITUATIONS, "key")) end,
     quality = function() return byQuality end,
-    category = function() return byPosition(positionsOf(NS.Constants.CATEGORIES, "key")) end,
+    category = function() -- the categories' order, History's Watched item after them
+        local pos = positionsOf(NS.Constants.CATEGORIES, "key")
+        pos[NS.Constants.CATEGORY_WATCHED] = #NS.Constants.CATEGORIES + 1
+        return byPosition(pos)
+    end,
     char = function(opts) return byChar(opts.current) end,
 }
 

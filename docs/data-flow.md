@@ -871,7 +871,8 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
-                          (the entry keeps the item kind, `category`, and a tier token's `tokenSlot`;
+                          (the entry keeps the item kind, `category` (`watched` for an Always watch item
+                           of no kind), and a tier token's `tokenSlot`;
                            a collectible's `me` its collection verdict: `collect`, `category`,
                            `count`, `limit`, `reasonKey`)
 PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin

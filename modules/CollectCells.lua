@@ -198,10 +198,11 @@ end
 
 -- ── the Slot, Type and Kind of a collectible, the detail card (DW-CAT7) ─────────────────────
 
--- Each category's word: the Slot cell of a collectible, the Kind row.
+-- Each category's word: the Slot cell of a collectible, the Kind row. `watched` is History's kind
+-- for an Always watch item that fits no category (NS.Constants.CATEGORY_WATCHED), never a live one.
 local KIND = {
     equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
-    recipe = L["Recipe"], cosmetic = L["Cosmetic"],
+    recipe = L["Recipe"], cosmetic = L["Cosmetic"], watched = L["Watched item"],
 }
 
 --- A category's word (`Mount`, `Tier token`), or nil for a key that is none (the Insights tab's

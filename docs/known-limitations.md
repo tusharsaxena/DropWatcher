@@ -35,7 +35,9 @@ the code reads every case the design leaves open, module by module, is in
   item on Always watch or Never watch, filters the drops that arrive after; a drop already in the
   feed stays, and a drop restored after a `/reload` is not filtered by a Never watch entry added
   since it dropped. History entries recorded before issue #13 have no item kind and read as
-  Equipment.
+  Equipment, or as Tier token when their slot is `INVTYPE_NON_EQUIP_IGNORE` (see Insights below).
+  An item on Always watch that has no kind (a reagent, a quest item) is kept as Watched item, its
+  own entry in the Insights Category filter.
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
   two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
   bank are not read.
@@ -90,7 +92,7 @@ the code reads every case the design leaves open, module by module, is in
   when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
   not on a boss kill or a wipe.
 - **Insights** (issue #12) reads only the kept history, unconfirmed in game like the rest
-  (INSIGHT-1..7):
+  (INSIGHT-1..8):
   - **Legacy entries.** An entry settled before the ask, offer and settle stamps existed (before
     DW-N1.1) keeps no record of an ask or offer that a trade replaced. Insights counts someone
     else's drop you received as an ask, and your own drop traded away as an offer, so Asks sent and
@@ -104,8 +106,13 @@ the code reads every case the design leaves open, module by module, is in
     once its newest drop is older than the window, so the first day shown can be older than the
     window's start; the counts are what the kept groups hold.
   - **Item kinds.** A drop recorded before issue #13 has no category and reads as equipment, except
-    a slot of `INVTYPE_NON_EQUIP_IGNORE`, which only a tier token has and which reads as a tier token.
-    A mount, pet, toy, recipe or cosmetic recorded before then reads as equipment.
+    one whose slot is `INVTYPE_NON_EQUIP_IGNORE`, which reads as a tier token (the run plan's #12
+    Q3). The retail client gives every item you cannot equip that slot, not tier tokens alone, so a
+    mount, pet, toy or recipe recorded before then reads as a tier token too; a cosmetic, which has
+    a real slot, reads as equipment. This only touches players who ran with Gear only off and still
+    keep such drops in the retention window; INSIGHT-8 checks the slot the client reports. An item
+    on Always watch that has no kind (a reagent, a quest item) is recorded as Watched item and
+    counted as itself, after every category, never as equipment.
   - **Character.** Insights names a drop's character from the drop, else from its group's recorder,
     so a drop only the group recorded counts under that character. History's Character filter reads
     the drop's recorder alone and calls the same drop Not recorded.

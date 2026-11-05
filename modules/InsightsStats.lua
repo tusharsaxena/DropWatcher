@@ -369,9 +369,11 @@ IS.VERDICT_ORDER = { "upgrade", "sidegrade", "downgrade", "cantUse", "unknown", 
     "collectUnknown" }
 IS.TRADE_ORDER = { "yes", "likely", "no", "unknown" }
 
+-- The categories in their order, History's Watched item last.
 local function categoryOrder()
     local out = {}
     for i, c in ipairs(NS.Constants.CATEGORIES) do out[i] = c.key end
+    out[#out + 1] = NS.Constants.CATEGORY_WATCHED
     return out
 end
 

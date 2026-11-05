@@ -243,6 +243,19 @@ test("insights stats: the mixes: class, quality, slot, category, verdicts and tr
     assertEqual(pairsOf(s.tradeStates), "yes=1,likely=3,no=1,unknown=1", "others' drops only")
 end)
 
+-- DW-N1 (review 2026-11-05): History's Watched item is its own category, after every other, and
+-- its Slot word when it has no slot of its own.
+test("insights stats: a Watched item counts as itself, listed after every category", function()
+    local s = compute({ group(nil, {
+        drop({ equipLoc = "INVTYPE_NON_EQUIP_IGNORE", category = "watched", me = { verdict = "unknown", collect = true } }),
+        drop({ equipLoc = "INVTYPE_NON_EQUIP_IGNORE", category = "watched", me = { verdict = "unknown", collect = true } }),
+        drop({ equipLoc = "", category = "toy", me = { verdict = "collected", collect = true } }),
+        drop(),
+    }) })
+    assertEqual(pairsOf(s.byCategory), "equipment=1,toy=1,watched=2")
+    assertEqual(pairsOf(s.bySlot), "Watched item=2,Head=1,Toy=1")
+end)
+
 -- ── the pass ────────────────────────────────────────────────────────────────────────────────
 
 test("insights stats: nothing in gives zeros and empty lists", function()

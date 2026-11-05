@@ -368,6 +368,11 @@ C.CATEGORIES = {
     { key = "cosmetic", collectible = true },
 }
 
+-- The kind History records for a drop the Always watch list let in that fits no category (a reagent,
+-- a quest item): History-only, never a CATEGORIES key or a feed filter's, so Insights files it as
+-- its own Watched item, sorted after every category, not as equipment (the pre-#13 fallback).
+C.CATEGORY_WATCHED = "watched"
+
 -- The slots a tier token can make, in the order an omni token's slots are tried.
 C.TIER_SLOTS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
 
