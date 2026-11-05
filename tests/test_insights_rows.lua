@@ -2,8 +2,10 @@
 -- design spec §1.3, §3.4, §4.2; modules/InsightsRows.lua): the eight cards' figures, hovers and
 -- tone (a dash with nothing to show, the legacy lines only when a count was inferred), the card
 -- grid (4 and 2 columns, a short last row stretched), the bar's wrap at the full, a middle and the
--- compact width, the period caption for a kept window, Never delete and a shorter range, and the
--- empty lines.
+-- compact width, the period caption for a kept window, Never delete and a shorter range, the
+-- empty lines, and every chart section's rows (spec §1.4): the outcome rows and their fracs, the
+-- instances, bosses and visits, the generous members, the gains, the day buckets and the mixes,
+-- their colors resolved from class, quality and tone names.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
@@ -138,4 +140,213 @@ test("insights rows: the empty line says how long drops are kept, or that the fi
     assertEqual(R.EmptyText(0, 30), "No history yet. Drops your group receives are kept for 30 days.")
     assertEqual(R.EmptyText(0, 0), "No history yet. Drops your group receives are kept until you clear them.")
     assertEqual(R.EmptyText(12, 30), "No drops match these filters.")
+end)
+
+-- ── the sections' rows ──────────────────────────────────────────────────────────────────────
+
+local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
+
+-- The stats of `groups` through the real pass, and the namespace it ran in.
+local function statsOf(groups)
+    local NS = T.newAddon()
+    local F = NS.InsightsFilters
+    local rows = F.Rows(groups)
+    return NS.InsightsStats.Compute(rows, F.Period(rows, 30, "all", NOW)), NS
+end
+
+local function drop(over)
+    local e = { itemLink = LINK, itemID = 212, looter = "Brakk-Testrealm", class = "WARRIOR", outcome = "seen",
+        at = NOW - 3600, quality = 4, equipLoc = "INVTYPE_HEAD", me = { verdict = "downgrade", ilvlDelta = -3 },
+        trade = { state = "likely" } }
+    for k, v in pairs(over or {}) do e[k] = v end
+    return e
+end
+
+local function group(over, drops)
+    local g = { key = "k", label = "Boss", kind = "encounter", instance = "Ruby Life Pools", difficulty = "Mythic",
+        situation = "raid", at = NOW - 3600, drops = drops }
+    for k, v in pairs(over or {}) do g[k] = v end
+    return g
+end
+
+local UP = { verdict = "upgrade", ilvlDelta = 9 }
+
+local function sameColor(a, b)
+    return type(a) == "table" and type(b) == "table" and a[1] == b.r and a[2] == b.g and a[3] == b.b
+end
+
+test("insights rows: A splits others' drops, their upgrades and yours by outcome, fracs over the largest row", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ outcome = "received", settledAt = NOW }), drop({ outcome = "expired" }), drop(), drop(),
+        drop({ me = UP }),
+        drop({ isMine = true, outcome = "tradedAway" }), drop({ isMine = true }),
+    }) })
+    local R = NS.InsightsRows
+    local rows, legend = R.OutcomeRows(s)
+    assertEqual(#rows, 3)
+    assertEqual(rows[1].label, "Others' drops"); assertEqual(rows[1].value, "5")
+    assertEqual(rows[2].label, "Upgrades for me"); assertEqual(rows[2].sublabel, "looted by others")
+    assertEqual(rows[3].label, "Your drops"); assertEqual(rows[3].value, "2")
+    local segs = rows[1].segments
+    assertEqual(#segs, 3, "received, expired and kept; no empty segment")
+    assertEqual(segs[1].frac, 1 / 5); assertEqual(segs[1].tip, "Traded to me: 1 (20%)")
+    assertTrue(sameColor(segs[1].color, NS.Constants.TONE.good), "received in the upgrade green")
+    assertTrue(sameColor(segs[2].color, NS.Constants.TONE.warn), "expired in the urgent amber")
+    assertEqual(segs[3].frac, 3 / 5)
+    assertEqual(rows[3].segments[1].frac, 1 / 5, "your row over the largest total too")
+    assertTrue(sameColor(rows[3].segments[1].color, NS.Constants.TONE.cyan), "traded away in Offer's cyan")
+    assertEqual(rows[1].tip[1], "Others' drops"); assertEqual(rows[1].tip[2], "Traded to me: 1 (20%)")
+    assertEqual(#legend, 6); assertEqual(legend[1].label, "Traded to me")
+    rows = R.OutcomeRows(statsOf({ group(nil, { drop({ isMine = true }) }) }))
+    assertEqual(#rows, 1, "a row with no drop is left out"); assertEqual(rows[1].label, "Your drops")
+    rows, legend = R.OutcomeRows(statsOf({}))
+    assertEqual(#rows, 0); assertEqual(#legend, 0)
+end)
+
+test("insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted", function()
+    local groups = {}
+    for i = 1, 12 do
+        local drops = { drop({ me = UP }) }
+        if i == 1 then drops[2] = drop({ me = UP, isMine = true }); drops[3] = drop({ me = UP }) end
+        groups[i] = group({ key = "g" .. i, instance = ("Instance %02d"):format(i) }, drops)
+    end
+    local s, NS = statsOf(groups)
+    local mine, others = { 1, 0, 0 }, { 0, 1, 0 }
+    local rows, legend, more = NS.InsightsRows.InstanceRows(s, { mine = mine, others = others })
+    assertEqual(#rows, 10); assertEqual(more, 2)
+    assertEqual(rows[1].label, "Instance 01"); assertEqual(rows[1].value, "3")
+    assertEqual(rows[1].segments[1].frac, 1 / 3); assertEqual(rows[1].segments[2].frac, 2 / 3)
+    assertTrue(rows[1].segments[1].color == mine and rows[1].segments[2].color == others)
+    assertEqual(rows[2].segments[2].frac, 1 / 3, "over the top row's total")
+    assertEqual(table.concat(rows[1].tip, " | "), "Instance 01 | 3 upgrades for you | 1 by you | 2 by others")
+    assertEqual(legend[1].label, "By you"); assertEqual(legend[2].tip, "Looted by others")
+    rows, legend, more = NS.InsightsRows.InstanceRows(statsOf({ group(nil, { drop() }) }), { mine = mine, others = others })
+    assertEqual(#rows, 0); assertEqual(#legend, 0); assertEqual(more, 0)
+end)
+
+test("insights rows: C names each boss under its instance and difficulty; encounters only", function()
+    local s, NS = statsOf({
+        group({ key = "a", label = "Kyveza" }, { drop({ me = UP }), drop({ me = UP }) }),
+        group({ key = "b", label = "Ansurek", difficulty = false }, { drop({ me = UP }) }),
+        group({ key = "c", label = "Ruby Life Pools", kind = "run", difficulty = "Mythic+ 12" }, { drop({ me = UP }) }),
+    })
+    local rows, more = NS.InsightsRows.BossRows(s)
+    assertEqual(#rows, 2, "a key's run is no boss"); assertEqual(more, 0)
+    assertEqual(rows[1].label, "Kyveza"); assertEqual(rows[1].sublabel, "Ruby Life Pools · Mythic")
+    assertEqual(rows[1].frac, 2); assertEqual(rows[1].value, "2")
+    assertEqual(rows[2].sublabel, "Ruby Life Pools", "no difficulty: the instance alone")
+    assertEqual(rows[2].tip[3], "1 upgrade for you")
+end)
+
+test("insights rows: D reads upgrades a visit with the visits in the hover", function()
+    local groups = {}
+    for i = 1, 3 do groups[i] = group({ key = "r" .. i }, { drop({ me = i == 1 and UP or nil }) }) end
+    local s, NS = statsOf(groups)
+    local rows = NS.InsightsRows.RateRows(s)
+    assertEqual(#rows, 1); assertEqual(rows[1].name, "Ruby Life Pools")
+    assertEqual(rows[1].right, "0.33 / visit"); assertEqual(rows[1].tip[2], "1 upgrades in 3 visits")
+    assertEqual(#NS.InsightsRows.RateRows(statsOf({ group(nil, { drop({ me = UP }) }) })), 0, "one visit: under the floor")
+end)
+
+test("insights rows: E lists who traded to you most, in their class color, the items in the hover", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ outcome = "received", settledAt = NOW, looter = "Seta-Testrealm", class = "PRIEST" }),
+        drop({ outcome = "received", settledAt = NOW, looter = "Seta-Testrealm", class = "PRIEST", at = NOW - 60 }),
+        drop({ outcome = "received", settledAt = NOW }),
+    }) })
+    local rows = NS.InsightsRows.GenerousRows(s)
+    assertEqual(#rows, 2)
+    assertEqual(rows[1].name, "Seta"); assertEqual(rows[1].right, "2")
+    local r, g, b = NS.Compat.ClassColor("PRIEST")
+    assertEqual(rows[1].nameColor[1], r); assertEqual(rows[1].nameColor[2], g); assertEqual(rows[1].nameColor[3], b)
+    assertEqual(rows[1].tip[1], "Seta-Testrealm")
+    assertTrue(rows[1].tip[2]:find("^2 items, the last on ") ~= nil, rows[1].tip[2])
+    assertEqual(rows[1].tip[3], "Crown of Roaring Storms")
+    assertEqual(rows[2].tip[2]:match("^1 item,"), "1 item,")
+end)
+
+test("insights rows: F draws each gain from 0, signed, legacy marked, the summed gain in the heading", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ outcome = "received", settledAt = NOW, got = { verdict = "upgrade", ilvlDelta = 7 } }),
+        drop({ outcome = "received", me = { verdict = "downgrade", ilvlDelta = -3 }, at = NOW - 7200 }),
+        drop({ outcome = "received", settledAt = NOW, got = { at = NOW } }),
+    }) })
+    local R = NS.InsightsRows
+    local rows, suffix = R.GainRows(s)
+    assertEqual(#rows, 2, "no comparison: no row")
+    assertEqual(rows[1].value, "-3"); assertEqual(rows[1].lo, -3); assertEqual(rows[1].hi, 0); assertEqual(rows[1].mark, 0)
+    assertTrue(rows[1].sublabel:find("as last judged", 1, true) ~= nil, "legacy")
+    assertTrue(sameColor(rows[1].color, NS.Constants.TONE.red))
+    assertEqual(rows[2].value, "+7"); assertEqual(rows[2].lo, 0); assertEqual(rows[2].hi, 7)
+    assertEqual(rows[2].label, "Crown of Roaring Storms"); assertTrue(rows[2].labelColor ~= nil, "in its quality color")
+    assertTrue(rows[2].sublabel:find("^from Brakk · ") ~= nil, rows[2].sublabel)
+    assertTrue(rows[2].sublabel:find("last judged", 1, true) == nil)
+    assertEqual(suffix, "+7 in all · 1 not compared")
+    assertEqual(R.Signed(0.4), "0"); assertEqual(R.Signed(-2.6), "-3"); assertEqual(R.Signed(12), "+12")
+end)
+
+test("insights rows: F past ten rows keeps the ten biggest gains, oldest first, and counts the rest", function()
+    local drops = {}
+    for i = 1, 13 do
+        drops[i] = drop({ outcome = "received", settledAt = NOW, at = NOW - 1000 + i,
+            got = { verdict = "upgrade", ilvlDelta = i } })
+    end
+    local s, NS = statsOf({ group(nil, drops) })
+    local rows, suffix = NS.InsightsRows.GainRows(s)
+    assertEqual(#rows, 10)
+    assertEqual(rows[1].value, "+4"); assertEqual(rows[10].value, "+13")
+    assertEqual(suffix, "+91 in all · 3 more")
+end)
+
+test("insights rows: G and H bucket each day, the zero days kept, the hover naming the counts", function()
+    local s, NS = statsOf({
+        group({ at = NOW - 2 * DAY }, { drop({ at = NOW - 2 * DAY, askedAt = NOW - 2 * DAY + 60, outcome = "asked" }) }),
+        group(nil, { drop({ me = UP }), drop() }),
+    })
+    local R = NS.InsightsRows
+    local asks, n = R.DayBuckets(s, "asks")
+    assertEqual(n, 1); assertEqual(asks[1].count, 1); assertEqual(asks[2].count, 0)
+    assertEqual(asks[1].label, R.Day(NOW - 2 * DAY))
+    assertEqual(asks[1].info[2], "1 ask, 0 offers")
+    local drops, total = R.DayBuckets(s, "drops")
+    assertEqual(total, 3); assertEqual(drops[#drops].count, 2)
+    assertEqual(drops[#drops].info[2], "2 drops, 1 upgrade for you")
+    s.weekly = true
+    assertEqual(R.DayBuckets(s, "drops")[1].info[1], "Week of " .. R.Day(s.perDay[1].day))
+end)
+
+test("insights rows: the mixes read their words and colors, a token under its category and Can't use's off-spec count", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ class = "PRIEST", quality = 3, me = { verdict = "cantUse", offSpec = { verdict = "upgrade" } } }),
+        drop({ equipLoc = "INVTYPE_NON_EQUIP_IGNORE", trade = { state = "no" } }),
+        drop({ class = false, me = { verdict = "newCollect" }, category = "mount", equipLoc = "" }),
+        drop({ isMine = true }),
+    }) })
+    local R = NS.InsightsRows
+    local function find(rows, label)
+        for _, r in ipairs(rows) do if r.label == label then return r end end
+    end
+    local class = R.MixRows(s, "byClass")
+    local priest = find(class, "Priest")
+    assertTrue(priest ~= nil, "the class's own name"); assertEqual(priest.value, "1")
+    assertTrue(priest.color ~= nil and priest.color[1] == select(1, NS.Compat.ClassColor("PRIEST")))
+    assertTrue(find(class, "Unknown") ~= nil and find(class, "Unknown").color == nil, "no class: no color")
+    local q = R.MixRows(s, "byQuality")
+    assertEqual(q[1].label, "Epic"); assertEqual(q[2].label, "Rare"); assertTrue(q[1].color ~= nil)
+    local slot = R.MixRows(s, "bySlot")
+    assertTrue(find(slot, "Tier token") ~= nil, "a token's slot reads its category")
+    assertTrue(find(slot, "Mount") ~= nil and find(slot, "Head") ~= nil)
+    local cat = R.MixRows(s, "byCategory")
+    assertEqual(cat[1].label, "Equipment"); assertEqual(cat[2].label, "Tier token"); assertEqual(cat[3].label, "Mount")
+    local v = R.MixRows(s, "verdicts")
+    local cant = find(v, "Can't use")
+    assertTrue(sameColor(cant.color, NS.Constants.TONE.redMuted))
+    assertEqual(cant.tip[3], "1 usable on another spec")
+    assertTrue(sameColor(find(v, "New to your collection").color, NS.Constants.TONE.good))
+    assertEqual(find(v, "Downgrade").tip[2], "2 (50%) drops")
+    local tr = R.MixRows(s, "tradeStates")
+    assertEqual(#tr, 2, "others' drops only")
+    assertTrue(sameColor(find(tr, "Likely").color, NS.Constants.TONE.good))
+    assertTrue(sameColor(find(tr, "No").color, NS.Constants.TONE.red), "the tone name resolved to its color")
+    assertEqual(#R.MixRows(statsOf({}), "byClass"), 0)
 end)

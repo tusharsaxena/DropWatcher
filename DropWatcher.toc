@@ -470,9 +470,14 @@ modules\OfferPanel.lua
 # NS.WindowGroup's item button and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
 # Conventional: publishes NS.InsightsRows, what the Insights tab draws as plain data (the cards'
-# figures and hovers, the card grid, the bar's wrap, the period caption, the empty lines). Pure;
-# NS.L and NS.HistoryRetention (above) are read at call time.
+# figures and hovers, the card grid, the bar's wrap, the period caption, the empty lines, every
+# chart section's rows). Pure; NS.L, NS.HistoryRetention, NS.InsightsStats and the color and label
+# readers (above) are read at call time.
 modules\InsightsRows.lua
+# Conventional: publishes NS.InsightsSections, the Insights tab's chart sections and their layout
+# pass on LibKa0s-Charts-1.0. NS.L at load; NS.Charts and NS.InsightsRows (above) are read at call
+# time, when modules\WindowInsights.lua (below) builds and lays out its pane.
+modules\InsightsSections.lua
 # LOAD-BEARING: registers the Insights body through Window.RegisterTab (modules\Window.lua, above)
 # at load, with its own bar (`ownBar`), and its HistoryChanged receiver on a NS.Bus target; takes
 # NS.Constants, NS.L, NS.Perf and NS.InsightsFilters (above) at load. NS.Charts / NS.ChartsHost

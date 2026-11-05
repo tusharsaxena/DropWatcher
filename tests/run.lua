@@ -291,6 +291,7 @@ Kit.run{
         "test_content_tabs",
         "test_insights_rows",
         "test_window_insights",
+        "test_insights_sections",
         "test_toast",
         "test_toast_stack",
         "test_glow",

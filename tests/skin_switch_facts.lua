@@ -78,6 +78,19 @@ return function(enableAddon, withPlayer)
 
     local function redraw() NS.Window.Refresh() end
 
+    --- The window on Insights over a one-drop history: an upgrade traded to you, so the cards, the
+    --- bars and a strip all draw. Answers the tab's drawn pane.
+    local function insights()
+        local now = m.time()
+        NS.History.Store().groups = { { key = "k", label = "Boss 3", kind = "encounter", instance = "Ruby Life Pools",
+            situation = "raid", at = now - 60, drops = { { itemLink = LINK, itemID = 212, looter = "Seta-Testrealm",
+            class = "PRIEST", outcome = "received", settledAt = now, at = now - 60, quality = 4,
+            equipLoc = "INVTYPE_HEAD", me = { verdict = "upgrade", ilvlDelta = 9 }, trade = { state = "yes" } } } } }
+        NS.ShowWindow()
+        NS.Window.SelectTab("insights")
+        return NS.WindowInsights.Drawn()
+    end
+
     --- A button whose GlowLib start writes the color the glow was handed to an object a spy reads.
     local function glowOf(d)
         local out = { SetVertexColor = function() end }
@@ -193,6 +206,22 @@ return function(enableAddon, withPlayer)
                 spot:GetScript("OnEnter")(spot)
                 return m.GameTooltip
             end, paint = function() tipSpot:GetScript("OnEnter")(tipSpot) end },
+            { name = "an Insights card", build = function()
+                local card = insights().cards[1]
+                return card.frame, card.value, card.label
+            end },
+            { name = "an Insights section heading and divider", build = function()
+                local d = insights()
+                return d.headers.verdicts, d.dividers.loot.fs, d.dividers.loot.rules[1]
+            end },
+            { name = "an Insights bar in a host color", build = function()
+                local bar = insights().ctx:Pool("verdicts").active[1]
+                return bar.fill
+            end, paint = redraw },
+            { name = "an Insights strip column", build = function()
+                local d = insights()
+                return d.ctx:Pool("drops").active[1].fill, d.strips.drops.axisLine
+            end, paint = redraw },
             { name = "the toast", build = function()
                 local d = drop()
                 NS.LootFeed.Get = function(id) return id == 1 and d or nil end

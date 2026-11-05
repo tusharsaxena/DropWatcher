@@ -1970,7 +1970,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_insights_rows.lua (9)
+### test_insights_rows.lua (18)
 
 - insights rows: eight cards in grid order, the owner's six then Offers sent and Traded away (Q4)
 - insights rows: each card's figure and hover read the stats' totals
@@ -1981,6 +1981,15 @@ Total.
 - insights rows: a day reads `Nov 5`, with no leading zero
 - insights rows: the period caption names the kept window, Never delete and a shorter range
 - insights rows: the empty line says how long drops are kept, or that the filters match nothing
+- insights rows: A splits others' drops, their upgrades and yours by outcome, fracs over the largest row
+- insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted
+- insights rows: C names each boss under its instance and difficulty; encounters only
+- insights rows: D reads upgrades a visit with the visits in the hover
+- insights rows: E lists who traded to you most, in their class color, the items in the hover
+- insights rows: F draws each gain from 0, signed, legacy marked, the summed gain in the heading
+- insights rows: F past ten rows keeps the ten biggest gains, oldest first, and counts the rest
+- insights rows: G and H bucket each day, the zero days kept, the hover naming the counts
+- insights rows: the mixes read their words and colors, a token under its category and Can't use's off-spec count
 
 ### test_window_insights.lua (19)
 
@@ -2003,6 +2012,17 @@ Total.
 - insights tab: without LibKa0s-Charts-1.0 the bar and the strip draw and one line says why
 - insights tab: without LibKa0s-Widgets-1.0 no dropdown draws and the cards still do
 - insights tab: compact lays the cards out two to a row and wraps the bar
+
+### test_insights_sections.lua (8)
+
+- insights sections: a filled log draws every section, each heading shown and in the spec's order
+- insights sections: the hovers carry the numbers
+- insights sections: a section with no rows shows its heading and one line, its renderer never called
+- insights sections: F with only items no level was compared for says so
+- insights sections: with no drop through the filters every section hides
+- insights sections: D and E sit side by side in the full layout and stack in compact
+- insights sections: a second pass builds no frame
+- insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
 
 ### test_toast.lua (49)
 
@@ -2487,7 +2507,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (41)
+### test_skin_switch.lua (49)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the window's title bar changes
@@ -2528,6 +2548,14 @@ Total.
 - skin switch: the Offer panel changes with the Scope ignored
 - skin switch: a tooltip's title and lines changes
 - skin switch: a tooltip's title and lines changes with the Scope ignored
+- skin switch: an Insights card changes
+- skin switch: an Insights card changes with the Scope ignored
+- skin switch: an Insights section heading and divider changes
+- skin switch: an Insights section heading and divider changes with the Scope ignored
+- skin switch: an Insights bar in a host color changes
+- skin switch: an Insights bar in a host color changes with the Scope ignored
+- skin switch: an Insights strip column changes
+- skin switch: an Insights strip column changes with the Scope ignored
 - skin switch: the toast changes
 - skin switch: the toast changes with the Scope ignored
 
@@ -2621,8 +2649,9 @@ Total.
 | test_insights_stats.lua | 14 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_insights_rows.lua | 9 |
+| test_insights_rows.lua | 18 |
 | test_window_insights.lua | 19 |
+| test_insights_sections.lua | 8 |
 | test_toast.lua | 49 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
@@ -2649,6 +2678,6 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 41 |
+| test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2177** |
+| **Total** | **2202** |

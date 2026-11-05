@@ -1,7 +1,8 @@
 local _, NS = ...
 -- modules/WindowInsights.lua — the Insights tab's body (issue #12, Insights design spec §4.3, §5):
--- its own filter bar, the KPI cards over the kept history and the strip naming the period it
--- covers, drawn through LibKa0s-Charts-1.0 (NS.Charts, core/ChartsSetup.lua).
+-- its own filter bar, the KPI cards and the chart sections over the kept history (the sections'
+-- layout pass is modules/InsightsSections.lua) and the strip naming the period it covers, drawn
+-- through LibKa0s-Charts-1.0 (NS.Charts, core/ChartsSetup.lua).
 --
 -- A BAR OF ITS OWN. The tab registers with `ownBar`, so the window hides the shared filter bar and
 -- the footer's Sort while it shows (modules/Window.lua). Its seven dropdowns (Character, Instance,
@@ -161,6 +162,7 @@ local function build(p)
     if NS.Charts then
         p.ctx = NS.Charts:New(p.content, NS.ChartsHost())
         buildCards(p)
+        NS.InsightsSections.Build(p)
     else
         NS.Debug(TAG, "insights: LibKa0s-Charts-1.0 absent, the tab draws no charts")
     end
@@ -296,11 +298,16 @@ local function layout(p, width, compact)
     p.empty:SetShown(line ~= nil)
     if line then p.empty:SetText(line) end
     local cw = width - K.SCROLL_W
-    if p.ctx then p.ctx:ReleaseAll() end
+    if p.ctx then
+        p.ctx:ReleaseAll()
+        NS.InsightsSections.Hide(p)
+    end
     showCards(p, line == nil)
     local y = -PAD
-    if line == nil then y = placeCards(p, cw, compact) end
-    p.content:SetSize(cw, math.max(1, -y))
+    if line == nil then
+        y = NS.InsightsSections.Layout(p, p.data.stats, placeCards(p, cw, compact), cw, PAD, compact)
+    end
+    p.content:SetSize(cw, math.max(1, PAD - y))
     if t0 then Perf.Note("insights.layout", debugprofilestop() - t0, "window.refresh") end
 end
 
@@ -319,13 +326,15 @@ local function refresh(p)
     layout(p, width, compact)
 end
 
---- The drawn pane, for the suites: { pane, dropdowns, cards, strip, empty, data, computes } or nil.
+--- The drawn pane, for the suites: { pane, dropdowns, cards, strip, empty, data, computes, ctx, bar,
+--- headers, dividers, panels, strips, sections (each section's row count this pass) } or nil.
 --- @return table|nil
 function WI.Drawn()
     local p = pane()
     if not (p and p.strip) then return nil end
     return { pane = p, dropdowns = p.dropdowns, cards = p.cards, strip = p.strip, empty = p.empty,
-        data = p.data, computes = p.computes or 0, ctx = p.ctx, bar = p.bar }
+        data = p.data, computes = p.computes or 0, ctx = p.ctx, bar = p.bar, headers = p.headers,
+        dividers = p.dividers, panels = p.panels, strips = p.strips, sections = p.drawn }
 end
 
 NS.Window.RegisterTab("insights", { build = build, refresh = refresh, ownBar = true })
