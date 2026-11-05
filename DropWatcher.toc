@@ -109,6 +109,9 @@ core\SkinSetup.lua
 # Conventional: NS.MakeDropdown / NS.CloseMenu are read inside functions only (the window's
 # filter bar and footer, built on the first show).
 core\WidgetsSetup.lua
+# Conventional: publishes NS.Charts (LibKa0s-Charts-1.0, nil when absent: no drawing stub) and
+# NS.ChartsHost, read by modules\WindowInsights.lua when its pane is built.
+core\ChartsSetup.lua
 # Conventional: publishes NS.GlowLib, the LibKa0s-Glow-1.0 seam, read by modules\Glow.lua at call time.
 core\GlowSetup.lua
 # LOAD-BEARING relative to modules\Toast.lua only, which calls NS.NewToast at load: publishes
@@ -466,6 +469,16 @@ modules\OfferPanel.lua
 # NS.L and NS.State at load. NS.History, NS.Gear (your class, for the Me tooltip's `You`),
 # NS.WindowGroup's item button and layout, NS.WindowFilterBar and NS.WindowFooter (above) are read at call time.
 modules\WindowHistory.lua
+# Conventional: publishes NS.InsightsRows, what the Insights tab draws as plain data (the cards'
+# figures and hovers, the card grid, the bar's wrap, the period caption, the empty lines). Pure;
+# NS.L and NS.HistoryRetention (above) are read at call time.
+modules\InsightsRows.lua
+# LOAD-BEARING: registers the Insights body through Window.RegisterTab (modules\Window.lua, above)
+# at load, with its own bar (`ownBar`), and its HistoryChanged receiver on a NS.Bus target; takes
+# NS.Constants, NS.L, NS.Perf and NS.InsightsFilters (above) at load. NS.Charts / NS.ChartsHost
+# (core\ChartsSetup.lua), NS.InsightsRows, NS.InsightsStats, NS.History and the window are read at
+# call time: the pane is built on the tab's first show.
+modules\WindowInsights.lua
 # LOAD-BEARING: takes NS.WindowCells, NS.MineCells and NS.SideCells (modules\, above) at load.
 # Publishes NS.CompactCards, compact mode's pure card composers (each card's three lines, tones and
 # tooltips for both tabs, and the header's short form); takes NS.L at load. NS.WindowHistory (above)

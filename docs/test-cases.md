@@ -371,7 +371,7 @@ Total.
 - skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
 - skin tools: the live debug console is painted for this owner
 
-### test_slash.lua (26)
+### test_slash.lua (27)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -392,6 +392,7 @@ Total.
 - slash: `clear` empties this session's feed and leaves the test feed alone
 - slash: `clear` closes an Offer panel whose drop it took
 - slash: `history` opens the window on that tab, expanded; `mine` opens Drops
+- slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)
 - slash: a tab verb the Visibility setting keeps hidden says so
 - slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
 - slash: `situation` prints the situation, its settings and the classifier's inputs
@@ -422,7 +423,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (63)
+### test_window_shell.lua (64)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -435,9 +436,10 @@ Total.
 - shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
 - shell: Scan group asks the inspect broker through the shared handler, and says what it did
 - shell: Scan group is refused while the addon is disabled
-- shell: two tabs, Drops active in gold with its underline, History gray
+- shell: three tabs, Drops active in gold with its underline, History and Insights gray
 - shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
 - shell: the tab labels carry no count; their tooltips say what each holds
+- shell: the Insights tooltip names what it holds and the period the kept history covers
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
@@ -606,7 +608,7 @@ Total.
 
 ### test_compact_chrome.lua (27)
 
-- chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
+- chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
 - chrome: the compact badge shows the queued count beside its lock, or nothing
 - chrome: the footer's one line is inspect freshness and the situation
@@ -619,7 +621,7 @@ Total.
 - chrome: the panes reserve the sim strip's height while a simulation runs
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
-- chrome: the two tabs keep a reduced width, their names in their tooltips
+- chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
 - chrome: the panel closes when the window hides, minimizes or goes back to full
@@ -871,7 +873,7 @@ Total.
 
 ### test_drops_strip.lua (15)
 
-- drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
+- drops tab: the tabs are Drops, History and Insights, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
 - drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
 - drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
@@ -1968,6 +1970,38 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
+### test_insights_rows.lua (9)
+
+- insights rows: eight cards in grid order, the owner's six then Offers sent and Traded away (Q4)
+- insights rows: each card's figure and hover read the stats' totals
+- insights rows: Ask success is a rounded percentage, green from 50%, with the legacy warning only when inferred
+- insights rows: with nothing to show a card reads 0 or a dash, never a nil, and no legacy line
+- insights rows: the card grid is 4 columns full and 2 compact, a short last row stretched
+- insights rows: the bar wraps one row at the full width, two at 600 and four at compact's 400
+- insights rows: a day reads `Nov 5`, with no leading zero
+- insights rows: the period caption names the kept window, Never delete and a shorter range
+- insights rows: the empty line says how long drops are kept, or that the filters match nothing
+
+### test_window_insights.lua (17)
+
+- insights tab: built once on its first show, with its chart context and eight cards
+- insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
+- insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History
+- insights tab: the footer's Sort is hidden on Insights and back on History
+- insights tab: switching in closes the compact Filters panel
+- insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
+- insights tab: a pick redraws the cards and the strip; Reset puts every filter back
+- insights tab: a date range with nothing in it says no drop matches, and the cards hide
+- insights tab: an unrelated repaint computes nothing; HistoryChanged and test mode off do
+- insights tab: a resize lays out again without computing
+- insights tab: the strip names the period, and follows the retention
+- insights tab: test mode fills the cards from the sample history
+- insights tab: with no history the cards hide and one line says how long drops are kept
+- insights tab: each recompute logs one line under UI
+- insights tab: without LibKa0s-Charts-1.0 the bar and the strip draw and one line says why
+- insights tab: without LibKa0s-Widgets-1.0 no dropdown draws and the cards still do
+- insights tab: compact lays the cards out two to a row and wraps the bar
+
 ### test_toast.lua (49)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
@@ -2518,9 +2552,9 @@ Total.
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
-| test_slash.lua | 26 |
+| test_slash.lua | 27 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 63 |
+| test_window_shell.lua | 64 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
@@ -2585,6 +2619,8 @@ Total.
 | test_insights_stats.lua | 14 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
+| test_insights_rows.lua | 9 |
+| test_window_insights.lua | 17 |
 | test_toast.lua | 49 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
@@ -2613,4 +2649,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2147** |
+| **Total** | **2175** |

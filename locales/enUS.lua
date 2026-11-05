@@ -44,6 +44,7 @@ L["Lock the window in place"] = "Lock the window in place"
 L["Measure performance — `/dw perf` opens the step panel"] = "Measure performance — `/dw perf` opens the step panel"
 L["Open the Drops tab, where your own drops are listed"] = "Open the Drops tab, where your own drops are listed"
 L["Open the History tab"] = "Open the History tab"
+L["Open the Insights tab"] = "Open the Insights tab"
 L["Open the Ka0s Drop Watcher settings panel"] = "Open the Ka0s Drop Watcher settings panel"
 L["Choose a skin: open the skin picker"] = "Choose a skin: open the skin picker"
 L["Open the Offer panel for a bag item — `/dw offer <item link>`"] = "Open the Offer panel for a bag item — `/dw offer <item link>`"
@@ -361,6 +362,7 @@ L["Collapse all"] = "Collapse all"
 -- Compact mode's chrome (modules/CompactChrome.lua, compact spec §4)
 L["Drops"] = "Drops"
 L["History"] = "History"
+L["Insights"] = "Insights"
 L["TEST"] = "TEST"
 L["SIM"] = "SIM"
 L["Sim: %s"] = "Sim: %s"
@@ -427,6 +429,7 @@ L["History cleared."] = "History cleared."
 
 -- modules/Window.lua
 L["Drops from earlier encounters appear here."] = "Drops from earlier encounters appear here."
+L["Charts over the kept history appear here."] = "Charts over the kept history appear here."
 -- modules/WindowTitleBar.lua
 L["PvP match"] = "PvP match"
 L["Chat restricted"] = "Chat restricted"

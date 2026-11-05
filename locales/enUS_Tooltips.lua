@@ -50,11 +50,15 @@ L["Refused by the feed"] = "Refused by the feed"
 -- modules/Window.lua
 L["across sessions"] = "across sessions"
 L["boss or key run"] = "boss or key run"
+L["charts over the kept history"] = "charts over the kept history"
+L["Covers"] = "Covers"
 L["drops from earlier encounters"] = "drops from earlier encounters"
 L["every drop your group receives, yours included"] = "every drop your group receives, yours included"
+L["every kept day"] = "every kept day"
 L["Grouped by"] = "Grouped by"
 L["Holds"] = "Holds"
 L["Kept"] = "Kept"
+L["the last %s kept"] = "the last %s kept"
 
 -- modules/WindowTitleBar.lua
 L["%d more"] = "%d more"

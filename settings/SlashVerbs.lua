@@ -1,6 +1,6 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the handlers of the design spec's feature verbs (§12.3) that only the
--- slash surface reaches: `clear`, `history`, `situation`, `offer <link>` and
+-- slash surface reaches: `clear`, `history`, `insights`, `situation`, `offer <link>` and
 -- `add <link> [player]`, plus the confirmation line `compact` and `full` print around the shared
 -- layout handlers. The verbs another surface shares (`show`, `hide`, `toggle`, `test`, `scan`,
 -- `compact`, `full`) call the host
@@ -68,8 +68,9 @@ end
 
 -- ── history, offer ──────────────────────────────────────────────────────────────────────────
 
---- Open the window, expanded, on one tab (`/dw history`; Drops for `/dw mine` and `/dw offer`).
---- @param key string `group` or `history`
+--- Open the window, expanded, on one tab (`/dw history`, `/dw insights`; Drops for `/dw mine` and
+--- `/dw offer`).
+--- @param key string `group`, `history` or `insights`
 --- @return boolean shown whether the window is on screen now
 function V.OpenTab(key)
     local W = NS.Window

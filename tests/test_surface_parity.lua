@@ -24,7 +24,12 @@ test("parity: the degraded load really is library-absent, and the live one is no
 end)
 
 test("parity: the Core seam's namespace surface survives the library's absence", function()
-    T.assertSurfaceParity(live, degraded, "the addon namespace (Core seam)")
+    T.assertSurfaceParity(live, degraded, "the addon namespace (Core seam)", {
+        -- LibKa0s-Charts-1.0 itself (core/ChartsSetup.lua): nil when absent, with no drawing stub
+        -- (anti-pattern #73). Its one reader, modules/WindowInsights.lua, checks it before every use
+        -- (`grep -n "NS.Charts" modules core`), and says the charts are unavailable instead.
+        "Charts",
+    })
     T.assertSurfaceParity(live.Util, degraded.Util, "NS.Util (Core printer seam)")
 end)
 

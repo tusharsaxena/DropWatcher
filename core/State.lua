@@ -35,6 +35,11 @@ State.windowOpen = false
 -- { [tab] = { view = { [value] = true }, content, search, sort } }, each seeded on the tab's first use.
 State.windowFilters = nil
 
+-- The Insights tab's seven filters (modules/WindowInsights.lua, Insights design spec §3.5):
+-- { char, instance, difficulty, situation, date, quality, category }, each a value or "all".
+-- Session-only, with no schema row; Reset filters puts NS.InsightsFilters.DEFAULTS back.
+State.insightsFilters = nil
+
 -- The Drops table's view state (modules/WindowGroup.lua, design spec §11.1-§11.2):
 -- { collapsed = { [groupKey] = true | false }, expanded = dropId }. A group the player never toggled
 -- follows the default (the newest shown group open, older ones collapsed); `expanded` is the one row

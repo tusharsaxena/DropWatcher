@@ -50,6 +50,7 @@ test("harness: every adopted LibKa0s module is the live library, not its stub", 
     -- red under: drop libs/LibKa0s/Pool.lua from the load (the stand-in would answer instead)
     assertTrue(NS.Pool == ls("LibKa0s-Pool-1.0", true), "Pool")
     assertTrue(NS.Item == ls("LibKa0s-Item-1.0", true), "Item")
+    assertTrue(NS.Charts ~= nil and NS.Charts == ls("LibKa0s-Charts-1.0", true), "Charts (the Insights tab, issue #12)")
     assertTrue(NS.addon.Settings.SchemaLib == ls("LibKa0s-Schema-1.0", true), "Schema")
     assertTrue(NS.SafeToString == ls("LibKa0s-Core-1.0", true).SafeToString, "Core")
     assertTrue(type(NS.Perf.Note) == "function" and NS.Perf.OnCommand ~= nil and NS.Perf.BuildRecord ~= nil,

@@ -26,7 +26,7 @@ local PINNED = {
 -- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged;
 -- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three,
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,
--- beside the feed's, for the My eq column).
+-- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -35,6 +35,7 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
+    "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",

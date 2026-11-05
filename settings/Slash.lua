@@ -6,7 +6,7 @@ local _, NS = ...
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
 -- its Master controls row and its launcher entry call (core/DropWatcher.lua). The design spec's
 -- feature verbs (§12.3) follow the window verbs: `scan`, `compact` and `full` call the window's own
--- host handlers; `clear`, `history`, `mine`, `situation`, `offer` and `add` are slash-only and answered
+-- host handlers; `clear`, `history`, `insights`, `mine`, `situation`, `offer` and `add` are slash-only and answered
 -- by settings/SlashVerbs.lua, as are `whitelist` and `blacklist`, which share the item lists' one
 -- writer with the settings panel (issue #13). `mine` is kept for habit and macros: it opens Drops, where your own
 -- drops are listed since the My drops tab was retired (feedback-5 spec §3). The simulator's `sim` (simulator spec §4) is answered by
@@ -76,6 +76,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.Clear() end},
     {"history",  L["Open the History tab"],
         function() NS.SlashVerbs.OpenTab("history") end},
+    {"insights", L["Open the Insights tab"],
+        function() NS.SlashVerbs.OpenTab("insights") end},
     {"mine",     L["Open the Drops tab, where your own drops are listed"],
         function() NS.SlashVerbs.OpenTab("group") end},
     {"compact",  L["Switch the window between its compact and full view"],

@@ -17,12 +17,13 @@ local addonName, NS = ...
 -- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
 -- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
 -- pure composer and its reads), modules/CompactChrome.lua all of it in the compact layout. The tabs'
--- bodies (WindowGroup, WindowHistory) each call Window.RegisterTab(key, { build, refresh }) and are
--- built on the tab's first show; a tab with no body says what it will hold.
+-- bodies (WindowGroup, WindowHistory, WindowInsights) each call Window.RegisterTab(key, { build,
+-- refresh, ownBar }) and are built on the tab's first show; a tab with no body says what it will hold.
 --
--- TWO TABS: Drops and History (feedback-5 spec §3). The Drops tab's key stays `group`, so its
--- filter state and the suites keep their key; the retired third tab's key, `mine`, opens Drops
--- (Window.SelectTab), and your own drops, with their summary strip, are on Drops now.
+-- THREE TABS: Drops, History (feedback-5 spec §3) and Insights (issue #12). The Drops tab's key stays
+-- `group`, so its filter state and the suites keep their key; the retired tab's key, `mine`, opens
+-- Drops (Window.SelectTab), and your own drops are on Drops now. A tab with `ownBar` (Insights) draws
+-- its own bar: the shared one, its Sync and the footer's Sort stand aside (Window.TabOwnsBar).
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
@@ -55,21 +56,30 @@ local Perf   = NS.Perf
 
 local TAG = "UI"
 
--- The tabs, in strip order (design spec §11.1; feedback-5 spec §3 retired the third, `mine`).
-Window.TABS = { "group", "history" }
-local TAB_SET = { group = true, history = true }
+-- The tabs, in strip order (design spec §11.1; feedback-5 spec §3 retired `mine`; issue #12 added
+-- Insights after History).
+Window.TABS = { "group", "history", "insights" }
+local TAB_SET = { group = true, history = true, insights = true }
 -- A retired tab's key opens the tab that took its drops.
 local TAB_ALIAS = { mine = "group" }
-local TAB_LABEL = { group = L["Drops"], history = L["History"] }
--- Each tab's tooltip rows (feedback-21): { label, value } pairs.
+local TAB_LABEL = { group = L["Drops"], history = L["History"], insights = L["Insights"] }
+-- Each tab's tooltip rows (feedback-21): { label, value } pairs, or a function answering them
+-- (Insights names the period it covers, which the retention row moves).
 local TAB_TIP = {
     group   = { { L["Holds"], L["every drop your group receives, yours included"] }, { L["Grouped by"], L["boss or key run"] } },
     history = { { L["Holds"], L["drops from earlier encounters"] }, { L["Kept"], L["across sessions"] } },
+    insights = function()
+        local R = NS.HistoryRetention
+        local days = R.Days()
+        return { { L["Holds"], L["charts over the kept history"] },
+            { L["Covers"], days > 0 and L["the last %s kept"]:format(R.Label(days)) or L["every kept day"] } }
+    end,
 }
 -- What a tab with no body yet says, so the window is never blank.
 local TAB_PLACEHOLDER = {
     group   = L["No drops yet. Loot your group receives appears here."],
     history = L["Drops from earlier encounters appear here."],
+    insights = L["Charts over the kept history appear here."],
 }
 
 local frame   -- built on the first show
@@ -290,8 +300,9 @@ end
 
 -- A tab's tooltip: its label and what it holds.
 local function tabTip(key)
-    local out = { TAB_LABEL[key] }
-    for _, r in ipairs(TAB_TIP[key] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
+    local out, rows = { TAB_LABEL[key] }, TAB_TIP[key]
+    if type(rows) == "function" then rows = rows() end
+    for _, r in ipairs(rows or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
     return unpack(out)
 end
 
@@ -459,9 +470,16 @@ end
 -- here: f.banner (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14,
 -- a running simulation, SimTip). Both are born hidden; Refresh shows the one in force. No library,
 -- no strips: both stay nil, the panes reserve nothing and the title bar's word marks the mode.
+-- Under a tab with its own bar (`own`) the shared bar is hidden, so they sit under the tabs instead.
+local function placeStrip(f, s, own)
+    local to, x, y = own and f.body or f.filterHost, own and K.INSET or 0, own and -(K.TAB_H + 6) or -2
+    s:ClearAllPoints()
+    s:SetPoint("TOPLEFT", to, own and "TOPLEFT" or "BOTTOMLEFT", x, y)
+    s:SetPoint("TOPRIGHT", to, own and "TOPRIGHT" or "BOTTOMRIGHT", own and -x or 0, y)
+end
+
 local function anchorStrip(f, s, tip)
-    s:SetPoint("TOPLEFT", f.filterHost, "BOTTOMLEFT", 0, -2)
-    s:SetPoint("TOPRIGHT", f.filterHost, "BOTTOMRIGHT", 0, -2)
+    placeStrip(f, s, false)
     Window.AttachTooltip(s, tip)
 end
 
@@ -503,11 +521,20 @@ local function buildBody(f)
 end
 
 -- The panes fill between the filter bar (and the strip in force, in test mode or a simulation) and
--- the footer.
+-- the footer; a pane with its own bar (Window.TabOwnsBar) starts under the tabs, and while it is the
+-- active tab the shared bar is hidden and the strips move up with it.
 local function layoutPanes()
     local marked = NS.State.testMode == true or NS.Sim:IsActive()
-    local top = K.TAB_H + 4 + K.FILTER_H + (marked and NS.CompactChrome.BannerH() or 0)
-    for _, pane in pairs(frame.panes) do
+    local band = marked and NS.CompactChrome.BannerH() or 0
+    local own = Window.TabOwnsBar(activeTab)
+    frame.filterHost:SetShown(not own)
+    if frame.stripsOwn ~= own then
+        frame.stripsOwn = own
+        if frame.banner then placeStrip(frame, frame.banner, own) end
+        if frame.simBanner then placeStrip(frame, frame.simBanner, own) end
+    end
+    for key, pane in pairs(frame.panes) do
+        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H) + band
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
         pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
@@ -672,7 +699,7 @@ function Window.Refresh()
         if frame.simBanner then frame.simBanner:SetShown(sim) end
         layoutPanes()
         paintTabs()
-        NS.WindowFilterBar.Sync(activeTab)
+        if not Window.TabOwnsBar(activeTab) then NS.WindowFilterBar.Sync(activeTab) end
         NS.WindowFooter.Refresh()
         refreshActive()
         -- The Offer panel docks beside the window and repaints with it (modules/OfferPanel.lua).
@@ -731,7 +758,7 @@ end
 
 --- Show one tab: its pane is built on its first show, and the filter bar takes its state. The
 --- retired `mine` opens Drops (`group`; feedback-5 spec §3).
---- @param key string `group` or `history`
+--- @param key string `group`, `history` or `insights`
 --- @return boolean changed false for an unknown tab
 function Window.SelectTab(key)
     key = TAB_ALIAS[key] or key
@@ -739,6 +766,10 @@ function Window.SelectTab(key)
     activeTab = key
     if not frame then return true end
     for k, pane in pairs(frame.panes) do pane:SetShown(k == key) end
+    if Window.TabOwnsBar(key) then
+        NS.CloseMenu()   -- the shared bar's menu and the compact Filters panel go with the bar
+        NS.CompactChrome.CloseFilters()
+    end
     buildPane(key)
     NS.Debug(TAG, "tab -> %s", key)
     Window.Refresh()
@@ -748,11 +779,19 @@ end
 --- @return string
 function Window.ActiveTab() return activeTab end
 
---- A feature item's body for one tab (WindowGroup, WindowHistory): `spec.build(pane)`
+--- Whether a tab draws its own filter bar (its spec's `ownBar`: Insights).
+--- @param tab string|nil the active tab when nil
+--- @return boolean
+function Window.TabOwnsBar(tab)
+    local spec = tabSpecs[tab or activeTab]
+    return spec ~= nil and spec.ownBar == true
+end
+
+--- A feature item's body for one tab (WindowGroup, WindowHistory, WindowInsights): `spec.build(pane)`
 --- runs on the tab's first show, `spec.refresh(pane, Window.TabContext(tab))` on every repaint
---- while it is the active tab.
+--- while it is the active tab. `spec.ownBar` marks a tab that draws its own filter bar.
 --- @param key string
---- @param spec table { build = fn, refresh = fn }
+--- @param spec table { build = fn, refresh = fn, ownBar = boolean|nil }
 function Window.RegisterTab(key, spec)
     assert(TAB_SET[key], "unknown tab " .. tostring(key))
     tabSpecs[key] = spec

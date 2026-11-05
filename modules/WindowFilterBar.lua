@@ -6,7 +6,10 @@ local _, NS = ...
 -- ONE BAR, ONE STATE PER TAB. The bar is a single set of controls under the tab strip; each tab
 -- keeps its own state (NS.State.windowFilters[tab], session-only), and selecting a tab puts its
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
--- never reflows between tabs (Ka0s Loot History's pattern). A fresh tab's state is seeded from the
+-- never reflows between tabs (Ka0s Loot History's pattern). The one exception is a tab that draws a
+-- bar of its own (Window.TabOwnsBar: Insights, whose seven filters none of these controls apply to):
+-- the window hides this bar while it shows and never syncs it, a DropWatcher convention, not a rule
+-- of the standard (Insights design spec §4.1). Its HONORS row is empty. A fresh tab's state is seeded from the
 -- `feed.view.<value>`, `feed.content` and `feed.sort` rows (through the schema seam) when they hold
 -- a valid value, else from DEFAULTS, which are those rows' defaults. History then takes its own
 -- fixed defaults (TAB_FIXED: View, Content and Character all All, feedback-13 spec §0).
@@ -93,6 +96,7 @@ FB.HONORS = {
     group   = ALL,
     history = { view = true, content = true, search = true, sort = true, char = true,
                 views = { interesting = true, usable = true, upgrade = true, newCollect = true } },
+    insights = {},   -- its own bar (modules/WindowInsights.lua): it honors none of these
 }
 
 local P = NS.C.PROFILE
@@ -836,9 +840,9 @@ end
 --- Put `tab`'s state on the controls, gray what it does not honor, and refresh the quality label.
 --- @param tab string
 function FB.Sync(tab)
-    if not controls.host then return end
-    putState(tab, FB.State(tab))
     local honors = FB.HONORS[tab]
+    if not controls.host or next(honors or {}) == nil then return end   -- a tab with its own bar
+    putState(tab, FB.State(tab))
     for _, key in ipairs(ROW) do setHonored(controls[key], honors[key] == true) end
     setHonored(controls.search, honors.search == true)
 end

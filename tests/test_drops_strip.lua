@@ -1,5 +1,5 @@
 -- tests/test_drops_strip.lua — one tab for every drop, with the strip (feedback-5 spec §3, DW-E3):
--- the tab strip is Drops and History (the retired `mine` opens Drops); under the Drops table (or
+-- the tab strip is Drops, History and Insights (the retired `mine` opens Drops); under the Drops table (or
 -- its compact cards), above the footer, the summary strip (modules/DropsStrip.lua) counts your
 -- drops the tab lists that you can still trade and names the next expiry, its next expiry moving
 -- each second; Post my tradeables posts them. Both layouts always show it (feedback-15 spec §2):
@@ -118,12 +118,12 @@ end
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
-test("drops tab: the tabs are Drops and History, and the retired `mine` opens Drops", function()
+test("drops tab: the tabs are Drops, History and Insights, and the retired `mine` opens Drops", function()
     local NS = shownMine()
     local W = NS.Window
-    assertEqual(table.concat(W.TABS, ","), "group,history")
+    assertEqual(table.concat(W.TABS, ","), "group,history,insights")
     local f = W.Frame()
-    assertTrue(f.tabs.mine == nil and f.panes.mine == nil, "no third tab")
+    assertTrue(f.tabs.mine == nil and f.panes.mine == nil, "no My drops tab")
     assertEqual(textOf(f.tabs.group.label), "Drops", "no count on the label")
     assertEqual(textOf(f.tabs.history.label), "History")
     local tip = W.TooltipOf(f.tabs.group)
