@@ -9,7 +9,8 @@ local _, NS = ...
 -- group's, else Open world for an area, else the group's label; no difficulty is `none`; no
 -- situation or quality is `unknown`; an entry with no category reads `equipment`, unless its slot is
 -- INVTYPE_NON_EQUIP_IGNORE, which only a tier token has (the run plan's #12 Q3). `day` is the local
--- midnight of `at`, from the calendar, so a DST change never moves a day.
+-- midnight of `at`, from the calendar, so a DST change never moves a day. `at` is the drop's, else
+-- the group's; a drop with neither is skipped, so a malformed row never reaches back to the epoch.
 --
 -- THE OPTIONS (spec §3.2). One pass over the rows: a row that fails no filter counts toward every
 -- dropdown, one that fails exactly one counts toward that dropdown alone, one that fails two or more
@@ -86,9 +87,11 @@ function IF.CategoryOf(e)
     return e.equipLoc == IF.TOKEN_SLOT and "tierToken" or "equipment"
 end
 
+-- The drop's time, else its group's; nil when neither is a number (a malformed row, skipped).
 local function atOf(e, g)
-    if type(e.at) == "number" then return e.at end
-    return type(g.at) == "number" and g.at or 0
+    if type(e.at) == "number" and e.at == e.at then return e.at end
+    if type(g.at) == "number" and g.at == g.at then return g.at end
+    return nil
 end
 
 -- A pass's midnights by quarter hour (every zone's offset is a multiple of one, so a quarter hour
@@ -104,6 +107,7 @@ end
 
 local function rowOf(e, g, memo)
     local at = atOf(e, g)
+    if not at then return nil end
     return {
         e = e, g = g, char = str(e.seenBy) or str(g.seenBy) or "unknown",
         charClass = str(e.seenByClass) or str(g.seenByClass), instance = instanceOf(g),
@@ -113,14 +117,15 @@ local function rowOf(e, g, memo)
     }
 end
 
---- One row per kept drop, its facets read once; anything that is not a table is skipped.
+--- One row per kept drop, its facets read once; anything that is not a table, or that has no time
+--- (no numeric `at` on the drop or its group), is skipped.
 --- @param groups table|nil History groups
 --- @return table rows
 function IF.Rows(groups)
     local out, memo = {}, {}
     for _, g in ipairs(type(groups) == "table" and groups or {}) do
         for _, e in ipairs(type(g) == "table" and type(g.drops) == "table" and g.drops or {}) do
-            if type(e) == "table" then out[#out + 1] = rowOf(e, g, memo) end
+            if type(e) == "table" then out[#out + 1] = rowOf(e, g, memo) end -- nil appends nothing
         end
     end
     return out

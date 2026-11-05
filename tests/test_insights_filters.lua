@@ -69,6 +69,18 @@ test("insights filters: Rows reads each facet once, with its legacy fallback", f
     assertEqual(#F.Rows(nil), 0)
 end)
 
+test("insights filters: a drop with no time on it or its group is skipped, never read as the epoch", function()
+    local F = IF()
+    local rows = F.Rows({
+        group({ at = false }, { drop({ at = false }), drop({ at = "soon" }), drop({ at = 0 / 0 }), drop() }),
+        group(nil, { drop({ at = false }) }),
+    })
+    assertEqual(#rows, 2, "a timeless drop in a timeless group is left out")
+    assertEqual(rows[1].at, NOW - 3600); assertEqual(rows[2].at, NOW - 3600, "else the group's time")
+    local p = F.Period(rows, 30, "all", NOW)
+    assertEqual(p.first, NOW - 3600); assertEqual(p.from, NOW - 3600, "the period starts at a real drop")
+end)
+
 -- ── the dates ───────────────────────────────────────────────────────────────────────────────
 
 test("insights filters: the ranges follow the retention: shorter windows only, all under Never delete", function()

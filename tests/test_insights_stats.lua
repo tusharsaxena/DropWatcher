@@ -79,6 +79,15 @@ test("insights stats: offers and traded away, your own drops only, the legacy on
     assertEqual(s.offers, 3); assertEqual(s.offersLegacy, 1); assertEqual(s.tradedAway, 2)
 end)
 
+test("insights stats: an ask or offer from before the stamps, settled after, still counts as sent", function()
+    local NS = load()
+    local asked, offered = drop({ outcome = "asked" }), drop({ isMine = true, outcome = "offered" })
+    NS.History.Settle(asked, "received", NOW); NS.History.Settle(offered, "tradedAway", NOW)
+    local s = compute({ group(nil, { asked, offered }) }).totals
+    assertEqual(s.asks, 1); assertEqual(s.askHits, 1); assertEqual(s.received, 1); assertEqual(s.success, 1)
+    assertEqual(s.offers, 1); assertEqual(s.tradedAway, 1)
+end)
+
 test("insights stats: upgrades for you include the off-spec part, as the filter bar's rule does", function()
     local NS, F, S = load()
     local offUp = { verdict = "cantUse", offSpec = { specID = 2, mainSpecID = 1, verdict = "upgrade", ilvlDelta = 4 } }

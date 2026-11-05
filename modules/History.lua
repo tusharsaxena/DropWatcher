@@ -42,7 +42,9 @@ local _, NS = ...
 -- the `me` verdict frozen then (`{ verdict, ilvlDelta, scoreDelta, offSpec?, at }`; `{ at }` when
 -- there was none), before equipping the item re-judges `me` against itself; nothing writes it
 -- again. An entry settled before they existed has neither (a legacy entry), so WasAsked and
--- WasOffered read a settled trade with no `settledAt` as asked or offered. Additive: `v` stays 1.
+-- WasOffered read a settled trade with no `settledAt` as asked or offered; one asked or offered
+-- before them and settled after gets its stamp back-filled at settling (the drop's `at`), since
+-- settling overwrites the outcome that held it. Additive: `v` stays 1.
 --
 -- HOW LONG IT IS KEPT (feedback-2 spec §5). By age, not by count: modules/HistoryRetention.lua
 -- deletes the groups older than `global.history.retentionDays` (Keep history for, default 30 days).
@@ -320,20 +322,30 @@ local function frozen(me, now)
     return got
 end
 
---- A completed trade settles an entry: its outcome (`received` or `tradedAway`), `settledAt`, and
---- for `received` the `me` verdict frozen as `got` (once; see the header).
---- @param e table
---- @param outcome string
---- @param now number time()
-function H.Settle(e, outcome, now)
-    e.outcome, e.before, e.settledAt = outcome, nil, now
-    if outcome == "received" and e.got == nil then e.got = frozen(e.me, now) end
-end
-
 -- Whether a record of `outcome` is in the entry: now, or the one an `expired` or a hand-set
 -- `declined` replaced.
 local function held(e, outcome)
     return e.outcome == outcome or e.beforeExpired == outcome or e.before == outcome
+end
+
+-- Settling overwrites the held outcome, so an ask or offer held only there (an entry from before the
+-- stamps) is stamped first, at the drop's own time: it stays asked or offered once settled.
+local function keepSent(e, now)
+    local at = type(e.at) == "number" and e.at or now
+    if e.askedAt == nil and held(e, "asked") then e.askedAt = at end
+    if e.offeredAt == nil and held(e, "offered") then e.offeredAt = at end
+end
+
+--- A completed trade settles an entry: its outcome (`received` or `tradedAway`), `settledAt`, and
+--- for `received` the `me` verdict frozen as `got` (once; see the header). An ask or offer held
+--- only in the outcome it replaces is stamped first (at the drop's time), so it is still sent.
+--- @param e table
+--- @param outcome string
+--- @param now number time()
+function H.Settle(e, outcome, now)
+    keepSent(e, now)
+    e.outcome, e.before, e.settledAt = outcome, nil, now
+    if outcome == "received" and e.got == nil then e.got = frozen(e.me, now) end
 end
 
 --- Whether your ask was sent for an entry: stamped, held (`asked` now or before an expiry or a

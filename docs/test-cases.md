@@ -1851,7 +1851,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (37)
+### test_history.lua (38)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1887,6 +1887,7 @@ Total.
 - history: a collection verdict that moves refreshes the entry; one that does not changes nothing
 - history: Stamp sets askedAt and offeredAt once, and Advance, Settle and declined keep them
 - history: Settle writes settledAt on both outcomes and freezes `got` on a received entry only
+- history: an ask or offer held from before the stamps survives Settle, stamped once
 - history: WasAsked and WasOffered read the stamps, the held outcomes and the legacy trades
 - history edge: a sent ask stamps askedAt, and a stamp with no advance still sends HistoryChanged
 - history trade: a completed trade stamps settledAt, and `got` keeps the pre-equip gain
@@ -1910,9 +1911,10 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
-### test_insights_filters.lua (10)
+### test_insights_filters.lua (11)
 
 - insights filters: Rows reads each facet once, with its legacy fallback
+- insights filters: a drop with no time on it or its group is skipped, never read as the epoch
 - insights filters: the ranges follow the retention: shorter windows only, all under Never delete
 - insights filters: Since is a local midnight, N-1 calendar days back; the walk never skips a day
 - insights filters: Period names what the rows cover
@@ -1923,10 +1925,11 @@ Total.
 - insights filters: difficulties in their natural order, situations in the constants' order
 - insights filters: you first among the characters, then by count; qualities and categories ordered
 
-### test_insights_stats.lua (13)
+### test_insights_stats.lua (14)
 
 - insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
 - insights stats: offers and traded away, your own drops only, the legacy one counted
+- insights stats: an ask or offer from before the stamps, settled after, still counts as sent
 - insights stats: upgrades for you include the off-spec part, as the filter bar's rule does
 - insights stats: three outcome rows, the upgrades row a subset of the others'
 - insights stats: active days in local time, first and last
@@ -2576,10 +2579,10 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 37 |
+| test_history.lua | 38 |
 | test_history_retention.lua | 16 |
-| test_insights_filters.lua | 10 |
-| test_insights_stats.lua | 13 |
+| test_insights_filters.lua | 11 |
+| test_insights_stats.lua | 14 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
@@ -2610,4 +2613,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2144** |
+| **Total** | **2147** |

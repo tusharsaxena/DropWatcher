@@ -317,7 +317,8 @@ history = { retentionDays = 30, v = 1, groups = {
 - `askedAt` and `offeredAt` are the `time()` your ask, or your offer or announce, was first sent
   (issue #12, Insights design spec §1.2): `AskStateChanged` `sent` stamps them once, whether or not
   the outcome moves, and nothing writes them again, so an ask is still known once the outcome moves
-  on. `settledAt` is when a completed trade settled the entry (`received` or `tradedAway`). `got`,
+  on. An entry asked or offered before they existed and settled after has the stamp back-filled at
+  settling (the drop's `at`), since settling overwrites the outcome that held the ask. `settledAt` is when a completed trade settled the entry (`received` or `tradedAway`). `got`,
   on a received entry only, is the `me` verdict frozen at that moment (`{ verdict, ilvlDelta,
   scoreDelta, offSpec?, at }`, or `{ at }` when there was none): equipping the item later re-judges
   `me` against itself, and `got` keeps the gain it was. An entry settled before these existed has
