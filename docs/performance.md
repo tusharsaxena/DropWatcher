@@ -28,6 +28,8 @@ through `NS.StoodDownRefusal()`, never the disabled line's `enable it with /dw e
 | `tradeTimer.scan` | `modules/TradeTimer.lua` `TradeTimer.Scan` | one read of your own drops' bag items and their trade-time lines (at most one per 2 seconds) |
 | `gear.rebuild` | `modules/Gear.lua` `Gear.Refresh` | one read of your worn and bag items into the gear snapshot (deferred out of combat for bag events; a bag-only rebuild reads no worn tooltip) |
 | `window.refresh` | `modules/Window.lua` `Window.Refresh` | one repaint pass of the window |
+| `insights.compute` (within `window.refresh`) | `modules/WindowInsights.lua` `compute` | one Insights recompute: Rows, Normalize, Filter, Period and the stats pass (issue #12), run only when the tab's cache key says the data or the filters changed |
+| `insights.layout` (within `window.refresh`) | `modules/WindowInsights.lua` `layout` | one Insights layout pass: the cards and every chart section, run on a recompute, a width or layout change, or a skin switch |
 
 Every bracket is the gated form (performance-§2): one upvalue read, one field read and one boolean
 test when capture is off. Every bucket of design spec §13 is declared, plus `gear.rebuild` (added by the M2 review:
@@ -56,6 +58,7 @@ notes per iteration, never time:
 | `showDecisionStoodDown` | the stood-down show decision returns before any work | 0 bytes, 0 notes |
 | `parseCaptureOff` | one third-person loot line parsed, the looter in the group; the bracket notes nothing | 700 bytes (the parse's own captures, record and roster lookup; 664 measured), 0 notes |
 | `parseCaptureOn` | the same with capture on: one note, and the same bytes, so the bracket adds none | 700 bytes, 1 note |
+| `insightsCompute` | the Insights recompute's pure pass alone (Rows, Normalize, Filter, Period, Compute) over a log at the safety ceiling, `NS.History.CEILING` (5,000) drops; it builds a row a drop and the options and stats tables by design, so its ceiling is that work; it calls no bracket, so it notes nothing | 5200000 bytes (4956816 measured 2026-11-05), 0 notes |
 
 The warm-up and the measured loop call each scenario through one helper, so both run at the same Lua
 stack depth. Before DW-C5 the measured loop sat one frame deeper, and the first scenario paid a one-time
@@ -96,6 +99,14 @@ artifact rather than a cost: the full collect shrinks the Lua stack, how far dep
 left it at, and the first iteration after it pays the regrowth. `measure` now runs one settling call
 with the collector stopped, so the loop measures only what each iteration allocates, and the figures
 above are whole numbers.
+
+Re-run 2026-11-05 after the Insights tab (issue #12): `refreshCaptureOff`/`On` 14288.0 and
+`refreshCompactCaptureOff`/`On` 11056.0, every pair matching and under its ceiling (the window
+measured is on Drops: the third tab's label and its tooltip function cost the rise from 13456 and
+10224, and the Insights pane is not built); `insightsCompute` 4956816.0 under its 5200000; the parse
+pair 664.0 and `showDecisionStoodDown` 0. The two Insights brackets are the gated form and declare
+`within = "window.refresh"`, because the tab's refresh runs inside the window's repaint: do not sum
+them with it.
 
 ## In game
 

@@ -89,6 +89,26 @@ the code reads every case the design leaves open, module by module, is in
   shape the full layout's tables only. The run override reads the situation edge, so a run ends
   when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
   not on a boss kill or a wipe.
+- **Insights** (issue #12) reads only the kept history, unconfirmed in game like the rest
+  (INSIGHT-1..7):
+  - **Legacy entries.** An entry settled before the ask, offer and settle stamps existed (before
+    DW-N1.1) keeps no record of an ask or offer that a trade replaced. Insights counts someone
+    else's drop you received as an ask, and your own drop traded away as an offer, so Asks sent and
+    Offers sent include them and Ask success reads high (every such ask succeeded); the hovers say
+    how many were inferred. A legacy item received shows the item level gain as last judged, which
+    after you equipped it is usually 0 or a downgrade, marked "as last judged". From DW-N1.1 on, the
+    gain is the verdict frozen when the trade completed (`got`).
+  - **Mythic+ keys** are kept as one group per run, labeled with the dungeon, so Upgrades for me by
+    boss counts encounter groups only (raids, and dungeons run without a key).
+  - **The period** is the retention window (`history.retentionDays`). Retention prunes a whole group
+    once its newest drop is older than the window, so the first day shown can be older than the
+    window's start; the counts are what the kept groups hold.
+  - **Item kinds.** A drop recorded before issue #13 has no category and reads as equipment, except
+    a slot of `INVTYPE_NON_EQUIP_IGNORE`, which only a tier token has and which reads as a tier token.
+    A mount, pet, toy, recipe or cosmetic recorded before then reads as equipment.
+  - **Character.** Insights names a drop's character from the drop, else from its group's recorder,
+    so a drop only the group recorded counts under that character. History's Character filter reads
+    the drop's recorder alone and calls the same drop Not recorded.
 
 ## The simulator
 

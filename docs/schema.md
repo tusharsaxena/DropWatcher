@@ -410,6 +410,11 @@ draws who they would help; feedback-5 spec §2, DW-E2, where `NS.State.windowMin
 `NS.State.offerPanel` (the drop the Offer panel shows),
 `NS.State.windowHistory` (the History tab's collapsed groups; its View: All, Content: All and
 Character: All come from WindowFilterBar.TAB_FIXED since feedback-13 spec §0),
+`NS.State.insightsFilters` (the Insights tab's seven single-select picks, `{ char, instance,
+difficulty, situation, date, quality, category }`, each `all` or one value, `InsightsFilters.DEFAULTS`
+at first and after Reset filters; no schema row and no saved view; kept across test mode and a
+simulation, and put back to All by Normalize wherever a pick matches nothing in the log in force;
+issue #12),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down), and compact mode's run override (`NS.State.compactRun`,
 `{ key, ended }` while an auto-open inside a run holds the window compact, and

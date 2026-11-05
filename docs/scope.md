@@ -41,6 +41,15 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   in the full layout, Scan group and the tab's Sort; a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
+- **Insights** (issue #12, [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
+  A third tab of charts over the kept history, drawn through LibKa0s-Charts-1.0: eight cards (drops
+  seen, upgrades for you, asks sent, items received, ask success, active days, offers sent, traded
+  away) and fourteen sections (drops by outcome, your verdicts, trade estimates, upgrades by instance
+  and by boss, top instances per visit, the most generous members, the item level items received
+  gained you, asks and drops per day, and drops by looter class, quality, slot and item kind). Its
+  own bar of seven filters (Character, Instance, Difficulty, Situation, Date, Quality, Category),
+  each listing only the values present with their counts; the strip names the period the kept history
+  covers. `/dw insights` opens it.
 - **The upgrade glow** (feedback-21). A drop that is an upgrade for you, and whose trade estimate
   is Yes or Likely (feedback-22), glows on its icon in the Drops table, the compact card and the
   detail card (never the toast): one glow for your current spec, one

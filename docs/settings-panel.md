@@ -228,7 +228,8 @@ long drops are kept) to their defaults. The item lists are kept.*
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
 since item 020; a shorter time that would delete groups asks first, and No puts the
-previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
+previous time back; the Insights tab names this window as the period it covers and its Date
+ranges are the shorter ones, issue #12), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
 setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it
 asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a
 simulation's session-only log while one is on). Window › Layout's until feedback-24. **Session:**

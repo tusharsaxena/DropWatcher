@@ -895,10 +895,13 @@ Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
                           (beforeExpired kept); `yes` on the timer's read ─> back to beforeExpired
                           (HistoryChanged only when the entry changed)
-AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
+AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce); askedAt /
+                          offeredAt stamped once, HistoryChanged on a stamp even with no advance
 TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(either
           side 1: the offer) ─> UI_INFO_MESSAGE "Trade complete." (before TRADE_CLOSED, or within
-          5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
+          5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway (History.Settle:
+          settledAt on both; on received `got`, the `me` verdict frozen, so equipping the item
+          and the gear re-judge after it never rewrite the gain Insights reads)
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
 row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
@@ -929,6 +932,40 @@ entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `Compact
 `CompactCards.HistoryHeader`, a right-click on a card to `WindowHistory.OpenMenu`. A row's or a
 card's click opens its entry's detail card under it (`HistoryCard`, DW-Q4), side by side in the
 table and stacked in the compact layout; both layouts read the one open entry.
+
+## The Insights tab (issue #12)
+
+```
+window repaint ─> Window.Refresh ─> WindowInsights refresh(pane): the cache key
+    { H.Log() identity, H.Log().groups identity, revision, testMode, Sim:IsActive(), the filters'
+      signature, R.Days(), today, width, compact }
+    unchanged ──────────> nothing
+    width or layout only ─> InsightsSections.Layout (no recompute)
+    data or filters ─> InsightsFilters.Rows(H.Log().groups)   one row a drop, its facets read once
+                     ─> Normalize(rows, State.insightsFilters, now, keep) ─> f', Options
+                          (zero-count picks back to All, in ORDER; each dropdown's rows and counts)
+                     ─> Filter(rows, f', now) ─> Period(rows, R.Days(), f'.date, now)
+                     ─> InsightsStats.Compute(rows, period)   one pass: REDUCERS, then FINALIZERS
+                     ─> InsightsRows builders (cards, sections, PeriodText, the empty lines)
+                     ─> InsightsSections.Layout ─> the Charts context (NS.Charts:New(content,
+                          NS.ChartsHost())): cards, bars, stacked bars, list panels, range, strips
+HistoryChanged ─> WindowInsights' receiver ─> revision + 1 ─> Window.ScheduleRepaint
+dropdown pick ─> WindowInsights.SetFilter: State.insightsFilters[key] = v (keep = key) ─> Window.OnFilterChanged
+Reset filters (the strip) ─> WindowInsights.ResetFilters: DEFAULTS ─> Window.OnFilterChanged
+the skin's OnLooksChanged ─> ctx:Reskin ─> onReskin ─> WindowInsights.MarkLayout ─> the rows bound again
+```
+
+`H.Log()` is whichever log is in force: the account's `global.history`, test mode's sample log
+(`State.testHistory`, a persistent table whose `groups` `TestData.History` fills) or a running
+simulation's session log (`SimHost.HistoryLog`). The cache key holds both the log's and its
+`groups`' identities and the two mode flags, because turning test mode off sends no
+`HistoryChanged`: the swap is seen through identity alone. Test mode's samples carry the stamps a
+live entry does (`askedAt`, `offeredAt`, `settledAt`, `got`), one legacy received item, an expired
+ask, a member who traded twice, every item kind and boss kills with upgrades, so every card and
+section has rows; a simulated trade (`SimEvents.Trade`) settles the simulation's log through the
+same `History.Settle`. The filters are session-only and survive a swap; Normalize corrects them
+against the log in force. `Perf.Note` brackets `insights.compute` and `insights.layout` under
+`Perf.on`; each recompute logs one `insights: n drops, m after filters` line under UI.
 
 ## The toast
 

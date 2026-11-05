@@ -70,12 +70,15 @@ one-line responsibility and why its position is load-bearing or conventional is 
   (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
-  after a reload, `FeedRestore.lua`; the toast, its content on LibKa0s-Toast-1.0's shell, and
+  after a reload, `FeedRestore.lua`; the Insights tab's pure filters and one stats pass over the kept
+  history, `InsightsFilters.lua` and `InsightsStats.lua`, issue #12; the toast, its content on LibKa0s-Toast-1.0's shell, and
   auto-ask); the simulator's
   host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
   drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
   (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
-  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, two tabs, their strips' one
+  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, three tabs (Drops, History and
+  Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
+  `InsightsSections.lua`, `WindowInsights.lua`), their strips' one
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
@@ -90,6 +93,14 @@ one-line responsibility and why its position is load-bearing or conventional is 
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
 button goes through the host handler its slash verb shares.
+
+The filter bar is shared by the tabs and never reflows between them: a control a tab does not use
+is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
+exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
+whose seven filters none of the shared controls apply to. While it is active the window hides the
+shared bar and the footer's Sort, starts the pane under the tabs, re-anchors the test-mode and
+simulation strips there, and never syncs the shared bar. This is a DropWatcher convention, not a rule
+of the standard (Insights design spec §4.1), so it owes no deviation row.
 
 ## Settings Schema
 
@@ -129,7 +140,7 @@ All ten messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GE
 `ASK_STATE_CHANGED` and `HISTORY_CHANGED`; the history (`modules/History.lua`) receives `DROP_ADDED`,
 `DROP_UPDATED` and `ASK_STATE_CHANGED`, the toast (`modules/Toast.lua`) the same three, auto-ask
 (`modules/AutoAsk.lua`) those three, `HISTORY_CHANGED` and `RESTRICTION_CHANGED`, the History
-tab (`modules/WindowHistory.lua`) `HISTORY_CHANGED`, the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
+tab (`modules/WindowHistory.lua`) and the Insights tab (`modules/WindowInsights.lua`) `HISTORY_CHANGED`, the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
 the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`modules/Asks.lua`)
 `RESTRICTION_CHANGED`, and the window (`modules/Window.lua`) `RESTRICTION_CHANGED`,
 `ASK_STATE_CHANGED`, `SITUATION_CHANGED`, `DROP_ADDED`, `DROP_UPDATED`, `GEAR_CHANGED` (since DW-83),
@@ -154,14 +165,14 @@ toast on screen or waiting go with its drop. The payloads and consumers below ar
 | `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Drops row's Ask or Offer button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the Offer panel's Offer and Announce to group; History (since DW-51): `sent` makes the drop's outcome `asked` (an ask) or `offered` (an offer or announce); Toast (since DW-52): that drop's toast, if it is on screen (anywhere in the stack since DW-T2), repaints its Ask button; AutoAsk (since DW-54): any move of a drop's `ask` cancels its waiting automatic ask (you asked yourself) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | LootFeed (since the DW-27 review): reads each own drop the timer matched from its bag item (since DW-80, `ReadBagItems`: `DropUpdated(id, "bag")` when its level, quality or link moved), then re-estimates your own drops' trade with the timer folded in; Window (since DW-33; the Drops tab since DW-E1): repaints the Drops tab's countdowns alone (its Trade window cells, the compact cards' countdowns and the strip's next expiry, `WindowGroup.TickCountdowns`) while it shows a live one, and the Offer panel while it is open, nothing else |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | Window (since DW-33): one whole repaint, batched; the countdown reads `ending soon` in bold from its own clock, so a repaint carries it |
-| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave; `modules/HistoryRetention.lua` (since DW-A5) when Keep history for deletes groups | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), Keep history for deletes groups (`modules/HistoryRetention.lua`, since DW-A5: the login prune or a confirmed shorter window), or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): the filter bar's cached History Character rows dropped (`WindowFilterBar.InvalidateChars`, since DW-A6), then one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled |
+| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave; `modules/HistoryRetention.lua` (since DW-A5) when Keep history for deletes groups | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), an ask, offer or announce sent is stamped even when the outcome does not move (`askedAt`, `offeredAt`; issue #12, since DW-N1.1), Keep history for deletes groups (`modules/HistoryRetention.lua`, since DW-A5: the login prune or a confirmed shorter window), or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): the filter bar's cached History Character rows dropped (`WindowFilterBar.InvalidateChars`, since DW-A6), then one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled; Insights tab (since DW-N2, `modules/WindowInsights.lua`): bumps its revision, so its next refresh recomputes, and schedules one repaint through `Window.ScheduleRepaint` |
 
 ## Slash Commands
 
 `/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
 reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
-add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
+add`, plus compact spec §1's `full` and issue #12's `insights`, which opens the Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
 issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through the item
 lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
@@ -456,7 +467,11 @@ battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is r
 drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
-(the session is the login); the History card shows only what a kept entry holds; an install
+(the session is the login); the History card shows only what a kept entry holds; Insights reads only the kept history (the
+retention window, pruned a whole group at a time), infers asks and offers from trades settled before
+they were stamped (so the old success rate reads high, and an old gain is the verdict as last
+judged), has no per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before
+issue #13 as equipment; an install
 missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a simulation does not exercise every live
 path (a member's spec, cross-source de-duplication, a situation's tracking switch). Every limitation,
 with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
@@ -476,7 +491,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, the upgrade glow `modules/Glow.lua` and every item icon's look `modules/IconStyle.lua`) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the Insights tab, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)
@@ -484,7 +499,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 31 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 34 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
