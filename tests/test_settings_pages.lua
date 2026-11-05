@@ -865,7 +865,7 @@ test("pages: the Drops page's Defaults tooltip names the situations it now reset
     local NS = T.enableAddon()
     local tip = NS.addon.Settings.Helpers.__panelFor("feed").panel.defaultsTooltip
     -- red under: the pre-020 tooltip, which left the situations out
-    assertEqual(tip, "Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept.")
+    assertEqual(tip, "Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept.")
     assertTrue(NS.addon.Settings.Helpers.__panelFor("situations") == nil, "no Situations page")
 end)
 

@@ -28,7 +28,7 @@ local LE       = Settings.ListEditors
 --- tab's rows) and `beforeClear` (run before each render's ClearScroll).
 local PAGES = {
     { key = "feed", title = L["Drops"],
-      tip = L["Reset the Drops page's settings (situations, quality, item kinds and how long drops are kept) to their defaults. The item lists are kept."],
+      tip = L["Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."],
       -- Item lists' two map rows (feed.whitelist, feed.blacklist) are drawn by this host tab, and the
       -- page's Defaults keeps them (settings/Schema.lua's resetExempt; plan #13, Q9).
       tabs = { { key = LE.TAB, render = function(ctx) LE.ItemListsTab(ctx) end } },
