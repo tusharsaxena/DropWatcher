@@ -180,7 +180,7 @@ Restored drops (`source == "restore"`) and test drops skip `FeedFilter`, as they
 
 - **`LF.Config`** gains `categories` (a loop over `C.CATEGORIES` reading `feed.categories.<key>`, shaped like `tradeRules()`), `whitelist` and `blacklist`. `gearOnly` and `includeTokens` go.
 - **`judge`** stores `rec.forced` from `Filter`'s third return value.
-- **`judgeMe`** is the one hook. If `NS.Collectibles.IsCollectible(rec.facts)` is true, or the item is uncategorized and `cfg.whitelist[itemID]` is set, then `rec.me = NS.Collectibles.Verdict(rec.facts, forced)`. Otherwise it evaluates as today. `judgeMe` reads the whitelist from `cfg`, not from `rec.forced`, so every later re-judge stays correct: the score retry, `OnGearChanged`, `LF.Refresh` and a restored drop.
+- **`judgeMe`** is the one hook. If `NS.Collectibles.IsCollectible(rec.facts)` is true, or the item is uncategorized and `cfg.whitelist[itemID]` is set, then `rec.me = NS.Collectibles.Verdict(rec.facts, forced)`. Otherwise it evaluates as today. `judgeMe` reads `rec.forced`, the Always watch answer the drop was admitted with, so every later re-judge (the score retry, `OnGearChanged`, `LF.Refresh`, a restored drop) keeps it; a list change applies to new drops only (M3 review, 32d84f6).
 - **`judgeCandidates`** gets a guard: when `rec.me.collect`, set `rec.candidates = {}` and request nothing. `judgeCandidates` is reached from `judgeLooter` and also from `reestimate`, when your own drop's trade moves off `no`. A guard only in `judgeLooter` would miss the second path.
 - **`judgeLooter`**: when `rec.me.collect` on someone else's drop, request no looter inspect and leave `rec.them` nil.
 - **`estimate`** passes `ctx.collectible = rec.me and rec.me.collect`.
@@ -235,7 +235,7 @@ Collectibles are feed-only, so none of these toggles has an AutoAsk or toast cou
   - `ctx.rebuild` pointed at this page's re-render.
 
   Each blurb closes with: "Applies to drops from now on. An item can be on one list only: remove it from the other first." `O.IdInput`, inside IdList, resolves a shift-clicked link. `H.IdList` and `H.SubTabStrip` already have library-absent stubs in `settings/OptionsSetup.lua`. Any other Helpers member the editor touches needs one too: `test_surface_parity` checks the degradation stubs.
-- **The Drops page Defaults button** resets these rows with the rest of the page, which **empties both lists**. Comparison's Defaults already wipes every spec's weights the same way. The Defaults tooltip names "item kinds and item lists".
+- **The Drops page Defaults button** resets the rest of the page but **keeps both lists**: the two map rows are reset-exempt (run plan, Q9). The Defaults tooltip says "The item lists are kept."
 
 ### 5.2 Migration step 13 (`core/Database.lua`)
 
@@ -396,7 +396,7 @@ New suite files must be added to the explicit list in `tests/run.lua`, which `Ki
 | `test_sim_e2e.lua` | Unchanged. `Unwrapped()` stays empty with the new file (the TOC order guard). |
 | `tests/test_collectibles.lua` (new) | `CategoryOf`: each category; the precedence (a toy flagged cosmetic stays a toy, a cosmetic armor or **weapon** is not equipment, a tier token beats equipment); out-of-scope classes answering nil. `Verdict`: new, collected, unknown, pet partial, recipe without the profession, whitelisted with no category. The collection events: coalescing into one re-read, `IF.RereadCollections` the only cache writer, `LF.Refresh(rec, "collection")` sending `DropUpdated(id, "collection")` only for a moved verdict, the regen pass for `collectUnknown` only, a stand-down cancelling the timer. |
 | `tests/test_item_lists.lua` (new) | `ParseId` (number, link, `item:`, garbage). Add, Remove, List. The `onOther` refusal both ways, `already`, `notListed`. Writes go through the seam (spy on `SchemaRuntime.Set`) as whole values copied on write. CLI output lines. The verbs refused while disabled. The panel's `onAdd` raising on a refusal. |
-| `tests/test_item_lists_panel.lua` (new) | The Item lists host tab placed after Items, its secondary strip and `activeSubTab` healing, IdList drawn with `entries` / `candidates` / `onAdd` / `onRemove`, one repaint per add (`filterWrite`), the Defaults button emptying both lists. |
+| `tests/test_item_lists_panel.lua` (new) | The Item lists host tab placed after Items, its secondary strip and `activeSubTab` healing, IdList drawn with `entries` / `candidates` / `onAdd` / `onRemove`, one repaint per add (`filterWrite`), the Defaults button keeping both lists (Q9). |
 | `tests/test_tier_token.lua` (new) | Slot from the table and from the tooltip; none leaving `unknown`; a concrete slot giving upgrade, sidegrade or downgrade against worn gear; the wrong class giving `cantUse`; a Curio with no class line reaching `ok`; the `any` fold picking the best slot; the scorer skipped and the caller's `opts` untouched; the looter's Them verdict; the facts cache untouched. |
 | `test_feed.lua` | The new `FeedFilter` order: the blacklist beats the whitelist and equipment; the whitelist beats category, heirloom, min ilvl and quality, and answers `forced`, but not the situation gate; a category off giving `category`; no category giving `notWatched`; min ilvl applying to tokens and not to collectibles. `judgeCandidates` requesting no inspect for your own collectible, including through `reestimate`. `mayChange` keeping your own collectible and dropping others'. Replace the `gearOnly` and `includeTokens` cases (lines 534–538). |
 | `test_item_facts.lua` | `category`, `collect`, `tokenSlot` and `rawEquipLoc` filled; a token's `equipLoc` override; `isTierToken` from the raw slot; `transmogKnown` read from the raw slot, also in `OnTransmogCollectionUpdated`; collectible probes not run for armor or weapons, while the cosmetic flag check is. |
@@ -445,7 +445,7 @@ The smoke-test checks:
 - **COLL-4:** a toy.
 - **COLL-5:** a recipe, known, and one without the profession.
 - **COLL-6:** the tradeability of a bound collectible: your own drop's trade timer read, and someone else's `unknown`.
-- **COLL-7:** the whitelist and blacklist from the panel (shift-click) and the CLI; the refusals; the blacklist hiding gear; the Defaults button emptying both.
+- **COLL-7:** the whitelist and blacklist from the panel (shift-click) and the CLI; the refusals; the blacklist hiding gear; the Defaults button keeping both (Q9).
 - **COLL-8:** each `/dw sim drop <category>`, and test mode's rows.
 - **ITEM-6:** what the token's tooltip carries.
 - **ITEM-7:** a token judged against your worn piece; a Curio's best slot.
@@ -456,12 +456,12 @@ The smoke-test checks:
 
 Each item is one commit that passes the gate, with the subject opening `DW-Cn: `. They run in order.
 
-The original C3 touched about 20 modules and their suites, too much for one reviewable commit, so it is split. This needs **one new row in `items.tsv`, `DW-C7`**, and two dependency corrections. Those are the orchestrator's edits:
+The original C3 touched about 20 modules and their suites, too much for one reviewable commit, so it is split. This needs **one new row in `items.tsv`, `DW-CAT7`**, and two dependency corrections. Those are the orchestrator's edits:
 
-- `DW-C7`: milestone M3, depends on `DW-CAT3`.
+- `DW-CAT7`: milestone M3, depends on `DW-CAT3`.
 - `DW-CAT4` depends on `DW-CAT3`, not `DW-CAT2`: it extends `CollectCells`.
 - `DW-CAT5` depends on `DW-CAT3`: the whitelisted uncategorized verdict needs `CollectCells` to render.
-- `DW-CAT6` depends on `DW-CAT3,DW-CAT4,DW-CAT5,DW-C7`.
+- `DW-CAT6` depends on `DW-CAT3,DW-CAT4,DW-CAT5,DW-CAT7`.
 
 **DW-CAT1: triage, detection, Compat**
 - Add `core/CompatCollect.lua` (nine members: everything but `TierTokenSlot`), with its TOC line before `core/SimSetup.lua` and its LOAD-BEARING annotation. Update the SimSetup TOC annotation and the `core/SimSetup.lua` header.
@@ -495,7 +495,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - Tests: the C3 rows of section 9, except the surfaces C7 owns.
 - Docs: `docs/data-flow.md`, `docs/ARCHITECTURE.md` (events, the `collection` cause).
 
-**DW-C7: the remaining surfaces and the View**
+**DW-CAT7: the remaining surfaces and the View**
 - `modules/CollectCells.lua`: Slot and Type text, chips.
 - `WC.Slot` and `WC.ArmorType` hooks, `modules/DetailCells.lua`, `modules/RowTooltip.lua`, `modules/HistoryCard.lua`, `modules/WindowHistory.lua`, `modules/DropsStrip.lua`, `modules/Diagnostics.lua`.
 - `modules/WindowFilterBar.lua`: the `newCollect` view and the other views' answers for collectibles.
@@ -521,7 +521,7 @@ The original C3 touched about 20 modules and their suites, too much for one revi
 - `settings/Pages.lua`: the Drops page's `tabs` and its Defaults tooltip.
 - `settings/SchemaRows.lua` and `defaults/Profile.lua`: the map rows, group `Item lists`.
 - `modules/FeedFilter.lua`: blacklist and whitelist precedence, and the `forced` return value.
-- `modules/LootFeed.lua`: `Config` gains the lists, `judge` stores `rec.forced`, `judgeMe` reads the whitelist, and the quality gate gets `forced`.
+- `modules/LootFeed.lua`: `Config` gains the lists, `judge` stores `rec.forced`, `judgeMe` reads `rec.forced`, and the quality gate gets `forced`.
 - `modules/QualityGate.lua`: the forced pass.
 - `settings/Slash.lua` and `settings/SlashVerbs.lua`: the verbs.
 - Locales.
@@ -561,7 +561,7 @@ No file crosses 1500. The census in `docs/ARCHITECTURE.md` stays "Nothing is ove
 5. **compat rules: compliant.** Enums are resolved by name, globals are read at call time, `IsSecret` comes first, GlobalStrings are read through `Compat.GlobalString`, and the new members are wrapped by the simulator seam (TOC order, LOAD-BEARING annotations).
 6. **savedvariables-§1: compliant.** The perProfile migration step is idempotent, frozen (a literal key list) and the runner owns the stamp.
 7. **TOC annotations.** Every new TOC line carries its load annotation, as every existing line does.
-8. **Run coordination, not the standard.** The migration step number depends on the other items of this run: #14 adds toast rows and no migration, as far as the plan says. #12 reads `category` from history. `items.tsv` needs `DW-C7` and the dependency fixes of section 11.
+8. **Run coordination, not the standard.** The migration step number depends on the other items of this run: #14 adds toast rows and no migration, as far as the plan says. #12 reads `category` from history. `items.tsv` needs `DW-CAT7` and the dependency fixes of section 11.
 
 ---
 
@@ -571,7 +571,7 @@ No file crosses 1500. The census in `docs/ARCHITECTURE.md` stays "Nothing is ove
 - The recipe "known" state depends on the client's `ITEM_SPELL_KNOWN` line. Under an addon restriction it can read secret. The drop then reads `collectUnknown` and is read again when combat ends.
 - Tier tokens missing from `C.TIER_TOKENS` whose tooltip names no slot stay `unknown`.
 - Category toggles and list changes apply to new drops only. A restored drop is not filtered by a blacklist entry added after it dropped.
-- The Drops page's Defaults button empties both item lists.
+- The Drops page's Defaults button keeps both item lists (Q9).
 - History entries recorded before this change have no category and read as Equipment.
 - Someone else's bound collectible reads trade `unknown`. Your own reads the trade timer's exact answer once its bag item is matched.
 
@@ -589,7 +589,7 @@ Each has a recommended default, which the implementation uses if the owner gives
 - **Q6. The interim C2 state.** *Default:* collectible categories are on from C2. They read `unknown` until C3 lands, on the branch only.
 - **Q7. (Withdrawn.)** No deviation-row change is needed (section 13, flag 1).
 - **Q8. Offer, Announce and Post my tradeables for collectibles.** The owner named no Ask, toast or AutoAsk. *Default:* refuse Offer, Announce and Post as well, so a collectible has no action at all, which is what "feed-only" means.
-- **Q9. The Defaults button and the lists.** *Default:* Drops' Defaults empties both lists, as Comparison's Defaults empties the weights. The alternative is to exclude the two map rows from the page reset.
+- **Q9. The Defaults button and the lists.** *Decided (run plan):* the two map rows are excluded from the page reset, so Drops' Defaults keeps both lists.
 
 ---
 
@@ -597,7 +597,7 @@ Each has a recommended default, which the implementation uses if the owner gives
 
 These are the changes the review made to the original draft, checked against the code at `655d19d` and issue #13.
 
-1. **`FeedFilter` stays pure.** `ctx.forced = true` mutated an input. It is now a third return value, stored as `rec.forced`. `judgeMe` reads the whitelist from `cfg`, so the score retry, `OnGearChanged`, `LF.Refresh` and restored drops stay correct (4.1, 4.4).
+1. **`FeedFilter` stays pure.** `ctx.forced = true` mutated an input. It is now a third return value, stored as `rec.forced`. `judgeMe` reads `rec.forced`, so the score retry, `OnGearChanged`, `LF.Refresh` and restored drops keep the admission answer (4.1, 4.4; M3 review).
 2. **`LF.Refresh(rec, cause)` already re-judges.** It calls `rejudge`, which runs `judgeMe` and `judgeLooter` and sends `DropUpdated(id, cause)`. The proposed `LF.Rejudge` was dropped in favor of `LF.Refresh(rec, "collection")` (4.6).
 3. **The cache write contract.** ItemFacts says its cached tables are never written by others. The re-read moved into `IF.RereadCollections()` (3.1, 4.6).
 4. **The transmog handler** reads `facts.equipLoc`. After the token override that would ask about the made slot's appearance, so it must read `rawEquipLoc`. The order inside `IF.Read` is spelled out (3.1).
@@ -611,11 +611,11 @@ These are the changes the review made to the original draft, checked against the
 12. **CompactCards.** `WORD_VERDICT` is what adds the ⊘ glyph. Adding the new verdicts to it contradicted the draft's own intent, so CompactCards needs no change (6.1).
 13. **`WC.HiddenLines`** shows the filter bar's reasons, not the feed's. The feed's reason words live in `SimReport.lua` and the `FeedCounts.lua` header. WindowCells was removed from C2 (4.1, 11).
 14. **`test_surface_parity`** checks degradation stubs, not CLI parity. `H.IdList` and `H.SubTabStrip` already have stubs. The description was corrected (9, 5.1).
-15. **IdList spec fields** were corrected to BankLedger's real usage: `entries`, `strings = { nameHint }`, `label`/`tooltip`, `ctx.rebuild`. `Settings.Helpers` is the Options instance. Map rows need `group = L["Item lists"]` and their declaration place sets the tab order. Defaults empties the lists (Q9) (5.1).
+15. **IdList spec fields** were corrected to BankLedger's real usage: `entries`, `strings = { nameHint }`, `label`/`tooltip`, `ctx.rebuild`. `Settings.Helpers` is the Options instance. Map rows need `group = L["Item lists"]` and their declaration place sets the tab order. Defaults keeps the lists (Q9) (5.1).
 16. **Migration.** Uses the runner's `run = function(_, profile)` signature, and a frozen literal key list instead of `NS.Constants.CATEGORIES` (5.2).
 17. **The deviation flag was downgraded.** The new tooltip reads go through the ratified `Compat.ReadTooltipLine`, so no new reader and no register change. Q7 was withdrawn, with a STOP condition if a non-`ReadTooltipLine` reader turns out to be needed (2, 13).
 18. **TOC and SimSetup.** The SimSetup TOC annotation and the `core/SimSetup.lua` header both name the wrapped compat files and must be updated. Every new TOC line needs its annotation (2, 13).
 19. **TestData** rows are never judged, so the collect verdict must be in `me` (through `ev`), not only in the facts (8).
 20. **Smoke IDs.** `TOKEN-*` became `ITEM-6..7`, continuing the Item facts range. Index rows were added, along with `docs/slash-dispatch.md` and `docs/midnight-quirks.md` (10).
-21. **Commit size.** C3 was too large and was split into DW-CAT3 and the new DW-C7. C4 and C5 depend on C3 (`CollectCells`). The `items.tsv` changes are flagged for the orchestrator (11, 13).
+21. **Commit size.** C3 was too large and was split into DW-CAT3 and the new DW-CAT7. C4 and C5 depend on C3 (`CollectCells`). The `items.tsv` changes are flagged for the orchestrator (11, 13).
 22. **Smaller fixes.** `Config` builds `categories` like `tradeRules()`. Filtering applies to new drops only, and restored drops skip the filter (0, 4.2, 14). First Aid maps to nil. Profession tools, gems and other classes were added to the out-of-scope list. `Battlepet [17]` was dropped as a detection rung. The `dynamicSlot` reason `emptySlot` and the `dynamicCharacter` behavior for collectibles are noted (4.3). A perf run was added to C1. Q8 was added, because Offer, Announce and Post go beyond the owner's "no Ask, toast, AutoAsk".
