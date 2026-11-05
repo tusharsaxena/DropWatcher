@@ -1970,7 +1970,7 @@ Total.
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
 
-### test_insights_rows.lua (18)
+### test_insights_rows.lua (20)
 
 - insights rows: eight cards in grid order, the owner's six then Offers sent and Traded away (Q4)
 - insights rows: each card's figure and hover read the stats' totals
@@ -1982,6 +1982,8 @@ Total.
 - insights rows: the period caption names the kept window, Never delete and a shorter range
 - insights rows: the empty line says how long drops are kept, or that the filters match nothing
 - insights rows: A splits others' drops, their upgrades and yours by outcome, fracs over the largest row
+- insights rows: A paints Offered in Offer's cyan with Traded away, Asked apart in yellow (spec §4.4)
+- insights rows: every A segment has a color with no chart.other and no tone filled (no Skin library)
 - insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted
 - insights rows: C names each boss under its instance and difficulty; encounters only
 - insights rows: D reads upgrades a visit with the visits in the hover
@@ -2649,7 +2651,7 @@ Total.
 | test_insights_stats.lua | 14 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
-| test_insights_rows.lua | 18 |
+| test_insights_rows.lua | 20 |
 | test_window_insights.lua | 19 |
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 49 |
@@ -2680,4 +2682,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2202** |
+| **Total** | **2204** |

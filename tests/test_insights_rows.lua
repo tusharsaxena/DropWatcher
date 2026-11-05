@@ -203,6 +203,41 @@ test("insights rows: A splits others' drops, their upgrades and yours by outcome
     assertEqual(#rows, 0); assertEqual(#legend, 0)
 end)
 
+test("insights rows: A paints Offered in Offer's cyan with Traded away, Asked apart in yellow (spec §4.4)", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ outcome = "asked" }), drop({ isMine = true, outcome = "offered" }),
+        drop({ isMine = true, outcome = "tradedAway" }),
+    }) })
+    local TONE = NS.Constants.TONE
+    local rows, legend = NS.InsightsRows.OutcomeRows(s)
+    local mine = rows[#rows]
+    assertEqual(mine.label, "Your drops")
+    for _, seg in ipairs(mine.segments) do
+        assertTrue(sameColor(seg.color, TONE.cyan), "offered and traded away both in dw.offer: " .. seg.tip)
+    end
+    assertTrue(sameColor(rows[1].segments[1].color, TONE.yellow), "asked, no trade in yellow")
+    assertEqual(legend[2].label, "Traded/offered"); assertTrue(sameColor(legend[2].color, TONE.cyan))
+    assertEqual(legend[3].label, "Asked"); assertTrue(sameColor(legend[3].color, TONE.yellow))
+end)
+
+test("insights rows: every A segment has a color with no chart.other and no tone filled (no Skin library)", function()
+    local s, NS = statsOf({ group(nil, {
+        drop({ outcome = "received", settledAt = NOW }), drop({ outcome = "expired" }), drop(),
+        drop({ outcome = "declined" }), drop({ isMine = true, outcome = "offered" }),
+    }) })
+    NS.SkinColor = function() return nil end
+    for k in pairs(NS.Constants.TONE) do NS.Constants.TONE[k] = {} end
+    local rows, legend = NS.InsightsRows.OutcomeRows(s)
+    for _, row in ipairs(rows) do
+        for _, seg in ipairs(row.segments) do
+            assertEqual(type(seg.color), "table", seg.tip); assertEqual(type(seg.color[1]), "number", seg.tip)
+        end
+    end
+    for _, chip in ipairs(legend) do assertEqual(type(chip.color), "table", chip.label) end
+    local kept = rows[1].segments[#rows[1].segments]
+    assertEqual(kept.color[1], NS.InsightsRows.OTHER_FALLBACK[1], "kept in LibKa0s' default chart.other")
+end)
+
 test("insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted", function()
     local groups = {}
     for i = 1, 12 do

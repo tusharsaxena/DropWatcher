@@ -216,7 +216,8 @@ end
 --
 -- Each builder turns one part of InsightsStats' answer into the rows a LibKa0s-Charts-1.0 renderer
 -- takes. Colors come as `{ r, g, b }` tables: a class's and a quality's from the client's triples,
--- a tone's from NS.Constants.TONE (refilled on a skin switch), nil for the library's own bar color.
+-- a tone's from NS.Constants.TONE (refilled on a skin switch), nil for the library's own bar color;
+-- a stacked segment is never nil (the renderer has no default for one): see segColor.
 -- No builder draws, and an empty answer is `{}`, the section's cue to show its muted line instead.
 
 IR.TOP = 10           -- a ranked section's rows (Charts' K.LIST_MAX for the list panels)
@@ -245,8 +246,13 @@ function IR.QualityColor(q)
     return rgb(NS.QualityColor(q))
 end
 
--- The library's `chart.other` (kept drops), else nil: the bar color.
-local function otherColor() return rgb(NS.SkinColor("chart.other")) end
+-- The library's `chart.other` (kept drops), else IR.OTHER_FALLBACK: a stacked segment needs a color,
+-- and the degraded arm (no Skin library) has no `chart.other`.
+IR.OTHER_FALLBACK = { 0.55, 0.62, 0.72 }   -- LibKa0s' own `chart.other` under its default skin
+local function otherColor()
+    local c = rgb(NS.SkinColor("chart.other")) or IR.OTHER_FALLBACK
+    return { c[1], c[2], c[3] }
+end
 
 --- A signed whole number (`+7`, `-3`, `0`): the range section's values and its scale.
 --- @param v number
@@ -280,7 +286,7 @@ IR.OUTCOME = {
     received = { label = L["Traded to me"], tone = "good" },
     tradedAway = { label = L["Traded away"], tone = "cyan" },
     asked = { label = L["Asked, no trade"], tone = "yellow" },
-    offered = { label = L["Offered, no trade"], tone = "yellow" },
+    offered = { label = L["Offered, no trade"], tone = "cyan" },
     declined = { label = L["Declined"], tone = "redMuted" },
     expired = { label = L["Expired"], tone = "warn" },
     kept = { label = L["Kept by the looter"] },
@@ -290,18 +296,19 @@ local OUTCOME_ROWS = {
     { key = "upgrades", segs = "others", label = L["Upgrades for me"], sublabel = L["looted by others"] },
     { key = "mine", segs = "mine", label = L["Your drops"] },
 }
--- The legend: one chip a color.
+-- The legend: one chip a color; Offered shares Traded away's `dw.offer` (spec §4.4).
 local OUTCOME_LEGEND = {
-    { key = "received", label = L["Traded to me"] }, { key = "tradedAway", label = L["Traded away"] },
-    { key = "asked", label = L["Asked/offered"], tip = L["Asked or offered, and no trade followed"] },
+    { key = "received", label = L["Traded to me"] },
+    { key = "tradedAway", label = L["Traded/offered"], tip = L["Traded away, or offered and no trade followed"] },
+    { key = "asked", label = L["Asked"], tip = L["Asked, and no trade followed"] },
     { key = "declined", label = L["Declined"] }, { key = "expired", label = L["Expired"] },
     { key = "kept", label = L["Kept"], tip = L["Kept by the looter"] },
 }
 
+-- Never nil: a tone the palette has not filled falls to the kept color.
 local function segColor(key)
     local o = IR.OUTCOME[key]
-    if o.tone then return IR.ToneColor(o.tone) end
-    return otherColor()
+    return o.tone and IR.ToneColor(o.tone) or otherColor()
 end
 
 local function outcomeTotal(counts, keys)
