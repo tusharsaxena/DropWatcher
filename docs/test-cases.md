@@ -1930,7 +1930,7 @@ Total.
 - insights filters: difficulties in their natural order, situations in the constants' order
 - insights filters: you first among the characters, then by count; qualities and categories ordered
 
-### test_insights_stats.lua (14)
+### test_insights_stats.lua (15)
 
 - insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
 - insights stats: offers and traded away, your own drops only, the legacy one counted
@@ -1940,6 +1940,7 @@ Total.
 - insights stats: active days in local time, first and last
 - insights stats: upgrades by instance and by boss (encounters only), and per visit over two visits
 - insights stats: the most generous members by count, then the most recent
+- insights stats: a generous member's last trade is when it settled, not when it dropped
 - insights stats: the gain is the frozen verdict's, the legacy one as last judged, none skipped
 - insights stats: the days are continuous with empty ones, asks on the day they were sent
 - insights stats: a period over 62 days buckets by week
@@ -2653,7 +2654,7 @@ Total.
 | test_history.lua | 38 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 11 |
-| test_insights_stats.lua | 14 |
+| test_insights_stats.lua | 15 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
@@ -2687,4 +2688,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2209** |
+| **Total** | **2210** |

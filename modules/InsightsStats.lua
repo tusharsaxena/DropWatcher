@@ -192,7 +192,9 @@ local function rReceived(acc, row)
     if who then
         local gv = acc.givers[who]
         if not gv then gv = { looter = who, class = e.class, n = 0, last = 0, items = {} }; acc.givers[who] = gv end
-        gv.n, gv.last = gv.n + 1, math.max(gv.last, row.at)
+        -- When the member traded it to you (its settle stamp), as section F reads it; the loot time
+        -- for an entry from before the stamps.
+        gv.n, gv.last = gv.n + 1, math.max(gv.last, tonumber(e.settledAt) or row.at)
         gv.items[#gv.items + 1] = e
     end
     local gain, legacy = IS.Gain(e)

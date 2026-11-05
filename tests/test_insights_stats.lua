@@ -161,6 +161,18 @@ test("insights stats: the most generous members by count, then the most recent",
     assertEqual(#s.generous[1].items, 2); assertEqual(s.generous[3].class, "MAGE")
 end)
 
+test("insights stats: a generous member's last trade is when it settled, not when it dropped", function()
+    -- red under: rReceived taking gv.last from the drop's loot time (row.at) alone
+    local s = compute({ group(nil, {
+        drop({ outcome = "received", looter = "Ana-R", at = NOW - 300, settledAt = NOW - 10 }),
+        drop({ outcome = "received", looter = "Bo-R", at = NOW - 100, settledAt = NOW - 200 }),
+        drop({ outcome = "received", looter = "Cy-R", at = NOW - 150 }),   -- legacy: no settledAt
+    }) })
+    local names = {}
+    for _, g in ipairs(s.generous) do names[#names + 1] = g.looter .. "@" .. (NOW - g.last) end
+    assertEqual(table.concat(names, ","), "Ana-R@10,Cy-R@150,Bo-R@200", "the tie goes to the latest trade")
+end)
+
 test("insights stats: the gain is the frozen verdict's, the legacy one as last judged, none skipped", function()
     local _, F, S = load()
     local s = S.Compute(F.Rows({ group(nil, {
