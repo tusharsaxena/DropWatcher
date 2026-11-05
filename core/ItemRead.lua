@@ -51,11 +51,12 @@ end
 local function int(v) return tonumber(v) end
 
 -- The bonus ids (in link order) and the modifiers ({ [type] = value }, and their count) from the
--- count fields on.
+-- count fields on. An empty id field is skipped, so the list has no hole for # and ipairs, but the
+-- modifier count is read past every declared field, not past the ids read (issue #10).
 local function bonusAndModifiers(f)
-    local bonus, at = {}, F_BONUS_COUNT + 1
-    for i = 1, int(f[F_BONUS_COUNT]) or 0 do bonus[i] = int(f[at + i - 1]) end
-    at = at + #bonus
+    local bonus, at, count = {}, F_BONUS_COUNT + 1, math.max(int(f[F_BONUS_COUNT]) or 0, 0)
+    for i = 1, count do bonus[#bonus + 1] = int(f[at + i - 1]) end
+    at = at + count
     local mods, n = {}, int(f[at]) or 0
     for i = 1, n do
         local t = int(f[at + 2 * i - 1])

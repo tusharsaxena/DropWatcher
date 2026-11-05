@@ -63,6 +63,44 @@ test("constants: with Enum present the ids are read from it, not from the litera
     assertEqual(c.QUALITY.UNCOMMON, 2)
 end)
 
+test("constants: the category ids fall back to the 12.x literals and read Enum by name (issue #13)", function()
+    local c = C()
+    assertEqual(c.ITEM_CLASS.RECIPE, 9)
+    assertEqual(c.MISC_SUBCLASS.JUNK, 0); assertEqual(c.MISC_SUBCLASS.REAGENT, 1)
+    assertEqual(c.MISC_SUBCLASS.COMPANION_PET, 2); assertEqual(c.MISC_SUBCLASS.MOUNT, 5)
+    assertEqual(c.MISC_SUBCLASS.MOUNT_EQUIPMENT, 6)
+    assertEqual(c.RECIPE_SUBCLASS.BOOK, 0); assertEqual(c.RECIPE_SUBCLASS.TAILORING, 2)
+    assertEqual(c.RECIPE_SUBCLASS.INSCRIPTION, 11)
+    local NS = T.newAddon{ mock = function(m)
+        m.Enum = { ItemClass = { Recipe = 109 }, ItemMiscellaneousSubclass = { Mount = 205 },
+            ItemRecipeSubclass = { Tailoring = 302 } }
+    end }
+    local e = NS.Constants
+    assertEqual(e.ITEM_CLASS.RECIPE, 109); assertEqual(e.MISC_SUBCLASS.MOUNT, 205)
+    assertEqual(e.RECIPE_SKILL_LINE[302], 197, "the skill line keys on the resolved subclass")
+end)
+
+test("constants: each recipe subclass names its profession's skill line; book and first aid none", function()
+    local c = C()
+    local RS, want = c.RECIPE_SUBCLASS, { LEATHERWORKING = 165, TAILORING = 197, ENGINEERING = 202,
+        BLACKSMITHING = 164, COOKING = 185, ALCHEMY = 171, ENCHANTING = 333, FISHING = 356,
+        JEWELCRAFTING = 755, INSCRIPTION = 773 }
+    for key, line in pairs(want) do assertEqual(c.RECIPE_SKILL_LINE[RS[key]], line, key) end
+    assertEqual(c.RECIPE_SKILL_LINE[RS.BOOK], nil); assertEqual(c.RECIPE_SKILL_LINE[RS.FIRST_AID], nil)
+    assertEqual(#keysOf(c.RECIPE_SKILL_LINE), 10)
+end)
+
+test("constants: the categories in display order, the tier slots and the empty token table", function()
+    local c = C()
+    local keys, collectible = {}, {}
+    for i, cat in ipairs(c.CATEGORIES) do keys[i] = cat.key; collectible[#collectible + 1] = tostring(cat.collectible) end
+    assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic")
+    assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true")
+    assertEqual(table.concat(c.TIER_SLOTS, ","), "INVTYPE_HEAD,INVTYPE_SHOULDER,INVTYPE_CHEST,INVTYPE_HAND,INVTYPE_LEGS")
+    for _, loc in ipairs(c.TIER_SLOTS) do assertTrue(c.SLOT_PLAN[loc] ~= nil, loc .. " has a slot plan") end
+    assertEqual(next(c.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")
+end)
+
 test("constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)", function()
     local c, q = C(), D().feed.quality
     assertEqual(q.fixed, c.QUALITY.RARE)

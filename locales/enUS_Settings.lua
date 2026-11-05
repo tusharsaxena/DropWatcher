@@ -19,6 +19,8 @@ L["A fresh tab hides the drops you can't use and the item types you marked as un
     "A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."
 L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] =
     "A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -48,15 +50,24 @@ L["The least quality a drop needs in the fixed mode."] = "The least quality a dr
 L["The least quality the two matching modes ever ask for, and what an empty slot asks for."] =
     "The least quality the two matching modes ever ask for, and what an empty slot asks for."
 L["Always show upgrades for me"] = "Always show upgrades for me"
-L["A drop below the minimum still shows when it is an upgrade for you."] =
-    "A drop below the minimum still shows when it is an upgrade for you."
+L["A drop below the minimum still shows when it is an upgrade for you or new to your collection."] =
+    "A drop below the minimum still shows when it is an upgrade for you or new to your collection."
 L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."] =
     "Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
-L["Gear only"] = "Gear only"
-L["List armor, weapons, jewelry and trinkets only."] = "List armor, weapons, jewelry and trinkets only."
-L["Include tier tokens"] = "Include tier tokens"
-L["List tier tokens too."] = "List tier tokens too."
+L["Armor, weapons, jewelry and trinkets."] = "Armor, weapons, jewelry and trinkets."
+L["Tier tokens"] = "Tier tokens"
+L["Tokens you turn in for a tier piece, judged against what you wear in that slot."] = "Tokens you turn in for a tier piece, judged against what you wear in that slot."
+L["Mounts"] = "Mounts"
+L["Mount items, marked new or already collected."] = "Mount items, marked new or already collected."
+L["Battle pets"] = "Battle pets"
+L["Companion pet items, marked new or already collected."] = "Companion pet items, marked new or already collected."
+L["Toys"] = "Toys"
+L["Toys, marked new or already collected."] = "Toys, marked new or already collected."
+L["Recipes and patterns"] = "Recipes and patterns"
+L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] = "Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."
+L["Cosmetics"] = "Cosmetics"
+L["Cosmetic armor and weapons: a look to collect, never gear."] = "Cosmetic armor and weapons: a look to collect, never gear."
 L["Minimum item level"] = "Minimum item level"
 L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."] =
     "Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."
@@ -133,6 +144,14 @@ L["Show in combat"] = "Show in combat"
 L["Show toasts in combat too."] = "Show toasts in combat too."
 L["Play a sound"] = "Play a sound"
 L["Play a sound with each toast."] = "Play a sound with each toast."
+L["Down"] = "Down"
+L["Up"] = "Up"
+L["Toasts at once"] = "Toasts at once"
+L["How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."] =
+    "How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."
+L["Stack direction"] = "Stack direction"
+L["Where each toast after the first goes: below the one before it, or above it."] =
+    "Where each toast after the first goes: below the one before it, or above it."
 L["Scale"] = "Scale"
 L["The toast's size, from half to double. It grows or shrinks about the place you put it."] =
     "The toast's size, from half to double. It grows or shrinks about the place you put it."
@@ -354,13 +373,27 @@ L["Window"] = "Window"
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."] =
-    "Reset the Drops page's settings (situations, quality, items and how long drops are kept) to their defaults."
+L["Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."] =
+    "Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."
 L["Quality floor"] = "Quality floor"
 L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
     "A situation can set a quality of its own: the Quality column on the Situations tab."
 L["Items"] = "Items"
 L["Item kinds"] = "Item kinds"
+
+-- settings/SchemaRows.lua and settings/ListEditors.lua: Drops › Item lists (issue #13)
+L["Item lists"] = "Item lists"
+L["The items always watched, whatever their kind."] = "The items always watched, whatever their kind."
+L["The items never watched, gear included."] = "The items never watched, gear included."
+L["Always watched, whatever its kind, its quality or the minimum item level; the Situations tab still decides where drops are watched. Applies to drops from now on. An item can be on one list only: remove it from the other first."] =
+    "Always watched, whatever its kind, its quality or the minimum item level; the Situations tab still decides where drops are watched. Applies to drops from now on. An item can be on one list only: remove it from the other first."
+L["Never watched, gear included, whatever would show it otherwise. Applies to drops from now on. An item can be on one list only: remove it from the other first."] =
+    "Never watched, gear included, whatever would show it otherwise. Applies to drops from now on. An item can be on one list only: remove it from the other first."
+L["Names work for items you carry (or carried this session), items on either list and items in this session's drops; otherwise use the ID or shift-click a link."] =
+    "Names work for items you carry (or carried this session), items on either list and items in this session's drops; otherwise use the ID or shift-click a link."
+L["Add an item by ID, link or name"] = "Add an item by ID, link or name"
+L["Type an item ID or an item's name, or shift-click an item link into the box."] =
+    "Type an item ID or an item's name, or shift-click an item link into the box."
 L["Retention"] = "Retention"
 L["Session"] = "Session"
 L["Unwanted types"] = "Unwanted types"

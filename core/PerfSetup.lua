@@ -29,6 +29,9 @@ local BUCKETS = {
     { key = "tradeTimer.scan" },  -- modules/TradeTimer.lua Scan: one read of your own drops' bag items
     { key = "gear.rebuild" },     -- modules/Gear.lua Refresh: one read of your worn and bag items
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
+    -- The Insights tab's pass runs inside a window repaint (its refresh is the active tab's).
+    { key = "insights.compute", within = "window.refresh" },  -- modules/WindowInsights.lua: rows to stats
+    { key = "insights.layout", within = "window.refresh" },   -- modules/WindowInsights.lua: one layout
 }
 
 if not (lib and NS.Lifecycle) then

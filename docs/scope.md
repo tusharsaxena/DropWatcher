@@ -41,6 +41,15 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   in the full layout, Scan group and the tab's Sort; a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
+- **Insights** (issue #12, [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
+  A third tab of charts over the kept history, drawn through LibKa0s-Charts-1.0: eight cards (drops
+  seen, upgrades for you, asks sent, items received, ask success, active days, offers sent, traded
+  away) and fourteen sections (drops by outcome, your verdicts, trade estimates, upgrades by instance
+  and by boss, top instances per visit, the most generous members, the item level items received
+  gained you, asks and drops per day, and drops by looter class, quality, slot and item kind). Its
+  own bar of seven filters (Character, Instance, Difficulty, Situation, Date, Quality, Category),
+  each listing only the values present with their counts; the strip names the period the kept history
+  covers. `/dw insights` opens it.
 - **The upgrade glow** (feedback-21). A drop that is an upgrade for you, and whose trade estimate
   is Yes or Likely (feedback-22), glows on its icon in the Drops table, the compact card and the
   detail card (never the toast): one glow for your current spec, one
@@ -63,11 +72,42 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by
   default).
-- **The extras.** The upgrade toast (with its own scale), on for a new profile since 2026-10-25, and
+- **The extras.** The upgrade toast (with its own scale, and up to five stacked at once, three by
+  default: DW-T2), on for a new profile since 2026-10-25, and
   auto-ask, off by default.
 - **The standard surfaces.** The settings pages (General, Drops, Comparison, Messages, Window,
   Alerts and Profiles; feedback-24, with Situations a Drops tab since item 020), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
+
+## Item categories (issue #13)
+
+The triage of [`superpowers/specs/2026-11-05-drop-watcher-categories-design.md`](superpowers/specs/2026-11-05-drop-watcher-categories-design.md)
+§1. Every item the client reads gets a category from `NS.Collectibles.CategoryOf`, first match in
+the order below, through the collection reads of `core/CompatCollect.lua`. The feed watches the
+kinds turned on under Drops › Items › Item kinds (the `feed.categories.<key>` rows, defaults below;
+they replaced Gear only and Include tier tokens, DW-CAT2): an item in no category is not watched.
+Two item-ID lists override the kinds (Drops › Item lists, or `/dw whitelist|blacklist`): Always watch
+lets an item through whatever its kind, the minimum item level and the quality gate say, but not the
+situation gate; Never watch hides it, gear included, and wins over Always watch. An ID sits on one
+list at a time. The simulator (`/dw sim drop <kind>`, one burst line in eight) and test mode (a
+sixth boss's samples) produce every kind. Enum values are resolved by name (the brackets are the
+12.x numbers).
+
+| Category | Default | Detection | Collected or known | Shown as |
+|---|---|---|---|---|
+| Tier tokens | on | the `RestrictedRaceClass` tooltip line on an item with no slot plan for its raw equipLoc (usually Miscellaneous [15] › Junk [0] or Reagent [1]); a curated `C.TIER_TOKENS`, empty until the ids are read in game | n/a: judged as gear against the slot it makes | the slot it makes and its classes |
+| Equipment | on | Armor [4] or Weapon [2], not a tier token, not cosmetic | n/a: the gear verdict | unchanged |
+| Mounts | on | `C_MountJournal.GetMountFromItem`, else Miscellaneous › Mount [5] (Mount Equipment [6] is not a mount) | the journal's `isCollected` | New or Collected |
+| Battle pets | on | `C_PetJournal.GetPetInfoByItemID`'s species, else Miscellaneous › Companion Pet [2] | `GetNumCollectedInfo`: none is new, else collected with `n/limit` | New or Collected 1/3 |
+| Toys | on | `C_ToyBox.GetToyInfo` answers the item | `PlayerHasToy` | New or Collected |
+| Recipes | on | Recipe [9]; its subclass names the profession's skill line (`C.RECIPE_SKILL_LINE`; Book and First Aid none) | the tooltip's whole `ITEM_SPELL_KNOWN` line; a profession you lack is can't use | New, Known or Can't use |
+| Cosmetics | off | Armor › Cosmetic [5], or `C_Item.IsCosmeticItem` on armor or a weapon (cosmetic weapons are Weapon-class) | the appearance, as today | New look or Look known |
+
+A collectible (mount, pet, toy, recipe, cosmetic) is feed-only: no Ask, toast, AutoAsk, Offer,
+Announce, Post my tradeables or glow. Not watched: quest starters, reagents (high quality included),
+containers, keystones, currencies (never `|Hitem:` loot lines), profession tools and accessories,
+gems, trade goods, item enhancements, consumables and housing decor. A caged battle pet arrives as
+a `|Hbattlepet:` link and is never watched; only companion items are.
 
 ## What it deliberately does not do (v1)
 

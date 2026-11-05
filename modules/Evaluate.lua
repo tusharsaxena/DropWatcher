@@ -8,7 +8,8 @@ local _, NS = ...
 --
 --   facts     = { itemID, ilvl, equipLoc, classID, subClassID, quality, specs = { [specID] = true },
 --                 stats = { [STAT_KEY] = n }, track = { name, rank, max, tier },
---                 unique = { cat, max }, isTierToken, classes = { [classFile] = true } }
+--                 unique = { cat, max }, isTierToken, classes = { [classFile] = true },
+--                 tokenSlot = "INVTYPE_*" | "any" | nil }
 --   candidate = { classFile, specID, dualWield, titanGrip, gear = { [slot] = facts | false },
 --                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } },
 --                 offSpecGear = function(specID), undesiredBySpec = { [specID] = { [SubClassKey] = true } } }
@@ -18,8 +19,15 @@ local _, NS = ...
 -- With `heirloomProtect`, a drop whose baseline is an heirloom is never called an upgrade: what
 -- would be one reads as a sidegrade, with the reason `heirloomProtected`.
 --
--- In `gear`, false is an empty slot and nil a slot nobody has read yet. A tier token's equipLoc is
--- the slot the token makes. A scorer answers a number, "pending" (Pawn not ready), or nil.
+-- In `gear`, false is an empty slot and nil a slot nobody has read yet. A scorer answers a number,
+-- "pending" (Pawn not ready), or nil.
+--
+-- TIER TOKENS (categories design spec §7.2). A tier token's equipLoc is the slot the token makes
+-- (modules/ItemFacts.lua sets it from `tokenSlot`), so it is judged as gear against what is worn
+-- there, by item level alone: the scorer is skipped (Pawn cannot value a token), and armor type and
+-- primary stat are not checked (the piece suits the class). Its class list still refuses other
+-- classes. A token whose slot was not read answers `unknown`, reason `tierToken`; an omni token
+-- (`tokenSlot == "any"`) is judged in its best tier slot (NS.TierTokens.Fold, read at call time).
 --
 -- A `cantUse` that depends on the spec also carries `offSpec`, the best verdict for another spec of
 -- the class (modules/OffSpec.lua); the verdict itself stays `cantUse`.
@@ -162,7 +170,7 @@ local function usable(facts, candidate)
         return "cant", "classRestricted"
     end
     if facts.isTierToken then
-        if isTable(facts.classes) then return "ok" end
+        if isTable(facts.classes) or facts.tokenSlot then return "ok" end
         return "unknown", "tierToken"
     end
     local specID = num(candidate.specID)
@@ -325,7 +333,7 @@ end
 
 local function planFor(facts, candidate, opts)
     local plan = C.SLOT_PLAN[facts.equipLoc]
-    if not plan then return nil, "notGear" end
+    if not plan then return nil, facts.isTierToken and "tierToken" or "notGear" end
     local ctx = {
         classFile = candidate.classFile,
         dualWield = flagOf(candidate, "dualWield", CD.DualWieldFor) == true,
@@ -440,7 +448,8 @@ local function compare(out, facts, candidate, opts)
     out.averaged = #base.items > 1 or nil   -- a two-hander against both hands: the pair, not one item
     out.ilvlDelta = ilvl - average(base.items, function(f) return f.ilvl end)
     out.trackDelta = E.TrackDelta(facts.track, out.baseline.track)
-    out.scoreDelta = scoreDelta(facts, base.items, candidate, opts, out.reasons)
+    -- A tier token is judged by item level alone: no scorer can value it.
+    out.scoreDelta = not facts.isTierToken and scoreDelta(facts, base.items, candidate, opts, out.reasons) or nil
     return base
 end
 
@@ -470,6 +479,8 @@ local function run(facts, candidate, opts)
         return out
     end
     opts = isTable(opts) and opts or {}
+    -- An omni token: the kernel once per tier slot, the best kept (modules/TierTokens.lua).
+    if facts.tokenSlot == "any" and NS.TierTokens then return NS.TierTokens.Fold(facts, candidate, opts, run) end
     local equip, why = E.Equippability(facts, candidate)
     out.equip = equip
     if why then addReason(out.reasons, why) end
@@ -504,7 +515,8 @@ end
 --- Grip: feedback-21 R5), or a unique-equipped item worn in one of the pair's own slots (feedback-22);
 --- nil when the drop was judged against one item (the main hand alone, both hands averaged, a unique
 --- redirection to another slot);
---- `averaged` is true when it was judged against both hands averaged (the baseline is the main hand's).
+--- `averaged` is true when it was judged against both hands averaged (the baseline is the main hand's);
+--- `tokenSlot` is the tier slot an omni token was judged in (NS.TierTokens.Fold), else nil.
 --- Never throws.
 function E.Evaluate(facts, candidate, opts)
     local ok, res = pcall(run, facts, candidate, opts)

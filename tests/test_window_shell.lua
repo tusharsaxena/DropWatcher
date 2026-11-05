@@ -220,12 +220,16 @@ end)
 -- The line S.Tab drew under a selected tab, from the library's record of the tab.
 local function tabLine(m, tab) return m.LibStub("LibKa0s-Skin-1.0").painted[tab].regions.line end
 
-test("shell: two tabs, Drops active in gold with its underline, History gray", function()
+test("shell: three tabs, Drops active in gold with its underline, History and Insights gray", function()
     local NS, f, m = shown()
-    assertEqual(table.concat(NS.Window.TABS, ","), "group,history")
+    assertEqual(table.concat(NS.Window.TABS, ","), "group,history,insights")
     assertEqual(NS.Window.ActiveTab(), "group")
     assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
+    assertEqual(textOf(f.tabs.insights.label), "Insights")
+    local K = NS.Constants.WINDOW
+    assertEqual(f.tabs.insights.__points[1][4], 2 * (K.TAB_W + K.TAB_GAP), "after History, in strip order")
+    assertTrue(tabLine(m, f.tabs.insights) == nil or not tabLine(m, f.tabs.insights):IsShown())
     local r, g = f.tabs.group.label:GetTextColor()
     assertEqual(r .. "," .. g, "1,0.82")
     assertTrue(tabLine(m, f.tabs.group):IsShown(), "the skin's line under the active tab")
@@ -258,6 +262,18 @@ test("shell: the tab labels carry no count; their tooltips say what each holds",
     assertEqual(NS.Window.TabLabel("group"), "Drops")
 end)
 
+-- Issue #12 (Insights design spec §4.1): the Insights tooltip is a function of the retention, so
+-- it names the period the tab covers as the row moves.
+test("shell: the Insights tooltip names what it holds and the period the kept history covers", function()
+    local NS, f = shown()
+    local tip = NS.Window.TooltipOf(f.tabs.insights)
+    assertEqual(tip[1], "Insights"); assertEqual(#tip, 3)
+    assertEqual(T.tipPlain(tip[2]), "• Holds: charts over the kept history")
+    assertEqual(T.tipPlain(tip[3]), "• Covers: the last 30 days kept")
+    NS.SchemaRuntime.Set("global.history.retentionDays", 0)
+    assertEqual(T.tipPlain(NS.Window.TooltipOf(f.tabs.insights)[3]), "• Covers: every kept day")
+end)
+
 test("shell: a tab's body is built on its first show, and refreshed with the tab's view", function()
     local NS, f = shown()
     local built, seen = 0, nil
@@ -279,7 +295,7 @@ end)
 
 test("shell: a tab with no body says what it will hold, never a blank pane", function()
     local _, f = shown()
-    for _, key in ipairs({ "group", "history" }) do
+    for _, key in ipairs({ "group", "history", "insights" }) do
         local text = textOf(f.panes[key].placeholder)
         assertTrue(type(text) == "string" and #text > 10, key)
     end
@@ -313,7 +329,7 @@ test("shell: the View is multi-select: its values combine, the label counts them
     assertTrue(c.view.multi, "multi-select")
     local labels = {}
     for _, o in ipairs(c.view._options) do labels[#labels + 1] = o.label end
-    assertEqual(table.concat(labels, ","), "View: All,Interesting,Likely tradeable,Usable by me,Upgrade for me")
+    assertEqual(table.concat(labels, ","), "View: All,Interesting,Likely tradeable,Usable by me,Upgrade for me,New to my collection")
     pick(c.view, "likely")
     assertEqual(textOf(c.view.text), "Likely tradeable", "one value: its name")
     assertTrue(FB.State("group").view.likely)
@@ -353,13 +369,14 @@ test("shell: the View tooltip lists every value as a bullet, and grays the ones 
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
     local tip = W.TooltipOf(c.view)
     assertEqual(tip[1], "View")
-    assertEqual(#tip, 6, "the title and five values")
+    assertEqual(#tip, 7, "the title and six values")
     assertEqual(T.tipPlain(tip[2]), "• All: every drop past the situation and quality gates")
     assertTrue(T.tipPlain(tip[3]):find("^• Interesting: ") ~= nil)
     assertTrue(T.tipPlain(tip[4]):find("^• Likely tradeable: ") ~= nil)
     assertTrue(T.tipPlain(tip[5]):find("^• Usable by me: ") ~= nil)
     assertTrue(T.tipPlain(tip[6]):find("^• Upgrade for me: ") ~= nil)
-    for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
+    assertTrue(T.tipPlain(tip[7]):find("^• New to my collection: ") ~= nil)
+    for i = 2, 7 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
     NS.Window.SelectTab("history")
     tip = W.TooltipOf(c.view)
     assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("|cff8c8c94", 1, true) ~= nil,
@@ -957,7 +974,7 @@ test("shell: in a dungeon, turning test mode off closes the window its drops ope
     local NS, m = inDungeon()
     m.seedGearJournal()
     NS.SetTestMode(true)
-    assertEqual(#NS.LootFeed.Drops("test"), 29, "the test drops are in"); assertTrue(NS.IsWindowShown())
+    assertEqual(#NS.LootFeed.Drops("test"), 35, "the test drops are in"); assertTrue(NS.IsWindowShown())
     NS.SetTestMode(false)
     assertFalse(NS.IsWindowShown(), "test mode opened it, so off closes it")
     NS.ShowWindow()

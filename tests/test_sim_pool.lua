@@ -200,6 +200,85 @@ test("sim pool: a loot burst draws the pool's gear, and every drop only when it 
     assertEqual(#P.LootDrops(nil), 0)
 end)
 
+-- A non-gear item: Miscellaneous (15) or Recipe (9) by subclass, no slot.
+local function nonGear(classID, subClassID)
+    return { name = "Thing", quality = 4, ilvl = 1, equipLoc = "", classID = classID, subClassID = subClassID,
+        bindType = 1, stats = {} }
+end
+
+test("sim pool: its extras are the drops that are not gear, by kind, in the pool's order (issue #13)", function()
+    -- red under: the pool that kept only gear, so the journal's mounts and recipes never dropped
+    local NS, _, m = T.newAddon()
+    local P = NS.SimPool
+    local function item(id, def, difficulty)
+        local l = link(id, 600)
+        m.addItem(l, def)
+        return { link = l, itemID = id, difficulty = difficulty or 8 }
+    end
+    local band, reins, plans = item(501, ring(600)), item(502, nonGear(15, 5)), item(503, nonGear(9, 2))
+    local salve, other = item(504, nonGear(0, 0)), item(505, nonGear(15, 5), 23)
+    m.mounts.byItem[502] = 77
+    local pool = { difficulty = 8, entries = { band, reins, salve, plans, other } }
+    local byKind, all = P.Extras(pool)
+    assertEqual(#all, 2, "a consumable is not watched; another difficulty's mount is not this pool's drop")
+    assertTrue(all[1] == reins and all[2] == plans, "the pool's order")
+    assertTrue(byKind.mount[1] == reins and byKind.recipe[1] == plans)
+    assertNil(byKind.equipment, "gear is not an extra")
+    assertEqual(reins.category, "mount", "the kind is kept on the entry")
+    assertEqual(salve.category, false, "not watched")
+    assertTrue(P.KindDrops(pool, "equipment")[1] == band)
+    assertTrue(P.KindDrops(pool, "mount")[1] == reins)
+    assertEqual(#P.KindDrops(pool, "toy"), 0, "no toy in the pool and none curated")
+end)
+
+test("sim pool: plain gear is classed from its cheap facts, so a big pool reads full facts only for the rest", function()
+    -- red under: P.CategoryOf reading NS.ItemFacts for every entry (test mode's pool, every kind's
+    -- extras: hundreds of tooltip reads in one frame, and the facts cache evicted past its cap)
+    local NS, _, m = T.newAddon()
+    local P = NS.SimPool
+    local entries = {}
+    for i = 1, NS.ItemFacts.CACHE_CAP + 88 do
+        local l = link(7000 + i, 600)
+        m.addItem(l, ring(600))
+        entries[i] = { link = l, itemID = 7000 + i, difficulty = 8 }
+    end
+    local reins, look = link(6901, 600), link(6902, 600)
+    m.addItem(reins, nonGear(15, 5)); m.mounts.byItem[6901] = 77
+    m.addItem(look, armor(600, "INVTYPE_HEAD", 5))
+    entries[#entries + 1] = { link = reins, itemID = 6901, difficulty = 8 }
+    entries[#entries + 1] = { link = look, itemID = 6902, difficulty = 8 }
+    local reads, read = 0, NS.ItemFacts.Read
+    NS.ItemFacts.Read = function(l) reads = reads + 1; return read(l) end
+    local byKind, all = P.Extras({ difficulty = 8, entries = entries })
+    assertEqual(reads, 2, "the mount and the cosmetic helm alone")
+    assertEqual(#all, 2)
+    assertEqual(byKind.mount[1].link, reins); assertEqual(byKind.cosmetic[1].link, look)
+    assertEqual(entries[1].category, "equipment", "kept on the entry")
+    assertTrue((NS.ItemFacts.Counts()) <= 2, "the facts cache holds what was read, never the gear")
+end)
+
+test("sim pool: a kind the pool has none of draws the curated samples, once the client has them", function()
+    local NS, _, m = T.newAddon()
+    local P = NS.SimPool
+    for _, cat in ipairs(NS.Constants.CATEGORIES) do
+        if cat.key ~= "equipment" then assertEqual(type(P.COLLECTIBLE_SAMPLES[cat.key]), "table", cat.key) end
+    end
+    local toy = link(601, 1)
+    m.addItem(toy, nonGear(15, 0))
+    m.toys[601] = true
+    local byLink = m.C_Item.GetItemInfo
+    m.C_Item.GetItemInfo = function(x)
+        if x == 601 then return byLink(toy) end
+        return byLink(x)
+    end
+    P.COLLECTIBLE_SAMPLES.toy, P.COLLECTIBLE_SAMPLES.pet = { 601 }, { 602 }
+    local got = P.KindDrops({ difficulty = 8, entries = {} }, "toy")
+    assertEqual(#got, 1)
+    assertEqual(got[1].link, toy); assertEqual(got[1].itemID, 601); assertTrue(got[1].sample)
+    assertEqual(#P.KindDrops(nil, "pet"), 0, "not cached yet")
+    assertEqual(m.loadRequests[#m.loadRequests], 602, "so its load is asked for")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Reading the journal
 -- ---------------------------------------------------------------------------------------------

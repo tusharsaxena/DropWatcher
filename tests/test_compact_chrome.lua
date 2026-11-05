@@ -19,10 +19,12 @@ local function textOf(region) return region and region:GetText() end
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)", function()
+test("chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)", function()
     local CC = T.newAddon().CompactChrome
     assertEqual(CC.TabText("group", true), "Drops")
     assertEqual(CC.TabText("history", true), "History")
+    assertEqual(CC.TabText("insights", true), "Insights")
+    assertEqual(CC.TabText("insights", false), "Insights")
     assertEqual(CC.TabText("group", false), "Drops")
     assertEqual(CC.TabText("history", false), "History")
 end)
@@ -209,13 +211,17 @@ end)
 
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
-test("chrome: the two tabs keep a reduced width, their names in their tooltips", function()
+test("chrome: the three tabs keep a reduced width, their names in their tooltips", function()
     local NS, f = shown("compact")
     local CC = NS.CompactChrome
     assertEqual(textOf(f.tabs.group.label), "Drops")
     assertEqual(textOf(f.tabs.history.label), "History")
     assertEqual(f.tabs.group:GetWidth(), CC.TAB_W)
     assertEqual(f.tabs.history.__points[1][4], CC.TAB_W + NS.Constants.WINDOW.TAB_GAP)
+    assertEqual(f.tabs.insights.__points[1][4], 2 * (CC.TAB_W + NS.Constants.WINDOW.TAB_GAP))
+    assertTrue(3 * CC.TAB_W + 2 * NS.Constants.WINDOW.TAB_GAP <= NS.Constants.WINDOW.COMPACT_MIN_W - 2 * NS.Constants.WINDOW.INSET,
+        "three tabs fit the least compact width")
+    assertEqual(NS.Window.TooltipOf(f.tabs.insights)[1], "Insights")
     assertEqual(NS.Window.TooltipOf(f.tabs.group)[1], "Drops")
     assertEqual(NS.Window.TooltipOf(f.tabs.history)[1], "History")
     NS.SetWindowMode("full")

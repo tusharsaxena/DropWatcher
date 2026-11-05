@@ -170,7 +170,9 @@ function WH.AsDrop(e, id, group)
     return {
         id = id, link = e.itemLink, at = e.at, isMine = e.isMine == true, outcome = e.outcome, entry = e, group = group,
         looter = { name = e.looter, classFile = e.class }, seenBy = e.seenBy, seenByClass = e.seenByClass,
-        facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality },
+        -- The kept kind (issue #13): an entry with none reads as equipment; a token's Slot cell is its own.
+        facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality, category = e.category,
+            tokenSlot = e.tokenSlot, isTierToken = e.category == "tierToken" or nil },
         me = e.me, them = e.them, trade = e.trade,
     }
 end
@@ -187,10 +189,11 @@ end
 
 --- The Them verdict alone (WH.ThemCell is the merged cell the table and the card draw): as the
 --- Drops table says it, except that a looter whose gear was never read says so plainly (the inspect
---- is long over).
+--- is long over), and a collectible's is a dash: it was judged for you alone (issue #13).
 --- @param drop table
 --- @return table cell
 function WH.ThemVerdict(drop)
+    if NS.Collectibles.IsFeedOnly(drop) then return NS.CollectCells.Them() end   -- judged for you alone
     if drop.isMine or type(drop.them) == "table" then return WC.Them(drop) end
     local who = WC.ShortName(drop.looter.name)
     return { text = "?", tone = "muted", verdict = "unknown",

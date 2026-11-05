@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.84.0 payload (twenty majors; media/icons pruned to the declared subset), nineteen wired with one setup file each and `LibKa0s-Charts-1.0` deliberately unwired, since this addon draws no chart (`DEPENDENCIES.md`
+LibKa0s v1.88.0 payload (twenty-one majors; media/icons pruned to the declared subset), twenty wired with one setup file each and `LibKa0s-IconBrowser-1.0` deliberately unwired, since this addon offers no icon picker (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -31,9 +31,10 @@ lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
-| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and five verbs (DW-02..DW-04) |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and six verbs (DW-02..DW-04) |
+| Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
-| Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
+| Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
 | Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-one `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
@@ -53,37 +54,53 @@ one-line responsibility and why its position is load-bearing or conventional is 
 [`module-map.md`](module-map.md), the only inventory. In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, the only files that name the client
+  family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
   it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
-  world providers, event drivers, restriction model and five verbs); the login session (`Session.lua`, the session start and This
+  world providers, event drivers, restriction model and six verbs); the login session (`Session.lua`, the session start and This
   instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
-  of your class) and the scorers; the edges
+  of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
+  pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
+  collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, and an omni
+  token's best slot, so a token is judged as gear) and the scorers; the item lists' one writer
+  (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
   that read the client; the feed that orchestrates them, with its counts, rosters, places and
   recorders; the recorded and opt-in features (History, its retention and the feed rebuilt from it
-  after a reload, `FeedRestore.lua`; the toast, its content on LibKa0s-Toast-1.0's shell, and
+  after a reload, `FeedRestore.lua`; the Insights tab's pure filters and one stats pass over the kept
+  history, `InsightsFilters.lua` and `InsightsStats.lua`, issue #12; the toast, its content on LibKa0s-Toast-1.0's shell, and
   auto-ask); the simulator's
   host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
   drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
   (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
-  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, two tabs, their strips' one
+  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, three tabs (Drops, History and
+  Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
+  `InsightsSections.lua`, `WindowInsights.lua`), their strips' one
   footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
-  off-spec verdict's look, `OffSpecCells.lua`, among them), the two
+  off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
   tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
   icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
   mode's switch and bodies, test mode and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
-  `ComposedRows.lua`), the options pages and their editors, the slash table,
+  `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in
+  `ListEditors.lua`), the slash table,
   the slash-only and `/dw sim` verbs, and Profiles, last.
 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
 button goes through the host handler its slash verb shares.
+
+The filter bar is shared by the tabs and never reflows between them: a control a tab does not use
+is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
+exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
+whose seven filters none of the shared controls apply to. While it is active the window hides the
+shared bar and the footer's Sort, starts the pane under the tabs, re-anchors the test-mode and
+simulation strips there, and never syncs the shared bar. This is a DropWatcher convention, not a rule
+of the standard (Insights design spec §4.1), so it owes no deviation row.
 
 ## Settings Schema
 
@@ -95,12 +112,16 @@ later pages (`settings/ComposedRows.lua`: Window › Icons' border, options-ui-�
 which take SchemaRows' checks. Each row's `group` is its tab on
 its page, a `disabledIf` predicate dims a row with nothing to do, its `default` references
 `defaults/Profile.lua`, and its `validate` refuses a value before the seam stores it. The two
-specID-keyed tables are whole-value `map` rows (architecture-§5's value route).
+specID-keyed tables are whole-value `map` rows (architecture-§5's value route), and so are the two
+item lists, `feed.whitelist` and `feed.blacklist` (issue #13): flat `{ [itemID] = true }` sets
+whose one writer, `NS.ItemLists` (`modules/ItemLists.lua`), the panel's Item lists tab and
+`/dw whitelist|blacklist` both call, so an ID on one list is refused by the other on both surfaces.
+The seam's `resetExempt` keeps them out of the Drops page's Defaults (plan #13, Q9).
 
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`, ten steps), and
+(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -119,7 +140,7 @@ All ten messages are sent today, `SITUATION_CHANGED`, `RESTRICTION_CHANGED`, `GE
 `ASK_STATE_CHANGED` and `HISTORY_CHANGED`; the history (`modules/History.lua`) receives `DROP_ADDED`,
 `DROP_UPDATED` and `ASK_STATE_CHANGED`, the toast (`modules/Toast.lua`) the same three, auto-ask
 (`modules/AutoAsk.lua`) those three, `HISTORY_CHANGED` and `RESTRICTION_CHANGED`, the History
-tab (`modules/WindowHistory.lua`) `HISTORY_CHANGED`, the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
+tab (`modules/WindowHistory.lua`) and the Insights tab (`modules/WindowInsights.lua`) `HISTORY_CHANGED`, the feed (`modules/LootFeed.lua`) receives `INSPECT_DONE`, `GEAR_CHANGED` and `TRADE_TIMER_TICK`,
 the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`modules/Asks.lua`)
 `RESTRICTION_CHANGED`, and the window (`modules/Window.lua`) `RESTRICTION_CHANGED`,
 `ASK_STATE_CHANGED`, `SITUATION_CHANGED`, `DROP_ADDED`, `DROP_UPDATED`, `GEAR_CHANGED` (since DW-83),
@@ -130,33 +151,35 @@ slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.Toggl
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the Offer
 panel's `NS.PressOffer` and `NS.PressAnnounce`, and the Drops strip's `NS.PostTradeables`). Drops leaving a
 feed are not a message: `LF.Clear` and the cap's trim call the feed's removal sinks
-(`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets a toast
-go with its drop. The payloads and consumers below are the code's.
+(`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets each
+toast on screen or waiting go with its drop. The payloads and consumers below are the code's.
 
 | `NS.MSG` key | Wire suffix | Sender | Payload | Consumers |
 |---|---|---|---|---|
 | `DROP_ADDED` | `DropAdded` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`. Sent once per drop, when it has passed every gate and been judged; a drop whose item is still loading is announced once it loads. `NS.LootFeed.Get(dropId)` is the record; test drops are announced too (`drop.feed` is `test`), test mode's placeholders (since DW-34, `AddTest`) one each as they are put in; since DW-Q0 a drop of this session restored after a reload (`source` `restore`, `LootFeed.Restore`) too, linked to its History entry first | TradeTimer (since DW-28): your own live drop asks for a bag scan; Window (since DW-30; the rule since DW-83, feedback spec §3 FB-12): every drop added to the feed the window shows (the live one, the simulator's included, or test mode's while it is on), your own included, opens a hidden window in a situation set to auto-open, with no once-per-situation latch (master `autoOpen` or the situation's `autoOpen` false turns it off); a minimized window stays minimized and counts it (`n new`); a test drop's open counts as test mode's, so `/dw test` off closes it again (DW-83 review); the frame is not protected, so it opens in combat too; and the open window repaints; History (since DW-51): records the live drop (never a test drop) in `global.history`, before the window repaints (a restored drop is already linked to its entry, `History.Adopt`, so nothing is recorded); a restored drop opens no window, is not counted new on a minimized one, queues no toast and schedules no automatic ask (DW-Q0); Toast (since DW-52): queues the drop for a toast when it qualifies (each drop once; a test drop too, so test mode can place it); AutoAsk (since DW-54): schedules its automatic ask when it qualifies (each drop once) |
-| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it; when its link was more complete the drop keeps it and is re-judged on the facts read from it, ui spec §0), `bag` (your own drop read from its matched bag item: its exact level and quality, and the bag item's link when more complete; since DW-80), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Drops rows: verdicts, trade, the looter's gear (in Them since DW-F1), and since DW-E1 the Trade window; since DW-32 the open detail card with them; since DW-33 the open Offer panel's candidates); History (since DW-51): takes the recorded drop's latest verdicts and trade estimate, and `expired` once the estimate is `no expired`; since the DW-80 review also the more complete link and the level and quality read again (`source`, `bag`); Toast (since DW-52): a drop not toasted yet is considered again (an inspect can make its trade `likely`), and the toast on screen repaints its Ask; AutoAsk (since DW-54): a drop not scheduled yet is considered again |
+| `DROP_UPDATED` | `DropUpdated` | `modules/LootFeed.lua` (sent since DW-27) | `dropId`, `cause`: `source` (another source reported it; when its link was more complete the drop keeps it and is re-judged on the facts read from it, ui spec §0), `bag` (your own drop read from its matched bag item: its exact level and quality, and the bag item's link when more complete; since DW-80), `inspect` (the looter's or a candidate's read arrived), `gear` (your gear moved), `score` (a pending score retried), `collection` (a collection changed and the drop's collection verdict moved: `modules/Collectibles.lua`'s coalesced re-read on the collection events, through `LootFeed.Refresh`; since DW-CAT3) or `trade` (the trade estimate moved on the sweep or the trade timer: a drop past its window, your own drop's exact timer). Never for a test drop | Window (since DW-30): the open window repaints its tabs and the active tab's body (since DW-31 the Drops rows: verdicts, trade, the looter's gear (in Them since DW-F1), and since DW-E1 the Trade window; since DW-32 the open detail card with them; since DW-33 the open Offer panel's candidates); History (since DW-51): takes the recorded drop's latest verdicts and trade estimate, and `expired` once the estimate is `no expired`; since the DW-80 review also the more complete link and the level and quality read again (`source`, `bag`); Toast (since DW-52): a drop not toasted yet is considered again (an inspect can make its trade `likely`), and that drop's toast, if it is on screen (anywhere in the stack since DW-T2), repaints its Ask; AutoAsk (since DW-54): a drop not scheduled yet is considered again |
 | `INSPECT_DONE` | `InspectDone` | `modules/Inspect.lua` (sent since DW-26) | `guid`. Sent once per job when it ends: after a read (`fresh` or `cached`), once the read items' facts have loaded or been given up on; at once for `outOfRange` and `failed`. `NS.Inspect.Get(guid)` says which | LootFeed (since DW-27): re-judges the drops that looter received and your own drops' candidate of that GUID; Window (since DW-30): the footer's inspect freshness |
 | `GEAR_CHANGED` | `GearChanged` | `modules/Gear.lua` (sent since DW-24) | none. Sent when a rebuild moved the snapshot (your class or spec, or any worn or owned item or its level), including the stand-up's rebuild; the first lazy read is silent | LootFeed (since DW-27): re-judges you on every drop; the quality gate's dynamic threshold reads the snapshot at the next drop; Window (since DW-83): repaints, so the Drops table's Me cells (My eq until DW-F1) show the new snapshot |
-| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason or any of `CanSendChat`, `CanInspect`, `CanTrade` moves | Messaging edge (since DW-2A, `modules/Asks.lua`): `canSendChat` true starts a flush of the queued asks; Window (since DW-30): the restriction badge, shown while `reason` is not nil; Auto-ask (since the M6 review, `modules/AutoAsk.lua`): after a world event that came while the Encounter restriction held, its lifting ends the encounter hold |
+| `RESTRICTION_CHANGED` | `RestrictionChanged` | `modules/Restrictions.lua` (sent since DW-21) | `reason` (`encounter`, `challengeMode`, `pvpMatch`, `chat`, `chatLockdown` or `combat`; nil when nothing the addon does is restricted), `canSendChat` (boolean). Sent when the reason, any of `CanSendChat`, `CanInspect`, `CanTrade`, or the combat flag (`InCombat`: the PLAYER_REGEN edge, else the client's flag) moves, so both combat edges announce even while the Combat restriction type holds `combat` (DW-I11) | Messaging edge (since DW-2A, `modules/Asks.lua`): `canSendChat` true starts a flush of the queued asks; Window (since DW-30): the restriction badge, shown while `reason` is not nil; Auto-ask (since the M6 review, `modules/AutoAsk.lua`): after a world event that came while the Encounter restriction held, its lifting ends the encounter hold |
 | `SITUATION_CHANGED` | `SituationChanged` | `modules/Situations.lua` (sent since DW-13) | `situationKey`, `previousKey` (nil on the first classification and after a stand-up) | Window (since DW-30): marks where "This instance" starts (since DW-Q0 through `NS.Session.MarkSituation`, which keeps it across a reload in the same situation and instance), and repaints the footer and the Quality label (until DW-83 it also re-armed the once-per-situation auto-open latch, which is gone). WindowCompact (since DW-C0): a situation off the one a run override began in ends the run, so the compact layout an auto-open forced lets go (at once while the window is hidden, else when it is next hidden). LootFeed reads `NS.Situations.Current()` at each receipt for its gate and subscribes to nothing |
-| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Drops row's Ask or Offer button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the Offer panel's Offer and Announce to group; History (since DW-51): `sent` makes the drop's outcome `asked` (an ask) or `offered` (an offer or announce); Toast (since DW-52): the toast on screen repaints its Ask button; AutoAsk (since DW-54): any move of a drop's `ask` cancels its waiting automatic ask (you asked yourself) |
+| `ASK_STATE_CHANGED` | `AskStateChanged` | `modules/Asks.lua` (sent since DW-2A) | `dropId`, `state` (`queued`, `sent`, `failed`, or `ready` after a cancel), `kind` (`ask`, `offer` or `announce`), `target` (the Name-Realm, or `group` for an announce), `reason` (a failure's reason, or `canceled` / `left` after a cancel). Sent on every move of one ask; `NS.Asks.StateOf(kind, target, dropId)` reads it back | Window (since DW-30): the restriction badge's queued count, and (since DW-31) a repaint of the active tab, so each Drops row's Ask or Offer button follows its ask, and (since DW-32) the open detail card's Ask and Edit message, and (since DW-33) the Offer panel's Offer and Announce to group; History (since DW-51): `sent` makes the drop's outcome `asked` (an ask) or `offered` (an offer or announce); Toast (since DW-52): that drop's toast, if it is on screen (anywhere in the stack since DW-T2), repaints its Ask button; AutoAsk (since DW-54): any move of a drop's `ask` cancels its waiting automatic ask (you asked yourself) |
 | `TRADE_TIMER_TICK` | `TradeTimerTick` | `modules/TradeTimer.lua` (sent since DW-28) | none. Sent on every tick of the shared ticker (each second while the window is shown, each minute while it is hidden, never with nothing live) and after a scan that found your own drops or dropped the last entries; `NS.TradeTimer.ForDrop(dropId)` and `Remaining(entry)` are the countdown | LootFeed (since the DW-27 review): reads each own drop the timer matched from its bag item (since DW-80, `ReadBagItems`: `DropUpdated(id, "bag")` when its level, quality or link moved), then re-estimates your own drops' trade with the timer folded in; Window (since DW-33; the Drops tab since DW-E1): repaints the Drops tab's countdowns alone (its Trade window cells, the compact cards' countdowns and the strip's next expiry, `WindowGroup.TickCountdowns`) while it shows a live one, and the Offer panel while it is open, nothing else |
 | `TRADE_TIMER_EXPIRING` | `TradeTimerExpiring` | `modules/TradeTimer.lua` (sent since DW-28) | `dropId`, `itemGUID`, `remaining` (seconds). Sent once per item, when its remaining time first falls to `trade.warnAt` (600s) or less; the module prints the chat warning itself, and the entry's `warned` is set | Window (since DW-33): one whole repaint, batched; the countdown reads `ending soon` in bold from its own clock, so a repaint carries it |
-| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave; `modules/HistoryRetention.lua` (since DW-A5) when Keep history for deletes groups | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), Keep history for deletes groups (`modules/HistoryRetention.lua`, since DW-A5: the login prune or a confirmed shorter window), or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): the filter bar's cached History Character rows dropped (`WindowFilterBar.InvalidateChars`, since DW-A6), then one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled |
+| `HISTORY_CHANGED` | `HistoryChanged` | `modules/History.lua` (sent since DW-51); `modules/TestMode.lua` (since DW-84) when its sample groups arrive or leave; `modules/HistoryRetention.lua` (since DW-A5) when Keep history for deletes groups | none. Sent when a drop is recorded, a refresh changes what its entry keeps (its verdicts, trade estimate, outcome, or its link, level and quality read again; a DropUpdated that changes none of them sends nothing), an outcome moves (an ask sent, declined set or cleared, a completed trade), an ask, offer or announce sent is stamped even when the outcome does not move (`askedAt`, `offeredAt`; issue #12, since DW-N1.1), Keep history for deletes groups (`modules/HistoryRetention.lua`, since DW-A5: the login prune or a confirmed shorter window), or Clear history empties it; `NS.History.Groups()` is the log | History tab (since DW-51, `modules/WindowHistory.lua`): the filter bar's cached History Character rows dropped (`WindowFilterBar.InvalidateChars`, since DW-A6), then one repaint of the shown window on the next frame through the window's own coalesced repaint (`Window.ScheduleRepaint`, shared with `DropUpdated`, so the two cost one pass), the Drops rows included (a received drop's Ask button reads `Traded`); AutoAsk (since DW-54): a waiting automatic ask for a drop now `received` is canceled; Insights tab (since DW-N2, `modules/WindowInsights.lua`): bumps its revision, so its next refresh recomputes, and schedules one repaint through `Window.ScheduleRepaint` |
 
 ## Slash Commands
 
 `/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
 reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
-add`, plus compact spec §1's `full`; `mine` opens Drops since My drops was retired, feedback-5 spec §3); the full table, the live-while-disabled set and the handlers are in
+add`, plus compact spec §1's `full` and issue #12's `insights`, which opens the Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
+issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through the item
+lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
 controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
 window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
 one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
-grammar plus DropWatcher's five verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
+grammar plus DropWatcher's six verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
 disabled like any other and has no key binding. The launcher menu's Sim mode entry and Master
 controls' Sim mode box are its one other door: both take the same `NS.IsSimMode` / `NS.ToggleSim`
 pair (`core/DropWatcher.lua`). `NS.IsSimMode` answers whether the step panel is shown or a sim runs
@@ -199,8 +222,8 @@ how many handlers it called.
 
 | Event | Handler | Why |
 |---|---|---|
-| `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatStart` (through `DW:OnSharedFeatureEvent`) | ends test mode; re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then parks the inspect queue (`modules/Inspect.lua`); then, unless `toast.inCombat`, holds the toast: the shell's `Hold` takes the toast on screen down and puts it back at the head of its queue (`modules/Toast.lua`) |
-| `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd`, then `DW.OnGearRegenEvent`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatEnd` (the same) | re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then arms the gear rebuild a bag event deferred in combat (`modules/Gear.lua`); then resumes the inspect queue (`modules/Inspect.lua`); then shows the toast combat held, the shell's `Release` (`modules/Toast.lua`) |
+| `PLAYER_REGEN_DISABLED` | `DW.OnCombatStart`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatStart` (through `DW:OnSharedFeatureEvent`) | ends test mode; re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then parks the inspect queue (`modules/Inspect.lua`); then, unless `toast.inCombat`, holds the toast: the shell's `Hold` takes every toast on screen down and puts them back at the head of its queue, in order (`modules/Toast.lua`) |
+| `PLAYER_REGEN_ENABLED` | `DW.OnCombatEnd`, then `DW.OnCollectRegenEvent`, then `DW.OnGearRegenEvent`, then `DW.OnInspectCombatEvent`, then `DW.OnToastCombatEnd` (the same) | re-runs the window's show decision; hands the combat edge to `modules/Restrictions.lua`; then (since DW-CAT3) arms the collection re-read for the live collectibles still at `collectUnknown`, whose protected answer may read now (`modules/Collectibles.lua`); then arms the gear rebuild a bag event deferred in combat (`modules/Gear.lua`); then resumes the inspect queue (`modules/Inspect.lua`); then shows the toast combat held, the shell's `Release` (`modules/Toast.lua`) |
 | `ADDON_RESTRICTION_STATE_CHANGED` | `DW.OnRestrictionEvent` | records the type's state as a hint and re-reads the restrictions (`modules/Restrictions.lua`); sends `RestrictionChanged` on a change |
 | `PLAYER_ENTERING_WORLD` | `DW.OnSimWorldEvent`, then `DW.OnSessionWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnInspectWorldEvent`, then `DW.OnRetentionWorldEvent`, then `DW.OnRestoreWorldEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | ends a running simulation when the real client is now inside an instance or in a group (`modules/Sim.lua`, read past the seam); then (since DW-Q0) an initial login starts the session now, a reload keeps it (`modules/Session.lua`, `char.session.start`); then re-classifies the situation (`modules/Situations.lua`); sends `SituationChanged` on a change; then, inside an instance, arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-A5) the first one of the session arms the History's prune by age five seconds later on a cancelable timer the stand-down takes back (`modules/HistoryRetention.lua`); then (since DW-Q0) the first one of a load that says `isReloadingUi` rebuilds the Drops tab from this session's History entries (`modules/FeedRestore.lua`); then (since DW-62) ends auto-ask's encounter hold when no Encounter restriction is left in force, so a player who left mid-fight is not held for good, or, while it is still in force, lets its later lifting (`RestrictionChanged`) end the hold (`modules/AutoAsk.lua`) |
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
@@ -208,7 +231,8 @@ how many handlers it called.
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent`, then `DW.OnCompactRunEnd` (the same) | the same (a keystone ended); then keeps the run's group open while you stay in its instance, else 120 seconds, for the chest and a late bonus roll (feedback-20); then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`); then (since DW-C0) arms compact mode's grace timer: 120 seconds later the run override ends (a hidden window lets go at once, a shown one when next hidden) and the situation is latched, since a completed key still reads as mythicPlus until the player leaves (`modules/WindowCompact.lua`) |
 | `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent`, then `DW.OnAskRosterEvent`, then `DW.OnAutoAskRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
-| `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`) |
+| `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`), then (since DW-CAT3) arms the collection re-read, so a live cosmetic's verdict follows (`modules/Collectibles.lua`) |
+| `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `NEW_RECIPE_LEARNED`, `SKILL_LINES_CHANGED` | `DW.OnCollectionEvent` | (since DW-CAT3) a mount, pet, toy or recipe learned, or a profession gained or lost: arms one 0.5-second timer, so a burst reads once; it re-reads the cached collectibles (`NS.ItemFacts.RereadCollections`, the cache's one writer) and re-judges each live collectible whose verdict moved through `LootFeed.Refresh(rec, "collection")`, which sends `DropUpdated(id, "collection")`; the stand-down cancels the timer (`modules/Collectibles.lua`). `PET_JOURNAL_LIST_UPDATE` is not used: it fires too often |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
 | `BAG_UPDATE_DELAYED` | `DW.OnGearEvent`, then `DW.OnTradeTimerEvent` (through `DW:OnSharedFeatureEvent`) | the same (a better item may have entered or left the bags), except in combat, where it is noted for the combat's end; a bag-only rebuild keeps the worn slots whose link stayed and reads no worn tooltip; then asks for the trade timer's scan of your own drops' bag items, at most one per 2 seconds (`modules/TradeTimer.lua`) |
 | `PLAYER_SPECIALIZATION_CHANGED` | `DW.OnGearSpecEvent` | the same, for your own unit only (another member's spec change is ignored) |
@@ -235,7 +259,7 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 ### The simulator on LibKa0s-Sim-1.0
 
 The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world providers, event drivers,
-restriction model and five verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
+restriction model and six verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
 session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
 panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
 (LibKa0s `docs/api/Sim/version-2.2.2-docs.md`, *The host contract (H1–H10)*; the standard's
@@ -244,7 +268,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | | Obligation | Where DropWatcher meets it |
 |---|---|---|
 | H1 | Every simulated client read and outward action is a Compat member read at call time; senders and actions are guarded | `NS.Compat` routing (`core/Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`); the chat sender, the inspect calls and the trade action in `core/SimSetup.lua`'s `GUARDED`; `test_sim_e2e`'s scan fails a module that names a world global the simulator answers |
-| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatJournal.lua`, under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
+| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatCollect.lua` (the last of the compat family), under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
 | H3 | One `deliver` with the client's handler set and order | `NS.DeliverEvent` (`core/DropWatcher.lua`, this section above): the `NS.FEATURE_EVENTS` rows in order, `NS.rejectedEvents` skipped |
 | H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
@@ -253,6 +277,13 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIMULATION` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
+
+The pool also keeps the journal's drops that are not gear, by item kind (`NS.SimPool.Extras`: the
+tier tokens, mounts, pets, toys, recipes and cosmetics), so a loot burst draws one line in eight from
+them and `/dw sim drop <kind> [player|me]` sends one item of a named kind (`NS.SimEvents.Drop`); a
+kind the journal lists none of falls back to `NS.SimPool.COLLECTIBLE_SAMPLES`, curated ids that ship
+empty until each is checked in the client (issue #13, DW-CAT6, smoke check COLL-8). Test mode's sixth
+boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 
 ## Frame layering
 
@@ -276,7 +307,7 @@ read from a library or owner token, a face from the skin, the monospace glyphs f
 Ka0s Default each is the pixel the addon drew before skins. The drop tables' tones keep their shape,
 `NS.Constants.TONE[key]`, refilled from the tokens `C.TONE_TOKEN` names at load and first on every skin
 switch; what the addon paints itself at build goes through `NS.SkinPaint`, which repaints it on a switch,
-and the window, the Offer panel and the shown toast repaint on `NS.Skin.OnLooksChanged`.
+and the window, the Offer panel and every toast on screen repaint on `NS.Skin.OnLooksChanged`.
 `tests/test_skin_chrome.lua` pins the chrome. The kit gates typed colors and textures (`test_skin_values`) and proves each declared surface changes on a skin switch (`test_skin_switch`, `tests/skin_switch_facts.lua`).
 
 - **The choice.** The player picks on Settings → General → **Skin**, the library's own tab
@@ -429,11 +460,18 @@ Blizzard's own dialogs (DW-62).
 
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
-unconfirmed; a non-English client shows no upgrade-track change; a delve's tier and a tier token's
-slot are not read; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
+unconfirmed; a non-English client shows no upgrade-track change; a delve's tier is not read, and a
+tier token whose slot neither the per-season table nor its tooltip names stays unknown; a caged
+battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
+*Already known* tooltip line (`ITEM_SPELL_KNOWN`), and the item kinds and item lists apply to new
+drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
-(the session is the login); the History card shows only what a kept entry holds; an install
+(the session is the login); the History card shows only what a kept entry holds; Insights reads only the kept history (the
+retention window, pruned a whole group at a time), infers asks and offers from trades settled before
+they were stamped (so the old success rate reads high, and an old gain is the verdict as last
+judged), has no per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before
+issue #13 as equipment; an install
 missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a simulation does not exercise every live
 path (a member's spec, cross-source de-duplication, a situation's tracking switch). Every limitation,
 with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
@@ -453,7 +491,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `module-map.md` | Every non-vendored file, its responsibility, and the TOC load order (the off-spec pass `modules/OffSpec.lua` and its look `modules/OffSpecCells.lua` included, the upgrade glow `modules/Glow.lua` and every item icon's look `modules/IconStyle.lua`) |
 | `schema.md` | The SavedVariables shape, every default, and the migration path |
 | `settings-panel.md` | The `Page \| Covers` table and the page → tab → row tree |
-| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
+| `data-flow.md` | The loot pipeline end to end, then each stage: a setting written, the show decision, the repaints, the feed, inspecting, the trade timer, the sends, the history, the Insights tab, the toast and auto-ask, and the off-spec verdict with its tones and ask precedence, Can't use and Trade's Can't use in dim red, and the upgrade glow |
 | `common-tasks.md` | Recipes for the changes made most often here |
 
 ### Conditional (documentation-§3, Tier 2)
@@ -461,11 +499,11 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 31 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 34 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 87 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 101 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 12 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

@@ -3,11 +3,12 @@ local _, NS = ...
 -- receipt is dropped silently.
 --
 -- HIDDEN is a receipt the feed took and judged, then kept out of every table by a gate: the
--- situation (`notTracking`), a filter of spec §6.3 (`heirloom`, `cosmetic`, `token`, `notGear`,
--- `minIlvl`) or the quality gate (`quality`). REFUSED is a receipt the feed never took: the
--- addon stood down (`stoodDown`), no item link (`notItem`), your own pushed line (`pushed`), no
--- looter named (`noLooter`), a C_LootHistory drop with no winner yet (`noWinner`) or one already
--- taken (`seen`). Both counts live in the feed's session store (NS.State.feed.hidden and
+-- situation (`notTracking`), a filter of spec §6.3 and the item kinds and lists of issue #13
+-- (`blacklist`: on the Never watch list; `heirloom`; `notWatched`: in no watched category; `category`: an item kind turned off, logged with its key as
+-- `category=<key>`; `minIlvl`) or the quality gate (`quality`). REFUSED is a receipt the feed
+-- never took: the addon stood down (`stoodDown`), no item link (`notItem`), your own pushed line
+-- (`pushed`), no looter named (`noLooter`), a C_LootHistory drop with no winner yet (`noWinner`)
+-- or one already taken (`seen`). Both counts live in the feed's session store (NS.State.feed.hidden and
 -- .refused), the diagnostics' `drops` section reports them, and /dw debug logs each one with its
 -- reason under the FEED tag. Peeled out of modules/LootFeed.lua, which the plan keeps under 1000
 -- lines; the feed calls these with its own store.
@@ -29,7 +30,8 @@ end
 function FC.Hide(s, rec, why)
     rec.state, rec.hidden = "hidden", why
     bump(s.hidden, why)
-    NS.Debug(TAG, "hidden %s by %s: %s", rec.link, tostring(rec.looter and rec.looter.name), why)
+    local said = why == "category" and ("category=" .. tostring(rec.facts and rec.facts.category)) or why
+    NS.Debug(TAG, "hidden %s by %s: %s", rec.link, tostring(rec.looter and rec.looter.name), said)
     if why == "quality" and type(rec.quality) == "table" then
         local q = rec.quality
         NS.Debug("QUAL", "hidden %s: quality %s below %s (%s, %s)", rec.link,

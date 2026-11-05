@@ -8,9 +8,10 @@ local _, NS = ...
 -- window reconciles with it.
 --
 -- THE REPORT. Loot marks the feed's receipt sequence and merge count (Mark), plays the drivers'
--- burst (NS.SimEvents.Loot), then collects the receipts made since the mark (Collect): the records
--- the feed took (each with its state: added, loading or hidden by a gate), how many lines merged
--- into an earlier drop, and how many lines went out. Place says where one drop is now (pure, given
+-- burst (NS.SimEvents.Loot; Drop, one item of a kind, NS.SimEvents.Drop), then collects the
+-- receipts made since the mark (Collect): the records the feed took (each with its state: added,
+-- loading or hidden by a gate), how many lines merged into an earlier drop, and how many lines went
+-- out. Place says where one drop is now (pure, given
 -- the feed's reader and the window's view, View): Drops, hidden by a gate (its reason), loading,
 -- cleared from the feed since, or not shown while test mode is on. Drops lists your own drops too
 -- (feedback-5 spec §2 and §3: `feed.showOwn` and the third tab are retired), so a drop of yours
@@ -30,8 +31,9 @@ local L = NS.L
 
 -- The words for each gate that hides a drop (modules/FeedCounts.lua's reasons).
 local GATE = {
-    notTracking = L["not tracked here"], heirloom = L["an heirloom"], cosmetic = L["cosmetic"],
-    token = L["a token"], notGear = L["not gear"], minIlvl = L["below the minimum item level"],
+    notTracking = L["not tracked here"], blacklist = L["on the Never watch list"], heirloom = L["an heirloom"],
+    notWatched = L["not a kind of item that is watched"], category = L["an item kind turned off"],
+    minIlvl = L["below the minimum item level"],
     quality = L["below the quality gate"],
 }
 
@@ -74,6 +76,16 @@ end
 function R.Loot(n, who)
     local mark = R.Mark()
     local sent, why = NS.SimEvents.Loot(n, who)
+    return sent, why, R.Collect(mark, sent)
+end
+
+--- As Loot, for `/dw sim drop <kind> [player|me]`'s one drop of an item kind (NS.SimEvents.Drop).
+--- @param kind string
+--- @param who string|nil
+--- @return number, string|nil, table
+function R.Drop(kind, who)
+    local mark = R.Mark()
+    local sent, why = NS.SimEvents.Drop(kind, who)
     return sent, why, R.Collect(mark, sent)
 end
 

@@ -15,7 +15,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
-| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Retention` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -190,7 +190,8 @@ since LibKa0s has no grid composer for mixed controls;
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
 `/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
-long it keeps it. Its Defaults resets every tab, Situations included.
+long it keeps it. Its Defaults resets every tab, Situations included, except Item lists, whose two
+lists it keeps (plan #13, Q9).
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
 value each picked mode uses: `Fixed minimum` while the feed's mode or any situation's own Quality is
@@ -202,14 +203,34 @@ line `In force now: Quality: Rare+`: the filter bar's label for where you stand,
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.
 
-**Items:** two subsections. **Item kinds:** Gear only | Include tier tokens (`Tier tokens` until item 020). **Item level:** Minimum item
+**Items:** two subsections. **Item kinds:** one switch per watched kind, two to a line in
+`C.CATEGORIES`' order: Equipment | Tier tokens, Mounts | Battle pets, Toys | Recipes and patterns,
+then Cosmetics (off by default) alone (DW-CAT2, issue #13; they replaced Gear only | Include tier
+tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item
 level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
 under my average in the relative mode, and neither under Off (LibKa0s#67).
+
+**Item lists** (DW-CAT5, issue #13): a host tab (`settings/ListEditors.lua`,
+`Settings.ListEditors.ItemListsTab`) keyed by the `feed.whitelist` and `feed.blacklist` rows' group,
+so it follows Items in the strip. A secondary strip, **Always watch | Never watch**, picks the list
+shown; its selection is `ctx.activeSubTab["Item lists"]`, session state, healed to Always watch
+when stale (options-ui-§13). Under it, the list's blurb (each closes with *Applies to drops from now
+on. An item can be on one list only: remove it from the other first.*), then one LibKa0s `IdList`
+(`kind = "item"`, `columns = 2`, `removeStyle = "icon"`): its add box takes an item ID, a
+shift-clicked link or a name the client knows or the candidates hold (both lists' IDs, then the
+live feed's items), and each entry is drawn with its icon and name. Its add and Remove call
+`NS.ItemLists`, the lists' one writer that `/dw whitelist|blacklist` shares; a refusal (the ID is on
+the other list, or already on this one) is raised again as its sentence, so the box keeps the typed
+text and says why. The write repaints the scalar widgets only, and IdList redraws this page alone
+through `ctx.rebuild`. The page's Defaults keeps both lists (the seam's `resetExempt`; plan #13, Q9),
+which its tooltip says: *Reset the Drops page's settings (situations, quality, item kinds and item
+level, and how long drops are kept) to their defaults. The item lists are kept.*
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
 since item 020; a shorter time that would delete groups asks first, and No puts the
-previous time back), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
+previous time back; the Insights tab names this window as the period it covers and its Date
+ranges are the shorter ones, issue #12), with **Clear history** beside it (feedback-15 spec §3, DW-Q3: an action, not a
 setting, so no schema row; Keep history for's `pairWith` partner in `settings/PageEditors.lua`; it
 asks first, `NS.History.AskClear`, and Yes empties the log on every character, or test mode's or a
 simulation's session-only log while one is on). Window › Layout's until feedback-24. **Session:**
@@ -283,9 +304,11 @@ its warning color this many seconds before it closes; 0 turns the mark off. It t
 does nothing else.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
-Interesting, Likely tradeable, Usable by me and Upgrade for me (`feed.view.<key>`, one checkbox per
-value; all unticked is View: All, the default, DW-A1, and since item 020 each tooltip ends `With none
-ticked, a fresh tab lists every drop.`). **Content and sort:** Content (the Drops
+Interesting, Likely tradeable, Usable by me, Upgrade for me and New to my collection
+(`feed.view.<key>`, one checkbox per value; New to my collection, `feed.view.newCollect` since
+issue #13, DW-CAT7, lists only the drops new to your collection; all unticked is View: All, the
+default, DW-A1, and since item 020 each tooltip ends `With none ticked, a fresh tab lists every
+drop.`). **Content and sort:** Content (the Drops
 tab's, This instance or This session, This session by default; History always opens on All,
 feedback-13 spec §0; All left the row in DW-Q1, feedback-15 spec §1, schema step 8) | Sort (what a
 fresh tab starts with).
@@ -315,8 +338,11 @@ Window › Toast and Window › Upgrade glow until feedback-24: both say an upgr
 is part of the window.
 
 **Toast:** Show a toast alone on its line, then Least gain | Duration, Show in combat | Play a sound,
-and its Scale (feedback-21 G10: a 50-200 % slider by 5, `isPercent` on the stored 0.5-2, applied
-live to a toast on screen about the place it was put), each live only while it is on.
+Toasts at once | Stack direction (DW-T2, issue #14: a 1-5 slider by 1, default 3, 1 the
+one-at-a-time toast; a Down | Up dropdown, default Down; both applied live to the toasts on screen,
+`NS.Toast.ApplyStack`), and its Scale (feedback-21 G10: a 50-200 % slider by 5, `isPercent` on the
+stored 0.5-2, applied live to a toast on screen about the place it was put), each live only while it
+is on.
 
 **Upgrade glow** (feedback-21; on the Window page until feedback-24): the glow on a drop's icon in the Drops table, the compact card and
 the detail card's header (never the toast, History, the Offer panel or the Replaces rows), two glows

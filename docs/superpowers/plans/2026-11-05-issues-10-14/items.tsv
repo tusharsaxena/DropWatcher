@@ -1,0 +1,19 @@
+id	milestone	repo	title	depends_on	issue
+DW-I10	M1	DropWatcher	ItemRead: advance the bonus walk by the declared count; test an empty bonus field before modifiers		#10
+DW-I11	M1	DropWatcher	Restrictions: the announce signature carries the combat flag; test a REGEN edge under the Combat type; smoke step		#11
+LK-T1	M2	LibKa0s	Toast-1.0 minor 4: opt-in stack/stackGrow/stackGap (frame pool, re-flow, overflow queue, Hold, Remove, Stats, Preview, drag); tests, API doc, CONSUMERS row; absent = v1 behavior		#14
+LK-T2	M2	LibKa0s	Release v1.88.0 (v1.87.0 was taken by another session): version bump and CHANGELOG (tag at merge, on the owner's go-ahead)	LK-T1	#14
+DW-T1	M2	DropWatcher	Re-vendor LibKa0s v1.88.0 (libs/ and tests/_kit/, provenance line, icons)	LK-T2	#14
+DW-T2	M2	DropWatcher	Toast stacking: toast.stack (1-5, default 3) and toast.stackGrow (down/up) rows, named Prune/Dismiss/Ask, visible set, diagnostics, test-mode stack, tests, smoke step	DW-T1	#14
+DW-CAT1	M3	DropWatcher	Categories: triage doc and detection (ItemFacts category; Compat wrappers for mount, pet, toy, recipe, appearance collected/known)		#13
+DW-CAT2	M3	DropWatcher	Category toggles replace feed.gearOnly (migration: gearOnly=false turns every category on; includeTokens becomes the Tier tokens category); FeedFilter; CLI parity	DW-CAT1	#13
+DW-CAT3	M3	DropWatcher	Collection verdict (new / collected) in Evaluate and on every surface; feed only: no Ask, toast or AutoAsk for collectibles; History snapshot	DW-CAT2	#13
+DW-CAT4	M3	DropWatcher	Tier tokens: show slot and class group; can't-use off-group, else ilvl vs equipped in that slot (upgrade/sidegrade/downgrade)	DW-CAT2	#13
+DW-CAT5	M3	DropWatcher	Whitelist and blacklist by itemID (OptionsIdList, shift-click links, icon+name, no duplicates across lists, blacklist wins), CLI add/remove/list	DW-CAT2	#13
+DW-CAT6	M3	DropWatcher	Sim and test-mode samples per category; smoke tests; docs (scope, schema, settings-panel, data-flow, README)	DW-CAT3,DW-CAT4,DW-CAT5	#13
+DW-CAT7	M3	DropWatcher	The remaining collectible surfaces and the New to collection view (spec section 11 DW-C7): Slot/Type text, chips, detail, row tooltip, History card and cells, Drops strip, diagnostics, feed.view.newCollect	DW-CAT3	#13
+DW-N1	M4	DropWatcher	Insights stats: one pure pass over the filtered history; data-driven filters (Character, Instance, Difficulty, Situation, Date, Quality, Category)	DW-CAT6	#12
+DW-N2	M4	DropWatcher	Insights tab: third window tab on LibKa0s-Charts-1.0, filter bar, KPI cards, period caption	DW-N1	#12
+DW-N3	M4	DropWatcher	Insights charts: every candidate in the issue (outcomes, upgrades by instance and boss, looter class, quality, slot, asks per day, ilvl gained, top instances, most generous members)	DW-N2	#12
+DW-N4	M4	DropWatcher	Insights: test-mode/sim data, smoke tests, docs	DW-N3	#12
+DW-FIN1	M5	DropWatcher	Whole-run review and fixes; docs sync; issue comments	DW-N4	all

@@ -12,7 +12,12 @@ local _, NS = ...
 --           gear = { [slot] = quality | facts | false },  -- equipped; false = empty
 --           baselineSlot = slot,                         -- the verdict for me's baselineSlot
 --           equipLoc = "INVTYPE_...",                    -- the plan fallback with no baseline slot
---           verdict = "upgrade" | ... }                  -- the verdict for me
+--           verdict = "upgrade" | ...,                   -- the verdict for me
+--           forced = true }                              -- on the Always watch list (issue #13)
+--
+-- The upgrade override lets a drop below the threshold through when it is an upgrade for you, or
+-- new to your collection (`newCollect`, categories design spec §4.3). An item on the Always watch
+-- list (`ctx.forced`) always passes, as `whitelisted`: the list is the player's own answer for it.
 --
 -- Modes: `fixed` (ctx.fixed), `dynamicSlot` (the baseline slot's equipped quality, floored; an
 -- empty slot is the floor) and `dynamicCharacter` (the most common equipped quality ignoring
@@ -53,6 +58,9 @@ local function ctxOf(ctx)
     if isTable(ctx) then return ctx end
     return {}
 end
+
+-- The verdicts for me the upgrade override lets through.
+local OVERRIDES = { upgrade = true, newCollect = true }
 
 local function floorOf(ctx) return num(ctx.floor) or DEFAULT.floor end
 
@@ -136,16 +144,18 @@ function Q.Threshold(mode, ctx)
     return THRESHOLDS[Q.NormalizeMode(mode)](ctxOf(ctx))
 end
 
---- The decision (design spec §6.2): pass, threshold, reasonKey. reasonKey is `atThreshold`,
---- `upgradeOverride` (below the threshold but an upgrade for me, with the override on),
+--- The decision (design spec §6.2): pass, threshold, reasonKey. reasonKey is `whitelisted` (on the
+--- Always watch list: it passes whatever its quality), `atThreshold`, `upgradeOverride` (below the
+--- threshold but an upgrade for me or new to my collection, with the override on),
 --- `belowThreshold` or `qualityUnknown` (the drop's quality is not a number; it passes).
 function Q.Passes(dropQuality, mode, ctx)
     ctx = ctxOf(ctx)
     local threshold = Q.Threshold(mode, ctx)
+    if ctx.forced == true then return true, threshold, "whitelisted" end
     local q = num(dropQuality)
     if not q then return true, threshold, "qualityUnknown" end
     if q >= threshold then return true, threshold, "atThreshold" end
-    if ctx.upgradeOverride ~= false and ctx.verdict == "upgrade" then
+    if ctx.upgradeOverride ~= false and OVERRIDES[ctx.verdict] then
         return true, threshold, "upgradeOverride"
     end
     return false, threshold, "belowThreshold"

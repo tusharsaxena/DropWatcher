@@ -113,7 +113,7 @@ end)
 
 -- `mine` stays as an alias that opens Drops, where your own drops now are (feedback-5 spec §3); it is
 -- tested on its own below.
-local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "compact", "full",
+local FEATURE = { "show", "hide", "toggle", "test", "scan", "clear", "history", "insights", "compact", "full",
     "situation", "offer", "add" }
 
 local function itemLink(id, name)
@@ -239,6 +239,19 @@ test("slash: `history` opens the window on that tab, expanded; `mine` opens Drop
     assertFalse(NS.Window.IsMinimized(), "and expands the window")
 end)
 
+test("slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)", function()
+    local NS = T.enableAddon()
+    NS.Window.SetMinimized(true)
+    NS.addon:OnSlashCommand("insights")
+    assertTrue(NS.IsWindowShown()); assertEqual(NS.Window.ActiveTab(), "insights")
+    assertFalse(NS.Window.IsMinimized(), "a tab verb expands the window")
+    local listed = false
+    for _, c in ipairs(NS.COMMANDS) do
+        if c[1] == "insights" then listed = c[2] == "Open the Insights tab" end
+    end
+    assertTrue(listed, "the help lists it beside `history`")
+end)
+
 test("slash: a tab verb the Visibility setting keeps hidden says so", function()
     local NS, _, m = T.enableAddon()
     NS.SchemaRuntime.Set("visibility", "never")
@@ -316,7 +329,7 @@ end)
 test("slash: every feature verb is refused while disabled", function()
     local NS, m = equipped()
     NS.addon:OnSlashCommand("disable")
-    for _, verb in ipairs({ "scan", "clear", "history", "compact", "full", "situation", "offer", "add" }) do
+    for _, verb in ipairs({ "scan", "clear", "history", "insights", "compact", "full", "situation", "offer", "add" }) do
         m.prints = {}
         NS.addon:OnSlashCommand(verb .. " " .. BAND)
         assertTrue(m.prints[1] ~= nil and m.prints[1]:find("is disabled", 1, true) ~= nil, verb)

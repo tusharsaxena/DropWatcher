@@ -51,6 +51,12 @@ local function oneOf(list)
     return function(v) return v ~= nil and ok[v] == true end
 end
 
+-- A whole number from lo to hi: a count, where the slider's step alone would let the CLI store 2.5.
+local function wholeIn(lo, hi)
+    local within = inRange(lo, hi)
+    return function(v) return within(v) and v == math.floor(v) end
+end
+
 local function nonEmptyString(v) return type(v) == "string" and v:match("%S") ~= nil end
 
 local function unit(n) return type(n) == "number" and n == n and n >= 0 and n <= 1 end
@@ -73,6 +79,17 @@ local function validWeights(v)
         for stat, n in pairs(w) do
             if type(stat) ~= "string" or type(n) ~= "number" or n ~= n then return false end
         end
+    end
+    return true
+end
+
+-- An item list (feed.whitelist, feed.blacklist): { [itemID] = true }. The shape alone: the two lists
+-- exclude each other in their one writer (modules/ItemLists.lua) and at read time, never here, so a
+-- profile with one overlapping ID keeps both lists (categories design spec §5.1).
+local function validItemSet(v)
+    if type(v) ~= "table" then return false end
+    for id, on in pairs(v) do
+        if type(id) ~= "number" or id < 1 or id ~= math.floor(id) or on ~= true then return false end
     end
     return true
 end
@@ -138,6 +155,22 @@ local VIEW_ROWS = {
       tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] },
     { key = "upgrade", label = L["Upgrade for me"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] },
+    -- issue #13 (categories design spec §5.1): a mount, pet, toy, recipe or look you lack
+    { key = "newCollect", label = L["New to my collection"],
+      tip = L["A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."] },
+}
+-- Drops › Items › Item kinds (issue #13, categories design spec §5.1): one switch per category, in
+-- C.CATEGORIES' order (test_schema_rows pins the two lists to each other).
+local CATEGORY_ROWS = {
+    { key = "equipment", label = L["Equipment"], tip = L["Armor, weapons, jewelry and trinkets."] },
+    { key = "tierToken", label = L["Tier tokens"],
+      tip = L["Tokens you turn in for a tier piece, judged against what you wear in that slot."] },
+    { key = "mount", label = L["Mounts"], tip = L["Mount items, marked new or already collected."] },
+    { key = "pet", label = L["Battle pets"], tip = L["Companion pet items, marked new or already collected."] },
+    { key = "toy", label = L["Toys"], tip = L["Toys, marked new or already collected."] },
+    { key = "recipe", label = L["Recipes and patterns"],
+      tip = L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] },
+    { key = "cosmetic", label = L["Cosmetics"], tip = L["Cosmetic armor and weapons: a look to collect, never gear."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
@@ -149,6 +182,8 @@ local CHANNELS = choices{
 }
 local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
+-- Where each stacked toast after the first goes (issue #14): the shell's DOWN and UP.
+local STACK_GROW = choices{ "down", L["Down"], "up", L["Up"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
 -- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
 -- Proc since DW-03, D-18, and the order did not move).
@@ -285,7 +320,7 @@ local function feed()
     pick("feed.quality.mode", Q.mode, QUALITY_MODES, L["Minimum quality"],
         L["Fixed: one quality for every drop. Match each slot: the quality of what the drop would replace. Match my gear: the quality most of your gear is."], quality)
     bool("feed.quality.upgradeOverride", Q.upgradeOverride, L["Always show upgrades for me"],
-        L["A drop below the minimum still shows when it is an upgrade for you."], quality)
+        L["A drop below the minimum still shows when it is an upgrade for you or new to your collection."], quality)
     pick("feed.quality.fixed", Q.fixed, FIXED_QUALITIES, L["Fixed minimum"],
         L["The least quality a drop needs in the fixed mode."],
         with(quality, { shownWhen = qualityValueShown("fixed") }))
@@ -294,10 +329,9 @@ local function feed()
         with(quality, { shownWhen = qualityValueShown({ "dynamicSlot", "dynamicCharacter" }) }))
 
     local kinds = { page = "feed", group = L["Items"], subgroup = L["Item kinds"] }
-    bool("feed.gearOnly", F.gearOnly, L["Gear only"],
-        L["List armor, weapons, jewelry and trinkets only."], kinds)
-    bool("feed.includeTokens", F.includeTokens, L["Include tier tokens"],
-        L["List tier tokens too."], kinds)
+    for _, row in ipairs(CATEGORY_ROWS) do
+        bool("feed.categories." .. row.key, F.categories[row.key], row.label, row.tip, kinds)
+    end
     local ilvl = with(kinds, { subgroup = L["Item level"] })
     pick("feed.minIlvlMode", F.minIlvlMode, ILVL_MODES, L["Minimum item level"],
         L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."],
@@ -308,6 +342,14 @@ local function feed()
     slider("feed.relativeIlvl", F.relativeIlvl, 0, 100, 1, L["Levels under my average"],
         L["How far under your average equipped item level a drop may be in the relative mode."],
         with(ilvl, { shownWhen = { path = "feed.minIlvlMode", equals = "relative" } }))
+
+    -- Drops › Item lists (categories design spec §5.1): the two lists, drawn by the tab's own editor
+    -- (settings/ListEditors.lua). Declared after Items, so the tab follows it in the strip.
+    local lists = { page = "feed", group = L["Item lists"] }
+    map("feed.whitelist", F.whitelist, validItemSet, L["Always watch"],
+        L["The items always watched, whatever their kind."], lists)
+    map("feed.blacklist", F.blacklist, validItemSet, L["Never watch"],
+        L["The items never watched, gear included."], lists)
 
     -- Keep history for first, so it is alone on its line and Clear history takes the right half
     -- (settings/Pages.lua pairWith); Window › Layout's until feedback-24.
@@ -447,6 +489,14 @@ local function toast()
     bool("toast.inCombat", T.inCombat, L["Show in combat"], L["Show toasts in combat too."],
         with(at, { onChange = function() NS.Toast.OnInCombatChanged() end }))
     bool("toast.sound", T.sound, L["Play a sound"], L["Play a sound with each toast."], at)
+    -- The stack (issue #14): how many show at once (1 is one at a time) and which way they grow,
+    -- both live on the toasts on screen (NS.Toast.ApplyStack, the shell's SetStack).
+    local restack = with(at, { onChange = function() NS.Toast.ApplyStack() end })
+    slider("toast.stack", T.stack, 1, 5, 1, L["Toasts at once"],
+        L["How many toasts show on screen at once, stacked. 1 shows one at a time; the rest wait their turn."],
+        with(restack, { validate = wholeIn(1, 5) }))
+    pick("toast.stackGrow", T.stackGrow, STACK_GROW, L["Stack direction"],
+        L["Where each toast after the first goes: below the one before it, or above it."], restack)
     -- 50 to 200 %, about the toast's saved anchor; live on a toast on screen (feedback-21 G10).
     slider("toast.scale", T.scale, 0.5, 2, 0.05, L["Scale"],
         L["The toast's size, from half to double. It grows or shrinks about the place you put it."],

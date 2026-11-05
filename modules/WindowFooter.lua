@@ -277,6 +277,7 @@ function WF.Refresh()
     if sortDropdown then
         local tab = NS.Window.ActiveTab()
         local FB = NS.WindowFilterBar
+        sortDropdown:SetShown(not NS.Window.TabOwnsBar(tab))   -- Insights sorts nothing: no dead Sort
         sortDropdown:SelectValue(FB.State(tab).sort)
         local on = FB.HONORS[tab].sort == true
         sortDropdown:SetEnabled(on)

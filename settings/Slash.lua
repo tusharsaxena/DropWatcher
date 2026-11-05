@@ -6,10 +6,11 @@ local _, NS = ...
 -- that reach into this addon's own state. Every verb that toggles something calls the same handler
 -- its Master controls row and its launcher entry call (core/DropWatcher.lua). The design spec's
 -- feature verbs (§12.3) follow the window verbs: `scan`, `compact` and `full` call the window's own
--- host handlers; `clear`, `history`, `mine`, `situation`, `offer` and `add` are slash-only and answered
--- by settings/SlashVerbs.lua. `mine` is kept for habit and macros: it opens Drops, where your own
+-- host handlers; `clear`, `history`, `insights`, `mine`, `situation`, `offer` and `add` are slash-only and answered
+-- by settings/SlashVerbs.lua, as are `whitelist` and `blacklist`, which share the item lists' one
+-- writer with the settings panel (issue #13). `mine` is kept for habit and macros: it opens Drops, where your own
 -- drops are listed since the My drops tab was retired (feedback-5 spec §3). The simulator's `sim` (simulator spec §4) is answered by
--- LibKa0s-Sim-1.0's NS.Sim:RunVerb, with DropWatcher's own five verbs from settings/SimVerbs.lua.
+-- LibKa0s-Sim-1.0's NS.Sim:RunVerb, with DropWatcher's own six verbs from settings/SimVerbs.lua.
 
 local DW = NS.addon
 local L  = NS.L
@@ -75,6 +76,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.Clear() end},
     {"history",  L["Open the History tab"],
         function() NS.SlashVerbs.OpenTab("history") end},
+    {"insights", L["Open the Insights tab"],
+        function() NS.SlashVerbs.OpenTab("insights") end},
     {"mine",     L["Open the Drops tab, where your own drops are listed"],
         function() NS.SlashVerbs.OpenTab("group") end},
     {"compact",  L["Switch the window between its compact and full view"],
@@ -87,6 +90,10 @@ local COMMANDS = {
         function(rest) NS.SlashVerbs.Offer(rest) end},
     {"add",      L["Inject a drop for testing — `/dw add <item link> [player]`"],
         function(rest) NS.SlashVerbs.Add(rest) end},
+    {"whitelist", L["Always watch an item — `/dw whitelist add|remove <id or link>`, or `list`"],
+        function(rest) NS.SlashVerbs.ItemList("whitelist", rest) end},
+    {"blacklist", L["Never watch an item — `/dw blacklist add|remove <id or link>`, or `list`"],
+        function(rest) NS.SlashVerbs.ItemList("blacklist", rest) end},
     {"sim",      L["Simulate a group session through the real engine — `/dw sim` for its verbs"],
         function(rest) NS.Sim:RunVerb(rest) end},
 }

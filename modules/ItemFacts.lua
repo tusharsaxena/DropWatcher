@@ -7,7 +7,8 @@ local _, NS = ...
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
---             transmogKnown = true | false | nil }
+--             transmogKnown = true | false | nil, rawEquipLoc, category, collect,
+--             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "tooltip" | nil }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
 -- effective level and the quality through NS.ItemRead (core/ItemRead.lua: the detailed level, else
@@ -24,9 +25,19 @@ local _, NS = ...
 -- own carries `{ cat = "item:<itemID>", max }`, so two copies of it share a category.
 --
 -- TIER TOKENS. An item that names its classes (the RestrictedRaceClass tooltip line) and is not
--- gear (no slot plan for its equipLoc) is a tier token, with `classes` set. Class-restricted gear
--- carries `classes` too, without the flag. Which slot a token makes is not read in v1, so the
--- token's verdict is the kernel's `unknown` for the slot (a follow-up, design spec §14).
+-- gear (no slot plan for its raw equipLoc) is a tier token, with `classes` set; so is an item the
+-- curated C.TIER_TOKENS lists (an omni Curio names no class). Class-restricted gear carries
+-- `classes` too, without the flag. NS.TierTokens.SlotOf (modules/TierTokens.lua) reads the slot the
+-- token makes, `tokenSlot`: the table's, else the tooltip's (NS.Compat.TierTokenSlot), with
+-- `tokenSlotSource` saying which. A concrete slot then becomes the facts' `equipLoc`, so the kernel
+-- and every gear reader judge the token as the piece it makes; `any` (a Curio) keeps the raw slot
+-- and the kernel folds over the tier slots (categories design spec §3.1, §7).
+--
+-- CATEGORIES (issue #13). `rawEquipLoc` is the client's own equipLoc, kept on every item: the
+-- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
+-- (modules/Collectibles.lua) fills `category` and, for a collectible, `collect` on the facts being
+-- built, before they are cached. A collection event re-reads them on every cached collectible
+-- (RereadCollections, the cache's one writer; modules/Collectibles.lua arms it).
 --
 -- THE CACHE AND THE LOAD. Get(link) answers the cached facts, or builds them when the client has
 -- the item cached, or nil. Request(link, callback) does the same and, on a miss, asks the client
@@ -36,7 +47,7 @@ local _, NS = ...
 -- at most CACHE_CAP links; when it would pass that, the least recently used EVICT_SHARE of it is
 -- dropped (a hit or a store marks a link used), so a raid's inspected gear and your own, read on
 -- every judgment, stay while old drops and bag clutter go. Learning an appearance re-reads
--- `transmogKnown` on the cached facts.
+-- `transmogKnown` on the cached facts, from the raw equipLoc.
 -- Stood down, the cache and every load are dropped, and a load that answers late is ignored.
 --
 -- The tables answered are the cache's own: read them, never write them.
@@ -111,10 +122,19 @@ local function readTransmog(link, equipLoc)
     return NS.Compat.PlayerHasTransmog(link)
 end
 
--- The tier-token flag and the class set.
+-- The tier-token flag and the class set, from the raw slot or the curated table.
 local function readClasses(facts)
     facts.classes = NS.Compat.ItemClassRestriction(facts.link)
-    facts.isTierToken = facts.classes ~= nil and C.SLOT_PLAN[facts.equipLoc or ""] == nil
+    facts.isTierToken = (facts.classes ~= nil and C.SLOT_PLAN[facts.rawEquipLoc or ""] == nil)
+        or NS.TierTokens.Listed(facts.itemID)
+end
+
+-- The slot a tier token makes; a concrete one becomes the equipLoc every gear reader takes.
+local function readTokenSlot(facts)
+    if not facts.isTierToken then return end
+    local slot, source = NS.TierTokens.SlotOf(facts, function() return NS.Compat.TierTokenSlot(facts.link) end)
+    facts.tokenSlot, facts.tokenSlotSource = slot, source
+    if slot and slot ~= "any" then facts.equipLoc = slot end
 end
 
 -- GetItemStats answers the primary stat of the spec playing alone; the tooltip's lines add the
@@ -164,7 +184,7 @@ function IF.Read(link)
     local facts = {
         link = link, itemID = itemID, name = info.name, baseIlvl = info.itemLevel,
         ilvl = ilvl, ilvlSource = ilvlSource,
-        equipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
+        equipLoc = info.equipLoc, rawEquipLoc = info.equipLoc, classID = info.classID, subClassID = info.subClassID,
         quality = quality, qualitySource = qualitySource, bindType = info.bindType,
         setID = info.setID, track = readTrack(link), stats = readStats(link),
         unique = readUnique(link, itemID), transmogKnown = readTransmog(link, info.equipLoc),
@@ -172,6 +192,8 @@ function IF.Read(link)
     readSpecs(facts)
     readBinds(facts)
     readClasses(facts)
+    readTokenSlot(facts)
+    if NS.Collectibles then NS.Collectibles.Read(facts) end
     return facts
 end
 
@@ -282,11 +304,28 @@ end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated" }
 
--- An appearance was learned (or lost): re-read the flag on every cached link.
+-- An appearance was learned (or lost): re-read the flag on every cached link, then let the live
+-- cosmetics be judged again (NS.Collectibles.Changed).
 function NS.addon.OnTransmogCollectionUpdated()
     for link, facts in pairs(store().cache) do
-        facts.transmogKnown = readTransmog(link, facts.equipLoc)
+        facts.transmogKnown = readTransmog(link, facts.rawEquipLoc)
     end
+    if NS.Collectibles then NS.Collectibles.Changed() end
+end
+
+--- Read the collection state again on every cached collectible (NS.Collectibles.Read on the
+--- cache's own tables: ItemFacts stays their one writer). Answers how many were read.
+--- @return number
+function IF.RereadCollections()
+    local CO, n = NS.Collectibles, 0
+    if not CO then return 0 end
+    for _, facts in pairs(store().cache) do
+        if CO.IsCollectible(facts) then
+            CO.Read(facts)
+            n = n + 1
+        end
+    end
+    return n
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

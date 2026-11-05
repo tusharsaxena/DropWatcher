@@ -15,19 +15,19 @@ local _, NS = ...
 -- THE GROUPS are the size the content is: a key run, a dungeon boss and a world boss are you and
 -- four others (PARTIES), a Heroic or Mythic raid twenty (RAID_20), a Raid Finder group twenty-five
 -- (LFR_25); and they drop what such a group sees: a key run's chest two items, a dungeon boss one
--- or two, a raid boss four or five.
+-- or two, a raid boss four or five, and six for the boss that drops the item kinds beside its gear.
 --
--- THE DROPS (the Drops tab: this session). Two key runs earlier on, then five Heroic raid bosses
--- tonight, twenty-nine drops between them. The other members' twenty-one cover board 03 (Me and Them:
--- upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade: yes, likely, unknown, no,
--- with every reason the Trade cell words in a few: BoE, warbound, bonus roll, legacy and group loot,
--- their upgrade and not, gear not read, your upgrade, a window open or passed, feedback-22;
--- a unique-equipped ring on both sides; an upgrade that glows and ones that can't, being untradeable;
--- inspect: fresh, cached, pending, out of range, combat, failed, not in the group; Ask: ready,
--- queued, asked, retry, traded and the dash) and your eight cover board 04 (an exact countdown, one
--- ending soon, an estimated one, a bind-on-equip drop and an expired one, with candidates in every
--- status the Offer panel shows: upgrade, equal, off-spec upgrade, no upgrade, can't use, checking
--- and unavailable).
+-- THE DROPS (the Drops tab: this session). Two key runs earlier on, then six Heroic raid bosses
+-- tonight, thirty-five drops between them. Up to the sixth boss, the other members' twenty-one cover
+-- board 03 (Me and Them: upgrade, sidegrade, downgrade, can't use, doesn't want, unknown; Trade:
+-- yes, likely, unknown, no, with every reason the Trade cell words in a few: BoE, warbound, bonus
+-- roll, legacy and group loot, their upgrade and not, gear not read, your upgrade, a window open or
+-- passed, feedback-22; a unique-equipped ring on both sides; an upgrade that glows and ones that
+-- can't, being untradeable; inspect: fresh, cached, pending, out of range, combat, failed, not in
+-- the group; Ask: ready, queued, asked, retry, traded and the dash) and your eight cover board 04
+-- (an exact countdown, one ending soon, an estimated one, a bind-on-equip drop and an expired one,
+-- with candidates in every status the Offer panel shows: upgrade, equal, off-spec upgrade, no
+-- upgrade, can't use, checking and unavailable).
 -- CAN'T USE (feedback-21). A drop you can use in no spec reads Can't use on Trade where the
 -- estimate is Yes or Likely: Mistveil's shoulders (Likely), a wrong armor type; Ashveil's chest stays
 -- No (an upgrade for its looter), and every off-spec sample keeps its Likely. Kaelith (second boss)
@@ -36,6 +36,15 @@ local _, NS = ...
 -- (feedback-21 H2).
 -- Each drop's age is its countdown's: four hours less what is left. One drop's look is collected
 -- and one's is not, for the look chips and the transmog ask.
+-- ITEM KINDS (issue #13, categories design spec §8). A sixth Heroic boss drops what is not gear:
+-- someone's mount new to your collection (its Ask reads No action), a pet you have one of three of,
+-- a toy the game gave no answer for, a cosmetic with a New look (no transmog ask) and a tier token
+-- that makes a Head, an upgrade you can ask for; and you a recipe for a profession you lack. A
+-- collectible is feed-only: no inspect, no candidates, its trade `unknown` for its looter. Its Me
+-- carries the collection verdict (`{ verdict, collect = kind, count, limit }`), and its facts the
+-- kind and the state NS.Collectibles.Read leaves (`category`, `collect`; a token's `isTierToken`,
+-- `tokenSlot` and made `equipLoc`). The item is one of the pool's of that kind (its `extras`), else
+-- another pool item that stands in for it.
 --
 -- OFF-SPEC (feedback-19 spec §4). Your samples' spec is Protection (paladin, OFF_MAIN) and the
 -- off-spec they show is Holy: a Me of `{ "cantUse", reason = "primaryStat", off = { 65, verdict,
@@ -68,11 +77,16 @@ local _, NS = ...
 -- two levels. Every player name is invented; nothing names a real player.
 --
 -- THE HISTORY (FB-10). History(nowEpoch, you, src) answers a session-only log of the last four
--- weeks (HISTORY): twenty-one groups you saw across Mythic+ 10 runs, Heroic dungeons, Heroic,
+-- weeks (HISTORY): twenty-two groups you saw across Mythic+ 10 runs, Heroic dungeons, Heroic,
 -- Mythic and Raid Finder raids and world bosses, mostly drops you only saw and every outcome among
 -- them (seen, asked, offered, expired, declined, received, traded away), and one seen by an invented
 -- alt on your realm (ALT), so the Character dropdown (feedback-2 spec §4) lists two characters and
--- Current hides the alt's group. The alt's group is ten days old, so a Keep history for of 7 days
+-- Current hides the alt's group, a world boss's mount new to your collection beside a pet of yours
+-- you already have and a toy, and a raid boss's cosmetic, your recipe and a tier token (issue #13). For the
+-- Insights tab (issue #12) the entries carry the stamps a live one does (`askedAt`, `offeredAt`,
+-- `settledAt`, `got`), one ask expired unanswered, one received item is legacy (no stamps: its ask
+-- inferred, its gain as last judged), Kragmar traded you twice, and the raid bosses' upgrades fill
+-- Upgrades for me by boss. The alt's group is ten days old, so a Keep history for of 7 days
 -- (feedback-2 spec §5) asks to delete it with the older ones. modules/TestMode.lua holds it while
 -- test mode is on; it is never written to the account's history.
 
@@ -180,21 +194,58 @@ local function pickDrop(self, spec, where)
         or firstOf(list, both) or firstOf(list, want) or firstOf(list, fresh) or list[1]
 end
 
+-- The item kind a sample is (issue #13): a tier token's `kind`, else its Me's collectible kind.
+local function kindOf(spec)
+    return spec.kind or (type(spec.me) == "table" and spec.me.collect) or nil
+end
+
+-- What a collection verdict says of the state: known (collected), not known (new), no answer.
+local KNOWN = { newCollect = false, collected = true }
+
+-- The kind on a sample's facts copy, as NS.ItemFacts and NS.Collectibles.Read leave it: a token's
+-- made slot (its equipLoc, so it is judged as the piece), a collectible's state and no slot (a
+-- cosmetic keeps its own; its state is its look's).
+local function stampKind(facts, spec, kind)
+    facts.category = kind
+    if kind == "tierToken" then
+        facts.isTierToken, facts.tokenSlot, facts.tokenSlotSource = true, spec.slot, "table"
+        facts.rawEquipLoc, facts.equipLoc = facts.rawEquipLoc or facts.equipLoc, spec.slot
+        return
+    end
+    local me = spec.me
+    facts.collect = { kind = kind, known = KNOWN[me[1]], count = me.count, limit = me.limit,
+        hasProfession = me[1] == "cantUse" and false or nil }
+    if kind == "cosmetic" then
+        facts.collect.known, facts.transmogKnown = nil, KNOWN[me[1]]
+    else
+        facts.equipLoc = ""
+    end
+end
+
+-- The first unused pool item of a kind (the pool's `extras`), or nil.
+local function kindEntry(self, kind)
+    if not kind then return nil end
+    return firstOf(self.extras[kind] or {}, function(e) return not self.used[e.link] end)
+end
+
 --- The sample drop for `spec` at `where`: { link, itemID, facts } (a copy of the facts, the
 --- sample's own), or nil when the pool is empty. `spec` is an equip location or { slot | armor,
---- strict }; `where` a place (nil: anywhere).
+--- strict, kind | me = { collect = kind } }; `where` a place (nil: anywhere). An item kind draws
+--- on the pool's items of that kind first.
 --- @param spec string|table
 --- @param where table|nil
 --- @return table|nil
 local function drop(self, spec, where)
     if type(spec) ~= "table" then spec = { slot = spec } end
-    local e = pickDrop(self, spec, where)
+    local kind = kindOf(spec)
+    local e = kindEntry(self, kind) or pickDrop(self, spec, where)
     if not e then return nil end
     self.used[e.link] = true
     local facts = {}
     for k, v in pairs(self.factsOf(e) or {}) do facts[k] = v end
     facts.ilvl = facts.ilvl or e.ilvl
     facts.equipLoc = facts.equipLoc or e.equipLoc
+    if kind then stampKind(facts, spec, kind) end
     return { link = e.link, itemID = e.itemID, facts = facts }
 end
 
@@ -235,15 +286,16 @@ end
 --- The item source the samples draw on. `drops` are the pool's drops and `gear` its gear (each
 --- { link, itemID, equipLoc, ilvl, and from the journal instance, encounterID, encounter,
 --- difficulty, worldBoss, classID, subClassID }); `factsOf(entry)` answers an entry's item facts or
---- nil.
+--- nil; `extras` are the pool's items that are not gear, by kind ({ [category] = { entry, ... } }).
 --- @param drops table
 --- @param gear table
 --- @param factsOf function
+--- @param extras table|nil
 --- @return table src { Drop(self, spec, where), Worn(self, equipLoc, target, notLink),
 ---   Above(self, equipLoc, floor, skip), Place(self, content, n) }
-function TD.Source(drops, gear, factsOf)
+function TD.Source(drops, gear, factsOf, extras)
     return { drops = drops or {}, gear = gear or {}, factsOf = factsOf or function() return nil end,
-        used = {}, places = {}, Drop = drop, Worn = worn, Above = above, Place = place }
+        extras = extras or {}, used = {}, places = {}, Drop = drop, Worn = worn, Above = above, Place = place }
 end
 
 -- ── the people ──────────────────────────────────────────────────────────────────────────────
@@ -375,8 +427,24 @@ local EITHER = { pair = true, weapon1H = true }
 -- for `spec.mainSpec`, else OFF_MAIN). `unique` is a unique-equipped ring already worn: the kernel's
 -- uniqueEquipped reason, judged against that ring, both rings marked (`either`, feedback-22), the
 -- other ring lower (TD.GearFor).
+-- A collection verdict as NS.Collectibles.Verdict answers it (issue #13): `spec` = { verdict,
+-- collect = kind, count, limit }, its reason the verdict's, a pet's partial count beside it.
+local COLLECT_REASON = { newCollect = "collectNew", collected = "collectKnown", collectUnknown = "collectNoAnswer",
+    cantUse = "notYourProfession" }
+
+local function collectEv(spec)
+    local count, limit = spec.count, spec.limit
+    local reasons = { { key = COLLECT_REASON[spec[1]] } }
+    if count and limit and count > 0 and count < limit then
+        reasons[2] = { key = "petPartial", detail = ("%d/%d"):format(count, limit) }
+    end
+    return { verdict = spec[1], equip = "collect", collect = true, category = spec.collect, count = count,
+        limit = limit, reasons = reasons }
+end
+
 local function ev(src, item, spec)
     if not spec then return nil end
+    if spec.collect then return collectEv(spec) end
     local verdict, delta = spec[1], spec[2]
     local reasons = spec.reason and { { key = spec.reason } } or {}
     if spec.unique then reasons[#reasons + 1] = { key = "uniqueEquipped" } end
@@ -419,7 +487,8 @@ end
 --- another of that slot at least as high, so the baseline is the one the drop replaces (lower, for a
 --- unique-equipped ring: the drop can replace only the copy worn, feedback-22); a
 --- two-hander's or a ranged weapon's off hand empty. Nothing for an `unknown` verdict (no gear to
---- judge by) or an item that is not worn. Pure.
+--- judge by), a collection verdict (judged for your collection, not your gear) or an item that is
+--- not worn. Pure.
 --- @param src table TD.Source's
 --- @param item table { link, facts }
 --- @param eval table|nil the evaluation the cell shows
@@ -441,7 +510,7 @@ end
 function TD.GearFor(src, item, eval)
     local loc = item.facts.equipLoc
     local plan = C.SLOT_PLAN[loc]
-    if not plan or (eval and eval.verdict == "unknown") then return {} end
+    if not plan or (eval and (eval.verdict == "unknown" or eval.collect)) then return {} end
     local first = eval and eval.baseline or src:Worn(loc, item.facts.ilvl, item.link)
     if not first then return {} end
     local gear = { [plan.slots[1]] = first }
@@ -481,7 +550,8 @@ local function other(src, now, row, where)
     if not item then return nil end
     if row.look ~= nil then item.facts.transmogKnown = row.look end
     local them, me = ev(src, item, row.them), ev(src, item, row.me)
-    local testInspect, insp = inspected(src, row, now, them, item)
+    local testInspect, insp
+    if row.inspect then testInspect, insp = inspected(src, row, now, them, item) end   -- a collectible: none
     return { looter = looter(row.who), link = item.link, facts = item.facts, me = me, testGear = TD.GearFor(src, item, me),
         testOffGear = TD.OffGearFor(item, me), them = them, trade = tradeOf(row, item, them, insp),
         testInspect = testInspect, inspect = insp, testAsk = row.ask, testLeft = row.left or nil }
@@ -540,8 +610,9 @@ local function mine(src, now, you, row, where)
         testOffGear = TD.OffGearFor(item, me), trade = tradeMine(now, row.trade, item, me), candidates = candidates }
 end
 
--- This session, oldest first: two key runs four and a half hours ago and more, then five Heroic raid
--- bosses, the fourth the off-spec showcase and the fifth the trade showcase (feedback-22). The
+-- This session, oldest first: two key runs four and a half hours ago and more, then six Heroic raid
+-- bosses, the fourth the off-spec showcase, the fifth the trade showcase (feedback-22) and the sixth
+-- the item kinds (issue #13). The
 -- second key run is the owner's own screenshot: your neck from a bonus roll (No Bonus roll, an
 -- upgrade you can't trade on), and another player's copy of a unique-equipped ring you wear, their
 -- gear never read (not in your group): You `315 ▲3 / 295 ▲23`, Them `–`, Trade `? Not inspected`.
@@ -650,6 +721,19 @@ local SESSION = {
         { who = "quillshot", slot = "INVTYPE_CLOAK", me = { "upgrade", 11 }, them = { "upgrade", 4 },
           trade = { "no", "upgradeForLooter", "inspect", 40 }, inspect = { "fresh", 40 } },
       } },
+    -- issue #13: the item kinds (see ITEM KINDS). A collectible's row has no inspect and no candidates.
+    { content = "raidHeroic", n = 6, party = RAID_20, ago = 15,
+      yours = {
+        { me = { "cantUse", collect = "recipe" }, trade = { "boe" }, cands = {} },
+      },
+      theirs = {
+        { who = "seta", me = { "newCollect", collect = "mount" }, trade = { "unknown", "collectible" } },
+        { who = "littlewolf", me = { "collected", collect = "pet", count = 1, limit = 3 }, trade = { "yes", "boe", "bind" } },
+        { who = "butterz", me = { "collectUnknown", collect = "toy" }, trade = { "unknown", "collectible" } },
+        { who = "kaelith", armor = true, me = { "newCollect", collect = "cosmetic" }, trade = { "unknown", "collectible" } },
+        { who = "mistveil", kind = "tierToken", slot = "INVTYPE_HEAD", strict = true, me = { "upgrade", 7 },
+          them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 30 }, inspect = { "fresh", 30 } },
+      } },
 }
 TD.SESSION = SESSION
 
@@ -706,9 +790,39 @@ local THEIRS = {
     { me = { "upgrade", 5 }, them = { "sidegrade", 1 }, trade = { "no", "bonusRoll" }, outcome = "seen" },
     { me = { "upgrade", 8 }, them = { "downgrade", -6 }, trade = { "yes", "boe" }, outcome = "asked" },
     { me = { "sidegrade", 2 }, them = { "upgrade", 5 }, trade = { "no", "warbound" }, outcome = "seen" },
-    { me = { "upgrade", 4 }, trade = { "unknown", "noInspect" }, outcome = "seen" },
+    { me = { "upgrade", 4 }, trade = { "unknown", "noInspect" }, outcome = "expired", beforeExpired = "asked" },
     { me = { "downgrade", -5 }, them = { "sidegrade", 0 }, trade = { "likely", "groupLoot" }, outcome = "seen" },
     { me = { "upgrade", 6 }, them = { "downgrade", -2 }, trade = { "no", "legacy" }, outcome = "seen" },
+}
+
+-- A world boss's collectibles (issue #13): its mount, new to your collection, a pet of yours you
+-- already have (`mine`), and a toy the game gave no answer for.
+local COLLECTED = {
+    { me = { "newCollect", collect = "mount" }, trade = { "unknown", "collectible" }, outcome = "seen" },
+    { me = { "collected", collect = "pet", count = 2, limit = 3 }, trade = { "yes", "boe" }, outcome = "seen", mine = true },
+    { me = { "collectUnknown", collect = "toy" }, trade = { "unknown", "collectible" }, outcome = "seen" },
+}
+
+-- A Heroic raid boss's other item kinds: a cosmetic with a new look, your recipe for a profession
+-- you lack, and a tier token that makes a Head, an upgrade you asked for.
+local RAID_KINDS = {
+    { me = { "newCollect", collect = "cosmetic" }, trade = { "unknown", "collectible" }, outcome = "seen" },
+    { me = { "cantUse", collect = "recipe" }, trade = { "yes", "boe" }, outcome = "seen", mine = true },
+    { kind = "tierToken", slot = "INVTYPE_HEAD", me = { "upgrade", 7 }, them = { "downgrade", -3 },
+      trade = { "likely", "notUpgrade" }, outcome = "asked" },
+}
+
+-- Two old raid nights' boss drops Kragmar traded you (the Most generous section's member who gave
+-- twice): the older one from before asks and trades were stamped (`legacy`: its ask inferred from
+-- the item received, its gain as last judged), the other stamped and frozen as a trade now is.
+local LEGACY_NIGHT = {
+    { me = { "upgrade", 6 }, them = { "downgrade", -3 }, trade = { "likely", "notUpgrade" }, outcome = "received",
+      legacy = true, giver = "kragmar" },
+    { me = { "downgrade", -4 }, them = { "upgrade", 6 }, trade = { "no", "upgradeForLooter" }, outcome = "seen" },
+}
+local SECOND_TRADE = {
+    { me = { "upgrade", 10 }, them = { "sidegrade", 1 }, trade = { "likely", "notUpgrade" }, outcome = "received",
+      giver = "kragmar" },
 }
 
 -- Your own drops in turn.
@@ -721,8 +835,9 @@ local YOURS = {
 }
 
 -- The last four weeks, newest first: the content, how long ago, how many drops, which of them was
--- yours (`mine`, its place in the group's drops), and `alt` for the group the alt saw. A raid night
--- is bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
+-- yours (`mine`, its place in the group's drops), `alt` for the group the alt saw, and `rows` for a
+-- group whose drops are its own list rather than the turn of THEIRS and YOURS. A raid night is
+-- bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
 local HISTORY = {
     { content = "raidHeroic", ago = DAY + 2 * HOUR, drops = 5, mine = 2 },
     { content = "raidHeroic", ago = DAY + 2 * HOUR + 25 * MIN, drops = 4 },
@@ -746,6 +861,10 @@ local HISTORY = {
     { content = "worldBoss", ago = 15 * DAY, drops = 2 },
     { content = "key", ago = 20 * DAY, drops = 2 },
     { content = "key", ago = 27 * DAY, drops = 2, mine = 1 },
+    { content = "worldBoss", ago = 4 * DAY, drops = #COLLECTED, rows = COLLECTED },
+    { content = "raidHeroic", ago = 13 * DAY, drops = #RAID_KINDS, rows = RAID_KINDS },
+    { content = "raidHeroic", ago = 24 * DAY, drops = #LEGACY_NIGHT, rows = LEGACY_NIGHT },
+    { content = "raidHeroic", ago = 17 * DAY, drops = #SECOND_TRADE, rows = SECOND_TRADE },
 }
 TD.HISTORY = HISTORY
 
@@ -760,24 +879,45 @@ end
 -- unless `plain` (the alt's: a Warlock has no Holy spec, so its Can't use stays plain).
 local function snap(spec, plain)
     if not spec then return nil end
+    if spec.collect then
+        return { verdict = spec[1], collect = true, category = spec.collect, count = spec.count, limit = spec.limit,
+            reasonKey = spec[1] == "cantUse" and "notYourProfession" or nil }
+    end
     local off = not plain and spec.off or nil
     return { verdict = spec[1], ilvlDelta = spec[2],
         offSpec = off and { specID = off[1], mainSpecID = OFF_MAIN, verdict = off[2], ilvlDelta = off[3] } or nil }
 end
 
+-- THE STAMPS (issue #12, Insights design spec §1.2), as NS.History writes them on a live entry: an
+-- ask or offer held in the outcome (or under an expiry) was sent SENT_AFTER the drop; a received
+-- or traded-away one was sent then and settled SETTLED_AFTER it (`settledAt`, and `got` on an item
+-- received). A `legacy` row keeps none, as an entry recorded before the stamps.
+TD.SENT_AFTER, TD.SETTLED_AFTER = 2 * MIN, 6 * MIN
+local SENT_KIND = { asked = "ask", received = "ask", offered = "offer", tradedAway = "offer" }
+local SETTLES = { received = true, tradedAway = true }
+
+local function stamp(e, row)
+    if row.legacy then return e end
+    local kind = SENT_KIND[row.beforeExpired or row.outcome]
+    if kind then NS.History.Stamp(e, kind, e.at + TD.SENT_AFTER) end
+    if SETTLES[row.outcome] then NS.History.Settle(e, row.outcome, e.at + TD.SETTLED_AFTER) end
+    return e
+end
+
 -- `seer` is whoever saw the group: you, or the alt (`seenBy`, its recorder key, and its class).
 local function historyEntry(src, seer, row, who, at, where)
-    local item = src:Drop({ armor = row.armor, strict = row.armor }, where)
+    local item = src:Drop({ armor = row.armor, strict = row.armor, me = row.me, kind = row.kind, slot = row.slot }, where)
     if not item then return nil end
     local f, m = item.facts, who and MEMBERS[who]
-    return {
+    return stamp({
         itemLink = item.link, itemID = item.itemID or NS.Item.ItemIDFromLink(item.link),
+        category = f.category, tokenSlot = f.tokenSlot,
         looter = m and m.name or seer.name, class = m and m.classFile or seer.classFile, isMine = m == nil or nil,
         ilvl = f.ilvl, equipLoc = f.equipLoc, quality = f.quality, me = snap(row.me, seer.alt), them = snap(row.them),
         trade = { state = row.trade[1], reasonKey = row.trade[2], basis = "rule", args = {} },
-        outcome = row.outcome, before = row.before, at = at, test = true,
+        outcome = row.outcome, before = row.before, beforeExpired = row.beforeExpired, at = at, test = true,
         seenBy = seer.seenBy, seenByClass = seer.classFile,
-    }
+    }, row)
 end
 
 -- The alt as a seer: on your realm (the one in your recorder key), else realm-less.
@@ -807,7 +947,10 @@ function TD.History(nowEpoch, you, src)
         group.seenBy, group.seenByClass = seer.seenBy, seer.classFile
         for i = 1, g.drops do
             local row, who
-            if i == g.mine then
+            if g.rows then
+                row = g.rows[i]
+                who = not row.mine and (row.giver or members[(gi + i - 1) % #members + 1]) or nil
+            elseif i == g.mine then
                 yours = yours + 1
                 row = YOURS[(yours - 1) % #YOURS + 1]
             else

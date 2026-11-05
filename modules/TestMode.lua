@@ -14,7 +14,9 @@ local _, NS = ...
 -- (State.testPool). The drops fill in when it is ready: at once when the journal has loaded, else
 -- after EJ_LOOT_DATA_RECIEVED or the pool's timeout, never with an invented item meanwhile (the
 -- Drops tab says it is gathering them). Each item's facts are the item cache's
--- (NS.ItemFacts.Get), else the pool's level and slot with the link's quality.
+-- (NS.ItemFacts.Get), else the pool's level and slot with the link's quality. The item-kind samples
+-- (issue #13: a mount, pet, toy, recipe, cosmetic and tier token) draw on the pool's items of that
+-- kind, else its curated samples (NS.SimPool.KindDrops), else another pool item stands in.
 --
 -- THE HISTORY (FB-10). While test mode is on, the History tab reads test mode's own session-only
 -- log (State.testHistory, NS.History.Log): four weeks of sample groups covering every outcome. It is never
@@ -119,8 +121,18 @@ local function factsOf(e)
         quality = (NS.ItemRead.QualityOf(e.link)) }
 end
 
+-- The pool's items of each kind that is not equipment (issue #13): its own, else the curated
+-- samples (NS.SimPool.KindDrops).
+local function extrasOf(pool)
+    local out = {}
+    for _, cat in ipairs(C.CATEGORIES) do
+        if cat.key ~= "equipment" then out[cat.key] = NS.SimPool.KindDrops(pool, cat.key) end
+    end
+    return out
+end
+
 --- The item source over a built pool: its drops (the entries at its own difficulty, every gear
---- entry when none is) and its gear.
+--- entry when none is), its gear, and its items of each other kind (the item-kind samples).
 --- @param pool table|nil
 --- @return table src
 function TM.Source(pool)
@@ -131,7 +143,7 @@ function TM.Source(pool)
     for _, e in ipairs(gear) do
         if atLevel[e] then drops[#drops + 1] = e end
     end
-    return TD.Source(#drops > 0 and drops or gear, gear, factsOf)
+    return TD.Source(#drops > 0 and drops or gear, gear, factsOf, extrasOf(pool))
 end
 
 --- Samples for a message template's preview (the settings' Messages page) when the feed holds no

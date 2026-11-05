@@ -190,6 +190,22 @@ test("sim report: the tooltip names each drop, its looter and its tab or gate", 
     assertEqual(#lines, 5)
 end)
 
+-- DW-CAT2 (issue #13): the item kinds' hidden reasons have words; the retired gear-only, token and
+-- cosmetic reasons have none. red under: a reason the feed hides by shown as its bare key.
+test("sim report: the item kinds' gates are named, and the retired ones are gone", function()
+    local R = T.newAddon().SimReport
+    local function said(why)
+        local lines = R.TipLines({ sent = 1, merged = 0, drops = {
+            rec(3, { state = "hidden", hidden = why, looter = { name = "Vaela" } }) } }, function() end)
+        return pair(lines[1])
+    end
+    assertEqual(said("notWatched"), "Item 3 (Vaela): hidden: not a kind of item that is watched")
+    assertEqual(said("category"), "Item 3 (Vaela): hidden: an item kind turned off")
+    for _, gone in ipairs({ "notGear", "token", "cosmetic" }) do
+        assertEqual(said(gone), "Item 3 (Vaela): hidden: " .. gone, gone .. ": no word left")
+    end
+end)
+
 test("sim report: a Drops header no longer counts drops of yours apart", function()
     local WC = T.newAddon().WindowCells
     local g = { label = "Altar of Fangs", kind = "run" }

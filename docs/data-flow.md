@@ -160,8 +160,8 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
-        ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
-        tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
+        ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` (a collectible not
+        counted, as Post leaves it out) and Post my tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
         right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
         at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
         K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
@@ -319,7 +319,7 @@ NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with th
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 /dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
-                   loot, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   loot, drop, lockdown, trade; else the usage) ─> no simulation running: "No simulation
                    is running: …" (but the bare form, status, start and panel)
 /dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
                    scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
@@ -338,7 +338,12 @@ the loot step and `/dw sim loot` ─> NS.SimReport.Loot: Mark (the feed's receip
                    in chat and on the panel row, TipLines (pure, { left, right } lines) ─> the
                    row's tooltip: each drop, its looter, Drops or the gate that hid it (feedback-3 §0);
                    each place honors the feed the window shows (SimReport.View = Window.FeedView:
-                   not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2)
+                   not shown in test mode; §5); yours are on Drops like any other (feedback-5 §2);
+                   a burst's line is one of the pool's extras about one time in eight (SimPool.Extras:
+                   its mounts, pets, toys, recipes, cosmetics and tier tokens; issue #13)
+/dw sim drop <kind> [player|me] ─> NS.SimReport.Drop: Mark ─> SimEvents.Drop ─> SimPool.KindDrops
+                   (the pool's items of that kind, else the curated COLLECTIBLE_SAMPLES; none:
+                   `noSample`) ─> one line through the same delivery ─> Collect ─> `Simulated drop: 1 drop.`
 the armed run ─> a step, then one every stepDelay seconds (the descriptor's
                    SimScenario.StepDelay(): `sim.stepDelay`, 1 by default, read as each next step is
                    set) on the session's own timers (the stop ends it) ─> at the last step the
@@ -538,7 +543,9 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
                                                       then every waiter with nil
 ```
 
-`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts. The stand-down drops the
+`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
+calls `Collectibles.Changed`. `RereadCollections` runs `Collectibles.Read` again on every cached
+collectible, for the collection re-read. The stand-down drops the
 cache and the loads; a load that answers after it is ignored.
 
 ## The gear snapshot
@@ -631,10 +638,16 @@ LootFeed.Receive   [Perf bucket `feed.add`]
     else the area's group (instance name or "Open world")
   Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
   ItemFacts.Request ─> loading? wait for the load, then go on
-  FeedFilter.Filter (heirloom, cosmetic, tokens, gear only, minimum item level) ─> hidden with its reason
+  FeedFilter.Filter (Never watch `blacklist` first, beating Always watch; then Always watch, passing
+    with `forced`, kept as rec.forced, past everything after it; heirloom, no watched kind, a kind
+    turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
+    a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
+      { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
+    (the upgrade override lets `upgrade` and `newCollect` through below the threshold; an Always
+    watch drop (`ctx.forced`) passes as `whitelisted`; the situation gate above still holds)
     ─> hidden `quality` (one FEED line with the reason, one QUAL line with the threshold), before any inspect
   someone else's drop: Inspect.Request(looter, looter priority)
       ─> Evaluate(facts, Inspect.Candidate(looter)) once read ─> drop.them
@@ -642,6 +655,10 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   your own drop:  TradeRules.Estimate(…, drop.me) ─> drop.trade
       ─> every other member: Evaluate when their read exists, else checking / unavailable
          (their inspects asked for at offer priority while the trade is not `no`)
+  a collectible, either side: no inspect, no Them, no candidates (none, also when the trade
+      re-estimate moves your own off `no`); TradeRules.Estimate with ctx.collectible: the bind and rule
+      answers kept, the looter's item-level check `unknown collectible`; someone else's collectible
+      stays out of the trade sweep, your own stays in (the trade timer's exact read)
   ─> State.feed.live (200 drops, oldest out) ─> DropAdded(id)
 InspectDone(guid) ─> that looter's drops and your drops' candidate re-judged ─> DropUpdated(id, "inspect")
 GearChanged ─> you re-judged on every drop (and your drops' trade) ─> DropUpdated(id, "gear")
@@ -649,10 +666,23 @@ TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read
     (the bag item's link when more complete; ItemRead.ItemLevelAt / QualityAt, exact, laid over the
     cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
+NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED,
+  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read) ─> Collectibles.Changed
+  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown ─> the same, for those alone
+    ─> one 0.5s timer per burst ─> ItemFacts.RereadCollections (the cache's one writer)
+    ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
+       ─> re-judged ─> DropUpdated(id, "collection")
 ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
 ```
 
-The stand-down unregisters the events and the bus receivers, cancels the score timer, and drops the
+A collectible is feed-only: no Ask (WindowCells' No action, `Messaging.AskTemplate` nil, so no
+transmog ask for a cosmetic either), no toast and so no auto-ask (`Toast.Qualifies`: `collectible`),
+no Offer panel (`OfferPanel.Open` nil; `/dw offer` says why), no Announce or Offer request
+(`Asks.Request` refuses `collectible`), not in Post my tradeables (`FB.IsTradeableMine`), no Retry
+inspect (the detail card's is grayed; `NS.RetryInspect` prints why), no glow (its verdict is never
+`upgrade`). A tier token is gear and is not refused.
+
+The stand-down unregisters the events and the bus receivers, cancels the score timer and the collection re-read, and drops the
 dedupe window, the context and any drop still loading; the recorded drops are kept for the session.
 
 ## Your own drops' trade timer (design spec §7.4)
@@ -841,6 +871,10 @@ The stand-down cancels the flush timer and drops the queued asks; the sent regis
 DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec, time()) ─> Record(global.history,
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
+                          (the entry keeps the item kind, `category` (`watched` for an Always watch item
+                           of no kind), and a tier token's `tokenSlot`;
+                           a collectible's `me` its collection verdict: `collect`, `category`,
+                           `count`, `limit`, `reasonKey`)
 PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin
                           ─> char.session.start = time(), cleared dropped; isReloadingUi ─> kept;
                           neither ─> nothing
@@ -862,10 +896,13 @@ Keep history for row ─> HistoryRetention.OnChanged ─> deletes nothing: taken
 DropUpdated(id) ───────> History.OnDropUpdated ─> Refresh: verdicts, trade; `no expired` ─> expired
                           (beforeExpired kept); `yes` on the timer's read ─> back to beforeExpired
                           (HistoryChanged only when the entry changed)
-AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce)
+AskStateChanged(sent) ─> History.OnAskState ───> asked (ask) / offered (offer, announce); askedAt /
+                          offeredAt stamped once, HistoryChanged on a stamp even with no advance
 TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TRADE_ACCEPT_UPDATE(either
           side 1: the offer) ─> UI_INFO_MESSAGE "Trade complete." (before TRADE_CLOSED, or within
-          5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway
+          5s after it) ─> MatchTrade(offer): got ─> received, gave ─> tradedAway (History.Settle:
+          settledAt on both; on received `got`, the `me` verdict frozen, so equipping the item
+          and the gear re-judge after it never rewrite the gain Insights reads)
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
 row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
 row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
@@ -897,6 +934,41 @@ entries go to `CompactHistory.Refresh(pane, entries, compact)` (DW-C3): `Compact
 card's click opens its entry's detail card under it (`HistoryCard`, DW-Q4), side by side in the
 table and stacked in the compact layout; both layouts read the one open entry.
 
+## The Insights tab (issue #12)
+
+```
+window repaint ─> Window.Refresh ─> WindowInsights refresh(pane): the cache key
+    { H.Log() identity, H.Log().groups identity, revision, testMode, Sim:IsActive(), the filters'
+      signature, R.Days(), today, width, compact }
+    window hidden or minimized ─> nothing (the frame's OnShow ─> visibility listener ─> refresh)
+    unchanged ──────────> nothing
+    width or layout only ─> InsightsSections.Layout (no recompute)
+    data or filters ─> InsightsFilters.Rows(H.Log().groups)   one row a drop, its facets read once
+                     ─> Normalize(rows, State.insightsFilters, now, keep) ─> f', Options
+                          (zero-count picks back to All, in ORDER; each dropdown's rows and counts)
+                     ─> Filter(rows, f', now) ─> Period(rows, R.Days(), f'.date, now)
+                     ─> InsightsStats.Compute(rows, period)   one pass: REDUCERS, then FINALIZERS
+                     ─> InsightsRows builders (cards, sections, PeriodText, the empty lines)
+                     ─> InsightsSections.Layout ─> the Charts context (NS.Charts:New(content,
+                          NS.ChartsHost())): cards, bars, stacked bars, list panels, range, strips
+HistoryChanged ─> WindowInsights' receiver ─> revision + 1 ─> Window.ScheduleRepaint
+dropdown pick ─> WindowInsights.SetFilter: State.insightsFilters[key] = v (keep = key) ─> Window.OnFilterChanged
+Reset filters (the strip) ─> WindowInsights.ResetFilters: DEFAULTS ─> Window.OnFilterChanged
+the skin's OnLooksChanged ─> ctx:Reskin ─> onReskin ─> WindowInsights.MarkLayout ─> recompute (the Quality rows' colors) and the rows bound again
+```
+
+`H.Log()` is whichever log is in force: the account's `global.history`, test mode's sample log
+(`State.testHistory`, a persistent table whose `groups` `TestData.History` fills) or a running
+simulation's session log (`SimHost.HistoryLog`). The cache key holds both the log's and its
+`groups`' identities and the two mode flags, because turning test mode off sends no
+`HistoryChanged`: the swap is seen through identity alone. Test mode's samples carry the stamps a
+live entry does (`askedAt`, `offeredAt`, `settledAt`, `got`), one legacy received item, an expired
+ask, a member who traded twice, every item kind and boss kills with upgrades, so every card and
+section has rows; a simulated trade (`SimEvents.Trade`) settles the simulation's log through the
+same `History.Settle`. The filters are session-only and survive a swap; Normalize corrects them
+against the log in force. `Perf.Note` brackets `insights.compute` and `insights.layout` under
+`Perf.on`; each recompute logs one `insights: n drops, m after filters` line under UI.
+
 ## The toast
 
 The shell is LibKa0s-Toast-1.0 (`NS.NewToast`, `core/ToastSetup.lua`, since AT-A2): `shell:` below
@@ -909,34 +981,45 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
     ─> syncHold (combat without toast.inCombat: shell:Hold(true), the toast on screen kept up;
        otherwise a hold left: shell:Release); also the toast.inCombat row's reaction and the
        profile reload
-    ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): nothing on screen, not held
+    ─> shell:Show(id, { key = id, sticky = a test drop }) (newest 5 wait): shown at once while
+       fewer than toast.stack (1 to 5, default 3; DW-T2, issue #14) are on screen and not held
     ─> its turn: the builder, next still wanted (in the feed, qualifying, not asked; else false and
-       the shell tries the next) ─> the rows made once on the shell's frame (icon and Ask
-       attached) ─> Compose(rec, your gear,
+       the shell tries the next) ─> on the frame the shell gives it (its pool: one per toast on
+       screen, DropWatcherToast, DropWatcherToast2, ...), the rows made once (icon and Ask
+       attached), f.dropId = id (that frame's Ask asks for it) ─> Compose(rec, your gear,
        their inspect gear) (the four rows' parts, feedback-9 spec §0) ─> paint: title; item
        (quality color) + item level; Looted by <looter> (class color) · You <glyph n> · Them
        <glyph n> (segments, mono glyphs, toned; on a two-item slot read in full the cells' dual
        mark, `321 ▼10 / 300 ▲11`, and the frame Toast.WidthFor(row 3) wide, never under WIDTH:
        feedback-21 H7);
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
-       ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky)
-    ─> expired ─> the shell's next
-close mark / right-click anywhere on it (frame, icon, Ask) ─> the shell's dismiss (not asked,
-    never toasts again) ─> its next
-hover (frame or an attached control) ─> pause (seconds left kept)   leave ─> resume (at least 1s)
-PLAYER_REGEN_DISABLED ─> shell:Hold: the shown toast back to the queue's head (full duration again)
-PLAYER_REGEN_ENABLED ─> shell:Release
-Ask ─> NS.PressAsk(id) (a drop already gone: the toast goes, nothing asked)
-AskStateChanged / DropUpdated of the shown drop ─> repaint Ask
+       ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky), placed: the
+          first (the head) at the saved point, each after it under the one before (toast.stackGrow
+          down) or above it (up), a gap between
+    ─> expired ─> the shell's re-flow (the rest close up on the head) and next (at the tail)
+close mark / right-click anywhere on one (frame, icon, Ask) ─> the shell's dismiss of that toast
+    (not asked, never toasts again) ─> re-flow and next
+hover (a frame or its attached control) ─> pause that toast (seconds left kept)   leave ─> resume (at least 1s)
+PLAYER_REGEN_DISABLED ─> shell:Hold: every toast on screen back to the queue's head, in order (full
+    duration again)
+PLAYER_REGEN_ENABLED ─> shell:Release (the stack fills again)
+a frame's Ask ─> Toast.Ask(f.dropId) ─> NS.PressAsk(id), that frame's Ask repainted (a drop already
+    gone: only its toast goes, Toast.Dismiss(id) = shell:Remove(id), nothing asked)
+AskStateChanged / DropUpdated of a drop on screen ─> shell:FrameFor(id) ─> repaint its Ask
+skin switch (NS.Skin.OnLooksChanged) ─> for each shell:Visible() id ─> repaint its frame
 LootFeed.Clear / the cap's trim ─> removal sink ─> Toast.Prune: shell:Remove(id) for each waiting
-    drop gone, then the shown one if gone ─> its next
+    drop gone, then each drop on screen gone (the stats' visibleKeys) ─> re-flow and next
+toast.stack / toast.stackGrow (the rows' reaction, Toast.ApplyStack) ─> shell:SetStack(n, grow): a
+    smaller stack's tail back to the queue's head in order, a larger one filled, re-anchored
 toast.enabled off (the row's reaction) / a profile with it off / the stand-down ─> shell:Clear: the
     toast goes, the queue empties, the hold is let go
-drag (test mode only: the shell's draggable) ─> setPosition ─> profile.toast.point (offsets x
+drag (test mode only: the shell's draggable; on any toast, it moves the head and the rest follow)
+    ─> setPosition ─> profile.toast.point (offsets x
     toast.scale: UIParent's units, the shape it always had)
 Reset position ─> Toast.ResetPosition ─> shell:ResetPosition ─> setPosition(nil)
 toast.scale (the row's reaction, Toast.ApplyScale) / each toast / profile reload
-    ─> shell:Refresh: SetScale(toast.scale), then SetPoint(getPosition's offsets / toast.scale)
+    ─> shell:Refresh: SetScale(toast.scale), then SetPoint(getPosition's offsets / toast.scale);
+       it reads toast.stack and toast.stackGrow again too (a profile reload's incoming stack)
        (the anchor stays where it was put; toast.point is never rewritten)
 ```
 

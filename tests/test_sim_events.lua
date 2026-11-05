@@ -4,7 +4,8 @@
 -- announce channel); inspect replies through the broker's real queue after a seeded random delay;
 -- boss pulls and kills with their combat edge and restriction, the ask queued meanwhile and
 -- flushed after; a keystone run; your own drops' trade windows read by the trade timer; a
--- simulated completed trade settled by the history's own reader; and the stop that ends what the
+-- simulated completed trade settled by the history's own reader; the item kinds (issue #13): one
+-- burst line in eight from the pool's extras and `drop <kind>`; and the stop that ends what the
 -- drivers raised (modules/SimWorld.lua, modules/SimEvents.lua, core/CompatWorld.lua).
 
 local T = _G.DW_TEST
@@ -230,6 +231,62 @@ test("sim loot: n random lines, and nothing without a running simulation or a po
     assertEqual(n, 0); assertEqual(why, "notRunning")
 end)
 
+test("sim lines: about one line in eight is one of the pool's extras, and without them nothing moves (issue #13)", function()
+    local NS = T.newAddon()
+    local E, R = NS.SimEvents, NS.SimRoster
+    local members = R.Members({ kind = "raid", size = 12, ownRealm = "Testrealm" }, R.Random(3))
+    local gear, extras = { { link = "a" }, { link = "b" } }, { { link = "reins" } }
+    local fromExtras, total = 0, 0
+    for seed = 1, 200 do
+        local plain = E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm")
+        local none = E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm", {})
+        for i, line in ipairs(plain) do
+            assertTrue(line.entry == none[i].entry and line.looter == none[i].looter, "no extras: the same seeded burst")
+        end
+        for _, line in ipairs(E.Plan(3, members, gear, R.Random(seed), nil, "Testrealm", extras)) do
+            total = total + 1
+            if line.entry == extras[1] then fromExtras = fromExtras + 1 end
+        end
+    end
+    local share = fromExtras / total
+    assertTrue(share > 0.07 and share < 0.19, "about one in eight: " .. share)
+end)
+
+-- A mount in the Mythic dungeon's loot, not yet collected.
+local function withMount(NS, m)
+    local l = link(7001, 0)
+    m.addItem(l, { name = "Reins", quality = 4, ilvl = 1, equipLoc = "", classID = 15, subClassID = 5, bindType = 1,
+        stats = {} })
+    m.mounts.byItem[7001], m.mounts.collected[77] = 77, false
+    local loot = m.journal.loot[101][NS.Constants.DIFFICULTY.MYTHIC_DUNGEON]
+    loot[#loot + 1] = { itemID = 7001, link = l, encounterID = 2009 }
+end
+
+test("sim drop: one drop of a named kind goes through the parser into the feed, judged for your collection", function()
+    -- red under: no `drop` entry point, so a mount could only come by chance in a burst
+    local NS, m, members = sim({ before = withMount })
+    local E = NS.SimEvents
+    assertEqual(E.Drop("mount", "me"), 1)
+    m.advance(0)
+    local rec = lastDrop(NS)
+    assertEqual(rec.itemID, 7001); assertTrue(rec.isMine and rec.sim)
+    assertEqual(rec.facts.category, "mount")
+    assertEqual(rec.me.verdict, "newCollect", "judged for your collection")
+    assertEqual(E.Drop("mount", members[1].name), 1)
+    m.advance(0)
+    assertEqual(lastDrop(NS).looter.guid, members[1].guid)
+    assertEqual(E.Drop("equipment", "me"), 1)
+    m.advance(0)
+    assertEqual(lastDrop(NS).facts.category, "equipment")
+    local n, why = E.Drop("toy")
+    assertEqual(n, 0); assertEqual(why, "noSample")
+    n, why = E.Drop("mount", "Nobody")
+    assertEqual(n, 0); assertEqual(why, "noLooter")
+    NS.Sim:Stop()
+    n, why = E.Drop("mount")
+    assertEqual(n, 0); assertEqual(why, "notRunning")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Inspect replies through the broker
 -- ---------------------------------------------------------------------------------------------
@@ -440,6 +497,34 @@ test("sim trade: your drop traded away and another's received land in the sessio
     assertEqual(#(NS.addon.db.global.history.groups or {}), 0, "saved history untouched")
     assertTrue(#NS.SimHost.HistoryLog().groups > 0, "the session's log holds them")
     assertEqual(#m.tradeCalls, 0, "no real trade")
+end)
+
+test("sim trade: a sent ask and offer, then the trades, stamp the session's entries and fill Insights' cards", function()
+    -- issue #12 (Insights design spec §4.3): the simulation exercises the stamps, settledAt and got end to end
+    local NS, m, members = sim()
+    local E, H = NS.SimEvents, NS.History
+    E.Configure({ endingSoonCount = 0 })
+    E.Loot(1, "me")
+    E.Loot(1, members[2].name)
+    m.advance(3)
+    local mine, theirs
+    for _, rec in ipairs(drops(NS)) do
+        if rec.isMine then mine = rec else theirs = rec end
+    end
+    NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, theirs.id, "sent", "ask")
+    NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, mine.id, "sent", "offer")
+    local asked, offered = H.EntryOf(theirs.id), H.EntryOf(mine.id)
+    assertTrue(asked.askedAt ~= nil and offered.offeredAt ~= nil, "both sends stamped")
+    assertTrue(E.Trade(theirs.id)); assertTrue(E.Trade(mine.id))
+    assertTrue(asked.settledAt ~= nil and asked.got ~= nil, "received: settled, its verdict frozen")
+    assertTrue(offered.settledAt ~= nil and offered.got == nil, "traded away: settled, nothing frozen")
+    local IF, IS = NS.InsightsFilters, NS.InsightsStats
+    local rows = IF.Rows(NS.SimHost.HistoryLog().groups)
+    local t = IS.Compute(rows, IF.Period(rows, 30, "all", m.time())).totals
+    assertEqual(t.asks, 1); assertEqual(t.received, 1); assertEqual(t.askHits, 1); assertEqual(t.success, 1)
+    assertEqual(t.offers, 1); assertEqual(t.tradedAway, 1)
+    assertEqual(t.asksLegacy, 0); assertEqual(t.offersLegacy, 0, "nothing inferred: every entry is stamped")
+    assertEqual(#(NS.addon.db.global.history.groups or {}), 0, "saved history untouched")
 end)
 
 test("sim trade: refused for an unknown drop, a real one and an expired own drop", function()

@@ -28,6 +28,9 @@ local _, NS = ...
 -- group is missing, fails `noChannel` (a stored PARTY, RAID or INSTANCE_CHAT is never sent blind,
 -- and a queued one is canceled once that group is gone); a failed ask may be retried.
 --
+-- A COLLECTIBLE (issue #13) is feed-only: a request of any kind for a drop whose verdict for you is a
+-- collection verdict (NS.Collectibles.IsFeedOnly) is refused `collectible`, Press included.
+--
 -- THE TRANSMOG ASK (design spec §4 transmog-known). An ask fills the template
 -- NS.Messaging.AskTemplate picks for its drop: `ask` for an upgrade or sidegrade for you, else
 -- `transmog` with `messages.transmogAsk` on and the drop's appearance not collected. It is still an
@@ -338,6 +341,7 @@ function A.Request(kind, target, dropID, opts)
     if stoodDown() then return refused("disabled") end
     opts = type(opts) == "table" and opts or {}
     local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
+    if NS.Collectibles.IsFeedOnly(rec) then return refused("collectible") end
     local test = isTest(rec)
     local who, why = recipient(kind, target, test)
     if not who then return refused(why) end

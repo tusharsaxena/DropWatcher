@@ -77,7 +77,7 @@ Total.
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
 
-### test_database.lua (14)
+### test_database.lua (15)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -93,6 +93,7 @@ Total.
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
+- database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
 
 ### test_schema.lua (11)
 
@@ -108,15 +109,17 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (23)
+### test_schema_rows.lua (26)
 
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
 - rows: NS.Setting answers the default before the database, and the stored value after
 - rows: a value outside a row's list or range is refused and stores nothing
+- rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
 - rows: the feed, the situations and the messaging edge read the rows
+- rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order
 - rows: the filter bar seeds a fresh tab from the rows
 - rows: the Quality control and the window's layout write through the seam (handoff from M3)
 - rows: Keep history for is account-wide, and a profile reset leaves it
@@ -128,7 +131,8 @@ Total.
 - glow: an out-of-range knob, an unknown style and a malformed color are refused
 - glow: a knob is dimmed while its glow is in another style, the style while the glow is off, the color pair never
 - glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic
-- toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on
+- toast scale: a 50-200 % slider by 5 on Alerts › Toast, after the stack's rows, live only with the toast on
+- toast stack: Toasts at once is a 1-5 slider by 1, default 3, and Stack direction picks Down or Up, default Down
 - icons: Window › Icons is the Zoom row then the composed Border block, with the owner's defaults
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
@@ -189,6 +193,14 @@ Total.
 - glow sections: only the styles a style dropdown selects are drawn, Proc alone by default (DW-04)
 - glow sections: two styles chosen draw both sections; a re-pick re-renders the tab (DW-04)
 - glow sections: a glow turned off still opens its style's section, dimmed (DW-04)
+
+### test_item_lists_panel.lua (5)
+
+- item lists panel: the tab follows Items, with an Always watch | Never watch strip, Always watch first
+- item lists panel: a sub-tab click draws the other list, and a stale pointer heals to the first
+- item lists panel: the IdList's entries, candidates and writes go through NS.ItemLists
+- item lists panel: a refused add is raised as its sentence, and nothing is written
+- item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
 ### test_skin_setup.lua (18)
 
@@ -359,7 +371,7 @@ Total.
 - skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
 - skin tools: the live debug console is painted for this owner
 
-### test_slash.lua (26)
+### test_slash.lua (27)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -380,6 +392,7 @@ Total.
 - slash: `clear` empties this session's feed and leaves the test feed alone
 - slash: `clear` closes an Offer panel whose drop it took
 - slash: `history` opens the window on that tab, expanded; `mine` opens Drops
+- slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)
 - slash: a tab verb the Visibility setting keeps hidden says so
 - slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
 - slash: `situation` prints the situation, its settings and the classifier's inputs
@@ -410,7 +423,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (63)
+### test_window_shell.lua (64)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -423,9 +436,10 @@ Total.
 - shell: RestrictionChanged shows the badge, AskStateChanged counts the queue, its tooltip lists it
 - shell: Scan group asks the inspect broker through the shared handler, and says what it did
 - shell: Scan group is refused while the addon is disabled
-- shell: two tabs, Drops active in gold with its underline, History gray
+- shell: three tabs, Drops active in gold with its underline, History and Insights gray
 - shell: clicking a tab shows its pane and moves the gold underline; an unknown tab is refused
 - shell: the tab labels carry no count; their tooltips say what each holds
+- shell: the Insights tooltip names what it holds and the period the kept history covers
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
@@ -594,7 +608,7 @@ Total.
 
 ### test_compact_chrome.lua (27)
 
-- chrome: the tabs' labels are Drops and History in both layouts (feedback-5 spec §3)
+- chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
 - chrome: the compact badge shows the queued count beside its lock, or nothing
 - chrome: the footer's one line is inspect freshness and the situation
@@ -607,7 +621,7 @@ Total.
 - chrome: the panes reserve the sim strip's height while a simulation runs
 - chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
-- chrome: the two tabs keep a reduced width, their names in their tooltips
+- chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
 - chrome: the panel closes when the window hides, minimizes or goes back to full
@@ -741,7 +755,39 @@ Total.
 - table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_detail_card.lua (30)
+### test_collect_cells.lua (11)
+
+- collect cells: each collection verdict's word and tone
+- collect cells: the tooltip's title, Means and one Why row per reason
+- collect cells: WindowCells.Verdict hands a collection verdict to CollectCells, never a glyph
+- collect cells: History's stored collection verdict renders through the same cell
+- collect cells: Them on someone else's collectible is a dash, never an inspect's `?`
+- collect cells: the merged Me and Them cells carry no gear part
+- collect cells: your own collectible has no candidates, a dash for Them and no Offer
+- collect cells: the Ask button is No action for a collectible, a cosmetic's transmog ask too
+- collect cells: no toast, no Post my tradeables and no glow for a collectible
+- collect cells: your own tradeable collectible is not counted by the Drops strip, nor Interesting
+- collect cells: a tier token is not feed-only: it still asks and toasts as gear
+
+### test_collect_surfaces.lua (15)
+
+- collect surfaces: the Slot cell is the collectible's kind, a cosmetic's slot in its tooltip
+- collect surfaces: the Type cell is a recipe's profession, a dash for the other collectibles
+- collect surfaces: a token kept with no classes reads a dash, never Any class
+- collect surfaces: the detail card's chips: the kind, a recipe's profession, a pet's count
+- collect surfaces: FOR YOU reads NEW TO COLLECTION over Kind and Collection rows, no gear rows
+- collect surfaces: FOR THE LOOTER on someone else's collectible is a dash, judged for you alone
+- collect surfaces: a History row reads the kept kind, verdict and a dash for the looter
+- collect surfaces: the History card's FOR YOU keeps the collection verdict, its group a dash
+- collect surfaces: the item tooltip adds the Kind and the collection now; gear none
+- collect surfaces: the Drops strip ends with `n new`, anyone's, the tab's filters applied
+- collect surfaces: the compact cards draw the collection words with no ⊘
+- collect surfaces: the diagnostics name the item kinds on, the lists' sizes and each drop's kind
+- collect surfaces: New to my collection lists the new collectibles; the other views' answers
+- collect surfaces: the View menu, its tooltip and History both carry New to my collection
+- collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
+
+### test_detail_card.lua (32)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - cells: StatChange lists the secondary stats gained and lost, the largest first
@@ -754,6 +800,7 @@ Total.
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
 - cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+- cells: a collectible's Retry inspect is disabled: it is judged for you alone, so no inspect is asked for
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
 - cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason
 - card: a row click expands it inline; the rows below move down by the card's height
@@ -773,6 +820,7 @@ Total.
 - card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
+- card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
 ### test_own_drops.lua (16)
 
@@ -825,7 +873,7 @@ Total.
 
 ### test_drops_strip.lua (15)
 
-- drops tab: the tabs are Drops and History, and the retired `mine` opens Drops
+- drops tab: the tabs are Drops, History and Insights, and the retired `mine` opens Drops
 - drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
 - drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
 - drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
@@ -927,7 +975,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (40)
+### test_test_mode.lua (47)
 
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -938,6 +986,12 @@ Total.
 - test mode data: off-spec samples show every off-spec verdict, an empty slot, a bag item and a worn one
 - test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade
 - test mode data: History holds an off-spec entry you asked for and one you received
+- test mode data: the sixth boss drops every item kind, each with its collection verdict (issue #13)
+- test mode data: an item kind draws on the pool's items of that kind before any stand-in
+- test mode data: History holds a world boss's mount new to you and a pet of yours you have (issue #13)
+- test mode data: History's sent and settled entries carry the stamps a live one does
+- test mode data: one received sample is legacy, and one member traded you twice
+- test mode data: History holds every item kind, and a boss kill with an upgrade for you
 - window: test mode shows an off-spec verdict, cyan with the spec's name, and its detail card's Spec row
 - test mode data: a key run and four bosses, every item a pool item that keeps its slot
 - test mode data: worn items are other pool items of the slot, nearest the level the change implies
@@ -954,7 +1008,7 @@ Total.
 - test mode: the Drops tab shows View: All while on, and the player's View comes back
 - history: test mode shows its sample groups, every outcome, and never writes the account's history
 - history: the account's kept groups come back when test mode ends
-- window: test mode draws every sample, under the two key runs and the five bosses, with real icons
+- window: test mode draws every sample, under the two key runs and the six bosses, with real icons
 - window: every cell of every sample row says something and has a reason
 - window: the rows show every ask state, every Them gear state and every trade chip
 - window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Yes
@@ -969,6 +1023,7 @@ Total.
 - sends: Post my tradeables in test mode prints its lines and sends nothing
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
+- window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
 ### test_compat.lua (74)
 
@@ -1047,6 +1102,26 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
+### test_compat_collect.lua (17)
+
+- compat collect: MountFromItem answers the journal's mount id, else nil
+- compat collect: MountCollected answers isCollected, the 11th return, else nil
+- compat collect: PetSpeciesFromItem answers the 13th return, the species id, else nil
+- compat collect: PetCollected answers the count and the limit, else nil, nil
+- compat collect: IsToy answers whether GetToyInfo knows the item, false without
+- compat collect: ToyCollected answers PlayerHasToy, else nil
+- compat collect: IsCosmeticItem answers the client's flag, false without
+- compat collect: RecipeKnown reads the Already known line by its whole text
+- compat collect: RecipeKnown answers nil when it cannot tell
+- compat collect: ProfessionSkillLines maps every profession slot to its skill line
+- compat collect: TierTokenSlot reads a slot line by its whole text
+- compat collect: TierTokenSlot answers nil when it cannot tell
+- compat collect: ClassDisplayName answers the client's name for a class, else nil
+- compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
+- compat collect: no member raises with every API gone
+- compat collect: the simulator's seam wraps every collection member (the TOC order)
+- compat collect: no other shipped file names a collection API in code
+
 ### test_text_parse.lua (10)
 
 - textparse: the module is pure — it names no client global and reads no _G
@@ -1060,10 +1135,13 @@ Total.
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
 
-### test_constants.lua (12)
+### test_constants.lua (15)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
+- constants: the category ids fall back to the 12.x literals and read Enum by name (issue #13)
+- constants: each recipe subclass names its profession's skill line; book and first aid none
+- constants: the categories in display order, the tier slots and the empty token table
 - constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
 - constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
@@ -1146,6 +1224,24 @@ Total.
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
 
+### test_tier_token.lua (15)
+
+- tier token: the slot is read off the tooltip, and becomes the equipLoc
+- tier token: the curated table beats the tooltip, and lists a Curio with no class line
+- tier token: a slot line is matched by its whole text; none read leaves the slot nil
+- tier token: the tooltip is not read when the table answers
+- tier token: a concrete slot is upgrade, sidegrade or downgrade against what is worn there
+- tier token: another class's token is cantUse; a slot not read is unknown, reason tierToken
+- tier token: a Curio with no class line folds to its best slot
+- tier token: a Curio of another class is cantUse, naming no slot
+- tier token: the scorer is skipped, and neither the opts nor the facts are written
+- tier token: the looter is judged on their own class and gear
+- tier token: through the feed, a token is judged against the head you wear
+- tier token: the minimum item level applies to a token
+- tier token: the Slot and Type cells name the slot and the classes
+- tier token: the detail card's Makes chip, and no type chip
+- tier token: the Me cell names a Curio's best slot; an unread slot's reason says so
+
 ### test_offspec_cells.lua (23)
 
 - off-spec cells: the offspec tone is its own cyan, apart from Offer's
@@ -1223,7 +1319,7 @@ Total.
 - scoring: with weights, a higher item level that scores lower is a sidegrade
 - scoring: the feed judges your drop with your weights once they are set
 
-### test_quality_gate.lua (24)
+### test_quality_gate.lua (26)
 
 - quality gate: fixed passes at or above the threshold and hides below it
 - quality gate: fixed defaults to Rare, and the floor does not apply to it
@@ -1249,6 +1345,8 @@ Total.
 - quality gate: every quality id has a display name
 - quality gate: an unknown drop quality passes, so the feed never hides what it cannot read
 - quality gate: nil and garbage inputs never throw
+- quality gate: the upgrade override lets a drop new to your collection through, never a collected one
+- quality gate: an Always watch item passes below the threshold, as whitelisted
 
 ### test_situations.lua (14)
 
@@ -1267,7 +1365,7 @@ Total.
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
 
-### test_trade_rules.lua (23)
+### test_trade_rules.lua (24)
 
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
@@ -1292,6 +1390,7 @@ Total.
 - trade rules: IsRule knows the three rule names and nothing else
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
+- trade rules: a collectible keeps the bind and rule answers, and is unknown collectible otherwise
 
 ### test_messaging.lua (26)
 
@@ -1322,7 +1421,7 @@ Total.
 - messaging: garbage never throws
 - messaging: FurthestState is the furthest state any ask of a kind reached for one drop (feedback-4 §1)
 
-### test_restrictions.lua (15)
+### test_restrictions.lua (16)
 
 - restrictions: nothing restricted, everything allowed and nothing announced
 - restrictions: an encounter stops chat and is the reason; its lift is announced
@@ -1339,6 +1438,7 @@ Total.
 - restrictions: a client without the restriction APIs restricts nothing but combat
 - restrictions: Refresh announces a lift no event reported
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
+- restrictions: [I11] both combat edges announce even under the Combat restriction type
 
 ### test_roster.lua (13)
 
@@ -1356,7 +1456,7 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (21)
+### test_item_facts.lua (23)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
@@ -1373,6 +1473,8 @@ Total.
 - item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
+- item facts: rawEquipLoc and the category are filled on every item (issue #13)
+- item facts: the appearance event reads the raw equipLoc, not a slot set later
 - item facts: Request answers a cached item at once and never calls back
 - item facts: an uncached item loads, and every waiter is called back once
 - item facts: the callback retries until the item arrives
@@ -1380,7 +1482,25 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_item_read.lua (24)
+### test_collectibles.lua (15)
+
+- collectibles: CategoryOf names each category
+- collectibles: CategoryOf's precedence
+- collectibles: the out-of-scope classes are not watched
+- collectibles: IsCollectible is true for the collectible categories alone
+- collectibles: Verdict reads new, collected and no answer
+- collectibles: a pet carries its count, and a partial collection says n/limit
+- collectibles: a recipe for a profession you lack is can't use
+- collectibles: a cosmetic reads its live transmogKnown
+- collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
+- collectibles: Read fills a mount's, a pet's and a toy's collection state
+- collectibles: Read fills a recipe's profession and known line
+- collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
+- collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
+- collectibles: Read leaves a tier token's category to its flag and probes nothing
+- collectibles: Read answers its argument and survives no facts
+
+### test_item_read.lua (25)
 
 - BUG-1 repro: chat first, the drop reads 311 Epic
 - BUG-1 repro: the encounter's bare link first, then chat's complete one: the complete link wins
@@ -1393,6 +1513,7 @@ Total.
 - BUG-1: the history's Refresh never trades a complete link for a bare one
 - BUG-1: a drop the bare link's base quality hid comes back when the complete link merges in
 - ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is
+- ItemRead: an empty bonus id field keeps the bonus list dense and the modifiers read at the declared count
 - ItemRead: BetterLink keeps the more complete link, the first on a tie, and never a non-item
 - ItemRead: the identity is the item and its bonus ids; unique id, level, spec and modifiers do not count
 - ItemRead: EffectiveItemLevel answers gear's detailed level, else its base, and nothing for non-gear
@@ -1504,7 +1625,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (50)
+### test_feed.lua (52)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1535,7 +1656,9 @@ Total.
 - comparison: heirloom protection (on by default) calls your upgrade over an heirloom a sidegrade
 - comparison: heirloom protection is yours alone; the looter's verdict is plain
 - gates: the filters run after the situation and before the verdict
-- filter: every rule of spec §6.3 (pure)
+- gates: an item kind turned off hides its drops as category, and Config reads every kind
+- filter: every rule of spec §6.3 and the item kinds (pure)
+- filter: Never watch beats everything, Always watch beats the kinds, heirlooms and min ilvl (pure)
 - gates: the relative minimum item level reads your average equipped level
 - load: an uncached item waits for its facts; a second source merges meanwhile
 - load: an item that never loads is shown, judged unknown
@@ -1560,8 +1683,8 @@ Total.
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
-- two yokes: the reagent and the altar are hidden by the gear-only rule and counted, not lost
-- two yokes: with gear-only off, the common reagent is hidden by the quality rule
+- two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost
+- two yokes: with Equipment off, both Yokes are hidden by the item kind rule, the rest still unwatched
 - two yokes: each hidden drop is logged with its reason under the FEED tag
 - refused: every receipt the feed turns away is counted by reason and logged under FEED
 - refused: a C_LootHistory drop already taken is counted as seen
@@ -1569,6 +1692,39 @@ Total.
 - header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
+
+### test_collect_feed.lua (15)
+
+- collect feed: someone else's mount reads its collection verdict, asks no inspect and has no Them
+- collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no
+- collect feed: the trade sweep drops someone else's collectible and keeps your own
+- collect feed: a mount new to your collection passes the quality gate's override; a collected one does not
+- collect feed: a burst of collection events reads once, and re-judges only the drop that moved
+- collect feed: combat's end reads again only the drops still at collectUnknown
+- collect feed: combat's end with no unknown collectible arms nothing
+- collect feed: a learned appearance re-judges a live cosmetic through the same re-read
+- collect feed: the stand-down cancels a waiting re-read
+- collect feed: RereadCollections is the cache's one writer and reads the collectibles alone
+- collect feed: Asks refuses an ask, an offer and an announce for a collectible
+- collect feed: the Offer panel never opens for your collectible, and /dw offer says why
+- collect feed: /dw offer refuses a bag collectible the feed never saw, and adds no drop
+- collect feed: an Always watch drop of no kind stays feed-only after the list changes
+- collect feed: auto-ask never schedules a collectible
+
+### test_item_lists.lua (12)
+
+- item lists: ParseId reads a number, a link, item:<id> and a number as text, and nothing else
+- item lists: Add, Remove, List and Contains, in ID order, with already and notListed
+- item lists: an ID on one list is refused by the other, both ways, and never moved
+- item lists: every write is a whole copy through the seam, at the list's own path
+- item lists: `/dw whitelist add|remove|list` writes through the writer and says what it did
+- item lists: the verbs are in NS.COMMANDS and the help, and refused while disabled
+- item lists: `/dw get` shows a list as its size, and a named `/dw reset` empties it
+- item lists: `/dw set` on a list is refused by the generic verb, and the list is unchanged
+- item lists: Never watch hides gear as blacklist, and beats Always watch on an overlap
+- item lists: Always watch shows an item of no kind as a feed-only unknown on its list
+- item lists: Always watch passes a kind turned off and the quality gate, gear judged as gear
+- item lists: Always watch never overrides the situation gate
 
 ### test_group_roster.lua (13)
 
@@ -1700,7 +1856,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (30)
+### test_history.lua (39)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1732,6 +1888,15 @@ Total.
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
 - history tab: rows draw the Drops rows' chevron and indent; the headers' chevrons are gold
+- history: Snapshot keeps the category, the token slot and a collectible's verdict
+- history: Snapshot records an Always watch item of no kind as Watched item
+- history: a collection verdict that moves refreshes the entry; one that does not changes nothing
+- history: Stamp sets askedAt and offeredAt once, and Advance, Settle and declined keep them
+- history: Settle writes settledAt on both outcomes and freezes `got` on a received entry only
+- history: an ask or offer held from before the stamps survives Settle, stamped once
+- history: WasAsked and WasOffered read the stamps, the held outcomes and the legacy trades
+- history edge: a sent ask stamps askedAt, and a stamp with no advance still sends HistoryChanged
+- history trade: a completed trade stamps settledAt, and `got` keeps the pre-equip gain
 
 ### test_history_retention.lua (16)
 
@@ -1751,6 +1916,40 @@ Total.
 - retention: enabled later in a session that started disabled, the prune still runs once
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
+
+### test_insights_filters.lua (12)
+
+- insights filters: Rows reads each facet once, with its legacy fallback
+- insights filters: a Watched item is its own category, listed last
+- insights filters: a drop with no time on it or its group is skipped, never read as the epoch
+- insights filters: the ranges follow the retention: shorter windows only, all under Never delete
+- insights filters: Since is a local midnight, N-1 calendar days back; the walk never skips a day
+- insights filters: Period names what the rows cover
+- insights filters: Filter keeps the rows passing every pick, in order
+- insights filters: each dropdown counts the rows the other filters keep; two misses count nowhere
+- insights filters: the pick stays listed at 0, and the head carries the total and the choices
+- insights filters: Normalize puts zero-count picks back to all in ORDER, spares `keep`, writes nothing
+- insights filters: difficulties in their natural order, situations in the constants' order
+- insights filters: you first among the characters, then by count; qualities and categories ordered
+
+### test_insights_stats.lua (16)
+
+- insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
+- insights stats: offers and traded away, your own drops only, the legacy one counted
+- insights stats: an ask or offer from before the stamps, settled after, still counts as sent
+- insights stats: upgrades for you include the off-spec part, as the filter bar's rule does
+- insights stats: three outcome rows, the upgrades row a subset of the others'
+- insights stats: active days in local time, first and last
+- insights stats: upgrades by instance and by boss (encounters only), and per visit over two visits
+- insights stats: the most generous members by count, then the most recent
+- insights stats: a generous member's last trade is when it settled, not when it dropped
+- insights stats: the gain is the frozen verdict's, the legacy one as last judged, none skipped
+- insights stats: the days are continuous with empty ones, asks on the day they were sent
+- insights stats: a period over 62 days buckets by week
+- insights stats: the mixes: class, quality, slot, category, verdicts and trade estimates
+- insights stats: a Watched item counts as itself, listed after every category
+- insights stats: nothing in gives zeros and empty lists
+- insights stats: one pass: each reducer sees each row once
 
 ### test_feed_restore.lua (14)
 
@@ -1777,6 +1976,65 @@ Total.
 - content per tab: Drops' This session starts at the stored session start, in the client clock
 - content per tab: the feed.content row offers This instance and This session, default This session
 - database: step 8 turns a stored feed.content all into session in every profile, and keeps the rest
+
+### test_insights_rows.lua (20)
+
+- insights rows: eight cards in grid order, the owner's six then Offers sent and Traded away (Q4)
+- insights rows: each card's figure and hover read the stats' totals
+- insights rows: Ask success is a rounded percentage, green from 50%, with the legacy warning only when inferred
+- insights rows: with nothing to show a card reads 0 or a dash, never a nil, and no legacy line
+- insights rows: the card grid is 4 columns full and 2 compact, a short last row stretched
+- insights rows: the bar wraps one row at the full width, two at 600 and four at compact's 400
+- insights rows: a day reads `Nov 5`, with no leading zero
+- insights rows: the period caption names the kept window, Never delete and a shorter range
+- insights rows: the empty line says how long drops are kept, or that the filters match nothing
+- insights rows: A splits others' drops, their upgrades and yours by outcome, fracs over the largest row
+- insights rows: A paints Offered in Offer's cyan with Traded away, Asked apart in yellow (spec §4.4)
+- insights rows: every A segment has a color with no chart.other and no tone filled (no Skin library)
+- insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted
+- insights rows: C names each boss under its instance and difficulty; encounters only
+- insights rows: D reads upgrades a visit with the visits in the hover
+- insights rows: E lists who traded to you most, in their class color, the items in the hover
+- insights rows: F draws each gain from 0, signed, legacy marked, the summed gain in the heading
+- insights rows: F past ten rows keeps the ten biggest gains, oldest first, and counts the rest
+- insights rows: G and H bucket each day, the zero days kept, the hover naming the counts
+- insights rows: the mixes read their words and colors, a token under its category and Can't use's off-spec count
+
+### test_window_insights.lua (22)
+
+- insights tab: built once on its first show, with its chart context and eight cards
+- insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
+- insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History
+- insights tab: the footer's Sort is hidden on Insights and back on History
+- insights tab: switching in closes the compact Filters panel
+- insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
+- insights tab: a pick redraws the cards and the strip; Reset puts every filter back
+- insights tab: a date range with nothing in it says no drop matches, and the cards hide
+- insights tab: an unrelated repaint computes nothing; HistoryChanged and test mode off do
+- insights tab: no work while the window is hidden; the show draws the tab afresh
+- insights tab: a skin switch recomputes the Quality rows' colors
+- insights tab: a resize lays out again without computing
+- insights tab: the strip names the period, and follows the retention
+- insights tab: a retention change that deletes nothing repaints the caption on its own
+- insights tab: test mode fills the cards from the sample history
+- insights tab: test mode fills every card and every section, none with its empty line (DW-N4)
+- insights tab: with no history the cards hide and one line says how long drops are kept
+- insights tab: each recompute logs one line under UI
+- insights tab: compact's empty line wraps inside the pane's width
+- insights tab: without LibKa0s-Charts-1.0 the bar and the strip draw and one line says why
+- insights tab: without LibKa0s-Widgets-1.0 no dropdown draws and the cards still do
+- insights tab: compact lays the cards out two to a row and wraps the bar
+
+### test_insights_sections.lua (8)
+
+- insights sections: a filled log draws every section, each heading shown and in the spec's order
+- insights sections: the hovers carry the numbers
+- insights sections: a section with no rows shows its heading and one line, its renderer never called
+- insights sections: F with only items no level was compared for says so
+- insights sections: with no drop through the filters every section hides
+- insights sections: D and E sit side by side in the full layout and stack in compact
+- insights sections: a second pass builds no frame
+- insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
 
 ### test_toast.lua (49)
 
@@ -1829,6 +2087,25 @@ Total.
 - toast edge: 90 px tall, its icon, Ask and every face scaled to match DpsRace's toast (DW-05)
 - toast edge: with CreateFont, each scaled face is a named font object, so Ignore fonts keeps the scale (DW-05)
 - toast edge: a scaled face scales its client font object's own height, NS.FONT_SIZE only the fallback (DW-05 review)
+
+### test_toast_stack.lua (16)
+
+- toast stack: the default is 3; N drops give min(N, 3) toasts, each on its own painted frame
+- toast stack: past the stack the drops queue, and the queue still keeps the newest MAX_QUEUE
+- toast stack: Down hangs each toast under the one before, from the saved point
+- toast stack: Up hangs each toast above the one before
+- toast stack: a toast that closes re-flows the rest onto the head, and the next waiting comes up
+- toast stack: each toast has its own countdown and its own hover pause
+- toast stack: the combat hold sends every toast back in order and brings them all again
+- toast stack: Show in combat turned off mid-combat keeps the whole stack up
+- toast stack: the two rows apply live, smaller sending the tail back, larger filling
+- toast stack: a profile switch reads the incoming stack and direction
+- toast stack: Prune takes only the toasts whose drops left the feed, wherever they sit
+- toast stack: Ask on a toast below the head asks for its own drop and repaints its own button
+- toast stack: Ask on a toast below the head whose drop is gone takes only that toast down
+- toast stack: a skin switch repaints every toast on screen, not only the head
+- toast stack: in test mode the sticky placeholders stack too
+- toast stack: the diagnostics name the stack and every toast on screen
 
 ### test_glow.lua (14)
 
@@ -1933,7 +2210,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (21)
+### test_sim_pool.lua (24)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -1941,6 +2218,9 @@ Total.
 - compat journal: world bosses are flagged, bosses named, the keys' preview level set and put back (fb17)
 - sim pool: each situation reads its side and difficulty; the class filter is yours or none
 - sim pool: a loot burst draws the pool's gear, and every drop only when it has none
+- sim pool: its extras are the drops that are not gear, by kind, in the pool's order (issue #13)
+- sim pool: plain gear is classed from its cheap facts, so a big pool reads full facts only for the rest
+- sim pool: a kind the pool has none of draws the curated samples, once the client has them
 - sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
 - sim pool: the selection is restored even when a read raises
 - sim pool: the journal is not read while its frame is shown
@@ -1957,7 +2237,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (21)
+### test_sim_events.lua (24)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -1967,6 +2247,8 @@ Total.
 - sim world: the stop puts the real world back
 - sim loot: a member's line goes through the parser into the feed, under their GUID
 - sim loot: n random lines, and nothing without a running simulation or a pool
+- sim lines: about one line in eight is one of the pool's extras, and without them nothing moves (issue #13)
+- sim drop: one drop of a named kind goes through the parser into the feed, judged for your collection
 - sim inspect: a looter is read through the broker's queue after the reply, never the fast path
 - sim inspect: a failing member times out; a member out of range waits and gives up
 - sim inspect: the reply delay is the session's seeded random source
@@ -1978,12 +2260,13 @@ Total.
 - sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)
 - sim own drops: the scenario sets the window and the ending-soon count
 - sim trade: your drop traded away and another's received land in the session's history log
+- sim trade: a sent ask and offer, then the trades, stamp the session's entries and fill Insights' cards
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
 ### test_sim_scenario.lua (31)
 
-- sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
 - sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage
@@ -2038,7 +2321,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (16)
+### test_sim_report.lua (17)
 
 - sim report: the owner's key run: the second drop is yours, on Drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -2046,6 +2329,7 @@ Total.
 - sim report: each drop's place: Drops (yours too), hidden by its gate, loading, cleared
 - sim report: the detail counts the drops and says which are hidden or otherwise placed
 - sim report: the tooltip names each drop, its looter and its tab or gate
+- sim report: the item kinds' gates are named, and the retired ones are gone
 - sim report: a Drops header no longer counts drops of yours apart
 - sim report regression key: Drops + hidden = every loot step's drops
 - sim report regression dungeon: Drops + hidden = every loot step's drops
@@ -2236,7 +2520,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (41)
+### test_skin_switch.lua (49)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the window's title bar changes
@@ -2277,6 +2561,14 @@ Total.
 - skin switch: the Offer panel changes with the Scope ignored
 - skin switch: a tooltip's title and lines changes
 - skin switch: a tooltip's title and lines changes with the Scope ignored
+- skin switch: an Insights card changes
+- skin switch: an Insights card changes with the Scope ignored
+- skin switch: an Insights section heading and divider changes
+- skin switch: an Insights section heading and divider changes with the Scope ignored
+- skin switch: an Insights bar in a host color changes
+- skin switch: an Insights bar in a host color changes with the Scope ignored
+- skin switch: an Insights strip column changes
+- skin switch: an Insights strip column changes with the Scope ignored
 - skin switch: the toast changes
 - skin switch: the toast changes with the Scope ignored
 
@@ -2287,10 +2579,11 @@ Total.
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 24 |
-| test_database.lua | 14 |
+| test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 23 |
+| test_schema_rows.lua | 26 |
 | test_settings_pages.lua | 53 |
+| test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 18 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
@@ -2302,9 +2595,9 @@ Total.
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
-| test_slash.lua | 26 |
+| test_slash.lua | 27 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 63 |
+| test_window_shell.lua | 64 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
@@ -2316,7 +2609,9 @@ Total.
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
-| test_detail_card.lua | 30 |
+| test_collect_cells.lua | 11 |
+| test_collect_surfaces.lua | 15 |
+| test_detail_card.lua | 32 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -2325,30 +2620,35 @@ Total.
 | test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 40 |
+| test_test_mode.lua | 47 |
 | test_compat.lua | 74 |
+| test_compat_collect.lua | 17 |
 | test_text_parse.lua | 10 |
-| test_constants.lua | 12 |
+| test_constants.lua | 15 |
 | test_class_data.lua | 13 |
 | test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
+| test_tier_token.lua | 15 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
 | test_scoring.lua | 16 |
-| test_quality_gate.lua | 24 |
+| test_quality_gate.lua | 26 |
 | test_situations.lua | 14 |
-| test_trade_rules.lua | 23 |
+| test_trade_rules.lua | 24 |
 | test_messaging.lua | 26 |
-| test_restrictions.lua | 15 |
+| test_restrictions.lua | 16 |
 | test_roster.lua | 13 |
-| test_item_facts.lua | 21 |
-| test_item_read.lua | 24 |
+| test_item_facts.lua | 23 |
+| test_collectibles.lua | 15 |
+| test_item_read.lua | 25 |
 | test_gear.lua | 27 |
 | test_loot_parser.lua | 28 |
 | test_inspect.lua | 33 |
-| test_feed.lua | 50 |
+| test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
+| test_collect_feed.lua | 15 |
+| test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
 | test_char_filter.lua | 19 |
@@ -2356,21 +2656,27 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 30 |
+| test_history.lua | 39 |
 | test_history_retention.lua | 16 |
+| test_insights_filters.lua | 12 |
+| test_insights_stats.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
+| test_insights_rows.lua | 20 |
+| test_window_insights.lua | 22 |
+| test_insights_sections.lua | 8 |
 | test_toast.lua | 49 |
+| test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 21 |
-| test_sim_events.lua | 21 |
+| test_sim_pool.lua | 24 |
+| test_sim_events.lua | 24 |
 | test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
-| test_sim_report.lua | 16 |
+| test_sim_report.lua | 17 |
 | test_sim_panel.lua | 13 |
 | test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
@@ -2385,6 +2691,6 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 41 |
+| test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **1965** |
+| **Total** | **2215** |

@@ -117,8 +117,10 @@ local SIM_PANEL_NAME = "DropWatcherSimPanel"
 -- The main window and every frame built inside it, recorded (modules/Window.lua and the tabs it
 -- hosts): the kit's frame answers every unmodeled getter with the frame itself, so "the window went
 -- back to where it started" or "the badge reads `Encounter · 2 queued`" could not fail without this.
--- A frame is decorated when it is the window, the toast or the simulation panel, or when its parent
--- is decorated (`__dwTree`), so the whole tree is, and nothing outside it changes.
+-- A frame is decorated when it is the window, a toast (the first `DropWatcherToast`, and each the
+-- stack pools after it, `DropWatcherToast2`, ...: LibKa0s-Toast-1.0 minor 4, issue #14) or the
+-- simulation panel, or when its parent is decorated (`__dwTree`), so the whole tree is, and nothing
+-- outside it changes.
 
 -- Text, color, font, texture, vertex color and check state, recorded on any widget or region of
 -- the tree (a font string never given a font answers the game's default face at 10 points).
@@ -631,9 +633,13 @@ local function installClock(M)
     -- time() moves with GetTime(), as the client's two clocks do (whole seconds from the load's
     -- epoch): the Drops tab's This session turns the stored login (time()) into the client clock
     -- (modules/Session.lua's StartClock, feedback-15 spec §1), which a still epoch would read as a
-    -- login that keeps moving forward. A case that sets `time` itself replaces it.
+    -- login that keeps moving forward. A case that sets `time` itself replaces it. Given a date
+    -- table, it answers that date's time, as the client's does (the Insights tab's local midnights).
     local epoch0 = os.time()
-    M.time = function() return epoch0 + math.floor(M.__now) end
+    M.time = function(t)
+        if t ~= nil then return os.time(t) end
+        return epoch0 + math.floor(M.__now)
+    end
 end
 
 -- The drop tables' client surface (modules/WindowGroup.lua through core/Compat.lua): item icons,
@@ -919,6 +925,7 @@ local function build()
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     installCompatSurface(M)
+    dofile("tests/wow_mock_collect.lua")(M)   -- the collection reads (core/CompatCollect.lua)
     installUnits(M)
     installInspect(M)
     installClock(M)
@@ -937,7 +944,9 @@ local function build()
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
-        if name == WINDOW_NAME or name == TOAST_NAME or name == SIM_PANEL_NAME
+        local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
+            and name:sub(#TOAST_NAME + 1):match("^%d*$") ~= nil
+        if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME
             or (type(parent) == "table" and parent.__dwTree) then
             decorateGeometry(M, f)
         end

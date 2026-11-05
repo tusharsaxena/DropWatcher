@@ -59,7 +59,8 @@ local _, NS = ...
 -- scorer answering "pending" is retried on one shared SCORE_RETRY timer, SCORE_TRIES times per
 -- drop; your own drop the trade timer matched to its bag item is read from it on each
 -- TradeTimerTick (ReadBagItems: the exact level and quality). Each sends DropUpdated(id, cause):
--- `source`, `inspect`, `gear`, `score` or `bag`. A new drop sends DropAdded(id). Updates re-judge
+-- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/Collectibles.lua's re-read,
+-- through Refresh). A new drop sends DropAdded(id). Updates re-judge
 -- the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.
 --
@@ -153,13 +154,20 @@ local function tradeRules()
     return rules
 end
 
+-- The item kinds (`feed.categories.<key>`, issue #13) as the map FeedFilter reads.
+local function categories()
+    local kinds = {}
+    for _, cat in ipairs(C.CATEGORIES) do kinds[cat.key] = get("feed.categories." .. cat.key) end
+    return kinds
+end
+
 --- The settings the feed reads: `feed.*`, `comparison.*` and `trade.rules.*`, each through the
 --- schema seam (`feed.clearOnBossKill` is read at each kill instead).
 --- @return table cfg
 function LF.Config()
     return {
-        gearOnly = get("feed.gearOnly"), includeTokens = get("feed.includeTokens"),
-        minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
+        categories = categories(), minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
+        whitelist = get("feed.whitelist"), blacklist = get("feed.blacklist"),
         relativeIlvl = get("feed.relativeIlvl"),
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
@@ -256,8 +264,24 @@ local function myCandidate(cfg)
 end
 
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
--- judged plainly, so a real upgrade for them never reads as one they would give away.
+-- judged plainly, so a real upgrade for them never reads as one they would give away. A
+-- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's, and so
+-- is an item of no kind on the Always watch list. The list is read once, when the drop is admitted
+-- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
+-- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a
+-- list change applies to new drops only, so a shown drop never leaves the collect path untold.
+local function whitelisted(cfg, f)
+    local id = type(f) == "table" and f.itemID or nil
+    return id ~= nil and type(cfg.whitelist) == "table" and cfg.whitelist[id] == true
+        and not (type(cfg.blacklist) == "table" and cfg.blacklist[id])
+end
+
 local function judgeMe(rec, cfg)
+    local f, forced = rec.facts, rec.forced == true
+    if NS.Collectibles.IsCollectible(f) or (forced and f.category == nil) then
+        rec.me = NS.Collectibles.Verdict(f, forced)
+        return
+    end
     local opts = evalOpts(cfg)
     opts.heirloomProtect = cfg.heirloomProtect == true
     rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
@@ -272,7 +296,7 @@ local function qualityGate(rec, cfg)
     local mode = QG.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation))
     local ctx = { fixed = cfg.fixed, floor = cfg.floor, upgradeOverride = cfg.upgradeOverride,
         gear = NS.Gear.Qualities(), baselineSlot = rec.me.baselineSlot, equipLoc = f.equipLoc,
-        verdict = rec.me.verdict }
+        verdict = rec.me.verdict, forced = rec.forced == true }
     local pass, threshold, reason = QG.Passes(f.quality, mode, ctx)
     rec.quality = { mode = mode, threshold = threshold, reason = reason }
     if t0 then Perf.Note("quality.gate", debugprofilestop() - t0, parent()) end
@@ -293,7 +317,8 @@ local function estimate(rec, looterEval, cfg, insp)
     local f = rec.facts
     local facts = f and { ilvl = f.ilvl, bindType = f.bindType, warbound = f.warbound, bonusRoll = rec.bonusRoll }
     local t = now()
-    local ctx = { situation = rec.situation, rules = cfg.rules, now = t, droppedAt = rec.at }
+    local ctx = { situation = rec.situation, rules = cfg.rules, now = t, droppedAt = rec.at,
+        collectible = NS.Collectibles.IsFeedOnly(rec) }
     if insp then
         if looterEval then
             ctx.inspectAge = insp.at and t - insp.at
@@ -347,8 +372,13 @@ local function candidateEntry(rec, m, cfg, ask)
     return e
 end
 
--- Your own drop: every other member judged; their inspects asked for only while it may trade.
+-- Your own drop: every other member judged; their inspects asked for only while it may trade. A
+-- collectible is judged for nobody (none asked for, here and through reestimate alike).
 local function judgeCandidates(rec, cfg, request)
+    if NS.Collectibles.IsFeedOnly(rec) then
+        rec.candidates = {}
+        return
+    end
     local ask = request and not rec.test and rec.trade.state ~= "no"
     local out = {}
     for _, m in ipairs(NS.Roster.Members()) do
@@ -366,6 +396,10 @@ local function judgeLooter(rec, cfg, request)
     if rec.isMine then
         estimate(rec, rec.me, cfg, nil)
         return judgeCandidates(rec, cfg, request)
+    end
+    if NS.Collectibles.IsFeedOnly(rec) then   -- judged for you alone: no inspect, no Them
+        rec.them = nil
+        return estimate(rec, nil, cfg, nil)
     end
     local guid = rec.looter.guid
     local inGroup = guid and NS.Roster.Get(guid) ~= nil
@@ -431,8 +465,10 @@ local function reestimate(rec, cfg)
     return true
 end
 
+-- Someone else's collectible stays out: its `unknown` would keep the sweep ticking all session.
 local function mayChange(rec)
-    return not rec.test and rec.trade ~= nil and (rec.isMine or rec.trade.state ~= "no")
+    if rec.test or rec.trade == nil then return false end
+    return rec.isMine or (rec.trade.state ~= "no" and not NS.Collectibles.IsFeedOnly(rec))
 end
 
 --- Re-estimate the live drops' trade (your own only, with `mineOnly`), sending DropUpdated(id,
@@ -547,8 +583,11 @@ local function judge(rec, facts)
     local cfg = LF.Config()
     if not rec.test and rec.source ~= "restore" then
         local ctx = { myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil }
-        local ok, why = NS.FeedFilter.Filter(facts, cfg, ctx)
+        local ok, why, forced = NS.FeedFilter.Filter(facts, cfg, ctx)
         if not ok then return hide(rec, why) end
+        rec.forced = forced or nil   -- the Always watch list let it through (the quality gate's pass)
+    else
+        rec.forced = whitelisted(cfg, facts) or nil   -- read once here too (no filter runs)
     end
     judgeMe(rec, cfg)
     if not rec.test and not qualityGate(rec, cfg) then return hide(rec, "quality") end

@@ -11,8 +11,10 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local PINNED = {
     "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
     "CHAT_MSG_LOOT", "DISPLAY_SIZE_CHANGED", "EJ_LOOT_DATA_RECIEVED", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
-    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_UPDATE_DROP", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
-    "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED",
+    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_UPDATE_DROP",
+    "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_RECIPE_LEARNED", "NEW_TOY_ADDED",
+    "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
+    "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED", "SKILL_LINES_CHANGED",
     "TRADE_ACCEPT_UPDATE", "TRADE_CLOSED", "TRADE_PLAYER_ITEM_CHANGED", "TRADE_SHOW", "TRADE_TARGET_ITEM_CHANGED",
     "TRANSMOG_COLLECTION_UPDATED", "UI_INFO_MESSAGE", "UI_SCALE_CHANGED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
@@ -24,7 +26,7 @@ local PINNED = {
 -- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged;
 -- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three,
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,
--- beside the feed's, for the My eq column).
+-- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -33,6 +35,7 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
+    "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",

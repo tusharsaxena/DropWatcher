@@ -509,18 +509,49 @@ test("gates: the filters run after the situation and before the verdict", functi
     brakkLoots(m, 300)
     brakkLoots(m, 301)
     assertEqual(#LF.Drops(), 0)
-    assertEqual(LF.Stats().hidden.notGear, 1); assertEqual(LF.Stats().hidden.heirloom, 1)
+    assertEqual(LF.Stats().hidden.notWatched, 1); assertEqual(LF.Stats().hidden.heirloom, 1)
 end)
 
-test("filter: every rule of spec §6.3 (pure)", function()
+-- DW-CAT2 (issue #13, categories design spec §4.1, §4.4): the feed reads every item kind through the
+-- seam, and a kind turned off hides its drops as `category`, logged under FEED with its key.
+-- red under: Config still reading gearOnly, or the FEED line naming no kind.
+test("gates: an item kind turned off hides its drops as category, and Config reads every kind", function()
+    local NS, m, LF = party()
+    local cfg = LF.Config()
+    for _, cat in ipairs(NS.Constants.CATEGORIES) do
+        assertEqual(cfg.categories[cat.key], NS.Setting("feed.categories." .. cat.key), cat.key)
+    end
+    assertEqual(cfg.categories.equipment, true); assertEqual(cfg.categories.cosmetic, false)
+    assertNil(cfg.gearOnly); assertNil(cfg.includeTokens)
+    assertTrue(NS.SchemaRuntime.Set("feed.categories.equipment", false))
+    local lines = {}
+    local debug = NS.Debug
+    NS.Debug = function(tag, fmt, ...)
+        if tag == "FEED" then lines[#lines + 1] = fmt:format(...) end
+        return debug(tag, fmt, ...)
+    end
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    NS.Debug = debug
+    assertEqual(#LF.Drops(), 0)
+    assertEqual(LF.Stats().hidden.category, 1)
+    local named = false
+    for _, l in ipairs(lines) do named = named or l:find("category=equipment", 1, true) ~= nil end
+    assertTrue(named, table.concat(lines, "\n"))
+end)
+
+test("filter: every rule of spec §6.3 and the item kinds (pure)", function()
     local NS = T.newAddon()
     local F = NS.FeedFilter.Filter
     local C = NS.Constants
-    local gear = { classID = C.ITEM_CLASS.ARMOR, subClassID = 0, quality = 4, ilvl = 600 }
+    local gear = { classID = C.ITEM_CLASS.ARMOR, subClassID = 0, quality = 4, ilvl = 600, category = "equipment" }
+    local NONE = {}   -- a field taken out of the gear facts
     local function with(over)
         local out = {}
         for k, v in pairs(gear) do out[k] = v end
-        for k, v in pairs(over) do out[k] = v end
+        for k, v in pairs(over) do
+            if v == NONE then out[k] = nil else out[k] = v end
+        end
         return out
     end
     local function check(facts, cfg, ctx, pass, why)
@@ -531,11 +562,25 @@ test("filter: every rule of spec §6.3 (pure)", function()
     check(nil, {}, {}, true, nil)
     check(with({ classID = C.ITEM_CLASS.WEAPON }), {}, {}, true, nil)
     check(with({ quality = C.QUALITY.HEIRLOOM }), {}, {}, false, "heirloom")
-    check(with({ subClassID = C.ARMOR_SUBCLASS.COSMETIC }), { gearOnly = false }, {}, false, "cosmetic")
-    check(with({ classID = 15, isTierToken = true }), {}, {}, true, nil)
-    check(with({ classID = 15, isTierToken = true }), { includeTokens = false }, {}, false, "token")
-    check(with({ classID = 15 }), {}, {}, false, "notGear")
-    check(with({ classID = 15 }), { gearOnly = false }, {}, true, nil)
+    -- red under: the item kinds not read (a kind turned off still shows; an unwatched item passes)
+    check(with({ classID = 15, category = NONE }), {}, {}, false, "notWatched")
+    check(with({ classID = 15, category = "mount" }), {}, {}, true, nil)
+    check(with({ classID = 15, category = "mount" }), { categories = { mount = false } }, {}, false, "category")
+    check(gear, { categories = { equipment = false, mount = true } }, {}, false, "category")
+    check(gear, { categories = { mount = false } }, {}, true, nil)
+    check(with({ subClassID = C.ARMOR_SUBCLASS.COSMETIC, category = "cosmetic" }), { categories = { cosmetic = false } },
+        {}, false, "category")
+    check(with({ classID = 15, isTierToken = true, category = "tierToken" }), {}, {}, true, nil)
+    check(with({ classID = 15, isTierToken = true, category = "tierToken" }), { categories = { tierToken = false } },
+        {}, false, "category")
+    check(with({ quality = C.QUALITY.HEIRLOOM, category = NONE }), {}, {}, false, "heirloom")
+    -- The minimum item level is equipment's and a tier token's (categories design spec Q3): a
+    -- collectible skips it, its level meaningless.
+    -- red under: FeedFilter returning before ilvlCheck for a tier token
+    check(with({ category = "tierToken", isTierToken = true }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, false,
+        "minIlvl")
+    check(with({ category = "tierToken", isTierToken = true }), { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
+    check(with({ category = "toy" }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, true, nil)
     check(gear, { minIlvlMode = "absolute", minIlvl = 601 }, {}, false, "minIlvl")
     check(gear, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
     check(gear, { minIlvlMode = "relative", relativeIlvl = 10 }, { myIlvl = 611 }, false, "minIlvl")
@@ -543,6 +588,30 @@ test("filter: every rule of spec §6.3 (pure)", function()
     check(gear, { minIlvlMode = "relative", relativeIlvl = 10 }, {}, true, nil)
     check(with({ ilvl = "x" }), { minIlvlMode = "absolute", minIlvl = 601 }, {}, true, nil)
     check(gear, "junk", "junk", true, nil)
+end)
+
+-- DW-CAT5 (categories design spec §4.1, §4.2): Never watch first, gear and Always watch included;
+-- Always watch next, past the kinds, the heirloom rule and the minimum item level, answering forced.
+-- red under: the lists read after the kinds, or the whitelist checked before the blacklist
+test("filter: Never watch beats everything, Always watch beats the kinds, heirlooms and min ilvl (pure)", function()
+    local NS = T.newAddon()
+    local F = NS.FeedFilter.Filter
+    local gear = { itemID = 500, quality = 4, ilvl = 600, category = "equipment" }
+    local function check(facts, cfg, pass, why, forced)
+        local ok, reason, f = F(facts, cfg, {})
+        assertEqual(ok, pass); assertEqual(reason, why); assertEqual(f, forced)
+    end
+    local white, black = { whitelist = { [500] = true } }, { blacklist = { [500] = true } }
+    check(gear, black, false, "blacklist", nil)
+    check(gear, { whitelist = { [500] = true }, blacklist = { [500] = true } }, false, "blacklist", nil)
+    check(gear, white, true, nil, true)
+    check({ itemID = 500, quality = 4, category = nil }, white, true, nil, true)
+    check({ itemID = 500, quality = NS.Constants.QUALITY.HEIRLOOM, category = "equipment" }, white, true, nil, true)
+    check(gear, { whitelist = { [500] = true }, categories = { equipment = false } }, true, nil, true)
+    check(gear, { whitelist = { [500] = true }, minIlvlMode = "absolute", minIlvl = 700 }, true, nil, true)
+    check(gear, { whitelist = { [501] = true }, blacklist = { [501] = true } }, true, nil, nil)
+    check({ quality = 4, category = "equipment" }, white, true, nil, nil)
+    check(gear, { whitelist = "junk", blacklist = "junk" }, true, nil, nil)
 end)
 
 test("gates: the relative minimum item level reads your average equipped level", function()

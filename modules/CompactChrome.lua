@@ -52,7 +52,7 @@ CC.COUNTED = { "quality", "content", "char" }
 -- Each panel row's name, its Filters tooltip row's label.
 local PANEL_LABEL = { quality = L["Quality"], content = L["Content"], char = L["Character"], sort = L["Sort"] }
 
-local SHORT_TAB = { group = L["Drops"], history = L["History"] }
+local SHORT_TAB = { group = L["Drops"], history = L["History"], insights = L["Insights"] }
 local WORD = {
     test = { full = L["TEST MODE"], compact = L["TEST"] },
     sim  = { full = L["SIMULATION"], compact = L["SIM"] },

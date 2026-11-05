@@ -68,17 +68,27 @@ NS.C = {
         feed = {
             -- The View a fresh filter bar tab opens on: a set, every value off is All (feedback-2
             -- spec §1). Each value is a `feed.view.<value>` row; they combine as AND.
-            view    = { interesting = false, likely = false, usable = false, upgrade = false },
+            view    = { interesting = false, likely = false, usable = false, upgrade = false, newCollect = false },
             content = "session",       -- instance | session (step 8 turns a stored all into session)
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
                 mode            = "fixed",   -- fixed | dynamicSlot | dynamicCharacter
                 fixed           = 3,         -- Rare (Enum.ItemQuality.Rare)
                 floor           = 2,         -- Uncommon: the dynamic modes' least threshold
-                upgradeOverride = true,      -- an upgrade for me shows below the threshold
+                upgradeOverride = true,      -- an upgrade for me (or new to my collection) shows below it
             },
-            gearOnly        = true,      -- armor, weapons, jewelry and trinkets only
-            includeTokens   = true,      -- tier tokens pass the gear-only filter
+            -- The item kinds the feed watches (issue #13, categories design spec §1, §5.1), keyed as
+            -- C.CATEGORIES; each is a `feed.categories.<key>` row. Step 13 replaced Gear only and
+            -- Include tier tokens with them.
+            categories = {
+                equipment = true, tierToken = true, mount = true, pet = true, toy = true, recipe = true,
+                cosmetic  = false,       -- a look to collect, never gear: off
+            },
+            -- The Always watch and Never watch item lists (issue #13, categories design spec §5.3):
+            -- { [itemID] = true }, written whole by NS.ItemLists alone. An ID sits on one list only;
+            -- the page's Defaults keeps both (plan #13, Q9).
+            whitelist = {},
+            blacklist = {},
             minIlvlMode     = "off",     -- off | absolute | relative
             minIlvl         = 0,         -- the absolute floor
             relativeIlvl    = 10,        -- how far below your average equipped level a drop may be
@@ -181,6 +191,8 @@ NS.C = {
             inCombat = false,
             sound    = false,
             scale    = 1,       -- the frame's scale, 0.5 to 2 (Window › Toast's Scale, 50 to 200 %)
+            stack    = 3,       -- toasts on screen at once, 1 to 5 (1: one at a time; issue #14)
+            stackGrow = "down", -- where each toast after the first goes: "down" or "up"
         },
 
         -- The upgrade glow on a drop's icon (feedback-21): `main` for an upgrade for your current

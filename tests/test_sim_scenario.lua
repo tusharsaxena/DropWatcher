@@ -85,13 +85,13 @@ end
 -- Pure: the verb parser and the timeline
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: DropWatcher's five host verbs on the descriptor, each parsing its arguments", function()
+test("sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments", function()
     local V = T.newAddon().SimVerbs
     local names = {}
     for verb in pairs(V.VERBS) do names[#names + 1] = verb end
     table.sort(names)
     -- red under: a generic verb (start, run, step, ...) kept in SimVerbs (the library owns them, C.7)
-    assertEqual(table.concat(names, ","), "kill,lockdown,loot,pull,trade")
+    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,pull,trade")
     local function P(line)
         local w = {}
         for x in line:gmatch("%S+") do w[#w + 1] = x end
@@ -108,6 +108,13 @@ test("sim verbs: DropWatcher's five host verbs on the descriptor, each parsing i
     assertEqual(P("lockdown on").on, true); assertEqual(P("lockdown OFF").on, false)
     assertNil(P("lockdown maybe"))
     assertEqual(P("trade 12").id, 12); assertNil(P("trade x"))
+    c = P("drop token me")
+    assertEqual(c.kind, "tierToken"); assertEqual(c.who, "me")
+    c = P("drop Mount Brakk-Stormhold")
+    assertEqual(c.kind, "mount"); assertEqual(c.who, "Brakk-Stormhold")
+    assertNil(P("drop pet").who)
+    for word in pairs(V.DROP_KIND) do assertTrue(P("drop " .. word) ~= nil, word) end
+    assertNil(P("drop")); assertNil(P("drop reagent"), "not a kind the feed watches")
     for _, spec in pairs(V.VERBS) do assertNil(spec.free, "every host verb needs the session") end
 end)
 
@@ -136,11 +143,11 @@ end)
 test("sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel", function()
     local NS, m = addon()
     slash(NS, "sim")
-    -- The library's status and usage (LibKa0s-Sim-1.0 RunVerb), then DropWatcher's five verbs.
+    -- The library's status and usage (LibKa0s-Sim-1.0 RunVerb), then DropWatcher's six verbs.
     assertEqual(printed(m, "Simulation: idle. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
     assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1)
     for _, line in ipairs({ "/dw sim pull: ", "/dw sim kill: ", "/dw sim loot [n] [player|me]: ",
-        "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
+        "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: ", "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
         assertEqual(printed(m, line), 1, line)
     end
     assertTrue(NS.Sim:IsPanelShown(), "the bare form opens the step panel")
@@ -191,6 +198,14 @@ test("sim verbs: each host verb runs through RunVerb with its line, and says why
     assertEqual(printed(m, "Simulated chat lockdown off."), 1)
     slash(NS, "sim trade 99999")
     assertEqual(printed(m, "No drop has that id."), 1)
+    slash(NS, "sim drop equipment me")
+    assertEqual(printed(m, "Simulated drop: 1 drop"), 1)
+    slash(NS, "sim drop toy")
+    assertEqual(printed(m, "The simulation has no item of that kind to drop."), 1)
+    local usage = "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: "
+    local shown = printed(m, usage)
+    slash(NS, "sim drop reagent")
+    assertEqual(printed(m, usage), shown + 1, "an unknown kind prints the usage")
 end)
 
 test("sim verbs: a refused start prints its one line and nothing more", function()

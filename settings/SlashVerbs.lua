@@ -1,10 +1,12 @@
 local _, NS = ...
 -- settings/SlashVerbs.lua — the handlers of the design spec's feature verbs (§12.3) that only the
--- slash surface reaches: `clear`, `history`, `situation`, `offer <link>` and
+-- slash surface reaches: `clear`, `history`, `insights`, `situation`, `offer <link>` and
 -- `add <link> [player]`, plus the confirmation line `compact` and `full` print around the shared
 -- layout handlers. The verbs another surface shares (`show`, `hide`, `toggle`, `test`, `scan`,
 -- `compact`, `full`) call the host
--- handlers in core/DropWatcher.lua, so each surface runs the same function. settings/Slash.lua lists every verb in NS.COMMANDS; this file only answers them.
+-- handlers in core/DropWatcher.lua, so each surface runs the same function; so do `whitelist` and
+-- `blacklist` (issue #13), whose writer NS.ItemLists the settings panel's Item lists tab shares.
+-- settings/Slash.lua lists every verb in NS.COMMANDS; this file only answers them.
 --
 -- SplitLink is PURE (test_slash drives it). The handlers read the feed, the situation edge and the
 -- bags through their owners, and print through NS.Print. The dispatcher refuses every verb here
@@ -66,8 +68,9 @@ end
 
 -- ── history, offer ──────────────────────────────────────────────────────────────────────────
 
---- Open the window, expanded, on one tab (`/dw history`; Drops for `/dw mine` and `/dw offer`).
---- @param key string `group` or `history`
+--- Open the window, expanded, on one tab (`/dw history`, `/dw insights`; Drops for `/dw mine` and
+--- `/dw offer`).
+--- @param key string `group`, `history` or `insights`
 --- @return boolean shown whether the window is on screen now
 function V.OpenTab(key)
     local W = NS.Window
@@ -165,6 +168,16 @@ local function bagLink(itemID)
     return nil
 end
 
+-- Is the item feed-only by itself (a collectible, or an item of no kind on Always watch and not
+-- on Never watch)? Asked before a bag item is adopted, so a refused offer adds no drop.
+local function feedOnlyItem(itemID, link)
+    local facts = NS.ItemFacts.Get(bagLink(itemID) or link)
+    if type(facts) ~= "table" then return false end
+    if NS.Collectibles.IsCollectible(facts) then return true end
+    local IL = NS.ItemLists
+    return facts.category == nil and IL.Contains("whitelist", itemID) and not IL.Contains("blacklist", itemID)
+end
+
 -- A bag item the feed never saw becomes one of your drops (a manual one), so the panel has a
 -- drop to judge candidates for. Answers its record, or nil once the reason is printed.
 local function adopt(itemID, link)
@@ -185,7 +198,9 @@ end
 
 --- `/dw offer <link>`: open the Offer panel for a bag item. Your drop of that item when the feed
 --- holds one; otherwise the bag item is added as a drop of yours first. Refused, with the reason,
---- while no other player is in your group (DW-07, NS.WindowOwn.Alone).
+--- while no other player is in your group (DW-07, NS.WindowOwn.Alone), and for a collectible
+--- (feed-only, issue #13): a bag item is judged from its own facts first, so a refused one is never
+--- adopted into the feed.
 --- @param rest string
 --- @return boolean opened
 function V.Offer(rest)
@@ -199,8 +214,68 @@ function V.Offer(rest)
         NS.Print(L["Not offered: %s"]:format(L["There is no other player in your group."]))
         return false
     end
-    local drop = newestMine(itemID) or adopt(itemID, link)
-    if not drop then return false end
+    local drop = newestMine(itemID)
+    if not drop and not feedOnlyItem(itemID, link) then
+        drop = adopt(itemID, link)
+        if not drop then return false end
+    end
+    if not drop or NS.Collectibles.IsFeedOnly(drop) then
+        NS.Print(L["Collectibles are watched, not offered."])
+        return false
+    end
     if not V.OpenTab("group") then return false end
     return NS.OfferPanel.Open(drop.id) ~= nil
+end
+
+-- ── whitelist, blacklist ────────────────────────────────────────────────────────────────────
+
+-- An entry as `list` prints it: `12345 [Name]` once the item is cached, else `item 12345`.
+local function entryLine(id)
+    local info = NS.Compat.GetItemInfo("item:" .. id)
+    if info and info.name then return ("%d [%s]"):format(id, info.name) end
+    return L["item %d"]:format(id)
+end
+
+--- The lines `/dw whitelist list` (or `blacklist`) prints: the list's name and size, then one line
+--- per entry in ID order, or `(none)`.
+--- @param list string `whitelist` or `blacklist`
+--- @return table lines
+function V.ItemListLines(list)
+    local IL = NS.ItemLists
+    local ids = IL.List(list)
+    local lines = { L["%s (%d)"]:format(IL.LISTS[list].name, #ids) }
+    for _, id in ipairs(ids) do lines[#lines + 1] = "  " .. entryLine(id) end
+    if #ids == 0 then lines[2] = "  " .. L["(none)"] end
+    return lines
+end
+
+local LIST_ACTS = {
+    add = { run = "Add", done = L["Added %s to %s."] },
+    remove = { run = "Remove", done = L["Removed %s from %s."] },
+}
+
+--- `/dw whitelist|blacklist add <id|link>`, `remove <id|link>` and `list` (a bare verb lists too):
+--- the Always watch and Never watch lists, written through their one writer (NS.ItemLists), which
+--- the settings panel's Item lists tab shares. A refusal says why; an open settings page redraws.
+--- @param list string `whitelist` or `blacklist`
+--- @param rest string
+--- @return boolean|nil ok nil when it only listed or printed the usage
+function V.ItemList(list, rest)
+    local sub, arg = trim(rest):match("^(%S*)%s*(.-)$")
+    sub = (sub or ""):lower()
+    if sub == "" or sub == "list" then
+        for _, line in ipairs(V.ItemListLines(list)) do NS.Print(line) end
+        return nil
+    end
+    local act, IL = LIST_ACTS[sub], NS.ItemLists
+    if not act then return usage(list .. " add|remove|list <item id or link>") end
+    local ok, why = IL[act.run](list, arg)
+    if not ok then
+        NS.Print(IL.WhyText(list, why))
+        return false
+    end
+    NS.Print(act.done:format(entryLine(IL.ParseId(arg)), IL.LISTS[list].name))
+    local H = NS.addon.Settings and NS.addon.Settings.Helpers
+    if H and H.RefreshAllPanels then H.RefreshAllPanels() end
+    return true
 end

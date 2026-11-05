@@ -6,7 +6,10 @@ local _, NS = ...
 -- ONE BAR, ONE STATE PER TAB. The bar is a single set of controls under the tab strip; each tab
 -- keeps its own state (NS.State.windowFilters[tab], session-only), and selecting a tab puts its
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
--- never reflows between tabs (Ka0s Loot History's pattern). A fresh tab's state is seeded from the
+-- never reflows between tabs (Ka0s Loot History's pattern). The one exception is a tab that draws a
+-- bar of its own (Window.TabOwnsBar: Insights, whose seven filters none of these controls apply to):
+-- the window hides this bar while it shows and never syncs it, a DropWatcher convention, not a rule
+-- of the standard (Insights design spec §4.1). Its HONORS row is empty. A fresh tab's state is seeded from the
 -- `feed.view.<value>`, `feed.content` and `feed.sort` rows (through the schema seam) when they hold
 -- a valid value, else from DEFAULTS, which are those rows' defaults. History then takes its own
 -- fixed defaults (TAB_FIXED: View, Content and Character all All, feedback-13 spec §0).
@@ -18,8 +21,8 @@ local _, NS = ...
 --
 -- THE VIEW IS A SET (feedback-2 spec §1, FB2-1..3). Like Loot History's `Direction: 3 selected`
 -- (../LootHistory/modules/BrowserFilterBar.lua) the View dropdown is multi-select: Interesting,
--- Likely tradeable, Usable by me and Upgrade for me combine as AND, and All (the empty set, the
--- default) clears them. The three checkboxes the bar had before are these values now. A tab grays
+-- Likely tradeable, Usable by me, Upgrade for me and New to my collection combine as AND, and All
+-- (the empty set, the default) clears them. The three checkboxes the bar had before are these values now. A tab grays
 -- the values it does not use (History has no Likely tradeable: a kept drop's trade estimate is
 -- long stale), and a grayed value neither toggles nor filters.
 --
@@ -40,6 +43,11 @@ local _, NS = ...
 -- off-spec difference a hundredth below a main-spec upgrade of the same size, so main spec comes
 -- first. The looter's off-spec changes nothing: a Can't use on their main spec still gives it.
 --
+-- COLLECTIBLES (issue #13, categories design spec §6.1). New to my collection passes the drops whose
+-- verdict for you is new to your collection. A collectible is never an upgrade, so Upgrade for me
+-- fails it; Interesting fails it (it has no action, IsInteresting); Usable by me fails a recipe of
+-- a profession you lack (`cantUse`) and passes the rest; Likely tradeable reads its estimate alone.
+--
 -- PURE: IsInteresting, IsTradeableMine, Matches, HiddenBy, ViewLabel and Comparator take plain
 -- tables and read nothing else, so the suites drive them case by case. Build, Sync and Layout are
 -- the frame edge.
@@ -56,7 +64,7 @@ local L     = NS.L
 local State = NS.State
 
 -- The View's values, in menu order after All (the empty set). Each is a `feed.view.<value>` row.
-FB.VIEWS = { "interesting", "likely", "usable", "upgrade" }
+FB.VIEWS = { "interesting", "likely", "usable", "upgrade", "newCollect" }
 local IS_VIEW = {}
 for _, v in ipairs(FB.VIEWS) do IS_VIEW[v] = true end
 
@@ -80,14 +88,15 @@ end
 
 -- Which controls each tab honors (the tab's Sort included). `views` is the View values the tab
 -- uses; the rest are grayed in its menu and ignored by its filter.
-local ALL_VIEWS = { interesting = true, likely = true, usable = true, upgrade = true }
+local ALL_VIEWS = { interesting = true, likely = true, usable = true, upgrade = true, newCollect = true }
 -- `char` is the Character dropdown; `charScope` `session` marks a tab whose drops are all yours.
 local ALL = { view = true, quality = true, content = true, search = true, sort = true, char = true,
     charScope = "session", views = ALL_VIEWS }
 FB.HONORS = {
     group   = ALL,
     history = { view = true, content = true, search = true, sort = true, char = true,
-                views = { interesting = true, usable = true, upgrade = true } },
+                views = { interesting = true, usable = true, upgrade = true, newCollect = true } },
+    insights = {},   -- its own bar (modules/WindowInsights.lua): it honors none of these
 }
 
 local P = NS.C.PROFILE
@@ -103,7 +112,7 @@ local SEED = { content = "feed.content", sort = "feed.sort" }
 -- Each View value's name, as its menu row and a one-value label show it.
 FB.VIEW_NAMES = {
     interesting = L["Interesting"], likely = L["Likely tradeable"], usable = L["Usable by me"],
-    upgrade = L["Upgrade for me"],
+    upgrade = L["Upgrade for me"], newCollect = L["New to my collection"],
 }
 local VIEW_ALL = L["View: All"]
 
@@ -127,6 +136,7 @@ local VIEW_TIP = {
     { key = "likely", name = L["Likely tradeable"], text = L["a trade estimate of yes or likely"] },
     { key = "usable", name = L["Usable by me"], text = L["you can use it, and its type is not unwanted"] },
     { key = "upgrade", name = L["Upgrade for me"], text = L["an upgrade over what you wear (or your best owned piece)"] },
+    { key = "newCollect", name = L["New to my collection"], text = L["a mount, pet, toy, recipe or look you have not collected"] },
 }
 -- Each control's tooltip: its title, then { label, value } rows (NS.TipMarks.Row at call time).
 local TIPS = {
@@ -326,22 +336,25 @@ local LOOTER_GIVES = { downgrade = true, cantUse = true, doesntWant = true }
 
 --- Interesting (brainstorm 03_FEATURES F1, board 01 note 5): a union, someone else's drop that is
 --- an upgrade for you, or one its looter has no use for (a downgrade, can't use, doesn't want) and
---- can trade (`yes` or `likely`); or your own drop you can trade now.
+--- can trade (`yes` or `likely`); or your own drop you can trade now. Never a collectible (feed-only,
+--- issue #13; categories design spec §6.1): it has no action, so even your own tradeable one fails.
 --- @param drop table
 --- @return boolean
 function FB.IsInteresting(drop)
-    if type(drop) ~= "table" then return false end
+    if type(drop) ~= "table" or NS.Collectibles.IsFeedOnly(drop) then return false end
     local state = tradeState(drop)
     if drop.isMine then return TRADEABLE[state] == true end
     if upgradeForMe(drop) then return true end
     return LOOTER_GIVES[verdictOf(drop.them)] == true and TRADEABLE[state] == true
 end
 
---- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts).
+--- Your own drop whose trade estimate is `yes` or `likely` (what Post my tradeables posts); never
+--- a collectible (feed-only, issue #13).
 --- @param drop table
 --- @return boolean
 function FB.IsTradeableMine(drop)
     return type(drop) == "table" and drop.isMine == true and TRADEABLE[tradeState(drop)] == true
+        and not NS.Collectibles.IsFeedOnly(drop)
 end
 
 local function itemName(drop)
@@ -381,6 +394,7 @@ local VIEW_PASS = {
     likely      = function(d) return TRADEABLE[tradeState(d)] == true end,
     usable      = function(d) return not NOT_USABLE[verdictOf(d.me)] or OFF_USABLE[offVerdictOf(d.me)] == true end,
     upgrade     = function(d) return upgradeForMe(d) end,
+    newCollect  = function(d) return verdictOf(d.me) == "newCollect" end,
 }
 
 -- The first selected View value the tab uses that the drop fails, in menu order, or nil.
@@ -402,8 +416,8 @@ local function charHides(drop, set, ctx, honors)
 end
 
 --- The first filter of a tab's state that hides a drop: a View value (`interesting`, `likely`,
---- `usable`, `upgrade`), `char`, `content` or `search`; nil when the drop passes them all. Only the
---- controls (and View values) the tab honors apply; anything not a drop answers `invalid`.
+--- `usable`, `upgrade`, `newCollect`), `char`, `content` or `search`; nil when the drop passes them
+--- all. Only the controls (and View values) the tab honors apply; anything not a drop answers `invalid`.
 --- @param drop table
 --- @param st table|nil the tab's state (DEFAULTS when nil)
 --- @param ctx table|nil { instanceSince, sessionSince (GetTime() seconds), current (your recorder key) }
@@ -826,9 +840,9 @@ end
 --- Put `tab`'s state on the controls, gray what it does not honor, and refresh the quality label.
 --- @param tab string
 function FB.Sync(tab)
-    if not controls.host then return end
-    putState(tab, FB.State(tab))
     local honors = FB.HONORS[tab]
+    if not controls.host or next(honors or {}) == nil then return end   -- a tab with its own bar
+    putState(tab, FB.State(tab))
     for _, key in ipairs(ROW) do setHonored(controls[key], honors[key] == true) end
     setHonored(controls.search, honors.search == true)
 end

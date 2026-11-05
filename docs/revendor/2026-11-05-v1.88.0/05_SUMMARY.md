@@ -1,0 +1,9 @@
+# Summary
+
+- **Tag:** v1.85.0 -> v1.88.0, from the tag (`v1.88.0^{commit}` = `3555d432f65d20851fd993a28fc230e2bf34dfc1`). The provenance line moves from v1.87.0, which labelled the untagged toast-stack tip `dab6407`; the real v1.87.0 (`758cbd4`) went to another session's cascading-menus release, so the delta is taken from v1.85.0, the last real release vendored here (`01_DELTA.md`, first section). This bundle supersedes `docs/revendor/2026-11-05-v1.87.0/`. Minors against v1.85.0: Widgets 22 -> 23, Toast 3 -> 4, DebugLogDiagnostics 6 -> 7, IconBrowserSources, IconBrowserWindow and IconBrowser new at 1. Against what was carried (`dab6407`): Widgets 22 -> 23 only. Kit 50 -> 50. No span bundle, no refresh.
+- **For free:** flat menus unchanged under Widgets 23 and `W.CloseMenu()` closes every level; a combat hold keeps every held drop; `Attach` before the first `Show` is safe; diagnostics name `IconBrowser` (`02_CANDIDATES.md`, class A).
+- **Blockers:** none new. The Toast stub members came with `b2726c7`; the Widgets member list did not move, so the stub parity cases hold with no host change.
+- **Icons:** the `LibKa0s icons:` line is kept (32 names, all Open Iconic). The prune kept 33 files and removed 5807, the same set the addon shipped before. No provenance split. README credits unchanged (Open Iconic only). No dead stub mirrors.
+- **Docs:** CLAUDE.md's provenance line, `docs/ARCHITECTURE.md`'s payload line and `docs/module-map.md`'s vendored-payload line move from v1.87.0 to v1.88.0.
+- **Adopted:** Toast minor 4's stack, already, as `DW-T2` (`a50f465`). Nothing else. **Declined:** nothing filed; cascading menu rows recommended *not now* and IconBrowser *never*, both left unfiled by instruction.
+- **Gate at the copy:** `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .`: 0 warnings / 0 errors in 229 files. `lua tests/run.lua`: 2116 passed, 0 failed, 1 skipped, 2117 total, `tests/test_vendor_sync.lua`'s three cases among the passes.

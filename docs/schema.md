@@ -24,7 +24,15 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   before the seam stores it.
 - `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
-  their own editors (`skipRender`); the CLI shows them as their entry count. The
+  their own editors (`skipRender`); the CLI shows them as their entry count. So are the two item
+  lists, `feed.whitelist` and `feed.blacklist` (issue #13), flat `{ [itemID] = true }` sets on the
+  same value route, whose one writer is `NS.ItemLists` (`modules/ItemLists.lua`): the panel's Item
+  lists tab and `/dw whitelist|blacklist` both call it, so the two surfaces share one refusal rule
+  (an ID on the other list is refused, never moved). Their `validate` checks the shape alone; the
+  overlap a copied profile may carry is resolved at read time, where Never watch wins. They are
+  the seam's `resetExempt` beside the minimap row, so the Drops page's Defaults keeps them (plan
+  #13, Q9); Reset all settings, a profile reset, empties them, and `/dw reset feed.whitelist` still
+  resets one. The
   `situations.<key>.*` and `trade.rules.<key>` rows are `skipRender` too (since DW-H0; the loot
   rules since feedback-24): the Drops › Situations table draws them, a line per situation, and writes
   through the seam.
@@ -104,8 +112,10 @@ button and profiles reach them as any row.
 | `feed.quality.mode` | `"fixed"` | Quality; the filter bar's Quality control (`NS.SetQualityMode`) | the minimum-quality mode new drops are gated with |
 | `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
-| `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you shows below the threshold |
-| `feed.gearOnly`, `feed.includeTokens` | `true`, `true` | Items | armor, weapons, jewelry and trinkets only; tier tokens too |
+| `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you, or a collectible new to your collection, shows below the threshold (issue #13); an Always watch item passes whatever its quality (`whitelisted`) |
+| `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |
+| `feed.whitelist` | `{}` | Item lists › Always watch (`map`) | `{ [itemID] = true }`: always watched, past the item kinds, the heirloom rule, the minimum item level and the quality gate, never past the situation gate; an item of no kind reads `unknown` and is feed-only (categories design spec §4.2) |
+| `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 
@@ -152,12 +162,14 @@ toast Window › Toast until feedback-24.
 | `window.tableFontColor`, `window.tableFontClassColor` | `{ r = 0.92, g = 0.92, b = 0.92, a = 1 }`, `false` | Layout › Tables (DW-01) | the tables' plain text color and its class-color companion (the player's class); a verdict, a quality or a class keeps its own color. At the default swatch (Ka0s Default's `dw.plain`) the skin's plain color is drawn, so a new profile looks as before |
 | `window.tableFontFlags`, `window.tableFontShadow` | `"@skin"`, `true` | Layout › Tables (DW-01) | the tables' font flags (From skin, `@skin`, resolved through the Skin tab's Font outline as window text; a picked flag as stored) and shadow (drawn through `S.HudFont`, `modules/WindowRows.lua`). Step 11 writes `@skin` to a stored flag once |
 | `window.tableFontShadowFromSkin` | `true` | Layout › Tables (FS-DW-FLIP) | Use the skin's shadow: `dw.tableShadow` at `hud.shadowX`, `hud.shadowY`, which keeps black 1, -1 under Ka0s Default; `window.tableFontShadow` is not read while it is on, and stands under Ignore fonts. Step 11 turns it on once per stored profile |
-| `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
+| `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade`, `feed.view.newCollect` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me; New to my collection, issue #13, DW-CAT7: the verdict for you is new to your collection, a row added with no migration since a missing value reads its default), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
 | `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Starting view | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
 | `trade.warnAt` | `600` | Columns (Trade window) | Mark a trade window ending within: seconds left when your own drop's Trade window countdown takes its warning color (`modules/MineCells.lua`, `modules/TradeTimer.lua`), 0 to 1800; 0 is off |
 | `toast.enabled` | `true` (`false` until 2026-10-25; no migration, so an existing profile keeps its value) | Alerts › Toast | Show a toast |
 | `toast.inCombat`, `toast.sound` | `false` | Alerts › Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction); in combat, turning `toast.inCombat` on shows what waits and turning it off holds what follows the toast on screen, which stays up (its reaction, `NS.Toast.OnInCombatChanged`, AT-A3) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Alerts › Toast | its least gain for you and its seconds on screen |
+| `toast.stack` | `3` | Alerts › Toast (DW-T2, issue #14) | Toasts at once: how many upgrade toasts show on screen at once, a whole number 1 to 5 by 1 (`wholeIn(1, 5)`, so the CLI's `2.5` is refused), the LibKa0s-Toast-1.0 shell's `stack` getter; `1` is the one-at-a-time toast. Past it the drops wait in the queue. Dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyStack()` is the shell's `SetStack`, live on the toasts on screen (a smaller stack sends its last ones back to the head of the queue, a larger one fills from it), and a profile reload's `Refresh` reads it again. A new stored path: AceDB's default fills it in for a stored profile, no migration step |
+| `toast.stackGrow` | `"down"` | Alerts › Toast (DW-T2, issue #14) | Stack direction: `down` hangs each toast after the first below the one before, `up` above it (the shell's `stackGrow`, `DOWN` or `UP`, through `NS.Toast.Grow`); the first stays at `toast.point`. Dimmed while `toast.enabled` is off; the same reaction as `toast.stack`. A new stored path, no migration step |
 | `toast.scale` | `1` | Alerts › Toast (feedback-21 G10) | the toast frame's scale, 0.5 to 2 by 0.05, drawn as a percentage (`isPercent`, 50 % to 200 %; the CLI shows the stored number), dimmed while `toast.enabled` is off; its reaction `NS.Toast.ApplyScale()` scales a built toast live, on screen or not, about its saved anchor (`toast.point` is unchanged), and a profile reload re-applies it; before the first toast the build applies it |
 
 ### Alerts › Upgrade glow (feedback-21)
@@ -265,8 +277,11 @@ history = { retentionDays = 30, v = 1, groups = {
     { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
-          me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
-          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
+          category?, tokenSlot?,
+          me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
+                 reasonKey? }, them = { ... } | nil,
+          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
+          askedAt?, offeredAt?, settledAt?, got? } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
@@ -279,6 +294,14 @@ history = { retentionDays = 30, v = 1, groups = {
   estimate as last judged while the drop was in the feed, plain fields only. A `cantUse` that another
   spec of the class can use keeps `offSpec = { specID, mainSpecID, verdict, ilvlDelta }` (feedback-19
   spec §1): no baseline and no reasons. No migration step: the field is optional.
+- `category` is the drop's item kind and `tokenSlot` a tier token's made slot (issue #13,
+  categories design spec §3.3); an Always watch item that fits no kind is kept as `watched`
+  (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key). A collectible's `me`
+  keeps its collection verdict: `collect` true, its `category`, a pet's `count` and `limit`, and
+  `reasonKey` `notYourProfession` for a recipe of a profession you lack. The fields are additive:
+  no migration, and `v` stays 1. An entry without `category` (one recorded before issue #13) reads
+  as equipment in Insights (`InsightsFilters.CategoryOf`), or as a tier token when its `equipLoc` is
+  `INVTYPE_NON_EQUIP_IGNORE`.
 - `roster` is who was in the group (feedback-2 spec §3, `modules/GroupRoster.lua`): each a short
   `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
   `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's
@@ -301,6 +324,17 @@ history = { retentionDays = 30, v = 1, groups = {
   `expired` replaced (feedback-15 spec §0): the trade timer's live `yes` puts it back, so a false
   Expired is undone (an entry expired before the field existed returns to `seen`). No migration
   step: the field is optional.
+- `askedAt` and `offeredAt` are the `time()` your ask, or your offer or announce, was first sent
+  (issue #12, Insights design spec §1.2): `AskStateChanged` `sent` stamps them once, whether or not
+  the outcome moves, and nothing writes them again, so an ask is still known once the outcome moves
+  on. An entry asked or offered before they existed and settled after has the stamp back-filled at
+  settling (the drop's `at`), since settling overwrites the outcome that held the ask. `settledAt` is when a completed trade settled the entry (`received` or `tradedAway`). `got`,
+  on a received entry only, is the `me` verdict frozen at that moment (`{ verdict, ilvlDelta,
+  scoreDelta, offSpec?, at }`, or `{ at }` when there was none): equipping the item later re-judges
+  `me` against itself, and `got` keeps the gain it was. An entry settled before these existed has
+  no `settledAt`, and `NS.History.WasAsked` / `WasOffered` read it as asked (someone else's drop
+  received) or offered (your drop traded away). No migration step: the fields are optional and
+  additive, and `v` stays 1.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all
@@ -386,6 +420,11 @@ draws who they would help; feedback-5 spec §2, DW-E2, where `NS.State.windowMin
 `NS.State.offerPanel` (the drop the Offer panel shows),
 `NS.State.windowHistory` (the History tab's collapsed groups; its View: All, Content: All and
 Character: All come from WindowFilterBar.TAB_FIXED since feedback-13 spec §0),
+`NS.State.insightsFilters` (the Insights tab's seven single-select picks, `{ char, instance,
+difficulty, situation, date, quality, category }`, each `all` or one value, `InsightsFilters.DEFAULTS`
+at first and after Reset filters; no schema row and no saved view; kept across test mode and a
+simulation, and put back to All by Normalize wherever a pick matches nothing in the log in force;
+issue #12),
 `NS.State.situation` and `NS.State.situationInputs` (the last classified situation and the inputs it
 came from; nil while stood down), and compact mode's run override (`NS.State.compactRun`,
 `{ key, ended }` while an auto-open inside a run holds the window compact, and
@@ -404,7 +443,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 12). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 13). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -424,5 +463,6 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 10 | 9 → 10, per profile: the item icon's border meets the skin once (DW-03; the skinning rollout's O2, skinning-§6). For a profile that stored an `icons` table, LibKa0s-Skin-1.0's `ResetToSkin` turns `icons.borderStyleFromSkin` on (called with `{ companions = true }`, LibKa0s v1.81.0's Skin minor 8, so a missing companion is set too and the reset never writes the library's sentinel into `icons.borderStyle`); the stored style, thickness and color stay, so turning the companion off later brings the player's own style back, and the stamp keeps that later choice from being reset again. A profile with no stored `icons` keeps the defaults, whose companion is already on. Without the library the companion is set directly (`NS.ResetIconBorderToSkin`) |
 | 11 | 10 → 11, per profile: the full skinning step (FS-DW-FLIP; the owner's rulings of 2026-11-01, existing profiles follow the skin). `Skin.FollowOnce` puts `NS.FULL_SKIN_KEYS` on the skin: every companion is set true and `window.tableFontFlags` takes `@skin`, whatever the player picked. No stored color or pick moves, so a companion turned off brings the player's own back. The record is `skin.fullSkinReset`, per profile, in the AceDB defaults with no row, so no Defaults path walks it; a companion turned off afterwards stays off, and a profile reset runs the step again against defaults. `NS.ResetProfileToSkin` runs from the ladder and again after it on every load and profile event, for a profile that arrives with no record |
 | 12 | 11 → 12, per profile: the deleted Friz becomes Ka0s Ubuntu (R3-FRIZ). LibKa0s v1.85.0 deleted `Ka0s Friz Quadrata TT` (R3-L7) and WoW Default draws `Ka0s Ubuntu` in its place (R3-L6). `NS.RetireFonts` moves every stored string naming the deleted face, at any depth (`window.tableFont`, the skin's Font override), to `Ka0s Ubuntu`. Blizzard's own `Friz Quadrata TT` stays. |
+| 13 | 12 → 13, per profile: Gear only and Include tier tokens become the item kinds (DW-CAT2, issue #13, categories design spec §5.2). A stored `feed.gearOnly = false` (every item class let through) turns every `feed.categories.<key>` on, cosmetics included; a stored `feed.includeTokens` then carries into `feed.categories.tierToken`, so a stored `false` still turns tokens off; both keys go. The key list is a frozen literal, so a kind added later is not turned on by this step. A fresh profile stores neither and passes through (`NS.MigrateItemKinds`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

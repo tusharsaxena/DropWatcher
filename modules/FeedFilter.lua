@@ -1,6 +1,7 @@
 local _, NS = ...
--- modules/FeedFilter.lua — the feed's filters of design spec §6.3: which items the feed never
--- shows, whatever their verdict.
+-- modules/FeedFilter.lua — the feed's filters of design spec §6.3, and the item kinds and item lists
+-- of issue #13 (categories design spec §4.1): which items the feed never shows, whatever their
+-- verdict, and which it always shows.
 --
 -- PURE. Filter takes the item facts, the feed's settings (LootFeed.Config()'s fields) and your
 -- average item level, and makes no client call; test_feed drives it directly. The feed
@@ -11,19 +12,6 @@ local _, NS = ...
 NS.FeedFilter = NS.FeedFilter or {}
 local FF = NS.FeedFilter
 local C = NS.Constants
-
-local function isGearClass(facts)
-    return facts.classID == C.ITEM_CLASS.ARMOR or facts.classID == C.ITEM_CLASS.WEAPON
-end
-
--- Heirlooms and cosmetics are never shown: the reason, or nil.
-local function alwaysOut(facts)
-    if facts.quality == C.QUALITY.HEIRLOOM then return "heirloom" end
-    if facts.classID == C.ITEM_CLASS.ARMOR and facts.subClassID == C.ARMOR_SUBCLASS.COSMETIC then
-        return "cosmetic"
-    end
-    return nil
-end
 
 local function ilvlCheck(facts, cfg, ctx)
     local ilvl, mode = facts.ilvl, cfg.minIlvlMode
@@ -37,6 +25,11 @@ local function ilvlCheck(facts, cfg, ctx)
         return false, "minIlvl"
     end
     return true
+end
+
+-- Is `id` on `list` (`cfg.whitelist` or `cfg.blacklist`, { [itemID] = true })?
+local function listed(list, id)
+    return id ~= nil and type(list) == "table" and list[id] == true
 end
 
 --- The average item level of `equipped` ({ [slot] = { ilvl } }, NS.Gear's snapshot), the shirt and
@@ -55,23 +48,33 @@ function FF.AverageIlvl(equipped)
     return sum / n
 end
 
---- Spec §6.3's filters: heirlooms and cosmetics always out; tier tokens by `includeTokens`; with
---- `gearOnly`, armor and weapons only (jewelry and trinkets are armor); the minimum item level by
---- `minIlvlMode` (`absolute` against `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`).
---- Pure. Facts that could not be read pass, so the feed never hides what it could not judge.
+--- The feed's filters, in order (categories design spec §4.1): an item on the Never watch list
+--- (`cfg.blacklist[itemID]`) out as `blacklist`, gear included and whatever else holds; one on the
+--- Always watch list (`cfg.whitelist[itemID]`) in, answering `forced`, past the kinds, the heirloom
+--- rule and the minimum item level (§4.2; the feed's quality gate lets it through too, the
+--- situation gate does not); heirlooms always out; an item in no watched category (facts.category
+--- nil: NS.Collectibles.CategoryOf's answer) out as `notWatched`; an item kind turned off
+--- (`cfg.categories[category] == false`, the `feed.categories.<key>` rows) out as `category`; then
+--- equipment and tier tokens take the minimum item level by `minIlvlMode` (`absolute` against
+--- `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`): a token's level is compared with your
+--- gear's (categories design spec Q3); a collectible skips it, its level meaningless. A kind with no
+--- entry in `cfg.categories` is on. Pure, and writes nothing it is handed. Facts that could not be
+--- read pass, so the feed never hides what it could not judge.
 --- @param facts table|nil
 --- @param cfg table|nil NS.LootFeed.Config()'s fields
 --- @param ctx table|nil { myIlvl }
---- @return boolean pass, string|nil reasonKey (`heirloom`, `cosmetic`, `token`, `notGear`, `minIlvl`)
+--- @return boolean pass, string|nil reasonKey (`blacklist`, `heirloom`, `notWatched`, `category`,
+--- `minIlvl`), boolean|nil forced (true: the Always watch list let the item through)
 function FF.Filter(facts, cfg, ctx)
     if type(facts) ~= "table" then return true end
     cfg = type(cfg) == "table" and cfg or {}
-    local why = alwaysOut(facts)
-    if why then return false, why end
-    if facts.isTierToken then
-        if cfg.includeTokens == false then return false, "token" end
-        return true
-    end
-    if cfg.gearOnly ~= false and not isGearClass(facts) then return false, "notGear" end
+    if listed(cfg.blacklist, facts.itemID) then return false, "blacklist" end
+    if listed(cfg.whitelist, facts.itemID) then return true, nil, true end
+    if facts.quality == C.QUALITY.HEIRLOOM then return false, "heirloom" end
+    local category = facts.category
+    if category == nil then return false, "notWatched" end
+    local kinds = type(cfg.categories) == "table" and cfg.categories or {}
+    if kinds[category] == false then return false, "category" end
+    if category ~= "equipment" and category ~= "tierToken" then return true end
     return ilvlCheck(facts, cfg, type(ctx) == "table" and ctx or {})
 end

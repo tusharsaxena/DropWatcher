@@ -33,7 +33,8 @@ test("harness: the addon's file list is the TOC's, Namespace first and Profiles 
     assertEqual(files[1], "locales/enUS.lua")
     assertEqual(files[2], "locales/enUS_Settings.lua", "the settings panel's strings, peeled at the cap")
     assertEqual(files[3], "locales/enUS_Tooltips.lua", "the tooltips' rows, a feature's topic file")
-    assertEqual(files[4], "core/Namespace.lua")
+    assertEqual(files[4], "locales/enUS_Insights.lua", "the Insights tab's strings, a feature's topic file")
+    assertEqual(files[5], "core/Namespace.lua")
     assertEqual(files[#files], "settings/Profiles.lua")
 end)
 
@@ -49,6 +50,7 @@ test("harness: every adopted LibKa0s module is the live library, not its stub", 
     -- red under: drop libs/LibKa0s/Pool.lua from the load (the stand-in would answer instead)
     assertTrue(NS.Pool == ls("LibKa0s-Pool-1.0", true), "Pool")
     assertTrue(NS.Item == ls("LibKa0s-Item-1.0", true), "Item")
+    assertTrue(NS.Charts ~= nil and NS.Charts == ls("LibKa0s-Charts-1.0", true), "Charts (the Insights tab, issue #12)")
     assertTrue(NS.addon.Settings.SchemaLib == ls("LibKa0s-Schema-1.0", true), "Schema")
     assertTrue(NS.SafeToString == ls("LibKa0s-Core-1.0", true).SafeToString, "Core")
     assertTrue(type(NS.Perf.Note) == "function" and NS.Perf.OnCommand ~= nil and NS.Perf.BuildRecord ~= nil,

@@ -160,6 +160,8 @@ test("perf: every declared bucket is reached by a real bracket", function()
     NS.Perf.Note = function(key, ...) declared[key] = true; return real(key, ...) end
     NS.Perf.on = true
     NS.ShowWindow()          -- builds the window and runs its repaint pass (window.refresh)
+    NS.Window.SelectTab("insights")   -- the Insights pass, inside a repaint (insights.compute, .layout)
+    NS.Window.SelectTab("group")
     m.__fire("CHAT_MSG_LOOT", "You receive loot: |Hitem:1|h[x]|h.")    -- one line parsed (parse)
     -- one member's slots read on the fast path (inspect.read)
     m.setGroup({ { guid = "Player-1-0000000A", name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })

@@ -7,7 +7,8 @@ local _, NS = ...
 -- argument through safeToString, so raw values are passed, never pre-built strings. Every section
 -- of design spec §13 is here: State, Feed, Inspect, Gear, Trade, Scoring and Messaging (and, from
 -- ui spec §0, one Drops line per drop), beside the standard's identity, settings, registration
--- and integrations, and the simulator's (simulator spec §6).
+-- and integrations, and the simulator's (simulator spec §6). The Feed section's `collect:` lines
+-- name the item kinds that are on and the item lists' sizes, and each drop line its kind (issue #13).
 
 NS.Diagnostics = NS.Diagnostics or {}
 
@@ -75,6 +76,8 @@ local function window(out)
     out:add(TAG, "toast: enabled=%s built=%s shown=%s drop=%s waiting=%s held=%s", NS.Setting("toast.enabled"),
         t.built, t.shown, t.dropId or "none", t.waiting, t.held)
     out:joined(TAG, "toast: point", type(t.point) == "table" and t.point or { "default" })
+    out:add(TAG, "toast: stack=%s grow=%s visible=%d", t.stack, t.grow, #t.visible)
+    if #t.visible > 0 then out:joined(TAG, "toast: on screen", t.visible) end
     if t.waiting > 0 then out:joined(TAG, "toast: queue", t.queue) end
 end
 
@@ -227,12 +230,30 @@ local function historyLine(out)
         st.ceiling, st.days, st.tracked, t and (t.accepted and "accepted" or "open") or "none")
 end
 
+-- The item kinds (issue #13, categories design spec §6.1): the categories that are on, in
+-- C.CATEGORIES' order, and how many items each item list holds. Stored state only.
+local function count(map)
+    local n = 0
+    for _ in pairs(type(map) == "table" and map or {}) do n = n + 1 end
+    return n
+end
+
+local function collectLines(out)
+    local cfg, on = NS.LootFeed.Config(), {}
+    for _, cat in ipairs(NS.Constants.CATEGORIES) do
+        if cfg.categories[cat.key] ~= false then on[#on + 1] = cat.key end
+    end
+    out:joined(TAG, "collect: on", on)
+    out:add(TAG, "collect: whitelist=%s blacklist=%s", count(cfg.whitelist), count(cfg.blacklist))
+end
+
 -- Design spec §13's Feed section. Stored state only, apart from the situation read live.
 local function feed(out)
     parserLines(out)
     dropLines(out)
     qualityLine(out)
     historyLine(out)
+    collectLines(out)
 end
 
 -- One line per live drop, newest first, the newest DROP_LINES (ui spec §0, BUG-1): its sources, the
@@ -273,8 +294,8 @@ local function itemLine(out, rec)
     local f = type(rec.facts) == "table" and rec.facts or {}
     local d = NS.ItemRead.LinkDetail(rec.link)
     local matched = rec.isMine and NS.TradeTimer.ForDrop(rec.id) ~= nil
-    out:add(TAG, "drops: %s sources=%s item=%s complete=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s", rec.id,
-        sourcesOf(rec), d and d.itemString or "?", d ~= nil and d.complete, f.ilvl,
+    out:add(TAG, "drops: %s sources=%s item=%s complete=%s kind=%s ilvl=%s (%s) quality=%s (%s) mine=%s bag=%s",
+        rec.id, sourcesOf(rec), d and d.itemString or "?", d ~= nil and d.complete, f.category or "none", f.ilvl,
         f.ilvlSource or "?", f.quality, f.qualitySource or "?", rec.isMine == true, matched and "yes" or "no")
 end
 

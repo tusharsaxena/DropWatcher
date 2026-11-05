@@ -27,7 +27,9 @@ local _, NS = ...
 -- alike: an upgrade `good` (green), a sidegrade `yellow`, a downgrade `red`; an item that cannot be
 -- used `redMuted` (a dim red, feedback-21), one not wanted `bad` (gray) and an unknown one `muted`.
 -- Trade's No is `red` too, and its Can't use `redMuted`. A Can't use another of the class's specs can
--- use is that spec's verdict in `offspec` cyan (NS.OffSpecCells).
+-- use is that spec's verdict in `offspec` cyan (NS.OffSpecCells). A collectible's Me cell is its
+-- collection word (NS.CollectCells: New green, Collected gray), its Them a dash, its Ask No action,
+-- its Slot its kind (`Mount`) and its Type a recipe's profession.
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -70,7 +72,7 @@ local EVAL_REASON = {
     primaryStat = L["its primary stat doesn't suit the spec"],
     classRestricted = L["for other classes"],
     specList = L["not for this spec"],
-    tierToken = L["a tier token whose slot is not read yet"],
+    tierToken = L["a tier token whose slot could not be read"],
     notGear = L["not gear that is compared"],
     noBaseline = L["the item it would replace is not read"],
     noIlvl = L["its item level is not read"],
@@ -233,6 +235,7 @@ local function verdictTip(title, eval, ilvl, who)
     lines[#lines + 1] = compareGrid(eval, ilvl, who)
     lines[#lines + 1] = NS.TipMarks.Row(L["Means"], VERDICT_MEANS[v] or VERDICT_MEANS.unknown)
     lines[#lines + 1] = WC.TrackRow(eval.trackDelta)
+    if SLOT_LABEL[eval.tokenSlot] then lines[#lines + 1] = row(L["Best in"], SLOT_LABEL[eval.tokenSlot]) end   -- a Curio
     local sd = num(eval.scoreDelta)
     if sd then lines[#lines + 1] = NS.TipMarks.Row(L["Score"], ("%+.1f"):format(sd)) end
     if hasReasons(eval) then WC.ReasonRows(eval.reasons, lines) end
@@ -266,6 +269,7 @@ function WC.Verdict(eval, side, title, ilvl, who)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then
         eval = { verdict = "unknown", reasons = {} }
     end
+    if eval.collect then return NS.CollectCells.Verdict(eval, side, title) end
     local off = NS.OffSpec.Of(eval)
     if off then return NS.OffSpecCells.Verdict(eval, off, side, title, ilvl, who) end
     local text, glyph = verdictText(eval)
@@ -317,6 +321,7 @@ function WC.Them(drop, now)
     if drop.isMine then
         return cell(DASH, "muted", L["Them"], row(L["Why"], L["your own drop"]), hint(L["Offer shows who it would help."]))
     end
+    if NS.Collectibles.IsFeedOnly(drop) then return NS.CollectCells.Them() end   -- never `?`: no inspect
     local named = NS.TipMarks.ClassName(who, type(drop.looter) == "table" and drop.looter.classFile or nil)
     if type(drop.them) ~= "table" then
         local c = cell("?", "muted", L["For %s: Unknown"]:format(who))
@@ -346,6 +351,7 @@ local TRADE_REASON = {
     badFacts = function() return L["The item's details have not loaded yet."] end,
     expired = function(a) return L["The trade window (%s) has passed."]:format(WC.Duration(a[2])) end,
     timer = function(a) return L["Your own item: %s left to trade it."]:format(WC.Duration(a[1])) end,
+    collectible = function() return L["A collectible: its looter's side of the game's rule is not judged."] end,
     error = function(a) return L["The estimate failed: %s"]:format(tostring(a[1])) end,
 }
 
@@ -394,6 +400,7 @@ local TRADE_ROWS = {
     badFacts = function() return { row(L["Item"], L["details not loaded yet"]) } end,
     expired = function(a) return { row(L["Trade window"], L["%s, passed"]:format(WC.Duration(a[2]))) } end,
     timer = function(a) return ruleRows(L["your own item"], L["Left to trade"], WC.Duration(a[1])) end,
+    collectible = function() return ruleRows(L["personal loot"], L["Collectible"], L["not judged for its looter"]) end,
     error = function(a) return { row(L["Estimate"], L["failed (%s)"]:format(tostring(a[1]))) } end,
 }
 
@@ -461,7 +468,7 @@ local TRADE_SHORT = {
     boe = L["BoE"], warbound = L["Warbound"], bonusRoll = L["Bonus roll"], legacy = L["Legacy loot"],
     groupLoot = L["Group loot"], badFacts = L["Not loaded"], expired = L["Window passed"],
     timer = L["Window open"], notUpgrade = L["Not their upgrade"], upgradeForYou = L["Your upgrade"],
-    noInspect = L["Not inspected"], error = L["Failed"],
+    noInspect = L["Not inspected"], error = L["Failed"], collectible = L["Collectible"],
 }
 WC.TRADE_SHORT = TRADE_SHORT   -- read-only, for the test that sizes the Trade column
 
@@ -729,6 +736,8 @@ end
 --- @param drop table
 --- @return table cell
 function WC.Slot(drop)
+    local own = NS.CollectCells.SlotOf(facts(drop))   -- `Token: Head`, `Mount` (issue #13)
+    if own then return own end
     local loc = facts(drop).equipLoc
     local label = SLOT_LABEL[loc]
     if not label then return cell(DASH, "muted", L["Slot"], row(L["Item"], L["not worn, or not loaded"])) end
@@ -769,6 +778,8 @@ local function typeTitle(word) return L["Type: %s"]:format(word) end
 --- @return table cell, with `known` (false for the dash)
 function WC.ArmorType(drop)
     local f = facts(drop)
+    local own = NS.CollectCells.TypeOf(f)   -- a token's classes, a recipe's profession
+    if own then return own end
     local loc = f.equipLoc
     local fixed = LOC_TYPE[loc]
     if fixed then
@@ -821,6 +832,7 @@ end
 -- when one is (NS.Messaging.AskTemplate: `ask`, `askOffSpec` for another spec's gain, or `transmog`).
 local function noAskReason(drop, transmogAsk)
     if drop.isMine then return { row(L["Why"], L["your own drop"]), hint(L["Offer shows who it would help."]) } end
+    if NS.Collectibles.IsFeedOnly(drop) then return { row(L["Why"], NS.CollectCells.NO_ASK) } end
     if type(drop.trade) == "table" and drop.trade.state == "no" then
         return append({ row(L["Why"], L["its looter can't trade it"]) }, WC.TradeRows(drop.trade, looterName(drop)))
     end

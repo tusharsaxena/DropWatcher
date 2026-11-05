@@ -373,7 +373,8 @@ local function looterOf(dropID)
 end
 
 --- Inspect a drop's looter again, ahead of the warm-up queue (design spec §8, §11.3): the detail
---- card's Retry inspect. Refused while stood down; says in chat when there is nobody to inspect.
+--- card's Retry inspect. Refused while stood down, and on a collectible (judged for you alone);
+--- says in chat when there is nobody to inspect.
 --- @param dropID number
 --- @return string|nil status NS.Inspect.Request's answer
 function NS.RetryInspect(dropID)
@@ -381,6 +382,10 @@ function NS.RetryInspect(dropID)
     local stoodDown = NS.StoodDownRefusal()
     if stoodDown then
         NS.Print(stoodDown)
+        return nil
+    end
+    if NS.Collectibles.IsFeedOnly(NS.LootFeed.Get(dropID)) then   -- judged for you alone: no inspect
+        NS.Print(L["Collectibles are judged for you alone."])
         return nil
     end
     local who = looterOf(dropID)

@@ -26,6 +26,10 @@ data, the chat sender and lockdown, the restriction state, `C_Item`'s upgrade, b
 answers, the trade action, the enums it resolves by name and the enUS GlobalStrings it parses),
 and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, and
 `C_Timer.NewTicker` is a repeating ticker on the same queue (its handle carries `ticker`).
+`tests/wow_mock_collect.lua`, which `tests/wow_mock.lua`'s builder calls, holds the collection reads
+`core/CompatCollect.lua` wraps (the mount and pet journals, the toy box, the cosmetic flag, the
+professions, the recipe's known line and a tier token's slot names), split out to keep
+`tests/wow_mock.lua` out of the 1000-line band.
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
@@ -58,7 +62,7 @@ within `feed.add`, observed inside it on a Receive-only capture, mixed with top 
 load or re-judge, and the depth counter cleared when Receive raises; review F06, DW-P24),
 `test_database` (the defaults tree and the migration runner: the stamp, a raising step, step 2
 reaching a stored profile that is not the active one, step 3 folding the View and its checkboxes
-into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
+into the View set, step 4 retiring the History's group cap and pruning nothing, step 6 retiring `feed.showOwn`, step 7 retiring the `myEq` and `theirEq` column toggles, step 12 retiring the deleted Friz, step 13 turning Gear only and Include tier tokens into the item kinds in every stored profile; step 8 is in `test_content_tabs`), `test_schema`, `test_schema_rows` (every
 spec §12.1 setting has a row whose default is `defaults/Profile.lua`'s and passes its own check,
 the refused values, the per-spec maps, the readers that go through `NS.Setting`, the M3 handoffs
 through the seam, the account-wide Keep history for, the CLI and the degraded load; the item-020 guard,
@@ -249,7 +253,7 @@ every cell, button and header of both tabs placed by it, the column labels and t
 (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask state, countdown
 and candidate status covered by the data, over pool items that keep their slot and level, the worn
 items the nearest of their slot, an empty pool giving none; feedback-17's realism: each group the
-size its content brings (five, twenty, twenty-five), the session's seven groups and twenty-nine drops (feedback-22: the unique ring on both sides, every
+size its content brings (five, twenty, twenty-five), the session's eight groups and thirty-five drops, the sixth boss's six the item kinds of issue #13 with their collection verdicts, no inspect and the pool's item of each kind before a stand-in, and History's world boss with a mount and a pet (feedback-22: the unique ring on both sides, every
 short trade reason, an upgrade that glows and ones that cannot),
 History's twenty-plus groups across every content within 30 days, each group one real place whose
 loot is that boss's or dungeon's at the group's difficulty, the keys' loot read at Mythic+ 10 with the
@@ -270,7 +274,9 @@ secret guards on both load paths, the localized duration decoder in three client
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
 `IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
 the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
-first, R4), and each shim's fallback with its API absent), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+first, R4), and each shim's fallback with its API absent), `test_compat_collect` (`core/CompatCollect.lua`'s
+collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
+by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
@@ -306,8 +312,41 @@ settled by classFile and by the player's realm, the re-read on a miss, the share
 `GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down), `test_item_facts` (the item facts: every field of a
 cached item, the track tier by string id and by name, the tooltip track, uniqueness, tier tokens and
 class gear, the link-color quality, the facts feeding the verdict kernel, the cache and its cap, the
-appearance event, the load with its retries, the give-up, a client that cannot load, and the
-stand-down), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
+appearance event (read from the raw equipLoc), the raw equipLoc and the category on every item, the load
+with its retries, the give-up, a client that cannot load, and the stand-down), `test_collectibles`
+(`modules/Collectibles.lua`, issue #13: `CategoryOf` for each category, its precedence and the classes
+not watched, `Verdict`'s new, collected, unknown, pet partial, recipe without the profession and
+whitelisted answers, and `Read` spending the probes only where they decide), `test_collect_feed`
+(DW-CAT3: a collectible through the feed: judged by its collection verdict, no looter inspect, no
+Them and no candidates, also through the trade re-estimate; the trade estimate's `collectible`; the
+trade sweep dropping someone else's and keeping your own; `newCollect` through the quality gate's
+override; the collection events coalesced into one re-read that re-judges only a moved verdict, the
+regen pass for `collectUnknown` alone, a learned appearance, the stand-down's cancel and
+`RereadCollections` the cache's one writer; and the refusals at the edges: Asks, the Offer panel and
+`/dw offer` (a bag collectible refused before it is adopted, so no drop is added), auto-ask; and an
+Always watch drop of no kind staying feed-only once the lists change, with no looter inspect), `test_item_lists` (DW-CAT5: `NS.ItemLists`' `ParseId`, Add, Remove and
+List, the refusal of an ID on the other list both ways, every write a whole copy through the seam,
+`/dw whitelist|blacklist` and their refusal while disabled, `/dw get` and a named reset; Never
+watch hiding gear and winning an overlap, Always watch showing an item of no kind as a feed-only
+`unknown`, passing a kind turned off and the quality gate, never the situation gate),
+`test_item_lists_panel` (Drops › Item lists: the tab after Items, its secondary strip and healed
+pointer, the IdList's entries, candidates and writes, a refusal raised, and the page's Defaults
+keeping both lists), `test_collect_cells` (DW-CAT3, pure: `NS.CollectCells`' words, tones and
+tooltip, the `WindowCells.Verdict` and `Them` hooks, the merged cells with no gear part, your own
+collectible's Them and Offer, History's stored verdict, and the refusals: the Ask button, the ask
+template's transmog fallback, the toast, Post my tradeables and the glow; a tier token not refused),
+`test_collect_surfaces` (DW-CAT7: a collectible's Slot (its kind) and Type (a recipe's profession)
+cells, a kept token's Type a dash, the detail card's chips, FOR YOU and looter boxes, the History row
+and card from the kept verdict, the item tooltip's Kind rows, the Drops strip's `n new`, the compact
+cards with no ⊘, the diagnostics' `collect:` lines, and the View's New to my collection beside the
+other values' answers and its `feed.view.newCollect` row), `test_tier_token` (DW-CAT4: a token's
+slot from the curated table, then the tooltip (matched by its whole line, none read leaving it nil,
+the tooltip not read when the table answers), the concrete-slot verdicts against what is worn there
+(upgrade, sidegrade, downgrade), another class's token `cantUse` and an unread slot `unknown`, the
+Curio folded to its best slot and another class's Curio `cantUse`, the scorer skipped with the opts
+and the facts left untouched, the looter judged on their own class and gear, a token through the
+feed, the minimum item level, and the Slot, Type, Makes and Me cells),
+`test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
 realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
 complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,
 identity, effective level, location reads and quality, the bag match by identity, an own drop read
@@ -347,7 +386,7 @@ member a candidate, no inspects for an untradeable one, pushed items; `GearChang
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
 stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
-altar hidden by the gear-only rule and the reagent by the quality rule with it off, the currency
+altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
 under FEED and reported in the `drops` diagnostics section; the group headers' `2 drops · 1 shown`
 and the tooltip naming each hidden drop and its filter, on Drops and History),
@@ -418,6 +457,33 @@ shorter one asking first with Yes pruning and No writing the agreed window back,
 at once; the login prune once per session, deferred, taken back by the stand-down and armed again
 by the stand-up, Never delete keeping everything; test mode's ten-day-old alt sample pruned by a
 7-day window while the account's log is kept),
+`test_insights_filters` (the Insights tab's rows and filters, issue #12, DW-N1: each facet's legacy
+fallback; `Options`, where a dropdown counts the rows the other six filters keep, a row failing two
+counts nowhere, the pick is kept at 0 and the head carries its count and choices; `Normalize` in
+ORDER with `keep` spared and the input never written; the date ranges by the retention, the local
+midnights across a DST change, each dropdown's order, the period and the closed label),
+`test_insights_stats` (the one stats pass, DW-N1: every spec §1 definition on fixture logs, asks and
+offers from the stamps, the held outcomes and the legacy trades, the success rate, the outcome rows,
+upgrades with the off-spec part, by instance, by boss and per visit with its 2-visit floor, the most
+generous members ordered by count and then by the latest trade's settle stamp, the gain from `got`
+against the legacy one, the days and weeks, the mixes, the empty pass, and each reducer seeing each
+row once in one pass),
+`test_insights_rows` (what the tab draws as plain data, DW-N2 and DW-N3: the eight cards' figures,
+hovers and tone with `IR.DASH` when there is nothing to show, the card grid at 4 and 2 columns,
+`BarPlan`'s wrap at the full, a middle and the compact width, the period caption in the singular and
+the plural, the empty lines, and every section builder's rows and colors),
+`test_insights_sections` (the chart sections on screen, DW-N3: the spec's order under its four
+dividers, a section with no rows drawing its heading and one muted line and never calling its
+renderer, the two list panels side by side and stacked in compact, the hover numbers, a second pass
+building no new frame, the empty state hiding every section, a skin switch re-laying
+them out) and
+`test_window_insights` (the tab in the window, DW-N2 to DW-N4: the `ownBar` plumbing that hides the
+shared bar and the footer's Sort and moves the mode strips; the seven dropdowns, a pick and Reset;
+the cache, where an unrelated repaint computes nothing, HistoryChanged and test mode off recompute,
+a resize lays out alone, a hidden window computes nothing (combat start ending test mode) and the
+show draws it afresh, and a skin switch recomputes the Quality rows' colors; the period strip and
+the retention; test mode filling every card and section; the degraded loads without Charts and
+without Widgets; compact's two-column cards and wrapped bar),
 `test_feed_restore` (the session is the login and the Drops tab survives a reload, feedback-15
 spec §0: the per-character session start an initial login sets, a reload keeps and a zone change
 leaves, stable with no stored value; after a reload this session's drops back in the feed under
@@ -455,7 +521,16 @@ shell placed with no migration, the icon and Ask holding the countdown, a drop m
 switch's Clear still held and `toast.inCombat` turned on mid-combat showing the next, a toast
 held for combat coming back with its full duration, `toast.inCombat` turned off mid-combat (by its
 row or a profile switch) keeping the toast on screen up and holding the next (AT-A3), and the
-drops gone from the feed leaving the queue on a shell whose `Stats` names no waiting keys),
+drops gone from the feed leaving the queue on a shell whose `Stats` names no waiting keys; its edge
+cases run at a stack of 1, the one-at-a-time toast),
+`test_toast_stack` (the stack, DW-T2, issue #14: at the default `toast.stack` of 3, N qualifying drops
+give min(N, 3) toasts on frames of their own, each painted with its drop; past the stack they queue
+under the queue's cap; Down and Up hang each toast under or over the one before from the saved
+point; a closed toast re-flows the rest and the next waiting comes up; each its own countdown and
+hover pause; the combat hold sending every toast back in order and bringing them all again, and
+`Hold(true)` keeping the stack up; the two rows applied live (`SetStack`) and a profile switch's
+incoming stack; `Prune`, Ask and the Ask repaint acting on a toast below the first; the skin repaint
+of every toast on screen; test mode's placeholders stacking; the diagnostics' stack lines),
 `test_auto_ask` (auto-ask: the pure `DueAt` and the delay's clamp; then the edge: off by default, a
 qualifying drop whispered after the delay once with the ask template, the delay and least gain
 read from the rows, an upgrade into an empty slot asked for whatever the least gain, a sidegrade,
@@ -483,14 +558,18 @@ answers, the world-boss flag, the boss names and the keys' preview level set and
 `everything` read covering both sides (feedback-17), each situation's side and difficulty, a read of every instance of the newest tier at every
 difficulty with the player's selection restored, even when a read raises, no read while the
 journal's frame is shown, the wait for `EJ_LOOT_DATA_RECIEVED` and its timeout keeping what loaded,
-the class filter, the own-items fallback reported once, the stop ending a waiting build; the seeded
+the class filter, the own-items fallback reported once, the stop ending a waiting build; the
+pool's extras (its drops that are not gear, by kind, issue #13) and a kind with none falling back to
+the curated samples once the client has them; the seeded
 random source, a party of four and a raid of nine to nineteen with distinct names and GUIDs and
 each spec its class's, the gear drawn inside the band from what the class can wear with the rest
 left empty and the off hand empty behind a two-hander, and the group kept on the session and
 forgotten by the stop),
 `test_sim_events` (the simulator's event drivers and its world: every `LOOT_ITEM*` shape written
 from its GlobalString and read back by the parser, a reordering locale written in its own order, a
-burst's size, your own lines and its looter from another realm; the roster, the situation and the
+burst's size, your own lines and its looter from another realm; one line in eight from the pool's
+extras and none moved without them, and `drop <kind>` reaching the feed judged for your collection,
+with its refusals (issue #13); the roster, the situation and the
 announce channel reading the invented party or raid while a live read sees the real world, and the
 stop putting it back; a member's line, bare or Name-Realm, reaching the feed under their GUID with
 saved history untouched; an inspect read through the broker's queue after the reply, never the
@@ -571,15 +650,17 @@ stay as integration over this addon's host half: `test_sim_core` (the seam's mem
 the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
 every scenario through the real engine), `test_sim_events` (the event drivers and the world
 providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
-`test_sim_scenario` (the scenarios, the timeline's steps, the five verbs through `/dw sim`) and
+`test_sim_scenario` (the scenarios, the timeline's steps, the six verbs through `/dw sim`, `drop <kind>` included) and
 `test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
 
-Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API, never
-`tests/_kit/`.
+Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
+read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
-The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails.
+The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
+
+The offline perf scenario `insightsCompute` (`lua tests/perf.lua`, [`performance.md`](performance.md)) measures the Insights recompute's pure pass over a log at the 5,000-drop safety ceiling.
 
 `lua tests/run.lua --list` prints the case inventory; it is committed as
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in

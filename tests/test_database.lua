@@ -276,6 +276,53 @@ test("database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in e
     assertEqual(p.Default.skin.font, "Ka0s Ubuntu", "the skin override")
     assertEqual(p.Alt.window.tableFont, "Ka0s Ubuntu", "another stored profile")
     assertEqual(p.Plain.window.tableFont, "Friz Quadrata TT", "Blizzard's own Friz stays")
-    assertEqual(NS.addon.db.global.schemaVersion, 12)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
     assertEqual(NS.RetireFonts(p.Alt), 0, "a second pass moves nothing")
+end)
+
+-- DW-CAT2 (issue #13, categories design spec §5.2): step 13 replaces Gear only and Include tier tokens
+-- with the item kinds. red under: no step 13; one that reaches only the active profile; one that skips
+-- cosmetics on gearOnly = false; one that applies includeTokens before the gearOnly sweep; or one that
+-- leaves either retired key behind.
+test("database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile", function()
+    local NS = T.newAddon()
+    local KINDS = { "equipment", "tierToken", "mount", "pet", "toy", "recipe", "cosmetic" }
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 12 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { feed = { gearOnly = false, minIlvl = 600 } },
+            Both = { feed = { gearOnly = false, includeTokens = false } },
+            Tokens = { feed = { includeTokens = false } },
+            Fresh = { window = { mode = "compact" } },
+        },
+    }
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    for _, key in ipairs(KINDS) do
+        assertEqual(p.Default.feed.categories[key], true, "every kind on: " .. key)
+    end
+    assertEqual(p.Default.feed.minIlvl, 600, "the other feed settings stay")
+    assertEqual(p.Both.feed.categories.tierToken, false, "includeTokens = false beside gearOnly = false")
+    assertEqual(p.Both.feed.categories.cosmetic, true)
+    assertEqual(p.Tokens.feed.categories.tierToken, false, "includeTokens alone")
+    assertNil(p.Tokens.feed.categories.equipment, "nothing else written: the default stands")
+    assertNil(p.Fresh.feed, "a fresh profile untouched")
+    for _, name in ipairs({ "Default", "Both", "Tokens" }) do
+        assertNil(p[name].feed.gearOnly, name .. ": gearOnly goes")
+        assertNil(p[name].feed.includeTokens, name .. ": includeTokens goes")
+    end
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.SCHEMA_VERSION >= 13)
+    assertEqual(NS.Setting("feed.categories.cosmetic"), true, "the active profile reads the migrated kinds")
+    local again = { feed = { categories = { mount = false } } }
+    NS.MigrateItemKinds(again); NS.MigrateItemKinds(again)
+    assertEqual(again.feed.categories.mount, false, "idempotent: a stored kind is kept")
+    local bare = { feed = { sort = "oldest" } }
+    NS.MigrateItemKinds(bare)
+    assertNil(bare.feed.categories, "no kinds table made from nothing")
+    NS.MigrateItemKinds(nil); NS.MigrateItemKinds({}); NS.MigrateItemKinds({ feed = 3 })
+    for _, key in ipairs({ "gearOnly", "includeTokens" }) do
+        assertNil(NS.SchemaRuntime.FindRow("feed." .. key), key .. ": no settings row reads it")
+    end
 end)

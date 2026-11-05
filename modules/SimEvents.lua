@@ -14,7 +14,8 @@ local _, NS = ...
 -- zoneChannelID, channelIndex, channelBaseName, languageID, lineID, guid. Plan draws a burst: one to
 -- three lines by default, random looters (you and a member always among them in a burst of two
 -- or more), occasional multiples and bonus rolls, and a looter from another realm whenever the
--- group has one and the burst has room.
+-- group has one and the burst has room. About one line in eight is one of the pool's extras (a
+-- mount, pet, toy, recipe or tier token, issue #13), and Drop sends one item of a named kind.
 --
 -- YOUR OWN DROPS land in your bags first, each with a trade window (TRADE_WINDOW seconds by
 -- default; Configure sets it per scenario, and the first ENDING_SOON_COUNT of them close in
@@ -201,25 +202,34 @@ local function ensurePlainLoot(plan)
     if first then first.kind = "loot" end
 end
 
+-- One line's item: about one in eight from `extras` (the pool's mounts, pets, toys, recipes and
+-- tier tokens) when it has any, else a drop. No extras, no draw: the seeded sequence is unchanged.
+local function pickEntry(drops, extras, rnd)
+    if extras and #extras > 0 and rnd(8) == 1 then return extras[rnd(#extras)] end
+    return drops[rnd(#drops)]
+end
+
 --- A burst of loot lines (pure): `n` lines (1 to 3 at random when nil), each { looter (a member,
 --- or nil for you), entry (a pool drop), qty, kind }. `who` is `me`, a member, or nil for random
---- looters; about one line in eight is a multiple and one in six a bonus roll. A random burst of
---- two or more has a line of yours, a member's and, when the group has one, a looter from
---- another realm; its members' lines are never all bonus rolls.
+--- looters; about one line in eight is a multiple and one in six a bonus roll, and with `extras`
+--- about one in eight is one of them (issue #13). A random burst of two or more has a line of
+--- yours, a member's and, when the group has one, a looter from another realm; its members' lines
+--- are never all bonus rolls.
 --- @param n number|nil
 --- @param members table
 --- @param drops table pool entries with a link
 --- @param rnd function a random source (NS.SimRoster.Random)
 --- @param who any
 --- @param ownRealm string|nil
+--- @param extras table|nil pool entries that are not gear (NS.SimPool.Extras' second answer)
 --- @return table plan
-function E.Plan(n, members, drops, rnd, who, ownRealm)
+function E.Plan(n, members, drops, rnd, who, ownRealm, extras)
     local plan = {}
     if #drops == 0 then return plan end
     n = tonumber(n) or rnd(1, 3)
     for i = 1, math.max(0, math.floor(n)) do
         plan[i] = {
-            looter = pickLooter(members, who, rnd), entry = drops[rnd(#drops)],
+            looter = pickLooter(members, who, rnd), entry = pickEntry(drops, extras, rnd),
             qty = rnd(8) == 1 and 2 or 1, kind = rnd(6) == 1 and "bonus" or "loot",
         }
     end
@@ -414,21 +424,12 @@ local function looterOf(who)
     return member and NS.SimWorld.Member(member.guid) or false
 end
 
---- Loot now (spec §4's `/dw sim loot [n] [player|me]`): `n` lines (1 to 3 when nil) from the pool's
---- drops, by `who` (`me`, a member's name, or random). Answers how many lines went out, or 0 and
---- why: `notRunning`, `noPool`, `noLooter`.
---- @param n number|nil
---- @param who string|nil
---- @return number, string|nil
-function E.Loot(n, who)
-    local d, s = drive(), Sim:Session()
-    if not d then return 0, "notRunning" end
-    local drops = NS.SimPool.LootDrops(s.pool)
-    if #drops == 0 then return 0, "noPool" end
+-- The lines of a burst delivered: `n` from `drops` (and `extras`), by `who`. Answers as E.Loot.
+local function burst(d, s, n, drops, who, extras)
     local looter = looterOf(who)
     if looter == false then return 0, "noLooter" end
     local ownRealm = NS.Compat.NormalizedRealm()
-    local plan = E.Plan(n, s.members or {}, drops, NS.SimWorld.Random(), looter, ownRealm)
+    local plan = E.Plan(n, s.members or {}, drops, NS.SimWorld.Random(), looter, ownRealm, extras)
     local me, sent, mine = player(), 0, false
     for _, line in ipairs(plan) do
         if deliverLine(d, line, me, ownRealm) then sent = sent + 1 end
@@ -437,6 +438,35 @@ function E.Loot(n, who)
     if mine then Sim:Fire("BAG_UPDATE_DELAYED") end
     NS.Debug(TAG, "loot: %d lines", sent)
     return sent
+end
+
+--- Loot now (spec §4's `/dw sim loot [n] [player|me]`): `n` lines (1 to 3 when nil) from the pool's
+--- drops, about one in eight from its extras, by `who` (`me`, a member's name, or random). Answers
+--- how many lines went out, or 0 and why: `notRunning`, `noPool`, `noLooter`.
+--- @param n number|nil
+--- @param who string|nil
+--- @return number, string|nil
+function E.Loot(n, who)
+    local d, s = drive(), Sim:Session()
+    if not d then return 0, "notRunning" end
+    local drops = NS.SimPool.LootDrops(s.pool)
+    if #drops == 0 then return 0, "noPool" end
+    local _, extras = NS.SimPool.Extras(s.pool)
+    return burst(d, s, n, drops, who, extras)
+end
+
+--- One drop of an item kind now (`/dw sim drop <kind> [player|me]`, issue #13): an item of that
+--- kind from the pool, else a curated sample (NS.SimPool.KindDrops), by `who` as E.Loot's. Answers
+--- 1, or 0 and why: `notRunning`, `noSample` (neither has one), `noLooter`.
+--- @param kind string a C.CATEGORIES key
+--- @param who string|nil
+--- @return number, string|nil
+function E.Drop(kind, who)
+    local d, s = drive(), Sim:Session()
+    if not d then return 0, "notRunning" end
+    local drops = NS.SimPool.KindDrops(s.pool, kind)
+    if #drops == 0 then return 0, "noSample" end
+    return burst(d, s, 1, drops, who)
 end
 
 -- ── a completed trade ───────────────────────────────────────────────────────────────────────

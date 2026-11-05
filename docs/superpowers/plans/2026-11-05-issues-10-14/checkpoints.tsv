@@ -1,0 +1,7 @@
+date	milestone	evidence
+2026-11-05	M1	DW-I10 655d19d + DW-I11 9275503; review clean; suite 1967/0/1, lint 0/0
+2026-11-05	M2	LK-T1 3844153..8b27da4 (stack, 27+ cases, 4 review fixes) + LK-T2 afd2aba,dab6407 (v1.87.0, no tag); LibKa0s suite 4167+/0/3 green
+2026-11-05	M3	DW-CAT1..CAT7 c324e07..51e7fb1; per-item reviews + a 3-lens adversarial M3 review (15 raised, 7 verified, all fixed); suite 2115/1/1 (the 1 = vendor-sync, the v1.87.0 tag collision; cleared by the v1.88.0 re-vendor)
+2026-11-05	M2	LK rebased onto 758cbd4 (real v1.87.0); LK-T2 1fdaed5,3555d43 = v1.88.0 (local annotated tag, release gate 20261105-064630 green, 4196/0/3); DW-T1 59e323d re-vendored from the tag; DW suite 2116/0/1, lint 0/0 (fully green)
+2026-11-05	M4	DW-N1..N4 0b38edc..b357206; per-item reviews + 3-lens adversarial M4 review (12 raised, 7 verified, all fixed); suite 2212/0/1, lint 0/0
+2026-11-05	M5	DW-FIN1: whole-run review (principal + standards + docs lenses, 20 raised, verified ones fixed 5eb5b6b..4752cce), review bundle fcc2815, automated-test bundle 20261105-100457 green (76e45d4); suite 2215/0/1, lint 0/0

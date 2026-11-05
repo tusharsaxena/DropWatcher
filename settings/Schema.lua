@@ -149,8 +149,11 @@ local S = Settings.SchemaLib:New{
     -- options-ui-§1 route (a): the host verbs that write a composed row still land on a load where
     -- the composer is hollow.
     writeThrough = { "enabled", "locked" },
-    -- The minimap button is a per-installation display preference: neither reset may touch it.
-    resetExempt  = { [MINIMAP_PATH] = true },
+    -- The minimap button is a per-installation display preference: neither reset may touch it. The
+    -- two item lists are a hand-built record, not a default to throw away, so the Drops page's
+    -- Defaults keeps them (plan #13, Q9); Reset all settings, a profile reset, still empties them,
+    -- and `/dw reset feed.whitelist` (a named single-row reset) still works.
+    resetExempt  = { [MINIMAP_PATH] = true, ["feed.whitelist"] = true, ["feed.blacklist"] = true },
 }
 NS.SchemaRuntime = S
 

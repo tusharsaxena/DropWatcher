@@ -9,7 +9,8 @@ local _, NS = ...
 --   header          the item button and the name in its quality color; chips for slot, armor type,
 --                   item level and the outcome in its tone (WindowHistory.Outcome's)
 --   FOR YOU         the verdict then (the title marks it AT THE TIME), the item-level and score
---                   deltas
+--                   deltas; a collectible's kept collection verdict, its Kind and Collection rows
+--                   instead (issue #13, NS.CollectCells.DetailRows), and a dash for its looter
 --   FOR THE GROUP   the looter (class color, ` [YOU]` on your own drop), the Them verdict and its
 --                   deltas; on your own drop who it was an upgrade for, which the snapshot does not
 --                   hold, so the Them line says it is not kept
@@ -98,6 +99,10 @@ end
 -- An off-spec verdict (feedback-19 spec §1): its chip, a Spec row and its own deltas.
 local function forYou(drop, classFile)
     local cell = WC.Me(drop, classFile)
+    if cell.collect then   -- the kept collection verdict: kind and collection (issue #13)
+        return { title = L["FOR YOU · AT THE TIME"], verdict = DC.VerdictChip(cell),
+            rows = NS.CollectCells.DetailRows(drop.me, drop.facts) }
+    end
     local off = NS.OffSpec.Of(drop.me)
     local rows = deltaRows(off or drop.me, cell.tone)
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
@@ -122,7 +127,7 @@ end
 local function forGroup(drop)
     if drop.isMine then return ownGroup(drop) end
     local cell = NS.WindowHistory.ThemVerdict(drop)
-    local rows = deltaRows(drop.them, cell.tone)
+    local rows = cell.collect and {} or deltaRows(drop.them, cell.tone)   -- a collectible: no deltas
     table.insert(rows, 1, looterRow(drop))
     return { title = L["FOR THE GROUP"], verdict = DC.VerdictChip(cell), rows = rows }
 end

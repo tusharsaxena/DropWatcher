@@ -20,9 +20,11 @@ local function specPaths()
         "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole", "global.minimap.shown",
         "autoOpen",
         "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
+        "feed.view.newCollect",   -- New to my collection (issue #13, DW-CAT7)
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
-        "feed.quality.upgradeOverride", "feed.gearOnly", "feed.includeTokens", "feed.minIlvlMode",
+        "feed.quality.upgradeOverride", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
+        "feed.whitelist", "feed.blacklist",   -- the item lists (issue #13, DW-CAT5)
         "feed.content",
         "comparison.scorer", "comparison.weights", "comparison.sidegradeBand", "comparison.compareOwned",
         "comparison.heirloomProtect", "comparison.undesired",
@@ -103,6 +105,29 @@ test("rows: a value outside a row's list or range is refused and stores nothing"
     assertEqual(p.trade.rules.raid, "group")
 end)
 
+-- DW-CAT5 (issue #13, categories design spec §5.1): the item lists are map rows on Drops › Item
+-- lists whose validate checks the shape alone; the two lists' overlap is the writer's to refuse.
+-- red under: validItemSet missing (any table stored), or refusing an ID that is on the other list
+test("rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    for _, path in ipairs({ "feed.whitelist", "feed.blacklist" }) do
+        local row = S.FindRow(path)
+        assertEqual(row.type, "map"); assertEqual(row.page, "feed"); assertEqual(row.group, "Item lists", path)
+        assertTrue(row.skipRender == true, path .. " is drawn by its tab's editor")
+        assertTrue(next(NS.C.PROFILE.feed[path:match("%.(%w+)$")]) == nil, path .. " defaults empty")
+        assertTrue(S.Set(path, { [19019] = true, [12345] = true }))
+        assertFalse(S.Set(path, { [19019] = 1 }), "a value that is not true")
+        assertFalse(S.Set(path, { ["19019"] = true }), "a key that is not a number")
+        assertFalse(S.Set(path, { [0] = true }), "a key that is no itemID")
+        assertFalse(S.Set(path, { [1.5] = true }), "a fractional key")
+        assertFalse(S.Set(path, "19019"), "not a table")
+    end
+    assertTrue(NS.Setting("feed.whitelist")[19019] and NS.Setting("feed.blacklist")[19019], "an overlap is stored")
+    assertEqual(NS.addon.Settings.FormatValue(S.FindRow("feed.whitelist"), NS.Setting("feed.whitelist"),
+        function() return "lib" end), "{2}", "the CLI renders a list as its entry count")
+end)
+
 test("rows: the per-spec maps take keyed values whole, and refuse a malformed one", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
@@ -140,6 +165,31 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertEqual(a.announceChannel, "RAID")
     assertEqual(a.templates.ask, NS.C.PROFILE.messages.templates.ask)
     assertEqual(NS.TradeTimer.WarnAt(), 120)
+end)
+
+-- DW-CAT2 (issue #13, categories design spec §5.1): one Item kinds switch per category, in
+-- C.CATEGORIES' order, on Drops › Items; Gear only and Include tier tokens are gone.
+-- red under: a category with no row, the rows out of order, or a retired row left behind.
+test("rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order", function()
+    local NS = T.newAddon()
+    local L = NS.L
+    local order = {}
+    for _, row in ipairs(NS.addon.Settings.Rows) do
+        local key = row.path:match("^feed%.categories%.(.+)$")
+        if key then
+            order[#order + 1] = key
+            assertEqual(row.type, "bool", key)
+            assertEqual(row.page, "feed", key); assertEqual(row.group, L["Items"], key)
+            assertEqual(row.subgroup, L["Item kinds"], key)
+            assertEqual(row.default, NS.C.PROFILE.feed.categories[key], key .. ": the profile's default")
+        end
+    end
+    assertEqual(#order, #NS.Constants.CATEGORIES)
+    for i, cat in ipairs(NS.Constants.CATEGORIES) do assertEqual(order[i], cat.key, "row " .. i) end
+    assertFalse(NS.C.PROFILE.feed.categories.cosmetic, "cosmetics off by default")
+    assertNil(NS.SchemaRuntime.FindRow("feed.gearOnly")); assertNil(NS.SchemaRuntime.FindRow("feed.includeTokens"))
+    assertNil(NS.C.PROFILE.feed.gearOnly); assertNil(NS.C.PROFILE.feed.includeTokens)
+    assertFalse(NS.SchemaRuntime.Set("feed.categories.mount", "no"), "a switch takes a boolean alone")
 end)
 
 test("rows: the filter bar seeds a fresh tab from the rows", function()
@@ -203,6 +253,9 @@ test("rows: `/dw set` reaches a hand-written row", function()
     assertEqual(NS.addon.db.profile.feed.quality.floor, 3)
     NS.addon:OnSlashCommand("set situations.solo.track false")   -- off its default (tracked, DW-06)
     assertEqual(NS.addon.db.profile.situations.solo.track, false)
+    NS.addon:OnSlashCommand("set feed.categories.cosmetic true")   -- an item kind, from the CLI (DW-CAT2)
+    assertEqual(NS.Setting("feed.categories.cosmetic"), true)
+    assertEqual(NS.LootFeed.Config().categories.cosmetic, true, "the feed reads what the CLI wrote")
 end)
 
 test("rows: degraded, the hand-written rows still read, write and refuse", function()
@@ -367,7 +420,7 @@ end)
 
 -- ── Alerts › Toast: Scale (feedback-21 G10; Window's until feedback-24) ─────────────────────
 
-test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a sound, live only with the toast on", function()
+test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after the stack's rows, live only with the toast on", function()
     local NS = T.enableAddon()
     local S = NS.SchemaRuntime
     local row = S.FindRow("toast.scale")
@@ -390,7 +443,38 @@ test("toast scale: a 50-200 % slider by 5 on Alerts › Toast, after Play a soun
         if r.group == "Toast" then order[#order + 1] = r.path end
     end
     assertEqual(order[#order], "toast.scale", "the tab's last row")
-    assertEqual(order[#order - 1], "toast.sound")
+    assertEqual(order[#order - 1], "toast.stackGrow")
+    assertEqual(order[#order - 2], "toast.stack")
+    assertEqual(order[#order - 3], "toast.sound")
+end)
+
+-- ── Alerts › Toast: the stack (issue #14, DW-T2) ────────────────────────────────────────────
+
+test("toast stack: Toasts at once is a 1-5 slider by 1, default 3, and Stack direction picks Down or Up, default Down", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    local n, g = S.FindRow("toast.stack"), S.FindRow("toast.stackGrow")
+    assertTrue(n ~= nil and g ~= nil, "both have a row")
+    assertEqual(n.page, "alerts"); assertEqual(n.group, "Toast"); assertEqual(n.label, "Toasts at once")
+    assertEqual(n.type, "number"); assertEqual(n.min, 1); assertEqual(n.max, 5); assertEqual(n.step, 1)
+    assertEqual(n.default, 3); assertEqual(NS.C.PROFILE.toast.stack, 3)
+    assertEqual(g.page, "alerts"); assertEqual(g.group, "Toast"); assertEqual(g.label, "Stack direction")
+    assertEqual(g.type, "string"); assertEqual(g.default, "down"); assertEqual(NS.C.PROFILE.toast.stackGrow, "down")
+    assertEqual(#g.values, 2)
+    assertEqual(g.values[1].value, "down"); assertEqual(g.values[1].text, "Down")
+    assertEqual(g.values[2].value, "up"); assertEqual(g.values[2].text, "Up")
+    assertTrue(type(n.onChange) == "function" and type(g.onChange) == "function", "applied live (NS.Toast.ApplyStack)")
+    assertFalse(S.Set("toast.stack", 0)); assertFalse(S.Set("toast.stack", 6))
+    assertFalse(S.Set("toast.stack", 2.5), "a whole number of toasts")
+    assertFalse(S.Set("toast.stackGrow", "left")); assertFalse(S.Set("toast.stackGrow", "UP"))
+    assertTrue(S.Set("toast.stack", 5)); assertEqual(NS.addon.db.profile.toast.stack, 5)
+    assertTrue(S.Set("toast.stackGrow", "up")); assertEqual(NS.addon.db.profile.toast.stackGrow, "up")
+    -- The CLI reaches both through the same seam (panel/CLI parity).
+    NS.addon:OnSlashCommand("set toast.stack 2")
+    NS.addon:OnSlashCommand("set toast.stackGrow down")
+    assertEqual(NS.addon.db.profile.toast.stack, 2); assertEqual(NS.addon.db.profile.toast.stackGrow, "down")
+    assertTrue(S.Set("toast.enabled", false))
+    assertTrue(n.disabledIf() and g.disabledIf(), "dimmed while the toast is off")
 end)
 
 -- ── Window › Icons (feedback-21 G11) ────────────────────────────────────────────────────────
@@ -502,9 +586,18 @@ local PINNED_ROWS = {
     { "comparison.weights", "map", "{}" },
     { "enabled", "bool", "true" },
     { "feed.clearOnBossKill", "bool", "false" },
+    -- DW-CAT2 (issue #13): the item kinds replace Gear only and Include tier tokens (step 13).
+    { "feed.categories.cosmetic", "bool", "false" },
+    { "feed.categories.equipment", "bool", "true" },
+    { "feed.categories.mount", "bool", "true" },
+    { "feed.categories.pet", "bool", "true" },
+    { "feed.categories.recipe", "bool", "true" },
+    { "feed.categories.tierToken", "bool", "true" },
+    { "feed.categories.toy", "bool", "true" },
+    -- DW-CAT5 (issue #13): the Always watch and Never watch item lists, new stored paths.
+    { "feed.blacklist", "map", "{}" },
+    { "feed.whitelist", "map", "{}" },
     { "feed.content", "string", "\"session\"" },
-    { "feed.gearOnly", "bool", "true" },
-    { "feed.includeTokens", "bool", "true" },
     { "feed.minIlvl", "number", "0" },
     { "feed.minIlvlMode", "string", "\"off\"" },
     { "feed.quality.fixed", "number", "3" },
@@ -515,6 +608,8 @@ local PINNED_ROWS = {
     { "feed.sort", "string", "\"newest\"" },
     { "feed.view.interesting", "bool", "false" },
     { "feed.view.likely", "bool", "false" },
+    -- DW-CAT7 (issue #13): the View's New to my collection, a new stored path.
+    { "feed.view.newCollect", "bool", "false" },
     { "feed.view.upgrade", "bool", "false" },
     { "feed.view.usable", "bool", "false" },
     { "global.history.retentionDays", "number", "30" },
@@ -635,6 +730,9 @@ local PINNED_ROWS = {
     { "toast.minGain", "number", "10" },
     { "toast.scale", "number", "1" },
     { "toast.sound", "bool", "false" },
+    -- DW-T2 (issue #14): the stack, new stored paths; 1 is the one-at-a-time toast.
+    { "toast.stack", "number", "3" },
+    { "toast.stackGrow", "string", "\"down\"" },
     { "trade.rules.delve", "string", "\"personal\"" },
     { "trade.rules.dungeon", "string", "\"personal\"" },
     { "trade.rules.followerDungeon", "string", "\"personal\"" },

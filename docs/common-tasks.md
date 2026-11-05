@@ -45,12 +45,26 @@ A version-variant, deprecated or optional client API is called from `core/Compat
    `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
    documented absent value (nil, false or `{}`) when the API is missing.
 2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]` (a stable world read
-   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`), never globally, and
+   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`, a collection read (the mount, pet and toy journals, the professions, a recipe's tooltip) in `core/CompatCollect.lua` under `files["core/CompatCollect.lua"]`), never globally, and
    add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
 3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
-   absent among them.
+   absent among them (a collection read: its fake in `tests/wow_mock_collect.lua` and its cases, and its name in
+   `COLLECT_APIS` rather than `SEAM_ONLY`, in `tests/test_compat_collect.lua`).
 4. Add the row to [`compat-layer.md`](compat-layer.md) (and its shim count), and a row to
    [`midnight-quirks.md`](midnight-quirks.md) when the shim works around a client change.
+
+## Add a season's tier tokens
+
+A tier token is judged as the piece it makes (categories design spec §7). The slot comes from the
+curated `C.TIER_TOKENS` in `core/Constants.lua` first, then from the token's tooltip.
+
+1. In the client, read each of the season's tokens with `/dump C_Item.GetItemInfo(<itemID>)` and its
+   tooltip (`/dump C_TooltipInfo.GetItemByID(<itemID>)`): note the slot it makes and whether it
+   names classes (an omni Curio names none).
+2. Add one row per token, `[itemID] = { slot = "INVTYPE_HEAD" }` (`INVTYPE_SHOULDER`,
+   `INVTYPE_CHEST`, `INVTYPE_HAND`, `INVTYPE_LEGS`), or `{ slot = "any" }` for a Curio, with the
+   season in a comment. Never guess an id into the table.
+3. Add the ids to smoke check `ITEM-6`'s record in [`smoke-tests.md`](smoke-tests.md).
 
 ## Add a perf bucket
 

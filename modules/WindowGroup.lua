@@ -447,6 +447,7 @@ local function itemEnter(self, owner)
     owner = owner or self
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
+    NS.RowTooltip.AddKindRows(GameTooltip, self.link)   -- a collectible's kind and collection (issue #13)
     local r, g, b = NS.Skin.Color("dw.tipHint")
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], r, g, b)
     GameTooltip:Show()

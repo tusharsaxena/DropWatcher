@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/Compat.lua — the root of the compat family (compat, design spec §4), the only caller of
--- version-variant, deprecated and optional client APIs; core/CompatWorld.lua, core/CompatItem.lua and
--- core/CompatJournal.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
+-- version-variant, deprecated and optional client APIs; core/CompatWorld.lua, core/CompatItem.lua,
+-- core/CompatJournal.lua and core/CompatCollect.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
 -- docs/compat-layer.md; the text parsing is core/TextParse.lua's (pure), handed this file's strings.
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but

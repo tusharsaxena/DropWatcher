@@ -14,7 +14,7 @@ passed.
 | ID range | Theme | What it covers |
 |---|---|---|
 | INSTALL-1..6 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV); LibKa0s-Toast-1.0 vendored alone (INSTALL-6, AT-A1) |
-| SLASH-1..8 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09) |
+| SLASH-1..9 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09); `/dw whitelist` and `/dw blacklist` in help and refused while disabled (SLASH-9, DW-CAT5, issue #13) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
@@ -22,12 +22,13 @@ passed.
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
 | STATE-1..6 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
-| COMBAT-1..3 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat |
+| COMBAT-1..4 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat; both combat edges announced under the Combat restriction (COMBAT-4, DW-I11) |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
-| DEGRADED-1..3 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21; superseded by AT-A2); no toast at all without LibKa0s, the toast's shell being LibKa0s-Toast-1.0 (DEGRADED-3, SM-DW-AT8, AT-A2) |
+| DEGRADED-1..4 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21; superseded by AT-A2); no toast at all without LibKa0s, the toast's shell being LibKa0s-Toast-1.0 (DEGRADED-3, SM-DW-AT8, AT-A2); the Insights tab without LibKa0s-Charts-1.0 (DEGRADED-4, DW-N2, issue #12) |
 | FEED-1..103 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24); the test-mode banner as LibKa0s-Widgets' strip (FEED-100, DW-06); the filter bar's search box as LibKa0s-Widgets' SearchBox (FEED-101, DW-07); the cyan simulation strip, and the title words only while minimized (FEED-102, DW-10); Trade on the compact card's line 3 beside the button, You and Them on line 4 to the card's edge (FEED-103, feedback-25) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
-| ITEM-1..5 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix) |
+| ITEM-1..7 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix); what a tier token's tooltip carries (ITEM-6) and a token judged against your worn piece, a Curio's best slot (ITEM-7; DW-CAT4, issue #13) |
+| COLL-1..9 | [Collectibles](#collectibles) | Issue #13 (DW-CAT1..DW-CAT7): the collection APIs' `/dump` shapes (COLL-1); a mount new to you that turns Collected once learned (COLL-2); a pet's count (COLL-3); a toy (COLL-4); a recipe known, and one for a profession you lack (COLL-5); a bound collectible's trade, yours and someone else's (COLL-6); Always watch and Never watch from the panel and the CLI, the refusals, Never watch hiding gear and the Drops Defaults keeping both lists (COLL-7); each `/dw sim drop <kind>` and test mode's item-kind samples (COLL-8); the View's New to my collection and a collectible's Slot, Type, detail card, History, item tooltip, Drops strip and diagnostics (COLL-9) |
 | GEAR-1..2 | Gear | Your gear snapshot, the owned best and the rebuild events (DW-24) |
 | INSPECT-1..5 | Inspect | The inspect broker: warm-up and spacing, the waits and the cache, courtesy and combat, the item level (DW-26); a looter who left keeps their read (feedback-21 H2) |
 | TRADE-1..6 | Trade | Trade estimates and the raid rule (TRADE-1..4, DW-14), timers (TRADE-5, DW-28), the trade helper (TRADE-6, DW-29) |
@@ -36,11 +37,12 @@ passed.
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
 | HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
-| TOAST-1..8 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05) |
+| INSIGHT-1..8 | [Insights](#insights) | Issue #12 (DW-N1..DW-N4): the tab, its tooltip and the period caption following the retention, `/dw insights` (INSIGHT-1); the seven data-driven filters and their fallback to All (INSIGHT-2); the cards and every section on real history, the empty lines, no Sort and no shared bar (INSIGHT-3); an ask that ends in a trade and the gain kept after equipping the item (INSIGHT-4); test mode filling every section, the strip under the tabs (INSIGHT-5); a simulation's drops and trade alone, and the restore (INSIGHT-6); compact, a skin switch and a resize (INSIGHT-7); the slot the client gives an item you cannot equip, and an Always watch item of no kind as Watched item (INSIGHT-8) |
+| TOAST-1..9 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05); three upgrades at once, stacked (TOAST-9, DW-T2, issue #14) |
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid border, the skin's color since R5-ICON) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..20 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM) |
+| SIM-1..21 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6) |
 | COMPACT-1..10 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16); the Filters panel closing on a press outside it (COMPACT-10, R5-DD) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
@@ -154,6 +156,13 @@ and press the key → exactly one disabled refusal line and no window. `/dw enab
 `/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
 Result: passed in the client, 2026-10-23 (the owner).
 
+**SLASH-9. The item-list verbs (DW-CAT5, issue #13).** `/dw help` → it lists `whitelist` (*Always
+watch an item*) and `blacklist` (*Never watch an item*), each with its `add|remove <id or link>`, or
+`list` form. `/dw whitelist` alone and `/dw blacklist list` each print the list, one `12345 [Name]`
+line per entry, or `(none)`. `/dw disable`, then `/dw whitelist list` → exactly the one disabled
+refusal line and no list; `/dw enable`. `/dw get feed.whitelist` prints the list as `{n}`, its entry
+count. Fail: a verb missing from help, a list printed while disabled, or a Lua error. Result: not run
+
 ## Keybindings
 
 Item 015 (DW-KB, the 2026-10-24 keybindings, layout and strata run; launcher-§6 and options-ui-§20
@@ -234,21 +243,22 @@ them, and after each check `/reload` and confirm they read the same.
 
 **LAYOUT-1. Drops (DRO-L01..L03, DRO-L10, DRO-L11, DRO-L-new3).** The settings list reads General, Drops,
 Comparison, Messages, Window, Alerts, Profiles: no Situations page. Drops' strip reads Situations,
-Quality, Items, Retention, and the page opens on Situations: Auto-open the window, then the
+Quality, Items, Item lists, Retention (Item lists since issue #13), and the page opens on Situations: Auto-open the window, then the
 per-situation table (Situation, Track, Auto-open, Quality, Loot rule) with every value you had set
 before the update. Click Quality → the table is gone and the In force now line is drawn, with
 `A situation can set a quality of its own: the Quality column on the Situations tab.` under it.
 Click Items, Retention, then Situations again → the table is there once, never on another tab.
-Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, items and how
-long drops are kept) to their defaults.` Tick Delve's Track, set Mythic+'s Loot rule to Group loot,
-press Defaults → both go back, with the Quality tab's rows; a Window value stays.
+Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, item kinds and
+item level, and how long drops are kept) to their defaults. The item lists are kept.` Tick Delve's
+Track, set Mythic+'s Loot rule to Group loot, put an item on Always watch, press Defaults → both go
+back, with the Quality tab's rows; the Always watch entry and a Window value stay.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
 section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
-Turned on in row reads `Settings > Drops > Situations`. Items: `Gear only` | `Include tier tokens` on one line. Retention: the tab is still
+Turned on in row reads `Settings > Drops > Situations`. Items: the seven item kinds two to a line, `Equipment` | `Tier tokens` first and `Cosmetics` alone last (`Gear only` | `Include tier tokens` before DW-CAT2). Retention: the tab is still
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
-Result: passed in the client, 2026-10-24 (the owner).
+Result: not run (reopened by the issues #10-#14 run, DW-CAT2 and DW-CAT5: its expected results moved; passed in the client, 2026-10-24 (the owner), before).
 
 **LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** General's strip still reads Master
 controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
@@ -521,6 +531,15 @@ ask. Result: passed in the client, 2026-10-23 (the owner).
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
 visibility `Only in combat`, the open window shows on the pull and hides when combat ends. Result: passed in the client, 2026-10-23 (the owner).
 
+**COMBAT-4. Both combat edges announced under the Combat restriction (DW-I11).** `/dw debug on`,
+then pull a mob outside any encounter (a training dummy will do) so the Combat restriction type is
+active → the console shows a `RES` line `restrictions <prev> -> combat/true/false/false/true
+(PLAYER_REGEN_DISABLED)` as combat starts, its last field the combat flag; leave combat → a
+second `RES` line ending `(PLAYER_REGEN_ENABLED)` whose signature's last field is `false`, even if
+the Combat type has not lifted yet (the reason may still read `combat`). Record whether each edge
+gave its own `RES` line, and whether the Combat type's own event came before or after the edge.
+Result: not run
+
 ## Diagnostics
 
 **DIAG-1. The report.** `/dw diagnostics` → the console opens with both markers naming Ka0s Drop
@@ -575,6 +594,15 @@ seam's stub answers`) and `test_surface_parity` (`the Toast stub`) cover it.
 
 Result: passed in the client, 2026-10-30 (the owner).
 
+**DEGRADED-4. The Insights tab without LibKa0s-Charts-1.0 (DW-N2, issue #12).** The headless
+`test_window_insights` (`without LibKa0s-Charts-1.0 the bar and the strip draw and one line says
+why`) and `test_surface_parity` cover it. In the client: move `libs\LibKa0s\Charts.lua` and
+`libs\LibKa0s\ChartsRender.lua` out of the folder, `/reload`, `/dw debug on`, then `/dw insights` →
+no Lua error; the tab shows its seven dropdowns and the strip with the period caption, and one line
+reads `The charts need LibKa0s-Charts-1.0, which did not load.` The console has one line saying the
+library is absent. The Drops and History tabs work as before. Restore both files and `/reload` → the
+cards and charts are back. Result: not run
+
 ## Feed
 
 The parser's patterns, the rebuild and the secret guards are headless-tested (`test_loot_parser`),
@@ -620,11 +648,11 @@ minutes of its kill), `/dw diagnostics` shows `feed: encounter=<boss name>`; aft
 `[QUAL] hidden <link>: quality <q> below 3 (fixed, belowThreshold)` line and **no** `[INSPECT]`
 line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSPECT] inspect
 <Name-Realm>: cached` or `fresh` line within a few seconds (out of combat), then `[EVAL] re-judged
-1 drops after an inspect`. A potion or a reagent shows `[FEED] hidden <link> by <name>: notGear`.
+1 drops after an inspect`. A potion or a reagent shows `[FEED] hidden <link> by <name>: notWatched` (`notGear` before DW-CAT2).
 An item you loot yourself shows `them=-` and a trade state judged by your own verdict (`no` when it
 is an upgrade for you). Then leave the instance and, alone in the open world, loot a few items:
 no `[FEED] drop` line appears outside a tracked situation (`/dw diagnostics` →
-`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: passed in the client, 2026-10-23 (the owner).
+`feed: hidden ... notTracking=<n>` counts any loot seen there). Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **FEED-5. The upgrade track on someone else's link.** After FEED-2, shift-click a member's drop
 (a piece with an upgrade track, from the loot window or chat) into `/dump
@@ -804,10 +832,10 @@ each, both looters spelled as in chat; the group header reads `<run> · Mythic+ 
 Switch View to All → both rows show and the header reads `2 drops`. A boss whose every drop View:
 Interesting hides → its header still shows, `n drops · 0 shown`, with no row under it; Search for
 an item it does not hold → that group leaves the table. A reagent and a non-gear item
-(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notGear` line each, no
+(a decor piece) in the same run → one `[FEED] hidden <link> by <looter>: notWatched` line each (`notGear` before DW-CAT2), no
 row. Loot an item yourself through a quest reward → one `[FEED] refused <link>: pushed` line.
-`/dw diagnostics` → its `drops` section reads `drops: hidden notGear=2` (plus any others) and
-`drops: refused pushed=1`. Result: passed in the client, 2026-10-23 (the owner).
+`/dw diagnostics` → its `drops` section reads `drops: hidden notWatched=2` (plus any others) and
+`drops: refused pushed=1`. Result: not run (reopened by the issues #10-#14 run, DW-CAT2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** On a
 character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
@@ -1863,6 +1891,106 @@ stat does not suit the spec`. A genuinely single-stat item (an Agility trinket) 
 unusable for a Strength spec. Record any multi-stat item judged by your own primary stat alone, with
 its link. Result: passed in the client, 2026-10-23 (the owner).
 
+**ITEM-6. What a tier token's tooltip carries (DW-CAT4, issue #13).** With a current-season tier token
+in your bags (or its link), `/dump C_TooltipInfo.GetHyperlink(<link>)` → record whether any line's
+`leftText` is exactly the slot's name (`Head`, `Shoulder`, `Chest`, `Hands`, `Legs`) and whether a
+class line names its classes; `/dump C_Item.GetItemInfoInstant(<link>)` → record its class,
+subclass and equip location. Then `/dw add <link>` → the row's Slot reads `Token: Head` (or the slot
+it makes) and Type its classes; `Token` alone means the slot was not read. Record each season token's
+item ID and slot: they seed `C.TIER_TOKENS` (`docs/common-tasks.md`, "Add a season's tier tokens").
+Result: not run
+
+**ITEM-7. A token judged against your worn piece (DW-CAT4, issue #13).** `/dw add <a token for your
+class>` → Me reads ▲, ≈ or ▼ with the item-level change against what you wear in the slot it makes
+(compare with your worn piece), never a score; Ask is offered as for gear. `/dw add <a token for
+another class group>` → Me reads Can't use. An omni Curio, once listed in `C.TIER_TOKENS` with slot
+`any` → Me's tooltip names the tier slot it helps most (*Best in: Legs*) and Slot reads `Token: any
+slot`. Fail:
+a scorer's number on a token, a wrong slot, or `?` on a token whose slot ITEM-6 read. Result: not run
+
+## Collectibles
+
+Issue #13 (categories design spec §1, §3.2, §4, §8; DW-CAT1..DW-CAT7). The headless suite covers the
+category order, the verdicts, the filter, the lists and the samples; these are the client's word on
+the collection APIs and the surfaces. Every collectible is feed-only: its Ask reads No action, no
+toast pops for it, auto-ask skips it, it is never offered, announced or posted, and no inspect is
+asked for it.
+
+**COLL-1. The collection APIs' shapes.** `/dump C_MountJournal.GetMountFromItem(<mount item id>)`,
+`/dump C_MountJournal.GetMountInfoByID(<that mount id>)` (the 11th return is `isCollected`), `/dump
+C_PetJournal.GetPetInfoByItemID(<companion item id>)` (the 13th return is the species), `/dump
+C_PetJournal.GetNumCollectedInfo(<species>)`, `/dump C_ToyBox.GetToyInfo(<toy id>)`, `/dump
+PlayerHasToy(<toy id>)`, `/dump C_Item.IsCosmeticItem(<cosmetic link>)`, `/dump GetProfessions()` and
+`/dump GetProfessionInfo(<each index>)` (the 7th return is the skill line), and `/dump ITEM_SPELL_KNOWN`
+→ record each answer's shape, and any that answers nil or secret right after login or in combat (it
+goes in `docs/midnight-quirks.md`). Result: not run
+
+**COLL-2. A mount, new then collected.** `/dw add <a mount item you have not learned> Somebody` → the
+row's Me reads `New` in green, its tooltip `For you: New to your collection`, Them a dash
+(*Collectibles are judged for you alone.*), Ask `No action` (*collectibles are watched, not asked
+for*), the detail card's Retry inspect grayed (*collectibles are judged for you alone, not
+inspected*), and no toast. Learn that mount (or use one you have) → within a second the same row reads
+`Collected` in gray, with no `/reload`. Result: not run
+
+**COLL-3. A pet's count.** `/dw add <a companion pet item>` for a species you have none of → `New`;
+for one you have 1 of 3 → `Collected 1/3`, its tooltip's Why naming `you have 1/3`. Learn one more
+→ the count moves. Result: not run
+
+**COLL-4. A toy.** `/dw add <a toy you lack>` → `New`; one you own → `Collected`. Result: not run
+
+**COLL-5. A recipe.** On a character with that profession, `/dw add <a recipe you know>` → `Known`;
+`<one you have not learned>` → `New`. On a character without the profession → `Can't use` in dim
+red, Why *not one of your professions*. Fail: `?` on a recipe whose tooltip shows *Already known*.
+Result: not run
+
+**COLL-6. A bound collectible's trade.** Loot a bind-on-pickup mount or pet yourself in a group →
+the Trade window counts down the real trade time once the bag item is read (the trade timer's exact
+answer); Offer reads No action (*collectibles are watched, not offered*), and `/dw offer <link>` prints
+*Collectibles are watched, not offered.* Someone else's → Trade reads `?` *Collectible*. Result: not
+run
+
+**COLL-7. Always watch and Never watch.** Settings › Drops › Item lists → the strip reads Always watch
+| Never watch. On Always watch, shift-click a reagent's link into the add box → it is listed with its
+icon and name; `/dw add <that reagent>` → it shows, Me `?` with Why *on your Always watch list*.
+On Never watch, type the same ID → refused with *That item is on Always watch: remove it there
+first.*, the text kept in the box. Remove it from Always watch, add it to Never watch, then add a
+piece of gear's ID to Never watch → `/dw add <that gear>` adds no row to Drops (the feed hides it as
+`blacklist`, which `/dw diagnostics` counts). `/dw whitelist add <id>`, `/dw whitelist remove <id>` and `/dw blacklist list` do the
+same from chat and the panel shows the change on its next render. Drops' Defaults button → the item
+kinds and quality reset, both lists kept (its tooltip says so). Turning Mounts off under Item kinds
+→ a new mount drop is hidden, one already in the feed stays. Result: not run
+
+**COLL-8. The simulator and test mode make every kind.** `/dw sim start raid`, then `/dw sim drop
+mount me`, `drop pet`, `drop toy`, `drop recipe`, `drop cosmetic` (with Cosmetics turned on), `drop
+token` and `drop equipment` → each prints `Simulated drop: 1 drop.` and lists one drop of that kind,
+or prints *The simulation has no item of that kind to drop.* when neither the journal nor the curated
+samples have one; record which kinds the current season's journal lists. For each kind it lacks, find
+an item of that kind, check it with `/dw add item:<id>` (it shows as that kind), and record its ID:
+it seeds `NS.SimPool.COLLECTIBLE_SAMPLES` (modules/SimPool.lua), which ships empty because no ID is
+guessed. `/dw sim drop reagent` → the usage. `/dw test` → a sixth Heroic boss holds a mount (`New`,
+Ask No action), a pet (`Collected 1/3`), a toy (`?`), a cosmetic (`New look`, no For transmog ask), a
+tier token (`Token: Head`, ▲ +7, Ask offered) and your own recipe (`Can't use`, no Offer); a kind the
+journal lacks is drawn on another item, named for its kind. History in test mode holds a world boss
+with a mount at `New` and your pet at `Collected 2/3`. Result: not run
+
+**COLL-9. New to my collection, and a collectible on every surface.** `/dw test` → on Drops, the
+sixth boss's mount reads Slot `Mount`, Type a dash, and the recipe Slot `Recipe`, Type its profession
+in dim red (you lack it in the sample), or a dash when the sample is drawn on an item that is no
+recipe; `/dw add <a recipe>` reads its profession, plain when it is yours. The strip under the table ends with `1 new` (or more: the mounts, pets,
+toys, recipes and looks new to you that the tab lists, anyone's), its tooltip a `New to your
+collection` row; Post my tradeables does not show for that alone. View › New to my collection → only
+the drops new to your collection stay (the mount and the cosmetic, not the pet at `Collected 1/3`,
+not the gear); Upgrade for me and Interesting → no collectible stays; Usable by me → the recipe of a
+profession you lack is hidden. Expand the mount → the card's slot chip reads `Mount`, FOR YOU's chip
+`NEW TO COLLECTION` over Kind and Collection rows (no Replaces, Item level or Score), the looter's
+side a dash; the pet's header has a `Collected 1/3` chip. Hover the mount's icon → under the game's
+tooltip, `Kind: Mount` and `Collection: New`; a piece of gear's tooltip adds neither. History → the
+test log's mount row reads Slot `Mount`, Me `New`, Them a dash, and its card the same FOR YOU. Settings
+› Window › Starting view → a New to my collection checkbox; tick it, `/reload` → a fresh Drops tab
+opens on New to my collection; untick it. `/dw diagnostics` → the Feed section has `collect: on
+equipment tierToken mount pet toy recipe` (cosmetic only when turned on) and `collect: whitelist=n
+blacklist=n`, and each drop line names its `kind=`. Result: not run
+
 ## Gear
 
 The snapshot, the owned best and the throttle are headless-tested (`test_gear`); these checks
@@ -2359,6 +2487,100 @@ Show in Drops → the Drops tab, the drop's header open and its card expanded; o
 session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
 the clicked card. Result: passed in the client, 2026-10-23 (the owner).
 
+## Insights
+
+Issue #12 (DW-N1..DW-N4; [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
+The Insights tab draws charts over the kept history through LibKa0s-Charts-1.0. Its own bar holds seven
+filters, and the strip at the bottom names the period the kept history covers.
+
+**INSIGHT-1. The tab, its tooltip and the period.** `/dw insights` → the window opens expanded on a
+third tab, Insights, after History, in both layouts. Hover the tab → the tooltip says what it holds
+and the period the kept history covers. The strip at the bottom reads `Kept for 30 days: <first day> –
+<today> · n drops in m groups` with the default retention. Set Settings › Drops › Retention › Keep
+history for to 14 days (confirm if asked) → the caption reads `Kept for 14 days: …` at once, with no
+`/reload`, and the tab's tooltip agrees. Never delete → `Every kept day: since <first day> · …`. Put the
+retention back after. Fail: no third tab, a caption that keeps the old window, or a Lua error.
+Result: not run
+
+**INSIGHT-2. The filters.** On real history, open each of the seven dropdowns (Character, Instance,
+Difficulty, Situation, Date, Quality, Category) → each lists only the values present in the kept
+history, each with its drop count (`Ruby Life Pools (14)`), under an `All …` head with the total.
+Closed, the head reads `All instances (n)`, where n is the number of values. Pick an instance → the
+cards and sections redraw, and the other dropdowns' counts shrink to that instance; the other
+dropdowns list only values that still have drops, so a pick from them can never empty another one.
+With the instance still picked, pick a Date range that has drops but none from that instance (Last 7
+days for an instance last run before then, or Today after a run elsewhere) → the Instance dropdown,
+which no longer has a match, falls back to All, and the tab shows that range's drops, not an empty
+tab. The Date dropdown lists All kept days, Today and the shorter windows under the
+retention (Last 7 days and Last 14 days at 30). Reset filters on the strip → every dropdown back to
+All. Switch to History and back → the picks are kept for the session. Fail: a value with no drops
+listed, a count that does not match the cards, a pick that leaves the tab empty with no way back, or a
+Lua error. Result: not run
+
+**INSIGHT-3. Cards and sections on real history.** With every filter on All → eight cards in two
+rows of four (Drops seen, Upgrades for me, Asks sent, Items received, Ask success, Active days,
+Offers sent, Traded away). Hover each → its numbers. Ask success reads a dash when no ask was sent,
+and is green from 50%. Below the cards the sections sit under four dividers, Loot, Upgrades, Trades
+and Activity, in this order: Drops by outcome (with its legend), Your verdicts, Trade estimates on
+others' drops, Upgrades for me by instance, Upgrades for me by boss, Top instances for upgrades beside
+Most generous group members, Item level gained from items received, Asks per day, Drops per day, and
+drops by looter class, quality, slot and category. Hover a bar, a segment, a list row and a day →
+each shows its numbers. Pick a filter that leaves a section with nothing (for example Situation:
+Mythic+ for Upgrades for me by boss) → the section keeps its heading with one muted line under it
+(`No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs.`). A
+Date range with no drops at all → the cards and sections hide and one line reads `No drops match these
+filters.` The footer shows no Sort on Insights, and Sort is back on History. The shared filter bar is
+hidden on Insights and back on History. Fail: an overlapping section, a hover with no numbers, a
+blank section with no line, a Sort in the Insights footer, or a Lua error. Result: not run
+
+**INSIGHT-4. An ask that ends in a trade, then equip the item.** Needs a group member and a tradeable
+drop that is an upgrade for you, as HIST-1. Note Asks sent, Items received and Ask success. Press its
+Ask, trade with them and both accept → Asks sent and Items received each go up by 1 and Ask success
+moves with them. Item level gained from items received has a row for the item, `from <member> · <day>`,
+with the gain the Me verdict showed before the trade (`+n`), and Most generous group members lists
+the member. Now equip the item and wait for the gear rebuild → the History row's Me reads the item as
+equal to itself (sidegrade 0), but the Insights row still shows the gain from before (it is the
+verdict kept at the trade). Fail: the gain drops to 0 after equipping, or Asks sent does not move.
+Result: not run
+
+**INSIGHT-5. Test mode.** `/dw test`, then the Insights tab → the amber test-mode strip sits directly
+under the tabs (not one bar's height lower), and every card has a number: Offers sent and Traded away
+included. Every section draws rows and none shows its empty line: Drops by outcome has Expired among
+others' drops, Upgrades for me by boss lists raid bosses, Most generous group members has Kragmar
+with more than one item, Item level gained from items received has one row marked `as last judged`
+(the legacy sample), and Drops by category lists Equipment, Tier token, Mount, Pet, Toy, Recipe
+and Cosmetic. Hover Asks sent → one ask is counted from an item received before asks were
+stamped. The Character dropdown lists you and Emberwick. Turn test mode off → the tab shows your own
+account's history again at once, with the filters corrected against it. Fail: an empty section, the
+strip a bar's height below the tabs, or the samples left behind. Result: not run
+
+**INSIGHT-6. The simulator.** With some real history kept, `/dw sim start dungeon`, `/dw sim pause`,
+`/dw sim loot 2 me`, then a member's drop, and `/dw sim trade <its id>` for one of each (as SIM-5)
+→ the Insights tab shows only the simulation's drops (Drops seen counts them, not your real
+history), the cyan simulation strip sits under the tabs, and Items received or Traded away moves with
+the trade. `/dw sim stop` → the tab is back on your real history; `/dw history` shows no simulated
+drop. Fail: the real history mixed into the simulation's, or left behind after the stop. Result: not
+run
+
+**INSIGHT-7. Compact layout, a skin switch, a resize.** Switch to the compact layout (`/dw compact`)
+at its 400-pixel minimum on Insights → the filter bar wraps to several rows, the cards are two to a
+row, and Top instances and Most generous stack one above the other; no text runs past the edge.
+Switch skins on General → Skin (Ka0s Default, then another) with the tab shown → the cards, bars and
+headings repaint in the new skin at once, and the class colors (Drops by looter class, Most generous)
+and quality colors (Drops by quality, the item names in Item level gained) stay right. Back in the
+full layout, drag the window's resize grip → the sections lay out again to the new width. Fail:
+clipped or overlapping charts, colors that keep the old skin, or a Lua error. Result: not run
+
+**INSIGHT-8. The slot of an item you cannot equip, and a Watched item.** Hold a mount, pet or toy
+item and a tier token in your bags, and run `/dump C_Item.GetItemInfoInstant(<itemID>)` for each →
+note the fourth value (the equip slot) for both. Pass if it matches docs/known-limitations.md's
+Insights note (both `INVTYPE_NON_EQUIP_IGNORE`, so a pre-#13 mount would read as a tier token);
+otherwise correct the note and modules/InsightsFilters.lua's header. Then put a reagent on Always
+watch (`/dw whitelist add <link>`), loot one (or `/dw sim` with it) and open Insights → the Category
+dropdown lists `Watched item (1)` last, and Drops by category counts it there, not under Equipment
+or Tier token. Fail: a different slot than the note says, the reagent under Equipment or Tier token,
+or a Lua error. Result: not run
+
 ## Toast
 
 **TOAST-1. The upgrade toast.** Settings › Alerts › Toast › Show a toast on, then `/dw test` → a
@@ -2403,7 +2625,8 @@ off-spec ask about 5 s after it, never before it. Result: passed in the client, 
 
 **TOAST-6. The toast's Scale (feedback-21 G10).** The headless `test_toast` (`toast.scale scales a toast
 on screen live`, `the first toast is built at toast.scale`) and `test_schema_rows` (`toast scale`) cover
-it. Settings › Alerts › Toast: Scale is the tab's last row, under Play a sound, reads `100%` and dims
+it. Settings › Alerts › Toast: Scale is the tab's last row, under Play a sound (since DW-T2, under the
+stack's two rows: TOAST-9), reads `100%` and dims
 while Show a toast is unticked. Tick Show a toast, `/dw test` → the test toast shows at today's size under
 the top of the screen. Drag Scale to `150%` → the toast on screen grows as you release, its top edge's
 middle staying where it was; `50%` → half size, same anchor; `200%` → double, still on screen. Drag the
@@ -2411,7 +2634,7 @@ toast somewhere else at `200%`, set Scale back to `100%` → it shrinks about wh
 under the top. `/reload`, `/dw test` → it comes back at the stored scale, in the same place. General ›
 Master controls › Reset position → back under the top, at the stored scale. Switch to a profile whose Scale is
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
-`150%`); `/dw set toast.scale 3` is refused. Result: passed in the client, 2026-10-23 (the owner).
+`150%`); `/dw set toast.scale 3` is refused. Result: not run (reopened by the issues #10-#14 run, DW-T2: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** The shell (the queue,
 the countdown and its pause, the close mark and right-click, the drag, the scale and the sound) moved
@@ -2466,6 +2689,28 @@ both worn items read (two dual marks) still widens the toast so neither verdict 
 → the larger toast grows about its anchor as before. Skin › Scope › Ignore fonts on → the toast keeps
 its larger size in the client's own font, never shrinking to the first release's. Under Obsidian and
 Glass → the same, in each skin's face. Result: Owner reported pass, 2026-10-31.
+
+**TOAST-9. Three upgrades at once, stacked (DW-T2, issue #14).** The headless `test_toast_stack`
+covers the shape (min(N, stack) toasts, the re-flow, the queue past the stack, the combat hold, Up and
+Down, the rows live, Prune and Ask on a toast below the first) and `test_schema_rows` (`toast stack`)
+the rows; this is the client's word on it. Settings › Alerts › Toast: Toasts at once reads `3` and
+Stack direction `Down`, both under Show in combat | Play a sound and above Scale, both dimmed while Show
+a toast is unticked. With Show a toast on and Least gain at `1` (so more drops qualify), `/dw sim start
+raid`, `/dw sim pull`, `/dw sim kill`, then `/dw sim loot 8` (again if fewer than three of the drops on
+Drops read Me ▲ with Trade Likely or Yes) → three toasts are on screen at once, the first under the top
+of the screen and each of the others just below the one before, a small gap between them, none
+overlapping; any more wait. Each one has its own countdown (hover the second → it stays while the
+other two go after Duration and the waiting ones come up below it), its own hover pause, its own Ask
+(press the third's Ask → only the third's button reads `Queued` or `Asked`, and the whisper names the
+third's item) and its own close mark (close the middle one → the one below closes the gap, and a
+waiting drop comes up at the bottom). Set Stack direction to `Up` with toasts on screen → they re-stack
+above the first at once; Toasts at once `1` → only the first stays and the others wait their turn, `5`
+→ the waiting ones come up. Pull a mob with three on screen and Show in combat off → all three go, and
+all three come back when combat ends. `/dw test` → the placeholders that qualify stack the same way
+and stay until closed; drag any of them → the whole stack moves with the first, and its place survives
+`/reload`. `/dw diagnostics` → `toast: stack=3 grow=DOWN visible=3` and a `toast: on screen` line naming
+the three drop ids. `/dw set toast.stack 2.5` and `/dw set toast.stackGrow left` are refused. Result:
+not run
 
 ## Upgrade glow
 
@@ -2837,13 +3082,13 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
 Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** The headless
-`test_sim_scenario` covers DropWatcher's five verbs; the grammar is the library's (its
+`test_sim_scenario` covers DropWatcher's six verbs (`drop <kind>` included); the grammar is the library's (its
 `test_sim_verbs`). SM-DW-6: `/dw sim` alone prints the status and the usage and opens the panel;
 `/dw sim start key`, `step`, `pull`, `kill`, `loot 3`, `lockdown on`, `trade <id>`, `status` and `stop`
 each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
 `Unknown scenario 'nosuch'. Scenarios: …` with the scenario names, the library's line (accepted
 change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
-disabled refusal line. Result: passed in the client, 2026-10-23 (the owner).
+disabled refusal line. Result: not run (reopened by the issues #10-#14 run, DW-CAT6, the sixth verb `drop <kind>` in the usage: its expected results moved; passed in the client, 2026-10-23 (the owner), before).
 
 **SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** The headless
 `test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
@@ -2913,6 +3158,14 @@ it unticked. Start `key` and close the panel → the menu shows Sim mode ticked;
 stops and the panel stays closed. Fail: a box or menu entry unticked with the panel open, ticked with
 the panel closed and nothing running, an untick that leaves the panel open, or a Lua error.
 Result: Passed (owner, 2026-11-04)
+
+**SIM-21. `/dw sim drop` and the item kinds in a burst (DW-CAT6, issue #13).** `/dw sim` → the usage
+lists `/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]` among the host verbs.
+`/dw sim start raid`, `/dw sim drop equipment` → one drop, a random looter; `/dw sim drop equipment
+<a member's name>` → that member's; `/dw sim drop mount Nobody` → *No one by that name is in the
+simulated group.* Play a whole run (`/dw sim start raid`, let it finish): when the journal lists any
+mount, pet, toy, recipe or token, about one line in eight of the loot bursts is one of them. Nothing
+is whispered and saved history is untouched (SIM-1). Result: not run
 
 ## Compact
 
@@ -3430,6 +3683,8 @@ Owed by the owner's fifth smoke round (2026-11-03; Ka0sAddonsCommonTasks `docs/2
 Owed by the owner's sixth smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-03-SMOKE_ROUND6/`): SKIN-50 (R6-RV), SKIN-51 (R6-PV), PANEL-11 (R6-RV2), SIM-19 (R6-SIM). An agent never marks one passed.
 
 Owed by the owner's seventh smoke round (2026-11-04; Ka0sAddonsCommonTasks `docs/2026-11-04-SMOKE_ROUND7/`): SIM-20 (R7-SIM), and SIM-19, whose expected results moved with it. An agent never marks one passed. On 2026-11-04 the owner reported that every check of the round passed (R7-SMOKE); SIM-19 and SIM-20 record it on their `Result:` lines as `Passed (owner, 2026-11-04)`.
+
+Owed by the issues #10-#14 run (2026-11-05; `docs/superpowers/plans/2026-11-05-issues-10-14.md`): COMBAT-4 (DW-I11), TOAST-9 (DW-T2), SLASH-9 (DW-CAT5), ITEM-6 and ITEM-7 (DW-CAT4), COLL-1..8 (DW-CAT1..DW-CAT6, issue #13), COLL-9 (DW-CAT7), SIM-21 (DW-CAT6), INSIGHT-1..8 (DW-N1..DW-N4, issue #12) and DEGRADED-4 (DW-N2, issue #12), and the checks it reopened, whose expected results moved and whose pass marks went with them: LAYOUT-1 (DW-CAT2, DW-CAT5), FEED-4 and FEED-19 (DW-CAT2), TOAST-6 (DW-T2) and SIM-15 (DW-CAT6). An agent never marks one passed.
 
 On 2026-11-02 the owner reported that every check on the smoke lists of the full skinning run and its smoke feedback batch (Ka0sAddonsCommonTasks `docs/2026-11-01-FULL_SKINNING/` and `docs/2026-11-01-SMOKE_FEEDBACK/`) passed, apart from DpsRace's clock font, the skinned look of the AceGUI Dropdown and the Ka0sMedia_Font and Ka0sMedia_Statusbar pickers, FadeNineSlice and IconBorder (`docs/2026-11-02-SMOKE_ROUND3/`, R3-SMOKE). Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-02)`: GLOW-9, SKIN-2, SKIN-30, SKIN-37, SKIN-39, SKIN-41, SKIN-42 and SKIN-43. Failed, re-opened as R3-L3 (IconBorder's 1 px outline and zoom) and recorded as `Failed (owner, 2026-11-02): re-opened as R3-L3`: SKIN-14, SKIN-38 and SKIN-40.
 

@@ -20,8 +20,24 @@ the code reads every case the design leaves open, module by module, is in
   gives it (GetInstanceInfo's difficultyName, else GetDifficultyInfo's), and neither is known to
   name the tier, so a delve reads `Delves` (feedback-3 spec §4 names `a delve tier`). FEED-30 records
   what the client gives.
-- **Tier tokens** are recognized, but the slot a token makes is not read, so the verdict for one is
-  `unknown` until the tier-token follow-up (design spec §14).
+- **Tier tokens** are judged as the piece they make: the slot is read from a per-season table
+  (`C.TIER_TOKENS`, which ships empty until the season's ids are read in the client, smoke check
+  `ITEM-6`) and, failing that, from a tooltip line naming the slot. An unlisted token whose tooltip
+  names no slot stays `unknown` (categories design spec §7, DW-CAT4). A token is judged by item
+  level alone, never by a scorer, and the History keeps the slot it made, not its classes.
+- **Collectibles** (issue #13). A caged battle pet arrives as a `|Hbattlepet:` link and is never
+  watched; only companion items are. A recipe's "known" state is the client's `ITEM_SPELL_KNOWN`
+  tooltip line: under an addon restriction that line can read secret, and the drop then reads
+  `collectUnknown` until it is read again when combat ends. Someone else's bound collectible reads
+  trade `unknown`; your own reads the trade timer's exact answer once its bag item is matched
+  (COLL-6). The collection APIs' answers are unconfirmed in game (COLL-1).
+- **Item kinds and item lists apply to drops from then on.** Turning an item kind off, or putting an
+  item on Always watch or Never watch, filters the drops that arrive after; a drop already in the
+  feed stays, and a drop restored after a `/reload` is not filtered by a Never watch entry added
+  since it dropped. History entries recorded before issue #13 have no item kind and read as
+  Equipment, or as Tier token when their slot is `INVTYPE_NON_EQUIP_IGNORE` (see Insights below).
+  An item on Always watch that has no kind (a reagent, a quest item) is kept as Watched item, its
+  own entry in the Insights Category filter.
 - **Your gear** is a per-slot best, not a loadout planner: unique-equipped limits and a
   two-hander's claim on both hands are not weighed, and the reagent bag, the bank and the warband
   bank are not read.
@@ -75,6 +91,31 @@ the code reads every case the design leaves open, module by module, is in
   shape the full layout's tables only. The run override reads the situation edge, so a run ends
   when the situation moves off the one it began in (a key's completion re-reads it as a dungeon),
   not on a boss kill or a wipe.
+- **Insights** (issue #12) reads only the kept history, unconfirmed in game like the rest
+  (INSIGHT-1..8):
+  - **Legacy entries.** An entry settled before the ask, offer and settle stamps existed (before
+    DW-N1.1) keeps no record of an ask or offer that a trade replaced. Insights counts someone
+    else's drop you received as an ask, and your own drop traded away as an offer, so Asks sent and
+    Offers sent include them and Ask success reads high (every such ask succeeded); the hovers say
+    how many were inferred. A legacy item received shows the item level gain as last judged, which
+    after you equipped it is usually 0 or a downgrade, marked "as last judged". From DW-N1.1 on, the
+    gain is the verdict frozen when the trade completed (`got`).
+  - **Mythic+ keys** are kept as one group per run, labeled with the dungeon, so Upgrades for me by
+    boss counts encounter groups only (raids, and dungeons run without a key).
+  - **The period** is the retention window (`history.retentionDays`). Retention prunes a whole group
+    once its newest drop is older than the window, so the first day shown can be older than the
+    window's start; the counts are what the kept groups hold.
+  - **Item kinds.** A drop recorded before issue #13 has no category and reads as equipment, except
+    one whose slot is `INVTYPE_NON_EQUIP_IGNORE`, which reads as a tier token (the run plan's #12
+    Q3). The retail client gives every item you cannot equip that slot, not tier tokens alone, so a
+    mount, pet, toy or recipe recorded before then reads as a tier token too; a cosmetic, which has
+    a real slot, reads as equipment. This only touches players who ran with Gear only off and still
+    keep such drops in the retention window; INSIGHT-8 checks the slot the client reports. An item
+    on Always watch that has no kind (a reagent, a quest item) is recorded as Watched item and
+    counted as itself, after every category, never as equipment.
+  - **Character.** Insights names a drop's character from the drop, else from its group's recorder,
+    so a drop only the group recorded counts under that character. History's Character filter reads
+    the drop's recorder alone and calls the same drop Not recorded.
 
 ## The simulator
 
@@ -83,7 +124,7 @@ the code reads every case the design leaves open, module by module, is in
   `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). Since
   DW-02..DW-04 the session, the timeline's step machine, the `/dw sim` grammar and the step panel
   are LibKa0s-Sim-1.0's (LibKa0s#54); this addon supplies the scenarios, the world, the event
-  drivers, the restrictions and five verbs, and the panel's position lasts the session only. The
+  drivers, the restrictions and six verbs, and the panel's position lasts the session only. The
   timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
   A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
   Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default
@@ -105,6 +146,11 @@ the code reads every case the design leaves open, module by module, is in
   instance without one of its side's difficulties repeats another difficulty's links, which the pool
   de-duplicates. A pool built with `loot for me` lists your class's items only, so members of
   another armor type draw fewer slots from it.
+- **The simulator's item kinds** (issue #13) come from the journal's own mounts, pets, toys,
+  recipes and tier tokens; a kind the journal lists none of falls back to
+  `NS.SimPool.COLLECTIBLE_SAMPLES`, curated ids that ship empty until each is checked in the client
+  (COLL-8). Until then `/dw sim drop <kind>` answers that the simulation has no item of that kind,
+  and test mode's sample of that kind is another pool item standing in for it.
 
 ## Internal readings and the build
 

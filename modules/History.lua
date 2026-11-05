@@ -7,8 +7,11 @@ local _, NS = ...
 --       { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
 --         roster = { { name, realm, class, me }, ... }, drops = {
 --           { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
---             me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
---             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
+--             category, tokenSlot,
+--             me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
+--                    reasonKey? }, them = { ... } | nil,
+--             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
+--             askedAt?, offeredAt?, settledAt?, got? } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
 -- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
@@ -20,11 +23,31 @@ local _, NS = ...
 -- `seenBy` is the character that saw the drop (Name-Realm) and `seenByClass` its classFile, for the
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
+-- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
+-- mount, pet, toy, recipe, cosmetic) and `tokenSlot` a tier token's made slot; an entry kept before
+-- they existed has neither and reads as equipment (Insights: a tier token for the slot
+-- INVTYPE_NON_EQUIP_IGNORE). An Always watch item of no kind (a reagent, a quest item) is kept as
+-- `watched` (NS.Constants.CATEGORY_WATCHED), a History-only kind, so it never reads as one of those
+-- older entries. A collectible's `me` keeps its collection verdict
+-- (`collect` true, the `category`, a pet's `count` and `limit`, and `reasonKey` = notYourProfession
+-- for a recipe of a profession you lack), so History draws it with no live drop; an entry keeps the
+-- verdict its drop last had while live, and an older entry is a record, never judged again. The
+-- fields are additive: `v` stays 1.
 -- `looter` is the Name-Realm and `class` its classFile. `before` is the outcome a hand-set
 -- `declined` replaced, so clearing it puts that back; `beforeExpired` the one an automatic `expired`
 -- replaced (feedback-15 spec §0), so a live timer read can put that back. The table is the
 -- account's: History never replaces `global.history` whole (the retention row lives in it), only
 -- its `groups` list.
+-- `askedAt` and `offeredAt` (time()) say when your ask, or your offer or announce, was first sent
+-- (issue #12, Insights design spec §1.2): stamped once by AskStateChanged `sent` whether or not
+-- the outcome moved, never written again, so an ask survives the outcome moving on. `settledAt` is
+-- when a completed trade settled the entry (`received` or `tradedAway`), and `got` (received only)
+-- the `me` verdict frozen then (`{ verdict, ilvlDelta, scoreDelta, offSpec?, at }`; `{ at }` when
+-- there was none), before equipping the item re-judges `me` against itself; nothing writes it
+-- again. An entry settled before they existed has neither (a legacy entry), so WasAsked and
+-- WasOffered read a settled trade with no `settledAt` as asked or offered; one asked or offered
+-- before them and settled after gets its stamp back-filled at settling (the drop's `at`), since
+-- settling overwrites the outcome that held it. Additive: `v` stays 1.
 --
 -- HOW LONG IT IS KEPT (feedback-2 spec §5). By age, not by count: modules/HistoryRetention.lua
 -- deletes the groups older than `global.history.retentionDays` (Keep history for, default 30 days).
@@ -73,7 +96,8 @@ local _, NS = ...
 -- each item you gave marks your own matching drop `tradedAway`. TRADE_CLOSED alone is a cancel or a
 -- failure (out of range, a full bag) and completes nothing.
 --
--- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined and MatchTrade take plain
+-- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined, Stamp, Settle, WasAsked,
+-- WasOffered and MatchTrade take plain
 -- tables and the clock as arguments and read nothing else but the pure link parse
 -- (NS.ItemRead.BetterLink); test_history and test_item_read drive them. The edge
 -- below reads the account table, the feed and the bus, and sends HistoryChanged on every change
@@ -119,9 +143,22 @@ local function offSnap(eval)
 end
 
 -- A verdict, kept small: the verdict and its deltas, nothing that names a frame or a table.
+-- A collection verdict's part (issue #13): its flag, category, a pet's count and limit (plain
+-- numbers only) and the one reason a cell names, a recipe of a profession you lack.
+local function collectSnap(snap, eval)
+    if eval.collect ~= true then return snap end
+    snap.collect, snap.count, snap.limit = true, num(eval.count), num(eval.limit)
+    snap.category = type(eval.category) == "string" and eval.category or nil
+    for _, r in ipairs(type(eval.reasons) == "table" and eval.reasons or {}) do
+        if r.key == "notYourProfession" then snap.reasonKey = r.key end
+    end
+    return snap
+end
+
 local function verdictSnap(eval)
     if type(eval) ~= "table" or type(eval.verdict) ~= "string" then return nil end
-    return { verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta), offSpec = offSnap(eval) }
+    return collectSnap({ verdict = eval.verdict, ilvlDelta = num(eval.ilvlDelta), scoreDelta = num(eval.scoreDelta),
+        offSpec = offSnap(eval) }, eval)
 end
 
 -- The trade estimate, kept small: its arguments only when they are plain numbers or strings.
@@ -135,6 +172,15 @@ local function tradeSnap(t)
         end
     end
     return { state = t.state, reasonKey = t.reasonKey, basis = t.basis, args = args }
+end
+
+-- The drop's item kind: its own, else Watched item for one the Always watch list let in with none
+-- (a forced drop, or its collection verdict), so Insights never files it as an entry from before #13.
+local function categoryOf(rec, facts)
+    if type(facts.category) == "string" then return facts.category end
+    local me = rec.me
+    if rec.forced == true or (type(me) == "table" and me.collect == true) then return NS.Constants.CATEGORY_WATCHED end
+    return nil
 end
 
 local function itemIDOf(rec)
@@ -152,6 +198,8 @@ function H.Snapshot(rec, now)
     local e = {
         itemLink = rec.link, itemID = itemIDOf(rec), looter = who.name, class = who.classFile,
         isMine = rec.isMine == true or nil, ilvl = num(facts.ilvl), equipLoc = facts.equipLoc,
+        category = categoryOf(rec, facts),
+        tokenSlot = type(facts.tokenSlot) == "string" and facts.tokenSlot or nil,
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
         seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }
@@ -256,6 +304,80 @@ function H.SetDeclined(e, on)
     if e.outcome ~= "declined" then return false end
     e.outcome, e.before = e.before or "seen", nil
     return true
+end
+
+local STAMP = { ask = "askedAt", offer = "offeredAt", announce = "offeredAt" }
+
+--- Stamp when an ask (kind `ask`) or an offer (`offer`, `announce`) was first sent; a later send
+--- never moves it.
+--- @param e table
+--- @param kind string
+--- @param now number time()
+--- @return boolean stamped
+function H.Stamp(e, kind, now)
+    local key = STAMP[kind]
+    if not key or e[key] ~= nil then return false end
+    e[key] = now
+    return true
+end
+
+-- A copy of the `me` snapshot (its off-spec part copied too), stamped `at`.
+local function frozen(me, now)
+    local got = {}
+    for k, v in pairs(type(me) == "table" and me or {}) do got[k] = v end
+    if type(got.offSpec) == "table" then
+        local off = {}
+        for k, v in pairs(got.offSpec) do off[k] = v end
+        got.offSpec = off
+    end
+    got.at = now
+    return got
+end
+
+-- Whether a record of `outcome` is in the entry: now, or the one an `expired` or a hand-set
+-- `declined` replaced.
+local function held(e, outcome)
+    return e.outcome == outcome or e.beforeExpired == outcome or e.before == outcome
+end
+
+-- Settling overwrites the held outcome, so an ask or offer held only there (an entry from before the
+-- stamps) is stamped first, at the drop's own time: it stays asked or offered once settled.
+local function keepSent(e, now)
+    local at = type(e.at) == "number" and e.at or now
+    if e.askedAt == nil and held(e, "asked") then e.askedAt = at end
+    if e.offeredAt == nil and held(e, "offered") then e.offeredAt = at end
+end
+
+--- A completed trade settles an entry: its outcome (`received` or `tradedAway`), `settledAt`, and
+--- for `received` the `me` verdict frozen as `got` (once; see the header). An ask or offer held
+--- only in the outcome it replaces is stamped first (at the drop's time), so it is still sent.
+--- @param e table
+--- @param outcome string
+--- @param now number time()
+function H.Settle(e, outcome, now)
+    keepSent(e, now)
+    e.outcome, e.before, e.settledAt = outcome, nil, now
+    if outcome == "received" and e.got == nil then e.got = frozen(e.me, now) end
+end
+
+--- Whether your ask was sent for an entry: stamped, held (`asked` now or before an expiry or a
+--- decline), or, on a legacy entry (no `settledAt`), someone else's drop you received.
+--- @param e table
+--- @return boolean
+function H.WasAsked(e)
+    if type(e) ~= "table" then return false end
+    if e.askedAt ~= nil or held(e, "asked") then return true end
+    return not e.isMine and e.outcome == "received" and e.settledAt == nil
+end
+
+--- Whether your offer or announce was sent for an entry: as WasAsked, the legacy case your own
+--- drop traded away.
+--- @param e table
+--- @return boolean
+function H.WasOffered(e)
+    if type(e) ~= "table" then return false end
+    if e.offeredAt ~= nil or held(e, "offered") then return true end
+    return e.isMine == true and e.outcome == "tradedAway" and e.settledAt == nil
 end
 
 local function markGone(group)
@@ -486,12 +608,6 @@ function H.OutcomeOf(dropId)
     return e and e.outcome
 end
 
--- Whether an entry was asked for: `asked` now, or the outcome an `expired` or a hand-set
--- `declined` replaced (`beforeExpired`, `before`).
-local function wasAsked(e)
-    return e.outcome == "asked" or e.beforeExpired == "asked" or e.before == "asked"
-end
-
 --- The Ask button's state once the history knows the drop was received (`traded`); `sent` when the
 --- Asks book has nothing for it (`ready`) but its entry was asked for, as a drop restored after a
 --- reload is (the book lives for one load, the entry across it: one ask per item per looter holds,
@@ -504,7 +620,7 @@ function H.AskState(drop, state, reason)
     if type(drop) ~= "table" or drop.test then return state, reason end
     if H.OutcomeOf(drop.id) == "received" then return "traded" end
     local e = state == "ready" and H.EntryOf(drop.id)
-    if e and wasAsked(e) then return "sent" end
+    if e and H.WasAsked(e) then return "sent" end
     return state, reason
 end
 
@@ -566,11 +682,13 @@ end
 
 local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered" }
 
---- AskStateChanged: a sent ask is `asked`; a sent offer or announce `offered`.
+--- AskStateChanged: a sent ask is `asked`; a sent offer or announce `offered`. Either is stamped
+--- (H.Stamp) even when the outcome does not move, and HistoryChanged follows either change.
 function H.OnAskState(dropId, state, kind)
     local e = H.EntryOf(dropId)
     if state ~= "sent" or not e or not SENT_OUTCOME[kind] then return end
-    if H.Advance(e, SENT_OUTCOME[kind]) then changed() end
+    local stamped = H.Stamp(e, kind, clock())
+    if H.Advance(e, SENT_OUTCOME[kind]) or stamped then changed() end
 end
 
 --- Mark a recorded entry declined by hand, or clear it (a History row's menu).
@@ -667,9 +785,9 @@ end
 local function settle(t)
     local hist = H.LogFor(t.sim)
     if not hist then return 0 end
-    local n = 0
+    local n, now = 0, clock()
     for _, m in ipairs(H.MatchTrade(hist, t)) do
-        m.entry.outcome, m.entry.before = m.outcome, nil
+        H.Settle(m.entry, m.outcome, now)
         n = n + 1
         NS.Debug("TRADE", "history: %s %s (with %s)", tostring(m.entry.itemLink), m.outcome, tostring(t.partner))
     end

@@ -255,8 +255,46 @@ C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
     CONSUMABLE    = { "Consumable", 0 },
     WEAPON        = { "Weapon", 2 },
     ARMOR         = { "Armor", 4 },
+    RECIPE        = { "Recipe", 9 },
     MISCELLANEOUS = { "Miscellaneous", 15 },
 })
+
+-- Enum.ItemMiscellaneousSubclass: a mount or companion pet item's class rung (categories design
+-- spec §1), the fallback when the journal does not answer. Mount Equipment is not a mount.
+C.MISC_SUBCLASS = fromEnum(Enum.ItemMiscellaneousSubclass, {
+    JUNK            = { "Junk", 0 },
+    REAGENT         = { "Reagent", 1 },
+    COMPANION_PET   = { "CompanionPet", 2 },
+    HOLIDAY         = { "Holiday", 3 },
+    OTHER           = { "Other", 4 },
+    MOUNT           = { "Mount", 5 },
+    MOUNT_EQUIPMENT = { "MountEquipment", 6 },
+})
+
+-- Enum.ItemRecipeSubclass: the profession a recipe teaches, by subclass.
+C.RECIPE_SUBCLASS = fromEnum(Enum.ItemRecipeSubclass, {
+    BOOK           = { "Book", 0 },
+    LEATHERWORKING = { "Leatherworking", 1 },
+    TAILORING      = { "Tailoring", 2 },
+    ENGINEERING    = { "Engineering", 3 },
+    BLACKSMITHING  = { "Blacksmithing", 4 },
+    COOKING        = { "Cooking", 5 },
+    ALCHEMY        = { "Alchemy", 6 },
+    FIRST_AID      = { "FirstAid", 7 },
+    ENCHANTING     = { "Enchanting", 8 },
+    FISHING        = { "Fishing", 9 },
+    JEWELCRAFTING  = { "Jewelcrafting", 10 },
+    INSCRIPTION    = { "Inscription", 11 },
+})
+
+-- A recipe subclass -> the skill line of the profession it needs (GetProfessionInfo's 7th return).
+-- Book and First Aid (retired) are absent, so no profession is checked for them.
+local RS = C.RECIPE_SUBCLASS
+C.RECIPE_SKILL_LINE = {
+    [RS.LEATHERWORKING] = 165, [RS.TAILORING] = 197, [RS.ENGINEERING] = 202, [RS.BLACKSMITHING] = 164,
+    [RS.COOKING] = 185, [RS.ALCHEMY] = 171, [RS.ENCHANTING] = 333, [RS.FISHING] = 356,
+    [RS.JEWELCRAFTING] = 755, [RS.INSCRIPTION] = 773,
+}
 
 -- Enum.ItemArmorSubclass. GENERIC is jewelry, trinkets and held off hands; COSMETIC is never gear.
 C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
@@ -315,6 +353,34 @@ C.TRACK_TIER = { Explorer = 1, Adventurer = 2, Veteran = 3, Champion = 4, Hero =
 -- Empty until FEED-5 records the client's ids in game (the research names the field, not its
 -- values); until then every track's tier comes from the enUS names above.
 C.TRACK_TIER_BY_STRING_ID = {}
+
+-- ---------------------------------------------------------------------------------------------
+-- Watched categories (issue #13, categories design spec §1)
+-- ---------------------------------------------------------------------------------------------
+
+-- Every category a drop can fall in, in display order. `collectible` ones get a collection verdict
+-- (new or collected) instead of a gear one, and are feed-only. NS.Collectibles.CategoryOf decides
+-- which one an item is, in its own precedence order.
+C.CATEGORIES = {
+    { key = "equipment", collectible = false }, { key = "tierToken", collectible = false },
+    { key = "mount", collectible = true }, { key = "pet", collectible = true },
+    { key = "toy", collectible = true }, { key = "recipe", collectible = true },
+    { key = "cosmetic", collectible = true },
+}
+
+-- The kind History records for a drop the Always watch list let in that fits no category (a reagent,
+-- a quest item): History-only, never a CATEGORIES key or a feed filter's, so Insights files it as
+-- its own Watched item, sorted after every category, not as equipment (the pre-#13 fallback).
+C.CATEGORY_WATCHED = "watched"
+
+-- The slots a tier token can make, in the order an omni token's slots are tried.
+C.TIER_SLOTS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
+
+-- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: the season's tier tokens, curated; the first rung
+-- of NS.TierTokens.SlotOf, ahead of the tooltip, and the one that names an omni Curio (`any`), which
+-- carries no class line. Empty until the token ids are read in the client (smoke check ITEM-6;
+-- categories design spec Q4; docs/common-tasks.md, "Add a season's tier tokens").
+C.TIER_TOKENS = {}
 
 -- ---------------------------------------------------------------------------------------------
 -- Inventory slots and slot plans (design spec §5.2)

@@ -29,10 +29,16 @@ local _, NS = ...
 -- something to drop. It is reported in chat once per session of play, and its source reads
 -- `fallback` in the pool.
 --
+-- THE ITEM KINDS (issue #13, categories design spec §8). The journal also lists mounts, pets,
+-- toys, recipes and tier tokens, with no equip slot. A loot burst draws gear (LootDrops), and
+-- modules/SimEvents.lua mixes in one line in eight from the rest, the `extras` (Extras, each
+-- entry's kind its item facts' category); `/dw sim drop <kind>` draws one kind (KindDrops). A kind
+-- the journal has none of falls back to COLLECTIBLE_SAMPLES, curated ids checked in the client.
+--
 --   pool  = { sim = true, source = "journal"|"fallback", difficulty, raid, pending, entries }
 --   entry = { link, itemID, encounterID, encounter, difficulty, instance, raid, worldBoss, equipLoc,
---             ilvl, classID, subClassID }   (encounter: the boss's name; worldBoss: the tier's
---             world bosses, Compat.JournalInstances)
+--             ilvl, classID, subClassID, category }   (encounter: the boss's name; worldBoss: the
+--             tier's world bosses, Compat.JournalInstances; category: CategoryOf's, once read)
 --
 -- The build lives on the running session (its pool and poolBuild) and its timers are
 -- the session's (NS.Sim:After), so the stop ends both. Test mode (modules/TestMode.lua) builds the
@@ -122,6 +128,90 @@ function P.LootDrops(pool)
     end
     if #gear == 0 then return drops end
     return gear
+end
+
+-- ── the item kinds (issue #13, categories design spec §8) ───────────────────────────────────
+
+--- Curated item ids per item kind (`tierToken` and the collectible kinds), drawn on by
+--- `/dw sim drop <kind>` and test mode's samples when the journal lists none of that kind. An id
+--- goes in only once `/dw add item:<id>` has shown it in the client as that kind (smoke check
+--- COLL-8): none is guessed, so each list stays empty until then.
+P.COLLECTIBLE_SAMPLES = { tierToken = {}, mount = {}, pet = {}, toy = {}, recipe = {}, cosmetic = {} }
+
+-- Plain gear, known from the cheap facts P.Facts fills (class, subclass, equip location) and the
+-- client's cosmetic flag: an armor or weapon item with a slot the comparisons know, not cosmetic
+-- and not a listed tier token. NS.Collectibles.CategoryOf answers `equipment` for every such item
+-- (a token the class line names never has such a slot, modules/ItemFacts.lua's readClasses), so
+-- the full facts read is kept for the few that are not, and a big pool never floods the cache.
+local function plainGear(e)
+    P.Facts(e)
+    local IC = C.ITEM_CLASS
+    if e.classID ~= IC.ARMOR and e.classID ~= IC.WEAPON then return false end
+    if not C.SLOT_PLAN[e.equipLoc or ""] then return false end
+    if e.classID == IC.ARMOR and e.subClassID == C.ARMOR_SUBCLASS.COSMETIC then return false end
+    return not NS.TierTokens.Listed(e.itemID) and not NS.Compat.IsCosmeticItem(e.link)
+end
+
+--- An entry's item kind (NS.ItemFacts' `category`), kept on the entry: `equipment` for plain gear
+--- without a facts read; anything else read once its facts are cached. False for an item the feed
+--- does not watch, nil while the client has not cached it.
+--- @param e table
+--- @return string|nil
+function P.CategoryOf(e)
+    if e.category == nil and plainGear(e) then e.category = "equipment" end
+    if e.category == nil then
+        local f = NS.ItemFacts.Get(e.link)
+        if f then e.category = f.category or false end
+    end
+    return e.category or nil
+end
+
+--- The pool's drops that are not equipment (the `extras`: the tier tokens, mounts, pets, toys,
+--- recipes and cosmetics the journal lists beside its gear), by kind, and all of them in the
+--- pool's order.
+--- @param pool table|nil
+--- @return table byKind { [category] = { entry, ... } }, table all
+function P.Extras(pool)
+    local byKind, all = {}, {}
+    for _, e in ipairs(P.Drops(pool)) do
+        local kind = P.CategoryOf(e)
+        if kind and kind ~= "equipment" then
+            byKind[kind] = byKind[kind] or {}
+            byKind[kind][#byKind[kind] + 1], all[#all + 1] = e, e
+        end
+    end
+    return byKind, all
+end
+
+--- The curated samples of a kind whose link the client answers (NS.Compat.ItemLinkByID), as pool
+--- entries; an id the client has not cached is asked to load, so a later call finds it.
+--- @param kind string
+--- @return table
+function P.Samples(kind)
+    local out = {}
+    for _, id in ipairs(P.COLLECTIBLE_SAMPLES[kind] or {}) do
+        local link = NS.Compat.ItemLinkByID(id)
+        if link then
+            out[#out + 1] = P.Facts({ link = link, itemID = id, category = kind, sample = true })
+        else
+            NS.Item.LoadItem(id)
+        end
+    end
+    return out
+end
+
+--- The drops of one kind: the pool's (its gear for `equipment`), else the curated samples of it.
+--- Empty when neither has one.
+--- @param pool table|nil
+--- @param kind string a C.CATEGORIES key
+--- @return table
+function P.KindDrops(pool, kind)
+    local out = {}
+    for _, e in ipairs(P.Drops(pool)) do
+        if P.CategoryOf(e) == kind then out[#out + 1] = e end
+    end
+    if #out == 0 then return P.Samples(kind) end
+    return out
 end
 
 -- ── item facts ─────────────────────────────────────────────────────────────────────────────

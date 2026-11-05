@@ -349,3 +349,33 @@ test("quality gate: nil and garbage inputs never throw", function()
     _, threshold = Q.Passes(RARE, "dynamicCharacter", { gear = { [S.HEAD] = "Epic", [S.NECK] = {} } })
     assertEqual(threshold, UNCOMMON)
 end)
+
+-- issue #13, categories design spec §4.3: new to your collection passes like an upgrade.
+test("quality gate: the upgrade override lets a drop new to your collection through, never a collected one", function()
+    local Q = load()
+    local pass, _, reason = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "newCollect" })
+    -- red under: the override honoring `upgrade` alone
+    assertTrue(pass); assertEqual(reason, "upgradeOverride")
+    pass, _, reason = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "collected" })
+    assertTrue(not pass); assertEqual(reason, "belowThreshold")
+    pass = Q.Passes(COMMON, "fixed", { fixed = RARE, verdict = "newCollect", upgradeOverride = false })
+    assertTrue(not pass, "the override off")
+    pass, _, reason = Q.Passes(COMMON, "dynamicSlot", { verdict = "collected", gear = gearAt(EPIC) })
+    assertTrue(not pass); assertEqual(reason, "belowThreshold", "no slot: the floor (Uncommon)")
+end)
+
+-- DW-CAT5 (categories design spec §4.3): an item on the Always watch list passes whatever its
+-- quality, as `whitelisted`, in every mode and with the upgrade override off.
+-- red under: Passes ignoring ctx.forced
+test("quality gate: an Always watch item passes below the threshold, as whitelisted", function()
+    local Q = load()
+    for _, mode in ipairs({ "fixed", "dynamicSlot", "dynamicCharacter" }) do
+        local pass, threshold, reason = Q.Passes(POOR, mode, { fixed = EPIC, floor = EPIC, gear = gearAt(EPIC),
+            forced = true, upgradeOverride = false })
+        assertTrue(pass, mode); assertEqual(reason, "whitelisted", mode); assertEqual(threshold, EPIC, mode)
+    end
+    local pass, _, reason = Q.Passes(nil, "fixed", { forced = true })
+    assertTrue(pass); assertEqual(reason, "whitelisted")
+    pass, _, reason = Q.Passes(POOR, "fixed", { fixed = EPIC, forced = "yes" })
+    assertEqual(pass, false); assertEqual(reason, "belowThreshold", "only true forces")
+end)
