@@ -167,6 +167,14 @@ local function dateLabel(range)
     return L["Last %d days"]:format(tonumber(range) or 0)
 end
 
+-- Where a period starts: the range's start, else the kept window's or the first drop, the later.
+local function periodFrom(range, now, days, first)
+    local from = IF.Since(range, now)
+    if from then return from end
+    local window = days > 0 and (now - days * IF.DAY) or nil
+    return (window and first and math.max(window, first)) or window or first
+end
+
 --- What the rows cover: { from, to, first, last, days, range, groups, drops }. `from` is the range's
 --- start; for `all` the kept window's start, or the first drop when that is later (or the window is
 --- Never delete).
@@ -183,11 +191,7 @@ function IF.Period(rows, days, range, now)
         if not last or r.at > last then last = r.at end
         if not seen[r.g] then seen[r.g], groups = true, groups + 1 end
     end
-    local from = IF.Since(range, now)
-    if not from then
-        local window = days > 0 and (now - days * IF.DAY) or nil
-        from = (window and first and math.max(window, first)) or window or first
-    end
+    local from = periodFrom(range, now, days, first)
     return { from = from, to = now, first = first, last = last, days = days, range = range or "all",
         groups = groups, drops = #rows }
 end
