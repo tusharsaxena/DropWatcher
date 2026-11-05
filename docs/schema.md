@@ -278,7 +278,8 @@ history = { retentionDays = 30, v = 1, groups = {
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
           me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
-          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at } } } } }
+          trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
+          askedAt?, offeredAt?, settledAt?, got? } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
@@ -313,6 +314,16 @@ history = { retentionDays = 30, v = 1, groups = {
   `expired` replaced (feedback-15 spec §0): the trade timer's live `yes` puts it back, so a false
   Expired is undone (an entry expired before the field existed returns to `seen`). No migration
   step: the field is optional.
+- `askedAt` and `offeredAt` are the `time()` your ask, or your offer or announce, was first sent
+  (issue #12, Insights design spec §1.2): `AskStateChanged` `sent` stamps them once, whether or not
+  the outcome moves, and nothing writes them again, so an ask is still known once the outcome moves
+  on. `settledAt` is when a completed trade settled the entry (`received` or `tradedAway`). `got`,
+  on a received entry only, is the `me` verdict frozen at that moment (`{ verdict, ilvlDelta,
+  scoreDelta, offSpec?, at }`, or `{ at }` when there was none): equipping the item later re-judges
+  `me` against itself, and `got` keeps the gain it was. An entry settled before these existed has
+  no `settledAt`, and `NS.History.WasAsked` / `WasOffered` read it as asked (someone else's drop
+  received) or offered (your drop traded away). No migration step: the fields are optional and
+  additive, and `v` stays 1.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all

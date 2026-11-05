@@ -1851,7 +1851,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (32)
+### test_history.lua (37)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1885,6 +1885,11 @@ Total.
 - history tab: rows draw the Drops rows' chevron and indent; the headers' chevrons are gold
 - history: Snapshot keeps the category, the token slot and a collectible's verdict
 - history: a collection verdict that moves refreshes the entry; one that does not changes nothing
+- history: Stamp sets askedAt and offeredAt once, and Advance, Settle and declined keep them
+- history: Settle writes settledAt on both outcomes and freezes `got` on a received entry only
+- history: WasAsked and WasOffered read the stamps, the held outcomes and the legacy trades
+- history edge: a sent ask stamps askedAt, and a stamp with no advance still sends HistoryChanged
+- history trade: a completed trade stamps settledAt, and `got` keeps the pre-equip gain
 
 ### test_history_retention.lua (16)
 
@@ -2542,7 +2547,7 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 32 |
+| test_history.lua | 37 |
 | test_history_retention.lua | 16 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
@@ -2574,4 +2579,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2116** |
+| **Total** | **2121** |
