@@ -10,7 +10,7 @@ local _, NS = ...
 -- by settings/SlashVerbs.lua, as are `whitelist` and `blacklist`, which share the item lists' one
 -- writer with the settings panel (issue #13). `mine` is kept for habit and macros: it opens Drops, where your own
 -- drops are listed since the My drops tab was retired (feedback-5 spec §3). The simulator's `sim` (simulator spec §4) is answered by
--- LibKa0s-Sim-1.0's NS.Sim:RunVerb, with DropWatcher's own five verbs from settings/SimVerbs.lua.
+-- LibKa0s-Sim-1.0's NS.Sim:RunVerb, with DropWatcher's own six verbs from settings/SimVerbs.lua.
 
 local DW = NS.addon
 local L  = NS.L

@@ -2977,7 +2977,7 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
 Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** The headless
-`test_sim_scenario` covers DropWatcher's five verbs; the grammar is the library's (its
+`test_sim_scenario` covers DropWatcher's six verbs (`drop <kind>` included); the grammar is the library's (its
 `test_sim_verbs`). SM-DW-6: `/dw sim` alone prints the status and the usage and opens the panel;
 `/dw sim start key`, `step`, `pull`, `kill`, `loot 3`, `lockdown on`, `trade <id>`, `status` and `stop`
 each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim start nosuch` prints
