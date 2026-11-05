@@ -243,7 +243,7 @@ end
 function V.ItemListLines(list)
     local IL = NS.ItemLists
     local ids = IL.List(list)
-    local lines = { L["%s (%d):"]:format(IL.LISTS[list].name, #ids) }
+    local lines = { L["%s (%d)"]:format(IL.LISTS[list].name, #ids) }
     for _, id in ipairs(ids) do lines[#lines + 1] = "  " .. entryLine(id) end
     if #ids == 0 then lines[2] = "  " .. L["(none)"] end
     return lines

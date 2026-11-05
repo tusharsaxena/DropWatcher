@@ -27,6 +27,14 @@ local function printed(m, needle)
     return false
 end
 
+-- Whether any printed line ends in a colon (slash-commands-§4: no chat line does; DW-CAT5 review).
+local function colonEnded(m)
+    for _, line in ipairs(m.prints) do
+        if line:find(":%s*$") then return line end
+    end
+    return nil
+end
+
 -- An enabled instance in a Heroic dungeon, two 600 rings worn, Brakk in the group.
 local function party()
     local NS, _, m = T.enableAddon({ mock = function(m)
@@ -131,7 +139,8 @@ test("item lists: `/dw whitelist add|remove|list` writes through the writer and 
     m.addItem("item:19019", { name = "Thunderfury", quality = 5, ilvl = 80, equipLoc = "INVTYPE_WEAPON",
         classID = 2, subClassID = 7, stats = {} })
     NS.addon:OnSlashCommand("whitelist")
-    assertTrue(printed(m, "Always watch (0):")); assertTrue(printed(m, "(none)"))
+    assertTrue(printed(m, "Always watch (0)")); assertTrue(printed(m, "(none)"))
+    assertNil(colonEnded(m), "the list's header ends in no colon")
     m.prints = {}
     NS.addon:OnSlashCommand("whitelist add " .. link(19019))
     assertTrue(printed(m, "Added 19019 [Thunderfury] to Always watch."), tostring(m.prints[1]))
@@ -139,7 +148,7 @@ test("item lists: `/dw whitelist add|remove|list` writes through the writer and 
     assertTrue(printed(m, "Added item 300 to Always watch."), tostring(m.prints[2]))
     m.prints = {}
     NS.addon:OnSlashCommand("whitelist list")
-    assertTrue(printed(m, "Always watch (2):"))
+    assertTrue(printed(m, "Always watch (2)")); assertNil(colonEnded(m))
     assertTrue(printed(m, "  item 300")); assertTrue(printed(m, "  19019 [Thunderfury]"))
     m.prints = {}
     NS.addon:OnSlashCommand("blacklist add 300")

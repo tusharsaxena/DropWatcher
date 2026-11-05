@@ -11,7 +11,6 @@ local L = NS.L
 
 
 -- The Insights filters (modules/InsightsFilters.lua): the dropdowns' heads, the dates, the fallbacks
-L["%s (%d)"] = "%s (%d)"
 L["All categories"] = "All categories"
 L["All characters"] = "All characters"
 L["All difficulties"] = "All difficulties"
