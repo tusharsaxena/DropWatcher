@@ -25,7 +25,7 @@ The bare command opens the settings panel.
 | `compact` | feature | no | `SlashVerbs.Compact`: `NS.ToggleWindowMode` (the `window.mode` row through the seam, the title-bar toggle's handler), then prints the layout, `Compact view.` or `Full view.` (compact spec §1) |
 | `full` | feature | no | `SlashVerbs.Full`: `NS.SetWindowMode("full")`, then prints `Full view.` |
 | `situation` | feature | no | `SlashVerbs.Situation`: three lines, the situation with its Track, Auto-open and Quality, then the classifier's inputs, read live |
-| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open`; refused with the reason while no other player is in your group (`NS.WindowOwn.Alone`, DW-07) |
+| `offer <link>` | feature | no | `SlashVerbs.Offer`: your newest live drop of that item, or the bag item added as your drop (`NS.LootFeed.Add`); then the Drops tab and `NS.OfferPanel.Open`; refused with the reason while no other player is in your group (`NS.WindowOwn.Alone`, DW-07); refused for a collectible (feed-only, issue #13: `Collectibles are watched, not offered.`), judged from the bag item's facts before it would be adopted, so none is added to the feed |
 | `add <link> [player]` | feature | no | `SlashVerbs.Add`: `NS.LootFeed.Add(link, player)`, you when no player is named; prints the drop's id, that it is loading, or why the feed refused it |
 | `whitelist add\|remove <id\|link>` / `whitelist [list]` | feature | no | `SlashVerbs.ItemList("whitelist", rest)`: `NS.ItemLists.Add` / `Remove` (the Always watch list's one writer, which the panel's Item lists tab shares); prints `Added 19019 [Name] to Always watch.`, `Removed …`, or the refusal (`That item is on Never watch: remove it there first.`); a bare verb or `list` prints `Always watch (n)` (no trailing colon, slash-commands-§4) and one line per entry, `12345 [Name]` once cached, else `item 12345`, or `(none)`; another word prints the usage; a write repaints open settings pages |
 | `blacklist add\|remove <id\|link>` / `blacklist [list]` | feature | no | `SlashVerbs.ItemList("blacklist", rest)`: the same, on the Never watch list |
@@ -48,7 +48,8 @@ never passes through the dispatcher, so its button (`DropWatcherToggleWindow`,
 `core/LauncherSetup.lua`) asks `NS.StoodDownRefusal()` itself and prints that one line, chosen by
 hold, before it would call `NS.ToggleWindow`; standing up, it calls the toggle verb's handler.
 
-The feature verbs are spec §12.3's (and compact spec §1's `full`). `scan`, `compact` and `full` call the host handlers their window
+The feature verbs are spec §12.3's (and compact spec §1's `full`, issue #12's `insights` and issue #13's
+`whitelist` and `blacklist`). `scan`, `compact` and `full` call the host handlers their window
 controls call; the slash-only ones live in `settings/SlashVerbs.lua` (`NS.SlashVerbs`), loaded just before
 `settings/Slash.lua`. A verb that takes an item link reads it with the pure `SlashVerbs.SplitLink`:
 the link runs to its closing `|h` (and `|r` when colored), so an item name's spaces stay in it and

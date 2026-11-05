@@ -277,7 +277,9 @@ history = { retentionDays = 30, v = 1, groups = {
     { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
-          me = { verdict, ilvlDelta, scoreDelta, offSpec? }, them = { ... } | nil,
+          category?, tokenSlot?,
+          me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
+                 reasonKey? }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
           askedAt?, offeredAt?, settledAt?, got? } } } } }
 ```
@@ -292,6 +294,14 @@ history = { retentionDays = 30, v = 1, groups = {
   estimate as last judged while the drop was in the feed, plain fields only. A `cantUse` that another
   spec of the class can use keeps `offSpec = { specID, mainSpecID, verdict, ilvlDelta }` (feedback-19
   spec §1): no baseline and no reasons. No migration step: the field is optional.
+- `category` is the drop's item kind and `tokenSlot` a tier token's made slot (issue #13,
+  categories design spec §3.3); an Always watch item that fits no kind is kept as `watched`
+  (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key). A collectible's `me`
+  keeps its collection verdict: `collect` true, its `category`, a pet's `count` and `limit`, and
+  `reasonKey` `notYourProfession` for a recipe of a profession you lack. The fields are additive:
+  no migration, and `v` stays 1. An entry without `category` (one recorded before issue #13) reads
+  as equipment in Insights (`InsightsFilters.CategoryOf`), or as a tier token when its `equipLoc` is
+  `INVTYPE_NON_EQUIP_IGNORE`.
 - `roster` is who was in the group (feedback-2 spec §3, `modules/GroupRoster.lua`): each a short
   `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
   `me` on the recorder's own entry, the recorder first. Every recorded drop merges the feed group's
