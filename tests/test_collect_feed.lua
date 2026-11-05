@@ -277,6 +277,21 @@ test("collect feed: the Offer panel never opens for your collectible, and /dw of
     assertEqual(printed[#printed], NS.L["Collectibles are watched, not offered."])
 end)
 
+test("collect feed: /dw offer refuses a bag collectible the feed never saw, and adds no drop", function()
+    local NS, m, LF = party()
+    addMount(m, 302, 79, false)
+    m.bags[0] = { size = 1, link(302) }
+    local printed = {}
+    local print0 = NS.Print
+    NS.Print = function(text) printed[#printed + 1] = text end
+    local ok = NS.SlashVerbs.Offer(link(302))
+    NS.Print = print0
+    assertFalse(ok)
+    assertEqual(printed[#printed], NS.L["Collectibles are watched, not offered."])
+    -- red under: the refusal after adopt (the bag mount added to the feed as one of your drops)
+    assertEqual(#LF.Drops(), 0, "no drop added")
+end)
+
 test("collect feed: auto-ask never schedules a collectible", function()
     local NS, m, LF = party()
     assertTrue(NS.SchemaRuntime.Set("messages.autoAsk.enabled", true))

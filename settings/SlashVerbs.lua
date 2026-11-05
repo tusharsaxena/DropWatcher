@@ -167,6 +167,16 @@ local function bagLink(itemID)
     return nil
 end
 
+-- Is the item feed-only by itself (a collectible, or an item of no kind on Always watch and not
+-- on Never watch)? Asked before a bag item is adopted, so a refused offer adds no drop.
+local function feedOnlyItem(itemID, link)
+    local facts = NS.ItemFacts.Get(bagLink(itemID) or link)
+    if type(facts) ~= "table" then return false end
+    if NS.Collectibles.IsCollectible(facts) then return true end
+    local IL = NS.ItemLists
+    return facts.category == nil and IL.Contains("whitelist", itemID) and not IL.Contains("blacklist", itemID)
+end
+
 -- A bag item the feed never saw becomes one of your drops (a manual one), so the panel has a
 -- drop to judge candidates for. Answers its record, or nil once the reason is printed.
 local function adopt(itemID, link)
@@ -188,7 +198,8 @@ end
 --- `/dw offer <link>`: open the Offer panel for a bag item. Your drop of that item when the feed
 --- holds one; otherwise the bag item is added as a drop of yours first. Refused, with the reason,
 --- while no other player is in your group (DW-07, NS.WindowOwn.Alone), and for a collectible
---- (feed-only, issue #13).
+--- (feed-only, issue #13): a bag item is judged from its own facts first, so a refused one is never
+--- adopted into the feed.
 --- @param rest string
 --- @return boolean opened
 function V.Offer(rest)
@@ -202,9 +213,12 @@ function V.Offer(rest)
         NS.Print(L["Not offered: %s"]:format(L["There is no other player in your group."]))
         return false
     end
-    local drop = newestMine(itemID) or adopt(itemID, link)
-    if not drop then return false end
-    if NS.Collectibles.IsFeedOnly(drop) then
+    local drop = newestMine(itemID)
+    if not drop and not feedOnlyItem(itemID, link) then
+        drop = adopt(itemID, link)
+        if not drop then return false end
+    end
+    if not drop or NS.Collectibles.IsFeedOnly(drop) then
         NS.Print(L["Collectibles are watched, not offered."])
         return false
     end

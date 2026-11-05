@@ -319,7 +319,7 @@ trade sweep dropping someone else's and keeping your own; `newCollect` through t
 override; the collection events coalesced into one re-read that re-judges only a moved verdict, the
 regen pass for `collectUnknown` alone, a learned appearance, the stand-down's cancel and
 `RereadCollections` the cache's one writer; and the refusals at the edges: Asks, the Offer panel and
-`/dw offer`, auto-ask), `test_item_lists` (DW-CAT5: `NS.ItemLists`' `ParseId`, Add, Remove and
+`/dw offer` (a bag collectible refused before it is adopted, so no drop is added), auto-ask), `test_item_lists` (DW-CAT5: `NS.ItemLists`' `ParseId`, Add, Remove and
 List, the refusal of an ID on the other list both ways, every write a whole copy through the seam,
 `/dw whitelist|blacklist` and their refusal while disabled, `/dw get` and a named reset; Never
 watch hiding gear and winning an overlap, Always watch showing an item of no kind as a feed-only
