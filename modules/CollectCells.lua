@@ -203,6 +203,13 @@ local KIND = {
     equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
     recipe = L["Recipe"], cosmetic = L["Cosmetic"],
 }
+
+--- A category's word (`Mount`, `Tier token`), or nil for a key that is none (the Insights tab's
+--- Category dropdown and Slot breakdown read it too).
+--- @param category string|nil
+--- @return string|nil
+function CC.KindLabel(category) return KIND[category] end
+
 local COLLECTIBLE = { mount = true, pet = true, toy = true, recipe = true, cosmetic = true }
 -- The profession a recipe is for, by its skill line (C.RECIPE_SKILL_LINE's values).
 local PROFESSION = {

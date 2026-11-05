@@ -33,7 +33,8 @@ test("harness: the addon's file list is the TOC's, Namespace first and Profiles 
     assertEqual(files[1], "locales/enUS.lua")
     assertEqual(files[2], "locales/enUS_Settings.lua", "the settings panel's strings, peeled at the cap")
     assertEqual(files[3], "locales/enUS_Tooltips.lua", "the tooltips' rows, a feature's topic file")
-    assertEqual(files[4], "core/Namespace.lua")
+    assertEqual(files[4], "locales/enUS_Insights.lua", "the Insights tab's strings, a feature's topic file")
+    assertEqual(files[5], "core/Namespace.lua")
     assertEqual(files[#files], "settings/Profiles.lua")
 end)
 

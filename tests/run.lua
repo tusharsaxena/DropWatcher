@@ -285,6 +285,8 @@ Kit.run{
         "test_transmog",
         "test_history",
         "test_history_retention",
+        "test_insights_filters",
+        "test_insights_stats",
         "test_feed_restore",
         "test_content_tabs",
         "test_toast",

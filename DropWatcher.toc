@@ -44,6 +44,9 @@ locales\enUS_Settings.lua
 # LOAD-BEARING: reads NS.L (locales\enUS.lua, above) at load and fills it with the tooltips' rows: a
 # topic file split out of enUS.lua (localization-§6).
 locales\enUS_Tooltips.lua
+# LOAD-BEARING: reads NS.L (locales\enUS.lua, above) at load and fills it with the Insights tab's
+# strings: a topic file named for its consumer (localization-§6).
+locales\enUS_Insights.lua
 
 # Core -- dependency-correct order (layout-§1)
 # LOAD-BEARING: publishes NS.name, NS.BRAND, NS.PREFIX and NS.SLASH, read at load below.
@@ -315,6 +318,14 @@ modules\History.lua
 # NS.SchemaRuntime (settings\Schema.lua, below) are read at call time; settings\SchemaRows.lua
 # (below) reads its Choices at load.
 modules\HistoryRetention.lua
+# Publishes NS.InsightsFilters, the Insights tab's rows, its seven data-driven filters, the date
+# ranges and the period (issue #12). Pure; NS.HistoryRetention (above), NS.Constants, NS.L and the
+# label readers (NS.WindowFooter, NS.Item, NS.CollectCells, NS.CharFilter) are read at call time.
+modules\InsightsFilters.lua
+# Publishes NS.InsightsStats, the Insights tab's one stats pass over the filtered rows (issue #12).
+# Pure; NS.History, NS.OffSpec, NS.InsightsFilters (above), NS.Constants, NS.L, NS.WindowCells and
+# NS.CollectCells are read at call time.
+modules\InsightsStats.lua
 # LOAD-BEARING: appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS after
 # modules\Situations.lua's and modules\HistoryRetention.lua's (above) and before modules\AutoAsk.lua's
 # (below), so a reload's feed is rebuilt on a fresh situation. Publishes NS.FeedRestore, the Drops

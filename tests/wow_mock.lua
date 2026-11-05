@@ -633,9 +633,13 @@ local function installClock(M)
     -- time() moves with GetTime(), as the client's two clocks do (whole seconds from the load's
     -- epoch): the Drops tab's This session turns the stored login (time()) into the client clock
     -- (modules/Session.lua's StartClock, feedback-15 spec §1), which a still epoch would read as a
-    -- login that keeps moving forward. A case that sets `time` itself replaces it.
+    -- login that keeps moving forward. A case that sets `time` itself replaces it. Given a date
+    -- table, it answers that date's time, as the client's does (the Insights tab's local midnights).
     local epoch0 = os.time()
-    M.time = function() return epoch0 + math.floor(M.__now) end
+    M.time = function(t)
+        if t ~= nil then return os.time(t) end
+        return epoch0 + math.floor(M.__now)
+    end
 end
 
 -- The drop tables' client surface (modules/WindowGroup.lua through core/Compat.lua): item icons,

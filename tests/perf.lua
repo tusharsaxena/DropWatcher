@@ -9,7 +9,8 @@
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
 -- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
--- too, DW-C5) and the loot parser's line (DW-25). The questions are performance-§9's: does each bracket cost nothing with capture off
+-- too, DW-C5), the loot parser's line (DW-25) and the Insights tab's recompute over a full log
+-- (issue #12, DW-N1). The questions are performance-§9's: does each bracket cost nothing with capture off
 -- (zero overhead), and is the stood-down show decision free.
 --
 -- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the stood-down early return
@@ -33,9 +34,16 @@
 -- button's count and tooltip, the one-line footer). Measured 2026-10-11 at 11065 bytes in both, under
 -- the full pass's 14249 (no column labels or table to lay out); its ceiling is that work, and
 -- the pair holds the same zero-overhead rule, paired.
+-- The Insights recompute (DW-N1, Insights design spec §6) is the pure pass alone, Rows, Options,
+-- Filter, Period and Compute, over a log at the safety ceiling (NS.History.CEILING drops): it builds
+-- a row per drop (most of it: about 660 bytes a row) and the options and stats tables by design,
+-- so its ceiling is that work: measured 2026-11-05 at 4956816 bytes (9567632 before the rows read
+-- one calendar midnight per quarter hour). It has no bracket of its own (the tab's are DW-N2's), so
+-- it notes nothing.
+local INSIGHTS_CEILING = 5200000
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
-    refreshCompactCaptureOn = 11500 }
+    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
@@ -45,7 +53,8 @@ local PAIRS = { refreshCaptureOff = "refreshCaptureOn", parseCaptureOff = "parse
 local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
-    parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1 }
+    parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1,
+    insightsCompute = 0 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -164,6 +173,42 @@ measure("parseCaptureOff", N, parseOnce)
 NS.Perf.on = true
 measure("parseCaptureOn", N, parseOnce)
 NS.Perf.on = false
+
+-- The Insights recompute over a log at the safety ceiling: 100 groups of 50 drops over 30 days, a
+-- mix of outcomes, verdicts, places and recorders; capture off, so nothing is noted.
+local function insightsLog(now)
+    local groups, places = {}, { "Ruby Life Pools", "Altar of Fangs", "Temple", "Priory" }
+    local outcomes = { "seen", "seen", "seen", "asked", "received", "expired", "tradedAway", "offered" }
+    local verdicts = { "upgrade", "sidegrade", "downgrade", "cantUse" }
+    for gi = 1, NS.History.CEILING / NS.History.MAX_DROPS do
+        local at = now - (gi % 30) * 86400
+        local g = { key = "g" .. gi, label = "Boss " .. (gi % 8), kind = gi % 3 == 0 and "encounter" or "run",
+            instance = places[gi % 4 + 1], difficulty = "Mythic+ " .. (gi % 10 + 2), situation = "mythicPlus",
+            at = at, seenBy = "Alt" .. (gi % 5) .. "-Realm", drops = {} }
+        for di = 1, NS.History.MAX_DROPS do
+            local o = outcomes[di % #outcomes + 1]
+            g.drops[di] = { itemLink = "x", itemID = di, looter = "M" .. (di % 7) .. "-Realm", class = "WARRIOR",
+                isMine = (o == "tradedAway" or o == "offered") or nil, outcome = o, at = at + di, quality = 4,
+                equipLoc = "INVTYPE_HEAD", me = { verdict = verdicts[di % 4 + 1], ilvlDelta = di % 9 - 4 },
+                trade = { state = "likely" }, settledAt = (o == "received") and at or nil }
+        end
+        groups[gi] = g
+    end
+    return groups
+end
+local IF, IS = NS.InsightsFilters, NS.InsightsStats
+local insightsNow = os.time()
+local insightsGroups = insightsLog(insightsNow)
+local insightsF = { char = "all", instance = "all", difficulty = "all", situation = "all", date = "14",
+    quality = "all", category = "all" }
+local function insightsOnce()
+    local rows = IF.Rows(insightsGroups)
+    local f = IF.Normalize(rows, insightsF, insightsNow, nil, { days = 30 })
+    local kept = IF.Filter(rows, f, insightsNow)
+    IS.Compute(kept, IF.Period(kept, 30, f.date, insightsNow))
+end
+NS.Perf.on = false
+measure("insightsCompute", 20, insightsOnce)
 NS.Perf.Note = realNote
 
 for _, r in ipairs(results) do

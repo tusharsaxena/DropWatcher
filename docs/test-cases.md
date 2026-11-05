@@ -1910,6 +1910,35 @@ Total.
 - retention: Never delete keeps every group at login
 - retention: in test mode a shorter window prunes test mode's older sample, not the account's
 
+### test_insights_filters.lua (10)
+
+- insights filters: Rows reads each facet once, with its legacy fallback
+- insights filters: the ranges follow the retention: shorter windows only, all under Never delete
+- insights filters: Since is a local midnight, N-1 calendar days back; the walk never skips a day
+- insights filters: Period names what the rows cover
+- insights filters: Filter keeps the rows passing every pick, in order
+- insights filters: each dropdown counts the rows the other filters keep; two misses count nowhere
+- insights filters: the pick stays listed at 0, and the head carries the total and the choices
+- insights filters: Normalize puts zero-count picks back to all in ORDER, spares `keep`, writes nothing
+- insights filters: difficulties in their natural order, situations in the constants' order
+- insights filters: you first among the characters, then by count; qualities and categories ordered
+
+### test_insights_stats.lua (13)
+
+- insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
+- insights stats: offers and traded away, your own drops only, the legacy one counted
+- insights stats: upgrades for you include the off-spec part, as the filter bar's rule does
+- insights stats: three outcome rows, the upgrades row a subset of the others'
+- insights stats: active days in local time, first and last
+- insights stats: upgrades by instance and by boss (encounters only), and per visit over two visits
+- insights stats: the most generous members by count, then the most recent
+- insights stats: the gain is the frozen verdict's, the legacy one as last judged, none skipped
+- insights stats: the days are continuous with empty ones, asks on the day they were sent
+- insights stats: a period over 62 days buckets by week
+- insights stats: the mixes: class, quality, slot, category, verdicts and trade estimates
+- insights stats: nothing in gives zeros and empty lists
+- insights stats: one pass: each reducer sees each row once
+
 ### test_feed_restore.lua (14)
 
 - session: an initial login starts it now; a zone change moves nothing; a reload keeps it
@@ -2549,6 +2578,8 @@ Total.
 | test_transmog.lua | 13 |
 | test_history.lua | 37 |
 | test_history_retention.lua | 16 |
+| test_insights_filters.lua | 10 |
+| test_insights_stats.lua | 13 |
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_toast.lua | 49 |
@@ -2579,4 +2610,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2121** |
+| **Total** | **2144** |
