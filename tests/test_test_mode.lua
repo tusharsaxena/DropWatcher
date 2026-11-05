@@ -933,8 +933,8 @@ test("window: Drops lists your samples with the others, and its strip counts the
     end
     assertEqual(#drawn.pane.ownDrops, 9, "every sample of yours is listed")
     assertTrue(mine <= 9)
-    -- your BoE recipe (issue #13) can be traded, so it counts, though Post my tradeables leaves it out
-    assertEqual(drawn.summary.count, 6, "the tradeable ones")
+    -- your BoE recipe (issue #13) is feed-only: left out, as Post my tradeables leaves it out
+    assertEqual(drawn.summary.count, 5, "the tradeable ones")
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)

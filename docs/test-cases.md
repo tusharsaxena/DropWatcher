@@ -753,7 +753,7 @@ Total.
 - table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_collect_cells.lua (10)
+### test_collect_cells.lua (11)
 
 - collect cells: each collection verdict's word and tone
 - collect cells: the tooltip's title, Means and one Why row per reason
@@ -764,6 +764,7 @@ Total.
 - collect cells: your own collectible has no candidates, a dash for Them and no Offer
 - collect cells: the Ask button is No action for a collectible, a cosmetic's transmog ask too
 - collect cells: no toast, no Post my tradeables and no glow for a collectible
+- collect cells: your own tradeable collectible is not counted by the Drops strip, nor Interesting
 - collect cells: a tier token is not feed-only: it still asks and toasts as gear
 
 ### test_detail_card.lua (30)
@@ -2082,7 +2083,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (23)
+### test_sim_pool.lua (24)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2091,6 +2092,7 @@ Total.
 - sim pool: each situation reads its side and difficulty; the class filter is yours or none
 - sim pool: a loot burst draws the pool's gear, and every drop only when it has none
 - sim pool: its extras are the drops that are not gear, by kind, in the pool's order (issue #13)
+- sim pool: plain gear is classed from its cheap facts, so a big pool reads full facts only for the rest
 - sim pool: a kind the pool has none of draws the curated samples, once the client has them
 - sim pool: a read takes every instance of the newest tier at every difficulty and restores the selection
 - sim pool: the selection is restored even when a read raises
@@ -2471,7 +2473,7 @@ Total.
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
-| test_collect_cells.lua | 10 |
+| test_collect_cells.lua | 11 |
 | test_detail_card.lua | 30 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -2528,7 +2530,7 @@ Total.
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 23 |
+| test_sim_pool.lua | 24 |
 | test_sim_events.lua | 23 |
 | test_sim_scenario.lua | 31 |
 | test_sim_e2e.lua | 20 |
@@ -2549,4 +2551,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2095** |
+| **Total** | **2097** |

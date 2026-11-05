@@ -160,8 +160,8 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   NS.TestMode.AskState(drop, NS.Asks.StateOf("ask", …))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
-        ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` and Post my
-        tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
+        ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` (a collectible not
+        counted, as Post leaves it out) and Post my tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
         right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
         at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
         K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,

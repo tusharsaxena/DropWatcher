@@ -4,8 +4,8 @@
 -- use) and its tooltip; WindowCells.Verdict delegating on `collect`; the Them cell a dash, never `?`
 -- waiting on an inspect; the merged Me and Them cells with no gear part; your own collectible's Them
 -- and Offer; and the pure refusals: the Ask button, the ask template (the transmog ask too), the
--- toast, Post my tradeables and the glow. A tier token is not refused. History's stored verdict
--- renders through the same cell.
+-- toast, Post my tradeables (and the Drops strip's count), the Interesting view and the glow. A tier
+-- token is not refused. History's stored verdict renders through the same cell.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -159,6 +159,20 @@ test("collect cells: no toast, no Post my tradeables and no glow for a collectib
     -- red under: FB.IsTradeableMine posting a collectible
     assertFalse(NS.WindowFilterBar.IsTradeableMine(mine))
     assertNil(NS.Glow.KindOf(drop()), "never an upgrade, so never a glow")
+end)
+
+test("collect cells: your own tradeable collectible is not counted by the Drops strip, nor Interesting", function()
+    local NS = ns()
+    local mine = drop({ isMine = true, trade = { state = "yes", reasonKey = "boe", args = {} } })
+    local gear = drop({ id = 2, isMine = true, me = { verdict = "sidegrade", reasons = {} },
+        facts = { ilvl = 620, equipLoc = "INVTYPE_HEAD", quality = 4, category = "equipment" },
+        trade = { state = "yes", reasonKey = "boe", args = {} } })
+    -- red under: MC.Summary counting what Post my tradeables (FB.IsTradeableMine) leaves out
+    assertEqual(NS.MineCells.Summary({ mine, gear }, 100).count, 1)
+    assertEqual(NS.MineCells.Summary({ mine }, 100).count, 0, "a collectible alone: nothing to post")
+    -- red under: FB.IsInteresting without the feed-only guard ahead of its isMine branch
+    assertFalse(NS.WindowFilterBar.IsInteresting(mine))
+    assertTrue(NS.WindowFilterBar.IsInteresting(gear), "your own tradeable gear still is")
 end)
 
 test("collect cells: a tier token is not feed-only: it still asks and toasts as gear", function()

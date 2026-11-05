@@ -138,11 +138,27 @@ end
 --- COLL-8): none is guessed, so each list stays empty until then.
 P.COLLECTIBLE_SAMPLES = { tierToken = {}, mount = {}, pet = {}, toy = {}, recipe = {}, cosmetic = {} }
 
---- An entry's item kind (NS.ItemFacts' `category`), read once its facts are cached and kept on
---- the entry: false for an item the feed does not watch, nil while the client has not cached it.
+-- Plain gear, known from the cheap facts P.Facts fills (class, subclass, equip location) and the
+-- client's cosmetic flag: an armor or weapon item with a slot the comparisons know, not cosmetic
+-- and not a listed tier token. NS.Collectibles.CategoryOf answers `equipment` for every such item
+-- (a token the class line names never has such a slot, modules/ItemFacts.lua's readClasses), so
+-- the full facts read is kept for the few that are not, and a big pool never floods the cache.
+local function plainGear(e)
+    P.Facts(e)
+    local IC = C.ITEM_CLASS
+    if e.classID ~= IC.ARMOR and e.classID ~= IC.WEAPON then return false end
+    if not C.SLOT_PLAN[e.equipLoc or ""] then return false end
+    if e.classID == IC.ARMOR and e.subClassID == C.ARMOR_SUBCLASS.COSMETIC then return false end
+    return not NS.TierTokens.Listed(e.itemID) and not NS.Compat.IsCosmeticItem(e.link)
+end
+
+--- An entry's item kind (NS.ItemFacts' `category`), kept on the entry: `equipment` for plain gear
+--- without a facts read; anything else read once its facts are cached. False for an item the feed
+--- does not watch, nil while the client has not cached it.
 --- @param e table
 --- @return string|nil
 function P.CategoryOf(e)
+    if e.category == nil and plainGear(e) then e.category = "equipment" end
     if e.category == nil then
         local f = NS.ItemFacts.Get(e.link)
         if f then e.category = f.category or false end

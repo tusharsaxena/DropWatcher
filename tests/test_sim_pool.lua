@@ -231,6 +231,32 @@ test("sim pool: its extras are the drops that are not gear, by kind, in the pool
     assertEqual(#P.KindDrops(pool, "toy"), 0, "no toy in the pool and none curated")
 end)
 
+test("sim pool: plain gear is classed from its cheap facts, so a big pool reads full facts only for the rest", function()
+    -- red under: P.CategoryOf reading NS.ItemFacts for every entry (test mode's pool, every kind's
+    -- extras: hundreds of tooltip reads in one frame, and the facts cache evicted past its cap)
+    local NS, _, m = T.newAddon()
+    local P = NS.SimPool
+    local entries = {}
+    for i = 1, NS.ItemFacts.CACHE_CAP + 88 do
+        local l = link(7000 + i, 600)
+        m.addItem(l, ring(600))
+        entries[i] = { link = l, itemID = 7000 + i, difficulty = 8 }
+    end
+    local reins, look = link(6901, 600), link(6902, 600)
+    m.addItem(reins, nonGear(15, 5)); m.mounts.byItem[6901] = 77
+    m.addItem(look, armor(600, "INVTYPE_HEAD", 5))
+    entries[#entries + 1] = { link = reins, itemID = 6901, difficulty = 8 }
+    entries[#entries + 1] = { link = look, itemID = 6902, difficulty = 8 }
+    local reads, read = 0, NS.ItemFacts.Read
+    NS.ItemFacts.Read = function(l) reads = reads + 1; return read(l) end
+    local byKind, all = P.Extras({ difficulty = 8, entries = entries })
+    assertEqual(reads, 2, "the mount and the cosmetic helm alone")
+    assertEqual(#all, 2)
+    assertEqual(byKind.mount[1].link, reins); assertEqual(byKind.cosmetic[1].link, look)
+    assertEqual(entries[1].category, "equipment", "kept on the entry")
+    assertTrue((NS.ItemFacts.Counts()) <= 2, "the facts cache holds what was read, never the gear")
+end)
+
 test("sim pool: a kind the pool has none of draws the curated samples, once the client has them", function()
     local NS, _, m = T.newAddon()
     local P = NS.SimPool

@@ -510,7 +510,8 @@ end
 -- ── the summary and Post my tradeables ──────────────────────────────────────────────────────
 
 --- The Drops strip's summary line (board 04's footer; feedback-5 spec §3): how many of your drops
---- may be traded and the next countdown to run out.
+--- may be traded and the next countdown to run out. A collectible (feed-only, issue #13) is left
+--- out, as Post my tradeables leaves it out, so the count is what the Post press would post.
 --- @param drops table your own drops the tab lists
 --- @param now number GetTime()
 --- @return table { count, next, text, tip }
@@ -518,7 +519,7 @@ function MC.Summary(drops, now)
     local count, nextLeft = 0, nil
     for _, d in ipairs(drops) do
         local s = tradeOf(d).state
-        if s == "yes" or s == "likely" then
+        if (s == "yes" or s == "likely") and not NS.Collectibles.IsFeedOnly(d) then
             count = count + 1
             local cd = MC.Countdown(d, now)
             if cd and (nextLeft == nil or cd.left < nextLeft) then nextLeft = cd.left end

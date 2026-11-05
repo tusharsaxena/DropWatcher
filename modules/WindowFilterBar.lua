@@ -326,11 +326,12 @@ local LOOTER_GIVES = { downgrade = true, cantUse = true, doesntWant = true }
 
 --- Interesting (brainstorm 03_FEATURES F1, board 01 note 5): a union, someone else's drop that is
 --- an upgrade for you, or one its looter has no use for (a downgrade, can't use, doesn't want) and
---- can trade (`yes` or `likely`); or your own drop you can trade now.
+--- can trade (`yes` or `likely`); or your own drop you can trade now. Never a collectible (feed-only,
+--- issue #13; categories design spec §6.1): it has no action, so even your own tradeable one fails.
 --- @param drop table
 --- @return boolean
 function FB.IsInteresting(drop)
-    if type(drop) ~= "table" then return false end
+    if type(drop) ~= "table" or NS.Collectibles.IsFeedOnly(drop) then return false end
     local state = tradeState(drop)
     if drop.isMine then return TRADEABLE[state] == true end
     if upgradeForMe(drop) then return true end
