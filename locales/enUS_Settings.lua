@@ -19,6 +19,8 @@ L["A fresh tab hides the drops you can't use and the item types you marked as un
     "A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."
 L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] =
     "A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."
+L["A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."] =
+    "A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."
 L["Newest"] = "Newest"
 L["Oldest"] = "Oldest"
 L["Gain"] = "Gain"
@@ -53,7 +55,6 @@ L["A drop below the minimum still shows when it is an upgrade for you or new to 
 L["Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."] =
     "Which drops the Drops tab lists when it opens: this instance's or this session's. History always opens on All."
 L["How a fresh tab sorts its rows."] = "How a fresh tab sorts its rows."
-L["Equipment"] = "Equipment"
 L["Armor, weapons, jewelry and trinkets."] = "Armor, weapons, jewelry and trinkets."
 L["Tier tokens"] = "Tier tokens"
 L["Tokens you turn in for a tier piece, judged against what you wear in that slot."] = "Tokens you turn in for a tier piece, judged against what you wear in that slot."

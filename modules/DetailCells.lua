@@ -19,6 +19,10 @@ local _, NS = ...
 -- judged on item level alone. The looter's side does the same from their off-spec part, its Spec
 -- row keyed `offSpec` ahead of their own inspected `spec` row.
 --
+-- A COLLECTIBLE (issue #13, NS.CollectCells) is judged for your collection: FOR YOU's chip reads
+-- `NEW TO COLLECTION`, `COLLECTED` or `COLLECTION UNKNOWN` over Kind and Collection rows (and a
+-- recipe's Profession), and someone else's has a dash for the looter, judged for you alone.
+--
 -- THE MARKS (feedback-21 H5). The card draws in the default face, which has no `→` and no `▲ ≈ ▼`
 -- (feedback-6 spec §3, DW-F5). Every up and down mark on it is the table's own glyph
 -- (NS.WindowCells.GLYPH), which modules/DetailCard.lua draws in a monospace string of its own
@@ -151,6 +155,8 @@ end
 
 local function slotChip(f)
     if f.isTierToken then return makesChip(f) end
+    local kind = NS.CollectCells.SlotOf(f)   -- a collectible's kind: `Mount` (issue #13)
+    if kind then return { text = kind.text, tip = kind.tip } end
     local label = WC.SlotLabel(f.equipLoc)
     if not label then return chip(DASH, L["Slot"], trow(L["Item"], L["not worn, or not loaded"])) end
     return chip(label, L["Slot"], trow(L["Worn in"], label))
@@ -238,13 +244,15 @@ end
 --- The item header's chips (board 02, callout 1): slot, armor type, bind, track and rank, the look
 --- (transmog), primary stat, socket and tertiary stats. A chip with nothing to say is left out; the
 --- slot always shows. A tier token's slot chip is `Makes: Head · <classes>`, and it has no type chip.
+--- A collectible's slot chip is its kind (`Mount`), a recipe's type chip its profession, and a pet's
+--- count a `Collected 2/3` chip (NS.CollectCells); a cosmetic keeps the look's chip.
 --- @param drop table
 --- @return table list of chips
 function DC.Chips(drop)
     local f = facts(drop)
     local stats = type(f.stats) == "table" and f.stats or {}
     local out = { slotChip(f) }
-    for _, fn in ipairs({ armorChip, bindChip, trackChip, transmogChip }) do
+    for _, fn in ipairs({ armorChip, bindChip, trackChip, transmogChip, NS.CollectCells.CountChip }) do
         local c = fn(f)
         if c then out[#out + 1] = c end
     end
@@ -423,6 +431,7 @@ local function specRow(drop, inspect, specName, now, left)
 end
 
 local function verdictChip(cell)
+    if cell.collect then return NS.CollectCells.Chip(cell) end   -- `NEW TO COLLECTION` (issue #13)
     -- The glyph first (feedback-4 spec §0), the table's own, in the chip's tone: DetailCard draws it
     -- in the monospace face (feedback-21 H5).
     local words = cell.offSpec and OFF_SPEC_CHIP or VERDICT_CHIP
@@ -456,6 +465,10 @@ local function gold(text) return toned(text, "mutedGold") end
 --- @return table side
 function DC.ForYou(drop, scorer, classFile, equipped)
     local cell = WC.Me(drop, classFile)
+    if cell.collect then   -- a collection verdict: its kind and collection, no gear rows (issue #13)
+        return { title = L["FOR %s"]:format(gold(L["YOU"])), verdict = verdictChip(cell),
+            rows = NS.CollectCells.DetailRows(drop.me, facts(drop)) }
+    end
     local off = NS.OffSpec.Of(drop.me)
     local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true, off and cell.tone,
         partsOf(cell, drop, equipped))
@@ -520,6 +533,10 @@ function DC.ForLooter(drop, inspect, specName, now, revealed, left)
     local classFile = type(drop.looter) == "table" and drop.looter.classFile or nil
     local title = L["FOR %s (%s)"]:format(gold(L["LOOTER"]), TM.ClassName(who:upper(), classFile))
     local cell = WC.Them(drop, now)
+    if cell.collect then   -- judged for you alone: no gear, no spec (issue #13)
+        return { title = title, verdict = verdictChip(cell), rows = { { key = "them", label = L["Them"],
+            text = cell.text, tone = cell.tone, tip = cell.tip } } }
+    end
     local off = NS.OffSpec.Of(drop.them)
     local gear = type(inspect) == "table" and inspect.gear or nil   -- what the Them cell reads (WindowGroup's)
     local rows = sideRows(off or drop.them, facts(drop), cell.tone, who, nil, off and cell.tone, partsOf(cell, drop, gear))

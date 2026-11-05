@@ -349,7 +349,8 @@ test("diagnostics: one drops line per drop names its sources, link, level and qu
     local line = report(NS)[1]
     assertTrue(line:find("sources=chat,encounter", 1, true) ~= nil, line)
     assertTrue(line:find("item=item:159617:", 1, true) ~= nil, line)
-    assertTrue(line:find("complete=true ilvl=311 (current) quality=4 (location) mine=true bag=yes", 1, true) ~= nil, line)
+    assertTrue(line:find("complete=true kind=equipment ilvl=311 (current) quality=4 (location) mine=true bag=yes", 1, true) ~= nil,
+        line)
 end)
 
 -- ---------------------------------------------------------------------------------------------

@@ -28,7 +28,8 @@ local _, NS = ...
 -- used `redMuted` (a dim red, feedback-21), one not wanted `bad` (gray) and an unknown one `muted`.
 -- Trade's No is `red` too, and its Can't use `redMuted`. A Can't use another of the class's specs can
 -- use is that spec's verdict in `offspec` cyan (NS.OffSpecCells). A collectible's Me cell is its
--- collection word (NS.CollectCells: New green, Collected gray), its Them a dash, its Ask No action.
+-- collection word (NS.CollectCells: New green, Collected gray), its Them a dash, its Ask No action,
+-- its Slot its kind (`Mount`) and its Type a recipe's profession.
 
 NS.WindowCells = NS.WindowCells or {}
 local WC = NS.WindowCells
@@ -735,7 +736,8 @@ end
 --- @param drop table
 --- @return table cell
 function WC.Slot(drop)
-    if facts(drop).isTierToken then return NS.CollectCells.TokenSlot(facts(drop)) end   -- `Token: Head`
+    local own = NS.CollectCells.SlotOf(facts(drop))   -- `Token: Head`, `Mount` (issue #13)
+    if own then return own end
     local loc = facts(drop).equipLoc
     local label = SLOT_LABEL[loc]
     if not label then return cell(DASH, "muted", L["Slot"], row(L["Item"], L["not worn, or not loaded"])) end
@@ -776,7 +778,8 @@ local function typeTitle(word) return L["Type: %s"]:format(word) end
 --- @return table cell, with `known` (false for the dash)
 function WC.ArmorType(drop)
     local f = facts(drop)
-    if f.isTierToken then return NS.CollectCells.TokenType(f) end   -- its classes
+    local own = NS.CollectCells.TypeOf(f)   -- a token's classes, a recipe's profession
+    if own then return own end
     local loc = f.equipLoc
     local fixed = LOC_TYPE[loc]
     if fixed then

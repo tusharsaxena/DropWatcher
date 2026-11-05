@@ -302,9 +302,11 @@ its warning color this many seconds before it closes; 0 turns the mark off. It t
 does nothing else.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
-Interesting, Likely tradeable, Usable by me and Upgrade for me (`feed.view.<key>`, one checkbox per
-value; all unticked is View: All, the default, DW-A1, and since item 020 each tooltip ends `With none
-ticked, a fresh tab lists every drop.`). **Content and sort:** Content (the Drops
+Interesting, Likely tradeable, Usable by me, Upgrade for me and New to my collection
+(`feed.view.<key>`, one checkbox per value; New to my collection, `feed.view.newCollect` since
+issue #13, DW-CAT7, lists only the drops new to your collection; all unticked is View: All, the
+default, DW-A1, and since item 020 each tooltip ends `With none ticked, a fresh tab lists every
+drop.`). **Content and sort:** Content (the Drops
 tab's, This instance or This session, This session by default; History always opens on All,
 feedback-13 spec §0; All left the row in DW-Q1, feedback-15 spec §1, schema step 8) | Sort (what a
 fresh tab starts with).

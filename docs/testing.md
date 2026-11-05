@@ -330,6 +330,11 @@ keeping both lists), `test_collect_cells` (DW-CAT3, pure: `NS.CollectCells`' wor
 tooltip, the `WindowCells.Verdict` and `Them` hooks, the merged cells with no gear part, your own
 collectible's Them and Offer, History's stored verdict, and the refusals: the Ask button, the ask
 template's transmog fallback, the toast, Post my tradeables and the glow; a tier token not refused),
+`test_collect_surfaces` (DW-CAT7: a collectible's Slot (its kind) and Type (a recipe's profession)
+cells, a kept token's Type a dash, the detail card's chips, FOR YOU and looter boxes, the History row
+and card from the kept verdict, the item tooltip's Kind rows, the Drops strip's `n new`, the compact
+cards with no ⊘, the diagnostics' `collect:` lines, and the View's New to my collection beside the
+other values' answers and its `feed.view.newCollect` row),
 `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the reproduction with
 realistic 12.x links per loot source and each hypothesis proved or refuted, the merge keeping the most
 complete link (loading and hidden drops included), `core/ItemRead.lua`'s link detail, better link,

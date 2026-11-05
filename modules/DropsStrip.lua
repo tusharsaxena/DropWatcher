@@ -22,6 +22,11 @@ local _, NS = ...
 --
 -- THE COMPACT LAYOUT shortens the summary: `2 tradeable · next 0:08:41` (DS.SummaryText).
 --
+-- NEW TO YOUR COLLECTION (issue #13, categories design spec §6.1). The summary ends with `n new`:
+-- the drops the tab lists (anyone's) whose verdict for you is new to your collection (DS.NewCount),
+-- `2 tradeable · next expiry 0:08:41 · 1 new`, or `1 new` alone (DS.Text). It is no trade count, so
+-- it never shows Post my tradeables.
+--
 -- THE FRAME EDGE. modules/WindowGroup.lua builds it with the pane (DS.Build) and repaints it on every
 -- refresh (DS.Paint, after the table or the cards are drawn: it moves the scroll frames' bottom edge
 -- up over it, or back down) and on each countdown tick (DS.Tick: the text alone). Post my tradeables
@@ -52,6 +57,41 @@ function DS.Own(drops, matches)
         if type(d) == "table" and d.isMine == true and matches(d) == true then out[#out + 1] = d end
     end
     return out
+end
+
+--- The drops the tab lists whose verdict for you is new to your collection (pure): anyone's.
+--- @param drops table|nil the feed's drops
+--- @param matches function drop -> boolean (Window.TabContext's)
+--- @return number
+function DS.NewCount(drops, matches)
+    local n = 0
+    for _, d in ipairs(drops or {}) do
+        if type(d) == "table" and type(d.me) == "table" and d.me.verdict == "newCollect" and matches(d) == true then
+            n = n + 1
+        end
+    end
+    return n
+end
+
+--- The summary's text and tooltip (pure): the tradeable part (MineCells.Summary's, the compact
+--- layout's DS.SummaryText) when anything is tradeable, then `n new` when anything is new to your
+--- collection, joined by ` · `; "" and nil when neither.
+--- @param s table MineCells.Summary's answer
+--- @param newCount number DS.NewCount's
+--- @param compact boolean
+--- @return string text, table|nil tip
+function DS.Text(s, newCount, compact)
+    local parts, tip = {}, nil
+    if s.count > 0 then
+        parts[1] = compact and DS.SummaryText(s) or s.text
+        tip = { unpack(s.tip) }
+    end
+    if (newCount or 0) > 0 then
+        parts[#parts + 1] = L["%d new"]:format(newCount)
+        tip = tip or { L["New to your collection"] }
+        tip[#tip + 1] = NS.TipMarks.Row(L["New to your collection"], newCount, "good")
+    end
+    return table.concat(parts, " · "), tip
 end
 
 --- The compact layout's short summary (MineCells.Summary's, shortened): `2 tradeable · next 0:08:41`.
@@ -183,16 +223,15 @@ local function placeButtons(strip, tradeable, compact)
     FR.PlaceInfo(strip, strip.info, slots.left)
 end
 
--- The summary's text in the layout in force; nothing to say (nothing tradeable) leaves it empty,
--- with no tooltip.
+-- The summary's text in the layout in force (DS.Text); nothing to say (nothing tradeable, nothing
+-- new) leaves it empty, with no tooltip.
 local function paintText(pane, s, compact)
-    local strip = pane.summary
-    local info = strip.info
-    local tradeable = s.count > 0
-    info.text:SetText(not tradeable and "" or compact and DS.SummaryText(s) or s.text)
+    local info = pane.summary.info
+    local text, tip = DS.Text(s, pane.newCount, compact)
+    info.text:SetText(text)
     local tone = C.TONE.muted
     info.text:SetTextColor(tone.r, tone.g, tone.b)
-    info.tipLines = tradeable and s.tip or nil
+    info.tipLines = tip
 end
 
 --- Repaint the strip for the tab's view (every refresh, after the table or the cards are drawn):
@@ -204,7 +243,9 @@ end
 function DS.Paint(pane, ctx, compact)
     local strip = pane.summary
     if not strip then return end
-    pane.ownDrops = DS.Own(NS.LootFeed.Drops(ctx.feed), ctx.matches)
+    local drops = NS.LootFeed.Drops(ctx.feed)
+    pane.ownDrops = DS.Own(drops, ctx.matches)
+    pane.newCount = DS.NewCount(drops, ctx.matches)
     local s = NS.MineCells.Summary(pane.ownDrops, GetTime())
     local tradeable = s.count > 0
     strip:Show()

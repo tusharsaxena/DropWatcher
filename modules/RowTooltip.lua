@@ -21,6 +21,11 @@ local _, NS = ...
 --
 -- Placed by hand after Show, so the room is measured on the tooltip's real width, at each frame's
 -- effective scale. No client call: the frames' own geometry and UIParent's width.
+--
+-- THE KIND ROWS (issue #13, categories design spec §6.1). Under the game's own lines, an item
+-- tooltip names a token's or a collectible's kind and, for a collectible, its collection verdict
+-- now (RT.AddKindRows: NS.CollectCells.KindRows over the item's facts, NS.ItemFacts.Get). Gear
+-- gets none: the game's tooltip names its kind.
 
 NS.RowTooltip = NS.RowTooltip or {}
 local RT = NS.RowTooltip
@@ -134,6 +139,20 @@ function RT.Place(tip, owner)
         tip:SetPoint("BOTTOMRIGHT", anchor, "TOPLEFT", -gap, dy)
     end
     return side
+end
+
+--- Add the item's Kind row and its collection row under the game's lines (the item tooltip, before
+--- its hint and Show). Nothing for gear, a link with no facts yet, or a tooltip with no AddLine.
+--- @param tip table a GameTooltip
+--- @param link string|nil the item's link
+--- @return number the rows added
+function RT.AddKindRows(tip, link)
+    local f = type(link) == "string" and NS.ItemFacts and NS.ItemFacts.Get(link) or nil
+    local lines = NS.CollectCells.KindRows(f)
+    if not (tip and tip.AddLine) then return 0 end
+    local r, g, b = NS.Skin.Color("gtip.value")   -- the skin's tooltip value color, as every cell tip's lines
+    for _, line in ipairs(lines) do tip:AddLine(line, r, g, b, true) end
+    return #lines
 end
 
 --- Place a shown tooltip for a row: RT.Place, else (unknown geometry) on the hovered frame's top

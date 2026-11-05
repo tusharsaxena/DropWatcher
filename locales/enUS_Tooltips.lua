@@ -332,6 +332,14 @@ L["collectibles are watched, not offered"] = "collectibles are watched, not offe
 L["collectibles are judged for you alone, not inspected"] = "collectibles are judged for you alone, not inspected"
 L["Collectibles are judged for you alone."] = "Collectibles are judged for you alone."
 L["Collectible: nobody is judged for it."] = "Collectible: nobody is judged for it."
+-- modules/CollectCells.lua's Slot, Type and detail rows (DW-CAT7); WindowFilterBar's View tooltip
+L["your collection, not your gear"] = "your collection, not your gear"
+L["Profession"] = "Profession"
+L["Yours"] = "Yours"
+L["You have"] = "You have"
+L["no profession named, or not read"] = "no profession named, or not read"
+L["a collectible: no armor or weapon type"] = "a collectible: no armor or weapon type"
+L["a mount, pet, toy, recipe or look you have not collected"] = "a mount, pet, toy, recipe or look you have not collected"
 
 -- modules/MineCells.lua
 L["%d members"] = "%d members"

@@ -27,9 +27,18 @@ local _, NS = ...
 -- `Any class` for a Curio. CC.TokenMakes is the slot word and the class list the detail card's
 -- `Makes:` chip reads (modules/DetailCells.lua).
 --
+-- THE OTHER SURFACES (DW-CAT7, categories design spec §6.1). A collectible's Slot cell is its kind
+-- (`Mount`, `Pet`, `Toy`, `Recipe`, `Cosmetic`: CC.SlotOf, the one hook NS.WindowCells.Slot calls,
+-- a token's included) and its Type cell a recipe's profession, else a dash (CC.TypeOf, the hook in
+-- NS.WindowCells.ArmorType). The detail card's chips and rows: CC.Chip (`NEW TO COLLECTION`,
+-- `COLLECTED`, `COLLECTION UNKNOWN`; a dash for the side judged for you alone), CC.CountChip (a
+-- pet's `Collected 2/3`) and CC.DetailRows (Kind, Collection, a recipe's Profession), which the
+-- History card takes from the stored verdict too. CC.KindRows are the item tooltip's Kind row and
+-- its collection row (modules/RowTooltip.lua's AddKindRows); gear has none, its kind is the game's.
+--
 -- PURE: plain tables in, plain tables out; the rows are NS.TipMarks', taken at load. A class's name
--- is the client's (NS.Compat.ClassDisplayName), and NS.ClassData and NS.WindowCells (the slot
--- words) are read at call time.
+-- is the client's (NS.Compat.ClassDisplayName), and NS.ClassData, NS.Collectibles (the verdict of
+-- the facts, for CC.KindRows) and NS.WindowCells (the slot words) are read at call time.
 
 NS.CollectCells = NS.CollectCells or {}
 local CC = NS.CollectCells
@@ -178,8 +187,137 @@ end
 function CC.TokenType(f)
     local colored, plain = tokenClasses(f)
     local title = L["Type: %s"]:format(L["Tier token"])
+    if not colored and f.tokenSlot ~= "any" then   -- a History entry keeps no classes
+        return { text = DASH, tone = "muted", known = false, tip = { title, TM.Row(L["Usable by"], L["not read"]) } }
+    end
     if not colored then
         return { text = L["Any class"], tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], L["every class"]) } }
     end
     return { text = colored, tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], plain) } }
+end
+
+-- ── the Slot, Type and Kind of a collectible, the detail card (DW-CAT7) ─────────────────────
+
+-- Each category's word: the Slot cell of a collectible, the Kind row.
+local KIND = {
+    equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
+    recipe = L["Recipe"], cosmetic = L["Cosmetic"],
+}
+local COLLECTIBLE = { mount = true, pet = true, toy = true, recipe = true, cosmetic = true }
+-- The profession a recipe is for, by its skill line (C.RECIPE_SKILL_LINE's values).
+local PROFESSION = {
+    [164] = L["Blacksmithing"], [165] = L["Leatherworking"], [171] = L["Alchemy"], [185] = L["Cooking"],
+    [197] = L["Tailoring"], [202] = L["Engineering"], [333] = L["Enchanting"], [356] = L["Fishing"],
+    [755] = L["Jewelcrafting"], [773] = L["Inscription"],
+}
+-- The detail card's verdict chip per collection verdict (the Me side's).
+local CHIP = {
+    newCollect = L["NEW TO COLLECTION"], collected = L["COLLECTED"], collectUnknown = L["COLLECTION UNKNOWN"],
+    cantUse = L["CAN'T USE"], unknown = L["UNKNOWN"],
+}
+
+--- A category's word (`Mount`, `Tier token`), or nil for none.
+--- @param category string|nil
+--- @return string|nil
+function CC.KindWord(category) return KIND[category] end
+
+-- A collectible's facts: its category is one with a collection verdict.
+local function collectible(f) return COLLECTIBLE[f.category] == true end
+
+-- A recipe's profession in words and whether it is yours (true, false, or nil when not read).
+local function professionOf(f)
+    local collect = type(f.collect) == "table" and f.collect or {}
+    local skillLine = collect.skillLine or NS.Constants.RECIPE_SKILL_LINE[f.subClassID]
+    return PROFESSION[skillLine], collect.hasProfession
+end
+
+--- The Slot column of a token or a collectible (NS.WindowCells.Slot's hook): `Token: Head`, or the
+--- collectible's kind (`Mount`); nil for gear, whose slot is its own.
+--- @param f table the drop's facts
+--- @return table|nil cell { text, tone, tip }
+function CC.SlotOf(f)
+    if f.isTierToken then return CC.TokenSlot(f) end
+    if not collectible(f) then return nil end
+    local word = KIND[f.category]
+    local worn = f.category == "cosmetic" and NS.WindowCells.SlotLabel(f.equipLoc) or nil
+    local tip = { word, TM.Row(L["Compared with"], L["your collection, not your gear"]) }
+    tip[3] = TM.Row(L["Worn in"], worn)   -- a cosmetic's slot; nil leaves no row
+    return { text = word, tone = "plain", tip = tip }
+end
+
+--- The Type column of a token or a collectible (NS.WindowCells.ArmorType's hook): a token's classes,
+--- a recipe's profession, else a dash (a collectible has no armor or weapon type); nil for gear.
+--- @param f table the drop's facts
+--- @return table|nil cell { text, tone, tip, known }
+function CC.TypeOf(f)
+    if f.isTierToken then return CC.TokenType(f) end
+    if not collectible(f) then return nil end
+    local title = L["Type: %s"]:format(KIND[f.category])
+    local word, yours = professionOf(f)
+    if f.category == "recipe" and word then
+        local mine = yours == true and L["yes"] or yours == false and L["no"] or nil
+        return { text = word, tone = yours == false and "redMuted" or "plain", known = true,
+            tip = { title, TM.Row(L["Profession"], word), TM.Row(L["Yours"], mine) } }
+    end
+    local why = f.category == "recipe" and L["no profession named, or not read"] or L["a collectible: no armor or weapon type"]
+    return { text = DASH, tone = "muted", known = false, tip = { title, TM.Row(L["Item"], why) } }
+end
+
+--- The detail card's verdict chip of a collection cell: the Me side's words (`NEW TO COLLECTION`),
+--- a dash for a side judged for you alone (CC.Them, CC.Nobody).
+--- @param cell table CC.Verdict's, CC.Them's or CC.Nobody's
+--- @return table chip { text, tone, tip }
+function CC.Chip(cell)
+    local text = cell.side == "me" and (CHIP[cell.verdict] or CHIP.unknown) or DASH
+    return { text = text, tone = cell.tone, tip = cell.tip }
+end
+
+--- A pet's `Collected 2/3` chip, or nil (no count read, or not a pet).
+--- @param f table the drop's facts
+--- @return table|nil chip { text, tone, tip }
+function CC.CountChip(f)
+    local collect = type(f.collect) == "table" and f.collect or {}
+    local count, limit = num(collect.count), num(collect.limit)
+    if f.category ~= "pet" or not (count and limit) then return nil end
+    local text = L["Collected %d/%d"]:format(count, limit)
+    return { text = text, tone = count > 0 and "bad" or "good", tip = { L["Collection"], TM.Row(L["You have"], text) } }
+end
+
+--- The detail card's rows of a collection verdict (a live drop's or History's stored one), in
+--- NS.DetailCells' row shape: Kind, Collection and, for a recipe, its Profession.
+--- @param eval table the collection verdict (`collect` set)
+--- @param f table the drop's facts (a History entry's carry no profession)
+--- @return table rows
+function CC.DetailRows(eval, f)
+    local kind = KIND[eval.category or f.category] or L["Watched item"]
+    local v = eval.verdict
+    local means = MEANS[v] or MEANS.unknown
+    local rows = {
+        { key = "kind", label = L["Kind"], text = kind, tone = "plain", tip = { L["Kind"], TM.Row(L["Item"], kind) } },
+        { key = "collection", label = L["Collection"], text = CC.Text(eval), tone = CC.TONE[v] or "muted",
+          tip = { L["Collection"], TM.Row(L["Means"], means) } },
+    }
+    local word, yours = professionOf(f)
+    if (eval.category or f.category) == "recipe" and word then
+        rows[3] = { key = "profession", label = L["Profession"], text = word, tone = yours == false and "redMuted" or "plain",
+            tip = { L["Profession"], TM.Row(L["Yours"], yours == true and L["yes"] or yours == false and L["no"] or nil) } }
+    end
+    return rows
+end
+
+--- The item tooltip's rows (modules/RowTooltip.lua's AddKindRows): the Kind and, for a collectible,
+--- its collection verdict now (NS.Collectibles.Verdict of the facts); a token's made slot. Gear
+--- has none (the game's tooltip names its kind).
+--- @param f table|nil the item's facts
+--- @return table lines
+function CC.KindRows(f)
+    if type(f) ~= "table" or not (f.isTierToken or collectible(f)) then return {} end
+    local lines = { TM.Row(L["Kind"], KIND[f.category] or L["Tier token"]) }
+    if f.isTierToken then
+        lines[2] = TM.Row(L["Makes"], (CC.TokenMakes(f)) or L["a slot that could not be read"])
+        return lines
+    end
+    local eval = NS.Collectibles.Verdict(f)
+    if eval then lines[2] = TM.Row(L["Collection"], CC.Text(eval), CC.TONE[eval.verdict]) end
+    return lines
 end

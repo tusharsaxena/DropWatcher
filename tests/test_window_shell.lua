@@ -313,7 +313,7 @@ test("shell: the View is multi-select: its values combine, the label counts them
     assertTrue(c.view.multi, "multi-select")
     local labels = {}
     for _, o in ipairs(c.view._options) do labels[#labels + 1] = o.label end
-    assertEqual(table.concat(labels, ","), "View: All,Interesting,Likely tradeable,Usable by me,Upgrade for me")
+    assertEqual(table.concat(labels, ","), "View: All,Interesting,Likely tradeable,Usable by me,Upgrade for me,New to my collection")
     pick(c.view, "likely")
     assertEqual(textOf(c.view.text), "Likely tradeable", "one value: its name")
     assertTrue(FB.State("group").view.likely)
@@ -353,13 +353,14 @@ test("shell: the View tooltip lists every value as a bullet, and grays the ones 
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
     local tip = W.TooltipOf(c.view)
     assertEqual(tip[1], "View")
-    assertEqual(#tip, 6, "the title and five values")
+    assertEqual(#tip, 7, "the title and six values")
     assertEqual(T.tipPlain(tip[2]), "• All: every drop past the situation and quality gates")
     assertTrue(T.tipPlain(tip[3]):find("^• Interesting: ") ~= nil)
     assertTrue(T.tipPlain(tip[4]):find("^• Likely tradeable: ") ~= nil)
     assertTrue(T.tipPlain(tip[5]):find("^• Usable by me: ") ~= nil)
     assertTrue(T.tipPlain(tip[6]):find("^• Upgrade for me: ") ~= nil)
-    for i = 2, 6 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
+    assertTrue(T.tipPlain(tip[7]):find("^• New to my collection: ") ~= nil)
+    for i = 2, 7 do assertTrue(tip[i]:find("not on this tab", 1, true) == nil, "Drops uses them all") end
     NS.Window.SelectTab("history")
     tip = W.TooltipOf(c.view)
     assertTrue(tip[4]:find("(not on this tab)", 1, true) ~= nil and tip[4]:find("|cff8c8c94", 1, true) ~= nil,

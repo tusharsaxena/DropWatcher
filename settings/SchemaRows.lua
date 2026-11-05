@@ -155,6 +155,9 @@ local VIEW_ROWS = {
       tip = L["A fresh tab hides the drops you can't use and the item types you marked as unwanted. With none ticked, a fresh tab lists every drop."] },
     { key = "upgrade", label = L["Upgrade for me"],
       tip = L["A fresh tab lists only the drops that are an upgrade for you. With none ticked, a fresh tab lists every drop."] },
+    -- issue #13 (categories design spec §5.1): a mount, pet, toy, recipe or look you lack
+    { key = "newCollect", label = L["New to my collection"],
+      tip = L["A fresh tab lists only the drops new to your collection. With none ticked, a fresh tab lists every drop."] },
 }
 -- Drops › Items › Item kinds (issue #13, categories design spec §5.1): one switch per category, in
 -- C.CATEGORIES' order (test_schema_rows pins the two lists to each other).

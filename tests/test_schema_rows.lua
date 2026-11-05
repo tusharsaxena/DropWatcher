@@ -20,6 +20,7 @@ local function specPaths()
         "enabled", "visibility", "scale", "alpha", "locked", "state.debugConsole", "global.minimap.shown",
         "autoOpen",
         "feed.view.interesting", "feed.view.likely", "feed.view.usable", "feed.view.upgrade",
+        "feed.view.newCollect",   -- New to my collection (issue #13, DW-CAT7)
         "feed.quality.mode", "feed.quality.fixed", "feed.quality.floor",
         "feed.quality.upgradeOverride", "feed.minIlvlMode",
         "feed.minIlvl", "feed.relativeIlvl", "feed.clearOnBossKill", "feed.sort",
@@ -607,6 +608,8 @@ local PINNED_ROWS = {
     { "feed.sort", "string", "\"newest\"" },
     { "feed.view.interesting", "bool", "false" },
     { "feed.view.likely", "bool", "false" },
+    -- DW-CAT7 (issue #13): the View's New to my collection, a new stored path.
+    { "feed.view.newCollect", "bool", "false" },
     { "feed.view.upgrade", "bool", "false" },
     { "feed.view.usable", "bool", "false" },
     { "global.history.retentionDays", "number", "30" },

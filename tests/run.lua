@@ -237,6 +237,7 @@ Kit.run{
         "test_drops_layout",
         "test_side_cells",
         "test_collect_cells",
+        "test_collect_surfaces",
         "test_detail_card",
         "test_own_drops",
         "test_tip_marks",

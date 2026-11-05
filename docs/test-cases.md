@@ -767,6 +767,24 @@ Total.
 - collect cells: your own tradeable collectible is not counted by the Drops strip, nor Interesting
 - collect cells: a tier token is not feed-only: it still asks and toasts as gear
 
+### test_collect_surfaces.lua (15)
+
+- collect surfaces: the Slot cell is the collectible's kind, a cosmetic's slot in its tooltip
+- collect surfaces: the Type cell is a recipe's profession, a dash for the other collectibles
+- collect surfaces: a token kept with no classes reads a dash, never Any class
+- collect surfaces: the detail card's chips: the kind, a recipe's profession, a pet's count
+- collect surfaces: FOR YOU reads NEW TO COLLECTION over Kind and Collection rows, no gear rows
+- collect surfaces: FOR THE LOOTER on someone else's collectible is a dash, judged for you alone
+- collect surfaces: a History row reads the kept kind, verdict and a dash for the looter
+- collect surfaces: the History card's FOR YOU keeps the collection verdict, its group a dash
+- collect surfaces: the item tooltip adds the Kind and the collection now; gear none
+- collect surfaces: the Drops strip ends with `n new`, anyone's, the tab's filters applied
+- collect surfaces: the compact cards draw the collection words with no ⊘
+- collect surfaces: the diagnostics name the item kinds on, the lists' sizes and each drop's kind
+- collect surfaces: New to my collection lists the new collectibles; the other views' answers
+- collect surfaces: the View menu, its tooltip and History both carry New to my collection
+- collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
+
 ### test_detail_card.lua (32)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
@@ -2476,6 +2494,7 @@ Total.
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 26 |
 | test_collect_cells.lua | 11 |
+| test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 32 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -2553,4 +2572,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 41 |
 | Skipped | 1 |
-| **Total** | **2099** |
+| **Total** | **2114** |
