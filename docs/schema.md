@@ -277,7 +277,7 @@ history = { retentionDays = 30, v = 1, groups = {
     { key, label, kind, situation, at, instance, difficulty, seenBy, seenByClass,
       roster = { { name, realm, class, me }, ... }, drops = {
         { itemLink, itemID, looter, class, isMine, ilvl, equipLoc, quality, seenBy, seenByClass,
-          category?, tokenSlot?,
+          category?, tokenSlot?, tokenUsers?,
           me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
                  reasonKey? }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
@@ -295,7 +295,9 @@ history = { retentionDays = 30, v = 1, groups = {
   spec of the class can use keeps `offSpec = { specID, mainSpecID, verdict, ilvlDelta }` (feedback-19
   spec §1): no baseline and no reasons. No migration step: the field is optional.
 - `category` is the drop's item kind and `tokenSlot` a tier token's made slot (issue #13,
-  categories design spec §3.3); an Always watch item that fits no kind is kept as `watched`
+  categories design spec §3.3); `tokenUsers` (TT-1) is who may use a token naming no classes:
+  `every` for an omni Curio, `yours` for a token whose Use text alone names your class, absent
+  otherwise (its Type then reads a dash, an `any` slot never taken for a Curio); an Always watch item that fits no kind is kept as `watched`
   (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key). A collectible's `me`
   keeps its collection verdict: `collect` true, its `category`, a pet's `count` and `limit`, and
   `reasonKey` `notYourProfession` for a recipe of a profession you lack. The fields are additive:

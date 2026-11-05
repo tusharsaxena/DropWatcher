@@ -8,6 +8,7 @@ local _, NS = ...
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
 --             transmogKnown = true | false | nil, rawEquipLoc, category, collect, useText | nil,
+--             useSpellLoading = spellID | nil, tokenUsers = "every" | "yours" | nil,
 --             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "use" | "name" | "any" | nil }
 --
 -- THE EDGE. Every client read goes through NS.Compat: the cached fields (GetItemInfo), the
@@ -28,8 +29,14 @@ local _, NS = ...
 -- names its classes (the RestrictedRaceClass tooltip line, `classes` set), when its use text makes a
 -- piece "appropriate for your class" (TT-1), or when it is an omni Curio (an epic Miscellaneous or
 -- Reagent item named "... Curio", which names no class; NS.TierTokens.IsCurio); so is an item the
--- C.TIER_TOKENS override lists. Class-restricted gear carries `classes` too, without the flag. The
--- use text (`useText`, NS.Compat.ItemUseText) is read once here, for an item that is not gear only.
+-- C.TIER_TOKENS override lists. Class-restricted gear carries `classes` too, without the flag. A
+-- token with no class list says who may use it in `tokenUsers` (NS.TierTokens.Users: `every` for a
+-- Curio, `yours` for a Use text alone, nil when not read), which History keeps. The use text
+-- (`useText`, NS.Compat.ItemUseText) is read here, for an item that is not gear only. A use spell
+-- whose text the client has not loaded yet leaves its id in `useSpellLoading`: Request then waits
+-- for the spell as it waits for an item (C_Spell.RequestLoadSpellData, IF.SPELL_LOAD_WAIT, up to
+-- MAX_LOAD_TRIES), and SPELL_TEXT_UPDATE re-reads a cached item still waiting on it; each re-read
+-- reads the use text, the flag, the slot and the category again (rereadToken).
 -- NS.TierTokens.SlotOf (modules/TierTokens.lua) reads the slot the token makes, `tokenSlot`, with
 -- `tokenSlotSource` naming the rung: `table`, `use` (its use text, else a tooltip slot line,
 -- NS.Compat.TierTokenSlot), `name`, else `any`. A concrete slot then becomes the facts' `equipLoc`,
@@ -69,6 +76,7 @@ local TAG = "ITEM"
 IF.MAX_LOAD_TRIES = 5
 IF.CACHE_CAP = 512
 IF.EVICT_SHARE = 0.25
+IF.SPELL_LOAD_WAIT = 0.4
 
 -- Equip locations without an appearance to collect.
 local NO_APPEARANCE = { INVTYPE_NECK = true, INVTYPE_FINGER = true, INVTYPE_TRINKET = true }
@@ -129,22 +137,27 @@ end
 -- An item that is not gear: no slot plan for its raw slot.
 local function notGear(facts) return C.SLOT_PLAN[facts.rawEquipLoc or ""] == nil end
 
--- The use text, read once for an item that is not gear (TT-1); gear's is never read.
+-- The use text, read for an item that is not gear (TT-1); gear's is never read. A use spell not
+-- loaded yet leaves its id in `useSpellLoading`.
 local function readUseText(facts)
-    if notGear(facts) then facts.useText = NS.Compat.ItemUseText(facts.link) end
+    facts.useText, facts.useSpellLoading = nil, nil
+    if notGear(facts) then facts.useText, facts.useSpellLoading = NS.Compat.ItemUseText(facts.link) end
 end
 
--- The tier-token flag and the class set (see the header): an item that is not gear and names its
--- classes, or whose use text makes a piece for your class, or an omni Curio; or a listed item.
+-- The tier-token flag, the class set and who may use a token naming none (see the header): an item
+-- that is not gear and names its classes, or whose use text makes a piece for your class, or an
+-- omni Curio; or a listed item.
 local function readClasses(facts)
     local TT = NS.TierTokens
     facts.classes = NS.Compat.ItemClassRestriction(facts.link)
-    local token = notGear(facts) and (facts.classes ~= nil or TT.UseNamesClass(facts.useText) or TT.IsCurio(facts))
-    facts.isTierToken = token or TT.Listed(facts.itemID)
+    local listed, token = TT.Listed(facts.itemID), notGear(facts)
+    facts.tokenUsers = (token or listed) and TT.Users(facts) or nil
+    facts.isTierToken = (token and (facts.classes ~= nil or facts.tokenUsers ~= nil)) or listed
 end
 
 -- The slot a tier token makes; a concrete one becomes the equipLoc every gear reader takes.
 local function readTokenSlot(facts)
+    facts.equipLoc, facts.tokenSlot, facts.tokenSlotSource = facts.rawEquipLoc, nil, nil
     if not facts.isTierToken then return end
     local slot, source = NS.TierTokens.SlotOf(facts, function() return NS.Compat.TierTokenSlot(facts.link) end)
     facts.tokenSlot, facts.tokenSlotSource = slot, source
@@ -212,6 +225,20 @@ function IF.Read(link)
     return facts
 end
 
+-- The use text read again on built facts, and all that hangs on it: the token flag, its users and
+-- slot, the category (a use spell's text that has loaded since; see the header).
+local function rereadToken(facts)
+    readUseText(facts)
+    readClasses(facts)
+    readTokenSlot(facts)
+    if NS.Collectibles then NS.Collectibles.Read(facts) end
+end
+
+-- Facts waiting on their use spell's text, when the client can be asked to load it.
+local function spellLoading(facts)
+    return facts.useSpellLoading ~= nil and NS.Compat.CanRequestSpellLoad()
+end
+
 -- ── the cache ───────────────────────────────────────────────────────────────────────────────
 
 local function touch(s, link)
@@ -267,24 +294,36 @@ local function finish(link, job, facts)
     for _, cb in ipairs(job.waiters) do cb(facts, link) end
 end
 
+-- A load answered: the item read (or its use text read again), else another try, else the facts
+-- as they stand (nil for an item that never loaded; a use text never loaded stops being waited on).
 local function onLoaded(link, job)
     if job.generation ~= generation then return end
     local facts = IF.Get(link)
-    if facts then return finish(link, job, facts) end
+    if facts and facts.useSpellLoading then rereadToken(facts) end
+    if facts and not spellLoading(facts) then return finish(link, job, facts) end
     if job.tries < IF.MAX_LOAD_TRIES then return attempt(link, job) end
     NS.Debug(TAG, "item facts: gave up on item %s after %d loads", job.itemID, job.tries)
-    finish(link, job, nil)
+    if facts then facts.useSpellLoading = nil end
+    finish(link, job, facts)
 end
 
+-- One load: the use spell's when the item is cached and waits on it, else the item's.
 attempt = function(link, job)
     job.tries = job.tries + 1
-    NS.Item.LoadItem(job.itemID, function() onLoaded(link, job) end)
+    local done = function() onLoaded(link, job) end
+    local cached = store().cache[link]
+    if cached and spellLoading(cached) and NS.Compat.RequestSpellLoad(cached.useSpellLoading) then
+        return C_Timer.After(IF.SPELL_LOAD_WAIT, done)
+    end
+    NS.Item.LoadItem(job.itemID, done)
 end
 
---- The facts of a link now, when the client has the item; else nil, and `callback(facts, link)`
---- runs once the item has loaded, or with nil facts when it never does (after MAX_LOAD_TRIES
---- loads). The second return says which: "ready", "loading", "invalid" (no item in the link; the
---- callback never runs) or "unavailable" (the client cannot load items; nor does it).
+--- The facts of a link now, when the client has the item (and the text of its use spell, where it
+--- has one the client can load); else nil, and `callback(facts, link)` runs once the item (or that
+--- text) has loaded, or when it never does (after MAX_LOAD_TRIES loads), with nil facts for an item
+--- never loaded and the facts as read for a use text never loaded. The second return says which:
+--- "ready", "loading", "invalid" (no item in the link; the callback never runs) or "unavailable"
+--- (the client cannot load items; nor does it).
 --- @param link string
 --- @param callback function|nil (facts|nil, link)
 --- @return table|nil facts, string status
@@ -292,8 +331,8 @@ function IF.Request(link, callback)
     local itemID = validLink(link)
     if not itemID then return nil, "invalid" end
     local facts = IF.Get(link)
-    if facts then return facts, "ready" end
-    if not NS.Compat.CanRequestItemLoad() then return nil, "unavailable" end
+    if facts and not spellLoading(facts) then return facts, "ready" end
+    if not (facts or NS.Compat.CanRequestItemLoad()) then return nil, "unavailable" end
     local loads = store().loads
     local job = loads[link]
     if not job then
@@ -318,6 +357,16 @@ end
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "SPELL_TEXT_UPDATE", "OnSpellTextUpdate" }
+
+-- A spell's text arrived: every cached item still waiting on it as its use spell is read again
+-- (its use text, token flag, slot and category; see the header).
+function NS.addon.OnSpellTextUpdate(_, _, spellID)
+    if NS.Compat.IsSecret(spellID) or type(spellID) ~= "number" then return end
+    for _, facts in pairs(store().cache) do
+        if facts.useSpellLoading == spellID then rereadToken(facts) end
+    end
+end
 
 -- An appearance was learned (or lost): re-read the flag on every cached link, then let the live
 -- cosmetics be judged again (NS.Collectibles.Changed).

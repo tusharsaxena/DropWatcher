@@ -872,7 +872,7 @@ DropAdded(id) ─────────> History.OnDropAdded ─> Snapshot(rec
                           (live drops only)        group = feed group @ session; Trim: 50 a group,
                                                    CEILING 5,000 drops in all, the oldest first)
                           (the entry keeps the item kind, `category` (`watched` for an Always watch item
-                           of no kind), and a tier token's `tokenSlot`;
+                           of no kind), and a tier token's `tokenSlot` and `tokenUsers`;
                            a collectible's `me` its collection verdict: `collect`, `category`,
                            `count`, `limit`, `reasonKey`)
 PLAYER_ENTERING_WORLD ─> Session.OnEnteringWorld (before the situation's handler): isInitialLogin

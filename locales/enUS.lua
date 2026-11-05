@@ -595,6 +595,7 @@ L["Token"] = "Token"
 L["Token: %s"] = "Token: %s"
 L["Tier token"] = "Tier token"
 L["Any class"] = "Any class"
+L["Your class"] = "Your class"
 L["Makes: %s"] = "Makes: %s"
 L["any slot"] = "any slot"
 -- A tier token's own text, matched against the client's (TT-1; modules/TierTokens.lua and

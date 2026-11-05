@@ -13,7 +13,8 @@ local _, NS = ...
 -- and use lines are read through the ratified tooltip reader, Compat.ReadTooltipLine (library-stack-§7:
 -- new consumers, not a new reader); core/Compat.lua's tooltipData helper is file-local, so this
 -- compat file asks C_TooltipInfo.GetHyperlink itself. An item's use text (ItemUseText, TT-1) is its
--- use spell's description (C_Item.GetItemSpell, C_Spell.GetSpellDescription), else that use line.
+-- use spell's description (C_Item.GetItemSpell, C_Spell.GetSpellDescription), else that use line;
+-- a description not loaded yet is asked for (RequestSpellLoad, C_Spell.RequestLoadSpellData).
 
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
@@ -205,7 +206,8 @@ end
 
 -- The text of an item's use spell (C_Item.GetItemSpell, then C_Spell.GetSpellDescription): the
 -- text, false for an item with no use spell, or nil when it could not be read (no API, a secret
--- or empty answer).
+-- or empty answer). An empty description is a spell the client has not loaded yet: its id is the
+-- second return then.
 local function spellUseText(link)
     local item, spell = C_Item, C_Spell
     if not (item and item.GetItemSpell and spell and spell.GetSpellDescription) then return nil end
@@ -214,7 +216,8 @@ local function spellUseText(link)
     if spellID == nil then return false end
     spellID = plainId(spellID)
     local text = spellID and plainString(spell.GetSpellDescription(spellID))
-    return text ~= "" and text or nil
+    if text == "" then return nil, spellID end
+    return text
 end
 
 -- The rest of the tooltip's first line that starts with the client's ITEM_SPELL_TRIGGER_ONUSE
@@ -233,14 +236,38 @@ end
 --- What an item does when used, as the client writes it, without the "Use:" prefix (TT-1: a tier
 --- token's "Create a soulbound set hand item appropriate for your class."), or nil: no use spell,
 --- or none readable. The use spell's description first; when that cannot be read, the tooltip's
---- use line. Read once, when an item's facts are built (modules/ItemFacts.lua).
+--- use line. With no text, the second return is the use spell's id when its description came back
+--- empty: a spell the client has not loaded yet (Compat.RequestSpellLoad, then read again; the
+--- caller is modules/ItemFacts.lua).
 --- @param link string
---- @return string|nil
+--- @return string|nil text, number|nil loadingSpellID
 function Compat.ItemUseText(link)
     if not plainString(link) then return nil end
-    local text = spellUseText(link)
+    local text, loading = spellUseText(link)
     if text == false then return nil end
-    return text or tooltipUseText(link)
+    text = text or tooltipUseText(link)
+    if text then return text end
+    return nil, loading
+end
+
+--- True when the client can be asked to load a spell's data and a timer can wait for it
+--- (C_Spell.RequestLoadSpellData, C_Timer.After).
+--- @return boolean
+function Compat.CanRequestSpellLoad()
+    local spell, timer = C_Spell, C_Timer
+    return (spell and spell.RequestLoadSpellData and timer and timer.After) and true or false
+end
+
+--- Ask the client to load a spell's data (its description then answers on a later read, and
+--- SPELL_TEXT_UPDATE fires). Answers whether it asked: false for no API or no plain id.
+--- @param spellID number
+--- @return boolean
+function Compat.RequestSpellLoad(spellID)
+    local spell = C_Spell
+    spellID = plainId(spellID)
+    if not (spellID and spell and spell.RequestLoadSpellData) then return false end
+    spell.RequestLoadSpellData(spellID)
+    return true
 end
 
 --- A class's name as the client writes it (LOCALIZED_CLASS_NAMES_MALE), or nil: no table, an

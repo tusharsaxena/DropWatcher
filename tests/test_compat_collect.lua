@@ -253,6 +253,26 @@ test("compat collect: ItemUseText falls back to the tooltip's use line when the 
     assertEqual(useOf("Use: G."), "G.", "a secret GlobalString falls back to the locale table's Use:")
 end)
 
+test("compat collect: ItemUseText names a use spell not loaded yet; the spell load is asked for (TT-1)", function()
+    local Compat, m = fresh()
+    m.itemSpells[TOKEN], m.spellTexts[900] = 900, ""
+    local text, loading = Compat.ItemUseText(TOKEN)
+    -- red under: an empty description read as no use text at all, nothing to wait on
+    assertNil(text); assertEqual(loading, 900, "an empty description: the spell is not loaded yet")
+    m.tooltips.hyperlink[TOKEN] = lines("Voidglass Token", "Use: Create it.")
+    text, loading = Compat.ItemUseText(TOKEN)
+    assertEqual(text, "Create it."); assertNil(loading, "the tooltip answered")
+    m.tooltips.hyperlink[TOKEN] = nil
+    m.spellTexts[900] = T.secret("")
+    assertNil(select(2, Compat.ItemUseText(TOKEN)), "a secret description is unreadable, not loading")
+    assertTrue(Compat.CanRequestSpellLoad())
+    assertTrue(Compat.RequestSpellLoad(900)); assertEqual(m.spellLoadRequests[1], 900)
+    assertFalse(Compat.RequestSpellLoad(T.secret(900)), "a secret id")
+    assertFalse(Compat.RequestSpellLoad(0), "no spell id")
+    m.C_Spell.RequestLoadSpellData = nil
+    assertFalse(Compat.CanRequestSpellLoad()); assertFalse(Compat.RequestSpellLoad(900), "no API")
+end)
+
 test("compat collect: ItemUseText answers nil when it cannot tell", function()
     local Compat, m = fresh()
     assertNil(Compat.ItemUseText(TOKEN), "no spell, no tooltip")
@@ -299,7 +319,7 @@ end)
 
 local MEMBERS = { "MountFromItem", "MountCollected", "PetSpeciesFromItem", "PetCollected", "IsToy",
     "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ItemUseText",
-    "ClassDisplayName", "ItemLinkByID" }
+    "ClassDisplayName", "ItemLinkByID", "CanRequestSpellLoad", "RequestSpellLoad" }
 
 test("compat collect: no member raises with every API gone", function()
     local Compat, m = fresh()
@@ -322,7 +342,7 @@ end)
 
 local COLLECT_APIS = { "C_MountJournal", "C_PetJournal", "C_ToyBox", "PlayerHasToy", "IsCosmeticItem",
     "GetProfessions%f[^%w_]", "GetProfessionInfo", "ITEM_SPELL_KNOWN", "C_Spell", "GetItemSpell",
-    "GetSpellDescription", "ITEM_SPELL_TRIGGER_ONUSE" }
+    "GetSpellDescription", "ITEM_SPELL_TRIGGER_ONUSE", "RequestLoadSpellData" }
 
 test("compat collect: no other shipped file names a collection API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

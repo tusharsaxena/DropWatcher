@@ -1102,7 +1102,7 @@ Total.
 - compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_collect.lua (20)
+### test_compat_collect.lua (21)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
 - compat collect: MountCollected answers isCollected, the 11th return, else nil
@@ -1118,6 +1118,7 @@ Total.
 - compat collect: TierTokenSlot answers nil when it cannot tell
 - compat collect: ItemUseText answers the use spell's description, once per call
 - compat collect: ItemUseText falls back to the tooltip's use line when the spell cannot be read
+- compat collect: ItemUseText names a use spell not loaded yet; the spell load is asked for (TT-1)
 - compat collect: ItemUseText answers nil when it cannot tell
 - compat collect: ClassDisplayName answers the client's name for a class, else nil
 - compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
@@ -1229,7 +1230,7 @@ Total.
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
 
-### test_tier_token.lua (25)
+### test_tier_token.lua (30)
 
 - tier token: the slot is read off the tooltip's slot line (the use rung), and becomes the equipLoc
 - tier token: the curated table beats the tooltip, and lists a Curio with no class line
@@ -1248,6 +1249,10 @@ Total.
 - tier token: every word is the locale table's, read from NS.L
 - tier token: a Use text with the class phrase is a token without a class line
 - tier token: an omni Curio is a token by its name, judged in any slot
+- tier token: a token with a class line and no slot read is `any`, kept with no users, never a Curio
+- tier token: a use spell not loaded yet is waited for, then the token read (TT-1)
+- tier token: SPELL_TEXT_UPDATE re-reads a cached item waiting on that spell
+- tier token: a use spell that never loads is given up after MAX_LOAD_TRIES, with the facts as read
 - tier token: gear, recipes, mounts, pets, toys and a common Curio are not tokens
 - tier token: a token judged in any slot folds to its best tier slot
 - tier token: through the feed, a token is judged against the head you wear
@@ -1255,6 +1260,7 @@ Total.
 - tier token: the minimum item level applies to a token
 - tier token: the Slot and Type cells name the slot and the classes
 - tier token: the detail card's Makes chip, and no type chip
+- tier token: who may use a token naming no classes is its kept tokenUsers, never its any slot
 - tier token: the Me cell names a Curio's best slot; an unread slot's reason says so
 
 ### test_offspec_cells.lua (23)
@@ -2638,13 +2644,13 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
 | test_compat.lua | 74 |
-| test_compat_collect.lua | 20 |
+| test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 13 |
 | test_evaluate.lua | 38 |
 | test_offspec.lua | 11 |
-| test_tier_token.lua | 25 |
+| test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
@@ -2709,4 +2715,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2231** |
+| **Total** | **2237** |

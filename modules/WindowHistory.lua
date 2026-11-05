@@ -172,7 +172,7 @@ function WH.AsDrop(e, id, group)
         looter = { name = e.looter, classFile = e.class }, seenBy = e.seenBy, seenByClass = e.seenByClass,
         -- The kept kind (issue #13): an entry with none reads as equipment; a token's Slot cell is its own.
         facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality, category = e.category,
-            tokenSlot = e.tokenSlot, isTierToken = e.category == "tierToken" or nil },
+            tokenSlot = e.tokenSlot, tokenUsers = e.tokenUsers, isTierToken = e.category == "tierToken" or nil },
         me = e.me, them = e.them, trade = e.trade,
     }
 end

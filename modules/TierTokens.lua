@@ -5,7 +5,7 @@ local _, NS = ...
 --
 -- PURE, like the kernel it serves: plain tables in, plain tables out, no WoW API, no saved
 -- variable, no state but the word lists it builds once from NS.L. modules/ItemFacts.lua calls
--- Listed, UseNamesClass, IsCurio and SlotOf while it builds the facts, and hands SlotOf the tooltip's
+-- Listed, Users, IsCurio and SlotOf while it builds the facts, and hands SlotOf the tooltip's
 -- slot line as a reader (NS.Compat.TierTokenSlot); NS.Evaluate's run calls Fold at call time,
 -- inside its own pcall.
 --
@@ -14,7 +14,9 @@ local _, NS = ...
 -- ("appropriate for your class"), the slot template ("set %s item") and its slot words, the slot
 -- nouns of an older token's name ("Gauntlets of the Foreseen Conqueror"), and the word an omni
 -- Curio's name ends with. A documented localization-§4 deviation (docs/ARCHITECTURE.md): on another
--- locale nothing matches, so every token is judged in its best tier slot (`any`), never a wrong one.
+-- locale none of these words match, so a token with a class line is read by its localized tooltip
+-- slot line where it has one, else judged in its best tier slot (`any`); a Curio, or a token with
+-- no class line and no English Use phrase, is not seen as a token at all.
 --
 -- THE SLOT (SlotOf), first rung that answers wins, with the rung that answered as its source:
 --   1. `table`: the curated override, C.TIER_TOKENS[itemID].slot: one of C.TIER_SLOTS, or "any";
@@ -121,6 +123,19 @@ function TT.IsCurio(facts)
     if not (misc or facts.classID == IC.REAGENT) or C.SLOT_PLAN[facts.rawEquipLoc or ""] then return false end
     local name = plain(facts.name)
     return name ~= nil and NS.TextParse.EndsWithWord(name, vocab().curio)
+end
+
+--- Who may use a tier token that names no classes (the facts' `tokenUsers`): "every" for an omni
+--- Curio or a C.TIER_TOKENS row of slot "any", "yours" for a token whose Use text makes a piece for
+--- your class, else nil (not read). Nil for facts that carry a class list: those name their own.
+--- @param facts table `classes`, `itemID`, `useText` and IsCurio's fields
+--- @return string|nil
+function TT.Users(facts)
+    if type(facts) ~= "table" or facts.classes ~= nil then return nil end
+    local listed = facts.itemID ~= nil and C.TIER_TOKENS[facts.itemID]
+    if TT.IsCurio(facts) or (type(listed) == "table" and listed.slot == "any") then return "every" end
+    if TT.UseNamesClass(facts.useText) then return "yours" end
+    return nil
 end
 
 --- The slot a tier token makes and the rung that read it (see the header): the table's (`table`),

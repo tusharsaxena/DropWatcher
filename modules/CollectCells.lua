@@ -23,9 +23,12 @@ local _, NS = ...
 --
 -- TIER TOKENS (DW-CAT4, categories design spec §6.1). A token is judged as gear, not collected, but
 -- its Slot and Type cells are its own: CC.TokenSlot reads `Token: Head`, `Token: any slot` (an omni
--- Curio) or `Token` (the slot not read), and CC.TokenType lists its classes in their colors, or
--- `Any class` for a Curio. CC.TokenMakes is the slot word and the class list the detail card's
--- `Makes:` chip reads (modules/DetailCells.lua).
+-- Curio) or `Token` (the slot not read), and CC.TokenType lists its classes in their colors, else
+-- who may use it as its facts kept it (`tokenUsers`, NS.TierTokens.Users): `Any class` for a Curio,
+-- `Your class` for a token whose Use text alone names it, a dash when not read (a History entry
+-- kept before TT-1). An `any` slot never means a Curio on its own: a token whose text named no slot
+-- reads `any` too. CC.TokenMakes is the slot word and the class list the detail card's `Makes:` chip
+-- reads, CC.TokenUsers the Usable by both read (modules/DetailCells.lua).
 --
 -- THE OTHER SURFACES (DW-CAT7, categories design spec §6.1). A collectible's Slot cell is its kind
 -- (`Mount`, `Pet`, `Toy`, `Recipe`, `Cosmetic`: CC.SlotOf, the one hook NS.WindowCells.Slot calls,
@@ -181,19 +184,31 @@ function CC.TokenSlot(f)
     return { text = text, tone = "plain", tip = { text, TM.Row(L["Makes"], word), TM.Row(L["Compared with"], with) } }
 end
 
---- The Type column of a tier token: its classes in their colors, or `Any class` for a Curio.
+-- Who may use a token naming no classes, by its `tokenUsers`: the cell's word and the tooltip's.
+local USERS = { every = { L["Any class"], L["every class"] }, yours = { L["Your class"], L["your class"] } }
+
+--- Who may use a tier token: its classes, colored and plain; else `Any class` (a Curio) or `Your
+--- class` (a Use text alone) by its `tokenUsers`; else nil (not read: a History entry kept none).
 --- @param f table the token's facts
---- @return table cell { text, tone, tip, known = true }
-function CC.TokenType(f)
+--- @return string|nil text, string|nil plain
+function CC.TokenUsers(f)
     local colored, plain = tokenClasses(f)
+    if colored then return colored, plain end
+    local users = USERS[f.tokenUsers]
+    if users then return users[1], users[2] end
+    return nil
+end
+
+--- The Type column of a tier token: who may use it (CC.TokenUsers), or a muted dash when not read.
+--- @param f table the token's facts
+--- @return table cell { text, tone, tip, known }
+function CC.TokenType(f)
+    local text, plain = CC.TokenUsers(f)
     local title = L["Type: %s"]:format(L["Tier token"])
-    if not colored and f.tokenSlot ~= "any" then   -- a History entry keeps no classes
+    if not text then
         return { text = DASH, tone = "muted", known = false, tip = { title, TM.Row(L["Usable by"], L["not read"]) } }
     end
-    if not colored then
-        return { text = L["Any class"], tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], L["every class"]) } }
-    end
-    return { text = colored, tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], plain) } }
+    return { text = text, tone = "plain", known = true, tip = { title, TM.Row(L["Usable by"], plain) } }
 end
 
 -- ── the Slot, Type and Kind of a collectible, the detail card (DW-CAT7) ─────────────────────
