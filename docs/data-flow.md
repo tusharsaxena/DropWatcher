@@ -939,6 +939,7 @@ table and stacked in the compact layout; both layouts read the one open entry.
 window repaint ─> Window.Refresh ─> WindowInsights refresh(pane): the cache key
     { H.Log() identity, H.Log().groups identity, revision, testMode, Sim:IsActive(), the filters'
       signature, R.Days(), today, width, compact }
+    window hidden or minimized ─> nothing (the frame's OnShow ─> visibility listener ─> refresh)
     unchanged ──────────> nothing
     width or layout only ─> InsightsSections.Layout (no recompute)
     data or filters ─> InsightsFilters.Rows(H.Log().groups)   one row a drop, its facets read once

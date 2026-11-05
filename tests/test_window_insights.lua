@@ -166,6 +166,32 @@ test("insights tab: an unrelated repaint computes nothing; HistoryChanged and te
     assertTrue(d.empty:IsShown())
 end)
 
+test("insights tab: no work while the window is hidden; the show draws the tab afresh", function()
+    -- red under: refresh with no on-screen guard (combat start recomputes on a just-hidden frame)
+    local NS, _, m = T.enableAddon()
+    m.seedGearJournal()
+    NS.SetTestMode(true)                -- test mode opens the window, so combat closes it again
+    NS.Window.SelectTab("insights")
+    local f = NS.Window.Frame()
+    local n = NS.WindowInsights.Drawn().computes
+    assertTrue(n > 0, "drawn once on screen")
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.State.testMode); assertFalse(f:IsShown(), "hidden with test mode")
+    assertEqual(NS.WindowInsights.Drawn().computes, n, "the hidden window computed nothing")
+    NS.addon:SendMessage(NS.MSG.HISTORY_CHANGED)
+    m.advance(0.1)
+    NS.Window.Refresh()
+    assertEqual(NS.WindowInsights.Drawn().computes, n, "nor on a later repaint while hidden")
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    NS.ShowWindow()
+    f:__fire("OnShow")                  -- the client fires it on Show; the mock frame does not
+    local d = NS.WindowInsights.Drawn()
+    assertEqual(d.computes, n + 1, "the show computes the account's log")
+    assertEqual(#d.data.rows, 0)
+end)
+
 test("insights tab: a resize lays out again without computing", function()
     local NS, f, _, d = insights({ samples = true })
     local n = d.computes

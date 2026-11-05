@@ -12,9 +12,10 @@ local _, NS = ...
 -- to All (Normalize). The bar wraps to the width (NS.InsightsRows.BarPlan). Reset filters, on the
 -- strip, puts every one back to All.
 --
--- THE PASS. refresh runs on every window repaint, so it compares a cache key first: the log's
--- identity and its groups' (test mode swaps the groups of one persistent table, and turning it off
--- sends no message), this tab's HistoryChanged revision, the test-mode and simulation flags, the
+-- THE PASS. refresh runs on every window repaint while the tab is on screen (a hidden or minimized
+-- window does no Insights work; the frame's OnShow draws it), so it compares a cache key first: the
+-- log's identity and its groups' (test mode swaps the groups of one persistent table, and turning
+-- it off sends no message), this tab's HistoryChanged revision, the test-mode and simulation flags, the
 -- filters, the retention, the day, the width and the layout. The data changed: Rows, Normalize,
 -- Filter, Period and the one stats pass (NS.InsightsStats.Compute), then the layout. Only the width
 -- or the layout changed: the layout alone. Nothing changed: nothing. H.Log() already answers test
@@ -312,6 +313,9 @@ local function layout(p, width, compact)
 end
 
 local function refresh(p)
+    -- No work for a pane that is not on screen (a hidden or minimized window): the cache key is
+    -- still compared on the pass that shows it, the frame's OnShow below.
+    if not (NS.Window.IsShown() and p:IsVisible()) then return end
     local now = time()
     local log = NS.History.Log()
     local groups = log and log.groups or {}
@@ -338,6 +342,14 @@ function WI.Drawn()
 end
 
 NS.Window.RegisterTab("insights", { build = build, refresh = refresh, ownBar = true })
+
+-- The window refreshes before it shows its frame (Window.UpdateVisibility), a pass refresh skips
+-- above; the show itself then draws the tab, so it never opens on a stale pass.
+NS.Window.AddVisibilityListener(function(shown)
+    if not shown or NS.IsStoodDown() or NS.Window.ActiveTab() ~= "insights" then return end
+    local p = pane()
+    if p and p.strip then refresh(p) end
+end)
 
 -- ── the bus ─────────────────────────────────────────────────────────────────────────────────
 
