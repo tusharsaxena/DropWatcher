@@ -85,11 +85,11 @@ function WI.ResetFilters()
     changed()
 end
 
---- Mark the tab for a fresh layout on the next repaint (a skin switch: the colors the cards were
---- bound with are read again).
+--- Mark the tab for a fresh pass on the next repaint (a skin switch): the colors the cards were
+--- bound with are read again, and so are the Quality rows' colors, set when the options were built.
 function WI.MarkLayout()
     local p = pane()
-    if p then p.layoutKey = nil end
+    if p then p.layoutKey, p.dataKey = nil, nil end
     NS.Window.ScheduleRepaint()
 end
 

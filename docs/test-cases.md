@@ -1997,7 +1997,7 @@ Total.
 - insights rows: G and H bucket each day, the zero days kept, the hover naming the counts
 - insights rows: the mixes read their words and colors, a token under its category and Can't use's off-spec count
 
-### test_window_insights.lua (21)
+### test_window_insights.lua (22)
 
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
@@ -2009,6 +2009,7 @@ Total.
 - insights tab: a date range with nothing in it says no drop matches, and the cards hide
 - insights tab: an unrelated repaint computes nothing; HistoryChanged and test mode off do
 - insights tab: no work while the window is hidden; the show draws the tab afresh
+- insights tab: a skin switch recomputes the Quality rows' colors
 - insights tab: a resize lays out again without computing
 - insights tab: the strip names the period, and follows the retention
 - insights tab: a retention change that deletes nothing repaints the caption on its own
@@ -2659,7 +2660,7 @@ Total.
 | test_feed_restore.lua | 14 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
-| test_window_insights.lua | 21 |
+| test_window_insights.lua | 22 |
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 49 |
 | test_toast_stack.lua | 16 |
@@ -2689,4 +2690,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2211** |
+| **Total** | **2212** |

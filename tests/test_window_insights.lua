@@ -192,6 +192,26 @@ test("insights tab: no work while the window is hidden; the show draws the tab a
     assertEqual(#d.data.rows, 0)
 end)
 
+test("insights tab: a skin switch recomputes the Quality rows' colors", function()
+    -- red under: MarkLayout clearing the layout key alone (the options keep the old skin's colors)
+    local NS, _, _, d = insights({ samples = true })
+    local function qualityColor()
+        for _, o in ipairs(d.dropdowns.quality._options) do
+            if o.value ~= "all" and o.color then return table.concat(o.color, ",") end
+        end
+    end
+    local before = qualityColor()
+    assertTrue(before ~= nil, "a colored quality row")
+    local real = NS.QualityColor
+    NS.QualityColor = function() return 0.25, 0.5, 0.75 end   -- the new skin's q.* tokens
+    NS.WindowInsights.MarkLayout()
+    NS.Window.Refresh()
+    d = NS.WindowInsights.Drawn()
+    local after = qualityColor()
+    NS.QualityColor = real
+    assertEqual(after, "0.25,0.5,0.75")
+end)
+
 test("insights tab: a resize lays out again without computing", function()
     local NS, f, _, d = insights({ samples = true })
     local n = d.computes

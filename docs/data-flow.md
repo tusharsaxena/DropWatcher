@@ -953,7 +953,7 @@ window repaint ─> Window.Refresh ─> WindowInsights refresh(pane): the cache 
 HistoryChanged ─> WindowInsights' receiver ─> revision + 1 ─> Window.ScheduleRepaint
 dropdown pick ─> WindowInsights.SetFilter: State.insightsFilters[key] = v (keep = key) ─> Window.OnFilterChanged
 Reset filters (the strip) ─> WindowInsights.ResetFilters: DEFAULTS ─> Window.OnFilterChanged
-the skin's OnLooksChanged ─> ctx:Reskin ─> onReskin ─> WindowInsights.MarkLayout ─> the rows bound again
+the skin's OnLooksChanged ─> ctx:Reskin ─> onReskin ─> WindowInsights.MarkLayout ─> recompute (the Quality rows' colors) and the rows bound again
 ```
 
 `H.Log()` is whichever log is in force: the account's `global.history`, test mode's sample log
