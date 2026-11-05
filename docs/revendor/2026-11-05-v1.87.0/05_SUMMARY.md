@@ -1,5 +1,7 @@
 # Summary
 
+> Superseded by `docs/revendor/2026-11-05-v1.88.0/`: the v1.87.0 tag went to another release (LibKa0s `758cbd4`, cascading menus), so this payload was re-vendored from v1.88.0.
+
 - **Tag:** v1.85.0 -> v1.87.0, base from the provenance line; v1.86.0 crossed, never vendored here. Source the branch tip `dab6407daaecbef88db16488f60c4453c9452d4f` (LibKa0s `feat/2026-11-05-toast-stack`), because the tag is not cut yet; `v1.87.0` is to be cut at the merge from that same commit (`01_DELTA.md`, *Source*). Minors: Toast 3 -> 4, DebugLogDiagnostics 6 -> 7, IconBrowserSources, IconBrowserWindow and IconBrowser new at 1. Kit 50 -> 50. No span bundle (no vendored tag unrecorded), no base correction, no refresh.
 - **For free:** a combat hold keeps every held drop; `Attach` before the first `Show` is safe; diagnostics name `IconBrowser` among the majors running (`02_CANDIDATES.md`, class A).
 - **Blocker:** the Toast degradation stub (`core/ToastSetup.lua`) gains `SetStack`, `Visible`, `FrameFor` and the four new `Stats` fields, as `docs/api/Toast/version-4-docs.md:201-224` gives them; `tests/test_surface_parity.lua:121` passes. Resolved in the re-vendor commit.
