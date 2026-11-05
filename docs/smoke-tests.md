@@ -2505,10 +2505,12 @@ Result: not run
 Difficulty, Situation, Date, Quality, Category) → each lists only the values present in the kept
 history, each with its drop count (`Ruby Life Pools (14)`), under an `All …` head with the total.
 Closed, the head reads `All instances (n)`, where n is the number of values. Pick an instance → the
-cards and sections redraw, and the other dropdowns' counts shrink to that instance. Then pick a
-Difficulty that instance was never run at from a state where it is listed (pick the difficulty first,
-then an instance without it) → the dropdown that no longer has a match falls back to All, with no empty
-tab left behind. The Date dropdown lists All kept days, Today and the shorter windows under the
+cards and sections redraw, and the other dropdowns' counts shrink to that instance; the other
+dropdowns list only values that still have drops, so a pick from them can never empty another one.
+With the instance still picked, pick a Date range that has drops but none from that instance (Last 7
+days for an instance last run before then, or Today after a run elsewhere) → the Instance dropdown,
+which no longer has a match, falls back to All, and the tab shows that range's drops, not an empty
+tab. The Date dropdown lists All kept days, Today and the shorter windows under the
 retention (Last 7 days and Last 14 days at 30). Reset filters on the strip → every dropdown back to
 All. Switch to History and back → the picks are kept for the session. Fail: a value with no drops
 listed, a count that does not match the cards, a pick that leaves the tab empty with no way back, or a
