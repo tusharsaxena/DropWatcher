@@ -9,24 +9,34 @@ local _, NS = ...
 --               restriction badge its lock and the queued count, at the left; the layout toggle,
 --               minimize and close at the right (Scan group is the Drops strip's icon, feedback-16)
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
---   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu holds
---               the full bar's Quality, Content and Character dropdowns and the tab's Sort, the
---               very same LibKa0s-Widgets dropdowns moved into it, so their choices, their
---               multi-select and their per-tab state are identical. The button counts the ones not at
---               their default (`Filters · 2`), and its tooltip lists every value in force.
+--   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu lists
+--               the full bar's Quality, Content and Character dropdowns and the tab's Sort, one child
+--               level each, whose rows are that dropdown's own and whose picks go through it, so their
+--               choices, their multi-select and their per-tab state are identical. The button counts
+--               the ones not at their default (`Filters · 2`), and its tooltip lists every value in
+--               force.
 --   strip       the strip in force (test mode's or the simulation's) in shorter words, wrapping to
 --               two lines when the width needs it
 --   footer      one line, `Inspect 4/4 · Mythic+`; the rest of the full footer is its tooltip
 --
--- WHY A PANEL, NOT SUBMENUS. LibKa0s-Widgets-1.0's popup has no submenu rows, and a second set of
--- dropdowns would be a second state to keep in step. So Filters ▾ opens a small panel under the
--- button holding the four dropdowns themselves, each opening its own menu as on the full bar.
+-- A CASCADE OF THE DROPDOWNS THEMSELVES. Filters ▾ opens LibKa0s-Widgets' shared menu on its button
+-- (W.ContextMenu through NS.ContextMenu) with one `submenu` row per dropdown (Widgets minor 23), in
+-- CC.MENU_ROWS' order and named for the control. Each child lists that dropdown's own option rows and
+-- reads its tick (`selected`) from that same dropdown, and a pick goes through the dropdown's own
+-- path (SetValue and onSelect, ToggleSelected and onMultiSelect, as its own menu's click does), so
+-- there is one state: the full bar, the count and the tooltip stay in step. Single-select rows
+-- (Quality, Content, Sort) are `radio` and close the menu on a pick; Character's multi-select rows are
+-- `keepOpen`, the library repainting every level so the ticks follow. In compact the four dropdowns
+-- stay where the full layout puts them, hidden. Until Widgets 23 the menu had no submenu rows, and
+-- Filters ▾ opened a hand-built panel the dropdowns were reparented into, with an outside-press
+-- listener of its own; the library's menu closes on an outside press itself.
 --
 -- PURE: TabText, ModeWord, BadgeShort, FooterLine, FooterTip, IsActive, ActiveKeys, CountActive,
 -- FiltersLabel and FiltersTip. The edge: Paint (Window.Refresh's every pass; the layout itself only
 -- when the layout in force changed), ModeStrip (the strip of the mode in force), BannerH (its height,
 -- which Window's pane layout reads),
--- PaintFooter (WindowFooter.Refresh in compact) and the Filters panel. WindowFilterBar.Layout
+-- PaintFooter (WindowFooter.Refresh in compact) and the Filters menu (FilterRows, ToggleFilters,
+-- CloseFilters). WindowFilterBar.Layout
 -- stands aside in compact: the search box's anchors size it there.
 
 NS.CompactChrome = NS.CompactChrome or {}
@@ -39,18 +49,16 @@ local TAG = "UI"
 CC.TAB_W     = 84     -- one compact tab
 CC.VIEW_W    = 104    -- the View dropdown on the compact bar
 CC.FILTERS_W = 84     -- the Filters ▾ button
-CC.PANEL_W   = 196    -- the Filters panel
 CC.BADGE_W   = 44     -- the restriction badge: its lock and the queued count
 CC.WRAP_H    = 12     -- the strip's second line
 local GAP = 8
-local ROW_GAP = 4
 
--- The Filters panel's rows, top to bottom; the tab's Sort is the last.
-CC.PANEL_ROWS = { "quality", "content", "char", "sort" }
+-- The Filters menu's rows, top to bottom; the tab's Sort is the last.
+CC.MENU_ROWS = { "quality", "content", "char", "sort" }
 -- The ones the button counts (compact spec §4: Quality, Content and Character).
 CC.COUNTED = { "quality", "content", "char" }
--- Each panel row's name, its Filters tooltip row's label.
-local PANEL_LABEL = { quality = L["Quality"], content = L["Content"], char = L["Character"], sort = L["Sort"] }
+-- Each menu row's name, its Filters tooltip row's label.
+local MENU_LABEL = { quality = L["Quality"], content = L["Content"], char = L["Character"], sort = L["Sort"] }
 
 local SHORT_TAB = { group = L["Drops"], history = L["History"], insights = L["Insights"] }
 local WORD = {
@@ -179,7 +187,7 @@ function CC.FiltersLabel(n)
     return L["Filters"]
 end
 
---- The Filters button's tooltip: a row per value in force, in the panel's order, the ones off their
+--- The Filters button's tooltip: a row per value in force, in the menu's order, the ones off their
 --- default in yellow, then what the button holds.
 --- @param labels table { quality, content, char, sort } the collapsed labels in force
 --- @param active table|nil the keys off their default (CC.ActiveKeys)
@@ -189,10 +197,10 @@ function CC.FiltersTip(labels, active)
     for _, key in ipairs(active or {}) do on[key] = true end
     local TM = NS.TipMarks
     local out = { L["Filters"] }
-    for _, key in ipairs(CC.PANEL_ROWS) do
+    for _, key in ipairs(CC.MENU_ROWS) do
         local text = labels and labels[key]
         if text then
-            local label = PANEL_LABEL[key]
+            local label = MENU_LABEL[key]
             -- A dropdown's text that names its control already (`Quality: Rare+`) keeps its value.
             if text:sub(1, #label + 2) == label .. ": " then text = text:sub(#label + 3) end
             out[#out + 1] = TM.Row(label, text, on[key] and "yellow" or nil)
@@ -224,9 +232,9 @@ local function readDefaults(tab)
     return defaults
 end
 
--- ── the Filters panel (frame edge) ──────────────────────────────────────────────────────────
+-- ── the Filters menu (frame edge) ───────────────────────────────────────────────────────────
 
-local parts = {}   -- filters (the button), panel
+local parts = {}   -- filters (the button), menu (the shared menu while this opened it)
 
 local function controlsByKey()
     local c = NS.WindowFilterBar.Controls()
@@ -249,55 +257,76 @@ local function filtersTip()
     return unpack(CC.FiltersTip(labelsInForce(), CC.ActiveKeys(FB.State(tab), FB.HONORS[tab], readDefaults(tab))))
 end
 
---- Close the Filters panel (and any dropdown menu opened from it).
-function CC.CloseFilters()
-    if parts.panel and parts.panel:IsShown() then
-        NS.CloseMenu()
-        parts.panel:Hide()
-        parts.panel:UnregisterEvent("GLOBAL_MOUSE_DOWN")   -- the outside press's listener (R5-DD)
+-- Whether one of a dropdown's options is what it shows: the library's own reading (an option's
+-- isActive first; a multi-select's set, "all" when it is empty; a single-select's value).
+local function optionOn(dd, opt)
+    if opt.isActive then return opt.isActive(dd) and true or false end
+    if dd.multi then
+        if opt.value == "all" then return next(dd._selected) == nil end
+        return dd._selected[opt.value] == true
     end
+    return opt.value == dd._value
 end
 
--- ── the outside press (R5-DD) ───────────────────────────────────────────────────────────────
--- The panel is this addon's one hand-built pullout, so neither the shared dropdown menu's listener
--- nor LibKa0s's AceGUI pullout watcher reaches it. Like the shared menu it LISTENS: GLOBAL_MOUSE_DOWN,
--- registered while it shows and dropped on hide, fires for a press anywhere and the press goes on to
--- whatever is under it. Three presses are not outside: on the panel, on its Filters button (whose
--- click is the toggle; closing on the press would reopen it on the release), and on the shared menu
--- one of its dropdowns dropped, which LibKa0s-Widgets parents to UIParent at FULLSCREEN_DIALOG, so a
--- pick in it never closes the panel under the player.
-local MENU_STRATA = "FULLSCREEN_DIALOG"
+-- A pick through the dropdown's own path, as a click on its own menu's row: a multi-select toggles
+-- (a preset, "all" included, as the dropdown does) and tells onMultiSelect; a single-select sets the
+-- value and tells onSelect.
+local function pickThrough(dd, opt)
+    if dd.multi then
+        dd:ToggleSelected(opt.value)
+        if dd.onMultiSelect then dd.onMultiSelect(dd._selected) end
+        return
+    end
+    dd:SetValue(opt.value, opt.label)
+    if dd.onSelect then dd.onSelect(opt.value, opt) end
+end
 
-local function onMenu()
-    for _, fr in ipairs(NS.Compat.MouseFoci()) do
-        local x, depth = fr, 0
-        while type(x) == "table" and depth < 20 do
-            if x == parts.panel then return true end
-            if type(x.GetFrameStrata) == "function" and x:GetFrameStrata() == MENU_STRATA then return true end
-            x = type(x.GetParent) == "function" and x:GetParent() or nil
-            depth = depth + 1
+-- One dropdown's child level: a row per option, its tick and its gold read from the dropdown.
+local function childRows(dd)
+    local out = {}
+    for i, opt in ipairs(dd._options or {}) do
+        local function on() return optionOn(dd, opt) end
+        out[i] = { value = opt.value, label = opt.label, color = opt.color, title = opt.title, divider = opt.divider,
+            selected = on, isActive = on, radio = not dd.multi or nil, keepOpen = dd.multi or nil,
+            onClick = function() pickThrough(dd, opt) end }
+    end
+    return out
+end
+
+--- The Filters menu's rows on the active tab: one submenu row per dropdown built, in CC.MENU_ROWS'
+--- order, named for its control and disabled where the tab does not honor it (its dropdown grayed).
+--- @return table rows (empty with no dropdown: the library absent)
+function CC.FilterRows()
+    local byKey = controlsByKey()
+    local honors = NS.WindowFilterBar.HONORS[NS.Window.ActiveTab()] or {}
+    local out = {}
+    for _, key in ipairs(CC.MENU_ROWS) do
+        local dd = byKey[key]
+        if dd then
+            out[#out + 1] = { value = key, label = MENU_LABEL[key], submenu = childRows(dd),
+                disabled = honors[key] ~= true or nil }
         end
     end
-    return false
+    return out
 end
 
-local function onPress()
-    local p, b = parts.panel, parts.filters
-    if not (p and p:IsShown()) then return end
-    if p:IsMouseOver() or (b and b:IsMouseOver()) or onMenu() then return end
-    CC.CloseFilters()
-    NS.Debug(TAG, "filters panel closed: a press outside it")
+--- Close the Filters menu, when it is the one open (every level of the cascade goes with it).
+function CC.CloseFilters()
+    local m = parts.menu
+    parts.menu = nil
+    if m and m:IsShown() then
+        NS.CloseMenu()
+        NS.Debug(TAG, "filters menu closed")
+    end
 end
 
---- Open or close the Filters panel under its button.
+--- Open the Filters menu under its button, or close it (the library's second call on its anchor).
 function CC.ToggleFilters()
-    local p = parts.panel
-    if not p then return end
-    if p:IsShown() then CC.CloseFilters() return end
-    NS.CloseMenu()
-    p:Show()
-    p:RegisterEvent("GLOBAL_MOUSE_DOWN")
-    NS.Debug(TAG, "filters panel open")
+    local b = parts.filters
+    if not b then return end
+    local m = NS.ContextMenu(b, CC.FilterRows(), { width = CC.FILTERS_W })
+    parts.menu = m and m:IsShown() and m or nil
+    NS.Debug(TAG, "filters menu %s", parts.menu and "open" or "closed")
 end
 
 -- The filter bar's flat skin, the dropdowns' and the search box's: the skin's Inset, a recessed
@@ -330,44 +359,21 @@ local function buildButton(host)
     return b
 end
 
-local function buildPanel(f, button)
-    local p = CreateFrame("Frame", nil, f, "BackdropTemplate")
-    -- A popover over the window's own rows, in its strata (frame-layering-§3). Set here, before
-    -- fillPanel reparents the four dropdowns into it, so they land at the panel's level + 1.
-    p:SetFrameLevel(f:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.POPOVER_FILTERS)
-    flat(p)
-    p:EnableMouse(true)
-    p:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT", 0, -2)
-    p:SetSize(CC.PANEL_W, 12 + #CC.PANEL_ROWS * (K.CONTROL_H + ROW_GAP) - ROW_GAP)
-    p:SetScript("OnEvent", function(_, event) if event == "GLOBAL_MOUSE_DOWN" then onPress() end end)
-    p:SetScript("OnHide", function(self) self:UnregisterEvent("GLOBAL_MOUSE_DOWN") end)
-    p:Hide()
-    return p
-end
-
 local function ensureParts(f)
     if parts.frame == f then return end
     parts = { frame = f }
     parts.filters = buildButton(f.filterHost)
-    parts.panel = buildPanel(f, parts.filters)
 end
 
--- Move the four dropdowns into the panel, one under another.
-local function fillPanel()
-    local p = parts.panel
-    local byKey = controlsByKey()
-    local i = 0
-    for _, key in ipairs(CC.PANEL_ROWS) do
-        local dd = byKey[key]
-        if dd then
-            dd:SetParent(p)
-            dd:ClearAllPoints()
-            dd:SetPoint("TOPLEFT", p, "TOPLEFT", 6, -(6 + i * (K.CONTROL_H + ROW_GAP)))
-            dd:SetWidth(CC.PANEL_W - 12)
-            i = i + 1
-        end
+-- The dropdowns the Filters menu lists, hidden in compact where the full layout keeps them; the
+-- count of those built.
+local function hideHeld()
+    local n = 0
+    for _, dd in pairs(controlsByKey()) do
+        dd:Hide()
+        n = n + 1
     end
-    return i
+    return n
 end
 
 -- ── the layout (frame edge) ─────────────────────────────────────────────────────────────────
@@ -428,9 +434,14 @@ local function layoutStrip(f, compact)
 end
 
 -- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
+-- WindowFooter.Refresh shows Sort again on its next pass.
 local function restoreBar(f)
     CC.CloseFilters()
     if parts.filters then parts.filters:Hide() end
+    local c = NS.WindowFilterBar.Controls()
+    for _, key in ipairs(CC.COUNTED) do
+        if c[key] then c[key]:Show() end
+    end
     NS.WindowFilterBar.Anchor()
     NS.WindowFooter.AnchorSort()
     NS.WindowFilterBar.Layout(f:GetWidth())
@@ -439,7 +450,7 @@ end
 local function compactBar(f)
     ensureParts(f)
     local c = NS.WindowFilterBar.Controls()
-    local held = fillPanel()
+    local held = hideHeld()
     parts.filters:SetShown(held > 0)
     if c.view then c.view:SetWidth(CC.VIEW_W) end
     local eb = c.search
@@ -492,7 +503,7 @@ end
 
 --- One pass of the chrome (Window.Refresh, before the tabs and the bar): the whole layout when the
 --- layout in force changed since the last pass, then the title's place, the strip's height and, in
---- compact, the Filters button's count. A minimized window closes the Filters panel.
+--- compact, the Filters button's count. A minimized window closes the Filters menu.
 --- @param f table the window frame
 function CC.Paint(f)
     local compact = isCompact()
@@ -561,11 +572,11 @@ function CC.PaintFooter(segments, read, composed)
     s:SetWidth(type(w) == "number" and w > 0 and w or 200)
 end
 
---- The Filters button and panel, for the suites: { filters, panel }.
+--- The Filters button and the menu it opened, for the suites: { filters, menu }.
 --- @return table
 function CC.Parts() return parts end
 
--- A hidden window closes the panel with it.
+-- A hidden window closes the menu with it.
 NS.Window.AddVisibilityListener(function(shown)
     if not shown then CC.CloseFilters() end
 end)

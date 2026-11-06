@@ -16,7 +16,7 @@ passed.
 | INSTALL-1..6 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV); LibKa0s-Toast-1.0 vendored alone (INSTALL-6, AT-A1) |
 | SLASH-1..9 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09); `/dw whitelist` and `/dw blacklist` in help and refused while disabled (SLASH-9, DW-CAT5, issue #13) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
-| LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3); the Edit message box over the floating Offer panel (LAYER-4) |
+| LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3; superseded by COMPACT-11); the Edit message box over the floating Offer panel (LAYER-4) |
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..11 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10); LibKa0s v1.85.0's sim checkbox re-cut, the panel unchanged (PANEL-11, R6-RV2) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
@@ -36,14 +36,14 @@ passed.
 | SIT-1..7 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02); a fresh profile's Situations defaults (SIT-7, DW-06) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
-| HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
+| HIST-1..8 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4; the row menu as the skinned Ka0s menu (HIST-8), V89A-DWH |
 | INSIGHT-1..8 | [Insights](#insights) | Issue #12 (DW-N1..DW-N4): the tab, its tooltip and the period caption following the retention, `/dw insights` (INSIGHT-1); the seven data-driven filters and their fallback to All (INSIGHT-2); the cards and every section on real history, the empty lines, no Sort and no shared bar (INSIGHT-3); an ask that ends in a trade and the gain kept after equipping the item (INSIGHT-4); test mode filling every section, the strip under the tabs (INSIGHT-5); a simulation's drops and trade alone, and the restore (INSIGHT-6); compact, a skin switch and a resize (INSIGHT-7); the slot the client gives an item you cannot equip, and an Always watch item of no kind as Watched item (INSIGHT-8) |
 | TOAST-1..9 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05); three upgrades at once, stacked (TOAST-9, DW-T2, issue #14) |
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid border, the skin's color since R5-ICON) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
 | SIM-1..21 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6) |
-| COMPACT-1..10 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16); the Filters panel closing on a press outside it (COMPACT-10, R5-DD) |
+| COMPACT-1..11 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16); the Filters menu closing on a press outside it (COMPACT-10, R5-DD); the Filters ▾ cascade of the full bar's own dropdowns (COMPACT-11, V89A-DW) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
 | SKIN-25..30 | [Skins](#skins) | LibKa0s v1.82.0 (DW-01, 2026-10-30): the Font outline (SKIN-25), From skin flags at any Font size (SKIN-26), `/dw skin` (SKIN-27), the windows' width parity in every skin (SKIN-28), the new faces, characters and Skin tab (SKIN-29), the tables' whole font setting (SKIN-30, the lead's ruling on D-07) |
@@ -224,6 +224,8 @@ a pick filters. With the window short, so the panel reaches past its bottom edge
 the window still shows and its dropdowns still open over everything. With the Offer panel floating
 (LAYER-2), open Filters → the Filters panel draws over the Offer panel.
 Result: passed in the client, 2026-10-24 (the owner).
+Superseded by COMPACT-11 (V89A-DW, 2026-11-06): the panel is gone; the Filters menu is the library's shared menu,
+at `FULLSCREEN_DIALOG` over every tier, so it draws over the floating Offer panel and past the window's edge.
 
 **LAYER-4. The Edit message box over the floating Offer panel.** Tick Edit before sending
 (Messages › Sending), float the Offer panel (LAYER-2), then press a member's Offer → the Edit
@@ -1423,7 +1425,7 @@ as wide and tall as Sort; the footer holds only its health segments, nothing bes
 nothing of yours tradeable (as FEED-63) → Post is gone and Scan group stays beside Sort, nothing slides.
 Click History → Sort is at the right edge of History's strip, Clear history just left of it; set Sort to
 Oldest there, back to Drops → Sort is on the Drops strip again and reads Drops' own value. `/dw compact` →
-Sort is in the Filters panel, Clear at the History strip's right edge; `/dw full` → Sort back on the active
+Sort is in the Filters menu, Clear at the History strip's right edge; `/dw full` → Sort back on the active
 tab's strip. Hover Sort → its tooltip opens above it. **Superseded by feedback-15 (2026-10-16)** (DW-Q2,
 DW-Q3): Expand all / Collapse all sits between Scan group and Sort on Drops and beside Sort on History, and
 Clear history left both strips for Settings › Window › Layout (Drops › Retention since feedback-24); FEED-78 and HIST-6 check that. Result: passed in the client, 2026-10-23 (the owner).
@@ -1484,7 +1486,7 @@ and `test_compact_modes` cover it. `/dw` → open Drops' Content → `This insta
 it → the tooltip names This instance (since you entered this instance or started this key), This session (since
 you logged in; a /reload keeps them) and All (History only). Select History, open Content → `This instance`,
 `This session` and `All`, the tab still on `All`, the same tooltip. Drops on `This session`, `/reload` → every drop
-since the login is still listed. `/dw compact` → the Filters panel's Content offers the same values per tab. On a
+since the login is still listed. `/dw compact` → the Filters menu's Content offers the same values per tab. On a
 profile whose Settings › Window › Starting view › Content was `All` before this version → it reads `This session`, and so does
 Drops. Result: passed in the client, 2026-10-23 (the owner).
 
@@ -1499,7 +1501,7 @@ Search for something no drop matches → the button is grayed out. Select Histor
 history` (each the same width) and the toggle works there on its own: History's groups open or close, Drops'
 stay as they were. `/dw compact` → Drops' strip shows even with nothing of yours tradeable, `Expand all` at its
 right and `Post my tradeables` (full label, same width) left of it while something is tradeable, no `Post`;
-Sort is in the Filters panel and Scan group the title bar's icon; History's strip reads `Expand all` with
+Sort is in the Filters menu and Scan group the title bar's icon; History's strip reads `Expand all` with
 `Clear history` (no `Clear`) left of it; the toggle opens and closes the cards' headers on both tabs. (Since
 DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
 strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result: passed in the client, 2026-10-23 (the owner).
@@ -1769,8 +1771,7 @@ search box) covers the wiring. Owed in the client, never marked passed by an age
 
 - SM-DW-14. The filter bar's search box looks as before (flat dark box, gray line, `Filter looter or
   item…` hint); focus lights the line gold and blur restores it; typing filters live; Enter and Escape
-  drop focus; in compact layout the box moves into the Filters panel with its hint (FB.Anchor) and still
-  filters.
+  drop focus; in compact layout the box sits beside View with its `Filter…` hint and still filters.
 
 Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2495,6 +2496,17 @@ declined`; Clear declined → the earlier outcome. On a drop of this session sti
 Show in Drops → the Drops tab, the drop's header open and its card expanded; on an earlier
 session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
 the clicked card. Result: passed in the client, 2026-10-23 (the owner).
+
+**HIST-8. The row menu as the skinned Ka0s menu (V89A-DWH, SM-07).** The headless `test_history` covers
+the rows handed to the library and the fallback. `/dw history` (or `/dw test` for sample entries),
+right-click a row → a menu opens at the pointer, the same Ka0s menu Filters ▾ opens in compact (not the
+client's own), with one row, `Mark as declined` (`Clear declined` on a declined entry). Choose it → the menu
+closes and the row reads `Declined`; right-click again → `Clear declined`, which puts the earlier outcome
+back. Right-click a cell, and a compact card (`/dw compact`) → the same menu. Right-click a second row while
+it is open → it moves to the pointer with that row's entry. A press elsewhere, Escape on the window or
+`/dw hide` closes it. The menu wears the skin in force (cycle a few). Fail: the client's menu, a menu under
+the row instead of at the pointer, or a pick that changes nothing.
+Result:
 
 ## Insights
 
@@ -3257,6 +3269,8 @@ switch to full → the panel closes. The footer is one line, `Inspect 4/4 · Myt
 tooltip lists the last loot, the situation and Pawn. Switch to full → every control is back on the
 bar and Sort back at the right edge of the tab's strip (in the footer until feedback-10, 2026-10-14; FEED-70),
 each at its place. Result: passed in the client, 2026-10-23 (the owner).
+Superseded in part by COMPACT-11 (V89A-DW, 2026-11-06): Filters opens a menu with a child level per control
+in place of the panel; the count, the tooltip and the choices are unchanged.
 
 **COMPACT-6. Open in compact view during a run (DW-C0).** With the Layout on Full and Settings →
 Window → Open in compact view during a run on (the default), close the window and start a Mythic+
@@ -3289,12 +3303,26 @@ buttons again, the toggle's mark a chevron there too. With
 no drop at all (`/dw clear`, out of test mode) → `No drops yet` and its line, no button, in both layouts.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-10. The Filters panel closes on a press outside it (R5-DD).** `/dw compact`, `/dw test`, then click
-Filters ▾ → the panel opens. Press in turn on the window's rows, on the game world, and on the View dropdown on
-the bar → each press closes the panel, and the last also opens View's list. Open the panel again, open its
-Quality dropdown and pick a value in its list → the pick applies and the panel stays open; a press on the panel's
-own background leaves it open too. Click Filters ▾ again → it closes, as before. Escape still closes the
-window. Fail: the panel left open after an outside press, or closed by a pick in one of its own dropdowns.
+**COMPACT-10. The Filters menu closes on a press outside it (R5-DD).** `/dw compact`, `/dw test`, then click
+Filters ▾ → the menu opens. Press in turn on the window's rows, on the game world, and on the View dropdown on
+the bar → each press closes the menu (every level of it), and the last also opens View's list. Open the menu
+again, hover Character and pick a character in its child level → the pick applies and both levels stay open.
+Click Filters ▾ again → it closes, as before. Escape still closes the window. Fail: the menu left open after an
+outside press, or closed by a Character pick. (Since V89A-DW, 2026-11-06, the library's menu does this itself;
+until then a hand-built panel listened for the press.)
+Result:
+
+**COMPACT-11. The Filters ▾ cascade (V89A-DW, SM-04).** `/dw compact`, `/dw test`, click Filters ▾ → a menu
+under the button with four rows, `Quality`, `Content`, `Character` and `Sort`, each with the submenu arrow.
+Hover each → its child opens beside the row, the parent stays drawn, and the rows are the full bar's
+dropdown's own, the value in force ticked: Quality's mode, Content's value (This instance and This session on
+Drops, All too on History), Character's (Current and your own name both ticked at the default), the tab's Sort.
+Pick Content: This instance → the menu closes and the button reads `Filters · 1`. Open Character, pick
+`Character: All` → the menu stays open, All is ticked and the others clear, and the button reads `Filters · 2`;
+the list filters with each pick. Pick a Sort → one choice ticked, the cards reorder, the count does not change.
+On History, Quality is grayed and opens nothing. `/dw full` → the bar's dropdowns read the same choices; back in
+compact the dropdowns are not on the bar. The menu wears the skin in force (cycle a few). Fail: a child whose
+tick disagrees with the full bar, a Character pick that closes the menu, or a dropdown visible on the compact bar.
 Result:
 
 ## Non-English client
@@ -3347,7 +3375,7 @@ no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Skin-1.0"]` pr
 
 **SKIN-2. Ka0s Default keeps its colors, with three visible changes (DW-01 to DW-04; X1, D2, D3).**
 On a profile that never touched the Skin tab (Ka0s Default), `/dw test`, then walk both tabs in both
-layouts, expand a detail card, open your own drop's Offer panel, the compact Filters panel, a toast
+layouts, expand a detail card, open your own drop's Offer panel, the compact Filters menu, a toast
 and the settings pages → every color is the one drawn before the skinning run: the verdict tones
 (green upgrade, yellow sidegrade, red downgrade, cyan Offer and off-spec, dim red Can't use, gray Not
 wanted), the gold column labels and headings, the stripes and the open row's wash, the chevrons, the
@@ -3398,8 +3426,8 @@ and a History detail card → each wears the skin. The four secondary stats' nam
 Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-7. Compact mode (DW-02).** `/dw compact` under **Glass** and **Ember** → the cards, their lines
-and action buttons, the strip's icon buttons, the empty state and the **Filters ▾** panel (the skin's
-inset) wear the skin; switch skins with the compact window open → they repaint. Result: passed in the client, 2026-10-30 (the owner).
+and action buttons, the strip's icon buttons, the empty state and the **Filters ▾** button (the skin's
+inset; its menu is the library's, COMPACT-11) wear the skin; switch skins with the compact window open → they repaint. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-8. The toast (DW-02).** Alerts › Toast on, `/dw test`, then show a toast; while it is on screen,
 switch from Ka0s Default to **Obsidian** → the toast's frame and its four rows (title, verdicts, trade

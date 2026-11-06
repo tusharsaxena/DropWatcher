@@ -262,7 +262,7 @@ test("skin tools: the debug console, perf panel, sim panel, test strip and toast
     assertTrue(read("modules/Sim.lua"):find('name%s*=%s*"' .. OWNER .. '"') ~= nil, "the Sim descriptor's name")
     local w = read("core/WidgetsSetup.lua")
     local _, owners = w:gsub("owner%s*=%s*addonName", "")
-    assertEqual(owners, 3, "Dropdown, SearchBox and TestStrip each name the owner")
+    assertEqual(owners, 4, "Dropdown, ContextMenu (the Filters ▾ cascade), SearchBox and TestStrip each name the owner")
     assertTrue(read("core/ToastSetup.lua"):find("d%.owner%s*=%s*d%.owner%s*or%s*addonName") ~= nil, "the toast's owner")
 end)
 

@@ -1,7 +1,8 @@
 -- tests/test_compact_chrome.lua — the window's chrome in the compact layout (compact spec §4, DW-C4):
 -- the short title with TEST and SIM, the badge's lock and count, the icon Scan group, the short tabs,
--- the one-row filter bar with View, the search box and the Filters panel (the full bar's own
--- Quality, Content and Character dropdowns and the footer's Sort), the shortened strip and the
+-- the one-row filter bar with View, the search box and the Filters menu (LibKa0s-Widgets' cascade:
+-- a child level per full-bar dropdown, Quality, Content and Character, and the footer's Sort, each
+-- ticked from and picked through that dropdown), the shortened strip and the
 -- one-line footer. The pure labels first, then the chrome drawn headless under the mock, and the
 -- full layout taking every control back.
 
@@ -231,6 +232,33 @@ end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
+-- THE FILTERS MENU is LibKa0s-Widgets' cascade (minor 23, V89A-DW): W.ContextMenu on the Filters
+-- button, one `submenu` row per full-bar dropdown. The rows the seam hands the library are captured
+-- (and passed on, so the library's own menu opens): their labels, their nesting, and each child's
+-- radio, keepOpen and selected, the tick read from the dropdown itself.
+
+local function captureMenu(NS)
+    local seen, open = {}, NS.ContextMenu
+    NS.ContextMenu = function(anchor, rows, opts)
+        local menu = open(anchor, rows, opts)
+        seen[#seen + 1] = { anchor = anchor, rows = rows, opts = opts, menu = menu }
+        return menu
+    end
+    return seen
+end
+
+local function child(sub, value)
+    for _, r in ipairs(sub) do if r.value == value then return r end end
+end
+
+local function ticked(sub)
+    local out = {}
+    for _, r in ipairs(sub) do if r.selected(r) then out[#out + 1] = r.value end end
+    return table.concat(out, ",")
+end
+
+local function pick(r) r.onClick(r.value, r) end
+
 test("chrome: the bar is one row: View, the search box (Filter…) and Filters on the right", function()
     local NS, f = shown("compact")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
@@ -242,57 +270,137 @@ test("chrome: the bar is one row: View, the search box (Filter…) and Filters o
     assertEqual(textOf(c.search.hint), "Filter…")
     local pts = c.search.__points
     assertEqual(pts[1][2], c.view); assertEqual(pts[2][2], p.filters)
+    -- red under: the hand-built panel the dropdowns were reparented into
+    assertTrue(p.panel == nil, "no hand-built panel: the Filters menu is the library's cascade")
     for _, key in ipairs({ "quality", "content", "char" }) do
-        assertTrue(c[key]:GetParent() == p.panel, key .. " moved into the Filters panel")
+        assertTrue(c[key]:GetParent() == f.filterHost, key .. " stays on the full bar")
+        assertFalse(c[key]:IsShown(), key .. " hidden in compact: the cascade lists it")
     end
     local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort:GetParent() == p.panel, "Sort moved into it too")
-    assertFalse(p.panel:IsShown(), "closed until clicked")
+    assertFalse(sort:IsShown(), "Sort hidden in compact too")
 end)
 
-test("chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does", function()
+test("chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own", function()
+    local NS = shown("compact")
+    local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
+    local _, sort = NS.WindowFooter.Parts()
+    local seen = captureMenu(NS)
+    p.filters:__fire("OnClick")
+    assertEqual(#seen, 1, "one W.ContextMenu call")
+    local call = seen[1]
+    assertTrue(call.anchor == p.filters, "anchored on the Filters button")
+    assertTrue(call.menu ~= nil and call.menu:IsShown(), "the library's shared menu is open")
+    local rows = call.rows
+    assertEqual(#rows, 4, "Quality, Content, Character and Sort")
+    local want = { { "Quality", c.quality }, { "Content", c.content }, { "Character", c.char }, { "Sort", sort } }
+    for i, w in ipairs(want) do
+        local r = rows[i]
+        assertEqual(r.label, w[1], "the control's name")
+        assertEqual(type(r.submenu), "table", w[1] .. " opens a child level")
+        assertEqual(#r.submenu, #w[2]._options, w[1] .. ": one row per option of its dropdown")
+        for j, opt in ipairs(w[2]._options) do
+            assertEqual(r.submenu[j].label, opt.label, w[1] .. " row " .. j)
+            assertEqual(r.submenu[j].value, opt.value)
+            assertEqual(type(r.submenu[j].selected), "function", "the tick is read live")
+        end
+    end
+    for _, i in ipairs({ 1, 2, 4 }) do
+        for _, r in ipairs(rows[i].submenu) do
+            assertTrue(r.radio == true, rows[i].label .. ": single-select rows are radio")
+            assertFalse(r.keepOpen == true, rows[i].label .. ": a pick closes the menu")
+        end
+    end
+    for _, r in ipairs(rows[3].submenu) do
+        assertTrue(r.keepOpen == true, "Character is multi-select: a pick keeps the menu open")
+        assertFalse(r.radio == true, "a multi-select row is no radio")
+    end
+end)
+
+test("chrome: each child's tick reads its own dropdown, and a pick goes through it, count and tooltip in step", function()
     local NS, f = shown("compact")
     local FB, c, p = NS.WindowFilterBar, NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
+    local _, sort = NS.WindowFooter.Parts()
+    local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
-    assertTrue(p.panel:IsShown())
-    assertTrue(c.char.multi, "the Character dropdown is still multi-select")
-    c.content.onSelect("instance")   -- Drops has no All (feedback-15 spec §1)
-    assertEqual(FB.State("group").content, "instance")
+    local rows, menu = seen[1].rows, seen[1].menu
+    local quality, content, char, sorts = rows[1].submenu, rows[2].submenu, rows[3].submenu, rows[4].submenu
+    assertEqual(ticked(content), "session", "Content ticks the tab's value")
+    assertEqual(ticked(sorts), FB.State("group").sort, "Sort ticks the tab's order")
+    assertEqual(ticked(quality), c.quality._value, "Quality ticks the mode in force")
+    -- Current is the preset that selects exactly you: its own predicate and your row, both lit, as
+    -- the dropdown's own menu lights them.
+    assertEqual(ticked(char), "current,Testchar-Testrealm", "Character: Current")
+    pick(child(content, "instance"))
+    assertEqual(FB.State("group").content, "instance", "through the dropdown's own onSelect")
+    assertEqual(c.content._value, "instance", "the full bar's dropdown holds the pick")
+    assertEqual(ticked(content), "instance")
     assertEqual(textOf(p.filters.label), "Filters · 1")
-    c.char:ToggleSelected("all")
-    c.char.onMultiSelect(c.char._selected)
+    pick(child(char, "all"))
     assertEqual(next(FB.State("group").char), nil, "Character: All")
+    assertEqual(next(c.char._selected), nil, "the dropdown's own set, emptied by its ToggleSelected")
+    assertEqual(ticked(char), "all", "All ticked, as the dropdown highlights it")
     assertEqual(textOf(p.filters.label), "Filters · 2")
+    assertTrue(menu:IsShown(), "a multi-select pick leaves the menu open")
     local tip = NS.Window.TooltipOf(p.filters)
     assertEqual(tip[1], "Filters")
     assertEqual(T.tipPlain(tip[3]), "• Content: This instance")
     assertTrue(tip[3]:find("|cfffff56b", 1, true) ~= nil, "off its default: yellow")
     assertEqual(T.tipPlain(tip[4]), "• Character: All")
     assertEqual(T.tipPlain(tip[5]), "• Sort: Newest")
-    local _, sort = NS.WindowFooter.Parts()
-    sort.onSelect("ilvl")
-    assertEqual(FB.State("group").sort, "ilvl", "Sort in the panel sorts the tab")
+    pick(child(sorts, "ilvl"))
+    assertEqual(FB.State("group").sort, "ilvl", "Sort in the menu sorts the tab")
+    assertEqual(sort._value, "ilvl")
+    assertEqual(ticked(sorts), "ilvl", "one choice ticked")
     assertEqual(textOf(p.filters.label), "Filters · 2", "Sort is not counted")
-    p.filters:__fire("OnClick")
-    assertFalse(p.panel:IsShown(), "a second click closes it")
+    pick(child(quality, "dynamicSlot"))
+    assertEqual(c.quality._value, "dynamicSlot", "Quality through its own onSelect")
+    assertEqual(ticked(quality), "dynamicSlot")
     NS.Window.SelectTab("history")
     assertEqual(textOf(p.filters.label), "Filters", "History starts from its own defaults, none counted (feedback-13 spec §0)")
     assertTrue(f:IsShown())
 end)
 
-test("chrome: the panel closes when the window hides, minimizes or goes back to full", function()
+test("chrome: a control the tab does not honor is a disabled row, as its dropdown is grayed", function()
+    local NS = shown("compact")
+    NS.Window.SelectTab("history")
+    local seen = captureMenu(NS)
+    NS.CompactChrome.Parts().filters:__fire("OnClick")
+    local rows = seen[1].rows
+    assertTrue(rows[1].disabled == true, "History does not honor Quality")
+    for i = 2, 4 do assertFalse(rows[i].disabled == true, rows[i].label) end
+end)
+
+test("chrome: a second click on Filters closes the menu, and so do hiding, minimizing and going back to full", function()
     local NS, f = shown("compact")
     local p = NS.CompactChrome.Parts()
+    local seen = captureMenu(NS)
+    p.filters:__fire("OnClick")
+    local menu = seen[1].menu
+    assertTrue(menu:IsShown())
+    p.filters:__fire("OnClick")
+    assertFalse(menu:IsShown(), "a second click closes it")
     p.filters:__fire("OnClick")
     NS.Window.SetMinimized(true)
-    assertFalse(p.panel:IsShown(), "minimized")
+    assertFalse(menu:IsShown(), "minimized")
     NS.Window.SetMinimized(false)
     p.filters:__fire("OnClick")
     f:GetScript("OnHide")(f)
-    assertFalse(p.panel:IsShown(), "hidden")
+    assertFalse(menu:IsShown(), "hidden")
+    NS.ShowWindow()
     p.filters:__fire("OnClick")
+    assertTrue(menu:IsShown())
     NS.SetWindowMode("full")
-    assertFalse(p.panel:IsShown(), "full")
+    assertFalse(menu:IsShown(), "full")
+end)
+
+test("chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filters button and no menu", function()
+    local NS = T.enableAddon{ skip = { "libs/LibKa0s/Widgets.lua" } }
+    NS.ShowWindow()
+    NS.SetWindowMode("compact")
+    local p = NS.CompactChrome.Parts()
+    assertFalse(p.filters:IsShown(), "nothing to hold")
+    assertTrue(NS.ContextMenu(p.filters, { { label = "x" } }) == nil, "the seam answers nil")
+    NS.CompactChrome.ToggleFilters()   -- no error, nothing opened
 end)
 
 test("chrome: the full layout takes every control back to its place on the bar and the tab's strip", function()
@@ -402,62 +510,35 @@ test("chrome: switching the chrome keeps every tab's filter state and builds no 
     assertEqual(FB.State("group").search, "crown")
 end)
 
--- ── the Filters panel closes on an outside press (R5-DD) ─────────────────────────────────────
--- Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, feedback item 6 (the lead's call 7): the
--- Filters panel is this addon's one hand-built pullout, and like the shared dropdown menu it LISTENS
--- for GLOBAL_MOUSE_DOWN while shown. A press on the panel, on its Filters button (whose own click is
--- the toggle) or on the shared menu one of its dropdowns dropped is not outside.
+-- ── the Filters menu closes on an outside press (R5-DD) ──────────────────────────────────────
+-- Ka0sAddonsCommonTasks docs/2026-11-03-SMOKE_ROUND5, feedback item 6: a press anywhere outside the
+-- Filters menu closes it. The cascade is the library's shared menu, which LISTENS for GLOBAL_MOUSE_DOWN
+-- while shown; the Filters button is its anchor, so a press on it is no outside press and its click
+-- stays the toggle.
 
 local function openFilters()
     local NS, _, m = shown("compact")
     local p = NS.CompactChrome.Parts()
+    local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
-    assertTrue(p.panel:IsShown(), "open")
-    return NS, p, m
+    local menu = seen[1].menu
+    assertTrue(menu:IsShown(), "open")
+    return NS, p, menu, m
 end
 
-local function press(p) p.panel:__fire("OnEvent", "GLOBAL_MOUSE_DOWN", "LeftButton") end
+local function press(menu) menu:__fire("OnEvent", "GLOBAL_MOUSE_DOWN", "LeftButton") end
 
-test("chrome: the Filters panel listens for a press only while it is open", function()
-    local _, p = openFilters()
-    assertTrue(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "registered on open")
-    p.filters:__fire("OnClick")
-    assertFalse(p.panel:IsShown())
-    assertFalse(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"), "dropped on close")
+test("chrome: a press outside the Filters menu closes it", function()
+    local _, _, menu = openFilters()
+    press(menu)
+    assertFalse(menu:IsShown(), "the game world, the window body: closed")
 end)
 
-test("chrome: a press outside the Filters panel closes it, and its dropdown's menu with it", function()
-    local NS, p = openFilters()
-    local closed = 0
-    local close = NS.CloseMenu
-    NS.CloseMenu = function() closed = closed + 1; return close() end
-    press(p)
-    assertFalse(p.panel:IsShown(), "the game world, the window body: closed")
-    assertTrue(closed > 0, "the shared menu goes with it")
-    assertFalse(p.panel:IsEventRegistered("GLOBAL_MOUSE_DOWN"))
-end)
-
-test("chrome: a press on the Filters panel or its button keeps it open, and the button still toggles", function()
-    local _, p = openFilters()
-    p.panel.__mouseOver = true
-    press(p)
-    assertTrue(p.panel:IsShown(), "a press on the panel (one of its dropdowns)")
-    p.panel.__mouseOver = false
+test("chrome: a press on the Filters button keeps the menu open, and the button still toggles", function()
+    local _, p, menu = openFilters()
     p.filters.__mouseOver = true
-    press(p)
-    assertTrue(p.panel:IsShown(), "the press on the button leaves its click to toggle")
+    press(menu)
+    assertTrue(menu:IsShown(), "the press on the button leaves its click to toggle")
     p.filters:__fire("OnClick")
-    assertFalse(p.panel:IsShown(), "and the click closes it")
-end)
-
-test("chrome: a press on the shared menu a panel dropdown dropped keeps the panel open", function()
-    local _, p, m = openFilters()
-    local menu = { GetFrameStrata = function() return "FULLSCREEN_DIALOG" end, GetParent = function() return nil end }
-    local row = { GetFrameStrata = function() return "FULLSCREEN_DIALOG" end, GetParent = function() return menu end }
-    m.GetMouseFoci = function() return { row } end
-    press(p)
-    assertTrue(p.panel:IsShown(), "a pick in the dropdown's menu")
-    m.GetMouseFoci = function() return { m.WorldFrame or {} } end
-    press(p)
-    assertFalse(p.panel:IsShown(), "the world under the pointer: closed")
+    assertFalse(menu:IsShown(), "and the click closes it")
 end)

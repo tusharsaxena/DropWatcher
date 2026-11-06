@@ -8,7 +8,8 @@ local _, NS = ...
 -- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
 -- strip (`pane.sortHost`: Drops' summary strip, after Post my tradeables, Scan group and Expand all;
 -- History's, after Expand all; feedback-15 spec §2, §3), re-anchored on every pass so it follows a
--- tab switch; in the compact layout it is in the Filters panel (modules/CompactChrome.lua).
+-- tab switch; in the compact layout it is hidden and the Filters menu lists its rows
+-- (modules/CompactChrome.lua).
 --
 -- Compose is PURE: plain inputs in, each segment's text and tooltip out, so test_window drives it
 -- case by case. Read gathers the inputs through the engine's read-only accessors (the roster, the
@@ -245,7 +246,7 @@ end
 
 --- Put the Sort control at its place in the full layout: the right edge of the active tab's strip
 --- (feedback-10 spec §3). Every full pass calls it (Refresh), so it follows a tab switch, and so does
---- the full layout taking it back from the compact Filters panel (modules/CompactChrome.lua).
+--- the switch back to the full layout (modules/CompactChrome.lua).
 function WF.AnchorSort()
     local dd, host = sortDropdown, sortHost()
     if not (dd and host) then return end
@@ -277,7 +278,8 @@ function WF.Refresh()
     if sortDropdown then
         local tab = NS.Window.ActiveTab()
         local FB = NS.WindowFilterBar
-        sortDropdown:SetShown(not NS.Window.TabOwnsBar(tab))   -- Insights sorts nothing: no dead Sort
+        -- Insights sorts nothing: no dead Sort. Compact lists it in the Filters menu (CompactChrome).
+        sortDropdown:SetShown(not NS.Window.TabOwnsBar(tab) and NS.WindowCompact.Mode() ~= "compact")
         sortDropdown:SelectValue(FB.State(tab).sort)
         local on = FB.HONORS[tab].sort == true
         sortDropdown:SetEnabled(on)

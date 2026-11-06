@@ -321,10 +321,11 @@ and a safety ceiling of 5,000 drops in all, the oldest first. **The tab** opens 
 (and Character: All since feedback-13 spec §0, its fixed defaults, WindowFilterBar.TAB_FIXED)
 the first time each session (Content's This session and This instance then cut by time, and
 `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
-declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear
+declined or Clear declined, in LibKa0s-Widgets' skinned menu at the pointer since V89A-DWH, the client's
+`MenuUtil` without the library, or at once without either), and Clear
 history asks first (a StaticPopup), then empties the log on every character and keeps the window.
 **Account-wide:** one log for all your characters, as the Keep history for row says. That the log survives a
-reload and the row menu opens in game is HIST-2.
+reload and the row menu opens in game is HIST-2; that it is the skinned Ka0s menu is HIST-8.
 
 ## The toast
 
@@ -627,6 +628,11 @@ from its font (`window.fontSize`). **The Filters menu** is a small panel under t
 the full bar's own Quality, Content and Character dropdowns and the footer's Sort, moved rather than copied,
 so their choices and multi-select behavior cannot differ; it closes on a second click, minimize, close or a
 switch to full, which puts each control back.
+**Superseded by V89A-DW (2026-11-06)** (LibKa0s v1.89.0, Widgets minor 23's cascading menus): the Filters menu is
+the library's shared menu on the `Filters` button, one submenu row each for Quality, Content, Character and Sort,
+each child that dropdown's own rows, ticked from and picked through that same dropdown (single-select rows radio,
+Character's multi-select rows held open), so there is still one state; the dropdowns stay where the full layout
+puts them, hidden in compact, and nothing is moved.
 **Superseded by feedback-5 (2026-10-13)** (feedback-5 spec §0-§4): the tabs are Drops and History (no My drops
 cards); a Drops card is indented under its header with the row's muted-white chevron before the item button,
 its line 2 ends in the countdown and its bar for a drop with one (else the inspect freshness), your own card

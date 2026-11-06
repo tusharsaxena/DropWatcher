@@ -607,7 +607,7 @@ Total.
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
 
-### test_compact_chrome.lua (27)
+### test_compact_chrome.lua (28)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIMULATION shorten to TEST and SIM
@@ -624,18 +624,19 @@ Total.
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
 - chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
-- chrome: Filters opens the panel of the full bar's own dropdowns, and a pick there filters as it does
-- chrome: the panel closes when the window hides, minimizes or goes back to full
+- chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own
+- chrome: each child's tick reads its own dropdown, and a pick goes through it, count and tooltip in step
+- chrome: a control the tab does not honor is a disabled row, as its dropdown is grayed
+- chrome: a second click on Filters closes the menu, and so do hiding, minimizing and going back to full
+- chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filters button and no menu
 - chrome: the full layout takes every control back to its place on the bar and the tab's strip
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
 - chrome: the compact strip takes a second line exactly when its words wrap at the window's width
 - chrome: the compact sim strip takes a second line when its words wrap at 380 px
 - chrome: the footer is one line, inspect and situation, the rest in its tooltip, ticker included
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
-- chrome: the Filters panel listens for a press only while it is open
-- chrome: a press outside the Filters panel closes it, and its dropdown's menu with it
-- chrome: a press on the Filters panel or its button keeps it open, and the button still toggles
-- chrome: a press on the shared menu a panel dropdown dropped keeps the panel open
+- chrome: a press outside the Filters menu closes it
+- chrome: a press on the Filters button keeps the menu open, and the button still toggles
 
 ### test_compact_modes.lua (7)
 
@@ -1026,7 +1027,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
-### test_compat.lua (74)
+### test_compat.lua (73)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1100,7 +1101,6 @@ Total.
 - compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: PixelFactor answers PixelUtil's factor, else nil
-- compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_compat_collect.lua (21)
@@ -1879,7 +1879,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (39)
+### test_history.lua (40)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1905,7 +1905,8 @@ Total.
 - history tab: kept groups newest first, the first open, each row's outcome painted
 - history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
-- history tab: a right-click marks a row declined, through the menu when the client has one
+- history tab: a right-click opens the library's skinned menu at the pointer, one flat row that marks the row declined
+- history tab: without LibKa0s-Widgets the row menu is the client's, and without that it acts at once
 - history tab: with nothing kept it says what it will hold, and the strip has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
@@ -2029,7 +2030,7 @@ Total.
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
 - insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History
 - insights tab: the footer's Sort is hidden on Insights and back on History
-- insights tab: switching in closes the compact Filters panel
+- insights tab: switching in closes the compact Filters menu
 - insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
 - insights tab: a pick redraws the cards and the strip; Reset puts every filter back
 - insights tab: a date range with nothing in it says no drop matches, and the cards hide
@@ -2170,7 +2171,7 @@ Total.
 - layers: the level bands keep border < glow, content < grip < popovers < modal
 - layers: the main window is MEDIUM, toplevel and clamped
 - layers: the Offer panel stays in the window's strata; floating, it is W+30, docked W+1
-- layers: the compact Filters panel is W+35 in the window's strata, its dropdowns over it
+- layers: the compact Filters menu is the library's shared menu at FULLSCREEN_DIALOG, no dropdown moved
 - layers: the Edit message box is DIALOG at W+40 and toplevel
 - layers: the toast is HIGH, above the window and under the modal
 - layers: an item button's border is button + 1, explicit, and the glow button + 2
@@ -2626,7 +2627,7 @@ Total.
 | test_compact_group.lua | 23 |
 | test_compact_history.lua | 11 |
 | test_history_card.lua | 15 |
-| test_compact_chrome.lua | 27 |
+| test_compact_chrome.lua | 28 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
 | test_table_font.lua | 10 |
@@ -2644,7 +2645,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
-| test_compat.lua | 74 |
+| test_compat.lua | 73 |
 | test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
@@ -2679,7 +2680,7 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 39 |
+| test_history.lua | 40 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
 | test_insights_stats.lua | 16 |
@@ -2716,4 +2717,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2238** |
+| **Total** | **2239** |

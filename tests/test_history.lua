@@ -358,8 +358,8 @@ end)
 local DAY = 86400
 
 -- Two groups kept from earlier sessions, then the tab shown.
-local function shownTab(mutate)
-    local NS, _, m = T.enableAddon()
+local function shownTab(mutate, opts)
+    local NS, _, m = T.enableAddon(opts)
     local now = m.time()
     local hist = NS.History.Store()
     hist.groups = {
@@ -440,18 +440,72 @@ test("history tab: a header click opens a collapsed group; the filter's Content 
     assertEqual(textOf(drawn.pane.placeholder), "No kept drop matches the filters. View: All, Character: All and Content: All show everything.")
 end)
 
-test("history tab: a right-click marks a row declined, through the menu when the client has one", function()
-    local _, drawn, m = shownTab()
+-- THE ROW MENU is LibKa0s-Widgets' shared menu (V89A-DWH): W.ContextMenu through NS.ContextMenu, at
+-- the pointer, in this addon's skin. The rows the seam hands the library are captured (and passed on,
+-- so the library's own menu opens). Without the library the client's MenuUtil menu is the fallback,
+-- and without either the row acts at once.
+
+local function captureMenu(NS)
+    local seen, open = {}, NS.ContextMenu
+    NS.ContextMenu = function(anchor, rows, opts)
+        local menu = open(anchor, rows, opts)
+        seen[#seen + 1] = { anchor = anchor, rows = rows, opts = opts, menu = menu }
+        return menu
+    end
+    return seen
+end
+
+local function recordingMenuUtil(m)
+    local made = {}
+    m.MenuUtil = { CreateContextMenu = function(o, gen)
+        gen(o, { CreateButton = function(_, text, fn) made[#made + 1] = { owner = o, text = text, fn = fn } end })
+    end }
+    return made
+end
+
+test("history tab: a right-click opens the library's skinned menu at the pointer, one flat row that marks the row declined", function()
+    local NS, drawn, m = shownTab()
+    local made = recordingMenuUtil(m)
+    local seen = captureMenu(NS)
+    local reads, cursor = 0, m.GetCursorPosition
+    m.GetCursorPosition = function() reads = reads + 1; return cursor() end
+    local row = drawn.rows[1]
+    local e = row.entry
+    row:GetScript("OnMouseUp")(row, "RightButton")
+    assertEqual(#seen, 1, "one W.ContextMenu call")
+    local call = seen[1]
+    assertTrue(call.anchor == row, "anchored on the row")
+    assertTrue(call.opts and call.opts.cursor == true, "opened at the pointer, as the client's menu was")
+    assertTrue(call.menu ~= nil and call.menu:IsShown(), "the library's shared menu is open")
+    assertEqual(reads, 1, "the library placed it at the pointer, not under the row")
+    assertEqual(#call.rows, 1, "one entry")
+    local r = call.rows[1]
+    assertEqual(r.label, "Mark as declined")
+    assertTrue(r.submenu == nil and r.radio == nil and r.selected == nil and r.keepOpen == nil,
+        "a flat plain row: no submenu, no tick, closes on the pick")
+    assertEqual(#made, 0, "the client's menu is not opened beside it")
+    assertTrue(e.outcome ~= "declined", "nothing changes until the pick")
+    r.onClick(r.value, r)
+    assertEqual(e.outcome, "declined")
+    row.cells.slot:GetScript("OnMouseUp")(row.cells.slot, "RightButton")
+    assertEqual(#seen, 2, "a cell's right-click is its row's")
+    assertEqual(seen[2].rows[1].label, "Clear declined")
+    seen[2].rows[1].onClick(seen[2].rows[1].value, seen[2].rows[1])
+    assertTrue(e.outcome ~= "declined")
+end)
+
+test("history tab: without LibKa0s-Widgets the row menu is the client's, and without that it acts at once", function()
+    local NS, drawn, m = shownTab(nil, { skip = { "libs/LibKa0s/Widgets.lua" } })
+    assertTrue(NS.ContextMenu(drawn.rows[1], { { label = "x" } }) == nil, "the seam answers nil")
     local row = drawn.rows[1]
     local e = row.entry
     row:GetScript("OnMouseUp")(row, "RightButton")
     assertEqual(e.outcome, "declined", "no MenuUtil: it acts at once")
-    local made = {}
-    m.MenuUtil = { CreateContextMenu = function(o, gen)
-        gen(o, { CreateButton = function(_, text, fn) made[#made + 1] = { text = text, fn = fn } end })
-    end }
+    local made = recordingMenuUtil(m)
     row.cells.slot:GetScript("OnMouseUp")(row.cells.slot, "RightButton")
+    assertEqual(#made, 1, "one button")
     assertEqual(made[1].text, "Clear declined")
+    assertTrue(made[1].owner == row, "the client's menu on the row")
     made[1].fn()
     assertTrue(e.outcome ~= "declined")
 end)

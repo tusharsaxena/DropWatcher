@@ -500,7 +500,7 @@ modules\CompactGroup.lua
 modules\CompactHistory.lua
 # LOAD-BEARING: adds a visibility listener to NS.Window (modules\Window.lua, above) at load.
 # Publishes NS.CompactChrome, the window's chrome in the compact layout (the short title and words,
-# the badge, the icon Scan group, the short tabs, the one-row filter bar and its Filters panel, the
+# the badge, the icon Scan group, the short tabs, the one-row filter bar and its Filters menu, the
 # strip and the one-line footer); takes NS.Constants and NS.L at load. Everything else is read at
 # call time.
 modules\CompactChrome.lua

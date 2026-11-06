@@ -2,8 +2,8 @@
 -- NS.Constants.LAYERS table, and every frame class the addon creates pinned to its strata, level and
 -- toplevel through the kit's frame-layer recorder (tests/_kit/mock_layers.lua, which tests/wow_mock.lua
 -- installs on every instance before any source loads). Levels are read relative to the window's own level W: the window at MEDIUM and
--- toplevel, the docked Offer panel W+1, the floating Offer panel W+30 and the compact Filters panel
--- W+35 in the window's strata, the Edit message box on DIALOG at W+40 and toplevel, the toast on
+-- toplevel, the docked Offer panel W+1 and the floating Offer panel W+30 in the window's strata, the
+-- compact Filters ▾ cascade the library's shared menu at FULLSCREEN_DIALOG, the Edit message box on DIALOG at W+40 and toplevel, the toast on
 -- HIGH and toplevel (LibKa0s-Toast-1.0's T5 tier); inside an item button, its border +1 and the
 -- glow +2. Last, a static scan: no strata literal and no absolute level anywhere in the addon's own
 -- source (frame-layering-§3, §5).
@@ -64,8 +64,8 @@ test("layers: the level bands keep border < glow, content < grip < popovers < mo
     assertEqual(NS.Glow.FRAME_LEVEL, V.EFFECT, "the glow's level is the table's")
     assertTrue(V.CONTENT_MAX < V.GRIP, "window content stays under the library grip")
     assertTrue(V.GRIP < V.POPOVER_OFFER, "a popover over every content level and the grip")
-    assertTrue(V.POPOVER_OFFER < V.POPOVER_FILTERS, "the Filters panel over the floating Offer panel")
-    assertTrue(V.POPOVER_FILTERS < V.MODAL, "the Edit box over every popover")
+    assertTrue(V.POPOVER_OFFER < V.MODAL, "the Edit box over every popover")
+    assertEqual(V.POPOVER_FILTERS, nil, "no Filters panel level: the Filters menu is the library's (V89A-DW)")
 end)
 
 -- ── the frames ──────────────────────────────────────────────────────────────────────────────
@@ -96,18 +96,16 @@ test("layers: the Offer panel stays in the window's strata; floating, it is W+30
     assertEqual(p.dock, "right"); assertEqual(p:GetFrameLevel(), W + V.DOCKED)
 end)
 
-test("layers: the compact Filters panel is W+35 in the window's strata, its dropdowns over it", function()
+test("layers: the compact Filters menu is the library's shared menu at FULLSCREEN_DIALOG, no dropdown moved", function()
     local NS, win, m = shownWithDrop("compact")
-    local V = NS.Constants.LAYERS.LEVEL
-    local parts = NS.CompactChrome.Parts()
-    parts.filters:__fire("OnClick")
-    local p = parts.panel
-    assertTrue(p:IsShown())
-    assertEqual(m.__layers(p).strata, "MEDIUM")
-    assertEqual(p:GetFrameLevel(), win:GetFrameLevel() + V.POPOVER_FILTERS)
+    local menu
+    local open = NS.ContextMenu
+    NS.ContextMenu = function(...) menu = open(...); return menu end
+    NS.CompactChrome.Parts().filters:__fire("OnClick")
+    assertTrue(menu ~= nil and menu:IsShown(), "open")
+    assertEqual(m.__layers(menu).strata, "FULLSCREEN_DIALOG", "over every tier it opens from")
     local dd = NS.WindowFilterBar.Controls().quality
-    assertTrue(dd:GetParent() == p, "reparented into the panel")
-    assertEqual(dd:GetFrameLevel(), p:GetFrameLevel() + 1)
+    assertTrue(dd:GetParent() == win.filterHost, "the dropdown stays on the full bar")
     assertEqual(m.__layers(dd).strata, "MEDIUM")
 end)
 

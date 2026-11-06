@@ -1009,19 +1009,6 @@ test("compat: PixelFactor answers PixelUtil's factor, else nil", function()
     assertNil(Compat.PixelFactor(), "no usable factor")
 end)
 
-test("compat: MouseFoci answers GetMouseFoci's list, else GetMouseFocus's one frame, else none", function()
-    local Compat, m = fresh()
-    m.GetMouseFoci, m.GetMouseFocus = nil, nil
-    assertEqual(#Compat.MouseFoci(), 0, "neither API")
-    local a, b = {}, {}
-    m.GetMouseFocus = function() return a end
-    local got = Compat.MouseFoci()
-    assertEqual(#got, 1); assertTrue(got[1] == a, "the older single focus")
-    m.GetMouseFoci = function() return { b, a } end
-    got = Compat.MouseFoci()
-    assertEqual(#got, 2); assertTrue(got[1] == b, "11.0's list, topmost first")
-end)
-
 -- ---------------------------------------------------------------------------------------------
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------

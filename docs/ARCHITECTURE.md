@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.88.0 payload (twenty-one majors; media/icons pruned to the declared subset), twenty wired with one setup file each and `LibKa0s-IconBrowser-1.0` deliberately unwired, since this addon offers no icon picker (`DEPENDENCIES.md`
+LibKa0s v1.89.0 payload (twenty-one majors; media/icons pruned to the declared subset), twenty wired with one setup file each and `LibKa0s-IconBrowser-1.0` deliberately unwired, since this addon offers no icon picker (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -30,7 +30,7 @@ lists the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and six verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
@@ -38,7 +38,7 @@ lists the toolchain):
 | Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-four `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
-(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
+(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
 (`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` / `SIMULATION` title word
 marks the mode; with the library, a word shows only while the window is minimized, DW-10). Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
@@ -207,11 +207,11 @@ General page's last tab, Keybindings, is LibKa0s's `O.KeybindingsTab` over it (o
 
 ## Event Subscriptions
 
-Every game event but one is declared in `NS.FEATURE_EVENTS` and registered through
+Every game event is declared in `NS.FEATURE_EVENTS` and registered through
 `NS.SafeRegisterEvent`, so `OnEnable` and the stand-up register exactly that list and the
-stand-down unregisters it. The exception is UI-local: compact mode's Filters panel registers
-`GLOBAL_MOUSE_DOWN` on its own frame only while it is open, to close on a press outside it, and
-unregisters it when it hides (`modules/CompactChrome.lua`). Two
+stand-down unregisters it. (Compact mode's Filters menu is LibKa0s-Widgets' shared menu, whose own
+`GLOBAL_MOUSE_DOWN` listener closes it on a press outside it; the addon registers none for it,
+`modules/CompactChrome.lua`.) Two
 modules may declare the same event: AceEvent keeps one handler per event, so such an event is
 registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
 TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
@@ -296,11 +296,11 @@ Every strata and frame level the addon sets reads one table, `NS.Constants.LAYER
 (`core/Constants.lua`, frame-layering-§5), whose header comment states the whole stack with its
 levels; every level is relative to the frame's parent. The tiers, low to high: the main window
 (`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel docked beside it; the
-library's resize grip; the window's popovers in its own strata, by level (the floating Offer panel,
-then the compact Filters panel); the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
+library's resize grip; the window's popover in its own strata, by level (the floating Offer panel);
+the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
 frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names); the Edit message box (`DIALOG`, toplevel), beside
 the library's debug console, perf and sim panels; the library's Copy window (`FULLSCREEN`); the
-library's dropdown menu (`FULLSCREEN_DIALOG`); tooltips. Inside an item button, the border frame sits
+library's dropdown menu (`FULLSCREEN_DIALOG`, the compact Filters ▾ cascade included); tooltips. Inside an item button, the border frame sits
 under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
 
 ## Skins

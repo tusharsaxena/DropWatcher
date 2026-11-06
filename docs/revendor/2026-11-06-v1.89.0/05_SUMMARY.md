@@ -1,0 +1,13 @@
+# Summary
+
+- **Tag:** v1.88.0 -> v1.89.0, taken from the tag (`v1.89.0^{commit}` = `df00e5f09fc71b59001b9e83afb22f868573b3d2`, pushed). Base v1.88.0, from the provenance line `CLAUDE.md:45`, which agrees with the last payload commit `59e323d`. No `LibKa0s/` LibStub minor moves: all 67 files are at their v1.88.0 minor. Kit 50 -> 51. No cross-major skew.
+- **Base correction:** Step 0 reports a MISMATCH for `docs/revendor/2026-11-05-v1.88.0/`, whose line 1 states v1.85.0 while the provenance line before `59e323d` named v1.87.0. That bundle's base is deliberate (v1.87.0 had labelled the untagged toast-stack tip). The one correction paragraph is in `01_DELTA.md`. The old bundle is not edited.
+- **Span bundle:** none. Step 3h prints nothing; every vendored tag since the 2026-10-14 horizon has a bundle.
+- **For free (class A):** test kit revision 51, the CallbackHandler unregister guard. `mock_ace.lua` no longer inserts absent keys on unregister, so a mid-dispatch `Unregister*` of an unregistered target cannot break the walk.
+- **Blockers:** none. No minor moved, no `__Attach*` site, no 3j whole-catalog test (the icon tests read declared names only), and no dead stub mirror.
+- **Icons:** the `LibKa0s icons:` line is kept (32 names, all Open Iconic). Before the prune, both payloads' content and byte diffs were empty against the whole tag. The tag's `tools/prune-icons.lua` kept 33 files and removed 5807 (the same set as before; all of the removed files came from the re-copy). No provenance split. README credits unchanged (Open Iconic only).
+- **Docs:** the provenance line in `CLAUDE.md`, the payload line in `docs/ARCHITECTURE.md:14` and the vendored-payload line in `docs/module-map.md:4` move from v1.88.0 to v1.89.0.
+- **Adopted:** nothing in this item. The compact Filters ▾ cascade (Widgets 23) is decided *adopt* and is implemented in item `V89A-DW`.
+- **Declined / filed:** nothing filed. IconBrowser is settled with no issue, by owner ruling.
+- **Undecided:** Widgets 23 for the History row menu (`modules/WindowHistory.lua:328`), which the plan's table does not name. Recommendation: *not now*. Reported to the run's lead.
+- **Gate:** `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` gave 0 warnings / 0 errors in 241 files. `.luacheckrc` excludes `libs/` and `tests/_kit/`, and the addon's own seams are inside the checked set. `~/.claude/dev-copilot/bin/ka0s-bounded lua tests/run.lua` gave 2238 passed, 0 failed, 1 skipped, 2239 total, and `tests/test_vendor_sync.lua`'s cases pass. The largest addon-owned file is `modules/WindowCells.lua` at 1177 lines, under the 1500 cap.

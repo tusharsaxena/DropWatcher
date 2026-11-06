@@ -149,14 +149,14 @@ C.WINDOW = {
 --              border at button + BORDER, its glow at button + EFFECT; the detail card's deepest glow
 --              reaches W+10, beside the grip in the footer corner, which the scroll keeps clear);
 --              the library's resize grip W+10 (LibKa0s-Core-1.0 sets it; GRIP names it); the
---              floating Offer panel W+30 and the compact Filters panel W+35, popovers over the
---              window's own content in the window's strata (a level, never a strata jump)
+--              floating Offer panel W+30, a popover over the window's own content in the window's
+--              strata (a level, never a strata jump)
 --   HIGH       the toast (ALERT): over the window and its popovers, under any modal
 --   DIALOG     the Edit message box (MODAL, W+40, toplevel); the library's debug console, perf and
 --              sim panels; Blizzard's StaticPopups
 --   FULLSCREEN the library's Copy window, over the debug console that opens it
---   FULLSCREEN_DIALOG  the library's dropdown menu, over every tier it opens from (the Filters
---              panel's dropdowns included)
+--   FULLSCREEN_DIALOG  the library's dropdown menu, over every tier it opens from (the compact
+--              Filters ▾ cascade included, each level 10 above the one it opens from)
 --   TOOLTIP    GameTooltip and the TipGrid holder
 C.LAYERS = {
     STRATA = {
@@ -171,7 +171,6 @@ C.LAYERS = {
         CONTENT_MAX     = 8,    -- the window's content stays at or below W+8 (frame-layering-§3)
         GRIP            = 10,   -- the library's resize grip: named here, set by LibKa0s-Core-1.0
         POPOVER_OFFER   = 30,   -- the floating Offer panel
-        POPOVER_FILTERS = 35,   -- the compact Filters panel, the more transient of the two
         MODAL           = 40,   -- the Edit message box, belt and braces over its DIALOG strata
     },
 }

@@ -41,7 +41,7 @@ on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`, which pass the edge 
 re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change. The
 frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
 (the trade timer, which paces its ticker by the window; compact mode's run override; and the compact
-Filters panel, which closes with the window); the window calls no engine module.
+Filters menu, which closes with the window); the window calls no engine module.
 
 ## What the window repaints on
 
@@ -913,7 +913,8 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           settledAt on both; on received `got`, the `me` verdict frozen, so equipping the item
           and the gear re-judge after it never rewrite the gain Insights reads)
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
-row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
+row right-click ─> NS.ContextMenu (W.ContextMenu at the pointer; without the library
+                 Compat.ContextMenu) ─> History.SetEntryDeclined
 row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
                  ─> repaint: HistoryCard.Paint(card, drop, width, WindowHistory.CardContext(drop))
                     under the row (feedback-15 §4; the snapshot only: HistoryCard.Model)
