@@ -121,7 +121,9 @@ if not lib then
     local function profileAbsent() libraryAbsent(SLASH .. " profile") end
     local DISABLED_LINE_FORMAT = "%s is disabled \226\128\148 enable it with |cFFFFFF00%s|r"
 
-    local function helpRow(entry) return SLASH .. " " .. entry[1] .. " — " .. entry[2] end
+    -- A degraded help row prints `cmd  desc` plainly: no gold command, no em dash, never a copy of
+    -- the library's FormatRow (slash-commands-§1).
+    local function helpRow(entry) return SLASH .. " " .. entry[1] .. "  " .. entry[2] end
 
     -- The verbs that answer while disabled: the standard's reserved set, plus `profile`. Any other
     -- verb the addon ships prints the one refusal line instead (slash-commands-§2).
