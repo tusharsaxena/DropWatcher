@@ -50,7 +50,7 @@ Total.
 - parity: the degraded Skin facade answers every name the live facade carries
 - parity: each host-copy skin token is the live library's Ka0s Default value
 
-### test_setup.lua (24)
+### test_setup.lua (25)
 
 - core: NS.Print is NS.Util.print after AceConsole's embed (architecture-§2)
 - core: the printer tags every line with the cyan [DW] prefix
@@ -76,6 +76,7 @@ Total.
 - options: the category registers eagerly, with the General page under it
 - options: the General page's first group is exactly `Master controls`
 - options: the degraded load completes, and the panel says once that it is unavailable
+- slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
 ### test_database.lua (15)
 
@@ -2600,7 +2601,7 @@ Total.
 |-------|------:|
 | test_harness.lua | 12 |
 | test_surface_parity.lua | 24 |
-| test_setup.lua | 24 |
+| test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 26 |
@@ -2715,4 +2716,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2237** |
+| **Total** | **2238** |

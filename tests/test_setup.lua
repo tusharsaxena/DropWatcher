@@ -374,3 +374,16 @@ test("options: the degraded load completes, and the panel says once that it is u
         "the composers are hollow ({}), never a host copy")
     assertTrue(S.FindRow("feed.quality.mode") ~= nil, "the hand-written rows stand without the library")
 end)
+
+-- ── Slash (library absent) ──────────────────────────────────────────────────────────────────
+
+test("slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)", function()
+    local D = T.newAddon{ skip = { "libs/LibKa0s/Slash.lua" } }
+    local rows = D.SlashCommands:LandingRows()
+    assertTrue(#rows > 0, "the stub renders a row per COMMANDS entry")
+    -- red under: the stub's helpRow joining the verb and its description with an em dash
+    for i, entry in ipairs(D.COMMANDS) do
+        assertEqual(rows[i], D.SLASH .. " " .. entry[1] .. "  " .. entry[2])
+        assertFalse(rows[i]:find("|c", 1, true) ~= nil, "no gold command: " .. rows[i])
+    end
+end)
