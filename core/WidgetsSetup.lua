@@ -2,7 +2,7 @@ local addonName, NS = ...
 -- core/WidgetsSetup.lua — NS.MakeDropdown / NS.ContextMenu / NS.CloseMenu / NS.MakeTestStrip /
 -- NS.MakeSearchBox from LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View,
 -- Quality and Content, the tab's Sort), the shared menu opened on a host's rows (the compact Filters ▾
--- cascade, Widgets minor 23's `submenu` rows), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
+-- cascade, Widgets minor 23's `submenu` rows; the History row menu at the pointer, V89A-DWH), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
 -- the cyan simulation flavor) and the filter bar's search box (LibKa0s#52).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown
@@ -18,7 +18,8 @@ local addonName, NS = ...
 --
 -- DEGRADED (the library absent): NS.MakeDropdown answers nil and the window draws no dropdown at
 -- all rather than a dead control that opens no menu. NS.ContextMenu answers nil (the compact Filters ▾
--- lists the dropdowns, so with none it is not shown either). NS.MakeSearchBox answers nil the same way: the
+-- lists the dropdowns, so with none it is not shown either; the History row menu falls back to the
+-- client's MenuUtil menu, core/Compat.lua's ContextMenu). NS.MakeSearchBox answers nil the same way: the
 -- bar draws no search box and filters nothing by text (no hand-built fallback, which would be a
 -- private copy of the library's box). NS.CloseMenu is a no-op, because there is no menu that could
 -- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;

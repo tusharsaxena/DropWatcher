@@ -17,8 +17,11 @@ local _, NS = ...
 -- A row's height, item button and text size are the Drops rows' (modules/WindowRows.lua, the
 -- Window page's Layout rows; feedback-2 spec §8, FB2-9).
 --
--- READ-ONLY. No row asks or offers. A right-click on a row opens its menu (core/Compat.lua's
--- ContextMenu): Mark as declined, or Clear declined; a client without the menu toggles it at once.
+-- READ-ONLY. No row asks or offers. A right-click on a row opens its menu, one row: Mark as
+-- declined, or Clear declined. It is LibKa0s-Widgets' shared menu at the pointer, in this addon's
+-- skin (NS.ContextMenu, core/WidgetsSetup.lua; V89A-DWH), the one Filters ▾ opens. Without the
+-- library it is the client's menu (core/Compat.lua's ContextMenu), and a client without that menu
+-- toggles it at once.
 --
 -- THE DETAIL CARD (feedback-15 spec §4, DW-Q4). A row draws the Drops rows' chevron and is indented
 -- as they are (K.ROW_INDENT, the columns after WindowGroup.LEAD); a click on it (a cell, or a plain
@@ -317,14 +320,16 @@ local function setTone(fs, tone) NS.WindowRows.SetTone(fs, tone) end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
---- A row's menu: Mark as declined, or Clear declined. Without the client's menu it acts at once.
+--- A row's menu: Mark as declined, or Clear declined. The library's skinned menu at the pointer
+--- (V89A-DWH); without the library the client's menu; without either it acts at once.
 --- @param e table the history entry
---- @param owner table|nil
+--- @param owner table|nil the row or card the menu is on
 function WH.OpenMenu(e, owner)
     if type(e) ~= "table" then return end
     local on = e.outcome ~= "declined"
     local text = on and L["Mark as declined"] or L["Clear declined"]
     local act = function() NS.History.SetEntryDeclined(e, on) end
+    if NS.ContextMenu(owner, { { label = text, onClick = act } }, { cursor = true }) then return end
     if not NS.Compat.ContextMenu(owner, { { text = text, fn = act } }) then act() end
 end
 

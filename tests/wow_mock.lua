@@ -654,6 +654,10 @@ local function installTableSurface(M)
     M.shift, M.ctrl = false, false
     M.IsShiftKeyDown = function() return M.shift == true end
     M.IsControlKeyDown = function() return M.ctrl == true end
+    -- The pointer, in screen pixels: LibKa0s-Widgets' menu opened `cursor = true` (the History row
+    -- menu, V89A-DWH) is placed there.
+    M.cursorX, M.cursorY = 300, 400
+    M.GetCursorPosition = function() return M.cursorX, M.cursorY end
     M.chatLinks, M.dressUps = {}, {}
     M.ChatEdit_InsertLink = function(link) M.chatLinks[#M.chatLinks + 1] = link; return true end
     M.DressUpItemLink = function(link) M.dressUps[#M.dressUps + 1] = link; return true end

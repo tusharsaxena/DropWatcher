@@ -36,7 +36,7 @@ passed.
 | SIT-1..7 | Situations | Where the addon is active (DW-13); the Situations table's Loot rule column fits in every skin (SIT-6, DW-02); a fresh profile's Situations defaults (SIT-7, DW-06) |
 | QUAL-1..4 | Quality | The minimum-quality gate (DW-12) |
 | SCORE-1..5 | Scoring | The Pawn adapter (SCORE-1), your weights and the Pawn scale import (SCORE-2), DW-50; Pawn counts only once initialized (SCORE-3), DW-62; Pawn with its default settings, no setup (SCORE-4), feedback-21 H1; the scale you show in Pawn (SCORE-5), feedback-21 R4 |
-| HIST-1..7 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4 |
+| HIST-1..8 | [History](#history) | A completed trade recorded (HIST-1), the History tab across a reload, its row menu and Clear history (HIST-2), DW-51, and the Drops tab across a reload (HIST-2, DW-Q0); Keep history for, its confirmation, the login prune and step 4 (HIST-3), DW-A5; the prune after a disabled start and a stale confirmation (HIST-4), DW-A9; the undone Expired and This instance across a reload (HIST-5), DW-Q0; Clear history in Settings, off the footers (HIST-6), DW-Q3; the History tab's detail card (HIST-7), DW-Q4; the row menu as the skinned Ka0s menu (HIST-8), V89A-DWH |
 | INSIGHT-1..8 | [Insights](#insights) | Issue #12 (DW-N1..DW-N4): the tab, its tooltip and the period caption following the retention, `/dw insights` (INSIGHT-1); the seven data-driven filters and their fallback to All (INSIGHT-2); the cards and every section on real history, the empty lines, no Sort and no shared bar (INSIGHT-3); an ask that ends in a trade and the gain kept after equipping the item (INSIGHT-4); test mode filling every section, the strip under the tabs (INSIGHT-5); a simulation's drops and trade alone, and the restore (INSIGHT-6); compact, a skin switch and a resize (INSIGHT-7); the slot the client gives an item you cannot equip, and an Always watch item of no kind as Watched item (INSIGHT-8) |
 | TOAST-1..9 | [Toast](#toast) | The upgrade toast (on for a new profile since 2026-10-25): shown, paused, held in combat, placed in test mode and its sound (TOAST-1), DW-52; it leaves with its drop and with its switch (TOAST-2) and fires for an empty slot (TOAST-3), DW-62; its close mark with the library present (TOAST-4, DW-P21); the off-spec toast's title, and auto-ask sending main spec first (TOAST-5, DW-O2); its Scale, 50 to 200 %, live and about the place you put it (TOAST-6, feedback-21 G10); the toast on the LibKa0s-Toast-1.0 shell, everything the player saw before kept: place, look, lifetime, closes, combat hold, test mode, sound and diagnostics (TOAST-7, SM-DW-AT2..AT7, AT-A2); the toast as tall as DpsRace's new-best toast, every element scaled (TOAST-8, DW-05); three upgrades at once, stacked (TOAST-9, DW-T2, issue #14) |
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
@@ -2496,6 +2496,17 @@ declined`; Clear declined → the earlier outcome. On a drop of this session sti
 Show in Drops → the Drops tab, the drop's header open and its card expanded; on an earlier
 session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
 the clicked card. Result: passed in the client, 2026-10-23 (the owner).
+
+**HIST-8. The row menu as the skinned Ka0s menu (V89A-DWH, SM-07).** The headless `test_history` covers
+the rows handed to the library and the fallback. `/dw history` (or `/dw test` for sample entries),
+right-click a row → a menu opens at the pointer, the same Ka0s menu Filters ▾ opens in compact (not the
+client's own), with one row, `Mark as declined` (`Clear declined` on a declined entry). Choose it → the menu
+closes and the row reads `Declined`; right-click again → `Clear declined`, which puts the earlier outcome
+back. Right-click a cell, and a compact card (`/dw compact`) → the same menu. Right-click a second row while
+it is open → it moves to the pointer with that row's entry. A press elsewhere, Escape on the window or
+`/dw hide` closes it. The menu wears the skin in force (cycle a few). Fail: the client's menu, a menu under
+the row instead of at the pointer, or a pick that changes nothing.
+Result:
 
 ## Insights
 

@@ -458,7 +458,7 @@ a completed trade marking `received` and the Ask button `Traded`, one given away
 unfinished or changed trade marking nothing; Clear history behind its
 confirmation (`History.AskClear`; the strip has none since DW-Q3); the diagnostics line; and the History tab built headless: kept groups newest first,
 the outcome column in the action buttons' tones (feedback-12 spec §0), a reason on every cell, a header toggle, Content's This session, the row menu
-with and without the client's menu, the empty line and `HistoryChanged`'s repaint),
+as the rows handed to LibKa0s-Widgets' menu at the pointer (V89A-DWH), and without the library through the client's menu or at once, the empty line and `HistoryChanged`'s repaint),
 `test_history_retention` (Keep history for, feedback-2 spec §5: the labels, choices and footer, a
 group's age by its newest entry, Count deleting nothing and Prune deleting whole groups; the row,
 account-wide with its listed windows; a longer window or one that deletes nothing taken at once, a

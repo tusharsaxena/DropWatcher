@@ -30,7 +30,7 @@ lists the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and six verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
@@ -38,7 +38,7 @@ lists the toolchain):
 | Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-four `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
-(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
+(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
 (`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` / `SIMULATION` title word
 marks the mode; with the library, a word shows only while the window is minimized, DW-10). Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live

@@ -1879,7 +1879,7 @@ Total.
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 
-### test_history.lua (39)
+### test_history.lua (40)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -1905,7 +1905,8 @@ Total.
 - history tab: kept groups newest first, the first open, each row's outcome painted
 - history tab: rows take the Window page's row height and font size
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
-- history tab: a right-click marks a row declined, through the menu when the client has one
+- history tab: a right-click opens the library's skinned menu at the pointer, one flat row that marks the row declined
+- history tab: without LibKa0s-Widgets the row menu is the client's, and without that it acts at once
 - history tab: with nothing kept it says what it will hold, and the strip has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
@@ -2679,7 +2680,7 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 27 |
 | test_transmog.lua | 13 |
-| test_history.lua | 39 |
+| test_history.lua | 40 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
 | test_insights_stats.lua | 16 |
@@ -2716,4 +2717,4 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 49 |
 | Skipped | 1 |
-| **Total** | **2238** |
+| **Total** | **2239** |

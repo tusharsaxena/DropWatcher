@@ -913,7 +913,8 @@ TRADE_SHOW ─> partner, items ─> *_ITEM_CHANGED (re-read, accept off) ─> TR
           settledAt on both; on received `got`, the `me` verdict frozen, so equipping the item
           and the gear re-judge after it never rewrite the gain Insights reads)
           TRADE_CLOSED alone ─> nothing (a cancel or a failed trade)
-row right-click ─> Compat.ContextMenu ─> History.SetEntryDeclined
+row right-click ─> NS.ContextMenu (W.ContextMenu at the pointer; without the library
+                 Compat.ContextMenu) ─> History.SetEntryDeclined
 row (or compact card) click ─> WindowHistory.ToggleExpand(entry) ─> State.windowHistory.expanded
                  ─> repaint: HistoryCard.Paint(card, drop, width, WindowHistory.CardContext(drop))
                     under the row (feedback-15 §4; the snapshot only: HistoryCard.Model)

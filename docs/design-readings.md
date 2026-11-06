@@ -321,10 +321,11 @@ and a safety ceiling of 5,000 drops in all, the oldest first. **The tab** opens 
 (and Character: All since feedback-13 spec §0, its fixed defaults, WindowFilterBar.TAB_FIXED)
 the first time each session (Content's This session and This instance then cut by time, and
 `n days ago` names an older group); it is read-only but for the row menu (right-click: Mark as
-declined or Clear declined, through the client's `MenuUtil`, or at once without it), and Clear
+declined or Clear declined, in LibKa0s-Widgets' skinned menu at the pointer since V89A-DWH, the client's
+`MenuUtil` without the library, or at once without either), and Clear
 history asks first (a StaticPopup), then empties the log on every character and keeps the window.
 **Account-wide:** one log for all your characters, as the Keep history for row says. That the log survives a
-reload and the row menu opens in game is HIST-2.
+reload and the row menu opens in game is HIST-2; that it is the skinned Ka0s menu is HIST-8.
 
 ## The toast
 
