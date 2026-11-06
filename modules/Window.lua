@@ -767,7 +767,7 @@ function Window.SelectTab(key)
     if not frame then return true end
     for k, pane in pairs(frame.panes) do pane:SetShown(k == key) end
     if Window.TabOwnsBar(key) then
-        NS.CloseMenu()   -- the shared bar's menu and the compact Filters panel go with the bar
+        NS.CloseMenu()   -- the shared bar's menu and the compact Filters menu go with the bar
         NS.CompactChrome.CloseFilters()
     end
     buildPane(key)

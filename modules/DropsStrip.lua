@@ -15,7 +15,7 @@ local _, NS = ...
 -- the tab's Sort (NS.WindowFooter's control, anchored here through `pane.sortHost`) at the strip's
 -- right edge (NS.WindowFooter.SORT_INSET). Compact, the same buttons as their marks alone
 -- (K.FOOTER_ICON_W, FooterRow.SetCompact; feedback-16), their tooltips naming them: `[Post] [Scan
--- group] [Expand all]` (Sort is in the Filters panel; Scan group is the title bar's icon too). Post,
+-- group] [Expand all]` (Sort is in the Filters menu; Scan group is the title bar's icon too). Post,
 -- the leftmost, shows only while one of your drops the tab lists can be traded and another player is
 -- in your group to read it (DS.Postable, DW-07; test mode always); the summary ends
 -- where the row starts, one line, cut with an ellipsis when the row is narrow.

@@ -80,16 +80,18 @@ test("insights tab: the footer's Sort is hidden on Insights and back on History"
     assertTrue(sort:IsShown())
 end)
 
-test("insights tab: switching in closes the compact Filters panel", function()
+test("insights tab: switching in closes the compact Filters menu", function()
     local NS, _, m = T.enableAddon()
     NS.SetWindowMode("compact")
     NS.ShowWindow()
     NS.Window.SelectTab("history")
     local p = NS.CompactChrome.Parts()
     p.filters:__fire("OnClick")
-    assertTrue(p.panel:IsShown(), "open on History")
+    local menu = p.menu
+    assertTrue(menu ~= nil and menu:IsShown(), "open on History")
     NS.Window.SelectTab("insights")
-    assertFalse(p.panel:IsShown(), "closed with the bar")
+    assertFalse(menu:IsShown(), "closed with the bar")
+    assertTrue(p.menu == nil)
     assertTrue(m ~= nil)
 end)
 

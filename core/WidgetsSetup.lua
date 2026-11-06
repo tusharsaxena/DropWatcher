@@ -1,7 +1,8 @@
 local addonName, NS = ...
--- core/WidgetsSetup.lua — NS.MakeDropdown / NS.CloseMenu / NS.MakeTestStrip / NS.MakeSearchBox from
--- LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View, Quality and Content, the
--- tab's Sort), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
+-- core/WidgetsSetup.lua — NS.MakeDropdown / NS.ContextMenu / NS.CloseMenu / NS.MakeTestStrip /
+-- NS.MakeSearchBox from LibKa0s-Widgets-1.0: the window's flat dropdowns (the filter bar's View,
+-- Quality and Content, the tab's Sort), the shared menu opened on a host's rows (the compact Filters ▾
+-- cascade, Widgets minor 23's `submenu` rows), its mode strips (LibKa0s#48: the amber test-mode strip and, from Widgets minor 14,
 -- the cyan simulation flavor) and the filter bar's search box (LibKa0s#52).
 --
 -- A seam, nothing else (library-stack-§7): one file leases the major, so the art the dropdown
@@ -16,7 +17,8 @@ local addonName, NS = ...
 -- path through UISpecialFrames), and the minimize, which hides the bar the menu dropped from.
 --
 -- DEGRADED (the library absent): NS.MakeDropdown answers nil and the window draws no dropdown at
--- all rather than a dead control that opens no menu. NS.MakeSearchBox answers nil the same way: the
+-- all rather than a dead control that opens no menu. NS.ContextMenu answers nil (the compact Filters ▾
+-- lists the dropdowns, so with none it is not shown either). NS.MakeSearchBox answers nil the same way: the
 -- bar draws no search box and filters nothing by text (no hand-built fallback, which would be a
 -- private copy of the library's box). NS.CloseMenu is a no-op, because there is no menu that could
 -- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;
@@ -82,6 +84,23 @@ function NS.MakeTestStrip(parent, text, kind)
     return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName,
         sim = isSim and NS.Sim or nil,
         onEnd = (not isSim) and function() NS.SetTestMode(false) end or nil })
+end
+
+--- Open the shared popup menu on `rows` from `anchor` (W.ContextMenu, Widgets minor 21; `submenu`,
+--- `radio` and `selected` rows minor 23), in this addon's skin. A second call on the same anchor
+--- closes it, as a dropdown's second click does. Nil when the library is absent: the caller draws no
+--- menu.
+--- @param anchor table the control the menu drops from (a press on it is no outside press)
+--- @param rows table the menu's rows
+--- @param opts table|nil W.ContextMenu's opts; `owner` is always this addon
+--- @return table|nil the menu
+function NS.ContextMenu(anchor, rows, opts)
+    if not W then return nil end
+    local o = {}
+    for k, v in pairs(opts or {}) do o[k] = v end
+    o.owner = addonName
+    o.check = o.check or NS.Icon("confirm")
+    return W.ContextMenu(anchor, rows, o)
 end
 
 --- Close the shared popup menu behind every dropdown in the process, if one is open. Safe when none

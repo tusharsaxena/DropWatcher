@@ -207,11 +207,11 @@ General page's last tab, Keybindings, is LibKa0s's `O.KeybindingsTab` over it (o
 
 ## Event Subscriptions
 
-Every game event but one is declared in `NS.FEATURE_EVENTS` and registered through
+Every game event is declared in `NS.FEATURE_EVENTS` and registered through
 `NS.SafeRegisterEvent`, so `OnEnable` and the stand-up register exactly that list and the
-stand-down unregisters it. The exception is UI-local: compact mode's Filters panel registers
-`GLOBAL_MOUSE_DOWN` on its own frame only while it is open, to close on a press outside it, and
-unregisters it when it hides (`modules/CompactChrome.lua`). Two
+stand-down unregisters it. (Compact mode's Filters menu is LibKa0s-Widgets' shared menu, whose own
+`GLOBAL_MOUSE_DOWN` listener closes it on a press outside it; the addon registers none for it,
+`modules/CompactChrome.lua`.) Two
 modules may declare the same event: AceEvent keeps one handler per event, so such an event is
 registered once, on `DW:OnSharedFeatureEvent`, which calls each declared handler in row order (the
 TOC order of the modules). Each handler runs under `pcall`, so one that raises never skips the
@@ -296,11 +296,11 @@ Every strata and frame level the addon sets reads one table, `NS.Constants.LAYER
 (`core/Constants.lua`, frame-layering-§5), whose header comment states the whole stack with its
 levels; every level is relative to the frame's parent. The tiers, low to high: the main window
 (`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel docked beside it; the
-library's resize grip; the window's popovers in its own strata, by level (the floating Offer panel,
-then the compact Filters panel); the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
+library's resize grip; the window's popover in its own strata, by level (the floating Offer panel);
+the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
 frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names); the Edit message box (`DIALOG`, toplevel), beside
 the library's debug console, perf and sim panels; the library's Copy window (`FULLSCREEN`); the
-library's dropdown menu (`FULLSCREEN_DIALOG`); tooltips. Inside an item button, the border frame sits
+library's dropdown menu (`FULLSCREEN_DIALOG`, the compact Filters ▾ cascade included); tooltips. Inside an item button, the border frame sits
 under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
 
 ## Skins

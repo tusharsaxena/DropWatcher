@@ -17,7 +17,7 @@ local _, NS = ...
 -- CONTENT IS PER TAB (feedback-15 spec §1, DW-Q1). Drops offers This instance and This session (its
 -- feed holds this session's drops alone, so an All would be This session again); History adds All,
 -- every kept day. The one Content dropdown takes the active tab's values on Sync, in both layouts
--- (the compact Filters panel holds the same control), and a value the tab does not offer is refused.
+-- (the compact Filters menu lists the same control's rows), and a value the tab does not offer is refused.
 --
 -- THE VIEW IS A SET (feedback-2 spec §1, FB2-1..3). Like Loot History's `Direction: 3 selected`
 -- (../LootHistory/modules/BrowserFilterBar.lua) the View dropdown is multi-select: Interesting,
@@ -53,8 +53,9 @@ local _, NS = ...
 -- the frame edge.
 -- DEGRADED (no LibKa0s-Widgets-1.0): the four dropdowns are not drawn (core/WidgetsSetup.lua);
 -- the search box still filters.
--- THE COMPACT LAYOUT (compact spec §4) keeps View and the search box on one row and moves Quality,
--- Content and Character into the Filters panel (modules/CompactChrome.lua); FB.Anchor puts them back.
+-- THE COMPACT LAYOUT (compact spec §4) keeps View and the search box on one row and hides Quality,
+-- Content and Character, whose rows the Filters menu lists and picks through (modules/CompactChrome.lua);
+-- the full layout shows them again and FB.Anchor puts them in their places.
 
 NS.WindowFilterBar = NS.WindowFilterBar or {}
 local FB    = NS.WindowFilterBar
@@ -682,7 +683,7 @@ end
 -- The search box is LibKa0s-Widgets-1.0's W.SearchBox (LibKa0s#52), through NS.MakeSearchBox
 -- (core/WidgetsSetup.lua): a BackdropTemplate frame with a square 1px WHITE8X8 border, the same fill
 -- and line as the dropdown beside it, so every control on the bar is one skin, the owner's
--- (`input.*`). modules/CompactChrome.lua's Filters button and panel draw it through the skin's Inset.
+-- (`input.*`). modules/CompactChrome.lua's Filters button draws it through the skin's Inset.
 
 -- The library's scripts own the hint and the gold line; DW hooks the focus loss for its debug line.
 local function buildSearch(host)
@@ -720,8 +721,8 @@ function FB.Build(host)
 end
 
 --- Put every control at its place on the bar, left to right, then the search box from the bar's gap
---- after the last of them to the bar's right edge, with its full hint (the build, and the full
---- layout taking them back from the compact Filters panel, modules/CompactChrome.lua). Both its edges
+--- after the last of them to the bar's right edge, with its full hint (the build, and the switch back
+--- to the full layout, modules/CompactChrome.lua). Both its edges
 --- are anchored, so it widens and narrows with the window, live while sizing (feedback-4 spec §4).
 function FB.Anchor()
     local host = controls.host

@@ -12,7 +12,7 @@ local _, NS = ...
 --   History   Sort · Expand/Collapse                                     Expand/Collapse
 --
 -- Post my tradeables shows only while one of your drops the tab lists can be traded; a hidden
--- control takes no room. In compact, Sort stays in the Filters panel (modules/CompactChrome.lua),
+-- control takes no room. In compact, Sort is in the Filters menu (modules/CompactChrome.lua),
 -- and every button is its mark alone, K.FOOTER_ICON_W wide and centered, its tooltip naming it
 -- (FR.SetCompact; feedback-16: three labeled buttons do not fit the compact pane; Scan group joins the
 -- strip, as in full, and stays the title bar's icon too). FR.Slots is that placement, pure; the info text on the strip's

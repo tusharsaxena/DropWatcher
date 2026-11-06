@@ -41,7 +41,7 @@ on both combat edges (`PLAYER_REGEN_DISABLED` / `_ENABLED`, which pass the edge 
 re-reading `UnitAffectingCombat`), on the stand-down and stand-up, and on a profile change. The
 frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibilityListener` listener
 (the trade timer, which paces its ticker by the window; compact mode's run override; and the compact
-Filters panel, which closes with the window); the window calls no engine module.
+Filters menu, which closes with the window); the window calls no engine module.
 
 ## What the window repaints on
 

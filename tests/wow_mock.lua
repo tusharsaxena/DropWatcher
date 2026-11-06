@@ -950,6 +950,19 @@ local function build()
             or (type(parent) == "table" and parent.__dwTree) then
             decorateGeometry(M, f)
         end
+        -- An undecorated frame is its own font string (the base's CreateFontString), so the stub's
+        -- catch-all would answer a measure with the frame itself, and a hover test with the frame
+        -- (truthy). Unmeasured text answers nil, as a font not yet loaded does, and the pointer is
+        -- over a frame only when a case says so (`__mouseOver`): LibKa0s-Widgets' shared menu (the
+        -- compact Filters ▾ cascade) sizes itself from its rows' labels and reads an outside press
+        -- that way.
+        if rawget(f, "GetStringWidth") == nil then
+            f.GetStringWidth = function() return nil end
+            f.GetUnboundedStringWidth = function() return nil end
+        end
+        if rawget(f, "IsMouseOver") == nil then
+            f.IsMouseOver = function(self) return self.__mouseOver == true end
+        end
         if frameType == "Button" then
             function f:RegisterForClicks(...) self.__clicks = { ... }; return self end
             if type(name) == "string" then rawset(M, name, f) end
