@@ -115,7 +115,7 @@ test("shell: TEST MODE is bright-red text beside the title, SIM the same in cyan
     assertTrue(f.simBanner:IsShown())
     assertFalse(f.banner:IsShown())
     assertEqual(f.simBanner.kind, "sim", "the library's simulation flavor")
-    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation", "the strip carries SimTip")
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "SIM", "the strip carries SimTip")
     NS.Window.SetMinimized(true)
     TB.PaintModeText(f)
     assertTrue(f.simText:IsShown(), "minimized in a sim: the word comes back")

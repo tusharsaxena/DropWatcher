@@ -142,7 +142,7 @@ test("window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and t
     assertEqual(table.concat({ s2[1], s2[3], s2[4], s2[5] }, ","), "TOPRIGHT,BOTTOMRIGHT,0,-2")
     assertTrue(s1[2] == f.filterHost and s2[2] == f.filterHost)
     assertEqual(f.simBanner.kind, "sim")
-    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation")
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "SIM")
 end)
 
 test("window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT", function()

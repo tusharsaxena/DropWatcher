@@ -102,7 +102,7 @@ end
 function SITUATION.tip(i)
     local name = WF.SituationLabel(i.situation)
     if type(i.sim) == "table" then
-        return { L["Simulation"], row(L["Situation"], name), row(L["Members"], i.sim.members or 0),
+        return { L["SIM"], row(L["Situation"], name), row(L["Members"], i.sim.members or 0),
             row(L["Both"], L["made up"]), hint(L["/dw sim stop ends it."]) }
     end
     if i.tracking == false then

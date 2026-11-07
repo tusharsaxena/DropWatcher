@@ -137,7 +137,7 @@ function TB.SimTip()
     local st = NS.SimHost.Status()
     local scenario = st.active and tostring(st.scenario) or L["none"]
     local TM = NS.TipMarks
-    return L["Simulation"],
+    return L["SIM"],
         TM.Row(L["Scenario"], ("%s (%s)"):format(scenario, NS.WindowFooter.SituationLabel(st.situation))),
         TM.Row(L["Runs"], L["a made-up group session, through the real engine"]),
         TM.Row(L["Sent"], L["nothing"]), TM.Row(L["Your history"], L["not touched"]),

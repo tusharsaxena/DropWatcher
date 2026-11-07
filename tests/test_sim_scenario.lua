@@ -556,10 +556,10 @@ test("sim window: the sim strip (not the SIM text) with the scenario tooltip, an
     NS.Window.Refresh()
     assertTrue(f.simBanner:IsShown(), "the cyan strip under the filter bar (DW-10)")
     assertFalse(f.simText:IsShown()); assertFalse(f.testText:IsShown())
-    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation")
+    assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "SIM")
     assertEqual(f.simText.text:GetText(), "SIM")
     local title, scenario = NS.WindowTitleBar.SimTip()
-    assertEqual(title, "Simulation"); assertEqual(T.tipPlain(scenario), "• Scenario: raid (Raid)")
+    assertEqual(title, "SIM"); assertEqual(T.tipPlain(scenario), "• Scenario: raid (Raid)")
     local seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation
     assertEqual(seg.text, "Simulating: Raid · 10 members")
     slash(NS, "sim stop")

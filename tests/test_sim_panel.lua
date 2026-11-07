@@ -87,7 +87,7 @@ test("sim panel: the descriptor carries DropWatcher's presentation fields and no
     table.sort(keys)
     -- No button, no tooltip (OWNER_SCOPE C.7) and no store (C.11).
     assertEqual(table.concat(keys, ","), "anchorTo,check,startTip,stepLabel,stepTip,stopTip,title")
-    assertEqual(F.title(), "Ka0s Drop Watcher - Simulation")
+    assertEqual(F.title(), "Ka0s Drop Watcher - SIM")
     assertEqual(F.check, NS.Icon("confirm"), "the done tick is the catalog's confirm icon")
     assertNil(F.anchorTo(), "no window shown: the panel floats")
 end)
@@ -159,7 +159,7 @@ test("sim panel: `/dw sim` opens it with DropWatcher's title, `/dw sim panel` to
     local NS, m = addon()
     slash(NS, "sim")
     assertTrue(NS.Sim:IsPanelShown())
-    assertEqual(m.simPanel.title:GetText(), "Ka0s Drop Watcher - Simulation")
+    assertEqual(m.simPanel.title:GetText(), "Ka0s Drop Watcher - SIM")
     slash(NS, "sim panel")
     assertFalse(NS.Sim:IsPanelShown())
     slash(NS, "sim panel")

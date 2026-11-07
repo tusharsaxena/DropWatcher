@@ -8,7 +8,7 @@ local _, NS = ...
 -- NS.SimPanel.FIELDS is the Sim:New descriptor's `panel` (modules/Sim.lua creates the table and
 -- passes it; this file fills it in place at load, the way modules/SimScenario.lua fills the
 -- scenario defs; the library reads each field when it draws, so nothing is captured early):
---   title      `Ka0s Drop Watcher - Simulation`
+--   title      `Ka0s Drop Watcher - SIM`
 --   stepLabel  each step's name, with the boss a pull or a kill names (`Pull: Warden Ashvane`) and
 --              where a played loot step's drops went (`Loot: 3 drops (1 hidden)`, modules/SimReport.lua);
 --              the library prints the same name in its `Simulation step 3 of 11: ...` line
@@ -115,7 +115,7 @@ function SP.StepTip(step)
     return lines
 end
 
-F.title = function() return L["%s - Simulation"]:format(NS.BRAND) end
+F.title = function() return L["%s - SIM"]:format(NS.BRAND) end
 F.stepLabel = SP.StepLabel
 F.stepTip = SP.StepTip
 F.startTip = START_TIP
