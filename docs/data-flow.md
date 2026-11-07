@@ -368,7 +368,7 @@ the step panel (DW-04: LibKa0s-Sim-1.0's; `/dw sim` and `/dw sim panel` open it,
                    shown panel beside it (SimScenario's ready: NS.Sim:ShowPanel); standing down hides it
                    ─> its OnShow / OnHide (hooked by modules/Sim.lua's ShowPanel wrap, R7-SIM) and the
                    sim's listener re-read Master controls' Sim mode box (NS.IsSimMode: shown or running)
-the SIMULATION title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
+the SIM title text, the footer's "Simulating: …" and the `sim` diagnostics section read NS.SimHost.Status,
                    NS.SimRoster.Get, NS.SimPool.Status and NS.SimScenario.Status
 ```
 

@@ -91,11 +91,11 @@ end
 
 -- DW-10 (OWNER_SCOPE A): the strip marks the mode while expanded, so the word is drawn only while
 -- minimized (the strip goes with the body) or with no strip (the degraded case, tests/test_window.lua).
-test("shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not", function()
+test("shell: TEST MODE is bright-red text beside the title, SIM the same in cyan, each shown only in its mode and only where its strip is not", function()
     local NS, f = shown()
     local TB = NS.WindowTitleBar
     assertModeText(f.testText, "TEST MODE", 1, 0.15, 0.15, f.title)
-    assertModeText(f.simText, "SIMULATION", 0.35, 0.8, 1, f.title)
+    assertModeText(f.simText, "SIM", 0.35, 0.8, 1, f.title)
     assertFalse(f.testText:IsShown()); assertFalse(f.simText:IsShown())
     NS.SetTestMode(true)
     NS.Window.Refresh()

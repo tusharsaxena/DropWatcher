@@ -125,7 +125,7 @@ test("window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and t
     assertTrue(opts.kind ~= "sim", "the test flavor")
     local sopts = calls[2].opts
     assertEqual(sopts.kind, "sim")
-    assertEqual(sopts.text, "SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it.")
+    assertEqual(sopts.text, "SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it.")
     assertEqual(sopts.icon, NS.Icon("info"))
     assertTrue(type(opts.icon) == "string" and opts.icon:find("info", 1, true) ~= nil, "the catalog's info mark")
     assertEqual(opts.icon, NS.Icon("info"))
@@ -202,7 +202,7 @@ test("window: with no Widgets the window builds, test mode on raises nothing, f.
     NS.SetWindowMode("full")
     NS.Sim.IsActive = function() return true end
     NS.Window.Refresh()
-    assertTrue(f.simText:IsShown(), "the SIMULATION title word marks a sim with no strip")
+    assertTrue(f.simText:IsShown(), "the SIM title word marks a sim with no strip")
     assertEqual(NS.CompactChrome.BannerH(), 0)
     assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H), "no reserve in a sim either")
 end)

@@ -1,6 +1,6 @@
 -- tests/test_sim_scenario.lua — the simulator's scenarios, timeline and controls (simulator spec
 -- §4, §6, §7): the pure verb parser and timeline; `/dw sim` through the real dispatcher (status,
--- usage, the refusals, refused while disabled); the SIMULATION text, the footer and the diagnostics
+-- usage, the refusals, refused while disabled); the SIM text, the footer and the diagnostics
 -- section; and the end-to-end scenarios: a `key` and a `raid` run headless through the mock,
 -- asserting only what the real engine produced (modules/SimScenario.lua, settings/SimVerbs.lua).
 
@@ -546,7 +546,7 @@ end)
 -- The chip, the footer and the diagnostics section
 -- ---------------------------------------------------------------------------------------------
 
-test("sim window: the sim strip (not the SIMULATION text) with the scenario tooltip, and the footer says Simulating", function()
+test("sim window: the sim strip (not the SIM text) with the scenario tooltip, and the footer says Simulating", function()
     local NS = addon()
     NS.ShowWindow()
     local f = NS.Window.Frame()
@@ -557,7 +557,7 @@ test("sim window: the sim strip (not the SIMULATION text) with the scenario tool
     assertTrue(f.simBanner:IsShown(), "the cyan strip under the filter bar (DW-10)")
     assertFalse(f.simText:IsShown()); assertFalse(f.testText:IsShown())
     assertEqual(NS.Window.TooltipOf(f.simBanner)[1], "Simulation")
-    assertEqual(f.simText.text:GetText(), "SIMULATION")
+    assertEqual(f.simText.text:GetText(), "SIM")
     local title, scenario = NS.WindowTitleBar.SimTip()
     assertEqual(title, "Simulation"); assertEqual(T.tipPlain(scenario), "• Scenario: raid (Raid)")
     local seg = NS.WindowFooter.Compose(NS.WindowFooter.Read()).situation

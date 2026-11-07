@@ -2,7 +2,7 @@ local _, NS = ...
 -- modules/WindowTitleBar.lua — the main window's title bar (design spec §11.1, boards 01, 06 A and
 -- 06 E, as the owner's feedback spec §1 reshaped it to match Ka0s Loot History): the centered gold
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
--- simulator's `SIMULATION` text in its own color (simulator spec §6), each drawn only while minimized
+-- simulator's `SIM` text in its own color (simulator spec §6), each drawn only while minimized
 -- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
 -- restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
@@ -131,7 +131,7 @@ TB.SIM_TOKEN = "strip.sim"
 --- The gap between the title and a mode's text, as Ka0s Loot History sets it.
 TB.MODE_GAP = 10
 
---- The SIMULATION text's and the simulation strip's tooltip (simulator spec §6): the scenario and
+--- The SIM text's and the simulation strip's tooltip (simulator spec §6): the scenario and
 --- what the simulation never does.
 function TB.SimTip()
     local st = NS.SimHost.Status()
@@ -372,7 +372,7 @@ function TB.Build(f, host)
     NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
-    f.simText = buildModeText(bar, f.title, L["SIMULATION"], TB.SIM_TOKEN, TB.SimTip)
+    f.simText = buildModeText(bar, f.title, L["SIM"], TB.SIM_TOKEN, TB.SimTip)
     buildNewChip(f, bar)
     buildControls(f, bar)
 
@@ -400,7 +400,7 @@ function TB.PaintBadge(f)
     f.badge:SetShown(text ~= nil)
 end
 
---- The TEST MODE or the SIMULATION text beside the title (the two modes are exclusive), the
+--- The TEST MODE or the SIM text beside the title (the two modes are exclusive), the
 --- `n new` counter after it. The word shows only while its mode is on and its strip is not on
 --- screen: minimized (the strip goes with the body) or with no strip (no Widgets library).
 --- @param f table the window frame

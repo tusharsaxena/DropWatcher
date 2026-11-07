@@ -23,7 +23,7 @@ local addonName, NS = ...
 -- bar draws no search box and filters nothing by text (no hand-built fallback, which would be a
 -- private copy of the library's box). NS.CloseMenu is a no-op, because there is no menu that could
 -- be open. NS.MakeTestStrip answers nil and the window draws no strip and reserves no room for one;
--- the TEST MODE / SIMULATION word in the title bar then marks the mode. The title words mark a mode
+-- the TEST MODE / SIM word in the title bar then marks the mode. The title words mark a mode
 -- only where there is no strip, or while the window is minimized (the strip goes with the body).
 --
 -- THE SKIN OWNER (skinning-§1: every library factory that takes an owner is given one). Each

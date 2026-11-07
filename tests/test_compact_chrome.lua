@@ -30,10 +30,10 @@ test("chrome: the tabs' labels are Drops, History and Insights in both layouts (
     assertEqual(CC.TabText("history", false), "History")
 end)
 
-test("chrome: TEST MODE and SIMULATION shorten to TEST and SIM", function()
+test("chrome: TEST MODE and SIM shorten to TEST and SIM", function()
     local CC = T.newAddon().CompactChrome
     assertEqual(CC.ModeWord("test", true), "TEST"); assertEqual(CC.ModeWord("test", false), "TEST MODE")
-    assertEqual(CC.ModeWord("sim", true), "SIM"); assertEqual(CC.ModeWord("sim", false), "SIMULATION")
+    assertEqual(CC.ModeWord("sim", true), "SIM"); assertEqual(CC.ModeWord("sim", false), "SIM")
 end)
 
 test("chrome: the compact badge shows the queued count beside its lock, or nothing", function()
@@ -122,7 +122,7 @@ test("chrome: compact shows the short title; in test mode the strip marks it, so
     NS.SetWindowMode("full")
     assertEqual(textOf(f.title), NS.BRAND)
     assertEqual(textOf(f.testText.text), "TEST MODE")
-    assertEqual(textOf(f.simText.text), "SIMULATION")
+    assertEqual(textOf(f.simText.text), "SIM")
 end)
 
 test("chrome: compact and minimized in test mode, TEST shows beside the title and the two center together", function()
@@ -149,13 +149,13 @@ test("chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim 
     assertFalse(f.simText:IsShown(), "the sim strip is the marker (DW-10)")
     assertTrue(f.simBanner:IsShown())
     assertFalse(f.banner:IsShown())
-    assertEqual(textOf(f.simBanner.text), "SIM: a made-up session. Nothing is sent; /dw sim stop ends it.")
+    assertEqual(textOf(f.simBanner.text), "SIM: a made-up session. Nothing is sent. /dw sim stop ends it.")
     assertTrue(f.simBanner.text:GetWordWrap(), "compact: the short words may take two lines")
     assertEqual(f.title.__points[1][4], 0, "the title alone, centered")
     assertTrue(NS.CompactChrome.ModeStrip(f) == f.simBanner)
     NS.SetWindowMode("full")
     assertEqual(textOf(f.simBanner.text),
-        "SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it.")
+        "SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it.")
     assertFalse(f.simBanner.text:GetWordWrap())
     NS.Sim:Stop()
     NS.Window.Refresh()

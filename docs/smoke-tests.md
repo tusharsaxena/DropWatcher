@@ -42,7 +42,7 @@ passed.
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid border, the skin's color since R5-ICON) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..21 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIMULATION` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6) |
+| SIM-1..21 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIM` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6) |
 | COMPACT-1..11 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16); the Filters menu closing on a press outside it (COMPACT-10, R5-DD); the Filters ▾ cascade of the full bar's own dropdowns (COMPACT-11, V89A-DW) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
@@ -787,7 +787,7 @@ and Loot History's test mode → each shows `TEST MODE` in bright red, the same 
 its title, with no box behind it; Drop Watcher's hover still shows the test-mode tooltip. The yellow strip
 under the filter bar (`TEST MODE: sample drops of real items in every state. …`) is unchanged. On the right,
 the restriction badge, `Scan group`, minimize and the close mark keep their places. `/dw test` off, then
-`/dw sim start key` → `SIMULATION` in cyan, the same style and place. Minimize with a new drop pending → the
+`/dw sim start key` → `SIM` in cyan, the same style and place. Minimize with a new drop pending → the
 `n new` counter sits after the mode's words. Resize to the least width (1038 since DW-F1; 1132 from DW-E4, 972 from DW-D4, 520 before) with
 test mode on → the title stays centered; record whether `TEST MODE` reaches `Scan group` or the restriction
 badge (at that width the centered title leaves them little room). Result: passed in the client, 2026-10-23 (the owner).
@@ -1790,7 +1790,7 @@ agent:
 - SM-DW-11 (FEED-102). Minimize the window in test mode → the title bar shows `TEST MODE` again
   (`TEST` in compact), the `n new` counter after it; expand → the word goes and the strip returns.
 - SM-DW-12 (FEED-102). `/dw test` off, then `/dw sim start raid 10` → a CYAN strip under the filter bar
-  (`SIMULATION: a made-up group session through the real engine. …`), and no `SIMULATION` word beside
+  (`SIM: a made-up group session through the real engine. …`), and no `SIM` word beside
   the title; hovering the strip shows the scenario tooltip (`Simulation`, `Scenario: raid (Raid)`);
   `/dw sim stop` removes the strip.
 - SM-DW-13 (FEED-102). `/dw compact`, the window about 380 px wide, during a simulation → the short
@@ -2944,7 +2944,7 @@ join a group → `Simulation stopped: you joined a group.`; start one, then `/dw
 
 **SIM-2. A full `key` run (DW-73).** The headless `test_sim_scenario` (`sim e2e key`) covers the same
 ground. Solo, outside an instance, out of combat, with `/dw debug on`: `/dw sim start key` → chat says
-`Simulation ready: 4 members, <n> items. …`, the window opens with cyan `SIMULATION` text beside the title
+`Simulation ready: 4 members, <n> items. …`, the window opens with cyan `SIM` text beside the title
 (its tooltip names `Scenario: key (Mythic+)`), and the footer reads `Simulating: Mythic+ · 4 members`.
 With nothing pressed it plays on its own (procedure amended for auto-play, DW-01, 2026-10-23) → over about half a minute the badge shows `Mythic+ key`, then each boss's `Encounter`
 in turn, then `Chat lockdown` after the completion; the completion's loot lands in Drops, yours among
@@ -3006,7 +3006,7 @@ running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prin
 scenario 'nowhere'. Scenarios: …` with the scenario names (the library's line since DW-03, SIM-15); `/dw disable`, then `/dw sim start dungeon` → the disabled line, and no simulation starts.
 With one running: `/dw sim pull` twice → `A simulated boss is already engaged: /dw sim kill first.`;
 `/dw sim run` while it plays → `The timeline is already playing.` Start one (it plays on its own), then accept a
-real group invite mid-run (procedure amended for auto-play, DW-01, 2026-10-23) → `Simulation stopped: you joined a group.`, the `SIMULATION` text goes, no further
+real group invite mid-run (procedure amended for auto-play, DW-01, 2026-10-23) → `Simulation stopped: you joined a group.`, the `SIM` text goes, no further
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
 follower dungeon will do) → `Simulation stopped: you entered an instance.` Result: passed in the client, 2026-10-23 (the owner).
 
@@ -3444,7 +3444,7 @@ never an empty square. Result: passed in the client, 2026-10-30 (the owner).
 
 **SKIN-11. The test and simulation strips (DW-02).** Under a non-default skin, `/dw test` → the
 TEST MODE strip wears the skin's test strip; `/dw test` again, then `/dw sim start key` → the cyan
-SIMULATION strip and the library's step panel wear the skin; `/dw sim stop`. Minimize the window
+SIM strip and the library's step panel wear the skin; `/dw sim stop`. Minimize the window
 during each → the title word shows in the strip's color. On LibKa0s v1.81.0 also: each strip's line
 is drawn in the skin's body face and accent color (Ka0s Default's gold, in Oxanium); the step panel's
 row, command and button labels are in the skin's face, its scenario and size dropdowns wear the skin
@@ -3490,7 +3490,7 @@ from **Font** → with no reload the window, cards, toast and tooltips' lines ta
 and the verdict glyphs and the debug console keep their monospace face; switch skins → the override
 stays; *Skin's default* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
 game's face (the override stays selected), the filter bar's dropdown menus, the TEST MODE and
-SIMULATION strips and the tool windows' labels included (LibKa0s v1.81.0), while the verdict glyphs
+SIM strips and the tool windows' labels included (LibKa0s v1.81.0), while the verdict glyphs
 ▲ ≈ ▼ keep their monospace face (chosen for glyph coverage: the follow-ups' D-10); untick → it
 returns. Drop Watcher draws no HUD text, so Ignore fonts reaching the HUD has nothing to show here.
 Pick a texture → nothing drawn as a bar

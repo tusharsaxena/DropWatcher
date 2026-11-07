@@ -95,7 +95,7 @@ test("skin chrome: under Ka0s Default the window draws the pixels it drew before
         ["row chevron"] = { 1, 1, 1, 0.55 },
     }
     for _, s in ipairs(surfaces(NS, f, m)) do near(s[1], s[2](), want[s[1]]) end
-    near("SIMULATION", textColor(f.simText.text), { 0.35, 0.80, 1.00, 1 })
+    near("SIM", textColor(f.simText.text), { 0.35, 0.80, 1.00, 1 })
 end)
 
 -- ── a skin switch ────────────────────────────────────────────────────────────────────────────
@@ -109,9 +109,9 @@ test("skin chrome: a skin switch repaints every surface in the new skin's colors
     for _, s in ipairs(list) do
         near(s[1] .. " (switched)", s[2](), token(NS, s[3]))
     end
-    -- The SIMULATION word: the strip's cyan at full opacity, in the new skin.
+    -- The SIM word: the strip's cyan at full opacity, in the new skin.
     local r, g, b = NS.Skin.Color("strip.sim")
-    near("SIMULATION (switched)", textColor(f.simText.text), { r, g, b, 1 })
+    near("SIM (switched)", textColor(f.simText.text), { r, g, b, 1 })
     assertTrue(math.abs(tabLine(m, f.tabs.group).__colorTexture[1]) < 1e-6,
         "SWITCH inverts gold, so the underline's red channel is 0: the case compared moved values")
 end)

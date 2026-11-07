@@ -428,7 +428,7 @@ Total.
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
-- shell: TEST MODE is bright-red text beside the title, SIMULATION the same in cyan, each shown only in its mode and only where its strip is not
+- shell: TEST MODE is bright-red text beside the title, SIM the same in cyan, each shown only in its mode and only where its strip is not
 - shell: the default size is 1080 x 600, the least width every column fits (feedback-4 spec §4)
 - shell: Escape and every close path close the dropdowns' shared menu too
 - shell: the title bar is its own module, and the shell's BadgeText and TextButton are its
@@ -610,7 +610,7 @@ Total.
 ### test_compact_chrome.lua (28)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
-- chrome: TEST MODE and SIMULATION shorten to TEST and SIM
+- chrome: TEST MODE and SIM shorten to TEST and SIM
 - chrome: the compact badge shows the queued count beside its lock, or nothing
 - chrome: the footer's one line is inspect freshness and the situation
 - chrome: the footer's tooltip carries every full segment
@@ -2316,7 +2316,7 @@ Total.
 - sim step delay: a run waits the set delay, and a change takes effect from the next step
 - sim stop: ends a playing timeline and its timers
 - sim stand-down: disabling mid-run stops the timeline; nothing fires afterward
-- sim window: the sim strip (not the SIMULATION text) with the scenario tooltip, and the footer says Simulating
+- sim window: the sim strip (not the SIM text) with the scenario tooltip, and the footer says Simulating
 - sim diagnostics: the section reads the session, the pool, the timeline and the sends
 - sim debug: the SIM tag logs every injected event and every step
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
