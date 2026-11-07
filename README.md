@@ -6,7 +6,7 @@
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
 ![Tests](https://img.shields.io/badge/Tests-2239%2F2239_passing-green)
 
-When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
+Retail only for now; WoW Forever support is planned. When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
 It watches what your party or raid receives and compares each item with your gear and with the looter's. Your own drops are listed with everyone else's, with the time left to trade each one and the people it would help. Out of the box it stays in its window, apart from a small popup when someone loots a big upgrade you could ask for. Sounds are opt-in, and nobody gets a whisper unless you click Ask or turn on auto-ask.
 

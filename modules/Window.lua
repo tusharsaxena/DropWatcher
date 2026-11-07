@@ -3,7 +3,7 @@ local addonName, NS = ...
 -- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the tab strip and
 -- its lazily built panes, the filter bar's host, the footer's host, the mode strips (the library's
 -- strip in its test and simulation flavors, anchored and tipped here; the title bar's TEST MODE /
--- SIMULATION word stands in only while minimized or with no strip), minimize, resize, position, lock, scale, alpha
+-- SIM word stands in only while minimized or with no strip), minimize, resize, position, lock, scale, alpha
 -- and the show decision.
 --
 -- A non-secure standalone window (standalone-windows): built lazily on the first show, skinned
@@ -489,7 +489,7 @@ local function buildBanner(f, body)
     anchorStrip(f, b, NS.WindowTitleBar.TestTip)
     f.banner = b
     local s = NS.MakeTestStrip(body,
-        L["SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it."], "sim")
+        L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim")
     if not s then return end
     anchorStrip(f, s, NS.WindowTitleBar.SimTip)
     f.simBanner = s

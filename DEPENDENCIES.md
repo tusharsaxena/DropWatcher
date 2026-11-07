@@ -17,6 +17,7 @@ marked as such rather than listed as a requirement.
   the KickCD sibling's vendored copy) draws the upgrade glow on item icons; its caller is
   LibKa0s-Glow-1.0 (the bundled LibKa0s payload, through `core/GlowSetup.lua`), which resolves it at
   every call.
+  Ace3: WoWUIDev/Ace3@ac3d1225 (untagged master; LibKa0s#76).
 - **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
   and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
   **Pawn**, once it has initialized (its `PawnIsReady()`), drives the `pawn` scorer

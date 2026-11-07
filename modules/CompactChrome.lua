@@ -63,7 +63,7 @@ local MENU_LABEL = { quality = L["Quality"], content = L["Content"], char = L["C
 local SHORT_TAB = { group = L["Drops"], history = L["History"], insights = L["Insights"] }
 local WORD = {
     test = { full = L["TEST MODE"], compact = L["TEST"] },
-    sim  = { full = L["SIMULATION"], compact = L["SIM"] },
+    sim  = { full = L["SIM"], compact = L["SIM"] },
 }
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
@@ -79,7 +79,7 @@ function CC.TabText(key, compact)
     return SHORT_TAB[key] or tostring(key)
 end
 
---- The word beside the title: test mode's `TEST MODE` or `TEST`, the simulator's `SIMULATION` or `SIM`.
+--- The word beside the title: test mode's `TEST MODE` or `TEST`, the simulator's `SIM`.
 --- @param kind string `test` or `sim`
 --- @param compact boolean|nil
 --- @return string
@@ -418,8 +418,8 @@ local STRIP_TEXT = {
         compact = L["TEST: sample drops in every state. Nothing is whispered; combat ends it."],
     },
     simBanner = {
-        full    = L["SIMULATION: a made-up group session through the real engine. Nothing is sent; /dw sim stop ends it."],
-        compact = L["SIM: a made-up session. Nothing is sent; /dw sim stop ends it."],
+        full    = L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."],
+        compact = L["SIM: a made-up session. Nothing is sent. /dw sim stop ends it."],
     },
 }
 

@@ -593,7 +593,7 @@ the stop ending the combat edge and the bag items),
 timeline; `/dw sim` through the real dispatcher with its status, usage and refusals, refused while
 disabled, in combat and with test mode on; a scenario's pool, group, situation and window, a raid
 sized by its argument; the timeline waiting for the pool, a step at a time, a run a few seconds per
-step to its end, the stop and the stand-down ending a playing run; the SIMULATION text, the footer's
+step to its end, the stop and the stand-down ending a playing run; the SIM text, the footer's
 `Simulating` line, the `sim` diagnostics section and the `SIM` debug lines; and the end-to-end
 scenarios (spec §7): a `key` and a `raid` run headless, asserting drops parsed from the written
 lines, your verdict and the looter's after the simulated inspect, the ask held in the lockdown and

@@ -39,7 +39,7 @@ lists the toolchain):
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
-(`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` / `SIMULATION` title word
+(`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` / `SIM` title word
 marks the mode; with the library, a word shows only while the window is minimized, DW-10). Each setup file holds a
 descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
@@ -279,7 +279,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
 | H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
 | H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no key binding. Not slash-only any more: since LibKa0s v1.85.0 the launcher menu's Sim mode entry (`isSimMode` / `toggleSim`, `core/LauncherSetup.lua`; SG-RV) and Master controls' Sim mode box (R6-SIM) run that same verb through `NS.ToggleSim` (`core/DropWatcher.lua`), so a click prints what `/dw sim` or `/dw sim stop` prints; since R7-SIM the pair reads "panel shown or running" and an untick also closes the panel |
-| H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIMULATION` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
+| H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the `SIM` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
 
