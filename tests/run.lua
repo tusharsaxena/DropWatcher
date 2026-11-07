@@ -319,5 +319,6 @@ Kit.run{
         { name = "test_lizard_sighted",       dir = "tests/_kit/" },   -- automated-tests-§3
         { name = "test_skin_values",          dir = "tests/_kit/" },   -- skinning-§1
         { name = "test_skin_switch",          dir = "tests/_kit/" },   -- skinning-§1
+        { name = "test_client_globals", dir = "tests/_kit/" },   -- clients-§6
     },
 }
