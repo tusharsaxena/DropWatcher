@@ -74,7 +74,9 @@ Loot History's Price sources look; the rows are `skipRender` and the table write
 
 The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
 yet, or whose class the item's spec list does not cover; an item's own spec list wins whenever it
-exists for the candidate's class. The client lists the specs of the class playing alone, so the
+exists for the candidate's class, save one rule on WoW Forever: an armor type the class wears only
+from a later level (`armorLevel`) still refuses, since the list names a class-wide spec and knows
+the class, not the level (Forever port Review Focus 5). The client lists the specs of the class playing alone, so the
 list carries that class (`specsClass`) and every other class is judged by the tables, its primary
 stat read from every primary the tooltip shows (midnight-quirks.md). Devourer Demon Hunter (spec 1480, from the
 client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,

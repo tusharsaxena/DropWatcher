@@ -175,6 +175,16 @@ local function byClassData(facts, candidate)
     return statCheck(facts, classFile, specID, num(candidate.tree))
 end
 
+-- The spec list's "ok" still waits for the armor level (WoW Forever, Review Focus 5): the client's
+-- list names a class-wide spec, which knows the class, not the level. Only CanWearArmor's
+-- "armorLevel" answer refuses here; Retail's list never gives it, so Retail trusts its list as before.
+local function armorLevelCheck(facts, candidate)
+    if facts.classID ~= ITEM_CLASS.ARMOR or not C.ARMOR_TYPED_EQUIPLOC[facts.equipLoc] then return "ok" end
+    local ok, why = CD.CanWearArmor(candidate.classFile, facts.subClassID, num(candidate.level))
+    if ok == false and why == "armorLevel" then return "cant", why end
+    return "ok"
+end
+
 local function usable(facts, candidate)
     if type(candidate.classFile) ~= "string" then return "unknown", "unknownClass" end
     if isTable(facts.classes) and not facts.classes[candidate.classFile] then
@@ -189,8 +199,8 @@ local function usable(facts, candidate)
     -- is left to the class tables.
     local listed = facts.specsClass == nil or facts.specsClass == candidate.classFile
     if specID and listed and hasEntries(facts.specs) then
-        if facts.specs[specID] then return "ok" end
-        return "cant", "specList"
+        if not facts.specs[specID] then return "cant", "specList" end
+        return armorLevelCheck(facts, candidate)
     end
     return byClassData(facts, candidate)
 end

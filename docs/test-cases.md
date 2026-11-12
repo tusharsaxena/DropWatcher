@@ -1028,7 +1028,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
-### test_compat.lua (73)
+### test_compat.lua (74)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1102,6 +1102,7 @@ Total.
 - compat: IsTradeCompleteMessage knows the client's "Trade complete.", by type, else by text
 - compat: ContextMenu builds one button per entry through MenuUtil, else answers false
 - compat: PixelFactor answers PixelUtil's factor, else nil
+- compat: UnitLevel answers a plain level, nil for a secret, a skull, 0 or no API
 - compat: no other shipped file names a seam-only client API in code
 
 ### test_compat_client.lua (11)
@@ -1195,7 +1196,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (40)
+### test_evaluate.lua (41)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -1236,6 +1237,7 @@ Total.
 - evaluate: an internal failure is caught and reported as unknown
 - evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
 - evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
+- evaluate: on Forever the item's spec list does not lift the armor level rule
 - evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
 ### test_offspec.lua (11)
@@ -2676,13 +2678,13 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
-| test_compat.lua | 73 |
+| test_compat.lua | 74 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
-| test_evaluate.lua | 40 |
+| test_evaluate.lua | 41 |
 | test_offspec.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
@@ -2750,4 +2752,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2264** |
+| **Total** | **2266** |

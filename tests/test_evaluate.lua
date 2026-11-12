@@ -929,6 +929,20 @@ test("evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with rea
     assertEqual(E.Evaluate(mail, hunter(nil)).equip, "ok", "an unknown level is the cap's type")
 end)
 
+test("evaluate: on Forever the item's spec list does not lift the armor level rule", function()
+    local E = loadForever()
+    -- The client's spec list names the Hunter's class-wide spec (1485) for any mail piece: it knows
+    -- the class, not the level (Review Focus 5).
+    local mail = armor(650, "INVTYPE_CHEST", A.MAIL, { specs = { [1485] = true }, specsClass = "HUNTER" })
+    local res = E.Evaluate(mail, hunter(30))
+    -- red under: the spec-list path answering "ok" before the armor table is read (Need: upgrade)
+    assertEqual(res.verdict, "cantUse")
+    assertTrue(hasReason(res, "armorLevel"), "can't use yet")
+    assertEqual(E.Evaluate(mail, hunter(40)).verdict, "upgrade", "from 40 the list's answer stands")
+    local cloak = armor(650, "INVTYPE_CLOAK", A.CLOTH, { specs = { [1485] = true }, specsClass = "HUNTER" })
+    assertEqual(E.Evaluate(cloak, hunter(30)).equip, "ok", "a cloak has no armor level")
+end)
+
 test("evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat", function()
     local E = loadForever()
     local helm = armor(650, "INVTYPE_HEAD", A.LEATHER, { stats = { [STR] = 15, [INT] = 10 } })

@@ -1033,6 +1033,26 @@ end)
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
+test("compat: UnitLevel answers a plain level, nil for a secret, a skull, 0 or no API", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    local answer
+    m.UnitLevel = function() return answer end
+    answer = 30
+    assertEqual(Compat.UnitLevel("player"), 30)
+    -- a read that handed the secret on would let the armor rule compare it, and raise
+    answer = T.secret(30)
+    assertNil(Compat.UnitLevel("party1"), "a secret level")
+    answer = -1
+    assertNil(Compat.UnitLevel("target"), "a skull: not known")
+    answer = 0
+    assertNil(Compat.UnitLevel("party2"))
+    answer = "30"
+    assertNil(Compat.UnitLevel("party3"), "not a number")
+    m.UnitLevel = nil
+    assertNil(Compat.UnitLevel("player"), "no API")
+end)
+
 local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown", "C_RestrictedActions",
     "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
     "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
