@@ -87,7 +87,7 @@ local _, NS = ...
 -- `timer`) puts an `expired` back to the outcome it replaced (`beforeExpired`; `seen` for an entry
 -- expired before that field existed). A rule estimate never does.
 --
--- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (UnitName("NPC")); every
+-- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (TradePartnerName); every
 -- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED re-reads the window's items (core/Compat.lua,
 -- TradeItemLinks), and every TRADE_ACCEPT_UPDATE with either side accepted re-reads them and keeps
 -- them as the offer, since the window is empty by the time the trade ends and any later item change
