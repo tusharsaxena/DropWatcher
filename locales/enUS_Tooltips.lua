@@ -292,6 +292,7 @@ L["within the sidegrade band, or level and score disagree"] =
 L["Worn by"] = "Worn by"
 L["Worn item"] = "Worn item"
 L["wrong armor type for the class"] = "wrong armor type for the class"
+L["an armor type the class wears only at a higher level"] = "an armor type the class wears only at a higher level"
 L["wrong armor, weapon or primary stat for the spec"] = "wrong armor, weapon or primary stat for the spec"
 L["you marked this item type not wanted"] = "you marked this item type not wanted"
 L["your ask template"] = "your ask template"

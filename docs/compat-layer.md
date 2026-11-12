@@ -19,7 +19,7 @@ delegators and stay counted below. `test_text_parse` drives the parsers with the
 in; `test_compat` drives them through the shims.
 
 **One hundred and nine shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `109`): the
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `111`): the
 root `core/Compat.lua` publishes 58, `core/CompatClient.lua` 8, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5,
 `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 15. The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, and the four client helpers, `IsForever`,

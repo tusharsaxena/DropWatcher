@@ -88,8 +88,12 @@ core\MediaSetup.lua
 # is resolved from the seam above.
 core\Constants.lua
 # LOAD-BEARING: reads NS.Constants' ARMOR_SUBCLASS and WEAPON_SUBCLASS (core\Constants.lua, the line
-# above) at load. NS.ClassData, data plus pure lookups, is read by the feature modules at call time.
+# above) and NS.Compat.ClientKey (core\Compat.lua, above) at load, and installs Retail's list unless the
+# client is WoW Forever. NS.ClassData, data plus pure lookups, is read by the feature modules at call time.
 core\ClassData.lua
+# LOAD-BEARING: builds WoW Forever's list with NS.ClassData's CD.Build (core\ClassData.lua, the line
+# above) at load, and installs it when NS.Compat.ClientKey() is "forever" (clients-§5).
+core\ClassDataForever.lua
 # Conventional: session-only state (NS.State), read by everything below at call time.
 core\State.lua
 # Conventional: NS.Meta / NS.Version are read inside functions only.

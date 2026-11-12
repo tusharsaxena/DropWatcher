@@ -91,9 +91,18 @@ test("diagnostics: the gear section lists the stored slots without reading the c
         subClassID = 0, stats = {} })
     m.inventory.player[1] = HEAD
     m.bags[0] = { size = 1, [1] = RING }
+    if T.forever then
+        -- WoW Forever (design §4.2): the class-wide spec, your top talent tree and your level.
+        m.seedTalents(1487, { { name = "Arcane", spent = 0 }, { name = "Fire", spent = 31 }, { name = "Frost", spent = 5 } })
+    end
     NS.Gear.Refresh("test")
     local text = report(NS)
-    assertTrue(text:find("gear: class=MAGE spec=250 dualWield=false", 1, true) ~= nil, text)
+    if T.forever then
+        assertTrue(text:find("gear: class=MAGE spec=1487 dualWield=false titanGrip=false loading=0 tree=2 level=80", 1, true) ~= nil, text)
+    else
+        assertTrue(text:find("gear: class=MAGE spec=250 dualWield=false", 1, true) ~= nil, text)
+        assertTrue(text:find("tree=none level=80", 1, true) ~= nil, text)
+    end
     assertTrue(text:find("gear: HEAD ilvl=610 quality=4", 1, true) ~= nil, text)
     assertTrue(text:find("gear: NECK empty", 1, true) ~= nil, text)
     assertTrue(text:find("gear: FINGER1 empty owned=620", 1, true) ~= nil, text)
@@ -199,6 +208,10 @@ end)
 
 test("diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries", function()
     local NS, _, m = T.enableAddon()
+    -- Retail's spec model: the player's spec (250) and Pawn's spec index. On WoW Forever the mock
+    -- seeds the same spec through C_SpecializationInfo; Forever's tree-led Pawn scale is DW-FP07's.
+    T.retailList(NS)
+    if T.forever then m.seedTalents(250, {}) end
     local text = report(NS)
     assertTrue(text:find("scoring: scorer=auto inUse=none", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: pawn ready=false scale=none", 1, true) ~= nil, text)

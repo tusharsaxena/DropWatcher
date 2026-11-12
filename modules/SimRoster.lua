@@ -48,7 +48,8 @@ local SURNAMES = {
 }
 R.NAMES, R.REALMS, R.SURNAMES = NAMES, REALMS, SURNAMES
 
--- Every classFile with specs, sorted, so a seed draws the same classes on every load.
+-- Every classFile with specs in the client's list (core/ClassData.lua: nine on WoW Forever), sorted,
+-- so a seed draws the same classes on every load.
 local CLASSES = {}
 for classFile in pairs(CD.CLASS_SPECS) do CLASSES[#CLASSES + 1] = classFile end
 table.sort(CLASSES)
@@ -118,6 +119,14 @@ local function nameOf(name, ownRealm, surnames, rnd)
     return name, realm, name .. "-" .. realm
 end
 
+-- A drawn spec key as a member's specID: Retail's key is the specID; WoW Forever's is a talent
+-- tree ("HUNTER:2", core/ClassDataForever.lua), whose class-wide spec ID the client alone knows,
+-- so a Forever member has none, as an inspect of one that answered nothing (Forever port design §4.2).
+local function specIDOf(key)
+    if type(key) == "number" then return key end
+    return nil
+end
+
 local function makeMember(i, kind, opts, rnd, taken)
     local classFile = CLASSES[rnd(#CLASSES)]
     local specs = CD.CLASS_SPECS[classFile]
@@ -128,7 +137,7 @@ local function makeMember(i, kind, opts, rnd, taken)
         sim = true, name = name, realm = realm, fullName = fullName,
         guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)),
         unit = kind == "raid" and ("raid" .. (i + 1)) or ("party" .. i),
-        classFile = classFile, classID = CD.CLASS_ID[classFile], specID = specs[rnd(#specs)],
+        classFile = classFile, classID = CD.CLASS_ID[classFile], specID = specIDOf(specs[rnd(#specs)]),
     }
 end
 

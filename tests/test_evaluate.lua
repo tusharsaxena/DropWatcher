@@ -6,13 +6,27 @@
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
+-- The kernel is pure over NS.ClassData's ACTIVE list, so a case pins the list it is written
+-- against: the cases below Retail's (installed on either kit profile), the WoW Forever section's
+-- Forever's (Forever port design §4.2). Which list a client installs is test_class_data's.
 local cached
 local function load()
     if not cached then
         local NS = T.newAddon()
+        NS.ClassData.Install(NS.ClassData.LISTS.retail)
         cached = { E = NS.Evaluate, C = NS.Constants, CD = NS.ClassData }
     end
     return cached.E, cached.C, cached.CD
+end
+
+local cachedForever
+local function loadForever()
+    if not cachedForever then
+        local NS = T.newAddon()
+        NS.ClassData.Install(NS.ClassData.LISTS.forever)
+        cachedForever = { E = NS.Evaluate, C = NS.Constants, CD = NS.ClassData }
+    end
+    return cachedForever.E, cachedForever.C, cachedForever.CD
 end
 
 local _, C0 = load()
@@ -885,4 +899,49 @@ test("evaluate: heirloom protection keeps a slot holding an heirloom from being 
     assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
     c.gear[S.HEAD] = false
     assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- WoW Forever's list (Forever port design §4.2, §4.5; Review Focus 5)
+-- ---------------------------------------------------------------------------------------------
+
+-- A Forever Hunter at `level`: the class-wide spec ID (1485) and a talent tree.
+local function hunter(level, over)
+    local c = who("HUNTER", 1485, { tree = 1, level = level })
+    for k, v in pairs(over or {}) do c[k] = v end
+    return c
+end
+
+test("evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel", function()
+    local E = loadForever()
+    local mail = armor(650, "INVTYPE_CHEST", A.MAIL, { stats = { [AGI] = 20 } })
+    local res = E.Evaluate(mail, hunter(30))
+    -- red under: the level-blind armor table, which reads mail as a hunter's at any level (Need: upgrade)
+    assertEqual(res.verdict, "cantUse")
+    assertEqual(res.equip, "cant")
+    assertTrue(hasReason(res, "armorLevel"), "can't use yet")
+    assertEqual(E.Evaluate(mail, hunter(40)).verdict, "upgrade", "from 40 it is the hunter's")
+    local leather = armor(650, "INVTYPE_CHEST", A.LEATHER)
+    assertEqual(E.Evaluate(leather, hunter(30)).verdict, "upgrade", "leather is fine below 40")
+    assertEqual(E.Evaluate(leather, hunter(60)).equip, "ok", "a lighter type stays wearable")
+    local res60 = E.Evaluate(armor(650, "INVTYPE_CHEST", A.PLATE), hunter(60))
+    assertEqual(res60.verdict, "cantUse"); assertTrue(hasReason(res60, "armorType"), "plate is never a hunter's")
+    assertEqual(E.Evaluate(mail, hunter(nil)).equip, "ok", "an unknown level is the cap's type")
+end)
+
+test("evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat", function()
+    local E = loadForever()
+    local helm = armor(650, "INVTYPE_HEAD", A.LEATHER, { stats = { [STR] = 15, [INT] = 10 } })
+    local res = E.Evaluate(helm, hunter(30))
+    -- red under: the hard gate, where an Agility hunter's Strength helm is "can't use: primary stat"
+    assertEqual(res.equip, "ok")
+    assertTrue(res.verdict ~= "cantUse", res.verdict)
+    assertTrue(not hasReason(res, "primaryStat"))
+    local hood = armor(650, "INVTYPE_HEAD", A.CLOTH, { stats = { [STR] = 15 } })
+    assertEqual(E.Evaluate(hood, who("MAGE", nil, { level = 30 })).equip, "ok", "no tree, no spec")
+    -- armor, weapon type and the class list still refuse
+    local axe = weapon(650, "INVTYPE_WEAPON", W.AXE_1H, { stats = { [STR] = 15 } })
+    assertEqual(E.Evaluate(axe, who("MAGE", nil, { level = 30 })).equip, "cant", "a mage's axe")
+    local robe = E.Evaluate(helm, hunter(30, { classFile = "PRIEST" }))
+    assertEqual(robe.equip, "cant", "leather is heavier than a priest's cloth"); assertTrue(hasReason(robe, "armorType"))
 end)

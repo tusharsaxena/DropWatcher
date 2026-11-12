@@ -196,6 +196,7 @@ end)
 
 test("scoring: for you, a drop that upgrades no scale is valued on your spec's scale", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m, { ["S8:1"] = { drop = 10, worn = 12 } }, { drop = {} })
     local score = NS.Scoring.PawnScorer()
     local drop, me = { link = "drop" }, { isPlayer = true, classFile = "MAGE", specID = 62 }
@@ -205,6 +206,7 @@ end)
 
 test("scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m, { ["S8:1"] = { drop = 90, worn = 10 }, Mine = { drop = 10, worn = 12 } }, { drop = {} })
     m.PawnCommon = { Scales = { ["S8:1"] = { ClassID = 8, SpecID = 1, Provider = "P", ProviderActive = true },
         Mine = {} } }
@@ -218,6 +220,7 @@ end)
 
 test("scoring: for a looter, Pawn uses the scale for their class and spec", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m, { ["S1:1"] = { drop = 30, theirs = 25 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
@@ -231,6 +234,7 @@ end)
 
 test("scoring: Pawn answers pending while it is not ready or has not read the item", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m, { ["S1:1"] = { drop = 30 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
@@ -297,8 +301,12 @@ test("scoring: the feed judges your drop with your weights once they are set", f
     m.addItem(link(100), def(600, { [CRIT] = 100 }))
     m.addItem(link(101), def(600, { [CRIT] = 100 }))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
+    -- WoW Forever: the spec is class-wide and read through C_SpecializationInfo (design §4.2); the
+    -- weights stay keyed by it until DW-FP07 keys Forever's by talent tree.
+    local spec = T.forever and 1487 or 250
+    if T.forever then m.seedTalents(spec, { { name = "Arcane", spent = 31 } }) end
     NS.Gear.Refresh("test")
-    NS.SchemaRuntime.Set("comparison.weights", { [250] = { [CRIT] = 1, [HASTE] = 0.5 } })
+    NS.SchemaRuntime.Set("comparison.weights", { [spec] = { [CRIT] = 1, [HASTE] = 0.5 } })
     m.addItem(link(300), def(610, { [HASTE] = 100 }))
     NS.LootFeed.Add(link(300))
     local rec = NS.LootFeed.Drops()[1]

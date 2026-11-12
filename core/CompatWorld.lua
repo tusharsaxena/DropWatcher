@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSetup.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
--- GUID, name, class, connection and whether it is a player, where the player is (the instance, its difficulty and that
+-- GUID, name, class, level (plain), connection and whether it is a player, where the player is (the instance, its difficulty and that
 -- difficulty's name, a keystone run in progress and its level), whether the player is fighting, and
 -- whether an optional addon (Pawn, CanIMogIt) is loaded. (The GlobalString reads are the root's,
 -- core/Compat.lua's Compat.GlobalString: they are not world reads.)
@@ -60,6 +60,18 @@ end
 function Compat.UnitClass(unit)
     if not UnitClass then return nil end
     return UnitClass(unit)
+end
+
+--- UnitLevel(unit) as a plain level: nil for a secret, a non-number, 0 or less (the client's "not
+--- known", and -1 for a skull), or no API. The armor a WoW Forever class wears depends on it
+--- (core/ClassDataForever.lua, Forever port design §4.2).
+--- @param unit string
+--- @return number|nil
+function Compat.UnitLevel(unit)
+    if not UnitLevel then return nil end
+    local level = UnitLevel(unit)
+    if Compat.IsSecret(level) or type(level) ~= "number" or level <= 0 then return nil end
+    return level
 end
 
 --- UnitIsConnected(unit), raw (it may be secret). True without the API.

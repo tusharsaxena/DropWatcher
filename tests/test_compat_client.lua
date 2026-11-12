@@ -119,9 +119,30 @@ test("compat client: PlayerTalentTree is the group with most points; a tie is ni
     assertNil(degraded.PlayerTalentTree(), "library absent")
 end)
 
-test("compat client: PlayerTalentTree on the live Role is nil on Retail", function()
-    local Compat = fresh()
-    if Compat.ClientKey() == "retail" then assertNil(Compat.PlayerTalentTree()) end
+-- The real LibKa0s Role.Groups(), not a stub (clients-§6): the mock's C_SpecializationInfo and
+-- C_Traits answer the owner's Hunter probe (Forever port research R4 §3.1: Beast Mastery 10,
+-- Marksmanship 3, Survival 0). Role reads the groups on WoW Forever alone.
+test("compat client: PlayerTalentTree on the live Role reads Forever's talent groups, nil on Retail", function()
+    local Compat, m = fresh()
+    m.__context.class, m.__context.classToken = "Hunter", "HUNTER"
+    m.seedTalents(1485, {
+        { name = "Beast Mastery", spent = 10 }, { name = "Marksmanship", spent = 3 }, { name = "Survival", spent = 0 },
+    })
+    if Compat.ClientKey() ~= "forever" then
+        assertNil(Compat.PlayerTalentTree(), "Retail: Role reads no talent groups")
+        return
+    end
+    local tree = Compat.PlayerTalentTree()
+    -- red under: a Groups() the library answers empty (a missed C_Traits read), or the stub's order
+    assertEqual(tree and tree.index, 1); assertEqual(tree and tree.name, "Beast Mastery")
+    m.talents[3].spent = 31
+    tree = Compat.PlayerTalentTree()
+    assertEqual(tree and tree.index, 3); assertEqual(tree and tree.name, "Survival")
+    m.talents[1].spent = 31
+    assertNil(Compat.PlayerTalentTree(), "a tie names no tree")
+    for _, g in ipairs(m.talents) do g.spent = 0 end
+    assertNil(Compat.PlayerTalentTree(), "no points spent names no tree")
+    assertEqual(Compat.PlayerSpecID(), 1485, "the class-wide spec, through Role.Spec()")
 end)
 
 test("compat client: PlayerRole resolves through Role over db.char.role, and the override sticks", function()

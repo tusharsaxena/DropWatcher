@@ -65,6 +65,7 @@ local VERDICT_TONE = {
 -- NS.Evaluate's reason keys, in words: each a Why row's value (feedback-21).
 local EVAL_REASON = {
     armorType = L["wrong armor type for the class"],
+    armorLevel = L["an armor type the class wears only at a higher level"],
     weaponType = L["a weapon type the class can't use"],
     shield = L["the spec can't use a shield"],
     offhand = L["the spec can't use a held off hand"],

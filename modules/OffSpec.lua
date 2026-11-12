@@ -142,6 +142,9 @@ end
 --- cannot (see the header). `run` is the kernel's own evaluation, `run(facts, candidate, opts)`.
 function OS.Attach(out, facts, candidate, opts, run)
     local specID = knownSpec(candidate.specID)
+    -- A spec the list has no row for (WoW Forever's class-wide spec, whose trees are not specs a
+    -- candidate switches between here) has no off-spec to judge.
+    if not CD.Spec(specID) then return end
     local specs = CD.CLASS_SPECS[candidate.classFile]
     if not (specID and specs and type(candidate.offSpecGear) == "function" and specRefusal(out)) then return end
     local sub = { sidegradeBand = opts.sidegradeBand, heirloomProtect = opts.heirloomProtect }

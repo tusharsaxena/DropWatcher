@@ -160,8 +160,9 @@ end
 local function gear(out)
     local s = NS.State.gear
     if not s then return out:add(TAG, "gear: not read yet") end
-    out:add(TAG, "gear: class=%s spec=%s dualWield=%s titanGrip=%s loading=%s", s.classFile or "?",
-        s.specID or "unknown", s.dualWield, s.titanGrip, s.loading)
+    out:add(TAG, "gear: class=%s spec=%s dualWield=%s titanGrip=%s loading=%s tree=%s level=%s",
+        s.classFile or "?", s.specID or "unknown", s.dualWield, s.titanGrip, s.loading, s.tree or "none",
+        s.level or "unknown")
     local names = slotNames()
     for _, id in ipairs(NS.Gear.SLOTS) do
         local worn, owned = s.equipped[id], s.owned[id]

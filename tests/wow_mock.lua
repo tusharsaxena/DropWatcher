@@ -44,6 +44,11 @@
 --   inventory      GetInventoryItemLink's answers: inventory[unit][slot] = link
 --   bags           C_Container's bags: bags[bag] = { size = n, [slot] = link }; an absent bag has 0 slots
 --   specID         GetSpecializationInfo's first return (the base's 250 by default)
+--   seedTalents(specID, groups)  WoW Forever's spec and talent trees, opt-in (Forever port design
+--                  §4.2): C_SpecializationInfo's spec ladder answers `specID` (the class-wide id,
+--                  e.g. Hunter 1485) and the C_Traits reads LibKa0s-Role-1.0's Groups() takes
+--                  answer `groups` = { { name = "Beast Mastery", spent = 10 }, ... } in display
+--                  order; M.talents holds them, read live, so a case moves points by editing it
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
 --                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer.
@@ -451,6 +456,32 @@ local function installCompatSurface(M)
     M.specID = 250
     M.GetSpecializationInfo = function() return M.specID, M.__context.spec end
     M.InitiateTrade = recorder("InitiateTrade")
+    M.seedTalents = function(specID, groups)
+        M.specID, M.talents = specID, groups or {}
+        M.C_SpecializationInfo = {
+            GetSpecialization = function() return 1 end,
+            GetSpecializationInfo = function(i) if i == 1 then return M.specID, M.__context.class end end,
+            GetActiveSpecGroup = function() return 1 end,
+            GetCombatConfigIDForSpecGroup = function(group) if group == 1 then return 7001 end end,
+        }
+        M.C_Traits = {
+            GetConfigInfo = function(id) if id == 7001 then return { treeIDs = { 801 } } end end,
+            GetGroupDisplayInfoByTreeID = function(treeID)
+                if treeID ~= 801 then return nil end
+                local out = {}
+                for i, g in ipairs(M.talents) do out[i] = { groupID = 11000 + i, displayName = g.name, orderIndex = i } end
+                return out
+            end,
+            GetGroupCurrencyInfo = function(configID)
+                if configID ~= 7001 then return nil end
+                local out = {}
+                for i, g in ipairs(M.talents) do
+                    out[i] = { traitNodeGroupID = 11000 + i, currencyInfos = { { spent = g.spent } } }
+                end
+                return out
+            end,
+        }
+    end
 end
 
 -- The group's units (modules/Roster.lua). The player's row is the base's __context, read live, so

@@ -20,6 +20,27 @@ local PINNED = {
     "TRANSMOG_COLLECTION_UPDATED", "UI_INFO_MESSAGE", "UI_SCALE_CHANGED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
 
+-- Per client (clients-§4, §6): a row for the other client is not registered. Retail's spec change
+-- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2).
+local OTHER_CLIENT = {
+    retail  = { PLAYER_SPECIALIZATION_CHANGED = true },
+    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true },
+}
+do
+    local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"
+    local out = {}
+    for _, e in ipairs(PINNED) do
+        if not OTHER_CLIENT[theirs][e] then out[#out + 1] = e end
+    end
+    for e in pairs(OTHER_CLIENT[mine]) do
+        local listed = false
+        for _, have in ipairs(out) do listed = listed or have == e end
+        if not listed then out[#out + 1] = e end
+    end
+    table.sort(out)
+    PINNED = out
+end
+
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down),
 -- one entry per receiver: a message two modules hear is listed twice (the window, DW-30, hears
 -- DropAdded with the trade timer, InspectDone with the feed and RestrictionChanged with the asks;

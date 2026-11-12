@@ -9,7 +9,8 @@ local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assert
 local cached
 local function load()
     if not cached then
-        local NS = T.newAddon()
+        -- Off-spec is Retail's spec model (Forever's spec is class-wide): Retail's list, pinned.
+        local NS = T.retailList((T.newAddon()))
         cached = { E = NS.Evaluate, C = NS.Constants, OS = NS.OffSpec }
     end
     return cached.E, cached.C, cached.OS

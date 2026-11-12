@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Inspect.lua — the inspect broker (design spec §8): another group member's worn gear and
 -- spec, read through the client's inspect, one member at a time, politely.
 --
---   entry = { status, at, gear = { [slot] = { link, ilvl } | false }, specID, reason, gen, stale,
---             loading }
+--   entry = { status, at, gear = { [slot] = { link, ilvl } | false }, specID, level, reason, gen,
+--             stale, loading }
 --
 -- STATUS. `pending` (queued or in flight), `fresh` (read after an INSPECT_READY, ours or anyone's),
 -- `cached` (read at once without an inspect: the client already held every link, the fast path),
@@ -279,6 +279,10 @@ local function complete(guid, unit, snap, status)
     e.worn = snap.worn
     e.specID = NS.Compat.InspectSpecID(unit) or e.specID or (m and m.specID)
     if e.specID then NS.Roster.SetSpec(guid, e.specID) end
+    -- On WoW Forever the spec is class-wide and the armor a class wears depends on its level
+    -- (Forever port design §4.2): the inspect's level is kept beside it. Nobody's talent tree is
+    -- read but yours (LibKa0s-Role-1.0 reads the player's alone).
+    e.level = NS.Compat.UnitLevel(unit) or e.level
     logJob(guid, e)
     loadFacts(guid, e)
     schedulePump(0)
@@ -529,7 +533,7 @@ function I.Candidate(guid)
     local specID = e.specID or (m and m.specID)
     local gear = gearOf(e)
     return {
-        classFile = classFile, specID = specID, isPlayer = false, gear = gear,
+        classFile = classFile, specID = specID, level = e.level, isPlayer = false, gear = gear,
         dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
         offSpecGear = function(x) return NS.OffSpec.WornGear(gear, NS.OffSpec.Who(classFile, x)) end,
     }

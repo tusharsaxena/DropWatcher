@@ -552,6 +552,7 @@ end)
 
 test("comparison: Weights draws your class's specs as a sub-strip and one slider per stat", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     -- The mock player is a mage: Arcane, Fire and Frost, the first shown (250 is not a mage's).
@@ -564,6 +565,7 @@ end)
 
 test("comparison: a weight slider writes the whole map through the seam, for the spec on screen", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     find(drawn, "Slider", "Haste"):__fire("OnMouseUp", 1.5)
@@ -581,6 +583,7 @@ end)
 
 test("comparison: the Pawn import box replaces the spec on screen's weights and says what came in", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     local box = find(drawn, "EditBox", "Import a Pawn scale")
@@ -603,6 +606,7 @@ end)
 
 test("comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Unwanted types")
     local daggers = find(drawn, "CheckBox", "Daggers")
@@ -886,6 +890,7 @@ end)
 
 test("editors: a spec's stats are its primary stat, Stamina and the four secondaries", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local E = NS.addon.Settings.Editors
     local fury = E.StatsFor(72)
     assertEqual(fury[1], "ITEM_MOD_STRENGTH_SHORT")
@@ -899,6 +904,7 @@ end)
 
 test("editors: unwanted types are the class's weapons, then shields where a spec carries one", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local E, K = NS.addon.Settings.Editors, NS.Constants
     local keys = {}
     for _, c in ipairs(E.UndesiredChoices("PALADIN")) do keys[#keys + 1] = c.key end
@@ -921,6 +927,7 @@ end)
 
 test("editors: the spec strip keeps the remembered spec, else yours, else the first", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
     local E = NS.addon.Settings.Editors
     local list = E.ClassSpecs("MAGE", function(id) return id == 63 and "Fire" or nil end)
     assertEqual(#list, 3)

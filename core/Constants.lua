@@ -323,6 +323,7 @@ C.WEAPON_SUBCLASS = fromEnum(Enum.ItemWeaponSubclass, {
     FIST      = { "Unarmed", 13 },
     GENERIC   = { "Generic", 14 },
     DAGGER    = { "Dagger", 15 },
+    THROWN    = { "Thrown", 16 },   -- WoW Forever's ranged slot (core/ClassDataForever.lua)
     CROSSBOW  = { "Crossbow", 18 },
     WAND      = { "Wand", 19 },
 })

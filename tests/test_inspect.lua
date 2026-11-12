@@ -560,6 +560,7 @@ end)
 
 test("inspect: the candidate carries the roster's class, the read spec and the hand flags", function()
     local NS, m, I = party()
+    T.retailList(NS)   -- Retail's specs (Fury's Titan's Grip); a Forever unit's spec is class-wide
     assertNil(I.Candidate(A), "nothing read yet")
     I.Request(A)
     inspectNow(m, A, 72)
@@ -574,6 +575,7 @@ end)
 
 test("inspect: the candidate's off-spec gear is the worn gear each other spec could wear", function()
     local NS, m, I = party()
+    T.retailList(NS)   -- Retail's off-specs (Arms, Fury, Protection); off-spec is Retail's alone
     I.Request(A)
     m.advance(0)
     arrive(m, A, 73)

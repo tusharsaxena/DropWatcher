@@ -478,7 +478,13 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
             assertNil(names[mem.name], "distinct names"); names[mem.name] = true
             assertNil(guids[mem.guid], "distinct GUIDs"); guids[mem.guid] = true
             assertTrue(mem.guid:find("^Player%-%d+%-%x+$") ~= nil, "a client-shaped GUID")
-            assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
+            if T.forever then
+                -- Forever's spec is class-wide and the client's alone (core/ClassDataForever.lua)
+                assertNil(mem.specID, "no Retail specID on Forever")
+                assertTrue(CD.CLASS_SPECS[mem.classFile] ~= nil, "one of Forever's nine classes")
+            else
+                assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
+            end
             assertEqual(mem.classID, CD.CLASS_ID[mem.classFile])
             assertEqual(mem.fullName, mem.name .. "-" .. mem.realm)
         end

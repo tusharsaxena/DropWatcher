@@ -1112,7 +1112,7 @@ Total.
 - compat client: UnitCharacterName joins name and surname on Forever, keeps one name on Retail
 - compat client: CharacterKey is the AceDB character key of this client
 - compat client: PlayerTalentTree is the group with most points; a tie is nil
-- compat client: PlayerTalentTree on the live Role is nil on Retail
+- compat client: PlayerTalentTree on the live Role reads Forever's talent groups, nil on Retail
 - compat client: PlayerRole resolves through Role over db.char.role, and the override sticks
 - compat client: PlayerSpecID goes through Role.Spec
 - compat client: InspectSpecID reads C_SpecializationInfo first, then the global
@@ -1175,8 +1175,12 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (13)
+### test_class_data.lua (17)
 
+- class data: the active list is the client's, picked once at load
+- class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker
+- class data: ArmorFor("HUNTER", 30) is leather, ArmorFor("HUNTER", 40) is mail
+- class data: Forever's rows are keyed by class and talent tree, with the Pawn index
 - classdata: thirteen classes with their client classIDs, each with an armor type
 - classdata: every spec row is well-formed and its class lists it
 - classdata: every spec has its place in its class, 1 to n with none twice
@@ -1191,7 +1195,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (38)
+### test_evaluate.lua (40)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -1231,6 +1235,8 @@ Total.
 - evaluate: garbage inside the tables never throws
 - evaluate: an internal failure is caught and reported as unknown
 - evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
+- evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
+- evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
 ### test_offspec.lua (11)
 
@@ -1570,7 +1576,7 @@ Total.
 ### test_gear.lua (27)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
-- gear: the candidate carries the class, the spec and the hand flags from ClassData
+- gear: the candidate carries the class-wide spec and your talent tree
 - gear: a spec the class flags disagree on leaves the hand flag unknown
 - gear: the qualities are per worn slot, false for an empty one
 - gear: a better bag item you can wear is owned for its slot; one you cannot is not
@@ -2675,8 +2681,8 @@ Total.
 | test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
-| test_class_data.lua | 13 |
-| test_evaluate.lua | 38 |
+| test_class_data.lua | 17 |
+| test_evaluate.lua | 40 |
 | test_offspec.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
@@ -2744,4 +2750,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2258** |
+| **Total** | **2264** |

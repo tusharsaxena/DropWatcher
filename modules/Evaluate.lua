@@ -10,7 +10,7 @@ local _, NS = ...
 --                 stats = { [STAT_KEY] = n }, track = { name, rank, max, tier },
 --                 unique = { cat, max }, isTierToken, classes = { [classFile] = true },
 --                 tokenSlot = "INVTYPE_*" | "any" | nil }
---   candidate = { classFile, specID, dualWield, titanGrip, gear = { [slot] = facts | false },
+--   candidate = { classFile, specID, tree, level, dualWield, titanGrip, gear = { [slot] = facts | false },
 --                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } },
 --                 offSpecGear = function(specID), undesiredBySpec = { [specID] = { [SubClassKey] = true } } }
 --   opts      = { sidegradeBand = 0, compareOwned = false, heirloomProtect = false,
@@ -91,23 +91,30 @@ end
 
 local function hasEntries(t) return isTable(t) and next(t) ~= nil end
 
+-- The armor type at the candidate's level: on WoW Forever a type the class wears only from a later
+-- level answers "cant" with the reason armorLevel (design §4.2, Review Focus 5).
+local function armorTypeCheck(facts, candidate)
+    local ok, why = CD.CanWearArmor(candidate.classFile, facts.subClassID, num(candidate.level))
+    return tri(ok, why or "armorType")
+end
+
 -- Shields, held off hands, jewelry and cloaks, then the armor types.
-local function armorCheck(facts, classFile, specID)
-    local loc = facts.equipLoc
+local function armorCheck(facts, candidate, specID)
+    local loc, classFile, tree = facts.equipLoc, candidate.classFile, num(candidate.tree)
     if loc == "INVTYPE_SHIELD" or facts.subClassID == ARMOR.SHIELD then
-        return tri(CD.CanUseShield(classFile, specID), "shield")
+        return tri(CD.CanUseShield(classFile, specID, tree), "shield")
     end
-    if loc == "INVTYPE_HOLDABLE" then return tri(CD.CanUseOffhand(classFile, specID), "offhand") end
+    if loc == "INVTYPE_HOLDABLE" then return tri(CD.CanUseOffhand(classFile, specID, tree), "offhand") end
     if C.UNIVERSAL_EQUIPLOC[loc] then return "ok" end
-    if C.ARMOR_TYPED_EQUIPLOC[loc] then return tri(CD.CanWearArmor(classFile, facts.subClassID), "armorType") end
+    if C.ARMOR_TYPED_EQUIPLOC[loc] then return armorTypeCheck(facts, candidate) end
     return "unknown", "notGear"
 end
 
--- The candidate's own flag when it carries one, else the spec's, else the class's when every spec
--- agrees; nil when it cannot tell.
+-- The candidate's own flag when it carries one, else the spec's (or talent tree's), else the
+-- class's when every spec agrees; nil when it cannot tell.
 local function flagOf(candidate, field, lookup)
     if type(candidate[field]) == "boolean" then return candidate[field] end
-    return lookup(candidate.classFile, num(candidate.specID))
+    return lookup(candidate.classFile, num(candidate.specID), num(candidate.tree))
 end
 
 -- Weapon proficiency; an off-hand-only weapon also needs a dual wielder.
@@ -134,11 +141,14 @@ local function primariesOf(stats)
 end
 
 -- Whether the item's primary stat suits the candidate: by the spec (or the class, when every spec
--- shares one), else by how many of the class's specs it suits: all, none, or some (ambiguous).
-local function statCheck(facts, classFile, specID)
+-- shares one), else by how many of the class's specs it suits: all, none, or some (ambiguous). The
+-- list's soft gate (WoW Forever, design §4.5) never refuses by stat: vanilla items carry several,
+-- and the score weighs them.
+local function statCheck(facts, classFile, specID, tree)
+    if CD.STAT_GATE == "soft" then return "ok" end
     local prim = primariesOf(facts.stats)
     if not prim then return "ok" end
-    local stat = CD.PrimaryStat(classFile, specID)
+    local stat = CD.PrimaryStat(classFile, specID, tree)
     if stat then return tri(prim[stat] == true, "primaryStat") end
     local any, all = false, true
     for _, id in ipairs(CD.CLASS_SPECS[classFile] or {}) do
@@ -155,14 +165,14 @@ local function byClassData(facts, candidate)
     if not CD.ARMOR[classFile] then return "unknown", "unknownClass" end
     local status, why
     if facts.classID == ITEM_CLASS.ARMOR then
-        status, why = armorCheck(facts, classFile, specID)
+        status, why = armorCheck(facts, candidate, specID)
     elseif facts.classID == ITEM_CLASS.WEAPON then
         status, why = weaponCheck(facts, candidate)
     else
         return "unknown", "notGear"
     end
     if status ~= "ok" then return status, why end
-    return statCheck(facts, classFile, specID)
+    return statCheck(facts, classFile, specID, num(candidate.tree))
 end
 
 local function usable(facts, candidate)

@@ -13,7 +13,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 
 local function fresh(opts)
     local NS, _, m = T.newAddon(opts)
-    return NS.Compat, m
+    return NS.Compat, m, NS
 end
 
 local function installSecrets(m)
@@ -619,7 +619,8 @@ test("compat: Pawn ready answers the upgrade list, an empty list, or nil while u
 end)
 
 test("compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m)
     -- red under: a seam that passes the specID (71), which no Pawn scale carries
     assertEqual(Compat.PawnScaleForSpec(1, 71), "1:1", "Arms")
@@ -654,7 +655,8 @@ local function installScales(m, scales, visible)
 end
 
 test("compat: your visible Pawn scale is the one you show, a custom one before a starter", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
     installPawn(m)
     installScales(m, {
         Starter = { ClassID = 1, SpecID = 1, Provider = "Wowhead", ProviderActive = true },

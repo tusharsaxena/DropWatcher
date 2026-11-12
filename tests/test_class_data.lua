@@ -1,14 +1,121 @@
--- tests/test_class_data.lua — core/ClassData.lua (design spec §4, §5.2): the class and spec tables
--- are well-formed for Retail 12.x, Devourer included, and every lookup answers the three-valued way
--- the evaluation kernel's spec-unknown fallback needs (true, false, or nil for "cannot tell").
+-- tests/test_class_data.lua — core/ClassData.lua and core/ClassDataForever.lua (design spec §4,
+-- §5.2; Forever port design §4.2): the class and spec tables are well-formed for Retail 12.x,
+-- Devourer included, and for WoW Forever's nine classes and their talent trees, and every lookup
+-- answers the three-valued way the evaluation kernel's spec-unknown fallback needs (true, false, or
+-- nil for "cannot tell"). Both lists are read from NS.ClassData.LISTS on either kit profile; which
+-- one is ACTIVE (NS.ClassData's own members) is the profile's (clients-§6).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
+-- Retail's list (the cases below the Forever section read it on both profiles).
 local function load()
     local NS = T.newAddon()
-    return NS.ClassData, NS.Constants
+    return NS.ClassData.LISTS.retail, NS.Constants
 end
+
+-- WoW Forever's list, and the namespace.
+local function loadForever()
+    local NS = T.newAddon()
+    return NS.ClassData.LISTS.forever, NS.Constants, NS
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The list per client (clients-§5, §6)
+-- ---------------------------------------------------------------------------------------------
+
+test("class data: the active list is the client's, picked once at load", function()
+    local NS = T.newAddon()
+    local CD = NS.ClassData
+    local key = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
+    local list = CD.LISTS[key]
+    assertTrue(CD.SPECS == list.SPECS, "SPECS is the " .. key .. " list's")
+    assertTrue(CD.ARMOR == list.ARMOR and CD.WEAPONS == list.WEAPONS and CD.CLASS_ID == list.CLASS_ID)
+    assertTrue(CD.CLASS_SPECS == list.CLASS_SPECS)
+    assertTrue(CD.Spec == list.Spec and CD.CanWearArmor == list.CanWearArmor and CD.SpecIndex == list.SpecIndex)
+    assertEqual(CD.STAT_GATE, key == "forever" and "soft" or "hard")
+end)
+
+test("class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker", function()
+    local CD, C = loadForever()
+    local nine = { WARRIOR = 1, PALADIN = 2, HUNTER = 3, ROGUE = 4, PRIEST = 5, SHAMAN = 7, MAGE = 8,
+        WARLOCK = 9, DRUID = 11 }
+    local n = 0
+    for classFile, id in pairs(CD.CLASS_ID) do
+        n = n + 1
+        assertEqual(id, nine[classFile], classFile)
+        assertTrue(CD.ARMOR[classFile] ~= nil, classFile .. " armor")
+        assertTrue(type(CD.WEAPONS[classFile]) == "table", classFile .. " weapons")
+        assertEqual(#CD.CLASS_SPECS[classFile], 3, classFile .. " has three talent trees")
+    end
+    assertEqual(n, 9)
+    for _, gone in ipairs({ "DEATHKNIGHT", "MONK", "DEMONHUNTER", "EVOKER" }) do
+        assertNil(CD.CLASS_ID[gone], gone); assertNil(CD.ARMOR[gone], gone .. " armor")
+        assertNil(CD.CLASS_SPECS[gone], gone .. " specs")
+    end
+    assertEqual(CD.CanUseWeapon("WARRIOR", C.WEAPON_SUBCLASS.BOWS), true, "a warrior's bow")
+    assertEqual(CD.CanUseWeapon("ROGUE", C.WEAPON_SUBCLASS.THROWN), true, "thrown")
+    assertEqual(CD.CanUseWeapon("HUNTER", C.WEAPON_SUBCLASS.MACE_1H), false, "no maces for hunters")
+    assertEqual(CD.CanUseWeapon("DRUID", C.WEAPON_SUBCLASS.POLEARM), false, "no polearms for druids")
+    assertEqual(CD.CanUseWeapon("PALADIN", C.WEAPON_SUBCLASS.DAGGER), false)
+    assertEqual(CD.CanUseWeapon("MAGE", C.WEAPON_SUBCLASS.WARGLAIVE), false)
+end)
+
+test("class data: ArmorFor(\"HUNTER\", 30) is leather, ArmorFor(\"HUNTER\", 40) is mail", function()
+    local CD, C, NS = loadForever()
+    local A = C.ARMOR_SUBCLASS
+    assertEqual(CD.ArmorFor("HUNTER", 30), A.LEATHER)
+    assertEqual(CD.ArmorFor("HUNTER", 39), A.LEATHER)
+    assertEqual(CD.ArmorFor("HUNTER", 40), A.MAIL)
+    assertEqual(CD.ArmorFor("HUNTER", nil), A.MAIL, "an unknown level is the cap's type")
+    assertEqual(CD.ArmorFor("WARRIOR", 20), A.MAIL); assertEqual(CD.ArmorFor("PALADIN", 60), A.PLATE)
+    assertEqual(CD.ArmorFor("SHAMAN", 10), A.LEATHER); assertEqual(CD.ArmorFor("ROGUE", 10), A.LEATHER)
+    assertEqual(CD.ArmorFor("MAGE", 60), A.CLOTH)
+    assertNil(CD.ArmorFor("EVOKER", 60), "not a Forever class")
+    -- Wearing: no armor specialization, so a lighter type is fine; a heavier one waits for its level.
+    assertEqual(CD.CanWearArmor("HUNTER", A.LEATHER, 30), true)
+    assertEqual(CD.CanWearArmor("HUNTER", A.CLOTH, 30), true, "a lighter type")
+    local ok, why = CD.CanWearArmor("HUNTER", A.MAIL, 30)
+    assertEqual(ok, false); assertEqual(why, "armorLevel")
+    assertEqual(CD.CanWearArmor("HUNTER", A.MAIL, 40), true)
+    ok, why = CD.CanWearArmor("HUNTER", A.PLATE, 60)
+    assertEqual(ok, false); assertNil(why, "plate is never a hunter's")
+    assertNil(CD.CanWearArmor("HUNTER", A.GENERIC, 30))
+    -- Retail ignores the level, and stays exact.
+    local R = NS.ClassData.LISTS.retail
+    assertEqual(R.ArmorFor("HUNTER", 30), A.MAIL)
+    assertEqual(R.CanWearArmor("HUNTER", A.MAIL, 30), true)
+    assertEqual(R.CanWearArmor("HUNTER", A.LEATHER, 30), false)
+end)
+
+test("class data: Forever's rows are keyed by class and talent tree, with the Pawn index", function()
+    local CD = loadForever()
+    local row = CD.Spec("WARRIOR:2")
+    assertEqual(row.class, "WARRIOR"); assertEqual(row.tree, 2); assertEqual(row.pawn, 2)
+    assertEqual(row.titanGrip, false, "no Titan's Grip")
+    for key, r in pairs(CD.SPECS) do
+        assertEqual(key, r.class .. ":" .. r.tree)
+        assertEqual(r.titanGrip, false, key)
+    end
+    assertEqual(CD.DualWieldFor("HUNTER", 1485), true, "a class-wide spec ID: the class answers")
+    assertEqual(CD.DualWieldFor("SHAMAN", nil), false, "no dual wield for shamans")
+    assertEqual(CD.CanUseShield("SHAMAN", nil), true); assertEqual(CD.CanUseShield("WARRIOR", nil), true)
+    assertEqual(CD.CanUseShield("DRUID", nil), false)
+    assertNil(CD.CanUseOffhand("PALADIN", 1491), "it depends on the tree")
+    assertEqual(CD.CanUseOffhand("PALADIN", 1491, 1), true, "Holy")
+    assertEqual(CD.CanUseOffhand("PALADIN", 1491, 3), false, "Retribution")
+    assertEqual(CD.PrimaryStat("DRUID", nil, 2), "ITEM_MOD_AGILITY_SHORT")
+    -- The Pawn index (design §4.3): the tree's, and the Druid's own.
+    assertEqual(CD.SpecIndex("HUNTER:3"), 3)
+    assertEqual(CD.SpecIndex(1485, 2, nil, "HUNTER"), 2)
+    assertEqual(CD.SpecIndex(1485, 2), 2, "the tree alone")
+    assertEqual(CD.SpecIndex("DRUID:1"), 1, "Balance")
+    assertEqual(CD.SpecIndex("DRUID:2", nil, "DAMAGER"), 2, "Feral for damage")
+    assertEqual(CD.SpecIndex("DRUID:2", nil, "TANK"), 3, "Feral to tank")
+    assertEqual(CD.SpecIndex(nil, 3, nil, "DRUID"), 4, "Restoration")
+    assertNil(CD.SpecIndex(1485, nil), "no tree")
+    assertNil(CD.SpecIndex("x"))
+end)
 
 local CLASSES = { "WARRIOR", "PALADIN", "HUNTER", "ROGUE", "PRIEST", "DEATHKNIGHT", "SHAMAN", "MAGE",
     "WARLOCK", "MONK", "DRUID", "DEMONHUNTER", "EVOKER" }

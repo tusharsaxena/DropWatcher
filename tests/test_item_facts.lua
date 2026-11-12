@@ -114,6 +114,7 @@ end)
 
 test("item facts: a three-stat cloak read on a hunter suits a Blood death knight and a Retribution paladin", function()
     local NS, _, IF = enabled(huntersCloak)
+    T.retailList(NS)   -- Retail's classes and specs; Forever's stat gate is soft (test_evaluate)
     local f = IF.Get(CLOAK)
     -- red under: GetItemSpecInfo's hunter-only list refused both (specList), and GetItemStats'
     -- Agility alone refused both again (primaryStat)
