@@ -249,6 +249,7 @@ Kit.run{
         "test_row_tooltip",
         "test_test_mode",
         "test_compat",
+        "test_compat_client",
         "test_compat_collect",
         "test_text_parse",
         "test_constants",

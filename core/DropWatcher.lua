@@ -16,7 +16,9 @@ NS.addon = DW
 NS.Print = NS.Util.print
 
 -- Every game event this addon owns, as { event, handlerMethodName } pairs. Two rows may name the
--- same event; registerFeatureEvents (below) fans it out to both handlers.
+-- same event; registerFeatureEvents (below) fans it out to both handlers. A row that serves one
+-- client carries `clients = { "retail" }` (clients-§4): it is registered, unregistered and replayed
+-- only where NS.Compat.ForClient(row.clients) is true, so on the other client it is absent.
 NS.FEATURE_EVENTS = NS.FEATURE_EVENTS or {}
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_DISABLED", "OnCombatStart" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombatEnd" }
@@ -25,12 +27,17 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombat
 NS.STAND_DOWN = NS.STAND_DOWN or {}
 NS.STAND_UP   = NS.STAND_UP or {}
 
---- The declared feature events, each once, in the order of their first row.
+-- Whether a NS.FEATURE_EVENTS row serves this client (no `clients`: both).
+local function serves(row)
+    return NS.Compat.ForClient(row.clients)
+end
+
+--- The declared feature events this client serves, each once, in the order of their first row.
 --- @return table names
 function NS.FeatureEventNames()
     local names, seen = {}, {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if not seen[row[1]] then
+        if serves(row) and not seen[row[1]] then
             seen[row[1]] = true
             names[#names + 1] = row[1]
         end
@@ -42,9 +49,11 @@ end
 local function handlersByEvent()
     local by = {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        by[row[1]] = by[row[1]] or {}
-        local list = by[row[1]]
-        list[#list + 1] = row[2]
+        if serves(row) then
+            by[row[1]] = by[row[1]] or {}
+            local list = by[row[1]]
+            list[#list + 1] = row[2]
+        end
     end
     return by
 end
@@ -79,7 +88,7 @@ end
 --- The simulator's replay of the registration (modules/Sim.lua's Fire and DeliverForCleanup):
 --- every handler NS.FEATURE_EVENTS declares for `event`, in row order, with payload `...`, as the
 --- client would call them. An event the client rejected at registration (NS.rejectedEvents) is
---- never delivered, as the client never delivers it. Each handler is isolated under pcall, and
+--- never delivered, as the client never delivers it, and nor is a row for the other client. Each handler is isolated under pcall, and
 --- here a raise is a SIM debug line and is NEVER rethrown (the deliberate difference from
 --- DW:OnSharedFeatureEvent above, which rethrows the first error): a simulated event's driver, its
 --- sequence and the timeline go on. Answers how many handlers were called.
@@ -89,7 +98,7 @@ function NS.DeliverEvent(event, ...)
     if isRejected(event) then return 0 end
     local n = 0
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if row[1] == event then
+        if row[1] == event and serves(row) then
             local ok, err = pcall(DW[row[2]], DW, event, ...)
             if not ok then
                 NS.Debug("SIM", "handler %s for %s failed: %s", tostring(row[2]), tostring(event), NS.SafeToString(err))

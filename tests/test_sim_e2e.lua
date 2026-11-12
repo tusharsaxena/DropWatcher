@@ -87,8 +87,8 @@ local WORLD_READS = { "IsInInstance", "GetInstanceInfo", "GetDifficultyInfo", "C
     "UnitIsConnected", "UnitIsPlayer", "InCombatLockdown", "UnitAffectingCombat", "C_AddOns%.IsAddOnLoaded", "UNKNOWNOBJECT" }
 
 -- The seam's own files, and the two that read GlobalStrings once at load, before any simulation.
-local SKIPPED = { ["core/Compat.lua"] = true, ["core/CompatWorld.lua"] = true, ["core/CompatItem.lua"] = true,
-    ["core/CompatJournal.lua"] = true,
+local SKIPPED = { ["core/Compat.lua"] = true, ["core/CompatClient.lua"] = true, ["core/CompatWorld.lua"] = true,
+    ["core/CompatItem.lua"] = true, ["core/CompatJournal.lua"] = true,
     ["core/Constants.lua"] = true, ["core/ItemSetup.lua"] = true }
 
 -- A file's code with its comments and strings blanked, so a member key or a GlobalString's name

@@ -732,13 +732,26 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     assertNil(Compat.NormalizedRealm())
 end)
 
+-- Per profile (clients-§6): Retail answers through the deprecated globals the base mocks; WoW
+-- Forever has no such globals, so its one class-wide spec (Hunter 1485) comes from
+-- C_SpecializationInfo, which the case seeds there as the client carries it.
 test("compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library", function()
     local Compat, m = fresh()
-    m.specID = 72
-    assertEqual(Compat.PlayerSpecID(), 72)
-    m.GetSpecialization = function() return nil end
+    local forever = Compat.ClientKey() == "forever"
+    local index = 1
+    if forever then
+        m.C_SpecializationInfo = {
+            GetSpecialization = function() return index end,
+            GetSpecializationInfo = function(i) if i == 1 then return m.specID, "Hunter" end end,
+        }
+    else
+        m.GetSpecialization = function() return index end
+    end
+    m.specID = forever and 1485 or 72
+    assertEqual(Compat.PlayerSpecID(), forever and 1485 or 72)
+    index = nil
     assertNil(Compat.PlayerSpecID(), "no spec chosen yet")
-    m.GetSpecialization = function() return 2 end
+    index = 1
     installSecrets(m)
     m.specID = T.secret(72)
     assertNil(Compat.PlayerSpecID(), "a secret answer is never passed on")
@@ -1023,11 +1036,13 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
-    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
+    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]",
+    "WOW_PROJECT_%u+", "RegionalUniqueNamesEnabled", "UnitGroupRolesAssigned" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
-        if rel ~= "core/Compat.lua" and rel ~= "core/CompatJournal.lua" and rel ~= "core/CompatCollect.lua" then
+        if rel ~= "core/Compat.lua" and rel ~= "core/CompatClient.lua" and rel ~= "core/CompatJournal.lua"
+            and rel ~= "core/CompatCollect.lua" then
             local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", "")

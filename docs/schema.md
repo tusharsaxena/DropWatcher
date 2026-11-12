@@ -395,6 +395,11 @@ it is named.
   hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
   live `LootFeed.Clear`, `/dw clear` or Clear this session's drops on boss kill: a reload restores no entry dated
   before it).
+- `char.role.override` and `char.role.last` (`{ role, specID }`) are the player's role store
+  (Forever port design §4.2, DW-FP02). Owner `core/CompatClient.lua` (`Compat.RoleStore`, made on
+  first use); writers LibKa0s-Role-1.0's `Resolve` (`last`, on each answer from the group's
+  assignment, the talent tree or the spec, read through `Compat.PlayerRole`) and `SetOverride`
+  (`override`, through `Compat.SetRoleOverride`).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.SimHost.HistoryLog`, `modules/Sim.lua`), never

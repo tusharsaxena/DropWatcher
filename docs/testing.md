@@ -278,7 +278,11 @@ secret guards on both load paths, the localized duration decoder in three client
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
 `IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
 the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
-first, R4), and each shim's fallback with its API absent), `test_compat_collect` (`core/CompatCollect.lua`'s
+first, R4), and each shim's fallback with its API absent), `test_compat_client` (DW-FP02, on each kit
+profile: the client helpers and their library-absent stub, `ForClient`'s tokens, the whole character name
+and the character key, the talent tree and the role through LibKa0s-Role-1.0 over `db.char.role`, the
+inspect spec's `C_SpecializationInfo` rung, and a `NS.FEATURE_EVENTS` row registered and replayed only on
+the client its `clients` names), `test_compat_collect` (`core/CompatCollect.lua`'s
 collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
 by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and

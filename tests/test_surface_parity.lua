@@ -184,17 +184,14 @@ test("parity: the Media seam publishes the same NS members on both paths", funct
     assertSeamParity("core/MediaSetup.lua", "MediaFont", "Media seam (NS members)")
 end)
 
--- The six spell and spec readers of LibKa0s-Compat-1.0 that core/Compat.lua does not publish as
--- members: nothing here reads a spell, and the two spec readers are called on the library inside
--- Compat.PlayerSpecID only (`grep -rnE "Compat\.(GetSpell|GetSpecialization)" core modules settings`
--- finds no call site).
+-- The LibKa0s-Compat-1.0 members core/Compat.lua does not publish: the six spell and spec readers
+-- (nothing here reads a spell, and the two spec readers are called on the library inside
+-- Compat.PlayerSpecID only: `grep -rnE "Compat\.(GetSpell|GetSpecialization)" core modules settings`
+-- finds no call site), and two of Compat minor 4's character-identity four: nothing asks for the
+-- realm key, and the regional-names test is the library's own, inside UnitCharacterName and
+-- CharacterKey. The four client helpers (Compat minor 2) and those two readers are wired since DW-FP02.
 local COMPAT_READERS_UNWIRED = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
-    "GetSpecialization", "GetSpecializationInfo",
-    -- LibKa0s v1.92.0 (Compat minor 2) added these four client helpers. No caller here until the Forever port.
-    "IsForever", "IsRetail", "ClientKey", "ForClient",
-    -- LibKa0s v1.94.0 (Compat minor 4) added the character-identity four. No caller here until the
-    -- Forever port's DW-FP02 wires UnitCharacterName and CharacterKey.
-    "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey", }
+    "GetSpecialization", "GetSpecializationInfo", "RegionalNames", "RealmKey", }
 
 test("parity: the Compat seam carries every library member it wires", function()
     T.assertSurfaceParity(degraded.Compat, "LibKa0s-Compat-1.0", COMPAT_READERS_UNWIRED)

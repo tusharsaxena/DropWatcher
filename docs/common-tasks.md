@@ -45,7 +45,7 @@ A version-variant, deprecated or optional client API is called from `core/Compat
    `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
    documented absent value (nil, false or `{}`) when the API is missing.
 2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]` (a stable world read
-   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`, a collection read (the mount, pet and toy journals, the professions, a recipe's tooltip) in `core/CompatCollect.lua` under `files["core/CompatCollect.lua"]`), never globally, and
+   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, a character read (the realm, a name, a spec, the role) in `core/CompatClient.lua` under `files["core/CompatClient.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`, a collection read (the mount, pet and toy journals, the professions, a recipe's tooltip) in `core/CompatCollect.lua` under `files["core/CompatCollect.lua"]`), never globally, and
    add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
 3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
    absent among them (a collection read: its fake in `tests/wow_mock_collect.lua` and its cases, and its name in

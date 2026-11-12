@@ -54,7 +54,7 @@ one-line responsibility and why its position is load-bearing or conventional is 
 [`module-map.md`](module-map.md), the only inventory. In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  family (`Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, the only files that name the client
+  family (`Compat.lua`, `CompatClient.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
   it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
@@ -122,7 +122,7 @@ The seam's `resetExempt` keeps them out of the Drops page's Defaults (plan #13, 
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
+(`char.session`, feedback-15 spec §0), the per-character role store (`char.role`, LibKa0s-Role-1.0's, DW-FP02) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -509,7 +509,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Always (documentation-§3): the vendored catalog block (client-quirks-§1), then the addon's own client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 104 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 61, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 15 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 109 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 58, `core/CompatClient.lua` 8, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 15 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Not applicable | 10 messages are defined, not more than ten |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

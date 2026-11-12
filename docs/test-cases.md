@@ -1103,6 +1103,20 @@ Total.
 - compat: PixelFactor answers PixelUtil's factor, else nil
 - compat: no other shipped file names a seam-only client API in code
 
+### test_compat_client.lua (11)
+
+- compat client: ClientKey answers the kit profile
+- compat client: ForClient(nil) is true, ForClient({"retail"}) only on retail
+- compat client: a client that is neither answers nil and serves undeclared features only
+- compat client: UnitCharacterName joins name and surname on Forever, keeps one name on Retail
+- compat client: CharacterKey is the AceDB character key of this client
+- compat client: PlayerTalentTree is the group with most points; a tie is nil
+- compat client: PlayerTalentTree on the live Role is nil on Retail
+- compat client: PlayerRole resolves through Role over db.char.role, and the override sticks
+- compat client: PlayerSpecID goes through Role.Spec
+- compat client: InspectSpecID reads C_SpecializationInfo first, then the global
+- feature events: a retail-only row is not registered on forever
+
 ### test_compat_collect.lua (21)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
@@ -2652,6 +2666,7 @@ Total.
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
 | test_compat.lua | 73 |
+| test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
@@ -2724,4 +2739,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2242** |
+| **Total** | **2253** |

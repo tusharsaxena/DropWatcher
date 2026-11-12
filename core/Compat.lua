@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/Compat.lua — the root of the compat family (compat, design spec §4), the only caller of
--- version-variant, deprecated and optional client APIs; core/CompatWorld.lua, core/CompatItem.lua,
--- core/CompatJournal.lua and core/CompatCollect.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
+-- version-variant, deprecated and optional client APIs; core/CompatClient.lua, core/CompatWorld.lua,
+-- core/CompatItem.lua, core/CompatJournal.lua and core/CompatCollect.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
 -- docs/compat-layer.md; the text parsing is core/TextParse.lua's (pure), handed this file's strings.
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -13,11 +13,13 @@ NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 local TextParse = NS.TextParse -- core/TextParse.lua, above in the TOC: the pure parsers
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+local RoleLib = LibStub and LibStub("LibKa0s-Role-1.0", true)
 
 -- ── Secret guards: LibKa0s-Compat-1.0 ───────────────────────────────────────────────────────
 -- The library's answer, or the same one-rung body, on purpose: for a GUARD "the library is absent"
 -- is not "the client has no secrets" (LibKa0s docs/api/Compat/version-1-docs.md, "Degradation").
--- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID.
+-- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID's
+-- library-absent ladder; the client helpers and the character-name readers are routed below.
 
 --- True when `v` is a 12.0 secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
@@ -35,6 +37,50 @@ Compat.IsSafeKey = CompatLib and CompatLib.IsSafeKey or function(v)
     if Compat.IsSecret(v) then return false end
     return v ~= nil
 end
+
+-- ── The client: LibKa0s-Compat-1.0's, with the stub arm (clients-§3) ─────────────────────────
+-- The stub is the library's body, both constants read bare at call time; the nil guard keeps a
+-- client with neither from reading as Forever. No other file reads a WOW_PROJECT_* global.
+
+local function isForeverStub()
+    return WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+end
+
+local function isRetailStub()
+    return WOW_PROJECT_MAINLINE ~= nil and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not isForeverStub()
+end
+
+local function clientKeyStub()
+    if isForeverStub() then return "forever" end
+    if isRetailStub() then return "retail" end
+    return nil
+end
+
+local CLIENT_TOKENS = { retail = true, forever = true, both = true }
+
+local function forClientStub(clients)
+    if clients == nil or clients == "both" then return true end
+    if type(clients) ~= "table" then error('ForClient: unknown client "' .. tostring(clients) .. '"', 2) end
+    local key, hit = clientKeyStub(), false
+    for _, token in ipairs(clients) do
+        if not CLIENT_TOKENS[token] then error('ForClient: unknown client "' .. tostring(token) .. '"', 2) end
+        hit = hit or token == "both" or token == key
+    end
+    return hit
+end
+
+--- Whether this is a WoW Forever client. Exactly one boolean.
+Compat.IsForever = CompatLib and CompatLib.IsForever or isForeverStub
+
+--- Whether this is a Retail client (the mainline project id and NOT Forever). Exactly one boolean.
+Compat.IsRetail = CompatLib and CompatLib.IsRetail or isRetailStub
+
+--- The client's key: "retail", "forever", or nil when the project constants say neither.
+Compat.ClientKey = CompatLib and CompatLib.ClientKey or clientKeyStub
+
+--- Whether a `clients` declaration (nil, "both", or an array of "retail" / "forever" / "both")
+--- includes this client; nil means both (clients-§4). An unknown token raises on any client.
+Compat.ForClient = CompatLib and CompatLib.ForClient or forClientStub
 
 -- A plain (non-secret) string, or nil.
 local function plainString(v)
@@ -264,25 +310,34 @@ end
 
 -- ── Identity ────────────────────────────────────────────────────────────────────────────────
 
---- The player's realm as chat and unit names spell it: GetNormalizedRealmName (spaces and hyphens
---- dropped), which answers nil early in the login, then GetRealmName with the same characters
---- dropped. Nil when neither answers a plain, non-empty string.
+--- A unit's whole character name, never a realm (LibKa0s Compat.UnitCharacterName's first value,
+--- client-quirks-§5): "Traxex Silentshot" with regional names (WoW Forever), UnitName's name
+--- otherwise, and UnitName's first value with the library absent. Nil for no unit, a secret or "".
+--- @param unit string
 --- @return string|nil
-function Compat.NormalizedRealm()
-    local realm = GetNormalizedRealmName and plainString(GetNormalizedRealmName())
-    if realm and realm ~= "" then return realm end
-    realm = GetRealmName and plainString(GetRealmName())
-    realm = realm and realm:gsub("[%s%-]", "")
-    if realm and realm ~= "" then return realm end
-    return nil
+function Compat.UnitCharacterName(unit)
+    local read = CompatLib and CompatLib.UnitCharacterName or UnitName
+    if not (unit and read) then return nil end
+    local name = plainString((read(unit)))
+    if not name or name == "" then return nil end
+    return name
 end
 
---- The player's own specialization id: LibKa0s-Compat-1.0's GetSpecialization (the index) and
---- GetSpecializationInfo (its first return), each C_SpecializationInfo first and the global second.
---- Nil before the client knows the spec, for a secret answer, and with the library absent (the
---- major's reader stubs answer nil, so no rung is re-implemented here).
+--- The player's character key, AceDB-3.0 40's (LibKa0s Compat.CharacterKey): "First Surname" with
+--- regional names, "Name - Realm" otherwise. Nil until the client can answer, for a secret, and
+--- with the library absent.
+--- @return string|nil
+function Compat.CharacterKey()
+    if not (CompatLib and CompatLib.CharacterKey) then return nil end
+    return plainString(CompatLib.CharacterKey())
+end
+
+--- The player's own specialization id: LibKa0s-Role-1.0's Spec() (class-wide on WoW Forever),
+--- else LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo's first return. Nil before
+--- the client knows, for a secret, and with the library absent (no rung is re-implemented here).
 --- @return number|nil
 function Compat.PlayerSpecID()
+    if RoleLib and RoleLib.Spec then return plainNumber((RoleLib.Spec())) end
     if not (CompatLib and CompatLib.GetSpecialization and CompatLib.GetSpecializationInfo) then
         return nil
     end
@@ -371,16 +426,6 @@ function Compat.ClearInspectPlayer()
     if not ClearInspectPlayer then return false end
     ClearInspectPlayer()
     return true
-end
-
---- The inspected unit's specialization id (GetInspectSpecialization), or nil: 0 (not known), a
---- secret answer or no API.
---- @return number|nil
-function Compat.InspectSpecID(unit)
-    if not GetInspectSpecialization then return nil end
-    local id = plainNumber(GetInspectSpecialization(unit))
-    if not id or id <= 0 then return nil end
-    return id
 end
 
 --- True when Blizzard's inspect window is open (the player is inspecting someone).
@@ -875,18 +920,6 @@ function Compat.IsTradeCompleteMessage(messageType, message)
     return text ~= nil and plainString(message) == text
 end
 
---- Whom you are trading with (UnitName("NPC"), the trade window's partner unit), as `Name-Realm`
---- when the client names a realm, else `Name`. Nil for a secret or missing name.
---- @return string|nil
-function Compat.TradePartnerName()
-    if not UnitName then return nil end
-    local name, realm = UnitName("NPC")
-    name, realm = plainString(name), plainString(realm)
-    if not name or name == "" then return nil end
-    if realm and realm ~= "" then return name .. "-" .. realm end
-    return name
-end
-
 --- Opens a context menu on `owner` with one button per entry ({ text, fn }), through
 --- MenuUtil.CreateContextMenu. False when the client has no MenuUtil, so the caller acts directly.
 --- @param owner table
@@ -963,17 +996,4 @@ function Compat.DressUpItem(link)
     if type(link) ~= "string" or not fn then return false end
     fn(link)
     return true
-end
-
---- A specialization's localized name (the detail card's looter spec): GetSpecializationInfoByID's
---- second return. Nil for no API, an unknown or non-number id, or a secret or empty answer.
---- @param specID number
---- @return string|nil
-function Compat.SpecName(specID)
-    if type(specID) ~= "number" or Compat.IsSecret(specID) then return nil end
-    local fn = GetSpecializationInfoByID
-    if not fn then return nil end
-    local _, name = fn(specID)
-    if Compat.IsSecret(name) or type(name) ~= "string" or name == "" then return nil end
-    return name
 end

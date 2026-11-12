@@ -54,11 +54,12 @@ local function registered(m, kind)
     return table.concat(out, ",")
 end
 
--- Each declared event once: two rows may share one (core/DropWatcher.lua fans it out).
+-- Each declared event this client serves once: two rows may share one (core/DropWatcher.lua fans
+-- it out), and a row for the other client is not registered (clients-§4).
 local function declared(NS)
     local out, seen = {}, {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if not seen[row[1]] then
+        if NS.Compat.ForClient(row.clients) and not seen[row[1]] then
             seen[row[1]] = true
             out[#out + 1] = row[1]
         end

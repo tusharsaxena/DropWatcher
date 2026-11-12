@@ -46,7 +46,9 @@
 --   specID         GetSpecializationInfo's first return (the base's 250 by default)
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
---                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
+--                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer.
+--                  RegionalUniqueNamesEnabled() follows the kit profile (true on forever, where a
+--                  row's `realm` then stands for UnitName's second value, the surname)
 --   inspect        the inspect surface (modules/Inspect.lua): inspect.notified lists every
 --                  NotifyInspect(unit) call as { unit, at }; inspect.cleared counts ClearInspectPlayer;
 --                  inspect.cannot[unit] = true makes CanInspect false; inspect.far[unit] = true makes
@@ -491,6 +493,10 @@ local function installUnits(M)
         return r ~= nil and r.npc ~= true
     end
     M.GetNormalizedRealmName = function() return M.normalizedRealm end
+    -- Forever's regional names (client-quirks-§5), read at call time, after the kit stamped the profile.
+    M.RegionalUniqueNamesEnabled = function()
+        return M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT
+    end
     M.UNKNOWNOBJECT = "Unknown"
 
     --- Seed a group: `others` are the rows besides the player, in unit order. A party gives the
