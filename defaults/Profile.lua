@@ -241,7 +241,9 @@ NS.C = {
         -- The skin this addon wears (skinning-§2: per addon, per profile), applied through
         -- core/SkinSetup.lua and written only through the schema seam (settings/SchemaRows.lua's
         -- skipRender rows; General › Skin draws them). `source` is "ka0s" (the Ka0s skins) or "eui"
-        -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. The
+        -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. `skin`
+        -- is the client's default (NS.DEFAULT_SKIN, Skin:DefaultSkin, skinning-§2): Ka0s Default on
+        -- Retail, WoW Forever on the Forever client; core/SkinSetup.lua loads first and sets it. The
         -- Scope's two exceptions: a new profile leaves the settings panel the client's and skins
         -- the fonts (LootHistory's defaults). `font` and `texture` are the Skin tab's overrides, an
         -- LSM key each, "" for the skin's own. `outline` (LibKa0s v1.82.0, Skin minor 9, ruling
@@ -252,7 +254,7 @@ NS.C = {
         -- and no migration is owed.
         skin = {
             source      = "ka0s",
-            skin        = "ka0s",
+            skin        = NS.DEFAULT_SKIN or "ka0s",
             ignorePanel = true,
             ignoreFonts = false,
             font        = "",

@@ -10,7 +10,7 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 local function shown(mode)
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     NS.ShowWindow()
     if mode then NS.SetWindowMode(mode) end
     return NS, NS.Window.Frame(), m
@@ -89,7 +89,7 @@ test("chrome: the Filters count is Quality, Content and Character off their defa
 end)
 
 test("chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow", function()
-    local CC = T.newAddon().CompactChrome
+    local CC = T.newAddon{ skin = "ka0s" }.CompactChrome
     assertEqual(CC.FiltersLabel(0), "Filters"); assertEqual(CC.FiltersLabel(2), "Filters · 2")
     local tip = CC.FiltersTip({ quality = "Quality: Rare+", content = "Content: All", char = "Character: Current",
         sort = "Sort: Newest" }, { "content" })

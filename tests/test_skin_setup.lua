@@ -12,6 +12,9 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 local OWNER = "DropWatcher"
+-- The skin a new profile wears on this kit profile (skinning-§2, Skin:DefaultSkin, LibKa0s Skin minor
+-- 18): Ka0s Default on Retail, WoW Forever on the Forever client (clients-§6 picks it by ClientKey).
+local CLIENT_SKIN = { retail = "ka0s", forever = "forever" }
 
 local function skinOf(m) return m.LibStub("LibKa0s-Skin-1.0") end
 
@@ -53,14 +56,26 @@ test("Skin seam: the owner is the folder name, and NS.Skin is its facade", funct
     assertEqual(Skin:OwnerLabel(OWNER), NS.BRAND, "the copy confirmation names the addon by its brand")
 end)
 
-test("Skin seam: the read answers Ka0s Default before the profile store exists", function()
+test("Skin seam: the read answers the client's default before the profile store exists", function()
     -- RegisterOwner calls `get` at FILE LOAD, before AceDB; a getter that raised there would be a
     -- Lua error on every login.
     local NS = T.newAddon()
     local ok, source, skin = pcall(NS.SkinChoice)
     assertTrue(ok, "NS.SkinChoice raised without a store: " .. tostring(source))
     assertEqual(source, "ka0s")
-    assertEqual(skin, "ka0s")
+    assertEqual(skin, CLIENT_SKIN[NS.Compat.ClientKey()], "the client's default skin")
+end)
+
+test("skin: the profile default is the client's default skin", function()
+    -- red under: a hard-coded "ka0s" default (a Forever player opening on Ka0s Default, not the
+    -- WoW Forever skin the library chose for that client), or a default read from somewhere other
+    -- than Skin:DefaultSkin().
+    local NS, _, m = T.newAddon()
+    local want = CLIENT_SKIN[NS.Compat.ClientKey()]
+    assertEqual(NS.DEFAULT_SKIN, want, "NS.DEFAULT_SKIN")
+    assertEqual(NS.DEFAULT_SKIN, skinOf(m):DefaultSkin(), "NS.DEFAULT_SKIN is Skin:DefaultSkin()")
+    assertEqual(NS.C.PROFILE.skin.skin, want, "the profile default")
+    assertEqual(NS.C.PROFILE.skin.source, "ka0s", "the source stays the Ka0s skins on both clients")
 end)
 
 -- ── the owner tokens (X1, X2, X12) ───────────────────────────────────────────────────────────
@@ -85,7 +100,7 @@ end)
 test("Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's", function()
     -- X1: Ka0s Default keeps the exact value the addon drew before skins. red under: a default
     -- snapped to the follow token, or a follow ignored in another skin.
-    local NS, _, m = T.bootAddon()
+    local NS, _, m = T.bootAddon{ skin = "ka0s" }
     local Skin = skinOf(m)
     for name, def in pairs(NS.SKIN_TOKENS) do
         sameColor(name .. " (ka0s)", { NS.Skin.Color(name) }, def.default)
@@ -148,13 +163,13 @@ end)
 local PATHS = { "skin.source", "skin.skin", "skin.ignorePanel", "skin.ignoreFonts", "skin.font",
                 "skin.texture", "skin.outline", "skin.pickerSeen" }
 
-test("Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab", function()
+test("Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Skin tab", function()
     -- red under: a default other than today's look, or a row that renders itself on top of the
     -- library's choice grids. O3: pickerSeen is false on every profile, so the picker shows once.
     local NS = T.newAddon()
     local d = NS.C.PROFILE.skin
     assertEqual(d.source, "ka0s")
-    assertEqual(d.skin, "ka0s")
+    assertEqual(d.skin, CLIENT_SKIN[NS.Compat.ClientKey()], "the client's default skin")
     assertEqual(d.ignorePanel, true, "the settings panel stays the client's on a new profile")
     assertEqual(d.ignoreFonts, false)
     assertEqual(d.font, "")
@@ -183,7 +198,7 @@ test("Skin seam: /dw set refuses a skin that is not registered and applies one t
     local NS, _, m = T.enableAddon()
     local Skin, n = skinOf(m), countLooks(NS)
     quietly(m, function() NS.addon:OnSlashCommand("set skin.skin no-such-skin") end)
-    assertEqual(NS.Setting("skin.skin"), "ka0s", "an unknown skin was stored")
+    assertEqual(NS.Setting("skin.skin"), NS.DEFAULT_SKIN, "an unknown skin was stored")
     assertEqual(n.looks, 0, "a refused set repainted")
     quietly(m, function() NS.addon:OnSlashCommand("set skin.skin obsidian") end)
     assertEqual(NS.addon.db.profile.skin.skin, "obsidian", "a registered skin was refused")
@@ -309,7 +324,7 @@ end)
 
 test("Skin seam: a profile switch, copy and reset each apply the incoming profile's skin", function()
     -- skinning-§2. red under: a profile event that leaves the old profile's skin worn.
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local Skin, db = skinOf(m), NS.addon.db
     db:SetProfile("SkinProbe")
     db.profile.skin.skin = "glass"

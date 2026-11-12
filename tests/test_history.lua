@@ -359,7 +359,10 @@ local DAY = 86400
 
 -- Two groups kept from earlier sessions, then the tab shown.
 local function shownTab(mutate, opts)
-    local NS, _, m = T.enableAddon(opts)
+    -- Ka0s Default by name (DW-FP03): these cases pin the look before skins on both clients.
+    local o = { skin = "ka0s" }
+    for k, v in pairs(opts or {}) do o[k] = v end
+    local NS, _, m = T.enableAddon(o)
     local now = m.time()
     local hist = NS.History.Store()
     hist.groups = {

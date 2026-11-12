@@ -53,7 +53,7 @@ end
 test("icon style: by default an item icon is cropped 0.1 a side in a Solid icon.outline border 1 pixel thick", function()
     -- The skin's icon family, which the border follows by default, is 1 px in every skin since
     -- LibKa0s v1.85.0's R3-FIX; it was 2.
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local IS, frames = NS.IconStyle, borderFrames(m)
     local b = fakeButton()
     IS.Apply(b, EPIC)
@@ -194,7 +194,7 @@ test("icon style: a repaint that changes nothing costs nothing; a row's write re
 end)
 
 test("icon style: Show border draws the swatch over the icon; Use class color the player's class with its alpha", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local S, frames = NS.SchemaRuntime.Set, borderFrames(m)
     -- The player's own thickness below: the skin's (DW-03) is tests/test_skin_hud.lua's.
     assertTrue(S("icons.borderStyleFromSkin", false))

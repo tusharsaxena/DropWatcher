@@ -203,15 +203,16 @@ Total.
 - item lists panel: a refused add is raised as its sentence, and nothing is written
 - item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
-### test_skin_setup.lua (18)
+### test_skin_setup.lua (19)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
-- Skin seam: the read answers Ka0s Default before the profile store exists
+- Skin seam: the read answers the client's default before the profile store exists
+- skin: the profile default is the client's default skin
 - Skin seam: every owner token is namespaced dw. and taken by the library
 - Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
 - Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
 - Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
-- Skin seam: the skin keys default to Ka0s Default, as skip-render rows of General's Skin tab
+- Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Skin tab
 - Skin seam: the skin row's values are every registered skin, in the library's order
 - Skin seam: /dw set refuses a skin that is not registered and applies one that is, once
 - Skin seam: /dw set reaches an exception and an override, each its own half
@@ -2628,7 +2629,7 @@ Total.
 | test_schema_rows.lua | 26 |
 | test_settings_pages.lua | 53 |
 | test_item_lists_panel.lua | 5 |
-| test_skin_setup.lua | 18 |
+| test_skin_setup.lua | 19 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
@@ -2739,4 +2740,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2253** |
+| **Total** | **2254** |

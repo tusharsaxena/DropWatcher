@@ -106,7 +106,7 @@ test("glow: without the library Apply still records its decision; a glow turned 
 end)
 
 test("glow: each style starts with the knob table's arguments, under the addon's key", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
     -- main: proc (both default to proc since DW-03, D-18), its own #19FF19, opaque; the off-spec
@@ -176,7 +176,7 @@ end)
 -- drop (a Priest here), keeps the swatch's alpha, and falls through to the swatch when the class
 -- has no color.
 test("glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
     assertTrue(S("glow.main.type", "proc"))

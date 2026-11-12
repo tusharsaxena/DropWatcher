@@ -42,7 +42,7 @@ local GROUP = { key = "enc:3", label = "Commander Ri'mok", kind = "encounter", s
 
 -- The window in the compact layout, two drops shown (View: All).
 local function shownCards()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     m.__now = 100
     m.normalizedRealm = "Testrealm"
     local d2 = drop({ id = 2, link = RING, looter = { name = "Littlewolf-Testrealm", guid = "Player-1-0000000B",

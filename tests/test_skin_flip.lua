@@ -291,7 +291,7 @@ test("skin flip: a skin switch redraws the icon border's color; class and qualit
 end)
 
 test("skin flip: Ka0s Default keeps the glows' own colors; a skin switch restarts them in the skin's", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
     local calls = {}
     NS.GlowLib = { Start = function(_, _, cfg) calls[#calls + 1] = cfg.color; return true end, Stop = function() end }
@@ -390,7 +390,7 @@ local function tableString(m)
 end
 
 test("skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redraws it", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local WR = NS.WindowRows
     fakeCreateFont(m)
     local fs = tableString(m)

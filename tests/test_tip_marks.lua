@@ -46,7 +46,7 @@ test("tip marks: the escape is the whole 64x64 canvas at the text's height, tint
 end)
 
 test("tip marks: up is arrow-up in green, side is transfer in yellow, down is arrow-down in red", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local TM = NS.TipMarks
     local expect = { upgrade = { "arrow-up", "77:217:102" }, sidegrade = { "transfer", "255:245:107" },
         downgrade = { "arrow-down", "255:92:82" } }
@@ -110,7 +110,7 @@ end
 -- ── the rows (feedback-21) ──────────────────────────────────────────────────────────────────
 
 test("tip marks: a row is `• Label: value`, the bullet and label muted gold, the value plain or in its tone", function()
-    local TM = T.newAddon().TipMarks
+    local TM = T.newAddon{ skin = "ka0s" }.TipMarks
     assertEqual(TM.BULLET, "•", "a character the tooltip face draws: the media library has no dot-like icon")
     assertEqual(TM.Bullet(), "|cffccad5c•|r", "the bullet in the label's muted gold")
     assertEqual(TM.Row("Rule", "personal loot"), "|cffccad5c• Rule:|r personal loot")
@@ -146,7 +146,7 @@ local function shapes(list, where)
 end
 
 test("tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade cell's reason one row per fact", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local WC, SC = NS.WindowCells, NS.SideCells
     local d, mine = rowDrop(), rowDrop({ isMine = true })
     local tips = { WC.Trade(d).tip, WC.Me(d).tip, WC.Them(d, 100).tip, WC.Item(d).tip, WC.Ilvl(d).tip, WC.Slot(d).tip,
@@ -167,7 +167,7 @@ test("tip rows: the table's cells (WindowCells, SideCells) are rows, the Trade c
 end)
 
 test("tip rows: your own drop's cells and buttons (MineCells) and the off-spec cells are rows", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local MC, OC, WC = NS.MineCells, NS.OffSpecCells, NS.WindowCells
     local own = rowDrop({ isMine = true, trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = 200 } })
     local off = rowDrop({ me = { verdict = "cantUse", reasons = { { key = "primaryStat" } },
@@ -179,7 +179,7 @@ test("tip rows: your own drop's cells and buttons (MineCells) and the off-spec c
 end)
 
 test("tip rows: the detail card's chips, sides, trade box and actions (DetailCells) are rows", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local DC = NS.DetailCells
     local d = rowDrop()
     local tips = {}
@@ -193,7 +193,7 @@ test("tip rows: the detail card's chips, sides, trade box and actions (DetailCel
 end)
 
 test("tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local CC, CH = NS.CompactCards, NS.CompactChrome
     local d = rowDrop({ looter = { name = "Seta-Argent Dawn", classFile = "PRIEST" } })
     shapes({ CC.Freshness(d, 100).tip, CC.Freshness(rowDrop({ isMine = true }), 100).tip, CC.Looter(d, "Realm").tip,
@@ -204,7 +204,7 @@ test("tip rows: the compact cards and chrome (CompactCards, CompactChrome) are r
 end)
 
 test("tip rows: History's cells and card (WindowHistory, HistoryCard) are rows", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local WH, HC = NS.WindowHistory, NS.HistoryCard
     local d = rowDrop({ outcome = "asked", group = { label = "Boss", kind = "encounter" } })
     local m = HC.Model(d, { nowEpoch = 200, dateFn = function() return "2026-10-18 17:02" end })
@@ -217,7 +217,7 @@ test("tip rows: History's cells and card (WindowHistory, HistoryCard) are rows",
 end)
 
 test("tip rows: the column headers and the Offer panel's columns are rows, the settings keep their prose", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     for _, cols in ipairs({ NS.WindowGroup.COLUMNS, NS.WindowHistory.COLUMNS, NS.OfferPanel.COLS }) do
         for _, col in ipairs(cols) do assertRowShape({ col.label, unpack(col.tip) }, "column " .. col.key) end
     end
@@ -229,7 +229,7 @@ end)
 -- The simulator panel's tooltips are LibKa0s-Sim-1.0's GameTooltip lines since DW-04 (OWNER_SCOPE
 -- C.7): their { left, right } shape is tests/test_sim_panel.lua's.
 test("tip rows: the chrome's own tooltips (title bar, footer) are rows", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local TB, WF = NS.WindowTitleBar, NS.WindowFooter
     local tips = { { TB.ScanTip() }, { TB.TestTip() } }
     local seg = WF.Compose({ members = 0, situation = "solo", tracking = false, pawn = "off" })
@@ -509,7 +509,7 @@ local function auditTips(NS, widgets, where)
 end
 
 test("audit: every tooltip of test mode's drops, both layouts, the detail card and History is glyph-free and in rows", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local widgets = attached(NS)
     m.seedGearJournal()
     NS.SetTestMode(true)
@@ -537,7 +537,7 @@ end)
 -- ── the arrow and the drawn width (DW-F5) ───────────────────────────────────────────────────
 
 test("tip marks: the arrow between two values is arrow-right in the muted tone, -> without the library", function()
-    local NS = T.newAddon()
+    local NS = T.newAddon{ skin = "ka0s" }
     local TM = NS.TipMarks
     local path = NS.Icon("arrow-right")
     assertTrue(path ~= nil, "arrow-right is in the media catalog")

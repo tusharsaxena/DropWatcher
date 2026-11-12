@@ -43,7 +43,7 @@ end
 local GROUP = { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1, 2 } }
 
 local function shownTable()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     m.__now = 100
     local d2 = drop({ id = 2, link = RING, looter = { name = "Littlewolf-Realm", guid = "Player-1-0000000B", classFile = "ROGUE" },
         facts = { ilvl = 298, equipLoc = "INVTYPE_FINGER", quality = 4 },

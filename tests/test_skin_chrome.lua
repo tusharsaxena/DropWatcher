@@ -37,7 +37,7 @@ end
 
 -- An enabled addon with the window shown (its Drops pane built).
 local function shown()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     NS.ShowWindow()
     return NS, NS.Window.Frame(), m
 end
@@ -203,7 +203,7 @@ end)
 
 test("skin chrome: the refusal red and the trade reason's gray are escapes of the skin's tokens", function()
     -- red under: an escape built once at file load (it would keep the old skin's bytes) or a literal.
-    local NS, _, m = T.bootAddon()
+    local NS, _, m = T.bootAddon{ skin = "ka0s" }
     local E = NS.addon.Settings.Editors
     local label = E.CounterLabel("ask", string.rep("x", 256))
     assertTrue(label:find(NS.SkinEscape("sem.badAlt") .. "256 / 255|r", 1, true) ~= nil, label)

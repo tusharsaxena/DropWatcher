@@ -56,7 +56,7 @@ local function named(NS, m)
 end
 
 local function addon()
-    local NS, _, m = T.newAddon()
+    local NS, _, m = T.newAddon{ skin = "ka0s" }
     return named(NS, m), m
 end
 

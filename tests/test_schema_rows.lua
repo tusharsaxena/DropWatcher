@@ -575,6 +575,10 @@ local function serialize(v)
     return "{" .. table.concat(parts, ",") .. "}"
 end
 
+-- skin.skin's default is the client's default skin (DW-FP03, skinning-§2, Skin:DefaultSkin): Ka0s
+-- Default on Retail, WoW Forever on the Forever kit profile (clients-§6).
+local CLIENT_SKIN = ({ retail = "ka0s", forever = "forever" })[os.getenv("KA0S_KIT_CLIENT") or "retail"]
+
 local PINNED_ROWS = {
     { "alpha", "number", "1" },
     { "autoOpen", "bool", "true" },
@@ -687,7 +691,7 @@ local PINNED_ROWS = {
     -- LibKa0s v1.82.0 (DW-01 of the skin fonts run, ruling D-06): the Font outline, a new row.
     { "skin.outline", "string", "\"hud\"" },
     { "skin.pickerSeen", "bool", "false" },
-    { "skin.skin", "string", "\"ka0s\"" },
+    { "skin.skin", "string", "\"" .. CLIENT_SKIN .. "\"" },
     { "skin.source", "string", "\"ka0s\"" },
     { "skin.texture", "string", "\"\"" },
     { "situations.delve.autoOpen", "bool", "true" },

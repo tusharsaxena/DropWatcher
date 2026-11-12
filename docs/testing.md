@@ -34,7 +34,7 @@ Suites that need a secret value use `T.secret(v)` and install the kit's `issecre
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
-each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env, mock)`:
+each taking an `opts` table (`skip`, `mock`, `inCombat`, `skin`) and returning `(NS, env, mock)`:
 
 - `T.newAddon(opts)` — every file loaded.
 - `T.bootAddon(opts)` — plus `OnInitialize` (the database, the migrations, the chat commands).
@@ -42,6 +42,11 @@ each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env
 
 `opts.skip = T.loadAddon.libFiles` loads the addon with the whole LibKa0s payload absent, which is how
 every degradation stub is tested: by a real load, never by a hand-written stub (testing-§8).
+
+`opts.skin = "ka0s"` makes that skin the instance's client default (`Skin:DefaultSkin()`, so
+`NS.DEFAULT_SKIN` and `skin.skin`'s default). A new profile wears Ka0s Default on Retail and WoW Forever
+on Forever (skinning-§2), so a case pinning Ka0s Default's pixels chooses it by name this way and
+reads the same on both kit profiles; `test_skin_setup` pins the per-client default itself.
 
 Named suites the standard requires: `test_surface_parity` (testing-§8; since AT-A2 it also holds
 `core/ToastSetup.lua`'s `NS.ToastStub` to a live LibKa0s-Toast-1.0 instance), `test_vendor_sync`

@@ -22,7 +22,7 @@ end
 
 -- Two kept groups, then the History tab in the compact layout.
 local function shownCompact()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     m.normalizedRealm = "Testrealm"
     local now = m.time()
     local hist = NS.History.Store()
