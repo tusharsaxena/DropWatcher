@@ -3,6 +3,7 @@
 	<Script file="CorePixel.lua"/>
 	<Script file="Env.lua"/>
 	<Script file="Compat.lua"/>
+	<Script file="Role.lua"/>
 	<Script file="Lifecycle.lua"/>
 	<Script file="Bus.lua"/>
 	<Script file="Schema.lua"/>

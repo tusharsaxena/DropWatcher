@@ -191,7 +191,10 @@ end)
 local COMPAT_READERS_UNWIRED = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
     "GetSpecialization", "GetSpecializationInfo",
     -- LibKa0s v1.92.0 (Compat minor 2) added these four client helpers. No caller here until the Forever port.
-    "IsForever", "IsRetail", "ClientKey", "ForClient", }
+    "IsForever", "IsRetail", "ClientKey", "ForClient",
+    -- LibKa0s v1.94.0 (Compat minor 4) added the character-identity four. No caller here until the
+    -- Forever port's DW-FP02 wires UnitCharacterName and CharacterKey.
+    "RegionalNames", "UnitCharacterName", "CharacterKey", "RealmKey", }
 
 test("parity: the Compat seam carries every library member it wires", function()
     T.assertSurfaceParity(degraded.Compat, "LibKa0s-Compat-1.0", COMPAT_READERS_UNWIRED)
