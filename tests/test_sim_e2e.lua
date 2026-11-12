@@ -125,7 +125,7 @@ test("sim e2e: the seam wraps every world read, the combat flags and the GlobalS
     local NS = T.newAddon()
     local wrapped = {}
     for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
-    for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
+    for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitCharacterName", "UnitClass", "UnitIsConnected",
         "UnitIsPlayer", "InstanceState", "InstanceInfo", "DifficultyKnown", "ChallengeModeActive", "InCombatLockdown", "PlayerInCombat",
         "GlobalString", "IsAddOnLoaded" }) do
         assertTrue(wrapped[key], key .. " is answered through the seam")
@@ -173,7 +173,7 @@ local function assertDefaultFilters(NS)
         assertEqual(next(st.view), nil, "View: All"); assertEqual(st.search, "")
         if tab == "group" then
             assertEqual(st.content, "session")
-            assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
+            assertTrue(st.char[T.ME] == true and next(st.char, next(st.char)) == nil,
                 "Character: Current (feedback-2 spec §4)")
         else
             assertEqual(st.content, "all"); assertNil(next(st.char), "Character: All")
@@ -255,7 +255,7 @@ end
 -- (the simulator never answers for "player"), so Character: Current shows the run on every tab
 -- (feedback-2 spec §4).
 local function assertRecorder(NS, label)
-    local me = "Testchar-Testrealm"
+    local me = T.ME
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
         assertEqual(rec.seenBy, me, label .. ": drop " .. rec.id .. " says who saw it")
     end
@@ -398,7 +398,7 @@ test("sim e2e: in a raid, raid1 is you, online, for every unit read", function()
     local Compat = NS.Compat
     local guid = NS.SimSeam:Live(Compat.UnitGUID, "player")
     assertEqual(Compat.UnitGUID("raid1"), guid)
-    assertEqual(Compat.UnitName("raid1"), NS.SimSeam:Live(Compat.UnitName, "player"))
+    assertEqual(Compat.UnitCharacterName("raid1"), NS.SimSeam:Live(Compat.UnitCharacterName, "player"))
     -- red under: the M7 provider, which asked the client about raid1 and read you offline
     assertTrue(Compat.UnitIsConnected("raid1") == true, "you are online")
     local me = NS.Roster.Player()

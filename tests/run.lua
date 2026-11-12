@@ -153,6 +153,16 @@ local function withPlayer(m)
     return m
 end
 
+-- The kit profile in use (clients-§6), and the name the roster gives a mock unit row on it
+-- (client-quirks-§5): on Forever (regional names) a row's `realm` stands for UnitName's second
+-- value, the surname, so the member is "First Surname" with no realm; on Retail it is `Name-Realm`,
+-- the realm normalized, and the player's own (the mock's Testrealm) when the row names none.
+local FOREVER = (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever"
+local function rosterName(name, realm)
+    if FOREVER then return realm and (name .. " " .. realm) or name end
+    return name .. "-" .. (realm and (realm:gsub("[%s%-]", "")) or "Testrealm")
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -168,6 +178,9 @@ _G.DW_TEST = Kit.expose{
     tipPlain    = tipPlain,
     tipPlainJoined = tipPlainJoined,
     cardText    = cardText,
+    forever     = FOREVER,
+    rosterName  = rosterName,
+    ME          = rosterName("Testchar"),
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,

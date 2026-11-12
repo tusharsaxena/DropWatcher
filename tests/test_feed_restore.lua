@@ -9,7 +9,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local BRAKK = "Player-1-0000000A"
-local ME_KEY = "Testchar-Testrealm"
+local ME_KEY = T.ME   -- your recorder key on the kit profile
 local T0 = 1800000000
 
 local function link(id) return ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Item %d]|h|r"):format(id, id) end
@@ -135,7 +135,7 @@ test("restore: after a reload this session's drops come back under their headers
     assertEqual(a.source, "restore"); assertEqual(a.groupKey, before[1].groupKey, "the feed key, its suffix gone")
     assertEqual(LF.Groups()[1].label, NS.LootFeed.Groups()[1].label)
     assertEqual(#LF.Groups(), 1)
-    assertEqual(a.looter.name, "Brakk-Testrealm"); assertEqual(a.looter.guid, BRAKK, "read from the roster")
+    assertEqual(a.looter.name, T.rosterName("Brakk")); assertEqual(a.looter.guid, BRAKK, "read from the roster")
     assertFalse(a.isMine); assertTrue(b.isMine)
     assertEqual(a.at, m2.GetTime() - 600, "its epoch turned into the client clock")
     assertEqual(a.situation, "dungeon")

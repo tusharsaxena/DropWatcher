@@ -329,7 +329,7 @@ test("chrome: each child's tick reads its own dropdown, and a pick goes through 
     assertEqual(ticked(quality), c.quality._value, "Quality ticks the mode in force")
     -- Current is the preset that selects exactly you: its own predicate and your row, both lit, as
     -- the dropdown's own menu lights them.
-    assertEqual(ticked(char), "current,Testchar-Testrealm", "Character: Current")
+    assertEqual(ticked(char), "current," .. T.ME, "Character: Current")
     pick(child(content, "instance"))
     assertEqual(FB.State("group").content, "instance", "through the dropdown's own onSelect")
     assertEqual(c.content._value, "instance", "the full bar's dropdown holds the pick")

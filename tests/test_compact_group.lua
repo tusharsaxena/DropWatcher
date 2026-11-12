@@ -205,7 +205,12 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     assertTrue(has(them, "For Seta: Downgrade"))
     assertEqual(W.TooltipOf(c.ilvl.hit)[1], "Item level 311")
     local looter = W.TooltipOf(c.looter.hit)
-    assertEqual(T.tipPlain(looter[#looter]), "• Realm: Otherrealm")
+    if T.forever then
+        -- no realm on Forever: no looter is ever from another realm (client-quirks-§5)
+        assertTrue(T.tipPlain(looter[#looter]) ~= "• Realm: Otherrealm", "no realm row on Forever")
+    else
+        assertEqual(T.tipPlain(looter[#looter]), "• Realm: Otherrealm")
+    end
     assertEqual(W.TooltipOf(c.fresh.hit)[1], "Inspect of Seta")
     assertEqual(#W.TooltipOf(c.item.hit), 0, "the item shows the game's own tooltip instead")
     assertTrue(c.item.hit.showItem == true)

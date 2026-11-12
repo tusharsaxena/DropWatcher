@@ -629,7 +629,7 @@ test("inspect: one debug line per job", function()
     m.advance(0.15)
     NS.Debug = real
     assertEqual(#lines, 1, table.concat(lines, " | "))
-    assertTrue(lines[1]:find("Brakk%-Testrealm: fresh") ~= nil, lines[1])
+    assertTrue(lines[1]:find(T.rosterName("Brakk"):gsub("%-", "%%-") .. ": fresh") ~= nil, lines[1])
 end)
 
 -- ---------------------------------------------------------------------------------------------

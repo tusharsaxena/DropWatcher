@@ -66,8 +66,11 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `IsRestrictionActive(rtype)` | `C_RestrictedActions.IsAddOnRestrictionActive` → `GetAddOnRestrictionState` through `IsRestrictionStateActive` | `false` |
 | Client | `IsForever()`, `IsRetail()`, `ClientKey()`, `ForClient(clients)` | LibKa0s-Compat-1.0's, wired by assignment; the library-absent stub is the library's body, reading `WOW_PROJECT_ID`, `WOW_PROJECT_MAINLINE` and `WOW_PROJECT_CAMELOT` bare at call time (the one place in the addon that reads them). `ClientKey` answers `"retail"`, `"forever"` or nil (neither); `ForClient` is true for nil, `"both"` or a list naming this client, and raises on an unknown token. `core/DropWatcher.lua` gates each `NS.FEATURE_EVENTS` row's `clients` through it (clients-§4) | stub |
 | Identity | `NormalizedRealm()` (`core/CompatClient.lua`) | `GetNormalizedRealmName` (nil early in the login) → `GetRealmName` with spaces and hyphens dropped; a secret answer is skipped | `nil` |
-| | `UnitCharacterName(unit)` | LibKa0s-Compat-1.0's `UnitCharacterName`'s first value (client-quirks-§5): "First Surname" with regional names (WoW Forever), UnitName's name otherwise; never a realm. A secret or empty name is nil. Library absent: `UnitName`'s first value | `nil` |
+| | `NameRealm()` (`core/CompatClient.lua`) | the realm a same-realm `Name-Realm` carries: `NormalizedRealm()`, and nil with regional names (WoW Forever: no realm on any name, client-quirks-§5). The roster's identity, the group roster's and the cards' own-realm test and the simulator's members read it | `nil` |
+| | `RegionalNames()` | LibKa0s-Compat-1.0's `RegionalNames` (client-quirks-§5): whether names are unique per region (true on WoW Forever). Library absent: `RegionalUniqueNamesEnabled() == true` | `false` |
+| | `UnitCharacterName(unit)` | LibKa0s-Compat-1.0's `UnitCharacterName`, both values (client-quirks-§5): the whole name, "First Surname", and a nil realm with regional names (WoW Forever); UnitName's name and realm otherwise. A secret or empty part is nil. Library absent: `UnitName`'s two values, the second dropped with regional names, so a surname is never read as a realm. Every unit name the addon reads goes through it (the roster, you, the trade partner, the simulator's members) | `nil` |
 | | `CharacterKey()` | LibKa0s-Compat-1.0's `CharacterKey`, AceDB-3.0 40's character key: "First Surname" with regional names, "Name - Realm" otherwise; a secret answer is nil | `nil` (library absent too) |
+| | `PlayerRecordKey()` (`core/CompatClient.lua`) | the player as stored records name a character (`seenBy`, the Character dropdown): `CharacterKey()` (else the whole name) with regional names; otherwise `Name-Realm` over `NormalizedRealm()`, the shape History has stored since v1 | `nil` until known |
 | | `PlayerSpecID()` | LibKa0s-Role-1.0's `Spec()` (Compat's spec ladder; class-wide on WoW Forever); without Role, LibKa0s-Compat-1.0's `GetSpecialization` (the index) then `GetSpecializationInfo(index)`'s first return, each `C_SpecializationInfo` first and the global second; a secret answer is nil. With the library absent its reader stubs answer nil, so no rung is re-implemented here | `nil` |
 | | `PlayerTalentTree()` (`core/CompatClient.lua`) | the group of LibKa0s-Role-1.0's `Groups()` with the most points spent, as `{ index, name }`; nil on Retail (no groups), on a tie and with no points spent | `nil` |
 | Role | `RoleStore()` (`core/CompatClient.lua`) | `db.char.role`, made on first use (the player's override and Role's last answer) | `nil` before the database |
@@ -109,7 +112,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
-| | `TradePartnerName()` (`core/CompatClient.lua`) | `UnitName("NPC")`, the trade window's partner, as `Name-Realm` when a realm is named, else `Name`; a secret or empty name is nil | `nil` |
+| | `TradePartnerName()` (`core/CompatClient.lua`) | `UnitCharacterName("NPC")`, the trade window's partner: the whole name on WoW Forever, else `Name-Realm` when a realm is named, else `Name`; a secret or empty name is nil | `nil` |
 | | `IsTradeCompleteMessage(messageType, message)` | whether a `UI_INFO_MESSAGE` is the client's "Trade complete.": its type is `LE_GAME_ERR_TRADE_COMPLETE`, or, without that constant, its text is `ERR_TRADE_COMPLETE`; a secret value is no match | `false` |
 | Row menu | `ContextMenu(owner, entries)` | `MenuUtil.CreateContextMenu(owner, generator)`, one `CreateButton(text, fn)` per entry; `true` when built. The History row menu's fallback only: with LibKa0s-Widgets it opens the library's menu instead (`NS.ContextMenu`, V89A-DWH) | `false` (the caller acts at once) |
 | Pixels | `PixelFactor()` | `PixelUtil.GetPixelToUIUnitFactor`: one physical pixel in UI units at scale 1; the item icons' edge divides it by the button's effective scale (R5-ICON) | `nil` (the edge draws its size in UI units) |
@@ -158,7 +161,7 @@ the simulator's own safety checks read the real world. `test_sim_core` holds all
 `core/CompatWorld.lua` loads between this file and `core/SimSetup.lua` (simulator spec §2, DW-72). It
 adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
-(`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`,
+(`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitClass`, `UnitIsConnected`,
 `UnitIsPlayer` (since DW-07: false for a follower or a delve companion; raw, so a secret answer
 reaches the roster, which reads the GUID's kind instead),
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`; its fifth answer the instance map id, the
@@ -177,7 +180,8 @@ does not ask for them here, and they are not counted above; they are `NS.Compat`
 seam wraps them, because a module reading the global would bypass a running simulation and see the
 real, empty group. They answer the client's raw values (secrets included) and each caller guards
 them as before. No other file names these globals: `.luacheckrc` declares them for
-`core/CompatWorld.lua` alone (`C_ChallengeMode` and `UnitName` also for `core/Compat.lua`), and
+`core/CompatWorld.lua` alone (`C_ChallengeMode` also for `core/Compat.lua`, and `UnitName` for
+`core/Compat.lua` alone: a unit's name is the root's `UnitCharacterName`, client-quirks-§5), and
 `tests/test_sim_e2e.lua` scans every shipped file and fails one that does (the engine's modules for
 `_G` too; `UNKNOWNOBJECT` and `C_AddOns.IsAddOnLoaded` are on its list).
 
@@ -276,9 +280,9 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | Caller | Shims |
 |---|---|
 | `modules/Restrictions.lua` | `InChatMessagingLockdown`, `RestrictionTypes`, `IsRestrictionStateActive`, `IsRestrictionActive`; `InCombatLockdown` (`core/CompatWorld.lua`) |
-| `modules/Roster.lua` | `NormalizedRealm`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitName`, `UnitClass`, `UnitIsConnected`, `UnitIsPlayer` (`core/CompatWorld.lua`) |
-| `modules/GroupRoster.lua` | `NormalizedRealm` |
-| `modules/CharFilter.lua` | `NormalizedRealm`; `UnitName`, `UnitClass` (`core/CompatWorld.lua`: your own key and class) |
+| `modules/Roster.lua` | `NameRealm`, `RegionalNames`, `UnitCharacterName`, `GlobalString` (`UNKNOWNOBJECT`, a name not yet arrived); `GroupSize`, `InRaid`, `InGroup`, `UnitGUID`, `UnitClass`, `UnitIsConnected`, `UnitIsPlayer` (`core/CompatWorld.lua`) |
+| `modules/GroupRoster.lua` | `NameRealm` |
+| `modules/CharFilter.lua` | `PlayerRecordKey` (your own key); `UnitClass` (`core/CompatWorld.lua`: your class) |
 | `modules/Situations.lua` | `InstanceState`, `InstanceInfo`, `DifficultyKnown`, `ChallengeModeActive`, `InGroup`, `InRaid` (`core/CompatWorld.lua`) |
 | `core/ItemRead.lua` | `GetItemInfo`, `GetDetailedItemLevel`; `BagItemLevelQuality` (`core/CompatItem.lua`) |
 | `modules/ItemFacts.lua` | `CanRequestItemLoad`, `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, `IsItemBindToAccount`, `IsItemBindToAccountUntilEquip`, `ItemClassRestriction`, `ItemPrimaryStats`, `PlayerHasTransmog`; `UnitClass` (`core/CompatWorld.lua`: the class a spec list was read for); `TierTokenSlot`, `ItemUseText`, `CanRequestSpellLoad`, `RequestSpellLoad` (`core/CompatCollect.lua`: the slot a tier token makes, an item's use text, and the wait on a use spell not loaded yet, TT-1) |
@@ -287,9 +291,9 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/InsightsRows.lua` | `ClassColor`; `ClassDisplayName` (`core/CompatCollect.lua`: the By class rows' names) |
 | `modules/WindowInsights.lua` | `ClassColor` |
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
-| `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`; `UnitName`, `UnitGUID` (`core/CompatWorld.lua`) |
+| `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`, `UnitCharacterName`; `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
-| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo`, `UnitName` (`core/CompatWorld.lua`) |
+| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`), `UnitCharacterName` |
 | `modules/GroupPlace.lua` | `IsSecret`; `InstanceState`, `InstanceInfo`, `DifficultyName`, `KeystoneLevel` (`core/CompatWorld.lua`: a group's instance and difficulty name) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |
@@ -304,8 +308,8 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/WindowCells.lua` | `ClassColor` |
 | `modules/TipMarks.lua` | `ClassColor` |
 | `modules/WindowFilterBar.lua` | `ClassColor` |
-| `modules/CompactGroup.lua` | `ClassColor`, `NormalizedRealm` |
-| `modules/CompactHistory.lua` | `NormalizedRealm` |
+| `modules/CompactGroup.lua` | `ClassColor`, `NameRealm` |
+| `modules/CompactHistory.lua` | `NameRealm` |
 | `modules/WindowHistory.lua` | `ContextMenu`, `ClassColor` |
 | `modules/IconStyle.lua` | `PixelFactor` (the item icons' 1 px edge, R5-ICON) |
 | `modules/WindowFooter.lua` | `PawnIsReady` |
@@ -314,15 +318,15 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Window.lua` | `PlayerInCombat` (`core/CompatWorld.lua`: the show decision off a combat edge) |
 | `core/SkinSetup.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: the first-run skin picker waits out combat) |
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
-| `modules/TestMode.lua` | `UnitName`, `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
+| `modules/TestMode.lua` | `UnitCharacterName`; `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
 | `modules/Diagnostics.lua` | `PawnIsReady`, `PawnVisibleScale`, `PawnScaleForSpec`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
 | `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item); `GetItemInfo` (an item list entry's name) |
 | `modules/Sim.lua` | `RestrictionTypes` |
 | `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `IsCosmeticItem`, `ItemLinkByID` (`core/CompatCollect.lua`: plain gear, a curated sample's link); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
-| `modules/SimRoster.lua` | `NormalizedRealm` (who shares your realm) |
-| `modules/SimWorld.lua` | `NormalizedRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads; `TooltipHyperlink` (`core/CompatItem.lua`: a member's item level read off the tooltip) |
-| `modules/SimEvents.lua` | `GroupSize`, `UnitName`, `UnitGUID`, `NormalizedRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |
+| `modules/SimRoster.lua` | `NameRealm` (who shares your realm), `ClientKey` (Forever's surnames) |
+| `modules/SimWorld.lua` | `NameRealm`, `BagSlotCount` (read past the seam); `GetDetailedItemLevel` (a member's slot level); `InstanceGroupCategory`. Its providers answer the members listed under the world reads; `TooltipHyperlink` (`core/CompatItem.lua`: a member's item level read off the tooltip) |
+| `modules/SimEvents.lua` | `GroupSize`, `UnitCharacterName`, `UnitGUID`, `NameRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |
 
 The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
 payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are

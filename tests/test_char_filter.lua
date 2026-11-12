@@ -10,7 +10,9 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
-local ME = "Testchar-Testrealm"   -- the mock's player (tests/_kit/mock_base.lua __context, wow_mock's realm)
+-- the mock's player (tests/_kit/mock_base.lua __context, wow_mock's realm): Testchar-Testrealm on
+-- Retail, the character key Testchar on Forever (no surname in the mock, no realm: client-quirks-§5)
+local ME = T.ME
 
 local function cf() return T.newAddon().CharFilter end
 
@@ -79,7 +81,7 @@ test("char filter: the characters are every recorder in the log once, you always
     local chars = CF.Characters(groups, ME, "MAGE")
     local keys = {}
     for i, c in ipairs(chars) do keys[i] = c.key end
-    assertEqual(table.concat(keys, ","), "Alt-Other,Testchar-Testrealm,Zed-Testrealm")
+    assertEqual(table.concat(keys, ","), "Alt-Other," .. ME .. ",Zed-Testrealm")
     assertEqual(chars[3].class, "ROGUE")
     assertEqual(#CF.Characters(nil, ME, "MAGE"), 1, "you, with no log")
     assertEqual(#CF.Characters({}, nil, nil), 0)
@@ -127,11 +129,39 @@ test("recorder: you are Name-Realm and your class, read live and kept", function
     assertEqual(NS.CharFilter.CurrentKey(), ME)
 end)
 
+test("char filter: the character key is CharacterKey(), so two alts named Traxex do not collide", function()
+    local function keyOf(surname, realm)
+        local NS, _, m = T.enableAddon()
+        m.__context.name = "Traxex"
+        m.units.player = { guid = "Player-1-00000001", name = "Traxex",
+            realm = NS.Compat.ClientKey() == "forever" and surname or nil, class = "Hunter", classFile = "HUNTER" }
+        m.UnitNameUnmodified = function() return "Traxex", surname end
+        m.normalizedRealm = realm
+        return NS.CharFilter.CurrentKey(), NS
+    end
+    local a, NS = keyOf("Silentshot", "Testrealm")
+    local b = keyOf("Ironhide", "Otherrealm")
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(a, "Traxex Silentshot", "the AceDB character key: first name and surname")
+        assertEqual(a, NS.Compat.CharacterKey())
+        assertEqual(b, "Traxex Ironhide")
+    else
+        assertEqual(a, "Traxex-Testrealm", "Retail keeps the Name-Realm History already stores")
+        assertEqual(b, "Traxex-Otherrealm")
+    end
+    assertTrue(a ~= b, "two alts named Traxex are two characters")
+end)
+
 test("recorder: unknown while the client has no realm yet, then known", function()
     local NS, _, m = T.enableAddon()
     local realm = m.normalizedRealm
     m.normalizedRealm = nil
     m.GetRealmName = function() return nil end
+    if T.forever then
+        -- the character key carries no realm on Forever, so the realm is never waited for
+        assertEqual(NS.CharFilter.CurrentKey(), ME)
+        return
+    end
     assertNil(NS.CharFilter.Recorder())
     m.normalizedRealm = realm
     assertEqual(NS.CharFilter.CurrentKey(), ME)

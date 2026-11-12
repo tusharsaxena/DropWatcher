@@ -110,7 +110,7 @@ test("feed: a member's loot is added once, judged for you, and asks for the loot
     brakkLoots(m, 300)
     local rec = only(LF)
     assertEqual(table.concat(seen.added, ","), tostring(rec.id))
-    assertEqual(rec.looter.guid, BRAKK); assertEqual(rec.looter.name, "Brakk-Testrealm")
+    assertEqual(rec.looter.guid, BRAKK); assertEqual(rec.looter.name, T.rosterName("Brakk"))
     assertFalse(rec.isMine); assertEqual(rec.source, "chat"); assertEqual(rec.situation, "dungeon")
     assertEqual(rec.me.verdict, "upgrade", "620 against your 600 ring")
     assertEqual(rec.quality.reason, "atThreshold")
@@ -674,7 +674,7 @@ test("own: your drop is judged for you, its trade by your verdict, and every mem
     m.advance(0)    -- Brakk on the fast path; Lyra wears nothing readable and waits
     assertEqual(rec.candidates[BRAKK].status, "ready")
     assertEqual(rec.candidates[BRAKK].eval.verdict, "upgrade")
-    assertEqual(rec.candidates[BRAKK].name, "Brakk-Testrealm")
+    assertEqual(rec.candidates[BRAKK].name, T.rosterName("Brakk"))
     assertEqual(NS.Inspect.Get(LYRA).status, "pending")
 end)
 

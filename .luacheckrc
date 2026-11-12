@@ -59,13 +59,15 @@ files["core/Compat.lua"] = {
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
     "C_ChallengeMode", "UnitName",
     "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",  -- the client stub (clients-§3)
+    "RegionalUniqueNamesEnabled",  -- the regional-names stub (client-quirks-§5)
   },
 }
 
 -- The character's client-variant reads (Forever port design §4.1): core/CompatClient.lua alone names
--- the realm, the trade partner's unit name, a spec's name, the inspected spec and the group role.
+-- the realm, a spec's name, the inspected spec and the group role (the trade partner's name goes
+-- through the root's UnitCharacterName).
 files["core/CompatClient.lua"] = {
-  read_globals = { "GetNormalizedRealmName", "GetRealmName", "UnitName", "GetSpecializationInfoByID",
+  read_globals = { "GetNormalizedRealmName", "GetRealmName", "GetSpecializationInfoByID",
     "C_SpecializationInfo", "GetInspectSpecialization", "UnitGroupRolesAssigned" },
 }
 
@@ -93,7 +95,7 @@ files["core/CompatCollect.lua"] = {
 files["core/CompatWorld.lua"] = {
   read_globals = {
     "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
-    "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
+    "GetNumGroupMembers", "UnitGUID", "UnitClass", "UnitIsConnected",
     "UnitIsPlayer", "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
   },
 }

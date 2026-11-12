@@ -136,7 +136,7 @@ test("feed: the owner's Timewalking drop names the instance, the boss, Timewalki
     local g = NS.LootFeed.Groups("live")[1]
     assertTrue(g ~= nil, "the drop made a group")
     assertEqual(g.instance, "Gate of the Setting Sun"); assertEqual(g.difficulty, "Timewalking")
-    assertEqual(g.seenBy, "Testchar-Testrealm")
+    assertEqual(g.seenBy, T.ME)
     local sit = NS.WindowFooter.SITUATION_LABEL[g.situation]
     local hd = NS.WindowCells.Header(g, 1, nil, sit, false)
     assertEqual(uncolored(hd.text), "Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar")
@@ -144,7 +144,7 @@ test("feed: the owner's Timewalking drop names the instance, the boss, Timewalki
     local kept = NS.History.Log().groups[1]
     assertTrue(kept ~= nil, "recorded")
     assertEqual(kept.instance, "Gate of the Setting Sun"); assertEqual(kept.difficulty, "Timewalking")
-    assertEqual(kept.seenBy, "Testchar-Testrealm"); assertTrue(kept.seenByClass ~= nil)
+    assertEqual(kept.seenBy, T.ME); assertTrue(kept.seenByClass ~= nil)
     local wh = NS.WindowHistory.Header(kept, 1, nil, sit, false)
     assertEqual(uncolored(wh.text), "Gate of the Setting Sun · Commander Ri'mok · Timewalking · 1 drop · Testchar")
 end)

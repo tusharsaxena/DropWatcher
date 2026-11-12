@@ -5,9 +5,9 @@ local _, NS = ...
 --
 -- THE EDGE. Refresh reads the client through NS.Compat (core/CompatWorld.lua, so a running
 -- simulation answers it): IsInRaid / IsInGroup / GetNumGroupMembers for the tokens (raid1..N in a
--- raid, player and party1..N-1 in a party, player alone otherwise), then UnitGUID, UnitName,
--- UnitClass, UnitIsConnected and UnitIsPlayer per token. The realm of a same-realm member comes from
--- NS.Compat.NormalizedRealm. It runs on GROUP_ROSTER_UPDATE (declared in NS.FEATURE_EVENTS, shared
+-- raid, player and party1..N-1 in a party, player alone otherwise), then UnitGUID,
+-- UnitCharacterName, UnitClass, UnitIsConnected and UnitIsPlayer per token. The realm of a
+-- same-realm member comes from NS.Compat.NameRealm. It runs on GROUP_ROSTER_UPDATE (declared in NS.FEATURE_EVENTS, shared
 -- with modules/Situations.lua through core/DropWatcher.lua's dispatcher) and at the stand-up, and
 -- lazily on the first read.
 --
@@ -21,6 +21,11 @@ local _, NS = ...
 -- companion (Brann) and any other non-player unit in the group. OtherPlayerPresent answers whether
 -- anyone besides you could take a drop: false solo and in a group of such units alone. Your own drop
 -- is offered only while it is true (modules/WindowOwn.lua's Alone).
+--
+-- NAMES (client-quirks-§5). A member's name is UnitCharacterName's whole name: on WoW Forever the
+-- first name and surname ("Doom Dock") with no realm, so its fullName is the name itself; on Retail
+-- the name, and fullName `Name-Realm`. A query is never split on whitespace, and with regional
+-- names never on a hyphen either: the whole query is the name.
 --
 -- RESOLVING. Resolve(query, classFile) takes a GUID, a "Name-Realm" or a bare "Name", compared
 -- without case, and with the realm normalized (spaces and hyphens dropped, as the client's
@@ -92,9 +97,10 @@ local function humanOf(unit, guid)
     return guid:find("^Player%-") ~= nil
 end
 
--- Name, realm and Name-Realm of a unit; the name and full name are nil when unreadable.
+-- Name, realm and Name-Realm of a unit (the whole name and no realm on Forever); the name and full
+-- name are nil when unreadable.
 local function identityOf(unit, ownRealm)
-    local name, realm = NS.Compat.UnitName(unit)
+    local name, realm = NS.Compat.UnitCharacterName(unit)
     name = plainName(name)
     realm = Ro.NormalizeRealm(realm) or ownRealm
     if not name then return nil, realm, nil end
@@ -122,7 +128,7 @@ end
 -- A fresh roster: { byGUID = { [guid] = member }, list = { member, ... } }, carrying each known
 -- member's specID over from `prev`.
 local function build(prev)
-    local ownRealm = NS.Compat.NormalizedRealm()
+    local ownRealm = NS.Compat.NameRealm()
     local me = playerGUID()
     local roster = { byGUID = {}, list = {} }
     for _, unit in ipairs(unitTokens()) do
@@ -247,7 +253,7 @@ local function pick(list, name, realm, classFile)
         cands = narrow(cands, function(m) return m.classFile == classFile end)
     end
     if not realm then
-        local own = Ro.NormalizeRealm(NS.Compat.NormalizedRealm())
+        local own = Ro.NormalizeRealm(NS.Compat.NameRealm())
         own = own and own:lower()
         cands = narrow(cands, function(m) return m.realm ~= nil and m.realm:lower() == own end)
     end
@@ -256,7 +262,9 @@ local function pick(list, name, realm, classFile)
 end
 
 -- A query split into a lowercased name and a lowercased normalized realm (nil for a bare name).
+-- With regional names a query is the whole name: no realm to split off.
 local function parse(query)
+    if NS.Compat.RegionalNames() then return query:lower(), nil end
     local name, realm = query:match("^([^%-]+)%-(.+)$")
     if not name then return query:lower(), nil end
     realm = Ro.NormalizeRealm(realm)

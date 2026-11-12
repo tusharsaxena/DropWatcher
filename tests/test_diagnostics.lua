@@ -76,7 +76,7 @@ test("diagnostics: the roster section lists the stored members without reading t
     m.__fire("GROUP_ROSTER_UPDATE")
     local text = report(NS)
     assertTrue(text:find("roster: 2 members", 1, true) ~= nil, text)
-    assertTrue(text:find("roster: Brakk-Testrealm unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
+    assertTrue(text:find("roster: " .. T.rosterName("Brakk") .. " unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the gear section lists the stored slots without reading the client", function()
@@ -109,7 +109,7 @@ test("diagnostics: the feed section counts the parser's lines and names the last
     m.__now = 62
     local text = report(NS)
     assertTrue(text:find("feed: parser hits=1 ignored=1 rejected=1 secret=0", 1, true) ~= nil, text)
-    assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by Testchar-Testrealm", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by " .. T.ME, 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the feed section counts the drops, the hidden ones and the context", function()
@@ -163,7 +163,7 @@ test("diagnostics: the inspect section shows the queue and each member's entry",
     m.advance(3)
     local text = report(NS)
     assertTrue(text:find("inspect: queued=0 inFlight=Player-1-0000000A parked=false", 1, true) ~= nil, text)
-    assertTrue(text:find("inspect: Brakk-Testrealm status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
+    assertTrue(text:find("inspect: " .. T.rosterName("Brakk") .. " status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the messaging section counts the registry, the sends and lists each queued ask", function()
@@ -177,7 +177,7 @@ test("diagnostics: the messaging section counts the registry, the sends and list
     NS.Asks.Request("ask", "Brakk", 7)
     text = report(NS)
     assertTrue(text:find("messaging: asks=1 queued=1", 1, true) ~= nil, text)
-    assertTrue(text:find("messaging: queued ask to Brakk-Testrealm, drop 7", 1, true) ~= nil, text)
+    assertTrue(text:find("messaging: queued ask to " .. T.rosterName("Brakk") .. ", drop 7", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue", function()

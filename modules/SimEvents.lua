@@ -414,7 +414,7 @@ end
 -- You, as the loot line names you.
 local function player()
     local Compat = NS.Compat
-    return { name = Compat.UnitName("player"), guid = Compat.UnitGUID("player") }
+    return { name = Compat.UnitCharacterName("player"), guid = Compat.UnitGUID("player") }
 end
 
 -- `who` resolved: `me`, a member (by GUID or name), or nil for random looters.
@@ -428,7 +428,7 @@ end
 local function burst(d, s, n, drops, who, extras)
     local looter = looterOf(who)
     if looter == false then return 0, "noLooter" end
-    local ownRealm = NS.Compat.NormalizedRealm()
+    local ownRealm = NS.Compat.NameRealm()
     local plan = E.Plan(n, s.members or {}, drops, NS.SimWorld.Random(), looter, ownRealm, extras)
     local me, sent, mine = player(), 0, false
     for _, line in ipairs(plan) do

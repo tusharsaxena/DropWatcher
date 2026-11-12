@@ -48,15 +48,41 @@ function Compat.NormalizedRealm()
     return nil
 end
 
---- Whom you are trading with (UnitName("NPC"), the trade window's partner unit), as `Name-Realm`
---- when the client names a realm, else `Name`. Nil for a secret or missing name.
+--- The realm a same-realm `Name-Realm` carries (modules/Roster.lua's identity, the group roster's
+--- and the cards' own-realm test, the simulator's members): NormalizedRealm on Retail, and nil with
+--- regional names (WoW Forever, client-quirks-§5), where a character is its whole name and there
+--- is no cross-realm play to put a realm on anyone.
+--- @return string|nil
+function Compat.NameRealm()
+    if Compat.RegionalNames() then return nil end
+    return Compat.NormalizedRealm()
+end
+
+--- The player as the stored records name a character (a drop's and a History entry's `seenBy`,
+--- the Character dropdown's key): with regional names (WoW Forever) the character key, "First
+--- Surname" (CharacterKey, else the whole name UnitCharacterName reads), so two alts who share a
+--- first name never collide; otherwise `Name-Realm` over the normalized realm, the key History has
+--- stored since v1, kept so a Retail log stays the same character's. Nil while the client does not
+--- know the name (or, on Retail, the realm) yet.
+--- @return string|nil
+function Compat.PlayerRecordKey()
+    if Compat.RegionalNames() then
+        return Compat.CharacterKey() or Compat.UnitCharacterName("player")
+    end
+    local name, realm = Compat.UnitCharacterName("player"), Compat.NormalizedRealm()
+    if not (name and realm) then return nil end
+    if name:find("-", 1, true) then return name end
+    return name .. "-" .. realm
+end
+
+--- Whom you are trading with (the trade window's partner unit, "NPC"), through UnitCharacterName:
+--- the whole name with regional names (WoW Forever: "Traxex Silentshot", never "Traxex-Silentshot"),
+--- else `Name-Realm` when the client names a realm, else `Name`. Nil for a secret or missing name.
 --- @return string|nil
 function Compat.TradePartnerName()
-    if not UnitName then return nil end
-    local name, realm = UnitName("NPC")
-    name, realm = plainString(name), plainString(realm)
-    if not name or name == "" then return nil end
-    if realm and realm ~= "" then return name .. "-" .. realm end
+    local name, realm = Compat.UnitCharacterName("NPC")
+    if not name then return nil end
+    if realm then return name .. "-" .. realm end
     return name
 end
 

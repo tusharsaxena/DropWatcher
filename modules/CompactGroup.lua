@@ -553,7 +553,7 @@ end
 local function sharedCtx(now)
     local snap = NS.Gear.Snapshot()
     return { now = now, equipped = snap and snap.equipped, classFile = snap and snap.classFile, transmogAsk = NS.Setting("messages.transmogAsk") == true,
-        ownRealm = NS.Compat.NormalizedRealm() }
+        ownRealm = NS.Compat.NameRealm() }
 end
 
 local function cardCtx(drop, shared)

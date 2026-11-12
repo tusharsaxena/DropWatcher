@@ -107,7 +107,7 @@ end
 
 local function you()
     local Compat = NS.Compat
-    local name = Compat.UnitName("player")
+    local name = Compat.UnitCharacterName("player")
     local _, classFile = Compat.UnitClass("player")
     return { name = name or L["You"], guid = Compat.UnitGUID("player"), classFile = classFile, isSelf = true,
         seenBy = NS.CharFilter.CurrentKey() }

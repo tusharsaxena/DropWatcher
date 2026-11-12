@@ -310,17 +310,30 @@ end
 
 -- ── Identity ────────────────────────────────────────────────────────────────────────────────
 
---- A unit's whole character name, never a realm (LibKa0s Compat.UnitCharacterName's first value,
---- client-quirks-§5): "Traxex Silentshot" with regional names (WoW Forever), UnitName's name
---- otherwise, and UnitName's first value with the library absent. Nil for no unit, a secret or "".
+--- Whether character names are unique per region (LibKa0s Compat.RegionalNames, client-quirks-§5):
+--- true on WoW Forever, where a character is its first name and surname together and carries no
+--- realm. The stub reads RegionalUniqueNamesEnabled itself; false where it is absent. One boolean.
+--- @return boolean
+Compat.RegionalNames = CompatLib and CompatLib.RegionalNames or function()
+    return RegionalUniqueNamesEnabled ~= nil and RegionalUniqueNamesEnabled() == true
+end
+
+--- A unit's whole character name and its realm (LibKa0s Compat.UnitCharacterName, client-quirks-§5):
+--- "Traxex Silentshot" and a nil realm with regional names (WoW Forever); UnitName's name and realm
+--- otherwise (the realm nil on the player's own). With the library absent, UnitName's first value,
+--- and its second as the realm only without regional names: never a surname read as a realm. The
+--- name is nil for no unit, a secret or ""; the realm nil for a secret or "".
 --- @param unit string
---- @return string|nil
+--- @return string|nil name, string|nil realm
 function Compat.UnitCharacterName(unit)
     local read = CompatLib and CompatLib.UnitCharacterName or UnitName
     if not (unit and read) then return nil end
-    local name = plainString((read(unit)))
+    local name, realm = read(unit)
+    name = plainString(name)
     if not name or name == "" then return nil end
-    return name
+    realm = plainString(realm)
+    if realm == "" or (not CompatLib and Compat.RegionalNames()) then realm = nil end
+    return name, realm
 end
 
 --- The player's character key, AceDB-3.0 40's (LibKa0s Compat.CharacterKey): "First Surname" with

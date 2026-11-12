@@ -54,14 +54,6 @@ function Compat.UnitGUID(unit)
     return UnitGUID(unit)
 end
 
---- UnitName(unit): name, realm, raw (either may be secret; realm is nil on your own realm).
---- @param unit string
---- @return any name, any realm
-function Compat.UnitName(unit)
-    if not UnitName then return nil end
-    return UnitName(unit)
-end
-
 --- UnitClass(unit): localized name, classFile, classID, raw.
 --- @param unit string
 --- @return any, any, any

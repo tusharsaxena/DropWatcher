@@ -16,6 +16,9 @@ local ME    = "Player-1-00000001"
 local BRAKK = "Player-1-0000000A"
 local LYRA  = "Player-2-0000000B"
 local EVENT = "CHAT_MSG_LOOT"
+-- How chat names Lyra, the cross-realm priest: Name-Realm on Retail; on Forever the whole name, no
+-- realm (the mock row's realm is the surname there, client-quirks-§5).
+local LYRA_CHAT = T.forever and "Lyra Area 52" or "Lyra-Area52"
 
 local function row(guid, name, realm, classFile)
     return { guid = guid, name = name, realm = realm, class = classFile, classFile = classFile }
@@ -69,10 +72,10 @@ for _, v in ipairs(VARIANTS) do
         assertEqual(loot.qty, v[4])
         assertEqual(loot.isSelf, v[3])
         if v[3] then
-            assertEqual(loot.looterName, "Testchar-Testrealm")
+            assertEqual(loot.looterName, T.ME)
             assertEqual(loot.looterGUID, ME)
         else
-            assertEqual(loot.looterName, "Brakk-Testrealm", "a same-realm name gains the realm")
+            assertEqual(loot.looterName, T.rosterName("Brakk"), "a same-realm name gains the realm")
             assertEqual(loot.looterGUID, BRAKK)
         end
     end)
@@ -84,15 +87,31 @@ end
 
 test("loot parser: a cross-realm looter resolves to the member", function()
     local _, _, LP = party()
-    local loot = LP.Parse("Lyra-Area52 receives loot: " .. OTHER .. ".")
-    assertEqual(loot.looterName, "Lyra-Area52")
+    local loot = LP.Parse(LYRA_CHAT .. " receives loot: " .. OTHER .. ".")
+    assertEqual(loot.looterName, LYRA_CHAT)
     assertEqual(loot.looterGUID, LYRA)
-    assertEqual(LP.Parse("Lyra-Area52 receives loot: " .. OTHER .. "x2.").qty, 2)
+    assertEqual(LP.Parse(LYRA_CHAT .. " receives loot: " .. OTHER .. "x2.").qty, 2)
+end)
+
+test('loot parser: a Forever looter "Doom Dock" is kept whole and resolves to the member', function()
+    local NS, m = T.enableAddon()
+    m.setGroup({ row(BRAKK, "Doom", "Dock", "WARRIOR") })
+    m.__fire("GROUP_ROSTER_UPDATE")
+    local LP = NS.LootParser
+    if NS.Compat.ClientKey() == "forever" then
+        local loot = LP.Parse("Doom Dock receives loot: " .. OTHER .. ".")
+        assertEqual(loot.looterName, "Doom Dock", "never Doom-Dock, never Doom")
+        assertEqual(loot.looterGUID, BRAKK)
+        local mine = LP.Parse("You receive loot: " .. OTHER .. ".")
+        assertEqual(mine.looterName, "Testchar", "you: the whole name, no realm")
+    else
+        assertEqual(LP.Parse("Doom-Dock receives loot: " .. OTHER .. ".").looterGUID, BRAKK)
+    end
 end)
 
 test("loot parser: a player hyperlink or color around the name is stripped", function()
     local _, _, LP = party()
-    local linked = "|Hplayer:Lyra-Area52:12:LOOT|h[Lyra-Area52]|h receives loot: " .. OTHER .. "."
+    local linked = "|Hplayer:" .. LYRA_CHAT .. ":12:LOOT|h[" .. LYRA_CHAT .. "]|h receives loot: " .. OTHER .. "."
     assertEqual(LP.Parse(linked).looterGUID, LYRA)
     local colored = "|cffc41e3aBrakk|r receives loot: " .. OTHER .. "."
     assertEqual(LP.Parse(colored).looterGUID, BRAKK)
@@ -252,7 +271,7 @@ test("loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the
     LP.AddSink(function(loot) got[#got + 1] = loot end)
     LP.AddSink(function() second = second + 1 end)
     m.__now = 100
-    assertEqual(fireLoot(m, "Lyra-Area52 receives bonus loot: " .. OTHER .. "."), 1)
+    assertEqual(fireLoot(m, LYRA_CHAT .. " receives bonus loot: " .. OTHER .. "."), 1)
     fireLoot(m, "Brakk has selected Greed for: " .. BAND)
     fireLoot(m, "Changed " .. OTHER .. " to " .. BAND .. ".")
     installSecrets(m)
@@ -263,7 +282,7 @@ test("loot parser: CHAT_MSG_LOOT hands each receipt to every sink and counts the
     assertEqual(got[1].looterGUID, LYRA)
     local s = LP.Stats()
     assertEqual(s.hits, 1); assertEqual(s.ignored, 1); assertEqual(s.rejected, 1); assertEqual(s.secret, 1)
-    assertEqual(s.lastAt, 100); assertEqual(s.lastKind, "bonus"); assertEqual(s.lastLooter, "Lyra-Area52")
+    assertEqual(s.lastAt, 100); assertEqual(s.lastKind, "bonus"); assertEqual(s.lastLooter, LYRA_CHAT)
     assertTrue(NS.State.lootParser == s)
 end)
 

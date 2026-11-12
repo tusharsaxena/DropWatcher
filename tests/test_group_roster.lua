@@ -106,6 +106,9 @@ end
 
 local function link(id) return ("|cffa335ee|Hitem:%d::::::::90:::::|h[Ring %d]|h|r"):format(id, id) end
 
+-- The two cross-realm members as the roster names them on the kit profile: Name-Realm on Retail, the
+-- whole name on Forever (the mock row's realm is the surname there, client-quirks-§5).
+local BUNIAN_TO, KEGHUNT_TO = T.rosterName("Bùnian", "Azralon"), T.rosterName("Keghunt", "Thrall")
 local BUNIAN_ROW = { guid = BUNIAN, name = "Bùnian", realm = "Azralon", class = "PALADIN", classFile = "PALADIN" }
 local KEGHUNT_ROW = { guid = KEGHUNT, name = "Keghunt", realm = "Thrall", class = "WARRIOR", classFile = "WARRIOR" }
 local TIAMAT_ROW = { guid = TIAMAT, name = "Tiamât", class = "MAGE", classFile = "MAGE" }
@@ -130,23 +133,23 @@ end
 
 test("feed roster: the group takes everyone in it when its first drop makes it, you first", function()
     local NS = party()
-    NS.LootFeed.Add(link(501), "Keghunt-Thrall")
+    NS.LootFeed.Add(link(501), KEGHUNT_TO)
     local g = onlyGroup(NS)
-    assertEqual(names(g.roster), "Testchar,Bùnian-Azralon,Keghunt-Thrall")
+    assertEqual(names(g.roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO)
     assertTrue(g.roster[1].me); assertEqual(g.roster[2].class, "PALADIN")
 end)
 
 test("feed roster: someone who joins mid-run is added on the roster event, and to the History group", function()
     local NS, m = party()
-    NS.LootFeed.Add(link(501), "Keghunt-Thrall")
+    NS.LootFeed.Add(link(501), KEGHUNT_TO)
     local kept = NS.History.Log().groups
-    assertEqual(#kept, 1); assertEqual(names(kept[1].roster), "Testchar,Bùnian-Azralon,Keghunt-Thrall")
+    assertEqual(#kept, 1); assertEqual(names(kept[1].roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO)
     local heard = 0
     NS.addon:RegisterMessage(NS.MSG.HISTORY_CHANGED, function() heard = heard + 1 end)
     m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW, TIAMAT_ROW })
     m.__fire("GROUP_ROSTER_UPDATE")
-    assertEqual(names(onlyGroup(NS).roster), "Testchar,Bùnian-Azralon,Keghunt-Thrall,Tiamât")
-    assertEqual(names(NS.History.Log().groups[1].roster), "Testchar,Bùnian-Azralon,Keghunt-Thrall,Tiamât")
+    assertEqual(names(onlyGroup(NS).roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO .. ",Tiamât")
+    assertEqual(names(NS.History.Log().groups[1].roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO .. ",Tiamât")
     assertTrue(heard > 0, "the History tab hears it")
     m.setGroup({ KEGHUNT_ROW })
     m.__fire("GROUP_ROSTER_UPDATE")
@@ -155,7 +158,7 @@ end)
 
 test("feed roster: a joiner is also taken by the next drop, with no roster event between", function()
     local NS, m = party()
-    NS.LootFeed.Add(link(501), "Keghunt-Thrall")
+    NS.LootFeed.Add(link(501), KEGHUNT_TO)
     m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW, TIAMAT_ROW })
     NS.Roster.Refresh("test")
     NS.LootFeed.Add(link(502), "Bùnian-Azralon")

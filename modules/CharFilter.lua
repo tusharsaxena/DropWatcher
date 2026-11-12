@@ -4,7 +4,8 @@ local _, NS = ...
 -- recorder), the menu's rows and label, and the predicate the filter bar applies.
 --
 -- THE RECORDER. Every drop record (modules/LootFeed.lua: a live receipt and a test placeholder) is
--- stamped with the character that saw it, `seenBy` (Name-Realm) and `seenByClass` (classFile), and
+-- stamped with the character that saw it, `seenBy` (its recorder key: Name-Realm on Retail, the
+-- character key "First Surname" on WoW Forever) and `seenByClass` (classFile), and
 -- each History entry keeps both (modules/History.lua's Snapshot). A History entry recorded before
 -- the recorder existed has none: it is "unknown", which only All shows.
 --
@@ -184,20 +185,21 @@ end
 
 -- ── the edge ────────────────────────────────────────────────────────────────────────────────
 
-local cached   -- { key, class } once your name and realm are known; a character's never change
+local cached   -- { key, class } once your key is known; a character's never changes
 
---- You, as a recorder: { key = Name-Realm, class = classFile }, or nil while the client does not
---- know your name or realm yet (early in the login). Read live (the simulator never answers for
---- "player"), and kept once known.
+--- You, as a recorder: { key, class = classFile }, or nil while the client does not know your name
+--- or realm yet (early in the login). The key is NS.Compat.PlayerRecordKey (client-quirks-§5): the
+--- character key "First Surname" on WoW Forever, so two alts who share a first name never collide;
+--- `Name-Realm` on Retail, the shape History has always stored. Read live (the simulator never
+--- answers for "player"), and kept once known.
 --- @return table|nil
 function CF.Recorder()
     if cached then return cached end
     local Compat = NS.Compat
-    local name = plain(Compat.UnitName("player"))
-    local realm = Compat.NormalizedRealm()
-    if not (name and realm) then return nil end
+    local key = plain(Compat.PlayerRecordKey())
+    if not key then return nil end
     local _, classFile = Compat.UnitClass("player")
-    cached = { key = CF.Key(name, realm), class = plain(classFile) }
+    cached = { key = key, class = plain(classFile) }
     return cached
 end
 

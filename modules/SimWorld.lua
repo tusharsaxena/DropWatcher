@@ -323,11 +323,13 @@ function P.UnitGUID(live, unit)
     return live(liveUnit(unit))
 end
 
-function P.UnitName(live, unit)
+-- A member's whole name (UnitCharacterName's shape, client-quirks-§5): its realm only when it is
+-- not yours, and none on Forever, where a sim member is "First Surname" with no realm.
+function P.UnitCharacterName(live, unit)
     local m = W.MemberOfUnit(unit)
     if not m then return live(liveUnit(unit)) end
-    local own = NS.SimSeam:Live(NS.Compat.NormalizedRealm)
-    if m.realm == own then return m.name, nil end
+    local own = NS.SimSeam:Live(NS.Compat.NameRealm)
+    if m.realm == nil or m.realm == own then return m.name, nil end
     return m.name, m.realm
 end
 

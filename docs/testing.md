@@ -48,6 +48,15 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 on Forever (skinning-§2), so a case pinning Ka0s Default's pixels chooses it by name this way and
 reads the same on both kit profiles; `test_skin_setup` pins the per-client default itself.
 
+Names differ per kit profile (client-quirks-§5, DW-FP04): on Forever the mock's `RegionalUniqueNamesEnabled`
+answers true and a unit row's `realm` stands for UnitName's second value, the surname, so the roster
+names a member by the whole name with no realm. `T.forever` says which profile runs,
+`T.rosterName(name, realm)` is the name the roster gives a mock row on it (`Name-Realm` with the
+realm normalized, `Testrealm` when the row names none, on Retail; `Name Surname`, or `Name`, on
+Forever), and `T.ME` is the player's (`Testchar-Testrealm` on Retail, `Testchar` on Forever: your
+recorder key and your roster name both). A case that pins a looter, a whisper target or a recorder
+key takes its expectation from them; a cross-realm case states its Forever behavior beside it.
+
 Named suites the standard requires: `test_surface_parity` (testing-§8; since AT-A2 it also holds
 `core/ToastSetup.lua`'s `NS.ToastStub` to a live LibKa0s-Toast-1.0 instance), `test_vendor_sync`
 (testing-§11, delegating to the kit), `test_disabled` (slash-commands-§7; its own cases 9 and 10 hold

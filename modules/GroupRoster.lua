@@ -188,7 +188,7 @@ end
 function GR.Current()
     local Ro = NS.Roster
     if type(Ro) ~= "table" or type(Ro.Members) ~= "function" then return {} end
-    return GR.FromMembers(Ro.Members(), NS.Compat.NormalizedRealm())
+    return GR.FromMembers(Ro.Members(), NS.Compat.NameRealm())
 end
 
 --- A feed group takes the members of the drop just added to it: a test drop's spec roster (and a

@@ -40,7 +40,13 @@ local NAMES = {
     "Fenwick", "Isolde", "Quillon", "Haskar", "Merrow",
 }
 local REALMS = { "Stormhold", "Ashcrest", "Duskmere", "Silverkeep", "Emberfall" }
-R.NAMES, R.REALMS = NAMES, REALMS
+-- WoW Forever's surnames (client-quirks-§5): there a member is "First Surname", unique per region,
+-- with no realm. Forever's own list (clients-§5), picked once by ClientKey() in Create.
+local SURNAMES = {
+    "Ironhide", "Silentshot", "Dock", "Ashwalker", "Brightmane", "Stormcall", "Duskwhisper",
+    "Hollowbrook", "Emberjaw", "Frostvale", "Thornmantle", "Graywind",
+}
+R.NAMES, R.REALMS, R.SURNAMES = NAMES, REALMS, SURNAMES
 
 -- Every classFile with specs, sorted, so a seed draws the same classes on every load.
 local CLASSES = {}
@@ -100,22 +106,34 @@ local function pickName(rnd, taken)
     return NAMES[1] .. n
 end
 
-local function makeMember(i, kind, ownRealm, rnd, taken)
-    local classFile = CLASSES[rnd(#CLASSES)]
-    local specs = CD.CLASS_SPECS[classFile]
-    local name = pickName(rnd, taken)
-    taken[name] = true
+-- A member's name, realm and fullName in the client's shape: "First Surname" with no realm when
+-- `surnames` is given (WoW Forever), else a name on your realm or, one in three, on another.
+local function nameOf(name, ownRealm, surnames, rnd)
+    if surnames then
+        local whole = name .. " " .. surnames[rnd(#surnames)]
+        return whole, nil, whole
+    end
     local realm = ownRealm
     if not realm or rnd(3) == 1 then realm = REALMS[rnd(#REALMS)] end
+    return name, realm, name .. "-" .. realm
+end
+
+local function makeMember(i, kind, opts, rnd, taken)
+    local classFile = CLASSES[rnd(#CLASSES)]
+    local specs = CD.CLASS_SPECS[classFile]
+    local first = pickName(rnd, taken)
+    taken[first] = true
+    local name, realm, fullName = nameOf(first, opts.ownRealm, opts.surnames, rnd)
     return {
-        sim = true, name = name, realm = realm, fullName = name .. "-" .. realm,
+        sim = true, name = name, realm = realm, fullName = fullName,
         guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)),
         unit = kind == "raid" and ("raid" .. (i + 1)) or ("party" .. i),
         classFile = classFile, classID = CD.CLASS_ID[classFile], specID = specs[rnd(#specs)],
     }
 end
 
---- A group of invented members (spec §2). `opts` = { kind = `party`|`raid`, size, ownRealm }. In a
+--- A group of invented members (spec §2). `opts` = { kind = `party`|`raid`, size, ownRealm,
+--- surnames (WoW Forever's list: each member is then "First Surname" with no realm) }. In a
 --- raid you are raid1 and the members raid2 onward; in a party they are party1 onward. Names are
 --- distinct; GUIDs are distinct, shaped as the client's.
 --- @param opts table
@@ -126,7 +144,7 @@ function R.Members(opts, rnd)
     local kind = opts.kind == "raid" and "raid" or "party"
     local out, taken, guids = {}, {}, {}
     for i = 1, R.Size(kind, opts.size, rnd) do
-        local m = makeMember(i, kind, opts.ownRealm, rnd, taken)
+        local m = makeMember(i, kind, opts, rnd, taken)
         while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)) end
         guids[m.guid] = true
         out[i] = m
@@ -256,8 +274,8 @@ function R.Create(opts)
     if not s then return nil end
     opts = type(opts) == "table" and opts or {}
     local rnd = R.Random(opts.seed or math.floor(GetTime() * 1000))
-    local members = R.Members({ kind = opts.kind, size = opts.size,
-        ownRealm = NS.Compat.NormalizedRealm() }, rnd)
+    local members = R.Members({ kind = opts.kind, size = opts.size, ownRealm = NS.Compat.NameRealm(),
+        surnames = NS.Compat.ClientKey() == "forever" and SURNAMES or nil }, rnd)
     local entries = NS.SimPool.GearEntries(s.pool)
     local drops = {}
     for _, e in ipairs(NS.SimPool.Drops(s.pool)) do drops[#drops + 1] = NS.SimPool.Facts(e) end

@@ -499,9 +499,9 @@ GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent (each handler under pcall; the 
   raised after the rest ran) ─> DW.OnSituationEvent (above), then
   └─> DW.OnRosterEvent ─> Roster.Refresh
         ├─> tokens: raid1..N, or player + party1..N-1, or player alone
-        ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
-        │              name), UnitClass, UnitIsConnected; same-realm realm from
-        │              Compat.NormalizedRealm
+        ├─> per token: UnitGUID (secret or missing: skipped), UnitCharacterName (secret or
+        │              Unknown: no name; the whole name, no realm, on WoW Forever), UnitClass,
+        │              UnitIsConnected; same-realm realm from Compat.NameRealm (nil on Forever)
         ├─> NS.State.roster = { byGUID, list }, each member's specID carried over
         └─> changed: the change sinks ─> GroupRoster.Grow
               └─> LootFeed.OpenGroup (the live group a drop now would join, if it exists)

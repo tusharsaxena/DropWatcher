@@ -124,7 +124,7 @@ test("sim seam: an ask goes through the real messaging edge and is printed, neve
     local state = NS.Asks.Request("ask", "Brakk", id)
     assertEqual(state, "sent", "the edge ran its whole pipeline")
     assertEqual(#m.chatSent, 0)
-    assertEqual(printed(m, "[sim] WHISPER to Brakk-Testrealm: Hi Brakk"), 1)
+    assertEqual(printed(m, "[sim] WHISPER to " .. T.rosterName("Brakk") .. ": Hi Brakk"), 1)
 end)
 
 test("sim seam: no real inspect and no real trade while a simulation runs", function()

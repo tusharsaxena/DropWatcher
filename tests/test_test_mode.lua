@@ -746,7 +746,7 @@ test("history: test mode shows its sample groups, every outcome, and never write
     assertEqual(#NS.WindowHistory.Drawn().headers, n - 1, "Character: Current hides the alt's group (feedback-2 spec §4)")
     local listed = {}
     for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
-    assertEqual(table.concat(listed, ","), "all,current,Emberwick-Testrealm,Testchar-Testrealm")
+    assertEqual(table.concat(listed, ","), "all,current," .. T.rosterName("Emberwick") .. "," .. T.ME)
     dd:ToggleSelected("all"); dd.onMultiSelect(dd._selected)
     assertEqual(#NS.WindowHistory.Drawn().headers, n, "All shows it")
     H.Clear()

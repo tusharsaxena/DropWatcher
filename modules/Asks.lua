@@ -156,6 +156,8 @@ local function isTest(rec)
     return State.testMode == true or (rec ~= nil and rec.test == true)
 end
 
+-- The whisper goes to the member's fullName (modules/Roster.lua): `Name-Realm` on Retail, the whole
+-- name "First Surname" on WoW Forever (client-quirks-§5), never split and never given a realm.
 local function whisperRecipient(target)
     local m = NS.Roster.Resolve(target)
     if not (m and m.fullName) then return nil, "notInGroup" end

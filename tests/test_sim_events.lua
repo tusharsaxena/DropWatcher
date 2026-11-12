@@ -81,7 +81,10 @@ local function lastDrop(NS)
     return list[#list]
 end
 
+-- On Forever no member has a realm (client-quirks-§5): any member stands for "another realm", and
+-- the last for "your realm", each named by its whole name.
 local function otherRealm(members)
+    if T.forever then return members[1] end
     for _, mem in ipairs(members) do
         if mem.realm ~= "Testrealm" then return mem end
     end
@@ -89,6 +92,7 @@ local function otherRealm(members)
 end
 
 local function sameRealm(members)
+    if T.forever then return members[#members] end
     for _, mem in ipairs(members) do
         if mem.realm == "Testrealm" then return mem end
     end

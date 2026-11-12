@@ -1477,7 +1477,7 @@ Total.
 - restrictions: stood down, nothing is heard; the stand-up announces what is in effect
 - restrictions: [I11] both combat edges announce even under the Combat restriction type
 
-### test_roster.lua (13)
+### test_roster.lua (14)
 
 - roster: solo, the player alone, read lazily
 - roster: a party, in unit order, keyed by GUID, with realm, class and online
@@ -1489,6 +1489,7 @@ Total.
 - roster: the event fans out to the situation edge and the roster both
 - roster: a miss re-reads the client once, so a name still Unknown at the event resolves
 - roster: secret answers never raise; a secret GUID drops the unit, a secret name hides it
+- roster: a Forever chat sender "Doom Dock" matches the member Doom Dock
 - roster: garbage queries answer nil
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
@@ -1596,7 +1597,7 @@ Total.
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
 
-### test_loot_parser.lua (28)
+### test_loot_parser.lua (29)
 
 - loot parser: loot (self) x1
 - loot parser: loot (self) x3
@@ -1611,6 +1612,7 @@ Total.
 - loot parser: pushed (other) x1
 - loot parser: pushed (other) x12
 - loot parser: a cross-realm looter resolves to the member
+- loot parser: a Forever looter "Doom Dock" is kept whole and resolves to the member
 - loot parser: a player hyperlink or color around the name is stripped
 - loot parser: a looter the roster cannot place keeps the name and the event's GUID
 - loot parser: the roster's member wins over the event's GUID
@@ -1798,7 +1800,7 @@ Total.
 - test mode: the sample groups carry real instance names and realistic difficulties
 - sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
-### test_char_filter.lua (19)
+### test_char_filter.lua (20)
 
 - char filter: a recorder key is Name-Realm; a name that carries its realm is kept
 - char filter: the class icon is the classicon atlas as inline markup, nothing with no class
@@ -1808,6 +1810,7 @@ Total.
 - char filter: the characters are every recorder in the log once, you always, sorted by name
 - char filter: the menu is All, Current, then each character with its class icon and color
 - recorder: you are Name-Realm and your class, read live and kept
+- char filter: the character key is CharacterKey(), so two alts named Traxex do not collide
 - recorder: unknown while the client has no realm yet, then known
 - recorder: every drop record and its History entry say who saw it
 - recorder: a test placeholder is stamped too, and a stamp already there is kept
@@ -1848,9 +1851,10 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (27)
+### test_asks.lua (28)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
+- asks: on Forever the whisper goes to the whole name "Doom Dock"
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
 - send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)
 - send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
@@ -2684,12 +2688,12 @@ Total.
 | test_trade_rules.lua | 24 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
-| test_roster.lua | 13 |
+| test_roster.lua | 14 |
 | test_item_facts.lua | 24 |
 | test_collectibles.lua | 15 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 27 |
-| test_loot_parser.lua | 28 |
+| test_loot_parser.lua | 29 |
 | test_inspect.lua | 33 |
 | test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
@@ -2697,10 +2701,10 @@ Total.
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
-| test_char_filter.lua | 19 |
+| test_char_filter.lua | 20 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 27 |
+| test_asks.lua | 28 |
 | test_transmog.lua | 13 |
 | test_history.lua | 40 |
 | test_history_retention.lua | 16 |
@@ -2740,4 +2744,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2254** |
+| **Total** | **2258** |
