@@ -9,3 +9,4 @@ never merge without the owner's go-ahead.
 
 ## Log
 - 2026-11-13 — research (5 notes, 2 skeptic passes), design, builder check (4 questions, all settled as Claude's calls, design §11), plan written. Branch cut from master `924435f`. Baseline: retail 2242/0/1, forever 2234/8/1 (spec), lint 0/0.
+- 2026-11-13 — M1 groundwork landed (LibKa0s v1.95.0, CompatClient, default skin per client, names). Carry into M2: a Forever-profile PlayerTalentTree case against the real Role.Groups (FP02 review); CharacterKey can be nil when the library is absent.
