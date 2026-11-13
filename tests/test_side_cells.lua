@@ -546,13 +546,14 @@ test("widths: the column set and the shed order keep Me and Them where the verdi
     local WG = NS.WindowGroup
     local keys = {}
     for _, col in ipairs(WG.COLUMNS) do keys[#keys + 1] = col.key end
-    assertEqual(table.concat(keys, ","), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
+    local TW = T.forever and "" or "tradeWindow,"   -- Retail's alone (Forever port design §4.4)
+    assertEqual(table.concat(keys, ","), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
     local byShed = {}
     for _, col in ipairs(WG.COLUMNS) do if col.shed then byShed[#byShed + 1] = col end end
     table.sort(byShed, function(a, b) return a.shed < b.shed end)
     local order = {}
     for _, col in ipairs(byShed) do order[#order + 1] = col.key end
-    assertEqual(table.concat(order, ","), "armorType,slot,looter,tradeWindow,ilvl,them,trade,me")
+    assertEqual(table.concat(order, ","), "armorType,slot,looter," .. TW .. "ilvl,them,trade,me")
     for _, col in ipairs(WG.COLUMNS) do
         if col.key == "me" or col.key == "them" then
             assertEqual(col.label, col.key == "me" and "Me" or "Them")

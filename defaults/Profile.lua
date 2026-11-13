@@ -152,7 +152,6 @@ NS.C = {
         -- TRADE_RULES above), the owner's override once changed (§7.3).
         trade = {
             rules = TRADE_RULES[CLIENT],
-            warnAt     = 600,     -- seconds left when your own item's trade timer warns; 0 is off
         },
 
         -- Messaging (design spec §9).
@@ -161,12 +160,9 @@ NS.C = {
                 ask      = "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!",
                 offer    = "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?",
                 announce = "{item} is up for grabs, whisper me.",
-                transmog = "Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!",
-                askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!",
                 -- To the master looter, for an item awaiting them (Forever port design §6).
                 askML    = "Hi {player}, if nobody needs {item}, I'd love it: +{mygain} for me. Thanks!",
             },
-            transmogAsk     = false,    -- offer the For transmog ask on a drop whose look you lack
             editFirst       = false,    -- open the edit box before a send
             oneAsk          = true,     -- each (drop, target, kind) is sent once
             announceChannel = "auto",   -- auto | INSTANCE_CHAT | RAID | PARTY
@@ -187,7 +183,7 @@ NS.C = {
                 -- `me` and `them` show the worn gear too (feedback-6 spec §1); schema step 7 retired
                 -- the `myEq` and `theirEq` toggles.
                 ilvl = true, slot = true, armorType = true, looter = true,
-                me = true, them = true, trade = true, tradeWindow = true, actions = true,
+                me = true, them = true, trade = true, actions = true,
             },
             -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card
             -- view). Schema step 5 maps the retired `compact` preset to it.
@@ -238,10 +234,10 @@ NS.C = {
         -- Both Proc (flipbook), in their own colors (DW-03, owner ruling D-18, image-39; two pixel
         -- borders and the main spec's #FFF468 from feedback-21 H6 until then): the main spec's green
         -- #19FF19, the off-spec's blue #3FC7EB. AceDB's defaults carry a profile that never chose a
-        -- style or a color onto these; a stored choice stays, so no migration is owed.
+        -- style or a color onto these; a stored choice stays, so no migration is owed. The off-spec
+        -- glow is Retail's alone, added below.
         glow = {
             main    = glow(true, "proc", TONE.glowMain),
-            offSpec = glow(true, "proc", TONE.glowOffSpec),
         },
 
         -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The
@@ -315,3 +311,23 @@ NS.C = {
         history = { retentionDays = 30 },
     },
 }
+
+-- THE RETAIL-ONLY DEFAULTS (clients-§4, Forever port design §4.4): a value only a Retail-only
+-- feature reads is added where that feature's declaration (C.FEATURE, core/Constants.lua) is true,
+-- so WoW Forever's profile carries nothing that client never reads, and its schema rows, which
+-- declare the same clients, are not registered there.
+do
+    local F, P = NS.Constants.FEATURE, NS.C.PROFILE
+    if F.tradeTimer then
+        P.trade.warnAt = 600                   -- seconds left when your own item's trade timer warns; 0 is off
+        P.window.columns.tradeWindow = true    -- the Trade window column, the countdown's
+    end
+    if F.transmog then
+        P.messages.templates.transmog = "Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!"
+        P.messages.transmogAsk = false         -- offer the For transmog ask on a drop whose look you lack
+    end
+    if F.offSpec then
+        P.messages.templates.askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!"
+        P.glow.offSpec = glow(true, "proc", TONE.glowOffSpec)
+    end
+end

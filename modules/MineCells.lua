@@ -117,7 +117,7 @@ end
 
 -- Whether `left` seconds is at or under the warning threshold (0 or less turns it off).
 local function endingSoon(left, warnAt)
-    local w = num(warnAt) or NS.C.PROFILE.trade.warnAt
+    local w = num(warnAt) or NS.C.PROFILE.trade.warnAt or 0   -- no default on WoW Forever, which has no countdown
     return w > 0 and left <= w
 end
 
@@ -571,7 +571,9 @@ function MC.PanelHeader(drop, now, warnAt)
     local ilvl = num(facts(drop).ilvl)
     parts[2] = ilvl and tostring(ilvl) or "?"
     local tw = MC.TradeWindow(drop, now, warnAt)
-    parts[3] = L["Trade window %s"]:format(tw.text)
+    -- The words are Retail's, whose drops count down (C.FEATURE.tradeTimer); on WoW Forever the
+    -- answer stands bare: No limit (BoE), or why it can't change hands (Forever port design §4.4).
+    parts[3] = C.FEATURE.tradeTimer and L["Trade window %s"]:format(tw.text) or tw.text
     local tip = { WC.ItemName(drop.link) or "?" }
     for i = 2, #me.tip do tip[#tip + 1] = me.tip[i] end
     for i = 2, #tw.tip do tip[#tip + 1] = tw.tip[i] end

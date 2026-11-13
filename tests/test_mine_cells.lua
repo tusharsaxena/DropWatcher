@@ -232,6 +232,15 @@ test("mine cells: the panel's header reads your change, the item level and the t
     assertEqual(h.name, "Bracers of the Tide")
     assertEqual(h.text, "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertTrue(#h.tip >= 3)
+end, T.RETAIL_ONLY)
+
+-- clients-§6: the words "Trade window" are Retail's alone (Forever port design §4.4). On WoW Forever
+-- the drop you offer is a bind-on-equip one, and the line says its answer bare.
+test("mine cells: the panel's header names the trade window on Retail alone", function()
+    local NS = T.newAddon()
+    local h = NS.MineCells.PanelHeader(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), NOW, 600)
+    assertEqual(h.text, NS.Compat.ClientKey() == "retail" and "You: -5 ilvl · 305 · Trade window No limit (BoE)"
+        or "You: -5 ilvl · 305 · No limit (BoE)")
 end)
 
 -- ── whose move it is (feedback-4 spec §1) ───────────────────────────────────────────────────

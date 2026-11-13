@@ -116,11 +116,11 @@ test("skin flip: a stored partial profile moves, and nothing but companions and 
     }
     local before = dump(p)
     assertTrue(NS.ResetProfileToSkin(p) == true, "the first run moves it")
-    for _, path in ipairs(COMPANIONS) do assertEqual(leaf(p, path), true, path) end
+    for _, path in ipairs(here(COMPANIONS)) do assertEqual(leaf(p, path), true, path) end
     assertEqual(p.skin.fullSkinReset, true, "recorded on the profile")
     assertEqual(p.window.tableFontFlags, "@skin", "the one key that takes the sentinel")
     -- Take off what the step owed: the rest is the profile it was handed.
-    for _, path in ipairs(COMPANIONS) do
+    for _, path in ipairs(here(COMPANIONS)) do
         local parent, key = path:match("^(.*)%.([^.]+)$")
         leaf(p, parent)[key] = nil
     end
@@ -319,8 +319,12 @@ test("skin flip: Ka0s Default keeps the glows' own colors; a skin switch restart
         offSpec = { verdict = "upgrade" } } }
     NS.OffSpec.Of = function(me) return me.offSpec end
     NS.Glow.Apply(button, off)
-    local warband = Skin:Token(OWNER, "sem.warband")
-    assertTrue(near(calls[3][1], warband[1]) and near(calls[3][2], warband[2]), "the off-spec glow's own")
+    if T.forever then   -- clients-§6: the off-spec glow is Retail's alone (Forever port design §4.4)
+        assertEqual(#calls, 2, "no off-spec glow on WoW Forever")
+    else
+        local warband = Skin:Token(OWNER, "sem.warband")
+        assertTrue(near(calls[3][1], warband[1]) and near(calls[3][2], warband[2]), "the off-spec glow's own")
+    end
     setSkin(m, "ka0s")
 end)
 

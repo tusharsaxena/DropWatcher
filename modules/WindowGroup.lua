@@ -114,8 +114,12 @@ WG.PART_SEP = "/"
 -- `tip` is the header's tooltip rows (feedback-21); `desc` the prose the settings panel's Columns
 -- checkbox shows for it (settings/SchemaRows.lua), which stays prose.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
--- also on the row's detail card. Item and Actions never go.
-WG.COLUMNS = {
+-- also on the row's detail card. Item and Actions never go. A column declaring `clients` (clients-§4)
+-- is a column only where NS.Compat.ForClient(clients) is true: the Trade window column is Retail's
+-- alone (Forever port design §4.4; WoW Forever has no countdown, and its Trade column says
+-- Soulbound or No limit), and so is its Shown columns row, which settings/SchemaRows.lua makes per
+-- column here.
+local COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = { TM.Row(L["Shows"], L["the drop"]),
           TM.Hint(L["Hover its icon for the game's tooltip; shift-click links it, ctrl-click tries it on."]) } },
@@ -147,7 +151,7 @@ WG.COLUMNS = {
     { key = "trade", label = L["Trade"], width = 112, shed = 6,
       tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, No or ?, then why in a few words"]) },
       desc = L["Whether the looter can trade it: Yes, No or ?, then why in a few words."] },
-    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
+    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3, clients = C.FEATURE_CLIENTS.tradeTimer,
       desc = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."],
       tip = { TM.Row(L["Shows"], L["the time left to trade it, over its bar"]),
           TM.Row(L["Exact"], L["your own item, once it is in your bags"]), TM.Row(L["Estimated"], L["from when it dropped"]),
@@ -156,6 +160,10 @@ WG.COLUMNS = {
       desc = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."],
       tip = { TM.Row(L["Shows"], L["Ask the looter for it, once"]), TM.Row(L["Your own drop"], L["Offer, who it would help"]) } },
 }
+WG.COLUMNS = {}
+for _, col in ipairs(COLUMNS) do
+    if NS.Compat.ForClient(col.clients) then WG.COLUMNS[#WG.COLUMNS + 1] = col end
+end
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 local TEST_LOADING = L["Gathering real items for test mode."]

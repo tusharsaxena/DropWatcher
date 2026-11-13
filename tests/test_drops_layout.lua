@@ -73,7 +73,10 @@ test("layout: at the least width no tab sheds a column, and one pixel less would
         local cols = NS[tab].COLUMNS
         assertEqual(#NS.WindowGroup.Fit(cols, row - lead[tab]), #cols, tab .. " keeps every column")
     end
-    local groupRow = row - NS.WindowGroup.LEAD
+    -- On WoW Forever the Drops table has no Trade window column (Forever port design §4.4) and keeps
+    -- Retail's least width, so its Item column has that column's room and gap to spare.
+    local spare = T.forever and (76 + K.CELL_GAP) or 0
+    local groupRow = row - NS.WindowGroup.LEAD - spare
     assertTrue(#NS.WindowGroup.Fit(NS.WindowGroup.COLUMNS, groupRow - 1) < #NS.WindowGroup.COLUMNS,
         "the least width is the tightest that fits Drops")
     assertTrue(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH) >= 200, "the search box has room to type")

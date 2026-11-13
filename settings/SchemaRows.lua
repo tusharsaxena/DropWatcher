@@ -481,7 +481,9 @@ local function window()
     local columns = { page = "window", group = L["Columns"], subgroup = L["Shown columns"], onChange = repaintWindow }
     for _, col in ipairs(NS.WindowGroup.COLUMNS) do
         if col.key ~= "item" then
-            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
+            -- A column's declaration is its row's (the Trade window column is Retail's alone).
+            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc,
+                col.clients and with(columns, { clients = col.clients }) or columns)
         end
     end
     slider("trade.warnAt", P.trade.warnAt, 0, 1800, 60, L["Mark a trade window ending within (seconds)"],
@@ -540,8 +542,9 @@ end
 -- spec's glow and the right the off-spec's. The tab mixes kinds of control, so each block carries a
 -- subsection heading (options-ui-§7), a style's heading its name in the Style dropdown.
 -- The off-spec glow is Retail's alone (Forever port design §4.4): its rows declare it, so on WoW
--- Forever the tab is the main spec's column alone.
-local GLOWS = { "main", "offSpec" }
+-- Forever the tab is the main spec's column alone. NS.Glow.KINDS is the glows this client has, so
+-- a loop reads only a glow whose defaults exist (defaults/Profile.lua adds the off-spec's on Retail).
+local GLOWS = NS.Glow.KINDS
 local GLOW_CLIENTS = { offSpec = K.FEATURE_CLIENTS.offSpec }
 
 -- Each style's knobs, with its ranges and the styles it applies to; the defaults are
@@ -606,12 +609,13 @@ local function glow()
     end
     bool("glow.main.enabled", G.main.enabled, L["Main spec glow"],
         L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."], at)
-    bool("glow.offSpec.enabled", G.offSpec.enabled, L["Off-spec glow"],
+    local GO = G.offSpec or {}   -- nil on WoW Forever, whose off-spec rows are not registered
+    bool("glow.offSpec.enabled", GO.enabled, L["Off-spec glow"],
         L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."],
         with(at, { clients = GLOW_CLIENTS.offSpec }))
     pick("glow.main.type", G.main.type, GLOW_STYLES, L["Main spec style"],
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
-    pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
+    pick("glow.offSpec.type", GO.type, GLOW_STYLES, L["Off-spec style"],
         L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec"), clients = GLOW_CLIENTS.offSpec }))
     -- Main spec left, off-spec right on every line, the colors too (feedback-21 H6, the owner's
     -- choice): the two swatches share a line and their Use class color companions the next,

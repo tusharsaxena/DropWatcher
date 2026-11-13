@@ -151,7 +151,9 @@ test("diagnostics: an auto-ask waiting is listed with its looter and when it is 
     NS.addon:OnSlashCommand("diagnostics")
     local text = joined(NS.DebugLog.buffer)
     assertTrue(text:find("auto-ask: waiting drop 1 to Brakk", 1, true) ~= nil, text)
-    assertTrue(text:find("due=10s offSpec=false", 1, true) ~= nil, text)
+    -- clients-§6: the off-spec word is Retail's alone (Forever port design §4.4).
+    assertEqual(text:find("due=10s offSpec=false", 1, true) ~= nil, not T.forever, text)
+    assertTrue(text:find("due=10s", 1, true) ~= nil, text)
 end)
 
 test("debug: the toast queue held over combat says so when combat ends", function()

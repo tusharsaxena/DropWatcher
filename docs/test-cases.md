@@ -112,9 +112,10 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (27)
+### test_schema_rows.lua (28)
 
 - settings: no Retail-only row on the Forever panel
+- defaults: WoW Forever's profile has none of the Retail-only features' defaults
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
@@ -655,7 +656,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (51)
+### test_window_group.lua (52)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -672,6 +673,7 @@ Total.
 - cells: an encounter header reads `Label · Situation · age · n drops`
 - cells: a header's tooltip is its facts in rows, gold labels, every member named five a row (feedback-17)
 - table: the default columns, and a column the profile turns off
+- table: the Trade window column, its row and its default are Retail's alone
 - table: the Item column takes the slack, never less than its minimum
 - table: a row too narrow for every column sheds Type, Slot, Looter, Trade window and Ilvl, in that order
 - table: groups newest first, the first open and older ones collapsed; a group the View hid whole keeps a header
@@ -954,7 +956,7 @@ Total.
 - offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
 - offer alone: /dw offer says why and opens nothing
 
-### test_mine_cells.lua (14)
+### test_mine_cells.lua (15)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -967,6 +969,7 @@ Total.
 - mine cells: Post my tradeables lists every link, cut at the chat limit without splitting one
 - mine cells: the Offer panel docks right, else left, else floats
 - mine cells: the panel's header reads your change, the item level and the trade window
+- mine cells: the panel's header names the trade window on Retail alone
 - mine cells: ToneState is the button's own state, or tradedAway once you traded the drop away
 - drops strip: it counts your drops the tab lists, its filters applied, in the feed's order
 - drops strip: the compact layout's summary is shortened
@@ -2302,15 +2305,17 @@ Total.
 - toast stack: in test mode the sticky placeholders stack too
 - toast stack: the diagnostics name the stack and every toast on screen
 
-### test_glow.lua (15)
+### test_glow.lua (17)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
 - glow: an upgrade its looter can't trade, or not yet estimated, never glows
 - glow: without the library Apply still records its decision; a glow turned off clears it
 - glow: Forever has the main glow alone, and it still starts, styles and stops
 - glow: each style starts with the knob table's arguments, under the addon's key
+- glow: the off-spec glow takes its own style and knobs
 - glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
 - glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it
+- glow: the off-spec glow's Use class color is its own
 - glow: Use class color with a class that has no color falls through to the swatch
 - glow: the proc style's opening burst plays once, not again on every repaint's re-show
 - glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
@@ -2794,7 +2799,7 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 27 |
+| test_schema_rows.lua | 28 |
 | test_settings_pages.lua | 55 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
@@ -2818,7 +2823,7 @@ Total.
 | test_history_card.lua | 16 |
 | test_compact_chrome.lua | 28 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 51 |
+| test_window_group.lua | 52 |
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
@@ -2831,7 +2836,7 @@ Total.
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 21 |
 | test_offer_alone.lua | 15 |
-| test_mine_cells.lua | 14 |
+| test_mine_cells.lua | 15 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 50 |
 | test_compat.lua | 75 |
@@ -2888,7 +2893,7 @@ Total.
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 50 |
 | test_toast_stack.lua | 16 |
-| test_glow.lua | 15 |
+| test_glow.lua | 17 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
@@ -2915,4 +2920,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2401** |
+| **Total** | **2406** |

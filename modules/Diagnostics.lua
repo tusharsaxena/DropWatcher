@@ -377,9 +377,15 @@ local function messaging(out)
     out:add(TAG, "auto-ask: enabled=%s delay=%s minGain=%s waiting=%s nextDue=%s inEncounter=%s", aa.enabled,
         aa.delay, aa.minGain, aa.waiting, aa.nextDue and math.floor(aa.nextDue) or "none", aa.inEncounter)
     out:add(TAG, "auto-ask: scheduled=%s sent=%s canceled=%s", aa.scheduled, aa.sent, aa.canceled)
+    -- The off-spec word is Retail's alone (Forever port design §4.4): no Forever ask is off-spec.
+    local offSpec = NS.Constants.FEATURE.offSpec
     for _, w in ipairs(NS.AutoAsk.Waiting()) do
-        out:add(TAG, "auto-ask: waiting drop %s to %s due=%s offSpec=%s", w.id, w.target or "?",
-            w.due and (math.floor(w.due) .. "s") or "held", w.offSpec == true)
+        local due = w.due and (math.floor(w.due) .. "s") or "held"
+        if offSpec then
+            out:add(TAG, "auto-ask: waiting drop %s to %s due=%s offSpec=%s", w.id, w.target or "?", due, w.offSpec == true)
+        else
+            out:add(TAG, "auto-ask: waiting drop %s to %s due=%s", w.id, w.target or "?", due)
+        end
     end
 end
 

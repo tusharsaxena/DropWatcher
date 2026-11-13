@@ -64,13 +64,13 @@ local function profileDefault(NS, path)
 end
 
 -- The Retail-only rows (Forever port design §4.4, clients-§4): the transmog opt-in and template, the
--- off-spec template, every row of the off-spec glow, the trade timer's warning and every
--- situation's loot rule (WoW Forever has one rule, `soulbound`, §4.6). Each carries
--- `clients = { "retail" }`.
+-- off-spec template, every row of the off-spec glow, the trade timer's warning and its Trade window
+-- column, and every situation's loot rule (WoW Forever has one rule, `soulbound`, §4.6). Each
+-- carries `clients = { "retail" }`.
 local function retailOnlyRow(path)
     return path == "messages.transmogAsk" or path == "messages.templates.transmog"
         or path == "messages.templates.askOffSpec" or path:match("^glow%.offSpec%.") ~= nil
-        or path == "trade.warnAt" or path:match("^trade%.rules%.") ~= nil
+        or path == "trade.warnAt" or path == "window.columns.tradeWindow" or path:match("^trade%.rules%.") ~= nil
 end
 
 -- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
@@ -92,11 +92,26 @@ test("settings: no Retail-only row on the Forever panel", function()
     end
     local glowKeys = 0
     for _ in pairs(NS.C.PROFILE.glow.main) do glowKeys = glowKeys + 1 end
-    -- Three messaging rows, the off-spec glow's, the warning and Retail's ten loot rules.
-    assertEqual(seen, retail and (3 + glowKeys + 1 + 10) or 0, "the declared rows")
+    -- Three messaging rows, the off-spec glow's, the warning, the Trade window column and Retail's
+    -- ten loot rules.
+    assertEqual(seen, retail and (3 + glowKeys + 1 + 1 + 10) or 0, "the declared rows")
     for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         assertTrue(retail or not retailOnlyRow(row.path or ""), "the Alerts page")
     end
+end)
+
+-- clients-§6: a default only a Retail-only feature reads is Retail's alone too, so WoW Forever's
+-- profile carries no value nothing on that client reads or writes (Forever port design §4.4).
+-- `trade.rules` stays: Forever's one rule, `soulbound`, is read there.
+test("defaults: WoW Forever's profile has none of the Retail-only features' defaults", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    for _, path in ipairs({ "messages.transmogAsk", "messages.templates.transmog", "messages.templates.askOffSpec",
+            "glow.offSpec", "trade.warnAt", "window.columns.tradeWindow" }) do
+        assertEqual(profileDefault(NS, path) ~= nil, retail, path)
+    end
+    assertTrue(profileDefault(NS, "glow.main.enabled") == true, "the main glow serves both clients")
+    assertTrue(type(profileDefault(NS, "trade.rules")) == "table", "Forever reads its one loot rule")
 end)
 
 test("rows: every spec §12.1 setting has a row", function()
@@ -225,7 +240,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertFalse(a.oneAsk)
     assertEqual(a.announceChannel, "RAID")
     assertEqual(a.templates.ask, NS.C.PROFILE.messages.templates.ask)
-    assertEqual(NS.TradeTimer.WarnAt(), T.forever and NS.C.PROFILE.trade.warnAt or 120)
+    assertEqual(NS.TradeTimer.WarnAt(), T.forever and 0 or 120, "WoW Forever has no warning (Forever port design §4.4)")
 end)
 
 -- DW-CAT2 (issue #13, categories design spec §5.1): one Item kinds switch per category, in

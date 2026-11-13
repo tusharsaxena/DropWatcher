@@ -334,18 +334,30 @@ local function keys(cols)
     return table.concat(out, ",")
 end
 
+-- clients-§6: the Trade window column is Retail's alone (Forever port design §4.4): WoW Forever has
+-- no trade countdown, a bind-on-pickup drop is soulbound and a bind-on-equip one has no limit, which
+-- the Trade column already says. On Retail it sits between Trade and Actions.
+local TW = T.forever and "" or "tradeWindow,"
+
 test("table: the default columns, and a column the profile turns off", function()
     local WG = T.newAddon().WindowGroup
-    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
+    assertEqual(keys(WG.Columns()), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
     assertEqual(keys(WG.Columns({ slot = false, item = false, them = true })),
-        "item,ilvl,armorType,looter,me,them,trade,tradeWindow,actions", "Item never hides")
+        "item,ilvl,armorType,looter,me,them,trade," .. TW .. "actions", "Item never hides")
     assertEqual(keys(WG.Columns({ me = false })),
-        "item,ilvl,slot,armorType,looter,them,trade,tradeWindow,actions", "`window.columns.me` turns Me off, gear and all")
+        "item,ilvl,slot,armorType,looter,them,trade," .. TW .. "actions", "`window.columns.me` turns Me off, gear and all")
     assertEqual(keys(WG.Columns({ myEq = false, theirEq = false })), keys(WG.Columns()),
         "a retired toggle names no column (feedback-6 spec §1)")
     assertEqual(keys(WG.Columns({ tradeWindow = false })),
         "item,ilvl,slot,armorType,looter,me,them,trade,actions", "`window.columns.tradeWindow` turns it off")
-    assertTrue(T.newAddon().C.PROFILE.window.columns.tradeWindow == true, "on by default")
+end)
+
+test("table: the Trade window column, its row and its default are Retail's alone", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    assertEqual(keys(NS.WindowGroup.COLUMNS), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
+    assertEqual(NS.SchemaRuntime.FindRow("window.columns.tradeWindow") ~= nil, retail, "its Shown columns row")
+    assertEqual(NS.C.PROFILE.window.columns.tradeWindow, retail or nil, "on by default on Retail")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()
@@ -373,7 +385,7 @@ test("table: a row too narrow for every column sheds Type, Slot, Looter, Trade w
             if not kept[key] then shed[#shed + 1] = key; have[key] = nil end
         end
     end
-    assertEqual(table.concat(shed, ","), "armorType,slot,looter,tradeWindow,ilvl,them,trade,me",
+    assertEqual(table.concat(shed, ","), "armorType,slot,looter," .. TW .. "ilvl,them,trade,me",
         "Trade window goes after Looter, and Me and Them where the verdict columns sat (feedback-6 spec §1)")
     assertEqual(keys(WG.Fit(cols, 0)), "item,actions", "Item and Actions never go")
     for _, w in ipairs({ 300, 500, 700, 900 }) do
@@ -466,10 +478,10 @@ test("table: built at the least width, every column shows and Ask stays inside t
     NS.ShowWindow()
     assertEqual(NS.Window.Frame():GetWidth(), K.MIN_WIDTH, "raised to the least width")
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
+    assertEqual(keys(drawn.columns), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
     local c = rowFor(drawn, 1).cells
     assertTrue(c.slot:IsShown()); assertTrue(c.looter:IsShown()); assertTrue(c.them:IsShown())
-    assertTrue(c.tradeWindow:IsShown())
+    assertEqual(c.tradeWindow ~= nil and c.tradeWindow:IsShown(), not T.forever, "Trade window, Retail's alone")
     assertTrue(c.actions:IsShown())
     local _, _, _, x = c.actions:GetPoint(1)   -- from the row's left edge, itself indented
     assertTrue(K.ROW_INDENT + x + c.actions:GetWidth() <= K.MIN_WIDTH - 2 * K.INSET - K.SCROLL_W)
@@ -796,7 +808,7 @@ test("table: the compact layout draws cards instead of the table, and the full l
     NS.ToggleWindowMode()
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil)
-    assertEqual(#drawn.columns, 10)
+    assertEqual(#drawn.columns, T.forever and 9 or 10, "WoW Forever has no Trade window column")
     assertTrue(drawn.pane.scroll:IsShown()); assertFalse(drawn.pane.compactView.scroll:IsShown())
 end)
 
@@ -874,7 +886,7 @@ test("table: Trade window paints every drop's countdown over its bar; the row gr
     drawn = NS.WindowGroup.Drawn()
     assertFalse(rowFor(drawn, 1).cells.tradeWindow:IsShown())
     assertEqual(rowFor(drawn, 1):GetHeight(), WR.ROW_H, "turned off, the row is the row height again")
-end)
+end, T.RETAIL_ONLY)
 
 -- The live countdown tickers: a repeating ticker every `period` seconds, not canceled.
 local function tickers(m, period)
@@ -908,7 +920,7 @@ test("table: the countdowns move each second while one runs, repainting the Trad
     assertEqual(tickers(m, 1), 1)
     NS.HideWindow()
     assertEqual(tickers(m, 1), 0, "a hidden window runs none")
-end)
+end, T.RETAIL_ONLY)
 
 test("table: with no countdown running (nothing tradeable, or the column off) no each-second ticker runs", function()
     local NS, _, m = T.enableAddon()
@@ -921,6 +933,10 @@ test("table: with no countdown running (nothing tradeable, or the column off) no
     assertFalse(NS.WindowGroup.LiveCountdown())
     seed(NS, { GROUP }, { drop(), drop({ id = 2 }) })
     NS.Window.Refresh()
+    if T.forever then   -- clients-§6: no Trade window column, so no countdown (Forever port design §4.4)
+        assertFalse(NS.WindowGroup.LiveCountdown(), "WoW Forever has no countdown"); assertEqual(tickers(m, 1), 0)
+        return
+    end
     assertTrue(NS.WindowGroup.LiveCountdown()); assertEqual(tickers(m, 1), 1)
     NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
     NS.Window.Refresh()

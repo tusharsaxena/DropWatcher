@@ -139,7 +139,7 @@ end
 function TT.WarnAt()
     local v = NS.Setting("trade.warnAt")
     if type(v) == "number" and v == v then return v end
-    return NS.C.PROFILE.trade.warnAt
+    return NS.C.PROFILE.trade.warnAt or 0   -- WoW Forever has no warning, and no default for it
 end
 
 --- The ticker's period in seconds, or nil while no ticker runs.

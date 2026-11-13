@@ -396,8 +396,11 @@ test("card: a row click expands it inline; the rows below move down by the card'
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.card:IsShown()); assertEqual(drawn.cardDropId, top)
     assertEqual(NS.WindowGroup.Expanded(), top)
-    -- a row is the bar's room taller while Trade window shows (feedback-5 spec §1)
-    assertEqual(yOf(drawn.card), yOf(rowFor(drawn, top)) - NS.WindowRows.CountdownRowHeight(NS.WindowRows.ROW_H), "right under its row")
+    -- a row is the bar's room taller while Trade window shows (feedback-5 spec §1); WoW Forever has
+    -- no such column (Forever port design §4.4), so its row is the row height
+    local WR = NS.WindowRows
+    local rowH = T.forever and WR.ROW_H or WR.CountdownRowHeight(WR.ROW_H)
+    assertEqual(yOf(drawn.card), yOf(rowFor(drawn, top)) - rowH, "right under its row")
     assertEqual(yOf(rowFor(drawn, below)), before - K.CARD_H, "the next row moves down")
     assertEqual(rowFor(drawn, top).chevron:GetTexture(), NS.Icon("chevron-up"), "the open row's chevron points up")
     assertEqual(rowFor(drawn, below).chevron:GetTexture(), NS.Icon("chevron-down"), "a closed row's points down")

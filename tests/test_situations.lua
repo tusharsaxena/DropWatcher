@@ -262,7 +262,7 @@ test("situations: the edge's inputs are what the client says", function()
     assertTrue(NS.Situations.ReadInputs().isPvP)
     m.__fire("PLAYER_ENTERING_WORLD")
     assertEqual(NS.Situations.LastInputs().instanceType, "arena")
-end, T.RETAIL_ONLY)
+end)
 
 test("situations: a difficulty the client does not know falls back to the instance type", function()
     local NS, m = live()

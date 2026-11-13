@@ -144,7 +144,9 @@ core\DebugLogSetup.lua
 # LOAD-BEARING: promotes NS to the AceAddon object (NS.addon) and reclaims NS.Print; modules\ and
 # settings\ read NS.addon at load.
 core\DropWatcher.lua
-# Conventional: NS:RunMigrations is called from OnInitialize.
+# LOAD-BEARING: reads NS.Constants.FEATURE (core\Constants.lua, above) at load, for the skin
+# step's key list (the off-spec glow's companion is Retail's alone). NS:RunMigrations is called from
+# OnInitialize.
 core\Database.lua
 # LOAD-BEARING relative to core\Namespace.lua only: the Show window key binding's header label reads
 # NS.BRAND at load (launcher-§6). The launcher is built here and registered from OnEnable.
@@ -155,6 +157,8 @@ core\LauncherSetup.lua
 # take at load, and so do modules\QualityGate.lua, modules\Situations.lua, modules\TradeRules.lua and
 # modules\WindowFilterBar.lua (their defaults, as file-scope upvalues); modules\Messaging.lua,
 # modules\TradeTimer.lua and modules\MineCells.lua read it at call time. It stays above every module.
+# Reads NS.Constants (core\Constants.lua, above) at load: its tones, and C.FEATURE, which adds the
+# Retail-only features' defaults on Retail alone (clients-§4).
 defaults\Profile.lua
 
 # Modules
@@ -447,9 +451,10 @@ modules\WindowOwn.lua
 # right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
-# Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
-# libs\, above, which LibKa0s-Glow-1.0 resolves at call time through NS.GlowLib, core\GlowSetup.lua);
-# reads nothing at load. NS.OffSpec, NS.Setting, NS.C, NS.GlowLib and NS.Window are read at call
+# LOAD-BEARING: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
+# libs\, above, which LibKa0s-Glow-1.0 resolves at call time through NS.GlowLib, core\GlowSetup.lua),
+# and Glow.KINDS, picked by NS.Constants.FEATURE (above) at load, which settings\SchemaRows.lua (below)
+# takes at load for the Upgrade glow tab's columns. NS.OffSpec, NS.Setting, NS.C, NS.GlowLib and NS.Window are read at call
 # time; modules\WindowGroup.lua, modules\DetailCard.lua and modules\CompactGroup.lua (below) call it
 # when they paint an icon (the toast never glows, G9).
 modules\Glow.lua
@@ -632,8 +637,8 @@ settings\SchemaSetup.lua
 # settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load.
 settings\Schema.lua
 # LOAD-BEARING: appends every hand-written row to NS.SchemaRuntime at file scope; reads NS.C,
-# NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup
-# (modules\, above) at load.
+# NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup,
+# NS.Glow (modules\, above) at load.
 settings\SchemaRows.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.
