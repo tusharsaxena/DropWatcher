@@ -1831,7 +1831,7 @@ Total.
 - ml pending: under group loot nothing is pending from the loot window
 - ml pending: standing down drops the items and their timers
 
-### test_ask_ml.lua (10)
+### test_ask_ml.lua (12)
 
 - askML: one press whispers the master looter once; a second press is refused by the one-ask guard
 - askML: queued while chat is restricted and sent on lift
@@ -1843,6 +1843,8 @@ Total.
 - askML: the diagnostics name its template and a queued one
 - askML: the restriction badge's tooltip names a queued one in words, never the kind's key
 - askML: a master looter the roster no longer knows is named, never whispered by GUID
+- askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
+- askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
 ### test_roll_cells.lua (5)
 
@@ -2885,7 +2887,7 @@ Total.
 | test_feed.lua | 54 |
 | test_pending.lua | 16 |
 | test_pending_ml.lua | 9 |
-| test_ask_ml.lua | 10 |
+| test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 5 |
 | test_window_pending.lua | 11 |
 | test_roll_popup.lua | 10 |
@@ -2937,4 +2939,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2419** |
+| **Total** | **2421** |

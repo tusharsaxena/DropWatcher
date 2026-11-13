@@ -59,6 +59,9 @@ P.TICK = 1      -- the fallback ticker's period
 local ticker, scoreTimer
 local lingers = {}
 local generation = 0   -- bumped at every stand-down: an item load answering after it is ignored
+-- The last id the live store handed out, kept across a stand-down so a new store never reuses an
+-- id: the Asks book keeps a sent askML filed under its pending item's id (modules/Asks.lua).
+local lastSeq = 0
 
 local function stoodDown()
     return NS.IsStoodDown ~= nil and NS.IsStoodDown()
@@ -69,7 +72,7 @@ local function now() return GetTime() end
 local function store()
     local s = State.pending
     if not s then
-        s = { seq = 0, items = {}, byId = {}, byKey = {}, done = {}, loading = {}, mine = {} }
+        s = { seq = lastSeq, items = {}, byId = {}, byKey = {}, done = {}, loading = {}, mine = {} }
         State.pending = s
     end
     return s
@@ -546,6 +549,7 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
     for _, t in pairs(lingers) do t:Cancel() end
     lingers = {}
+    lastSeq = State.pending and State.pending.seq or lastSeq
     State.pending, State.pendingTest = nil, nil
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()

@@ -240,3 +240,32 @@ test("askML: a master looter the roster no longer knows is named, never whispere
     assertEqual(printed(m, DOOM), 0, "no GUID in chat")
     assertEqual(#m.chatSent, 0)
 end)
+
+test("askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID", function()
+    -- red under: NS.AskMLTargetOf answering the item's raw GUID when it read no name
+    local NS, m = raid()
+    local item = awaiting(NS, m, 300)
+    item.ml.name, item.ml.realm = nil, nil
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR") }, true)
+    NS.Roster.Refresh("test")
+    assertNil(NS.AskMLTargetOf(item), "no name to give, and never the GUID")
+    local state, reason = NS.PressAskML(item.id)
+    assertEqual(state, "refused"); assertEqual(reason, "noTarget")
+    assertEqual(printed(m, "Not asked: The master looter is not known."), 1)
+    assertEqual(printed(m, DOOM), 0, "no GUID in chat")
+    assertEqual(#m.chatSent, 0)
+end)
+
+test("askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask", function()
+    -- red under: the stand-down dropping the pending store's id sequence while the Asks book keeps
+    -- the sent askML filed under the old id
+    local NS, m = raid()
+    local item = awaiting(NS, m, 300)
+    assertEqual((NS.PressAskML(item.id)), "sent")
+    NS.addon:OnSlashCommand("disable")
+    NS.addon:OnSlashCommand("enable")
+    local fresh = awaiting(NS, m, 301)
+    assertTrue(fresh.id ~= item.id, "a new id after the stand-down")
+    assertTrue(NS.Asks.StateOf("askML", NS.AskMLTargetOf(fresh), fresh.id) ~= "sent", "the new item is not asked")
+    assertFalse(fresh.askedML == true)
+end)

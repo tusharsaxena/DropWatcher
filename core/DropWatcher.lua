@@ -386,7 +386,8 @@ local ASK_ML_REFUSAL = {
 --- and StateOf's `target`): the roster's whole name for the master looter (`Name-Realm`, or a
 --- Forever "First Surname", never split: client-quirks-§5), else what the item read
 --- (NS.Pending.MLTargetOf); a master looter the roster no longer knows is named as the item read
---- them (`Name-Realm`, or the whole Forever name), never by GUID; nil when it read nothing.
+--- them (`Name-Realm`, or the whole Forever name), never by GUID; nil when it read no name
+--- (the refusal then reads that the master looter is not known).
 --- @param item table|nil a NS.Pending item of kind `ml`
 --- @return string|nil
 function NS.AskMLTargetOf(item)
@@ -394,7 +395,7 @@ function NS.AskMLTargetOf(item)
     local m = target and NS.Roster.Resolve(target)
     if m then return m.fullName end
     local ml = target and item.ml
-    if not (ml and ml.name) then return target end
+    if not (ml and ml.name) then return nil end
     return ml.realm and (ml.name .. "-" .. ml.realm) or ml.name
 end
 
