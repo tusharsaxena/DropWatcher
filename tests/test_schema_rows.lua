@@ -82,7 +82,11 @@ test("settings: no Retail-only row on the Forever panel", function()
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do
         local path = row.path or ""
-        if retailOnlyRow(path) then
+        if path == "char.role" then
+            -- WoW Forever's alone (Forever port design §11.4): Retail never reads the role.
+            assertTrue(not retail, "the Role row on Retail")
+            assertEqual(table.concat(row.clients or {}, ","), "forever", path .. " declares its client")
+        elseif retailOnlyRow(path) then
             seen = seen + 1
             assertTrue(retail, "a Retail-only row on Forever: " .. path)
             assertEqual(table.concat(row.clients or {}, ","), "retail", path .. " declares its client")
@@ -140,6 +144,7 @@ test("rows: every default is defaults/Profile.lua's, and passes the row's own ch
     local NS = T.newAddon()
     for _, row in ipairs(NS.addon.Settings.Rows) do
         local want = row.path == "global.history.retentionDays" and NS.C.GLOBAL_DEFAULTS.history.retentionDays
+            or row.path == "char.role" and NS.C.ROLE_DEFAULT
             or profileDefault(NS, row.path)
         -- red under: a row whose `default` is a literal of its own that drifted from defaults/
         assertTrue(row.default == want, row.path .. " default is the defaults table's")
@@ -865,6 +870,8 @@ local PINNED_ROWS = {
     { "window.tableFontFlags", "string", "\"@skin\"" },
     { "window.tableFontFromSkin", "bool", "true" },
     { "window.tableFontShadow", "bool", "true" },
+    -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
+    { "char.role", "string", "\"auto\"" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
@@ -873,7 +880,8 @@ test("rows: the layout changes keep every stored path, its type and its default 
     for _, p in ipairs(PINNED_ROWS) do
         -- On WoW Forever a Retail-only situation's paths, and the Retail-only rows, are absent
         -- (clients-§4), not moved.
-        if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1]))) then want[p[1]], pinned = p, pinned + 1 end
+        if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1])))
+            and not (not T.forever and p[1] == "char.role") then want[p[1]], pinned = p, pinned + 1 end
     end
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do

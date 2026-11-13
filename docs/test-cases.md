@@ -1135,6 +1135,13 @@ Total.
 - compat client: InspectSpecID reads C_SpecializationInfo first, then the global
 - feature events: a retail-only row is not registered on forever
 
+### test_role_override.lua (4)
+
+- role override: the Role row is General's on WoW Forever alone
+- role override: a pick lands in db.char.role through SetOverride, and Automatic clears it
+- role override: the CLI reaches the row, and Reset all leaves a per-character pick
+- role override: the tooltip names what Automatic answers now, and its source
+
 ### test_compat_collect.lua (21)
 
 - compat collect: MountFromItem answers the journal's mount id, else nil
@@ -2841,6 +2848,7 @@ Total.
 | test_test_mode.lua | 50 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
+| test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
 | test_compat_loot.lua | 18 |
 | test_text_parse.lua | 12 |
@@ -2920,4 +2928,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2406** |
+| **Total** | **2410** |

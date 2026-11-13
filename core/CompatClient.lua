@@ -180,6 +180,17 @@ function Compat.PlayerRole()
     return fallbackRole(store)
 end
 
+--- What Automatic answers now, whatever the player picked: PlayerRole's ladder with the override
+--- left out (General › Role's tooltip, Forever port design §11.4). Read over a copy of the store, so
+--- the override stays set and the saved answer is not rewritten by this read.
+--- @return string|nil role, string|nil source, string|nil detail
+function Compat.AutomaticRole()
+    local store = Compat.RoleStore()
+    local view = store and { last = store.last } or nil
+    if RoleLib and RoleLib.Resolve then return RoleLib.Resolve(view) end
+    return fallbackRole(view)
+end
+
 --- Set the player's pick ("TANK", "HEALER" or "DAMAGER"), or nil for Automatic: LibKa0s
 --- Role.SetOverride on this character's store. False when there is no store yet or the role is
 --- not one of the three.

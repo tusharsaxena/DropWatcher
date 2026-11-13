@@ -310,6 +310,12 @@ NS.C = {
         -- never replaces the table whole.
         history = { retentionDays = 30 },
     },
+
+    -- General › Role's default (WoW Forever alone, Forever port design §11.4): `auto`, no override,
+    -- so LibKa0s Role.Resolve's ladder answers. The row stores per character in `db.char.role`
+    -- (settings/Schema.lua's CHAR closure row), so this is no AceDB default: nothing hands it to
+    -- AceDB, and `db.char.role` stays the role store's own table.
+    ROLE_DEFAULT = "auto",
 }
 
 -- THE RETAIL-ONLY DEFAULTS (clients-§4, Forever port design §4.4): a value only a Retail-only

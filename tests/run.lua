@@ -291,6 +291,7 @@ Kit.run{
         "test_test_mode",
         "test_compat",
         "test_compat_client",
+        "test_role_override",
         "test_compat_collect",
         "test_compat_loot",
         "test_text_parse",

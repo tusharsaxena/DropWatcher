@@ -703,6 +703,51 @@ local function icons()
         { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
 end
 
+-- ── General › Role (Forever port design §11.4): the role you play, WoW Forever alone ─────────
+--
+-- Saved per character in `db.char.role` through LibKa0s Role.SetOverride (settings/Schema.lua's
+-- CHAR closure row); Automatic is Role.Resolve's ladder. On a Druid it decides the Feral scale
+-- (Pawn 2 or 3), which is what a Feral tank whose group role reads none needs to correct. Retail
+-- never reads the role, so the row is not registered there (clients-§4). Its tooltip names what
+-- Automatic answers now: RefreshRoleTooltip rewrites it each time the General page draws.
+
+local ROLE_CHOICES = choices{
+    "auto", L["Automatic"], "tank", L["Tank"], "healer", L["Healer"], "damage", L["Damage"],
+}
+local ROLE_NAME = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
+local ROLE_TIP = L["The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."]
+
+-- Where Automatic's answer came from, in words (LibKa0s Role.Resolve's `source` and `detail`).
+local function roleSource(source, detail)
+    if source == "assigned" then return L["the role your group gave you"] end
+    if source == "talents" then
+        return detail and L["your talents (%s)"]:format(detail) or L["your talents"]
+    end
+    if source == "spec" then
+        return detail and L["your specialization (%s)"]:format(detail) or L["your specialization"]
+    end
+    if source == "saved" then return L["the last role it found"] end
+    return nil
+end
+
+--- The Role row's tooltip with what Automatic answers now and its source (NS.Compat.AutomaticRole).
+--- A no-op where the row is not registered (Retail).
+function Settings.RefreshRoleTooltip()
+    local row = NS.SchemaRuntime.FindRow(Settings.ROLE_PATH)
+    if not row then return end
+    local role, source, detail = NS.Compat.AutomaticRole()
+    local why = roleSource(source, detail)
+    local now = (ROLE_NAME[role] and why) and L["Automatic now picks %s: %s."]:format(ROLE_NAME[role], why)
+        or L["Automatic has no answer yet."]
+    row.tooltip = ROLE_TIP .. "\n\n" .. now
+end
+
+local function role()
+    local row = pick(Settings.ROLE_PATH, NS.C.ROLE_DEFAULT, ROLE_CHOICES, L["Role"], ROLE_TIP,
+        { page = "general", group = L["Role"], clients = { "forever" } })
+    Settings.StampClosureRows({ row })
+end
+
 -- ── General › Simulator (feedback-2 spec §8): the simulator's pace ─────────────────────────────
 
 local function simulation()
@@ -764,6 +809,7 @@ local function skin()
         L["Whether the first-run skin picker was closed on this profile."], at)
 end
 
+role()
 simulation()
 skin()
 situations()

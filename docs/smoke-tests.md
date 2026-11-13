@@ -3821,7 +3821,10 @@ first. With Pawn installed and Comparison's scorer Pawn → a drop's detail card
 used (your own tree's, the one shown in Pawn, or the best of your class's for a looter). Settings →
 Comparison's weights strip lists your class's talent trees by the client's names, your current tree
 first; a weight set on one tree scores that tree's drops. The secondary stats the editor offers are
-probe P-STATS: record which of them Forever items carry. Result:
+probe P-STATS: record which of them Forever items carry. On a Feral Druid in a group with no
+assigned roles: Settings → General → Role's tooltip ends `Automatic now picks Damage: your talents
+(Feral Combat).`; pick Tank → a drop's card names the bear scale (Pawn 3), and `/dw reset char.role`
+goes back to the cat's (design §11.4). Result:
 
 **FOREVER-6. Score-first verdicts (DW-FP08).** Client: WoW Forever. With a scorer in use, a drop that
 scores higher than what you wear at a lower item level → Me reads an upgrade, and its detail card

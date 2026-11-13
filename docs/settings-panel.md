@@ -14,7 +14,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
+| General | `Master controls`, `Role` (WoW Forever alone), `Simulator`, `Skin`, `Keybindings` |
 | Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention`, `Rolls` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
@@ -84,6 +84,17 @@ on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, throu
 reset, so its tooltip is the very text Reset all settings carries, read from the library
 (`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting" lead),
 then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
+
+## General → Role (WoW Forever alone)
+
+One dropdown, `Role` (`char.role`, Forever port design §11.4): Automatic, Tank, Healer or Damage,
+saved for this character in `db.char.role` through LibKa0s `Role.SetOverride`. Automatic is
+`Role.Resolve`'s ladder: the role your group gave you, else your talents. On a Druid the role picks
+the Feral Pawn scale (cat for Damage, bear for Tank), so a Feral tank in a group with no assigned
+roles picks Tank here. The tooltip ends with what Automatic picks now and where from (`Automatic
+now picks Damage: your talents (Feral Combat).`), read each time the page draws. Reset all
+settings does not reach it (it is not a profile setting); `/dw set char.role tank` and `/dw reset
+char.role` do. Retail has no such tab: Retail never reads the role.
 
 ## General → Simulator
 

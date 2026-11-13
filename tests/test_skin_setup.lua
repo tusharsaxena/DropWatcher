@@ -273,7 +273,9 @@ test("Skin seam: the Skin tab sits after Simulator and before Keybindings, label
         b:__fire("OnClick")
         keys[i] = ctx.activeTab
     end
-    assertEqual(table.concat(keys, "|"), "Master controls|Simulator|Appearance|Keybindings")
+    -- WoW Forever's Role tab (Forever port design §11.4) follows Master controls.
+    assertEqual(table.concat(keys, "|"), T.forever and "Master controls|Role|Simulator|Appearance|Keybindings"
+        or "Master controls|Simulator|Appearance|Keybindings")
     clickTab(m, ctx, "Appearance")
     assertEqual(ctx.activeTab, "Appearance")
 end)

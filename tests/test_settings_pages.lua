@@ -15,7 +15,11 @@ local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEq
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
     -- "Appearance" is the Skin tab's key (the library labels it "Skin"; tests/test_skin_setup.lua).
-    { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Appearance", "Keybindings" } },
+    -- WoW Forever's Role tab (Forever port design §11.4) follows Master controls; Retail has none.
+    { key = "general",    title = "General",
+      strip = (os.getenv("KA0S_KIT_CLIENT") == "forever")
+          and { "Master controls", "Role", "Simulator", "Appearance", "Keybindings" }
+          or  { "Master controls", "Simulator", "Appearance", "Keybindings" } },
     -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
     { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Item lists", "Retention", "Rolls" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },

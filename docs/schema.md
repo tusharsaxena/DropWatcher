@@ -48,6 +48,11 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
   `writeThrough`, so the host verbs still land on a load where the composers are hollow
   (options-ui-§1 route (a)).
+- The per-character closure row is General › Role (`char.role`, WoW Forever alone, Forever port
+  design §11.4): `auto`, `tank`, `healer` or `damage`, onto `db.char.role.override` through
+  `Compat.SetRoleOverride` (`auto` clears it). No profile default and no profile reset reach it;
+  `/dw reset char.role` is Automatic. Its tooltip names what Automatic answers now
+  (`Compat.AutomaticRole`), rewritten each time the General page draws.
 - The global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`)
   and Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks
   before it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its
@@ -80,6 +85,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
+| `char.role` | `"auto"` | Role (WoW Forever alone) | the role your gear is judged for: `auto`, `tank`, `healer` or `damage`; stored per character as `db.char.role.override` (no profile key; see the closure rows above), and on a Druid the Feral Pawn scale (2 for Damage, 3 for Tank, Forever port design §11.4) |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
 | `skin.skin` | `NS.DEFAULT_SKIN` (`"ka0s"` on Retail, `"forever"` on Forever) | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); the default is `Skin:DefaultSkin()` (skinning-§2): `ka0s` is Ka0s Default, the look before skins, and `forever` is WoW Forever |
@@ -421,7 +427,7 @@ it is named.
   (Forever port design §4.2, DW-FP02). Owner `core/CompatClient.lua` (`Compat.RoleStore`, made on
   first use); writers LibKa0s-Role-1.0's `Resolve` (`last`, on each answer from the group's
   assignment, the talent tree or the spec, read through `Compat.PlayerRole`) and `SetOverride`
-  (`override`, through `Compat.SetRoleOverride`).
+  (`override`, through `Compat.SetRoleOverride`, the General › Role row's write on WoW Forever).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.SimHost.HistoryLog`, `modules/Sim.lua`), never

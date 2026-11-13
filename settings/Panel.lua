@@ -93,6 +93,8 @@ end
 -- `before`, so it follows every schema tab. The stub's KeybindingsTab answers nil: no tab.
 local function renderGeneral(c)
     Helpers.ClearScroll(c)
+    -- WoW Forever's Role row names what Automatic answers now (settings/SchemaRows.lua).
+    if Settings.RefreshRoleTooltip then Settings.RefreshRoleTooltip() end
     local tabs = {}
     local function addTab(tab) if tab then tabs[#tabs + 1] = tab end end
     addTab(appearanceTab())

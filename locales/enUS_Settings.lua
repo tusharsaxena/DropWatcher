@@ -415,6 +415,21 @@ L["Alerts"] = "Alerts"
 L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."] =
     "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
 L["Simulator"] = "Simulator"
+-- settings/SchemaRows.lua: General › Role (Forever port design §11.4)
+L["Role"] = "Role"
+L["Tank"] = "Tank"
+L["Healer"] = "Healer"
+L["Damage"] = "Damage"
+L["The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."] =
+    "The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."
+L["the role your group gave you"] = "the role your group gave you"
+L["your talents (%s)"] = "your talents (%s)"
+L["your talents"] = "your talents"
+L["your specialization (%s)"] = "your specialization (%s)"
+L["your specialization"] = "your specialization"
+L["the last role it found"] = "the last role it found"
+L["Automatic now picks %s: %s."] = "Automatic now picks %s: %s."
+L["Automatic has no answer yet."] = "Automatic has no answer yet."
 -- settings/SchemaRows.lua: Drops › Rolls (Forever port design §5.3)
 L["Show rolls"] = "Show rolls"
 L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."] =
