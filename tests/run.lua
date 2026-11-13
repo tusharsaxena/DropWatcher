@@ -224,7 +224,17 @@ Kit.diagnostics = {
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
 -- The typed-value gate (skinning-§1, kit revision 50).
-Kit.skinValues = { calls = { Colored = { 2, 3, 4 }, Escape = { 2, 3, 4 }, tone = { 2, 3, 4 } } }
+Kit.skinValues = {
+    calls = { Colored = { 2, 3, 4 }, Escape = { 2, 3, 4 }, tone = { 2, 3, 4 } },
+    rows  = {   -- DW-FP15's roll glyphs: the game's own group-loot roll-button art, as DPS Race's countdown digits are
+        { file = "modules/RollCells.lua", substring = "local DICE =",
+          why = "the Need roll button's dice, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        { file = "modules/RollCells.lua", substring = "local COIN =",
+          why = "the Greed roll button's coin, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        { file = "modules/RollCells.lua", substring = "local CROSS =",
+          why = "the Pass roll button's cross, the game's group-loot art players know, the same under every skin", cause = "A6" },
+    },
+}
 
 -- The skin-switch test (skinning-§1, kit revision 50): the painted surfaces are declared there.
 Kit.skinSwitch = dofile("tests/skin_switch_facts.lua")(enableAddon, withPlayer)
