@@ -378,14 +378,19 @@ test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spe
     assertEqual(shown, 2, "the trinket's candidate and the off-spec showcase's")
 end, T.RETAIL_ONLY)
 
+-- Per client (Forever port design §4.4, clients-§4, §6): off-spec is Retail's alone, so on WoW
+-- Forever no History sample carries an off-spec part (the History card's Spec row, the Me cell's
+-- Cyan verdict); on Retail one you asked for and one you received do.
 test("test mode data: History holds an off-spec entry you asked for and one you received", function()
     local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
     local log = NS.TestData.History(5000000, YOU, (source(NS)))
-    local outcomes = {}
+    local outcomes, n = {}, 0
     for _, g in ipairs(log.groups) do
         for _, e in ipairs(g.drops) do
             local off = NS.OffSpec.Of(e.me)
-            if off then
+            if off then n = n + 1 end
+            if off and retail then
                 outcomes[e.outcome] = true
                 assertEqual(g.seenBy, YOU.seenBy, "only your own: the Warlock alt has no Holy spec")
                 assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
@@ -393,6 +398,7 @@ test("test mode data: History holds an off-spec entry you asked for and one you 
             end
         end
     end
+    if not retail then return assertEqual(n, 0, "no off-spec History sample on Forever") end
     hasAll(outcomes, { "asked", "received" }, "off-spec outcome")
 end)
 

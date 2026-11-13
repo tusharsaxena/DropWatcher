@@ -1005,14 +1005,15 @@ local function membersOf(content, n)
 end
 
 -- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta },
--- unless `plain` (the alt's: a Warlock has no Holy spec, so its Can't use stays plain).
+-- unless `plain` (the alt's: a Warlock has no Holy spec, so its Can't use stays plain). Off-spec is
+-- Retail's alone (modules/OffSpec.lua): no History sample has one on WoW Forever.
 local function snap(spec, plain)
     if not spec then return nil end
     if spec.collect then
         return { verdict = spec[1], collect = true, category = spec.collect, count = spec.count, limit = spec.limit,
             reasonKey = spec[1] == "cantUse" and "notYourProfession" or nil }
     end
-    local off = not plain and spec.off or nil
+    local off = not plain and NS.OffSpec.Initialized() and spec.off or nil
     return { verdict = spec[1], ilvlDelta = spec[2],
         offSpec = off and { specID = off[1], mainSpecID = OFF_MAIN, verdict = off[2], ilvlDelta = off[3] } or nil }
 end
