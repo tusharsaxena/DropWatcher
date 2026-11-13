@@ -601,6 +601,23 @@ end)
 -- Group-loot rolls (Forever port design §8, plan DW-FP17): a both-clients feature
 -- ---------------------------------------------------------------------------------------------
 
+-- One roll plan's rows: each chosen before the close, Need, Greed or Pass, and a pass carries no
+-- number while every other row carries a distinct one from 1 to 100.
+local function assertRollRows(plan)
+    local numbers = {}
+    for _, r in ipairs(plan.rows) do
+        assertTrue(r.at > 0 and r.at < plan.close, "chosen before the close")
+        assertTrue(r.state == 0 or r.state == 3 or r.state == 5, "Need, Greed or Pass")
+        if r.state == 5 then
+            assertNil(r.roll, "a pass has no number")
+        else
+            assertTrue(r.roll >= 1 and r.roll <= 100)
+            assertNil(numbers[r.roll], "no tie")
+            numbers[r.roll] = true
+        end
+    end
+end
+
 test("sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing", function()
     local NS = T.newAddon()
     local E = NS.SimEvents
@@ -611,18 +628,7 @@ test("sim roll plan: choices over a few seconds, numbers at the close, a winner 
         assertEqual(#plan.rows, 5, "you and every member roll")
         assertNil(plan.rows[1].member, "you first")
         assertEqual(plan.close, E.ROLL_CLOSE)
-        local numbers = {}
-        for _, r in ipairs(plan.rows) do
-            assertTrue(r.at > 0 and r.at < plan.close, "chosen before the close")
-            assertTrue(r.state == 0 or r.state == 3 or r.state == 5, "Need, Greed or Pass")
-            if r.state == 5 then
-                assertNil(r.roll, "a pass has no number")
-            else
-                assertTrue(r.roll >= 1 and r.roll <= 100)
-                assertNil(numbers[r.roll], "no tie")
-                numbers[r.roll] = true
-            end
-        end
+        assertRollRows(plan)
         if plan.allPassed then
             passed = passed + 1
             assertNil(plan.winner)

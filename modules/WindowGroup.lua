@@ -1070,7 +1070,7 @@ local function paintEmpty(pane, entries, ctx, compact)
     local none = #entries == 0
     local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
     local test = nothing and ctx.feed == "test"
-    pane.emptyState:SetShown(nothing and not test and #NS.WindowPending.Items() == 0)   -- not over Rolling now
+    pane.emptyState:SetShown(nothing and not test and NS.WindowPending.None())   -- not over Rolling now
     pane.placeholder:SetShown(none and (test or not nothing))
     pane.placeholder:SetText(not test and NO_MATCH or NS.TestMode.IsLoading() and TEST_LOADING or TEST_NONE)
     pane.colHead:SetShown(not (none or compact))

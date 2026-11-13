@@ -1797,9 +1797,10 @@ Total.
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 
-### test_pending.lua (15)
+### test_pending.lua (16)
 
 - pending: an UPDATE_ENCOUNTER with an open drop opens one roll item
+- pending: Count answers each store's size with no list built; a missing test store is empty
 - pending: each UPDATE_DROP that changes the table sends PENDING_CHANGED rolls once
 - pending: a winner hands the final table to the feed; the drop has rec.roll and the pending item closes
 - pending: a chat receipt that arrived first gets the roll attached by merge
@@ -1848,9 +1849,10 @@ Total.
 - roll cells: a higher roll that did not win is protected
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (10)
+### test_window_pending.lua (11)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
+- window pending: a repaint with nothing pending never builds the item list
 - window pending: a pending row has your verdict and no Ask button for a roll
 - window pending: a won or ended roll says so, and the timer ticks on the history's clock
 - window pending: a master-loot item names its master looter, never a roll that ended
@@ -2876,11 +2878,11 @@ Total.
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
-| test_pending.lua | 15 |
+| test_pending.lua | 16 |
 | test_pending_ml.lua | 9 |
 | test_ask_ml.lua | 10 |
 | test_roll_cells.lua | 5 |
-| test_window_pending.lua | 10 |
+| test_window_pending.lua | 11 |
 | test_roll_popup.lua | 10 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -2930,4 +2932,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2412** |
+| **Total** | **2414** |

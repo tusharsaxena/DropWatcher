@@ -269,9 +269,12 @@ Ask, Offer, Announce, Post my tradeables on a sample ─> NS.Asks ─> printed (
 Test mode also puts one open sample roll in the pending store's own test store
 (`TestData.PendingSamples` ─> `Pending.AddTest`, `State.pendingTest`; `Pending.ClearTest` on off), and
 one History sample group's drop keeps a roll table (DW-FP17). **Rolling now follows the feed the
-window shows**: `WindowPending.Items` reads `Pending.All(Window.FeedView().feed)`, so while test mode
-is on the section shows the test store alone, never a live roll beside the samples, as the boss
-groups show the test feed alone; off, it reads the live store again. A sample roll is never read
+window shows**: `WindowPending.Items` reads `Pending.All(Window.FeedName())`, so while test mode
+is on the section shows the test store alone, never a live roll beside the samples (even before the
+first sample lands: a missing test store reads as empty), as the boss groups show the test feed
+alone; off, it reads the live store again. Every repaint first asks `WindowPending.None`
+(`rolls.show` off, or `Pending.Count` of that store at 0), so a window with nothing pending builds
+no list and no feed-view table for the section (`tests/perf.lua`'s refresh pairs). A sample roll is never read
 from the client, never ticked and never handed to the feed.
 
 A placeholder is never judged, re-estimated or inspected: its verdicts, trade, inspect entry

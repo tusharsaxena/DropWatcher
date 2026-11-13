@@ -860,6 +860,22 @@ test("pages: Messages opens on Sending, its per-send switches on one line, the t
     assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
 end)
 
+-- The drawn widgets' heading texts, in draw order, joined by "|".
+local function headingsOf(drawn)
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return table.concat(heads, "|")
+end
+
+-- The last drawn widget labeled Font that is not a heading: the composed font block's face picker.
+local function fontFace(drawn)
+    local face
+    for _, w in ipairs(drawn) do
+        if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end
+    end
+    return face
+end
+
 test("pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in", function()
     local NS, _, m = T.enableAddon()
     local ctx, drawn = open(NS, m, "window")
@@ -872,17 +888,14 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
     -- DW-01 (the lead's ruling on D-07): Font size is the composed font block's, beside Font, on the
     -- line after Row height.
-    local face
-    for _, w in ipairs(drawn) do if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end end
+    local face = fontFace(drawn)
     assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) ~= lineOf(drawn, font), "Row height, then the font block")
     assertTrue(face ~= nil and lineOf(drawn, face) == lineOf(drawn, font), "Font | Font size")
     assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
     assertEqual(NS.SchemaRuntime.FindRow("window.fontSize").subgroup, "Tables")
-    local heads = {}
-    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
-    assertEqual(table.concat(heads, "|"), "Mode|Tables", "the two headings, in row order")
+    assertEqual(headingsOf(drawn), "Mode|Tables", "the two headings, in row order")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")

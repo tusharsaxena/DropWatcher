@@ -762,7 +762,11 @@ test("evaluate: the scorer is optional, may be pending, and may fail without har
     assertEqual(res.verdict, "upgrade")
     -- The scorer is handed the candidate too.
     local seen
-    E.Evaluate(drop, c, { scorer = function(_, cand) seen = cand return 1 end })
+    local function spy(_, cand)
+        seen = cand
+        return 1
+    end
+    E.Evaluate(drop, c, { scorer = spy })
     assertEqual(seen, c)
 end)
 
@@ -822,7 +826,8 @@ test("evaluate: scoreFirst, no score is item level with reason noScore", functio
     local E = load()
     local c = who("WARRIOR", 71)
     c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
-    for i, scorer in ipairs({ false, function() return nil end, function() return "pending" end }) do
+    local scorers = { false, function() return nil end, function() return "pending" end }
+    for i, scorer in ipairs(scorers) do
         local opts = { verdictMode = "scoreFirst", sidegradeBand = 5, scorer = scorer or nil }
         local res = E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c, opts)
         assertEqual(res.verdict, "upgrade", "case " .. i)

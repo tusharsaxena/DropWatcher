@@ -108,6 +108,14 @@ pair 664.0 and `showDecisionStoodDown` 0. The two Insights brackets are the gate
 `within = "window.refresh"`, because the tab's refresh runs inside the window's repaint: do not sum
 them with it.
 
+Re-run 2026-11-13 on the WoW Forever port branch: the refresh pairs had read 14752.0 and 11520.0, over
+their 14500 and 11500 ceilings. Bisected to two commits: DW-FP15 (the Rolling now section, +256 bytes a
+pass: `Pending.All`'s list and its empty fallback, built even with nothing pending, and the empty
+state's second `WindowPending.Items` call) and DW-FP17 (+208: `Window.FeedView`'s fresh table read for
+its feed name). The ceilings stay where they are: the repaint now asks `WindowPending.None`
+(`Pending.Count`, `Window.FeedName`) before it builds anything, so with nothing pending the pairs are
+back to 14288.0 and 11056.0, the 2026-11-05 figures exactly.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

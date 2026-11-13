@@ -87,15 +87,31 @@ local function byAge(a, b)
     return a.id < b.id
 end
 
+-- A store by name: `test` reads test mode's own and nothing else, even before its first sample (a
+-- bare `name == "test" and State.pendingTest or State.pending` fell through to the live store then).
+local function named(name)
+    if name == "test" then return State.pendingTest end
+    return State.pending
+end
+
 --- Every pending item of a store, oldest first (by `at`, then id): `live` (the default) or `test`
 --- (test mode's samples, P.AddTest).
 --- @param name string|nil
 --- @return table[]
 function P.All(name)
-    local out, s = {}, name == "test" and State.pendingTest or State.pending
+    local out, s = {}, named(name)
     for _, item in ipairs(s and s.items or {}) do out[#out + 1] = item end
     table.sort(out, byAge)
     return out
+end
+
+--- How many pending items a store holds (`live`, the default, or `test`), with no list built: the
+--- repaint's empty check, so a window with nothing pending allocates nothing for it (tests/perf.lua).
+--- @param name string|nil
+--- @return number
+function P.Count(name)
+    local s = named(name)
+    return s and #s.items or 0
 end
 
 --- One pending item by its id, from either store, or nil.

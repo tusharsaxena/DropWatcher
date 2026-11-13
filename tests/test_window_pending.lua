@@ -65,6 +65,13 @@ end
 
 local GROUP = { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1 } }
 
+-- Stand `list` in for the store: All answers it and Count its length (WindowPending's empty check
+-- reads Count, so a repaint with nothing pending builds no list).
+local function stubPending(NS, list)
+    NS.Pending.All = function() return list end
+    NS.Pending.Count = function() return #list end
+end
+
 local function seed(NS, drops, pending)
     local byId = {}
     for _, d in ipairs(drops) do byId[d.id] = d end
@@ -73,7 +80,7 @@ local function seed(NS, drops, pending)
     NS.LootFeed.Drops = function() return drops end
     local byPending = {}
     for _, it in ipairs(pending) do byPending[it.id] = it end
-    NS.Pending.All = function() return pending end
+    stubPending(NS, pending)
     NS.Pending.Get = function(id) return byPending[id] end
 end
 
@@ -106,7 +113,7 @@ test("window pending: the section shows only while an item exists and hides with
     assertEqual(yOf(drawn.headers[1]), 0, "the boss group starts at the top")
     -- One open roll: the section above the boss group, its header `Rolling now (1)`.
     local pending = { item() }
-    NS.Pending.All = function() return pending end
+    stubPending(NS, pending)
     drawn, wp = refresh(NS)
     assertTrue(wp.header:IsShown())
     assertEqual(textOf(wp.header.text), "Rolling now (1)")
@@ -132,9 +139,35 @@ test("window pending: the section shows only while an item exists and hides with
     NS.LootFeed.Groups = function() return {} end
     drawn = refresh(NS)
     assertFalse(drawn.empty:IsShown(), "not the empty state over Rolling now")
-    NS.Pending.All = function() return {} end
+    stubPending(NS, {})
     drawn = refresh(NS)
     assertTrue(drawn.empty:IsShown(), "and back once nothing is pending")
+end)
+
+-- tests/perf.lua's refresh pair: a repaint with nothing pending builds no list (Pending.Count, not
+-- All) and no feed view table (Window.FeedName, not FeedView).
+test("window pending: a repaint with nothing pending never builds the item list", function()
+    local NS = shown({ drop() }, {})
+    local built, viewed = 0, 0
+    local all, feedView = NS.Pending.All, NS.Window.FeedView
+    NS.Pending.All = function(...) built = built + 1 return all(...) end
+    NS.Window.FeedView = function(...) viewed = viewed + 1 return feedView(...) end
+    NS.Pending.Count = function() return 0 end
+    refresh(NS)
+    NS.SetWindowMode("compact")
+    NS.Window.Refresh()
+    assertEqual(built, 0, "no list in either layout")
+    assertEqual(viewed, 0, "no feed view table")
+    assertTrue(NS.WindowPending.None())
+    NS.SchemaRuntime.Set("rolls.show", false)
+    NS.Pending.Count = function() return 1 end
+    assertTrue(NS.WindowPending.None(), "rolls.show off: nothing to show, whatever is pending")
+    NS.SchemaRuntime.Set("rolls.show", true)
+    assertFalse(NS.WindowPending.None())
+    assertEqual(NS.Window.FeedName(), "live")
+    NS.State.testMode = true
+    assertEqual(NS.Window.FeedName(), "test", "test mode reads the test store")
+    NS.State.testMode = false
 end)
 
 test("window pending: a pending row has your verdict and no Ask button for a roll", function()
@@ -167,13 +200,13 @@ test("window pending: a won or ended roll says so, and the timer ticks on the hi
     NS.WindowGroup.TickCountdowns()
     assertEqual(textOf(wp.rows[1].cells.timer.text), "0:32", "the tick moved it")
     local ended = { item({ state = "expired" }) }
-    NS.Pending.All = function() return ended end
+    stubPending(NS, ended)
     NS.Pending.Get = function() return ended[1] end
     local _, wp2 = refresh(NS)
     assertEqual(textOf(wp2.rows[1].cells.summary.text), "Roll ended")
     assertFalse(NS.WindowPending.Live(NS.WindowGroup.Drawn().pane), "nothing open: no roll keeps the ticker")
     local passed = { item({ state = "allPassed", roll = { allPassed = true, rolls = { player("Brakk", 5) } } }) }
-    NS.Pending.All = function() return passed end
+    stubPending(NS, passed)
     _, wp2 = refresh(NS)
     assertEqual(textOf(wp2.rows[1].cells.summary.text), "Everyone passed")
 end)
@@ -194,7 +227,7 @@ test("window pending: a master-loot item names its master looter, never a roll t
     assertEqual(textOf(wp2.box.summary), "awaiting master looter", "the inline box never says Roll ended")
     local unnamed = { item({ kind = "ml", state = "awaiting", ml = { slot = 1 } }) }
     unnamed[1].roll = nil
-    NS.Pending.All = function() return unnamed end
+    stubPending(NS, unnamed)
     local _, wp3 = refresh(NS)
     assertEqual(textOf(wp3.rows[1].cells.summary.text), "Master loot", "no name read: the method alone")
 end)
@@ -222,11 +255,11 @@ test("window pending: a master-loot item has the Ask master looter button, in it
     local worse = item({ kind = "ml", state = "awaiting", ml = { name = "Doom Dock" },
         me = { verdict = "downgrade", ilvlDelta = -10, reasons = {} } })
     worse.roll = nil
-    NS.Pending.All = function() return { worse } end
+    stubPending(NS, { worse })
     _, wp2 = refresh(NS)
     assertEqual(textOf(wp2.rows[1].ask.label), "No action"); assertEqual(wp2.rows[1].ask.state, "none")
     -- A roll's row hides it.
-    NS.Pending.All = function() return { item() } end
+    stubPending(NS, { item() })
     _, wp2 = refresh(NS)
     assertFalse(wp2.rows[1].ask ~= nil and wp2.rows[1].ask:IsShown(), "no Ask on a roll")
 end)
@@ -249,11 +282,11 @@ test("compact: a pending item is a card", function()
     -- A master-loot item's card has the Ask master looter button.
     local mlItem = item({ id = 2, kind = "ml", state = "awaiting", ml = { name = "Doom Dock" } })
     mlItem.roll = nil
-    NS.Pending.All = function() return { mlItem } end
+    stubPending(NS, { mlItem })
     local _, wpm = refresh(NS)
     assertTrue(wpm.cards[1].ask ~= nil and wpm.cards[1].ask:IsShown(), "the card's Ask")
     assertEqual(textOf(wpm.cards[1].ask.label), "Ask")
-    NS.Pending.All = function() return { item() } end
+    stubPending(NS, { item() })
     _, wpm = refresh(NS)
     assertFalse(wpm.cards[1].ask:IsShown(), "hidden again on a roll's card")
     card = wpm.cards[1]

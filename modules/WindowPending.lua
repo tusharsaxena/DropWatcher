@@ -70,8 +70,16 @@ function WP.Shown() return NS.Setting("rolls.show") ~= false end
 --- @return table[]
 function WP.Items()
     if not WP.Shown() then return {} end
-    return NS.Pending.All(NS.Window.FeedView().feed)
+    return NS.Pending.All(NS.Window.FeedName())
 end
+
+--- Whether the section has nothing to show (`rolls.show` off, or no item pending in the window's
+--- feed), answered without building a list: every repaint asks, and most have nothing pending.
+--- @return boolean
+function WP.None()
+    return not WP.Shown() or NS.Pending.Count(NS.Window.FeedName()) == 0
+end
+local nothingPending = WP.None
 
 --- The pending item whose roll table is expanded, or nil.
 function WP.Expanded() return view().expanded end
@@ -493,12 +501,13 @@ function WP.Draw(pane, width)
     local s = section(pane)
     NS.Pool.ReleaseAll(s.rowPool)
     s.box:Hide()
-    local items = WP.Items()
-    pane.pendingShown = #items
-    if #items == 0 then
+    if nothingPending() then
+        pane.pendingShown = 0
         s.header:Hide()
         return 0
     end
+    local items = WP.Items()
+    pane.pendingShown = #items
     place(s.header, pane.content, 0, width)
     paintHeader(s.header, #items, width)
     local y = K.GROUP_H
@@ -550,12 +559,13 @@ function WP.DrawCompact(cv, width, m)
     local s = compactSection(cv)
     NS.Pool.ReleaseAll(s.cardPool)
     s.box:Hide()
-    local items = WP.Items()
-    cv.pendingShown = #items
-    if #items == 0 then
+    if nothingPending() then
+        cv.pendingShown = 0
         s.header:Hide()
         return 0
     end
+    local items = WP.Items()
+    cv.pendingShown = #items
     place(s.header, cv.content, 0, width)
     paintHeader(s.header, #items, width)
     s.header.text:SetWidth(max(width - 24, 20))

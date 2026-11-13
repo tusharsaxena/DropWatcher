@@ -130,6 +130,11 @@ local function feedName() return NS.State.testMode == true and "test" or "live" 
 --- @return table { feed }
 function Window.FeedView() return { feed = feedName() } end
 
+--- The feed the window shows (`test` in test mode, else `live`), with no table built: the repaint's
+--- own read (WindowPending), which FeedView's fresh table would bill to every pass.
+--- @return string
+function Window.FeedName() return feedName() end
+
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
 -- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's

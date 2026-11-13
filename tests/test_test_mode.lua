@@ -77,6 +77,15 @@ local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 local FOREVER_CLASSES = { WARRIOR = true, PALADIN = true, HUNTER = true, ROGUE = true, PRIEST = true,
     SHAMAN = true, MAGE = true, WARLOCK = true, DRUID = true }
 
+-- One sample spec's Forever checks: its looter and roster draw on the nine classes, and no key run.
+local function assertForeverSpec(s)
+    assertTrue(FOREVER_CLASSES[s.looter.classFile], s.group.key .. ": " .. tostring(s.looter.classFile))
+    assertTrue(s.group.kind ~= "run", "no key run on Forever")
+    for _, e in ipairs(s.group.roster) do
+        assertTrue(e.me or FOREVER_CLASSES[e.class], s.group.key .. ": " .. tostring(e.class))
+    end
+end
+
 test("test mode: Forever samples use only the nine classes", function()
     local NS, specs = placeholders()
     local TD, CD, C = NS.TestData, NS.ClassData, NS.Constants
@@ -98,13 +107,7 @@ test("test mode: Forever samples use only the nine classes", function()
     assertTrue(#specs > 0)
     for _, s in ipairs(specs) do
         assertTrue(C.SITUATION[s.group.situation] ~= nil, s.group.key .. ": " .. s.group.situation)
-        if forever then
-            assertTrue(FOREVER_CLASSES[s.looter.classFile], s.group.key .. ": " .. tostring(s.looter.classFile))
-            assertTrue(s.group.kind ~= "run", "no key run on Forever")
-            for _, e in ipairs(s.group.roster) do
-                assertTrue(e.me or FOREVER_CLASSES[e.class], s.group.key .. ": " .. tostring(e.class))
-            end
-        end
+        if forever then assertForeverSpec(s) end
     end
     for _, g in ipairs(TD.History(5000000, YOU, source(NS)).groups) do
         assertTrue(C.SITUATION[g.situation] ~= nil, g.key .. ": " .. g.situation)
