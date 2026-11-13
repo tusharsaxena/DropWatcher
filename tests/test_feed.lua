@@ -394,7 +394,7 @@ test("groups: a keystone run gathers every drop, the chest after completion incl
     brakkLoots(m, 303)
     assertEqual(labels(LF), "run:The Rookery+=4", "past the grace, still in the instance: the run's")
     assertEqual(LF.Groups()[1].mapID, 505)
-end)
+end, T.RETAIL_ONLY)
 
 test("groups: a bonus roll minutes after the key, still in the dungeon, joins the run; once you leave it does not", function()
     local _, m, LF = party(function(m) m.challengeMaps[505] = "The Rookery+" end)
@@ -411,7 +411,7 @@ test("groups: a bonus roll minutes after the key, still in the dungeon, joins th
     m.__fire("PLAYER_ENTERING_WORLD")
     LF.Add(link(302), "Brakk")
     assertEqual(labels(LF), "run:The Rookery+=2,area:Open world=1", "left the instance: a place of its own")
-end)
+end, T.RETAIL_ONLY)
 
 test("groups: outside an instance the area is the open world", function()
     local _, m, LF = party(function(m)

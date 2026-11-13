@@ -152,6 +152,8 @@ local SCENARIOS = {
     { name = "delve",   situation = "Delve",            members = 4 },
     { name = "world",   situation = "Open world group", members = 4 },
 }
+-- The scenarios WoW Forever has none of (Forever port design §4.4): their cases are Retail's.
+local RETAIL_SCENARIO = { key = true, lfr = true, delve = true }
 
 -- The mock answers the real solo world (spec §0 step 1), as the client did for the owner.
 local function assertSoloWorld(NS)
@@ -320,7 +322,7 @@ for _, mode in ipairs({ "full", "compact" }) do
                 for _, ilvl in ipairs({ 600, 660 }) do
                     for seed = 1, 3 do runScenario(sc, ilvl, seed, mode) end
                 end
-            end)
+            end, RETAIL_SCENARIO[sc.name] and T.RETAIL_ONLY or nil)
     end
 end
 
@@ -335,7 +337,8 @@ local function closeWindow(NS)
 end
 
 test("sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout", function()
-    for _, case in ipairs({ { "key", "compact", true }, { "key", "full", false } }) do
+    local run = T.forever and "dungeon" or "key"   -- WoW Forever has no key (Forever port design §4.4)
+    for _, case in ipairs({ { run, "compact", true }, { run, "full", false } }) do
         local NS, m = addon(600)
         assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", case[3]) or case[3], "the option")
         assertTrue(NS.SimScenario.Start(case[1], nil, { seed = 1 }), case[1])
@@ -421,4 +424,4 @@ test("sim e2e: Raid Finder is an instance group, so asks announce in instance ch
     NS.Sim:Stop("stop")
     NS.SimScenario.Start("key", nil, { seed = 1 })
     assertEqual(NS.Asks.AnnounceChannel(), "PARTY")
-end)
+end, T.RETAIL_ONLY)

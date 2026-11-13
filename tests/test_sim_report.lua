@@ -112,7 +112,7 @@ test("sim report: the owner's key run: the second drop is yours, on Drops, nothi
     assertTrue(text:find("· 2 drops ·", 1, true) ~= nil, text)
     assertTrue(text:find("yours", 1, true) == nil, "no `yours` suffix: " .. text)
     assertEqual(NS.Window.Frame().tabs.group.label:GetText(), "Drops", "no tab label count (feedback-5 spec §3)")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim report: the step's chat line says where its drops went", function()
     local NS, m = addon(600)
@@ -120,7 +120,7 @@ test("sim report: the step's chat line says where its drops went", function()
     toLoot(NS)
     local st = NS.SimScenario.Status()
     assertEqual(printed(m, ("Simulation step %d of %d: Loot: 2 drops."):format(st.pos, st.steps)), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim report: /dw sim loot says where its drops went", function()
     local NS, m = addon(600)
@@ -219,6 +219,8 @@ end)
 -- ---------------------------------------------------------------------------------------------
 
 local SCENARIOS = { { "key" }, { "dungeon" }, { "raid", 12 }, { "lfr", 10 }, { "delve" }, { "world" } }
+-- The scenarios WoW Forever has none of (Forever port design §4.4): their cases are Retail's.
+local RETAIL_SCENARIO = { key = true, lfr = true, delve = true }
 
 local function inReport(report)
     local set = {}
@@ -302,7 +304,7 @@ for _, sc in ipairs(SCENARIOS) do
             for seed = 1, 3 do runAll(sc[1], sc[2], seed, ilvl) end
         end
         runAll(sc[1], sc[2], 1, 600, true)
-    end)
+    end, RETAIL_SCENARIO[sc[1]] and T.RETAIL_ONLY or nil)
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -352,4 +354,4 @@ test("sim report: the owner's step lists yours on Drops, and the tabs agree", fu
     local c = NS.SimReport.Summarize(step.report, NS.LootFeed.Get, NS.SimReport.View())
     local shown = groupShown(NS, step.report)
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)
-end)
+end, T.RETAIL_ONLY)

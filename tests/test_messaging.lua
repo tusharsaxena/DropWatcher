@@ -269,7 +269,7 @@ test("messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CH
     assertFalse(M.ShouldFlush(book, "ENCOUNTER_END", false))
     assertFalse(M.ShouldFlush(book, "PLAYER_REGEN_ENABLED", true))
     assertFalse(M.ShouldFlush(nil, "ENCOUNTER_END", true))
-end)
+end, T.RETAIL_ONLY)
 
 test("messaging: cancel drops a queued ask, which the flush then skips", function()
     local M = load()

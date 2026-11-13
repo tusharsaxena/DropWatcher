@@ -137,11 +137,12 @@ end
 
 --- The keystone's level: the active run's (C_ChallengeMode.GetActiveKeystoneInfo), else the
 --- completed run's (C_ChallengeMode.GetChallengeCompletionInfo, which still answers while its end
---- chest is looted), else nil. Feedback-3 spec §4: a key run's header reads `Mythic+ 12`.
+--- chest is looted), else nil. Feedback-3 spec §4: a key run's header reads `Mythic+ 12`. Retail's
+--- alone: nil on WoW Forever, which has no keystones (Forever port design §4.4).
 --- @return number|nil
 function Compat.KeystoneLevel()
     local cm = C_ChallengeMode
-    if cm == nil then return nil end
+    if cm == nil or Compat.IsForever() then return nil end
     local level = type(cm.GetActiveKeystoneInfo) == "function" and keyLevel((cm.GetActiveKeystoneInfo())) or nil
     if level then return level end
     if type(cm.GetChallengeCompletionInfo) ~= "function" then return nil end
@@ -151,10 +152,12 @@ function Compat.KeystoneLevel()
 end
 
 --- C_ChallengeMode.IsChallengeModeActive() as a plain boolean (a keystone run in progress).
+--- Retail's alone: false on WoW Forever, which has no keystones (Forever port design §4.4).
 --- @return boolean
 function Compat.ChallengeModeActive()
     local cm = C_ChallengeMode
-    return cm ~= nil and type(cm.IsChallengeModeActive) == "function" and cm.IsChallengeModeActive() == true
+    if cm == nil or Compat.IsForever() then return false end
+    return type(cm.IsChallengeModeActive) == "function" and cm.IsChallengeModeActive() == true
 end
 
 --- InCombatLockdown() as a plain boolean (false without the API).

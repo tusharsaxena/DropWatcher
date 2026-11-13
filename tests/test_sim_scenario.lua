@@ -136,6 +136,24 @@ test("sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key
     end
 end)
 
+test("sim scenario: Forever lists no key, lfr or delve", function()
+    local NS = T.newAddon()
+    local SC = NS.SimScenario
+    local names = table.concat(SC.NAMES, ",")
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(names, "dungeon,raid,world")
+        for _, name in ipairs({ "key", "lfr", "delve" }) do assertNil(SC.SCENARIOS[name], name) end
+    else
+        assertEqual(names, "key,dungeon,raid,lfr,delve,world")
+    end
+    for _, name in ipairs(SC.NAMES) do
+        local def = SC.SCENARIOS[name]
+        assertTrue(NS.Constants.SITUATION[def.situation] ~= nil, name .. " simulates a situation this client has")
+        assertTrue(def.keystone == nil or not T.forever, name .. ": no keystone run on Forever")
+    end
+    assertEqual(table.concat(NS.SimScenarioDefs.names, ","), names, "the library's list is the client's")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- `/dw sim` through the dispatcher
 -- ---------------------------------------------------------------------------------------------
@@ -144,7 +162,8 @@ test("sim verbs: `/dw sim` through RunVerb prints the status and the usage and o
     local NS, m = addon()
     slash(NS, "sim")
     -- The library's status and usage (LibKa0s-Sim-1.0 RunVerb), then DropWatcher's six verbs.
-    assertEqual(printed(m, "Simulation: idle. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
+    -- Each client's own scenarios (Forever port design §4.4).
+    assertEqual(printed(m, "Simulation: idle. Scenarios: " .. table.concat(NS.SimScenario.NAMES, ", ") .. "."), 1)
     assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1)
     for _, line in ipairs({ "/dw sim pull: ", "/dw sim kill: ", "/dw sim loot [n] [player|me]: ",
         "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: ", "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
@@ -169,7 +188,7 @@ test("sim verbs: every verb but the free ones needs a running simulation; an unk
     assertTrue(#m.prints - before >= 15)
     slash(NS, "sim start nowhere")
     -- The library's line since DW-02 (OWNER_SCOPE C.7; smoke SM-DW-5): it names the scenarios.
-    assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
+    assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: " .. table.concat(NS.SimScenario.NAMES, ", ") .. "."), 1)
     assertFalse(NS.Sim:IsActive())
 end)
 
@@ -272,9 +291,11 @@ test("sim start: a raid takes its size; a party is always four", function()
     assertEqual(#NS.SimRoster.Get(), 15)
     assertEqual(NS.Situations.Current(), "raid")
     slash(NS, "sim stop")
-    slash(NS, "sim start delve 12")
+    -- A party each client has (WoW Forever has no delve, Forever port design §4.4).
+    local party, situation = T.forever and "world" or "delve", T.forever and "openWorldGroup" or "delve"
+    slash(NS, "sim start " .. party .. " 12")
     assertEqual(#NS.SimRoster.Get(), 4)
-    assertEqual(NS.Situations.Current(), "delve")
+    assertEqual(NS.Situations.Current(), situation)
 end)
 
 test("sim step: the timeline waits for the pool, then plays one step at a time", function()
@@ -587,12 +608,16 @@ end
 test("sim diagnostics: the section reads the session, the pool, the timeline and the sends", function()
     local NS = addon()
     assertTrue(diagnostics(NS):find("sim: active=false sendsPrinted=0", 1, true) ~= nil)
-    slash(NS, "sim start key")
+    -- A key on Retail, a dungeon on WoW Forever, which has no key (Forever port design §4.4).
+    local name = T.forever and "dungeon" or "key"
+    slash(NS, "sim start " .. name)
     slash(NS, "sim step")   -- a typed step holds the run that the typed start armed
     local text = diagnostics(NS)
-    assertTrue(text:find("sim: active=true scenario=key situation=mythicPlus members=4", 1, true) ~= nil, text)
+    local want = T.forever and "scenario=dungeon situation=dungeon" or "scenario=key situation=mythicPlus"
+    assertTrue(text:find("sim: active=true " .. want .. " members=4", 1, true) ~= nil, text)
     assertTrue(text:find("sim: pool size=", 1, true) ~= nil and text:find("source=journal", 1, true) ~= nil)
-    assertTrue(text:find("sim: timeline step=1/11 next=pull ready=true playing=false", 1, true) ~= nil, text)
+    local timeline = T.forever and "step=1/15 next=lockdownOn" or "step=1/11 next=pull"
+    assertTrue(text:find("sim: timeline " .. timeline .. " ready=true playing=false", 1, true) ~= nil, text)
     assertTrue(text:find("sim: sendsPrinted=0", 1, true) ~= nil)
 end)
 
@@ -673,7 +698,7 @@ test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and
     slash(NS, "sim stop")
     assertEqual(#drops(NS), 0)
     assertEqual(savedHistory(NS), 0)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved", function()
     local NS, m = addon()

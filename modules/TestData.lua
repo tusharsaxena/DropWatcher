@@ -96,6 +96,11 @@ local C  = NS.Constants
 local L  = NS.L
 local D  = C.DIFFICULTY
 
+-- The client picked once (clients-§5): the people, the places and the groups below are each
+-- client's own lists (Forever port design §4.4, §8). The rows a group drops (its `yours` and
+-- `theirs`, the boards' states) are the showcase both clients share.
+local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
+
 -- The key run's level the samples name.
 TD.KEY_LEVEL = 10
 
@@ -126,12 +131,11 @@ local function contentOf(e)
     return CONTENT_BY_DIFFICULTY[e.difficulty]
 end
 
--- The places of one content, in the pool's order: { instance, encounter, items, content } (content:
+-- Retail: the places of one content, in the pool's order: { instance, encounter, items, content } (content:
 -- every item of that content, for a drop its place runs short of). A key run's place is its dungeon
 -- (the chest drops any of its loot); a boss's is its encounter. A content the pool has nothing of
 -- takes every drop, placed the same way.
-local function placesOf(self, content)
-    if self.places[content] then return self.places[content] end
+local function journalPlaces(self, content)
     local list, byKey, all = {}, {}, {}
     local function add(e)
         local key = tostring(e.instance)
@@ -150,13 +154,27 @@ local function placesOf(self, content)
     if #list == 0 then
         for _, e in ipairs(self.drops) do add(e) end
     end
-    self.places[content] = list
     return list
+end
+
+-- WoW Forever: no journal places its pool (it is your own gear, Forever port design §4.4), so a
+-- content's one place holds every drop and the group names the content's own place (TD.Group).
+local function onePlace(self)
+    return { { items = self.drops, content = self.drops } }
+end
+
+local PLACES = { retail = journalPlaces, forever = onePlace }
+local placesFor = PLACES[CLIENT]
+
+local function placesOf(self, content)
+    if not self.places[content] then self.places[content] = placesFor(self, content) end
+    return self.places[content]
 end
 
 --- The `n`th place of `content` (they repeat once the pool runs out of them), or nil for an empty
 --- pool.
---- @param content string `key`, `heroicDungeon`, `raidHeroic`, `raidMythic`, `raidLFR`, `worldBoss`
+--- @param content string a CONTENT key: Retail's `key`, `heroicDungeon`, `raidHeroic`, `raidMythic`,
+---   `raidLFR`, WoW Forever's `dungeon`, `raid20`, `raid`, and `worldBoss`
 --- @param n number
 --- @return table|nil { instance, encounter, items, content }
 local function place(self, content, n)
@@ -300,8 +318,11 @@ end
 
 -- ── the people ──────────────────────────────────────────────────────────────────────────────
 
--- The members the samples name, all invented.
-local MEMBERS = {
+-- The members the samples name, all invented, one list per client: Retail's thirteen classes, and
+-- WoW Forever's nine (no Death Knight, Monk, Demon Hunter or Evoker), each with a spec of that
+-- client's list (core/ClassDataForever.lua's "<classFile>:<tree>" rows). The keys are the rows'.
+local MEMBER_LISTS = {}
+MEMBER_LISTS.retail = {
     seta        = { name = "Seta", guid = "Player-0-0000T001", classFile = "PRIEST", specID = 257 },
     littlewolf  = { name = "Littlewolf", guid = "Player-0-0000T002", classFile = "DRUID", specID = 105 },
     uniquerogue = { name = "Uniquerogue", guid = "Player-0-0000T003", classFile = "ROGUE", specID = 260 },
@@ -327,6 +348,33 @@ local MEMBERS = {
     duskmire    = { name = "Duskmire", guid = "Player-0-0000T023", classFile = "ROGUE", specID = 261 },
     palehorn    = { name = "Palehorn", guid = "Player-0-0000T024", classFile = "DEATHKNIGHT", specID = 251 },
 }
+MEMBER_LISTS.forever = {
+    seta        = { name = "Seta", guid = "Player-0-0000T001", classFile = "PRIEST", specID = "PRIEST:3" },
+    littlewolf  = { name = "Littlewolf", guid = "Player-0-0000T002", classFile = "DRUID", specID = "DRUID:2" },
+    uniquerogue = { name = "Uniquerogue", guid = "Player-0-0000T003", classFile = "ROGUE", specID = "ROGUE:2" },
+    butterz     = { name = "Butterz", guid = "Player-0-0000T004", classFile = "WARRIOR", specID = "WARRIOR:2" },
+    kaelith     = { name = "Kaelith", guid = "Player-0-0000T005", classFile = "PALADIN", specID = "PALADIN:3" },
+    mistveil    = { name = "Mistveil", guid = "Player-0-0000T006", classFile = "HUNTER", specID = "HUNTER:1" },
+    dawnfeather = { name = "Dawnfeather", guid = "Player-0-0000T007", classFile = "MAGE", specID = "MAGE:2" },
+    thornbrew   = { name = "Thornbrew", guid = "Player-0-0000T008", classFile = "WARRIOR", specID = "WARRIOR:3" },
+    ashveil     = { name = "Ashveil", guid = "Player-0-0000T009", classFile = "MAGE", specID = "MAGE:3" },
+    grimhollow  = { name = "Grimhollow", guid = "Player-0-0000T010", classFile = "WARLOCK", specID = "WARLOCK:1" },
+    solenne     = { name = "Solenne", guid = "Player-0-0000T011", classFile = "PRIEST", specID = "PRIEST:2" },
+    kragmar     = { name = "Kragmar", guid = "Player-0-0000T012", classFile = "SHAMAN", specID = "SHAMAN:1" },
+    vexxa       = { name = "Vexxa", guid = "Player-0-0000T013", classFile = "ROGUE", specID = "ROGUE:1" },
+    brightmane  = { name = "Brightmane", guid = "Player-0-0000T014", classFile = "PALADIN", specID = "PALADIN:1" },
+    quillshot   = { name = "Quillshot", guid = "Player-0-0000T015", classFile = "HUNTER", specID = "HUNTER:2" },
+    nythera     = { name = "Nythera", guid = "Player-0-0000T016", classFile = "WARLOCK", specID = "WARLOCK:2" },
+    ironpaw     = { name = "Ironpaw", guid = "Player-0-0000T017", classFile = "DRUID", specID = "DRUID:3" },
+    starhollow  = { name = "Starhollow", guid = "Player-0-0000T018", classFile = "SHAMAN", specID = "SHAMAN:3" },
+    rookfang    = { name = "Rookfang", guid = "Player-0-0000T019", classFile = "WARRIOR", specID = "WARRIOR:1" },
+    mossvale    = { name = "Mossvale", guid = "Player-0-0000T020", classFile = "SHAMAN", specID = "SHAMAN:2" },
+    frostlace   = { name = "Frostlace", guid = "Player-0-0000T021", classFile = "MAGE", specID = "MAGE:1" },
+    emberclaw   = { name = "Emberclaw", guid = "Player-0-0000T022", classFile = "HUNTER", specID = "HUNTER:3" },
+    duskmire    = { name = "Duskmire", guid = "Player-0-0000T023", classFile = "ROGUE", specID = "ROGUE:3" },
+    palehorn    = { name = "Palehorn", guid = "Player-0-0000T024", classFile = "WARLOCK", specID = "WARLOCK:3" },
+}
+local MEMBERS = MEMBER_LISTS[CLIENT]
 TD.MEMBERS = MEMBERS
 
 -- Who is in a group besides you: four for a key run, a dungeon or a world boss, nineteen for a
@@ -358,25 +406,53 @@ end
 
 -- ── the places ──────────────────────────────────────────────────────────────────────────────
 
--- Each content's group: its kind, its situation and its difficulty's name (a key run's is its level).
-local CONTENT = {
-    key           = { kind = "run", situation = "mythicPlus" },
-    heroicDungeon = { kind = "encounter", situation = "dungeon", difficulty = L["Heroic"] },
-    raidHeroic    = { kind = "encounter", situation = "raid", difficulty = L["Heroic"] },
-    raidMythic    = { kind = "encounter", situation = "raid", difficulty = L["Mythic"] },
-    raidLFR       = { kind = "encounter", situation = "raidLFR", difficulty = L["Looking For Raid"] },
-    worldBoss     = { kind = "encounter", situation = "openWorldGroup" },
+-- Each content's group: its kind, its situation and its difficulty's name (a key run's is its level),
+-- one list per client. WoW Forever's has no key run, Heroic, Mythic or Raid Finder: a dungeon (its
+-- one difficulty, which the header leaves to the situation's word), a 20-player and a 40-player
+-- raid, and a world boss. Its pool is your own gear (no journal places it), so each content names
+-- its own place (`place`: an instance and the bosses its groups take in turn).
+local CONTENT_LISTS = {
+    retail = {
+        key           = { kind = "run", situation = "mythicPlus" },
+        heroicDungeon = { kind = "encounter", situation = "dungeon", difficulty = L["Heroic"] },
+        raidHeroic    = { kind = "encounter", situation = "raid", difficulty = L["Heroic"] },
+        raidMythic    = { kind = "encounter", situation = "raid", difficulty = L["Mythic"] },
+        raidLFR       = { kind = "encounter", situation = "raidLFR", difficulty = L["Looking For Raid"] },
+        worldBoss     = { kind = "encounter", situation = "openWorldGroup" },
+    },
+    forever = {
+        dungeon   = { kind = "encounter", situation = "dungeon", place = { instance = L["Shadowfang Keep"],
+            bosses = { L["Razorclaw the Butcher"], L["Baron Silverlaine"], L["Commander Springvale"], L["Archmage Arugal"] } } },
+        raid20    = { kind = "encounter", situation = "raid", difficulty = L["20 Player"],
+            place = { instance = L["Zul'Gurub"], bosses = { L["High Priestess Jeklik"], L["High Priest Venoxis"],
+                L["High Priestess Mar'li"], L["Bloodlord Mandokir"], L["High Priest Thekal"], L["Hakkar"] } } },
+        raid      = { kind = "encounter", situation = "raid", difficulty = L["40 Player"],
+            place = { instance = L["Molten Core"], bosses = { L["Lucifron"], L["Magmadar"], L["Garr"],
+                L["Baron Geddon"], L["Golemagg the Incinerator"], L["Ragnaros"] } } },
+        worldBoss = { kind = "encounter", situation = "openWorldGroup", place = { bosses = { L["Azuregos"], L["Lord Kazzak"] } } },
+    },
 }
+local CONTENT = CONTENT_LISTS[CLIENT]
 TD.CONTENT = CONTENT
+
+-- The `n`th group of a content's own place (WoW Forever's): its instance and its boss, nil, nil
+-- for a content that names none.
+local function ownPlace(c, n)
+    local p = c.place
+    if not p then return nil, nil end
+    return p.instance, p.bosses[((n or 1) - 1) % #p.bosses + 1]
+end
 
 --- A sample group at `where` (a place, or nil): { key, label, kind, situation, instance,
 --- difficulty }. A key run is labeled its dungeon at `Mythic+ 10`; a boss its encounter, in its
---- instance at the content's difficulty; a world boss names neither. Pure.
+--- instance at the content's difficulty; a world boss names neither. A place the pool does not name
+--- takes the content's own (WoW Forever's, its `n`th boss), else a placeholder. Pure.
 --- @param content string
 --- @param where table|nil
 --- @param key string
+--- @param n number|nil the group's turn among its content's
 --- @return table
-function TD.Group(content, where, key)
+function TD.Group(content, where, key, n)
     local c = CONTENT[content]
     local g = { key = key, kind = c.kind, situation = c.situation }
     where = where or {}
@@ -384,8 +460,9 @@ function TD.Group(content, where, key)
         g.label = where.instance or L["Placeholder key run"]
         g.instance, g.difficulty = where.instance, L["Mythic+ %d"]:format(TD.KEY_LEVEL)
     else
-        g.label = where.encounter or L["Placeholder boss"]
-        if content ~= "worldBoss" then g.instance, g.difficulty = where.instance, c.difficulty end
+        local instance, boss = ownPlace(c, n)
+        g.label = where.encounter or boss or L["Placeholder boss"]
+        if content ~= "worldBoss" then g.instance, g.difficulty = where.instance or instance, c.difficulty end
     end
     return g
 end
@@ -624,7 +701,8 @@ end
 -- { status, age, reason }, the ask state, the look's state, and `left` for a looter who has since
 -- left the group (the card keeps their read: `testLeft`). `yours` are yours, board 04: the slot, Me, the trade and the candidates. Every drop
 -- is the group's age; a countdown's is four hours less what is left.
-local SESSION = {
+local SESSION_LISTS = {}
+SESSION_LISTS.retail = {
     { content = "key", n = 2, party = PARTIES[2], ago = 16200,
       yours = {
         { slot = "INVTYPE_NECK", me = { "upgrade", 23 }, trade = { "bonusRoll" }, cands = {} },
@@ -735,6 +813,22 @@ local SESSION = {
           them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 30 }, inspect = { "fresh", 30 } },
       } },
 }
+-- WoW Forever's session, oldest first: two dungeon bosses some four hours ago, then six bosses of a
+-- 20-player raid tonight, each dropping the same rows as Retail's group in its place (the showcase).
+SESSION_LISTS.forever = {
+    { content = "dungeon", n = 1, party = PARTIES[2], ago = 16200 },
+    { content = "dungeon", n = 2, party = PARTIES[1], ago = 15000 },
+    { content = "raid20", n = 1, party = RAID_20, ago = 14000 },
+    { content = "raid20", n = 2, party = RAID_20, ago = 7800 },
+    { content = "raid20", n = 3, party = RAID_20, ago = 240 },
+    { content = "raid20", n = 4, party = RAID_20, ago = 60 },
+    { content = "raid20", n = 5, party = RAID_20, ago = 30 },
+    { content = "raid20", n = 6, party = RAID_20, ago = 15 },
+}
+for i, g in ipairs(SESSION_LISTS.forever) do
+    g.yours, g.theirs = SESSION_LISTS.retail[i].yours, SESSION_LISTS.retail[i].theirs
+end
+local SESSION = SESSION_LISTS[CLIENT]
 TD.SESSION = SESSION
 
 --- Every sample drop, as NS.LootFeed.AddTest takes them: the session's groups oldest first, each
@@ -747,7 +841,7 @@ function TD.Placeholders(now, you, src)
     local out = {}
     for i, s in ipairs(SESSION) do
         local where = src:Place(s.content, s.n)
-        local group = TD.Group(s.content, where, "test:session:" .. i)
+        local group = TD.Group(s.content, where, "test:session:" .. i, s.n)
         group.roster = roster(you, s.party)
         local function put(spec)
             if spec then
@@ -838,7 +932,8 @@ local YOURS = {
 -- yours (`mine`, its place in the group's drops), `alt` for the group the alt saw, and `rows` for a
 -- group whose drops are its own list rather than the turn of THEIRS and YOURS. A raid night is
 -- bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
-local HISTORY = {
+local HISTORY_LISTS = {}
+HISTORY_LISTS.retail = {
     { content = "raidHeroic", ago = DAY + 2 * HOUR, drops = 5, mine = 2 },
     { content = "raidHeroic", ago = DAY + 2 * HOUR + 25 * MIN, drops = 4 },
     { content = "raidHeroic", ago = DAY + 2 * HOUR + 50 * MIN, drops = 5, mine = 4 },
@@ -866,13 +961,45 @@ local HISTORY = {
     { content = "raidHeroic", ago = 24 * DAY, drops = #LEGACY_NIGHT, rows = LEGACY_NIGHT },
     { content = "raidHeroic", ago = 17 * DAY, drops = #SECOND_TRADE, rows = SECOND_TRADE },
 }
+-- WoW Forever's last four weeks, newest first: 20-player raid nights, 40-player raid nights,
+-- dungeon bosses and world bosses (its own contents, CONTENT_LISTS.forever).
+HISTORY_LISTS.forever = {
+    { content = "raid20", ago = DAY + 2 * HOUR, drops = 5, mine = 2 },
+    { content = "raid20", ago = DAY + 2 * HOUR + 25 * MIN, drops = 4 },
+    { content = "raid20", ago = DAY + 2 * HOUR + 50 * MIN, drops = 5, mine = 4 },
+    { content = "raid20", ago = DAY + 3 * HOUR + 15 * MIN, drops = 4 },
+    { content = "dungeon", ago = 2 * DAY + HOUR, drops = 2, mine = 1 },
+    { content = "dungeon", ago = 2 * DAY + 2 * HOUR, drops = 2 },
+    { content = "raid", ago = 3 * DAY + HOUR, drops = 4, mine = 3 },
+    { content = "raid", ago = 3 * DAY + HOUR + 35 * MIN, drops = 4 },
+    { content = "raid", ago = 3 * DAY + 2 * HOUR + 10 * MIN, drops = 5 },
+    { content = "dungeon", ago = 5 * DAY, drops = 1 },
+    { content = "dungeon", ago = 5 * DAY + 15 * MIN, drops = 2, mine = 2 },
+    { content = "dungeon", ago = 5 * DAY + 30 * MIN, drops = 1 },
+    { content = "worldBoss", ago = 6 * DAY, drops = 3, mine = 1 },
+    { content = "dungeon", ago = 8 * DAY, drops = 2 },
+    { content = "raid", ago = 9 * DAY, drops = 4, mine = 1 },
+    { content = "raid", ago = 9 * DAY + 20 * MIN, drops = 3 },
+    { content = "raid", ago = 9 * DAY + 40 * MIN, drops = 5 },
+    { content = "raid20", ago = 10 * DAY, drops = 2, mine = 2, alt = true },
+    { content = "dungeon", ago = 12 * DAY, drops = 2, mine = 2 },
+    { content = "worldBoss", ago = 15 * DAY, drops = 2 },
+    { content = "dungeon", ago = 20 * DAY, drops = 2 },
+    { content = "dungeon", ago = 27 * DAY, drops = 2, mine = 1 },
+    { content = "worldBoss", ago = 4 * DAY, drops = #COLLECTED, rows = COLLECTED },
+    { content = "raid20", ago = 13 * DAY, drops = #RAID_KINDS, rows = RAID_KINDS },
+    { content = "raid20", ago = 24 * DAY, drops = #LEGACY_NIGHT, rows = LEGACY_NIGHT },
+    { content = "raid20", ago = 17 * DAY, drops = #SECOND_TRADE, rows = SECOND_TRADE },
+}
+local HISTORY = HISTORY_LISTS[CLIENT]
 TD.HISTORY = HISTORY
 
--- The members of a group of `content`: the raid's, Raid Finder's, else the `n`th party.
+-- The members of a group of `content`: a raid of twenty's (a 20-player raid's on WoW Forever),
+-- Raid Finder's (the 40-player raid's on WoW Forever, the most the samples name), else the `n`th
+-- party.
+local RAID_OF = { raidHeroic = RAID_20, raidMythic = RAID_20, raid20 = RAID_20, raidLFR = LFR_25, raid = LFR_25 }
 local function membersOf(content, n)
-    if content == "raidHeroic" or content == "raidMythic" then return RAID_20 end
-    if content == "raidLFR" then return LFR_25 end
-    return PARTIES[(n - 1) % #PARTIES + 1]
+    return RAID_OF[content] or PARTIES[(n - 1) % #PARTIES + 1]
 end
 
 -- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta },
@@ -942,7 +1069,7 @@ function TD.History(nowEpoch, you, src)
         local at, seer = nowEpoch - g.ago, g.alt and altSeer(you) or you
         local where = src:Place(g.content, nth[g.content])
         local members = membersOf(g.content, gi)
-        local group = TD.Group(g.content, where, "test:history:" .. gi)
+        local group = TD.Group(g.content, where, "test:history:" .. gi, nth[g.content])
         group.at, group.roster, group.drops = at, roster(seer, members), {}
         group.seenBy, group.seenByClass = seer.seenBy, seer.classFile
         for i = 1, g.drops do

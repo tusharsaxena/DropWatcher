@@ -2,7 +2,7 @@
 -- §6.2, §7.2): well-formed, consistent with each other, and resolved from Enum when the client has it.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function C() return (T.newAddon()).Constants end
 -- The setting defaults (defaults/Profile.lua), where the spec's default values live.
@@ -223,6 +223,10 @@ test("constants: every situation key is listed once, in order, with the spec §6
         { "scenario", true, true }, { "pvp", false, false }, { "openWorldGroup", false, false },
         { "solo", true, true },
     }
+    if T.forever then   -- WoW Forever's own five (Forever port design §4.4), the same defaults
+        want = { { "dungeon", true, true }, { "raid", true, true }, { "pvp", false, false },
+            { "openWorldGroup", false, false }, { "solo", true, true } }
+    end
     assertEqual(#c.SITUATIONS, #want)
     assertEqual(#keysOf(d), #want)
     for i, row in ipairs(want) do
@@ -239,14 +243,30 @@ test("constants: every difficulty id maps to a situation kind the classifier kno
     local c = C()
     local kinds = { mythicPlus = true, dungeon = true, followerDungeon = true, raidLFR = true,
         raid = true, delve = true, scenario = true }
+    -- Each client maps its own ids (Forever port design §4.4): WoW Forever's classic raids are no
+    -- Retail difficulty, and Retail's Mythic+, LFR, delves and the rest none of Forever's.
+    local FOREVER_IDS = { NORMAL_DUNGEON = true, RAID_40 = true, RAID_CLASSIC_20 = true, RAID_CLASSIC_10 = true }
+    local RETAIL_IDS = { RAID_CLASSIC_20 = false, RAID_CLASSIC_10 = false }
     for name, id in pairs(c.DIFFICULTY) do
         assertTrue(type(id) == "number", name)
-        assertTrue(kinds[c.DIFFICULTY_KIND[id]] == true, name .. " -> " .. tostring(c.DIFFICULTY_KIND[id]))
+        local mapped = (T.forever and FOREVER_IDS[name] == true) or (not T.forever and RETAIL_IDS[name] ~= false)
+        if mapped then
+            assertTrue(kinds[c.DIFFICULTY_KIND[id]] == true, name .. " -> " .. tostring(c.DIFFICULTY_KIND[id]))
+            assertTrue(c.SITUATION[c.DIFFICULTY_KIND[id]] ~= nil, name .. " maps to a situation this client has")
+        else
+            assertNil(c.DIFFICULTY_KIND[id], name .. " is not this client's")
+        end
     end
     for id in pairs(c.DIFFICULTY_KIND) do
         local named = false
         for _, v in pairs(c.DIFFICULTY) do if v == id then named = true end end
         assertTrue(named, "difficulty " .. id .. " has a name")
+    end
+    if T.forever then
+        assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.NORMAL_DUNGEON], "dungeon")
+        assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.RAID_40], "raid")
+        assertEqual(c.DIFFICULTY_KIND[242], "raid"); assertEqual(c.DIFFICULTY_KIND[243], "raid")
+        return
     end
     assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.MYTHIC_KEYSTONE], "mythicPlus")
     assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.MYTHIC_DUNGEON], "dungeon")
@@ -275,8 +295,9 @@ test("constants: the trade rules are the spec §7.2 table, and every situation h
     end
     assertEqual(#keysOf(rules), #c.SITUATIONS)
     assertEqual(rules.raid, "personal")
-    assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.pvp, "legacy")
+    if T.forever then return end   -- WoW Forever has no follower dungeon or Mythic+ (design §4.4)
+    assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.mythicPlus, "personal")
 end)
 

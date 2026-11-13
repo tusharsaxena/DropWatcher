@@ -86,6 +86,24 @@ end
 
 local function yesNo(v) return v and L["yes"] or L["no"] end
 
+-- The two input lines, per client (Forever port design §4.4): WoW Forever has no keystone, delve
+-- or follower dungeon to name.
+local INPUT_LINES = {
+    retail = function(i)
+        return L["Inputs: in instance %s · type %s · difficulty %s · keystone %s"]:format(
+                yesNo(i.inInstance), tostring(i.instanceType), tostring(i.difficultyID or L["none"]),
+                yesNo(i.isChallengeModeActive)),
+            L["Inputs: delve %s · follower dungeon %s · group %s · raid %s · PvP %s"]:format(
+                yesNo(i.isDelve), yesNo(i.isFollowerDungeon), yesNo(i.inGroup), yesNo(i.inRaid), yesNo(i.isPvP))
+    end,
+    forever = function(i)
+        return L["Inputs: in instance %s · type %s · difficulty %s"]:format(
+                yesNo(i.inInstance), tostring(i.instanceType), tostring(i.difficultyID or L["none"])),
+            L["Inputs: group %s · raid %s · PvP %s"]:format(yesNo(i.inGroup), yesNo(i.inRaid), yesNo(i.isPvP))
+    end,
+}
+local inputLines = INPUT_LINES[NS.Compat.ClientKey() == "forever" and "forever" or "retail"]
+
 --- `/dw situation`'s lines (design spec §6.1): the situation, its settings and the classifier's
 --- inputs, read live. The edge only reads, so this is safe in combat and while stood down.
 --- @return table lines
@@ -94,15 +112,12 @@ function V.SituationLines()
     local i = Sit.ReadInputs()
     local key = Sit.Classify(i)
     local s = Sit.Settings(key)
+    local where, kinds = inputLines(i)
     return {
         L["Situation: %s (%s) · Track %s · Auto-open %s · Quality %s"]:format(
             NS.WindowFooter.SituationLabel(key), key, yesNo(s.track), yesNo(s.autoOpen),
             s.quality or L["global"]),
-        L["Inputs: in instance %s · type %s · difficulty %s · keystone %s"]:format(
-            yesNo(i.inInstance), tostring(i.instanceType), tostring(i.difficultyID or L["none"]),
-            yesNo(i.isChallengeModeActive)),
-        L["Inputs: delve %s · follower dungeon %s · group %s · raid %s · PvP %s"]:format(
-            yesNo(i.isDelve), yesNo(i.isFollowerDungeon), yesNo(i.inGroup), yesNo(i.inRaid), yesNo(i.isPvP)),
+        where, kinds,
     }
 end
 

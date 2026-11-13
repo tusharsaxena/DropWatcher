@@ -218,7 +218,9 @@ test("insights filters: difficulties in their natural order, situations in the c
         g[i] = group({ difficulty = d })
     end
     g[#g + 1] = group({ difficulty = false })
-    for _, s in ipairs({ "solo", "raid", "mythicPlus" }) do g[#g + 1] = group({ situation = s }) end
+    -- Each client's own situations (Forever port design §4.4: WoW Forever has no Mythic+).
+    local third = T.forever and "pvp" or "mythicPlus"
+    for _, s in ipairs({ "solo", "raid", third }) do g[#g + 1] = group({ situation = s }) end
     g[#g + 1] = group({ situation = false })
     local o = F.Options(F.Rows(g), nil, NOW)
     local names = {}
@@ -228,8 +230,13 @@ test("insights filters: difficulties in their natural order, situations in the c
     assertEqual(o.difficulty[#o.difficulty].name, "No difficulty")
     names = {}
     for i = 2, #o.situation do names[#names + 1] = o.situation[i].value end
-    assertEqual(table.concat(names, ","), "mythicPlus,dungeon,raid,solo,unknown")
-    assertEqual(o.situation[2].name, "Mythic+")
+    if T.forever then
+        assertEqual(table.concat(names, ","), "dungeon,raid,pvp,solo,unknown")
+        assertEqual(o.situation[2].name, "Dungeon")
+    else
+        assertEqual(table.concat(names, ","), "mythicPlus,dungeon,raid,solo,unknown")
+        assertEqual(o.situation[2].name, "Mythic+")
+    end
 end)
 
 test("insights filters: you first among the characters, then by count; qualities and categories ordered", function()

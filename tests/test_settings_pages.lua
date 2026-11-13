@@ -167,6 +167,15 @@ test("situations: the global Auto-open row, then one table line per situation an
     for i, s in ipairs(S) do
         assertEqual(t.rows[i].label:GetText(), NS.WindowFooter.SituationLabel(s.key), s.key)
     end
+    -- Per client (Forever port design §4.4): WoW Forever's table has its five situations alone.
+    local labels = {}
+    for i, r in ipairs(t.rows) do labels[i] = r.label:GetText() end
+    if T.forever then
+        assertEqual(table.concat(labels, "|"), "Dungeon|Raid|PvP|Open world group|Solo")
+    else
+        assertEqual(table.concat(labels, "|"),
+            "Mythic+|Dungeon|Follower dungeon|Raid Finder|Raid|Delve|Scenario|PvP|Open world group|Solo")
+    end
 end)
 
 test("situations: five gold, left-aligned column headers, and a stripe on every second line", function()
@@ -215,10 +224,18 @@ test("situations: the five columns fit beside the panel's scroll gutter, Loot ru
     end
 end)
 
+-- Each situation's table line, per client (Forever port design §4.4: WoW Forever has its five), and
+-- the first line's key (Mythic+ on Retail, Dungeon on Forever).
+local SIT_KEYS = T.forever and { "dungeon", "raid", "pvp", "openWorldGroup", "solo" }
+    or { "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp", "openWorldGroup", "solo" }
+local LINE = {}
+for i, key in ipairs(SIT_KEYS) do LINE[key] = i end
+local FIRST = SIT_KEYS[1]
+
 test("situations: each cell paints its stored value, and a toggle writes its path", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
-    local pvp = t.rows[8]   -- K.SITUATIONS order: PvP is eighth, untracked by default
+    local pvp = t.rows[LINE.pvp]   -- K.SITUATIONS order: PvP is eighth (third on Forever), untracked by default
     assertEqual(pvp.track.value, false)
     assertEqual(t.rows[1].track.value, true, "Mythic+ is tracked by default")
     assertEqual(t.rows[1].quality.value, "global")
@@ -226,22 +243,22 @@ test("situations: each cell paints its stored value, and a toggle writes its pat
     pvp.track:__fire("OnValueChanged", true)
     assertEqual(NS.addon.db.profile.situations.pvp.track, true)
     t.rows[1].quality:__fire("OnValueChanged", "dynamicSlot")
-    assertEqual(NS.addon.db.profile.situations.mythicPlus.quality, "dynamicSlot")
+    assertEqual(NS.addon.db.profile.situations[FIRST].quality, "dynamicSlot")
     t.rows[1].autoOpen:__fire("OnValueChanged", false)
-    assertEqual(NS.addon.db.profile.situations.mythicPlus.autoOpen, false)
+    assertEqual(NS.addon.db.profile.situations[FIRST].autoOpen, false)
     assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
     assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
     t.rows[1].rule:__fire("OnValueChanged", "group")
-    assertEqual(NS.addon.db.profile.trade.rules.mythicPlus, "group")
+    assertEqual(NS.addon.db.profile.trade.rules[FIRST], "group")
     NS.SchemaRuntime.Set("situations.raid.track", false)
-    assertEqual(t.rows[5].track.value, false, "a write from elsewhere repaints it")
+    assertEqual(t.rows[LINE.raid].track.value, false, "a write from elsewhere repaints it")
 end)
 
 test("situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
-    local mp, pvp = t.rows[1], t.rows[8]
+    local mp, pvp = t.rows[1], t.rows[LINE.pvp]
     assertFalse(mp.autoOpen.disabled == true, "mythicPlus auto-open live")
     assertFalse(mp.quality.disabled == true)
     assertFalse(pvp.track.disabled == true, "Track is always live")
@@ -266,24 +283,24 @@ test("situations: Defaults repaints the table", function()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
     Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
-    Set("situations.mythicPlus.quality", "fixed")
-    assertEqual(t.rows[8].track.value, true)
+    Set("situations." .. FIRST .. ".quality", "fixed")
+    assertEqual(t.rows[LINE.pvp].track.value, true)
     NS.addon.Settings.Helpers.RestoreAllDefaults()
-    assertEqual(t.rows[8].track.value, false)
+    assertEqual(t.rows[LINE.pvp].track.value, false)
     assertEqual(t.rows[1].quality.value, "global")
-    assertTrue(t.rows[8].autoOpen.disabled == true)
+    assertTrue(t.rows[LINE.pvp].autoOpen.disabled == true)
 end)
 
 test("situations: a profile switch repaints the table and re-hosts it", function()
     local NS, _, m = T.enableAddon()
     local ctx, _, t = whenToShow(NS, m)
     NS.SchemaRuntime.Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
-    assertEqual(t.rows[8].track.value, true)
+    assertEqual(t.rows[LINE.pvp].track.value, true)
     NS.addon.db:SetProfile("Other")
     -- red under: a full re-render that builds a second table, or re-hosts nothing after the park
     assertTrue(ctx.dwSituations == t, "the same table")
-    assertEqual(t.rows[8].track.value, false, "the fresh profile's PvP is untracked")
-    assertTrue(t.rows[8].autoOpen.disabled == true, "and its auto-open dims again")
+    assertEqual(t.rows[LINE.pvp].track.value, false, "the fresh profile's PvP is untracked")
+    assertTrue(t.rows[LINE.pvp].autoOpen.disabled == true, "and its auto-open dims again")
     assertTrue(t.host:IsShown() == true, "still on the page")
     assertTrue(t.host:GetParent() ~= ctx.panel, "re-hosted off the park")
 end)
@@ -308,7 +325,7 @@ test("situations: the table is built once, parked before each render, and re-hos
     assertEqual(checks, 0)
     assertTrue(t.host:IsShown() == true)
     NS.SchemaRuntime.Set("situations.solo.track", false)   -- Solo is tracked by default (DW-06)
-    assertEqual(t.rows[10].track.value, false, "repainted after the re-host")
+    assertEqual(t.rows[LINE.solo].track.value, false, "repainted after the re-host")
 end)
 
 test("situations: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
@@ -358,11 +375,11 @@ test("situations: the pure rows carry each situation's label, values and live ce
     local function rows() return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel) end
     local list = rows()
     assertEqual(#list, #NS.Constants.SITUATIONS)
-    assertEqual(list[1].key, "mythicPlus")
-    assertEqual(list[1].label, "Mythic+")
-    assertEqual(list[1].track.path, "situations.mythicPlus.track")
+    assertEqual(list[1].key, FIRST)
+    assertEqual(list[1].label, NS.WindowFooter.SituationLabel(FIRST))
+    assertEqual(list[1].track.path, "situations." .. FIRST .. ".track")
     assertEqual(list[1].quality.value, "global")
-    assertEqual(list[1].rule.path, "trade.rules.mythicPlus")
+    assertEqual(list[1].rule.path, "trade.rules." .. FIRST)
     assertEqual(list[1].rule.value, "personal")
     assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled and list[1].rule.enabled)
     -- track x global auto-open: Auto-open is live only with both on; Quality with the track on.
@@ -371,7 +388,7 @@ test("situations: the pure rows carry each situation's label, values and live ce
     for _, c in ipairs(cases) do
         Set("situations.dungeon.track", c[1])
         Set("autoOpen", c[2])
-        local d = rows()[2]
+        local d = rows()[LINE.dungeon]
         local tag = tostring(c[1]) .. "/" .. tostring(c[2])
         assertEqual(d.active, c[1], tag)
         assertTrue(d.track.enabled, tag .. " track always live")

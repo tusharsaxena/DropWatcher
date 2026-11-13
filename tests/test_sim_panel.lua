@@ -103,7 +103,7 @@ test("sim panel: a key's preview names every step with its boss, and every comma
     assertEqual(r[2].command, "/dw sim step")
     assertEqual(r[#r].command, "/dw sim stop")
     assertEqual(lines(r[11].tip), "Injects: 2 loot lines | Through: the real loot handler (CHAT_MSG_LOOT)")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim panel: a step names the boss it played, and a loot step its count or its detail", function()
     local NS = T.newAddon()
@@ -145,10 +145,14 @@ test("sim panel: the scenarios carry their names, and the raids the sizes the pi
     local defs = NS.SimScenarioDefs.defs
     local names = {}
     for i, name in ipairs(NS.SimScenarioDefs.names) do names[i] = defs[name].label end
-    assertEqual(table.concat(names, "|"), "Mythic+ key|Dungeon|Raid|Raid Finder|Delve|Open world")
+    if T.forever then   -- WoW Forever's own three (Forever port design §4.4)
+        assertEqual(table.concat(names, "|"), "Dungeon|Raid|Open world")
+    else
+        assertEqual(table.concat(names, "|"), "Mythic+ key|Dungeon|Raid|Raid Finder|Delve|Open world")
+        assertEqual(table.concat(defs.lfr.sizes, ","), "9,12,15,19")
+    end
     assertEqual(table.concat(defs.raid.sizes, ","), "9,12,15,19")
-    assertEqual(table.concat(defs.lfr.sizes, ","), "9,12,15,19")
-    assertNil(defs.key.sizes, "a party has no size")
+    assertNil(defs.dungeon.sizes, "a party has no size")
 end)
 
 -- ---------------------------------------------------------------------------------------------

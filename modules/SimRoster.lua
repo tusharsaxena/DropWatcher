@@ -55,10 +55,19 @@ for classFile in pairs(CD.CLASS_SPECS) do CLASSES[#CLASSES + 1] = classFile end
 table.sort(CLASSES)
 
 -- The order the gear is drawn in: the main hand before the off hand, so a two-hander empties it.
-local ORDER = {
-    S.HEAD, S.NECK, S.SHOULDER, S.BACK, S.CHEST, S.WRIST, S.HANDS, S.WAIST, S.LEGS, S.FEET,
-    S.FINGER1, S.FINGER2, S.TRINKET1, S.TRINKET2, S.MAINHAND, S.OFFHAND,
+-- One list per client, picked once (clients-§5): WoW Forever's members wear the ranged slot too
+-- (slot 18: a bow, gun, crossbow, wand, thrown weapon or relic, DW-FP06).
+local ORDER_LISTS = {
+    retail = {
+        S.HEAD, S.NECK, S.SHOULDER, S.BACK, S.CHEST, S.WRIST, S.HANDS, S.WAIST, S.LEGS, S.FEET,
+        S.FINGER1, S.FINGER2, S.TRINKET1, S.TRINKET2, S.MAINHAND, S.OFFHAND,
+    },
+    forever = {
+        S.HEAD, S.NECK, S.SHOULDER, S.BACK, S.CHEST, S.WRIST, S.HANDS, S.WAIST, S.LEGS, S.FEET,
+        S.FINGER1, S.FINGER2, S.TRINKET1, S.TRINKET2, S.MAINHAND, S.OFFHAND, S.RANGED,
+    },
 }
+local ORDER = ORDER_LISTS[NS.Compat.ClientKey() == "forever" and "forever" or "retail"]
 R.ORDER = ORDER
 
 -- ── the random source ──────────────────────────────────────────────────────────────────────

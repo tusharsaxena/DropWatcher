@@ -20,6 +20,12 @@ local function joined(parts) return table.concat(parts, " · ") end
 
 test("group place: a keystone's difficulty reads Mythic+ and its level; any other is the client's name", function()
     local GP = T.newAddon().GroupPlace
+    if T.forever then   -- the keystone header is Retail's alone (Forever port design §4.4)
+        assertEqual(GP.DifficultyName(8, "Mythic Keystone", 12), "Mythic Keystone", "no Mythic+ on Forever")
+        assertNil(GP.DifficultyName(8, nil, 12))
+        assertEqual(GP.DifficultyName(9, "40 Player", 12), "40 Player")
+        return
+    end
     assertEqual(GP.DifficultyName(8, "Mythic Keystone", 12), "Mythic+ 12")
     assertEqual(GP.DifficultyName(8, "Mythic Keystone", nil), "Mythic+", "no level read: Mythic+ alone")
     assertEqual(GP.DifficultyName(8, nil, 0), "Mythic+")
@@ -106,7 +112,7 @@ test("compat: KeystoneLevel answers the active key, else the completed run's, el
     assertNil(NS.Compat.KeystoneLevel())
     m.C_ChallengeMode = nil
     assertNil(NS.Compat.KeystoneLevel())
-end)
+end, T.RETAIL_ONLY)
 
 -- ── through the real feed ───────────────────────────────────────────────────────────────────
 
@@ -190,7 +196,7 @@ test("feed: a key run's end chest reads Mythic+ and the completed run's level", 
     assertEqual(g.kind, "run")
     local hd = NS.WindowCells.Header(g, 1, nil, "Mythic+", false)
     assertEqual(uncolored(hd.text), "Ara-Kara, City of Echoes · Mythic+ 14 · 1 drop · Testchar")
-end)
+end, T.RETAIL_ONLY)
 
 test("feed: in the open world no place is read and the situation word stands in", function()
     local NS, m = T.enableAddon()
@@ -229,7 +235,7 @@ test("test mode: the sample groups carry real instance names and realistic diffi
         end
         assertTrue(g.seenBy ~= nil, g.key .. ": and its recorder")
     end
-end)
+end, T.RETAIL_ONLY)
 
 -- Two dungeons dropping rings at the dungeon difficulties (tests/test_sim_e2e.lua's journal, cut down).
 local function seedJournal(m)
@@ -263,4 +269,4 @@ test("sim: a dungeon boss and a key run name the pool's instance and the client'
     for _, x in ipairs(NS.LootFeed.Groups("live")) do if x.kind == "run" then run = x end end
     assertTrue(run ~= nil, "the key's chest made a run group")
     assertEqual(joined(NS.GroupPlace.Parts(run, "Mythic+")), "Ashen Vault · Mythic+ " .. NS.SimEvents.KEY_LEVEL)
-end)
+end, T.RETAIL_ONLY)

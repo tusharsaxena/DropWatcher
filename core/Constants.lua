@@ -485,13 +485,21 @@ C.BAG_IDS = { 0, 1, 2, 3, 4 }
 -- Situations and difficulties (design spec §6.1)
 -- ---------------------------------------------------------------------------------------------
 
--- Every situation key in display order. Each one's `track`, `autoOpen` and `quality` defaults are
--- defaults/Profile.lua's `situations`.
-C.SITUATIONS = {
-    { key = "mythicPlus" }, { key = "dungeon" }, { key = "followerDungeon" }, { key = "raidLFR" },
-    { key = "raid" }, { key = "delve" }, { key = "scenario" }, { key = "pvp" },
-    { key = "openWorldGroup" }, { key = "solo" },
+-- Every situation key in display order, one list per client, picked once (clients-§5). Each
+-- one's `track`, `autoOpen` and `quality` defaults are defaults/Profile.lua's `situations`. WoW
+-- Forever has no Mythic+, follower dungeons, Raid Finder, delves or scenarios (Forever port design
+-- §4.4), so its list is the five situations it has.
+local SITUATION_LISTS = {
+    retail = {
+        { key = "mythicPlus" }, { key = "dungeon" }, { key = "followerDungeon" }, { key = "raidLFR" },
+        { key = "raid" }, { key = "delve" }, { key = "scenario" }, { key = "pvp" },
+        { key = "openWorldGroup" }, { key = "solo" },
+    },
+    forever = {
+        { key = "dungeon" }, { key = "raid" }, { key = "pvp" }, { key = "openWorldGroup" }, { key = "solo" },
+    },
 }
+C.SITUATIONS = SITUATION_LISTS[FOREVER and "forever" or "retail"]
 C.SITUATION = {}
 for _, s in ipairs(C.SITUATIONS) do C.SITUATION[s.key] = s end
 
@@ -519,11 +527,15 @@ C.DIFFICULTY = {
     LFR_TIMEWALKING     = 151,
     FOLLOWER_DUNGEON    = 205,
     DELVE               = 208,
+    RAID_CLASSIC_20     = 242,   -- WoW Forever's 20-player raids (DifficultyUtil.ID, research R4 §12)
+    RAID_CLASSIC_10     = 243,   -- WoW Forever's 10-player raids
 }
 local D = C.DIFFICULTY
 
--- difficultyID -> the situation it implies. Ids not listed here fall back to instanceType.
-C.DIFFICULTY_KIND = {
+-- difficultyID -> the situation it implies, one map per client, picked once (clients-§5). Ids not
+-- listed here fall back to instanceType.
+local DIFFICULTY_KINDS = {}
+DIFFICULTY_KINDS.retail = {
     [D.MYTHIC_KEYSTONE]     = "mythicPlus",
     [D.NORMAL_DUNGEON]      = "dungeon",
     [D.HEROIC_DUNGEON]      = "dungeon",
@@ -544,6 +556,15 @@ C.DIFFICULTY_KIND = {
     [D.TIMEWALKING_RAID]    = "raid",
     [D.DELVE]               = "delve",
 }
+-- WoW Forever: a dungeon's one difficulty, the 40-player raids and the classic 20- and 10-player
+-- ones. None of its ids implies a situation Retail alone has.
+DIFFICULTY_KINDS.forever = {
+    [D.NORMAL_DUNGEON]  = "dungeon",
+    [D.RAID_40]         = "raid",
+    [D.RAID_CLASSIC_20] = "raid",
+    [D.RAID_CLASSIC_10] = "raid",
+}
+C.DIFFICULTY_KIND = DIFFICULTY_KINDS[FOREVER and "forever" or "retail"]
 
 -- ---------------------------------------------------------------------------------------------
 -- Trade rules (design spec §7.2). modules/TradeRules.lua reads them; the rule each situation takes
@@ -598,5 +619,10 @@ C.MESSAGE_TEMPLATES = { "ask", "transmog", "askOffSpec", "offer", "announce" }
 C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
 C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)
 C.MESSAGE_FLUSH_INTERVAL = 1.5   -- seconds between two queued sends
--- What empties the queue once the player can send: the restriction lift and these two events.
-C.MESSAGE_FLUSH_TRIGGERS = { restrictionLifted = true, ENCOUNTER_END = true, CHALLENGE_MODE_COMPLETED = true }
+-- What empties the queue once the player can send: the restriction lift and these events, one set
+-- per client, picked once (a key's completion is Retail's alone).
+local FLUSH_TRIGGERS = {
+    retail  = { restrictionLifted = true, ENCOUNTER_END = true, CHALLENGE_MODE_COMPLETED = true },
+    forever = { restrictionLifted = true, ENCOUNTER_END = true },
+}
+C.MESSAGE_FLUSH_TRIGGERS = FLUSH_TRIGGERS[FOREVER and "forever" or "retail"]

@@ -340,9 +340,10 @@ end)
 
 -- CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED are shared with modules/Situations.lua and
 -- modules/LootFeed.lua (core/DropWatcher.lua's dispatcher); the situation's rows come first, so
--- Situations.Current is fresh here.
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_START", "OnCompactRunStart" }
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_COMPLETED", "OnCompactRunEnd" }
+-- Situations.Current is fresh here. A key is Retail's alone (Forever port design §4.4): on WoW
+-- Forever a run ends when the situation moves.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_START", "OnCompactRunStart", clients = { "retail" } }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_COMPLETED", "OnCompactRunEnd", clients = { "retail" } }
 function NS.addon.OnCompactRunStart() WC.OnRunStarted() end
 function NS.addon.OnCompactRunEnd() WC.OnRunCompleted() end
 

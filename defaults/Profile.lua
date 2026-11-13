@@ -40,6 +40,49 @@ local function glow(enabled, style, tone)
 end
 local TONE = NS.Constants.TONE
 
+-- The client picked once (clients-§5): the per-situation defaults below are one table per client,
+-- keyed like that client's C.SITUATIONS (Forever port design §4.4).
+local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
+
+-- Where Drop Watcher is active (design spec §6.1). Retail's are the owner's defaults since DW-06:
+-- follower dungeons, delves, scenarios and solo tracked and auto-opening too. WoW Forever's are
+-- the same values for the five situations it has.
+local SITUATIONS = {
+    retail = {
+        mythicPlus      = situation(true, true),
+        dungeon         = situation(true, true),
+        followerDungeon = situation(true, true),
+        raidLFR         = situation(true, false),
+        raid            = situation(true, true),
+        delve           = situation(true, true),
+        scenario        = situation(true, true),
+        pvp             = situation(false, false),
+        openWorldGroup  = situation(false, false),
+        solo            = situation(true, true),
+    },
+    forever = {
+        dungeon         = situation(true, true),
+        raid            = situation(true, true),
+        pvp             = situation(false, false),
+        openWorldGroup  = situation(false, false),
+        solo            = situation(true, true),
+    },
+}
+
+-- The rule each situation takes (design spec §7.2): Retail's follower dungeons `personal` since
+-- DW-06, the owner's default; `raid` is the conservative `personal` until smoke check TRADE-3
+-- confirms it. WoW Forever's keys are its own situations' (its rule is DW-FP11's).
+local TRADE_RULES = {
+    retail = {
+        mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
+        raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
+        pvp = "legacy", openWorldGroup = "personal", solo = "personal",
+    },
+    forever = {
+        dungeon = "personal", raid = "personal", pvp = "legacy", openWorldGroup = "personal", solo = "personal",
+    },
+}
+
 NS.C = {
     PROFILE = {
         enabled    = true,       -- master switch (the `disabled` hold reads it)
@@ -49,20 +92,8 @@ NS.C = {
         locked     = false,      -- Lock frame: the window cannot be dragged or resized
         autoOpen   = true,       -- master auto-open: false keeps every situation from opening the window
 
-        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS. The owner's defaults
-        -- since DW-06: follower dungeons, delves, scenarios and solo tracked and auto-opening too.
-        situations = {
-            mythicPlus      = situation(true, true),
-            dungeon         = situation(true, true),
-            followerDungeon = situation(true, true),
-            raidLFR         = situation(true, false),
-            raid            = situation(true, true),
-            delve           = situation(true, true),
-            scenario        = situation(true, true),
-            pvp             = situation(false, false),
-            openWorldGroup  = situation(false, false),
-            solo            = situation(true, true),
-        },
+        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS (SITUATIONS above).
+        situations = SITUATIONS[CLIENT],
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
         feed = {
@@ -106,16 +137,10 @@ NS.C = {
             undesired       = {},
         },
 
-        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2; follower
-        -- dungeons `personal` since DW-06, the owner's default), the
-        -- owner's override once changed (§7.3); `raid` is the conservative `personal` until smoke
-        -- check TRADE-3 confirms it.
+        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2,
+        -- TRADE_RULES above), the owner's override once changed (§7.3).
         trade = {
-            rules = {
-                mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
-                raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
-                pvp = "legacy", openWorldGroup = "personal", solo = "personal",
-            },
+            rules = TRADE_RULES[CLIENT],
             warnAt     = 600,     -- seconds left when your own item's trade timer warns; 0 is off
         },
 

@@ -560,6 +560,25 @@ test("gear: the player's spec change rebuilds; another unit's does not", functio
     assertEqual(G.Candidate().specID, 261)
 end)
 
+test("gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen", function()
+    local NS, m, G = enabled(function(m)
+        m.__context.class, m.__context.classToken = "Hunter", "HUNTER"
+        if T.forever then m.seedTalents(1485, hunterTrees(10, 3, 0)) end
+    end)
+    local registered = false
+    for _, r in ipairs(m.__registrations()) do registered = registered or r.event == "PLAYER_LEVEL_UP" end
+    assertEqual(registered, T.forever, "PLAYER_LEVEL_UP is Forever's alone")
+    if not T.forever then return end
+    G.Snapshot()
+    local seen = listen(NS)
+    m.__context.level = (G.Candidate().level or 39) + 1
+    m.__fire("PLAYER_LEVEL_UP", m.__context.level)
+    assertTrue(G.IsScheduled())
+    m.__fireTimers()
+    assertEqual(seen.n, 1)
+    assertEqual(G.Candidate().level, m.__context.level)
+end)
+
 test("gear: the first lazy read announces nothing", function()
     local NS, _, G = enabled()
     NS.State.gear = nil

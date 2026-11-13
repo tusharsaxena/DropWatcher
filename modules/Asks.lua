@@ -552,9 +552,10 @@ end
 
 -- ENCOUNTER_END and CHALLENGE_MODE_COMPLETED are shared with the feed and the situation edge, and
 -- GROUP_ROSTER_UPDATE with the roster, whose row comes first so it is fresh here
--- (core/DropWatcher.lua's dispatcher).
+-- (core/DropWatcher.lua's dispatcher). A key's completion is Retail's alone (Forever port design
+-- §4.4, C.MESSAGE_FLUSH_TRIGGERS).
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "ENCOUNTER_END", "OnAskFlushEvent" }
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_COMPLETED", "OnAskFlushEvent" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHALLENGE_MODE_COMPLETED", "OnAskFlushEvent", clients = { "retail" } }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "GROUP_ROSTER_UPDATE", "OnAskRosterEvent" }
 
 function NS.addon.OnAskFlushEvent(_, event)

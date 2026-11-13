@@ -10,6 +10,15 @@ local SITUATIONS = {
     "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp",
     "openWorldGroup", "solo",
 }
+-- WoW Forever's own five (Forever port design §4.4): the others are Retail's alone, with no row there.
+local RETAIL_ONLY_SITUATION = { mythicPlus = true, followerDungeon = true, raidLFR = true, delve = true, scenario = true }
+if T.forever then SITUATIONS = { "dungeon", "raid", "pvp", "openWorldGroup", "solo" } end
+
+-- Whether a stored path is a Retail-only situation's (its `situations.<key>.*` or `trade.rules.<key>`).
+local function retailOnlyPath(path)
+    local key = path:match("^situations%.([^.]+)%.") or path:match("^trade%.rules%.(.+)$")
+    return key ~= nil and RETAIL_ONLY_SITUATION[key] == true
+end
 -- `myEq` and `theirEq` were retired by schema step 7 (feedback-6 spec §1: merged into Me and Them).
 local COLUMNS = { "ilvl", "slot", "looter", "me", "them", "trade", "tradeWindow", "actions" }
 
@@ -84,7 +93,7 @@ end)
 test("rows: NS.Setting answers the default before the database, and the stored value after", function()
     local NS = T.newAddon()
     assertEqual(NS.Setting("feed.quality.fixed"), 3)
-    assertEqual(NS.Setting("situations.raidLFR.autoOpen"), false)
+    assertEqual(NS.Setting("situations.pvp.autoOpen"), false)
     NS.addon:OnInitialize()
     assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 4))
     assertEqual(NS.addon.db.profile.feed.quality.fixed, 4)
@@ -779,8 +788,11 @@ local PINNED_ROWS = {
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
     local NS = T.newAddon()
-    local want = {}
-    for _, p in ipairs(PINNED_ROWS) do want[p[1]] = p end
+    local want, pinned = {}, 0
+    for _, p in ipairs(PINNED_ROWS) do
+        -- On WoW Forever a Retail-only situation's paths are absent (clients-§4), not moved.
+        if not (T.forever and retailOnlyPath(p[1])) then want[p[1]], pinned = p, pinned + 1 end
+    end
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do
         if row.path then
@@ -793,5 +805,5 @@ test("rows: the layout changes keep every stored path, its type and its default 
             seen = seen + 1
         end
     end
-    assertEqual(seen, #PINNED_ROWS, "every pinned path is still a row")
+    assertEqual(seen, pinned, "every pinned path is still a row")
 end)

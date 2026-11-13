@@ -48,14 +48,18 @@ local function same(a, b)
     return a ~= nil and b ~= nil and a:lower() == b:lower()
 end
 
+-- The keystone difficulty a header words as `Mythic+`: Retail's alone, picked once (Forever port
+-- design §4.4). WoW Forever has no keystones, so its every difficulty reads as the client names it.
+local KEYSTONE_ID = NS.Compat.ClientKey() ~= "forever" and C.DIFFICULTY.MYTHIC_KEYSTONE or nil
+
 --- The difficulty's name for a header: `Mythic+ <level>` for a keystone run (`Mythic+` without a
---- level), else the client's name. Nil when the client gives none.
+--- level; Retail's alone), else the client's name. Nil when the client gives none.
 --- @param id number|nil the difficulty id
 --- @param name string|nil GetDifficultyInfo's name
 --- @param keyLevel number|nil the keystone's level
 --- @return string|nil
 function GP.DifficultyName(id, name, keyLevel)
-    if id == C.DIFFICULTY.MYTHIC_KEYSTONE then
+    if id ~= nil and id == KEYSTONE_ID then
         local level = tonumber(keyLevel)
         if level and level > 0 then return L["Mythic+ %d"]:format(level) end
         return L["Mythic+"]
@@ -145,7 +149,7 @@ function GP.Read()
     id = plainNumber(id)
     local out = { instance = plainString(name) }
     if id and id > 0 then
-        local level = id == C.DIFFICULTY.MYTHIC_KEYSTONE and Compat.KeystoneLevel() or nil
+        local level = id == KEYSTONE_ID and Compat.KeystoneLevel() or nil
         out.difficulty = GP.DifficultyName(id, plainString(diffName) or Compat.DifficultyName(id), level)
     end
     return out

@@ -90,7 +90,7 @@ test("debug: the encounter and the keystone run edges each write one FEED line",
     assertEqual(count(feed, "encounter 2902 ended: wipe"), 1, joined(feed))
     assertEqual(count(feed, "encounter 2902 ended: kill"), 1, joined(feed))
     assertEqual(count(feed, "keystone run completed: The Rookery+"), 1, joined(feed))
-end)
+end, T.RETAIL_ONLY)
 
 test("debug: a drop re-judged on new facts says what it reads now", function()
     local NS, m = dungeon()

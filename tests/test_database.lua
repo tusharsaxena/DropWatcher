@@ -71,7 +71,7 @@ test("database: step 2 reaches a stored profile that is not the active one", fun
                 window = { compact = "yes", columns = { slot = false, me = 1 } },
                 trade = { rules = { raid = "group", pvp = "nope" } },
                 messages = { templates = { ask = "", offer = "Mine: {item}" }, announceChannel = "SAY" },
-                situations = { delve = { track = true, quality = "loud" } },
+                situations = { solo = { track = false, quality = "loud" } },
             },
         },
     }
@@ -87,8 +87,8 @@ test("database: step 2 reaches a stored profile that is not the active one", fun
     assertTrue(raid.messages.templates.ask == nil, "an empty template is dropped")
     assertEqual(raid.messages.templates.offer, "Mine: {item}")
     assertTrue(raid.messages.announceChannel == nil, "SAY is never a channel")
-    assertEqual(raid.situations.delve.track, true)
-    assertTrue(raid.situations.delve.quality == nil)
+    assertEqual(raid.situations.solo.track, false)
+    assertTrue(raid.situations.solo.quality == nil)
     assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 

@@ -406,7 +406,7 @@ test("sim encounter: a keystone run groups its loot and holds the ChallengeMode 
     assertFalse(NS.Compat.ChallengeModeActive())
     assertNil(NS.Restrictions.ActiveSet().challengeMode)
     assertEqual(select(2, E.RunEnd()), "noRun")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim combat: the stop ends a combat edge it raised", function()
     local NS = sim()

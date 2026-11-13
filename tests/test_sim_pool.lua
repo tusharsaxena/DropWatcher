@@ -538,6 +538,23 @@ test("sim roster: gear is what the class can wear, worn at a level inside the ba
     assertEqual(R.BandAround(600, { low = -20, high = 0 }).low, 580)
 end)
 
+test("sim roster: on Forever a member wears its bow in the ranged slot; Retail's order has no slot 18", function()
+    local NS = T.newAddon()
+    local R, S = NS.SimRoster, NS.Constants.SLOT
+    local W = NS.Constants.WEAPON_SUBCLASS
+    local has18 = false
+    for _, slot in ipairs(R.ORDER) do has18 = has18 or slot == 18 end
+    assertEqual(has18, T.forever, "slot 18 is drawn on Forever only")
+    if not T.forever then return end
+    local entries = {
+        { link = "bow", equipLoc = "INVTYPE_RANGED", ilvl = 60, classID = 2, subClassID = W.BOWS },
+        { link = "dagger", equipLoc = "INVTYPE_WEAPON", ilvl = 60, classID = 2, subClassID = W.DAGGER },
+    }
+    local gear = R.Gear({ classFile = "HUNTER", specID = "HUNTER:2" }, entries, { low = 55, high = 60 }, R.Random(5))
+    assertEqual(gear[S.RANGED], "bow", "the bow is worn in the ranged slot")
+    assertEqual(gear[S.MAINHAND], "dagger", "and leaves the hands free")
+end)
+
 test("sim roster: the content's level is the median of the pool's drops", function()
     local R = T.newAddon().SimRoster
     assertNil(R.ContentLevel({}))

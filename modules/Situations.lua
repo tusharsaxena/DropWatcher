@@ -10,8 +10,9 @@ local _, NS = ...
 -- The edge, ReadInputs, is the only place this module touches the client: GetInstanceInfo,
 -- IsInInstance, C_ChallengeMode.IsChallengeModeActive, IsInGroup / IsInRaid and GetDifficultyInfo,
 -- each through NS.Compat (core/CompatWorld.lua), so a running simulation answers them.
--- It runs on the six re-evaluation events of spec §6.1, all declared in NS.FEATURE_EVENTS so the
--- stand-down takes them down, and sends SITUATION_CHANGED (key, previousKey) when the key moves.
+-- It runs on the six re-evaluation events of spec §6.1 (four on WoW Forever, which has no keystone
+-- events), all declared in NS.FEATURE_EVENTS so the stand-down takes them down, and sends
+-- SITUATION_CHANGED (key, previousKey) when the key moves.
 --
 --   inputs = { inInstance, instanceType, difficultyID, isChallengeModeActive, isDelve,
 --              isFollowerDungeon, inGroup, inRaid, isPvP }
@@ -63,18 +64,35 @@ local function byDifficulty(i, kind)
     return nil
 end
 
---- The situation key for a set of inputs (design spec §6.1). Order: PvP, Mythic+, the open world,
---- then the difficulty-led delve and follower dungeon, then the instance type. A difficulty the
---- client did not confirm should arrive as nil, so the instance type decides.
---- @param i table|any the classifier inputs
---- @return string key one of C.SITUATIONS' keys; `solo` for anything unreadable
-function Sit.Classify(i)
-    if type(i) ~= "table" then return "solo" end
+local function classify(i)
     local kind = C.DIFFICULTY_KIND[i.difficultyID]
     if i.isPvP or PVP_TYPE[i.instanceType] then return "pvp" end
     if i.isChallengeModeActive or kind == "mythicPlus" then return "mythicPlus" end
     if not i.inInstance then return openWorld(i) end
     return byDifficulty(i, kind) or byInstanceType(i, kind) or openWorld(i)
+end
+
+-- A key this client's C.SITUATIONS has no row for (WoW Forever has no Mythic+, follower dungeon,
+-- Raid Finder, delve or scenario, Forever port design §4.4) reads as its nearest one, and with none
+-- as the open world, so no Retail-only key ever comes out there.
+local NEAREST = { mythicPlus = "dungeon", followerDungeon = "dungeon", raidLFR = "raid" }
+
+local function served(key, i)
+    if C.SITUATION[key] then return key end
+    local near = NEAREST[key]
+    if near and C.SITUATION[near] then return near end
+    return openWorld(i)
+end
+
+--- The situation key for a set of inputs (design spec §6.1). Order: PvP, Mythic+, the open world,
+--- then the difficulty-led delve and follower dungeon, then the instance type. A difficulty the
+--- client did not confirm should arrive as nil, so the instance type decides. A key the client has
+--- no situation for reads as its nearest one (NEAREST), else the open world.
+--- @param i table|any the classifier inputs
+--- @return string key one of C.SITUATIONS' keys; `solo` for anything unreadable
+function Sit.Classify(i)
+    if type(i) ~= "table" then return "solo" end
+    return served(classify(i), i)
 end
 
 local function flag(stored, field, default)
@@ -193,12 +211,14 @@ function Sit.LastInputs() return State.situationInputs end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
+-- The keystone events are Retail's alone (Forever port design §4.4): not registered on WoW Forever.
+local RETAIL = { "retail" }
 local EVENTS = {
-    "PLAYER_ENTERING_WORLD", "ZONE_CHANGED_NEW_AREA", "CHALLENGE_MODE_START",
-    "CHALLENGE_MODE_COMPLETED", "GROUP_ROSTER_UPDATE", "PLAYER_DIFFICULTY_CHANGED",
+    { "PLAYER_ENTERING_WORLD" }, { "ZONE_CHANGED_NEW_AREA" }, { "CHALLENGE_MODE_START", RETAIL },
+    { "CHALLENGE_MODE_COMPLETED", RETAIL }, { "GROUP_ROSTER_UPDATE" }, { "PLAYER_DIFFICULTY_CHANGED" },
 }
-for _, event in ipairs(EVENTS) do
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnSituationEvent" }
+for _, row in ipairs(EVENTS) do
+    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { row[1], "OnSituationEvent", clients = row[2] }
 end
 
 function NS.addon.OnSituationEvent(_, event)

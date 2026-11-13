@@ -73,8 +73,84 @@ local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 
 -- ── the data (pure) ─────────────────────────────────────────────────────────────────────────
 
+-- WoW Forever's nine classes (CLASS_SORT_ORDER there).
+local FOREVER_CLASSES = { WARRIOR = true, PALADIN = true, HUNTER = true, ROGUE = true, PRIEST = true,
+    SHAMAN = true, MAGE = true, WARLOCK = true, DRUID = true }
+
+test("test mode: Forever samples use only the nine classes", function()
+    local NS, specs = placeholders()
+    local TD, CD, C = NS.TestData, NS.ClassData, NS.Constants
+    local forever = NS.Compat.ClientKey() == "forever"
+    local classes = {}
+    for key, m in pairs(TD.MEMBERS) do
+        classes[m.classFile] = true
+        local row = CD.SPECS[m.specID]
+        assertTrue(row ~= nil and row.class == m.classFile, key .. ": a spec of this client's list")
+        if forever then assertTrue(FOREVER_CLASSES[m.classFile], key .. " is " .. m.classFile) end
+    end
+    if forever then
+        for class in pairs(FOREVER_CLASSES) do assertTrue(classes[class], class .. " is among the samples") end
+        assertTrue(FOREVER_CLASSES[TD.ALT.classFile], "the alt is " .. TD.ALT.classFile)
+    else
+        assertTrue(classes.EVOKER and classes.DEMONHUNTER and classes.MONK and classes.DEATHKNIGHT,
+            "Retail's samples keep its thirteen classes")
+    end
+    assertTrue(#specs > 0)
+    for _, s in ipairs(specs) do
+        assertTrue(C.SITUATION[s.group.situation] ~= nil, s.group.key .. ": " .. s.group.situation)
+        if forever then
+            assertTrue(FOREVER_CLASSES[s.looter.classFile], s.group.key .. ": " .. tostring(s.looter.classFile))
+            assertTrue(s.group.kind ~= "run", "no key run on Forever")
+            for _, e in ipairs(s.group.roster) do
+                assertTrue(e.me or FOREVER_CLASSES[e.class], s.group.key .. ": " .. tostring(e.class))
+            end
+        end
+    end
+    for _, g in ipairs(TD.History(5000000, YOU, source(NS)).groups) do
+        assertTrue(C.SITUATION[g.situation] ~= nil, g.key .. ": " .. g.situation)
+        for _, d in ipairs(g.drops) do
+            if forever then assertTrue(FOREVER_CLASSES[d.class], g.key .. ": " .. tostring(d.class)) end
+        end
+    end
+end)
+
+test("test mode: Forever samples name Forever places, whatever pool they draw on", function()
+    local NS, specs = placeholders()
+    local TD = NS.TestData
+    local session, history = {}, {}
+    for _, s in ipairs(specs) do session[s.group.key] = s.group end
+    for _, g in ipairs(TD.History(5000000, YOU, source(NS)).groups) do history[g.key] = g end
+    if not T.forever then
+        for _, g in pairs(session) do assertTrue(g.label ~= "Molten Core" and g.instance ~= "Zul'Gurub", g.key) end
+        return
+    end
+    -- The fake pool names no place (as your own gear does): every group takes its content's own.
+    local places = { ["Shadowfang Keep"] = "dungeon", ["Zul'Gurub"] = "raid", ["Molten Core"] = "raid" }
+    for key, g in pairs(session) do
+        assertEqual(places[g.instance], g.situation, key .. ": " .. tostring(g.instance))
+        assertTrue(g.label ~= "Placeholder boss", key .. ": a real boss, " .. tostring(g.label))
+    end
+    assertEqual(session["test:session:1"].instance, "Shadowfang Keep")
+    assertEqual(session["test:session:3"].label, "High Priestess Jeklik")
+    assertEqual(session["test:session:3"].difficulty, "20 Player")
+    local seen = {}
+    for key, g in pairs(history) do
+        seen[g.situation] = true
+        if g.situation == "openWorldGroup" then
+            assertTrue(g.instance == nil and g.difficulty == nil, key .. ": a world boss names no instance")
+            assertTrue(g.label == "Azuregos" or g.label == "Lord Kazzak", key .. ": " .. tostring(g.label))
+        else
+            assertEqual(places[g.instance], g.situation, key .. ": " .. tostring(g.instance))
+        end
+    end
+    hasAll(seen, { "dungeon", "raid", "openWorldGroup" }, "situation")
+end)
+
 -- The group size each content brings (feedback-17): a party, a raid of twenty, Raid Finder's 25.
-local SIZE = { key = 5, heroicDungeon = 5, worldBoss = 5, raidHeroic = 20, raidMythic = 20, raidLFR = 25 }
+-- WoW Forever's own contents (Forever port design §4.4): a dungeon, a 20- and a 40-player raid (the
+-- samples name 25 for the 40) and a world boss.
+local SIZE = { key = 5, heroicDungeon = 5, worldBoss = 5, raidHeroic = 20, raidMythic = 20, raidLFR = 25,
+    dungeon = 5, raid20 = 20, raid = 25 }
 
 test("test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)", function()
     local NS, specs = placeholders()
@@ -87,7 +163,7 @@ test("test mode data: each sample group names who was in it, you first, as many 
             if s.looter.name == e.name then sizes.looterIn = (sizes.looterIn or 0) + 1 end
         end
     end
-    assertEqual(sizes.run, 5, "the key run: a party of five")
+    if not T.forever then assertEqual(sizes.run, 5, "the key run: a party of five") end
     assertEqual(sizes.encounter, 20, "a Heroic raid boss: twenty")
     assertEqual(sizes.looterIn, #specs, "every looter is in their group")
     local src = source(NS)
@@ -107,7 +183,7 @@ test("test mode data: the session drops what such groups see; History holds far 
     for _, s in ipairs(TD.SESSION) do
         local n = #s.yours + #s.theirs
         sessionDrops = sessionDrops + n
-        if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
+        if s.content == "key" or s.content == "dungeon" then assertEqual(n, 2, "a key run's chest, a dungeon boss: two items")
         elseif s.n == 6 then assertEqual(n, 6, "the boss with the item kinds: its gear and six of them")
         else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
     end
@@ -116,11 +192,13 @@ test("test mode data: the session drops what such groups see; History holds far 
     for _, g in ipairs(TD.HISTORY) do
         per[g.content] = true
         total = total + g.drops
-        local most = ({ key = 2, heroicDungeon = 2, worldBoss = 3, raidHeroic = 5, raidMythic = 5, raidLFR = 5 })[g.content]
+        local most = ({ key = 2, heroicDungeon = 2, worldBoss = 3, raidHeroic = 5, raidMythic = 5, raidLFR = 5,
+            dungeon = 2, raid20 = 5, raid = 5 })[g.content]
         assertTrue(g.drops >= 1 and g.drops <= most, g.content .. ": " .. g.drops)
     end
     assertTrue(#TD.HISTORY >= 20 and total >= 60, #TD.HISTORY .. " groups, " .. total .. " drops")
-    hasAll(per, { "key", "heroicDungeon", "raidHeroic", "raidMythic", "raidLFR", "worldBoss" }, "content")
+    hasAll(per, T.forever and { "dungeon", "raid20", "raid", "worldBoss" }
+        or { "key", "heroicDungeon", "raidHeroic", "raidMythic", "raidLFR", "worldBoss" }, "content")
     for _, g in ipairs(TD.HISTORY) do assertTrue(g.ago <= 28 * 86400, "inside the default 30 days") end
 end)
 
@@ -179,7 +257,7 @@ test("test mode data: each group is one real place, its loot that place's at the
         end
     end
     hasAll(seen, { "mythicPlus", "dungeon", "raid", "raidLFR", "openWorldGroup" }, "situation")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: the other members' drops cover every Me and Them verdict (board 03)", function()
     local _, specs = placeholders()
@@ -490,7 +568,7 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
         slots[s.facts.equipLoc] = true
         assertTrue(s.situation ~= nil)
     end
-    hasAll(groups, { "encounter", "run" }, "group")
+    hasAll(groups, T.forever and { "encounter" } or { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
     assertEqual(#specs, 35)
     assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
@@ -642,7 +720,8 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
         -- feedback-17: the key run's loot is its dungeon's at Mythic Keystone, the bosses' their raid's at Heroic
         -- an item kind's stand-in (issue #13) is any unused pool item once the place has none of it
         local standIn = rec.facts.category ~= nil and rec.facts.category ~= "equipment"
-        if not standIn then
+        -- WoW Forever's contents are no journal difficulty (its pool is your gear, design §4.4)
+        if not standIn and not T.forever then
             assertEqual(rec.facts.ilvl, rec.situation == "mythicPlus" and 300 or 295, "the drop's own level")
         end
         assertTrue(NS.Compat.ItemIcon(rec.link) ~= 134400, "a real icon, not the question mark")

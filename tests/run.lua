@@ -168,6 +168,12 @@ local function retailList(NS)
     NS.ClassData.Install(NS.ClassData.LISTS.retail)
     return NS
 end
+-- The declared-skip reason (the kit's `test(name, fn, reason)`) for a case of a Retail-only feature
+-- (Mythic+, Raid Finder, delves, follower dungeons, scenarios: Forever port design §4.4) on the
+-- forever profile, where the feature is absent and its own per-client case asserts the absence
+-- (clients-§6); nil on Retail, which runs it.
+local RETAIL_ONLY = FOREVER and "Retail-only feature (Forever port design §4.4): absent on Forever, "
+    .. "which its per-client case asserts" or nil
 local function rosterName(name, realm)
     if FOREVER then return realm and (name .. " " .. realm) or name end
     return name .. "-" .. (realm and (realm:gsub("[%s%-]", "")) or "Testrealm")
@@ -190,6 +196,7 @@ _G.DW_TEST = Kit.expose{
     cardText    = cardText,
     forever     = FOREVER,
     retailList  = retailList,
+    RETAIL_ONLY = RETAIL_ONLY,
     rosterName  = rosterName,
     ME          = rosterName("Testchar"),
     root        = root,

@@ -240,7 +240,7 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
     assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
         "Den of Nalorakk · Mythic+ 12 · 2 drops · Testchar")
-end)
+end, T.RETAIL_ONLY)
 
 test("header: your own drop is listed in Drops with the others, never counted as hidden", function()
     local NS, m, LF = run()

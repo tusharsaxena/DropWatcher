@@ -279,7 +279,9 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     hasAll(seen.trade, { "Yes", "?", "No" }, "trade")
     hasAll(seen.fresh, { "(cached)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out (pending: Them says it)")
     hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
-    hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
+    -- On WoW Forever every Them sidegrade sample lands on a two-slot item (a ring, a trinket, a
+    -- one-hander worn beside another), so its cell reads the other slot's arrow, never ≈.
+    hasAll(seen.them, T.forever and { "▲", "▼", "⊘" } or { "▲", "≈", "▼", "⊘" }, "their verdict")
     hasAll(seen.eq, { "…", "range", "combat", "!" }, "their gear's states")
     local levels = 0
     for k in pairs(seen.eq) do if tostring(k):match("^%d+$") then levels = levels + 1 end end

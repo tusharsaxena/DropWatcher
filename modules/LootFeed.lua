@@ -1039,18 +1039,20 @@ end
 NS.LootParser.AddSink(function(loot) LF.OnChatLoot(loot) end)
 
 -- CHALLENGE_MODE_START and CHALLENGE_MODE_COMPLETED are shared with modules/Situations.lua
--- (core/DropWatcher.lua's dispatcher); its rows come first, so the situation is fresh.
+-- (core/DropWatcher.lua's dispatcher); its rows come first, so the situation is fresh. Both are
+-- Retail's alone (`clients`, Forever port design §4.4).
+local RETAIL = { "retail" }
 local EVENTS = {
     { "ENCOUNTER_START", "OnFeedEncounterStart", LF.OnEncounterStart },
     { "ENCOUNTER_END", "OnFeedEncounterEnd", LF.OnEncounterEnd },
-    { "CHALLENGE_MODE_START", "OnFeedRunStart", LF.OnRunStart },
-    { "CHALLENGE_MODE_COMPLETED", "OnFeedRunEnd", LF.OnRunEnd },
+    { "CHALLENGE_MODE_START", "OnFeedRunStart", LF.OnRunStart, RETAIL },
+    { "CHALLENGE_MODE_COMPLETED", "OnFeedRunEnd", LF.OnRunEnd, RETAIL },
     { "ENCOUNTER_LOOT_RECEIVED", "OnFeedEncounterLoot", LF.OnEncounterLoot },
     { "LOOT_HISTORY_UPDATE_DROP", "OnFeedLootHistory", LF.OnLootHistoryDrop },
 }
 for _, row in ipairs(EVENTS) do
     local fn = row[3]
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { row[1], row[2] }
+    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { row[1], row[2], clients = row[4] }
     NS.addon[row[2]] = function(_, _, ...) fn(...) end
 end
 

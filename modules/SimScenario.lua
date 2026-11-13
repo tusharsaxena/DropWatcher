@@ -65,21 +65,37 @@ end
 --- random), band (the members' item-level offsets around the content's level; nil: the roster's
 --- default), sizes (a raid's group sizes besides you, which the picker offers; the library adds 0,
 --- random), label (the scenario's name in the panel's picker and Start row, and in the library's
---- started line), timeline (SC.Timeline, set below) }.
-SC.SCENARIOS = {
-    key     = { situation = "mythicPlus",     kind = "party", bosses = 3, keystone = true, burst = 2,
-                label = L["Mythic+ key"] },
-    dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3, label = L["Dungeon"] },
-    raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5, sizes = { 9, 12, 15, 19 },
-                label = L["Raid"] },
-    lfr     = { situation = "raidLFR",        kind = "raid",  bosses = 2, burst = 4, sizes = { 9, 12, 15, 19 },
-                label = L["Raid Finder"] },
-    delve   = { situation = "delve",          kind = "party", bosses = 1, burst = 3, label = L["Delve"] },
-    world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3, label = L["Open world"] },
+--- started line), timeline (SC.Timeline, set below) }. One list per client, picked once
+--- (clients-§5): WoW Forever has no key, Raid Finder or delve (Forever port design §4.4).
+local SCENARIO_LISTS = {
+    retail = {
+        key     = { situation = "mythicPlus",     kind = "party", bosses = 3, keystone = true, burst = 2,
+                    label = L["Mythic+ key"] },
+        dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3, label = L["Dungeon"] },
+        raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5, sizes = { 9, 12, 15, 19 },
+                    label = L["Raid"] },
+        lfr     = { situation = "raidLFR",        kind = "raid",  bosses = 2, burst = 4, sizes = { 9, 12, 15, 19 },
+                    label = L["Raid Finder"] },
+        delve   = { situation = "delve",          kind = "party", bosses = 1, burst = 3, label = L["Delve"] },
+        world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3, label = L["Open world"] },
+    },
+    forever = {
+        dungeon = { situation = "dungeon",        kind = "party", bosses = 3, burst = 3, label = L["Dungeon"] },
+        raid    = { situation = "raid",           kind = "raid",  bosses = 2, burst = 5, sizes = { 9, 12, 15, 19 },
+                    label = L["Raid"] },
+        world   = { situation = "openWorldGroup", kind = "party", bosses = 1, burst = 3, label = L["Open world"] },
+    },
 }
+-- The scenario names, in the order the usage line lists them, per client.
+local NAME_LISTS = {
+    retail  = { "key", "dungeon", "raid", "lfr", "delve", "world" },
+    forever = { "dungeon", "raid", "world" },
+}
+local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
+SC.SCENARIOS = SCENARIO_LISTS[CLIENT]
 
 --- The scenario names, in the order the usage line lists them.
-SC.NAMES = { "key", "dungeon", "raid", "lfr", "delve", "world" }
+SC.NAMES = NAME_LISTS[CLIENT]
 
 -- ── the timeline (pure) ─────────────────────────────────────────────────────────────────────
 

@@ -71,6 +71,30 @@ local TRUTH = {
     { "a dungeon id outside an instance", world({ difficultyID = D.HEROIC_DUNGEON }), "solo" },
 }
 
+-- WoW Forever's own truth table (Forever port design §4.4): its five situations, its difficulty
+-- map, and no Retail-only key whatever the inputs say.
+if T.forever then
+    TRUTH = {
+        { "Normal dungeon",                inst("party", D.NORMAL_DUNGEON), "dungeon" },
+        { "party, unknown difficulty",     inst("party", nil), "dungeon" },
+        { "party, solo",                   inst("party", D.NORMAL_DUNGEON, { inGroup = false }), "dungeon" },
+        { "a keystone flag reads as a dungeon", inst("party", nil, { isChallengeModeActive = true }), "dungeon" },
+        { "40-player raid",                inst("raid", D.RAID_40), "raid" },
+        { "20-player raid",                inst("raid", D.RAID_CLASSIC_20), "raid" },
+        { "10-player raid",                inst("raid", D.RAID_CLASSIC_10), "raid" },
+        { "raid, unknown difficulty",      inst("raid", nil), "raid" },
+        { "a delve id reads as the open world", inst("scenario", D.DELVE), "openWorldGroup" },
+        { "battleground",                  inst("pvp", nil), "pvp" },
+        { "arena",                         inst("arena", nil), "pvp" },
+        { "PvP flag",                      inst("none", nil, { isPvP = true }), "pvp" },
+        { "open world, in a party",        world({ inGroup = true }), "openWorldGroup" },
+        { "open world, in a raid",         world({ inGroup = true, inRaid = true }), "openWorldGroup" },
+        { "open world, alone",             world(), "solo" },
+        { "unnamed instance type, alone",  inst("neighborhood", nil, { inGroup = false }), "solo" },
+        { "a dungeon id outside an instance", world({ difficultyID = D.NORMAL_DUNGEON }), "solo" },
+    }
+end
+
 test("situations: the classifier truth table", function()
     local Sit = load()
     for _, row in ipairs(TRUTH) do assertEqual(Sit.Classify(row[2]), row[3], row[1]) end
@@ -103,6 +127,7 @@ test("situations: with nothing stored, every key takes the spec's track and auto
         scenario = { true, true }, pvp = { false, false }, openWorldGroup = { false, false },
         solo = { true, true },
     }
+    local want = T.forever and 5 or 10   -- WoW Forever's five (Forever port design §4.4)
     local n = 0
     for _, s in ipairs(C.SITUATIONS) do
         local r = Sit.Resolve(s.key, nil)
@@ -111,7 +136,7 @@ test("situations: with nothing stored, every key takes the spec's track and auto
         assertNil(r.quality, s.key .. " quality")
         n = n + 1
     end
-    assertEqual(n, 10)
+    assertEqual(n, want)
 end)
 
 test("situations: a stored row overrides, and a malformed field falls back to the default", function()
@@ -156,6 +181,9 @@ end
 
 local KEYSTONE = { inInstance = true, instanceType = "party", difficultyID = 8, cm = true, inGroup = true }
 local HEROIC = { inInstance = true, instanceType = "party", difficultyID = 2, inGroup = true }
+-- A place each client has, and its key: a key run on Retail, a 40-player raid on WoW Forever.
+local AWAY = T.forever and { inInstance = true, instanceType = "raid", difficultyID = 9, inGroup = true } or KEYSTONE
+local AWAY_KEY = T.forever and "raid" or "mythicPlus"
 
 -- An enabled instance with a receiver recording every SITUATION_CHANGED as { key, prev }.
 local function live()
@@ -178,6 +206,14 @@ test("situations: each re-evaluation event classifies and announces a change onc
         { "GROUP_ROSTER_UPDATE", {}, "solo" },
         { "PLAYER_DIFFICULTY_CHANGED", { inInstance = true, instanceType = "raid", difficultyID = 17 }, "raidLFR" },
     }
+    if T.forever then   -- four events there: no keystone (Forever port design §4.4)
+        EVENTS = {
+            { "PLAYER_ENTERING_WORLD", HEROIC, "dungeon" },
+            { "ZONE_CHANGED_NEW_AREA", { inGroup = true }, "openWorldGroup" },
+            { "GROUP_ROSTER_UPDATE", {}, "solo" },
+            { "PLAYER_DIFFICULTY_CHANGED", { inInstance = true, instanceType = "raid", difficultyID = 242 }, "raid" },
+        }
+    end
     local prev
     for i, e in ipairs(EVENTS) do
         place(m, e[2])
@@ -214,7 +250,7 @@ test("situations: the edge's inputs are what the client says", function()
     assertTrue(NS.Situations.ReadInputs().isPvP)
     m.__fire("PLAYER_ENTERING_WORLD")
     assertEqual(NS.Situations.LastInputs().instanceType, "arena")
-end)
+end, T.RETAIL_ONLY)
 
 test("situations: a difficulty the client does not know falls back to the instance type", function()
     local NS, m = live()
@@ -223,7 +259,7 @@ test("situations: a difficulty the client does not know falls back to the instan
     m.unknownDifficulties[205] = true
     assertNil(NS.Situations.ReadInputs().difficultyID)
     assertEqual(NS.Situations.Current(), "dungeon")
-end)
+end, T.RETAIL_ONLY)
 
 test("situations: a client with no C_ChallengeMode still classifies", function()
     local NS, m = live()
@@ -235,9 +271,9 @@ end)
 
 test("situations: Current classifies live before the first event, without a message", function()
     local NS, m, heard = live()
-    place(m, KEYSTONE)
+    place(m, AWAY)
     assertNil(NS.State.situation)
-    assertEqual(NS.Situations.Current(), "mythicPlus")
+    assertEqual(NS.Situations.Current(), AWAY_KEY)
     assertEqual(#heard, 0)
 end)
 
@@ -261,12 +297,95 @@ test("situations: stood down, the events are gone; the stand-up announces where 
     m.__fire("PLAYER_ENTERING_WORLD")
     NS.addon:OnSlashCommand("disable")
     assertNil(NS.State.situation, "the stand-down drops the stale key")
-    place(m, KEYSTONE)
+    place(m, AWAY)
     for _, e in ipairs({ "PLAYER_ENTERING_WORLD", "CHALLENGE_MODE_START", "GROUP_ROSTER_UPDATE" }) do
         assertEqual(m.__fire(e), 0, e)
     end
     NS.addon:OnSlashCommand("enable")
-    assertEqual(NS.State.situation, "mythicPlus")
+    assertEqual(NS.State.situation, AWAY_KEY)
     local last = heard[#heard]
-    assertEqual(last[1], "mythicPlus", "the replayed receiver heard the stand-up")
+    assertEqual(last[1], AWAY_KEY, "the replayed receiver heard the stand-up")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- per client (Forever port design §4.4, clients-§5, §6): each client's own situation list and
+-- difficulty map, picked once by ClientKey()
+-- ---------------------------------------------------------------------------------------------
+
+local RETAIL_ONLY_SITUATIONS = { "mythicPlus", "delve", "followerDungeon", "raidLFR", "scenario" }
+
+test("situations: Forever has no mythicPlus, delve, followerDungeon, raidLFR or scenario rows", function()
+    local NS = T.newAddon()
+    local C = NS.Constants
+    local keys = {}
+    for i, s in ipairs(C.SITUATIONS) do keys[i] = s.key end
+    local rows = {}
+    for _, row in ipairs(NS.addon.Settings.Rows) do rows[row.path] = true end
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(table.concat(keys, ","), "dungeon,raid,pvp,openWorldGroup,solo")
+        for _, key in ipairs(RETAIL_ONLY_SITUATIONS) do
+            assertNil(C.SITUATION[key], key .. " is no situation on Forever")
+            assertNil(NS.C.PROFILE.situations[key], key .. " has no default on Forever")
+            assertNil(NS.C.PROFILE.trade.rules[key], key .. " has no loot rule on Forever")
+            for _, field in ipairs({ "track", "autoOpen", "quality" }) do
+                assertNil(rows["situations." .. key .. "." .. field], key .. "." .. field .. " has no row")
+            end
+            assertNil(rows["trade.rules." .. key], key .. "'s loot rule has no row")
+        end
+    else
+        assertEqual(table.concat(keys, ","),
+            "mythicPlus,dungeon,followerDungeon,raidLFR,raid,delve,scenario,pvp,openWorldGroup,solo")
+        for _, key in ipairs(RETAIL_ONLY_SITUATIONS) do
+            assertTrue(rows["situations." .. key .. ".track"], key .. " is a Retail row")
+        end
+    end
+    for _, s in ipairs(C.SITUATIONS) do
+        assertTrue(rows["situations." .. s.key .. ".track"], s.key .. " has its rows")
+        assertTrue(NS.C.PROFILE.situations[s.key] ~= nil, s.key .. " has its defaults")
+        assertTrue(NS.C.PROFILE.trade.rules[s.key] ~= nil, s.key .. " has its loot rule")
+    end
+end)
+
+test("situations: difficulty 242 is a raid on Forever", function()
+    local NS = T.newAddon()
+    local Sit, C = NS.Situations, NS.Constants
+    assertEqual(D.RAID_CLASSIC_20, 242); assertEqual(D.RAID_CLASSIC_10, 243)
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(C.DIFFICULTY_KIND[242], "raid"); assertEqual(C.DIFFICULTY_KIND[243], "raid")
+        assertEqual(Sit.Classify(inst("raid", 242)), "raid")
+        assertEqual(Sit.Classify(inst("raid", 243)), "raid")
+        assertEqual(Sit.Classify(inst("raid", D.RAID_40)), "raid")
+        assertEqual(Sit.Classify(inst("party", D.NORMAL_DUNGEON)), "dungeon")
+        -- No Retail-only key ever comes out on Forever, whatever the inputs say.
+        assertEqual(Sit.Classify(inst("party", D.MYTHIC_KEYSTONE, { isChallengeModeActive = true })), "dungeon")
+        assertEqual(Sit.Classify(inst("party", nil, { isFollowerDungeon = true })), "dungeon")
+        assertEqual(Sit.Classify(inst("raid", D.LFR)), "raid")
+        assertEqual(Sit.Classify(inst("scenario", D.DELVE, { inGroup = false })), "solo")
+        assertEqual(Sit.Classify(inst("scenario", nil)), "openWorldGroup")
+        for _, key in ipairs(RETAIL_ONLY_SITUATIONS) do
+            for id, kind in pairs(C.DIFFICULTY_KIND) do assertTrue(kind ~= key, id .. " -> " .. kind) end
+        end
+    else
+        assertNil(C.DIFFICULTY_KIND[242], "Retail has no classic 20-player raid")
+        assertNil(C.DIFFICULTY_KIND[243])
+        assertEqual(C.DIFFICULTY_KIND[D.MYTHIC_KEYSTONE], "mythicPlus")
+    end
+end)
+
+test("situations: the keystone events serve Retail alone", function()
+    local NS, m = T.enableAddon()
+    local n = 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[1] == "CHALLENGE_MODE_START" or row[1] == "CHALLENGE_MODE_COMPLETED" then
+            n = n + 1
+            assertEqual(table.concat(row.clients or {}, ","), "retail", row[1] .. " " .. row[2])
+        end
+    end
+    assertEqual(n, 7, "Situations, LootFeed and WindowCompact, two each, and the asks' flush")
+    assertEqual(NS.Constants.MESSAGE_FLUSH_TRIGGERS.CHALLENGE_MODE_COMPLETED == true,
+        not T.forever, "a key's completion flushes on Retail only")
+    m.challengeModeActive = true
+    assertEqual(NS.Compat.ChallengeModeActive(), not T.forever, "no keystone read on Forever")
+    m.keystoneLevel = 9
+    assertEqual(NS.Compat.KeystoneLevel() == nil, T.forever, "nor a keystone level")
 end)

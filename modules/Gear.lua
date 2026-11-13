@@ -407,6 +407,8 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_SPECIALIZATION_CHANGED", "
 -- WoW Forever's spec change is a talent change: the trees are the specs (design §4.2).
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRAIT_CONFIG_UPDATED", "OnGearTalentEvent", clients = { "forever" } }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHARACTER_POINTS_CHANGED", "OnGearTalentEvent", clients = { "forever" } }
+-- WoW Forever: a level gained moves what you can wear (plate or mail from level 40, design §4.2).
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_LEVEL_UP", "OnGearLevelEvent", clients = { "forever" } }
 -- Shared (core/DropWatcher.lua's dispatcher): this row comes after core/DropWatcher.lua's, which
 -- hands the edge to the restriction tracker first, so InCombat already reads false.
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnGearRegenEvent" }
@@ -428,6 +430,12 @@ end
 -- WoW Forever: your talents moved (a point spent, a respec, a config switch); the rebuild re-reads
 -- your top talent tree. Both events are the player's own.
 function NS.addon.OnGearTalentEvent(_, event)
+    G.Schedule(event)
+end
+
+-- WoW Forever: you gained a level. The rebuild re-reads your level (the armor by level) once the
+-- throttle runs, when UnitLevel answers the new one.
+function NS.addon.OnGearLevelEvent(_, event)
     G.Schedule(event)
 end
 

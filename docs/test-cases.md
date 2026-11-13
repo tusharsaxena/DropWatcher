@@ -981,8 +981,10 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (47)
+### test_test_mode.lua (49)
 
+- test mode: Forever samples use only the nine classes
+- test mode: Forever samples name Forever places, whatever pool they draw on
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
 - test mode data: each group is one real place, its loot that place's at the group's difficulty (fb17)
@@ -1410,7 +1412,7 @@ Total.
 - quality gate: the upgrade override lets a drop new to your collection through, never a collected one
 - quality gate: an Always watch item passes below the threshold, as whitelisted
 
-### test_situations.lua (14)
+### test_situations.lua (17)
 
 - situations: the classifier truth table
 - situations: the truth table reaches every situation key
@@ -1426,6 +1428,9 @@ Total.
 - situations: Current classifies live before the first event, without a message
 - situations: IsTracking, ShouldAutoOpen and QualityOverride read the profile, then the spec
 - situations: stood down, the events are gone; the stand-up announces where the player is
+- situations: Forever has no mythicPlus, delve, followerDungeon, raidLFR or scenario rows
+- situations: difficulty 242 is a raid on Forever
+- situations: the keystone events serve Retail alone
 
 ### test_trade_rules.lua (24)
 
@@ -1593,7 +1598,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (28)
+### test_gear.lua (29)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class-wide spec and your talent tree
@@ -1620,6 +1625,7 @@ Total.
 - gear: a bag event in combat arms nothing; the combat's end rebuilds once
 - gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
 - gear: the player's spec change rebuilds; another unit's does not
+- gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen
 - gear: the first lazy read announces nothing
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
@@ -2284,7 +2290,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (24)
+### test_sim_pool.lua (25)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2308,6 +2314,7 @@ Total.
 - sim roster: the random source replays a seed and stays in range
 - sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
 - sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
+- sim roster: on Forever a member wears its bow in the ranged slot; Retail's order has no slot 18
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
@@ -2338,10 +2345,11 @@ Total.
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 
-### test_sim_scenario.lua (31)
+### test_sim_scenario.lua (32)
 
 - sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
+- sim scenario: Forever lists no key, lfr or delve
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
 - sim verbs: every verb but the free ones needs a running simulation; an unknown word prints the usage
 - sim verbs: each host verb runs through RunVerb with its line, and says why it did nothing
@@ -2700,7 +2708,7 @@ Total.
 | test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 47 |
+| test_test_mode.lua | 49 |
 | test_compat.lua | 76 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
@@ -2715,7 +2723,7 @@ Total.
 | test_offspec_offer.lua | 11 |
 | test_scoring.lua | 22 |
 | test_quality_gate.lua | 26 |
-| test_situations.lua | 14 |
+| test_situations.lua | 17 |
 | test_trade_rules.lua | 24 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
@@ -2723,7 +2731,7 @@ Total.
 | test_item_facts.lua | 25 |
 | test_collectibles.lua | 15 |
 | test_item_read.lua | 25 |
-| test_gear.lua | 28 |
+| test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
 | test_feed.lua | 53 |
@@ -2753,9 +2761,9 @@ Total.
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 24 |
+| test_sim_pool.lua | 25 |
 | test_sim_events.lua | 24 |
-| test_sim_scenario.lua | 31 |
+| test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 17 |
 | test_sim_panel.lua | 13 |
@@ -2775,4 +2783,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2289** |
+| **Total** | **2297** |

@@ -395,7 +395,7 @@ test("flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that 
         m.__fire(event)
         assertEqual(#m.chatSent, 1, event)
     end
-end)
+end, T.RETAIL_ONLY)
 
 test("flush: a trigger with nothing queued, or while chat is still restricted, sends nothing", function()
     local NS, m, A = party()

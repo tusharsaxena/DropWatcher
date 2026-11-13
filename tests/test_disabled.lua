@@ -21,10 +21,12 @@ local PINNED = {
 }
 
 -- Per client (clients-§4, §6): a row for the other client is not registered. Retail's spec change
--- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2).
+-- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2); the keystone events
+-- are Retail's alone (Forever port design §4.4), and a level gained rebuilds Forever's gear (its
+-- armor type moves at 40).
 local OTHER_CLIENT = {
-    retail  = { PLAYER_SPECIALIZATION_CHANGED = true },
-    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true },
+    retail  = { PLAYER_SPECIALIZATION_CHANGED = true, CHALLENGE_MODE_COMPLETED = true, CHALLENGE_MODE_START = true },
+    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"
@@ -377,7 +379,7 @@ test("disabled 12: disabling hides the simulation panel, idle or running, and it
         assertFalse(NS.Sim:ShowPanel(), d[1] .. ": the library refuses it while stood down")
     end
     local NS = T.enableAddon()
-    NS.Sim:Start({ scenario = "key" })
+    NS.Sim:Start({ scenario = "dungeon" })
     assertTrue(NS.Sim:IsActive())
     assertTrue(NS.Sim:ShowPanel())
     NS.addon:OnSlashCommand("disable")
