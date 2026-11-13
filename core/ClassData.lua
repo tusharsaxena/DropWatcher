@@ -20,7 +20,7 @@ local _, NS = ...
 -- THE SHAPE, both lists: CLASS_ID (classFile -> classID), ARMOR (classFile -> the armor subclass of
 -- its loot at the level cap), WEAPONS (classFile -> { [subClassID] = true }), SPECS (spec key ->
 -- row), SPEC_INDEX (Retail: specID -> Pawn's spec index), CLASS_SPECS (classFile -> its spec keys,
--- sorted; derived from SPECS), STAT_GATE ("hard": a primary stat the spec cannot use is "can't
+-- sorted; derived from SPECS), RELIC (Forever only: classFile -> its relic subclass), STAT_GATE ("hard": a primary stat the spec cannot use is "can't
 -- use"; "soft": it never is by itself, Forever port design §4.5). A spec row is { class, stat,
 -- dualWield, titanGrip, shield, offhand } plus, on Forever, { tree, pawn, pawnTank }.
 --
@@ -299,6 +299,15 @@ local function bindGear(L)
         if ARMOR_RANK[subClassID] <= ARMOR_RANK[now] then return true end
         if ARMOR_RANK[subClassID] <= ARMOR_RANK[L.ARMOR[classFile]] then return false, "armorLevel" end
         return false
+    end
+
+    --- Whether the class can use a relic of `subClassID` (WoW Forever's libram, idol or totem, the
+    --- list's RELIC: classFile -> its relic subclass): true for its own, false for any other or a
+    --- class with none; nil for an unknown class or subclass, or a list with no relics (Retail).
+    function L.CanUseRelic(classFile, subClassID)
+        if not L.RELIC or type(subClassID) ~= "number" then return nil end
+        if type(classFile) ~= "string" or not L.ARMOR[classFile] then return nil end
+        return L.RELIC[classFile] == subClassID
     end
 
     --- Whether the class can use a weapon of `subClassID`; nil for an unknown class or subclass.

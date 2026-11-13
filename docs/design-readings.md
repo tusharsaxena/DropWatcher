@@ -19,7 +19,10 @@ class-restricted item. The track delta orders tracks by a numeric `tier` from It
 falls back to the enUS track names, so a localized name with no tier leaves it unset. Bows
 (`INVTYPE_RANGED`) and guns, crossbows and wands (`INVTYPE_RANGEDRIGHT`) fill both hands, so the
 off-hand and one-hander plans compare against them as two-handers; a ranged drop compares like a
-two-hander for hunters and against the main hand for everyone else. A unique-equipped drop at
+two-hander for hunters and against the main hand for everyone else. That is Retail's slot plan;
+WoW Forever's keeps the ranged slot 18 (`C.SLOT.RANGED`, picked once by `ClientKey()` in
+`core/Constants.lua`, DW-FP06), so there a bow, gun, crossbow, wand, thrown weapon or relic
+compares against what is worn in slot 18 alone, and the snapshot and the inspect read it. A unique-equipped drop at
 its category's maximum compares against the lowest holder in its own slots when one of them
 holds the category, else the lowest holder anywhere.
 

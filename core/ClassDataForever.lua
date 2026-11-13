@@ -19,7 +19,7 @@ local _, NS = ...
 -- for damage and 3 (`pawnTank`) for a tank, and its Restoration is 4 (design §4.3).
 --
 -- INFERRED, not probed: the rows are vanilla-era game knowledge (R4 §5). Relics (libram, idol,
--- totem) come with the ranged slot (DW-FP06).
+-- totem) go in the ranged slot (DW-FP06), each its one class's (RELIC).
 
 local CD = NS.ClassData
 local C = NS.Constants
@@ -66,6 +66,9 @@ FOREVER.WEAPONS = {
     WARLOCK = set(W.SWORD_1H, W.STAFF, W.DAGGER, W.WAND),
     DRUID   = set(W.MACE_1H, W.MACE_2H, W.STAFF, W.FIST, W.DAGGER),
 }
+
+-- classFile -> the relic subclass it can use in the ranged slot; any other class uses none.
+FOREVER.RELIC = { PALADIN = A.LIBRAM, DRUID = A.IDOL, SHAMAN = A.TOTEM }
 
 -- "<classFile>:<tree>" -> row, every class's three talent trees (the Druid's Pawn scales are four).
 FOREVER.SPECS = {

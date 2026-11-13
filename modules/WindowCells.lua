@@ -69,6 +69,7 @@ local EVAL_REASON = {
     weaponType = L["a weapon type the class can't use"],
     shield = L["the spec can't use a shield"],
     offhand = L["the spec can't use a held off hand"],
+    relic = L["a relic for another class"],
     dualWield = L["the spec can't dual wield"],
     primaryStat = L["its primary stat doesn't suit the spec"],
     classRestricted = L["for other classes"],
@@ -122,6 +123,8 @@ local SLOT_LABEL = {
     INVTYPE_TRINKET = L["Trinket"], INVTYPE_WEAPON = L["One-hand"], INVTYPE_WEAPONMAINHAND = L["Main hand"],
     INVTYPE_WEAPONOFFHAND = L["Off hand"], INVTYPE_SHIELD = L["Shield"], INVTYPE_HOLDABLE = L["Held in off hand"],
     INVTYPE_2HWEAPON = L["Two-hand"], INVTYPE_RANGED = L["Ranged"], INVTYPE_RANGEDRIGHT = L["Ranged"],
+    -- WoW Forever's ranged slot alone holds these (core/Constants.lua's Forever slot plan).
+    INVTYPE_THROWN = L["Ranged"], INVTYPE_RELIC = L["Relic"],
 }
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
@@ -767,6 +770,7 @@ local LOC_TYPE = {
 local WEAPON_LOC = {
     INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true, INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
     INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true,
+    INVTYPE_THROWN = true,
 }
 
 local function typeTitle(word) return L["Type: %s"]:format(word) end

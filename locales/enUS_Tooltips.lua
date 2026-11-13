@@ -275,6 +275,7 @@ L["the score is not ready yet (retried)"] = "the score is not ready yet (retried
 L["the slot holds an heirloom you protect"] = "the slot holds an heirloom you protect"
 L["the spec can't dual wield"] = "the spec can't dual wield"
 L["the spec can't use a held off hand"] = "the spec can't use a held off hand"
+L["a relic for another class"] = "a relic for another class"
 L["the spec can't use a shield"] = "the spec can't use a shield"
 L["this area, outside any boss encounter"] = "this area, outside any boss encounter"
 L["This item"] = "This item"

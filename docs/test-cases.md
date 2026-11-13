@@ -1167,7 +1167,7 @@ Total.
 - constants: the categories in display order, the tier slots and the empty token table
 - constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
 - constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
-- constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use
+- constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone
 - constants: every slot plan has a known kind and real slot ids
 - constants: the slot plan maps each equip location to the spec §5.2 kind
 - constants: universal and armor-typed equip locations partition the armor plans
@@ -1196,7 +1196,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (41)
+### test_evaluate.lua (42)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -1238,6 +1238,7 @@ Total.
 - evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
 - evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
 - evaluate: on Forever the item's spec list does not lift the armor level rule
+- evaluate: on Forever a relic is its class's alone: libram, idol, totem
 - evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
 ### test_offspec.lua (11)
@@ -1502,7 +1503,7 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (24)
+### test_item_facts.lua (25)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
@@ -1514,6 +1515,7 @@ Total.
 - item facts: an item unique on its own takes its item id as the category
 - item facts: a token naming classes is a tier token; class gear carries classes only
 - item facts: a tier token's use text names the slot it makes, read once; gear's never (TT-1)
+- item facts: a relic is gear on Forever, not gear on Retail
 - item facts: the quality falls back to the link's color
 - item facts: the facts feed the verdict kernel
 - item facts: Get caches by link
@@ -1575,7 +1577,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (27)
+### test_gear.lua (28)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class-wide spec and your talent tree
@@ -1590,6 +1592,7 @@ Total.
 - gear: a bag item with no slot plan (a reagent, a potion) is never asked of the item facts
 - gear: a tier token and a secret bag link are not owned gear
 - gear: the candidate judges a drop against the worn item, and against the bags with compareOwned
+- gear: on Forever a bow compares against slot 18, on Retail against the hands
 - gear: the pool keeps every gear item read, the off-spec ones too
 - gear: OffSpecGear is the best item per slot that spec could wear, false where nothing fits
 - gear: a worn slot still loading leaves no off-spec gear until it loads
@@ -1637,10 +1640,11 @@ Total.
 - loot parser: the event's twelfth argument is the GUID it uses
 - loot parser: stood down, CHAT_MSG_LOOT reaches nothing; the counters survive
 
-### test_inspect.lua (33)
+### test_inspect.lua (34)
 
 - inspect: a request sends one NotifyInspect, and the ready read stores gear and spec
 - inspect: a slot's level comes from its tooltip, else from the link
+- inspect: on Forever the ranged slot 18 is read; on Retail it is not
 - inspect: one in flight at a time, spaced SPACING seconds apart
 - inspect: looters first, then offer candidates, then warm-up; a later ask can raise a job
 - inspect: no INSPECT_READY in 2.5s retries once, then the job fails with a timeout
@@ -2684,7 +2688,7 @@ Total.
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
-| test_evaluate.lua | 41 |
+| test_evaluate.lua | 42 |
 | test_offspec.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
@@ -2697,12 +2701,12 @@ Total.
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
-| test_item_facts.lua | 24 |
+| test_item_facts.lua | 25 |
 | test_collectibles.lua | 15 |
 | test_item_read.lua | 25 |
-| test_gear.lua | 27 |
+| test_gear.lua | 28 |
 | test_loot_parser.lua | 29 |
-| test_inspect.lua | 33 |
+| test_inspect.lua | 34 |
 | test_feed.lua | 52 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -2752,4 +2756,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2266** |
+| **Total** | **2270** |

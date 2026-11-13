@@ -37,7 +37,9 @@ local _, NS = ...
 -- tier token, or an item with no slot plan, is not gear) is placed by its slot plan: a single-slot
 -- item in its slot; a ring or trinket in either of its pair; a one-hander in the main hand, and in
 -- the off hand too for a dual wielder; a two-hander or ranged weapon in the main hand, and in the
--- off hand too with Titan's Grip; an off hand, shield or held item in the off hand. The slots are
+-- off hand too with Titan's Grip; an off hand, shield or held item in the off hand. On WoW Forever a
+-- ranged or thrown weapon, a wand or a relic goes in the ranged slot 18 instead (C.SLOT.RANGED),
+-- which the snapshot reads with every other slot of C.SLOT. The slots are
 -- filled in id order, each with the highest-level item that fits and is not already placed, so a
 -- pair gets your best two and one item never fills two slots. It is a per-slot best, not a loadout
 -- planner: unique-equipped limits and a two-hander's claim on both hands are not weighed.

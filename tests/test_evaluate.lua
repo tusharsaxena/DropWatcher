@@ -97,15 +97,30 @@ test("evaluate: every equip location in SLOT_PLAN compares against its slot", fu
         { "INVTYPE_HOLDABLE", armor(650, "INVTYPE_HOLDABLE", A.GENERIC), who("MAGE", 64), S.OFFHAND, 617 },
         { "INVTYPE_2HWEAPON", weapon(650, "INVTYPE_2HWEAPON", W.SWORD_2H), who("WARRIOR", 71), S.MAINHAND,
             616.5 },
+    }
+    -- The client's own ranged rows (clients-§6): Retail's fill both hands; WoW Forever's, thrown
+    -- weapons and relics with them, go in the ranged slot (DW-FP06), judged on Forever's class list.
+    local EF = T.forever and loadForever() or nil
+    local ranged = T.forever and {
+        { "INVTYPE_RANGED", weapon(650, "INVTYPE_RANGED", W.BOWS), who("HUNTER", 1485, { tree = 2 }), S.RANGED, 618 },
+        { "INVTYPE_RANGEDRIGHT", weapon(650, "INVTYPE_RANGEDRIGHT", W.WAND), who("PRIEST", nil, { tree = 1 }),
+            S.RANGED, 618 },
+        { "INVTYPE_THROWN", weapon(650, "INVTYPE_THROWN", W.THROWN), who("ROGUE", nil, { tree = 2 }), S.RANGED, 618 },
+        { "INVTYPE_RELIC", armor(650, "INVTYPE_RELIC", A.LIBRAM), who("PALADIN", nil, { tree = 1 }), S.RANGED, 618 },
+    } or {
         { "INVTYPE_RANGED", weapon(650, "INVTYPE_RANGED", W.BOWS), who("HUNTER", 254), S.MAINHAND, 616.5 },
         { "INVTYPE_RANGEDRIGHT", weapon(650, "INVTYPE_RANGEDRIGHT", W.WAND), who("PRIEST", 256), S.MAINHAND,
             616 },
     }
+    for _, row in ipairs(ranged) do
+        row.E = EF
+        cases[#cases + 1] = row
+    end
     local seen = 0
     for _, row in ipairs(cases) do
         local loc = row[1]
         assertTrue(C.SLOT_PLAN[loc] ~= nil, loc .. " has a plan")
-        local res = E.Evaluate(row[2], row[3])
+        local res = (row.E or E).Evaluate(row[2], row[3])
         assertEqual(res.equip, "ok", loc .. " equip")
         assertEqual(res.verdict, "upgrade", loc .. " verdict")
         assertEqual(res.baselineSlot, row[4], loc .. " baselineSlot")
@@ -333,7 +348,22 @@ test("evaluate: an off hand against a wielded two-hander compares with the two-h
     assertTrue(hasReason(res, "vsTwoHand"))
 end)
 
+-- WoW Forever's ranged slot (DW-FP06): a bow, gun or wand compares against slot 18 alone, never
+-- the hands.
+local function foreverRanged()
+    local E = loadForever()
+    local h = who("HUNTER", 1485, { tree = 1, level = 60 })
+    h.gear[S.MAINHAND] = weapon(640, "INVTYPE_2HWEAPON", W.POLEARM)
+    h.gear[S.RANGED] = weapon(630, "INVTYPE_RANGED", W.BOWS)
+    local res = E.Evaluate(weapon(650, "INVTYPE_RANGEDRIGHT", W.GUNS), h)
+    assertEqual(res.baselineSlot, S.RANGED); assertEqual(res.ilvlDelta, 20)
+    assertNil(res.either, "one slot, one worn item")
+    h.gear[S.RANGED] = false
+    assertTrue(hasReason(E.Evaluate(weapon(650, "INVTYPE_RANGED", W.BOWS), h), "emptySlot"))
+end
+
 test("evaluate: ranged weapons are two-handers for hunters and main hand for wand users", function()
+    if T.forever then return foreverRanged() end
     local E = load()
     local h = who("HUNTER", 253)
     h.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGED", W.BOWS)
@@ -941,6 +971,19 @@ test("evaluate: on Forever the item's spec list does not lift the armor level ru
     assertEqual(E.Evaluate(mail, hunter(40)).verdict, "upgrade", "from 40 the list's answer stands")
     local cloak = armor(650, "INVTYPE_CLOAK", A.CLOTH, { specs = { [1485] = true }, specsClass = "HUNTER" })
     assertEqual(E.Evaluate(cloak, hunter(30)).equip, "ok", "a cloak has no armor level")
+end)
+
+test("evaluate: on Forever a relic is its class's alone: libram, idol, totem", function()
+    local E = loadForever()
+    local relic = function(sub) return armor(650, "INVTYPE_RELIC", sub) end
+    local function equip(sub, classFile) return E.Equippability(relic(sub), who(classFile, nil, { level = 60 })) end
+    -- red under: no relic rule, so every relic is unknown (notGear) for every class
+    assertEqual(equip(A.LIBRAM, "PALADIN"), "ok"); assertEqual(equip(A.IDOL, "DRUID"), "ok")
+    assertEqual(equip(A.TOTEM, "SHAMAN"), "ok")
+    local status, why = equip(A.LIBRAM, "DRUID")
+    assertEqual(status, "cant"); assertEqual(why, "relic")
+    assertEqual(equip(A.TOTEM, "WARRIOR"), "cant", "a class with no relic")
+    assertEqual(equip(A.IDOL, nil), "unknown", "no class yet")
 end)
 
 test("evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat", function()

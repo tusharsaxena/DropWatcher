@@ -118,7 +118,7 @@ test("constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 ste
     assertEqual(#keysOf(c.TRACK_TIER), #order)
 end)
 
-test("constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use", function()
+test("constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone", function()
     local c = C()
     assertEqual(c.SLOT.HEAD, 1)
     assertEqual(c.SLOT.SHIRT, 4)
@@ -128,9 +128,11 @@ test("constants: the inventory slot ids are the client's, 1 through 19 with no s
     assertEqual(c.SLOT.MAINHAND, 16)
     assertEqual(c.SLOT.OFFHAND, 17)
     assertEqual(c.SLOT.TABARD, 19)
+    -- WoW Forever keeps the ranged slot (research R4 §9); Retail's slot 18 is unused (clients-§6).
+    if T.forever then assertEqual(c.SLOT.RANGED, 18) else assertEqual(c.SLOT.RANGED, nil) end
     local seen = {}
     for name, id in pairs(c.SLOT) do
-        assertTrue(type(id) == "number" and id >= 1 and id <= 19 and id ~= 18, name)
+        assertTrue(type(id) == "number" and id >= 1 and id <= 19 and (id ~= 18 or T.forever), name)
         assertTrue(not seen[id], "slot id " .. id .. " is unique")
         seen[id] = true
     end
@@ -172,9 +174,19 @@ test("constants: the slot plan maps each equip location to the spec §5.2 kind",
         INVTYPE_2HWEAPON = { "weapon2H", { S.MAINHAND, S.OFFHAND } },
         INVTYPE_SHIELD = { "offhand", { S.OFFHAND } },
         INVTYPE_HOLDABLE = { "offhand", { S.OFFHAND } },
-        INVTYPE_RANGED = { "ranged", { S.MAINHAND, S.OFFHAND } },
-        INVTYPE_RANGEDRIGHT = { "ranged", { S.MAINHAND, S.OFFHAND } },
     }
+    -- The client's own ranged rows (clients-§5): Retail's bows, guns, crossbows and wands fill both
+    -- hands; WoW Forever's, with thrown weapons and relics, go in the ranged slot.
+    if T.forever then
+        for _, loc in ipairs({ "INVTYPE_RANGED", "INVTYPE_RANGEDRIGHT", "INVTYPE_THROWN", "INVTYPE_RELIC" }) do
+            cases[loc] = { "single", { S.RANGED } }
+        end
+    else
+        cases.INVTYPE_RANGED = { "ranged", { S.MAINHAND, S.OFFHAND } }
+        cases.INVTYPE_RANGEDRIGHT = { "ranged", { S.MAINHAND, S.OFFHAND } }
+        assertTrue(c.SLOT_PLAN.INVTYPE_THROWN == nil and c.SLOT_PLAN.INVTYPE_RELIC == nil, "no Retail plan")
+    end
+    assertEqual(#keysOf(c.SLOT_PLAN), #keysOf(cases), "no plan beyond the client's own")
     for equipLoc, want in pairs(cases) do
         local plan = c.SLOT_PLAN[equipLoc]
         assertTrue(plan ~= nil, equipLoc .. " has a plan")

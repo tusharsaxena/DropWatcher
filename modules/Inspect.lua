@@ -25,7 +25,8 @@ local _, NS = ...
 -- times out, and the PLAYER_REGEN_ENABLED edge resumes the rest. A job no gate lets through is
 -- asked again every RECHECK seconds.
 --
--- READING. On the job's INSPECT_READY the slots 1-17 are read READ_DELAY seconds later; a slot whose
+-- READING. On the job's INSPECT_READY the slots 1-17 (1-18 on WoW Forever, whose ranged slot 18
+-- holds ranged and thrown weapons, wands and relics) are read READ_DELAY seconds later; a slot whose
 -- item id is known but whose link is not (or is nameless) is incomplete, and the read is retried up
 -- to LINK_TRIES times, LINK_RETRY seconds apart, then kept as it is (`reason` = `incomplete`).
 -- A read that finds no item at all, or a unit that no longer names the GUID, is NO DATA (the
@@ -81,7 +82,8 @@ I.WARMUP_DELAY = 2
 --- Queue priorities, lower first.
 I.PRIORITY = { looter = 1, offer = 2, warmup = 3 }
 
-local FIRST_SLOT, LAST_SLOT = 1, 17
+-- The last slot read: the ranged slot where the client has one (WoW Forever), else the off hand.
+local FIRST_SLOT, LAST_SLOT = 1, NS.Constants.SLOT.RANGED or NS.Constants.SLOT.OFFHAND
 
 --- The slots the client knows only from inspect data (neck, rings, trinkets): the fast path needs
 --- an item in each before it trusts a read made without an inspect.
@@ -232,7 +234,7 @@ local function readSlot(unit, slot)
     return { link = link, ilvl = Compat.InventoryItemLevel(unit, slot) }
 end
 
--- Slots 1-17 of `unit`: { items, missing (incomplete slots), worn (slots with an item) }.
+-- Slots FIRST_SLOT-LAST_SLOT of `unit`: { items, missing (incomplete slots), worn (slots with an item) }.
 local function readSlots(unit)
     local t0 = Perf.on and debugprofilestop()
     local snap = { items = {}, missing = 0, worn = 0 }

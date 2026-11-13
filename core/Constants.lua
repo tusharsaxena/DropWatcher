@@ -297,6 +297,7 @@ C.RECIPE_SKILL_LINE = {
 }
 
 -- Enum.ItemArmorSubclass. GENERIC is jewelry, trinkets and held off hands; COSMETIC is never gear.
+-- LIBRAM, IDOL and TOTEM are WoW Forever's relics (the ranged slot, core/ClassDataForever.lua).
 C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
     GENERIC  = { "Generic", 0 },
     CLOTH    = { "Cloth", 1 },
@@ -305,6 +306,9 @@ C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
     PLATE    = { "Plate", 4 },
     COSMETIC = { "Cosmetic", 5 },
     SHIELD   = { "Shield", 6 },
+    LIBRAM   = { "Libram", 7 },
+    IDOL     = { "Idol", 8 },
+    TOTEM    = { "Totem", 9 },
 })
 
 -- Enum.ItemWeaponSubclass.
@@ -387,12 +391,16 @@ C.TIER_TOKENS = {}
 -- Inventory slots and slot plans (design spec §5.2)
 -- ---------------------------------------------------------------------------------------------
 
+-- The client picked once (clients-§5): the slot ids and the slot plans below are per client.
+local FOREVER = NS.Compat.ClientKey() == "forever"
+
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
--- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items.
+-- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items. WoW Forever keeps
+-- it (INVSLOT_RANGED, research R4 §9) for ranged and thrown weapons, wands and relics.
 C.SLOT = {
     HEAD = 1, NECK = 2, SHOULDER = 3, SHIRT = 4, CHEST = 5, WAIST = 6, LEGS = 7, FEET = 8,
     WRIST = 9, HANDS = 10, FINGER1 = 11, FINGER2 = 12, TRINKET1 = 13, TRINKET2 = 14, BACK = 15,
-    MAINHAND = 16, OFFHAND = 17, TABARD = 19,
+    MAINHAND = 16, OFFHAND = 17, RANGED = FOREVER and 18 or nil, TABARD = 19,
 }
 local S = C.SLOT
 
@@ -404,8 +412,9 @@ C.SLOT_KIND = {
 }
 
 -- equipLoc -> { kind, slots }. An equip location absent here (shirt, tabard, bag, ammo,
--- non-equippable) is not gear the feed compares.
-C.SLOT_PLAN = {
+-- non-equippable) is not gear the feed compares. The rows both clients share; each client's own
+-- ranged rows follow (SLOT_PLAN_RANGED), and the two are joined once, by ClientKey().
+local SLOT_PLAN_SHARED = {
     INVTYPE_HEAD           = { kind = "single", slots = { S.HEAD } },
     INVTYPE_NECK           = { kind = "single", slots = { S.NECK } },
     INVTYPE_SHOULDER       = { kind = "single", slots = { S.SHOULDER } },
@@ -428,10 +437,29 @@ C.SLOT_PLAN = {
     INVTYPE_SHIELD         = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_HOLDABLE       = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_2HWEAPON       = { kind = "weapon2H", slots = { S.MAINHAND, S.OFFHAND } },
-    -- Bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) fill both hands.
-    INVTYPE_RANGED         = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
-    INVTYPE_RANGEDRIGHT    = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
 }
+
+-- Each client's ranged rows: two lists, one per client, picked once (clients-§5).
+local SLOT_PLAN_RANGED = {
+    -- Retail: bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) fill both hands; there are
+    -- no thrown weapons or relics.
+    retail = {
+        INVTYPE_RANGED      = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+        INVTYPE_RANGEDRIGHT = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+    },
+    -- WoW Forever: bows, guns, crossbows, wands, thrown weapons and relics (a libram, idol or totem)
+    -- go in the ranged slot, compared with what is worn there (research R4 §9).
+    forever = {
+        INVTYPE_RANGED      = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_RANGEDRIGHT = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_THROWN      = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_RELIC       = { kind = "single", slots = { S.RANGED } },
+    },
+}
+
+C.SLOT_PLAN = {}
+for loc, plan in pairs(SLOT_PLAN_SHARED) do C.SLOT_PLAN[loc] = plan end
+for loc, plan in pairs(SLOT_PLAN_RANGED[FOREVER and "forever" or "retail"]) do C.SLOT_PLAN[loc] = plan end
 
 -- Equip locations any class can use whatever their armor subclass (cloaks are cloth for everyone).
 C.UNIVERSAL_EQUIPLOC = {

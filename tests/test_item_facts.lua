@@ -202,6 +202,28 @@ test("item facts: a tier token's use text names the slot it makes, read once; ge
     assertEqual(c.equipLoc, "INVTYPE_CHEST", "its own slot stays")
 end)
 
+-- The ranged slot (Forever port design §4.4, research R4 §9): a relic (a libram, idol or totem) has a
+-- slot plan on WoW Forever, so it is gear and its use text is never read; Retail has no relics, so
+-- there it has no plan and is not gear.
+test("item facts: a relic is gear on Forever, not gear on Retail", function()
+    local RELIC = "|cnIQ3:|Hitem:2004::::::::60:::::|h[Libram of Truth]|h|r"
+    local USE = "Increases the damage of your Holy Strike."
+    local NS, _, IF = enabled(function(m)
+        m.addItem(RELIC, { name = "Libram of Truth", quality = 3, ilvl = 60, equipLoc = "INVTYPE_RELIC",
+            classID = 4, subClassID = 7, bindType = 1, stats = {} })
+        m.itemSpells[RELIC], m.spellTexts[79] = 79, USE
+    end)
+    local f = IF.Get(RELIC)
+    assertEqual(f.rawEquipLoc, "INVTYPE_RELIC")
+    if T.forever then
+        assertTrue(NS.Constants.SLOT_PLAN.INVTYPE_RELIC ~= nil, "the relic has the ranged slot's plan")
+        assertNil(f.useText, "gear's use text is never read")
+    else
+        assertNil(NS.Constants.SLOT_PLAN.INVTYPE_RELIC, "Retail has no relic plan")
+        assertEqual(f.useText, USE, "not gear: its use text is read")
+    end
+end)
+
 test("item facts: the quality falls back to the link's color", function()
     local _, _, IF = enabled(function(m) m.addItem(RING, ring({ quality = nil })) end)
     assertEqual(IF.Get(RING).quality, 4)

@@ -98,13 +98,14 @@ local function armorTypeCheck(facts, candidate)
     return tri(ok, why or "armorType")
 end
 
--- Shields, held off hands, jewelry and cloaks, then the armor types.
+-- Shields, held off hands, relics (WoW Forever), jewelry and cloaks, then the armor types.
 local function armorCheck(facts, candidate, specID)
     local loc, classFile, tree = facts.equipLoc, candidate.classFile, num(candidate.tree)
     if loc == "INVTYPE_SHIELD" or facts.subClassID == ARMOR.SHIELD then
         return tri(CD.CanUseShield(classFile, specID, tree), "shield")
     end
     if loc == "INVTYPE_HOLDABLE" then return tri(CD.CanUseOffhand(classFile, specID, tree), "offhand") end
+    if loc == "INVTYPE_RELIC" then return tri(CD.CanUseRelic(classFile, facts.subClassID), "relic") end
     if C.UNIVERSAL_EQUIPLOC[loc] then return "ok" end
     if C.ARMOR_TYPED_EQUIPLOC[loc] then return armorTypeCheck(facts, candidate) end
     return "unknown", "notGear"

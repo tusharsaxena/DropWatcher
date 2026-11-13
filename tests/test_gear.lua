@@ -284,6 +284,32 @@ test("gear: the candidate judges a drop against the worn item, and against the b
     assertEqual(r.verdict, "downgrade", "the 640 in the bags is the baseline"); assertEqual(r.ilvlDelta, -20)
 end)
 
+-- The ranged slot (Forever port design §4.4, research R4 §9): WoW Forever's bows, guns, crossbows,
+-- wands, thrown weapons and relics go in slot 18, which the snapshot reads; on Retail slot 18 is
+-- unused and a bow fills both hands.
+test("gear: on Forever a bow compares against slot 18, on Retail against the hands", function()
+    local RANGED = 18
+    local NS, _, G = enabled(function(m)
+        m.__context.class, m.__context.classToken, m.__context.level = "Hunter", "HUNTER", 60
+        if T.forever then m.seedTalents(1485, hunterTrees(0, 31, 5)) else m.specID = 254 end
+        wear(m, SLOT.MAINHAND, 3001, def("INVTYPE_2HWEAPON", 600, 2, 6))
+        wear(m, RANGED, 3002, def("INVTYPE_RANGED", 610, 2, 2))
+        m.addItem(link(3020), def("INVTYPE_RANGED", 620, 2, 2))
+    end)
+    G.Refresh("test")
+    local r = NS.Evaluate.Evaluate(NS.ItemFacts.Get(link(3020)), G.Candidate(), {})
+    assertEqual(r.verdict, "upgrade")
+    if T.forever then
+        assertEqual(NS.Constants.SLOT.RANGED, RANGED)
+        assertEqual(G.Snapshot().equipped[RANGED].ilvl, 610, "the snapshot reads the ranged slot")
+        assertEqual(r.baselineSlot, RANGED); assertEqual(r.ilvlDelta, 10)
+    else
+        assertNil(NS.Constants.SLOT.RANGED, "Retail has no ranged slot")
+        assertNil(G.Snapshot().equipped[RANGED], "slot 18 is never read on Retail")
+        assertEqual(r.baselineSlot, SLOT.MAINHAND); assertEqual(r.ilvlDelta, 20)
+    end
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Off-spec gear (feedback-19 spec §0)
 -- ---------------------------------------------------------------------------------------------

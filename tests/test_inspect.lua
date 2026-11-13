@@ -134,6 +134,25 @@ test("inspect: a slot's level comes from its tooltip, else from the link", funct
     assertEqual(NS.ItemFacts.Get(link(4001)).ilvl, 600, "the cached facts are not written")
 end)
 
+-- The ranged slot (Forever port design §4.4): WoW Forever's slot 18 is read with the rest; on
+-- Retail it is unused and never read.
+test("inspect: on Forever the ranged slot 18 is read; on Retail it is not", function()
+    local _, m, I = party()
+    I.Request(A)
+    m.advance(0)
+    arrive(m, A)
+    m.addItem(link(4018), plate("INVTYPE_RANGED", 605, { classID = 2, subClassID = 2 }))
+    m.inventory[UNIT[A]][18] = link(4018)
+    ready(m, A)
+    m.advance(0.15)
+    local gear = I.Get(A).gear
+    if T.forever then
+        assertEqual(gear[18].link, link(4018), "the bow in the ranged slot")
+    else
+        assertNil(gear[18], "Retail has no slot 18 to read")
+    end
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The queue: spacing and priority
 -- ---------------------------------------------------------------------------------------------
