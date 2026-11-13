@@ -731,7 +731,7 @@ Total.
 - rows: every drop row and its detail card sit ROW_INDENT in from the header; the labels shift over their cells
 - headers: a group header's chevron is gold, as its text, collapsed or open
 
-### test_side_cells.lua (26)
+### test_side_cells.lua (27)
 
 - side cells: Me reads the worn level, then the glyph and the unsigned difference in the verdict's tone
 - side cells: Can't use and Not wanted stay words after the gear, dim red and gray
@@ -746,6 +746,7 @@ Total.
 - side cells: two worn items are two rows, each with its own arrow against the drop; a slot worn empty reads empty
 - side cells: a dual slot gives each worn item its own arrow and tone against the drop, the band as the kernel's
 - side cells: History's verdict alone keeps its own one-row grid from the judged item
+- side cells: the Means words are the client's, picked once, and noScore is a Why row (Forever port §4.5)
 - side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip
 - side cells: History's Me and Them are the verdict alone, worded as the Drops table's
 - side cells: History's Me grid names you in your class color, as on Drops
@@ -1200,7 +1201,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (43)
+### test_evaluate.lua (47)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -1233,6 +1234,10 @@ Total.
 - evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
 - evaluate: the scorer is optional, may be pending, and may fail without harm
 - evaluate: a two-hander's score baseline is the average of both hands' scores
+- evaluate: scoreFirst, a lower item level with a higher score is an upgrade
+- evaluate: scoreFirst, a score within 1% defers to item level
+- evaluate: scoreFirst, no score is item level with reason noScore
+- evaluate: ilvlFirst unchanged
 - evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
 - evaluate: the track delta orders tracks by tier, then rank
 - evaluate: the output carries every field of spec 5.2 step 5
@@ -1875,12 +1880,13 @@ Total.
 - open: InitiateTrade with the member's unit; noApi without it
 - diagnostics: the trade section reports the helper's counts once it has been used
 
-### test_asks.lua (28)
+### test_asks.lua (29)
 
 - send: an ask whispers the looter's Name-Realm with the expanded template, and confirms in chat
 - asks: on Forever the whisper goes to the whole name "Doom Dock"
 - send: every token comes from the drop: item, ilvl, slot, track and both gains
 - send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)
+- send: a score-led upgrade with no item-level gain reads its gain as words (Forever port §4.5)
 - send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again
 - send: an edited text over 255 bytes is refused tooLong and nothing is sent
 - send: a stranger, yourself, an offline member and a missing target are refused
@@ -2103,9 +2109,10 @@ Total.
 - insights sections: a second pass builds no frame
 - insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
 
-### test_toast.lua (49)
+### test_toast.lua (50)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
+- toast: on Forever a score-led upgrade passes the gain gate
 - toast: Compose answers the four rows' parts (feedback-9 spec §0)
 - toast: Compose keeps the table's words, the empty slot and each trade reason
 - toast: the longest rows fit at Toast.WIDTH, nothing cut (feedback-9 spec §0)
@@ -2681,7 +2688,7 @@ Total.
 | test_window_group.lua | 51 |
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
-| test_side_cells.lua | 26 |
+| test_side_cells.lua | 27 |
 | test_collect_cells.lua | 11 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 32 |
@@ -2700,7 +2707,7 @@ Total.
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
-| test_evaluate.lua | 43 |
+| test_evaluate.lua | 47 |
 | test_offspec.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
@@ -2728,7 +2735,7 @@ Total.
 | test_char_filter.lua | 20 |
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
-| test_asks.lua | 28 |
+| test_asks.lua | 29 |
 | test_transmog.lua | 13 |
 | test_history.lua | 40 |
 | test_history_retention.lua | 16 |
@@ -2739,7 +2746,7 @@ Total.
 | test_insights_rows.lua | 20 |
 | test_window_insights.lua | 22 |
 | test_insights_sections.lua | 8 |
-| test_toast.lua | 49 |
+| test_toast.lua | 50 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 14 |
 | test_icon_style.lua | 14 |
@@ -2768,4 +2775,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2282** |
+| **Total** | **2289** |
