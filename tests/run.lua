@@ -306,6 +306,7 @@ Kit.run{
         "test_loot_parser",
         "test_inspect",
         "test_feed",
+        "test_pending",
         "test_feed_counts",
         "test_collect_feed",
         "test_item_lists",

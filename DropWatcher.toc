@@ -301,6 +301,13 @@ modules\Inspect.lua
 # receivers on a NS.Bus target and takes NS.Perf as a load-time upvalue at load. Every module above,
 # and NS.TradeTimer and NS.Window (below), are read at call time.
 modules\LootFeed.lua
+# LOAD-BEARING: appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS after
+# modules\Situations.lua's, so the situation its gates read is fresh when a reload rebuilds the open
+# rolls, and its LOOT_HISTORY_UPDATE_DROP row in place of the feed's; its NS.STAND_DOWN / NS.STAND_UP
+# steps run in TOC order, after those of the modules above. Publishes NS.Pending, the drops seen but
+# not yet assigned (Forever port design §5.2); appends its handlers to NS.addon at load. NS.LootFeed
+# (above), NS.Compat, NS.ItemFacts, NS.Item and NS.Situations are read at call time.
+modules\Pending.lua
 # LOAD-BEARING: appends its BAG_UPDATE_DELAYED row to NS.FEATURE_EVENTS after modules\Gear.lua's, so
 # the gear handler runs first; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of
 # the modules above. Publishes NS.TradeTimer, the own-item trade countdown; appends its LOOT_CLOSED
@@ -542,11 +549,12 @@ modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's
 # on those events (modules\Sim.lua's, modules\Session.lua's, modules\Situations.lua's,
-# modules\Roster.lua's, modules\Inspect.lua's, modules\LootFeed.lua's, modules\Asks.lua's,
-# modules\HistoryRetention.lua's and modules\FeedRestore.lua's), so its handler runs last; its
-# NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes
-# NS.AutoAsk, the opt-in auto-ask; appends its handlers to NS.addon and registers its DropAdded,
-# DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus target at load. NS.LootFeed,
+# modules\Roster.lua's, modules\Inspect.lua's, modules\LootFeed.lua's, modules\Pending.lua's,
+# modules\Asks.lua's, modules\HistoryRetention.lua's and modules\FeedRestore.lua's), so its handler
+# runs last; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
+# above. Publishes NS.AutoAsk, the opt-in auto-ask; appends its handlers to NS.addon and registers
+# its DropAdded, DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus target at
+# load. NS.LootFeed,
 # NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions, NS.History, NS.Setting and
 # NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua

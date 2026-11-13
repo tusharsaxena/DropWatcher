@@ -428,7 +428,13 @@ settings and a situation's mode; the pure filters row by row and the relative it
 still loading and one that never loads; your own drop with its trade by your verdict and every
 member a candidate, no inspects for an untradeable one, pushed items; `GearChanged`; the score
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
-stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+stand-down), `test_pending` (`modules/Pending.lua`, DW-FP14, on both kit profiles: an open group-loot
+roll opening one item, a changed table sending `PendingChanged` once, a winner handing its final table to
+the feed (`rec.roll`) and closing the item, a chat receipt that came first taking the roll by merge, two
+identical items on one encounter kept apart with their own tables and roll popups (Review Focus 1), a
+reload mid-roll rebuilding one item whose winner makes one drop (Review Focus 3), everyone passing
+lingering 60 s with no feed record, the quality gate keeping a drop out, the 1 s ticker alive only while
+a roll is open, and the stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged

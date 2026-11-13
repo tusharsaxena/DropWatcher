@@ -61,7 +61,7 @@ Total.
 - core: no file builds a typed × close mark (the close control degrades to nothing)
 - core: a raising shared handler costs only itself; the first error is raised after the rest ran
 - media: FONT_MONO is the shipped face live, and a real client font degraded
-- bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>
+- bus: the catalog holds the eleven messages of the designs, each Ka0s_DropWatcher_<Event>
 - bus: a tracked target's registrations come down with the stand-down and back with the stand-up
 - bus: the seam answers tracked once; without the library the modules take their receivers down
 - perf: every declared bucket is reached by a real bracket
@@ -1780,6 +1780,19 @@ Total.
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 
+### test_pending.lua (10)
+
+- pending: an UPDATE_ENCOUNTER with an open drop opens one roll item
+- pending: each UPDATE_DROP that changes the table sends PENDING_CHANGED rolls once
+- pending: a winner hands the final table to the feed; the drop has rec.roll and the pending item closes
+- pending: a chat receipt that arrived first gets the roll attached by merge
+- pending: two identical items on one encounter stay two items with their own tables
+- pending: reload mid-roll rebuilds one item, and its winner makes exactly one drop
+- pending: all passed closes after 60 s with no feed record
+- pending: a drop below the quality gate is not pending
+- pending: the ticker stops when no roll is open
+- pending: standing down unregisters every event and stops the ticker
+
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
@@ -2766,6 +2779,7 @@ Total.
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
+| test_pending.lua | 10 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2814,4 +2828,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2324** |
+| **Total** | **2334** |

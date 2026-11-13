@@ -29,6 +29,7 @@ local MSG = {
     TRADE_TIMER_TICK     = "Ka0s_DropWatcher_TradeTimerTick",      -- modules/TradeTimer.lua
     TRADE_TIMER_EXPIRING = "Ka0s_DropWatcher_TradeTimerExpiring",  -- modules/TradeTimer.lua
     HISTORY_CHANGED      = "Ka0s_DropWatcher_HistoryChanged",      -- modules/History.lua
+    PENDING_CHANGED      = "Ka0s_DropWatcher_PendingChanged",      -- modules/Pending.lua
 }
 
 if not lib then

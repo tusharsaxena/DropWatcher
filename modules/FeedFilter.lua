@@ -7,7 +7,8 @@ local _, NS = ...
 -- average item level, and makes no client call; test_feed drives it directly. The feed
 -- (modules/LootFeed.lua) runs it after the situation gate and before the verdict, and a drop it
 -- refuses is hidden with the reason it answers. Peeled out of the feed (DW-62), which the plan
--- keeps under 1000 lines.
+-- keeps under 1000 lines. PassesForMe is the whole of the feed's pre-looter gates (Forever port
+-- design §11.1), the one call the feed and the Pending store (modules/Pending.lua) both make.
 
 NS.FeedFilter = NS.FeedFilter or {}
 local FF = NS.FeedFilter
@@ -77,4 +78,61 @@ function FF.Filter(facts, cfg, ctx)
     if kinds[category] == false then return false, "category" end
     if category ~= "equipment" and category ~= "tierToken" then return true end
     return ilvlCheck(facts, cfg, type(ctx) == "table" and ctx or {})
+end
+
+--- Whether `cfg` forces `facts` in: on the Always watch list and not on the Never watch list, the
+--- answer Filter's `forced` gives when it passes (the feed reads it for a drop no filter runs on).
+--- @param facts table|nil
+--- @param cfg table|nil
+--- @return boolean
+function FF.Forced(facts, cfg)
+    local id = type(facts) == "table" and facts.itemID or nil
+    cfg = type(cfg) == "table" and cfg or {}
+    return listed(cfg.whitelist, id) and not listed(cfg.blacklist, id)
+end
+
+-- The filters, or (ctx.skipFilter) the Always watch list alone; `out.forced` takes the answer.
+local function admit(facts, ctx, out)
+    local cfg = type(ctx.cfg) == "table" and ctx.cfg or {}
+    if ctx.skipFilter then
+        out.forced = FF.Forced(facts, cfg) or nil
+        return true
+    end
+    local ok, why, forced = FF.Filter(facts, cfg, ctx)
+    out.forced = ok and forced or nil
+    return ok, why
+end
+
+-- The quality gate on your verdict `out.me`; `out.quality` takes { mode, threshold, reason }.
+local function qualityPasses(facts, ctx, out)
+    local cfg, f, me = type(ctx.cfg) == "table" and ctx.cfg or {}, type(facts) == "table" and facts or {}, out.me
+    local qctx = { fixed = cfg.fixed, floor = cfg.floor, upgradeOverride = cfg.upgradeOverride, gear = ctx.gear,
+        baselineSlot = me.baselineSlot, equipLoc = f.equipLoc, verdict = me.verdict, forced = out.forced == true }
+    local passes = type(ctx.passes) == "function" and ctx.passes or NS.QualityGate.Passes
+    local pass, threshold, reason = passes(f.quality, ctx.mode, qctx)
+    out.quality = { mode = ctx.mode, threshold = threshold, reason = reason }
+    return pass
+end
+
+--- The feed's pre-looter gates in their order (Forever port design §11.1): the situation's on/off
+--- (`ctx.tracking == false` refuses as `notTracking`; nil skips it), the filters above (or, with
+--- `ctx.skipFilter`, the Always watch list alone), your verdict (`ctx.judge(forced)`, the caller's
+--- judge, so the feed's own judgeMe path runs), then the quality gate in `ctx.mode` against
+--- `ctx.gear` (skipped with `ctx.skipQuality`; `ctx.passes` may stand in for QualityGate.Passes, so
+--- the feed can time it). The looter-dependent gates are not here: a pending roll has no looter.
+--- Pure apart from the two callbacks it is handed. `out` is { forced, me, quality }, filled as far
+--- as the gates got.
+--- @param facts table|nil
+--- @param ctx table { cfg, myIlvl, tracking, skipFilter, skipQuality, judge, mode, gear, passes }
+--- @return boolean pass, string|nil why, table out
+function FF.PassesForMe(facts, ctx)
+    ctx = type(ctx) == "table" and ctx or {}
+    local out = {}
+    if ctx.tracking == false then return false, "notTracking", out end
+    local ok, why = admit(facts, ctx, out)
+    if not ok then return false, why, out end
+    if type(ctx.judge) == "function" then out.me = ctx.judge(out.forced) end
+    if ctx.skipQuality or type(out.me) ~= "table" then return true, nil, out end
+    if not qualityPasses(facts, ctx, out) then return false, "quality", out end
+    return true, nil, out
 end

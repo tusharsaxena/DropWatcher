@@ -21,8 +21,9 @@ local _, NS = ...
 -- column. A drop's tables are the feed's own: read them, never write them.
 --
 -- THE SOURCES. CHAT_MSG_LOOT through the loot parser's sink (`chat`), ENCOUNTER_LOOT_RECEIVED
--- (`encounter`, which names the encounter) and C_LootHistory's won group-loot drops on
--- LOOT_HISTORY_UPDATE_DROP (`history`, each drop taken once). Your own `pushed` lines (quest
+-- (`encounter`, which names the encounter) and C_LootHistory's won group-loot drops, which
+-- modules/Pending.lua hands over with their final roll table (`history`, each drop taken once;
+-- `rec.roll`, `rec.pendingKey`). Your own `pushed` lines (quest
 -- rewards, containers, purchases) are not drops and are skipped. Add(link, looter, opts) is the
 -- fourth door (`manual`): `/dw add`; Restore(r, adopt) the fifth (`restore`, modules/FeedRestore.lua,
 -- feedback-15 spec §0): past the situation gate and the filters, never merged with another restored
@@ -275,12 +276,6 @@ end
 -- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
 -- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a
 -- list change applies to new drops only, so a shown drop never leaves the collect path untold.
-local function whitelisted(cfg, f)
-    local id = type(f) == "table" and f.itemID or nil
-    return id ~= nil and type(cfg.whitelist) == "table" and cfg.whitelist[id] == true
-        and not (type(cfg.blacklist) == "table" and cfg.blacklist[id])
-end
-
 local function judgeMe(rec, cfg)
     local f, forced = rec.facts, rec.forced == true
     if NS.Collectibles.IsCollectible(f) or (forced and f.category == nil) then
@@ -295,17 +290,28 @@ end
 -- Your average equipped item level (shirt and tabard aside), or nil (NS.FeedFilter.AverageIlvl).
 local function myIlvl() return NS.FeedFilter.AverageIlvl(NS.Gear.Snapshot().equipped) end
 
-local function qualityGate(rec, cfg)
+local function timedGate(quality, mode, ctx)
     local t0 = Perf.on and debugprofilestop()
-    local QG, f = NS.QualityGate, rec.facts or {}
-    local mode = QG.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation))
-    local ctx = { fixed = cfg.fixed, floor = cfg.floor, upgradeOverride = cfg.upgradeOverride,
-        gear = NS.Gear.Qualities(), baselineSlot = rec.me.baselineSlot, equipLoc = f.equipLoc,
-        verdict = rec.me.verdict, forced = rec.forced == true }
-    local pass, threshold, reason = QG.Passes(f.quality, mode, ctx)
-    rec.quality = { mode = mode, threshold = threshold, reason = reason }
+    local pass, threshold, reason = NS.QualityGate.Passes(quality, mode, ctx)
     if t0 then Perf.Note("quality.gate", debugprofilestop() - t0, parent()) end
-    return pass
+    return pass, threshold, reason
+end
+
+-- The pre-looter gates' context for NS.FeedFilter.PassesForMe (Forever port design §11.1): a test
+-- drop skips them, a restored one the filters; your verdict lands on `rec` through judgeMe.
+local function gateCtx(rec, cfg)
+    return { cfg = cfg, skipFilter = rec.test or rec.source == "restore", skipQuality = rec.test,
+        myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil, gear = NS.Gear.Qualities(), passes = timedGate,
+        mode = NS.QualityGate.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation)),
+        judge = function(forced) rec.forced = forced; judgeMe(rec, cfg); return rec.me end }
+end
+
+--- The feed's pre-looter gates for an item with no looter yet (modules/Pending.lua): `situation`'s
+--- on/off, then PassesForMe with your verdict. Answers pass, why and { forced, me, quality }.
+function LF.GateFor(facts, situation)
+    local ctx = gateCtx({ facts = facts, situation = situation }, LF.Config())
+    ctx.tracking = NS.Situations.IsTracking(situation)
+    return NS.FeedFilter.PassesForMe(facts, ctx)
 end
 
 local CHECKING = { pending = true, combatParked = true }
@@ -586,16 +592,9 @@ local start
 local function judge(rec, facts)
     rec.facts = facts
     local cfg = LF.Config()
-    if not rec.test and rec.source ~= "restore" then
-        local ctx = { myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil }
-        local ok, why, forced = NS.FeedFilter.Filter(facts, cfg, ctx)
-        if not ok then return hide(rec, why) end
-        rec.forced = forced or nil   -- the Always watch list let it through (the quality gate's pass)
-    else
-        rec.forced = whitelisted(cfg, facts) or nil   -- read once here too (no filter runs)
-    end
-    judgeMe(rec, cfg)
-    if not rec.test and not qualityGate(rec, cfg) then return hide(rec, "quality") end
+    local ok, why, out = NS.FeedFilter.PassesForMe(facts, gateCtx(rec, cfg))
+    rec.quality = out.quality
+    if not ok then return hide(rec, why) end
     judgeLooter(rec, cfg, true)
     return add(rec)
 end
@@ -633,8 +632,8 @@ local function newRecord(s, r)
         id = s.seq, feed = r.test and "test" or "live", test = r.test, force = r.force, link = r.link,
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
         looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = r.situation or situation,
-        encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source,
-        group = r.group or groupSpec(s, r.encounterID, t), state = "new", sim = sim,
+        encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source, roll = r.roll,
+        pendingKey = r.pendingKey, group = r.group or groupSpec(s, r.encounterID, t), state = "new", sim = sim,
     })
 end
 
@@ -665,6 +664,7 @@ local function merge(rec, r)
     local learned = not rec.looter.guid and r.looter.guid ~= nil
     if learned then rec.looter = r.looter end
     rec.encounterID = rec.encounterID or r.encounterID
+    rec.roll, rec.pendingKey = rec.roll or r.roll, rec.pendingKey or r.pendingKey
     local link = NS.FeedRecords.PreferredLink(rec.link, r.link, r.source)
     local relinked = link ~= rec.link
     rec.link = link
@@ -1020,8 +1020,9 @@ function LF.OnEncounterLoot(encounterID, _, link, qty, playerName, classFile)
         looter = who, encounterID = plainNumber(encounterID) })
 end
 
---- LOOT_HISTORY_UPDATE_DROP(encounterID, lootListID): a group-loot drop, taken once it has a winner.
-function LF.OnLootHistoryDrop(encounterID, lootListID)
+--- A group-loot drop (LOOT_HISTORY_UPDATE_DROP through modules/Pending.lua), taken once it has a
+--- winner, with its final roll table and the pending item's id when one was open.
+function LF.OnLootHistoryDrop(encounterID, lootListID, roll, pendingKey)
     local drop = NS.Compat.LootHistoryDrop(encounterID, lootListID)
     if not drop then return refuse("noWinner", lootListID) end
     local key = encounterID .. ":" .. lootListID
@@ -1031,7 +1032,7 @@ function LF.OnLootHistoryDrop(encounterID, lootListID)
     local who = resolveLooter(drop.name, drop.guid, drop.classFile)
     if drop.isSelf then who.isSelf = true end
     return LF.Receive({ link = drop.link, qty = 1, kind = "loot", source = "history", looter = who,
-        encounterID = encounterID })
+        encounterID = encounterID, roll = roll, pendingKey = pendingKey })
 end
 
 -- ── events, messages and the lifecycle ──────────────────────────────────────────────────────
@@ -1048,7 +1049,6 @@ local EVENTS = {
     { "CHALLENGE_MODE_START", "OnFeedRunStart", LF.OnRunStart, RETAIL },
     { "CHALLENGE_MODE_COMPLETED", "OnFeedRunEnd", LF.OnRunEnd, RETAIL },
     { "ENCOUNTER_LOOT_RECEIVED", "OnFeedEncounterLoot", LF.OnEncounterLoot },
-    { "LOOT_HISTORY_UPDATE_DROP", "OnFeedLootHistory", LF.OnLootHistoryDrop },
 }
 for _, row in ipairs(EVENTS) do
     local fn = row[3]

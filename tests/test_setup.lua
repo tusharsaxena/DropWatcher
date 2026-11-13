@@ -96,14 +96,14 @@ end)
 
 -- ── Bus ─────────────────────────────────────────────────────────────────────────────────────
 
-test("bus: the catalog holds the ten messages of the design, each Ka0s_DropWatcher_<Event>", function()
+test("bus: the catalog holds the eleven messages of the designs, each Ka0s_DropWatcher_<Event>", function()
     local NS = T.newAddon()
     local n = 0
     for _, wire in pairs(NS.MSG) do
         n = n + 1
         assertTrue(wire:find("^Ka0s_DropWatcher_%u%a+$") ~= nil, wire)
     end
-    assertEqual(n, 10)
+    assertEqual(n, 11, "the ten of the design and PendingChanged (Forever port design §5.2)")
     -- The strict copy: a mistyped constant raises at the call site, publisher or subscriber.
     T.assertError(function() return NS.MSG.DROP_ADDDED end, "a mistyped key raises")
 end)
