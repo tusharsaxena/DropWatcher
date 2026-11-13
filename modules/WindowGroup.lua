@@ -53,6 +53,10 @@ local _, NS = ...
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles are session-only (NS.State.windowGroup).
 --
+-- ROLLING NOW (Forever port design §5.3). Above the first header, the drops still being rolled for:
+-- modules/WindowPending.lua draws the section (WP.Draw) and the rows below start under it; the
+-- empty state stays hidden while it shows, and its roll timers tick with the countdowns.
+--
 -- THE DETAIL CARD (design spec §11.3, board 02). A click on a row (anywhere but a button) expands
 -- it inline: modules/DetailCard.lua's card is placed under it and the rows below move down by the
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
@@ -447,6 +451,7 @@ local function itemEnter(self, owner)
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
     NS.RowTooltip.AddKindRows(GameTooltip, self.link)   -- a collectible's kind and collection (issue #13)
+    NS.RowTooltip.AddRollRow(GameTooltip, self)          -- the roll summary (Forever port design §5.3)
     local r, g, b = NS.Skin.Color("dw.tipHint")
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], r, g, b)
     GameTooltip:Show()
@@ -1018,14 +1023,14 @@ end
 -- The open row's detail card under it, indented with its row; answers the height it takes.
 local function drawCard(pane, drop, y, width, now)
     place(pane.card, pane.content, y, width, K.ROW_INDENT)
-    NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)
+    local h = NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)   -- taller with a Rolls box
     pane.card:Show()
     pane.cardDropId = drop.id
-    return K.CARD_H
+    return h
 end
 
 local function drawEntries(pane, entries, layout, width)
-    local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
+    local now, y, metrics = GetTime(), NS.WindowPending.Draw(pane, width), NS.WindowRows.Metrics()   -- Rolling now first
     metrics.rowH = layout.tradeWindow and metrics.countdownHeight or metrics.height
     metrics.warnAt = NS.TradeTimer.WarnAt()
     local Pool = NS.Pool
@@ -1057,7 +1062,7 @@ local function paintEmpty(pane, entries, ctx, compact)
     local none = #entries == 0
     local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
     local test = nothing and ctx.feed == "test"
-    pane.emptyState:SetShown(nothing and not test)
+    pane.emptyState:SetShown(nothing and not test and #NS.WindowPending.Items() == 0)   -- not over Rolling now
     pane.placeholder:SetShown(none and (test or not nothing))
     pane.placeholder:SetText(not test and NO_MATCH or NS.TestMode.IsLoading() and TEST_LOADING or TEST_NONE)
     pane.colHead:SetShown(not (none or compact))
@@ -1121,7 +1126,7 @@ function WG.LiveCountdown()
     if not pane then return false end
     local s = pane.summaryData
     if s and s.next and s.next > 0 then return true end
-    return rowsLive(pane)
+    return NS.WindowPending.Live(pane) or rowsLive(pane)   -- a roll's time left moves too
 end
 
 --- Move every shown countdown on to the clock: the Trade window cells of the drawn rows and the
@@ -1131,6 +1136,7 @@ function WG.TickCountdowns()
     if not pane then return end
     local compact = WG.IsCompact()
     NS.DropsStrip.Tick(pane, compact)
+    NS.WindowPending.Tick(pane)
     if compact then return end
     if not (pane.layout and pane.layout.tradeWindow) then return end
     local now, warnAt = GetTime(), NS.TradeTimer.WarnAt()

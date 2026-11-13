@@ -425,6 +425,11 @@ modules\MineCells.lua
 # Publishes NS.SideCells, the drop tables' pure Me and Them cells (the worn gear and the verdict in
 # one cell; feedback-6 spec §1); takes NS.L at load.
 modules\SideCells.lua
+# Conventional: publishes NS.RollCells, what a group-loot roll table says (the summary, one row per
+# player, the time left, the rows' grid; Forever port design §5.3); takes NS.L at load. NS.TipMarks and
+# NS.Compat (a name's class color) are read at call time, by modules\WindowPending.lua,
+# modules\DetailCells.lua and modules\RowTooltip.lua.
+modules\RollCells.lua
 # LOAD-BEARING: takes NS.MineCells (modules\MineCells.lua, above) at load. Publishes NS.WindowOwn,
 # your own drops on Drops (the session's reveal state, the Offer and Announce tone states, the
 # message buttons' look, the own-drop cell reads and the Ask-or-Offer click); takes NS.State at load,
@@ -452,6 +457,12 @@ modules\IconStyle.lua
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
+# Conventional: publishes NS.WindowPending, the Drops tab's Rolling now section (the pending items
+# above the boss groups, in both layouts) and the Rolls box a roll table is drawn in (Forever port
+# design §5.3); takes NS.Constants and NS.L at load. NS.Pending, NS.RollCells, NS.WindowCells,
+# NS.WindowGroup, NS.CompactGroup, NS.DetailCard and NS.Window are read at call time, when
+# modules\WindowGroup.lua and modules\CompactGroup.lua repaint the tab.
+modules\WindowPending.lua
 # Conventional: publishes NS.FooterRow, the strips' one footer button kind, their row's placement
 # and Expand all / Collapse all (feedback-15 spec §2); takes NS.Constants and NS.L at load.
 # NS.Window is read at call time, when modules\DropsStrip.lua and modules\WindowHistory.lua (below)

@@ -8,7 +8,10 @@ local _, NS = ...
 -- fresh the data is; above the comparisons since feedback-22, so whether it can be had at all reads
 -- first); the For you and For the looter boxes side by side (what it replaces, the item-level
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
--- inspect's age, each under a verdict chip); and the actions: Ask, Edit message, Link in chat, Retry inspect,
+-- inspect's age, each under a verdict chip, the score's and the spec's tooltips naming the scale it
+-- used, NS.Scoring.ScoreFor); a group-loot drop resolved from its roll then has its ROLLS box
+-- (Forever port design §5.3: NS.WindowPending's box over NS.DetailCells.RollsBox, the card that much
+-- taller, while `rolls.show` is on); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
 -- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Looter row `Name [YOU]` and its Them
 -- row `Upgrade for N` (feedback-7 spec §2) with every member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
@@ -342,6 +345,7 @@ function DCard.Build(content, stacked)
     buildTrade(card)
     if card.stacked then placeStacked(card) else placeSideBySide(card) end
     buildActions(card)
+    card.rolls = NS.WindowPending.BuildRollsBox(card)   -- under the comparisons, while the drop has a roll
     card:Hide()
     return card
 end
@@ -572,8 +576,33 @@ local function placeStackedActions(card, width)
     end
 end
 
+-- The Rolls box under the comparisons (Forever port design §5.3): a resolved drop with a roll table
+-- while `rolls.show` is on (NS.DetailCells.RollsBox). Answers the height it adds to the card.
+local function paintRolls(card, drop, width)
+    local model = DC.RollsBox(drop, NS.Setting("rolls.show") ~= false)
+    card.rolls:SetShown(model ~= nil)
+    if not model then return 0 end
+    local P = K.CARD_PAD
+    local under = card.stacked and card.them or card.me
+    card.rolls:ClearAllPoints()
+    card.rolls:SetPoint("TOPLEFT", under, "BOTTOMLEFT", 0, -P)
+    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P) + P
+end
+
+-- The scale or weights each score used (NS.Scoring.ScoreFor's `how`, DW-FP07): yours, and the
+-- looter's on another player's drop.
+local function scoreHows(drop, insp)
+    local S = NS.Scoring
+    local _, mine = S.ScoreFor(drop.link, NS.Gear.Candidate())
+    if drop.isMine then return mine, nil end
+    local looter = type(drop.looter) == "table" and drop.looter or {}
+    local _, theirs = S.ScoreFor(drop.link, { isPlayer = false, classFile = looter.classFile,
+        specID = type(insp) == "table" and insp.specID or nil })
+    return mine, theirs
+end
+
 --- Paint the card for `drop`, `width` pixels wide; answers its height (CARD_H, or the stacked
---- card's, DCard.StackedHeight).
+--- card's, DCard.StackedHeight, and the Rolls box's under them).
 --- @param card table DCard.Build's answer
 --- @param drop table the feed record
 --- @param width number
@@ -592,16 +621,22 @@ function DCard.Paint(card, drop, width, now)
         placeStackedActions(card, width)
     end
     local snap = NS.Gear.Snapshot()
+    local myHow, theirHow = scoreHows(drop, insp)
     paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile,
-        NS.TestMode.GearOf(drop, snap and snap.equipped)), sideW)
+        NS.TestMode.GearOf(drop, snap and snap.equipped), myHow), sideW)
     local WO = NS.WindowOwn
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop)), sideW)
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop), theirHow), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
         transmogAsk = NS.Setting("messages.transmogAsk") == true,
         offerTone = drop.isMine and (WO.ToneStates(drop)) or nil, alone = drop.isMine and WO.Alone(drop) })
+    local extra = paintRolls(card, drop, width)
+    if extra > 0 then
+        height = height + extra
+        card:SetHeight(height)
+    end
     return height
 end
 

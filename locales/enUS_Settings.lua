@@ -152,7 +152,6 @@ L["How many toasts show on screen at once, stacked. 1 shows one at a time; the r
 L["Stack direction"] = "Stack direction"
 L["Where each toast after the first goes: below the one before it, or above it."] =
     "Where each toast after the first goes: below the one before it, or above it."
-L["Scale"] = "Scale"
 L["The toast's size, from half to double. It grows or shrinks about the place you put it."] =
     "The toast's size, from half to double. It grows or shrinks about the place you put it."
 L["Upgrade glow"] = "Upgrade glow"
@@ -373,8 +372,8 @@ L["Window"] = "Window"
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."] =
-    "Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."
+L["Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept."] =
+    "Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept."
 L["Quality floor"] = "Quality floor"
 L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
     "A situation can set a quality of its own: the Quality column on the Situations tab."
@@ -417,3 +416,12 @@ L["Alerts"] = "Alerts"
 L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."] =
     "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
 L["Simulator"] = "Simulator"
+-- settings/SchemaRows.lua: Drops › Rolls (Forever port design §5.3)
+L["Show rolls"] = "Show rolls"
+L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."] =
+    "Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."
+L["Keep rolls in history"] = "Keep rolls in history"
+L["Keep each rolled drop's rolls in the History tab."] = "Keep each rolled drop's rolls in the History tab."
+L["Mark the roll popup"] = "Mark the roll popup"
+L["Show your verdict on the game's Need and Greed roll popup."] =
+    "Show your verdict on the game's Need and Greed roll popup."

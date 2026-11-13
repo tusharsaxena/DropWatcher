@@ -1032,6 +1032,8 @@ local function listen()
     target:RegisterMessage(M.SITUATION_CHANGED, function(_, key) onSituation(key) end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
+    -- Drops' Rolling now section (modules/WindowPending.lua): an item opened, changed or closed.
+    target:RegisterMessage(M.PENDING_CHANGED, function() scheduleRepaint() end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)

@@ -368,6 +368,16 @@ local function feed()
     history(retention)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
+
+    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients.
+    local R = P.rolls
+    local rolls = { page = "feed", group = L["Rolls"], onChange = repaintWindow }
+    bool("rolls.show", R.show, L["Show rolls"],
+        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."], rolls)
+    bool("rolls.keep", R.keep, L["Keep rolls in history"],
+        L["Keep each rolled drop's rolls in the History tab."], rolls)
+    bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
+        L["Show your verdict on the game's Need and Greed roll popup."], rolls)
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────

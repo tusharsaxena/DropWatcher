@@ -44,6 +44,7 @@ local function specPaths()
         "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
+        "rolls.show", "rolls.keep", "rolls.popupMark",   -- Drops › Rolls (Forever port design §5.3, DW-FP15)
     }
     for _, key in ipairs(SITUATIONS) do
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do out[#out + 1] = "situations." .. key .. "." .. f end
@@ -754,6 +755,10 @@ local PINNED_ROWS = {
     { "messages.templates.offer", "string", "\"Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?\"" },
     { "messages.templates.transmog", "string", "\"Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!\"" },
     { "messages.transmogAsk", "bool", "false" },
+    -- DW-FP15 (Forever port design §5.3): Drops › Rolls, three new rows on both clients.
+    { "rolls.keep", "bool", "true" },
+    { "rolls.popupMark", "bool", "true" },
+    { "rolls.show", "bool", "true" },
     { "scale", "number", "1" },
     { "sim.stepDelay", "number", "1" },
     -- The skinning rollout (DW-01) adds the seven skin.* keys, General's Skin tab: new rows, not a

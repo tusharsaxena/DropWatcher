@@ -434,7 +434,17 @@ the feed (`rec.roll`) and closing the item, a chat receipt that came first takin
 identical items on one encounter kept apart with their own tables and roll popups (Review Focus 1), a
 reload mid-roll rebuilding one item whose winner makes one drop (Review Focus 3), everyone passing
 lingering 60 s with no feed record, the quality gate keeping a drop out, the 1 s ticker alive only while
-a roll is open, and the stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+a roll is open, and the stand-down), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
+profiles: the open summary's counts in the state order, the won summary with the winner's choice and
+number, the rows' order (the winner, numbers high to low, chosen without a number, waiting, pass), a
+nameless row kept as `?` (Review Focus 2), win protection marked only once won, the time left on the
+history's clock and the grid a box flows its rows into), `test_window_pending` (`modules/WindowPending.lua`,
+DW-FP15, on both kit profiles: the Rolling now section above the boss groups only while an item
+exists and `rolls.show` is on, collapsing on its header, keeping the empty state away; a row's verdict,
+summary and time left with no action for a roll, a click expanding the roll table inline, the timer
+ticking and a won, ended or all-passed roll saying so; the compact layout's card; the resolved drop's
+Rolls box on its detail card; the row tooltip's summary line; and the score and spec rows naming the
+scale each score used, through the shipped card's `S.ScoreFor` calls), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
@@ -731,7 +741,6 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `DCard.Editor` (`modules/DetailCard.lua`) | reaches the private Edit message box |
 | `Host.IsSimGUID` (`modules/Sim.lua`) | reads the running simulation's private GUID set |
 | `E.Configure` (`modules/SimEvents.lua`) | shortens a simulated trade window |
-| `S.ScoreFor` (`modules/Scoring.lua`) | reads one item's score and how its scale or weights were chosen (`tree`, `bestOfClass`, `custom`, `none`), the WoW Forever scorer's choice (DW-FP07) |
 | `W.SetMember`, `W.BagItems` (`modules/SimWorld.lua`) | marks a simulated member, reads the simulated bag |
 | `Sit.LastInputs` (`modules/Situations.lua`) | reads what the edge last classified |
 | `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |

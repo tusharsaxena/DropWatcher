@@ -1793,6 +1793,25 @@ Total.
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
 
+### test_roll_cells.lua (5)
+
+- roll cells: summary counts Need 3 · Greed 2 · Pass 1 · waiting 4
+- roll cells: won reads Won by Name (Need 87)
+- roll cells: rows sort winner first, then numbers high to low, waiting, pass
+- roll cells: a higher roll that did not win is protected
+- roll cells: the timer reads the time left on the history's clock, and the grid flows rows
+
+### test_window_pending.lua (8)
+
+- window pending: the section shows only while an item exists and hides with rolls.show off
+- window pending: a pending row has your verdict and no Ask button for a roll
+- window pending: a won or ended roll says so, and the timer ticks on the history's clock
+- compact: a pending item is a card
+- detail card: a resolved drop with rec.roll has a Rolls box
+- row tooltip: a rolled drop's item tooltip has the roll summary line
+- detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
+- detail card: the shipped card asks ScoreFor for both scores
+
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
@@ -2780,6 +2799,8 @@ Total.
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
 | test_pending.lua | 10 |
+| test_roll_cells.lua | 5 |
+| test_window_pending.lua | 8 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2828,4 +2849,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2334** |
+| **Total** | **2347** |

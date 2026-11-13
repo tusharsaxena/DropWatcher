@@ -127,6 +127,16 @@ NS.C = {
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
+        -- Everyone's loot rolls (Forever port design §5.3, both clients): `show` the Drops tab's
+        -- Rolling now section and a resolved drop's Rolls box (the store tracks every roll either
+        -- way), `keep` the roll table in History (DW-FP16), `popupMark` your verdict on the game's
+        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration.
+        rolls = {
+            show      = true,
+            keep      = true,
+            popupMark = true,
+        },
+
         -- How a drop is judged (design spec §5). `weights` and `undesired` are keyed by specID:
         -- weights[specID] = { STAT_KEY = weight }, undesired[specID] = { ["<classID>:<subClassID>"] = true }.
         comparison = {

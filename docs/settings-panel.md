@@ -15,7 +15,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
 | General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
-| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention`, `Rolls` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -186,7 +186,7 @@ belt-and-braces. Until DW-H0 the tab drew one block per situation,
 since LibKa0s has no grid composer for mixed controls;
 [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the tab's own editor.
 
-## Drops → Quality, Items and Retention
+## Drops → Quality, Items, Retention and Rolls
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
 `/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
@@ -224,7 +224,7 @@ the other list, or already on this one) is raised again as its sentence, so the 
 text and says why. The write repaints the scalar widgets only, and IdList redraws this page alone
 through `ctx.rebuild`. The page's Defaults keeps both lists (the seam's `resetExempt`; plan #13, Q9),
 which its tooltip says: *Reset the Drops page's settings (situations, quality, item kinds and item
-level, and how long drops are kept) to their defaults. The item lists are kept.*
+level, how long drops are kept, and rolls) to their defaults. The item lists are kept.*
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
@@ -236,6 +236,12 @@ asks first, `NS.History.AskClear`, and Yes empties the log on every character, o
 simulation's session-only log while one is on). Window › Layout's until feedback-24. **Session:**
 Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
+
+**Rolls** (Forever port design §5.3, DW-FP15; both clients): **Show rolls** (`rolls.show`: the Drops
+tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
+off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`,
+read by History from DW-FP16) and **Mark the roll popup** (`rolls.popupMark`, read by the popup mark
+from DW-FP20), all on by default. A change repaints the shown window.
 
 ## Comparison
 

@@ -251,7 +251,7 @@ before the update. Click Quality → the table is gone and the In force now line
 `A situation can set a quality of its own: the Quality column on the Situations tab.` under it.
 Click Items, Retention, then Situations again → the table is there once, never on another tab.
 Hover the page's Defaults → `Reset the Drops page's settings (situations, quality, item kinds and
-item level, and how long drops are kept) to their defaults. The item lists are kept.` Tick Delve's
+item level, how long drops are kept, and rolls) to their defaults. The item lists are kept.` Tick Delve's
 Track, set Mythic+'s Loot rule to Group loot, put an item on Always watch, press Defaults → both go
 back, with the Quality tab's rows; the Always watch entry and a Window value stay.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
