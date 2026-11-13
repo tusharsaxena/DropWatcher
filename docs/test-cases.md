@@ -2312,7 +2312,7 @@ Total.
 - toast stack: in test mode the sticky placeholders stack too
 - toast stack: the diagnostics name the stack and every toast on screen
 
-### test_glow.lua (17)
+### test_glow.lua (18)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
 - glow: an upgrade its looter can't trade, or not yet estimated, never glows
@@ -2324,6 +2324,7 @@ Total.
 - glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it
 - glow: the off-spec glow's Use class color is its own
 - glow: Use class color with a class that has no color falls through to the swatch
+- glow: the off-spec glow's Use class color with a class that has no color falls through to its swatch
 - glow: the proc style's opening burst plays once, not again on every repaint's re-show
 - glow: the full table's Drops row icon wears its drop's glow; the detail card's header too
 - glow: a pooled row reused for a sidegrade, or left unused, loses its glow
@@ -2901,7 +2902,7 @@ Total.
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 50 |
 | test_toast_stack.lua | 16 |
-| test_glow.lua | 17 |
+| test_glow.lua | 18 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
@@ -2928,4 +2929,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2410** |
+| **Total** | **2411** |

@@ -257,6 +257,21 @@ test("glow: Use class color with a class that has no color falls through to the 
         "the stored main-spec green, never white or a substitute")
 end)
 
+-- The off-spec glow's own fallback (its companion, its stored blue): Retail's alone, as the off-spec
+-- glow is (Forever port design §4.4).
+test("glow: the off-spec glow's Use class color with a class that has no color falls through to its swatch", function()
+    local NS, _, m = T.enableAddon()
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    m.__context.classToken = "NOPE"
+    assertTrue(S("glow.offSpec.type", "pixel"))
+    assertTrue(S("glow.offSpec.useClassColor", true))
+    G.Apply(button(m), drop({ me = offSpec() }))
+    local c, tone = lib.calls[1], NS.Constants.TONE.glowOffSpec
+    assertEqual(c[1], "PixelGlow_Start")
+    assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
+        "the stored off-spec blue, never white or a substitute")
+end, T.RETAIL_ONLY)
+
 -- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
 -- shows every pooled row and card: once the button has been on screen the burst is spent.
 test("glow: the proc style's opening burst plays once, not again on every repaint's re-show", function()
