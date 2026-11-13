@@ -1824,11 +1824,12 @@ Total.
 - roll cells: a higher roll that did not win is protected
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (8)
+### test_window_pending.lua (9)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
 - window pending: a pending row has your verdict and no Ask button for a roll
 - window pending: a won or ended roll says so, and the timer ticks on the history's clock
+- window pending: a master-loot item names its master looter, never a roll that ended
 - compact: a pending item is a card
 - detail card: a resolved drop with rec.roll has a Rolls box
 - row tooltip: a rolled drop's item tooltip has the roll summary line
@@ -2834,7 +2835,7 @@ Total.
 | test_pending.lua | 15 |
 | test_pending_ml.lua | 9 |
 | test_roll_cells.lua | 5 |
-| test_window_pending.lua | 8 |
+| test_window_pending.lua | 9 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2883,4 +2884,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2377** |
+| **Total** | **2378** |

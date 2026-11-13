@@ -442,7 +442,8 @@ history's clock and the grid a box flows its rows into), `test_window_pending` (
 DW-FP15, on both kit profiles: the Rolling now section above the boss groups only while an item
 exists and `rolls.show` is on, collapsing on its header, keeping the empty state away; a row's verdict,
 summary and time left with no action for a roll, a click expanding the roll table inline, the timer
-ticking and a won, ended or all-passed roll saying so; the compact layout's card; the resolved drop's
+ticking and a won, ended or all-passed roll saying so, a master-loot item naming its master looter
+and never reading Roll ended (DW-FP18 review); the compact layout's card; the resolved drop's
 Rolls box on its detail card; the row tooltip's summary line; and the score and spec rows naming the
 scale each score used, through the shipped card's `S.ScoreFor` calls), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the

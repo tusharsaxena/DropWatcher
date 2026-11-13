@@ -178,6 +178,27 @@ test("window pending: a won or ended roll says so, and the timer ticks on the hi
     assertEqual(textOf(wp2.rows[1].cells.summary.text), "Everyone passed")
 end)
 
+test("window pending: a master-loot item names its master looter, never a roll that ended", function()
+    local mlItem = item({ kind = "ml", key = "Creature-0-1-2-3-2900-0000AAAA:300", state = "awaiting", roll = nil,
+        ml = { unit = "raid3", name = "Doom Dock", slot = 1, quality = 4, threshold = 4 } })
+    mlItem.roll = nil   -- an ml item has no roll table
+    local NS, _, wp = shown({ drop() }, { mlItem })
+    local c = wp.rows[1].cells
+    assertEqual(textOf(c.timer.text), "awaiting master looter")
+    assertEqual(plain(textOf(c.summary.text)), "Master looter: Doom Dock", "the master looter, whole (Review Focus 4)")
+    assertFalse(NS.WindowPending.Live(NS.WindowGroup.Drawn().pane), "no roll clock to tick")
+    NS.WindowGroup.TickCountdowns()
+    assertEqual(plain(textOf(c.summary.text)), "Master looter: Doom Dock", "a tick keeps it")
+    wp.rows[1]:__fire("OnClick")
+    local _, wp2 = refresh(NS)
+    assertEqual(textOf(wp2.box.summary), "awaiting master looter", "the inline box never says Roll ended")
+    local unnamed = { item({ kind = "ml", state = "awaiting", ml = { slot = 1 } }) }
+    unnamed[1].roll = nil
+    NS.Pending.All = function() return unnamed end
+    local _, wp3 = refresh(NS)
+    assertEqual(textOf(wp3.rows[1].cells.summary.text), "Master loot", "no name read: the method alone")
+end)
+
 -- ── the compact layout ──────────────────────────────────────────────────────────────────────
 
 test("compact: a pending item is a card", function()

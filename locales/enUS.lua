@@ -961,6 +961,7 @@ L["protected: already won a copy, so a lower roll took it"] =
 L["Rolls end in"] = "Rolls end in"
 L["awaiting master looter"] = "awaiting master looter"
 L["Master loot"] = "Master loot"
+L["Master looter: %s"] = "Master looter: %s"
 L["drops still being rolled for"] = "drops still being rolled for"
 L["Rolling now (%d)"] = "Rolling now (%d)"
 L["ROLLS"] = "ROLLS"

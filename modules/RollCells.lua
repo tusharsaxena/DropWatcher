@@ -191,9 +191,14 @@ end
 --- `Everyone passed`, or `Roll ended` when its time ran out (or `state` says so) with no winner read.
 --- @param roll table|nil the plain roll table
 --- @param now number|nil NS.Compat.LootHistoryNow() (for the time left)
---- @param state string|nil the pending item's state (`expired` reads Roll ended)
+--- @param state string|nil the pending item's state (`expired` reads Roll ended; a master-loot
+--- item's `awaiting` reads awaiting master looter)
 --- @return table cell { text, tone, tip }
 function RC.Summary(roll, now, state)
+    if state == "awaiting" then   -- a master-loot item (modules/PendingML.lua): no roll to read
+        return { text = L["awaiting master looter"], tone = "muted",
+            tip = { L["Master loot"], row(nil, L["awaiting master looter"]) } }
+    end
     if type(roll) ~= "table" then
         return { text = L["Roll ended"], tone = "muted", tip = { L["Rolls"], row(nil, L["the roll is no longer read"]) } }
     end

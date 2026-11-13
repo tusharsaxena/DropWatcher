@@ -13,7 +13,8 @@ local _, NS = ...
 --
 -- A ROW (the full layout) shows the item's icon and name, your verdict (Me: the feed's own
 -- WindowCells.Me over the item's `me`), the roll summary (NS.RollCells.Summary) and the time left
--- (RollCells.Timer, on the loot history's clock). A roll has no row action: the game's own popup is
+-- (RollCells.Timer, on the loot history's clock); a master-loot item (modules/PendingML.lua) reads
+-- `Master looter: Name` and `awaiting master looter` there instead. A roll has no row action: the game's own popup is
 -- where you roll (the master-loot ask arrives with its kind, DW-FP19). A click on the row expands
 -- its roll table inline under it (one at a time, session-only: NS.State.windowPending), as a drop
 -- row's detail card does. The compact layout's card (CompactGroup's PendingCard) says the same in
@@ -101,10 +102,15 @@ function WP.Model(item, now, classFile)
     local t = RC.Timer(item.roll, now)
     local timer = t and cellOf(t, "plain", { L["Time left"], NS.TipMarks.Row(L["Rolls end in"], t) })
         or cellOf("", "muted")
+    local summary
     if item.kind == "ml" then
-        timer = cellOf(L["awaiting master looter"], "muted", { L["Master loot"], NS.TipMarks.Row(nil, L["awaiting master looter"]) })
+        -- A master-loot item has no roll table: it names who hands it out, never "Roll ended".
+        local tip = { L["Master loot"], NS.TipMarks.Row(nil, L["awaiting master looter"]) }
+        local name = type(item.ml) == "table" and item.ml.name or nil
+        timer = cellOf(L["awaiting master looter"], "muted", tip)
+        summary = cellOf(name and L["Master looter: %s"]:format(name) or L["Master loot"], "muted", tip)
     end
-    return { item = WC.Item(item), me = WC.Me(item, classFile), summary = RC.Summary(item.roll, now, item.state),
+    return { item = WC.Item(item), me = WC.Me(item, classFile), summary = summary or RC.Summary(item.roll, now, item.state),
         timer = timer, action = nil }
 end
 
