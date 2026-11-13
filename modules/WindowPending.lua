@@ -60,11 +60,12 @@ end
 --- @return boolean
 function WP.Shown() return NS.Setting("rolls.show") ~= false end
 
---- The pending items the section shows, oldest first: none while `rolls.show` is off.
+--- The pending items the section shows, oldest first, from the store of the feed the window shows
+--- (test mode's samples while it is on, NS.Window.FeedView): none while `rolls.show` is off.
 --- @return table[]
 function WP.Items()
     if not WP.Shown() then return {} end
-    return NS.Pending.All()
+    return NS.Pending.All(NS.Window.FeedView().feed)
 end
 
 --- The pending item whose roll table is expanded, or nil.

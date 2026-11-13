@@ -1,6 +1,7 @@
 local _, NS = ...
 -- settings/SimVerbs.lua — `/dw sim`'s host half (simulator spec §4; OWNER_SCOPE C.7, C.10): the
--- six verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`,
+-- seven verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`, `roll` (a
+-- group-loot roll, chosen and won over the next seconds; DW-FP17),
 -- `drop <kind> [player|me]` (one item of a kind: equipment, token, mount, pet, toy, recipe or
 -- cosmetic; issue #13), `lockdown on|off` and `trade <dropID>`, the lines that say why one did nothing, their usage
 -- lines and the status line's host part. settings/Slash.lua's `sim` row hands the whole argument
@@ -100,6 +101,14 @@ local function runLockdown(c)
     return true
 end
 
+-- `roll`: a group-loot roll opens; its choices and its winner follow over the next seconds.
+local function runRoll()
+    local roll, code = NS.SimEvents.Roll()
+    if not roll then return false, code end
+    NS.Print(L["Simulated roll opened: %s, %d players."]:format(roll.link, #roll.rows))
+    return true
+end
+
 local function runTrade(c)
     local ok, code = NS.SimEvents.Trade(c.id)
     if not ok then return false, code end
@@ -114,6 +123,7 @@ for verb, spec in pairs({
     drop     = { parse = parseDrop,     run = runDrop },
     lockdown = { parse = parseLockdown, run = runLockdown },
     trade    = { parse = parseTrade,    run = runTrade },
+    roll     = { parse = bare,          run = runRoll },
 }) do V.VERBS[verb] = spec end
 
 -- ── the lines ───────────────────────────────────────────────────────────────────────────────
@@ -142,17 +152,23 @@ do
         L["%s drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: one simulated drop of that kind."]:format(s),
         L["%s lockdown on|off: turn the simulated chat lockdown on or off."]:format(s),
         L["%s trade <drop id>: complete a simulated trade of that drop."]:format(s),
+        L["%s roll: a simulated group-loot roll, chosen and won over the next seconds."]:format(s),
     }
     for i, line in ipairs(lines) do V.USAGE[i] = line end
 end
 
 --- The status line's host part (the descriptor's `statusLine`, printed after the library's): the
---- simulated situation, the group's size and the sends printed; nil while none runs.
+--- simulated situation, the group's size and the sends printed, then its rolls once one opened
+--- (NS.SimReport.Rolls); nil while none runs.
 --- @param status table NS.Sim:Status()
 --- @param session table|nil the library's session
 --- @return string|nil
 function V.StatusLine(status, session)
     if not (status and status.active and session) then return nil end
-    return L["Simulated %s: %d members, %d sends printed."]:format(
+    local line = L["Simulated %s: %d members, %d sends printed."]:format(
         NS.WindowFooter.SituationLabel(session.situation), #NS.SimRoster.Get(), NS.SimHost.counts.sends)
+    local st = NS.SimEvents.Status()
+    local rolls = NS.SimReport.Rolls(st and st.rolls)
+    if rolls then line = line .. " " .. L["Rolls: %s."]:format(rolls.text) end
+    return line
 end

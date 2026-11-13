@@ -987,7 +987,7 @@ Total.
 - row tooltip: History rows and headers open at the row's top right
 - row tooltip: the column labels and the tabs keep their own anchor (rows only)
 
-### test_test_mode.lua (49)
+### test_test_mode.lua (50)
 
 - test mode: Forever samples use only the nine classes
 - test mode: Forever samples name Forever places, whatever pool they draw on
@@ -1038,6 +1038,7 @@ Total.
 - hooks: AskState shows a sample's own state only while the edge holds none
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
+- test mode: shows one open roll and a History drop with rolls
 
 ### test_compat.lua (75)
 
@@ -2385,7 +2386,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (25)
+### test_sim_events.lua (28)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2412,10 +2413,13 @@ Total.
 - sim trade: a sent ask and offer, then the trades, stamp the session's entries and fill Insights' cards
 - sim trade: refused for an unknown drop, a real one and an expired own drop
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
+- sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing
+- sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll
+- sim roll: refused without a running simulation
 
 ### test_sim_scenario.lua (32)
 
-- sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's seven host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim scenario: Forever lists no key, lfr or delve
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
@@ -2448,11 +2452,12 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (20)
+### test_sim_e2e.lua (21)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
 - sim e2e: nothing escapes the seam
+- sim: every CompatLoot member is wrapped
 - sim e2e key, full: a run fills Drops, yours too, under the default filters
 - sim e2e dungeon, full: a run fills Drops, yours too, under the default filters
 - sim e2e raid, full: a run fills Drops, yours too, under the default filters
@@ -2471,7 +2476,7 @@ Total.
 - sim e2e: in a raid, raid1 is you, online, for every unit read
 - sim e2e: Raid Finder is an instance group, so asks announce in instance chat
 
-### test_sim_report.lua (17)
+### test_sim_report.lua (18)
 
 - sim report: the owner's key run: the second drop is yours, on Drops, nothing lost
 - sim report: the step's chat line says where its drops went
@@ -2490,6 +2495,7 @@ Total.
 - sim report: a place lists yours on Drops and honors the feed the window shows
 - sim report: View reads the feed the window shows; feed.showOwn is retired
 - sim report: the owner's step lists yours on Drops, and the tabs agree
+- sim report: counts rolls
 
 ### test_sim_panel.lua (13)
 
@@ -2776,7 +2782,7 @@ Total.
 | test_offer_alone.lua | 15 |
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
-| test_test_mode.lua | 49 |
+| test_test_mode.lua | 50 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
@@ -2834,10 +2840,10 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 26 |
-| test_sim_events.lua | 25 |
+| test_sim_events.lua | 28 |
 | test_sim_scenario.lua | 32 |
-| test_sim_e2e.lua | 20 |
-| test_sim_report.lua | 17 |
+| test_sim_e2e.lua | 21 |
+| test_sim_report.lua | 18 |
 | test_sim_panel.lua | 13 |
 | test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
@@ -2855,4 +2861,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2353** |
+| **Total** | **2359** |

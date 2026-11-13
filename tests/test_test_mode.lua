@@ -1256,3 +1256,44 @@ test("window: test mode's item kinds read their collection words; only the tier 
     assertEqual(asks.recipe, "No action", "your own recipe: no Offer")
     assertEqual(asks.tierToken, "Ask", "a tier token is asked for as gear")
 end)
+
+test("test mode: shows one open roll and a History drop with rolls", function()
+    -- DW-FP17 (Forever port design §8): a both-clients feature. The open roll is test mode's own
+    -- pending item, shown in Rolling now while test mode is on and never in the live store; the
+    -- History sample keeps one drop's roll table, as a rolled live drop keeps it.
+    local NS, drawn = shownTest()
+    local P = NS.Pending
+    assertEqual(#P.All(), 0, "the live store is never touched")
+    local items = P.All("test")
+    assertEqual(#items, 1, "one sample roll")
+    local item = items[1]
+    assertEqual(item.kind, "roll"); assertEqual(item.state, "open")
+    assertTrue(P.Get(item.id) == item)
+    assertTrue(NS.Compat.ItemIcon(item.link) ~= 134400, "a real pool item")
+    assertTrue(type(item.me) == "table" and item.me.verdict ~= nil, "your verdict on it")
+    local states = {}
+    for _, r in ipairs(item.roll.rolls) do states[r.state] = true end
+    assertTrue(states[0] and states[3] and states[4] and states[5], "Need, Greed, waiting and Pass among them")
+    local wp = NS.WindowPending.Drawn(drawn.pane)
+    assertTrue(wp.header:IsShown()); assertEqual(textOf(wp.header.text), "Rolling now (1)")
+    assertEqual(#wp.rows, 1)
+    -- The History sample: one drop kept its roll table, the winner its looter.
+    local rolled
+    for _, g in ipairs(NS.History.Groups()) do
+        for _, e in ipairs(g.drops) do
+            if e.rolls then
+                assertNil(rolled, "one rolled drop")
+                rolled = e
+            end
+        end
+    end
+    assertTrue(rolled ~= nil, "a History drop with rolls")
+    local t = NS.History.RollTable(rolled.rolls)
+    assertTrue(t.winner ~= nil); assertEqual(t.winner.name, rolled.looter, "won by its looter")
+    assertTrue(#t.rolls >= 5); assertEqual(rolled.rolls.n, #t.rolls)
+    for _, x in ipairs(rolled.rolls.r) do assertNil(x.guid, "no GUIDs kept") end
+    -- Off: the sample roll goes with the samples.
+    NS.SetTestMode(false)
+    assertEqual(#P.All("test"), 0)
+    assertNil(P.Get(item.id))
+end)

@@ -38,14 +38,23 @@ local _, NS = ...
 -- UI_INFO_MESSAGE follow; the history's own trade reader settles the outcome. A given item leaves
 -- your bags.
 --
+-- GROUP-LOOT ROLLS (Forever port design §8, DW-FP17). Roll opens one pool drop for you and every
+-- member on the boss engaged or last killed (modules/SimWorld.lua answers the roll readers):
+-- LOOT_HISTORY_UPDATE_ENCOUNTER and your popup's START_LOOT_ROLL, then a LOOT_HISTORY_UPDATE_DROP
+-- as each choice lands over the next ROLL_CLOSE seconds (RollPlan, pure, on its own seeded source),
+-- then the close: the numbers, the winner (or everyone passed), your popup's CANCEL_LOOT_ROLL and
+-- the winner's loot line, so modules/Pending.lua hands the drop to the feed as it does a real one.
+--
 -- COMBAT FLAGS. While the simulated combat edge is up, InCombatLockdown and the player's combat
 -- flag answer true through the seam; otherwise the client answers.
 --
--- THE STOP. A cleanup step ends the combat edge it raised (unless you really are fighting) and
--- re-reads your real bags (BAG_UPDATE_DELAYED), both delivered once the seam is off.
+-- THE STOP. A cleanup step ends the combat edge it raised (unless you really are fighting),
+-- re-reads your real bags (BAG_UPDATE_DELAYED), closes your open roll popups (CANCEL_LOOT_ROLL),
+-- all delivered once the seam is off, and takes its rolls' pending items away.
 --
 --   NS.Sim:Session().drive = { lines, pulls, kills, encounter = { id, name } | nil, run = { mapID, name,
---     level, ended } | nil, combat, trade = { window, soon, soonLeft }, trades }
+--     level, ended } | nil, lastEncounter, combat, trade = { window, soon, soonLeft }, trades,
+--     rolls = { started, won, allPassed } }
 
 NS.SimEvents = NS.SimEvents or {}
 local E = NS.SimEvents
@@ -254,6 +263,7 @@ local function drive()
     local d = s.drive
     if not d then
         d = { lines = 0, pulls = 0, kills = 0, trades = 0, combat = false,
+            rolls = { started = 0, won = 0, allPassed = 0 },
             trade = { window = E.TRADE_WINDOW, soon = E.ENDING_SOON, soonLeft = E.ENDING_SOON_COUNT } }
         s.drive = d
     end
@@ -274,14 +284,15 @@ function E.Configure(opts)
     return true
 end
 
---- The drivers at a glance: { lines, pulls, kills, trades, combat, encounter, run }; nil when
---- no simulation runs.
+--- The drivers at a glance: { lines, pulls, kills, trades, combat, encounter, run, rolls = { started,
+--- won, allPassed } }; nil when no simulation runs.
 --- @return table|nil
 function E.Status()
     local d = Sim:Session() and drive()
     if not d then return nil end
+    local r = d.rolls
     return { lines = d.lines, pulls = d.pulls, kills = d.kills, trades = d.trades, combat = d.combat,
-        encounter = d.encounter, run = d.run }
+        encounter = d.encounter, run = d.run, rolls = { started = r.started, won = r.won, allPassed = r.allPassed } }
 end
 
 --- The keystone run in progress (or ended, until the next starts), or nil.
@@ -351,7 +362,7 @@ function E.Kill(success)
     local enc = d and d.encounter
     if not enc then return nil, "notEngaged" end
     local kill = success ~= false
-    d.encounter = nil
+    d.encounter, d.lastEncounter = nil, enc
     if kill then d.kills = d.kills + 1 end
     local id, name, difficulty, size = encounterArgs(enc)
     Sim:Fire("ENCOUNTER_END", id, name, difficulty, size, kill and 1 or 0)
@@ -517,6 +528,134 @@ function E.Trade(dropID)
     return true
 end
 
+-- ── group-loot rolls (Forever port design §8) ───────────────────────────────────────────────
+
+--- Seconds a simulated roll takes: every choice is made inside it, the numbers come at its end.
+E.ROLL_CLOSE = 6
+--- Seconds the roll's own timer (its duration) runs past the close, so the close always comes first.
+E.ROLL_SLACK = 4
+
+-- Enum.EncounterLootDropRollState's numbers the plan uses.
+local NEED, GREED, PASS = 0, 3, 5
+
+-- A number from 1 to 100 that no other roller has (the client rerolls a tie).
+local function freshNumber(rnd, used)
+    local n
+    for _ = 1, 100 do
+        n = rnd(1, 100)
+        if not used[n] then break end
+    end
+    used[n] = true
+    return n
+end
+
+-- The row that wins: Need before Greed, then the higher number; nil when everyone passed.
+local function winnerOf(rows)
+    local best
+    for i, r in ipairs(rows) do
+        local b = best and rows[best]
+        if r.state ~= PASS and (not b or r.state < b.state or (r.state == b.state and r.roll > b.roll)) then best = i end
+    end
+    return best
+end
+
+--- A seeded roll plan (pure): you and `n` members (every member when nil) each choose Need, Greed or
+--- Pass at a moment inside the first ROLL_CLOSE seconds (`at`), each choice with its number (none
+--- for a pass), shown at the close; the winner is the best Need, else the best Greed. About one plan
+--- in six is everyone passing. Answers { rows = { { member (nil for you), at, state, roll } },
+--- close, winner (a row index, nil when everyone passed), allPassed }.
+--- @param n number|nil
+--- @param members table
+--- @param rnd function a random source (NS.SimRoster.Random)
+--- @return table plan
+function E.RollPlan(n, members, rnd)
+    local rows = { {} }
+    for i = 1, math.min(tonumber(n) or #members, #members) do rows[#rows + 1] = { member = members[i] } end
+    local used = {}
+    for _, r in ipairs(rows) do
+        r.at = rnd(1, (E.ROLL_CLOSE - 1) * 2) / 2
+        local d = rnd(10)
+        r.state = d > 8 and PASS or (d <= 4 and NEED or GREED)
+        if r.state ~= PASS then r.roll = freshNumber(rnd, used) end
+    end
+    -- Drawn after the rows: a seed's first draw is its weakest (modules/SimRoster.lua's source).
+    if rnd(6) == 1 then
+        for _, r in ipairs(rows) do r.state, r.roll = PASS, nil end
+    end
+    local winner = winnerOf(rows)
+    return { rows = rows, close = E.ROLL_CLOSE, winner = winner, allPassed = winner == nil }
+end
+
+-- The rolls' own seeded source, apart from the session's, so a roll never moves the seeded
+-- sequence the loot lines and inspect replies replay.
+local function rollRandom(s)
+    s.rollRnd = s.rollRnd or NS.SimRoster.Random((s.seed or 1) + 7919)
+    return s.rollRnd
+end
+
+-- One roller's choice lands: the table changes.
+local function choose(roll, i, row)
+    roll.rows[i].state = row.state
+    Sim:Fire("LOOT_HISTORY_UPDATE_DROP", roll.encounterID, roll.key)
+end
+
+-- Your popup closes with the roll (CANCEL_LOOT_ROLL), once.
+local function closePopup(roll, fire)
+    if not roll.popupOpen then return end
+    roll.popupOpen = false
+    fire("CANCEL_LOOT_ROLL", roll.rollID)
+end
+
+-- The close: the numbers show, the winner is set and its loot line follows, as the client's does.
+local function close(d, roll, plan)
+    for i, row in ipairs(plan.rows) do roll.rows[i].roll = row.roll end
+    roll.allPassed = plan.allPassed
+    if plan.winner then
+        roll.winner = plan.winner
+        roll.rows[plan.winner].isWinner = true
+    end
+    closePopup(roll, function(...) return Sim:Fire(...) end)
+    Sim:Fire("LOOT_HISTORY_UPDATE_DROP", roll.encounterID, roll.key)
+    if not plan.winner then
+        d.rolls.allPassed = d.rolls.allPassed + 1
+        return
+    end
+    d.rolls.won = d.rolls.won + 1
+    local m, ownRealm = plan.rows[plan.winner].member, NS.Compat.NameRealm()
+    if deliverLine(d, { looter = m, entry = { link = roll.link }, qty = 1, kind = "loot" }, player(), ownRealm)
+        and m == nil then
+        Sim:Fire("BAG_UPDATE_DELAYED")
+    end
+end
+
+--- A group-loot roll now (`/dw sim roll`, the timeline's `roll` step): one of the pool's drops,
+--- rolled for by you and every member (E.RollPlan) on the boss engaged or last killed. The drop
+--- opens (LOOT_HISTORY_UPDATE_ENCOUNTER, your popup's START_LOOT_ROLL), each choice is a
+--- LOOT_HISTORY_UPDATE_DROP over the next seconds, and the close shows the numbers and the winner,
+--- whose loot line follows. Answers the roll (modules/SimWorld.lua's), or nil and why:
+--- `notRunning`, `noPool`.
+--- @return table|nil roll, string|nil why
+function E.Roll()
+    local d, s = drive(), Sim:Session()
+    if not d then return nil, "notRunning" end
+    local drops = NS.SimPool.LootDrops(s.pool)
+    if #drops == 0 then return nil, "noPool" end
+    local rnd = rollRandom(s)
+    local entry = drops[rnd(#drops)]
+    local plan = E.RollPlan(nil, s.members or {}, rnd)
+    local enc = d.encounter or d.lastEncounter or { id = E.ENCOUNTER_BASE, name = BOSSES[1] }
+    local roll = NS.SimWorld.AddRoll({ encounterID = enc.id, encounterName = enc.name, link = entry.link,
+        duration = plan.close + E.ROLL_SLACK, rows = plan.rows })
+    d.rolls.started = d.rolls.started + 1
+    Sim:Fire("LOOT_HISTORY_UPDATE_ENCOUNTER", roll.encounterID)
+    if roll.rollID then Sim:Fire("START_LOOT_ROLL", roll.rollID, roll.duration * 1000) end
+    for i, row in ipairs(plan.rows) do Sim:After(row.at, function() choose(roll, i, row) end) end
+    Sim:After(plan.close, function() close(d, roll, plan) end)
+    NS.Debug(TAG, "roll %s: %d rollers, %s", tostring(entry.link), #plan.rows,
+        plan.winner and ("winner " .. plan.winner) or "everyone passes")
+    return roll
+end
+
 -- ── the combat answers ──────────────────────────────────────────────────────────────────────
 
 -- The seam's providers for the client's combat flags, keyed by their NS.Compat member names
@@ -546,4 +685,10 @@ Sim:OnStop(function(s)
     local d, w = s.drive, s.world
     if d and d.combat and not NS.Compat.InCombatLockdown() then Sim:DeliverForCleanup("PLAYER_REGEN_ENABLED") end
     if w and #w.bag > 0 then Sim:DeliverForCleanup("BAG_UPDATE_DELAYED") end
+    -- Its rolls leave with it: your open popups close through the real handler, and every pending
+    -- item of a simulated roll goes (its drop is no longer the client's to answer).
+    for _, roll in ipairs(w and w.rollList or {}) do
+        closePopup(roll, function(...) return Sim:DeliverForCleanup(...) end)
+    end
+    if w and w.rolls then NS.Pending.RemoveWhere(function(item) return w.rolls[item.key] ~= nil end) end
 end)

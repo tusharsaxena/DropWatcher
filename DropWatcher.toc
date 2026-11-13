@@ -543,8 +543,8 @@ modules\TestData.lua
 # in TOC order, after those of the modules above. Publishes NS.TestMode, test mode's edge (the item
 # pool, populate and clear) and the hooks the drop tables read (InspectOf, AskState) and the History
 # log (HistoryLog); takes NS.L and NS.State at load. NS.LootFeed, NS.SimPool (below), NS.ItemFacts,
-# NS.ItemRead, NS.WindowFilterBar and NS.Inspect are read at call time; core\DropWatcher.lua's
-# NS.SetTestMode calls Populate and Clear.
+# NS.ItemRead, NS.WindowFilterBar, NS.Inspect and NS.Pending (its test-mode samples) are read at
+# call time; core\DropWatcher.lua's NS.SetTestMode calls Populate and Clear.
 modules\TestMode.lua
 # LOAD-BEARING: adds its removal sink to NS.LootFeed (modules\LootFeed.lua, above) at load, and
 # appends both PLAYER_REGEN rows to NS.FEATURE_EVENTS after core\DropWatcher.lua's and
@@ -581,12 +581,12 @@ modules\SimRoster.lua
 modules\SimPool.lua
 # Conventional: publishes NS.SimWorld, the simulated world's client answers, and registers them as
 # providers on NS.SimSeam (core\SimSetup.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
-# NS.SimPool, NS.SimEvents (below) and NS.Compat are read at call time.
+# NS.SimPool, NS.SimEvents (below), NS.ItemRead and NS.Compat are read at call time.
 modules\SimWorld.lua
 # LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load, before
 # modules\SimScenario.lua (below) has modules\Sim.lua register the engine steps after it. Publishes
-# NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and
-# NS.Compat are read at call time.
+# NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.SimRoster, NS.Roster,
+# NS.LootFeed, NS.Pending and NS.Compat are read at call time.
 modules\SimEvents.lua
 # Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
 # load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
@@ -596,7 +596,7 @@ modules\SimReport.lua
 # modules\SimEvents.lua's; fills NS.SimScenarioDefs in place at load (LibKa0s-Sim-1.0 reads them when
 # a simulation starts). Publishes NS.SimScenario, the simulator's scenarios, its world's prepare and
 # its steps' play (the step machine is the library's); reads NS.L at load. NS.Sim, NS.SimPool,
-# NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call time.
+# NS.SimRoster, NS.SimEvents, NS.SimReport, NS.WindowCells and NS.Window are read at call time.
 modules\SimScenario.lua
 # LOAD-BEARING: fills NS.SimPanel.FIELDS, the Sim:New descriptor's `panel` that modules\Sim.lua
 # (above) created and passed, in place at load (LibKa0s-Sim-1.0 reads each field when it draws);

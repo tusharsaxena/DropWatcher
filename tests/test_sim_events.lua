@@ -580,3 +580,113 @@ test("sim stop: your simulated bag items leave the gear snapshot and the trade t
     assertTrue(NS.TradeTimer.ForDrop(id) == nil, "its entry left with the bag item")
     assertEqual(#NS.SimWorld.BagItems(), 0)
 end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Group-loot rolls (Forever port design §8, plan DW-FP17): a both-clients feature
+-- ---------------------------------------------------------------------------------------------
+
+test("sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing", function()
+    local NS = T.newAddon()
+    local E = NS.SimEvents
+    local members = { { guid = "g1" }, { guid = "g2" }, { guid = "g3" }, { guid = "g4" } }
+    local won, passed = 0, 0
+    for seed = 1, 60 do
+        local plan = E.RollPlan(nil, members, NS.SimRoster.Random(seed))
+        assertEqual(#plan.rows, 5, "you and every member roll")
+        assertNil(plan.rows[1].member, "you first")
+        assertEqual(plan.close, E.ROLL_CLOSE)
+        local numbers = {}
+        for _, r in ipairs(plan.rows) do
+            assertTrue(r.at > 0 and r.at < plan.close, "chosen before the close")
+            assertTrue(r.state == 0 or r.state == 3 or r.state == 5, "Need, Greed or Pass")
+            if r.state == 5 then
+                assertNil(r.roll, "a pass has no number")
+            else
+                assertTrue(r.roll >= 1 and r.roll <= 100)
+                assertNil(numbers[r.roll], "no tie")
+                numbers[r.roll] = true
+            end
+        end
+        if plan.allPassed then
+            passed = passed + 1
+            assertNil(plan.winner)
+            for _, r in ipairs(plan.rows) do assertEqual(r.state, 5) end
+        else
+            won = won + 1
+            local w = plan.rows[plan.winner]
+            for _, r in ipairs(plan.rows) do
+                if r ~= w and r.state ~= 5 then
+                    assertTrue(r.state > w.state or (r.state == w.state and r.roll < w.roll),
+                        "Need beats Greed, then the higher number wins")
+                end
+            end
+        end
+    end
+    assertTrue(won > 0 and passed > 0, ("sometimes everyone passes (%d won, %d passed)"):format(won, passed))
+    assertEqual(#E.RollPlan(2, members, NS.SimRoster.Random(3)).rows, 3, "n members take part, and you")
+end)
+
+-- Every PendingChanged's cause, in order.
+local function pendingCauses(NS)
+    local seen = {}
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.PENDING_CHANGED, function(_, _, cause) seen[#seen + 1] = cause end)
+    return seen
+end
+
+local function count(list, want)
+    local n = 0
+    for _, v in ipairs(list) do if v == want then n = n + 1 end end
+    return n
+end
+
+test("sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll", function()
+    local NS, m, members = sim()
+    local E, P = NS.SimEvents, NS.Pending
+    local causes = pendingCauses(NS)
+    local before = #drops(NS)
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    assertEqual(printed(m, "Simulated roll opened: "), 1)
+    local items = P.All()
+    assertEqual(#items, 1, "one open roll")
+    local item = items[1]
+    assertEqual(item.state, "open"); assertEqual(count(causes, "open"), 1)
+    assertEqual(#item.roll.rolls, #members + 1, "you and every member")
+    for _, r in ipairs(item.roll.rolls) do assertEqual(r.state, 4, "waiting at the open") end
+    assertTrue(item.rollID ~= nil, "your own popup claimed the item")
+    assertEqual(#drops(NS), before, "nothing in the feed while it rolls")
+    -- The choices land over the next seconds, each one update.
+    m.advance(E.ROLL_CLOSE - 0.25)
+    assertTrue(count(causes, "rolls") >= 2, "the table changed as they chose")
+    assertEqual(P.All()[1].state, "open")
+    -- The close: the numbers, the winner, the drop.
+    m.advance(1)
+    assertEqual(#P.All(), 0, "the roll resolved")
+    assertEqual(count(causes, "closed"), 1)
+    assertEqual(#drops(NS), before + 1, "exactly one drop (the winner's loot line merged into it)")
+    local rec = lastDrop(NS)
+    assertTrue(rec.sim, "a simulated drop")
+    assertEqual(type(rec.roll), "table"); assertTrue(rec.roll.winner ~= nil, "won (this seed's plan has a winner)")
+    local winner = rec.roll.winner
+    if winner.isSelf then
+        assertTrue(rec.isMine)
+    else
+        assertEqual(rec.looter.guid, winner.guid, "the winner is the looter")
+    end
+    assertEqual(E.Status().rolls.won, 1)
+    -- An open roll leaves with the stop, and its popup with it.
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    assertEqual(#P.All(), 1)
+    NS.Sim:Stop()
+    m.advance(0)
+    assertEqual(#P.All(), 0, "the stop took the open roll away")
+    assertEqual(next(NS.State.pending and NS.State.pending.mine or {}), nil, "and your simulated popup")
+    assertEqual(#NS.Compat.ActiveLootRolls(), 0)
+end)
+
+test("sim roll: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local roll, why = NS.SimEvents.Roll()
+    assertNil(roll); assertEqual(why, "notRunning")
+end)

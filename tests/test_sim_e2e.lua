@@ -140,6 +140,26 @@ test("sim e2e: nothing escapes the seam", function()
         .. table.concat(NS.SimSeam:Unwrapped(), ", "))
 end)
 
+test("sim: every CompatLoot member is wrapped", function()
+    -- DW-FP17 (Forever port design §8): every roll reader core/CompatLoot.lua publishes answers
+    -- through the seam, and the simulator answers it (a provider in modules/SimWorld.lua). The
+    -- members are read off the file itself, so a reader added later is covered.
+    -- red under: no LootHistory* or roll provider on the seam
+    local NS = T.newAddon()
+    assertEqual(#NS.SimSeam:Unwrapped(), 0, "nothing escapes: " .. table.concat(NS.SimSeam:Unwrapped(), ", "))
+    local wrapped = {}
+    for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
+    local fh = assert(io.open(T.root .. "/core/CompatLoot.lua", "rb"))
+    local src = fh:read("*a"); fh:close()
+    local n = 0
+    for key in src:gmatch("\nfunction Compat%.([%w_]+)%(") do
+        n = n + 1
+        assertTrue(wrapped[key], key .. " is wrapped by the seam")
+        assertTrue(NS.SimWorld.PROVIDERS[key] ~= nil, key .. " has a simulator provider")
+    end
+    assertTrue(n >= 8, "the readers were found: " .. n)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Every scenario fills the window under the default filters
 -- ---------------------------------------------------------------------------------------------

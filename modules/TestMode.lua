@@ -2,7 +2,9 @@ local _, NS = ...
 -- modules/TestMode.lua — test mode (design spec §11.6, boards 03 and 06; ui spec §4): sample drops
 -- in every verdict, trade, inspect and ask state the window draws, over REAL items, put in the test
 -- feed when test mode turns on and cleared when it turns off, so the layout and position can be
--- checked anywhere, solo and out of an instance; and the History tab's sample groups.
+-- checked anywhere, solo and out of an instance; the Rolling now section's sample roll (test mode's
+-- own pending store, NS.Pending.AddTest, never the live one: DW-FP17); and the History tab's sample
+-- groups, one of whose drops kept its roll table.
 --
 -- THE DATA is modules/TestData.lua's (pure). This file is the edge: the items, the hooks the UI
 -- reads, and populate and clear.
@@ -216,12 +218,14 @@ local function changed()
     NS.addon:SendMessage(NS.MSG.HISTORY_CHANGED)
 end
 
--- The pool is ready: the samples into the test feed, the sample groups into the History tab.
+-- The pool is ready: the samples into the test feed, the pending samples into test mode's own
+-- pending store (NS.Pending.AddTest: the Rolling now section), the sample groups into the History tab.
 local function fill(pool)
     local LF, n = NS.LootFeed, 0
     for _, spec in ipairs(TD.Placeholders(GetTime(), you(), TM.Source(pool))) do
         if LF.AddTest(spec) then n = n + 1 end
     end
+    for _, spec in ipairs(TD.PendingSamples(you(), TM.Source(pool))) do NS.Pending.AddTest(spec) end
     TM.HistoryLog().groups = TD.History(time(), you(), TM.Source(pool)).groups
     changed()
     if n == 0 then NS.Print(L["Test mode found no items to show."]) end
@@ -234,6 +238,7 @@ end
 --- @return number the drops added so far
 function TM.Populate()
     NS.LootFeed.Clear("test")
+    NS.Pending.ClearTest()
     releasePool()
     State.testHistory = { v = 1, groups = {} }
     showEverything()
@@ -248,11 +253,12 @@ function TM.Populate()
     return #NS.LootFeed.Drops("test")
 end
 
---- Empty the test feed and the sample history (test mode turned off), let the pool go and put the
+--- Empty the test feed, the pending samples and the sample history (test mode turned off), let the pool go and put the
 --- Drops tab's View back.
 function TM.Clear()
     releasePool()
     NS.LootFeed.Clear("test")
+    NS.Pending.ClearTest()
     if State.testHistory then
         State.testHistory = nil
         changed()

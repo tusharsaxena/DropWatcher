@@ -35,9 +35,21 @@ local _, NS = ...
 -- answer TradePartnerName and TradeItemLinks, and a UI_INFO_MESSAGE of type TRADE_COMPLETE is
 -- the client's "Trade complete." modules/SimEvents.lua drives the events.
 --
+-- THE ROLLS (Forever port design §8, DW-FP17). A simulated group-loot roll (AddRoll, opened by
+-- modules/SimEvents.lua's Roll) answers every core/CompatLoot.lua reader for its own encounter
+-- and key: its roll table (you and the members, each as chat names them, with their choices and,
+-- from the close, their numbers and the winner), its drop once won, the encounter's drops and
+-- name, the history's clock (the session's GetTime while a roll exists), and your popup (its
+-- rollID among ActiveLootRolls while open, its item for LootRollInfo). A roll's key is counted
+-- across sessions, so the pending store and the feed, which remember a resolved key, never meet
+-- one twice.
+--
 --   NS.Sim:Session().world = { members (the list the token map was built from), units = { [token] =
 --     member }, kind = "party"|"raid", marks = { [guid] = { far, failing, offline } }, held (guid),
---     bag = { item }, nextItem, trade = { partner, given, received } | nil, inspects }
+--     bag = { item }, nextItem, trade = { partner, given, received } | nil, inspects,
+--     rolls = { ["encounterID:key"] = roll }, rollList = { roll } }
+--   roll = { encounterID, encounterName, key, link, startTime, duration, rows = { { member, state,
+--     roll, isWinner } }, rollID, popupOpen, allPassed, winner }
 --   item = { sim = true, link, guid, expiresAt }
 
 NS.SimWorld = NS.SimWorld or {}
@@ -281,6 +293,102 @@ local function itemID(link)
     return link and tonumber(link:match("item:(%d+)")) or nil
 end
 
+-- ── the group-loot rolls ────────────────────────────────────────────────────────────────────
+
+-- The keys and popup ids a roll takes, counted across sessions: the store and the feed remember a
+-- drop's key once it resolved (modules/Pending.lua, LootFeed's history keys), so a later session
+-- never reuses one.
+local rollSeq = 0
+
+--- The first id your simulated roll popups take (START_LOOT_ROLL's rollID), far from the client's.
+W.ROLL_ID_BASE = 990000
+
+-- The roll at `encounterID:key`, or nil.
+local function rollAt(encounterID, key)
+    local w = world()
+    return w and w.rolls and w.rolls[tostring(encounterID) .. ":" .. tostring(key)] or nil
+end
+
+--- Open a simulated roll: { encounterID, encounterName, link, duration, rows } where each row is
+--- { member (nil for you) }. Every row starts waiting (state 4) with no number; yours gets a popup
+--- id. Answers the roll: { encounterID, encounterName, key, link, startTime, duration, rows,
+--- rollID, allPassed, winner (a row index) }; nil when no simulation runs.
+--- @param spec table
+--- @return table|nil
+function W.AddRoll(spec)
+    local w = world()
+    if not w then return nil end
+    rollSeq = rollSeq + 1
+    local r = { encounterID = spec.encounterID, encounterName = spec.encounterName, key = rollSeq, link = spec.link,
+        startTime = GetTime(), duration = spec.duration, rows = {}, allPassed = false, popupOpen = false }
+    for i, row in ipairs(spec.rows or {}) do
+        r.rows[i] = { member = row.member, state = 4 }
+        if row.member == nil then r.rollID, r.popupOpen = W.ROLL_ID_BASE + rollSeq, true end
+    end
+    w.rolls = w.rolls or {}
+    w.rollList = w.rollList or {}
+    w.rolls[r.encounterID .. ":" .. r.key] = r
+    w.rollList[#w.rollList + 1] = r
+    return r
+end
+
+--- Every simulated roll, oldest first. Read them; only the drivers write them.
+--- @return table
+function W.Rolls()
+    local w = world()
+    return w and w.rollList or {}
+end
+
+--- Whether `key` (a pending item's `encounterID:dropKey`) is a simulated roll's.
+--- @param key any
+--- @return boolean
+function W.IsRollKey(key)
+    local w = world()
+    return w ~= nil and w.rolls ~= nil and w.rolls[key] ~= nil
+end
+
+-- You, as a roll table names you.
+local function you()
+    local Compat = NS.Compat
+    local _, classFile = Compat.UnitClass("player")
+    return { name = (Compat.UnitCharacterName("player")), guid = Compat.UnitGUID("player"), classFile = classFile }
+end
+
+-- One row as Compat.LootHistoryRolls answers it: a member named as chat names them.
+local function rollRow(row, me, ownRealm)
+    local m = row.member
+    local p = m and { name = NS.SimEvents.ChatName(m, ownRealm), guid = m.guid, classFile = m.classFile } or me
+    return { name = p.name, guid = p.guid, classFile = p.classFile, isSelf = m == nil, state = row.state,
+        roll = row.roll, isWinner = row.isWinner == true }
+end
+
+local function playerOf(row) return row and { name = row.name, guid = row.guid, classFile = row.classFile,
+    isSelf = row.isSelf, roll = row.roll } or nil end
+
+-- The highest numbered row so far, Need before Greed (the client's currentLeader), or nil.
+local function leaderOf(rows)
+    local best
+    for _, r in ipairs(rows) do
+        if r.roll and (not best or r.state < best.state or (r.state == best.state and r.roll > best.roll)) then
+            best = r
+        end
+    end
+    return best
+end
+
+-- A roll's table, freshly built, in Compat.LootHistoryRolls' shape.
+local function rollTable(r)
+    local me, ownRealm = you(), NS.SimSeam:Live(NS.Compat.NameRealm)
+    local rows, mine = {}, nil
+    for i, row in ipairs(r.rows) do
+        rows[i] = rollRow(row, me, ownRealm)
+        if row.member == nil then mine = row.state end
+    end
+    local winner = r.winner and rows[r.winner] or nil
+    return { link = r.link, key = r.key, startTime = r.startTime, duration = r.duration, allPassed = r.allPassed,
+        isTied = false, myState = mine, leader = playerOf(leaderOf(rows)), winner = playerOf(winner), rolls = rows }
+end
+
 -- ── the providers ───────────────────────────────────────────────────────────────────────────
 
 -- Keyed by the NS.Compat member names, written as fields (test_compat's seam-only scan never
@@ -507,6 +615,78 @@ end
 function P.IsTradeCompleteMessage(live, messageType, message)
     if messageType == W.TRADE_COMPLETE then return true end
     return live(messageType, message)
+end
+
+-- The group-loot rolls (core/CompatLoot.lua's readers): a simulated roll answers for its own
+-- encounter and key; anything else is the client's.
+
+function P.LootHistoryRolls(live, encounterID, key)
+    local r = rollAt(encounterID, key)
+    if not r then return live(encounterID, key) end
+    return rollTable(r)
+end
+
+function P.LootHistoryDrop(live, encounterID, key)
+    local r = rollAt(encounterID, key)
+    if not r then return live(encounterID, key) end
+    local w = r.winner and rollTable(r).winner
+    if not w then return nil end
+    return { link = r.link, name = w.name, guid = w.guid, classFile = w.classFile, isSelf = w.isSelf }
+end
+
+function P.LootHistoryDropsFor(live, encounterID)
+    local out
+    for _, r in ipairs(W.Rolls()) do
+        if r.encounterID == encounterID then
+            out = out or {}
+            out[#out + 1] = { key = r.key, link = r.link, open = not (r.winner or r.allPassed) }
+        end
+    end
+    return out or live(encounterID)
+end
+
+function P.LootHistoryEncounters(live)
+    local out, seen = live(), {}
+    for _, id in ipairs(out) do seen[id] = true end
+    for _, r in ipairs(W.Rolls()) do
+        if not seen[r.encounterID] then
+            seen[r.encounterID] = true
+            out[#out + 1] = r.encounterID
+        end
+    end
+    return out
+end
+
+function P.LootHistoryEncounter(live, encounterID)
+    for _, r in ipairs(W.Rolls()) do
+        if r.encounterID == encounterID then return r.encounterName end
+    end
+    return live(encounterID)
+end
+
+-- The history's clock is the session's while it holds a roll (a roll's startTime is GetTime()).
+function P.LootHistoryNow(live)
+    if #W.Rolls() > 0 then return GetTime() end
+    return live()
+end
+
+function P.ActiveLootRolls(live)
+    local out = live()
+    for _, r in ipairs(W.Rolls()) do
+        if r.popupOpen then out[#out + 1] = r.rollID end
+    end
+    return out
+end
+
+-- Your simulated popup's item: an epic you can Need or Greed, bound on pickup.
+function P.LootRollInfo(live, rollID)
+    for _, r in ipairs(W.Rolls()) do
+        if r.rollID == rollID then
+            return { link = r.link, quality = (NS.ItemRead.QualityOf(r.link)), bop = true, canNeed = true,
+                canGreed = true, canTransmog = false }
+        end
+    end
+    return live(rollID)
 end
 
 W.PROVIDERS = P

@@ -857,6 +857,35 @@ function TD.Placeholders(now, you, src)
     return out
 end
 
+-- ── the pending samples (pure) ──────────────────────────────────────────────────────────────
+
+-- Who is on the sample roll besides you, and what each has chosen so far (Enum.EncounterLootDropRollState:
+-- 0 Need, 3 Greed, 4 still choosing, 5 Pass).
+local ROLLERS = { { "seta", 0 }, { "kaelith", 0 }, { "brightmane", 0 }, { "butterz", 3 }, { "littlewolf", 3 },
+    { "solenne", 4 }, { "kragmar", 4 }, { "ashveil", 5 } }
+
+--- Test mode's pending samples (Forever port design §8), as NS.Pending.AddTest takes them: one open
+--- group-loot roll on a drop of the session's last boss, an upgrade for you, with you and eight
+--- members on it: three Need, two Greed, two still choosing, one Pass, you not chosen yet, no
+--- numbers until it closes. Empty when `src` has no item. Pure.
+--- @param you table your looter
+--- @param src table TD.Source's
+--- @return table specs
+function TD.PendingSamples(you, src)
+    local last = SESSION[#SESSION]
+    local item = src:Drop({ me = { "upgrade", 9 } }, src:Place(last.content, last.n))
+    if not item then return {} end
+    local rows = { { name = you.name, guid = you.guid, classFile = you.classFile, isSelf = true, state = 4,
+        isWinner = false } }
+    for _, x in ipairs(ROLLERS) do
+        local m = MEMBERS[x[1]]
+        rows[#rows + 1] = { name = m.name, guid = m.guid, classFile = m.classFile, isSelf = false, state = x[2],
+            isWinner = false }
+    end
+    return { { kind = "roll", link = item.link, facts = item.facts, me = ev(src, item, { "upgrade", 9 }), ago = 10,
+        roll = { link = item.link, key = 1, allPassed = false, isTied = false, myState = 4, rolls = rows } } }
+end
+
 -- ── the history (pure) ──────────────────────────────────────────────────────────────────────
 
 -- The alt that saw one sample group: an invented character on your realm.
@@ -931,7 +960,8 @@ local YOURS = {
 }
 
 -- The last four weeks, newest first: the content, how long ago, how many drops, which of them was
--- yours (`mine`, its place in the group's drops), `alt` for the group the alt saw, and `rows` for a
+-- yours (`mine`, its place in the group's drops), `alt` for the group the alt saw, `rolled` for the
+-- drop that kept its group-loot roll table (DW-FP17), and `rows` for a
 -- group whose drops are its own list rather than the turn of THEIRS and YOURS. A raid night is
 -- bosses some twenty minutes apart; a key run drops two items, a dungeon boss one or two.
 local HISTORY_LISTS = {}
@@ -945,7 +975,7 @@ HISTORY_LISTS.retail = {
     { content = "raidMythic", ago = 3 * DAY + HOUR, drops = 4, mine = 3 },
     { content = "raidMythic", ago = 3 * DAY + HOUR + 35 * MIN, drops = 4 },
     { content = "raidMythic", ago = 3 * DAY + 2 * HOUR + 10 * MIN, drops = 5 },
-    { content = "heroicDungeon", ago = 5 * DAY, drops = 1 },
+    { content = "heroicDungeon", ago = 5 * DAY, drops = 1, rolled = 1 },
     { content = "heroicDungeon", ago = 5 * DAY + 15 * MIN, drops = 2, mine = 2 },
     { content = "heroicDungeon", ago = 5 * DAY + 30 * MIN, drops = 1 },
     { content = "worldBoss", ago = 6 * DAY, drops = 3, mine = 1 },
@@ -975,7 +1005,7 @@ HISTORY_LISTS.forever = {
     { content = "raid", ago = 3 * DAY + HOUR, drops = 4, mine = 3 },
     { content = "raid", ago = 3 * DAY + HOUR + 35 * MIN, drops = 4 },
     { content = "raid", ago = 3 * DAY + 2 * HOUR + 10 * MIN, drops = 5 },
-    { content = "dungeon", ago = 5 * DAY, drops = 1 },
+    { content = "dungeon", ago = 5 * DAY, drops = 1, rolled = 1 },
     { content = "dungeon", ago = 5 * DAY + 15 * MIN, drops = 2, mine = 2 },
     { content = "dungeon", ago = 5 * DAY + 30 * MIN, drops = 1 },
     { content = "worldBoss", ago = 6 * DAY, drops = 3, mine = 1 },
@@ -1050,6 +1080,24 @@ local function historyEntry(src, seer, row, who, at, where)
     }, row)
 end
 
+-- A kept roll table (NS.History's compact shape, Forever port design §5.4): its looter won with a
+-- Need 96, then the group's other members and whoever saw it in the roll cells' order (the numbers
+-- high to low, then the passes). No GUIDs.
+local ROLLED = { { 3, 77 }, { 0, 58 }, { 5 } }
+local function rolledOf(e, seer, members, at)
+    local r = { { name = e.looter, class = e.class, s = 0, n = 96 } }
+    local others = {}
+    for _, k in ipairs(members) do
+        if MEMBERS[k].name ~= e.looter then others[#others + 1] = MEMBERS[k] end
+    end
+    for i, x in ipairs(ROLLED) do
+        local m = others[i]
+        if m then r[#r + 1] = { name = m.name, class = m.classFile, s = x[1], n = x[2] } end
+    end
+    table.insert(r, #r, { name = seer.name, class = seer.classFile, s = 3, n = 41 })   -- before the pass
+    return { at = at, allPassed = false, n = #r, w = 1, r = r }
+end
+
 -- The alt as a seer: on your realm (the one in your recorder key), else realm-less.
 local function altSeer(you)
     local realm = type(you.seenBy) == "string" and you.seenBy:match("%-(.+)$") or nil
@@ -1087,7 +1135,9 @@ function TD.History(nowEpoch, you, src)
                 theirs = theirs + 1
                 row, who = THEIRS[(theirs - 1) % #THEIRS + 1], members[(gi + i - 1) % #members + 1]
             end
-            group.drops[#group.drops + 1] = historyEntry(src, seer, row, who, at + i * 20, where)
+            local e = historyEntry(src, seer, row, who, at + i * 20, where)
+            if e and g.rolled == i then e.rolls = rolledOf(e, seer, members, at + i * 20) end
+            group.drops[#group.drops + 1] = e
         end
         if #group.drops > 0 then log.groups[#log.groups + 1] = group end
     end

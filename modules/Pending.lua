@@ -13,6 +13,10 @@ local _, NS = ...
 -- popup: Review Focus 1). An item's tables are the store's own: read them, never write them.
 -- (`kind = "ml"`, the master-loot drops of design §6, lands with DW-FP18.)
 --
+-- TEST MODE (DW-FP17) keeps its sample items in a store of their own (State.pendingTest, AddTest
+-- and ClearTest; All("test") reads it), never read from the client, never ticked, never handed to
+-- the feed; the window reads the store of the feed it shows.
+--
 -- THE LIFECYCLE (design §5.2). LOOT_HISTORY_UPDATE_ENCOUNTER walks the encounter's drops and opens
 -- each open one that passes the feed's pre-looter gates (design §11.1, NS.FeedFilter.PassesForMe
 -- through LootFeed.GateFor): PendingChanged(id, "open"). LOOT_HISTORY_UPDATE_DROP re-reads one
@@ -75,18 +79,21 @@ local function byAge(a, b)
     return a.id < b.id
 end
 
---- Every pending item, oldest first (by `at`, then id).
+--- Every pending item of a store, oldest first (by `at`, then id): `live` (the default) or `test`
+--- (test mode's samples, P.AddTest).
+--- @param name string|nil
 --- @return table[]
-function P.All()
-    local out = {}
-    for _, item in ipairs(State.pending and State.pending.items or {}) do out[#out + 1] = item end
+function P.All(name)
+    local out, s = {}, name == "test" and State.pendingTest or State.pending
+    for _, item in ipairs(s and s.items or {}) do out[#out + 1] = item end
     table.sort(out, byAge)
     return out
 end
 
---- One pending item by its id, or nil.
+--- One pending item by its id, from either store, or nil.
 function P.Get(id)
-    return State.pending and State.pending.byId[id] or nil
+    local live, test = State.pending, State.pendingTest
+    return (live and live.byId[id]) or (test and test.byId[id]) or nil
 end
 
 --- The pending item that holds your roll popup `rollID`, or nil.
@@ -293,6 +300,50 @@ function P.OnCancelRoll(rollID)
     if item then item.rollID = nil end
 end
 
+--- Close every live item `pred(item)` answers true for, its key free again (the simulator's stop:
+--- its rolls are no longer the client's to answer). Answers how many closed.
+--- @param pred function
+--- @return number
+function P.RemoveWhere(pred)
+    local gone = {}
+    for _, item in ipairs(State.pending and State.pending.items or {}) do
+        if pred(item) then gone[#gone + 1] = item end
+    end
+    for _, item in ipairs(gone) do
+        remove(item)
+        store().done[item.key] = nil
+    end
+    return #gone
+end
+
+-- ── test mode's samples ─────────────────────────────────────────────────────────────────────
+
+--- Add one of test mode's sample items (modules/TestMode.lua) to the test store: `spec` = { kind,
+--- link, facts, me, roll, state }. It is never read from the client, never ticks and never reaches
+--- the feed; its id is a string (`test:<n>`), so it never meets a live one. Answers the item.
+--- @param spec table
+--- @return table|nil
+function P.AddTest(spec)
+    if stoodDown() or type(spec) ~= "table" or not spec.link then return nil end
+    local s = State.pendingTest or { seq = 0, items = {}, byId = {} }
+    State.pendingTest = s
+    s.seq = s.seq + 1
+    local id = "test:" .. s.seq
+    local item = { id = id, kind = spec.kind or "roll", key = id, link = spec.link,
+        itemID = NS.Item.ItemIDFromLink(spec.link), at = now() - (tonumber(spec.ago) or 0), state = spec.state or "open",
+        facts = spec.facts, me = spec.me, roll = spec.roll, test = true }
+    s.items[#s.items + 1], s.byId[id] = item, item
+    send(id, "open")
+    return item
+end
+
+--- Empty the test store (test mode turned off).
+function P.ClearTest()
+    local s = State.pendingTest
+    State.pendingTest = nil
+    for _, item in ipairs(s and s.items or {}) do send(item.id, "closed") end
+end
+
 --- Rebuild from the client (a reload, the stand-up): every encounter's open drops, then your open
 --- roll popups. Idempotent: a drop already held is not opened again.
 function P.Rebuild()
@@ -347,6 +398,6 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     stopTicker()
     for _, t in pairs(lingers) do t:Cancel() end
     lingers = {}
-    State.pending = nil
+    State.pending, State.pendingTest = nil, nil
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function() P.Rebuild() end

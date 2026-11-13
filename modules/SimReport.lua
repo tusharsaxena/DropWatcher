@@ -148,6 +148,34 @@ local function where(rec, get, view)
     return PLACE_WORDS[place]
 end
 
+-- ── the rolls (DW-FP17) ─────────────────────────────────────────────────────────────────────
+
+-- The roll counts a line lists after its total, in order, and their words.
+local ROLL_PARTS = {
+    { key = "open", fmt = L["%d open"] }, { key = "won", fmt = L["%d won"] },
+    { key = "allPassed", fmt = L["%d everyone passed"] },
+}
+
+--- The session's group-loot rolls at a glance (pure): `counts` is NS.SimEvents.Status().rolls
+--- ({ started, won, allPassed }). Answers { started, open, won, allPassed, text } with text `4 rolls
+--- (1 open, 2 won, 1 everyone passed)`, or nil before the first roll.
+--- @param counts table|nil
+--- @return table|nil
+function R.Rolls(counts)
+    local started = type(counts) == "table" and tonumber(counts.started) or 0
+    if started <= 0 then return nil end
+    local c = { started = started, won = tonumber(counts.won) or 0, allPassed = tonumber(counts.allPassed) or 0 }
+    c.open = math.max(0, started - c.won - c.allPassed)
+    local parts = {}
+    for _, x in ipairs(ROLL_PARTS) do
+        if c[x.key] > 0 then parts[#parts + 1] = x.fmt:format(c[x.key]) end
+    end
+    local text = started == 1 and L["1 roll"] or L["%d rolls"]:format(started)
+    if #parts > 0 then text = L["%s (%s)"]:format(text, table.concat(parts, ", ")) end
+    c.text = text
+    return c
+end
+
 --- The tooltip's lines for a report (pure, given `get`): each drop, its looter and where it is
 --- as { left, right } lines (`Item (Seta)` / `Drops`, `Item (Seta)` / `hidden: below the quality
 --- gate`), then the merged and refused lines' counts; the step panel (LibKa0s-Sim-1.0) draws them.

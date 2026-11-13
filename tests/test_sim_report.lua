@@ -9,7 +9,7 @@
 -- the step's drops of yours.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function link(id, ilvl)
     return ("|cnIQ4:|Hitem:%d::::::::90:::::%d|h[Item %d]|h|r"):format(id, ilvl or 0, id)
@@ -355,3 +355,28 @@ test("sim report: the owner's step lists yours on Drops, and the tabs agree", fu
     local shown = groupShown(NS, step.report)
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)
 end, T.RETAIL_ONLY)
+
+test("sim report: counts rolls", function()
+    -- DW-FP17: the roll line, pure, then end to end through /dw sim roll and the status line.
+    local NS0 = T.newAddon()
+    local R0 = NS0.SimReport
+    assertNil(R0.Rolls(nil), "no roll yet: no line")
+    assertNil(R0.Rolls({ started = 0, won = 0, allPassed = 0 }))
+    assertEqual(R0.Rolls({ started = 1, won = 1, allPassed = 0 }).text, "1 roll (1 won)")
+    local c = R0.Rolls({ started = 4, won = 2, allPassed = 1 })
+    assertEqual(c.open, 1)
+    assertEqual(c.text, "4 rolls (1 open, 2 won, 1 everyone passed)")
+    local NS, m = addon(600)
+    NS.SimScenario.Start("dungeon", nil, { seed = 1 })
+    NS.addon:OnSlashCommand("sim pause")
+    NS.addon:OnSlashCommand("sim roll")
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local r = NS.SimReport.Rolls(NS.SimEvents.Status().rolls)
+    assertEqual(r.started, 2); assertEqual(r.open, 2)
+    m.advance(NS.SimEvents.ROLL_CLOSE + 1)
+    r = NS.SimReport.Rolls(NS.SimEvents.Status().rolls)
+    assertEqual(r.open, 0); assertEqual(r.won + r.allPassed, 2)
+    NS.addon:OnSlashCommand("sim status")
+    assertEqual(printed(m, "Rolls: " .. r.text .. "."), 1, "the status line counts them")
+end)
