@@ -134,6 +134,20 @@ function Compat.PlayerTalentTree()
     return { index = best.index, name = best.name }
 end
 
+--- The player's talent trees' names on WoW Forever, by their index in display order (LibKa0s
+--- Role.Groups()): `{ [index] = name }`, a name the client does not give left out. Empty on Retail,
+--- and without the library (the Comparison page's strip, Forever port design §4.3).
+--- @return table
+function Compat.TalentTreeNames()
+    local out = {}
+    if not (RoleLib and RoleLib.Groups) then return out end
+    for _, group in ipairs(RoleLib.Groups()) do
+        local name = plainString(group.name)
+        if type(group.index) == "number" and name and name ~= "" then out[group.index] = name end
+    end
+    return out
+end
+
 -- ── The role (LibKa0s-Role-1.0) ─────────────────────────────────────────────────────────────
 
 --- This character's role store (`db.char.role`: the player's override and the last answer),

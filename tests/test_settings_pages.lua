@@ -552,7 +552,7 @@ end)
 
 test("comparison: Weights draws your class's specs as a sub-strip and one slider per stat", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     -- The mock player is a mage: Arcane, Fire and Frost, the first shown (250 is not a mage's).
@@ -565,7 +565,7 @@ end)
 
 test("comparison: a weight slider writes the whole map through the seam, for the spec on screen", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     find(drawn, "Slider", "Haste"):__fire("OnMouseUp", 1.5)
@@ -581,9 +581,25 @@ test("comparison: a weight slider writes the whole map through the seam, for the
     assertEqual(w[62].ITEM_MOD_HASTE_RATING_SHORT, 1.5)
 end)
 
+test("comparison: the Weights strip shows your specs on Retail and your class's talent trees on Forever", function()
+    local NS, _, m = T.enableAddon()
+    local forever = NS.Compat.ClientKey() == "forever"
+    if forever then
+        m.seedTalents(1487, { { name = "Arcane", spent = 0 }, { name = "Fire", spent = 31 }, { name = "Frost", spent = 5 } })
+    end
+    local ctx = open(NS, m, "comparison")
+    local drawn = tab(m, ctx, "Weights")
+    assertEqual(#ctx.__subTabKids, 3)
+    -- red under: a Forever strip keyed by the class-wide spec, or one that opens on the first tree
+    local own = forever and "MAGE:2" or 62
+    assertEqual(ctx.activeSubTab["Weights"], own, "your own tree on Forever; the first mage spec on Retail")
+    find(drawn, "Slider", "Haste"):__fire("OnMouseUp", 1.5)
+    assertEqual(NS.Setting("comparison.weights")[own].ITEM_MOD_HASTE_RATING_SHORT, 1.5)
+end)
+
 test("comparison: the Pawn import box replaces the spec on screen's weights and says what came in", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     local box = find(drawn, "EditBox", "Import a Pawn scale")
@@ -606,7 +622,7 @@ end)
 
 test("comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Unwanted types")
     local daggers = find(drawn, "CheckBox", "Daggers")
@@ -890,7 +906,7 @@ end)
 
 test("editors: a spec's stats are its primary stat, Stamina and the four secondaries", function()
     local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E = NS.addon.Settings.Editors
     local fury = E.StatsFor(72)
     assertEqual(fury[1], "ITEM_MOD_STRENGTH_SHORT")
@@ -904,7 +920,7 @@ end)
 
 test("editors: unwanted types are the class's weapons, then shields where a spec carries one", function()
     local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E, K = NS.addon.Settings.Editors, NS.Constants
     local keys = {}
     for _, c in ipairs(E.UndesiredChoices("PALADIN")) do keys[#keys + 1] = c.key end
@@ -927,7 +943,7 @@ end)
 
 test("editors: the spec strip keeps the remembered spec, else yours, else the first", function()
     local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip; Forever's trees are DW-FP07's
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E = NS.addon.Settings.Editors
     local list = E.ClassSpecs("MAGE", function(id) return id == 63 and "Fire" or nil end)
     assertEqual(#list, 3)
@@ -937,6 +953,18 @@ test("editors: the spec strip keeps the remembered spec, else yours, else the fi
     assertEqual(E.PickSpec(list, 250, 63), 63)
     assertEqual(E.PickSpec(list, nil, 250), 62)
     assertEqual(E.PickSpec({}, 62, 62), nil)
+end)
+
+test("editors: on Forever the strip lists your class's talent trees by name", function()
+    local NS = T.newAddon()
+    NS.ClassData.Install(NS.ClassData.LISTS.forever)
+    local E = NS.addon.Settings.Editors
+    local list = E.ClassSpecs("MAGE", E.SpecNamer(function() return "spec" end, { "Arcane", "Fire" }))
+    assertEqual(#list, 3)
+    assertEqual(list[1].key, "MAGE:1"); assertEqual(list[1].label, "Arcane")
+    assertEqual(list[3].key, "MAGE:3"); assertEqual(list[3].label, "Talent tree 3", "a tree the client does not name")
+    assertEqual(E.PickSpec(list, nil, "MAGE:2"), "MAGE:2")
+    assertEqual(E.SpecNamer(function(id) return id == 62 and "Arcane" end)(62), "Arcane", "a Retail spec by its name")
 end)
 
 test("editors: the counter label counts bytes and turns red past the limit", function()

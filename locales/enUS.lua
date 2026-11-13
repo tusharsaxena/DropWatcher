@@ -161,6 +161,7 @@ L["Imported %s into %s: %d weights."] = "Imported %s into %s: %d weights."
 L["Not scored: %s."] = "Not scored: %s."
 L["Paste a Pawn scale string first."] = "Paste a Pawn scale string first."
 L["Pick a specialization first."] = "Pick a specialization first."
+L["Talent tree %d"] = "Talent tree %d"
 L["That is not a Pawn scale string: it reads ( Pawn: v1: \"name\": Key=value, ... )."] =
     "That is not a Pawn scale string: it reads ( Pawn: v1: \"name\": Key=value, ... )."
 L["That scale has no stat Drop Watcher scores, so nothing was imported."] =

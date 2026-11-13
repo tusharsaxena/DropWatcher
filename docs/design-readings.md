@@ -41,7 +41,15 @@ starter one; `NS.Compat.PawnVisibleScale`, feedback-21 R4), else your spec's sta
 `scoreDelta` is a value difference, not Pawn's percent. For a looter it is `PawnFindScaleForSpec`
 for their class and spec, the spec given as its place in the class (Pawn numbers its scales so, not
 by specID; `NS.ClassData.SpecIndex`); with no scale for that spec there is no
-score (item level alone), not a pending one. The kernel hands every scorer the drop beside the
+score (item level alone), not a pending one. On WoW Forever (the class list's `PAWN_BY_TREE`, Forever
+port design §4.3) Pawn has one Classic scale per talent tree and no specs, and the drop's best
+visible scale is never used: for you, your visible custom scale, else your top talent tree's
+(the Druid's Feral 2 or 3 by your role, Restoration 4), else with no tree the best of your
+class's scales; for a looter the best of their class's scales, the one that values the drop
+highest (`NS.Compat.PawnClassScales`). Weights there are keyed `"<classFile>:<tree>"`, and a
+looter with no tree is scored with the class's tree whose weights score the drop highest.
+`NS.Scoring.ScoreFor(link, who)` answers one item's score and how its scale or weights were
+chosen (`tree`, `bestOfClass`, `custom` or `none`). The kernel hands every scorer the drop beside the
 item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
 that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
 (the Weights tab's box) replaces the weights of the spec on screen, whatever `Class=` and `Spec=`

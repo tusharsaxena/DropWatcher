@@ -139,7 +139,7 @@ Total.
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 
-### test_settings_pages.lua (53)
+### test_settings_pages.lua (55)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -167,6 +167,7 @@ Total.
 - feed: the readout names the situation whose own quality setting is in force
 - comparison: Weights draws your class's specs as a sub-strip and one slider per stat
 - comparison: a weight slider writes the whole map through the seam, for the spec on screen
+- comparison: the Weights strip shows your specs on Retail and your class's talent trees on Forever
 - comparison: the Pawn import box replaces the spec on screen's weights and says what came in
 - comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec
 - messages: three editors whose labels count the template's bytes against 255
@@ -187,6 +188,7 @@ Total.
 - editors: unwanted types are the class's weapons, then shields where a spec carries one
 - editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
 - editors: the spec strip keeps the remembered spec, else yours, else the first
+- editors: on Forever the strip lists your class's talent trees by name
 - editors: the counter label counts bytes and turns red past the limit
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
@@ -1028,7 +1030,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
-### test_compat.lua (74)
+### test_compat.lua (76)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1081,6 +1083,8 @@ Total.
 - compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares
 - compat: an error inside Pawn reads as not ready, never as this addon's error
 - compat: your visible Pawn scale is the one you show, a custom one before a starter
+- compat: on Forever Pawn's scale is asked by the talent tree, the Druid's Feral by role
+- compat: PawnClassScales lists a class's Classic scales by tree, shown or hidden
 - compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts
 - compat: InitiateTrade calls through, and reports false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
@@ -1347,7 +1351,7 @@ Total.
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
 
-### test_scoring.lua (16)
+### test_scoring.lua (22)
 
 - scoring: a Pawn v1 string imports its stats under GetItemStats' keys
 - scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
@@ -1362,6 +1366,12 @@ Total.
 - scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn
 - scoring: for a looter, Pawn uses the scale for their class and spec
 - scoring: Pawn answers pending while it is not ready or has not read the item
+- scoring: on Forever your score uses the scale of your top talent tree
+- scoring: with no tree, the best of your class's scales, how = bestOfClass
+- scoring: another player is scored with the best of their class's scales
+- scoring: Feral Druid tank uses Pawn 3, damage Pawn 2
+- scoring: on Forever the weights are keyed by class and talent tree
+- scoring: ScoreFor with your weights is how = custom, and none without a scorer
 - scoring: the kernel hands the scorer the drop beside each item
 - scoring: with weights, a higher item level that scores lower is a sidegrade
 - scoring: the feed judges your drop with your weights once they are set
@@ -2644,7 +2654,7 @@ Total.
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 26 |
-| test_settings_pages.lua | 53 |
+| test_settings_pages.lua | 55 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2683,7 +2693,7 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 47 |
-| test_compat.lua | 74 |
+| test_compat.lua | 76 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
 | test_text_parse.lua | 12 |
@@ -2695,7 +2705,7 @@ Total.
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 16 |
+| test_scoring.lua | 22 |
 | test_quality_gate.lua | 26 |
 | test_situations.lua | 14 |
 | test_trade_rules.lua | 24 |
@@ -2757,4 +2767,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2271** |
+| **Total** | **2281** |

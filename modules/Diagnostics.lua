@@ -374,13 +374,16 @@ local function messaging(out)
     end
 end
 
--- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read): the
--- one you show in Pawn, else your spec's starter scale, as the scorer falls back (modules/Scoring.lua).
+-- Your Pawn scale, read from the stored gear snapshot's class, spec and talent tree (never a fresh
+-- read): the one you show in Pawn, else your spec's (on WoW Forever your tree's) starter scale, as
+-- the scorer falls back (modules/Scoring.lua).
 local function pawnScale()
     local g = NS.State.gear
     local classID = g and NS.ClassData.CLASS_ID[g.classFile]
     if not (classID and g.specID) then return nil end
-    return NS.Compat.PawnVisibleScale(classID, g.specID) or NS.Compat.PawnScaleForSpec(classID, g.specID)
+    local role = g.tree and (NS.Compat.PlayerRole()) or nil
+    return NS.Compat.PawnVisibleScale(classID, g.specID, g.tree, role)
+        or NS.Compat.PawnScaleForSpec(classID, g.specID, g.tree, role)
 end
 
 -- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:

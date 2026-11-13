@@ -767,12 +767,19 @@ end
 
 -- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
 -- Pawn is CC BY-NC-ND: its API is called, never copied. Every call is behind PawnIsReady and in
--- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries. The
--- shapes below are Pawn 2.13.6's (Pawn.lua; line numbers cite that file).
+-- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries. Line
+-- numbers cite Pawn 2.14.1's Pawn.lua (the WoW Forever install, Forever port research R4 §10);
+-- the two that research did not re-read (PawnIsInitialized, PawnGetAllScales) still cite 2.13.6's.
+--
+-- THE SCALE INDEX. Pawn numbers a class's scales by their place in the class (Arms is 1); on WoW
+-- Forever it has no specs and one Classic scale per talent tree, its SpecID the tree's index (the
+-- Druid's are four: Balance 1, Feral 2 for damage and 3 to tank, Restoration 4). Both clients
+-- translate through NS.ClassData.SpecIndex(specID, tree, role, classFile), the active list's:
+-- Retail's answers by specID, Forever's by the talent tree's row.
 
---- True when Pawn is loaded and has finished initializing: Pawn's own PawnIsReady() (line 4916),
---- which answers its file-local PawnIsInitialized (line 28; true, or nil while it initializes).
---- Without that function, a global PawnIsInitialized (flag or function) is read instead.
+--- True when Pawn is loaded and has finished initializing: Pawn's own PawnIsReady() (line 4949),
+--- which answers its file-local PawnIsInitialized (2.13.6 line 28; true, or nil while it
+--- initializes). Without that function, a global PawnIsInitialized (flag or function) is read instead.
 --- @return boolean
 function Compat.PawnIsReady()
     local flag = type(PawnIsReady) == "function" and PawnIsReady or PawnIsInitialized
@@ -791,14 +798,14 @@ local function pawnCall(fn, ...)
     return v, w
 end
 
---- Pawn's item object for a link (PawnGetItemData, line 1314), or nil while the item is not cached.
+--- Pawn's item object for a link (PawnGetItemData, line 1324), or nil while the item is not cached.
 function Compat.PawnItemData(link)
     if not plainString(link) then return nil end
     return (pawnCall(PawnGetItemData, link))
 end
 
 --- Pawn's upgrade list for a link against YOUR gear (PawnIsItemAnUpgrade's first return, line
---- 3552): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
+--- 3586): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
 --- visible scale it upgrades, empty when it upgrades nothing (Pawn answers nil); nil while not ready.
 --- @return table|nil
 function Compat.PawnUpgradeInfo(link)
@@ -808,20 +815,37 @@ function Compat.PawnUpgradeInfo(link)
     return type(list) == "table" and list or {}
 end
 
+-- The classFile of a classID, read off the active class list's CLASS_ID.
+local function classFileOf(classID)
+    for file, id in pairs(NS.ClassData.CLASS_ID or {}) do
+        if id == classID then return file end
+    end
+    return nil
+end
+
+-- Pawn's scale index for a class, a spec and (on Forever) a talent tree and role; nil when unknown.
+local function pawnIndex(classID, specID, tree, role)
+    if classID == nil then return nil end
+    return NS.ClassData.SpecIndex(specID, tree, role, classFileOf(classID))
+end
+
 --- The Pawn scale name for a class and spec, or nil when Pawn has none. `specID` is the client's
 --- specID (71); Pawn's scales carry the spec's place in its class instead (Arms is 1;
---- PawnFindScaleForSpec, line 4531), so it is translated through NS.ClassData.SpecIndex.
+--- PawnFindScaleForSpec, line 4565), so it is translated through NS.ClassData.SpecIndex. On WoW
+--- Forever `tree` is the talent tree's index (the specID is class-wide) and `role` the role played
+--- ("TANK" makes the Druid's Feral Pawn 3); with no tree there, there is no scale.
 --- @return string|nil
-function Compat.PawnScaleForSpec(classID, specID)
-    local index = classID and NS.ClassData.SpecIndex(specID)
+function Compat.PawnScaleForSpec(classID, specID, tree, role)
+    local index = pawnIndex(classID, specID, tree, role)
     if index == nil then return nil end
     return (pawnCall(PawnFindScaleForSpec, classID, index))
 end
 
 -- Your visible scales for a class and spec index (PawnCommon.Scales and PawnIsScaleVisible, line
--- 5467): a scale that names another class or spec is skipped, and so is an abandoned provider's
--- (PawnGetAllScales, line 5168). A custom scale outranks a starter one, one that names your spec
--- outranks one that names none, and the name breaks a tie, so the answer never depends on order.
+-- 5500): a scale that names another class or spec is skipped, and so is an abandoned provider's
+-- (PawnGetAllScales, 2.13.6 line 5168). A custom scale outranks a starter one, one that names your
+-- spec outranks one that names none, and the name breaks a tie, so the answer never depends on
+-- order. With no index (`index` nil) only a scale that names no spec fits.
 -- Whether a scale is one of yours for the class and spec index: it names neither another class nor
 -- another spec, its provider (if any) is active, and Pawn shows it.
 local function scaleFits(name, scale, classID, index)
@@ -835,16 +859,17 @@ end
 -- A fitting scale's rank: a custom one (no provider) 2, one naming the spec 1 more.
 local function scaleRank(scale, index)
     local r = scale.Provider == nil and 2 or 0
-    if scale.SpecID == index then r = r + 1 end
+    if index ~= nil and scale.SpecID == index then r = r + 1 end
     return r
 end
 
-local function visibleScale(classID, index)
+local function visibleScale(classID, index, customOnly)
     local scales = type(PawnCommon) == "table" and PawnCommon.Scales
     if type(scales) ~= "table" or type(PawnIsScaleVisible) ~= "function" then return nil end
     local best, rank
     for name, scale in pairs(scales) do
-        local r = scaleFits(name, scale, classID, index) and scaleRank(scale, index)
+        local fits = scaleFits(name, scale, classID, index) and not (customOnly and scale.Provider ~= nil)
+        local r = fits and scaleRank(scale, index)
         if r and (rank == nil or r > rank or (r == rank and name < best)) then best, rank = name, r end
     end
     return best
@@ -852,16 +877,56 @@ end
 
 --- The Pawn scale YOU show in tooltips for your class and spec, or nil when none is visible: the
 --- one Pawn itself values your gear on, your custom or imported scale included, where
---- PawnScaleForSpec answers a starter (provider) scale only. `specID` as PawnScaleForSpec's.
+--- PawnScaleForSpec answers a starter (provider) scale only. The arguments as PawnScaleForSpec's.
 --- @return string|nil
-function Compat.PawnVisibleScale(classID, specID)
-    local index = classID and NS.ClassData.SpecIndex(specID)
+function Compat.PawnVisibleScale(classID, specID, tree, role)
+    local index = pawnIndex(classID, specID, tree, role)
     if index == nil then return nil end
     return (pawnCall(visibleScale, classID, index))
 end
 
+--- Your visible custom scale for a class (one you made or imported: no provider, naming neither
+--- another class nor a spec), or nil. What WoW Forever scores you with when no talent tree is known
+--- and you picked a scale of your own (Forever port design §4.3).
+--- @param classID number
+--- @return string|nil
+function Compat.PawnCustomScale(classID)
+    if classID == nil then return nil end
+    return (pawnCall(visibleScale, classID, nil, true))
+end
+
+-- The class's starter scales from active providers, sorted by spec index then name.
+local function classScales(classID)
+    local scales = type(PawnCommon) == "table" and PawnCommon.Scales
+    local out = {}
+    if type(scales) ~= "table" then return out end
+    for name, scale in pairs(scales) do
+        if type(name) == "string" and type(scale) == "table" and scale.ClassID == classID
+            and scale.Provider ~= nil and scale.ProviderActive then
+            out[#out + 1] = { name = name, index = scale.SpecID }
+        end
+    end
+    table.sort(out, function(a, b)
+        local x, y = tonumber(a.index) or math.huge, tonumber(b.index) or math.huge
+        if x ~= y then return x < y end
+        return a.name < b.name
+    end)
+    return out
+end
+
+--- Every starter scale Pawn has for a class (WoW Forever's Classic scales, one per talent tree), as
+--- `{ { name, index }, ... }` sorted by tree, shown or hidden: what another player, or you with no
+--- talent tree, is scored with at best (Forever port design §4.3). Empty without Pawn, while it is
+--- not ready, or for a class it has none for.
+--- @param classID number
+--- @return table
+function Compat.PawnClassScales(classID)
+    if classID == nil then return {} end
+    return pawnCall(classScales, classID) or {}
+end
+
 --- One item's value on scale `scale`, or nil while not ready. PawnGetSingleValueFromItem (line
---- 1663) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
+--- 1690) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
 --- Pawn's own upgrade test compares (PawnIsItemAnUpgrade), so worn enchants and gems do not
 --- outweigh a bare drop. A Pawn that answers one value gives that one.
 --- @return number|nil

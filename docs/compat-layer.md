@@ -73,6 +73,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `PlayerRecordKey()` (`core/CompatClient.lua`) | the player as stored records name a character (`seenBy`, the Character dropdown): `CharacterKey()` (else the whole name) with regional names; otherwise `Name-Realm` over `NormalizedRealm()`, the shape History has stored since v1 | `nil` until known |
 | | `PlayerSpecID()` | LibKa0s-Role-1.0's `Spec()` (Compat's spec ladder; class-wide on WoW Forever); without Role, LibKa0s-Compat-1.0's `GetSpecialization` (the index) then `GetSpecializationInfo(index)`'s first return, each `C_SpecializationInfo` first and the global second; a secret answer is nil. With the library absent its reader stubs answer nil, so no rung is re-implemented here | `nil` |
 | | `PlayerTalentTree()` (`core/CompatClient.lua`) | the group of LibKa0s-Role-1.0's `Groups()` with the most points spent, as `{ index, name }`; nil on Retail (no groups), on a tie and with no points spent | `nil` |
+| | `TalentTreeNames()` (`core/CompatClient.lua`) | the names of LibKa0s-Role-1.0's `Groups()` by index, `{ [index] = name }` (the Comparison page's strip on WoW Forever); empty on Retail | `{}` |
 | Role | `RoleStore()` (`core/CompatClient.lua`) | `db.char.role`, made on first use (the player's override and Role's last answer) | `nil` before the database |
 | | `PlayerRole()` (`core/CompatClient.lua`) | LibKa0s-Role-1.0's `Resolve(RoleStore())`: role, source, detail. Library absent: the override, then `UnitGroupRolesAssigned("player")` | `nil` |
 | | `SetRoleOverride(role)` (`core/CompatClient.lua`) | LibKa0s-Role-1.0's `SetOverride` on the store (`TANK`, `HEALER`, `DAMAGER`, or nil for Automatic); false with no store or another role | `false` |
@@ -106,8 +107,10 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | Pawn | `PawnIsReady()` | Pawn's own `PawnIsReady()` (its `PawnIsInitialized` is a file local); without that function, a global `PawnIsInitialized` flag or function | `false` |
 | | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
 | | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
-| | `PawnScaleForSpec(classID, specID)` | `PawnFindScaleForSpec(classID, index)`, `index` the spec's place in its class (`NS.ClassData.SpecIndex`; Pawn's scales are numbered so, not by specID) | `nil` |
-| | `PawnVisibleScale(classID, specID)` | The scale you show in Pawn's tooltips (`PawnCommon.Scales` and `PawnIsScaleVisible`) for your class and spec: one naming another class or spec, or an abandoned provider's, is skipped; a custom scale before a starter one, one naming your spec before one naming none, then by name | `nil` |
+| | `PawnScaleForSpec(classID, specID, tree, role)` | `PawnFindScaleForSpec(classID, index)`, `index` the spec's place in its class (`NS.ClassData.SpecIndex(specID, tree, role, classFile)`; Pawn's scales are numbered so, not by specID). On WoW Forever `tree` is the talent tree's index (the specID is class-wide) and `role` makes the Druid's Feral Pawn 3 to tank, 2 for damage; Restoration is 4; no tree, no scale (Forever port design §4.3) | `nil` |
+| | `PawnVisibleScale(classID, specID, tree, role)` | The scale you show in Pawn's tooltips (`PawnCommon.Scales` and `PawnIsScaleVisible`) for your class and spec: one naming another class or spec, or an abandoned provider's, is skipped; a custom scale before a starter one, one naming your spec before one naming none, then by name; the index as `PawnScaleForSpec`'s | `nil` |
+| | `PawnCustomScale(classID)` | Your visible custom scale for the class (no provider, naming neither another class nor a spec): what WoW Forever scores you with when no talent tree is known | `nil` |
+| | `PawnClassScales(classID)` | Every starter scale of an active provider for the class (`PawnCommon.Scales`, WoW Forever's Classic scales, one per talent tree), shown or hidden, as `{ { name, index } }` sorted by index: the "best of the class" a looter, or you with no tree, is scored with | `{}` |
 | | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`'s unenchanted value (its second return, what Pawn's own upgrade test compares), else its first; a number | `nil` |
 | Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
@@ -298,7 +301,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |
 | `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
-| `modules/Scoring.lua` | `PawnIsReady`, `PawnUpgradeInfo`, `PawnVisibleScale`, `PawnScaleForSpec`, `PawnItemValue` |
+| `modules/Scoring.lua` | `PawnIsReady`, `PawnItemData`, `PawnUpgradeInfo`, `PawnVisibleScale`, `PawnScaleForSpec`, `PawnCustomScale`, `PawnClassScales`, `PawnItemValue`, `PlayerRole` |
 | `modules/Session.lua` | `IsSecret`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`: the instance map id This instance is kept by) |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/HistoryCard.lua` | `InsertChatLink` |
@@ -319,7 +322,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `core/SkinSetup.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: the first-run skin picker waits out combat) |
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
 | `modules/TestMode.lua` | `UnitCharacterName`; `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
-| `modules/Diagnostics.lua` | `PawnIsReady`, `PawnVisibleScale`, `PawnScaleForSpec`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
+| `modules/Diagnostics.lua` | `PawnIsReady`, `PawnVisibleScale`, `PawnScaleForSpec`, `PlayerRole`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
 | `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item); `GetItemInfo` (an item list entry's name) |
 | `modules/Sim.lua` | `RestrictionTypes` |

@@ -134,6 +134,7 @@ end)
 
 test("scoring: InUse and Scorer follow the settings and whether Pawn is initialized", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- weights keyed by Retail's specID (Forever's by talent tree is below)
     local S, Set = NS.Scoring, NS.SchemaRuntime.Set
     assertEqual(S.InUse(), "none")
     assertNil(S.Scorer(), "no Pawn and no weights: item level alone")
@@ -183,6 +184,7 @@ end
 
 test("scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's model (Forever's by talent tree is below)
     local calls = installPawn(m, { Tank = { drop = 50, worn = 40 }, Dps = { drop = 80, worn = 60 } },
         { drop = { { ScaleName = "Tank", PercentUpgrade = 0.05 }, { ScaleName = "Dps", PercentUpgrade = 0.2 } } })
     local score = NS.Scoring.PawnScorer()
@@ -196,7 +198,7 @@ end)
 
 test("scoring: for you, a drop that upgrades no scale is valued on your spec's scale", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m, { ["S8:1"] = { drop = 10, worn = 12 } }, { drop = {} })
     local score = NS.Scoring.PawnScorer()
     local drop, me = { link = "drop" }, { isPlayer = true, classFile = "MAGE", specID = 62 }
@@ -206,7 +208,7 @@ end)
 
 test("scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m, { ["S8:1"] = { drop = 90, worn = 10 }, Mine = { drop = 10, worn = 12 } }, { drop = {} })
     m.PawnCommon = { Scales = { ["S8:1"] = { ClassID = 8, SpecID = 1, Provider = "P", ProviderActive = true },
         Mine = {} } }
@@ -220,7 +222,7 @@ end)
 
 test("scoring: for a looter, Pawn uses the scale for their class and spec", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m, { ["S1:1"] = { drop = 30, theirs = 25 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
@@ -234,7 +236,7 @@ end)
 
 test("scoring: Pawn answers pending while it is not ready or has not read the item", function()
     local NS, _, m = T.enableAddon()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m, { ["S1:1"] = { drop = 30 } }, {})
     local score = NS.Scoring.PawnScorer()
     local drop = { link = "drop" }
@@ -244,6 +246,150 @@ test("scoring: Pawn answers pending while it is not ready or has not read the it
         "your drop's upgrade list not read yet")
     m.PawnIsReady = function() return nil end
     assertEqual(score(drop, brakk, drop), "pending")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Pawn and the weights on WoW Forever (Forever port design §4.3)
+-- ---------------------------------------------------------------------------------------------
+
+-- Installs WoW Forever's class list (core/ClassDataForever.lua) on either kit profile: the scoring
+-- by talent tree is pure code over it, as T.retailList pins Retail's.
+local function foreverList(NS)
+    NS.ClassData.Install(NS.ClassData.LISTS.forever)
+    return NS
+end
+
+-- Forever's Pawn (2.14.1, research R4 §10): no specs, one Classic scale per talent tree, named
+-- "<CLASS><index>", carrying ClassID and SpecID = the index; PawnFindScaleForSpec matches SpecID.
+-- `classes` = { { "HUNTER", 3, 3 }, ... } (classFile, classID, scales); `values[scale][link]`;
+-- `upgrades[link]` PawnIsItemAnUpgrade's list; `visible` the scales Pawn shows (all by default).
+local function installClassicPawn(m, classes, values, upgrades, visible)
+    local scales = {}
+    for _, c in ipairs(classes) do
+        for i = 1, c[3] do
+            scales[c[1] .. i] = { ClassID = c[2], SpecID = i, Provider = "Classic", ProviderActive = true }
+        end
+    end
+    m.PawnIsReady = function() return true end
+    m.PawnCommon = { Scales = scales }
+    m.PawnIsScaleVisible = function(name) return scales[name] ~= nil and (visible == nil or visible[name] == true) end
+    m.PawnGetItemData = function(link) return { link = link } end
+    m.PawnIsItemAnUpgrade = function(data) return (upgrades or {})[data.link] end
+    m.PawnFindScaleForSpec = function(classID, specID)
+        for name, s in pairs(scales) do
+            if s.ClassID == classID and s.SpecID == specID and s.Provider then return name end
+        end
+    end
+    m.PawnGetSingleValueFromItem = function(data, scale) return values[scale] and values[scale][data.link] end
+    return scales
+end
+
+local HUNTER = { { "HUNTER", 3, 3 } }
+
+test("scoring: on Forever your score uses the scale of your top talent tree", function()
+    local NS, _, m = T.enableAddon()
+    foreverList(NS)
+    local scales = installClassicPawn(m, HUNTER, {
+        HUNTER1 = { drop = 10, worn = 8 }, HUNTER2 = { drop = 20, worn = 25 }, HUNTER3 = { drop = 90, worn = 10 },
+    }, { drop = { { ScaleName = "HUNTER3", PercentUpgrade = 0.8 } } })
+    local drop, me = { link = "drop" }, { isPlayer = true, classFile = "HUNTER", specID = 1485, tree = 2 }
+    local score = NS.Scoring.PawnScorer()
+    -- red under: a scorer that takes the drop's best visible scale (the tree that gains most, HUNTER3)
+    assertEqual(score(drop, me, drop), 20)
+    assertEqual(score({ link = "worn" }, me, drop), 25)
+    local v, how = NS.Scoring.ScoreFor("drop", me)
+    assertEqual(v, 20); assertEqual(how, "tree")
+    -- A visible custom scale of your class wins, as on Retail.
+    scales.Mine = {}
+    m.PawnGetSingleValueFromItem = function(data, scale) return scale == "Mine" and #data.link or nil end
+    v, how = NS.Scoring.ScoreFor("drop", me)
+    assertEqual(v, 4); assertEqual(how, "custom")
+end)
+
+test("scoring: with no tree, the best of your class's scales, how = bestOfClass", function()
+    local NS, _, m = T.enableAddon()
+    foreverList(NS)
+    installClassicPawn(m, HUNTER, {
+        HUNTER1 = { drop = 10, worn = 8 }, HUNTER2 = { drop = 30, worn = 25 }, HUNTER3 = { drop = 20, worn = 1 },
+    })
+    local drop, me = { link = "drop" }, { isPlayer = true, classFile = "HUNTER", specID = 1485 }
+    local score = NS.Scoring.PawnScorer()
+    assertEqual(score(drop, me, drop), 30)
+    assertEqual(score({ link = "worn" }, me, drop), 25, "the baseline on the drop's scale")
+    local v, how = NS.Scoring.ScoreFor("drop", me)
+    assertEqual(v, 30); assertEqual(how, "bestOfClass")
+    m.PawnGetItemData = function(link) if link ~= "drop" then return { link = link } end end
+    assertEqual(NS.Scoring.PawnScorer()(drop, me, drop), "pending", "the drop not read by Pawn yet")
+end)
+
+test("scoring: another player is scored with the best of their class's scales", function()
+    local NS, _, m = T.enableAddon()
+    foreverList(NS)
+    -- Another class's scales are hidden from you; they still value the item.
+    installClassicPawn(m, HUNTER, {
+        HUNTER1 = { drop = 10, theirs = 9 }, HUNTER2 = { drop = 30, theirs = 12 }, HUNTER3 = { drop = 20 },
+    }, nil, {})
+    local drop = { link = "drop" }
+    local them = { isPlayer = false, classFile = "HUNTER", specID = 1485 }
+    local score = NS.Scoring.PawnScorer()
+    assertEqual(score(drop, them, drop), 30)
+    assertEqual(score({ link = "theirs" }, them, drop), 12)
+    local v, how = NS.Scoring.ScoreFor("drop", them)
+    assertEqual(v, 30); assertEqual(how, "bestOfClass")
+    -- A class Pawn has no scale for: no score, so item level decides.
+    assertNil(score(drop, { isPlayer = false, classFile = "ROGUE", specID = 1484 }, drop))
+    v, how = NS.Scoring.ScoreFor("drop", { isPlayer = false, classFile = "ROGUE" })
+    assertNil(v); assertEqual(how, "none")
+end)
+
+test("scoring: Feral Druid tank uses Pawn 3, damage Pawn 2", function()
+    local NS, _, m = T.enableAddon()
+    foreverList(NS)
+    installClassicPawn(m, { { "DRUID", 11, 4 } }, {
+        DRUID1 = { drop = 1 }, DRUID2 = { drop = 2 }, DRUID3 = { drop = 3 }, DRUID4 = { drop = 4 },
+    })
+    local drop = { link = "drop" }
+    local feral = { isPlayer = true, classFile = "DRUID", specID = 1447, tree = 2 }
+    NS.addon.db.char = {}   -- AceDB's per-character table, the role store's home (the kit seeds none)
+    assertTrue(NS.Compat.SetRoleOverride("TANK"))
+    assertEqual(NS.Scoring.PawnScorer()(drop, feral, drop), 3)
+    assertTrue(NS.Compat.SetRoleOverride("DAMAGER"))
+    assertEqual(NS.Scoring.PawnScorer()(drop, feral, drop), 2)
+    local resto = { isPlayer = true, classFile = "DRUID", specID = 1447, tree = 3 }
+    assertEqual(NS.Scoring.PawnScorer()(drop, resto, drop), 4, "Restoration is Pawn 4")
+    local balance = { isPlayer = true, classFile = "DRUID", specID = 1447, tree = 1 }
+    assertEqual(NS.Scoring.PawnScorer()(drop, balance, drop), 1)
+end)
+
+test("scoring: on Forever the weights are keyed by class and talent tree", function()
+    local NS = foreverList(T.newAddon())
+    local S = NS.Scoring
+    local AGI = "ITEM_MOD_AGILITY_SHORT"
+    local map = { ["HUNTER:1"] = { [AGI] = 1 }, ["HUNTER:2"] = { [AGI] = 3 }, [1485] = { [AGI] = 100 } }
+    local scorer = S.WeightsScorer(map)
+    local drop = { stats = { [AGI] = 10 } }
+    -- red under: a weights scorer that reads map[specID], the class-wide spec every tree shares
+    assertEqual(scorer(drop, { isPlayer = true, classFile = "HUNTER", specID = 1485, tree = 1 }, drop), 10)
+    assertEqual(scorer(drop, { isPlayer = false, classFile = "HUNTER", specID = 1485 }, drop), 30,
+        "no tree: the best of the class's trees")
+    assertNil(scorer(drop, { classFile = "HUNTER", specID = 1485, tree = 3 }, drop), "a tree with no weights")
+    assertEqual(NS.ClassData.SpecKey("HUNTER", 1485, 2), "HUNTER:2")
+    assertNil(NS.ClassData.SpecKey("HUNTER", 1485, nil))
+    local out = S.ImportInto(map, "HUNTER:3", '( Pawn: v1: "BM": Agility=2 )')
+    assertEqual(out["HUNTER:3"][AGI], 2, "an import into a tree")
+end)
+
+test("scoring: ScoreFor with your weights is how = custom, and none without a scorer", function()
+    local NS, _, m = T.enableAddon()
+    T.retailList(NS)
+    local v, how = NS.Scoring.ScoreFor("x", { classFile = "MAGE", specID = 62 })
+    assertNil(v); assertEqual(how, "none")
+    local link = "|cnIQ4:|Hitem:100::::::::90:::::|h[Item 100]|h|r"
+    m.addItem(link, { name = "Item", quality = 4, ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, bindType = 1, stats = { [CRIT] = 10 } })
+    NS.SchemaRuntime.Set("comparison.weights", { [62] = { [CRIT] = 2 } })
+    v, how = NS.Scoring.ScoreFor(link, { classFile = "MAGE", specID = 62 })
+    assertEqual(v, 20); assertEqual(how, "custom")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -270,6 +416,7 @@ end)
 
 test("scoring: with weights, a higher item level that scores lower is a sidegrade", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's model (Forever's by talent tree is below)
     local scorer = NS.Scoring.WeightsScorer({ [62] = { [CRIT] = 1, [HASTE] = 0.5 } })
     local who = wearer(ring(600, { [CRIT] = 100 }), ring(600, { [CRIT] = 100 }))
     local out = NS.Evaluate.Evaluate(ring(610, { [HASTE] = 100 }), who, { scorer = scorer })
@@ -301,12 +448,12 @@ test("scoring: the feed judges your drop with your weights once they are set", f
     m.addItem(link(100), def(600, { [CRIT] = 100 }))
     m.addItem(link(101), def(600, { [CRIT] = 100 }))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    -- WoW Forever: the spec is class-wide and read through C_SpecializationInfo (design §4.2); the
-    -- weights stay keyed by it until DW-FP07 keys Forever's by talent tree.
-    local spec = T.forever and 1487 or 250
-    if T.forever then m.seedTalents(spec, { { name = "Arcane", spent = 31 } }) end
+    -- WoW Forever: the spec is class-wide and read through C_SpecializationInfo, and the weights are
+    -- keyed by class and talent tree (design §4.2, §4.3).
+    if T.forever then m.seedTalents(1487, { { name = "Arcane", spent = 31 } }) end
+    local key = T.forever and "MAGE:1" or 250
     NS.Gear.Refresh("test")
-    NS.SchemaRuntime.Set("comparison.weights", { [spec] = { [CRIT] = 1, [HASTE] = 0.5 } })
+    NS.SchemaRuntime.Set("comparison.weights", { [key] = { [CRIT] = 1, [HASTE] = 0.5 } })
     m.addItem(link(300), def(610, { [HASTE] = 100 }))
     NS.LootFeed.Add(link(300))
     local rec = NS.LootFeed.Drops()[1]

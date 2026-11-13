@@ -620,7 +620,7 @@ end)
 
 test("compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID", function()
     local Compat, m, NS = fresh()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m)
     -- red under: a seam that passes the specID (71), which no Pawn scale carries
     assertEqual(Compat.PawnScaleForSpec(1, 71), "1:1", "Arms")
@@ -656,7 +656,7 @@ end
 
 test("compat: your visible Pawn scale is the one you show, a custom one before a starter", function()
     local Compat, m, NS = fresh()
-    T.retailList(NS)   -- Pawn's Retail spec index; Forever's is DW-FP07's
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m)
     installScales(m, {
         Starter = { ClassID = 1, SpecID = 1, Provider = "Wowhead", ProviderActive = true },
@@ -679,6 +679,50 @@ test("compat: your visible Pawn scale is the one you show, a custom one before a
     assertNil(Compat.PawnVisibleScale(1, 71))
     m.PawnCommon = nil
     assertNil(Compat.PawnVisibleScale(1, 71))
+end)
+
+test("compat: on Forever Pawn's scale is asked by the talent tree, the Druid's Feral by role", function()
+    local Compat, m, NS = fresh()
+    NS.ClassData.Install(NS.ClassData.LISTS.forever)
+    installPawn(m)
+    -- red under: a seam that asks SpecIndex(specID) alone, which the class-wide spec never answers
+    assertEqual(Compat.PawnScaleForSpec(3, 1485, 2), "3:2", "a Hunter's second tree")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 2, "TANK"), "11:3", "Feral to tank")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 2, "DAMAGER"), "11:2", "Feral for damage")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 3), "11:4", "Restoration")
+    assertNil(Compat.PawnScaleForSpec(3, 1485), "no tree: no scale")
+    installScales(m, {
+        HUNTER1 = { ClassID = 3, SpecID = 1, Provider = "Classic", ProviderActive = true },
+        HUNTER2 = { ClassID = 3, SpecID = 2, Provider = "Classic", ProviderActive = true },
+    }, { HUNTER1 = true, HUNTER2 = true })
+    assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "HUNTER2")
+    assertNil(Compat.PawnVisibleScale(3, 1485), "no tree: no visible scale")
+    assertNil(Compat.PawnCustomScale(3), "a starter scale is not a custom one")
+    m.PawnCommon.Scales.Mine = {}
+    m.PawnIsScaleVisible = function(name) return name ~= "HUNTER1" end
+    assertEqual(Compat.PawnCustomScale(3), "Mine", "your visible custom scale")
+    assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "Mine", "a custom scale before the tree's starter")
+end)
+
+test("compat: PawnClassScales lists a class's Classic scales by tree, shown or hidden", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    installScales(m, {
+        HUNTER2 = { ClassID = 3, SpecID = 2, Provider = "Classic", ProviderActive = true },
+        HUNTER1 = { ClassID = 3, SpecID = 1, Provider = "Classic", ProviderActive = true },
+        Old = { ClassID = 3, SpecID = 3, Provider = "Gone" },
+        Mine = { ClassID = 3 },
+        MAGE1 = { ClassID = 8, SpecID = 1, Provider = "Classic", ProviderActive = true },
+    }, {})
+    local list = Compat.PawnClassScales(3)
+    assertEqual(#list, 2, "a custom, another class's and an abandoned provider's scale are left out")
+    assertEqual(list[1].name, "HUNTER1"); assertEqual(list[2].name, "HUNTER2")
+    assertNil(next(Compat.PawnClassScales(4)), "a class with none")
+    assertNil(next(Compat.PawnClassScales(nil)))
+    m.PawnCommon = nil
+    assertNil(next(Compat.PawnClassScales(3)), "no Pawn table: an empty list")
+    m.PawnIsReady = function() return nil end
+    assertNil(next(Compat.PawnClassScales(3)), "not ready: an empty list")
 end)
 
 test("compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts", function()

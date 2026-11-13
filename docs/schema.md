@@ -22,7 +22,8 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
 - A row with nothing to do carries a `disabledIf` predicate that dims it on the panel; its `default`
   references `defaults/Profile.lua`; its `validate` refuses a value outside its list or range
   before the seam stores it.
-- `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
+- `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID (on
+  WoW Forever by `"<classFile>:<tree>"`, one per talent tree: `NS.ClassData.SpecKey`)
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
   their own editors (`skipRender`); the CLI shows them as their entry count. So are the two item
   lists, `feed.whitelist` and `feed.blacklist` (issue #13), flat `{ [itemID] = true }` sets on the
@@ -127,7 +128,7 @@ button and profiles reach them as any row.
 | `comparison.sidegradeBand` | `0` | Scoring | item levels either side of equal that read as a sidegrade, 0 to 20 |
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
 | `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |
-| `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }`, the Weights adapter's scores; the Pawn scale import writes one spec's |
+| `comparison.weights` | `{}` | Weights (`map`) | `{ [specKey] = { STAT_KEY = weight } }` (the specID, or on WoW Forever `"<classFile>:<tree>"`), the Weights adapter's scores; the Pawn scale import writes one spec's |
 | `comparison.undesired` | `{}` | Unwanted types (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
 
 The two `map` rows are whole values: a write replaces the whole table through the seam, and the

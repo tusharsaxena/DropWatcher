@@ -35,9 +35,27 @@ end
 
 -- ── the specs a page edits ──────────────────────────────────────────────────────────────────
 
---- A class's specializations, in specID order, as sub-tab entries: { key = specID, label }.
+--- The name of a spec key for the strip: a specID's (`specName`, Compat.SpecName), or for WoW
+--- Forever's "<classFile>:<tree>" the talent tree's (`treeNames[tree]`, Compat.TalentTreeNames),
+--- else "Talent tree <n>". Answers the `nameOf` E.ClassSpecs takes.
+--- @param specName function|nil specID -> localized name or nil
+--- @param treeNames table|nil { [tree] = name }
+--- @return function
+function E.SpecNamer(specName, treeNames)
+    return function(key)
+        local tree = type(key) == "string" and tonumber(key:match(":(%d+)$"))
+        if not tree then return type(specName) == "function" and specName(key) or nil end
+        local name = isTable(treeNames) and treeNames[tree] or nil
+        if type(name) == "string" and name ~= "" then return name end
+        return L["Talent tree %d"]:format(tree)
+    end
+end
+
+--- A class's specializations, in spec key order, as sub-tab entries: { key, label }. The key is
+--- the specID on Retail and "<classFile>:<tree>" on WoW Forever, one per talent tree (Forever port
+--- design §4.3); NS.ClassData's active list decides.
 --- @param classFile string
---- @param nameOf function specID -> localized name or nil (Compat.SpecName)
+--- @param nameOf function spec key -> localized name or nil (E.SpecNamer)
 --- @return table
 function E.ClassSpecs(classFile, nameOf)
     local out = {}
@@ -51,9 +69,9 @@ end
 --- The spec a sub-strip shows: the remembered one while the list still has it, else the player's
 --- own, else the first. Nil for an empty list.
 --- @param list table E.ClassSpecs' answer
---- @param remembered number|nil
---- @param own number|nil
---- @return number|nil
+--- @param remembered number|string|nil
+--- @param own number|string|nil
+--- @return number|string|nil
 function E.PickSpec(list, remembered, own)
     local has = {}
     for _, e in ipairs(list) do has[e.key] = true end

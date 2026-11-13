@@ -14,10 +14,10 @@ local _, NS = ...
 -- tab; it takes this file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
--- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). Drops › Situations' per-situation rows (`situations.<key>.track`,
--- `.autoOpen`, `.quality` and `trade.rules.<key>`) are `skipRender` too: its table draws them, one
--- line per situation. The window's geometry, its minimized flag and the toast's position have no
+-- specID, or on WoW Forever by "<classFile>:<tree>" (architecture-§5's value route): written
+-- whole through the seam, drawn by their own editors (`skipRender`). Drops › Situations'
+-- per-situation rows (`situations.<key>.track`, `.autoOpen`, `.quality` and `trade.rules.<key>`)
+-- are `skipRender` too: its table draws them, one line per situation. The window's geometry, its minimized flag and the toast's position have no
 -- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
 -- `glow.<main|offSpec>.color` rows are typed `color`, stored {r=,g=,b=,a=} (the library's codec).
 
@@ -68,14 +68,20 @@ end
 
 local function isSpecID(k) return type(k) == "number" and k > 0 and k == math.floor(k) end
 
+-- A per-spec map's key: a specID (Retail), or WoW Forever's "<classFile>:<tree>" (Forever port
+-- design §4.3, NS.ClassData.SpecKey).
+local function isSpecKey(k)
+    return isSpecID(k) or (type(k) == "string" and k:match("^%u+:%d+$") ~= nil)
+end
+
 -- The checks a composed block's rows take too (settings/ComposedRows.lua): the composer emits none.
 Settings.Checks = { isBool = isBool, inRange = inRange, nonEmptyString = nonEmptyString, isColor = isColor }
 
--- weights: { [specID] = { [STAT_KEY] = number } }.
+-- weights: { [specKey] = { [STAT_KEY] = number } }.
 local function validWeights(v)
     if type(v) ~= "table" then return false end
     for spec, w in pairs(v) do
-        if not isSpecID(spec) or type(w) ~= "table" then return false end
+        if not isSpecKey(spec) or type(w) ~= "table" then return false end
         for stat, n in pairs(w) do
             if type(stat) ~= "string" or type(n) ~= "number" or n ~= n then return false end
         end
@@ -98,7 +104,7 @@ end
 local function validUndesired(v)
     if type(v) ~= "table" then return false end
     for spec, set in pairs(v) do
-        if not isSpecID(spec) or type(set) ~= "table" then return false end
+        if not isSpecKey(spec) or type(set) ~= "table" then return false end
         for key, on in pairs(set) do
             if type(key) ~= "string" or not key:match("^%d+:%d+$") or on ~= true then return false end
         end

@@ -11,7 +11,13 @@ local _, NS = ...
 --            unenchanted value, the one Pawn's own upgrade test compares), so the kernel's
 --            scoreDelta is a difference on one scale. A nil answer from Pawn means
 --            "not ready": the adapter answers "pending" and LootFeed retries on its shared timer.
---   Weights  your own per-spec weights, `comparison.weights[specID] = { STAT_KEY = weight }`: the
+--            WoW Forever (the class list's PAWN_BY_TREE, Forever port design §4.3): Pawn has one
+--            Classic scale per talent tree and no specs, so the drop's best visible scale is never
+--            used. For you: your visible custom scale, else your top talent tree's (the Druid's
+--            Feral 2 or 3 by your role), else with no tree the best of your class's scales; for
+--            a looter the best of their class's scales (the one that values the drop highest).
+--   Weights  your own per-spec weights, `comparison.weights[key] = { STAT_KEY = weight }`, the key
+--            the specID (Retail) or "<classFile>:<tree>" (WoW Forever, NS.ClassData.SpecKey): the
 --            score is the sum of stat times weight. A Pawn scale string imports into one spec.
 --   None     no scorer: the verdict is item level alone.
 --
@@ -24,6 +30,9 @@ local _, NS = ...
 -- and make no client call, so test_scoring drives them directly. A weight whose stat key is not one
 -- this file knows contributes 0 and is logged once per key (NS.DebugOnce, tag SCORE); it never
 -- raises. A scorer is called under pcall by the kernel, so even a third-party error is no score.
+--
+-- ScoreFor(link, who) answers one item's score by the scorer in use and how its scale or weights
+-- were chosen ("tree", "bestOfClass", "custom" or "none"), for a reader that names the source.
 
 NS.Scoring = NS.Scoring or {}
 local S = NS.Scoring
@@ -91,12 +100,12 @@ function S.ParseImport(text)
     return out
 end
 
---- The weights map with spec `specID`'s weights replaced by an imported string's: a fresh table
---- (the seam stores what it is handed). Answers the map and ParseImport's result, or nil and its
---- reason ("noSpec" without a spec).
+--- The weights map with spec `specID`'s weights (a specID, or on WoW Forever a "<classFile>:<tree>"
+--- key) replaced by an imported string's: a fresh table (the seam stores what it is handed).
+--- Answers the map and ParseImport's result, or nil and its reason ("noSpec" without a spec).
 --- @return table|nil, table|string
 function S.ImportInto(map, specID, text)
-    if num(specID) == nil then return nil, "noSpec" end
+    if num(specID) == nil and type(specID) ~= "string" then return nil, "noSpec" end
     local parsed, why = S.ParseImport(text)
     if not parsed then return nil, why end
     local out = {}
@@ -172,24 +181,107 @@ local function bestVisibleScale(link)
     return best
 end
 
--- The starter scale for the candidate's class and spec; for you, the scale you show in Pawn first
--- (a custom or imported one, or the starter you kept visible), so a hidden scale is never used.
+-- Retail: the starter scale for the candidate's class and spec, and for you the scale you show in
+-- Pawn first (a custom or imported one, or the starter you kept visible), so a hidden scale is
+-- never used. "custom" when the scale you show is not the starter.
 local function specScale(candidate, visibleFirst)
     local classID = CD.CLASS_ID[candidate.classFile]
     if not (classID and num(candidate.specID)) then return nil end
-    return visibleFirst and NS.Compat.PawnVisibleScale(classID, candidate.specID)
-        or NS.Compat.PawnScaleForSpec(classID, candidate.specID)
+    local starter = NS.Compat.PawnScaleForSpec(classID, candidate.specID)
+    local shown = visibleFirst and NS.Compat.PawnVisibleScale(classID, candidate.specID) or nil
+    if shown and shown ~= starter then return shown, "custom" end
+    return starter or shown, "tree"
+end
+
+-- Retail: for you the drop's best visible scale, else your spec's; for a looter their spec's.
+local function specPick(candidate, dropLink)
+    if not candidate.isPlayer then return specScale(candidate) end
+    local best = bestVisibleScale(dropLink)
+    if best == "pending" then return "pending", "none" end
+    if best then return best, "bestOfClass" end
+    return specScale(candidate, true)
+end
+
+-- The role a candidate plays, for the Druid's Feral tree (Pawn 2 or 3): a set `role`, else yours
+-- (NS.Compat.PlayerRole); a looter's is not known.
+local function roleOf(candidate)
+    if candidate.role then return candidate.role end
+    if candidate.isPlayer then return (NS.Compat.PlayerRole()) end
+    return nil
+end
+
+-- WoW Forever: the class's starter scale that values the drop highest (an "at best" read, design
+-- §4.3; the list is in tree order, so a tie keeps the lower tree). "pending" while Pawn has not
+-- read the drop, nil when no scale of the class values it.
+local function bestOfClass(classID, dropLink)
+    if NS.Compat.PawnItemData(dropLink) == nil then return "pending" end
+    local best, top
+    for _, s in ipairs(NS.Compat.PawnClassScales(classID)) do
+        local v = NS.Compat.PawnItemValue(dropLink, s.name)
+        if v and (top == nil or v > top) then best, top = s.name, v end
+    end
+    return best
+end
+
+-- WoW Forever (PAWN_BY_TREE): your visible custom scale first; then the talent tree's Classic
+-- scale (yours from your top tree, the Druid's Feral by your role); else the best of the class's.
+local function treePick(candidate, classID, dropLink)
+    local tree, mine = num(candidate.tree), candidate.isPlayer == true
+    local role = roleOf(candidate)
+    local starter = tree and NS.Compat.PawnScaleForSpec(classID, candidate.specID, tree, role) or nil
+    local shown
+    if mine and tree then
+        shown = NS.Compat.PawnVisibleScale(classID, candidate.specID, tree, role)
+    elseif mine then
+        shown = NS.Compat.PawnCustomScale(classID)
+    end
+    if shown and shown ~= starter then return shown, "custom" end
+    if starter then return starter, "tree" end
+    return bestOfClass(classID, dropLink), "bestOfClass"
+end
+
+--- The Pawn scale a candidate is scored on for a drop, and how it was chosen: "tree" (the spec's
+--- or talent tree's own scale), "custom" (a scale you made or imported and show in Pawn),
+--- "bestOfClass" (Retail: the drop's best visible scale against your gear; WoW Forever: the class's
+--- scale that values the drop highest, for a looter, or you with no talent tree) or "none". The
+--- scale is "pending" while Pawn has not read the drop.
+--- @param candidate table
+--- @param dropLink string
+--- @return string|nil scale, string how
+function S.PawnScale(candidate, dropLink)
+    dropLink = plainLink(dropLink)
+    if not (isTable(candidate) and dropLink) then return nil, "none" end
+    local scale, how
+    if CD.PAWN_BY_TREE then
+        local classID = CD.CLASS_ID[candidate.classFile]
+        if classID then scale, how = treePick(candidate, classID, dropLink) end
+    else
+        scale, how = specPick(candidate, dropLink)
+    end
+    if scale == nil then return nil, "none" end
+    return scale, how or "none"
+end
+
+-- The memo key of a candidate's scale for one drop: you, or a looter by class, spec and tree.
+local function memoKey(candidate, dropLink)
+    if candidate.isPlayer then return "me|" .. dropLink end
+    return ("%s:%s:%s|%s"):format(tostring(candidate.classFile), tostring(candidate.specID),
+        tostring(candidate.tree), dropLink)
 end
 
 --- The Pawn adapter: a scorer(facts, candidate, drop) for the kernel. One per evaluation pass,
---- so your best visible scale is read once per drop.
+--- so each candidate's scale is chosen once per drop.
 --- @return function
 function S.PawnScorer()
-    local mine = {}
+    local memo = {}
     local function scaleFor(candidate, dropLink)
-        if not candidate.isPlayer then return specScale(candidate) end
-        if mine[dropLink] == nil then mine[dropLink] = bestVisibleScale(dropLink) or specScale(candidate, true) or false end
-        return mine[dropLink] or nil
+        local key = memoKey(candidate, dropLink)
+        if memo[key] == nil then
+            local scale = S.PawnScale(candidate, dropLink)
+            if scale == "pending" then return "pending" end
+            memo[key] = scale or false
+        end
+        return memo[key] or nil
     end
     return function(facts, candidate, drop)
         if not NS.Compat.PawnIsReady() then return "pending" end
@@ -197,20 +289,56 @@ function S.PawnScorer()
         local dropLink = isTable(drop) and plainLink(drop.link) or link
         if not (link and dropLink and isTable(candidate)) then return nil end
         local scale = scaleFor(candidate, dropLink)
-        if scale == "pending" then mine[dropLink] = nil return "pending" end
+        if scale == "pending" then return "pending" end
         if scale == nil then return nil end
         return NS.Compat.PawnItemValue(link, scale) or "pending"
     end
 end
 
---- The Weights adapter over a weights map: a scorer(facts, candidate) answering the score under
---- the candidate's spec's weights, nil when that spec has none.
---- @param map table { [specID] = { [STAT_KEY] = weight } }
+-- WoW Forever with no talent tree: the class's tree whose weights score the drop highest.
+local function bestTreeWeights(map, classFile, dropStats)
+    local best, top
+    for _, key in ipairs(CD.CLASS_SPECS[classFile] or {}) do
+        local v = S.WeightsScore(dropStats, map[key])
+        if v and (top == nil or v > top) then best, top = map[key], v end
+    end
+    return best
+end
+
+--- The weights a candidate is scored with, and how they were chosen: their spec's (Retail, keyed by
+--- specID) or talent tree's (WoW Forever, "<classFile>:<tree>"), how = "custom"; on Forever with
+--- no tree, the class's tree whose weights score the drop's stats highest, how = "bestOfClass".
+--- Nil and "none" when there are none.
+--- @param map table|nil the `comparison.weights` map
+--- @param candidate table
+--- @param dropStats table|nil the drop's stats (for the best of the class's trees)
+--- @return table|nil, string
+function S.WeightsFor(map, candidate, dropStats)
+    if not (isTable(map) and isTable(candidate)) then return nil, "none" end
+    local w, how
+    if not CD.PAWN_BY_TREE then
+        w, how = map[candidate.specID], "custom"
+    else
+        local key = CD.SpecKey(candidate.classFile, candidate.specID, num(candidate.tree))
+        if key ~= nil then
+            w, how = map[key], "custom"
+        elseif isTable(dropStats) then
+            w, how = bestTreeWeights(map, candidate.classFile, dropStats), "bestOfClass"
+        end
+    end
+    if not isTable(w) or next(w) == nil then return nil, "none" end
+    return w, how
+end
+
+--- The Weights adapter over a weights map: a scorer(facts, candidate, drop) answering the score
+--- under the candidate's spec's (or talent tree's) weights, nil when it has none (S.WeightsFor).
+--- @param map table { [specKey] = { [STAT_KEY] = weight } }
 --- @return function
 function S.WeightsScorer(map)
-    return function(facts, candidate)
-        local w = isTable(map) and isTable(candidate) and map[candidate.specID]
-        if not isTable(w) or not isTable(facts) then return nil end
+    return function(facts, candidate, drop)
+        if not isTable(facts) then return nil end
+        local w = S.WeightsFor(map, candidate, isTable(drop) and drop.stats or facts.stats)
+        if not w then return nil end
         return S.WeightsScore(facts.stats, w)
     end
 end
@@ -232,4 +360,28 @@ function S.Scorer()
     if use == "pawn" then return S.PawnScorer() end
     if use == "weights" then return S.WeightsScorer(NS.Setting("comparison.weights")) end
     return nil
+end
+
+--- One item's score for `who` (a candidate: you, or a looter) by the scorer in use, and how its
+--- scale or weights were chosen: "tree", "bestOfClass", "custom" (S.PawnScale, S.WeightsFor) or
+--- "none". Nil while Pawn or the item cache has not read it, or with no score at all.
+--- @param link string
+--- @param who table
+--- @return number|nil, string
+function S.ScoreFor(link, who)
+    link = plainLink(link)
+    if not (link and isTable(who)) then return nil, "none" end
+    local use = S.InUse()
+    if use == "pawn" then
+        local scale, how = S.PawnScale(who, link)
+        if scale == nil or scale == "pending" then return nil, how end
+        return NS.Compat.PawnItemValue(link, scale), how
+    end
+    if use ~= "weights" then return nil, "none" end
+    local facts = NS.ItemFacts and NS.ItemFacts.Get(link)
+    local stats = isTable(facts) and facts.stats or nil
+    local w, how = S.WeightsFor(NS.Setting("comparison.weights"), who, stats)
+    local v = w and S.WeightsScore(stats, w)
+    if v == nil then return nil, "none" end
+    return v, how
 end

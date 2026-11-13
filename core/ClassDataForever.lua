@@ -16,7 +16,9 @@ local _, NS = ...
 -- (design §4.5).
 --
 -- PAWN. Each row's `pawn` is its Classic scale's SpecID (the tree index); the Druid's Feral is 2
--- for damage and 3 (`pawnTank`) for a tank, and its Restoration is 4 (design §4.3).
+-- for damage and 3 (`pawnTank`) for a tank, and its Restoration is 4 (design §4.3). PAWN_BY_TREE
+-- tells modules/Scoring.lua to pick the scale by talent tree (and by the best of the class's scales
+-- where no tree is known), never by the drop's best visible scale.
 --
 -- INFERRED, not probed: the rows are vanilla-era game knowledge (R4 §5). Relics (libram, idol,
 -- totem) go in the ranged slot (DW-FP06), each its one class's (RELIC).
@@ -35,7 +37,7 @@ local function tree(class, index, stat, flags, pawn, pawnTank)
     return row
 end
 
-local FOREVER = { STAT_GATE = "soft", ARMOR_LOWER_OK = true, ARMOR_LEVEL = 40 }
+local FOREVER = { STAT_GATE = "soft", ARMOR_LOWER_OK = true, ARMOR_LEVEL = 40, PAWN_BY_TREE = true }
 
 -- classFile -> the client's classID (the same ids as Retail's, for the nine classes there are).
 FOREVER.CLASS_ID = {

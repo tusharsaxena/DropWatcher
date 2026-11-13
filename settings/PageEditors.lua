@@ -341,16 +341,30 @@ local function classFile()
     return file
 end
 
--- Draws the strip of your class's specs at the top of `tabKey`'s content and answers the spec it
--- shows. The selection is session state per primary tab (ctx.activeSubTab, options-ui-§13); a
--- click re-renders the page, which the library refuses in combat.
+-- A spec key's name on the strip: the spec's (Retail) or your talent tree's (WoW Forever).
+local function specNamer()
+    return E.SpecNamer(NS.Compat.SpecName, NS.Compat.TalentTreeNames())
+end
+
+-- Your own spec key: the specID on Retail, your top talent tree's "<classFile>:<tree>" on WoW
+-- Forever (NS.ClassData.SpecKey), so the strip opens on what you play.
+local function ownSpecKey()
+    local talents = NS.Compat.PlayerTalentTree()
+    local specID = NS.Compat.PlayerSpecID()
+    return NS.ClassData.SpecKey(classFile(), specID, talents and talents.index) or specID
+end
+
+-- Draws the strip of your class's specs (on WoW Forever its talent trees, Forever port design
+-- §4.3) at the top of `tabKey`'s content and answers the spec key it shows. The selection is
+-- session state per primary tab (ctx.activeSubTab, options-ui-§13); a click re-renders the page,
+-- which the library refuses in combat.
 local function specStrip(ctx, tabKey)
     local h = H()
     local scroll = h.EnsureScroll(ctx)
-    local list = E.ClassSpecs(classFile(), NS.Compat.SpecName)
+    local list = E.ClassSpecs(classFile(), specNamer())
     if not scroll or #list == 0 then return nil end
     ctx.activeSubTab = ctx.activeSubTab or {}
-    local spec = E.PickSpec(list, ctx.activeSubTab[tabKey], NS.Compat.PlayerSpecID())
+    local spec = E.PickSpec(list, ctx.activeSubTab[tabKey], ownSpecKey())
     ctx.activeSubTab[tabKey] = spec
     local host = acquire("SimpleGroup")
     host:SetLayout(nil)
@@ -382,7 +396,7 @@ local function weightRow(spec, stat)
 end
 
 local function specLabel(spec)
-    local name = NS.Compat.SpecName(spec)
+    local name = specNamer()(spec)
     return type(name) == "string" and name ~= "" and name or tostring(spec)
 end
 

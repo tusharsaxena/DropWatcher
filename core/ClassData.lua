@@ -21,7 +21,8 @@ local _, NS = ...
 -- its loot at the level cap), WEAPONS (classFile -> { [subClassID] = true }), SPECS (spec key ->
 -- row), SPEC_INDEX (Retail: specID -> Pawn's spec index), CLASS_SPECS (classFile -> its spec keys,
 -- sorted; derived from SPECS), RELIC (Forever only: classFile -> its relic subclass), STAT_GATE ("hard": a primary stat the spec cannot use is "can't
--- use"; "soft": it never is by itself, Forever port design §4.5). A spec row is { class, stat,
+-- use"; "soft": it never is by itself, Forever port design §4.5), PAWN_BY_TREE (Forever only: Pawn's
+-- scale is the talent tree's, design §4.3). A spec row is { class, stat,
 -- dualWield, titanGrip, shield, offhand } plus, on Forever, { tree, pawn, pawnTank }.
 --
 -- Retail's spec key is the specID. Forever's is "<classFile>:<tree>" (its spec ID is class-wide,
@@ -216,6 +217,16 @@ local function bindSpecs(L)
         return nil
     end
     L.OwnSpec = ownSpec
+
+    --- The key a candidate's per-spec settings are stored under (`comparison.weights`,
+    --- `comparison.undesired`): the spec key `specID` names when the list has a row for it (Retail's
+    --- specID), else "<classFile>:<tree>" for the class's talent tree (Forever), else nil.
+    function L.SpecKey(classFile, specID, tree)
+        if L.Spec(specID) then return specID end
+        if type(classFile) ~= "string" or type(tree) ~= "number" then return nil end
+        local key = classFile .. ":" .. tree
+        return L.SPECS[key] and key or nil
+    end
 
     -- A field across every spec of a class: the shared value, or nil when the specs disagree or
     -- the class is unknown.

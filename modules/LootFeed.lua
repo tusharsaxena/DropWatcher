@@ -254,10 +254,12 @@ local function evaluate(facts, candidate, opts)
     return out
 end
 
--- Your candidate, with the item types you do not want for your spec.
+-- Your candidate, with the item types you do not want for your spec (on WoW Forever your talent
+-- tree's, NS.ClassData.SpecKey).
 local function myCandidate(cfg)
     local cand = NS.Gear.Candidate()
-    local undesired = cfg.undesired and cand.specID and cfg.undesired[cand.specID]
+    local key = NS.ClassData.SpecKey(cand.classFile, cand.specID, cand.tree) or cand.specID
+    local undesired = cfg.undesired and key and cfg.undesired[key]
     if type(undesired) == "table" then cand.prefs = { undesired = undesired } end
     cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (modules/OffSpec.lua)
     return cand

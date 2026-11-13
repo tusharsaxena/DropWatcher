@@ -141,6 +141,11 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertTrue(cfg.undesired[62]["4:1"] == true, "the feed reads the stored map")
     assertEqual(NS.addon.Settings.FormatValue(S.FindRow("comparison.undesired"), cfg.undesired,
         function() return "lib" end), "{1}", "the CLI renders a map as its entry count")
+    -- WoW Forever keys both maps by class and talent tree (Forever port design §4.3).
+    assertTrue(S.Set("comparison.weights", { ["HUNTER:2"] = { INTELLECT = 1 } }))
+    assertTrue(S.Set("comparison.undesired", { ["HUNTER:2"] = { ["4:1"] = true } }))
+    assertFalse(S.Set("comparison.weights", { ["HUNTER"] = { INTELLECT = 1 } }), "a class with no tree")
+    assertFalse(S.Set("comparison.weights", { ["hunter:x"] = { INTELLECT = 1 } }))
 end)
 
 test("rows: the feed, the situations and the messaging edge read the rows", function()
