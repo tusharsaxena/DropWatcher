@@ -458,5 +458,8 @@ test("scoring: the feed judges your drop with your weights once they are set", f
     NS.LootFeed.Add(link(300))
     local rec = NS.LootFeed.Drops()[1]
     assertEqual(rec.me.scoreDelta, -50)
-    assertEqual(rec.me.verdict, "sidegrade")
+    -- Retail: item level up, score down, a sidegrade; Forever: score first, the score's 50 down of
+    -- 100 worn is past the 1% tie, a downgrade (Forever port design §4.5).
+    assertEqual(rec.me.verdict, T.forever and "downgrade" or "sidegrade")
+    assertEqual(rec.me.led, T.forever and "score" or nil)
 end)

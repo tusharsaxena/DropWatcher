@@ -6,9 +6,9 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape) and plain inputs (an
 -- inspect entry's gear, an ask's state, the clock) and answers a plain table; nothing here reads a
--- module's state, the client or a saved variable (only NS.TipMarks, at call time: a verdict
--- tooltip's gear grid takes the class and quality colors), so test_window_group drives each state
--- case by case.
+-- module's state or a saved variable (only NS.TipMarks, at call time: a verdict tooltip's gear grid
+-- takes the class and quality colors), and the client once, at load (the Means words, VERDICT_MEANS),
+-- so test_window_group drives each state case by case.
 -- The frame edge that paints them is modules/WindowGroup.lua; the detail card (DW-32) and the
 -- compact cards take the same composers. The Me and Them cells merge two of them each (the worn gear,
 -- then the verdict): modules/SideCells.lua.
@@ -50,11 +50,17 @@ local VERDICT_WORD = {
 }
 -- What a glyph-less verdict shows in its cell.
 local VERDICT_SHORT = { cantUse = L["Can't use"], doesntWant = L["Not wanted"], unknown = "?" }
--- Board 03's explanation of each verdict, the Means row under every verdict tooltip's title.
+-- Board 03's explanation of each verdict, the Means row under every verdict tooltip's title. On WoW
+-- Forever the verdict is score first (Forever port design §4.5), so its three compared verdicts have
+-- their own words, picked once by client (the one client read here, at load).
+local FOREVER_MEANS = NS.Compat.ClientKey() == "forever"
 local VERDICT_MEANS = {
-    upgrade    = L["a higher item level (and score, when scored)"],
-    sidegrade  = L["within the sidegrade band, or level and score disagree"],
-    downgrade  = L["a lower item level, no score gain"],
+    upgrade    = FOREVER_MEANS and L["a higher score (item level breaks a tie)"]
+        or L["a higher item level (and score, when scored)"],
+    sidegrade  = FOREVER_MEANS and L["a score within 1%, and item level within the sidegrade band"]
+        or L["within the sidegrade band, or level and score disagree"],
+    downgrade  = FOREVER_MEANS and L["a lower score (item level breaks a tie)"]
+        or L["a lower item level, no score gain"],
     cantUse    = L["wrong armor, weapon or primary stat for the spec"],
     doesntWant = L["usable, but excluded by your preferences"],
     unknown    = L["no inspect, no spec, or a protected value"],
@@ -83,6 +89,7 @@ local EVAL_REASON = {
     vsTwoHand = L["compared with the two-hander it would replace"],
     scorePending = L["the score is not ready yet (retried)"],
     scoreDisagrees = L["item level and score disagree"],
+    noScore = L["no score, so item level decides"],
     heirloomProtected = L["the slot holds an heirloom you protect"],
     undesired = L["you marked this item type not wanted"],
     badFacts = L["the item's details have not loaded"],

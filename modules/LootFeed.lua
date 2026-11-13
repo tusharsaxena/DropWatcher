@@ -96,6 +96,8 @@ LF.MAX_DROPS = 200
 LF.SCORE_RETRY = 1
 LF.SCORE_TRIES = 5
 LF.TRADE_SWEEP = 30
+-- How NS.Evaluate decides, picked once by client (Forever port design §4.5): score first on Forever.
+LF.VERDICT_MODE = NS.Compat.ClientKey() == "forever" and "scoreFirst" or "ilvlFirst"
 
 local timers = {}
 
@@ -244,7 +246,8 @@ local function scorer()
 end
 
 local function evalOpts(cfg)
-    return { sidegradeBand = cfg.sidegradeBand, compareOwned = cfg.compareOwned, scorer = scorer() }
+    return { sidegradeBand = cfg.sidegradeBand, compareOwned = cfg.compareOwned, scorer = scorer(),
+        verdictMode = LF.VERDICT_MODE }
 end
 
 local function evaluate(facts, candidate, opts)

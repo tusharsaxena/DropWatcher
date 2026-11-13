@@ -777,6 +777,88 @@ test("evaluate: a two-hander's score baseline is the average of both hands' scor
     assertEqual(res.verdict, "upgrade")
 end)
 
+-- ---------------------------------------------------------------------------------------------
+-- The verdict mode (Forever port design §4.5): ilvlFirst (Retail, the default), scoreFirst (Forever)
+-- ---------------------------------------------------------------------------------------------
+
+local function scoredHead(E, dropIlvl, dropScore, mode, band)
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE, { score = 200 })
+    local drop = armor(dropIlvl, "INVTYPE_HEAD", A.PLATE, { score = dropScore })
+    return E.Evaluate(drop, c, { scorer = function(f) return f.score end, sidegradeBand = band, verdictMode = mode })
+end
+
+test("evaluate: scoreFirst, a lower item level with a higher score is an upgrade", function()
+    local E = load()
+    local res = scoredHead(E, 630, 210, "scoreFirst", 0)
+    assertEqual(res.verdict, "upgrade")
+    assertEqual(res.led, "score", "the score led")
+    assertTrue(not hasReason(res, "scoreDisagrees"), "no disagreement under scoreFirst")
+    res = scoredHead(E, 650, 190, "scoreFirst", 0)
+    assertEqual(res.verdict, "downgrade", "a higher item level with a lower score")
+    assertEqual(res.led, "score")
+end)
+
+test("evaluate: scoreFirst, a score within 1% defers to item level", function()
+    local E = load()
+    -- The worn score is 200, so a tie is |delta| <= 2.
+    -- { drop ilvl, drop score, band, verdict }
+    local cases = {
+        { 650, 202, 0, "upgrade" },     -- +1%: a tie, item level up
+        { 630, 198, 0, "downgrade" },   -- -1%: a tie, item level down
+        { 643, 201, 5, "sidegrade" },   -- both tie: a sidegrade
+        { 646, 200, 5, "upgrade" },     -- an equal score, item level past the band
+        { 630, 203, 0, "upgrade" },     -- past 1%: the score decides
+    }
+    for i, row in ipairs(cases) do
+        local res = scoredHead(E, row[1], row[2], "scoreFirst", row[3])
+        assertEqual(res.verdict, row[4], "case " .. i)
+        assertEqual(res.led, i == 5 and "score" or "ilvl", "led " .. i)
+        assertEqual(res.scoreDelta, row[2] - 200, "scoreDelta " .. i)
+    end
+end)
+
+test("evaluate: scoreFirst, no score is item level with reason noScore", function()
+    local E = load()
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    for i, scorer in ipairs({ false, function() return nil end, function() return "pending" end }) do
+        local opts = { verdictMode = "scoreFirst", sidegradeBand = 5, scorer = scorer or nil }
+        local res = E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c, opts)
+        assertEqual(res.verdict, "upgrade", "case " .. i)
+        assertEqual(res.led, "ilvl", "led " .. i)
+        assertTrue(hasReason(res, "noScore"), "noScore " .. i)
+        assertEqual(E.Evaluate(armor(643, "INVTYPE_HEAD", A.PLATE), c, opts).verdict, "sidegrade", "band " .. i)
+    end
+    -- An empty slot is still an upgrade with its own reason, not led by either.
+    c.gear[S.HEAD] = false
+    local res = E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c, { verdictMode = "scoreFirst" })
+    assertEqual(res.verdict, "upgrade"); assertTrue(hasReason(res, "emptySlot")); assertNil(res.led)
+end)
+
+test("evaluate: ilvlFirst unchanged", function()
+    local E = load()
+    -- The existing score cases, under the default and under ilvlFirst named: same verdicts, no `led`.
+    local cases = {
+        { 650, 220, 0, "upgrade" }, { 630, 180, 0, "downgrade" }, { 650, 180, 0, "sidegrade", true },
+        { 630, 220, 0, "sidegrade", true }, { 643, 220, 5, "sidegrade", true }, { 643, 200, 5, "sidegrade" },
+        { 640, 201, 0, "sidegrade", true },
+    }
+    for _, mode in ipairs({ "ilvlFirst", false }) do
+        for i, row in ipairs(cases) do
+            local res = scoredHead(E, row[1], row[2], mode or nil, row[3])
+            local tag = tostring(mode) .. " " .. i
+            assertEqual(res.verdict, row[4], "case " .. tag)
+            assertEqual(hasReason(res, "scoreDisagrees"), row[5] == true, "disagrees " .. tag)
+            assertNil(res.led, "led " .. tag)
+            assertTrue(not hasReason(res, "noScore"), "noScore " .. tag)
+        end
+    end
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    assertTrue(not hasReason(E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c), "noScore"), "no score, no reason")
+end)
+
 test("evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison", function()
     local E = load()
     local c = who("MAGE", 64)

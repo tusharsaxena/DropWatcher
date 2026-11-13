@@ -14,7 +14,12 @@ local _, NS = ...
 --                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } },
 --                 offSpecGear = function(specID), undesiredBySpec = { [specID] = { [SubClassKey] = true } } }
 --   opts      = { sidegradeBand = 0, compareOwned = false, heirloomProtect = false,
---                 scorer = function(facts, candidate, drop) }
+--                 scorer = function(facts, candidate, drop), verdictMode = "ilvlFirst" | "scoreFirst" }
+--
+-- `verdictMode` (Forever port design §4.5) is the edge's, set once by client (LootFeed.VERDICT_MODE):
+-- "ilvlFirst" (Retail, and the default) or "scoreFirst" (WoW Forever: the score decides, item level
+-- breaks a tie within 1% of the worn score, and with no score item level decides, reason `noScore`).
+-- Under scoreFirst a compared verdict carries `led` = "score" or "ilvl".
 --
 -- With `heirloomProtect`, a drop whose baseline is an heirloom is never called an upgrade: what
 -- would be one reads as a sidegrade, with the reason `heirloomProtected`.
@@ -419,17 +424,18 @@ local function scoreDelta(facts, items, candidate, opts, reasons)
     local mine, base = value(facts), average(items, value)
     if pending then addReason(reasons, "scorePending") end
     if not mine or not base then return nil end
-    return mine - base
+    return mine - base, base
 end
 
 -- ---------------------------------------------------------------------------------------------
 -- Step 4: the verdict
 -- ---------------------------------------------------------------------------------------------
 
--- ilvl alone, or ilvl and score (spec §5.2 step 4): the verdict takes the sign only when the two
--- agree in sign; when they disagree (one of them within its band counts) it is a sidegrade, as it
--- is when both are within. The band is in item levels, so the score's band is 0.
-local function decide(out, band)
+-- ilvlFirst (Retail, the default): ilvl alone, or ilvl and score (spec §5.2 step 4): the verdict
+-- takes the sign only when the two agree in sign; when they disagree (one of them within its band
+-- counts) it is a sidegrade, as it is when both are within. The band is in item levels, so the
+-- score's band is 0.
+local function ilvlFirst(out, band)
     local si = sign(out.ilvlDelta, band)
     if out.scoreDelta == nil then return BY_SIGN[si] end
     local ss = sign(out.scoreDelta, 0)
@@ -438,7 +444,28 @@ local function decide(out, band)
     return "sidegrade"
 end
 
-local function verdictOf(out, base, band)
+-- scoreFirst (WoW Forever, Forever port design §4.5): the score's sign decides, unless it is a tie
+-- (|scoreDelta| within SCORE_TIE of the worn item's score), where item level decides by the band;
+-- with no score, item level alone, reason `noScore`. `led` says which one decided (the toast's and
+-- auto-ask's least gain apply only to an item-level-led verdict).
+local SCORE_TIE = 0.01
+local function scoreFirst(out, band, worn)
+    local sd = out.scoreDelta
+    if sd == nil then addReason(out.reasons, "noScore") end
+    if sd ~= nil and math.abs(sd) > SCORE_TIE * math.abs(worn or 0) then
+        out.led = "score"
+        return BY_SIGN[sign(sd, 0)]
+    end
+    out.led = "ilvl"
+    return BY_SIGN[sign(out.ilvlDelta, band)]
+end
+
+local function decide(out, band, opts, worn)
+    if opts.verdictMode == "scoreFirst" then return scoreFirst(out, band, worn) end
+    return ilvlFirst(out, band)
+end
+
+local function verdictOf(out, base, band, opts, worn)
     if out.equip == "cant" then return "cantUse" end
     if out.equip == "doesntWant" then return "doesntWant" end
     if out.equip ~= "ok" or not base then return "unknown" end
@@ -447,10 +474,11 @@ local function verdictOf(out, base, band)
         return "upgrade"
     end
     if not out.ilvlDelta then return "unknown" end
-    return decide(out, band)
+    return decide(out, band, opts, worn)
 end
 
--- Fills the baseline and the deltas; answers the plan (nil when there is no baseline).
+-- Fills the baseline and the deltas; answers the plan (nil when there is no baseline) and the worn
+-- item's score (nil when unscored).
 local function compare(out, facts, candidate, opts)
     local ilvl = num(facts.ilvl)
     if not ilvl then
@@ -472,8 +500,10 @@ local function compare(out, facts, candidate, opts)
     out.ilvlDelta = ilvl - average(base.items, function(f) return f.ilvl end)
     out.trackDelta = E.TrackDelta(facts.track, out.baseline.track)
     -- A tier token is judged by item level alone: no scorer can value it.
-    out.scoreDelta = not facts.isTierToken and scoreDelta(facts, base.items, candidate, opts, out.reasons) or nil
-    return base
+    if facts.isTierToken then return base end
+    local sd, worn = scoreDelta(facts, base.items, candidate, opts, out.reasons)
+    out.scoreDelta = sd
+    return base, worn
 end
 
 -- Heirloom protection (opts.heirloomProtect): a slot that holds an heirloom is kept, so a drop
@@ -507,9 +537,9 @@ local function run(facts, candidate, opts)
     local equip, why = E.Equippability(facts, candidate)
     out.equip = equip
     if why then addReason(out.reasons, why) end
-    local base = compare(out, facts, candidate, opts)
+    local base, worn = compare(out, facts, candidate, opts)
     local band = math.abs(num(opts.sidegradeBand) or 0)
-    out.verdict = verdictOf(out, base, band)
+    out.verdict = verdictOf(out, base, band, opts, worn)
     if band > 0 then out.band = band end   -- for a tooltip's other worn items (E.ItemVerdict)
     protect(out, base, opts)
     -- The off-spec pass (modules/OffSpec.lua): only a spec refusal, only with offSpecGear.
@@ -530,7 +560,7 @@ function E.ItemVerdict(delta, band)
 end
 
 --- Evaluates `facts` for `candidate` (design spec §5.2). Answers
---- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either?, averaged? }, where
+--- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either?, averaged?, led? }, where
 --- verdict is "upgrade", "sidegrade", "downgrade", "cantUse", "doesntWant" or "unknown", and
 --- reasons is a list of { key = ... }; `band` is the sidegrade band, kept only when it is not 0;
 --- `either` is true when the drop's slot holds two worn items a reader marks each of: the baseline the
@@ -539,7 +569,8 @@ end
 --- nil when the drop was judged against one item (the main hand alone, both hands averaged, a unique
 --- redirection to another slot);
 --- `averaged` is true when it was judged against both hands averaged (the baseline is the main hand's);
---- `tokenSlot` is the tier slot an omni token was judged in (NS.TierTokens.Fold), else nil.
+--- `tokenSlot` is the tier slot an omni token was judged in (NS.TierTokens.Fold), else nil;
+--- `led` is "score" or "ilvl" under the scoreFirst mode (what decided), else nil.
 --- Never throws.
 function E.Evaluate(facts, candidate, opts)
     local ok, res = pcall(run, facts, candidate, opts)
