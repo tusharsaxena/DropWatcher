@@ -564,6 +564,9 @@ end
 local function metaLine(t, situationLabel)
     local parts = {}
     local rule = RULE_WORD[t.rule]
+    -- WoW Forever's one rule names a bind (bind on pickup): only a soulbound drop says it, so a BoE
+    -- drop under it never reads "Rule: bind on pickup" (Forever port design §4.6).
+    if t.rule == "soulbound" and t.reasonKey ~= "soulbound" then rule = nil end
     if rule then
         parts[#parts + 1] = situationLabel and L["Rule: %s, %s"]:format(rule, situationLabel) or L["Rule: %s"]:format(rule)
     end

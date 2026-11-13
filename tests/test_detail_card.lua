@@ -250,6 +250,17 @@ test("cells: the trade box says the state, the reason, the rule in force and how
     assertEqual(no.chip.tone, "red", "No in the palette's red (feedback-7 spec §2)"); assertEqual(no.meta, "Rule: legacy loot, PvP · Basis: the content's rule")
 end)
 
+-- WoW Forever's one rule, `soulbound`, names a bind (Forever port design §4.6): a BoP drop's card
+-- says it, but a BoE drop under it never reads "Rule: bind on pickup" (its own bind says BoE).
+test("cells: the trade box names bind on pickup only on a soulbound drop, never on a BoE under the soulbound rule", function()
+    local D = DC()
+    local bop = D.TradeBox(drop({ trade = { state = "no", reasonKey = "soulbound", basis = "bind", rule = "soulbound" } }), "Raid")
+    assertEqual(bop.meta, "Rule: bind on pickup, Raid · Basis: the item's bind")
+    assertEqual(bop.text, "Bind on Pickup items can't change hands once looted.")
+    local boe = D.TradeBox(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind", rule = "soulbound" } }), "Raid")
+    assertEqual(boe.meta, "Basis: the item's bind")
+end)
+
 test("cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use", function()
     local D = DC()
     local b = D.TradeBox(drop({ me = { verdict = "cantUse", reasons = { { key = "armorType" } } } }), "Mythic+")

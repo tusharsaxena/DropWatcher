@@ -794,7 +794,7 @@ Total.
 - collect surfaces: the View menu, its tooltip and History both carry New to my collection
 - collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
 
-### test_detail_card.lua (33)
+### test_detail_card.lua (34)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - tracks: no Track row or {track} token on Forever
@@ -806,6 +806,7 @@ Total.
 - cells: a looter who left the group: the kept read's spec, else `not in your group`, never spec unknown
 - cells: on your own drop the looter's side is FOR THE GROUP, no Looter row, Upgrade for N then a row per member
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
+- cells: the trade box names bind on pickup only on a soulbound drop, never on a BoE under the soulbound rule
 - cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
 - cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
 - cells: a collectible's Retry inspect is disabled: it is judged for you alone, so no inspect is asked for
@@ -2710,7 +2711,7 @@ Total.
 | test_side_cells.lua | 27 |
 | test_collect_cells.lua | 11 |
 | test_collect_surfaces.lua | 15 |
-| test_detail_card.lua | 33 |
+| test_detail_card.lua | 34 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -2794,4 +2795,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2308** |
+| **Total** | **2309** |
