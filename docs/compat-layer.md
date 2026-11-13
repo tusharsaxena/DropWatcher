@@ -2,8 +2,8 @@
 
 `core/Compat.lua` is the only file that names a version-variant, deprecated or optional client API
 (compat; design spec §4). It is the root of the addon's compat family: `core/CompatClient.lua`,
-`core/CompatWorld.lua`, `core/CompatItem.lua`, `core/CompatJournal.lua` and `core/CompatCollect.lua`
-add reads to the same `NS.Compat` (below), and the root's header names all five. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
+`core/CompatLoot.lua`, `core/CompatWorld.lua`, `core/CompatItem.lua`, `core/CompatJournal.lua` and
+`core/CompatCollect.lua` add reads to the same `NS.Compat` (below), and the root's header names all six. The family follows compat's family rule (standard v2.79.0). Feature modules call `NS.Compat.X`; `luacheck` declares those client
 globals for this one file only, and `test_compat`'s last case fails if any other shipped file names
 one in code. It loads in `# Core` right after `core/TextParse.lua`, needs `LibStub` and `NS.TextParse` at
 load, and is read inside functions only.
@@ -18,10 +18,10 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred and nine shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `111`): the
-root `core/Compat.lua` publishes 58, `core/CompatClient.lua` 8, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5,
-`core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 15. The three
+**One hundred and twenty-one shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `121`): the
+root `core/Compat.lua` publishes 59, `core/CompatClient.lua` 11, `core/CompatLoot.lua` 8, `core/CompatWorld.lua` 18,
+`core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 15. The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, and the four client helpers, `IsForever`,
 `IsRetail`, `ClientKey` and `ForClient` (clients-§3, DW-FP02), are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
@@ -88,7 +88,14 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `InspectSpecID(unit)` (`core/CompatClient.lua`) | `C_SpecializationInfo.GetInspectSpecialization` → `GetInspectSpecialization` (on Retail the global exists only under a deprecation CVar); 0 (not known) and a secret answer are nil | `nil` |
 | | `IsInspectFrameShown()` | `InspectFrame:IsShown()`; a secret answer is not shown | `false` |
 | | `HookNotifyInspect(fn)` | `hooksecurefunc("NotifyInspect", fn)`: anyone's call reaches `fn`, after the client's own; the hook can never be removed. `true` when installed | `false` |
-| Loot sources | `LootHistoryDrop(encounterID, lootListID)` | `C_LootHistory.GetSortedInfoForDrop`: a drop with a winner as `{ link, name, guid, classFile, isSelf }`, every field plain (a secret GUID or flag dropped); nil while nobody has won it, and for a secret or malformed answer | `nil` |
+| Loot sources | `LootHistoryRolls(encounterID, key)` (`core/CompatLoot.lua`) | `C_LootHistory.GetSortedInfoForDrop`: a drop's roll table `{ link, key, startTime, duration, allPassed, isTied, myState, leader, winner, rolls }`, every field plain; a secret field drops that field, a secret row that row (a secret list answers `rolls = {}`), never the table; the key is `lootListID` (Retail) or `lootListKey` (Forever) | `nil` |
+| | `LootHistoryDrop(encounterID, key)` (`core/CompatLoot.lua`) | a view over `LootHistoryRolls`: a drop with a winner as `{ link, name, guid, classFile, isSelf }`, every field plain (a secret GUID or flag dropped); nil while nobody has won it, and for a secret or malformed answer | `nil` |
+| | `LootHistoryDropsFor(encounterID)` (`core/CompatLoot.lua`) | `C_LootHistory.GetSortedDropsForEncounter`: `{ { key, link, open } }`, open while no winner and not all passed; a drop with no plain key left out | `{}` |
+| | `LootHistoryEncounters()` (`core/CompatLoot.lua`) | `C_LootHistory.GetAllEncounterInfos`' plain encounter ids, in its order | `{}` |
+| | `LootHistoryEncounter(encounterID)` (`core/CompatLoot.lua`) | `C_LootHistory.GetInfoForEncounter`'s `encounterName`; an empty or secret name is nil | `nil` |
+| | `LootHistoryNow()` (`core/CompatLoot.lua`) | `C_LootHistory.GetLootHistoryTime`, the clock a drop's `startTime` is on | `nil` |
+| | `ActiveLootRolls()` (`core/CompatLoot.lua`) | `GetActiveLootRollIDs`' plain ids: your open group-loot rolls | `{}` |
+| | `LootRollInfo(rollID)` (`core/CompatLoot.lua`) | `GetLootRollItemLink` and `GetLootRollItemInfo`: `{ link, quality, bop, canNeed, canGreed, canTransmog }`, `bop` from `bindOnPickUp`; a secret field dropped; nil with no plain link | `nil` |
 | | `ChallengeMapName(mapID)` | `C_ChallengeMode.GetMapUIInfo`'s name; an empty or secret answer is nil | `nil` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
@@ -137,7 +144,7 @@ is out of combat.
 
 ## The simulator's seam
 
-`core/SimSetup.lua` loads straight after this file, `core/CompatWorld.lua`, `core/CompatItem.lua`, `core/CompatJournal.lua`
+`core/SimSetup.lua` loads straight after this file, `core/CompatClient.lua`, `core/CompatLoot.lua`, `core/CompatWorld.lua`, `core/CompatItem.lua`, `core/CompatJournal.lua`
 and `core/CompatCollect.lua`
 (simulator spec §2, §5, DW-70; LibKa0s-Sim-1.0's `Sim:NewSeam` since DW-02). It names no client API
 and adds no shim, so the count above stands. At load it wraps every member here that answers for
@@ -255,6 +262,18 @@ recipe's known line, a tier token's slot line and an item's tooltip use line are
 answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped
 file that names one of these APIs.
 
+## The loot reads
+
+`core/CompatLoot.lua` loads after `core/CompatClient.lua` and before `core/SimSetup.lua` (Forever port
+design §5.1, DW-FP13), so the seam wraps its members, on the root's rules. Both clients have the same
+`C_LootHistory` surface and one field rename: a drop table's key is `lootListID` on Retail and
+`lootListKey` on Forever (R2 §2.2), so every read of it takes either name (the event payload is
+positional and needs no such read). The getters take only plain numbers
+(`SecretArguments = "AllowedWhenUntainted"`), so every id is checked plain first. The client's tables
+are copied out once, field by field, and a GUID is kept only as a safe key. `LootHistoryDrop`, the
+feed's won drop, moved here from the root as a view over `LootHistoryRolls`, so the history has one
+call path. `test_compat_loot` holds these, on both kit profiles.
+
 ## The duration decoder
 
 The client writes a remaining time as unit terms joined by `TIME_UNIT_DELIMITER`, each term formatted
@@ -296,7 +315,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/Gear.lua` | `PlayerSpecID`, `InventoryItemLink`, `InventoryItemLevel`, `BagSlotCount`, `BagItemLink`, `ItemEquipLoc`; `UnitClass` (`core/CompatWorld.lua`) |
 | `modules/LootParser.lua` | `FormatToPattern`, `GlobalString`, `UnitCharacterName`; `UnitGUID` (`core/CompatWorld.lua`) |
 | `modules/Inspect.lua` | `CanInspectUnit`, `InInspectRange`, `NotifyInspect`, `ClearInspectPlayer`, `InspectSpecID`, `IsInspectFrameShown`, `HookNotifyInspect`, `InventoryItemID`, `InventoryItemLink`, `InventoryItemLevel`; `UnitGUID`, `InstanceState` (`core/CompatWorld.lua`) |
-| `modules/LootFeed.lua` | `LootHistoryDrop`, `ChallengeMapName`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`), `UnitCharacterName` |
+| `modules/LootFeed.lua` | `LootHistoryDrop` (`core/CompatLoot.lua`), `ChallengeMapName`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`), `UnitCharacterName` |
 | `modules/GroupPlace.lua` | `IsSecret`; `InstanceState`, `InstanceInfo`, `DifficultyName`, `KeystoneLevel` (`core/CompatWorld.lua`: a group's instance and difficulty name) |
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |

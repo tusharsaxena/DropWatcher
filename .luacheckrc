@@ -53,7 +53,7 @@ files["core/Compat.lua"] = {
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
     "GetInventoryItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
-    "InspectFrame", "hooksecurefunc", "C_LootHistory",
+    "InspectFrame", "hooksecurefunc",
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
     "DressUpLink", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
@@ -69,6 +69,12 @@ files["core/Compat.lua"] = {
 files["core/CompatClient.lua"] = {
   read_globals = { "GetNormalizedRealmName", "GetRealmName", "GetSpecializationInfoByID",
     "C_SpecializationInfo", "GetInspectSpecialization", "UnitGroupRolesAssigned" },
+}
+
+-- The loot history and the group-loot rolls (Forever port design §5.1): core/CompatLoot.lua alone
+-- names C_LootHistory and the roll globals.
+files["core/CompatLoot.lua"] = {
+  read_globals = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink" },
 }
 
 -- The Encounter Journal: core/CompatJournal.lua alone names it, for the simulator's item pool.

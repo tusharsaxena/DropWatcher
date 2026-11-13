@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/Compat.lua — the root of the compat family (compat, design spec §4), the only caller of
 -- version-variant, deprecated and optional client APIs; core/CompatClient.lua, core/CompatWorld.lua,
--- core/CompatItem.lua, core/CompatJournal.lua and core/CompatCollect.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
+-- core/CompatItem.lua, core/CompatJournal.lua, core/CompatCollect.lua and core/CompatLoot.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
 -- docs/compat-layer.md; the text parsing is core/TextParse.lua's (pure), handed this file's strings.
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -463,34 +463,7 @@ function Compat.HookNotifyInspect(fn)
 end
 
 -- ── The loot sources beside chat (the feed, design spec §3) ─────────────────────────────────
-
--- The winner of a C_LootHistory drop, plain fields only, or nil.
-local function lootWinner(w)
-    if Compat.IsSecret(w) or type(w) ~= "table" then return nil end
-    local guid = w.playerGUID
-    if not (Compat.IsSafeKey(guid) and type(guid) == "string") then guid = nil end
-    local isSelf = w.isSelf
-    return { name = plainString(w.playerName), guid = guid, classFile = plainString(w.playerClass),
-        isSelf = not Compat.IsSecret(isSelf) and isSelf == true }
-end
-
---- A group-loot drop that has a winner, from C_LootHistory.GetSortedInfoForDrop: { link, name,
---- guid, classFile, isSelf }, every field plain. Nil while nobody has won it (rolls still open, or
---- everyone passed), for a secret or malformed answer, or with no API.
---- @param encounterID number
---- @param lootListID number
---- @return table|nil
-function Compat.LootHistoryDrop(encounterID, lootListID)
-    local api = C_LootHistory
-    if not (api and api.GetSortedInfoForDrop) then return nil end
-    if not (plainNumber(encounterID) and plainNumber(lootListID)) then return nil end
-    local info = api.GetSortedInfoForDrop(encounterID, lootListID)
-    if Compat.IsSecret(info) or type(info) ~= "table" then return nil end
-    local link, winner = plainString(info.itemHyperlink), lootWinner(info.winner)
-    if not (link and winner) or not (winner.name or winner.guid) then return nil end
-    winner.link = link
-    return winner
-end
+-- The loot history (the feed's won group-loot drops, and everyone's rolls) is core/CompatLoot.lua's.
 
 --- A keystone dungeon's name from C_ChallengeMode.GetMapUIInfo, or nil (no map, a secret answer,
 --- or no API).

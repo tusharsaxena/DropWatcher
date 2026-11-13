@@ -5,7 +5,7 @@
 -- seam (spec §5.4), the trade action and the drop tables' item icon, class color, chat link and
 -- dressing room (spec §11.1). Every shim is also driven with its API absent, where it
 -- must answer its documented absent value and never raise, the inspect calls (spec §8) and the
--- feed's loot history and keystone map readers included.
+-- feed's keystone map reader included (the loot history readers are tests/test_compat_loot.lua's).
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -886,35 +886,6 @@ end)
 -- The loot sources beside chat (the feed)
 -- ---------------------------------------------------------------------------------------------
 
-test("compat: LootHistoryDrop answers a won drop's plain fields, else nil", function()
-    local Compat, m = fresh()
-    local LINK = "|Hitem:9::|h[Band]|h"
-    assertNil(Compat.LootHistoryDrop(1, 2), "no answer")
-    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = "Brakk",
-        playerGUID = "Player-1-0000000A", playerClass = "WARRIOR", isSelf = false } }
-    local d = Compat.LootHistoryDrop(1, 2)
-    assertEqual(d.link, LINK); assertEqual(d.name, "Brakk"); assertEqual(d.guid, "Player-1-0000000A")
-    assertEqual(d.classFile, "WARRIOR"); assertFalse(d.isSelf)
-    m.lootHistory["1:2"].winner = {}
-    assertNil(Compat.LootHistoryDrop(1, 2), "rolls still open: nobody won it")
-    m.lootHistory["1:2"].winner = nil
-    assertNil(Compat.LootHistoryDrop(1, 2))
-    assertNil(Compat.LootHistoryDrop("1", 2), "the ids must be numbers")
-    installSecrets(m)
-    m.lootHistory["1:2"] = { itemHyperlink = T.secret(LINK), winner = { playerName = "Brakk" } }
-    assertNil(Compat.LootHistoryDrop(1, 2), "a secret link")
-    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = T.secret("Brakk"),
-        playerGUID = T.secret("Player-1-0000000A"), isSelf = T.secret(true) } }
-    assertNil(Compat.LootHistoryDrop(1, 2), "a winner with nothing plain")
-    m.lootHistory["1:2"].winner.playerName = "Brakk"
-    d = Compat.LootHistoryDrop(1, 2)
-    assertEqual(d.name, "Brakk"); assertNil(d.guid); assertFalse(d.isSelf)
-    m.lootHistory["1:2"] = T.secret({})
-    assertNil(Compat.LootHistoryDrop(1, 2))
-    m.C_LootHistory = nil
-    assertNil(Compat.LootHistoryDrop(1, 2), "no API")
-end)
-
 test("compat: ChallengeMapName answers a keystone dungeon's name, else nil", function()
     local Compat, m = fresh()
     m.challengeMaps[505] = "The Rookery"
@@ -1113,7 +1084,7 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
         if rel ~= "core/Compat.lua" and rel ~= "core/CompatClient.lua" and rel ~= "core/CompatJournal.lua"
-            and rel ~= "core/CompatCollect.lua" then
+            and rel ~= "core/CompatCollect.lua" and rel ~= "core/CompatLoot.lua" then
             local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", "")

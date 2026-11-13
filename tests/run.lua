@@ -282,6 +282,7 @@ Kit.run{
         "test_compat",
         "test_compat_client",
         "test_compat_collect",
+        "test_compat_loot",
         "test_text_parse",
         "test_constants",
         "test_class_data",

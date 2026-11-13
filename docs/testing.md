@@ -38,7 +38,10 @@ and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, 
 `tests/wow_mock_collect.lua`, which `tests/wow_mock.lua`'s builder calls, holds the collection reads
 `core/CompatCollect.lua` wraps (the mount and pet journals, the toy box, the cosmetic flag, the
 professions, the recipe's known line and a tier token's slot names), split out to keep
-`tests/wow_mock.lua` out of the 1000-line band.
+`tests/wow_mock.lua` out of the 1000-line band. `tests/wow_mock_loot.lua`, its own mock family, holds
+the loot surface `core/CompatLoot.lua` wraps (`C_LootHistory`, which serves a drop's key as
+`lootListID` on the retail profile and `lootListKey` on the forever one, the roll globals,
+`C_PartyInfo.GetLootMethod`, the loot-window slots and plain `GroupLootFrame1`..`4` stand-ins).
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
@@ -307,7 +310,12 @@ and the character key, the talent tree and the role through LibKa0s-Role-1.0 ove
 inspect spec's `C_SpecializationInfo` rung, and a `NS.FEATURE_EVENTS` row registered and replayed only on
 the client its `clients` names), `test_compat_collect` (`core/CompatCollect.lua`'s
 collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
-by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_compat_loot` (`core/CompatLoot.lua`'s
+loot history and roll reads, DW-FP13, on both kit profiles: a drop's roll table field by field, a secret
+field, row or list degrading that field or row and never the table (Review Focus 2), the drop key under
+either client's name, `LootHistoryDrop` unchanged as a view, an encounter's drops and name, the history
+clock, your open rolls and a roll's bind on pickup flag, the seam wrapping every member, and no other file
+naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over

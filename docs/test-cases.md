@@ -1038,7 +1038,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 
-### test_compat.lua (76)
+### test_compat.lua (75)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1102,7 +1102,6 @@ Total.
 - compat: the bag readers call C_Container, guard a secret answer, and answer empty without it
 - compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
 - compat: the inspect calls, the spec, the item id, the inspect window and the hook
-- compat: LootHistoryDrop answers a won drop's plain fields, else nil
 - compat: ChallengeMapName answers a keystone dungeon's name, else nil
 - compat: ItemIcon answers C_Item.GetItemIconByID's texture, else nil
 - compat: ClassColor reads C_ClassColor first, then RAID_CLASS_COLORS
@@ -1154,6 +1153,23 @@ Total.
 - compat collect: no member raises with every API gone
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
+
+### test_compat_loot.lua (14)
+
+- compat loot: rolls answer every row with its state and number
+- compat loot: a secret playerName drops the name, keeps the row
+- compat loot: a secret rollInfos answers rolls = {}
+- compat loot: a nil roll stays nil
+- compat loot: lootListKey is read on Forever-shaped drops
+- compat loot: LootHistoryDrop is unchanged
+- compat loot: LootHistoryEncounter answers the encounter's name, else nil
+- compat loot: LootHistoryEncounters lists the encounter ids
+- compat loot: LootHistoryNow answers the history clock, else nil
+- compat loot: ActiveLootRolls answers the open roll ids, plain ones only
+- compat loot: LootRollInfo answers bop from bindOnPickUp
+- compat loot: no member raises with every API gone
+- compat loot: the simulator's seam wraps every loot member (the TOC order)
+- compat loot: no other shipped file names a loot roll API in code
 
 ### test_text_parse.lua (12)
 
@@ -2723,9 +2739,10 @@ Total.
 | test_mine_cells.lua | 14 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 49 |
-| test_compat.lua | 76 |
+| test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
+| test_compat_loot.lua | 14 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -2797,4 +2814,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2311** |
+| **Total** | **2324** |

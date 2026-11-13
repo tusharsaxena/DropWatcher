@@ -63,6 +63,10 @@ core\Compat.lua
 # and the role, LibKa0s-Role-1.0) to NS.Compat; it loads before core\SimSetup.lua (below), which
 # wraps every member at load. Read inside functions only.
 core\CompatClient.lua
+# LOAD-BEARING: adds the loot history and group-loot roll reads (a drop's roll table, an encounter's
+# drops, your open rolls) to NS.Compat; it loads before core\SimSetup.lua (below), which wraps every
+# member at load. Read inside functions only.
+core\CompatLoot.lua
 # LOAD-BEARING: adds the stable world reads (the group, a unit, the instance) to NS.Compat; it
 # loads before core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatWorld.lua
@@ -78,7 +82,7 @@ core\CompatJournal.lua
 # which wraps every member at load. Read inside functions only.
 core\CompatCollect.lua
 # LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
-# CompatClient.lua, CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
+# CompatClient.lua, CompatLoot.lua, CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
 # NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
 # and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
 core\SimSetup.lua

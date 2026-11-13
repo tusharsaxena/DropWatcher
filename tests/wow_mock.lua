@@ -22,8 +22,8 @@
 --                  __context.inInstance (IsInInstance reads them)
 --   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer; challengeMaps[mapID] is
 --                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
---   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
---                  ({ itemHyperlink, winner = { playerName, playerGUID, playerClass, isSelf } })
+--   lootHistory    C_LootHistory's drops, keyed "encounterID:key": tests/wow_mock_loot.lua's family
+--                  (with the roll globals, the loot method, the loot slots and the roll popups)
 --   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty);
 --                  difficultyNames[id] is the name it answers for the rest (`Difficulty <id>` unlisted)
 --   keystoneLevel  C_ChallengeMode.GetActiveKeystoneInfo()'s level (0: no active key);
@@ -977,18 +977,11 @@ local function build()
         GetChallengeCompletionInfo = function() return { level = M.completionLevel or 0 } end,
     }
 
-    -- C_LootHistory: lootHistory["encounterID:lootListID"] is GetSortedInfoForDrop's answer.
-    M.lootHistory = {}
-    M.C_LootHistory = {
-        GetSortedInfoForDrop = function(encounterID, lootListID)
-            return M.lootHistory[encounterID .. ":" .. lootListID]
-        end,
-    }
-
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     installCompatSurface(M)
     dofile("tests/wow_mock_collect.lua")(M)   -- the collection reads (core/CompatCollect.lua)
+    dofile("tests/wow_mock_loot.lua")(M)      -- the loot history and the rolls (core/CompatLoot.lua)
     installUnits(M)
     installInspect(M)
     installClock(M)
