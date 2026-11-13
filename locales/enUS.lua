@@ -989,6 +989,8 @@ L["An upgrade by score, though its item level is lower."] =
 L["You are the master looter."] = "You are the master looter."
 L["It is not an upgrade for you."] = "It is not an upgrade for you."
 L["That item is no longer waiting for the master looter."] = "That item is no longer waiting for the master looter."
+-- The master-loot ask's name (settings/, and the restriction badge's queued list).
+L["Ask the master looter"] = "Ask the master looter"
 L["The master looter is not known."] = "The master looter is not known."
 L["the master looter is not in your group"] = "the master looter is not in your group"
 L["the master looter is offline"] = "the master looter is offline"

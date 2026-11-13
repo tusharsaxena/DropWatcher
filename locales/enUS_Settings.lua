@@ -424,7 +424,6 @@ L["Mark the roll popup"] = "Mark the roll popup"
 L["Show your verdict on the game's Need and Greed roll popup."] =
     "Show your verdict on the game's Need and Greed roll popup."
 -- settings/SchemaRows.lua, settings/Editors.lua: the master-loot ask template (DW-FP19)
-L["Ask the master looter"] = "Ask the master looter"
 L["What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."] =
     "What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."
 L["Ask the master looter (whisper to the master looter)"] = "Ask the master looter (whisper to the master looter)"

@@ -40,7 +40,8 @@ local REASON_TIP = {
     combat        = { { L["Why"], L["you are in combat"] }, { L["Waiting"], L["inspects and trades, until it ends"] },
         { L["Asks"], L["still sent"] } },
 }
-local KIND_LABEL = { ask = L["Ask"], offer = L["Offer"], announce = L["Announce"] }
+local KIND_LABEL = { ask = L["Ask"], offer = L["Offer"], announce = L["Announce"],
+    askML = L["Ask the master looter"] }
 local BADGE_LIST_MAX = 8
 
 local lastTitleClick
