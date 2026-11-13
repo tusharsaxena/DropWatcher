@@ -134,6 +134,7 @@ L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve,
 L["Row height"] = "Row height"
 L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."] =
     "The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."
+L["The height of one row in the drop tables: Drops and History."] = "The height of one row in the drop tables: Drops and History."
 L["Toast"] = "Toast"
 L["Show a toast"] = "Show a toast"
 L["Pop up a toast for a likely tradeable upgrade for you."] = "Pop up a toast for a likely tradeable upgrade for you."

@@ -358,6 +358,9 @@ test("table: the Trade window column, its row and its default are Retail's alone
     assertEqual(keys(NS.WindowGroup.COLUMNS), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
     assertEqual(NS.SchemaRuntime.FindRow("window.columns.tradeWindow") ~= nil, retail, "its Shown columns row")
     assertEqual(NS.C.PROFILE.window.columns.tradeWindow, retail or nil, "on by default on Retail")
+    -- No word of it on WoW Forever (clients-§4): the Row height row names the column on Retail alone.
+    local tip = NS.SchemaRuntime.FindRow("window.rowHeight").tooltip
+    assertEqual(tip:find("Trade window", 1, true) ~= nil, retail, "the Row height row's tooltip")
 end)
 
 test("table: the Item column takes the slack, never less than its minimum", function()

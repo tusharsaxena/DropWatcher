@@ -469,8 +469,11 @@ local function window()
         L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
     layout = with(layout, { subgroup = L["Tables"] })
+    -- The countdown bar's sentence is Retail's alone, like the Trade window column (clients-§4).
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
-        L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
+        K.FEATURE.tradeTimer
+            and L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."]
+            or L["The height of one row in the drop tables: Drops and History."], layout)
     -- The tables' font follows Row height: the whole font setting (DW-01, the lead's ruling on
     -- D-07), the library's composed block, so settings/ComposedRows.lua declares it (it needs the
     -- Options instance). `window.fontSize` keeps its path, its 0 (Default) and its range there.
