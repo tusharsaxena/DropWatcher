@@ -1850,7 +1850,7 @@ Total.
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (9)
+### test_roll_popup.lua (10)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
 - roll popup: two identical items on two popups each show their own Need so far
@@ -1861,6 +1861,7 @@ Total.
 - roll popup: gamepad mode skips
 - roll popup: Forever BoP cantUse says Greed / Pass
 - roll popup: the sim draws it against a stand-in of the popup's size
+- roll popup: a popup shown before its history drop gets Need so far when the drop lands
 
 ### test_feed_counts.lua (10)
 
@@ -2865,7 +2866,7 @@ Total.
 | test_ask_ml.lua | 10 |
 | test_roll_cells.lua | 5 |
 | test_window_pending.lua | 10 |
-| test_roll_popup.lua | 9 |
+| test_roll_popup.lua | 10 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2914,4 +2915,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2400** |
+| **Total** | **2401** |

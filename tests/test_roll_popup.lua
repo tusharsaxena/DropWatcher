@@ -236,3 +236,18 @@ test("roll popup: the sim draws it against a stand-in of the popup's size", func
     m.__fire("CANCEL_LOOT_ROLL", 11)
     assertFalse(s:IsShown()); assertFalse(o:IsShown())
 end)
+
+-- The popup can come up before its drop reaches the loot history: the item admitted later claims
+-- the popup before its PendingChanged goes out, so that message repaints line 2.
+test("roll popup: a popup shown before its history drop gets Need so far when the drop lands", function()
+    local _, m, RP = party()
+    myRoll(m, 11, 300)
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    show(m, 1, 11)
+    assertTrue(RP.Overlay(1):IsShown())
+    assertFalse(RP.Overlay(1).line2:IsShown(), "no pending roll yet")
+    m.lootHistory["2900:1"] = openDrop(300, 1)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertTrue(RP.Overlay(1).line2:IsShown(), "the admitted drop repaints the mark")
+    assertEqual(line2(RP, 1), "Need so far: 1")
+end)

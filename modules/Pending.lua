@@ -249,9 +249,10 @@ local function admit(encounterID, dropKey, roll, facts)
         link = roll.link, itemID = NS.Item.ItemIDFromLink(roll.link), at = now(), state = "open",
         facts = facts, forced = out.forced, me = out.me, roll = roll, sig = signature(roll) }
     s.items[#s.items + 1], s.byId[item.id], s.byKey[key] = item, item, item
+    -- Claimed before the message, so a roll popup already up repaints with this item (DW-FP20 review).
+    claimRolls()
     send(item.id, "open")
     P.NoteScore(item)
-    claimRolls()
     retune()
 end
 

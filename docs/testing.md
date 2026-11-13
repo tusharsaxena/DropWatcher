@@ -451,8 +451,9 @@ overlay anchored above it at the alert tier, two identical items on two popups e
 far (Review Focus 1), a popup closed at once or with no rollID drawing nothing, the disabled state and
 `rolls.popupMark` off drawing nothing through the same one-way hooks, no key added to or changed on
 Blizzard's frame table and no second hook after a stand-up, gamepad mode skipped, the Forever BoP
-wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, and the simulator's
-stand-in; it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, the simulator's
+stand-in, and a popup shown before its drop reaches the loot history gaining its Need so far when
+the drop lands (DW-FP20 review); it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
