@@ -321,6 +321,7 @@ Kit.run{
         "test_ask_ml",
         "test_roll_cells",
         "test_window_pending",
+        "test_roll_popup",
         "test_feed_counts",
         "test_collect_feed",
         "test_item_lists",

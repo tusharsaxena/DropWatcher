@@ -445,7 +445,14 @@ summary and time left with no action for a roll, a click expanding the roll tabl
 ticking and a won, ended or all-passed roll saying so, a master-loot item naming its master looter
 and never reading Roll ended (DW-FP18 review); the compact layout's card; the resolved drop's
 Rolls box on its detail card; the row tooltip's summary line; and the score and spec rows naming the
-scale each score used, through the shipped card's `S.ScoreFor` calls), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+scale each score used, through the shipped card's `S.ScoreFor` calls), `test_roll_popup`
+(`modules/RollPopup.lua`, DW-FP20, on both kit profiles: an upgrade roll marking GroupLootFrame1 from an
+overlay anchored above it at the alert tier, two identical items on two popups each with its own Need so
+far (Review Focus 1), a popup closed at once or with no rollID drawing nothing, the disabled state and
+`rolls.popupMark` off drawing nothing through the same one-way hooks, no key added to or changed on
+Blizzard's frame table and no second hook after a stand-up, gamepad mode skipped, the Forever BoP
+wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, and the simulator's
+stand-in; it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged

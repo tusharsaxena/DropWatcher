@@ -26,7 +26,11 @@
 --                  source }; GetNumLootItems is their count, GetLootSlotLink / GetLootSlotInfo read
 --                  one, GetLootSourceInfo answers its `source` GUID and the count
 --   GroupLootFrame1..4  plain stand-ins for Blizzard's roll popups: rollID, Show / Hide / IsShown,
---                  and HookScript recording each hook in .hooks[script]
+--                  and HookScript recording each hook in .hooks[script]. Show runs the popup's own
+--                  handler first (`.blizzOnShow(self)`, a case's stand-in for Blizzard's
+--                  GroupLootFrame_OnShow, which can hide it again at once), then the OnShow hooks;
+--                  Hide runs the OnHide hooks when it was shown (DW-FP20)
+--   gamepadUI      InputUtil.IsGamepadUIEnabled()'s answer (WoW Forever's gamepad roll list)
 
 local function isForever(M)
     return M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT
@@ -44,8 +48,20 @@ end
 
 local function popup(i)
     local f = { rollID = nil, shown = false, hooks = {} }
-    function f.Show(self) self.shown = true end
-    function f.Hide(self) self.shown = false end
+    local function run(self, script)
+        for _, fn in ipairs(self.hooks[script] or {}) do fn(self) end
+    end
+    function f.Show(self)
+        if self.shown then return end
+        self.shown = true
+        if self.blizzOnShow then self.blizzOnShow(self) end
+        run(self, "OnShow")
+    end
+    function f.Hide(self)
+        if not self.shown then return end
+        self.shown = false
+        run(self, "OnHide")
+    end
     function f.IsShown(self) return self.shown end
     function f.GetName() return "GroupLootFrame" .. i end
     function f.HookScript(self, script, fn)
@@ -121,4 +137,5 @@ return function(M)
     end
 
     for i = 1, 4 do M["GroupLootFrame" .. i] = popup(i) end
+    M.InputUtil = { IsGamepadUIEnabled = function() return M.gamepadUI == true end }
 end

@@ -577,6 +577,16 @@ modules\Toast.lua
 # NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions, NS.History, NS.Setting and
 # NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua
+# LOAD-BEARING: appends its START_LOOT_ROLL and CANCEL_LOOT_ROLL rows to NS.FEATURE_EVENTS after
+# modules\Pending.lua's, so your roll popup has claimed its pending item before the mark is drawn;
+# its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules above.
+# Publishes NS.RollPopup, your verdict on Blizzard's roll popup (Forever port design §7); appends its
+# handlers to NS.addon and registers its PendingChanged and GearChanged receivers on a NS.Bus target
+# at load; takes NS.Constants, NS.L and NS.Compat's client at load. NS.Pending, NS.RollCells,
+# NS.LootFeed, NS.ItemFacts, NS.Item, NS.TipMarks, NS.WindowCells, NS.CollectCells, NS.WindowRows,
+# NS.DetailCard, NS.Sim and NS.Setting are read at call time; core\DropWatcher.lua's OnEnable calls
+# Install, which builds the overlays and hooks GroupLootFrame1..4 through NS.Compat.
+modules\RollPopup.lua
 # Conventional: publishes NS.SimRoster, the simulator's invented group and its gear (pure, but for
 # Create); reads NS.Constants and NS.ClassData at load. NS.Sim, NS.SimPool (below) and NS.Compat are
 # read at call time.

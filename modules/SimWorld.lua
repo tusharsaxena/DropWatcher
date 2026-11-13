@@ -756,5 +756,11 @@ function P.LootSlots(live)
     return { { slot = 1, link = loot.link, quality = loot.quality, locked = true, sourceGUID = loot.sourceGUID } }
 end
 
+-- The roll popups and the gamepad switch (DW-FP20): a simulation invents no Blizzard popup (its
+-- roll is drawn on modules/RollPopup.lua's stand-in), so the client's own frames and its input mode
+-- answer while one runs.
+local function client(live, ...) return live(...) end
+P.RollPopupFrame, P.HookRollPopup, P.RollPopupOpen, P.GamepadUI = client, client, client, client
+
 W.PROVIDERS = P
 for key, fn in pairs(P) do NS.SimSeam:SetProvider(key, fn) end

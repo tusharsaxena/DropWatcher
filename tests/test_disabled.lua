@@ -54,7 +54,8 @@ end
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,
 -- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too; DW-FP15's
 -- window hears PendingChanged for the Drops tab's Rolling now section; since the M4 review the
--- pending store hears GearChanged too, to judge your verdict on a pending item again).
+-- pending store hears GearChanged too, to judge your verdict on a pending item again; DW-FP20's roll
+-- popup mark hears PendingChanged and GearChanged, to repaint the marks on the shown popups).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -62,10 +63,11 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
-    "Ka0s_DropWatcher_PendingChanged",
+    "Ka0s_DropWatcher_PendingChanged", "Ka0s_DropWatcher_PendingChanged",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_SituationChanged",

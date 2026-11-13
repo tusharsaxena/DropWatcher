@@ -997,14 +997,17 @@ local function build()
     -- nothing else, so "the button exists under that name" is a question a suite has to ask. A
     -- Button also records RegisterForClicks, which the stub frame's metatable would swallow: a
     -- CLICK binding fires the button only for a registered click, so the registration is behavior.
-    -- Its OnClick fires through the kit's `__fire`.
+    -- Its OnClick fires through the kit's `__fire`. A case that sets `M.__decorateUIParent` before
+    -- the load also gets the geometry and text regions on every frame parented to UIParent (the roll
+    -- popup mark's owned cards, DW-FP20), so it can read what they say.
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
         local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
             and name:sub(#TOAST_NAME + 1):match("^%d*$") ~= nil
         if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME
-            or (type(parent) == "table" and parent.__dwTree) then
+            or (type(parent) == "table" and parent.__dwTree)
+            or (M.__decorateUIParent and parent ~= nil and parent == M.UIParent) then
             decorateGeometry(M, f)
         end
         -- An undecorated frame is its own font string (the base's CreateFontString), so the stub's

@@ -296,3 +296,61 @@ function Compat.LootSlots()
     end
     return out
 end
+
+-- ── the roll popups (DW-FP20, design §7) ────────────────────────────────────────────────────
+
+-- How many roll popups the client builds: GroupLootFrame1..4 on both clients (R2 §10.1).
+Compat.ROLL_POPUPS = 4
+
+-- Blizzard's roll popup N, a plain frame on both clients (no secure template, R2 §10.1), or nil.
+local function popup(i)
+    if type(i) ~= "number" then return nil end
+    local f = _G["GroupLootFrame" .. i]
+    if type(f) ~= "table" then return nil end
+    return f
+end
+
+--- Blizzard's roll popup `i` (GroupLootFrame1..4), for anchoring an owned frame to it and nothing
+--- else: the caller never writes to it, never sets its scripts, parent, points or strata. Nil when
+--- the client has no such frame.
+--- @param i number
+--- @return table|nil
+function Compat.RollPopupFrame(i)
+    return popup(i)
+end
+
+--- Install one-way OnShow and OnHide hooks on roll popup `i` (HookScript: they can never be
+--- removed, so the caller gates its own state). `onShow(i)` and `onHide(i)` run after Blizzard's
+--- own handlers. True when installed; false with no such frame.
+--- @param i number
+--- @param onShow function
+--- @param onHide function
+--- @return boolean
+function Compat.HookRollPopup(i, onShow, onHide)
+    local f = popup(i)
+    if not (f and f.HookScript) then return false end
+    f:HookScript("OnShow", function() onShow(i) end)
+    f:HookScript("OnHide", function() onHide(i) end)
+    return true
+end
+
+--- The rollID roll popup `i` shows now: nil unless it is shown and its rollID is a plain number.
+--- Blizzard can close a popup inside its own OnShow (an item with no name, R2 skeptic correction
+--- 6), so an OnShow hook asks this, never the event's word.
+--- @param i number
+--- @return number|nil
+function Compat.RollPopupOpen(i)
+    local f = popup(i)
+    if not (f and f.IsShown and f:IsShown()) then return nil end
+    return plainNumber(f.rollID)
+end
+
+--- Whether the client's gamepad UI is on (InputUtil.IsGamepadUIEnabled): WoW Forever then shows
+--- its rolls in GamepadGroupLootRollFrame, not in GroupLootFrame1..4 (R2 §10.1). False when the
+--- API is absent, or for a secret answer.
+--- @return boolean
+function Compat.GamepadUI()
+    local iu = InputUtil
+    if not (type(iu) == "table" and iu.IsGamepadUIEnabled) then return false end
+    return isTrue(iu.IsGamepadUIEnabled())
+end

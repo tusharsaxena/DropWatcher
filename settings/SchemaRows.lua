@@ -377,7 +377,8 @@ local function feed()
     bool("rolls.keep", R.keep, L["Keep rolls in history"],
         L["Keep each rolled drop's rolls in the History tab."], rolls)
     bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
-        L["Show your verdict on the game's Need and Greed roll popup."], rolls)
+        L["Show your verdict on the game's Need and Greed roll popup."],
+        with(rolls, { onChange = function() if NS.RollPopup then NS.RollPopup.Refresh() end end }))
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────

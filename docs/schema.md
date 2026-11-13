@@ -121,7 +121,7 @@ button and profiles reach them as any row.
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 | `rolls.show` | `true` | Rolls | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
 | `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (the entry's `rolls`) |
-| `rolls.popupMark` | `true` | Rolls | your verdict on the game's roll popup (DW-FP20 reads it) |
+| `rolls.popupMark` | `true` | Rolls | your verdict on the game's roll popup (`modules/RollPopup.lua`, since DW-FP20); a change repaints the marks on the shown popups |
 
 ### Comparison
 

@@ -759,6 +759,10 @@ function DW:OnEnable()
 
     logDependencies()
 
+    -- The roll popup mark's overlays and its one-way hooks on Blizzard's popups (modules/RollPopup.lua,
+    -- Forever port design §7): installed once, whatever the latch says; the hooks gate on it.
+    if NS.RollPopup then NS.RollPopup.Install() end
+
     -- The first-run skin picker's login fuse (core/SkinSetup.lua), before the latch: a profile
     -- stored disabled stands down below, which puts it out again.
     if NS.ArmSkinPicker then NS.ArmSkinPicker(true) end

@@ -240,8 +240,13 @@ feedback-5 spec §2; schema step 6 removes the stored value.)
 **Rolls** (Forever port design §5.3, DW-FP15; both clients): **Show rolls** (`rolls.show`: the Drops
 tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
 off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`:
-a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`, read by the popup mark
-from DW-FP20), all on by default. A change repaints the shown window.
+a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`: your verdict, and
+`Need so far` while the roll is open, on a small card above the game's own roll popup,
+`modules/RollPopup.lua`, DW-FP20), all on by default. A change to the first two repaints the shown
+window; a change to the third repaints the marks on the popups shown now. The design (§7) placed
+Mark the roll popup under Alerts › Roll popup; it stays here beside Show rolls and Keep rolls, the
+plan's placement, as Claude's call (2026-11-13), because it is one of the three roll switches and the
+Alerts page holds the toast's rows. The owner can move it at the merge gate.
 
 ## Comparison
 

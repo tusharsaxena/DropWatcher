@@ -96,6 +96,10 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `LootHistoryNow()` (`core/CompatLoot.lua`) | `C_LootHistory.GetLootHistoryTime`, the clock a drop's `startTime` is on | `nil` |
 | | `ActiveLootRolls()` (`core/CompatLoot.lua`) | `GetActiveLootRollIDs`' plain ids: your open group-loot rolls | `{}` |
 | | `LootRollInfo(rollID)` (`core/CompatLoot.lua`) | `GetLootRollItemLink` and `GetLootRollItemInfo`: `{ link, quality, bop, canNeed, canGreed, canTransmog }`, `bop` from `bindOnPickUp`; a secret field dropped; nil with no plain link | `nil` |
+| | `RollPopupFrame(i)` (`core/CompatLoot.lua`) | `_G["GroupLootFrame" .. i]`, Blizzard's roll popup `i` (1 to `Compat.ROLL_POPUPS`, 4): a plain frame on both clients, handed out only as an anchor for an owned frame (DW-FP20) | `nil` |
+| | `HookRollPopup(i, onShow, onHide)` (`core/CompatLoot.lua`) | `HookScript("OnShow")` and `HookScript("OnHide")` on popup `i`, each calling its function with `i` after Blizzard's handler; the hooks can never be removed. `true` when installed | `false` |
+| | `RollPopupOpen(i)` (`core/CompatLoot.lua`) | popup `i`'s plain `rollID`, only while `IsShown()` (Blizzard can close a popup inside its own OnShow) | `nil` |
+| | `GamepadUI()` (`core/CompatLoot.lua`) | `InputUtil.IsGamepadUIEnabled()`, plain true only: WoW Forever's gamepad mode, whose rolls are in `GamepadGroupLootRollFrame` | `false` |
 | | `ChallengeMapName(mapID)` | `C_ChallengeMode.GetMapUIInfo`'s name; an empty or secret answer is nil | `nil` |
 | Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
 | | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |

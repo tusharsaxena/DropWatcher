@@ -122,6 +122,13 @@ the code reads every case the design leaves open, module by module, is in
   - **Character.** Insights names a drop's character from the drop, else from its group's recorder,
     so a drop only the group recorded counts under that character. History's Character filter reads
     the drop's recorder alone and calls the same drop Not recorded.
+- **The roll popup mark** (Forever port design §7, DW-FP20) is drawn only over Blizzard's four roll
+  popups, `GroupLootFrame1..4`. In WoW Forever's gamepad mode the client lists rolls in
+  `GamepadGroupLootRollFrame` instead, and the mark is skipped while `InputUtil.IsGamepadUIEnabled()`
+  is true. Its `Need so far` line needs the drop to be pending (the Drops tab's own gates, design
+  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line. The
+  score part of the gain is the score's difference, not a percentage. None of it is confirmed in
+  game yet (the FOREVER smoke theme, DW-FP21).
 
 ## The simulator
 
