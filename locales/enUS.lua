@@ -140,6 +140,7 @@ L["You cannot trade with yourself."] = "You cannot trade with yourself."
 
 -- The gain token of an upgrade into an empty slot (modules/Asks.lua, design spec §9.1)
 L["an empty-slot upgrade"] = "an empty-slot upgrade"
+L["a score upgrade"] = "a score upgrade"
 
 -- Test mode (modules/TestMode.lua, modules/TestData.lua): the samples, the window's chip and banner, the
 -- empty state

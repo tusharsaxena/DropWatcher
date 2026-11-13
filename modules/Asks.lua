@@ -187,11 +187,16 @@ end
 -- Messaging.Expand drops the template's `+` before a worded gain, so `+{mygain}` never reads `+?`.
 -- A main `cantUse` with an off-spec gain reads the off-spec result (NS.OffSpec.EvalFor,
 -- feedback-19 spec §2), so the off-spec ask's `+{mygain}` is the off-spec difference.
+-- A score-led upgrade (WoW Forever's scoreFirst verdict, `led = "score"`, Forever port design §4.5)
+-- with no item-level gain reads `a score upgrade`, so a lower item level is never whispered `+-3`.
 local function gainOf(eval)
     eval = NS.OffSpec.EvalFor(eval)
     if type(eval) ~= "table" then return nil end
     local d = eval.ilvlDelta
-    if type(d) == "number" and d == d then return d end
+    if type(d) == "number" and d == d then
+        if d <= 0 and eval.led == "score" and eval.verdict == "upgrade" then return L["a score upgrade"] end
+        return d
+    end
     if intoEmptySlot(eval) then return L["an empty-slot upgrade"] end
     return nil
 end

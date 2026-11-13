@@ -28,9 +28,9 @@ local _, NS = ...
 -- keeps what it had). A drop toasts when it is not yours, its verdict for you is
 -- `upgrade` with an item-level gain of at least `toast.minGain` (default 10), and its trade
 -- estimate is `likely` or `yes` (Qualifies, pure). An upgrade into an empty slot (the kernel's
--- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`, and so does
--- a score-led upgrade (WoW Forever's scoreFirst verdict, `led = "score"`, Forever port design §4.5:
--- the least gain is in item levels, so it applies only to an item-level-led verdict). Each drop
+-- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`. A score-led
+-- upgrade (WoW Forever's scoreFirst verdict, `led = "score"`, Forever port design §4.5) clears any
+-- least gain too: the least gain is in item levels, so it applies only to an item-level-led verdict. Each drop
 -- is considered on DropAdded and again on each DropUpdated until it has toasted once (an inspect can
 -- turn its trade `likely` later).
 --

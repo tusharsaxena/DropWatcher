@@ -137,6 +137,23 @@ test("send: into an empty slot the gain reads as words, never the item level or 
     assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, nil, "no gain and no empty slot: unknown")
 end)
 
+test("send: a score-led upgrade with no item-level gain reads its gain as words (Forever port §4.5)", function()
+    local NS = party()
+    -- WoW Forever's scoreFirst verdict: an upgrade by score at a lower item level.
+    local scored = { verdict = "upgrade", ilvlDelta = -3, scoreDelta = 12, led = "score", reasons = {} }
+    local rec = { link = link(300), facts = { ilvl = 308 }, me = scored, them = scored }
+    local ctx = NS.Asks.TokenContext("ask", rec, { name = "Brakk" })
+    assertEqual(ctx.mygain, "a score upgrade"); assertEqual(ctx.gain, "a score upgrade")
+    local text = NS.Messaging.Expand(NS.Messaging.Template("ask"), ctx)
+    assertEqual(text:find("-3", 1, true), nil, "a lower item level is never whispered as a gain")
+    assertTrue(text:find("It'd be a score upgrade for me", 1, true) ~= nil, text)
+    -- A score-led upgrade that also gains item levels keeps its number; an item-level-led one too.
+    rec.me = { verdict = "upgrade", ilvlDelta = 4, led = "score", reasons = {} }
+    assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, 4)
+    rec.me = { verdict = "upgrade", ilvlDelta = 0, led = "ilvl", reasons = {} }
+    assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, 0)
+end)
+
 test("send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again", function()
     local NS, m, A = party()
     local id = drop(NS, m, 300, "Brakk")
