@@ -154,8 +154,9 @@ over a kept entry, the header's chips, For you at the time, For the group and yo
 recorded trade estimate, when and where and the actions; then headless, a row click expanding it
 under the row with the chevron up and the rows below moved, one at a time, a right-click still the
 menu, the columns after the indent and chevron, Link in chat, Mark and Clear declined, Show in Drops
-selecting the Drops tab with the drop's header open and its card expanded, and the stacked card
-under a compact card),
+selecting the Drops tab with the drop's header open and its card expanded, the stacked card
+under a compact card, the Rolls box, and a kept roll table read back once across repaints until
+History replaces it),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its

@@ -326,3 +326,28 @@ test("history card: shows the rolls rows", function()
     assertFalse(card.rolls:IsShown())
     assertEqual(card:GetHeight(), NS.HistoryCard.CARD_H)
 end)
+
+-- A History repaint turns every kept entry into a drop record (WindowHistory.AsDrop); the roll table
+-- read back from an entry's kept `rolls` is reused until History replaces that table (the roll moved).
+test("history card: a repaint reads each kept roll table back once, reusing it until the roll moves", function()
+    local NS, _, _, g = shown()
+    local e, WH, H = g.drops[1], NS.WindowHistory, NS.History
+    e.rolls = { at = 1, allPassed = false, n = 2, w = 1, r = {
+        { name = "Brakk", class = "WARRIOR", s = 0, n = 87 }, { name = "Ann", class = "PRIEST", s = 5 } } }
+    local read, reads = H.RollTable, 0
+    H.RollTable = function(rolls) reads = reads + 1; return read(rolls) end
+    local first = WH.AsDrop(e, 1, GROUP)
+    NS.Window.Refresh(); NS.Window.Refresh()
+    local again = WH.AsDrop(e, 1, GROUP)
+    -- red under: a fresh read-back table on every AsDrop, so on every repaint for every row
+    assertTrue(first.roll ~= nil and rawequal(first.roll, again.roll), "the same read-back table")
+    assertEqual(reads, 1, "read back once across two repaints")
+    assertNil(WH.AsDrop(g.drops[2], 2, GROUP).roll, "an entry with no roll kept has none")
+    e.rolls = { at = 2, allPassed = false, n = 3, w = 1, r = {
+        { name = "Brakk", class = "WARRIOR", s = 0, n = 87 }, { name = "Ann", class = "PRIEST", s = 5 },
+        { name = "Doom Dock", class = "MAGE", s = 3, n = 50 } } }
+    local moved = WH.AsDrop(e, 1, GROUP)
+    assertEqual(moved.roll.count, 3, "the replaced table is read back anew")
+    assertEqual(reads, 2)
+    H.RollTable = read
+end)

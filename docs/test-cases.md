@@ -596,7 +596,7 @@ Total.
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
 
-### test_history_card.lua (16)
+### test_history_card.lua (17)
 
 - history card: the header's chips name slot, type, item level and the outcome in its tone
 - history card: For you is the verdict then, with its deltas, marked at the time
@@ -614,6 +614,7 @@ Total.
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
 - history card: shows the rolls rows
+- history card: a repaint reads each kept roll table back once, reusing it until the roll moves
 
 ### test_compact_chrome.lua (28)
 
@@ -2828,7 +2829,7 @@ Total.
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
 | test_compact_history.lua | 11 |
-| test_history_card.lua | 16 |
+| test_history_card.lua | 17 |
 | test_compact_chrome.lua | 28 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 52 |
@@ -2929,4 +2930,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2411** |
+| **Total** | **2412** |

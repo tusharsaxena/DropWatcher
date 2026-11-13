@@ -164,9 +164,26 @@ end
 
 -- ── the pure halves ─────────────────────────────────────────────────────────────────────────
 
+-- Each kept roll table read back once (History.RollTable), keyed by the entry's own `rolls`: History
+-- replaces that table whole when the roll moves (takeRolls) and never edits it in place, so a moved
+-- roll is a new key and a repaint reuses the read-back instead of building it again for every row.
+-- Weak keys: a trimmed or cleared entry's goes with it. `false` marks a table with nothing to read.
+local rollReads = setmetatable({}, { __mode = "k" })
+
+local function rollOf(rolls)
+    if type(rolls) ~= "table" then return nil end
+    local t = rollReads[rolls]
+    if t == nil then
+        t = NS.History.RollTable(rolls) or false
+        rollReads[rolls] = t
+    end
+    return t or nil
+end
+
 --- An entry as the drop record the cell composers read: { id, link, at, isMine, looter, facts,
 --- me, them, trade, roll, outcome, entry, group }; `roll` is the kept roll table read back
---- (History.RollTable, the card's Rolls box: Forever port design §5.4).
+--- (History.RollTable, the card's Rolls box: Forever port design §5.4), once per kept table and
+--- shared by every repaint: read it, never write it.
 --- @param e table a history entry
 --- @param id number its place in the list (Sort's tiebreak)
 --- @param group table|nil the kept group it is in (the detail card's When and where)
@@ -178,7 +195,7 @@ function WH.AsDrop(e, id, group)
         -- The kept kind (issue #13): an entry with none reads as equipment; a token's Slot cell is its own.
         facts = { ilvl = e.ilvl, equipLoc = e.equipLoc, quality = e.quality, category = e.category,
             tokenSlot = e.tokenSlot, tokenUsers = e.tokenUsers, isTierToken = e.category == "tierToken" or nil },
-        me = e.me, them = e.them, trade = e.trade, roll = NS.History.RollTable(e.rolls),
+        me = e.me, them = e.them, trade = e.trade, roll = rollOf(e.rolls),
     }
 end
 
