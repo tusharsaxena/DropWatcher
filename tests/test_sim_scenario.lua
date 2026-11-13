@@ -720,9 +720,14 @@ test("sim e2e raid: a large roster, auto-ask after its delay, a trade received, 
     playUntil(NS, m, nil)
     m.advance(NS.AutoAsk.Config().delay + 2)
     local aa = NS.AutoAsk.Stats()
-    assertTrue(aa.scheduled >= 1, "auto-ask scheduled")
-    assertTrue(aa.sent >= 1, "auto-ask fired after its delay")
-    assertTrue(printed(m, "[sim] WHISPER to ") >= 1, "printed, not sent")
+    if T.forever then   -- the boss drops bind on pickup: soulbound, so nothing to ask for (design §4.6)
+        assertEqual(aa.scheduled, 0, "no auto-ask for a soulbound drop")
+        assertEqual(printed(m, "[sim] WHISPER to "), 0)
+    else
+        assertTrue(aa.scheduled >= 1, "auto-ask scheduled")
+        assertTrue(aa.sent >= 1, "auto-ask fired after its delay")
+        assertTrue(printed(m, "[sim] WHISPER to ") >= 1, "printed, not sent")
+    end
     -- The newest such drop: a trade settles the newest open drop of its item from its partner.
     local rec = lastWhere(drops(NS), function(r) return not r.isMine and r.them ~= nil end)
     assertTrue(rec ~= nil, "a member's drop with the looter's verdict")

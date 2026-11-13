@@ -399,14 +399,18 @@ local FOREVER = NS.Compat.ClientKey() == "forever"
 -- Encounter Journal source of the simulator's pool (modules/SimPool.lua), transmog (the look read,
 -- its event, chips, ask and rows), upgrade tracks (the Track row, the track in the item level chip
 -- and tooltip, the {track} token), off-spec (modules/OffSpec.lua, its glow, ask and words) and the
--- simulator's bonus rolls (modules/SimEvents.lua). docs/ARCHITECTURE.md's per-client feature table
--- names each one's gate.
+-- simulator's bonus rolls (modules/SimEvents.lua), your own BoP drop's trade countdown and its
+-- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
+-- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,
+-- `soulbound` (design §4.6). docs/ARCHITECTURE.md's per-client feature table names each one's gate.
 C.FEATURE_CLIENTS = {
-    journalPool  = { "retail" },
-    transmog     = { "retail" },
-    tracks       = { "retail" },
-    offSpec      = { "retail" },
-    bonusRollSim = { "retail" },
+    journalPool   = { "retail" },
+    transmog      = { "retail" },
+    tracks        = { "retail" },
+    offSpec       = { "retail" },
+    bonusRollSim  = { "retail" },
+    tradeTimer    = { "retail" },
+    tradeRuleRows = { "retail" },
 }
 C.FEATURE = {}
 for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end
@@ -608,14 +612,24 @@ C.TRADE_ACCOUNT_BIND = {
 
 C.TRADE_WINDOW = 14400  -- seconds a tradeable drop stays tradeable (four hours since 12.1.5, seen in game 2026-10-16)
 
--- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
-C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }
-C.TRADE_RULE_DEFAULT = "personal"
+-- The rule names in Settings › Trade's display order, and the rule an unknown situation takes, one
+-- list per client, picked once (clients-§5). WoW Forever has no personal loot and no trade window:
+-- a looted Bind on Pickup item is soulbound (Forever port design §4.6), so its one rule is
+-- `soulbound` and only a BoE drop changes hands.
+local TRADE_RULE_LISTS = {
+    retail  = { "personal", "group", "legacy" },
+    forever = { "soulbound" },
+}
+C.TRADE_RULE_NAMES = TRADE_RULE_LISTS[FOREVER and "forever" or "retail"]
+C.TRADE_RULE_DEFAULT = C.TRADE_RULE_NAMES[1]
 
+-- Every rule's data. TradeRules takes only the client's own names (C.TRADE_RULE_NAMES) as rules.
+-- `bopOnly`: every drop the bind checks did not answer (anything not BoE) is `no soulbound`.
 C.TRADE_RULES = {
-    personal = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },
-    group    = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "none" },
-    legacy   = { tradeable = false },
+    personal  = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },
+    group     = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "none" },
+    legacy    = { tradeable = false },
+    soulbound = { tradeable = false, bopOnly = true },
 }
 
 -- ---------------------------------------------------------------------------------------------

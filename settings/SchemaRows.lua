@@ -286,9 +286,10 @@ local function situations()
             L["The minimum quality here: the feed's own mode, or one of its own."],
             with(sit, { disabledIf = untracked }))
         -- Its label stays the situation's name: `/dw list` reads it under the Drops page's `feed` section.
+        -- Retail's alone: WoW Forever has one rule, `soulbound` (Forever port design §4.4, §4.6).
         pick("trade.rules." .. key, T.rules[key], RULES, NS.WindowFooter.SituationLabel(key),
             L["The loot rule that decides whether a drop here can be traded."],
-            with(sit, { disabledIf = untracked }))
+            with(sit, { disabledIf = untracked, clients = K.FEATURE_CLIENTS.tradeRuleRows }))
     end
 end
 
@@ -460,7 +461,8 @@ local function window()
     -- Options instance). `window.fontSize` keeps its path, its 0 (Default) and its range there.
 
     -- The full layout's Drops table columns, then the Trade window column's ending-soon mark (Trade ›
-    -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else).
+    -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else). The
+    -- mark is Retail's alone: WoW Forever has no countdown (Forever port design §4.4).
     local columns = { page = "window", group = L["Columns"], subgroup = L["Shown columns"], onChange = repaintWindow }
     for _, col in ipairs(NS.WindowGroup.COLUMNS) do
         if col.key ~= "item" then
@@ -469,7 +471,7 @@ local function window()
     end
     slider("trade.warnAt", P.trade.warnAt, 0, 1800, 60, L["Mark a trade window ending within (seconds)"],
         L["Your own drop's Trade window countdown turns to its warning color this many seconds before the item stops being tradeable. 0 turns the mark off."],
-        { page = "window", group = L["Columns"], subgroup = L["Trade window"] })
+        { page = "window", group = L["Columns"], subgroup = L["Trade window"], clients = K.FEATURE_CLIENTS.tradeTimer })
 
     -- What a fresh Drops tab opens on (Feed › Filters until feedback-24): the View, a set
     -- (feedback-2 spec §1: one row per value, all off is All, combined as AND, as the filter bar's

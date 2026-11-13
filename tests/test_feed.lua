@@ -116,7 +116,11 @@ test("feed: a member's loot is added once, judged for you, and asks for the loot
     assertEqual(rec.quality.reason, "atThreshold")
     assertNil(rec.them, "no inspect read yet")
     assertEqual(rec.inspect.status, "pending")
-    assertEqual(rec.trade.state, "unknown"); assertEqual(rec.trade.reasonKey, "noInspect")
+    if T.forever then   -- a BoP drop is soulbound there, whatever the looter wears (design §4.6)
+        assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "soulbound")
+    else
+        assertEqual(rec.trade.state, "unknown"); assertEqual(rec.trade.reasonKey, "noInspect")
+    end
     assertEqual(NS.Inspect.QueueState().queued, 1, "the looter queued at looter priority")
 end)
 
@@ -131,7 +135,11 @@ test("feed: the looter's inspect re-judges the drop: their verdict and the trade
     assertEqual(NS.Inspect.Get(BRAKK).status, "cached")
     assertEqual(rec.them.verdict, "downgrade", "620 against Brakk's 630")
     assertEqual(rec.inspect.status, "cached")
-    assertEqual(rec.trade.state, "likely"); assertEqual(rec.trade.reasonKey, "notUpgrade")
+    if T.forever then
+        assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "soulbound")
+    else
+        assertEqual(rec.trade.state, "likely"); assertEqual(rec.trade.reasonKey, "notUpgrade")
+    end
     assertEqual(table.concat(seen.updated, ","), rec.id .. ":inspect")
 end)
 
@@ -199,7 +207,7 @@ test("feed: an upgrade for the looter cannot be traded under the personal rule",
     local rec = only(LF)
     assertEqual(rec.them.verdict, "upgrade")
     assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "upgradeForLooter")
-end)
+end, T.RETAIL_ONLY)
 
 test("feed: a bonus roll is never tradeable", function()
     local _, m, LF = party()
@@ -208,6 +216,44 @@ test("feed: a bonus roll is never tradeable", function()
     local rec = only(LF)
     assertTrue(rec.bonusRoll); assertEqual(rec.kind, "bonus")
     assertEqual(rec.trade.reasonKey, "bonusRoll")
+end)
+
+-- Forever port design §4.6 (O5): on WoW Forever a looted BoP item is soulbound, so the effects of
+-- `trade.state == "no"` follow for every BoP drop, a member's upgrade for you and your own spare
+-- alike. Retail's personal loot keeps both tradeable (clients-§6).
+test("feed: on Forever a BoP drop shows no Ask, no Offer, no toast, no glow, not in tradeables", function()
+    local NS, m, LF = party()
+    m.addItem(link(300), ring(620))
+    brakkWears(m, 630)
+    brakkLoots(m, 300)
+    m.addItem(link(301), ring(590))
+    chat(m, "You receive loot: " .. link(301) .. ".")
+    m.advance(0)
+    local theirs, mine
+    for _, rec in ipairs(LF.Drops()) do
+        if rec.isMine then mine = rec else theirs = rec end
+    end
+    assertEqual(theirs.me.verdict, "upgrade", "620 against your 600 ring")
+    local ask = NS.WindowGroup.Action(theirs)
+    local offer = NS.WindowOwn.Offer(mine)
+    if not T.forever then
+        assertEqual(theirs.trade.state, "likely"); assertEqual(theirs.trade.reasonKey, "notUpgrade")
+        assertTrue(ask.offered, "Ask"); assertTrue(NS.Toast.Qualifies(theirs, 0), "toast")
+        assertEqual(NS.Glow.KindOf(theirs), "main")
+        assertEqual(mine.trade.state, "likely")
+        assertTrue(offer.enabled, "Offer"); assertTrue(NS.WindowFilterBar.IsTradeableMine(mine), "tradeables")
+        return
+    end
+    for _, rec in ipairs({ theirs, mine }) do
+        assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "soulbound")
+        assertEqual(rec.trade.basis, "bind"); assertEqual(rec.trade.rule, "soulbound")
+    end
+    assertFalse(ask.offered, "no Ask"); assertEqual(ask.state, "none")
+    assertEqual(select(2, NS.Toast.Qualifies(theirs, 0)), "trade", "no toast, so no auto-ask")
+    assertNil(NS.Glow.KindOf(theirs), "no glow")
+    assertFalse(offer.enabled, "no Offer"); assertEqual(offer.state, "none")
+    assertFalse(NS.WindowFilterBar.IsTradeableMine(mine), "not in tradeables")
+    assertEqual(NS.WindowCells.TradePlain(NS.WindowCells.Trade(theirs)), "No Soulbound")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -659,16 +705,22 @@ end)
 -- Your own drops
 -- ---------------------------------------------------------------------------------------------
 
+-- On WoW Forever only a BoE drop of yours can change hands (Forever port design §4.6), so the drop
+-- there binds on equip and its trade is the bind's answer.
 test("own: your drop is judged for you, its trade by your verdict, and every member a candidate", function()
     local NS, m, LF = party()
-    m.addItem(link(300), ring(590))
+    m.addItem(link(300), ring(590, T.forever and { bindType = 2 } or nil))
     brakkWears(m, 580)
     chat(m, "You receive loot: " .. link(300) .. ".")
     local rec = only(LF)
     assertTrue(rec.isMine); assertEqual(rec.looter.guid, ME)
     assertNil(rec.them); assertNil(rec.inspect)
     assertEqual(rec.me.verdict, "downgrade")
-    assertEqual(rec.trade.state, "likely"); assertEqual(rec.trade.reasonKey, "notUpgrade")
+    if T.forever then
+        assertEqual(rec.trade.state, "yes"); assertEqual(rec.trade.reasonKey, "boe")
+    else
+        assertEqual(rec.trade.state, "likely"); assertEqual(rec.trade.reasonKey, "notUpgrade")
+    end
     assertEqual(rec.candidates[BRAKK].status, "checking")
     assertEqual(rec.candidates[LYRA].status, "checking")
     m.advance(0)    -- Brakk on the fast path; Lyra wears nothing readable and waits
@@ -783,7 +835,7 @@ test("trade: a group drop past its rule's window turns no expired on the sweep",
     local n = #seen.updated
     m.advance(LF.TRADE_SWEEP * 4)
     assertEqual(#seen.updated, n, "nothing left to sweep")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade: your own drop takes the timer's exact read: yes with expiresAt, then no expired", function()
     local NS, m, LF = party()
@@ -804,7 +856,7 @@ test("trade: your own drop takes the timer's exact read: yes with expiresAt, the
     assertEqual(rec.trade.basis, "timer")
     -- red under: the fold carrying no window, so the reason read "The trade window (0s) has passed."
     assertEqual(rec.trade.args[2], NS.Constants.TRADE_WINDOW)
-end)
+end, T.RETAIL_ONLY)
 
 test("trade: your own fresh drop with no trade-time line is your upgrade, not a window passed", function()
     local NS, m, LF = party()
@@ -819,7 +871,7 @@ test("trade: your own fresh drop with no trade-time line is your upgrade, not a 
     assertEqual(NS.WindowCells.TradeReason(rec.trade, "you"),
         "620 is an upgrade over the 600 you wear, so the game won't let you trade it.")
     assertEqual(NS.MineCells.TradeWindow(rec, m.GetTime()).text, "Your upgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade: your own drop the rule had as tradeable but with no trade-time line says the game gave no window", function()
     local NS, m, LF = party()
@@ -831,7 +883,7 @@ test("trade: your own drop the rule had as tradeable but with no trade-time line
     assertEqual(rec.trade.reasonKey, "upgradeForYou")
     assertEqual(NS.WindowCells.TradeReason(rec.trade, "you"),
         "The game gave it no trade window: it counts as an upgrade for you, so you can't trade it.")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade: your own drop the rule called no, with a live timer, asks for its candidates then", function()
     local NS, m, LF = party()
@@ -846,7 +898,7 @@ test("trade: your own drop the rule called no, with a live timer, asks for its c
     -- red under: the candidates' inspects gated on the rule's first estimate only
     assertTrue(NS.Inspect.Get(BRAKK) ~= nil, "Brakk's inspect asked for")
     assertEqual(rec.candidates[BRAKK].status, "checking")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade: a BoE own drop keeps the bind's answer; the timer folds nothing in", function()
     local _, m, LF = party()

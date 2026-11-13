@@ -379,9 +379,11 @@ end
 
 -- ── Situations ──────────────────────────────────────────────────────────────────────────────
 
---- The table's four setting columns, in order: three fields of `situations.<key>`, then the
---- situation's loot rule, `trade.rules.<key>` (Trade › Rules until feedback-24).
-E.SITUATION_FIELDS = { "track", "autoOpen", "quality", "rule" }
+--- The table's setting columns, in order: three fields of `situations.<key>`, then (Retail's alone,
+--- C.FEATURE_CLIENTS.tradeRuleRows) the situation's loot rule, `trade.rules.<key>` (Trade › Rules
+--- until feedback-24). WoW Forever has one rule, `soulbound`, so no column (Forever port design §4.4).
+E.SITUATION_FIELDS = { "track", "autoOpen", "quality" }
+if K.FEATURE.tradeRuleRows then E.SITUATION_FIELDS[#E.SITUATION_FIELDS + 1] = "rule" end
 local SITUATION_PATH = { rule = "trade.rules.%s" }
 
 -- One cell: its schema row, the value stored at its path, and whether it is live. Live unless the

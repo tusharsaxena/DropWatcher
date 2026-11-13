@@ -71,7 +71,8 @@ local SITUATIONS = {
 
 -- The rule each situation takes (design spec §7.2): Retail's follower dungeons `personal` since
 -- DW-06, the owner's default; `raid` is the conservative `personal` until smoke check TRADE-3
--- confirms it. WoW Forever's keys are its own situations' (its rule is DW-FP11's).
+-- confirms it. WoW Forever's keys are its own situations', each `soulbound`: a looted Bind on
+-- Pickup item can't change hands there (Forever port design §4.6).
 local TRADE_RULES = {
     retail = {
         mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
@@ -79,7 +80,7 @@ local TRADE_RULES = {
         pvp = "legacy", openWorldGroup = "personal", solo = "personal",
     },
     forever = {
-        dungeon = "personal", raid = "personal", pvp = "legacy", openWorldGroup = "personal", solo = "personal",
+        dungeon = "soulbound", raid = "soulbound", pvp = "soulbound", openWorldGroup = "soulbound", solo = "soulbound",
     },
 }
 

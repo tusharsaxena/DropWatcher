@@ -89,8 +89,13 @@ test("collect feed: someone else's mount reads its collection verdict, asks no i
     -- red under: judgeLooter requesting the looter's inspect for a collectible
     assertEqual(NS.Inspect.QueueState().queued, 0, "no looter inspect")
     assertNil(rec.inspect)
-    assertEqual(rec.trade.state, "unknown"); assertEqual(rec.trade.reasonKey, "collectible")
-    assertEqual(rec.trade.basis, "rule")
+    if T.forever then   -- a BoP mount is soulbound there (Forever port design §4.6)
+        assertEqual(rec.trade.state, "no"); assertEqual(rec.trade.reasonKey, "soulbound")
+        assertEqual(rec.trade.basis, "bind")
+    else
+        assertEqual(rec.trade.state, "unknown"); assertEqual(rec.trade.reasonKey, "collectible")
+        assertEqual(rec.trade.basis, "rule")
+    end
 end)
 
 test("collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no", function()
@@ -119,7 +124,7 @@ test("collect feed: the trade sweep drops someone else's collectible and keeps y
     mine.trade = { state = "likely", reasonKey = "notUpgrade", basis = "inspect", args = {} }
     -- red under: mayChange keeping someone else's `unknown` collectible in the sweep
     assertEqual(LF.SweepTrade(), 1, "your own only")
-    assertEqual(mine.trade.reasonKey, "collectible")
+    assertEqual(mine.trade.reasonKey, T.forever and "soulbound" or "collectible", "re-estimated")
     assertEqual(theirs.trade.reasonKey, "notUpgrade", "someone else's is not re-estimated")
 end)
 

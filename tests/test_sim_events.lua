@@ -460,7 +460,7 @@ test("sim own drops: they land in your bags with a trade window the trade timer 
     assertTrue(NS.TradeTimer.ForDrop(own[1].id).expired, "the window closed")
     assertFalse(NS.TradeTimer.ForDrop(own[2].id).expired)
     assertEqual(#m.chatSent, 0)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)", function()
     local NS, m = sim()
@@ -487,7 +487,7 @@ test("sim own drops: the scenario sets the window and the ending-soon count", fu
     NS.Sim:Stop()
     assertFalse(E.Configure({}), "no simulation")
     assertEqual(#NS.SimWorld.BagItems(), 0)
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- A simulated completed trade
@@ -570,9 +570,13 @@ test("sim stop: your simulated bag items leave the gear snapshot and the trade t
     local NS, m = sim()
     NS.SimEvents.Loot(1, "me")
     m.advance(3)
-    assertEqual(NS.TradeTimer.LiveCount(), 1)
+    local id = lastDrop(NS).id
+    -- WoW Forever matches the bag item with no countdown (Forever port design §4.4).
+    assertEqual(NS.TradeTimer.LiveCount(), T.forever and 0 or 1)
+    assertTrue(NS.TradeTimer.ForDrop(id) ~= nil, "matched to its simulated bag item")
     NS.Sim:Stop()
     m.advance(3)
     assertEqual(NS.TradeTimer.LiveCount(), 0)
+    assertTrue(NS.TradeTimer.ForDrop(id) == nil, "its entry left with the bag item")
     assertEqual(#NS.SimWorld.BagItems(), 0)
 end)

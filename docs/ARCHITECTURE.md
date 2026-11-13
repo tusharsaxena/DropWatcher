@@ -100,7 +100,7 @@ button goes through the host handler its slash verb shares.
 Drop Watcher serves Retail and WoW Forever. These features serve one client (Forever port design
 §4.4); every other feature serves both. A declaration is `clients = { ... }` on the row, the event
 row or the seed list; `C.FEATURE_CLIENTS` (`core/Constants.lua`) names the Retail-only features
-DW-FP10 gates, and `C.FEATURE` holds each one's `ForClient` answer, read once.
+DW-FP10 and DW-FP11 gate, and `C.FEATURE` holds each one's `ForClient` answer, read once.
 
 | Feature | Client | Gated in |
 |---|---|---|
@@ -113,6 +113,9 @@ DW-FP10 gates, and `C.FEATURE` holds each one's `ForClient` answer, read once.
 | Upgrade tracks: the Track row, the track in the item level chip and the Ilvl tooltip, the `{track}` token | Retail | `modules/DetailCells.lua`, `modules/WindowCells.lua`, `core/Constants.lua` (`C.MESSAGE_TOKENS`) |
 | Off-spec: the off-spec pass (`OffSpec.Initialized`), the candidates' off-spec gear, the `askOffSpec` template and row, the off-spec glow's rows, its legend and notes | Retail | `modules/OffSpec.lua`, `modules/Gear.lua`, `modules/Inspect.lua`, `core/Constants.lua` (`C.MESSAGE_TEMPLATES`), `settings/SchemaRows.lua`, `modules/OffSpecCells.lua`, `modules/WindowGroup.lua`, `modules/OfferPanel.lua`, `modules/TestData.lua` |
 | The simulator's bonus rolls | Retail | `modules/SimEvents.lua` (`Plan`) |
+| The trade rules: `personal`, `group` and `legacy` on Retail, `soulbound` alone on Forever (a BoP drop is `no soulbound`, basis `bind`; only a BoE drop changes hands, design §4.6) | Each its own | `core/Constants.lua` (`C.TRADE_RULE_NAMES` per client), `defaults/Profile.lua` (`trade.rules` per client), `modules/TradeRules.lua` |
+| The trade timer's countdown and warning (`TradeTimer.Initialized`; on Forever the bag match runs and every entry is permanent), the `trade.warnAt` row, the card's bag-timer basis line | Retail | `modules/TradeTimer.lua`, `settings/SchemaRows.lua`, `modules/DetailCells.lua`, `modules/Diagnostics.lua` |
+| The per-situation loot rule rows (`trade.rules.<situation>`) and the Situations table's Loot rule column | Retail | `settings/SchemaRows.lua`, `settings/Editors.lua` (`SITUATION_FIELDS`), `settings/PageEditors.lua` |
 
 The filter bar is shared by the tabs and never reflows between them: a control a tab does not use
 is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one

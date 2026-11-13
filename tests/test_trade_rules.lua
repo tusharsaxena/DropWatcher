@@ -1,6 +1,9 @@
 -- tests/test_trade_rules.lua — modules/TradeRules.lua, the trade estimator (design spec §7.1-§7.3):
 -- every row of the Estimate table in its order, the trade window's expiry, the per-situation rule
 -- with the owner's override map, and that no input ever makes it throw.
+-- Retail's three rules (personal, group, legacy) and their window are Retail's alone: those cases
+-- are declared skips on the forever profile, where the one rule is `soulbound` (Forever port
+-- design §4.6) and its own cases at the end assert each client's answer (clients-§6).
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -83,7 +86,7 @@ test("trade rules: the legacy rule is no legacy (PvP by default)", function()
     check(TR.Estimate(drop(), looter(-5), ctx("pvp")), "no", "legacy", "rule")
     check(TR.Estimate(drop(), nil, ctx("pvp")), "no", "legacy", "rule")
     assertEqual(TR.Estimate(drop(), nil, ctx("pvp")).rule, "legacy")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: the group rule (ilvlRule none) is likely groupLoot without inspect", function()
     local TR = load()
@@ -92,7 +95,7 @@ test("trade rules: the group rule (ilvlRule none) is likely groupLoot without in
     assertEqual(est.rule, "group")
     -- An upgrade for the looter does not matter under the group rule.
     check(TR.Estimate(drop(), looter(15), ctx("raid", 60, { rules = { raid = "group" } })), "likely", "groupLoot")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: personal, the looter's evaluation known and not an upgrade, is likely notUpgrade", function()
     local TR = load()
@@ -104,7 +107,7 @@ test("trade rules: personal, the looter's evaluation known and not an upgrade, i
         assertEqual(est.age, 30)
         assertEqual(est.rule, "personal")
     end
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: personal, an upgrade for the looter, is no upgradeForLooter", function()
     local TR = load()
@@ -112,7 +115,7 @@ test("trade rules: personal, an upgrade for the looter, is no upgradeForLooter",
     check(est, "no", "upgradeForLooter", "inspect")
     assertEqual(est.args[1], 610)
     assertEqual(est.args[2], 597)
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: the item level decides, not the scored verdict (the game's rule is ilvl)", function()
     local TR = load()
@@ -120,7 +123,7 @@ test("trade rules: the item level decides, not the scored verdict (the game's ru
     check(TR.Estimate(drop(), looter(6, "sidegrade"), ctx("dungeon")), "no", "upgradeForLooter")
     -- ... and a drop the looter cannot use is judged on item level as well.
     check(TR.Estimate(drop(), looter(-4, "cantUse"), ctx("dungeon")), "likely", "notUpgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: an empty slot on the looter is an upgrade for them", function()
     local TR = load()
@@ -129,7 +132,7 @@ test("trade rules: an empty slot on the looter is an upgrade for them", function
     check(est, "no", "upgradeForLooter", "inspect")
     assertEqual(est.args[1], 610)
     assertNil(est.args[2])
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: the looter unknown is unknown noInspect, carrying the inspect reason", function()
     local TR = load()
@@ -143,7 +146,7 @@ test("trade rules: the looter unknown is unknown noInspect, carrying the inspect
     local unknown = { verdict = "unknown", equip = "unknown", reasons = { { key = "noBaseline" } } }
     check(TR.Estimate(drop(), unknown, ctx("dungeon")), "unknown", "noInspect")
     check(TR.Estimate(drop(), { verdict = "downgrade", reasons = {} }, ctx("dungeon")), "unknown", "noInspect")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: an estimate has no expiresAt; only the own-item timer sets one", function()
     local TR = load()
@@ -165,12 +168,12 @@ test("trade rules: past the rule's window the drop is no expired", function()
     check(TR.Estimate(drop(), nil, ctx("dungeon", 15000)), "no", "expired")
     check(TR.Estimate(drop(), looter(9), ctx("dungeon", 15000)), "no", "expired")
     check(TR.Estimate(drop(), nil, ctx("raid", 15000, { rules = { raid = "group" } })), "no", "expired")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: at exactly the window the drop has not expired", function()
     local TR = load()
     check(TR.Estimate(drop(), looter(-5), ctx("dungeon", 14400)), "likely", "notUpgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: with no clock or no drop time there is no expiry check", function()
     local TR = load()
@@ -178,14 +181,14 @@ test("trade rules: with no clock or no drop time there is no expiry check", func
     noClock.now = nil
     check(TR.Estimate(drop(), looter(-5), noClock), "likely", "notUpgrade")
     check(TR.Estimate(drop(), looter(-5), ctx("dungeon", 9000, { droppedAt = "x" })), "likely", "notUpgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: binds and legacy are decided before the window", function()
     local TR = load()
     check(TR.Estimate(drop({ warbound = true }), nil, ctx("dungeon", 9000)), "no", "warbound")
     check(TR.Estimate(drop({ bonusRoll = true }), nil, ctx("raid", 9000)), "no", "bonusRoll")
     check(TR.Estimate(drop(), nil, ctx("pvp", 9000)), "no", "legacy")
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- the rule per situation and the owner override (spec §7.3)
@@ -199,7 +202,7 @@ test("trade rules: each situation's default rule is its `trade.rules` default, r
         assertFalse(overridden, s.key)
     end
     assertEqual(TR.RuleFor("raid"), "personal")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: the override map replaces a situation's rule", function()
     local TR = load()
@@ -213,7 +216,7 @@ test("trade rules: the override map replaces a situation's rule", function()
     check(TR.Estimate(drop(), looter(-2), ctx("pvp", 60, { rules = rules })), "likely", "notUpgrade")
     check(TR.Estimate(drop(), nil, ctx("followerDungeon", 60, { rules = { followerDungeon = "group" } })),
         "likely", "groupLoot")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: an override naming no rule, or equal to the default, is not an override", function()
     local TR = load()
@@ -224,7 +227,7 @@ test("trade rules: an override naming no rule, or equal to the default, is not a
     assertEqual(rule, "personal")
     assertFalse(overridden)
     assertEqual(TR.RuleFor("raid", "garbage"), "personal")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: an unknown or missing situation takes the default personal rule", function()
     local TR = load()
@@ -232,7 +235,7 @@ test("trade rules: an unknown or missing situation takes the default personal ru
     assertEqual(TR.RuleFor("nowhere", { nowhere = "group" }), "group")
     assertEqual(TR.RuleFor("nowhere"), "personal")
     check(TR.Estimate(drop(), looter(-1), ctx(nil)), "likely", "notUpgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: Reset clears the override map in place, restoring the defaults", function()
     local TR = load()
@@ -242,7 +245,7 @@ test("trade rules: Reset clears the override map in place, restoring the default
     assertEqual(TR.RuleFor("raid", rules), "personal")
     assertEqual(TR.RuleFor("pvp", rules), "legacy")
     assertNil(TR.Reset(nil))
-end)
+end, T.RETAIL_ONLY)
 
 test("trade rules: IsRule knows the three rule names and nothing else", function()
     local TR, C = load()
@@ -291,4 +294,50 @@ test("trade rules: a collectible keeps the bind and rule answers, and is unknown
     -- red under: the looter check run for a collectible (a `likely` claim an item level cannot back)
     check(TR.Estimate(drop(), looter(-20), ctx("raid", 60, col)), "unknown", "collectible", "rule")
     check(TR.Estimate(drop(), looter(-20), ctx("raid", 60)), "likely", "notUpgrade", "inspect", "gear unchanged")
+end, T.RETAIL_ONLY)
+
+-- ---------------------------------------------------------------------------------------------
+-- the Forever trade model (Forever port design §4.6, O2, O5): on WoW Forever a looted Bind on
+-- Pickup item is soulbound, with no trade window, so only a BoE drop changes hands. Retail keeps
+-- its three rules and its four-hour window (clients-§6: each profile asserts its own answer).
+-- ---------------------------------------------------------------------------------------------
+
+test("trade rules: on Forever a BoP drop is no soulbound with basis bind", function()
+    local TR, C, rules = load()
+    if not T.forever then
+        assertEqual(table.concat(C.TRADE_RULE_NAMES, ","), "personal,group,legacy", "Retail's three rules")
+        assertEqual(C.TRADE_RULE_DEFAULT, "personal")
+        assertFalse(TR.IsRule("soulbound"), "not a rule on Retail")
+        for _, s in ipairs(C.SITUATIONS) do assertTrue(rules[s.key] ~= "soulbound", s.key) end
+        check(TR.Estimate(drop(), looter(-5), ctx("dungeon")), "likely", "notUpgrade", "inspect", "Retail: personal loot")
+        return
+    end
+    assertEqual(table.concat(C.TRADE_RULE_NAMES, ","), "soulbound", "Forever's one rule")
+    assertEqual(C.TRADE_RULE_DEFAULT, "soulbound")
+    assertEqual(C.TRADE_RULES.soulbound.tradeable, false)
+    assertTrue(C.TRADE_RULES.soulbound.bopOnly)
+    for _, name in ipairs({ "personal", "group", "legacy" }) do assertFalse(TR.IsRule(name), name .. " is Retail's") end
+    for _, s in ipairs(C.SITUATIONS) do
+        assertEqual(rules[s.key], "soulbound", s.key .. "'s default")
+        assertEqual(TR.RuleFor(s.key, { [s.key] = "personal" }), "soulbound", s.key .. ": a Retail rule is no override")
+        for _, args in ipairs({ { looter(-5), 60 }, { nil, 60 }, { looter(13), 60 }, { looter(-5), 99999 } }) do
+            local est = TR.Estimate(drop(), args[1], ctx(s.key, args[2]))
+            check(est, "no", "soulbound", "bind", s.key)
+            assertEqual(est.rule, "soulbound", s.key)
+        end
+        check(TR.Estimate(drop(), looter(-20), ctx(s.key, 60, { collectible = true })), "no", "soulbound", "bind",
+            s.key .. ": a collectible BoP is soulbound too")
+    end
+    check(TR.Estimate(drop(), nil, ctx(nil)), "no", "soulbound", "bind", "an unknown situation takes the default")
+end)
+
+test("trade rules: on Forever a BoE drop is yes boe", function()
+    local TR, C = load()
+    for _, s in ipairs(C.SITUATIONS) do
+        for _, bind in ipairs({ B.ON_EQUIP, B.ON_USE }) do
+            local est = TR.Estimate(drop({ bindType = bind }), looter(20), ctx(s.key, 99999))
+            check(est, "yes", "boe", "bind", s.key .. " bind " .. bind)
+            assertEqual(est.rule, TR.RuleFor(s.key), s.key)
+        end
+    end
 end)

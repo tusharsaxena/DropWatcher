@@ -8,6 +8,11 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
+-- The countdown and its warning are Retail's alone (Forever port design §4.4, clients-§4): on WoW
+-- Forever nothing Bind on Pickup can be traded. Every case of the countdown is a declared skip on
+-- the forever profile; the last case asserts each client's own answer (clients-§6).
+local function retailTest(name, fn) test(name, fn, T.RETAIL_ONLY) end
+
 local BRAKK = "Player-1-0000000A"
 local LINE_TYPE = 36    -- the mock's Enum.TooltipDataLineType.TradeTimeRemaining
 local SENTENCE = "You may trade this item with players that were also eligible to loot this item for the next %s."
@@ -85,7 +90,7 @@ end
 -- Reading the timer
 -- ---------------------------------------------------------------------------------------------
 
-test("read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID", function()
+retailTest("read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), "1 hour 59 min")
     local e = TT.ForDrop(id)
@@ -104,7 +109,7 @@ test("read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by
     assertEqual(TT.Remaining(e), 5400, "one further off is taken")
 end)
 
-test("read: the sentence on a line of another type is still the timer (the text fallback)", function()
+retailTest("read: the sentence on a line of another type is still the timer (the text fallback)", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), nil)
     m.tooltips.bag["0:1"] = tradeLine("2 hrs", 99)    -- the client tagged it with another type
@@ -113,7 +118,7 @@ test("read: the sentence on a line of another type is still the timer (the text 
     assertEqual(TT.Remaining(TT.ForDrop(id)), 7200)
 end)
 
-test("decoder: without the line type, the localized sentence is decoded with the client's globals", function()
+retailTest("decoder: without the line type, the localized sentence is decoded with the client's globals", function()
     local NS, m, TT = setup()
     m.Enum.TooltipDataLineType.TradeTimeRemaining = nil
     m.BIND_TRADE_TIME_REMAINING = "Ihr könnt diesen Gegenstand in den nächsten %s mit anderen Spielern handeln."
@@ -126,7 +131,7 @@ test("decoder: without the line type, the localized sentence is decoded with the
     assertEqual(TT.Remaining(TT.ForDrop(id)), 3900)
 end)
 
-test("read: no timer line (bound, or the window gone) means no: expired, never live", function()
+retailTest("read: no timer line (bound, or the window gone) means no: expired, never live", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), nil)
     local e = TT.ForDrop(id)
@@ -136,7 +141,7 @@ test("read: no timer line (bound, or the window gone) means no: expired, never l
     assertNil(TT.TickerPeriod(), "nothing live, no ticker")
 end)
 
-test("read: a BoE drop has no timer line and no window: permanent, never expired, never live", function()
+retailTest("read: a BoE drop has no timer line and no window: permanent, never expired, never live", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590, 2))    -- Enum.ItemBind.OnEquip
     local id = NS.LootFeed.Add(link(300))
@@ -154,7 +159,7 @@ end)
 -- Matching bag items to your drops
 -- ---------------------------------------------------------------------------------------------
 
-test("match: by exact link first, then by item id; each drop takes one item", function()
+retailTest("match: by exact link first, then by item id; each drop takes one item", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590))
     local a = NS.LootFeed.Add(link(300))
@@ -167,7 +172,7 @@ test("match: by exact link first, then by item id; each drop takes one item", fu
     assertEqual(TT.LiveCount(), 2)
 end)
 
-test("match: an item that is none of your drops, and another member's drop, are not timed", function()
+retailTest("match: an item that is none of your drops, and another member's drop, are not timed", function()
     local NS, m, TT = setup()
     m.setGroup({ { guid = BRAKK, name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
     NS.Roster.Refresh("test")
@@ -180,7 +185,7 @@ test("match: an item that is none of your drops, and another member's drop, are 
     assertNil(next(TT.Entries()))
 end)
 
-test("match: test drops are never timed", function()
+retailTest("match: test drops are never timed", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590))
     NS.LootFeed.Add(link(300), nil, { test = true })
@@ -190,7 +195,7 @@ test("match: test drops are never timed", function()
     assertNil(next(TT.Entries()))
 end)
 
-test("match: an item that left the bags drops its entry; a moved one keeps it", function()
+retailTest("match: an item that left the bags drops its entry; a moved one keeps it", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), "1 hour")
     local e = TT.ForDrop(id)
@@ -208,7 +213,7 @@ end)
 -- The scan's triggers and throttle
 -- ---------------------------------------------------------------------------------------------
 
-test("scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds", function()
+retailTest("scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds", function()
     local NS, m, TT = setup()
     ownDrop(NS, m, link(300), "1 hour")    -- the DropAdded scan
     local scans = NS.State.tradeTimer.scans
@@ -231,7 +236,7 @@ end)
 -- The ticker
 -- ---------------------------------------------------------------------------------------------
 
-test("ticker: slow while the window is hidden, fast while it is shown, off when nothing is live", function()
+retailTest("ticker: slow while the window is hidden, fast while it is shown, off when nothing is live", function()
     local NS, m, TT = setup()
     local seen = listen(NS)
     ownDrop(NS, m, link(300), "1 hour")
@@ -255,7 +260,7 @@ test("ticker: slow while the window is hidden, fast while it is shown, off when 
     assertEqual(tickers(m), 0)
 end)
 
-test("ticker: a second live item shares the one ticker", function()
+retailTest("ticker: a second live item shares the one ticker", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590))
     NS.LootFeed.Add(link(300))
@@ -274,7 +279,7 @@ end)
 -- The warning
 -- ---------------------------------------------------------------------------------------------
 
-test("warn: once per item at the threshold, with TradeTimerExpiring and one chat line", function()
+retailTest("warn: once per item at the threshold, with TradeTimerExpiring and one chat line", function()
     local NS, m, TT = setup()
     local seen = listen(NS)
     local id = ownDrop(NS, m, link(300), "11 min 40 sec")    -- 700s
@@ -296,7 +301,7 @@ test("warn: once per item at the threshold, with TradeTimerExpiring and one chat
     assertEqual(printed(m, "left to trade it."), 1)
 end)
 
-test("warn: an item first read below the threshold warns at once; warnAt 0 turns it off", function()
+retailTest("warn: an item first read below the threshold warns at once; warnAt 0 turns it off", function()
     local NS, m, TT = setup()
     local seen = listen(NS)
     local id = ownDrop(NS, m, link(300), "5 min")
@@ -316,7 +321,7 @@ end)
 -- Secrets and the stand-down
 -- ---------------------------------------------------------------------------------------------
 
-test("secrets: a secret bag link, GUID or tooltip text is never used", function()
+retailTest("secrets: a secret bag link, GUID or tooltip text is never used", function()
     local NS, m, TT = setup()
     m.issecretvalue = T.isSecret
     m.canaccessvalue = function(v) return not T.isSecret(v) end
@@ -332,7 +337,7 @@ test("secrets: a secret bag link, GUID or tooltip text is never used", function(
     assertTrue(TT.ForDrop(id).expired, "an unreadable line is no timer")
 end)
 
-test("stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again", function()
+retailTest("stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again", function()
     local NS, m, TT = setup()
     local seen = listen(NS)
     local id = ownDrop(NS, m, link(300), "5 min")
@@ -346,4 +351,33 @@ test("stand-down: the ticker and the scan stop, the entries are kept; the stand-
     m.advance(2)
     assertEqual(TT.TickerPeriod(), 60, "rescanned and ticking")
     assertEqual(#seen.expiring, 1, "the warned flag survived: no second warning")
+end)
+
+-- clients-§6: on WoW Forever the bag match still runs (the feed reads your drop's level, quality
+-- and link from its bag item) but no countdown does: the entry is permanent, as a BoE's is.
+test("trade timer: not running on Forever", function()
+    local NS, m, TT = setup()
+    local seen = listen(NS)
+    local id = ownDrop(NS, m, link(300), "5 min")
+    local e = TT.ForDrop(id)
+    assertTrue(e ~= nil, "matched to its bag item on both clients")
+    if not T.forever then
+        assertTrue(TT.Initialized())
+        assertFalse(e.permanent); assertEqual(TT.Remaining(e), 300)
+        assertEqual(TT.TickerPeriod(), 60, "counting down")
+        assertEqual(#seen.expiring, 1, "warned")
+        assertTrue(NS.SchemaRuntime.FindRow("trade.warnAt") ~= nil, "the warning's row")
+        return
+    end
+    assertFalse(TT.Initialized())
+    assertTrue(e.permanent, "no window to count down"); assertFalse(e.expired); assertNil(e.expiresAt)
+    assertEqual(TT.LiveCount(), 0)
+    m.__fire("BAG_UPDATE_DELAYED")
+    m.advance(5)
+    assertNil(TT.TickerPeriod(), "no ticker"); assertEqual(tickers(m), 0)
+    assertEqual(#seen.expiring, 0, "no warning"); assertEqual(printed(m, "left to trade it"), 0)
+    assertNil(NS.SchemaRuntime.FindRow("trade.warnAt"), "no warning row")
+    local rec = NS.LootFeed.Get(id)
+    assertEqual(rec.trade.reasonKey, "soulbound", "the timer folds nothing in")
+    assertEqual(rec.trade.basis, "bind")
 end)

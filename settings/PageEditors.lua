@@ -126,6 +126,10 @@ local SIT_TABLE_W = 576   -- the table's right edge: the Loot rule cell's, plus 
 -- Published for the suite (tests/test_settings_pages.lua holds the fit).
 P.SIT_COL, P.SIT_TABLE_W = SIT_COL, SIT_TABLE_W
 P.SIT_WIDTHS = { quality = SIT_QUALITY_W, rule = SIT_RULE_W }
+-- The Loot rule column is Retail's alone (C.FEATURE_CLIENTS.tradeRuleRows): WoW Forever has one
+-- rule, `soulbound`, and no `trade.rules.<situation>` row (Forever port design §4.4).
+local RULE_COLUMN = K.FEATURE.tradeRuleRows == true
+P.SIT_RULE_COLUMN = RULE_COLUMN
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
 -- The colors are the skin's (the table is a raw frame the page owns, built once a session, so each
 -- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in
@@ -159,8 +163,10 @@ local function paintSituations(t)
         r.autoOpen:SetDisabled(not e.autoOpen.enabled)
         r.quality:SetValue(e.quality.value)
         r.quality:SetDisabled(not e.quality.enabled)
-        r.rule:SetValue(e.rule.value)
-        r.rule:SetDisabled(not e.rule.enabled)
+        if r.rule then
+            r.rule:SetValue(e.rule.value)
+            r.rule:SetDisabled(not e.rule.enabled)
+        end
     end
 end
 
@@ -240,7 +246,7 @@ local function situationSlot(t, i, key)
         track = situationCheck(t, rf, SIT_COL.track, base .. "track"),
         autoOpen = situationCheck(t, rf, SIT_COL.autoOpen, base .. "autoOpen"),
         quality = situationPick(t, rf, base .. "quality", SIT_COL.quality, SIT_QUALITY_W),
-        rule = situationPick(t, rf, "trade.rules." .. key, SIT_COL.rule, SIT_RULE_W),
+        rule = RULE_COLUMN and situationPick(t, rf, "trade.rules." .. key, SIT_COL.rule, SIT_RULE_W) or nil,
     }
 end
 
@@ -260,7 +266,7 @@ end
 -- repaints each in the new skin, or hands it back stock when the Scope's Ignore settings panel is
 -- turned on (a refused PaintAce restores what this owner painted).
 local situationTables = setmetatable({}, { __mode = "k" })
-local CELLS = { "track", "autoOpen", "quality", "rule" }
+local CELLS = { "track", "autoOpen", "quality", RULE_COLUMN and "rule" or nil }
 
 local function repaintSituationCells()
     for t in pairs(situationTables) do
@@ -282,7 +288,7 @@ local function buildSituationTable(ctx)
         situationHeader(t.host, SIT_COL.track, L["Track"]),
         situationHeader(t.host, SIT_COL.autoOpen, L["Auto-open"]),
         situationHeader(t.host, SIT_COL.quality, L["Quality"]),
-        situationHeader(t.host, SIT_COL.rule, L["Loot rule"]),
+        RULE_COLUMN and situationHeader(t.host, SIT_COL.rule, L["Loot rule"]) or nil,
     }
     for i, s in ipairs(K.SITUATIONS) do t.rows[i] = situationSlot(t, i, s.key) end
     return t

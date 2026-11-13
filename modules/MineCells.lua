@@ -127,7 +127,7 @@ end
 local NO_SHORT = {
     bonusRoll = L["Bonus roll"], warbound = L["Warbound"], legacy = L["Legacy loot"],
     expired = L["Window passed"], upgradeForLooter = L["Your upgrade"], upgradeForYou = L["Your upgrade"],
-    badFacts = L["Not loaded"],
+    badFacts = L["Not loaded"], soulbound = L["Soulbound"],
 }
 -- Another player's drop says whose upgrade it is in the same room.
 local NO_SHORT_THEIRS = { upgradeForLooter = L["Their upgrade"] }

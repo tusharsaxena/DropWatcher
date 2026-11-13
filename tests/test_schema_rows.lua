@@ -62,10 +62,13 @@ local function profileDefault(NS, path)
 end
 
 -- The Retail-only rows (Forever port design §4.4, clients-§4): the transmog opt-in and template, the
--- off-spec template and every row of the off-spec glow. Each carries `clients = { "retail" }`.
+-- off-spec template, every row of the off-spec glow, the trade timer's warning and every
+-- situation's loot rule (WoW Forever has one rule, `soulbound`, §4.6). Each carries
+-- `clients = { "retail" }`.
 local function retailOnlyRow(path)
     return path == "messages.transmogAsk" or path == "messages.templates.transmog"
         or path == "messages.templates.askOffSpec" or path:match("^glow%.offSpec%.") ~= nil
+        or path == "trade.warnAt" or path:match("^trade%.rules%.") ~= nil
 end
 
 -- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
@@ -87,7 +90,8 @@ test("settings: no Retail-only row on the Forever panel", function()
     end
     local glowKeys = 0
     for _ in pairs(NS.C.PROFILE.glow.main) do glowKeys = glowKeys + 1 end
-    assertEqual(seen, retail and (3 + glowKeys) or 0, "the declared rows")
+    -- Three messaging rows, the off-spec glow's, the warning and Retail's ten loot rules.
+    assertEqual(seen, retail and (3 + glowKeys + 1 + 10) or 0, "the declared rows")
     for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         assertTrue(retail or not retailOnlyRow(row.path or ""), "the Alerts page")
     end
@@ -96,7 +100,11 @@ end)
 test("rows: every spec §12.1 setting has a row", function()
     local NS = T.newAddon()
     for _, path in ipairs(specPaths()) do
-        assertTrue(NS.SchemaRuntime.FindRow(path) ~= nil, path)
+        if T.forever and retailOnlyRow(path) then   -- clients-§6: absent where not declared
+            assertNil(NS.SchemaRuntime.FindRow(path), path .. " is Retail's alone")
+        else
+            assertTrue(NS.SchemaRuntime.FindRow(path) ~= nil, path)
+        end
     end
 end)
 
@@ -140,8 +148,9 @@ test("rows: a value outside a row's list or range is refused and stores nothing"
     assertFalse(S.Set("messages.announceChannel", "SAY"), "never say or yell")
     assertFalse(S.Set("messages.autoAsk.delay", 2), "the delay is 3 to 30 seconds")
     assertFalse(S.Set("messages.templates.ask", "  "), "an empty template is refused")
-    assertFalse(S.Set("trade.rules.raid", "bogus"))
     assertFalse(S.Set("window.columns.slot", "no"))
+    if T.forever then return end   -- the loot rule rows are Retail's alone (Forever port design §4.4)
+    assertFalse(S.Set("trade.rules.raid", "bogus"))
     assertTrue(S.Set("trade.rules.raid", "group"))
     assertEqual(p.trade.rules.raid, "group")
 end)
@@ -192,16 +201,20 @@ end)
 test("rows: the feed, the situations and the messaging edge read the rows", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
-    S.Set("trade.rules.dungeon", "group")
+    if not T.forever then S.Set("trade.rules.dungeon", "group") end
     S.Set("feed.minIlvlMode", "absolute")
     S.Set("situations.openWorldGroup.track", true)   -- off its default (untracked)
     S.Set("situations.raid.quality", "dynamicSlot")
     S.Set("messages.oneAsk", false)
     S.Set("messages.announceChannel", "RAID")
-    S.Set("trade.warnAt", 120)
+    if not T.forever then S.Set("trade.warnAt", 120) end
     local cfg = NS.LootFeed.Config()
-    assertEqual(cfg.rules.dungeon, "group")
-    assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
+    if T.forever then   -- no rule rows: every situation reads its one default, soulbound
+        assertEqual(cfg.rules.dungeon, "soulbound"); assertEqual(cfg.rules.pvp, "soulbound")
+    else
+        assertEqual(cfg.rules.dungeon, "group")
+        assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
+    end
     assertEqual(cfg.minIlvlMode, "absolute")
     assertTrue(NS.Situations.IsTracking("openWorldGroup"))
     assertEqual(NS.Situations.QualityOverride("raid"), "dynamicSlot")
@@ -210,7 +223,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertFalse(a.oneAsk)
     assertEqual(a.announceChannel, "RAID")
     assertEqual(a.templates.ask, NS.C.PROFILE.messages.templates.ask)
-    assertEqual(NS.TradeTimer.WarnAt(), 120)
+    assertEqual(NS.TradeTimer.WarnAt(), T.forever and NS.C.PROFILE.trade.warnAt or 120)
 end)
 
 -- DW-CAT2 (issue #13, categories design spec §5.1): one Item kinds switch per category, in

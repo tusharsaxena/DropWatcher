@@ -157,8 +157,15 @@ test("diagnostics: the trade section shows the timers, the ticker and each entry
     m.tooltips.bag["0:1"] = { lines = { { type = 36, leftText = m.BIND_TRADE_TIME_REMAINING:format("1 hour") } } }
     m.advance(0)
     local text = report(NS)
-    assertTrue(text:find("trade: timers live=1 expired=0 boe=0 scans=1 ticker=60s", 1, true) ~= nil, text)
     assertTrue(text:find("trade: drop " .. id .. " ", 1, true) ~= nil, text)
+    if T.forever then   -- the bag match alone: no countdown there (Forever port design §4.4)
+        assertTrue(text:find("trade: no countdown on this client (bag match only)", 1, true) ~= nil, text)
+        assertTrue(text:find("trade: timers live=0 expired=0 boe=1 scans=1 ticker=off", 1, true) ~= nil, text)
+        assertTrue(text:find("left=0s expired=false boe=true warned=false guid=Item-1-0001", 1, true) ~= nil, text)
+        return
+    end
+    assertTrue(text:find("trade: no countdown", 1, true) == nil, text)
+    assertTrue(text:find("trade: timers live=1 expired=0 boe=0 scans=1 ticker=60s", 1, true) ~= nil, text)
     assertTrue(text:find("left=3600s expired=false boe=false warned=false guid=Item-1-0001", 1, true) ~= nil, text)
 end)
 

@@ -22,6 +22,11 @@ local _, NS = ...
 -- rule's legacy, expired and group-loot answers; only the looter check, which an item level cannot
 -- answer for a mount or a recipe, is `unknown collectible` (basis `rule`) instead.
 --
+-- WoW Forever (Forever port design §4.6): its one rule, `soulbound` (`bopOnly`), answers every drop
+-- the bind checks did not (anything not BoE) `no soulbound`, basis `bind`: a looted Bind on Pickup
+-- item is soulbound there, with no trade window, so LootFeed.FoldTimer passes it through untouched.
+-- The rule names are the client's own (C.TRADE_RULE_NAMES): a Retail rule is no override there.
+--
 -- It NEVER THROWS: garbage in answers `unknown` with a reason, and the public entry point runs
 -- under pcall as the last line of defense.
 
@@ -48,9 +53,13 @@ end
 -- The rule per situation and the owner override (spec §7.3)
 -- ---------------------------------------------------------------------------------------------
 
---- True when `name` is one of the rule names (C.TRADE_RULES).
+-- The client's rule names as a set (C.TRADE_RULE_NAMES, picked once per client).
+local RULE_SET = {}
+for _, name in ipairs(C.TRADE_RULE_NAMES) do RULE_SET[name] = true end
+
+--- True when `name` is one of this client's rule names (C.TRADE_RULE_NAMES).
 function TR.IsRule(name)
-    return type(name) == "string" and C.TRADE_RULES[name] ~= nil
+    return type(name) == "string" and RULE_SET[name] == true
 end
 
 local function defaultRule(situation)
@@ -132,6 +141,7 @@ local function estimate(facts, looterEval, ctx)
     local ruleName = TR.RuleFor(ctx.situation, ctx.rules)
     local rule = C.TRADE_RULES[ruleName]
     local out = bindCheck(facts)
+    if not out and rule.bopOnly then out = result("no", "soulbound", "bind") end
     if not out and rule.tradeable == false then out = result("no", "legacy", "rule") end
     out = out or expiryCheck(rule, ctx)
     if not out and rule.ilvlRule == "none" then out = result("likely", "groupLoot", "rule") end

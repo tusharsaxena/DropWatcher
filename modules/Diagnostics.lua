@@ -333,6 +333,8 @@ local function trade(out)
         out:add(TAG, "trade helper: opens=%s refused=%s last=%s", th.opens, th.refused,
             th.lastReason or "none")
     end
+    -- WoW Forever: the bag match alone, every entry permanent (Forever port design §4.4).
+    if not NS.TradeTimer.Initialized() then out:add(TAG, "trade: no countdown on this client (bag match only)") end
     local st = NS.TradeTimer.Stats()
     if not st then return out:add(TAG, "trade: no scan yet") end
     out:add(TAG, "trade: timers live=%s expired=%s boe=%s scans=%s ticker=%s", st.live, st.expired,

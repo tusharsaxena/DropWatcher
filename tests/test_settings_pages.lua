@@ -9,7 +9,7 @@
 -- strip's button.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
@@ -188,7 +188,9 @@ test("situations: five gold, left-aligned column headers, and a stripe on every 
         local r, g, b = fs:GetTextColor()
         assertTrue(r > 0.8 and g > 0.7 and b < 0.5, "gold")
     end
-    assertEqual(table.concat(names, "|"), "Situation|Track|Auto-open|Quality|Loot rule")
+    -- The Loot rule column is Retail's alone (Forever port design §4.4): Forever has one rule.
+    assertEqual(table.concat(names, "|"), T.forever and "Situation|Track|Auto-open|Quality"
+        or "Situation|Track|Auto-open|Quality|Loot rule")
     for i, r in ipairs(t.rows) do
         assertEqual(r.stripe:IsShown() == true, i % 2 == 0, "stripe on line " .. i)
         assertEqual(r.label.__template, "GameFontHighlightSmall")
@@ -212,16 +214,20 @@ test("situations: the five columns fit beside the panel's scroll gutter, Loot ru
     assertTrue(C.quality + W.quality < C.rule, "the Quality dropdown ends before Loot rule starts")
     assertTrue(C.rule + W.rule <= P.SIT_TABLE_W, "the Loot rule dropdown ends inside the table")
     assertTrue(P.SIT_TABLE_W <= 600, "the table fits the ~600 units the panel leaves beside its gutter")
-    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width.
+    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width. WoW
+    -- Forever draws no Loot rule column (Forever port design §4.4).
     local _, _, t = whenToShow(NS, m)
-    for i, k in ipairs(order) do
+    local drawn = T.forever and { "situation", "track", "autoOpen", "quality" } or order
+    assertEqual(#t.headers, #drawn)
+    for i, k in ipairs(drawn) do
         local x = t.headers[i].__points[1][4]   -- the mock's regions record their points
         assertEqual(x, C[k], k .. "'s header sits over its cells")
     end
     local row = t.rows[1]
-    for _, k in ipairs({ "quality", "rule" }) do
+    for _, k in ipairs(T.forever and { "quality" } or { "quality", "rule" }) do
         assertEqual(row[k].width, W[k], k .. " dropdown width")   -- the kit's AceGUI fake records it
     end
+    if T.forever then assertNil(row.rule, "no Loot rule cell") end
 end)
 
 -- Each situation's table line, per client (Forever port design §4.4: WoW Forever has its five), and
@@ -246,10 +252,14 @@ test("situations: each cell paints its stored value, and a toggle writes its pat
     assertEqual(NS.addon.db.profile.situations[FIRST].quality, "dynamicSlot")
     t.rows[1].autoOpen:__fire("OnValueChanged", false)
     assertEqual(NS.addon.db.profile.situations[FIRST].autoOpen, false)
-    assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
-    assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
-    t.rows[1].rule:__fire("OnValueChanged", "group")
-    assertEqual(NS.addon.db.profile.trade.rules[FIRST], "group")
+    if T.forever then   -- one rule, so no Loot rule cell (Forever port design §4.4)
+        assertNil(t.rows[1].rule)
+    else
+        assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
+        assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
+        t.rows[1].rule:__fire("OnValueChanged", "group")
+        assertEqual(NS.addon.db.profile.trade.rules[FIRST], "group")
+    end
     NS.SchemaRuntime.Set("situations.raid.track", false)
     assertEqual(t.rows[LINE.raid].track.value, false, "a write from elsewhere repaints it")
 end)
@@ -264,13 +274,13 @@ test("situations: an untracked situation's Auto-open, Quality and Loot rule are 
     assertFalse(pvp.track.disabled == true, "Track is always live")
     assertTrue(pvp.autoOpen.disabled == true, "pvp (untracked) auto-open dimmed")
     assertTrue(pvp.quality.disabled == true, "and its quality")
-    assertTrue(pvp.rule.disabled == true, "and its loot rule")
-    assertFalse(mp.rule.disabled == true, "a tracked one's is live")
+    assertTrue(T.forever or pvp.rule.disabled == true, "and its loot rule")
+    assertTrue(T.forever or mp.rule.disabled ~= true, "a tracked one's is live")
     assertEqual(select(1, pvp.label:GetTextColor()), 0.5, "its label dims")
     Set("situations.pvp.track", true)
     assertFalse(pvp.autoOpen.disabled == true, "tracking it lights it")
     assertFalse(pvp.quality.disabled == true)
-    assertFalse(pvp.rule.disabled == true)
+    assertTrue(T.forever or pvp.rule.disabled ~= true)
     assertEqual(select(1, pvp.label:GetTextColor()), 0.86)
     Set("autoOpen", false)
     -- red under: a disabled rule that reads the situation's track alone
@@ -353,7 +363,10 @@ end)
 test("situations: the per-situation rows are still schema rows, skipRender, with no subsection", function()
     local NS = T.enableAddon()
     for _, s in ipairs(NS.Constants.SITUATIONS) do
-        local paths = { "trade.rules." .. s.key }
+        -- The loot rule's row is Retail's alone (Forever port design §4.4).
+        local paths = {}
+        if not T.forever then paths[1] = "trade.rules." .. s.key end
+        if T.forever then assertNil(NS.SchemaRuntime.FindRow("trade.rules." .. s.key), s.key .. "'s loot rule") end
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do paths[#paths + 1] = "situations." .. s.key .. "." .. f end
         for _, path in ipairs(paths) do
             local row = NS.SchemaRuntime.FindRow(path)
@@ -379,9 +392,14 @@ test("situations: the pure rows carry each situation's label, values and live ce
     assertEqual(list[1].label, NS.WindowFooter.SituationLabel(FIRST))
     assertEqual(list[1].track.path, "situations." .. FIRST .. ".track")
     assertEqual(list[1].quality.value, "global")
-    assertEqual(list[1].rule.path, "trade.rules." .. FIRST)
-    assertEqual(list[1].rule.value, "personal")
-    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled and list[1].rule.enabled)
+    if T.forever then   -- no Loot rule column (Forever port design §4.4)
+        assertNil(list[1].rule)
+    else
+        assertEqual(list[1].rule.path, "trade.rules." .. FIRST)
+        assertEqual(list[1].rule.value, "personal")
+        assertTrue(list[1].rule.enabled)
+    end
+    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled)
     -- track x global auto-open: Auto-open is live only with both on; Quality with the track on.
     local cases = { { true, true, true, true }, { true, false, false, true },
                     { false, true, false, false }, { false, false, false, false } }
@@ -394,7 +412,7 @@ test("situations: the pure rows carry each situation's label, values and live ce
         assertTrue(d.track.enabled, tag .. " track always live")
         assertEqual(d.autoOpen.enabled, c[3], tag .. " auto-open")
         assertEqual(d.quality.enabled, c[4], tag .. " quality")
-        assertEqual(d.rule.enabled, c[4], tag .. " loot rule")
+        if not T.forever then assertEqual(d.rule.enabled, c[4], tag .. " loot rule") end
     end
 end)
 
@@ -864,7 +882,9 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")
-    assertTrue(find(drawn, "Slider", "Mark a trade window ending within (seconds)") ~= nil, "Trade › Timers' slider")
+    -- The ending-soon mark is Retail's alone: WoW Forever has no countdown (Forever port design §4.4).
+    assertEqual(find(drawn, "Slider", "Mark a trade window ending within (seconds)") ~= nil, not T.forever,
+        "Trade › Timers' slider")
     drawn = tab(m, ctx, "Starting view")
     for _, label in ipairs({ "Interesting", "Likely tradeable", "Usable by me", "Upgrade for me" }) do
         assertTrue(find(drawn, "CheckBox", label) ~= nil, label)
@@ -876,7 +896,9 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
         assertEqual(tip:sub(-#tail), tail, key)
     end
     assertTrue(find(drawn, "Dropdown", "Content") ~= nil and find(drawn, "Dropdown", "Sort") ~= nil)
-    assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
+    if not T.forever then
+        assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
+    end
     assertEqual(NS.SchemaRuntime.FindRow("feed.view.likely").page, "window")
 end)
 
@@ -885,10 +907,14 @@ end)
 test("pages: a page's Defaults resets that page's rows and no other page's", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
+    -- A Window page row, and the loot rules: the warning and the rules are Retail's alone (Forever
+    -- port design §4.4), so Forever takes Row height and has no rule to reset.
+    local winPath, winValue = "trade.warnAt", 120
+    if T.forever then winPath, winValue = "window.rowHeight", 30 end
     Set("feed.categories.mount", false)
-    Set("trade.warnAt", 120)
+    assertTrue(Set(winPath, winValue))
     Set("situations.pvp.track", true)   -- off its default (PvP is untracked by default)
-    Set("trade.rules.raid", "group")
+    if not T.forever then Set("trade.rules.raid", "group") end
     Set("autoOpen", false)
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
     local ctx = open(NS, m, "feed")
@@ -898,7 +924,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     assertEqual(NS.Setting("situations.pvp.track"), NS.C.PROFILE.situations.pvp.track, "the situations table reset")
     assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")
     assertEqual(NS.Setting("autoOpen"), NS.C.PROFILE.autoOpen, "and the global auto-open")
-    assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
+    assertEqual(NS.Setting(winPath), winValue, "Window's row untouched")
     local cctx = open(NS, m, "comparison")
     cctx.panel.defaultsOnClick()
     assertTrue(next(NS.Setting("comparison.weights")) == nil, "the weights map reset whole")

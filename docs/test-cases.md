@@ -1435,7 +1435,7 @@ Total.
 - situations: difficulty 242 is a raid on Forever
 - situations: the keystone events serve Retail alone
 
-### test_trade_rules.lua (24)
+### test_trade_rules.lua (26)
 
 - trade rules: a warbound or account-bound drop is no warbound
 - trade rules: a bonus roll is no bonusRoll, and warbound wins over it
@@ -1461,6 +1461,8 @@ Total.
 - trade rules: nil and garbage inputs never throw
 - trade rules: bad facts are unknown badFacts
 - trade rules: a collectible keeps the bind and rule answers, and is unknown collectible otherwise
+- trade rules: on Forever a BoP drop is no soulbound with basis bind
+- trade rules: on Forever a BoE drop is yes boe
 
 ### test_messaging.lua (26)
 
@@ -1702,7 +1704,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (53)
+### test_feed.lua (54)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1711,6 +1713,7 @@ Total.
 - feed: a looter who leaves before any read reads not in your group
 - feed: an upgrade for the looter cannot be traded under the personal rule
 - feed: a bonus roll is never tradeable
+- feed: on Forever a BoP drop shows no Ask, no Offer, no toast, no glow, not in tradeables
 - dedupe: chat, the encounter loot event and the loot history report one drop
 - dedupe: the encounter event first, chat second, merges the same way
 - dedupe: a looter the roster cannot place is matched by name without the realm
@@ -1861,7 +1864,7 @@ Total.
 - filter bar: Drops keeps every drop under any Character choice it offers
 - filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's
 
-### test_trade_timer.lua (16)
+### test_trade_timer.lua (17)
 
 - read: your drop's TradeTimeRemaining line gives its exact expiry, keyed by item GUID
 - read: the sentence on a line of another type is still the timer (the text fallback)
@@ -1879,6 +1882,7 @@ Total.
 - warn: an item first read below the threshold warns at once; warnAt 0 turns it off
 - secrets: a secret bag link, GUID or tooltip text is never used
 - stand-down: the ticker and the scan stop, the entries are kept; the stand-up scans again
+- trade timer: not running on Forever
 
 ### test_trade_helper.lua (6)
 
@@ -2731,7 +2735,7 @@ Total.
 | test_scoring.lua | 22 |
 | test_quality_gate.lua | 26 |
 | test_situations.lua | 17 |
-| test_trade_rules.lua | 24 |
+| test_trade_rules.lua | 26 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
@@ -2741,14 +2745,14 @@ Total.
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 53 |
+| test_feed.lua | 54 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
 | test_char_filter.lua | 20 |
-| test_trade_timer.lua | 16 |
+| test_trade_timer.lua | 17 |
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 29 |
 | test_transmog.lua | 14 |
@@ -2790,4 +2794,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2304** |
+| **Total** | **2308** |

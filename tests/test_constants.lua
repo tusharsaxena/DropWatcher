@@ -289,14 +289,19 @@ test("constants: the trade rules are the spec §7.2 table, and every situation h
     assertEqual(c.TRADE_RULES.group.window, 14400)
     assertEqual(c.TRADE_RULES.group.ilvlRule, "none")
     assertEqual(c.TRADE_RULES.legacy.tradeable, false)
+    assertEqual(c.TRADE_RULES.soulbound.tradeable, false)
+    assertEqual(c.TRADE_RULES.soulbound.bopOnly, true)
     for _, s in ipairs(c.SITUATIONS) do
         local rule = rules[s.key]
         assertTrue(c.TRADE_RULES[rule] ~= nil, s.key .. " -> " .. tostring(rule))
     end
     assertEqual(#keysOf(rules), #c.SITUATIONS)
+    if T.forever then   -- WoW Forever: every situation's rule is soulbound (Forever port design §4.6)
+        for _, s in ipairs(c.SITUATIONS) do assertEqual(rules[s.key], "soulbound", s.key) end
+        return
+    end
     assertEqual(rules.raid, "personal")
     assertEqual(rules.pvp, "legacy")
-    if T.forever then return end   -- WoW Forever has no follower dungeon or Mythic+ (design §4.4)
     assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.mythicPlus, "personal")
 end)
@@ -313,7 +318,9 @@ test("constants: the bind ids are Enum.ItemBind's, and the trade bind sets name 
     assertTrue(c.TRADE_BOE_BIND[c.BIND.ON_EQUIP] and c.TRADE_BOE_BIND[c.BIND.ON_USE])
     assertEqual(#keysOf(c.TRADE_ACCOUNT_BIND), 3)
     assertTrue(c.TRADE_BOE_BIND[c.BIND.ON_ACQUIRE] == nil and c.TRADE_ACCOUNT_BIND[c.BIND.ON_ACQUIRE] == nil)
-    assertEqual(#c.TRADE_RULE_NAMES, #keysOf(c.TRADE_RULES))
+    -- The rule names are per client (clients-§5); every one has its data, and the default is first.
+    assertEqual(table.concat(c.TRADE_RULE_NAMES, ","), T.forever and "soulbound" or "personal,group,legacy")
     for _, name in ipairs(c.TRADE_RULE_NAMES) do assertTrue(c.TRADE_RULES[name] ~= nil, name) end
-    assertEqual(c.TRADE_RULES[c.TRADE_RULE_DEFAULT].ilvlRule, "notUpgradeForLooter")
+    assertEqual(c.TRADE_RULE_DEFAULT, c.TRADE_RULE_NAMES[1])
+    if not T.forever then assertEqual(c.TRADE_RULES[c.TRADE_RULE_DEFAULT].ilvlRule, "notUpgradeForLooter") end
 end)

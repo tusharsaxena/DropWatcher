@@ -105,7 +105,8 @@ local TRADE_CHIP = {
     yes = L["TRADEABLE"], likely = L["LIKELY TRADEABLE"], unknown = L["TRADE UNKNOWN"], no = L["NOT TRADEABLE"],
 }
 local TRADE_TONE = WC.TRADE_TONE   -- the Trade column's tones (No red, feedback-7 spec §2)
-local RULE_WORD = { personal = L["personal loot"], group = L["group loot"], legacy = L["legacy loot"] }
+local RULE_WORD = { personal = L["personal loot"], group = L["group loot"], legacy = L["legacy loot"],
+    soulbound = L["bind on pickup"] }
 local BASIS_WORD = { bind = L["the item's bind"], rule = L["the content's rule"], inspect = L["inspect"], timer = L["your bag's timer"] }
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
@@ -588,10 +589,11 @@ function DC.TradeBox(drop, situationLabel)
             meta = L["The estimate is made once the item's details load."], tip = cell.tip }
     end
     -- The Trade cell's tooltip (the reason as rows, the read's age, the basis), so the box and the
-    -- row never disagree; your own drop's basis is your bag's timer.
+    -- row never disagree; your own drop's basis is your bag's timer, where there is one (Retail's
+    -- alone: WoW Forever has no trade timer, Forever port design §4.4).
     local tip = {}
     for i, l in ipairs(cell.tip) do tip[i] = l end
-    if drop.isMine then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
+    if drop.isMine and C.FEATURE.tradeTimer then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
     -- The cell's Can't use (a Yes or Likely none of your specs can use, feedback-21) is the chip's
     -- too, so the chip agrees with its tooltip and with the row; the reason stays the trade's.
     local face = { text = TRADE_CHIP[t.state], tone = TRADE_TONE[t.state] }

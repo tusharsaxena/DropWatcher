@@ -357,6 +357,7 @@ local TRADE_REASON = {
     boe = function() return L["Bind on equip: anyone can trade this."] end,
     warbound = function() return L["Warbound: it can't be traded."] end,
     bonusRoll = function() return L["Bonus roll loot can't be traded."] end,
+    soulbound = function() return L["Bind on Pickup items can't change hands once looted."] end,   -- WoW Forever
     legacy = function() return L["Loot from this content can't be traded."] end,
     groupLoot = function() return L["Group loot: its winner may trade it for four hours."] end,
     badFacts = function() return L["The item's details have not loaded yet."] end,
@@ -406,6 +407,7 @@ local TRADE_ROWS = {
     boe = function() return ruleRows(L["bind on equip"], L["Tradeable"], L["by anyone, until equipped"]) end,
     warbound = function() return ruleRows(L["warbound"], L["Tradeable"], L["no"]) end,
     bonusRoll = function() return ruleRows(L["bonus roll loot"], L["Tradeable"], L["no"]) end,
+    soulbound = function() return ruleRows(L["bind on pickup"], L["Tradeable"], L["no"]) end,
     legacy = function() return ruleRows(L["legacy loot"], L["Tradeable"], L["no"]) end,
     groupLoot = function() return ruleRows(L["group loot"], L["Tradeable"], L["by its winner, for 4h"]) end,
     badFacts = function() return { row(L["Item"], L["details not loaded yet"]) } end,
@@ -480,6 +482,7 @@ local TRADE_SHORT = {
     groupLoot = L["Group loot"], badFacts = L["Not loaded"], expired = L["Window passed"],
     timer = L["Window open"], notUpgrade = L["Not their upgrade"], upgradeForYou = L["Your upgrade"],
     noInspect = L["Not inspected"], error = L["Failed"], collectible = L["Collectible"],
+    soulbound = L["Soulbound"],
 }
 WC.TRADE_SHORT = TRADE_SHORT   -- read-only, for the test that sizes the Trade column
 
