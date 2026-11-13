@@ -2,12 +2,21 @@
 
 ## The green commit gate
 
-Both MUST pass before every commit (testing-§4):
+All three MUST pass before every commit (testing-§4). Drop Watcher is `Retail · Forever` (the
+roster's Clients column, clients-§2), so the headless suite runs under both kit profiles, and a
+suite green on one and red on the other is a failing suite (clients-§6):
 
 ```sh
-lua tests/run.lua                               # the headless suite, Lua 5.1
+lua tests/run.lua                               # the headless suite, Lua 5.1, the Retail profile (the default)
+KA0S_KIT_CLIENT=forever lua tests/run.lua       # the same suite as WoW Forever (1.60.1, interface 16001)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .  # 0 warnings / 0 errors
 ```
+
+A per-client feature has a case on each profile, present where `docs/ARCHITECTURE.md`'s per-client
+feature table declares it and absent where not; a case takes its expectation from
+`NS.Compat.ClientKey()` (or `T.forever`). The Forever run skips the cases that pin a Retail-only
+feature's own behavior. The TOC's Forever number arms the kit's missing-globals gate
+(`test_client_globals`) for the `forever` name set as well as `live`.
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
 census in [`ARCHITECTURE.md`](ARCHITECTURE.md). Toolchain: [`DEPENDENCIES.md`](../DEPENDENCIES.md).
@@ -16,7 +25,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 46, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 54, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -691,7 +700,8 @@ The offline perf scenario `insightsCompute` (`lua tests/perf.lua`, [`performance
 
 `lua tests/run.lua --list` prints the case inventory; it is committed as
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
-the change that moves the count (testing-§5).
+the change that moves the count (testing-§5). Both are the default (Retail) profile's run; the
+Forever run lists the same cases and skips more of them.
 
 ## Members only the suites call
 
@@ -707,6 +717,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `DCard.Editor` (`modules/DetailCard.lua`) | reaches the private Edit message box |
 | `Host.IsSimGUID` (`modules/Sim.lua`) | reads the running simulation's private GUID set |
 | `E.Configure` (`modules/SimEvents.lua`) | shortens a simulated trade window |
+| `S.ScoreFor` (`modules/Scoring.lua`) | reads one item's score and how its scale or weights were chosen (`tree`, `bestOfClass`, `custom`, `none`), the WoW Forever scorer's choice (DW-FP07) |
 | `W.SetMember`, `W.BagItems` (`modules/SimWorld.lua`) | marks a simulated member, reads the simulated bag |
 | `Sit.LastInputs` (`modules/Situations.lua`) | reads what the edge last classified |
 | `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |
@@ -718,7 +729,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
 | `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
-| `tests` | `lua tests/run.lua` | **gates** | gates |
+| `tests` | `lua tests/run.lua` (the runner's run, the Retail profile; the commit gate adds `KA0S_KIT_CLIENT=forever lua tests/run.lua`) | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0, and no crashed run (a crashed or bounded lizard run is a fail, its files listed as crashedFiles) |
 

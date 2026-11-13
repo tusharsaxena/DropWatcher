@@ -100,10 +100,19 @@ button goes through the host handler its slash verb shares.
 Drop Watcher serves Retail and WoW Forever. These features serve one client (Forever port design
 §4.4); every other feature serves both. A declaration is `clients = { ... }` on the row, the event
 row or the seed list; `C.FEATURE_CLIENTS` (`core/Constants.lua`) names the Retail-only features
-DW-FP10 and DW-FP11 gate, and `C.FEATURE` holds each one's `ForClient` answer, read once.
+DW-FP10 and DW-FP11 gate, and `C.FEATURE` holds each one's `ForClient` answer, read once. A row
+marked **Each its own** is a feature both clients have in their own shape, picked once by
+`ClientKey()` (clients-§5), never a filtered Retail list.
 
 | Feature | Client | Gated in |
 |---|---|---|
+| The default skin: Ka0s Default on Retail, WoW Forever on Forever (`NS.DEFAULT_SKIN = Skin:DefaultSkin()`, skinning-§2, DW-FP03) | Each its own | `core/SkinSetup.lua`, `defaults/Profile.lua` (`skin.skin`) |
+| Character names: `Name-Realm` on Retail, the whole name (first name and surname, no realm) on Forever (`Compat.UnitCharacterName`, `Compat.CharacterKey`, client-quirks-§5, DW-FP04) | Each its own | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` (sim names per client) |
+| The class data: Retail's classes and specs; Forever's nine classes keyed `"<classFile>:<tree>"` by talent tree, armor by level (`CD.ArmorFor`, plate or mail from 40, reason `armorLevel`) and the soft stat gate (`CD.STAT_GATE`, DW-FP05) | Each its own | `core/ClassData.lua`, `core/ClassDataForever.lua` (the list picked at load), `modules/Evaluate.lua` (the stat and armor gates) |
+| The ranged slot plan: on Retail a bow, gun, crossbow or wand fills both hands; on Forever slot 18 (`C.SLOT.RANGED`) holds ranged and thrown weapons, wands and relics, and the snapshot and the inspect read it (DW-FP06) | Each its own | `core/Constants.lua` (`SLOT_PLAN_RANGED` per client, joined into `C.SLOT_PLAN`), `modules/Gear.lua`, `modules/Inspect.lua` |
+| Pawn and your weights: by spec on Retail; on Forever by talent tree (Pawn's Classic scale per tree, the best of the class's scales for a looter, weights keyed `"<classFile>:<tree>"`, the class list's `PAWN_BY_TREE`, DW-FP07) | Each its own | `core/Compat.lua` (`PawnScaleForSpec`, `PawnVisibleScale`, `PawnClassScales`), `modules/Scoring.lua`, `settings/Editors.lua`, `settings/PageEditors.lua` (the weights strip's trees) |
+| Score-first verdicts: `opts.verdictMode` is `ilvlFirst` on Retail and `scoreFirst` on Forever (the score decides, item level breaks a tie within 1%, `noScore` falls back to item level; the verdict's `led` says which decided, and a score-led upgrade passes the toast's and auto-ask's least gain, DW-FP08) | Each its own | `modules/LootFeed.lua` (`LF.VERDICT_MODE`), `modules/Evaluate.lua` (`decide`), `modules/Toast.lua`, `modules/AutoAsk.lua`, `modules/Asks.lua` (`{mygain}`), `modules/WindowCells.lua` (`VERDICT_MEANS`) |
+| Test mode's and the simulator's seeds: Forever's nine classes, its places and its history samples (DW-FP09) | Each its own | `modules/TestData.lua`, `modules/SimScenario.lua`, `modules/SimRoster.lua` (seed lists per client) |
 | Mythic+, delves, follower dungeons, Raid Finder, scenarios: their situations, rows and sim scenarios | Retail | `core/Constants.lua` (`C.SITUATIONS`, `C.DIFFICULTY_KIND`), `defaults/Profile.lua`, `modules/SimScenario.lua` (seed lists per client) |
 | `CHALLENGE_MODE_START`, `CHALLENGE_MODE_COMPLETED` and the keystone header | Retail | `modules/Situations.lua`, `modules/LootFeed.lua`, `modules/Asks.lua`, `modules/WindowCompact.lua` (event rows) |
 | `PLAYER_SPECIALIZATION_CHANGED` | Retail | `modules/Gear.lua` (event row) |

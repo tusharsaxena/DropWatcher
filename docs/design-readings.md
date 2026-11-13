@@ -14,6 +14,16 @@ follows. With the spec unknown, an item whose primary stat suits only some of th
 is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
 an ilvl and a score that agree in sign give that sign, so one inside its band and the other
 outside is a sidegrade (`scoreDisagrees`); the band is in item levels, so the score's band is 0.
+That is `opts.verdictMode = "ilvlFirst"`, Retail's and the default. WoW Forever's is `"scoreFirst"`
+(Forever port design §4.5), set once by client in the feed (`LootFeed.VERDICT_MODE`, read into
+`evalOpts`): the score's sign decides, so a lower item level with a higher score is an upgrade;
+a score within 1% of the worn item's (`|scoreDelta| <= 0.01 * wornScore`) is a tie, and item level
+decides it by `sidegradeBand`; with no score, item level decides and the reasons carry `noScore`.
+Under `scoreFirst` a compared verdict carries `led`, `"score"` or `"ilvl"`, naming which one
+decided (nil under `ilvlFirst`): the toast's and auto-ask's least gain are in item levels, so they
+apply only to an item-level-led verdict, and a score-led upgrade with no item-level gain fills
+`{mygain}` with `a score upgrade`. The verdict tooltip's Means row has Forever's own words for the
+three compared verdicts (`VERDICT_MEANS`, `modules/WindowCells.lua`).
 A candidate whose class is not known yet is `unknown` (`unknownClass`), even for a
 class-restricted item. The track delta orders tracks by a numeric `tier` from ItemFacts and
 falls back to the enUS track names, so a localized name with no tier leaves it unset. Bows
@@ -346,7 +356,8 @@ The toast (DW-52, `modules/Toast.lua`) settles what design spec §11.5 leaves op
 is the item-level change for you (`me.ilvlDelta`), as the `toast.minGain` row says, whatever the
 scorer; an upgrade into an empty slot has no change to measure and clears any least gain (DW-62:
 spec §5.2 makes it an upgrade, so it is the clearest case), reading `empty` where the gain would
-go; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
+go; on WoW Forever a score-led upgrade (`led = "score"`, the verdict kernel's `scoreFirst`) clears
+it too, since the least gain is in item levels; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
 each `DropUpdated` until it has toasted, so one whose trade turns `likely` after the looter's
 inspect still toasts. **The queue** keeps the newest five; a drop asked for meanwhile, gone from the
 feed or no longer qualifying is skipped when its turn comes. **Combat** holds the queue until
@@ -379,7 +390,8 @@ reads right in game is FEED-66.
 Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What qualifies** is the
 toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the item-level change for you,
 whatever the scorer (an empty slot clears any least gain, and the ask's `{mygain}` then reads
-`an empty-slot upgrade`, never the drop's item level, which is no gain), never your own drop, and an upgrade
+`an empty-slot upgrade`, never the drop's item level, which is no gain; on WoW Forever a score-led
+upgrade clears it too, its `{mygain}` reading `a score upgrade` when its item level is no higher), never your own drop, and an upgrade
 only, so it always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
 considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns `likely`
 after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never scheduled again that

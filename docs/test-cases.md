@@ -8,12 +8,14 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_harness.lua (12)
+### test_harness.lua (14)
 
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
 - harness: every adopted LibKa0s module is the live library, not its stub
-- toc: the fixed field order, a single Retail Interface line and the X-Standard field
+- toc: the fixed field order, the Retail and Forever Interface line and the X-Standard field
+- toc: the Forever number arms the kit's missing-globals scan for both clients
+- readme: the dual-client WoW badge and the supported-clients sentence open the page
 - toc: the icon is the 128x128 logo, and the file exists
 - toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
 - toc: no Conventional comment states the order of handlers on a shared event (toc-file-§5)
@@ -2676,7 +2678,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_harness.lua | 12 |
+| test_harness.lua | 14 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
@@ -2795,4 +2797,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2309** |
+| **Total** | **2311** |

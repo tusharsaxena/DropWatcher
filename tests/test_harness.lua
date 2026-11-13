@@ -61,13 +61,17 @@ end)
 
 -- ── the TOC ─────────────────────────────────────────────────────────────────────────────────
 
-test("toc: the fixed field order, a single Retail Interface line and the X-Standard field", function()
+test("toc: the fixed field order, the Retail and Forever Interface line and the X-Standard field", function()
     local fields, lines = tocFields()
     local order = {}
     for i, kv in ipairs(fields) do order[i] = kv[1] end
     assertEqual(table.concat(order, ","), "Interface,Title,Notes,Author,Version,IconTexture,"
         .. "SavedVariables,OptionalDeps,DefaultState,Category-enUS,X-License,X-Standard,X-Curse-Project-ID")
-    assertEqual(field(fields, "Interface"), "120105")
+    -- Retail · Forever (clients-§2, toc-file-§3): one unsuffixed TOC with both numbers and no load-gating
+    -- line. red under: the Retail number alone, or an AllowLoadGameType / ExcludeLoadGameType line
+    assertEqual(field(fields, "Interface"), "120105, 16001")
+    assertTrue(field(fields, "AllowLoadGameType") == nil and field(fields, "ExcludeLoadGameType") == nil,
+        "no load-gating line on a Retail · Forever addon")
     assertEqual(field(fields, "Title"), "Ka0s Drop Watcher")
     assertEqual(field(fields, "X-Standard"), "https://github.com/tusharsaxena/WowAddonStandards")
     assertEqual(field(fields, "SavedVariables"), "DropWatcherDB, DropWatcherPerfDB")
@@ -79,6 +83,23 @@ test("toc: the fixed field order, a single Retail Interface line and the X-Stand
     local fh = assert(io.open(T.root .. "/README.md", "rb"))
     local readme = fh:read("*a"); fh:close()
     assertTrue(readme:find("img.shields.io/curseforge/v/1748054", 1, true) ~= nil, "the README's CurseForge badge")
+end)
+
+test("toc: the Forever number arms the kit's missing-globals scan for both clients", function()
+    local CG = dofile(T.root .. "/tests/_kit/client_globals.lua")
+    -- red under: `## Interface: 120105` alone (the scan checks live only)
+    assertEqual(table.concat(CG.clientsFromToc(read("DropWatcher.toc")), ","), "live,forever")
+end)
+
+test("readme: the dual-client WoW badge and the supported-clients sentence open the page", function()
+    local readme = read("README.md"):gsub("\r", "")
+    -- documentation-§1 (v2.103.0): both clients and both numbers on the badge, then one plain sentence
+    -- at the start of the description. red under: the Midnight-only badge or the port-pending sentence
+    assertTrue(readme:find("![WoW](https://img.shields.io/badge/WoW-Midnight_12.1.5_and_Forever_1.60.1-purple)",
+        1, true) ~= nil, "the dual-client badge")
+    local body = readme:match("\n\n([^!#\n][^\n]*)")
+    assertTrue(body ~= nil and body:find("^Supports Retail and WoW Forever%. ") ~= nil, tostring(body))
+    assertTrue(readme:find("WoW Forever support is planned", 1, true) == nil, "no port-pending sentence left")
 end)
 
 test("toc: the icon is the 128x128 logo, and the file exists", function()
