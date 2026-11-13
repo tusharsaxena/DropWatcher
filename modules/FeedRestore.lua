@@ -89,8 +89,9 @@ function FR.Pick(groups, start, current, max, cleared)
 end
 
 --- One pick as LootFeed.Restore's receipt: `looter` = { name, guid, classFile, isSelf } (the guid
---- given by the caller), the entry's epoch turned into the client clock, and its History group's
---- place as the drop's group spec.
+--- given by the caller), the entry's epoch turned into the client clock, its History group's
+--- place as the drop's group spec, and its kept roll table read back (`roll`, History.RollTable:
+--- the restored drop's Rolls box, Forever port design §5.4).
 --- @param pick table FR.Pick's
 --- @param looter table
 --- @param epochNow number time()
@@ -101,6 +102,7 @@ function FR.Receipt(pick, looter, epochNow, clockNow)
     return {
         link = e.itemLink, itemID = e.itemID, qty = 1, kind = "loot", source = "restore", force = true,
         looter = looter, at = clockNow - (epochNow - (num(e.at) or epochNow)), situation = g.situation,
+        roll = NS.History.RollTable(e.rolls),
         group = { key = pick.feedKey, label = g.label, kind = g.kind, instance = g.instance,
             difficulty = g.difficulty, roster = NS.GroupRoster.Copy(g.roster) },
     }

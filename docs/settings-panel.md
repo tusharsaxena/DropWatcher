@@ -239,8 +239,8 @@ feedback-5 spec §2; schema step 6 removes the stored value.)
 
 **Rolls** (Forever port design §5.3, DW-FP15; both clients): **Show rolls** (`rolls.show`: the Drops
 tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
-off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`,
-read by History from DW-FP16) and **Mark the roll popup** (`rolls.popupMark`, read by the popup mark
+off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`:
+a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`, read by the popup mark
 from DW-FP20), all on by default. A change repaints the shown window.
 
 ## Comparison

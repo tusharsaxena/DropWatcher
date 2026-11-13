@@ -120,7 +120,7 @@ button and profiles reach them as any row.
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
 | `rolls.show` | `true` | Rolls | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
-| `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (DW-FP16 reads it) |
+| `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (the entry's `rolls`) |
 | `rolls.popupMark` | `true` | Rolls | your verdict on the game's roll popup (DW-FP20 reads it) |
 
 ### Comparison
@@ -287,7 +287,8 @@ history = { retentionDays = 30, v = 1, groups = {
           me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
                  reasonKey? }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
-          askedAt?, offeredAt?, settledAt?, got? } } } } }
+          askedAt?, offeredAt?, settledAt?, got?,
+          rolls? = { at, allPassed, n, w, r = { { name, class, s, n? }, ... } } } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
@@ -343,6 +344,14 @@ history = { retentionDays = 30, v = 1, groups = {
   no `settledAt`, and `NS.History.WasAsked` / `WasOffered` read it as asked (someone else's drop
   received) or offered (your drop traded away). No migration step: the fields are optional and
   additive, and `v` stays 1.
+- `rolls` (Forever port design §5.4, DW-FP16) is a group-loot drop's final roll table, kept while
+  `rolls.keep` is on: `r` one row per player in the roll cells' order (the winner first), at most
+  40 (`NS.History.ROLL_ROWS`), each its name, classFile (`class`), state number (`s`, 0 Need to
+  5 Pass) and roll number (`n`, none for a pass); `w` the winner's place in `r`; `n` every player
+  who rolled, the rows cut or not; `at` the `time()` it was kept. No GUIDs. It lands with the drop
+  or on the later merge that attaches it (that change sends `HistoryChanged`);
+  `NS.History.RollTable` reads it back for the History card's Rolls box and the drop a reload
+  restores. Additive, `v` stays 1.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all

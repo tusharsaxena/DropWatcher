@@ -728,3 +728,96 @@ test("history trade: a completed trade stamps settledAt, and `got` keeps the pre
     assertEqual(e.got.verdict, "upgrade"); assertEqual(e.got.ilvlDelta, 10)
     assertFalse(NS.History.WasAsked(e), "received with no ask sent")
 end)
+
+-- ── rolls kept (Forever port design §5.4, DW-FP16) ──────────────────────────────────────────
+
+-- A won roll table as NS.Compat.LootHistoryRolls answers it: Brakk won with Need 87, Doom Dock
+-- (a Forever two-word name) rolled Greed 50, Ann passed.
+local function wonRoll()
+    return { link = link(500), key = 7, startTime = 100, duration = 60, allPassed = false, isTied = false,
+        winner = { name = "Brakk", guid = "Player-1-0000000A", classFile = "WARRIOR", roll = 87 },
+        rolls = {
+            { name = "Ann", guid = "Player-1-0000000C", classFile = "PRIEST", state = 5 },
+            { name = "Doom Dock", guid = "Player-1-0000000B", classFile = "MAGE", state = 3, roll = 50 },
+            { name = "Brakk", guid = "Player-1-0000000A", classFile = "WARRIOR", state = 0, roll = 87, isWinner = true },
+        } }
+end
+
+local function hasGuid(t)
+    for k, v in pairs(t) do
+        if k == "guid" or (type(v) == "string" and v:find("^Player%-")) then return true end
+        if type(v) == "table" and hasGuid(v) then return true end
+    end
+    return false
+end
+
+test("history: a rolled drop keeps rolls { at, allPassed, n, w, r } with no GUIDs", function()
+    local NS = T.newAddon()
+    local Hi = NS.History
+    local e = Hi.Snapshot(rec({ roll = wonRoll() }), 1234, true)
+    local r = e.rolls
+    assertEqual(type(r), "table", "the roll table is kept")
+    assertEqual(r.at, 1234); assertEqual(r.allPassed, false); assertEqual(r.n, 3); assertEqual(r.w, 1)
+    assertEqual(#r.r, 3)
+    assertEqual(r.r[1].name, "Brakk"); assertEqual(r.r[1].class, "WARRIOR"); assertEqual(r.r[1].s, 0)
+    assertEqual(r.r[1].n, 87)
+    assertEqual(r.r[2].name, "Doom Dock", "a two-word name kept whole"); assertEqual(r.r[2].s, 3)
+    assertEqual(r.r[2].n, 50)
+    assertEqual(r.r[3].name, "Ann"); assertEqual(r.r[3].s, 5); assertNil(r.r[3].n, "a pass has no number")
+    assertFalse(hasGuid(r), "no GUIDs kept")
+    assertNil(Hi.Snapshot(rec(), 1, true).rolls, "a drop with no roll keeps none")
+    -- The kept table reads back as a plain roll table the roll cells draw.
+    local back = Hi.RollTable(r)
+    assertEqual(back.winner.name, "Brakk"); assertEqual(back.winner.roll, 87)
+    assertTrue(back.rolls[1].isWinner); assertEqual(back.count, 3)
+    local plain = NS.RollCells.Summary(back).text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertEqual(plain, "Won by Brakk (Need 87)")
+    assertNil(Hi.RollTable(nil)); assertNil(Hi.RollTable({ r = "broken" }))
+end)
+
+test("history: 50 rollers keep 40 rows and n = 50", function()
+    local Hi = H()
+    local roll = { allPassed = false, rolls = {} }
+    for i = 1, 50 do
+        roll.rolls[i] = { name = "P" .. i, guid = "Player-1-" .. i, classFile = "MAGE", state = 3, roll = i + 10 }
+    end
+    roll.rolls[1].isWinner = true   -- the lowest number won (win protection above it)
+    roll.winner = { name = "P1", guid = "Player-1-1", classFile = "MAGE", roll = 11 }
+    local e = Hi.Snapshot(rec({ roll = roll }), 1, true)
+    assertEqual(#e.rolls.r, Hi.ROLL_ROWS); assertEqual(Hi.ROLL_ROWS, 40)
+    assertEqual(e.rolls.n, 50, "every roller counted")
+    assertEqual(e.rolls.r[e.rolls.w].name, "P1", "the winner is among the rows kept")
+    -- A restored table (40 rows, its count) keeps the same snapshot: nothing moves.
+    local again = { roll = Hi.RollTable(e.rolls) }
+    local _, moved = Hi.Refresh(e, rec(again), 99, true)
+    assertFalse(moved, "the restored table is the kept one")
+    assertEqual(e.rolls.n, 50); assertEqual(e.rolls.at, 1, "its time stands")
+end)
+
+test("history: the roll arriving after the entry fires HistoryChanged", function()
+    local NS, m, seen, byId = enabled({ rec() })
+    added(NS, 1)
+    assertEqual(seen.changed, 1)
+    assertNil(NS.History.EntryOf(1).rolls)
+    -- red under: takeSnaps not comparing the roll (a merge that attaches it changes nothing kept)
+    byId[1] = rec({ roll = wonRoll() })
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "source")
+    assertEqual(seen.changed, 2, "the roll landing is a change")
+    local kept = NS.History.EntryOf(1).rolls
+    assertEqual(kept.n, 3); assertEqual(kept.at, m.time())
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 1, "inspect")
+    assertEqual(seen.changed, 2, "the same table again changes nothing")
+end)
+
+test("history: rolls.keep off keeps no rolls", function()
+    local NS, _, seen, byId = enabled({ rec({ roll = wonRoll() }), rec({ id = 2 }) })
+    assertTrue(NS.SchemaRuntime.Set("rolls.keep", false))
+    added(NS, 1); added(NS, 2)
+    assertNil(NS.History.EntryOf(1).rolls, "recorded with no roll table")
+    local before = seen.changed
+    byId[2] = rec({ id = 2, roll = wonRoll() })
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, 2, "source")
+    assertNil(NS.History.EntryOf(2).rolls, "nor taken when it lands later")
+    assertEqual(seen.changed, before)
+    assertNil(NS.History.Snapshot(rec({ roll = wonRoll() }), 1, false).rolls, "the pure half too")
+end)

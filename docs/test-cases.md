@@ -595,7 +595,7 @@ Total.
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
 
-### test_history_card.lua (15)
+### test_history_card.lua (16)
 
 - history card: the header's chips name slot, type, item level and the outcome in its tone
 - history card: For you is the verdict then, with its deltas, marked at the time
@@ -612,6 +612,7 @@ Total.
 - history card: Show in Drops selects the Drops tab, opens the drop's header and expands its card
 - history card: compact cards expand the stacked card under the clicked card
 - history card: the stacked card's actions fit one line at the compact width
+- history card: shows the rolls rows
 
 ### test_compact_chrome.lua (28)
 
@@ -1993,7 +1994,7 @@ Total.
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
 - transmog: no transmog template, row or event on Forever
 
-### test_history.lua (40)
+### test_history.lua (44)
 
 - history: Normalize gives the shape in place and keeps the retention row
 - history: Snapshot keeps the drop small: link, looter, verdicts, trade, `seen`
@@ -2035,6 +2036,10 @@ Total.
 - history: WasAsked and WasOffered read the stamps, the held outcomes and the legacy trades
 - history edge: a sent ask stamps askedAt, and a stamp with no advance still sends HistoryChanged
 - history trade: a completed trade stamps settledAt, and `got` keeps the pre-equip gain
+- history: a rolled drop keeps rolls { at, allPassed, n, w, r } with no GUIDs
+- history: 50 rollers keep 40 rows and n = 50
+- history: the roll arriving after the entry fires HistoryChanged
+- history: rolls.keep off keeps no rolls
 
 ### test_history_retention.lua (16)
 
@@ -2089,7 +2094,7 @@ Total.
 - insights stats: nothing in gives zeros and empty lists
 - insights stats: one pass: each reducer sees each row once
 
-### test_feed_restore.lua (14)
+### test_feed_restore.lua (15)
 
 - session: an initial login starts it now; a zone change moves nothing; a reload keeps it
 - session: with no stored value (a first run, a corrupt row) it is now, and it holds
@@ -2105,6 +2110,7 @@ Total.
 - restore: drops cleared from the Drops tab before the reload stay cleared
 - history: a live timer read undoes Expired; a rule estimate, declined and received do not
 - session: This instance survives a reload in the same instance, and only then
+- feed restore: a reload brings the roll table back
 
 ### test_content_tabs.lua (6)
 
@@ -2752,7 +2758,7 @@ Total.
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 23 |
 | test_compact_history.lua | 11 |
-| test_history_card.lua | 15 |
+| test_history_card.lua | 16 |
 | test_compact_chrome.lua | 28 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 51 |
@@ -2811,11 +2817,11 @@ Total.
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 29 |
 | test_transmog.lua | 14 |
-| test_history.lua | 40 |
+| test_history.lua | 44 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
 | test_insights_stats.lua | 16 |
-| test_feed_restore.lua | 14 |
+| test_feed_restore.lua | 15 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
 | test_window_insights.lua | 22 |
@@ -2849,4 +2855,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2347** |
+| **Total** | **2353** |

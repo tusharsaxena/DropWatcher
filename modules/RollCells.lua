@@ -182,7 +182,7 @@ local function summaryTip(roll, title, now)
     if roll.isTied then tip[#tip + 1] = row(L["Tied"], L["the highest rolls are equal"]) end
     local t = RC.Timer(roll, now)
     if t then tip[#tip + 1] = row(L["Time left"], t) end
-    tip[#tip + 1] = row(L["Players"], #(roll.rolls or {}))
+    tip[#tip + 1] = row(L["Players"], num(roll.count) or #(roll.rolls or {}))   -- a kept table's own tally
     return tip
 end
 
