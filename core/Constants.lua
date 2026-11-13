@@ -638,8 +638,11 @@ C.TRADE_RULES = {
 -- ---------------------------------------------------------------------------------------------
 
 -- The message kinds, in Settings › Messages' display order. Their default templates are
--- defaults/Profile.lua's `messages.templates`.
-C.MESSAGE_KINDS = { "ask", "offer", "announce" }
+-- defaults/Profile.lua's `messages.templates`. `askML` (Forever port design §6, both clients) is the
+-- polite whisper to the master looter for an item awaiting them: its own kind, because it goes to
+-- the master looter, is filed against a pending item (modules/PendingML.lua), not a feed drop, and
+-- auto-ask never sends it.
+C.MESSAGE_KINDS = { "ask", "offer", "announce", "askML" }
 -- The templates, in Settings › Messages' display order: one per kind, plus two more wordings of
 -- the ask, each sent as an `ask` and filed under the ask's one-ask key (NS.Messaging.AskTemplate
 -- picks them): `transmog`, for a drop that is no gain for you but whose appearance you have not
@@ -647,9 +650,10 @@ C.MESSAGE_KINDS = { "ask", "offer", "announce" }
 -- spec of your class gains from.
 -- One list per client, picked once (clients-§5): WoW Forever has no transmog and no off-spec
 -- (Forever port design §4.4), so it has neither of their templates.
+-- The master-loot ask's template follows the ask's wordings on both.
 local TEMPLATE_LISTS = {
-    retail  = { "ask", "transmog", "askOffSpec", "offer", "announce" },
-    forever = { "ask", "offer", "announce" },
+    retail  = { "ask", "transmog", "askOffSpec", "askML", "offer", "announce" },
+    forever = { "ask", "askML", "offer", "announce" },
 }
 C.MESSAGE_TEMPLATES = TEMPLATE_LISTS[FOREVER and "forever" or "retail"]
 -- The tokens a template may name, in the token chips' order, per client: WoW Forever has no

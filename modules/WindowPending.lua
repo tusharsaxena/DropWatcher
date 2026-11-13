@@ -15,7 +15,10 @@ local _, NS = ...
 -- WindowCells.Me over the item's `me`), the roll summary (NS.RollCells.Summary) and the time left
 -- (RollCells.Timer, on the loot history's clock); a master-loot item (modules/PendingML.lua) reads
 -- `Master looter: Name` and `awaiting master looter` there instead. A roll has no row action: the game's own popup is
--- where you roll (the master-loot ask arrives with its kind, DW-FP19). A click on the row expands
+-- where you roll. A master-loot item has the Ask master looter button (plan DW-FP19, WP.AskAction:
+-- the Ask button's looks in the `askML` ask's state, through NS.PressAskML), or the gray No action
+-- when the item is no upgrade or sidegrade for you; the button is made the first time a row or a
+-- card shows one, and hidden on a roll's. A click on the row expands
 -- its roll table inline under it (one at a time, session-only: NS.State.windowPending), as a drop
 -- row's detail card does. The compact layout's card (CompactGroup's PendingCard) says the same in
 -- four lines.
@@ -44,6 +47,7 @@ WP.LINE_H = 16       -- one player's line
 WP.COL_W = 190       -- one column of players
 WP.MAX_LINES = 10    -- the most lines a box takes before `and n more`
 WP.ME_W, WP.SUMMARY_W, WP.TIMER_W = 96, 280, 56   -- a row's columns after the item (the full layout)
+WP.ACTION_W = K.ASK_W                              -- and the master-loot ask's button, last
 WP.GAP = 8
 
 -- ── reading ─────────────────────────────────────────────────────────────────────────────────
@@ -90,9 +94,45 @@ end
 
 local function cellOf(text, tone, tip) return { text = text or "", tone = tone or "plain", tip = tip } end
 
+local USEFUL = { upgrade = true, sidegrade = true }   -- the verdicts the master-loot ask is offered for
+
+local function askTip(state, who, reason)
+    local WC, row = NS.WindowCells, NS.TipMarks.Row
+    local limit = row(L["Limit"], L["one per item"])
+    if state == "queued" then return L["Queued"], WC.WaitRows(state, who) end
+    if state == "sent" then return L["Asked"], row(L["To"], who), limit end
+    if state == "failed" then return L["Retry"], WC.WaitRows(state, who, reason) end
+    return L["Ask master looter"], row(L["Whispers"], who), row(L["Template"], L["your master-loot ask template"]), limit
+end
+
+--- A master-loot item's action (plan DW-FP19): the Ask button's look (NS.WindowCells.ASK_LOOK) in
+--- the `askML` ask's state, its tooltip naming the master looter; the gray No action when the item
+--- is no upgrade or sidegrade for you. Nil for any other item: a roll is rolled on the game's popup.
+--- @param item table a NS.Pending item
+--- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`)
+--- @param reason string|nil its reason
+--- @return table|nil { offered, text, icon, enabled, tip, state, kind = "askML" }
+function WP.AskAction(item, state, reason)
+    if type(item) ~= "table" or item.kind ~= "ml" then return nil end
+    local WC = NS.WindowCells
+    local v = type(item.me) == "table" and item.me.verdict or nil
+    if not USEFUL[v] then return WC.NoAction({ NS.TipMarks.Row(L["Why"], L["not an upgrade for you"]) }) end
+    local s = WC.ASK_LOOK[state] and state or "ready"
+    local look = WC.ASK_LOOK[s]
+    local who = type(item.ml) == "table" and item.ml.name or L["the master looter"]
+    return { offered = true, text = look.text, icon = look.icon, enabled = look.enabled, tip = { askTip(s, who, reason) },
+        state = s, kind = "askML" }
+end
+
+-- A master-loot item's action in its ask's live state; nil for a roll.
+local function actionOf(item)
+    if item.kind ~= "ml" then return nil end
+    return WP.AskAction(item, NS.Asks.StateOf("askML", NS.AskMLTargetOf(item), item.id))
+end
+
 --- What one pending item's row (or card) says: { item, me, summary, timer, action }. `now` is the
 --- loot history's clock; `classFile` your class (the verdict tooltip names you in it). `action` is
---- nil for a roll: nothing to press here.
+--- nil for a roll (nothing to press here), a master-loot item's WP.AskAction otherwise.
 --- @param item table a NS.Pending item
 --- @param now number|nil NS.Compat.LootHistoryNow()
 --- @param classFile string|nil
@@ -111,7 +151,7 @@ function WP.Model(item, now, classFile)
         summary = cellOf(name and L["Master looter: %s"]:format(name) or L["Master loot"], "muted", tip)
     end
     return { item = WC.Item(item), me = WC.Me(item, classFile), summary = summary or RC.Summary(item.roll, now, item.state),
-        timer = timer, action = nil }
+        timer = timer, action = actionOf(item) }
 end
 
 --- The section header's text and tooltip: `Rolling now (n)`.
@@ -127,10 +167,10 @@ end
 --- The x and width of a full-layout row's columns inside `width`: the item takes what the others
 --- leave, never under K.ITEM_MIN; the summary gives way first on a narrow window.
 --- @param width number the row's width
---- @return table { item, me, summary, timer = { x, w } }
+--- @return table { item, me, summary, timer, action = { x, w } }
 function WP.Columns(width)
     local lead = NS.WindowGroup.CHEVRON_LEAD
-    local fixed = WP.ME_W + WP.TIMER_W + 3 * WP.GAP
+    local fixed = WP.ME_W + WP.TIMER_W + WP.ACTION_W + 4 * WP.GAP
     local summary = max(80, min(WP.SUMMARY_W, width - lead - fixed - K.ITEM_MIN))
     local itemW = max(K.ITEM_MIN, width - lead - fixed - summary)
     local x = lead
@@ -141,6 +181,8 @@ function WP.Columns(width)
     out.summary = { x = x, w = summary }
     x = x + summary + WP.GAP
     out.timer = { x = x, w = WP.TIMER_W }
+    x = x + WP.TIMER_W + WP.GAP
+    out.action = { x = x, w = WP.ACTION_W }
     return out
 end
 
@@ -273,6 +315,40 @@ end
 
 local function rowClick(self) WP.ToggleExpand(self.pendingId) end
 
+--- The master-loot ask's button on a row or a card, made on first use: the Ask button's width and
+--- look, its press NS.PressAskML on the item it was painted for.
+--- @param parent table the row or the card
+--- @return table button
+function WP.AskButton(parent)
+    local b = parent.ask
+    if b then return b end
+    b = NS.Window.TextButton(parent, K.ASK_W, "chat", L["Ask"], function(self) NS.PressAskML(self.pendingId) end)
+    NS.Window.AttachTooltip(b, function() return tipOf(b) end, "row")
+    parent.ask = b
+    return b
+end
+
+--- Paint the ask's button from an action (WP.AskAction), or hide it with none (a roll).
+--- @param parent table the row or the card
+--- @param a table|nil
+--- @param id any the pending item's id
+--- @return table|nil the button, shown
+function WP.PaintAsk(parent, a, id)
+    if not a then
+        if parent.ask then parent.ask:Hide() end
+        return nil
+    end
+    local b = WP.AskButton(parent)
+    b.pendingId = id
+    NS.Window.SetButtonMark(b, a.text, a.icon)
+    b:SetEnabled(a.enabled)
+    b:SetAlpha(a.enabled and 1 or 0.6)
+    b.tipLines, b.state = a.tip, a.state
+    NS.WindowGroup.ToneButton(b, a.state, a.kind)
+    b:Show()
+    return b
+end
+
 local function textPiece(row, key)
     local f = CreateFrame("Frame", nil, row)
     f.text = faced(f)
@@ -343,6 +419,14 @@ function WP.PaintVerdict(f, c)
     f.text:SetPoint("LEFT", f.glyph, "RIGHT", c.glyph and 3 or 0, 0)
 end
 
+-- A master-loot item's Ask in the row's last column; hidden on a roll's row.
+local function placeAsk(row, model, item, cols)
+    local ask = WP.PaintAsk(row, model.action, item.id)
+    if not ask then return end
+    ask:ClearAllPoints()
+    ask:SetPoint("LEFT", row, "LEFT", cols.action.x, 0)
+end
+
 local function paintRow(row, item, model, cols, height, metrics)
     row.pendingId, row.item = item.id, item
     row:SetHeight(height)
@@ -352,11 +436,14 @@ local function paintRow(row, item, model, cols, height, metrics)
     NS.WindowRows.ApplyRowFont(row, metrics.fontSize, metrics.font)
     for key, at in pairs(cols) do
         local f = row.cells[key]
-        f:ClearAllPoints()
-        f:SetPoint("LEFT", row, "LEFT", at.x, 0)
-        f:SetSize(at.w, height)
-        f.text:SetWidth(max(at.w - (key == "item" and K.ROW_ICON + 5 or 0), 10))
+        if f then
+            f:ClearAllPoints()
+            f:SetPoint("LEFT", row, "LEFT", at.x, 0)
+            f:SetSize(at.w, height)
+            f.text:SetWidth(max(at.w - (key == "item" and K.ROW_ICON + 5 or 0), 10))
+        end
     end
+    placeAsk(row, model, item, cols)
     local c = row.cells
     NS.WindowGroup.SetItem(c.item.button, item.link)
     c.item.button.pendingId, c.item.button.dropId = item.id, nil

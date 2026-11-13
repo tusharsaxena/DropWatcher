@@ -10,11 +10,14 @@ local _, NS = ...
 -- the detail card's Edit message box (DW-32) reads Preview, which fills the template and sends nothing.
 --
 --   Request(kind, target, dropID, opts) -> state, reason
---     kind    "ask" | "offer" | "announce"
+--     kind    "ask" | "offer" | "announce" | "askML"
 --     target  a member's GUID, "Name-Realm" or bare name (the looter for an ask, the candidate for
---             an offer); ignored for an announce, whose registry target is "group"
---     dropID  the drop's id; Post my tradeables (DW-33, NS.PostTradeables) files each of its lines
---             under a key of its own instead, `post:<n>:<i>`, which names no drop (no token context)
+--             an offer, the master looter for an askML); ignored for an announce, whose registry
+--             target is "group"
+--     dropID  the drop's id; for an askML the pending item's (NS.Pending.Get, kind `ml`), whose
+--             ids are their own and may equal a feed drop's; Post my tradeables (DW-33,
+--             NS.PostTradeables) files each of its lines under a key of its own instead,
+--             `post:<n>:<i>`, which names no drop (no token context)
 --     opts    { text = edited text (the edit-first popup), ctx = token overrides }
 --     state   "sent" | "queued" | "failed" | "refused"; reason says why for the last two
 --
@@ -27,6 +30,14 @@ local _, NS = ...
 -- client without a sender fails `noApi`, an announce outside a group, or to a stored channel whose
 -- group is missing, fails `noChannel` (a stored PARTY, RAID or INSTANCE_CHAT is never sent blind,
 -- and a queued one is canceled once that group is gone); a failed ask may be retried.
+--
+-- THE MASTER-LOOT ASK (Forever port design §6, both clients). An `askML` whispers the master looter
+-- for an item awaiting them (modules/PendingML.lua): its token context is the pending item's (your
+-- gain as {mygain}, the master looter as {player}), and it is refused `noDrop` once the item no
+-- longer awaits, `isML` when you are the master looter and `noUpgrade` when the item is neither an
+-- upgrade nor a sidegrade for you. Sent, it marks the item asked (NS.Pending.NoteAskedML), which the
+-- drop it turns into carries to History; a queued one is canceled when its item closes
+-- (A.CancelFor). Auto-ask never sends it.
 --
 -- A COLLECTIBLE (issue #13) is feed-only: a request of any kind for a drop whose verdict for you is a
 -- collection verdict (NS.Collectibles.IsFeedOnly) is refused `collectible`, Press included.
@@ -157,6 +168,27 @@ local function isTest(rec)
     return State.testMode == true or (rec ~= nil and rec.test == true)
 end
 
+-- The record a request is filed against: an askML's pending item, any other kind's feed drop.
+local function recordOf(kind, id)
+    if id == nil then return nil end
+    if kind == "askML" then return NS.Pending.Get(id) end
+    return NS.LootFeed.Get(id)
+end
+
+-- The verdicts for you a master-loot ask is offered for.
+local USEFUL = { upgrade = true, sidegrade = true }
+
+-- Why a master-loot ask for pending item `rec` is refused, or nil: the item no longer awaits the
+-- master looter, you are the master looter (read live), or it is no upgrade or sidegrade for you.
+local function mlRefusal(rec)
+    if not (rec and rec.kind == "ml" and rec.state == "awaiting") then return "noDrop" end
+    local lm = not rec.test and NS.Compat.LootMethod() or nil
+    if lm and lm.isML then return "isML" end
+    local v = type(rec.me) == "table" and rec.me.verdict or nil
+    if not USEFUL[v] then return "noUpgrade" end
+    return nil
+end
+
 -- The whisper goes to the member's fullName (modules/Roster.lua): `Name-Realm` on Retail, the whole
 -- name "First Surname" on WoW Forever (client-quirks-§5), never split and never given a realm.
 local function whisperRecipient(target)
@@ -208,8 +240,10 @@ local function slotText(equipLoc)
     return key and plainString(NS.Compat.GlobalString(key)) or nil
 end
 
--- The verdict whose gain is {gain}: the looter's for an ask, the candidate's for an offer.
+-- The verdict whose gain is {gain}: the looter's for an ask, the candidate's for an offer; none
+-- for a master-loot ask (the master looter gains nothing).
 local function theirEval(kind, rec, who)
+    if kind == "askML" then return nil end
     if kind ~= "offer" then return rec.them end
     local c = who.guid and type(rec.candidates) == "table" and rec.candidates[who.guid] or nil
     return c and c.eval
@@ -275,7 +309,7 @@ local function send(a)
 end
 
 local function itemOf(a)
-    local rec = NS.LootFeed.Get(a.dropID)
+    local rec = recordOf(a.kind, a.dropID)
     return rec and plainString(rec.link) or a.text
 end
 
@@ -294,6 +328,7 @@ local function succeed(a, chatType)
     M.MarkSent(s.book, a.key, now())
     s.sent = s.sent + 1
     NS.Debug(TAG, "sent %s to %s (%s), drop %s", a.kind, a.target, tostring(chatType), tostring(a.dropID))
+    if a.kind == "askML" then NS.Pending.NoteAskedML(a.dropID) end
     confirm(a, chatType)
 end
 
@@ -348,7 +383,9 @@ end
 function A.Request(kind, target, dropID, opts)
     if stoodDown() then return refused("disabled") end
     opts = type(opts) == "table" and opts or {}
-    local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
+    local rec = recordOf(kind, dropID)
+    local mlWhy = kind == "askML" and mlRefusal(rec)
+    if mlWhy then return refused(mlWhy) end
     if NS.Collectibles.IsFeedOnly(rec) then return refused("collectible") end
     local test = isTest(rec)
     local who, why = recipient(kind, target, test)
@@ -367,7 +404,9 @@ end
 function A.Preview(kind, target, dropID, opts)
     if stoodDown() then return nil, "disabled" end
     opts = type(opts) == "table" and opts or {}
-    local rec = dropID ~= nil and NS.LootFeed.Get(dropID) or nil
+    local rec = recordOf(kind, dropID)
+    local mlWhy = kind == "askML" and mlRefusal(rec)
+    if mlWhy then return nil, mlWhy end
     local who, why = recipient(kind, target, isTest(rec))
     if not who then return nil, why end
     return M.Preview(M.Template(A.TemplateFor(kind, rec), A.Settings().templates), context(kind, rec, who, opts.ctx))
@@ -411,6 +450,23 @@ function A.Cancel(kind, target, dropID)
     NS.Debug(TAG, "canceled %s to %s, drop %s", a.kind, a.target, tostring(a.dropID))
     changed(a, "ready", "canceled")
     return true
+end
+
+--- Cancel every queued `kind` ask for `dropID`, whoever it goes to (a master-loot item assigned or
+--- expired before its queued ask went out). Answers how many were canceled.
+--- @param kind string
+--- @param dropID any
+--- @return number
+function A.CancelFor(kind, dropID)
+    local book, n = store().book, 0
+    for _, a in ipairs(A.Queued()) do
+        if a.kind == kind and a.dropID == dropID and M.Cancel(book, a.key) then
+            n = n + 1
+            NS.Debug(TAG, "canceled %s to %s, drop %s: its item closed", a.kind, a.target, tostring(a.dropID))
+            changed(a, "ready", "closed")
+        end
+    end
+    return n
 end
 
 --- The ask button: a queued ask is canceled, anything else requested.

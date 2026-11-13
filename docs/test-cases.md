@@ -1360,7 +1360,7 @@ Total.
 - off-spec ask: the template is listed after transmog, with its default text inside the limit
 - off-spec ask: its row sits after the transmog template on the Templates tab
 - off-spec ask: the editor names it and previews it over an off-spec drop
-- off-spec ask: Reset templates speaks of five messages
+- off-spec ask: Reset templates speaks of every message, never a count
 - off-spec ask: EvalFor answers the off-spec result when it counts, else the eval itself
 - off-spec ask: {mygain} reads the off-spec result, and an empty slot its words
 - off-spec ask: the Ask button fills askOffSpec, and its tooltip names the spec
@@ -1816,6 +1816,17 @@ Total.
 - ml pending: under group loot nothing is pending from the loot window
 - ml pending: standing down drops the items and their timers
 
+### test_ask_ml.lua (8)
+
+- askML: one press whispers the master looter once; a second press is refused by the one-ask guard
+- askML: queued while chat is restricted and sent on lift
+- askML: refused when you are the master looter, when it is no upgrade for you, when the ML is offline
+- askML: on Forever the whisper target is the whole two-word name
+- askML: the received drop's History entry reads asked
+- auto-ask: never sends askML
+- askML: the Edit message box opens first with editFirst on, and its Send whispers the master looter
+- askML: the diagnostics name its template and a queued one
+
 ### test_roll_cells.lua (5)
 
 - roll cells: summary counts Need 3 · Greed 2 · Pass 1 · waiting 4
@@ -1824,12 +1835,13 @@ Total.
 - roll cells: a higher roll that did not win is protected
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (9)
+### test_window_pending.lua (10)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
 - window pending: a pending row has your verdict and no Ask button for a roll
 - window pending: a won or ended roll says so, and the timer ticks on the history's clock
 - window pending: a master-loot item names its master looter, never a roll that ended
+- window pending: a master-loot item has the Ask master looter button, in its ask's state
 - compact: a pending item is a card
 - detail card: a resolved drop with rec.roll has a Rolls box
 - row tooltip: a rolled drop's item tooltip has the roll summary line
@@ -2408,7 +2420,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (28)
+### test_sim_events.lua (30)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2437,11 +2449,13 @@ Total.
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 - sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing
 - sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll
+- sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it
+- sim ml: refused without a running simulation
 - sim roll: refused without a running simulation
 
 ### test_sim_scenario.lua (32)
 
-- sim verbs: DropWatcher's seven host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim scenario: Forever lists no key, lfr or delve
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
@@ -2834,8 +2848,9 @@ Total.
 | test_feed.lua | 54 |
 | test_pending.lua | 15 |
 | test_pending_ml.lua | 9 |
+| test_ask_ml.lua | 8 |
 | test_roll_cells.lua | 5 |
-| test_window_pending.lua | 9 |
+| test_window_pending.lua | 10 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2863,7 +2878,7 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 26 |
-| test_sim_events.lua | 28 |
+| test_sim_events.lua | 30 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
@@ -2884,4 +2899,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2378** |
+| **Total** | **2389** |

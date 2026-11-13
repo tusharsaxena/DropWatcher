@@ -227,7 +227,7 @@ end
 
 -- What each token fills in, for the chip's tooltip (design spec §9.1).
 E.TOKEN_TIPS = {
-    player = L["The player's name: the looter for an ask, the candidate for an offer."],
+    player = L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."],
     item   = L["The item's link."],
     ilvl   = L["The item's level."],
     slot   = L["The slot the item goes in."],
@@ -241,6 +241,7 @@ E.TEMPLATE_LABEL = {
     ask      = L["Ask (whisper to the looter)"],
     transmog = L["Ask for transmog (whisper to the looter)"],
     askOffSpec = L["Ask for off-spec (whisper to the looter)"],
+    askML    = L["Ask the master looter (whisper to the master looter)"],
     offer    = L["Offer (whisper to a candidate)"],
     announce = L["Announce (group, raid or instance)"],
 }
@@ -251,8 +252,8 @@ local function red(text) return (NS.SkinEscape("sem.badAlt") or "") .. text .. "
 
 -- A template's short name, for the preview's header.
 E.KIND_NAME = {
-    ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"], offer = L["Offer"],
-    announce = L["Announce"],
+    ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"],
+    askML = L["Ask the master looter"], offer = L["Offer"], announce = L["Announce"],
 }
 
 
@@ -319,6 +320,13 @@ local SAMPLE = {
     askOffSpec = function(rec, strict)
         if isMine(rec) or not isTable(rec.looter) then return nil end
         if strict and not offSpecGain(rec) then return nil end
+        return { name = rec.looter.name, guid = rec.looter.guid }
+    end,
+    -- No pending item lives in the feed: another member's drop, an upgrade for you when there is
+    -- one, stands in for it, its looter for the master looter.
+    askML = function(rec, strict)
+        if isMine(rec) or not isTable(rec.looter) then return nil end
+        if strict and (myGain(rec) or 0) <= 0 then return nil end
         return { name = rec.looter.name, guid = rec.looter.guid }
     end,
     offer = function(rec)

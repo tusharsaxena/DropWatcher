@@ -584,3 +584,7 @@ L["this session's drops, until the feed is cleared"] = "this session's drops, un
 L["what was worn then"] = "what was worn then"
 L["Who it upgraded"] = "Who it upgraded"
 L["you passed on it"] = "you passed on it"
+-- modules/WindowPending.lua, modules/DetailCard.lua: the master-loot ask (DW-FP19)
+L["the master looter"] = "the master looter"
+L["Ask master looter"] = "Ask master looter"
+L["your master-loot ask template"] = "your master-loot ask template"

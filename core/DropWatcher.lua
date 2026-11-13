@@ -374,6 +374,61 @@ function NS.PressAsk(dropID, opts)
     return state, reason
 end
 
+-- Why a master-loot ask was not sent, in words (modules/Asks.lua's askML refusals, then the ask's).
+local ASK_ML_REFUSAL = {
+    isML = NS.L["You are the master looter."], noUpgrade = NS.L["It is not an upgrade for you."],
+    noDrop = NS.L["That item is no longer waiting for the master looter."],
+    noTarget = NS.L["The master looter is not known."], self = NS.L["You are the master looter."],
+    alreadyAsked = NS.L["You already asked %s for it."],
+}
+
+--- Who a master-loot ask for pending item `item` is filed under and whispered (NS.Asks.Request's
+--- and StateOf's `target`): the roster's whole name for the master looter (`Name-Realm`, or a
+--- Forever "First Surname", never split: client-quirks-§5), else what the item read
+--- (NS.Pending.MLTargetOf); nil when it read nothing.
+--- @param item table|nil a NS.Pending item of kind `ml`
+--- @return string|nil
+function NS.AskMLTargetOf(item)
+    local target = NS.Pending.MLTargetOf(item)
+    local m = target and NS.Roster.Resolve(target)
+    return m and m.fullName or target
+end
+
+--- Ask the master looter for an item awaiting them (Forever port design §6, plan DW-FP19): the
+--- Rolling now row's and card's Ask, through the messaging edge's Press (kind `askML`, filed
+--- against the pending item), so a queued ask is canceled by a second click. A refusal is said in
+--- chat (`isML`, `noUpgrade`, `offline`, `alreadyAsked`, `noDrop`, ...); a send confirms itself.
+--- Refused while stood down. With `messages.editFirst` on, a press without `opts` opens the Edit
+--- message box instead (state `editing`). Auto-ask never calls it.
+--- @param pendingID any NS.Pending's item id
+--- @param opts table|nil { text = the edited message } (the Edit message box's Send)
+--- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
+function NS.PressAskML(pendingID, opts)
+    local item = NS.Pending.Get(pendingID)
+    local target = NS.AskMLTargetOf(item)
+    local state, reason
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        state, reason = "refused", NS.StoodDownReason()
+    elseif not (item and item.kind == "ml") then
+        state, reason = "refused", "noDrop"
+    elseif not target then
+        state, reason = "refused", "noTarget"
+    elseif editFirst("askML", target, pendingID, opts) then
+        state = "editing"
+    else
+        state, reason = NS.Asks.Press("askML", target, pendingID, opts)
+    end
+    if stoodDown then
+        NS.Print(stoodDown)
+    elseif state == "refused" then
+        local why = ASK_ML_REFUSAL[reason] or ASK_REFUSAL[reason]
+        why = why and why:format(target or "?") or tostring(reason)
+        NS.Print(NS.L["Not asked: %s"]:format(why))
+    end
+    return state, reason
+end
+
 -- The looter record of a drop that is not yours, or nil.
 local function looterOf(dropID)
     local rec = NS.LootFeed.Get(dropID)

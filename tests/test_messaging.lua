@@ -42,7 +42,9 @@ local HOLD = { canSend = false, now = 100 }
 
 test("messaging: the default templates are the spec §9.1 text, one per kind", function()
     local _, C, D = load()
-    assertEqual(#C.MESSAGE_KINDS, 3)
+    assertEqual(#C.MESSAGE_KINDS, 4, "ask, offer, announce and the master-loot askML (DW-FP19)")
+    assertEqual(C.MESSAGE_KINDS[4], "askML")
+    assertEqual(D.templates.askML, "Hi {player}, if nobody needs {item}, I'd love it: {mygain} for me. Thanks!")
     assertEqual(D.templates.ask,
         "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!")
     assertEqual(D.templates.offer, "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?")

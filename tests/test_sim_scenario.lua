@@ -86,13 +86,13 @@ end
 -- Pure: the verb parser and the timeline
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: DropWatcher's seven host verbs on the descriptor, each parsing its arguments", function()
+test("sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments", function()
     local V = T.newAddon().SimVerbs
     local names = {}
     for verb in pairs(V.VERBS) do names[#names + 1] = verb end
     table.sort(names)
     -- red under: a generic verb (start, run, step, ...) kept in SimVerbs (the library owns them, C.7)
-    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,pull,roll,trade")
+    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,ml,pull,roll,trade")
     local function P(line)
         local w = {}
         for x in line:gmatch("%S+") do w[#w + 1] = x end

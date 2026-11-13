@@ -199,6 +199,38 @@ test("window pending: a master-loot item names its master looter, never a roll t
     assertEqual(textOf(wp3.rows[1].cells.summary.text), "Master loot", "no name read: the method alone")
 end)
 
+test("window pending: a master-loot item has the Ask master looter button, in its ask's state", function()
+    local mlItem = item({ kind = "ml", key = "Creature-0-1-2-3-2900-0000AAAA:300", state = "awaiting",
+        ml = { unit = "raid3", name = "Doom Dock", slot = 1, quality = 4, threshold = 4 } })
+    mlItem.roll = nil
+    local NS, _, wp = shown({ drop() }, { mlItem })
+    local pressed = {}
+    NS.PressAskML = function(id) pressed[#pressed + 1] = id end
+    local b = wp.rows[1].ask
+    assertTrue(b ~= nil and b:IsShown(), "the row's Ask")
+    assertEqual(textOf(b.label), "Ask"); assertEqual(b.state, "ready")
+    local tip = T.tipPlainJoined(b.tipLines)
+    assertTrue(tip:find("Ask master looter", 1, true) ~= nil, tip)
+    assertTrue(tip:find("Doom Dock", 1, true) ~= nil, "it names the master looter whole: " .. tip)
+    b:__fire("OnClick")
+    assertEqual(#pressed, 1); assertEqual(pressed[1], mlItem.id, "the press names the pending item")
+    -- Sent: Asked, and no longer clickable.
+    NS.Asks.StateOf = function(kind) return kind == "askML" and "sent" or "ready" end
+    local _, wp2 = refresh(NS)
+    assertEqual(textOf(wp2.rows[1].ask.label), "Asked"); assertFalse(wp2.rows[1].ask:IsEnabled())
+    -- No upgrade for you: the gray No action.
+    local worse = item({ kind = "ml", state = "awaiting", ml = { name = "Doom Dock" },
+        me = { verdict = "downgrade", ilvlDelta = -10, reasons = {} } })
+    worse.roll = nil
+    NS.Pending.All = function() return { worse } end
+    _, wp2 = refresh(NS)
+    assertEqual(textOf(wp2.rows[1].ask.label), "No action"); assertEqual(wp2.rows[1].ask.state, "none")
+    -- A roll's row hides it.
+    NS.Pending.All = function() return { item() } end
+    _, wp2 = refresh(NS)
+    assertFalse(wp2.rows[1].ask ~= nil and wp2.rows[1].ask:IsShown(), "no Ask on a roll")
+end)
+
 -- ── the compact layout ──────────────────────────────────────────────────────────────────────
 
 test("compact: a pending item is a card", function()
@@ -214,6 +246,17 @@ test("compact: a pending item is a card", function()
     assertEqual(textOf(card.cells.timer.text), "0:50")
     assertNil(card.ask, "no action button on a roll's card")
     assertTrue(yOf(drawn.headers[1]) < 0, "the boss group's header under the section")
+    -- A master-loot item's card has the Ask master looter button.
+    local mlItem = item({ id = 2, kind = "ml", state = "awaiting", ml = { name = "Doom Dock" } })
+    mlItem.roll = nil
+    NS.Pending.All = function() return { mlItem } end
+    local _, wpm = refresh(NS)
+    assertTrue(wpm.cards[1].ask ~= nil and wpm.cards[1].ask:IsShown(), "the card's Ask")
+    assertEqual(textOf(wpm.cards[1].ask.label), "Ask")
+    NS.Pending.All = function() return { item() } end
+    _, wpm = refresh(NS)
+    assertFalse(wpm.cards[1].ask:IsShown(), "hidden again on a roll's card")
+    card = wpm.cards[1]
     -- A click expands its roll table under the card.
     card:__fire("OnClick")
     local _, wp2 = refresh(NS)

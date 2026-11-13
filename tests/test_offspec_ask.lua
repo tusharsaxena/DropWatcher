@@ -74,8 +74,9 @@ end, T.RETAIL_ONLY)
 test("off-spec ask: the template is listed after transmog, with its default text inside the limit", function()
     local NS = addon()
     local M, C = NS.Messaging, NS.Constants
-    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,askOffSpec,offer,announce")
-    assertEqual(table.concat(C.MESSAGE_KINDS, ","), "ask,offer,announce", "no new kind: it is sent as an ask")
+    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,askOffSpec,askML,offer,announce")
+    -- askML (DW-FP19) is the master-loot ask's own kind; the off-spec ask adds none.
+    assertEqual(table.concat(C.MESSAGE_KINDS, ","), "ask,offer,announce,askML", "no new kind: it is sent as an ask")
     local default = NS.C.PROFILE.messages.templates.askOffSpec
     assertEqual(default, DEFAULT)
     assertTrue(#default <= C.MESSAGE_MAX_LEN, #default .. " bytes")
@@ -101,7 +102,7 @@ test("off-spec ask: its row sits after the transmog template on the Templates ta
         local leaf = row.path and row.path:match("^messages%.templates%.(.+)$")
         if leaf then order[#order + 1] = leaf end
     end
-    assertEqual(table.concat(order, ","), "ask,transmog,askOffSpec,offer,announce")
+    assertEqual(table.concat(order, ","), "ask,transmog,askOffSpec,askML,offer,announce")
     local row = NS.SchemaRuntime.FindRow("messages.templates.askOffSpec")
     assertEqual(row.label, "Ask for off-spec")
     assertEqual(row.maxLetters, NS.Constants.MESSAGE_MAX_LEN)
@@ -121,12 +122,14 @@ test("off-spec ask: the editor names it and previews it over an off-spec drop", 
     assertNil(E.PreviewSample("askOffSpec", { drop({ isMine = true }) }), "never your own drop")
 end)
 
-test("off-spec ask: Reset templates speaks of five messages", function()
+-- The count differs per client and grew with the master-loot ask (DW-FP19): no number at all.
+test("off-spec ask: Reset templates speaks of every message, never a count", function()
     local NS = addon()
-    assertEqual(NS.L["Put the five messages back to the shipped wording."], "Put the five messages back to the shipped wording.")
+    assertEqual(NS.L["Put every message back to the shipped wording."], "Put every message back to the shipped wording.")
     local src = assert(io.open("settings/PageEditors.lua", "rb")):read("*a")
     assertTrue(src:find("four messages", 1, true) == nil, "no four left in the Templates tab")
-    assertTrue(src:find('L["Put the five messages back to the shipped wording."]', 1, true) ~= nil)
+    assertTrue(src:find("five messages", 1, true) == nil, "no five either")
+    assertTrue(src:find('L["Put every message back to the shipped wording."]', 1, true) ~= nil)
 end)
 
 -- ── the gain ────────────────────────────────────────────────────────────────────────────────

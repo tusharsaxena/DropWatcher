@@ -685,6 +685,56 @@ test("sim: /dw sim roll opens a pending roll, updates it and resolves it into a 
     assertEqual(#NS.Compat.ActiveLootRolls(), 0)
 end)
 
+-- Master loot (Forever port design §8, plan DW-FP19): a both-clients feature.
+test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it", function()
+    -- Two 500 rings worn, so whichever ring the pool offers (WoW Forever's is your own gear) is worth asking for.
+    local NS, m = sim({ before = function(_, mock)
+        mock.addItem(link(102, 500), ring(500))
+        mock.inventory.player[11], mock.inventory.player[12] = link(102, 500), link(102, 500)
+    end })
+    local E, P = NS.SimEvents, NS.Pending
+    local before = #drops(NS)
+    NS.addon:OnSlashCommand("sim ml")
+    m.advance(0)
+    assertEqual(printed(m, "Simulated master loot: "), 1)
+    local items = P.All()
+    assertEqual(#items, 1, "one item awaiting the master looter")
+    local item = items[1]
+    assertEqual(item.kind, "ml"); assertEqual(item.state, "awaiting")
+    local ml = NS.SimWorld.Member(item.ml.guid)
+    assertTrue(ml ~= nil, "a simulated member is the master looter")
+    assertEqual(item.ml.name, ml.name, "named whole, as the client names them")
+    assertEqual(#drops(NS), before, "nothing in the feed while it waits")
+    -- Ask: the guarded sender prints the whisper to the master looter's whole name.
+    local v = item.me.verdict
+    assertTrue(v == "upgrade" or v == "sidegrade", "the pool's ring is worth asking for over the worn 500s: " .. tostring(v))
+    assertEqual(NS.PressAskML(item.id), "sent")
+    assertEqual(printed(m, "[sim] WHISPER to " .. ml.fullName .. ": Hi "), 1, "the [sim] whisper")
+    assertEqual(#m.chatSent, 0, "nothing reached the real chat")
+    -- About 20 s later the master looter hands it out: the item resolves into one drop.
+    m.advance(E.ML_ASSIGN - 1)
+    assertEqual(#P.All(), 1, "still waiting")
+    m.advance(1)
+    assertEqual(#P.All(), 0, "assigned")
+    assertEqual(#drops(NS), before + 1)
+    local rec = lastDrop(NS)
+    assertTrue(rec.sim); assertTrue(rec.askedML, "the drop carries the ask"); assertEqual(rec.pendingKey, item.id)
+    -- A held item leaves with the stop.
+    NS.addon:OnSlashCommand("sim ml")
+    m.advance(0)
+    assertEqual(#P.All(), 1, "a second one held")
+    NS.Sim:Stop()
+    m.advance(0)
+    assertEqual(#P.All(), 0, "the stop took the held item away")
+    assertEqual(NS.Compat.LootMethod(), nil, "the client's own loot method again (none in the mock)")
+end)
+
+test("sim ml: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local loot, why = NS.SimEvents.MasterLoot()
+    assertNil(loot); assertEqual(why, "notRunning")
+end)
+
 test("sim roll: refused without a running simulation", function()
     local NS = T.newAddon()
     local roll, why = NS.SimEvents.Roll()

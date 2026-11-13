@@ -290,6 +290,7 @@ test("loot method: ML unit and name from masterLooterRaidID", function()
     m.lootMethod = { 2, nil, 3 }
     local lm = Compat.LootMethod()
     assertEqual(lm.method, "master"); assertEqual(lm.mlUnit, "raid3"); assertFalse(lm.isML)
+    assertEqual(lm.mlGUID, DOOM, "the master looter's GUID, the ask's whisper target (DW-FP19)")
     if Compat.ClientKey() == "forever" then
         assertEqual(lm.mlName, "Doom Dock", "a Forever two-word name kept whole (Review Focus 4)")
         assertNil(lm.mlRealm)

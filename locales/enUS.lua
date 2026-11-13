@@ -278,6 +278,11 @@ L["Simulated trade completed for drop %d."] = "Simulated trade completed for dro
 -- The simulated group-loot rolls (DW-FP17: settings/SimVerbs.lua, modules/SimReport.lua, modules/SimPanel.lua)
 L["Simulated roll opened: %s, %d players."] = "Simulated roll opened: %s, %d players."
 L["%s roll: a simulated group-loot roll, chosen and won over the next seconds."] = "%s roll: a simulated group-loot roll, chosen and won over the next seconds."
+-- settings/SimVerbs.lua: master loot (DW-FP19)
+L["Simulated master loot: %s, waiting for %s."] = "Simulated master loot: %s, waiting for %s."
+L["%s ml: an Epic waiting for a simulated master looter, handed out after a while."] =
+    "%s ml: an Epic waiting for a simulated master looter, handed out after a while."
+L["The simulation has no group."] = "The simulation has no group."
 L["Rolls: %s."] = "Rolls: %s."
 L["1 roll"] = "1 roll"
 L["%d rolls"] = "%d rolls"
@@ -980,3 +985,14 @@ L["Decided by"] = "Decided by"
 L["the score (item level breaks a tie)"] = "the score (item level breaks a tie)"
 L["An upgrade by score, though its item level is lower."] =
     "An upgrade by score, though its item level is lower."
+-- core/DropWatcher.lua, modules/DetailCard.lua: the master-loot ask (DW-FP19)
+L["You are the master looter."] = "You are the master looter."
+L["It is not an upgrade for you."] = "It is not an upgrade for you."
+L["That item is no longer waiting for the master looter."] = "That item is no longer waiting for the master looter."
+L["The master looter is not known."] = "The master looter is not known."
+L["the master looter is not in your group"] = "the master looter is not in your group"
+L["the master looter is offline"] = "the master looter is offline"
+L["you are the master looter"] = "you are the master looter"
+L["it is not an upgrade for you"] = "it is not an upgrade for you"
+L["the item is no longer waiting"] = "the item is no longer waiting"
+L["the master looter is not known"] = "the master looter is not known"

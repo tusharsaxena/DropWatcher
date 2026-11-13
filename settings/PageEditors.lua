@@ -607,7 +607,7 @@ function P.TemplatesTab(ctx, rows)
     previewBlock(ctx, st)
     h.InlineButtonPair(ctx, {
         text = L["Reset templates"],
-        tooltip = L["Put the five messages back to the shipped wording."],
+        tooltip = L["Put every message back to the shipped wording."],
         onClick = function() resetTemplates(rows or {}) end,
     })
 end

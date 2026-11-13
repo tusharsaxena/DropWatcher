@@ -442,6 +442,10 @@ local function messages()
     text("messages.templates.askOffSpec", M.templates.askOffSpec, L["Ask for off-spec"],
         L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."],
         with(templates, { clients = K.FEATURE_CLIENTS.offSpec }))
+    -- Both clients (Forever port design §11.2): wherever the group's method is master loot.
+    text("messages.templates.askML", M.templates.askML, L["Ask the master looter"],
+        L["What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."],
+        templates)
     text("messages.templates.offer", M.templates.offer, L["Offer"],
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],

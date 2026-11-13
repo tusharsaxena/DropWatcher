@@ -321,8 +321,6 @@ L["Guns"] = "Guns"
 L["Crossbows"] = "Crossbows"
 L["Wands"] = "Wands"
 L["Shields"] = "Shields"
-L["The player's name: the looter for an ask, the candidate for an offer."] =
-    "The player's name: the looter for an ask, the candidate for an offer."
 L["The item's link."] = "The item's link."
 L["The item's level."] = "The item's level."
 L["The slot the item goes in."] = "The slot the item goes in."
@@ -360,7 +358,7 @@ L["Click a token to put it in the message you last edited. Each is filled in whe
     "Click a token to put it in the message you last edited. Each is filled in when the message is sent."
 L["Your messages"] = "Your messages"
 L["Reset templates"] = "Reset templates"
-L["Put the five messages back to the shipped wording."] = "Put the five messages back to the shipped wording."
+L["Put every message back to the shipped wording."] = "Put every message back to the shipped wording."
 
 -- settings/Pages.lua
 L["Comparison"] = "Comparison"
@@ -425,3 +423,10 @@ L["Keep each rolled drop's rolls in the History tab."] = "Keep each rolled drop'
 L["Mark the roll popup"] = "Mark the roll popup"
 L["Show your verdict on the game's Need and Greed roll popup."] =
     "Show your verdict on the game's Need and Greed roll popup."
+-- settings/SchemaRows.lua, settings/Editors.lua: the master-loot ask template (DW-FP19)
+L["Ask the master looter"] = "Ask the master looter"
+L["What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."] =
+    "What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."
+L["Ask the master looter (whisper to the master looter)"] = "Ask the master looter (whisper to the master looter)"
+L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."] =
+    "The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."

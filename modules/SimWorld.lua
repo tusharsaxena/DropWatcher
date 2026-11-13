@@ -44,10 +44,19 @@ local _, NS = ...
 -- across sessions, so the pending store and the feed, which remember a resolved key, never meet
 -- one twice.
 --
+-- MASTER LOOT (Forever port design §8, plan DW-FP19). Once AddMasterLoot (modules/SimEvents.lua's
+-- MasterLoot, `/dw sim ml`) has run, the session's group answers master loot with that member as
+-- the master looter (their unit, whole name and GUID) and a threshold of Epic (ML_THRESHOLD: the
+-- sim plays WoW Forever's rule on both clients), and the loot window answers the item as one
+-- locked slot of an invented corpse until AssignMasterLoot hands it out. Before it, a simulated
+-- group plays group loot and opens no loot window.
+--
 --   NS.Sim:Session().world = { members (the list the token map was built from), units = { [token] =
 --     member }, kind = "party"|"raid", marks = { [guid] = { far, failing, offline } }, held (guid),
 --     bag = { item }, nextItem, trade = { partner, given, received } | nil, inspects,
---     rolls = { ["encounterID:key"] = roll }, rollList = { roll } }
+--     rolls = { ["encounterID:key"] = roll }, rollList = { roll }, masterLoot = loot | nil,
+--     mlKeys = { [pending key] = true } }
+--   loot = { member, link, quality, sourceGUID, key, assigned }
 --   roll = { encounterID, encounterName, key, link, startTime, duration, rows = { { member, state,
 --     roll, isWinner } }, rollID, popupOpen, allPassed, winner }
 --   item = { sim = true, link, guid, expiresAt }
@@ -330,6 +339,47 @@ function W.AddRoll(spec)
     w.rolls[r.encounterID .. ":" .. r.key] = r
     w.rollList[#w.rollList + 1] = r
     return r
+end
+
+-- ── master loot ─────────────────────────────────────────────────────────────────────────────
+
+--- The master-loot threshold a simulated master looter answers: Epic.
+W.ML_THRESHOLD = 4
+
+-- The corpses a simulated master-loot item lies on, counted across sessions (the pending store
+-- remembers a key once it closed).
+local mlSeq = 0
+
+--- Make `spec.member` the simulated group's master looter with `spec.link` waiting on a corpse of
+--- `spec.encounterID` (`/dw sim ml`). Answers the loot: { member, link, quality, sourceGUID, key
+--- (the pending store's `sourceGUID:itemID`), assigned = false }; nil when no simulation runs.
+--- @param spec table { member, link, encounterID }
+--- @return table|nil
+function W.AddMasterLoot(spec)
+    local w = world()
+    if not (w and spec.member and spec.link) then return nil end
+    mlSeq = mlSeq + 1
+    local source = ("Creature-0-3900-0-0-%d-SIM%06X"):format(tonumber(spec.encounterID) or 0, mlSeq)
+    local loot = { member = spec.member, link = spec.link, quality = NS.ItemRead.QualityOf(spec.link) or W.ML_THRESHOLD,
+        sourceGUID = source, key = source .. ":" .. tostring(itemID(spec.link)), assigned = false }
+    w.masterLoot = loot
+    w.mlKeys = w.mlKeys or {}
+    w.mlKeys[loot.key] = true
+    return loot
+end
+
+--- The master looter hands the item out: the loot window no longer holds it.
+--- @param loot table W.AddMasterLoot's
+function W.AssignMasterLoot(loot)
+    if type(loot) == "table" then loot.assigned = true end
+end
+
+--- Whether a pending key is one of the session's master-loot items (its stop takes them away).
+--- @param key any
+--- @return boolean
+function W.IsMasterLootKey(key)
+    local w = world()
+    return w ~= nil and w.mlKeys ~= nil and w.mlKeys[key] == true
 end
 
 --- Every simulated roll, oldest first. Read them; only the drivers write them.
@@ -681,18 +731,29 @@ function P.LootRollInfo(live, rollID)
     return live(rollID)
 end
 
--- The loot method and the loot window (DW-FP18): a simulated group rolls under group loot and
--- opens no loot window, so nothing is held for a master looter while it runs (`/dw sim ml`, which
--- plays one, lands with DW-FP19); the threshold is the client's.
+-- The loot method and the loot window (DW-FP18, DW-FP19): a simulated group rolls under group
+-- loot and opens no loot window (the threshold is the client's) until `/dw sim ml` makes a member
+-- its master looter; from then on it is master loot, and the window holds the item until it is
+-- handed out.
 function P.LootMethod(live)
-    if not group() then return live() end
+    local w = group()
+    if not w then return live() end
+    local loot = w.masterLoot
+    if loot then
+        local m = loot.member
+        return { method = "master", isML = false, mlUnit = m.unit, mlName = m.name, mlRealm = m.realm,
+            mlGUID = m.guid, threshold = W.ML_THRESHOLD }
+    end
     local real = live()
     return { method = "group", isML = false, threshold = real and real.threshold or nil }
 end
 
 function P.LootSlots(live)
-    if not group() then return live() end
-    return {}
+    local w = group()
+    if not w then return live() end
+    local loot = w.masterLoot
+    if not loot or loot.assigned then return {} end
+    return { { slot = 1, link = loot.link, quality = loot.quality, locked = true, sourceGUID = loot.sourceGUID } }
 end
 
 W.PROVIDERS = P

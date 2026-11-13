@@ -256,10 +256,11 @@ local function isYou(unit)
 end
 
 --- The group's loot method (C_PartyInfo.GetLootMethod): { method, isML, mlUnit, mlName, mlRealm,
---- threshold }. `method` is the plain name of Enum.LootMethod's value ("freeForAll", "roundRobin",
+--- mlGUID, threshold }. `method` is the plain name of Enum.LootMethod's value ("freeForAll", "roundRobin",
 --- "master", "group", "needBeforeGreed", "personal"); under master loot `mlUnit` is the master
 --- looter's unit (raid<N>, party<N> or player), `mlName` / `mlRealm` its Compat.UnitCharacterName
---- (a Forever "First Surname" whole, no realm) and `isML` whether that is you. `threshold` is the
+--- (a Forever "First Surname" whole, no realm), `mlGUID` its GUID (a safe key only) and `isML`
+--- whether that is you. `threshold` is the
 --- master-loot quality threshold. Nil for a secret or unknown method, or with no API.
 --- @return table|nil
 function Compat.LootMethod()
@@ -274,6 +275,8 @@ function Compat.LootMethod()
     if unit then
         out.mlUnit, out.isML = unit, isYou(unit)
         out.mlName, out.mlRealm = Compat.UnitCharacterName(unit)
+        local guid = Compat.UnitGUID(unit)
+        out.mlGUID = Compat.IsSafeKey(guid) and guid or nil
     end
     return out
 end

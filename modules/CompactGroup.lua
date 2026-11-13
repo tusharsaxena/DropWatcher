@@ -593,7 +593,9 @@ end
 --   line 2  You, then your verdict (the glyph and the words, in the verdict's tone)
 --   line 3  the roll summary (`Need 3 · Greed 2 · waiting 4`, `Won by Name (Need 87)`)
 --   line 4  the time left (`0:42`), or `awaiting master looter`
--- No action button: a roll is rolled on the game's own popup. A click expands its roll table.
+-- No action button on a roll: it is rolled on the game's own popup. A master-loot item has the Ask
+-- master looter button (WindowPending.PaintAsk) at lines 2 and 3's right, where a drop card's Ask
+-- sits, and its summary and time left give way to it. A click expands its roll table.
 
 --- A pending item's card, built once and repainted (the section's pool).
 --- @param content table the compact view's scroll child
@@ -658,6 +660,14 @@ function CG.PaintPendingCard(card, item, model, width, m)
     WP.PaintVerdict(c.me, model.me)
     WP.PaintPiece(c.summary, model.summary)
     WP.PaintPiece(c.timer, model.timer)
+    local b = WP.PaintAsk(card, model.action, item.id)
+    local room = max(width - CG.TextLeft(m, CG.LEAD) - CG.PAD, 20)
+    if b then
+        at(b, "RIGHT", card, "TOPRIGHT", -CG.PAD, CG.AskY(m))
+        b:SetHeight(CG.AskHeight(m))
+        room = max(room - K.ASK_W - CG.HALF_GAP, 20)
+    end
+    for _, key in ipairs({ "summary", "timer" }) do c[key].text:SetWidth(room) end
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).

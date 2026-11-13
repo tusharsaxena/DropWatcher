@@ -397,10 +397,10 @@ function H.SetDeclined(e, on)
     return true
 end
 
-local STAMP = { ask = "askedAt", offer = "offeredAt", announce = "offeredAt" }
+local STAMP = { ask = "askedAt", offer = "offeredAt", announce = "offeredAt", askML = "askedAt" }
 
---- Stamp when an ask (kind `ask`) or an offer (`offer`, `announce`) was first sent; a later send
---- never moves it.
+--- Stamp when an ask (kind `ask`, or the master-loot `askML`) or an offer (`offer`, `announce`) was
+--- first sent; a later send never moves it.
 --- @param e table
 --- @param kind string
 --- @param now number time()
@@ -751,6 +751,19 @@ function H.GrowRoster(feedGroup)
     return true
 end
 
+-- What a sent message makes an entry: an ask (or the master-loot ask) `asked`, an offer or an
+-- announce `offered`.
+local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered", askML = "asked" }
+
+-- A drop that assigned a master-loot item you asked the master looter for (`rec.askedML`, plan
+-- DW-FP19) is recorded asked and stamped as an ask is: the ask was filed against the pending item,
+-- before the drop existed.
+local function askedForML(e, rec)
+    if rec.askedML ~= true then return end
+    H.Stamp(e, "askML", clock())
+    H.Advance(e, SENT_OUTCOME.askML)
+end
+
 --- DropAdded: record a live drop.
 --- @param id any
 function H.OnDropAdded(id)
@@ -760,7 +773,9 @@ function H.OnDropAdded(id)
     -- a simulation runs (the record's own origin decides, never whether one runs).
     local hist = H.LogFor(rec.sim)
     if not hist then return end
-    index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock(), keepRolls()))
+    local e = H.Snapshot(rec, clock(), keepRolls())
+    askedForML(e, rec)
+    index[id] = H.Record(hist, groupInfo(rec), e)
     changed()
 end
 
@@ -774,11 +789,12 @@ function H.OnDropUpdated(id)
     if moved then changed() end
 end
 
-local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered" }
-
 --- AskStateChanged: a sent ask is `asked`; a sent offer or announce `offered`. Either is stamped
---- (H.Stamp) even when the outcome does not move, and HistoryChanged follows either change.
+--- (H.Stamp) even when the outcome does not move, and HistoryChanged follows either change. A
+--- master-loot ask's id is a pending item's, never a drop's (the two stores' ids may meet): its drop
+--- is recorded asked when it arrives (`askedML`), so it is skipped here.
 function H.OnAskState(dropId, state, kind)
+    if kind == "askML" then return end
     local e = H.EntryOf(dropId)
     if state ~= "sent" or not e or not SENT_OUTCOME[kind] then return end
     local stamped = H.Stamp(e, kind, clock())

@@ -7,7 +7,7 @@ local _, NS = ...
 -- sends what Request or Dequeue hands it, and reports the result with MarkSent or MarkFailed. The
 -- defaults are data in core/Constants.lua (C.MESSAGE_*).
 --
---   req  = { kind = "ask" | "offer" | "announce", target, dropID, ctx = token values, text?,
+--   req  = { kind = "ask" | "offer" | "announce" | "askML", target, dropID, ctx = token values, text?,
 --            template? = the template to fill instead of the kind's (an ask's `transmog` or `askOffSpec`) }
 --   opts = { canSend = true, oneAsk = true, templates = { [kind] = text }, now }
 --

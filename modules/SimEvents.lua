@@ -45,12 +45,19 @@ local _, NS = ...
 -- then the close: the numbers, the winner (or everyone passed), your popup's CANCEL_LOOT_ROLL and
 -- the winner's loot line, so modules/Pending.lua hands the drop to the feed as it does a real one.
 --
+-- MASTER LOOT (Forever port design §8, plan DW-FP19). MasterLoot makes one member the master
+-- looter with one of the pool's Epics on a corpse of the boss engaged or last killed
+-- (modules/SimWorld.lua answers the loot method and the loot window): PARTY_LOOT_METHOD_CHANGED,
+-- then LOOT_READY and LOOT_OPENED, so modules/PendingML.lua holds it as awaiting the master
+-- looter; ML_ASSIGN seconds later the master looter hands it to you or a member, whose loot line
+-- assigns the pending item.
+--
 -- COMBAT FLAGS. While the simulated combat edge is up, InCombatLockdown and the player's combat
 -- flag answer true through the seam; otherwise the client answers.
 --
 -- THE STOP. A cleanup step ends the combat edge it raised (unless you really are fighting),
 -- re-reads your real bags (BAG_UPDATE_DELAYED), closes your open roll popups (CANCEL_LOOT_ROLL),
--- all delivered once the seam is off, and takes its rolls' pending items away.
+-- all delivered once the seam is off, and takes its rolls' and its master loot's pending items away.
 --
 --   NS.Sim:Session().drive = { lines, pulls, kills, encounter = { id, name } | nil, run = { mapID, name,
 --     level, ended } | nil, lastEncounter, combat, trade = { window, soon, soonLeft }, trades,
@@ -656,6 +663,58 @@ function E.Roll()
     return roll
 end
 
+-- ── master loot (Forever port design §8, plan DW-FP19) ──────────────────────────────────────
+
+--- Seconds the simulated master looter takes to hand the item out.
+E.ML_ASSIGN = 20
+
+-- The pool's drops of at least the master-loot threshold's quality, else every drop.
+local function mlCandidates(drops)
+    local out = {}
+    for _, entry in ipairs(drops) do
+        if (NS.ItemRead.QualityOf(entry.link) or 0) >= NS.SimWorld.ML_THRESHOLD then out[#out + 1] = entry end
+    end
+    return #out > 0 and out or drops
+end
+
+-- The master looter hands it out: to you or a member, whose loot line follows.
+local function assign(d, loot, rnd)
+    if not Sim:Session() then return end
+    NS.SimWorld.AssignMasterLoot(loot)
+    local members = Sim:Session().members or {}
+    local pick = rnd(#members + 1)
+    local m = pick <= #members and members[pick] or nil
+    if deliverLine(d, { looter = m, entry = { link = loot.link }, qty = 1, kind = "loot" }, player(), NS.Compat.NameRealm())
+        and m == nil then
+        Sim:Fire("BAG_UPDATE_DELAYED")
+    end
+end
+
+--- Master loot now (`/dw sim ml`): one member becomes the master looter with one of the pool's
+--- Epics on the corpse of the boss engaged or last killed; the loot window opens on it, and
+--- ML_ASSIGN seconds later the master looter hands it to you or a member. Answers the loot
+--- (modules/SimWorld.lua's), or nil and why: `notRunning`, `noGroup`, `noPool`.
+--- @return table|nil loot, string|nil why
+function E.MasterLoot()
+    local d, s = drive(), Sim:Session()
+    if not d then return nil, "notRunning" end
+    local members = s.members or {}
+    if #members == 0 then return nil, "noGroup" end
+    local drops = NS.SimPool.LootDrops(s.pool)
+    if #drops == 0 then return nil, "noPool" end
+    local rnd = rollRandom(s)
+    local pool = mlCandidates(drops)
+    local entry = pool[rnd(#pool)]
+    local enc = d.encounter or d.lastEncounter or { id = E.ENCOUNTER_BASE }
+    local loot = NS.SimWorld.AddMasterLoot({ member = members[rnd(#members)], link = entry.link, encounterID = enc.id })
+    Sim:Fire("PARTY_LOOT_METHOD_CHANGED")
+    Sim:Fire("LOOT_READY", false)
+    Sim:Fire("LOOT_OPENED", false, false)
+    Sim:After(E.ML_ASSIGN, function() assign(d, loot, rnd) end)
+    NS.Debug(TAG, "master loot %s: held by %s", tostring(entry.link), tostring(loot.member.fullName))
+    return loot
+end
+
 -- ── the combat answers ──────────────────────────────────────────────────────────────────────
 
 -- The seam's providers for the client's combat flags, keyed by their NS.Compat member names
@@ -691,4 +750,5 @@ Sim:OnStop(function(s)
         closePopup(roll, function(...) return Sim:DeliverForCleanup(...) end)
     end
     if w and w.rolls then NS.Pending.RemoveWhere(function(item) return w.rolls[item.key] ~= nil end) end
+    if w and w.mlKeys then NS.Pending.RemoveWhere(function(item) return w.mlKeys[item.key] == true end) end
 end)

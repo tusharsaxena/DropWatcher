@@ -39,6 +39,7 @@ local function specPaths()
         "comparison.heirloomProtect", "comparison.undesired",
         "trade.warnAt",
         "messages.templates.ask", "messages.templates.offer", "messages.templates.announce",
+        "messages.templates.askML",   -- the master-loot ask (Forever port design §6, DW-FP19), both clients
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
         "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
@@ -751,6 +752,7 @@ local PINNED_ROWS = {
     { "messages.oneAsk", "bool", "true" },
     { "messages.templates.announce", "string", "\"{item} is up for grabs, whisper me.\"" },
     { "messages.templates.ask", "string", "\"Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!\"" },
+    { "messages.templates.askML", "string", "\"Hi {player}, if nobody needs {item}, I'd love it: {mygain} for me. Thanks!\"" },
     { "messages.templates.askOffSpec", "string", "\"Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!\"" },
     { "messages.templates.offer", "string", "\"Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?\"" },
     { "messages.templates.transmog", "string", "\"Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!\"" },

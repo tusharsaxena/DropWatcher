@@ -368,8 +368,10 @@ local function messaging(out)
     else
         out:add(TAG, "messaging: oneAsk=%s announceChannel=%s", cfg.oneAsk, cfg.announceChannel)
     end
+    -- A master-loot ask is filed against a pending item, not a drop (DW-FP19).
     for _, a in ipairs(A.Queued()) do
-        out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
+        out:add(TAG, "messaging: queued %s to %s, %s %s", a.kind, a.target, a.kind == "askML" and "pending" or "drop",
+            a.dropID)
     end
     local aa = NS.AutoAsk.Stats()
     out:add(TAG, "auto-ask: enabled=%s delay=%s minGain=%s waiting=%s nextDue=%s inEncounter=%s", aa.enabled,

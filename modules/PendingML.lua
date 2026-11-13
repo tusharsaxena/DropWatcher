@@ -6,8 +6,13 @@ local _, NS = ...
 -- holds and closes its items through NS.Pending.Hold / Close.
 --
 --   item = { id, kind = "ml", key = "sourceGUID:itemID", link, itemID, at, state = awaiting |
---            assigned | expired, facts, forced, me, where, ml = { unit, name, realm, slot,
+--            assigned | expired, facts, forced, me, where, ml = { unit, name, realm, guid, slot,
 --            sourceGUID, quality, threshold }, askedML }
+--
+-- THE ASK (plan DW-FP19). NS.PressAskML whispers the master looter for an awaiting item (the
+-- `askML` message kind, modules/Asks.lua); once it is sent P.NoteAskedML marks the item `askedML`,
+-- which the receipt that assigns it carries to the drop and History. An item that closes cancels
+-- an ask still queued for it (NS.Asks.CancelFor).
 --
 -- THE SOURCE. On LOOT_READY / LOOT_OPENED, while the group's method is master loot and you are not
 -- the master looter (Compat.LootMethod), every slot of the window (Compat.LootSlots) with a
@@ -61,6 +66,7 @@ local function close(item, state)
     if expiries[item.id] then expiries[item.id]:Cancel() end
     expiries[item.id] = nil
     P.Close(item)
+    NS.Asks.CancelFor("askML", item.id)   -- an ask still queued for it never goes out
 end
 
 local function expire(item, why)
@@ -78,7 +84,7 @@ local function admit(slot, key, lm, facts)
     end
     local item = P.Hold({ kind = "ml", key = key, link = slot.link, itemID = NS.Item.ItemIDFromLink(slot.link),
         at = GetTime(), state = "awaiting", facts = facts, forced = out.forced, me = out.me, where = where(),
-        ml = { unit = lm.mlUnit, name = lm.mlName, realm = lm.mlRealm, slot = slot.slot,
+        ml = { unit = lm.mlUnit, name = lm.mlName, realm = lm.mlRealm, guid = lm.mlGUID, slot = slot.slot,
             sourceGUID = slot.sourceGUID, quality = slot.quality, threshold = lm.threshold } })
     local gen = generation
     expiries[item.id] = C_Timer.NewTimer(P.EXPIRE, function()
@@ -133,6 +139,29 @@ function P.ClaimML(itemID)
         end
     end
     return nil
+end
+
+--- The master-loot ask for item `id` was sent (modules/Asks.lua): the item is `askedML`, and so is
+--- the drop it turns into. Answers whether an ml item took it.
+--- @param id any
+--- @return boolean
+function P.NoteAskedML(id)
+    local item = P.Get(id)
+    if not (item and item.kind == "ml") then return false end
+    item.askedML = true
+    NS.Debug(TAG, "ml item %s: asked", tostring(id))
+    return true
+end
+
+--- The master looter a master-loot ask for item `item` whispers: their GUID when it was read (the
+--- roster resolves it to the whole name, client-quirks-§5), else their name as read; nil for an
+--- item with neither.
+--- @param item table|nil
+--- @return string|nil
+function P.MLTargetOf(item)
+    local ml = type(item) == "table" and item.kind == "ml" and type(item.ml) == "table" and item.ml or nil
+    if not ml then return nil end
+    return ml.guid or ml.name
 end
 
 --- PARTY_LOOT_METHOD_CHANGED: made master looter, nothing of yours stays pending.
