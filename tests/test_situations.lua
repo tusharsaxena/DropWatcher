@@ -238,14 +238,26 @@ end)
 
 test("situations: the edge's inputs are what the client says", function()
     local NS, m = live()
-    place(m, KEYSTONE)
-    local i = NS.Situations.ReadInputs()
-    assertTrue(i.inInstance); assertEqual(i.instanceType, "party"); assertEqual(i.difficultyID, 8)
-    assertTrue(i.isChallengeModeActive); assertTrue(i.inGroup); assertFalse(i.inRaid)
-    assertFalse(i.isDelve); assertFalse(i.isFollowerDungeon); assertFalse(i.isPvP)
-    place(m, { inInstance = true, instanceType = "scenario", difficultyID = 208 })
-    i = NS.Situations.ReadInputs()
-    assertTrue(i.isDelve)
+    if T.forever then   -- no keystone or delve to read there (Forever port design §4.4)
+        place(m, { inInstance = true, instanceType = "raid", difficultyID = 242, inGroup = true, inRaid = true })
+        local i = NS.Situations.ReadInputs()
+        assertTrue(i.inInstance); assertEqual(i.instanceType, "raid"); assertEqual(i.difficultyID, 242)
+        assertFalse(i.isChallengeModeActive); assertTrue(i.inGroup); assertTrue(i.inRaid)
+        assertFalse(i.isDelve); assertFalse(i.isFollowerDungeon); assertFalse(i.isPvP)
+        place(m, { inInstance = true, instanceType = "scenario", difficultyID = 208, cm = true })
+        i = NS.Situations.ReadInputs()
+        assertFalse(i.isDelve, "a delve id is no delve on Forever")
+        assertFalse(i.isChallengeModeActive, "nor a keystone flag")
+    else
+        place(m, KEYSTONE)
+        local i = NS.Situations.ReadInputs()
+        assertTrue(i.inInstance); assertEqual(i.instanceType, "party"); assertEqual(i.difficultyID, 8)
+        assertTrue(i.isChallengeModeActive); assertTrue(i.inGroup); assertFalse(i.inRaid)
+        assertFalse(i.isDelve); assertFalse(i.isFollowerDungeon); assertFalse(i.isPvP)
+        place(m, { inInstance = true, instanceType = "scenario", difficultyID = 208 })
+        i = NS.Situations.ReadInputs()
+        assertTrue(i.isDelve)
+    end
     place(m, { inInstance = true, instanceType = "arena" })
     assertTrue(NS.Situations.ReadInputs().isPvP)
     m.__fire("PLAYER_ENTERING_WORLD")
@@ -254,12 +266,17 @@ end, T.RETAIL_ONLY)
 
 test("situations: a difficulty the client does not know falls back to the instance type", function()
     local NS, m = live()
-    place(m, { inInstance = true, instanceType = "party", difficultyID = 205, inGroup = true })
-    assertEqual(NS.Situations.Current(), "followerDungeon")
-    m.unknownDifficulties[205] = true
+    -- Retail: a follower dungeon's id in a party; WoW Forever, whose ids imply no situation the
+    -- instance type does not, a 20-player raid's: the unknown id is dropped and the type decides.
+    local id, itype = T.forever and 242 or 205, T.forever and "raid" or "party"
+    local known, fallback = T.forever and "raid" or "followerDungeon", T.forever and "raid" or "dungeon"
+    place(m, { inInstance = true, instanceType = itype, difficultyID = id, inGroup = true })
+    assertEqual(NS.Situations.ReadInputs().difficultyID, id)
+    assertEqual(NS.Situations.Current(), known)
+    m.unknownDifficulties[id] = true
     assertNil(NS.Situations.ReadInputs().difficultyID)
-    assertEqual(NS.Situations.Current(), "dungeon")
-end, T.RETAIL_ONLY)
+    assertEqual(NS.Situations.Current(), fallback)
+end)
 
 test("situations: a client with no C_ChallengeMode still classifies", function()
     local NS, m = live()

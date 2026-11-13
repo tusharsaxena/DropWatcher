@@ -385,6 +385,8 @@ test("flush: a restriction back mid-flush stops it; the rest wait for the next t
 end)
 
 test("flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that lifted silently", function()
+    -- A key's completion is Retail's alone (Forever port design §4.4): on WoW Forever the event is
+    -- not registered, so it reaches no flush and the ask stays queued.
     for _, event in ipairs({ "ENCOUNTER_END", "CHALLENGE_MODE_COMPLETED" }) do
         local NS, m, A = party()
         local id = drop(NS, m, 300, "Brakk")
@@ -393,9 +395,10 @@ test("flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that 
         m.chatLockdown = false
         assertEqual(#m.chatSent, 0)
         m.__fire(event)
-        assertEqual(#m.chatSent, 1, event)
+        local sent = (event == "CHALLENGE_MODE_COMPLETED" and T.forever) and 0 or 1
+        assertEqual(#m.chatSent, sent, event)
     end
-end, T.RETAIL_ONLY)
+end)
 
 test("flush: a trigger with nothing queued, or while chat is still restricted, sends nothing", function()
     local NS, m, A = party()

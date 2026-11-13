@@ -264,12 +264,13 @@ test("messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CH
     M.Request(book, ask("d1"), HOLD)
     assertTrue(M.ShouldFlush(book, "restrictionLifted", true))
     assertTrue(M.ShouldFlush(book, "ENCOUNTER_END", true))
-    assertTrue(M.ShouldFlush(book, "CHALLENGE_MODE_COMPLETED", true))
+    -- A key's completion is Retail's alone (Forever port design §4.4): no trigger on WoW Forever.
+    assertEqual(M.ShouldFlush(book, "CHALLENGE_MODE_COMPLETED", true), not T.forever)
     assertFalse(M.ShouldFlush(book, "restrictionLifted", false))
     assertFalse(M.ShouldFlush(book, "ENCOUNTER_END", false))
     assertFalse(M.ShouldFlush(book, "PLAYER_REGEN_ENABLED", true))
     assertFalse(M.ShouldFlush(nil, "ENCOUNTER_END", true))
-end, T.RETAIL_ONLY)
+end)
 
 test("messaging: cancel drops a queued ask, which the flush then skips", function()
     local M = load()

@@ -85,12 +85,15 @@ test("debug: the encounter and the keystone run edges each write one FEED line",
     m.__fire("ENCOUNTER_END", 2902, "Kyrioss", 8, 5, 1)
     m.__fire("CHALLENGE_MODE_COMPLETED")
     local feed = logged(NS, "FEED")
-    assertEqual(count(feed, "keystone run started: The Rookery+"), 1, joined(feed))
     assertEqual(count(feed, "encounter 2902 started"), 2, joined(feed))
     assertEqual(count(feed, "encounter 2902 ended: wipe"), 1, joined(feed))
     assertEqual(count(feed, "encounter 2902 ended: kill"), 1, joined(feed))
-    assertEqual(count(feed, "keystone run completed: The Rookery+"), 1, joined(feed))
-end, T.RETAIL_ONLY)
+    -- The keystone events are Retail's alone (Forever port design §4.4): not registered on WoW
+    -- Forever, so no run line there, while the encounter edges still write theirs.
+    local runs = T.forever and 0 or 1
+    assertEqual(count(feed, "keystone run started: The Rookery+"), runs, joined(feed))
+    assertEqual(count(feed, "keystone run completed: The Rookery+"), runs, joined(feed))
+end)
 
 test("debug: a drop re-judged on new facts says what it reads now", function()
     local NS, m = dungeon()
