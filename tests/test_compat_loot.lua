@@ -277,15 +277,90 @@ test("compat loot: LootRollInfo answers bop from bindOnPickUp", function()
 end)
 
 -- ---------------------------------------------------------------------------------------------
+-- The loot method and the loot window (DW-FP18, design §6)
+-- ---------------------------------------------------------------------------------------------
+
+local DOOM = "Player-1-0000000D"
+
+test("loot method: ML unit and name from masterLooterRaidID", function()
+    local Compat, m = fresh()
+    assertNil(Compat.LootMethod(), "no answer")
+    m.setGroup({ { guid = BRAKK, name = "Brakk", class = "WARRIOR", classFile = "WARRIOR" },
+        { guid = DOOM, name = "Doom", realm = "Dock", class = "HUNTER", classFile = "HUNTER" } }, true)
+    m.lootMethod = { 2, nil, 3 }
+    local lm = Compat.LootMethod()
+    assertEqual(lm.method, "master"); assertEqual(lm.mlUnit, "raid3"); assertFalse(lm.isML)
+    if Compat.ClientKey() == "forever" then
+        assertEqual(lm.mlName, "Doom Dock", "a Forever two-word name kept whole (Review Focus 4)")
+        assertNil(lm.mlRealm)
+    else
+        assertEqual(lm.mlName, "Doom"); assertEqual(lm.mlRealm, "Dock")
+    end
+    m.lootMethod = { 2, nil, 1 }
+    lm = Compat.LootMethod()
+    assertEqual(lm.mlUnit, "raid1"); assertTrue(lm.isML, "raid1 is you")
+    m.setGroup({ { guid = BRAKK, name = "Brakk", class = "WARRIOR", classFile = "WARRIOR" } })
+    m.lootMethod = { 2, 1, nil }
+    lm = Compat.LootMethod()
+    assertEqual(lm.mlUnit, "party1"); assertEqual(lm.mlName, "Brakk"); assertFalse(lm.isML)
+    m.lootMethod = { 2, 0, nil }
+    lm = Compat.LootMethod()
+    assertEqual(lm.mlUnit, "player"); assertTrue(lm.isML)
+    m.lootMethod = { 3, nil, nil }
+    lm = Compat.LootMethod()
+    assertEqual(lm.method, "group"); assertNil(lm.mlUnit); assertFalse(lm.isML)
+    m.lootMethod = { 2, nil, T.secret(3) }
+    lm = Compat.LootMethod()
+    assertEqual(lm.method, "master"); assertNil(lm.mlUnit, "a secret id is never read"); assertFalse(lm.isML)
+    m.lootMethod = { T.secret(2) }
+    assertNil(Compat.LootMethod(), "a secret method answers nothing")
+    m.C_PartyInfo.GetLootMethod = nil
+    assertNil(Compat.LootMethod(), "no API")
+end)
+
+test("loot method: threshold falls back to 4", function()
+    local Compat, m = fresh()
+    m.lootMethod = { 2, 0, nil }
+    m.Constants = { LootConsts = { MasterLootQualityThreshold = 5 }, LootConsts_Camelot = { MasterLootQualityThreshold = 4 } }
+    assertEqual(Compat.LootMethod().threshold, 5, "LootConsts first: the runtime key on both clients")
+    m.Constants = { LootConsts_Camelot = { MasterLootQualityThreshold = 4 } }
+    assertEqual(Compat.LootMethod().threshold, 4, "then LootConsts_Camelot")
+    m.Constants = { LootConsts = { MasterLootQualityThreshold = T.secret(3) } }
+    local fallback = Compat.ClientKey() == "forever" and 4 or 5
+    assertEqual(Compat.LootMethod().threshold, fallback, "a secret is skipped")
+    m.Constants = nil
+    assertEqual(Compat.LootMethod().threshold, fallback, "4 on Forever, 5 on Retail")
+end)
+
+test("loot slots: every slot with its link, quality, lock and source", function()
+    local Compat, m = fresh()
+    assertEqual(#Compat.LootSlots(), 0, "no loot window")
+    m.lootSlots = { { link = LINK, quality = 4, locked = true, source = "Creature-0-1-2-3-4-5" },
+        { link = T.secret(LINK), quality = 4, source = T.secret("Creature-0-1-2-3-4-6") },
+        { quality = 0 } }
+    local slots = Compat.LootSlots()
+    assertEqual(#slots, 3)
+    local a = slots[1]
+    assertEqual(a.slot, 1); assertEqual(a.link, LINK); assertEqual(a.quality, 4); assertTrue(a.locked)
+    assertEqual(a.sourceGUID, "Creature-0-1-2-3-4-5")
+    assertNil(slots[2].link); assertNil(slots[2].sourceGUID, "never keyed on a secret")
+    assertEqual(slots[2].quality, 4); assertFalse(slots[2].locked)
+    assertNil(slots[3].link)
+    m.GetNumLootItems = nil
+    assertEqual(#Compat.LootSlots(), 0, "no API")
+end)
+
+-- ---------------------------------------------------------------------------------------------
 -- The family's contract
 -- ---------------------------------------------------------------------------------------------
 
 local MEMBERS = { "LootHistoryRolls", "LootHistoryDrop", "LootHistoryDropsFor", "LootHistoryEncounter",
-    "LootHistoryEncounters", "LootHistoryNow", "ActiveLootRolls", "LootRollInfo" }
+    "LootHistoryEncounters", "LootHistoryNow", "ActiveLootRolls", "LootRollInfo", "LootMethod", "LootSlots" }
 
 test("compat loot: no member raises with every API gone", function()
     local Compat, m = fresh()
     m.C_LootHistory, m.GetActiveLootRollIDs, m.GetLootRollItemInfo, m.GetLootRollItemLink = nil, nil, nil, nil
+    m.C_PartyInfo, m.GetNumLootItems, m.GetLootSlotLink, m.GetLootSlotInfo, m.GetLootSourceInfo = nil, nil, nil, nil, nil
     for _, name in ipairs(MEMBERS) do
         for _, arg in ipairs({ 1, LINK, false, {} }) do
             assertTrue(pcall(Compat[name], arg, arg), name .. " raised")
@@ -300,7 +375,8 @@ test("compat loot: the simulator's seam wraps every loot member (the TOC order)"
     for _, name in ipairs(MEMBERS) do assertTrue(wrapped[name], name .. " is not wrapped") end
 end)
 
-local LOOT_APIS = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink" }
+local LOOT_APIS = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink",
+    "GetLootMethod", "GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "GetLootSourceInfo" }
 
 test("compat loot: no other shipped file names a loot roll API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do

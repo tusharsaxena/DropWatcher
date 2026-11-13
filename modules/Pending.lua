@@ -11,7 +11,8 @@ local _, NS = ...
 -- judge (NS.LootFeed.GateFor); `rollID` is your own roll popup's id once claimed (START_LOOT_ROLL,
 -- joined by item ID, the oldest unclaimed item first, so two copies of one item keep their own
 -- popup: Review Focus 1). An item's tables are the store's own: read them, never write them.
--- (`kind = "ml"`, the master-loot drops of design §6, lands with DW-FP18.)
+-- `kind = "ml"`, the master-loot drops of design §6, is modules/PendingML.lua's: it holds and
+-- closes its items through P.Hold / P.Close, and P.Held answers whether a key is held or closed.
 --
 -- TEST MODE (DW-FP17) keeps its sample items in a store of their own (State.pendingTest, AddTest
 -- and ClearTest; All("test") reads it), never read from the client, never ticked, never handed to
@@ -297,13 +298,18 @@ end
 
 --- LOOT_HISTORY_CLEAR_HISTORY: the live mapping goes (the keys may be reused). Each open roll
 --- item is detached from its encounterID:dropKey, so a reused key can never resolve it into
---- another drop (M4 review); the ticker expires it on its next pass.
+--- another drop (M4 review); the ticker expires it on its next pass. A master-loot item's key is
+--- not the history's (sourceGUID:itemID): it stays held, so a re-opened corpse adds nothing.
 function P.OnClearHistory()
     if stoodDown() then return end
     local s = store()
     s.byKey, s.done, s.loading = {}, {}, {}
     for _, item in ipairs(s.items) do
-        if item.kind == "roll" and item.state == "open" then item.detached = true end
+        if item.kind == "roll" then
+            if item.state == "open" then item.detached = true end
+        else
+            s.byKey[item.key] = item
+        end
     end
 end
 
@@ -324,6 +330,36 @@ function P.OnCancelRoll(rollID)
     local item = P.ForRoll(rollID)
     if item then item.rollID = nil end
 end
+
+--- Hold one item another kind built (modules/PendingML.lua): it takes the next id, enters the
+--- store under its `key` and sends PendingChanged(id, "open"); its verdict joins the score retry.
+--- @param item table { kind, key, link, itemID, at, state, facts, forced, me, ... }
+--- @return table item
+function P.Hold(item)
+    local s = store()
+    s.seq = s.seq + 1
+    item.id = s.seq
+    s.items[#s.items + 1], s.byId[item.id], s.byKey[item.key] = item, item, item
+    send(item.id, "open")
+    P.NoteScore(item)
+    return item
+end
+
+--- Close one held item (PendingChanged(id, "closed")); its key stays closed until the history clears.
+function P.Close(item)
+    if P.Get(item.id) == item then remove(item) end
+end
+
+--- Whether a key is held now, or was closed (or gated) since the last history clear.
+--- @param key string
+--- @return boolean
+function P.Held(key)
+    local s = store()
+    return s.byKey[key] ~= nil or s.done[key] == true
+end
+
+--- Mark a key closed without holding an item (a drop the gates refused).
+function P.Refuse(key) store().done[key] = true end
 
 --- Close every live item `pred(item)` answers true for, its key free again (the simulator's stop:
 --- its rolls are no longer the client's to answer). Answers how many closed.

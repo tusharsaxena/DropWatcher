@@ -1156,7 +1156,7 @@ Total.
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_compat_loot.lua (15)
+### test_compat_loot.lua (18)
 
 - compat loot: rolls answer every row with its state and number
 - compat loot: a secret playerName drops the name, keeps the row
@@ -1169,6 +1169,9 @@ Total.
 - compat loot: LootHistoryNow answers the history clock, else nil
 - compat loot: ActiveLootRolls answers the open roll ids, plain ones only
 - compat loot: LootRollInfo answers bop from bindOnPickUp
+- loot method: ML unit and name from masterLooterRaidID
+- loot method: threshold falls back to 4
+- loot slots: every slot with its link, quality, lock and source
 - compat loot: no member raises with every API gone
 - compat loot: the simulator's seam wraps every loot member (the TOC order)
 - compat loot: no other shipped file names a loot roll API in code
@@ -1800,6 +1803,18 @@ Total.
 - pending: a history clear detaches open items, so a reused key never resolves the wrong drop
 - pending: your verdict is judged again on a gear change
 - pending: a pending score is judged again on the score retry
+
+### test_pending_ml.lua (9)
+
+- ml pending: an Epic slot under master loot opens one ml item; re-opening the corpse does not duplicate it
+- ml pending: a receipt for that item assigns it and the drop carries askedML
+- ml pending: a receipt after 600 s, or for another item, assigns nothing
+- ml pending: a cleared loot history keeps the ml item; re-opening the corpse still adds nothing
+- ml pending: you as master looter see no pending item
+- ml pending: expires at 900 s
+- ml pending: leaving the group or the instance expires it
+- ml pending: under group loot nothing is pending from the loot window
+- ml pending: standing down drops the items and their timers
 
 ### test_roll_cells.lua (5)
 
@@ -2792,7 +2807,7 @@ Total.
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
-| test_compat_loot.lua | 15 |
+| test_compat_loot.lua | 18 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -2817,6 +2832,7 @@ Total.
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
 | test_pending.lua | 15 |
+| test_pending_ml.lua | 9 |
 | test_roll_cells.lua | 5 |
 | test_window_pending.lua | 8 |
 | test_feed_counts.lua | 10 |
@@ -2867,4 +2883,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2365** |
+| **Total** | **2377** |

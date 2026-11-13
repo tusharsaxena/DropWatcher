@@ -23,7 +23,8 @@ local _, NS = ...
 -- THE SOURCES. CHAT_MSG_LOOT through the loot parser's sink (`chat`), ENCOUNTER_LOOT_RECEIVED
 -- (`encounter`, which names the encounter) and C_LootHistory's won group-loot drops, which
 -- modules/Pending.lua hands over with their final roll table (`history`, each drop taken once;
--- `rec.roll`, `rec.pendingKey`). Your own `pushed` lines (quest
+-- `rec.roll`, `rec.pendingKey`); a chat or encounter receipt that assigns a master-loot item
+-- (NS.Pending.ClaimML) carries its `pendingKey` and `askedML`. Your own `pushed` lines (quest
 -- rewards, containers, purchases) are not drops and are skipped. Add(link, looter, opts) is the
 -- fourth door (`manual`): `/dw add`; Restore(r, adopt) the fifth (`restore`, modules/FeedRestore.lua,
 -- feedback-15 spec §0): past the situation gate and the filters, never merged with another restored
@@ -641,7 +642,7 @@ local function newRecord(s, r)
         itemID = r.itemID, qty = r.qty or 1, kind = r.kind or "loot", bonusRoll = r.kind == "bonus",
         looter = r.looter, isMine = r.looter.isSelf == true, at = t, situation = r.situation or situation,
         encounterID = r.encounterID, sources = { [r.source] = 1 }, source = r.source, roll = r.roll,
-        pendingKey = r.pendingKey, group = r.group or groupSpec(s, r.encounterID, t), state = "new", sim = sim,
+        pendingKey = r.pendingKey, askedML = r.askedML, group = r.group or groupSpec(s, r.encounterID, t), state = "new", sim = sim,
     })
 end
 
@@ -709,6 +710,7 @@ local function receive(r)
         local hit = NS.FeedRecords.FindRecent(s.recent, r)
         if hit then return merge(hit, r) end
     end
+    if r.source == "chat" or r.source == "encounter" then r.pendingKey, r.askedML = NS.Pending.ClaimML(itemID) end
     local rec = newRecord(s, r)
     if not rec.test and not rec.force then s.recent[#s.recent + 1] = rec end
     return start(rec)

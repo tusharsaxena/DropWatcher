@@ -20,9 +20,11 @@
 --                  canNeed, canGreed, canDisenchant, canTransmog }, read by GetLootRollItemInfo (its
 --                  thirteen returns) and GetLootRollItemLink; activeLootRolls is
 --                  GetActiveLootRollIDs()'s list
---   lootMethod     C_PartyInfo.GetLootMethod()'s answer (nil: a case that leaves it unset)
---   lootSlots      the open loot window's slots: { link, texture, name, count, quality, locked };
---                  GetNumLootItems is their count, GetLootSlotLink / GetLootSlotInfo read one
+--   lootMethod     C_PartyInfo.GetLootMethod()'s three answers as { method, masterLootPartyID,
+--                  masterLooterRaidID } (nil: a case that leaves it unset)
+--   lootSlots      the open loot window's slots: { link, texture, name, count, quality, locked,
+--                  source }; GetNumLootItems is their count, GetLootSlotLink / GetLootSlotInfo read
+--                  one, GetLootSourceInfo answers its `source` GUID and the count
 --   GroupLootFrame1..4  plain stand-ins for Blizzard's roll popups: rollID, Show / Hide / IsShown,
 --                  and HookScript recording each hook in .hooks[script]
 
@@ -95,7 +97,11 @@ return function(M)
     end
 
     M.C_PartyInfo = M.C_PartyInfo or {}
-    M.C_PartyInfo.GetLootMethod = function() return M.lootMethod end
+    M.C_PartyInfo.GetLootMethod = function()
+        local lm = M.lootMethod
+        if type(lm) ~= "table" then return lm end
+        return lm[1], lm[2], lm[3]
+    end
 
     M.lootSlots = {}
     M.GetNumLootItems = function() return #M.lootSlots end
@@ -107,6 +113,11 @@ return function(M)
         local s = M.lootSlots[slot]
         if not s then return nil end
         return s.texture, s.name, s.count or 1, nil, s.quality, s.locked
+    end
+    M.GetLootSourceInfo = function(slot)
+        local s = M.lootSlots[slot]
+        if not (s and s.source) then return nil end
+        return s.source, s.count or 1
     end
 
     for i = 1, 4 do M["GroupLootFrame" .. i] = popup(i) end

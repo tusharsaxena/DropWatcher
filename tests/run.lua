@@ -317,6 +317,7 @@ Kit.run{
         "test_inspect",
         "test_feed",
         "test_pending",
+        "test_pending_ml",
         "test_roll_cells",
         "test_window_pending",
         "test_feed_counts",

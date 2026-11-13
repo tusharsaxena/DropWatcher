@@ -681,5 +681,19 @@ function P.LootRollInfo(live, rollID)
     return live(rollID)
 end
 
+-- The loot method and the loot window (DW-FP18): a simulated group rolls under group loot and
+-- opens no loot window, so nothing is held for a master looter while it runs (`/dw sim ml`, which
+-- plays one, lands with DW-FP19); the threshold is the client's.
+function P.LootMethod(live)
+    if not group() then return live() end
+    local real = live()
+    return { method = "group", isML = false, threshold = real and real.threshold or nil }
+end
+
+function P.LootSlots(live)
+    if not group() then return live() end
+    return {}
+end
+
 W.PROVIDERS = P
 for key, fn in pairs(P) do NS.SimSeam:SetProvider(key, fn) end

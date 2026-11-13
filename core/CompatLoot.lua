@@ -1,7 +1,8 @@
 local _, NS = ...
 -- core/CompatLoot.lua — the loot history and group-loot roll reads (Forever port design §5.1, plan
 -- DW-FP13): a drop's whole roll table, an encounter's drops and its name, the history clock, your
--- open rolls and one roll's item, published on NS.Compat like the rest of the compat family, split
+-- open rolls and one roll's item, and the loot method and the loot window's slots (design §6,
+-- DW-FP18), published on NS.Compat like the rest of the compat family, split
 -- out of core/Compat.lua to keep it under its cap. LootHistoryDrop (the feed's won drop) lives here
 -- as a view over LootHistoryRolls, so the history has one call path. Both clients have the same
 -- C_LootHistory surface but one field name: a drop table's key is `lootListID` on Retail and
@@ -217,4 +218,78 @@ function Compat.LootRollInfo(rollID)
     local _, _, _, quality, bop, canNeed, canGreed, _, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
     return { link = link, quality = plainNumber(quality), bop = plainBool(bop), canNeed = plainBool(canNeed),
         canGreed = plainBool(canGreed), canTransmog = plainBool(canTransmog) }
+end
+
+-- ── the loot method and the loot window (DW-FP18, design §6) ────────────────────────────────
+
+-- Enum.LootMethod's values, the same on both clients (R1 §1.2), as plain names.
+local METHODS = { [0] = "freeForAll", [1] = "roundRobin", [2] = "master", [3] = "group",
+    [4] = "needBeforeGreed", [5] = "personal" }
+
+-- The master-loot quality threshold: Constants.LootConsts (the runtime key on both clients), then
+-- Constants.LootConsts_Camelot (Forever's documented name), then 4 on Forever or 5 on Retail.
+local function mlThreshold()
+    local consts = plainTable(Constants)
+    for _, key in ipairs({ "LootConsts", "LootConsts_Camelot" }) do
+        local t = consts and plainTable(consts[key])
+        local v = t and plainNumber(t.MasterLootQualityThreshold)
+        if v then return v end
+    end
+    return Compat.ClientKey() == "forever" and 4 or 5
+end
+
+-- The master looter's unit from GetLootMethod's ids: a raid index is raid<N>; a party index is
+-- party<N>, 0 being you.
+local function mlUnitOf(partyID, raidID)
+    raidID, partyID = plainNumber(raidID), plainNumber(partyID)
+    if raidID and raidID > 0 then return "raid" .. raidID end
+    if partyID == 0 then return "player" end
+    if partyID and partyID > 0 then return "party" .. partyID end
+    return nil
+end
+
+-- Whether `unit` is you: the player token, or the same plain GUID.
+local function isYou(unit)
+    if unit == "player" then return true end
+    local mine, theirs = Compat.UnitGUID("player"), Compat.UnitGUID(unit)
+    return Compat.IsSafeKey(mine) and Compat.IsSafeKey(theirs) and mine == theirs
+end
+
+--- The group's loot method (C_PartyInfo.GetLootMethod): { method, isML, mlUnit, mlName, mlRealm,
+--- threshold }. `method` is the plain name of Enum.LootMethod's value ("freeForAll", "roundRobin",
+--- "master", "group", "needBeforeGreed", "personal"); under master loot `mlUnit` is the master
+--- looter's unit (raid<N>, party<N> or player), `mlName` / `mlRealm` its Compat.UnitCharacterName
+--- (a Forever "First Surname" whole, no realm) and `isML` whether that is you. `threshold` is the
+--- master-loot quality threshold. Nil for a secret or unknown method, or with no API.
+--- @return table|nil
+function Compat.LootMethod()
+    local api = C_PartyInfo
+    if not (api and api.GetLootMethod) then return nil end
+    local raw, partyID, raidID = api.GetLootMethod()
+    local method = METHODS[plainNumber(raw)]
+    if not method then return nil end
+    local out = { method = method, isML = false, threshold = mlThreshold() }
+    if method ~= "master" then return out end
+    local unit = mlUnitOf(partyID, raidID)
+    if unit then
+        out.mlUnit, out.isML = unit, isYou(unit)
+        out.mlName, out.mlRealm = Compat.UnitCharacterName(unit)
+    end
+    return out
+end
+
+--- The open loot window's slots (GetNumLootItems, GetLootSlotLink, GetLootSlotInfo,
+--- GetLootSourceInfo): { { slot, link, quality, locked, sourceGUID } } in slot order. A secret field
+--- drops that field; the source GUID is kept only as a safe key. Empty with no window or no API.
+--- @return table
+function Compat.LootSlots()
+    local out = {}
+    if not (GetNumLootItems and GetLootSlotLink and GetLootSlotInfo) then return out end
+    local n = plainNumber(GetNumLootItems()) or 0
+    for slot = 1, n do
+        local _, _, _, _, quality, locked = GetLootSlotInfo(slot)
+        out[#out + 1] = { slot = slot, link = plainString(GetLootSlotLink(slot)), quality = plainNumber(quality),
+            locked = isTrue(locked), sourceGUID = GetLootSourceInfo and plainGUID((GetLootSourceInfo(slot))) or nil }
+    end
+    return out
 end

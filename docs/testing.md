@@ -434,7 +434,7 @@ the feed (`rec.roll`) and closing the item, a chat receipt that came first takin
 identical items on one encounter kept apart with their own tables and roll popups (Review Focus 1), a
 reload mid-roll rebuilding one item whose winner makes one drop (Review Focus 3), everyone passing
 lingering 60 s with no feed record, the quality gate keeping a drop out, the 1 s ticker alive only while
-a roll is open, and the stand-down), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
+a roll is open, and the stand-down; since the M4 review also a history clear during an item load, a closed roll releasing its popup, a cleared history detaching open items, and your verdict judged again on a gear change and on the score retry), `test_pending_ml` (`modules/PendingML.lua`, DW-FP18, on both kit profiles: a slot at the client's master-loot threshold opening one `ml` item that a re-opened corpse does not duplicate, a receipt inside 600 s assigning it with `askedML` on the drop, a late or other receipt assigning nothing, nothing pending for the master looter, expiry at 900 s and on leaving the group or the instance, nothing from the loot window under group or personal loot, and the stand-down), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
 profiles: the open summary's counts in the state order, the won summary with the winner's choice and
 number, the rows' order (the winner, numbers high to low, chosen without a number, waiting, pass), a
 nameless row kept as `?` (Review Focus 2), win protection marked only once won, the time left on the

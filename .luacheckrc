@@ -71,10 +71,11 @@ files["core/CompatClient.lua"] = {
     "C_SpecializationInfo", "GetInspectSpecialization", "UnitGroupRolesAssigned" },
 }
 
--- The loot history and the group-loot rolls (Forever port design §5.1): core/CompatLoot.lua alone
--- names C_LootHistory and the roll globals.
+-- The loot history and the group-loot rolls (Forever port design §5.1), the loot method and the
+-- loot window (§6): core/CompatLoot.lua alone names C_LootHistory, C_PartyInfo and those globals.
 files["core/CompatLoot.lua"] = {
-  read_globals = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink" },
+  read_globals = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink",
+    "C_PartyInfo", "Constants", "GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "GetLootSourceInfo" },
 }
 
 -- The Encounter Journal: core/CompatJournal.lua alone names it, for the simulator's item pool.
