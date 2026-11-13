@@ -120,7 +120,7 @@ return function(enableAddon, withPlayer)
         end
     end
 
-    return {
+    local facts = {
         owner = "DropWatcher",
         skin  = function() return m.LibStub("LibKa0s-Skin-1.0") end,
         reset = fresh,
@@ -232,4 +232,11 @@ return function(enableAddon, withPlayer)
             end },
         },
     }
+    -- The off-spec glow is Retail's alone (Forever port design §4.4): on WoW Forever it is no surface.
+    if _G.DW_TEST.forever then
+        for i, s in ipairs(facts.surfaces) do
+            if s.name == "the off-spec glow" then table.remove(facts.surfaces, i) break end
+        end
+    end
+    return facts
 end

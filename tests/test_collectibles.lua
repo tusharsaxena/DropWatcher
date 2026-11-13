@@ -236,7 +236,7 @@ test("collectibles: a cosmetic's verdict follows a learned appearance, with no s
     assertTrue(f.transmogKnown); assertEqual(NS.Collectibles.Verdict(f).verdict, "collected")
     -- red under: Read copying transmogKnown into collect.known, which the event never refreshes
     assertNil(f.collect.known, "the state lives in transmogKnown alone")
-end)
+end, T.RETAIL_ONLY)
 
 test("collectibles: Read leaves a tier token's category to its flag and probes nothing", function()
     local asked = 0

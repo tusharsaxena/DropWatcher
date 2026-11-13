@@ -282,7 +282,8 @@ test("cells: Item, Ilvl, Slot and Looter are never blank, each with a reason too
         assertTrue(#c.tip >= 2, "a cell's reason: " .. tostring(c.tip[1]))
     end
     assertEqual(W.Ilvl(drop()).text, "311")
-    assertEqual(P(W.Ilvl(drop()).tip[2]), "• Upgrade track: Hero 2/6")
+    -- WoW Forever has no upgrade tracks (Forever port design §4.4): the tooltip names the level.
+    assertEqual(P(W.Ilvl(drop()).tip[2]), T.forever and "• Item level: 311" or "• Upgrade track: Hero 2/6")
     assertEqual(W.Slot(drop()).text, "Head")
     assertEqual(P(W.Slot(drop({ facts = { equipLoc = "INVTYPE_TRINKET" } })).tip[2]), "• Compared with: the lower of the two worn there")
     local lc = W.Looter(drop())

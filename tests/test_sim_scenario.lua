@@ -48,6 +48,7 @@ local function addon()
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     return NS, m
 end
 
@@ -319,7 +320,7 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     assertEqual(printed(m, "A simulated boss is already engaged"), 1)
     m.advance(10)
     assertEqual(NS.SimScenario.Status().pos, 2, "paused before the pool was ready: nothing played on its own")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim restart: a stale pool callback from the first session never readies the restarted one (C.1)", function()
     local NS, m = addon()
@@ -342,7 +343,7 @@ test("sim restart: a stale pool callback from the first session never readies th
     m.advance(1)
     assertTrue(NS.Sim:Status().ready, "its own pool readies it")
     assertEqual(printed(m, "Simulation ready:"), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim run: Run while the panel's click-ahead plays answers playing (C.2)", function()
     local NS, m = addon()
@@ -412,7 +413,7 @@ test("sim run: a typed start waits for the pool, then plays", function()
     -- red under: LibKa0s v1.75.2, where the ready pool waited for a verb
     assertTrue(NS.SimScenario.Status().pos >= 1, "the ready pool plays with no further verb")
     assertEqual(printed(m, "Simulation step 1 of 15: Pull: Warden Ashvane."), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim step: a typed step while it plays pauses it and plays one step", function()
     local NS, m = addon()
@@ -615,7 +616,9 @@ test("sim diagnostics: the section reads the session, the pool, the timeline and
     local text = diagnostics(NS)
     local want = T.forever and "scenario=dungeon situation=dungeon" or "scenario=key situation=mythicPlus"
     assertTrue(text:find("sim: active=true " .. want .. " members=4", 1, true) ~= nil, text)
-    assertTrue(text:find("sim: pool size=", 1, true) ~= nil and text:find("source=journal", 1, true) ~= nil)
+    -- WoW Forever's pool is your own gear (modules/SimPool.lua, Forever port design §4.4).
+    local source = T.forever and "source=fallback" or "source=journal"
+    assertTrue(text:find("sim: pool size=", 1, true) ~= nil and text:find(source, 1, true) ~= nil)
     local timeline = T.forever and "step=1/15 next=lockdownOn" or "step=1/11 next=pull"
     assertTrue(text:find("sim: timeline " .. timeline .. " ready=true playing=false", 1, true) ~= nil, text)
     assertTrue(text:find("sim: sendsPrinted=0", 1, true) ~= nil)

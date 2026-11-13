@@ -408,7 +408,7 @@ test("gear: the candidate brings its off-spec gear, and the kernel judges Holy a
     assertEqual(r.verdict, "cantUse")
     assertEqual(r.offSpec.specID, 65); assertEqual(r.offSpec.verdict, "upgrade")
     assertEqual(r.offSpec.ilvlDelta, 50); assertEqual(r.offSpec.baseline.link, link(3010))
-end)
+end, T.RETAIL_ONLY)
 
 test("gear: a bag change that touches only an off-spec item still sends GearChanged", function()
     local NS, m, G = retailEnabled(protPaladin)

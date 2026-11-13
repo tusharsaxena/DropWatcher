@@ -291,7 +291,7 @@ test("item facts: learning an appearance re-reads the flag on the cached facts",
     m.items[CHEST].transmog = true
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
     assertTrue(IF.Get(CHEST).transmogKnown)
-end)
+end, T.RETAIL_ONLY)
 
 test("item facts: rawEquipLoc and the category are filled on every item (issue #13)", function()
     local _, _, IF = enabled(function(m)
@@ -316,7 +316,7 @@ test("item facts: the appearance event reads the raw equipLoc, not a slot set la
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
     -- red under: the handler reading facts.equipLoc, which has no appearance
     assertTrue(IF.Get(CHEST).transmogKnown)
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- Loading an uncached item

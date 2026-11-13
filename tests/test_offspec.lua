@@ -74,7 +74,7 @@ test("offspec: a Protection paladin's Intellect axe is an off-spec upgrade for H
     assertEqual(res.offSpec.baselineSlot, S.MAINHAND)
     assertTrue(hasReason(res.offSpec, "emptySlot"), "the off-spec pass's own reasons")
     assertEqual(table.concat(calls, ","), HOLY .. "," .. RET, "every other spec, never the main one")
-end)
+end, T.RETAIL_ONLY)
 
 test("offspec: against the best Holy item owned, the off-spec verdict takes the band", function()
     local E = load()
@@ -89,7 +89,7 @@ test("offspec: against the best Holy item owned, the off-spec verdict takes the 
     res = E.Evaluate(intAxe(600), c, { sidegradeBand = 5 })
     assertEqual(res.offSpec.verdict, "downgrade")
     assertEqual(res.offSpec.ilvlDelta, -40)
-end)
+end, T.RETAIL_ONLY)
 
 test("offspec: a refusal on the class skips the pass; so does a drop the main spec can use", function()
     local E = load()
@@ -143,7 +143,7 @@ test("offspec: the spec list and the dual-wield flag are spec refusals too", fun
     assertTrue(hasReason(res, "dualWield"))
     assertEqual(res.offSpec.specID, 72, "Fury, not the main spec's flag copied across")
     assertEqual(res.offSpec.verdict, "upgrade")
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- The best spec
@@ -171,7 +171,7 @@ test("offspec: the best spec wins: verdict, then the larger difference (an empty
     -- A sidegrade beats a downgrade.
     o = judge(shield(640), shield(629), { sidegradeBand = 2 })
     assertEqual(o.specID, PROT); assertEqual(o.verdict, "sidegrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("offspec: doesntWant, cantUse and unknown are never chosen; with none left there is no off-spec", function()
     local E = load()
@@ -185,7 +185,7 @@ test("offspec: doesntWant, cantUse and unknown are never chosen; with none left 
     -- Unknown: a slot nobody has read.
     c = paladin(RET, { [HOLY] = {}, [PROT] = {} })
     assertNil(E.Evaluate(shield(630), c, {}).offSpec, "no baseline for either spec")
-end)
+end, T.RETAIL_ONLY)
 
 test("offspec: item level only: the scorer is never asked, so it never waits on a score", function()
     local E = load()
@@ -198,7 +198,7 @@ test("offspec: item level only: the scorer is never asked, so it never waits on 
     local res = E.Evaluate(intAxe(650), paladin(PROT, { [HOLY] = { [S.MAINHAND] = mace } }), { scorer = scorer })
     assertEqual(res.offSpec.verdict, "upgrade")
     assertNil(asked[HOLY]); assertTrue(not hasReason(res.offSpec, "scorePending"))
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- Junk
@@ -232,7 +232,7 @@ test("offspec: junk off-spec gear and junk undesired lists are tolerated and ski
     -- An unknown class: nothing to walk.
     assertNil(E.Evaluate(intAxe(650), { classFile = "NOPE", specID = 1, gear = {},
         offSpecGear = function() return good end }, {}).offSpec)
-end)
+end, T.RETAIL_ONLY)
 
 test("offspec: Who derives a spec's candidate from ClassData, never from the main spec", function()
     local _, _, OS = load()
@@ -255,4 +255,42 @@ test("offspec: WornGear keeps each worn item the spec could wear, false where it
     local ret = OS.WornGear({ [S.MAINHAND] = axe, [S.OFFHAND] = shield(600) }, OS.Who("PALADIN", RET))
     assertEqual(ret[S.MAINHAND], false); assertEqual(ret[S.OFFHAND], false, "Retribution takes no shield")
     assertNil(OS.WornGear("x", OS.Who("PALADIN", RET)))
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Per client (Forever port design §4.4, clients-§4, §6)
+-- ---------------------------------------------------------------------------------------------
+
+-- Off-spec is Retail's alone: WoW Forever's spec is class-wide, so there is no other spec to judge.
+-- On Forever the module is not initialized (no off-spec pass, even on Retail's spec model, and no
+-- off-spec gear on a candidate), the off-spec glow and the askOffSpec template have no row, there is
+-- no askOffSpec template, and no column tip or note speaks of it. On Retail each is there.
+test("offspec: not initialized, no rows, no askOffSpec on Forever", function()
+    local NS = T.retailList((T.enableAddon()))
+    local retail = NS.Compat.ClientKey() == "retail"
+    assertEqual(NS.OffSpec.Initialized(), retail, "the module")
+    local c = paladin(PROT, { [HOLY] = { [S.MAINHAND] = false }, [RET] = { [S.MAINHAND] = strSword(600) } })
+    local res = NS.Evaluate.Evaluate(intAxe(650), c, { sidegradeBand = 2 })
+    assertEqual(type(res.offSpec) == "table", retail, "the off-spec pass")
+    assertEqual(type(NS.Gear.Candidate().offSpecGear) == "function", retail, "your candidate's off-spec gear")
+    local templates = {}
+    for _, name in ipairs(NS.Constants.MESSAGE_TEMPLATES) do templates[name] = true end
+    assertEqual(templates.askOffSpec == true, retail, "the askOffSpec template")
+    local d = { me = { verdict = "cantUse", reasons = {}, offSpec = { specID = HOLY, verdict = "upgrade", ilvlDelta = 5 } } }
+    assertEqual(NS.Messaging.AskTemplate(d, false), retail and "askOffSpec" or nil, "never the askOffSpec ask on Forever")
+    local rows = NS.SchemaRuntime
+    assertEqual(rows.FindRow("messages.templates.askOffSpec") ~= nil, retail, "the template's row")
+    assertEqual(rows.FindRow("glow.offSpec.enabled") ~= nil, retail, "the off-spec glow's row")
+    assertEqual(NS.OffSpecCells.Legend() ~= nil, retail, "the Cyan legend row")
+    local function said(tip)
+        local text = type(tip) == "table" and T.tipPlainJoined(tip) or tostring(tip or "")
+        return text:find("off-spec", 1, true) ~= nil or text:find("Cyan", 1, true) ~= nil
+    end
+    local me
+    for _, col in ipairs(NS.WindowGroup.COLUMNS) do if col.key == "me" then me = col end end
+    assertEqual(said(me.tip) or said(me.desc), retail, "the Me column's tip and description")
+    local eq
+    for _, col in ipairs(NS.OfferPanel.COLS) do if col.key == "eq" then eq = col end end
+    assertEqual(said(eq.tip), retail, "the Offer panel's Their eq tip")
+    assertEqual(said(NS.OfferPanel.ORDER_TIP), retail, "the Offer panel's order note")
 end)

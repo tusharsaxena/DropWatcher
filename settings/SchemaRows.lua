@@ -215,7 +215,11 @@ end
 
 -- ── the row makers ──────────────────────────────────────────────────────────────────────────
 
+-- A row declaring `clients` (clients-§4) is registered only where NS.Compat.ForClient(clients) is
+-- true: on the other client it is not in the schema at all, so the panel, `/dw list|get|set|reset`
+-- and the defaults reset never see it (Forever port design §4.4's Retail-only rows).
 local function add(row)
+    if not NS.Compat.ForClient(row.clients) then return row end
     Rows[#Rows + 1] = row
     return row
 end
@@ -399,9 +403,11 @@ local function messages()
         L["Open the message in an edit box before it is sent."], sending)
     pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
         L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
+    -- Transmog and off-spec are Retail's alone (Forever port design §4.4): their rows declare it.
+    local transmog = { clients = K.FEATURE_CLIENTS.transmog }
     bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
         L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
-        sending)
+        with(sending, transmog))
 
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
@@ -420,9 +426,11 @@ local function messages()
     text("messages.templates.ask", M.templates.ask, L["Ask"],
         L["What you whisper a looter to ask for their drop."], templates)
     text("messages.templates.transmog", M.templates.transmog, L["Ask for transmog"],
-        L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."], templates)
+        L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."],
+        with(templates, transmog))
     text("messages.templates.askOffSpec", M.templates.askOffSpec, L["Ask for off-spec"],
-        L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."], templates)
+        L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."],
+        with(templates, { clients = K.FEATURE_CLIENTS.offSpec }))
     text("messages.templates.offer", M.templates.offer, L["Offer"],
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],
@@ -514,7 +522,10 @@ end
 -- The two glows, side by side: each knob is a main | off-spec pair, so the left column is the main
 -- spec's glow and the right the off-spec's. The tab mixes kinds of control, so each block carries a
 -- subsection heading (options-ui-§7), a style's heading its name in the Style dropdown.
+-- The off-spec glow is Retail's alone (Forever port design §4.4): its rows declare it, so on WoW
+-- Forever the tab is the main spec's column alone.
 local GLOWS = { "main", "offSpec" }
+local GLOW_CLIENTS = { offSpec = K.FEATURE_CLIENTS.offSpec }
 
 -- Each style's knobs, with its ranges and the styles it applies to; the defaults are
 -- defaults/Profile.lua's. `labels` is { main, off-spec }. Offset first, as it applies to three of the
@@ -579,11 +590,12 @@ local function glow()
     bool("glow.main.enabled", G.main.enabled, L["Main spec glow"],
         L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."], at)
     bool("glow.offSpec.enabled", G.offSpec.enabled, L["Off-spec glow"],
-        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."], at)
+        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."],
+        with(at, { clients = GLOW_CLIENTS.offSpec }))
     pick("glow.main.type", G.main.type, GLOW_STYLES, L["Main spec style"],
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
     pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
-        L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec") }))
+        L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec"), clients = GLOW_CLIENTS.offSpec }))
     -- Main spec left, off-spec right on every line, the colors too (feedback-21 H6, the owner's
     -- choice): the two swatches share a line and their Use class color companions the next,
     --     [Main spec color]             | [Off-spec color]
@@ -606,11 +618,11 @@ local function glow()
              label = i == 1 and L["Main spec color"] or L["Off-spec color"],
              tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use the skin's color is on, or while Use class color is on, except for its opacity, which then applies."],
              validate = isColor, startsLine = i == 1 or nil, classColorSource = "player",
-             page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow }
+             page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow, clients = GLOW_CLIENTS[key] }
     end
     for i, key in ipairs(GLOWS) do
         bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
-            with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
+            with(at, { classColorSource = "player", startsLine = i == 1 or nil, clients = GLOW_CLIENTS[key] }))
     end
     -- The skin's companions (FS-DW-FLIP, cause D5): the same two columns, one line down. No
     -- `disabledIf`, as for the swatch above. Use class color comes first.
@@ -622,7 +634,7 @@ local function glow()
     }
     for i, key in ipairs(GLOWS) do
         bool("glow." .. key .. ".colorFromSkin", G[key].colorFromSkin, FROM_SKIN[key][1], FROM_SKIN[key][2],
-            with(at, { startsLine = i == 1 or nil }))
+            with(at, { startsLine = i == 1 or nil, clients = GLOW_CLIENTS[key] }))
     end
     -- A style's section is drawn only while EITHER glow's style selects it (DW-04, owner ruling D-17,
     -- image-40/41; LibKa0s OptionsSwitch minor 1's `shownWhen = { any = ... }`): both rows of every
@@ -635,14 +647,18 @@ local function glow()
         local list = {}
         for style in pairs(styles) do list[#list + 1] = style end
         table.sort(list)
-        return { any = { { path = "glow.main.type", equals = list }, { path = "glow.offSpec.type", equals = list } } }
+        local any = {}
+        for _, key in ipairs(GLOWS) do
+            if NS.Compat.ForClient(GLOW_CLIENTS[key]) then any[#any + 1] = { path = "glow." .. key .. ".type", equals = list } end
+        end
+        return { any = any }
     end
     for _, knob in ipairs(GLOW_KNOBS) do
         local switch = knob.heading ~= L["Offset"] and chosen(knob.styles) or nil
         for i, key in ipairs(GLOWS) do
             local path = "glow." .. key .. "." .. knob.key
             local extra = with(at, { subgroup = knob.heading, disabledIf = knobOff(key, knob.styles),
-                                     zeroText = knob.zeroText, shownWhen = switch })
+                                     zeroText = knob.zeroText, shownWhen = switch, clients = GLOW_CLIENTS[key] })
             if knob.kind == "bool" then
                 bool(path, G[key][knob.key], knob.labels[i], knob.tip, extra)
             else

@@ -47,7 +47,11 @@ local KIND_TIP = {
     lockdownOff = { { L["Lifts"], L["the chat lockdown"] }, { L["Waiting asks"], L["go out (printed, never sent)"] } },
 }
 
-local START_TIP = { { L["Builds"], L["the item pool, from the Encounter Journal"] }, { L["Invents"], L["the group"] },
+-- The pool's source is the Encounter Journal on Retail, your own gear on WoW Forever (its journal
+-- is disabled: modules/SimPool.lua, Forever port design §4.4).
+local POOL_FROM = NS.Constants.FEATURE.journalPool and L["the item pool, from the Encounter Journal"]
+    or L["the item pool, from your own gear"]
+local START_TIP = { { L["Builds"], POOL_FROM }, { L["Invents"], L["the group"] },
     { L["Opens"], L["the window"] } }
 local STOP_TIP = { { L["Ends"], L["the simulation"] }, { L["Cleans up"], L["everything it made"] } }
 

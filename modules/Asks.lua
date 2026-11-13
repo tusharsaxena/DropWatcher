@@ -113,7 +113,8 @@ function A.Settings()
         oneAsk = NS.Setting("messages.oneAsk") ~= false,
         templates = templates,
         announceChannel = CHANNELS[channel] and channel or "auto",
-        transmogAsk = NS.Setting("messages.transmogAsk") == true,
+        -- Retail's alone (Forever port design §4.4): WoW Forever has no transmog, so no opt-in row.
+        transmogAsk = C.FEATURE.transmog and NS.Setting("messages.transmogAsk") == true,
     }
 end
 

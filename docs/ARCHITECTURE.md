@@ -95,6 +95,25 @@ one-line responsibility and why its position is load-bearing or conventional is 
 The window only listens: it reads the engine through read-only accessors and the bus, and every
 button goes through the host handler its slash verb shares.
 
+### Per-client features (clients-§4)
+
+Drop Watcher serves Retail and WoW Forever. These features serve one client (Forever port design
+§4.4); every other feature serves both. A declaration is `clients = { ... }` on the row, the event
+row or the seed list; `C.FEATURE_CLIENTS` (`core/Constants.lua`) names the Retail-only features
+DW-FP10 gates, and `C.FEATURE` holds each one's `ForClient` answer, read once.
+
+| Feature | Client | Gated in |
+|---|---|---|
+| Mythic+, delves, follower dungeons, Raid Finder, scenarios: their situations, rows and sim scenarios | Retail | `core/Constants.lua` (`C.SITUATIONS`, `C.DIFFICULTY_KIND`), `defaults/Profile.lua`, `modules/SimScenario.lua` (seed lists per client) |
+| `CHALLENGE_MODE_START`, `CHALLENGE_MODE_COMPLETED` and the keystone header | Retail | `modules/Situations.lua`, `modules/LootFeed.lua`, `modules/Asks.lua`, `modules/WindowCompact.lua` (event rows) |
+| `PLAYER_SPECIALIZATION_CHANGED` | Retail | `modules/Gear.lua` (event row) |
+| `TRAIT_CONFIG_UPDATED`, `CHARACTER_POINTS_CHANGED`, `PLAYER_LEVEL_UP` | Forever | `modules/Gear.lua` (event rows) |
+| The Encounter Journal item pool and `EJ_LOOT_DATA_RECIEVED` (Forever's pool is your own gear) | Retail | `modules/SimPool.lua` (`BuildInto`, event row), `modules/SimPanel.lua` (Start's tooltip) |
+| Transmog: the look read, `TRANSMOG_COLLECTION_UPDATED`, the look chip, the `transmog` template, `messages.transmogAsk` and `messages.templates.transmog`, the CanIMogIt and transmog diagnostics lines | Retail | `modules/ItemFacts.lua`, `modules/DetailCells.lua`, `modules/Messaging.lua`, `modules/Asks.lua`, `settings/SchemaRows.lua`, `modules/Diagnostics.lua`, `core/DropWatcher.lua`, `modules/TestData.lua` |
+| Upgrade tracks: the Track row, the track in the item level chip and the Ilvl tooltip, the `{track}` token | Retail | `modules/DetailCells.lua`, `modules/WindowCells.lua`, `core/Constants.lua` (`C.MESSAGE_TOKENS`) |
+| Off-spec: the off-spec pass (`OffSpec.Initialized`), the candidates' off-spec gear, the `askOffSpec` template and row, the off-spec glow's rows, its legend and notes | Retail | `modules/OffSpec.lua`, `modules/Gear.lua`, `modules/Inspect.lua`, `core/Constants.lua` (`C.MESSAGE_TEMPLATES`), `settings/SchemaRows.lua`, `modules/OffSpecCells.lua`, `modules/WindowGroup.lua`, `modules/OfferPanel.lua`, `modules/TestData.lua` |
+| The simulator's bonus rolls | Retail | `modules/SimEvents.lua` (`Plan`) |
+
 The filter bar is shared by the tabs and never reflows between them: a control a tab does not use
 is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
 exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
@@ -236,7 +255,7 @@ how many handlers it called.
 | `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent`, then `DW.OnAskRosterEvent`, then `DW.OnAutoAskRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `SPELL_TEXT_UPDATE` | `DW.OnSpellTextUpdate` | (since TT-1) a spell's text arrived: every cached item whose use spell it is and whose use text came back empty (`useSpellLoading`, not loaded yet) reads its use text, tier-token flag, made slot and category again (`modules/ItemFacts.lua`); a drop of such an item already waits for the spell through `ItemFacts.Request` |
-| `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`), then (since DW-CAT3) arms the collection re-read, so a live cosmetic's verdict follows (`modules/Collectibles.lua`) |
+| `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | Retail only (`clients = C.FEATURE_CLIENTS.transmog`, DW-FP10: WoW Forever has no transmog): re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`), then (since DW-CAT3) arms the collection re-read, so a live cosmetic's verdict follows (`modules/Collectibles.lua`) |
 | `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `NEW_RECIPE_LEARNED`, `SKILL_LINES_CHANGED` | `DW.OnCollectionEvent` | (since DW-CAT3) a mount, pet, toy or recipe learned, or a profession gained or lost: arms one 0.5-second timer, so a burst reads once; it re-reads the cached collectibles (`NS.ItemFacts.RereadCollections`, the cache's one writer) and re-judges each live collectible whose verdict moved through `LootFeed.Refresh(rec, "collection")`, which sends `DropUpdated(id, "collection")`; the stand-down cancels the timer (`modules/Collectibles.lua`). `PET_JOURNAL_LIST_UPDATE` is not used: it fires too often |
 | `PLAYER_EQUIPMENT_CHANGED` | `DW.OnGearEvent` | arms the gear snapshot's throttled rebuild (`modules/Gear.lua`); sends `GearChanged` when it moved |
 | `BAG_UPDATE_DELAYED` | `DW.OnGearEvent`, then `DW.OnTradeTimerEvent` (through `DW:OnSharedFeatureEvent`) | the same (a better item may have entered or left the bags), except in combat, where it is noted for the combat's end; a bag-only rebuild keeps the worn slots whose link stayed and reads no worn tooltip; then asks for the trade timer's scan of your own drops' bag items, at most one per 2 seconds (`modules/TradeTimer.lua`) |
@@ -255,7 +274,7 @@ how many handlers it called.
 | `TRADE_PLAYER_ITEM_CHANGED`, `TRADE_TARGET_ITEM_CHANGED` | `DW.OnHistoryTradeItems` | the items moved: re-read, and any both-accepted state is off |
 | `TRADE_ACCEPT_UPDATE` | `DW.OnHistoryTradeAccept` | either side accepted: the items are read once more and kept as the offer, since they are gone by the end |
 | `TRADE_CLOSED` | `DW.OnHistoryTradeClosed` | the window closed, completed or not: the trade waits `CLOSED_GRACE` (5) seconds for its "Trade complete."; alone it is a cancel or a failure and completes nothing. The client's second `TRADE_CLOSED` changes nothing |
-| `EJ_LOOT_DATA_RECIEVED` (the client's spelling) | `DW.OnSimPoolLoot` | a journal entry loaded: every item-pool build waiting for its data (a simulation's, or test mode's since DW-84) reads the journal again once the burst settles (`modules/SimPool.lua`); with no build waiting it does nothing |
+| `EJ_LOOT_DATA_RECIEVED` (the client's spelling) | `DW.OnSimPoolLoot` | Retail only (`clients = C.FEATURE_CLIENTS.journalPool`, DW-FP10: WoW Forever disables the journal, and its pool is your own gear): a journal entry loaded: every item-pool build waiting for its data (a simulation's, or test mode's since DW-84) reads the journal again once the burst settles (`modules/SimPool.lua`); with no build waiting it does nothing |
 | `UI_INFO_MESSAGE` | `DW.OnHistoryInfoMessage` | the client's "Trade complete." (`Compat.IsTradeCompleteMessage`), before the close or within the grace after it, completes the trade: the offer's items you got mark the matching drops `received`, the items you gave your own `tradedAway`; sends `HistoryChanged`. Any other message, or no trade, returns at once |
 | `UI_SCALE_CHANGED`, `DISPLAY_SIZE_CHANGED` | `DW.OnIconScaleEvent` | the client's UI scale or display size moved every pixel: each item button made so far whose effective scale changed re-snaps its icon edge to one physical pixel (`NS.IconStyle.Resnap`, `modules/IconStyle.lua`; the window's and the toast's Scale rows call it too, R5-ICON) |
 

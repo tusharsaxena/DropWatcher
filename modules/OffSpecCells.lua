@@ -38,9 +38,33 @@ local TM = NS.TipMarks
 local TONE = "offspec"
 OC.TONE = TONE
 
---- The legend's row (the Me column's tooltip, the Offer panel's Their eq), read at call time.
+--- The legend's row (the Me column's tooltip, the Offer panel's Their eq), read at call time. Nil
+--- where off-spec is not initialized (WoW Forever, Forever port design §4.4): no word of it there.
+--- @return string|nil
+function OC.Legend()
+    if not NS.OffSpec.Initialized() then return nil end
+    return TM.Row(L["Cyan"], L["an off-spec upgrade (another of your specs can use it)"])
+end
+
+--- A column tooltip: `rows`, then the legend's row where there is one, then `hint`. A fresh list.
+--- @param rows table
+--- @param hint string
+--- @return table
+function OC.WithLegend(rows, hint)
+    local out = {}
+    for i, r in ipairs(rows) do out[i] = r end
+    out[#out + 1] = OC.Legend()
+    out[#out + 1] = hint
+    return out
+end
+
+--- The Me column's description's off-spec sentence, with its leading space; "" where off-spec is
+--- not initialized.
 --- @return string
-function OC.Legend() return TM.Row(L["Cyan"], L["an off-spec upgrade (another of your specs can use it)"]) end
+function OC.MeNote()
+    if not NS.OffSpec.Initialized() then return "" end
+    return " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."]
+end
 
 local TITLE = {
     upgrade = L["Off-spec upgrade for %s"], sidegrade = L["Off-spec sidegrade for %s"],

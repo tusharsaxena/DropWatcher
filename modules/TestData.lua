@@ -486,7 +486,8 @@ end
 -- baseline carries the drop's first slot, a bag one (`bag`) none, no change an empty slot (and the
 -- kernel's emptySlot reason, which the toast's gain test and the {mygain} words read).
 local function offSpecOf(src, item, off, mainSpecID)
-    if not off then return nil end
+    -- Off-spec is Retail's alone (modules/OffSpec.lua): no sample has one on WoW Forever.
+    if not (off and NS.OffSpec.Initialized()) then return nil end
     local base = baselineOf(src, item, off[3])
     local plan = C.SLOT_PLAN[item.facts.equipLoc]
     if base and not off.bag and plan then base.slot = plan.slots[1] end
@@ -625,7 +626,8 @@ end
 local function other(src, now, row, where)
     local item = src:Drop(row, where)
     if not item then return nil end
-    if row.look ~= nil then item.facts.transmogKnown = row.look end
+    -- The look is Retail's alone (Forever port design §4.4): no sample has one on WoW Forever.
+    if row.look ~= nil and C.FEATURE.transmog then item.facts.transmogKnown = row.look end
     local them, me = ev(src, item, row.them), ev(src, item, row.me)
     local testInspect, insp
     if row.inspect then testInspect, insp = inspected(src, row, now, them, item) end   -- a collectible: none

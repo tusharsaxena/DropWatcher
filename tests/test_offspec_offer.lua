@@ -264,4 +264,4 @@ test("off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cy
     assertEqual(select(3, k.eq.text:GetTextColor()), TONE.offspec.b, "and the difference with the spec's name")
     assertTrue(k.offer:IsShown()); assertEqual(textOf(k.offer.label), "Offer")
     assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(p.panel.note)):find("off%-spec upgrades and equals") ~= nil, "the order note names the tier")
-end)
+end, T.RETAIL_ONLY)

@@ -103,6 +103,24 @@ test("glow: without the library Apply still records its decision; a glow turned 
     assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
     assertNil(G.Apply(b, drop())); assertNil(b.glowKind)
     G.Stop(b); G.Stop(nil); assertNil(G.Apply(nil, drop()))
+end, T.RETAIL_ONLY)
+
+-- clients-§6: WoW Forever has the main glow alone (Forever port design §4.4): it records, styles and
+-- clears as on Retail, and there is no off-spec glow setting to turn; on Retail both are there.
+test("glow: Forever has the main glow alone, and it still starts, styles and stops", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    local b = button(m)
+    assertEqual(NS.SchemaRuntime.FindRow("glow.offSpec.enabled") ~= nil, not T.forever, "the off-spec glow's row")
+    assertTrue(S("glow.main.type", "pixel"))
+    assertEqual(G.Apply(b, drop()), "main"); assertEqual(b.glowKind, "main")
+    assertEqual(names(lib), "PixelGlow_Start")
+    assertTrue(S("glow.main.type", "button"))
+    lib.calls = {}
+    G.Apply(b, drop())
+    assertEqual(names(lib), "PixelGlow_Stop,ButtonGlow_Start", "the old style stops first")
+    assertTrue(S("glow.main.enabled", false))
+    assertNil(G.Apply(b, drop())); assertNil(b.glowKind, "turned off, it clears")
 end)
 
 test("glow: each style starts with the knob table's arguments, under the addon's key", function()
@@ -148,7 +166,7 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     lib.calls = {}
     G.Apply(b, side(2))
     assertEqual(names(lib), "AutoCastGlow_Stop"); assertNil(b.glowStyle)
-end)
+end, T.RETAIL_ONLY)
 
 test("glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it", function()
     local NS, _, m = T.enableAddon()
@@ -203,7 +221,7 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     G.Apply(b, drop())
     c = lib.calls[2][3].color
     assertTrue(c[1] == 1 and c[2] == 0 and c[3] == 0, "off again: the swatch")
-end)
+end, T.RETAIL_ONLY)
 
 test("glow: Use class color with a class that has no color falls through to the swatch", function()
     local NS, _, m = T.enableAddon()
@@ -216,7 +234,7 @@ test("glow: Use class color with a class that has no color falls through to the 
     assertEqual(c[1], "PixelGlow_Start")
     assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
         "the stored off-spec blue, never white or a substitute")
-end)
+end, T.RETAIL_ONLY)
 
 -- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
 -- shows every pooled row and card: once the button has been on screen the burst is spent.
@@ -342,7 +360,7 @@ test("glow: a glow row's write re-applies every drawn icon at once", function()
     assertEqual(started, 1)
     assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
     assertNil(rowFor(NS, 2).cells.item.button.glowKind)
-end)
+end, T.RETAIL_ONLY)
 
 test("glow: a profile switch re-reads the glow settings", function()
     local NS, m = shown(THREE())

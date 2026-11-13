@@ -359,8 +359,13 @@ local function messaging(out)
         lengths[i] = name .. "=" .. #M.Template(name, cfg.templates)
     end
     out:joined(TAG, "messaging: template lengths", lengths)
-    out:add(TAG, "messaging: oneAsk=%s announceChannel=%s transmogAsk=%s", cfg.oneAsk, cfg.announceChannel,
-        cfg.transmogAsk)
+    -- The transmog opt-in is Retail's alone (Forever port design §4.4).
+    if NS.Constants.FEATURE.transmog then
+        out:add(TAG, "messaging: oneAsk=%s announceChannel=%s transmogAsk=%s", cfg.oneAsk, cfg.announceChannel,
+            cfg.transmogAsk)
+    else
+        out:add(TAG, "messaging: oneAsk=%s announceChannel=%s", cfg.oneAsk, cfg.announceChannel)
+    end
     for _, a in ipairs(A.Queued()) do
         out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
     end
@@ -437,6 +442,11 @@ local function integrations(out)
     local Lc = NS.Launcher
     out:add(TAG, "launcher: registered=%s shown=%s", Lc and read(Lc.IsRegistered, Lc),
         Lc and read(Lc.IsShown, Lc))
+    -- Transmog, and CanIMogIt with it, is Retail's alone (Forever port design §4.4).
+    if not NS.Constants.FEATURE.transmog then
+        out:add(TAG, "optional: Pawn=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"))
+        return
+    end
     out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"),
         read(NS.Compat.IsAddOnLoaded, "CanIMogIt"))
     out:add(TAG, "transmog: source=%s", NS.Compat.TransmogSource())

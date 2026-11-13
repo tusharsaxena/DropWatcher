@@ -128,13 +128,12 @@ WG.COLUMNS = {
     { key = "me", label = L["Me"], width = 127, shed = 7,
       desc = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
           TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade"))
-          .. " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."],
-      tip = { TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          .. NS.OffSpecCells.MeNote(),
+      tip = NS.OffSpecCells.WithLegend({ TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
           TM.Row(L["Then"], L["the drop judged for you, and the item-level difference"]),
           TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
-              TM.Mark("downgrade"))),
-          NS.OffSpecCells.Legend(), TM.Hint(L["Hover an icon for the item."]) } },
+              TM.Mark("downgrade"))) }, TM.Hint(L["Hover an icon for the item."])) },
     { key = "them", label = L["Them"], width = 127, shed = 5,
       desc = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."],
       tip = { TM.Row(L["Shows"], L["what the looter wears there, its item level"]),

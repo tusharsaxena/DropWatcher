@@ -215,7 +215,7 @@ test("collect feed: a learned appearance re-judges a live cosmetic through the s
     -- red under: ItemFacts' transmog handler not calling Collectibles.Changed
     assertEqual(rec.me.verdict, "collected")
     assertEqual(count(seen, rec.id .. ":collection"), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("collect feed: the stand-down cancels a waiting re-read", function()
     local NS, m = party()

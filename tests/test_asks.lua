@@ -120,7 +120,8 @@ test("send: every token comes from the drop: item, ilvl, slot, track and both ga
     NS.db.profile.messages = { templates = { ask = "{player}|{item}|{ilvl}|{slot}|{track}|{mygain}" } }
     local id = drop(NS, m, 300, "Brakk", 613)
     A.Request("ask", "Brakk", id)
-    assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|?|13")
+    -- On WoW Forever {track} is no token (Forever port design §4.4): it is sent as it is written.
+    assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|" .. (T.forever and "{track}" or "?") .. "|13")
 end)
 
 test("send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)", function()

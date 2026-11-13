@@ -312,8 +312,9 @@ test("compact cards: a different upgrade track is in the verdict's tooltip, not 
     local card = C.Group(d, groupCtx())
     -- The verdict's own mark on the trinket it was judged against; the other trinket its own (H7).
     assertEqual(C.HalfText(card.you), "You 321 ▼26 / 308 ▲6")
-    assertTrue(has(card.you.tip, "• Track: a higher track or rank"))
-    assertTrue(has(card.ilvl.tip, "Champion 4/8"))
+    -- WoW Forever has no upgrade tracks (Forever port design §4.4): neither tooltip names one.
+    assertEqual(has(card.you.tip, "• Track: a higher track or rank"), not T.forever)
+    assertEqual(has(card.ilvl.tip, "Champion 4/8"), not T.forever)
 end)
 
 test("compact cards: a drop whose details have not loaded is never blank", function()

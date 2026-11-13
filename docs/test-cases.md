@@ -110,8 +110,9 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (26)
+### test_schema_rows.lua (27)
 
+- settings: no Retail-only row on the Forever panel
 - rows: every spec §12.1 setting has a row
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
@@ -793,9 +794,10 @@ Total.
 - collect surfaces: the View menu, its tooltip and History both carry New to my collection
 - collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
 
-### test_detail_card.lua (32)
+### test_detail_card.lua (33)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
+- tracks: no Track row or {track} token on Forever
 - cells: StatChange lists the secondary stats gained and lost, the largest first
 - cells: For you shows what it replaces, the ilvl, track and stat change, and Pawn's score
 - cells: For you without a score says why: no scorer, Pawn or your weights not scored yet
@@ -1253,7 +1255,7 @@ Total.
 - evaluate: on Retail's class list a relic is not gear, never the relic reason
 - evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
-### test_offspec.lua (11)
+### test_offspec.lua (12)
 
 - offspec: a Protection paladin's Intellect axe is an off-spec upgrade for Holy over an empty hand
 - offspec: against the best Holy item owned, the off-spec verdict takes the band
@@ -1266,6 +1268,7 @@ Total.
 - offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
+- offspec: not initialized, no rows, no askOffSpec on Forever
 
 ### test_tier_token.lua (30)
 
@@ -1918,7 +1921,7 @@ Total.
 - test mode: nothing is sent; the text is printed and the ask is marked sent, even restricted
 - stand-down: a request is refused, the flush timer is canceled and the queue is dropped
 
-### test_transmog.lua (13)
+### test_transmog.lua (14)
 
 - transmog compat: CanIMogIt answers first when it is loaded, else the client's collection
 - transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non-boolean falls back
@@ -1933,6 +1936,7 @@ Total.
 - transmog settings: the preview sample is a drop whose look you have not collected
 - transmog test mode: one sample's look is collected and one's is not
 - transmog diagnostics: the integrations name the look's source, messaging the opt-in
+- transmog: no transmog template, row or event on Forever
 
 ### test_history.lua (40)
 
@@ -2187,11 +2191,12 @@ Total.
 - toast stack: in test mode the sticky placeholders stack too
 - toast stack: the diagnostics name the stack and every toast on screen
 
-### test_glow.lua (14)
+### test_glow.lua (15)
 
 - glow: KindOf is main for your upgrade, offSpec for an off-spec upgrade, nothing else glows
 - glow: an upgrade its looter can't trade, or not yet estimated, never glows
 - glow: without the library Apply still records its decision; a glow turned off clears it
+- glow: Forever has the main glow alone, and it still starts, styles and stops
 - glow: each style starts with the knob table's arguments, under the addon's key
 - glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it
 - glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it
@@ -2290,7 +2295,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (25)
+### test_sim_pool.lua (26)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2310,6 +2315,7 @@ Total.
 - sim pool: loot for me sets the journal's class filter to yours; any lists every class
 - sim pool: an empty journal falls back to your own gear, reported once
 - sim pool: without the journal API the fallback answers at once
+- sim pool: no journal source on Forever
 - sim pool: the stop ends a waiting build, and a late event does nothing
 - sim roster: the random source replays a seed and stays in range
 - sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
@@ -2318,11 +2324,12 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (24)
+### test_sim_events.lua (25)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
 - sim lines: a burst has one to three lines, your own when asked, and a looter from another realm
+- sim lines: no bonus roll on Forever
 - sim world: the roster, the situation and the announce channel read the invented party
 - sim world: in a raid you are raid1 and the members raid2 onward; the channel is RAID
 - sim world: the stop puts the real world back
@@ -2669,7 +2676,7 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 26 |
+| test_schema_rows.lua | 27 |
 | test_settings_pages.lua | 55 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
@@ -2699,7 +2706,7 @@ Total.
 | test_side_cells.lua | 27 |
 | test_collect_cells.lua | 11 |
 | test_collect_surfaces.lua | 15 |
-| test_detail_card.lua | 32 |
+| test_detail_card.lua | 33 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
@@ -2716,7 +2723,7 @@ Total.
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
 | test_evaluate.lua | 47 |
-| test_offspec.lua | 11 |
+| test_offspec.lua | 12 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -2744,7 +2751,7 @@ Total.
 | test_trade_timer.lua | 16 |
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 29 |
-| test_transmog.lua | 13 |
+| test_transmog.lua | 14 |
 | test_history.lua | 40 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
@@ -2756,13 +2763,13 @@ Total.
 | test_insights_sections.lua | 8 |
 | test_toast.lua | 50 |
 | test_toast_stack.lua | 16 |
-| test_glow.lua | 14 |
+| test_glow.lua | 15 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 25 |
-| test_sim_events.lua | 24 |
+| test_sim_pool.lua | 26 |
+| test_sim_events.lua | 25 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 20 |
 | test_sim_report.lua | 17 |
@@ -2783,4 +2790,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2297** |
+| **Total** | **2304** |

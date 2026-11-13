@@ -394,6 +394,23 @@ C.TIER_TOKENS = {}
 -- The client picked once (clients-§5): the slot ids and the slot plans below are per client.
 local FOREVER = NS.Compat.ClientKey() == "forever"
 
+-- The Retail-only features (Forever port design §4.4), each declared with the clients it serves
+-- (clients-§4) and gated where it registers by C.FEATURE, its ForClient answer read once: the
+-- Encounter Journal source of the simulator's pool (modules/SimPool.lua), transmog (the look read,
+-- its event, chips, ask and rows), upgrade tracks (the Track row, the track in the item level chip
+-- and tooltip, the {track} token), off-spec (modules/OffSpec.lua, its glow, ask and words) and the
+-- simulator's bonus rolls (modules/SimEvents.lua). docs/ARCHITECTURE.md's per-client feature table
+-- names each one's gate.
+C.FEATURE_CLIENTS = {
+    journalPool  = { "retail" },
+    transmog     = { "retail" },
+    tracks       = { "retail" },
+    offSpec      = { "retail" },
+    bonusRollSim = { "retail" },
+}
+C.FEATURE = {}
+for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end
+
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
 -- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items. WoW Forever keeps
 -- it (INVSLOT_RANGED, research R4 §9) for ranged and thrown weapons, wands and relics.
@@ -614,9 +631,20 @@ C.MESSAGE_KINDS = { "ask", "offer", "announce" }
 -- picks them): `transmog`, for a drop that is no gain for you but whose appearance you have not
 -- collected, and `askOffSpec` (feedback-19 spec §2), for a drop your spec cannot use but another
 -- spec of your class gains from.
-C.MESSAGE_TEMPLATES = { "ask", "transmog", "askOffSpec", "offer", "announce" }
--- The tokens a template may name, in the token chips' order.
-C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
+-- One list per client, picked once (clients-§5): WoW Forever has no transmog and no off-spec
+-- (Forever port design §4.4), so it has neither of their templates.
+local TEMPLATE_LISTS = {
+    retail  = { "ask", "transmog", "askOffSpec", "offer", "announce" },
+    forever = { "ask", "offer", "announce" },
+}
+C.MESSAGE_TEMPLATES = TEMPLATE_LISTS[FOREVER and "forever" or "retail"]
+-- The tokens a template may name, in the token chips' order, per client: WoW Forever has no
+-- upgrade tracks, so no {track} (Forever port design §4.4).
+local TOKEN_LISTS = {
+    retail  = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" },
+    forever = { "player", "item", "ilvl", "slot", "gain", "mygain" },
+}
+C.MESSAGE_TOKENS = TOKEN_LISTS[FOREVER and "forever" or "retail"]
 C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)
 C.MESSAGE_FLUSH_INTERVAL = 1.5   -- seconds between two queued sends
 -- What empties the queue once the player can send: the restriction lift and these events, one set

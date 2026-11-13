@@ -248,10 +248,13 @@ test("toast stack: in test mode the sticky placeholders stack too", function()
     m.seedGearJournal()
     NS.SetTestMode(true)
     local ids = visible(NS)
-    assertTrue(#ids >= 2, "more than one placeholder on screen: " .. #ids)
+    -- WoW Forever has no off-spec sample (Forever port design §4.4), so one placeholder toasts there.
+    assertTrue(#ids >= (T.forever and 1 or 2), "more than one placeholder on screen: " .. #ids)
     assertTrue(#ids <= 3, "no more than the stack")
     for _, id in ipairs(ids) do assertTrue(NS.LootFeed.Get(id).test, "a test drop") end
-    assertEqual(pointOf(NS.Toast.Frame(ids[2]))[2], NS.Toast.Frame(ids[1]), "stacked under the first")
+    if #ids >= 2 then
+        assertEqual(pointOf(NS.Toast.Frame(ids[2]))[2], NS.Toast.Frame(ids[1]), "stacked under the first")
+    end
     m.advance(60)
     assertEqual(#visible(NS), #ids, "sticky: they wait to be placed")
     NS.SetTestMode(false)

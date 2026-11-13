@@ -55,6 +55,7 @@ local function sim(opts)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
     if opts.before then opts.before(NS, m) end
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     local situation = opts.situation or "dungeon"
     assertTrue(T.simBare(NS):Start({ scenario = "test", situation = situation, seed = opts.seed or 11 }))
     NS.SimPool.Build({ situation = situation })
@@ -162,6 +163,21 @@ test("sim lines: a burst has one to three lines, your own when asked, and a loot
     assertEqual(E.ChatName(brakk, "Elsewhere"), brakk.fullName, "another realm: Name-Realm")
 end)
 
+-- Bonus rolls are Retail's alone (Forever port design §4.4, clients-§6): a seeded burst plays the
+-- same lines on both clients, and on WoW Forever none of them is a bonus roll.
+test("sim lines: no bonus roll on Forever", function()
+    local NS = T.newAddon()
+    local E, R = NS.SimEvents, NS.SimRoster
+    local members = R.Members({ kind = "raid", size = 12, ownRealm = "Testrealm" }, R.Random(3))
+    local bonus = 0
+    for seed = 1, 60 do
+        for _, line in ipairs(E.Plan(3, members, { { link = "a" } }, R.Random(seed), nil, "Testrealm")) do
+            if line.kind == "bonus" then bonus = bonus + 1 end
+        end
+    end
+    assertEqual(bonus > 0, NS.Compat.ClientKey() == "retail", "bonus rolls: " .. bonus)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The group and the world, through NS.Compat
 -- ---------------------------------------------------------------------------------------------
@@ -177,7 +193,8 @@ test("sim world: the roster, the situation and the announce channel read the inv
     assertEqual(NS.Situations.Current(), "dungeon")
     assertEqual(NS.Asks.AnnounceChannel(), "PARTY")
     local name = NS.Compat.InstanceInfo()
-    assertEqual(name, "Ashen Vault", "the instance the pool came from")
+    -- WoW Forever's pool is your own gear, from no instance (modules/SimPool.lua).
+    assertEqual(name, T.forever and "Simulated instance" or "Ashen Vault", "the instance the pool came from")
     local real = NS.SimSeam:Live(NS.Situations.ReadInputs)
     assertFalse(real.inGroup, "a live read sees the real world"); assertFalse(real.inInstance)
     assertEqual(#m.inspect.notified, 0)
@@ -289,7 +306,7 @@ test("sim drop: one drop of a named kind goes through the parser into the feed, 
     NS.Sim:Stop()
     n, why = E.Drop("mount")
     assertEqual(n, 0); assertEqual(why, "notRunning")
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- Inspect replies through the broker

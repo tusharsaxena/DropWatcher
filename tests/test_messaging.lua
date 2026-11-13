@@ -49,7 +49,8 @@ test("messaging: the default templates are the spec §9.1 text, one per kind", f
     assertEqual(D.templates.announce, "{item} is up for grabs, whisper me.")
     assertEqual(C.MESSAGE_MAX_LEN, 255)
     assertEqual(C.MESSAGE_FLUSH_INTERVAL, 1.5)
-    assertEqual(#C.MESSAGE_TOKENS, 7)
+    -- WoW Forever has no upgrade tracks, so no {track} (Forever port design §4.4).
+    assertEqual(#C.MESSAGE_TOKENS, T.forever and 6 or 7)
 end)
 
 test("messaging: Template takes the owner's text, and the default for an empty or absent one", function()
@@ -64,7 +65,8 @@ end)
 test("messaging: Expand fills every token, and formats the gains as numbers", function()
     local M = load()
     local text = M.Expand("{player}|{item}|{ilvl}|{slot}|{track}|{gain}|{mygain}", tokens())
-    assertEqual(text, "Seta-Silvermoon|" .. LINK .. "|619|Finger|Hero|4.3|12")
+    -- On WoW Forever {track} is no token (Forever port design §4.4): it is left as it is.
+    assertEqual(text, "Seta-Silvermoon|" .. LINK .. "|619|Finger|" .. (T.forever and "{track}" or "Hero") .. "|4.3|12")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 5.0 })), "+5")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 0.04 })), "+0")
 end)

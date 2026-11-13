@@ -303,8 +303,10 @@ test("test mode data: your own drops cover every countdown and every candidate s
         for _, c in ipairs(MC.Candidates(drop)) do pills[c.status] = true end
     end
     hasAll(kinds, { "exact", "soon", "estimated", "boe", "expired" }, "countdown")
-    hasAll(pills, { "upgrade", "sidegrade", "offSpecUpgrade", "downgrade", "cantUse", "checking", "unavailable" },
-        "status")
+    -- Off-spec is Retail's alone (Forever port design §4.4): no candidate of WoW Forever's is one.
+    local statuses = { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }
+    if T.forever then assertNil(pills.offSpecUpgrade, "no off-spec candidate") else statuses[#statuses + 1] = "offSpecUpgrade" end
+    hasAll(pills, statuses, "status")
 end)
 
 -- ── off-spec (feedback-19 spec §4) ──────────────────────────────────────────────────────────
@@ -351,7 +353,7 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
     hasAll(verdicts, { "upgrade", "sidegrade", "downgrade" }, "off-spec verdict")
     hasAll(kinds, { "empty", "worn", "bag" }, "off-spec baseline")
     assertTrue(armorRefusal, "a class-wide refusal stays Can't use")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade", function()
     local NS, specs = placeholders()
@@ -374,7 +376,7 @@ test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spe
         end
     end
     assertEqual(shown, 2, "the trinket's candidate and the off-spec showcase's")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: History holds an off-spec entry you asked for and one you received", function()
     local NS = T.newAddon()
@@ -556,7 +558,7 @@ test("window: test mode shows an off-spec verdict, cyan with the spec's name, an
         end
     end
     assertEqual(shown, 5, "the Crescent row and four showcase rows")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: a key run and four bosses, every item a pool item that keeps its slot", function()
     local NS, specs, ids = placeholders()
@@ -711,8 +713,13 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     NS.SetTestMode(true)
     assertEqual(#LF.Drops("test"), 35)
     assertEqual(#LF.Drops("live"), 0)
-    assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
-    assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
+    -- The journal is Retail's alone (Forever port design §4.4): WoW Forever's pool is your own gear.
+    if not T.forever then
+        assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
+        assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
+    else
+        assertNil(m.journal.previews[1], "the journal is never read")
+    end
     local ids = journalIds(m)
     for _, rec in ipairs(LF.Drops("test")) do
         assertTrue(ids[rec.itemID] == true, "a journal item, never an unknown id: " .. tostring(rec.link))
@@ -747,7 +754,7 @@ test("test mode: while the pool loads the tab says so and holds no drop; the dro
     m.advance(1)
     assertFalse(NS.TestMode.IsLoading())
     assertEqual(#NS.LootFeed.Drops("test"), 35)
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode: turned off while the pool loads, nothing arrives later", function()
     local NS, _, m = T.enableAddon()
@@ -971,7 +978,8 @@ test("window: test mode's Can't use samples read Can't use on Trade, a No stays 
         end
     end
     hasAll(seen, { "Mistveil", "Ashveil" }, "Can't use sample")
-    assertTrue(offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
+    -- Off-spec is Retail's alone (Forever port design §4.4): WoW Forever's samples have none.
+    assertTrue(T.forever and offSpec == 0 or offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
 end)
 
 -- feedback-21 H2: Kaelith's wrists were read before they left, so the card keeps their spec and
@@ -1016,6 +1024,13 @@ local function levelsOf(NS, drop)
     return #items > 0 and WC.Levels(items) or nil
 end
 
+-- Whether a sample's You cell shows the 999s you wear. On WoW Forever the pool is your own gear
+-- (modules/SimPool.lua), so a sample may be one of them; its worn gear is still its own.
+local function showsYours(d, level)
+    if T.forever and d.facts.ilvl == 999 then return false end
+    return level:find("999", 1, true) ~= nil
+end
+
 test("window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)", function()
     local NS, _, m = T.enableAddon()
     wearReal(NS, m)
@@ -1029,7 +1044,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
         local d = NS.LootFeed.Get(r.dropId)
         local level = drawnLevels(r.cells.me)
         -- red under: `You 999`, your real gear beside a verdict judged against the sample's worn item
-        assertFalse(level:find("999", 1, true) ~= nil, "row " .. d.id .. ": " .. level)
+        assertFalse(showsYours(d, level), "row " .. d.id .. ": " .. level)
         local want = levelsOf(NS, d)
         if want then
             assertEqual(level, want, "row " .. d.id)
@@ -1053,7 +1068,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     for _, card in ipairs(NS.WindowGroup.Drawn().rows) do
         local d = NS.LootFeed.Get(card.dropId)
         local level = drawnLevels(card.cells.you)
-        assertFalse(level:find("999", 1, true) ~= nil, "card " .. d.id .. ": " .. level)
+        assertFalse(showsYours(d, level), "card " .. d.id .. ": " .. level)
         assertEqual(level, levelsOf(NS, d) or level, "card " .. d.id)
     end
 end)

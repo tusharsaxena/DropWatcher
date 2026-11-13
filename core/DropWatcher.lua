@@ -684,6 +684,8 @@ end
 -- The optional integrations, said once when logging is turned on (debug-logging-§8).
 local function logDependencies()
     local function state(name) return NS.Compat.IsAddOnLoaded(name) and "loaded" or "absent" end
+    -- CanIMogIt serves transmog, Retail's alone (Forever port design §4.4).
+    if not NS.Constants.FEATURE.transmog then return NS.DebugAtEnable("Init", "optional: Pawn %s", state("Pawn")) end
     NS.DebugAtEnable("Init", "optional: Pawn %s, CanIMogIt %s", state("Pawn"), state("CanIMogIt"))
 end
 

@@ -56,18 +56,61 @@ local function byKey(list, key)
     for _, x in ipairs(list) do if x.key == key then return x end end
 end
 
+-- The Spec row's place on For the looter: after the Track row, which WoW Forever has not.
+local SPEC_ROW = T.forever and 4 or 5
+
+-- A side's or a chip strip's texts as a `,`-joined list, with WoW Forever's drop (clients-§6):
+-- no upgrade track there (Forever port design §4.4), so no Track row and no track in a chip. The
+-- `track` part of `want` (one item) is left out on Forever, `bare` its chip's Forever text.
+local function perClient(want, track, bare)
+    if not T.forever then return want end
+    local out = {}
+    for part in want:gmatch("[^,]+") do
+        if part == track then
+            if bare then out[#out + 1] = bare end
+        else
+            out[#out + 1] = part
+        end
+    end
+    return table.concat(out, ",")
+end
+
 -- ── the header's chips ──────────────────────────────────────────────────────────────────────
 
 test("cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary", function()
     local D = DC()
     local chips = D.Chips(drop())
-    assertEqual(texts(chips), "Head,Cloth,BoP,Hero 2/6 · 311,Int,Socket,Leech")
+    assertEqual(texts(chips), perClient("Head,Cloth,BoP,Hero 2/6 · 311,Int,Socket,Leech", "Hero 2/6 · 311", "311"))
     for _, c in ipairs(chips) do assertTrue(#c.tip >= 2, c.text .. " explains itself") end
     local warbound = D.Chips(drop({ facts = { ilvl = 311, equipLoc = "INVTYPE_FINGER", warbound = true } }))
     assertEqual(texts(warbound), "Finger,Jewelry,Warbound,311", "a ring's type is Jewelry (feedback-4 §3)")
     local bare = D.Chips(drop({ facts = NONE }))
     assertEqual(texts(bare), "–", "the slot always shows, even unread")
     assertTrue(bare[1].tip[2]:find("not loaded") ~= nil)
+end)
+
+-- Upgrade tracks are Retail's alone (Forever port design §4.4, clients-§4, §6): on WoW Forever
+-- there is no Track row, no track in the item level chip or the Ilvl cell's tooltip, and no
+-- {track} token; on Retail each is there. A drop that somehow carries a track is drawn without it.
+test("tracks: no Track row or {track} token on Forever", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    local D, WC = NS.DetailCells, NS.WindowCells
+    assertEqual(byKey(D.ForYou(drop(), true).rows, "track") ~= nil, retail, "For you's Track row")
+    assertEqual(byKey(D.ForLooter(drop(), { status = "fresh", at = 60 }, "Discipline", 100).rows, "track") ~= nil, retail,
+        "For the looter's Track row")
+    local chips = texts(D.Chips(drop()))
+    assertEqual(chips:find("Hero 2/6", 1, true) ~= nil, retail, "the track in the item level chip: " .. chips)
+    if not retail then
+        assertEqual(chips, "Head,Cloth,BoP,311,Int,Socket,Leech")
+        for _, c in ipairs(D.Chips(drop())) do assertTrue(#c.tip >= 2, c.text .. " explains itself") end
+    end
+    assertEqual(T.tipPlainJoined(WC.Ilvl(drop()).tip):find("track", 1, true) ~= nil, retail, "the Ilvl cell's tooltip")
+    local tokens = {}
+    for _, name in ipairs(NS.Constants.MESSAGE_TOKENS) do tokens[name] = true end
+    assertEqual(tokens.track == true, retail, "the {track} token")
+    local text = NS.Messaging.Expand("{item} {track}", { item = "[Crown]", track = "Hero" })
+    assertEqual(text, retail and "[Crown] Hero" or "[Crown] {track}", "an unknown token on Forever is left as it is")
 end)
 
 -- ── the comparisons ─────────────────────────────────────────────────────────────────────────
@@ -85,7 +128,8 @@ test("cells: For you shows what it replaces, the ilvl, track and stat change, an
     local side = D.ForYou(drop(), true)
     assertEqual(P(side.title), "FOR YOU")
     assertEqual(T.cardText(side.verdict), "▲ UPGRADE"); assertEqual(side.verdict.tone, "good")
-    assertEqual(texts(side.rows), "292 Old Helm,292 [arrow-right] 311 ▲ 19,Champion 6/6 [arrow-right] Hero 2/6 ▲,+130 Haste -119 Mastery,+2.4")
+    assertEqual(texts(side.rows), perClient("292 Old Helm,292 [arrow-right] 311 ▲ 19,Champion 6/6 [arrow-right] Hero 2/6 ▲,+130 Haste -119 Mastery,+2.4",
+        "Champion 6/6 [arrow-right] Hero 2/6 ▲"))
     assertEqual(byKey(side.rows, "replaces").link, OLD)
     assertEqual(byKey(side.rows, "ilvl").tone, "good")
     for _, r in ipairs(side.rows) do assertTrue(#r.tip >= 2 and r.text ~= "", r.key) end
@@ -103,6 +147,7 @@ test("cells: For you without a score says why: no scorer, Pawn or your weights n
     assertEqual(P(w.tip[3]), "Set them in Settings, Comparison.", "where to set them, the closing hint")
     assertEqual(byKey(D.ForYou(d, "pawn").rows, "score").label, "Pawn")
     local track = byKey(D.ForYou(d, true).rows, "track")
+    if T.forever then return assertNil(track, "no Track row on WoW Forever") end
     assertEqual(track.text, "Hero 2/6"); assertEqual(T.tipPlainJoined(track.tip), "Track | • This item: Hero 2/6 | • Worn: not read")
 end)
 
@@ -111,7 +156,7 @@ test("cells: an empty slot and an unread baseline each say so, never blank", fun
     local empty = D.ForYou(drop({ me = { verdict = "upgrade", reasons = { { key = "emptySlot" } } } }), true)
     assertEqual(byKey(empty.rows, "replaces").text, "Empty slot")
     local unread = D.ForYou(drop({ me = { verdict = "unknown", reasons = { { key = "noBaseline" } } } }), true)
-    assertEqual(texts(unread.rows), "–,311,Hero 2/6,–,–")
+    assertEqual(texts(unread.rows), perClient("–,311,Hero 2/6,–,–", "Hero 2/6"))
     assertEqual(unread.verdict.text, "UNKNOWN")
     for _, r in ipairs(unread.rows) do assertTrue(#r.tip >= 2, r.key) end
 end)
@@ -121,7 +166,8 @@ test("cells: For the looter compares their inspected gear and names their spec a
     local side = D.ForLooter(drop(), { status = "fresh", at = 60 }, "Discipline", 100)
     assertEqual(P(side.title), "FOR LOOTER (SETA)")
     assertEqual(T.cardText(side.verdict), "▼ DOWNGRADE"); assertEqual(side.verdict.tone, "red", "one tone per verdict")
-    assertEqual(texts(side.rows), "324 Their Helm,324 [arrow-right] 311 ▼ 13,Myth 1/6 [arrow-right] Hero 2/6 ▼,+95 Haste -80 Crit,Discipline · inspected 40s ago")
+    assertEqual(texts(side.rows), perClient("324 Their Helm,324 [arrow-right] 311 ▼ 13,Myth 1/6 [arrow-right] Hero 2/6 ▼,+95 Haste -80 Crit,Discipline · inspected 40s ago",
+        "Myth 1/6 [arrow-right] Hero 2/6 ▼"))
     local unread = D.ForLooter(drop({ them = NONE, inspect = { status = "pending" } }), nil, nil, 100)
     assertEqual(unread.verdict.text, "UNKNOWN")
     assertEqual(byKey(unread.rows, "spec").text, "spec unknown")
@@ -366,13 +412,13 @@ test("card: the header, both comparisons and the trade box are painted, each wit
     local card = NS.WindowGroup.Drawn().card
     local W = NS.Window
     assertEqual(textOf(card.name), "Crown of Roaring Storms"); assertEqual(card.icon.link, LINK)
-    assertEqual(textOf(card.chips[1].text), "Head"); assertEqual(textOf(card.chips[4].text), "Hero 2/6 · 311")
+    assertEqual(textOf(card.chips[1].text), "Head"); assertEqual(textOf(card.chips[4].text), T.forever and "311" or "Hero 2/6 · 311")
     assertTrue(card.chips[7]:IsShown()); assertFalse(card.chips[8]:IsShown())
     assertEqual(P(textOf(card.me.title)), "FOR YOU"); assertEqual(textOf(card.me.verdict.text), "UPGRADE")
     assertEqual(T.marks(textOf(card.me.rows[2].value)), "292 [arrow-right] 311")
     assertEqual(card.me.rows[1].item.link, OLD); assertTrue(card.me.rows[1].item:IsShown())
     assertEqual(P(textOf(card.them.title)), "FOR LOOTER (SETA)")
-    assertEqual(textOf(card.them.rows[5].value), "Discipline · inspected 40s ago")
+    assertEqual(textOf(card.them.rows[SPEC_ROW].value), "Discipline · inspected 40s ago")
     assertEqual(textOf(card.trade.chip.text), "LIKELY TRADEABLE")
     assertEqual(textOf(card.trade.meta), "Rule: personal loot, Mythic+ · Basis: inspect 40s ago")
     for _, c in ipairs(card.chips) do
@@ -454,8 +500,9 @@ test("card: the glyphs are drawn in the monospace face; Replaces puts its item l
     assertEqual(textOf(card.me.rows[2].glyph), "▲"); assertEqual(textOf(card.me.rows[2].glyphText), "19")
     local r, g, b = card.me.rows[2].glyph:GetTextColor()
     assertEqual(("%.2f %.2f %.2f"):format(r, g, b), ("%.2f %.2f %.2f"):format(C.TONE.good.r, C.TONE.good.g, C.TONE.good.b))
-    assertEqual(textOf(card.them.verdict.glyph), "▼"); assertEqual(textOf(card.them.rows[3].glyph), "▼", "the Track row's")
-    assertFalse(card.me.rows[4].glyph:IsShown(), "Stats has no glyph")
+    assertEqual(textOf(card.them.verdict.glyph), "▼")
+    if not T.forever then assertEqual(textOf(card.them.rows[3].glyph), "▼", "the Track row's") end
+    assertFalse(card.me.rows[SPEC_ROW - 1].glyph:IsShown(), "Stats has no glyph")
     assertFalse(card.trade.chip.glyph:IsShown(), "the trade chip has none")
     local rep = card.me.rows[1]
     assertTrue(rep.lead:IsShown()); assertEqual(textOf(rep.lead), "292")
@@ -527,7 +574,7 @@ test("card: a looter who left the group: the Spec row reads the drop's kept read
     NS.Inspect.Get = function() return nil end
     NS.LootFeed.Get(1).inspect = { status = "fresh", at = 60, specID = 256, gear = {} }
     NS.WindowGroup.ToggleExpand(1)
-    local spec = NS.WindowGroup.Drawn().card.them.rows[5]
+    local spec = NS.WindowGroup.Drawn().card.them.rows[SPEC_ROW]
     assertEqual(textOf(spec.value), "Discipline · inspected 40s ago")
     assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(spec)),
         "Spec | • Seta's spec: Discipline | • Inspected: 40s ago | • Looter: not in your group")

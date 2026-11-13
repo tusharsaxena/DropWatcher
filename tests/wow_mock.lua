@@ -105,7 +105,8 @@
 --                  EncounterJournal (the frame) is nil until a case sets one; loadJournal() loads
 --                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded;
 --                  seedGearJournal() adds a newest tier whose dungeon, raid and world boss drop gear
---                  for every slot
+--                  for every slot; journalToBags() (called by seedGearJournal) puts every journal
+--                  item in the player's bag 4 on the forever profile, whose pool is your own gear
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -863,6 +864,26 @@ local GEAR_INSTANCES = {
       bosses = { "Grumbleroot", "Skyshatter" } },
 }
 
+-- On the forever profile every item the journal lists is also the player's own, in the last bag
+-- (C.BAG_IDS' 4): WoW Forever's pool is your own gear, never the journal (modules/SimPool.lua,
+-- Forever port design §4.4), so a case that seeds the journal seeds the same items on either
+-- client. Nothing on the retail profile.
+local function journalToBags(M)
+    if not (M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT) then return end
+    local own, seen, links = { size = 0 }, {}, {}
+    for _, byDifficulty in pairs(M.journal.loot) do
+        for _, list in pairs(byDifficulty) do
+            for _, e in ipairs(list) do
+                if e.link and not seen[e.link] then seen[e.link] = true; links[#links + 1] = e.link end
+            end
+        end
+    end
+    table.sort(links)
+    for i, l in ipairs(links) do own[i] = l end
+    own.size = #links
+    M.bags[4] = own
+end
+
 local function seedGearJournal(M)
     local j = M.journal
     local tier = { dungeons = {}, raids = {} }
@@ -890,6 +911,7 @@ local function seedGearJournal(M)
             j.loot[inst.id][row[1]] = list
         end
     end
+    journalToBags(M)
 end
 
 local function build()
@@ -975,6 +997,7 @@ local function build()
     installSound(M)
     installJournal(M)
     M.seedGearJournal = function() seedGearJournal(M) end
+    M.journalToBags = function() journalToBags(M) end
 
     -- A NAMED Button is filed in the environment under its name, as the client files it in _G: the
     -- Show window key binding (launcher-§6, Bindings.xml) reaches its button by global name and

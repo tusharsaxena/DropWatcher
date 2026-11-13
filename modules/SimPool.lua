@@ -29,6 +29,11 @@ local _, NS = ...
 -- something to drop. It is reported in chat once per session of play, and its source reads
 -- `fallback` in the pool.
 --
+-- RETAIL'S JOURNAL (Forever port design §4.4, clients-§4). The journal source is Retail's alone:
+-- WoW Forever disables the Encounter Journal, so there a build never reads it, its loot event is not
+-- registered, and the pool is the own-gear fallback at once, with no chat line (it is the source,
+-- not a fallback from one).
+--
 -- THE ITEM KINDS (issue #13, categories design spec §8). The journal also lists mounts, pets,
 -- toys, recipes and tier tokens, with no equip slot. A loot burst draws gear (LootDrops), and
 -- modules/SimEvents.lua mixes in one line in eight from the rest, the `extras` (Extras, each
@@ -346,13 +351,14 @@ end
 P.FALLBACK_LINE = L["The Encounter Journal gave no items, so this simulation drops your own gear instead."]
 
 --- The own-items fallback pool (spec §3). `line` (the simulation's by default) is printed once per
---- session of play.
+--- session of play, unless `quiet` (WoW Forever, where your gear is the source: no journal failed).
 --- @param line string|nil
+--- @param quiet boolean|nil
 --- @return table pool
-function P.Fallback(line)
+function P.Fallback(line, quiet)
     line = line or P.FALLBACK_LINE
     local entries = NS.SimSeam:Live(ownItems)
-    if not reported[line] then
+    if not (quiet or reported[line]) then
         reported[line] = true
         NS.Print(line)
     end
@@ -382,7 +388,7 @@ local function finish(b)
         pool = { sim = true, source = "journal", difficulty = b.source.difficulty, raid = b.source.raid,
             pending = b.pending or 0, entries = b.entries }
     else
-        pool = P.Fallback(b.host.fallbackLine)
+        pool = P.Fallback(b.host.fallbackLine, not C.FEATURE.journalPool)
     end
     for _, e in ipairs(pool.entries) do P.Facts(e) end
     holder.pool = pool
@@ -440,6 +446,7 @@ function P.BuildInto(holder, host, opts, done)
         deadline = GetTime() + (tonumber(opts.timeout) or P.TIMEOUT),
     }
     holder.pool, holder.poolBuild = nil, b
+    if not C.FEATURE.journalPool then return finish(b) end   -- WoW Forever: your own gear (header)
     builds[b] = true
     attempt(b)
 end
@@ -480,7 +487,8 @@ end
 
 -- ── the loot-data event ────────────────────────────────────────────────────────────────────
 
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "EJ_LOOT_DATA_RECIEVED", "OnSimPoolLoot" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "EJ_LOOT_DATA_RECIEVED", "OnSimPoolLoot",
+    clients = C.FEATURE_CLIENTS.journalPool }
 
 --- EJ_LOOT_DATA_RECIEVED: a journal entry loaded. Every build waiting for its data reads again
 --- once the burst settles; with no build waiting it does nothing.

@@ -69,7 +69,7 @@ test("off-spec ask: AskTemplate takes the main spec, then the off-spec, then tra
     assertNil(M.AskTemplate(rec(cantMain(nil), nil), true), "no off-spec, no ask")
     assertNil(M.AskTemplate(rec({ verdict = "downgrade", offSpec = off() }, nil), false),
         "an off-spec part counts only on a Can't use")
-end)
+end, T.RETAIL_ONLY)
 
 test("off-spec ask: the template is listed after transmog, with its default text inside the limit", function()
     local NS = addon()
@@ -86,7 +86,7 @@ test("off-spec ask: the template is listed after transmog, with its default text
     assertEqual(res.action, "send")
     assertEqual(res.ask.text, "Hi Brakk, if you don't need [Axe], could I have it for my off-spec? It'd be +20 for me. No worries if not!")
     assertEqual(res.ask.kind, "ask", "still an ask, under the ask's one-ask key")
-end)
+end, T.RETAIL_ONLY)
 
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
 
@@ -105,7 +105,7 @@ test("off-spec ask: its row sits after the transmog template on the Templates ta
     local row = NS.SchemaRuntime.FindRow("messages.templates.askOffSpec")
     assertEqual(row.label, "Ask for off-spec")
     assertEqual(row.maxLetters, NS.Constants.MESSAGE_MAX_LEN)
-end)
+end, T.RETAIL_ONLY)
 
 test("off-spec ask: the editor names it and previews it over an off-spec drop", function()
     local E = addon().addon.Settings.Editors
@@ -164,7 +164,7 @@ test("off-spec ask: the Ask button fills askOffSpec, and its tooltip names the s
         .. " | • Why: your current spec can't use it | • Limit: one per item per looter")
     assertFalse(WC.Ask(drop({ me = cantMain(nil) }), "ready", nil).offered, "a plain Can't use has no ask")
     assertEqual(WC.Ask(drop({ me = { verdict = "upgrade", ilvlDelta = 5 } }), "ready", nil).tip[1], "Ask")
-end)
+end, T.RETAIL_ONLY)
 
 -- ── the toast ───────────────────────────────────────────────────────────────────────────────
 
@@ -240,7 +240,7 @@ test("off-spec auto-ask: an off-spec upgrade is asked for the lag after the dela
     assertEqual(#w, 1)
     assertTrue(w[1]:find("for my off-spec? It'd be +20 for me", 1, true) ~= nil, w[1])
     assertEqual(NS.Asks.StateOf("ask", "Brakk", 1), "sent", "filed as the drop's one ask")
-end)
+end, T.RETAIL_ONLY)
 
 test("off-spec auto-ask: main spec goes first; an off-spec ask due while a main one waits is re-armed", function()
     local NS, m, make = party()
@@ -262,7 +262,7 @@ test("off-spec auto-ask: main spec goes first; an off-spec ask due while a main 
     assertTrue(w[2]:find("for my off-spec?", 1, true) ~= nil, w[2])
     local st = NS.AutoAsk.Stats()
     assertEqual(st.scheduled, 2); assertEqual(st.sent, 2); assertEqual(st.waiting, 0)
-end)
+end, T.RETAIL_ONLY)
 
 test("off-spec auto-ask: the least gain applies to the off-spec difference", function()
     local NS, m, make = party()
@@ -290,4 +290,4 @@ test("off-spec auto-ask: whether an ask is off-spec is read again when it comes 
     w = whispered(m)
     assertEqual(#w, 2, "then drop 1, with the off-spec template")
     assertTrue(w[2]:find("for my off-spec?", 1, true) ~= nil, w[2])
-end)
+end, T.RETAIL_ONLY)

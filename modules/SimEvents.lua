@@ -209,9 +209,13 @@ local function pickEntry(drops, extras, rnd)
     return drops[rnd(#drops)]
 end
 
+-- Bonus rolls are Retail's alone (Forever port design §4.4): on WoW Forever no line is one. The
+-- draw is still made, so a seed plays the same lines, items and looters on both clients.
+local BONUS = NS.Constants.FEATURE.bonusRollSim
+
 --- A burst of loot lines (pure): `n` lines (1 to 3 at random when nil), each { looter (a member,
 --- or nil for you), entry (a pool drop), qty, kind }. `who` is `me`, a member, or nil for random
---- looters; about one line in eight is a multiple and one in six a bonus roll, and with `extras`
+--- looters; about one line in eight is a multiple and one in six a bonus roll (Retail only), and with `extras`
 --- about one in eight is one of them (issue #13). A random burst of two or more has a line of
 --- yours, a member's and, when the group has one, a looter from another realm; its members' lines
 --- are never all bonus rolls.
@@ -230,7 +234,7 @@ function E.Plan(n, members, drops, rnd, who, ownRealm, extras)
     for i = 1, math.max(0, math.floor(n)) do
         plan[i] = {
             looter = pickLooter(members, who, rnd), entry = pickEntry(drops, extras, rnd),
-            qty = rnd(8) == 1 and 2 or 1, kind = rnd(6) == 1 and "bonus" or "loot",
+            qty = rnd(8) == 1 and 2 or 1, kind = (rnd(6) == 1 and BONUS) and "bonus" or "loot",
         }
     end
     if who == nil then

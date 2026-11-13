@@ -16,6 +16,15 @@ local COMPANIONS = {
     "window.tableFontFromSkin", "window.tableFontShadowFromSkin", "icons.borderStyleFromSkin",
     "icons.borderColorFromSkin", "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin",
 }
+-- The off-spec glow is Retail's alone (Forever port design §4.4): on WoW Forever it has no rows.
+local function here(list)
+    if not T.forever then return list end
+    local out = {}
+    for _, path in ipairs(list) do
+        if not path:find("^glow%.offSpec%.") then out[#out + 1] = path end
+    end
+    return out
+end
 
 local function near(a, b) return math.abs(a - b) < 1e-6 end
 
@@ -50,15 +59,15 @@ end
 
 test("skin flip: every companion is a bool row, on by default in both places", function()
     local NS = T.bootAddon()
-    for _, path in ipairs(COMPANIONS) do
+    for _, path in ipairs(here(COMPANIONS)) do
         local row = NS.SchemaRuntime.FindRow(path)
         assertTrue(row ~= nil, "no row " .. path)
         assertEqual(row.type, "bool", path)
         assertEqual(row.default, true, path .. " defaults on on the row")
         assertEqual(leaf(NS.C.PROFILE, path), true, path .. " defaults on in AceDB")
     end
-    for _, path in ipairs({ "window.tableFontShadowFromSkin", "icons.borderColorFromSkin",
-        "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin" }) do
+    for _, path in ipairs(here({ "window.tableFontShadowFromSkin", "icons.borderColorFromSkin",
+        "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin" })) do
         local row = NS.SchemaRuntime.FindRow(path)
         assertTrue(row.tooltip:find("not read while this is on", 1, true) ~= nil,
             path .. "'s tooltip says the row it governs is not read")
@@ -70,7 +79,7 @@ end)
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
-    for _, path in ipairs({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontShadow" }) do
+    for _, path in ipairs(here({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontShadow" })) do
         assertNil(S.FindRow(path).disabledIf, path)
     end
     for _, path in ipairs({ "icons.useClassColorBorderFromSkin", "glow.main.useClassColorFromSkin",

@@ -615,7 +615,7 @@ test("inspect: the candidate's off-spec gear is the worn gear each other spec co
     local r = NS.Evaluate.Evaluate(drop, c, {})
     assertEqual(r.verdict, "cantUse")
     assertEqual(r.offSpec.specID, 72); assertEqual(r.offSpec.verdict, "upgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("inspect: InspectDone waits for the read's items to load", function()
     local NS, m, I = party()

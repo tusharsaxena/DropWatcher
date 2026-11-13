@@ -822,12 +822,18 @@ test("pages: Messages opens on Sending, its per-send switches on one line, the t
     local once, edit = find(drawn, "CheckBox", "Ask once"), find(drawn, "CheckBox", "Edit before sending")
     local channel, transmog = find(drawn, "Dropdown", "Announce channel"), find(drawn, "CheckBox", "Offer transmog asks")
     assertTrue(once ~= nil and edit ~= nil and lineOf(drawn, once) == lineOf(drawn, edit), "Ask once | Edit before sending")
-    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
-        "Announce channel | Offer transmog asks")
     local order = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("messages")) do
         if row.group == "Sending" then order[#order + 1] = row.path end
     end
+    if T.forever then
+        -- WoW Forever has no transmog (Forever port design §4.4): no switch for it, and the channel alone.
+        assertTrue(channel ~= nil and transmog == nil, "Announce channel, no transmog switch")
+        assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel")
+        return
+    end
+    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
+        "Announce channel | Offer transmog asks")
     assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel,messages.transmogAsk")
     assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
 end)
@@ -1096,16 +1102,18 @@ test("glow sections: two styles chosen draw both sections; a re-pick re-renders 
     drawn, heads = restyle(NS, m, ctx, "glow.main.type", "autocast")
     assertEqual(heads, "Effect|Offset|Auto cast sparkles|Button (rotating rays)")
     assertTrue(find(drawn, "Slider", "Main spec particles") ~= nil)
-end)
+end, T.RETAIL_ONLY)
 
 test("glow sections: a glow turned off still opens its style's section, dimmed (DW-04)", function()
     -- D-17: hiding follows the style alone, never the on/off check box.
+    -- WoW Forever has the main glow alone (Forever port design §4.4): it is the one turned off there.
     local NS, _, m = T.enableAddon()
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.type", "pixel"))
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+    local key = T.forever and "main" or "offSpec"
+    assertTrue(NS.SchemaRuntime.Set("glow." .. key .. ".type", "pixel"))
+    assertTrue(NS.SchemaRuntime.Set("glow." .. key .. ".enabled", false))
     local _, drawn, heads = glowTab(NS, m)
-    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)")
-    local off = find(drawn, "Slider", "Off-spec lines")
+    assertEqual(heads, T.forever and "Effect|Offset|Pixel border" or "Effect|Offset|Pixel border|Proc (flipbook)")
+    local off = find(drawn, "Slider", T.forever and "Main spec lines" or "Off-spec lines")
     assertTrue(off ~= nil and off.disabled == true, "the off glow's section shows, dimmed")
     -- The hidden rows stay in the schema: /dw set and Defaults still reach them.
     assertTrue(NS.SchemaRuntime.Set("glow.main.buttonFrequency", 0.5))

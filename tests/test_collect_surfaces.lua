@@ -118,7 +118,8 @@ test("collect surfaces: the detail card's chips: the kind, a recipe's profession
     -- red under: DC.Chips without CollectCells.CountChip
     assertTrue(texts(DC.Chips(pet)):find(L["Collected %d/%d"]:format(2, 3), 1, true) ~= nil, texts(DC.Chips(pet)))
     local look = drop({ facts = { category = "cosmetic", equipLoc = "INVTYPE_HEAD", transmogKnown = false } })
-    assertTrue(texts(DC.Chips(look)):find(L["New look"], 1, true) ~= nil, "a cosmetic keeps the look's chip")
+    -- The look is Retail's alone (Forever port design §4.4): on WoW Forever no chip names it.
+    assertEqual(texts(DC.Chips(look)):find(L["New look"], 1, true) ~= nil, not T.forever, "a cosmetic keeps the look's chip")
 end)
 
 test("collect surfaces: FOR YOU reads NEW TO COLLECTION over Kind and Collection rows, no gear rows", function()

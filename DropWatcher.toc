@@ -175,7 +175,7 @@ modules\TierTokens.lua
 modules\Evaluate.lua
 # Conventional: publishes NS.OffSpec, the pure off-spec pass NS.Evaluate's run calls at call time;
 # read by modules\Gear.lua and modules\Inspect.lua at call time only, and itself reads NS.ClassData
-# (core\, above) at load. NS.Evaluate (above) is read at call time.
+# and NS.Constants' FEATURE (core\, above) at load. NS.Evaluate (above) is read at call time.
 modules\OffSpec.lua
 # Conventional: publishes NS.Scoring, the scorers behind the kernel's opts.scorer (Pawn, your weights,
 # none); read by the feed and the diagnostics at call time only, and itself reads NS.ClassData

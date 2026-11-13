@@ -189,7 +189,15 @@ local function trackText(tr)
     return ("%s %s/%s"):format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?"))
 end
 
+-- WoW Forever has no upgrade tracks (Forever port design §4.4): its chip is the item level alone.
+local function ilvlChip(f)
+    local ilvl = num(f.ilvl)
+    if not ilvl then return nil end
+    return chip(tostring(ilvl), L["Item level %d"]:format(ilvl), trow(L["Item level"], ilvl))
+end
+
 local function trackChip(f)
+    if not C.FEATURE.tracks then return ilvlChip(f) end
     local text, ilvl = trackText(f.track), num(f.ilvl)
     if not text then
         if not ilvl then return nil end
@@ -203,6 +211,7 @@ end
 -- The look: `New look` when you have not collected the appearance, `Look known` when you have,
 -- nothing when it is not known or the item has none (design spec §4, transmog-known).
 local function transmogChip(f)
+    if not C.FEATURE.transmog then return nil end   -- Retail's alone (Forever port design §4.4)
     if f.transmogKnown == false then
         local c = chip(L["New look"], L["Transmog"], trow(L["Appearance"], L["not collected yet"], "good"))
         c.tone = "good"
@@ -441,10 +450,13 @@ local function verdictChip(cell)
 end
 DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
+-- The Track row is Retail's alone (Forever port design §4.4): WoW Forever has no upgrade tracks.
 local function sideRows(eval, f, tone, whose, mine, glyphTone, parts)
     local ilvl = num(f.ilvl)
-    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone, parts), trackRow(eval, f.track),
-        statsRow(eval, f.stats) }
+    local rows = { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone, parts) }
+    if C.FEATURE.tracks then rows[#rows + 1] = trackRow(eval, f.track) end
+    rows[#rows + 1] = statsRow(eval, f.stats)
+    return rows
 end
 
 -- The dual mark of a verdict cell against `gear` in the drop's slot (NS.SideCells.Parts), or nil.

@@ -61,6 +61,38 @@ local function profileDefault(NS, path)
     return node
 end
 
+-- The Retail-only rows (Forever port design §4.4, clients-§4): the transmog opt-in and template, the
+-- off-spec template and every row of the off-spec glow. Each carries `clients = { "retail" }`.
+local function retailOnlyRow(path)
+    return path == "messages.transmogAsk" or path == "messages.templates.transmog"
+        or path == "messages.templates.askOffSpec" or path:match("^glow%.offSpec%.") ~= nil
+end
+
+-- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
+-- `/dw list` and the defaults reset have none); on Retail every one is a row declaring Retail, and
+-- no other row declares a client.
+test("settings: no Retail-only row on the Forever panel", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    local seen = 0
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        local path = row.path or ""
+        if retailOnlyRow(path) then
+            seen = seen + 1
+            assertTrue(retail, "a Retail-only row on Forever: " .. path)
+            assertEqual(table.concat(row.clients or {}, ","), "retail", path .. " declares its client")
+        else
+            assertNil(row.clients, path .. " serves both clients")
+        end
+    end
+    local glowKeys = 0
+    for _ in pairs(NS.C.PROFILE.glow.main) do glowKeys = glowKeys + 1 end
+    assertEqual(seen, retail and (3 + glowKeys) or 0, "the declared rows")
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
+        assertTrue(retail or not retailOnlyRow(row.path or ""), "the Alerts page")
+    end
+end)
+
 test("rows: every spec §12.1 setting has a row", function()
     local NS = T.newAddon()
     for _, path in ipairs(specPaths()) do
@@ -293,10 +325,15 @@ local GLOW_KNOBS = {
     { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
 }
 
+-- The glows this client has: WoW Forever has no off-spec glow (Forever port design §4.4), so a case
+-- driving "the other glow" drives the main one there, and a pair's right column is absent.
+local GLOW_KEYS = T.forever and { "main" } or { "main", "offSpec" }
+local OTHER = T.forever and "main" or "offSpec"
+
 test("glow: both glows have every knob's row on Alerts › Upgrade glow, with the plan's defaults", function()
     local NS = T.newAddon()
     local S, TONE = NS.SchemaRuntime, NS.Constants.TONE
-    for _, key in ipairs({ "main", "offSpec" }) do
+    for _, key in ipairs(GLOW_KEYS) do
         local base = "glow." .. key .. "."
         for _, k in ipairs(GLOW_KNOBS) do
             local row = S.FindRow(base .. k[1])
@@ -319,6 +356,7 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
     -- DW-03 (owner ruling D-18, image-39; was feedback-21 H6's two pixel borders and #FFF468): both
     -- Proc (flipbook), the main spec #19FF19 and the off-spec #3FC7EB, opaque.
     assertEqual(NS.Setting("glow.main.type"), "proc")
+    if T.forever then return assertNil(S.FindRow("glow.offSpec.type"), "no off-spec glow on WoW Forever") end
     assertEqual(NS.Setting("glow.offSpec.type"), "proc")
     local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
     assertTrue(main.r == TONE.glowMain.r and main.g == TONE.glowMain.g and main.b == TONE.glowMain.b and main.a == 1,
@@ -336,6 +374,11 @@ test("glow: the main and off-spec rows alternate, so each line reads main left, 
     local rows = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         if row.group == "Upgrade glow" then rows[#rows + 1] = row end
+    end
+    if T.forever then
+        -- WoW Forever: the main spec's column alone (Forever port design §4.4).
+        for _, row in ipairs(rows) do assertTrue(row.path:match("^glow%.main%.") ~= nil, row.path) end
+        return
     end
     assertEqual(#rows % 2, 0)
     -- Every row, the colors and their companions too (feedback-21 H6): main left, off-spec right.
@@ -375,16 +418,16 @@ test("glow: an out-of-range knob, an unknown style and a malformed color are ref
     local S, p = NS.SchemaRuntime, NS.addon.db.profile
     assertFalse(S.Set("glow.main.pixelLines", 0), "1 to 20 lines")
     assertFalse(S.Set("glow.main.pixelLines", 21))
-    assertFalse(S.Set("glow.offSpec.xOffset", 11), "-10 to 10")
-    assertFalse(S.Set("glow.offSpec.procDuration", 0.1), "0.25 to 3 seconds")
+    assertFalse(S.Set("glow." .. OTHER .. ".xOffset", 11), "-10 to 10")
+    assertFalse(S.Set("glow." .. OTHER .. ".procDuration", 0.1), "0.25 to 3 seconds")
     assertFalse(S.Set("glow.main.type", "sparkle"), "only LibCustomGlow's four styles")
     assertFalse(S.Set("glow.main.color", { r = 2, g = 0, b = 0 }), "a channel past 1")
     assertFalse(S.Set("glow.main.color", "green"), "a color is a table")
     assertFalse(S.Set("glow.main.enabled", "yes"))
     assertEqual(p.glow.main.pixelLines, 8, "nothing stored")
     assertTrue(S.Set("glow.main.type", "autocast"))
-    assertTrue(S.Set("glow.offSpec.color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
-    assertEqual(p.glow.offSpec.color.g, 0.5)
+    assertTrue(S.Set("glow." .. OTHER .. ".color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
+    assertEqual(p.glow[OTHER].color.g, 0.5)
     assertTrue(S.Set("glow.main.pixelLength", 0), "0 is automatic")
 end)
 
@@ -392,13 +435,16 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
     local function dim(path) return S.FindRow(path).disabledIf() == true end
-    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here
-    assertTrue(S.Set("glow.offSpec.type", "pixel"))
+    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here (WoW
+    -- Forever has the main glow alone, Forever port design §4.4)
+    if not T.forever then assertTrue(S.Set("glow.offSpec.type", "pixel")) end
     assertTrue(S.Set("glow.main.type", "proc"))
     assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
-    assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    if not T.forever then
+        assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    end
     assertFalse(dim("glow.main.xOffset"), "the offsets serve proc")
-    assertTrue(dim("glow.offSpec.buttonFrequency"))
+    if not T.forever then assertTrue(dim("glow.offSpec.buttonFrequency")) end
     S.Set("glow.main.type", "button")
     assertTrue(dim("glow.main.xOffset"), "but not button")
     assertFalse(dim("glow.main.buttonFrequency"))
@@ -406,12 +452,12 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     S.Set("glow.main.enabled", false)
     assertTrue(dim("glow.main.type") and dim("glow.main.buttonFrequency"), "off dims the style and every knob")
     -- anti-pattern #74: the swatch is read under either mode (its alpha), so neither half is dimmed
-    for _, key in ipairs({ "main", "offSpec" }) do
+    for _, key in ipairs(GLOW_KEYS) do
         assertNil(S.FindRow("glow." .. key .. ".color").disabledIf, key .. " color")
         assertNil(S.FindRow("glow." .. key .. ".useClassColor").disabledIf, key .. " Use class color")
     end
     assertTrue(S.FindRow("glow.main.enabled").disabledIf == nil, "the switch itself is never dimmed")
-    assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own")
+    if not T.forever then assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own") end
 end)
 
 test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic", function()
@@ -421,15 +467,15 @@ test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color 
     local real = NS.Glow.Refresh
     NS.Glow.Refresh = function() calls = calls + 1 end
     assertTrue(NS.SchemaRuntime.Set("glow.main.pixelThickness", 3))
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.color", { r = 0, g = 1, b = 0, a = 1 }))
+    assertTrue(NS.SchemaRuntime.Set("glow." .. OTHER .. ".color", { r = 0, g = 1, b = 0, a = 1 }))
     assertTrue(NS.SchemaRuntime.Set("glow.main.useClassColor", true))
     assertFalse(NS.SchemaRuntime.Set("glow.main.useClassColor", "yes"), "a boolean")
     assertEqual(calls, 3)
     NS.Glow.Refresh = real
     local row = NS.SchemaRuntime.FindRow("glow.main.pixelLength")
     assertEqual(NS.addon.Settings.FormatValue(row, 0, function(_, v) return tostring(v) end), "0 (Automatic)")
-    NS.addon:OnSlashCommand("set glow.offSpec.color 1 0 0 1")
-    assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
+    NS.addon:OnSlashCommand("set glow." .. OTHER .. ".color 1 0 0 1")
+    assertEqual(NS.addon.db.profile.glow[OTHER].color.r, 1)
 end)
 
 -- ── Alerts › Toast: Scale (feedback-21 G10; Window's until feedback-24) ─────────────────────
@@ -790,8 +836,9 @@ test("rows: the layout changes keep every stored path, its type and its default 
     local NS = T.newAddon()
     local want, pinned = {}, 0
     for _, p in ipairs(PINNED_ROWS) do
-        -- On WoW Forever a Retail-only situation's paths are absent (clients-§4), not moved.
-        if not (T.forever and retailOnlyPath(p[1])) then want[p[1]], pinned = p, pinned + 1 end
+        -- On WoW Forever a Retail-only situation's paths, and the Retail-only rows, are absent
+        -- (clients-§4), not moved.
+        if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1]))) then want[p[1]], pinned = p, pinned + 1 end
     end
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do

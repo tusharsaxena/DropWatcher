@@ -218,11 +218,11 @@ local function hasReasons(eval) return type(eval.reasons) == "table" end
 local TRACK_WORD = { [1] = L["a higher track or rank"], [0] = L["the same track and rank"], [-1] = L["a lower track or rank"] }
 
 --- The Track row of a verdict tooltip from NS.Evaluate's trackDelta, or nil with none (the
---- off-spec cell's too).
+--- off-spec cell's too). Nil on WoW Forever, which has no upgrade tracks (Forever port design §4.4).
 --- @param td table|nil { sign }
 --- @return string|nil
 function WC.TrackRow(td)
-    if type(td) ~= "table" then return nil end
+    if type(td) ~= "table" or not C.FEATURE.tracks then return nil end
     return NS.TipMarks.Row(L["Track"], TRACK_WORD[td.sign > 0 and 1 or td.sign < 0 and -1 or 0])
 end
 
@@ -737,6 +737,8 @@ function WC.Ilvl(drop)
     local f = facts(drop)
     local ilvl = num(f.ilvl)
     if not ilvl then return cell("?", "muted", L["Item level"], row(L["Item"], L["details not loaded yet"])) end
+    -- WoW Forever has no upgrade tracks (Forever port design §4.4): the item level alone.
+    if not C.FEATURE.tracks then return cell(tostring(ilvl), "plain", L["Item level %d"]:format(ilvl), row(L["Item level"], ilvl)) end
     local tr = type(f.track) == "table" and f.track or nil
     local track = L["none"]
     if tr and tr.name then track = ("%s %s/%s"):format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?")) end

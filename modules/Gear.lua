@@ -359,7 +359,8 @@ function G.Candidate()
     local s = G.Snapshot()
     return {
         classFile = s.classFile, specID = s.specID, tree = s.tree, level = s.level,
-        dualWield = s.dualWield, titanGrip = s.titanGrip, gear = s.equipped, owned = s.owned, isPlayer = true, offSpecGear = G.OffSpecGear,
+        dualWield = s.dualWield, titanGrip = s.titanGrip, gear = s.equipped, owned = s.owned, isPlayer = true,
+        offSpecGear = NS.OffSpec.Initialized() and G.OffSpecGear or nil,   -- Retail's alone (modules/OffSpec.lua)
     }
 end
 

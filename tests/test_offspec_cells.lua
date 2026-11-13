@@ -249,7 +249,7 @@ test("off-spec cells: the detail card's Can't use with no off-spec is unchanged"
     local DC = addon().DetailCells
     local side = DC.ForYou(drop({ me = cantMain(nil) }), "pawn")
     assertEqual(side.verdict.text, "CAN'T USE"); assertNil(byKey(side.rows, "spec"))
-    assertEqual(#side.rows, 5)
+    assertEqual(#side.rows, T.forever and 4 or 5, "WoW Forever has no Track row (Forever port design §4.4)")
 end)
 
 -- ── History ─────────────────────────────────────────────────────────────────────────────────
@@ -363,7 +363,7 @@ test("off-spec cells: the Me column's tooltip and the Offer panel's legend name 
     for _, c in ipairs(NS.WindowGroup.COLUMNS) do if c.key == "me" then me = c end end
     assertTrue(T.tipPlainJoined(me.tip):find(CYAN, 1, true) ~= nil, T.tipPlainJoined(me.tip))
     assertTrue(T.tipPlainJoined(NS.OfferPanel.COLS[2].tip):find(CYAN, 1, true) ~= nil, T.tipPlainJoined(NS.OfferPanel.COLS[2].tip))
-end)
+end, T.RETAIL_ONLY)
 
 -- ── painted on the Drops table ──────────────────────────────────────────────────────────────
 

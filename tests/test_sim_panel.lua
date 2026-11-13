@@ -51,6 +51,7 @@ local function addon()
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     local create = m.CreateFrame
     m.CreateFrame = function(kind, name, ...)
         local f = create(kind, name, ...)
@@ -136,7 +137,9 @@ test("sim panel: every step kind's tooltip says what it injects; Start and Stop 
     for kind, text in pairs(want) do assertEqual(lines(SP.StepTip({ kind = kind })), text, kind) end
     assertEqual(lines(SP.StepTip({ kind = "loot", n = 1 })), "Injects: 1 loot line | Through: the real loot handler (CHAT_MSG_LOOT)")
     local r = NS.Sim:PanelRows()
-    assertEqual(lines(r[1].tip), "Builds: the item pool, from the Encounter Journal | Invents: the group | Opens: the window")
+    -- WoW Forever's pool is your own gear (modules/SimPool.lua, Forever port design §4.4).
+    assertEqual(lines(r[1].tip), "Builds: the item pool, from " .. (T.forever and "your own gear" or "the Encounter Journal")
+        .. " | Invents: the group | Opens: the window")
     assertEqual(lines(r[#r].tip), "Ends: the simulation | Cleans up: everything it made")
 end)
 
@@ -245,7 +248,7 @@ test("sim panel: opened before the window, it docks beside the window once a slo
     assertEqual(m.simPanel.__dock, "right", "re-docked beside the window, not over it")
     local pt = { m.simPanel:GetPoint(1) }
     assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == NS.Window.Frame())
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- The session-only position and the stand-down
