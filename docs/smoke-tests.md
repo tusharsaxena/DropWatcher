@@ -10,11 +10,13 @@ the check when its feature lands. These checks are the owner's to run; an agent 
 passed.
 
 Each check names its client after its title: `Client: Retail.`, `Client: WoW Forever.` or `Client:
-both.` (run it on each, and record each client's result on its own `Result:` line). Every check
-written before the Forever port (DW-FP21) names Retail, where it was run; the FOREVER theme holds the
-WoW Forever checks and FOREVER-16 lists the Retail checks worth running again there. The in-game
-probes the port's design leaves open, each a line to type and what to read, are
-[`forever-probes.md`](forever-probes.md).
+both.` (run it on each, and record each client's result on its own `Result:` line). The checks
+written before the Forever port were run on Retail; DW-FP22 reviewed them by theme and tagged
+`both` every one whose feature exists on WoW Forever too, keeping `Retail` for the Retail-only
+features (Forever port design §4.4) and the checks that lean on one throughout. On WoW Forever a
+`both` check skips its Retail-only steps as FOREVER-16 says. The FOREVER theme holds the WoW
+Forever checks. The in-game probes the port's design leaves open, each a line to type and what to
+read, are [`forever-probes.md`](forever-probes.md).
 
 ## Index
 
@@ -62,7 +64,7 @@ probes the port's design leaves open, each a line to type and what to read, are
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
 | ROLLS-1..7 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7) |
-| FOREVER-1..16 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); the Retail checks to run again (FOREVER-16) |
+| FOREVER-1..16 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -74,14 +76,14 @@ probes the port's design leaves open, each a line to type and what to read, are
 
 ## Install
 
-**INSTALL-1. Loads clean.** Client: Retail. `/reload` with only Drop Watcher enabled → no Lua error, no chat line at
+**INSTALL-1. Loads clean.** Client: both. `/reload` with only Drop Watcher enabled → no Lua error, no chat line at
 login, the addon listed in the AddOns list with the gem logo. Result: passed in the client, 2026-10-23 (the owner).
 
-**INSTALL-2. Minimap button and broker.** Client: Retail. Look at the minimap → the gem button is there; hover it →
+**INSTALL-2. Minimap button and broker.** Client: both. Look at the minimap → the gem button is there; hover it →
 the tooltip reads `Ka0s Drop Watcher  v1.0.0`, `Enabled: Yes`, `Locked`, `Test mode`, then the two
 click hints. A missing icon (a blank or green square) is the failure. Result: passed in the client, 2026-10-23 (the owner).
 
-**INSTALL-3. Reload keeps settings.** Client: Retail. Set Master scale to 1.25 and lock the window, `/reload` →
+**INSTALL-3. Reload keeps settings.** Client: both. Set Master scale to 1.25 and lock the window, `/reload` →
 both are kept; the debug flag and test mode are not (session-only). Result: passed in the client, 2026-10-23 (the owner).
 
 **INSTALL-4. The re-vendored LibKa0s (DW-P22).** Client: Retail. The DW-P22 re-vendor has landed (`ff567d3`). `/reload`
@@ -122,23 +124,23 @@ Result: passed in the client, 2026-10-30 (the owner).
 
 ## Slash
 
-**SLASH-1. Help.** Client: Retail. `/dw help` and `/dropwatcher help` → the same index, gold commands, white
+**SLASH-1. Help.** Client: both. `/dw help` and `/dropwatcher help` → the same index, gold commands, white
 descriptions, every row present; `/dw` alone opens the settings panel. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-2. Window verbs.** Client: Retail. `/dw show`, `/dw hide`, `/dw toggle` → the window opens, closes and
+**SLASH-2. Window verbs.** Client: both. `/dw show`, `/dw hide`, `/dw toggle` → the window opens, closes and
 toggles; Escape closes it too. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-3. Lock verbs.** Client: Retail. `/dw lock` → the window cannot be dragged by its title bar or resized from
+**SLASH-3. Lock verbs.** Client: both. `/dw lock` → the window cannot be dragged by its title bar or resized from
 its corner; `/dw unlock` → both work again; the Lock frame box follows. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-4. Feed verbs.** Client: Retail. In a group, `/dw scan` → `Inspecting n group members, one at a time.` and
+**SLASH-4. Feed verbs.** Client: both. In a group, `/dw scan` → `Inspecting n group members, one at a time.` and
 the footer's inspect freshness moves as they are read. `/dw add <shift-click an item>` → `Added
 [item] for you (drop n).` and the drop is on Drops with Offer in its Actions; `/dw add <item> <a
 member's name>` → the drop is on Drops under that member; `/dw add <item> Nobody` → it shows, with no inspect asked.
 `/dw clear` → `Cleared this session's drops.`, both tabs empty; with test mode on, its sample drops
 stay. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-5. View verbs.** Client: Retail. `/dw history` → the window opens on History, expanded even when it was
+**SLASH-5. View verbs.** Client: both. `/dw history` → the window opens on History, expanded even when it was
 minimized; `/dw mine` → it opens on Drops (where your own drops are, since DW-E3 retired My drops),
 the same way. `/dw compact` → `Compact view.` and the window narrows to its compact layout
 (COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
@@ -146,7 +148,7 @@ Window layout choice follows. `/dw situation` in a Heroic dungeon →
 three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
 party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-6. Offer verb.** Client: Retail. `/dw offer <one of your drops>` → the window opens on Drops with the
+**SLASH-6. Offer verb.** Client: both. `/dw offer <one of your drops>` → the window opens on Drops with the
 Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed never saw>` → it is added
 as your drop and the panel opens for it. `/dw offer <an item not in your bags>` → `[item] is not in
 your bags.`; `/dw offer` alone → the usage line. While disabled, every one of these verbs answers
@@ -159,14 +161,14 @@ root with `help`: `/dw`, `/dropwatcher`, then each other addon's own roots (`/qc
 the client's `Type /help for a listing`. Then Settings → AddOns → each addon is listed once, and each
 multi-page addon's pages appear once each under it. Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-8. The Show window key binding (launcher-§6, LibKa0s#58, DW-09).** Client: Retail. Key Bindings → AddOns →
+**SLASH-8. The Show window key binding (launcher-§6, LibKa0s#58, DW-09).** Client: both. Key Bindings → AddOns →
 Ka0s Drop Watcher lists `Toggle Drop Watcher window` with no default key. Bind one; a press opens the
 window and a second press closes it (one toggle per press), in and out of combat. Then `/dw disable`
 and press the key → exactly one disabled refusal line and no window. `/dw enable`, start a
 `/dw perf` capture and press → exactly `Not available during a performance capture.` and no toggle.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**SLASH-9. The item-list verbs (DW-CAT5, issue #13).** Client: Retail. `/dw help` → it lists `whitelist` (*Always
+**SLASH-9. The item-list verbs (DW-CAT5, issue #13).** Client: both. `/dw help` → it lists `whitelist` (*Always
 watch an item*) and `blacklist` (*Never watch an item*), each with its `add|remove <id or link>`, or
 `list` form. `/dw whitelist` alone and `/dw blacklist list` each print the list, one `12345 [Name]`
 line per entry, or `(none)`. `/dw disable`, then `/dw whitelist list` → exactly the one disabled
@@ -179,13 +181,13 @@ Item 015 (DW-KB, the 2026-10-24 keybindings, layout and strata run; launcher-§6
 at standard v2.88.0, LibKa0s v1.77.0's `O.KeybindingsTab`). SLASH-8 above was run on the earlier
 shape (Key Bindings → AddOns), and these three replace its path.
 
-**KEYBIND-1. Its own section in Options → Keybindings (SM-DW-KB1).** Client: Retail. Options → Keybindings → scroll
+**KEYBIND-1. Its own section in Options → Keybindings (SM-DW-KB1).** Client: both. Options → Keybindings → scroll
 to the addon sections → a section titled `Ka0s Drop Watcher` holds one row, `Toggle drop feed`, with
 no default key, and there is no blank spacer row above or in it. Drop Watcher no longer appears
 under the shared *AddOns* section. A key bound before this change is still bound.
 Result: passed in the client, 2026-10-24 (the owner).
 
-**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2, SM-DW-RV3).** Client: Retail. Settings → Ka0s Drop
+**KEYBIND-2. The tab and the client's page in step (SM-DW-KB2, SM-DW-RV3).** Client: both. Settings → Ka0s Drop
 Watcher → General → the strip ends with `Keybindings`. It shows the intro line, one row `Toggle drop
 feed` (hover: `Shows or hides the drop feed.`) with one key button and Clear (no second key box;
 LibKa0s OptionsKeybinds minor 4, DW-RV3), and `Saved for: all characters (Options -> Keybindings ->
@@ -198,7 +200,7 @@ with Character Specific Keybindings ticked → the set line reads `Saved for: th
 and the same round trips hold.
 Result: passed in the client, 2026-10-24 (the owner).
 
-**KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** Client: Retail. With a key bound, press it → the window
+**KEYBIND-3. The key, Escape and combat (SM-DW-KB3).** Client: both. With a key bound, press it → the window
 opens; press again → it closes. On the tab, click the key button (it reads `Press a key...`), press Escape →
 the capture cancels, the old key is shown again and the Settings window stays open. Pull a training
 dummy, then click the key button or Clear → nothing changes and the outcome line reads `Key bindings
@@ -212,14 +214,14 @@ v2.88.0). Every strata and level now reads `NS.Constants.LAYERS`; these are the 
 see. The headless `test_layers` pins each frame's strata, level and toplevel. All four make up
 SM-DW-ZS.
 
-**LAYER-1. The window comes forward on click.** Client: Retail. Open another addon's or Blizzard's `MEDIUM` window
+**LAYER-1. The window comes forward on click.** Client: both. Open another addon's or Blizzard's `MEDIUM` window
 (the Group Finder, for one), then `/dw show` and drag Drop Watcher's window so it overlaps it. Click
 the other window → it covers Drop Watcher's. Click anywhere on Drop Watcher's window → it comes to
 the front, whole. Drag it, resize it by the grip and open a detail card → nothing has moved under
 or over anything else; the grip still works.
 Result: passed in the client, 2026-10-24 (the owner).
 
-**LAYER-2. The floating Offer panel over the window's rows, under the toast.** Client: Retail. Make the Offer panel
+**LAYER-2. The floating Offer panel over the window's rows, under the toast.** Client: both. Make the Offer panel
 float: put the window where neither side has room for it (a full-width window, or the compact window
 with the screen's edges close on both sides), then press Offer on a drop of yours → the panel floats
 over the window's right side, over its rows, its rows' tooltips over the panel. With `toast.enabled`
@@ -228,7 +230,7 @@ the panel (before this change the panel covered it). Dock the panel again (move 
 it sits beside the window as before.
 Result: passed in the client, 2026-10-24 (the owner).
 
-**LAYER-3. The compact Filters panel and its dropdowns.** Client: Retail. `/dw compact`, press Filters ▾ → the panel
+**LAYER-3. The compact Filters panel and its dropdowns.** Client: both. `/dw compact`, press Filters ▾ → the panel
 opens over the window's cards. Open each of its four dropdowns → each menu opens over the panel, and
 a pick filters. With the window short, so the panel reaches past its bottom edge, the part outside
 the window still shows and its dropdowns still open over everything. With the Offer panel floating
@@ -237,7 +239,7 @@ Result: passed in the client, 2026-10-24 (the owner).
 Superseded by COMPACT-11 (V89A-DW, 2026-11-06): the panel is gone; the Filters menu is the library's shared menu,
 at `FULLSCREEN_DIALOG` over every tier, so it draws over the floating Offer panel and past the window's edge.
 
-**LAYER-4. The Edit message box over the floating Offer panel.** Client: Retail. Tick Edit before sending
+**LAYER-4. The Edit message box over the floating Offer panel.** Client: both. Tick Edit before sending
 (Messages › Sending), float the Offer panel (LAYER-2), then press a member's Offer → the Edit
 message box opens centered over the window and draws **over** the Offer panel, whole and clickable;
 its Send and close work. Click the window behind it → the box stays over the window. Escape or close
@@ -272,7 +274,7 @@ under Session the checkbox reads `Clear this session's drops on boss kill`, tick
 `/reload` → every value you set before the check (other than the ones Defaults reset) is unchanged.
 Result: Passed (owner, 2026-11-05)
 
-**LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** Client: Retail. General's strip still reads Master
+**LAYOUT-2. General (DRO-L05, DRO-L-new1, DRO-L-new4).** Client: both. General's strip still reads Master
 controls, Simulator, Keybindings. Hover the header's Defaults → `Reset the current profile to its
 defaults — the same thing Profiles -> Reset Profile does. Your other profiles are not affected. Key
 bindings are not changed.`; hover Master controls' Reset all settings → the same text without the
@@ -282,7 +284,7 @@ last sentence. Neither mentions `Reset every Ka0s Drop Watcher setting`. Simulat
 effect from the next step.` `/reload` → the step delay and every Master controls value unchanged.
 Result: passed in the client, 2026-10-24 (the owner).
 
-**LAYOUT-3. Window (DRO-L06, DRO-L07, DRO-L15).** Client: Retail. Window's strip still reads Layout, Columns,
+**LAYOUT-3. Window (DRO-L06, DRO-L07, DRO-L15).** Client: both. Window's strip still reads Layout, Columns,
 Starting view, Icons. Layout: a `Mode` heading over `Window layout` | `Compact view when it
 auto-opens in a run`, then a `Tables` heading over `Row height` | `Font size`; every value is
 what it was. With the checkbox ticked, enter a dungeon and loot so the window auto-opens → it opens
@@ -300,14 +302,14 @@ Result: passed in the client, 2026-10-24 (the owner).
 
 ## Settings panel
 
-**PANEL-1. Landing page.** Client: Retail. Settings → AddOns → Ka0s Drop Watcher → the logo once (not twice after
+**PANEL-1. Landing page.** Client: both. Settings → AddOns → Ka0s Drop Watcher → the logo once (not twice after
 switching pages back and forth), the notes line, and the slash command list. Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-2. Master controls.** Client: Retail. General → the `Master controls` tab: Enable, General visibility,
+**PANEL-2. Master controls.** Client: both. General → the `Master controls` tab: Enable, General visibility,
 Master scale, Master alpha, Lock frame, Debug console, Minimap button, Test mode, then Reset position
 and Reset all settings. Each control changes the window at once. Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-3. Defaults and Reset all.** Client: Retail. Hide the minimap button, change the scale, press the header's
+**PANEL-3. Defaults and Reset all.** Client: both. Hide the minimap button, change the scale, press the header's
 Defaults button and accept → the scale is back to 1.0 and the minimap button stays hidden. Result: passed in the client, 2026-10-23 (the owner).
 
 **PANEL-4. Situations and Drops.** Client: Retail. The settings list shows General, Situations, Drops, Comparison,
@@ -330,7 +332,7 @@ reads `{1}`, and a dagger that drops afterwards reads `Doesn't want` for you, wi
 type as not wanted for your spec." Comparison's Defaults clears both. The tabs, the strip and the
 sliders cannot be used in combat (the page is covered). Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-6. Messages.** Client: Retail. Messages opens on Sending (feedback-24). Messages › Templates (board 08): the seven token chips, each with its tooltip;
+**PANEL-6. Messages.** Client: both. Messages opens on Sending (feedback-24). Messages › Templates (board 08): the seven token chips, each with its tooltip;
 the three editors with `n / 255` in their labels, counting as you type; the preview below names who
 it goes to (a real drop's looter when the feed has one, else a placeholder) and follows the editor
 you type in. Type `{bogus}` into Ask → the preview's status line shows it in red; press Enter → it is
@@ -340,7 +342,7 @@ all three back to the shipped wording. With test mode on, Ask in the window send
 stored (printed). Sending and Auto-ask: Auto-ask's delay and least gain are dimmed until Ask
 automatically is ticked. Alerts › Toast: its rows dim until Show a toast is ticked. Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-7. Rows that act.** Client: Retail. Drops › Retention: tick Clear on boss kill, loot some trash in a dungeon,
+**PANEL-7. Rows that act.** Client: both. Drops › Retention: tick Clear on boss kill, loot some trash in a dungeon,
 then kill a boss → the trash drops leave the table at the kill and the boss's loot fills its own
 group; a wipe clears nothing. Comparison › Scoring: wearing an heirloom in a slot, a higher drop for
 that slot reads `≈` for you, its reason "The slot holds an heirloom you protect, so it is a
@@ -351,14 +353,14 @@ announcement's text; Post my tradeables still posts at once. Window › Layout: 
 and Font size to 15 → the rows grow and their text with them, at once, on Drops and History.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-8. The situation table never rides a released frame (DW-P21).** Client: Retail. Open Situations
+**PANEL-8. The situation table never rides a released frame (DW-P21).** Client: both. Open Situations
 → the table, a line per situation. Without changing anything: close the Settings window, reopen it on
 Drops → no situation table anywhere on Drops. Back to Situations → the table is there once.
 Switch to General's Master controls and back three times, then open Comparison, Messages and Alerts in
 turn → the table shows only on Situations, never on another tab or page, never twice, never empty;
 toggle one cell → it writes, and Defaults repaints it. No Lua error throughout. Result: passed in the client, 2026-10-23 (the owner).
 
-**PANEL-9. A mode draws its own value (LibKa0s#67, options-ui-§22).** Client: Retail. Drops › Quality: Minimum quality
+**PANEL-9. A mode draws its own value (LibKa0s#67, options-ui-§22).** Client: both. Drops › Quality: Minimum quality
 `Fixed minimum` → Fixed minimum is drawn, live, and there is no Quality floor row. Switch to
 `Match each slot` → the page redraws at once, Fixed minimum is gone and Quality floor is there, live;
 `Match my gear` keeps it. Back to `Fixed minimum` → it returns with the value you left. Drops › Items:
@@ -370,7 +372,7 @@ Back to `Use global` → Quality floor is gone. With Minimum quality `Match my g
 on `Fixed minimum` → both are drawn.
 Result:
 
-**PANEL-10. A font row and a border row on the Ka0sMedia picker (the owner's ruling, 2026-11-01).** Client: Retail. Keep
+**PANEL-10. A font row and a border row on the Ka0sMedia picker (the owner's ruling, 2026-11-01).** Client: both. Keep
 another addon that ships AceGUI-3.0-SharedMediaWidgets enabled if you have one. Window › Layout › Tables:
 untick Use the skin's font, open **Font** → the closed row sits in line with the rows around it, and the
 pull-out lists every LibSharedMedia font, each in its own face. Pick one → the tables take it. Window ›
@@ -388,13 +390,13 @@ Result:
 
 ## Profiles
 
-**PROFILE-1. The Profiles page.** Client: Retail. Settings → Ka0s Drop Watcher → Profiles → AceDB's page draws;
+**PROFILE-1. The Profiles page.** Client: both. Settings → Ka0s Drop Watcher → Profiles → AceDB's page draws;
 create a profile, change the scale, switch back → each profile keeps its own scale. Result: passed in the client, 2026-10-23 (the owner).
 
-**PROFILE-2. The profile verb.** Client: Retail. `/dw profile` lists the profiles; `/dw profile <name>` switches,
+**PROFILE-2. The profile verb.** Client: both. `/dw profile` lists the profiles; `/dw profile <name>` switches,
 and works while the addon is disabled. Result: passed in the client, 2026-10-23 (the owner).
 
-**PROFILE-3. The settings rows.** Client: Retail. `/dw list` → every setting of design spec §12.1 listed under its
+**PROFILE-3. The settings rows.** Client: both. `/dw list` → every setting of design spec §12.1 listed under its
 page (general, feed, comparison, trade, messages, window), the two Comparison maps as `{0}`.
 `/dw set feed.quality.fixed 4` → the filter bar reads `Quality: Epic+`; `/dw set feed.quality.mode
 bogus` and `/dw set messages.announceChannel SAY` are refused and change nothing. `/reload` →
@@ -404,15 +406,15 @@ first login on this build, `/dw debug on` → one held `[Migrate] v1 -> v2` line
 
 ## State
 
-**STATE-1. Disable stands everything down.** Client: Retail. Open the window and turn test mode on, then
+**STATE-1. Disable stands everything down.** Client: both. Open the window and turn test mode on, then
 `/dw disable` → the window closes, test mode ends, `/dw show` and `/dw test` answer `Ka0s Drop Watcher
 is disabled — enable it with /dw enable`; the minimap menu grays every entry but Enabled;
 `/dw enable` → the window comes back. Result: passed in the client, 2026-10-23 (the owner).
 
-**STATE-2. Launcher menu.** Client: Retail. Right-click the minimap button → Enabled, Locked, Test mode, Show window,
+**STATE-2. Launcher menu.** Client: both. Right-click the minimap button → Enabled, Locked, Test mode, Show window,
 each ticking the state it shows and toggling it. Result: passed in the client, 2026-10-23 (the owner).
 
-**STATE-3. Test mode populates every drop state.** Client: Retail. Solo, outside an instance and out of combat, open the
+**STATE-3. Test mode populates every drop state.** Client: both. Solo, outside an instance and out of combat, open the
 window with no drop yet → the Drops tab shows `No drops yet`,
 `Loot your group receives appears here, grouped by boss.` (no button since feedback-16). Type `/dw test`
 → test mode turns on, bright-red `TEST MODE` text sits beside
@@ -437,7 +439,7 @@ trinket opens the panel with `+14 UPGRADE`, `+6 UPGRADE`, `EQUAL`, `NO UPGRADE`,
 Since DW-10, 2026-10-23, the `TEST MODE` text shows only while the window is minimized: FEED-102.)
 Result: passed in the client, 2026-10-23 (the owner).
 
-**STATE-4. Test mode shows real items, History test data and no trailing ellipsis (DW-84).** Client: Retail. Solo, outside
+**STATE-4. Test mode shows real items, History test data and no trailing ellipsis (DW-84).** Client: both. Solo, outside
 an instance and out of combat, `/dw test` → for a moment the Drops tab may read
 `Gathering real items for test mode.`, then the rows fill. Every row's icon is a real item's (no red
 question mark anywhere: Item, the Me and Them icons (My eq and Their eq until DW-F1), the detail card, the Offer panel), the names are
@@ -457,7 +459,7 @@ since DW-D4) → none ends in an ellipsis or is cut short. Then in a Heroic dung
 out of combat, with the window closed: `/dw test` → the window opens with the test rows; `/dw test` again →
 the window closes (test mode opened it, even though its drops arrived first). Result: passed in the client, 2026-10-23 (the owner).
 
-**STATE-5. One refusal line while disabled (DW-P16).** Client: Retail. `/dw disable` (the refusal comes before any
+**STATE-5. One refusal line while disabled (DW-P16).** Client: both. `/dw disable` (the refusal comes before any
 other check, so no drop is needed). Run
 `/run LibStub("AceAddon-3.0"):GetAddon("DropWatcher").PressAsk(1)` and then `/dw scan` → each prints
 exactly `Ka0s Drop Watcher is disabled — enable it with /dw enable`, byte for byte the same, never
@@ -552,7 +554,7 @@ from the pull until the boss dies, `Combat` while fighting trash, and no badge o
 active, and once an ask is queued (ASK-2) it reads `Encounter · 1 queued` and its tooltip lists the
 ask. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMBAT-3. Combat ends test mode.** Client: Retail. Turn test mode on, pull a training dummy → test mode ends with
+**COMBAT-3. Combat ends test mode.** Client: both. Turn test mode on, pull a training dummy → test mode ends with
 the chat line `Test mode ended: you entered combat.`; `/dw test` in combat is refused. With General
 visibility `Only in combat`, the open window shows on the pull and hides when combat ends. Result: passed in the client, 2026-10-23 (the owner).
 
@@ -567,23 +569,23 @@ Result: Passed (owner, 2026-11-05)
 
 ## Diagnostics
 
-**DIAG-1. The report.** Client: Retail. `/dw diagnostics` → the console opens with both markers naming Ka0s Drop
+**DIAG-1. The report.** Client: both. `/dw diagnostics` → the console opens with both markers naming Ka0s Drop
 Watcher and the `identity`, `settings`, `window`, `registration` and `integrations` sections; logging
 is on afterwards. `/dw debug diagnostics` writes the same report again below the first. Result: passed in the client, 2026-10-23 (the owner).
 
-**DIAG-2. Perf.** Client: Retail. `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
+**DIAG-2. Perf.** Client: both. `/dw perf` → the step panel opens with its own close mark; run A, B and finish →
 the report lists `window.refresh`, and `parse` when a loot line arrived during the run. During a
 suspended run (the addon stood down by the `perf` hold, `enabled` still on), `/dw scan`, `/dw test` and
 `/dw sim start dungeon` each answer `Not available during a performance capture.` and never `is
 disabled — enable it with /dw enable`. Result: passed in the client, 2026-10-23 (the owner).
 
-**DIAG-3. State and Scoring.** Client: Retail. In a dungeon, `/dw diagnostics` → `state: enabled=true
+**DIAG-3. State and Scoring.** Client: both. In a dungeon, `/dw diagnostics` → `state: enabled=true
 situation=dungeon testMode=false restriction=none queuedSends=0`; pull a boss and run it again →
 `restriction=encounter`. The `scoring:` lines name the scorer setting, `pawn ready=true scale=<your
 spec's Pawn scale>` with Pawn installed (`ready=false scale=none` without it), and `retries pending=0
 spent=0 timer=off` out of loot. Result: passed in the client, 2026-10-23 (the owner).
 
-**DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** Client: Retail. DW-P22 (LibKa0s Perf 15,
+**DIAG-4. Perf nesting confirmed by a capture (DW-P24, review C-04).** Client: both. DW-P22 (LibKa0s Perf 15,
 `ff567d3`) and DW-P24 (`evaluate` and `quality.gate` declared within `feed.add`, `917449f`) have landed. In a
 dungeon, in a group: the standard two-arm `/dw perf` protocol, the clean arm first and the suspended
 arm second, no `/reload` between the arms, with at least one boss kill and its loot in the clean arm.
@@ -596,12 +598,12 @@ dump to `/dev-copilot:wow-perf-analysis`, which records the capture as
 
 ## Degraded
 
-**DEGRADED-1. LibKa0s missing.** Client: Retail. Rename `libs\LibKa0s` and `/reload` → no Lua error; one chat line
+**DEGRADED-1. LibKa0s missing.** Client: both. Rename `libs\LibKa0s` and `/reload` → no Lua error; one chat line
 says the library is missing; `/dw show` opens the window without the skin; `/dw disable` and
 `/dw enable` still work; `/dw list` says the settings CLI is unavailable. Restore the folder after.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**DEGRADED-2. The toast's close degrades to nothing (DW-P21).** Client: Retail. With the library present, turn
+**DEGRADED-2. The toast's close degrades to nothing (DW-P21).** Client: both. With the library present, turn
 Settings › Alerts › Toast › Show a toast on (it is saved). Rename `libs\LibKa0s` as in DEGRADED-1,
 `/reload`, then `/dw test` → the test toast shows with Ask in its top-right corner and no close control at all:
 no `×` text button. Right-click the toast → it closes. With the library restored and `/reload` → the
@@ -610,7 +612,7 @@ skinned close mark is back at the corner and Ask sits to its left. Restore the f
 toast shows at all (DEGRADED-3). The close mark's own degradation (a Core with no close mark: Ask in
 the corner, a right-click still closes) is held headless by `test_toast`.
 
-**DEGRADED-3. No toast without LibKa0s (AT-A2).** Client: Retail. The headless `test_toast` (`without LibKa0s the
+**DEGRADED-3. No toast without LibKa0s (AT-A2).** Client: both. The headless `test_toast` (`without LibKa0s the
 seam's stub answers`) and `test_surface_parity` (`the Toast stub`) cover it.
 
 - SM-DW-AT8: with Show a toast on (saved), rename `libs\LibKa0s` as in DEGRADED-1, `/reload`, then
@@ -619,7 +621,7 @@ seam's stub answers`) and `test_surface_parity` (`the Toast stub`) cover it.
 
 Result: passed in the client, 2026-10-30 (the owner).
 
-**DEGRADED-4. The Insights tab without LibKa0s-Charts-1.0 (DW-N2, issue #12).** Client: Retail. The headless
+**DEGRADED-4. The Insights tab without LibKa0s-Charts-1.0 (DW-N2, issue #12).** Client: both. The headless
 `test_window_insights` (`without LibKa0s-Charts-1.0 the bar and the strip draw and one line says
 why`) and `test_surface_parity` cover it. In the client: move `libs\LibKa0s\Charts.lua` and
 `libs\LibKa0s\ChartsRender.lua` out of the folder, `/reload`, `/dw debug on`, then `/dw insights` →
@@ -637,7 +639,7 @@ and the `feed:` lines of `/dw diagnostics`, FEED-10..12 how the Drops table draw
 (DW-31), FEED-13..15 the detail card a row expands into (DW-32), FEED-16 the title bar side by side with Ka0s Loot History's (DW-81), FEED-17 the filter bar beside Loot History's (DW-82), FEED-18 My eq, Their eq, Usable by me, Upgrade for me and auto-open on every drop (DW-83), FEED-19 the two-Yoke regression (DW-A0), FEED-20 the multi-select View (DW-A1), FEED-21 item tooltips beside the window (DW-A2), FEED-22 the party named in every group header (DW-A3), FEED-23 the Character dropdown (DW-A4), FEED-24 the tables' font and row height beside Loot History's (DW-A8), and FEED-25 your own drops' group headers and the tooltip beside the docked Offer panel (DW-A9), FEED-26 every row tooltip at the row's top right (DW-B2), FEED-27 the filter bar's tooltips above their controls (DW-B1), FEED-28 the group headers' instance, boss, difficulty and recorder (DW-B4), FEED-29 the filter bar's tooltips near the top of the screen (DW-B5), FEED-30 a delve's header and its tier (DW-B4), FEED-31..37 feedback-4's tones, colors, Type column, labels, search box and least width (DW-D0..DW-D4), and FEED-38..47 feedback-5's chevrons and indent, Actions width, Trade window column, your own drops on Drops, the strip, the two tabs and the least width (DW-E0..DW-E4), and FEED-48..54 feedback-6's narrower Trade window, the merged Me and Them cells, the retired toggles, Offer in cyan, the (Details) tooltip, tooltips without glyph boxes and the least width 1038 (DW-F0..DW-F3). FEED-7 checks the class data (DW-10, judged by DW-11) for the one spec the client data could not
 settle.
 
-**FEED-1. The parser on real loot.** Client: Retail. `/dw debug on`, in a party with at least one player from
+**FEED-1. The parser on real loot.** Client: both. `/dw debug on`, in a party with at least one player from
 another realm, and run a dungeon. → For every loot line chat shows, the console shows one `[PARSE]`
 line: your own loot as `loot <link> x1 by <You>-<YourRealm> (Player-…)`, a stack you loot as `x<n>`
 with the link stopping before the count, a member's loot as `by <Name>-<Realm> (Player-…)` with the
@@ -651,7 +653,7 @@ won …`) show nothing. `/dw diagnostics` → `feed: parser hits=<n>` matches th
 cannot place. Record any line chat showed with no `[PARSE]` line, any
 looter shown without a realm, and any quantity wrong. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-2. One drop per item, whatever reports it.** Client: Retail. `/dw debug on`, in a Normal or Heroic dungeon
+**FEED-2. One drop per item, whatever reports it.** Client: both. `/dw debug on`, in a Normal or Heroic dungeon
 with four others, and kill a boss. → Each item chat shows as looted produces one `[FEED] drop <n>:
 <link> by <Name-Realm> (chat) in <boss name>` line (or `(encounter)` when the encounter's report
 came first), and, when the other report arrives, one `[FEED] drop <n>: <link> also reported by
@@ -661,14 +663,14 @@ second reports. In a group-loot (Need/Greed) run, each won item also shows `also
 history` once the roll ends, never before. Record any item with two numbers, or a `merged=` of 0
 after a boss whose loot chat showed. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-3. Groups by encounter and area.** Client: Retail. Same dungeon, `/dw debug on`. → Trash loot before the
+**FEED-3. Groups by encounter and area.** Client: both. Same dungeon, `/dw debug on`. → Trash loot before the
 first boss reads `in <dungeon name>`; the boss's loot reads `in <boss name>`, including loot that
 arrives up to two minutes after the kill; trash after that reads `in <dungeon name>` again. Wipe on
 a boss once → loot that follows is not filed under the boss. While a boss is up (or within two
 minutes of its kill), `/dw diagnostics` shows `feed: encounter=<boss name>`; afterwards
 `encounter=none`. Record any drop filed under the wrong name. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-4. The gates, in order, and your own drops.** Client: Retail. Same dungeon, Feed quality at its default
+**FEED-4. The gates, in order, and your own drops.** Client: both. Same dungeon, Feed quality at its default
 (Rare+). → An Uncommon or lower item a member loots that is not an upgrade for you shows a
 `[QUAL] hidden <link>: quality <q> below 3 (fixed, belowThreshold)` line and **no** `[INSPECT]`
 line for that member right after it; an Epic shows `[FEED] drop`, then an `[INSPECT] inspect
@@ -702,7 +704,7 @@ off-hand item as `Can't use`. Before the inspect, the same Intellect weapon read
 not known and Intellect suits only one Demon Hunter spec). If the item's own spec list disagrees,
 the item wins: record the item and both verdicts. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-8. The window's shell.** Client: Retail. `/dw show` on a clean `/reload` → a window about 1038 × 600 (since DW-F1; 1132 from DW-E4)
+**FEED-8. The window's shell.** Client: both. `/dw show` on a clean `/reload` → a window about 1038 × 600 (since DW-F1; 1132 from DW-E4)
 with the Ka0s edge (a hard black line with a gray line inside it), the gold `Ka0s Drop Watcher` title
 centered on the title bar (no logo), a `Scan group` button with a people mark (since DW-G4 on the Drops
 strip in both layouts: FEED-63; no Scan group in the title bar since feedback-16), a minimize mark and the close
@@ -719,7 +721,7 @@ will not take it narrower than 1038: FEED-37, FEED-54). In a party, `Scan group`
 `Inspecting <n> group members, one at a time.`, and within a minute the footer reads
 `Inspect <n>/<n> fresh`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-9. Minimize and auto-open.** Client: Retail. With the window open, the minimize mark → the window shrinks
+**FEED-9. Minimize and auto-open.** Client: both. With the window open, the minimize mark → the window shrinks
 to its title bar where it stood, the mark becomes a plus; `/reload` → it comes back minimized. In a
 Drag the window to the middle of the screen and minimize it again → the title bar stays exactly
 where it was, and the expand grows the window downward from it. Press Alt-Z twice → the window
@@ -730,7 +732,7 @@ appears beside the title and the window stays minimized; a double-click on the t
 and the chip goes. Superseded in part by FEED-18 (DW-83): every drop now opens it, not only the
 first upgrade. In the open world solo nothing opens it. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-10. The Drops table.** Client: Retail. In a Heroic dungeon with the window open, let the group loot a boss →
+**FEED-10. The Drops table.** Client: both. In a Heroic dungeon with the window open, let the group loot a boss →
 under the filter bar a row of gold column labels (`Item`, `Ilvl`, `Slot`, `Type`, `Looter`, `Me`,
 `Them`, `Trade`, `Trade window`, `Actions`; gold and Type since DW-D4 and DW-D3, Trade window since DW-E1;
 `My eq` and `Their eq` merged into Me and Them since DW-F1: FEED-49), then a gold header `<boss> · Dungeon · <age> ago · <n> drops` with a gold down chevron
@@ -753,7 +755,7 @@ and the header → each one shows a tooltip with a reason (Trade's reads like
 `Personal loot: 311 is not an upgrade over the 324 <name> wears, so they may trade it.`); no cell is blank.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-11. Headers, item buttons, compact.** Client: Retail. After FEED-10, kill a second boss → its group is on top and
+**FEED-11. Headers, item buttons, compact.** Client: both. After FEED-10, kill a second boss → its group is on top and
 open, the first one collapsed with a right chevron and `(collapsed)`; click each header → it opens or
 collapses. Hover an item icon → the game's item tooltip with a
 `Shift-click to link it in chat; ctrl-click to try it on.` line; shift-click it with the chat box open → the
@@ -762,7 +764,7 @@ FEED-33). Switch to the compact layout (`/dw compact`) → the table gives way t
 back. Resize the window → the Item column takes the width. Scroll with the mouse wheel when the rows pass
 the bottom. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-12. The table's Ask button.** Client: Retail. In a party, on a drop that is an upgrade for you and Likely tradeable,
+**FEED-12. The table's Ask button.** Client: both. In a party, on a drop that is an upgrade for you and Likely tradeable,
 click `Ask` (red: your move, DW-D1) → the looter is whispered your ask template and the chat line
 `Whispered <name>: [item]` appears; the button reads `Asked` with a check mark, yellow and grayed; its
 tooltip says it cannot be sent twice. In a boss fight, click `Ask` on another such drop → it reads `Queued`
@@ -771,7 +773,7 @@ click once more and let the fight end → it is sent and reads `Asked`. A drop w
 that is not an upgrade for you, shows a dash whose tooltip says why (superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72); a drop of your own shows `Offer`
 instead (since DW-E2: FEED-44). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-13. The detail card opens inline.** Client: Retail. After FEED-10, click a drop's row (anywhere but a button) → a
+**FEED-13. The detail card opens inline.** Client: both. After FEED-10, click a drop's row (anywhere but a button) → a
 card opens right under it, indented with its row, and the rows below move down; the row gets a faint gold
 tint and its left chevron turns up (since DW-E0 there is no chevron at the right edge: FEED-39). The card shows the item's icon and name in its quality color, then chips: the slot, the type
 (Cloth, Leather, Mail, Plate, Jewelry, Trinkets, Cloak or Weapons; the `Armor type` chip until DW-D3), the
@@ -780,7 +782,7 @@ tertiary stat when the item has them. Click the row again → the card closes an
 another row → the card moves to it: one card at a time. Fold the row's header, or type a search that hides
 the row → the card goes with it; clear the search → it comes back still open. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-14. Both comparisons and the trade box.** Client: Retail. On a drop the looter's inspect has read, the card's left
+**FEED-14. Both comparisons and the trade box.** Client: both. On a drop the looter's inspect has read, the card's left
 box `FOR YOU` and right box `FOR LOOTER (<NAME>)` (`FOR <NAME> (LOOTER)` until feedback-21 H5, FEED-91) each
 show a verdict chip (`▲ UPGRADE`, `▼ DOWNGRADE`, …, the arrow first and the chip green, yellow or red since
 DW-D0), the item it replaces with its item level and icon (`292 [icon] Old Helm` since FEED-91), `292 → 311
@@ -791,7 +793,7 @@ shows (compare each by hovering the icons). Below, the trade box shows a chip (`
 reason in a sentence, and `Rule: personal loot, Mythic+ · Basis: inspect 40s ago`. Hover every line and chip
 → each tooltip names it and says why; nothing is blank. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-15. The card's actions.** Client: Retail. On another player's drop that is an upgrade for you: `Ask <name>` whispers
+**FEED-15. The card's actions.** Client: both. On another player's drop that is an upgrade for you: `Ask <name>` whispers
 them as the row's Ask does; `Edit message` opens a small box over the window with the ask filled in and
 `n / 255 bytes`; change the text and click `Send` → the edited text is whispered and the box closes; type
 past 255 bytes → Send grays out; `Cancel` or Escape closes it unsent. `Link in chat` puts the item's link in
@@ -803,7 +805,7 @@ no `Hide this item` (DW-D2: FEED-33). On your own drop the first button is `Offe
 opens the Offer panel, and the For the looter box's Them row reads `(Details)` (`(Multiple)` until DW-F3) with the row's tooltip;
 Edit message, Retry inspect and Trade are grayed and each says why. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-16. The header beside Loot History (DW-81).** Client: Retail. Open Ka0s Loot History (`/lh`) and put the two windows
+**FEED-16. The header beside Loot History (DW-81).** Client: both. Open Ka0s Loot History (`/lh`) and put the two windows
 side by side. → Drop Watcher's title bar has no logo (the minimap button and the AddOns list keep it), and
 its gold `Ka0s Drop Watcher` title sits centered on the bar in the same font as Loot History's. `/dw test`
 and Loot History's test mode → each shows `TEST MODE` in bright red, the same size and color, 10px right of
@@ -815,7 +817,7 @@ the restriction badge, `Scan group`, minimize and the close mark keep their plac
 test mode on → the title stays centered; record whether `TEST MODE` reaches `Scan group` or the restriction
 badge (at that width the centered title leaves them little room). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-17. The filter bar beside Loot History (DW-82).** Client: Retail. With the two windows side by side as in
+**FEED-17. The filter bar beside Loot History (DW-82).** Client: both. With the two windows side by side as in
 FEED-16 → Drop Watcher's search box is a flat, square-cornered box, the same dark fill, thin gray
 line and height as Loot History's `Search items…` box, with its gray hint 6px in; click into it →
 its line turns gold, and click away → gray again. (The `Likely tradeable only` checkbox this check
@@ -826,7 +828,7 @@ SearchBox, its hint and filter Drop Watcher's: FEED-101.) Result: passed in the 
 (Superseded by DW-10, 2026-10-23: expanded, the amber and cyan strips mark the two modes and neither word is
 drawn beside the title; the words show only while minimized; FEED-102.)
 
-**FEED-18. My eq, Their eq, the two new filters and auto-open on every drop (DW-83).** Client: Retail. (Since DW-F1 My eq
+**FEED-18. My eq, Their eq, the two new filters and auto-open on every drop (DW-83).** Client: both. (Since DW-F1 My eq
 is the gear part of Me and Their eq of Them, and the My eq and Their eq toggles are gone: read the column
 checks below against Me and Them, FEED-49 and FEED-50.) In a Heroic dungeon
 with the window open, let the group loot a boss → the `My eq` column sits before `Their eq`; each row shows
@@ -847,7 +849,7 @@ longer open it; tick it back. Enter combat with the window closed and let an ite
 Lua error and no "Interface action blocked" message. `/dw sim start key` with the window closed → the
 simulator's first drop opens it. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-19. Every drop counted: the two-Yoke regression (DW-A0, feedback-2 spec §0).** Client: Retail. In a Mythic+
+**FEED-19. Every drop counted: the two-Yoke regression (DW-A0, feedback-2 spec §0).** Client: both. In a Mythic+
 dungeon with a cross-realm group, `/dw debug on`, View: Interesting. Let two members loot the same
 item, one for whom it is an equal (sidegrade) and one for whom it is a downgrade, while it is a
 downgrade for you (the owner's run: two Yokes of the Charging Bear, `Bùnian-Azralon` and
@@ -862,7 +864,7 @@ row. Loot an item yourself through a quest reward → one `[FEED] refused <link>
 `/dw diagnostics` → its `drops` section reads `drops: hidden notWatched=2` (plus any others) and
 `drops: refused pushed=1`. Result: Passed (owner, 2026-11-05)
 
-**FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** Client: Retail. On a
+**FEED-20. View: All by default, the checkboxes as View values (DW-A1, feedback-2 spec §1).** Client: both. On a
 character whose profile never changed the View, `/dw show` → the bar reads `View: All` and no
 checkbox is left on it. Open View → its rows are `View: All`, `Interesting`, `Likely tradeable`,
 `Usable by me` and `Upgrade for me`, and the menu stays open as you click. Click `Likely tradeable`
@@ -879,7 +881,7 @@ Drops tab reads `Usable by me`; `/dw set feed.view.usable false`. On a character
 ticked Usable by me or Likely tradeable only in the old settings (or `View: All` saved), the first
 load of this version → the same choices show as View values. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-21. Item tooltips beside the window (DW-A2, feedback-2 spec §2).** Client: Retail. `/dw test`, window in the
+**FEED-21. Item tooltips beside the window (DW-A2, feedback-2 spec §2).** Client: both. `/dw test`, window in the
 middle of the screen. Hover an item in each place: a Drops row (icon and name), the Me and Them icons (My eq and Their eq until DW-F1), the detail card's icon, name and Replaces rows, a row of your own, the Offer panel's icon and name,
 and a History row → each tooltip opens to the RIGHT of the window, its top level with the hovered
 row, and covers none of the table (the Offer panel's opens to the right of the panel). Drag the
@@ -888,7 +890,7 @@ Set the UI scale low (or the window's Scale to 0.7) and repeat near the right ed
 the window, never over it, never off screen. Hover the toast's icon → beside the toast. (Where
 each tooltip sits against the row is FEED-26's since DW-B2: it rises from the row's top.) Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-22. Group headers keep the party (DW-A3, feedback-2 spec §3; the header since DW-B4).** Client: Retail. In a
+**FEED-22. Group headers keep the party (DW-A3, feedback-2 spec §3; the header since DW-B4).** Client: both. In a
 five-player party, run a dungeon or a key until something drops. Since DW-B4 the header itself names
 only you (FEED-28). Hover the header → the tooltip's one line reads `Group: You, A, B, C, D`: your
 name first, every name in its class color, a cross-realm member as Name-Realm. Have someone leave
@@ -900,7 +902,7 @@ line names all eight (ten at most, then `+n`) (superseded by feedback-17, 2026-1
 everyone five a row, and `/dw test`'s raid bosses are twenty; FEED-79). `/dw sim start key` (it plays on its own) → the run's
 tooltip names you and the simulated group, and the simulation's History does too (procedure amended for auto-play, DW-01, 2026-10-23). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Client: Retail. Open the window: after Content the
+**FEED-23. The Character dropdown (DW-A4, feedback-2 spec §4).** Client: both. Open the window: after Content the
 bar holds `Character: Current`. Open it on Drops → `Character: All`,
 `Character: Current` and your own character alone, its class icon beside the name, in class color.
 Loot something on this character, log on to an alt and loot something there, then open History on
@@ -915,7 +917,7 @@ lists you and `Emberwick`, and Current hides the alt's `Placeholder boss (alt)` 
 feedback-17 the alt's group is named for its real boss, ten days old). `/dw sim
 start key` (it plays on its own) → the simulated run shows under Current on every tab (procedure amended for auto-play, DW-01, 2026-10-23). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).** Client: Retail.
+**FEED-24. The tables' font and row height beside Loot History's (DW-A8, feedback-2 spec §8, FB2-9).** Client: both.
 The headless `test_window_group` (`rows:`, `table: the Window page's row height`, and the Trade window
 row's height) and `test_history` (`rows take the Window page's row height`) cover the same ground. On a
 profile that never moved Row height or Font size, `/dw test`, then open Ka0s Loot History beside the window
@@ -931,7 +933,7 @@ to 0 → the original size returns. `/dw get window.fontSize` → `0 (Default)`.
 stored another row height or font size before this version, it is unchanged. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-25. Your own drops' headers and the tooltip beside the Offer panel (DW-A9, feedback-2 spec §8,
-FB2-10; on Drops since DW-E3).** Client: Retail. The headless `test_own_drops`, `test_drops_strip` and `test_window_group`
+FB2-10; on Drops since DW-E3).** Client: both. The headless `test_own_drops`, `test_drops_strip` and `test_window_group`
 (`beside the docked Offer panel`, `a docked panel's row never opens over the window`) cover the same
 ground. `/dw sim start key` and let it play until your own drops fall (procedure amended for auto-play, DW-01, 2026-10-23), or `/dw test` → your own drops
 are Drops rows under the same headers as everyone's: `Den of Nalorakk · Mythic+ · 6m ago · 2 drops`, the
@@ -944,7 +946,7 @@ does not fit) → the tooltip opens on the window's LEFT. Hover an item in the p
 never covers the window (right of the panel, else left of the window). Close the panel and hover a
 row → the tooltip is beside the window again. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-26. Every row tooltip at the row's top right, like Loot History (DW-B2, feedback-3 spec §2).** Client: Retail. The
+**FEED-26. Every row tooltip at the row's top right, like Loot History (DW-B2, feedback-3 spec §2).** Client: both. The
 headless `test_row_tooltip` covers the same ground. `/dw test`, window in the middle of the screen, Ka0s
 Loot History open for comparison (research `06-loothistory-tooltip-top-right.png`). On Drops hover a
 row's item, then its Looter, Me, Them and Trade cells (Me and Them holding the worn gear since DW-F1), the Ask button, then a group header
@@ -958,7 +960,7 @@ to the screen's right edge and repeat a few → each rises from the row's top-LE
 outside the window's left edge. The column labels, the tabs, the title bar, the footer and the filter bar
 keep their own anchors. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-27. The filter bar's tooltips open above their controls (DW-B1, feedback-3 spec §1).** Client: Retail.
+**FEED-27. The filter bar's tooltips open above their controls (DW-B1, feedback-3 spec §1).** Client: both.
 The headless `test_window_shell` (its three `filter bar tooltip` cases) covers the placement math. `/dw test`, window in
 the middle of the screen (research `03-view-tooltip-over-dropdown.png` shows the old overlap). Hover View,
 Quality, Content, Character, the search box and the footer's Sort (the strip's since feedback-10, 2026-10-14;
@@ -968,7 +970,7 @@ it; click a dropdown open while its tooltip shows → the menu is never under th
 window to the screen's right edge and hover the right-most controls → the tooltip's bottom-right
 corner sits on the control's top-left corner instead, still above it. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-28. Group headers name where it dropped and only your character (DW-B4, feedback-3 spec §4).** Client: Retail.
+**FEED-28. Group headers name where it dropped and only your character (DW-B4, feedback-3 spec §4).** Client: both.
 The headless `test_group_place` covers the names and the capture. Research `07-my-drops-real-timewalking-drop.png`
 shows the old header (`Commander Ri'mok · Dungeon · ... · Euthanàsia, Deathllanira, ...`) and
 `08-header-roster-too-long.png` the roster crowding it. Run a Timewalking dungeon and kill a boss that
@@ -985,7 +987,7 @@ world → `Open world · Open world group` (or `Solo`). `/dw test` → the key r
 `/dw sim start dungeon` (it plays on its own; procedure amended for auto-play, DW-01, 2026-10-23) → the boss headers name the pool's dungeon and `Mythic`;
 `/dw sim start key` → the run's header names the dungeon and `Mythic+ 12`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-29. A tooltip near the top of the screen opens below (DW-B5, feedback-3 spec §5).** Client: Retail. The headless
+**FEED-29. A tooltip near the top of the screen opens below (DW-B5, feedback-3 spec §5).** Client: both. The headless
 `test_window_shell` (its `near the top` cases) covers the placement. (The tab counts this check also
 covered, `My drops · 1` and the Group drops header's `· 1 yours on My drops`, are gone since DW-E3: your own
 drop is a Drops row and its header counts it with the others, FEED-46.) Solo, `/dw sim start key`, play it
@@ -1007,7 +1009,7 @@ the Drops header reads `<Delve> · <label> · <the difficultyName recorded> · .
 <you>`. If either dump names the tier, the header shows it; if neither does, record that here so
 the tier can be read from another source or the gap ratified. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-31. One tone per verdict, the arrow first (DW-D0, feedback-4 spec §0).** Client: Retail. The headless
+**FEED-31. One tone per verdict, the arrow first (DW-D0, feedback-4 spec §0).** Client: both. The headless
 `test_window_group` (its `cells: Me` and `Them column` cases), `test_compact_cards` and `test_detail_card`
 cover the tones and the order. Research `05-delta-arrows-after-text.png` shows the old cells. `/dw test`,
 full layout, Drops → in Me and in Them alike an upgrade reads `▲6` in green, a sidegrade `≈0` in
@@ -1019,7 +1021,7 @@ describes an inversion. History's Me and Them read the same way. Expand a row �
 detail card's verdict chips read `▲ UPGRADE`, `▼ DOWNGRADE`, … in the same tones. `/dw compact` → each
 card's You and Them halves keep the arrow first and take the same tones. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-32. Action buttons colored by whose move it is (DW-D1, feedback-4 spec §1).** Client: Retail. The headless
+**FEED-32. Action buttons colored by whose move it is (DW-D1, feedback-4 spec §1).** Client: both. The headless
 `test_window_group` (`ActionTone`, `the Ask button wears its state's tone`), `test_mine_cells`
 (`ToneState`), `test_own_drops`, `test_offer_panel` and `test_compact_group` cover each state. Research
 `04-actions-column-uncolored.png` shows the old white column. `/dw test`, full layout, Drops → `Ask` and
@@ -1032,7 +1034,7 @@ Once a drop of yours is traded away (HIST-1, or test mode's History sample) its 
 Announce to group are green. No button is gold. `/dw compact` → each card's Ask, and Offer on your own
 card, show the same colors in each state (Offer cyan while it is your move). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-33. Nothing dismisses or hides a drop (DW-D2, feedback-4 spec §2).** Client: Retail. The headless `test_window_group`
+**FEED-33. Nothing dismisses or hides a drop (DW-D2, feedback-4 spec §2).** Client: both. The headless `test_window_group`
 (`no row can be dismissed`), `test_detail_card` (`no Hide this item`), `test_own_drops` and
 `test_compact_group` cover it. Research `03-dismiss-column.png` shows the old × column. `/dw test`, full
 layout → Drops' Actions column holds only the Ask button, Offer on your own drop (or its dash; `No action` since feedback-11, 2026-10-14: FEED-72), no `×`; the
@@ -1043,7 +1045,7 @@ check also read is gone since DW-E3.)
 Turn on auto-ask (ASK-8) → its one-time notice reads
 `It holds off when you ask yourself, they leave or you get the item.`, with no word of dismissing. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-34. The Type column (DW-D3, feedback-4 spec §3).** Client: Retail. The headless `test_window_group`
+**FEED-34. The Type column (DW-D3, feedback-4 spec §3).** Client: both. The headless `test_window_group`
 (`Type names the armor type`, `the Type column sits after Slot`) and `test_compact_cards` cover the values.
 `/dw test`, full layout, Drops → a `Type` column sits right after `Slot`, its label gold. A head,
 shoulder, chest, waist, legs, feet, wrist or hands drop reads `Cloth`, `Leather`, `Mail` or `Plate` as the
@@ -1055,13 +1057,13 @@ Columns has a `Type` box; untick it → the column goes from Drops; tick it back
 detail card's chips include the same word (no `Armor type` chip). `/dw compact` → each Drops and
 History card's second line reads looter · slot · type (the trade on line 3 since feedback-20: FEED-82). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-35. Gold column labels (DW-D4, feedback-4 spec §4).** Client: Retail. The headless `test_drops_layout`
+**FEED-35. Gold column labels (DW-D4, feedback-4 spec §4).** Client: both. The headless `test_drops_layout`
 (`the column labels are gold`) covers it. Research `01-full-header-white.png` and
 `02-loothistory-header-gold.png` show the old labels and Loot History's. `/dw test`, full layout, Ka0s Loot
 History (`/lh`) open beside it → Drops' and History's column labels are the same gold as
 Loot History's headers; the group headers stay gold, and the tabs keep their own colors. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-36. The search box spans to the window's edge (DW-D4, feedback-4 spec §4).** Client: Retail. The headless
+**FEED-36. The search box spans to the window's edge (DW-D4, feedback-4 spec §4).** Client: both. The headless
 `test_drops_layout` (`the search box spans from the bar's gap after Character`) covers the width. Research
 `06-filter-textbox-gap.png` shows the old gap. Full layout → the `Filter looter or item…` box starts 8px
 after the Character dropdown (the same gap as between the dropdowns) and ends at the filter bar's right
@@ -1069,7 +1071,7 @@ edge, with no empty space after it. Drag the corner wider and back → the box w
 window while you drag, not only on release. Switch tabs → the same on each. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-37. The window never goes narrower than its default (DW-D4, feedback-4 spec §4; the widths since
-DW-E4).** Client: Retail. The headless `test_window_shell` (`the default size is 1038 x 600`) and `test_drops_layout`
+DW-E4).** Client: both. The headless `test_window_shell` (`the default size is 1038 x 600`) and `test_drops_layout`
 (`at the least width no tab sheds a column`) cover the bounds. On a new profile (Settings › Profiles › New),
 `/dw show` → the full window is about 1038 wide (1132 from DW-E4 to DW-F1, 972 before); drag its corner left → it stops at that
 width; at it, every column of Drops and History shows, nothing is cut, and Ask stays inside the row. Widen
@@ -1077,13 +1079,13 @@ it and bring it back → it stops at the same width. `/dw compact` → 440 wide 
 corner left → it stops at 440 (and at 520 on the right). With a profile whose stored full width is under
 1038 (an older build's 972, say), `/reload` → the full window opens at 1038. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-38. The group header's chevron is gold (DW-E0, feedback-5 spec §0).** Client: Retail. The headless
+**FEED-38. The group header's chevron is gold (DW-E0, feedback-5 spec §0).** Client: both. The headless
 `test_drops_layout` (`a group header's chevron is gold`) covers the color. Research `04-header-chevron.png` shows
 the chevron the rows now reuse. `/dw test`, full layout → every Drops header's chevron (down while open,
 right while collapsed) is the same gold as its text; History's headers too; `/dw compact` → the compact
 headers' chevrons are gold as well. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-39. Each drop row's chevron, and the rows indented under their header (DW-E0, feedback-5 spec §0).** Client: Retail.
+**FEED-39. Each drop row's chevron, and the rows indented under their header (DW-E0, feedback-5 spec §0).** Client: both.
 The headless `test_drops_layout` (the chevron and indent cases) and `test_compact_group` cover the
 geometry. `/dw test`, full layout → every Drops row draws a small chevron at its left edge, before the item
 icon, in a muted white (not gold, not bright white), the same on hover; it points down while the row is
@@ -1095,7 +1097,7 @@ cells. History's rows draw no chevron and are not indented (they do not expand).
 is indented the same and draws the same muted-white chevron before its item button, centered on line 1,
 pointing up while its detail card is open. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-40. The Actions column is wide enough (DW-E0, feedback-5 spec §0).** Client: Retail. The headless `test_drops_layout`
+**FEED-40. The Actions column is wide enough (DW-E0, feedback-5 spec §0).** Client: both. The headless `test_drops_layout`
 (`Actions is 84 pixels`) covers the width. Research `01-actions-cramped.png` shows `Queued` filling the old
 64-pixel button. `/dw test`, full layout → Drops' Ask button, in every state (`Ask`, `Asked`, `Queued`,
 `Retry`, `Traded`), and Offer on your own drop (`Offer`, `Offered`), show their icon and word with room on
@@ -1118,7 +1120,7 @@ countdown text and its bar never overlap (the row is taller by the bar's room). 
 dungeon, a member's drop shows the estimate too, and the column keeps moving while the window is open.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-42. Your own drop's Trade counts the upgrades (DW-E2, feedback-5 spec §2).** Client: Retail. (Superseded by
+**FEED-42. Your own drop's Trade counts the upgrades (DW-E2, feedback-5 spec §2).** Client: both. (Superseded by
 feedback-7, 2026-10-13: the cell reads `Yes`, the count in its tooltip; FEED-61.) The headless
 `test_own_drops` (`Trade appends the upgrade count`) covers the words. `/dw test`, or `/dw sim start key` and play to its loot
 step, or loot a tradeable item yourself in a group → your own drop is listed on Drops (always: no setting
@@ -1128,7 +1130,7 @@ shows who.` Settings › Window › Starting view has no `Show my own loot in Gr
 on loads with no error. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-43. Them reads (Details) on your own drop; the keep? rule (DW-E2, feedback-5 spec §2; (Details) and
-one Them since DW-F1 and DW-F3).** Client: Retail. (Superseded by feedback-7, 2026-10-13: `(Details)` reads
+one Them since DW-F1 and DW-F3).** Client: both. (Superseded by feedback-7, 2026-10-13: `(Details)` reads
 `Upgrade for N`; FEED-61, FEED-62.)
 The headless `test_own_drops`, `test_tip_marks` and `test_detail_card` cover the tooltip and the rule. On
 your own drop that is not an upgrade for you → Them reads `(Details)` (`(Multiple)` in Them and Their eq
@@ -1142,7 +1144,7 @@ opens, and from then on (this session) the count and `(Details)` are drawn. Expa
 card's Them row reads the same, with the same tooltip. `/dw compact` → line 3's Them reads the same.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-44. Offer on your own drop, and its tones (DW-E2, feedback-5 spec §2).** Client: Retail. The headless
+**FEED-44. Offer on your own drop, and its tones (DW-E2, feedback-5 spec §2).** Client: both. The headless
 `test_own_drops` and `test_offer_panel` cover the states. Your own tradeable drop's Actions is `Offer` (cyan since
 DW-F2, red before: FEED-51), not Ask; there is no Announce button in the table. Click it → the Offer panel opens for that drop (FEED-43's
 reveal), and Announce to group is in the panel's footer. Offer a member from the panel → the row's Offer reads
@@ -1151,7 +1153,7 @@ shows a gray dash whose tooltip gives the reason (superseded by feedback-11, 202
 tone. The detail card no longer says `offer it from My drops`: its reason reads `Your own drop: Offer shows
 who it would help.` Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-45. The strip under Drops and Post my tradeables (DW-E3, feedback-5 spec §3).** Client: Retail. (Superseded by
+**FEED-45. The strip under Drops and Post my tradeables (DW-E3, feedback-5 spec §3).** Client: both. (Superseded by
 feedback-7, 2026-10-13, in the full layout: the strip always shows, with Scan group beside Post, and Post
 sits above Sort at its size; FEED-63. Superseded again by feedback-10, 2026-10-14: the row reads `[Post my tradeables]
 [Scan group] [Sort]` on the strip; FEED-70.) The headless
@@ -1164,7 +1166,7 @@ one-line post (ASK-7). `/dw compact` → the strip under the cards reads `2 trad
 `Post` button, the same tooltip; switch to full → the full strip again. (Superseded by feedback-15, 2026-10-16:
 the compact strip is always shown and its button reads `Post my tradeables` at the full width; FEED-78.) Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-46. Two tabs, Drops and History (DW-E3, feedback-5 spec §3).** Client: Retail. The headless `test_drops_strip` (`the
+**FEED-46. Two tabs, Drops and History (DW-E3, feedback-5 spec §3).** Client: both. The headless `test_drops_strip` (`the
 tabs are Drops and History`) and `test_slash` cover it. `/dw show` → the tab strip reads `Drops` and
 `History` only; hover Drops → `Every drop your group receives, your own included, …`. On a profile last
 left on the My drops tab, `/reload` → the window opens on Drops with no error. `/dw mine` → Drops. `/dw
@@ -1174,7 +1176,7 @@ size's says both tabs.
 Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-47. The least width, full and compact, and the compact card's line 2 (DW-E4, feedback-5 spec §4; line
-2 since DW-E1).** Client: Retail. The headless `test_drops_layout` (`at the least width no tab sheds a column`) and
+2 since DW-E1).** Client: both. The headless `test_drops_layout` (`at the least width no tab sheds a column`) and
 `test_compact_group` (the least compact width) cover the arithmetic. FEED-37's checks at 1038 (since DW-F1: FEED-54) and 440: on
 Drops at 1038, the indent, the chevron, every column at its width with Trade window and the 84-pixel Actions,
 nothing shed and nothing cut. `/dw compact` at 440 → every Drops card's line 2 reads looter (a twelve-letter
@@ -1194,7 +1196,7 @@ the Trade window column ends a few pixels after its longest text: `~1:57:43`, `1
 the countdowns. Each bar spans the narrower column, its right end a few pixels short of the column's edge.
 At a larger Font size (Settings › Window › Layout) record whether the longest answers still fit. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-49. My eq merged into Me, Their eq into Them (DW-F1, feedback-6 spec §1).** Client: Retail. The headless
+**FEED-49. My eq merged into Me, Their eq into Them (DW-F1, feedback-6 spec §1).** Client: both. The headless
 `test_side_cells` covers the cells, the tooltip, the widths and the shed order; `test_compact_cards` and
 `test_compact_group` line 3. Research `02-eq-and-verdict-columns.png` shows the four old columns. `/dw test`,
 full layout, Drops → no `My eq` or `Their eq` label; Me and Them each read the worn item's icon (two for a
@@ -1210,14 +1212,14 @@ items. `/dw compact` → line 3 reads `You 321/308 ▼8` (`You 321 ▼10 / 308 �
 your own card, `⊘ Can't use` for a worded verdict, each part in the table's tone, nothing cut at 440.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-50. The My eq and Their eq toggles are retired (DW-F1, feedback-6 spec §1).** Client: Retail. The headless
+**FEED-50. The My eq and Their eq toggles are retired (DW-F1, feedback-6 spec §1).** Client: both. The headless
 `test_database` (`step 7 retires window.columns.myEq and theirEq`) and `test_schema_rows` cover the
 migration and the rows. Settings › Window › Columns → no `My eq` or `Their eq` checkbox; `Me` and `Them` are
 there. Untick Me → the whole merged cell goes (gear and verdict); tick it back. On a profile that had My eq or
 Their eq unticked, `/reload` → it loads with no error, Me and Them show the gear, and `/dw diagnostics`
 reads `schema stored=7 code=7`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-51. Offer in cyan (DW-F2, feedback-6 spec §2).** Client: Retail. The headless `test_own_drops`, `test_detail_card`,
+**FEED-51. Offer in cyan (DW-F2, feedback-6 spec §2).** Client: both. The headless `test_own_drops`, `test_detail_card`,
 `test_compact_cards` and `test_offer_panel` (`each member's Offer is cyan, Offered yellow, Retry red`) cover
 the tones. Research `03-offer-red.png` shows Offer in Ask's red. `/dw test` → your own tradeable drop's
 `Offer` on its Drops row is cyan (a light blue-green, not the blue of a link and not the red of Ask), while
@@ -1226,7 +1228,7 @@ cyan. Open the Offer panel → each member's `Offer` is cyan; offer one → it a
 `Offered` in yellow; a failed offer's `Retry` is red; `Announce to group` stays red until sent. Once traded
 away → green. `/dw compact` → your own card's Offer is the same cyan. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-52. The (Details) tooltip's lines, and the tooltip fits them (DW-F3, feedback-6 spec §3).** Client: Retail.
+**FEED-52. The (Details) tooltip's lines, and the tooltip fits them (DW-F3, feedback-6 spec §3).** Client: both.
 (Superseded by feedback-7, 2026-10-13: `(Details)` reads `Upgrade for N` and its tooltip is a grid with the
 table's glyphs; FEED-61, FEED-62.) The
 headless `test_tip_marks` (the `details:` cases) and `test_own_drops` cover the lines. Research
@@ -1239,7 +1241,7 @@ the lower one, the one it would replace. No line wraps: a long item name widens 
 explanatory lines (the keep? rule's `Hidden`, `n checking`, `Not an upgrade for anyone whose gear was read.`,
 `Nobody else in your group.`) still wrap at the usual width. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-53. No glyph boxes in any tooltip (DW-F3, feedback-6 spec §3).** Client: Retail. The headless `test_tip_marks` (its
+**FEED-53. No glyph boxes in any tooltip (DW-F3, feedback-6 spec §3).** Client: both. The headless `test_tip_marks` (its
 three `audit:` cases) covers every column tip, every localized string and every test-mode tooltip on both
 tabs and both layouts. `/dw test` → hover the `Me` and `Them` column labels on Drops and the `Me` and
 `Them` labels on History → any verdict mark in them is a small texture (an up arrow green, a two-way mark
@@ -1256,7 +1258,7 @@ chevron, Item, Ilvl, Slot, Type, Looter, Me and Them whole with two icons, `321/
 the 76-pixel Trade window and the 84-pixel Actions, nothing shed, cut or overlapping; History's columns too.
 A profile stored at 1132 (M14's least) keeps its width, and one under 1038 opens at 1038. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-55. No glyph boxes outside tooltips (DW-F5, feedback-6 spec §3).** Client: Retail. The default face (`GameFont*`)
+**FEED-55. No glyph boxes outside tooltips (DW-F5, feedback-6 spec §3).** Client: both. The default face (`GameFont*`)
 has no `→` and none of `▲ ▼ ≈ ⊘ ⊕`; only text set to the monospace face draws them. The headless
 `test_tip_marks` (`audit: no text in the default face carries a glyph`) walks every text test mode draws
 on Drops, the detail card, the Offer panel and History, both layouts, and `test_toast` pins the toast's
@@ -1271,7 +1273,7 @@ an upgrade for you that someone else loots → the toast's line reads `Looted by
 up-arrow texture (superseded by feedback-9, 2026-10-13: the toast's verdicts are the table's monospace
 glyphs, `You ▲n · Them ▼n`; FEED-66). The table cells and compact lines still draw `▲ ≈ ▼ ⊘` in the monospace face (no `⊕` since feedback-20: FEED-82). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-56. The Offer panel's Their eq column, and no Trade button (DW-G0, feedback-7 spec §0).** Client: Retail. The headless
+**FEED-56. The Offer panel's Their eq column, and no Trade button (DW-G0, feedback-7 spec §0).** Client: both. The headless
 `test_offer_panel` and `test_side_cells` (the `Offer panel's Their eq` cases) cover the cell and its widths.
 Research `01-offer-panel-columns.png` and `03-offer-trade-button.png` show the old `Eq -> drop` and Status
 columns and the always-gray Trade. `/dw test` → Offer on one of your sample drops → the panel's columns are
@@ -1284,14 +1286,14 @@ icons) is not cut and does not run into Actions. Actions holds one Offer button 
 is no second, grayed button. Hover Their eq → the gear grid (FEED-62) and the verdict's explanation, the
 words the old pill's tooltip held. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-57. The Offer panel's rows: no class bar, alternating stripes (DW-G0, feedback-7 spec §0).** Client: Retail. The
+**FEED-57. The Offer panel's rows: no class bar, alternating stripes (DW-G0, feedback-7 spec §0).** Client: both. The
 headless `test_offer_panel` (`no class bar; every second row striped`) covers the regions. Research
 `08-offer-panel-rows.png` shows the class-colored bar. `/dw test` → open the Offer panel on a sample drop with
 four or more members → no colored bar at any row's start; the member's name is still in their class color;
 every second row has the same faint light stripe as the main window's Drops and History rows, across the
 whole row, and the two look alike side by side. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-58. An icon on every action button (DW-G1, feedback-7 spec §1).** Client: Retail. The headless `test_mine_cells`
+**FEED-58. An icon on every action button (DW-G1, feedback-7 spec §1).** Client: both. The headless `test_mine_cells`
 (`action icons:` cases) and `test_drops_layout` (`every action button's icon and word fit its width`) cover the
 look tables and the arithmetic. Research `04-action-buttons.png` shows Ask and Offer without one. `/dw test` →
 on Drops, `Ask` shows a chat-bubble icon and your own drop's `Offer` an export (hand-out) icon (superseded by feedback-10, 2026-10-14: `external-link`, a
@@ -1302,13 +1304,13 @@ with the button's color; `Asked`, `Queued`, `Retry` and `Traded` keep theirs. Th
 2026-10-14, so `No action` fits: FEED-72) and Announce to group. With
 `toast.enabled` on, the toast's Ask shows the chat icon too. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-59. Trade `No` in red (DW-G2, feedback-7 spec §2).** Client: Retail. The headless `test_window_group` and
+**FEED-59. Trade `No` in red (DW-G2, feedback-7 spec §2).** Client: both. The headless `test_window_group` and
 `test_own_drops` cover the tone. Research `07-trade-no-gray.png` shows the gray. `/dw test` → a sample drop its
 looter can't trade reads `No` in the addon's red (the red of the down arrow and Retry), not gray, in the Drops
 Trade column, the History Trade column, the compact card's trade piece (`/dw compact`) and the detail card's
 `NOT TRADEABLE` chip. `Yes` and `Likely` stay green and `Unknown` muted. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-60. Your own drop's looter `Name [YOU]` (DW-G2, feedback-7 spec §2).** Client: Retail. The headless `test_own_drops`,
+**FEED-60. Your own drop's looter `Name [YOU]` (DW-G2, feedback-7 spec §2).** Client: both. The headless `test_own_drops`,
 `test_compact_cards` and `test_detail_card` cover the text. Research `09-looter-column.png` shows the plain
 name. `/dw test` → each of your own sample drops reads your name in your class color and ` [YOU]` after it in
 gold, in the Drops and History Looter columns and the compact card's line 2 (the detail card's Looter row
@@ -1316,14 +1318,14 @@ retired by feedback-20: FEED-84).
 At the least width, and on a character with a long name if you have one → the name is cut first,
 `[YOU]` always drawn whole; on the compact card the slot follows the mark without overlap. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-61. `Upgrade for N`, and Trade without its count (DW-G2, feedback-7 spec §2).** Client: Retail. The headless
+**FEED-61. `Upgrade for N`, and Trade without its count (DW-G2, feedback-7 spec §2).** Client: both. The headless
 `test_side_cells` and `test_own_drops` cover the words. Research `10-details-cell.png` shows `(Details)`.
 `/dw test` → your own sample drop that upgrades two members reads `Upgrade for 2` in green in Them (the row,
 the compact card's line 3 and the detail card's Them row); one that upgrades nobody `No upgrades` (muted); an
 upgrade for you `Hidden` until you open its Offer panel. Trade reads `Yes` or `Likely` with no `(2)`; hover
 it → the line `Upgrades 2 members: Offer shows who.` is still there. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-62. Columnar gear tooltips with the table's arrows (DW-G3, feedback-7 spec §3).** Client: Retail. The headless
+**FEED-62. Columnar gear tooltips with the table's arrows (DW-G3, feedback-7 spec §3).** Client: both. The headless
 `test_tip_marks` (`grid:` and `tooltip: a grid reserves a line per row` cases) and `test_side_cells` cover the
 data and a headless paint; only the client lays out the font strings on GameTooltip. Research
 `06-tooltip-arrow.png`, `11-details-tooltip.png` and `12-them-tooltip.png` show the old run-on lines. `/dw
@@ -1338,7 +1340,7 @@ B` lines. Hover Me → the same with `You`. The Offer panel's Their eq and the d
 Then hover an item icon, a column label and another addon's frame → no leftover grid text in those
 tooltips. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-63. Post my tradeables above Sort, Scan group beside it (DW-G4, feedback-7 spec §4).** Client: Retail. (Superseded by
+**FEED-63. Post my tradeables above Sort, Scan group beside it (DW-G4, feedback-7 spec §4).** Client: both. (Superseded by
 feedback-10, 2026-10-14: Sort leaves the footer for the strip, which reads `[Post my tradeables] [Scan group]
 [Sort]`, and Scan group keeps its place beside Sort while Post is hidden; FEED-70.) The headless
 `test_drops_strip` (`Post my tradeables is Sort's size`, `the slots, pure`, `full layout, nothing tradeable`)
@@ -1353,7 +1355,7 @@ the shortened strip is unchanged. (Superseded by feedback-15, 2026-10-16: Scan g
 row reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`; FEED-78. Superseded by feedback-16: the
 title bar has no Scan group in compact either, it is the compact strip's icon; COMPACT-9.) Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-64. The empty state's buttons centered as a pair (DW-G4, feedback-7 spec §4).** Client: Retail. The headless
+**FEED-64. The empty state's buttons centered as a pair (DW-G4, feedback-7 spec §4).** Client: both. The headless
 `test_window_group` (`the empty state's two buttons are centered as a pair`) covers the arithmetic. Research
 `15-empty-state-full.png` and `16-empty-state-compact.png` show the pair pushed left. With no drop at all
 (out of test mode, `/dw clear`) → `No drops yet`, its line, then `Preview with test data`
@@ -1361,7 +1363,7 @@ and `Scan group` side by side with a small gap, the pair's middle under the text
 the compact layout. **Superseded by feedback-16 (2026-10-16):** the empty state has no button; COMPACT-9
 checks it. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-65. When to show as one table (DW-H0, feedback-8 spec §0).** Client: Retail. The headless `test_settings_pages`
+**FEED-65. When to show as one table (DW-H0, feedback-8 spec §0).** Client: both. The headless `test_settings_pages`
 (the `when to show:` cases) covers the rows, the paint, the writes, the dimming, Defaults, a profile switch
 and the re-hosting. Research `docs/superpowers/research/2026-10-13-feedback-8/01-when-to-show-today.png`
 shows the old blocks, `02-loothistory-price-sources.png` the look. Open Situations → Auto-open
@@ -1379,7 +1381,7 @@ the header's Defaults and accept → the table shows the defaults (Mythic+, dung
 auto-opening, Raid Finder tracked only, the rest off, Quality `Use global`). Switch profile on the Profiles
 page and return → the table shows that profile's values. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-66. The toast as four rows beside a four-row icon (DW-I0, feedback-9 spec §0).** Client: Retail. The headless
+**FEED-66. The toast as four rows beside a four-row icon (DW-I0, feedback-9 spec §0).** Client: both. The headless
 `test_toast` (`Compose answers the four rows' parts`, `the longest rows fit at Toast.WIDTH`, `the four rows
 beside a four-row icon, painted` and the right-click cases) covers the parts, the paint and the widths.
 Research `docs/superpowers/research/2026-10-13-feedback-9/01-toast-today.png` shows the old line, cut at
@@ -1399,7 +1401,7 @@ Ask or the close mark. Right-click anywhere on the toast, the icon included → 
 does, and the drop does not toast again; a left-click keeps it, and in test mode the left button still
 drags it. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-67. The downgrade glyph is filled (DW-J0, feedback-10 spec §0).** Client: Retail. The headless `test_window_group`
+**FEED-67. The downgrade glyph is filled (DW-J0, feedback-10 spec §0).** Client: both. The headless `test_window_group`
 (`cells: Me shows ▲ ≈ ▼`), `test_tip_marks` (the arrow cell), `test_toast`, `test_compact_history` and
 `test_compact_modes` cover the glyph's text. Research `docs/superpowers/research/2026-10-14-feedback-10/01-hollow-down-arrow.png`
 shows the old hollow `▽`. `/dw test` → every downgrade in the Drops table's Me and Them cells reads a filled
@@ -1410,7 +1412,7 @@ Offer panel on one of your drops → Their eq's downgrades read `▼`. With `toa
 reads `Them ▼13` for a downgrade. The texture marks (the detail card's `DOWNGRADE` chip, the legends) are the
 solid arrow as before. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-68. Offer wears `external-link` (DW-J1, feedback-10 spec §1).** Client: Retail. The headless `test_mine_cells` (`action
+**FEED-68. Offer wears `external-link` (DW-J1, feedback-10 spec §1).** Client: both. The headless `test_mine_cells` (`action
 icons:` cases), `test_own_drops` and `test_offer_panel` (`each member's Offer is cyan`) cover the look tables.
 Research `02-offer-icon.png` shows the old `export` icon and `05-offer-icon-options.png` the options the owner
 chose from. `/dw test` → your own drop's `Offer` on its Drops row shows a box with an arrow leaving it,
@@ -1419,7 +1421,7 @@ beside it keeps the two opposing arrows, a different mark) and on each
 member's Offer in the Offer panel, the 72-pixel button (80 since feedback-11, 2026-10-14: FEED-72) still fitting icon and word. `Queued`, `Offered`,
 `Traded` and `Retry` keep their own icons; Ask keeps its chat bubble. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-69. The compact card, simplified (DW-J2, feedback-10 spec §2).** Client: Retail. The headless `test_compact_cards` (`no
+**FEED-69. The compact card, simplified (DW-J2, feedback-10 spec §2).** Client: both. The headless `test_compact_cards` (`no
 trade window on the card`), `test_compact_group` (`no card shows a trade window`, `a second's tick leaves the
 cards as they are`, `at the least width line 2's pieces end before the action button`) and
 `test_compact_history` cover the pieces and their places. Research `03-compact-cards.png` shows the old cards.
@@ -1439,7 +1441,7 @@ History → the same line 1 with the outcome at the right, the time on line 2, l
 Trade on line 3 and You and Them on line 4 on both tabs, History's outcome and time at the right of lines 2
 and 3). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-70. Sort on the tab's strip (DW-J3, feedback-10 spec §3).** Client: Retail. The headless `test_drops_strip` (`one row,
+**FEED-70. Sort on the tab's strip (DW-J3, feedback-10 spec §3).** Client: both. The headless `test_drops_strip` (`one row,
 right-aligned`, `Sort follows the active tab`, `the slots, pure`, `full layout, nothing tradeable`) and
 `test_compact_chrome` (`the full layout takes every control back`) cover the anchors. Research
 `04-strip-sort.png` shows Sort in the footer. `/dw test` in the full layout → the Drops strip reads, at its
@@ -1453,7 +1455,7 @@ tab's strip. Hover Sort → its tooltip opens above it. **Superseded by feedback
 DW-Q3): Expand all / Collapse all sits between Scan group and Sort on Drops and beside Sort on History, and
 Clear history left both strips for Settings › Window › Layout (Drops › Retention since feedback-24); FEED-78 and HIST-6 check that. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-71. Pending once, and the card's full width (DW-K0, feedback-11 spec §0).** Client: Retail. The headless
+**FEED-71. Pending once, and the card's full width (DW-K0, feedback-11 spec §0).** Client: both. The headless
 `test_compact_cards` (`the freshness mark is bracketed, and left out where there is nothing to say`),
 `test_compact_modes` and `test_compact_group` (`at the least width line 3's fullest halves fit`) cover the mark
 and the bound. Research `docs/superpowers/research/2026-10-14-feedback-11/01-pending-twice.png` shows `(…)`
@@ -1464,7 +1466,7 @@ Them half (two worn items and a worded verdict) has its last piece cut with `…
 never running past the card's edge or under the scroll bar; line 1's long name likewise runs to the right
 inset before it is cut. Line 2 alone stops short of the action button. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-72. No action (DW-K1, feedback-11 spec §1).** Client: Retail. The headless `test_window_group` (`a drop with no ask
+**FEED-72. No action (DW-K1, feedback-11 spec §1).** Client: both. The headless `test_window_group` (`a drop with no ask
 offered shows the gray No action button with its reason`), `test_compact_group` (`no ask offered shows No action
 and why`), `test_detail_card`, `test_own_drops`, `test_offer_panel` and `test_drops_layout` (`every action
 button's icon and word fit its width`) cover the look and the fit. `/dw test`, full layout, Drops → every row
@@ -1477,34 +1479,34 @@ button, never an empty slot, with the same tooltip. Open the Offer panel on one 
 no upgrade or equal for shows the gray `No action` in Actions, its tooltip the reason, fitting the 80-pixel
 button; an untradeable drop of yours shows it on every member's row. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-73. History's outcomes in the action buttons' colors (DW-L0, feedback-12 spec §0).** Client: Retail. The headless
+**FEED-73. History's outcomes in the action buttons' colors (DW-L0, feedback-12 spec §0).** Client: both. The headless
 `test_history` (`each row's outcome painted`), `test_compact_cards` (`every History outcome keeps its word and
 tone`) and `test_compact_history` cover the tones. `/dw test`, History, full layout → the Outcome column reads
 `Asked` and `Offered` in yellow, `Received` and `Traded away` in green, `Expired` in red, `Seen` and `Declined`
 in gray (the No action gray), the same colors as the action buttons on Drops. `/dw compact` → each History card's
 outcome at line 1's right in the same colors (line 2's right since FEED-103). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-74. No `0 shown` header where Character or Content left a group empty (DW-L1, feedback-12 spec §1).** Client: Retail.
+**FEED-74. No `0 shown` header where Character or Content left a group empty (DW-L1, feedback-12 spec §1).** Client: both.
 The headless `test_char_filter` (`a group Character and Content leave empty shows no header, full or compact`)
 and `test_window_group` (`KeepsHeader`) cover it. With History holding groups kept before the Character dropdown
 (no recorder) or seen by an alt: History, `Character: Current`, `Content: All` → no header reads `· 0 shown`,
 only groups with a drop shown are listed; the footer still counts every kept group. `/dw compact` → the same.
 `View: Interesting` hiding a group's every drop → its header still shows, `n drops · 0 shown`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-75. Each tab's default filters (DW-M0, feedback-13 spec §0).** Client: Retail. The headless `test_window_shell` (`each tab
+**FEED-75. Each tab's default filters (DW-M0, feedback-13 spec §0).** Client: both. The headless `test_window_shell` (`each tab
 opens on its own defaults`), `test_sim_e2e` and `test_compact_chrome` cover it. On a profile that never changed
 Settings › Window › Starting view › Content: `/reload`, `/dw` → Drops reads `View: All`, `Quality: Rare+`, `Content: This session`,
 `Character: Current`. Select History → `View: All`, `Quality: Rare+` grayed, `Content: All`, `Character: All`, and
 every character's groups are listed. Back to Drops → its own values again. `/dw compact` → History's Filters
 button reads `Filters` with no count; pick `Character: Current` there → `Filters · 1`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-76. No Lua error from a gear tooltip in combat (DW-N0, feedback-14 spec §0).** Client: Retail. The headless
+**FEED-76. No Lua error from a gear tooltip in combat (DW-N0, feedback-14 spec §0).** Client: both. The headless
 `test_tip_marks` (`a secret width or line count in combat`) covers it. In a dungeon or raid, with BugSack on: let
 another player loot a drop during a pull, then hover its Me and Them cells (and a compact card's You and Them)
 while still in combat → the gear grid shows, its columns perhaps a little wider than out of combat, and BugSack
 records nothing from `TipGrid.lua`. Hover again out of combat → the columns fit as before. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-77. Content per tab (DW-Q1, feedback-15 spec §1).** Client: Retail. The headless `test_content_tabs`, `test_compact_chrome`
+**FEED-77. Content per tab (DW-Q1, feedback-15 spec §1).** Client: both. The headless `test_content_tabs`, `test_compact_chrome`
 and `test_compact_modes` cover it. `/dw` → open Drops' Content → `This instance` and `This session` only; hover
 it → the tooltip names This instance (since you entered this instance or started this key), This session (since
 you logged in; a /reload keeps them) and All (History only). Select History, open Content → `This instance`,
@@ -1513,7 +1515,7 @@ since the login is still listed. `/dw compact` → the Filters menu's Content of
 profile whose Settings › Window › Starting view › Content was `All` before this version → it reads `This session`, and so does
 Drops. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-78. One footer button kind, and Expand all / Collapse all (DW-Q2, feedback-15 spec §2).** Client: Retail. The headless
+**FEED-78. One footer button kind, and Expand all / Collapse all (DW-Q2, feedback-15 spec §2).** Client: both. The headless
 `test_footer_row`, `test_drops_strip` and `test_compact_history` cover it. `/dw test` in the full layout → the
 Drops strip reads, right to left, Sort, `Expand all`, `Scan group` and `Post my tradeables`, the three buttons
 exactly as wide as Sort, about 8 pixels apart, each with its icon; the `n tradeable · next expiry` text on the
@@ -1529,7 +1531,7 @@ Sort is in the Filters menu and Scan group the title bar's icon; History's strip
 DW-Q3 History's strips carry no Clear history: it is in Settings, HIST-6. Since feedback-16 compact's
 strip buttons are icons alone and Drops' carries Scan group, the title bar none: COMPACT-9.) Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-79. A group's tooltip is rows (feedback-17).** Client: Retail. The headless `test_window_group`,
+**FEED-79. A group's tooltip is rows (feedback-17).** Client: both. The headless `test_window_group`,
 `test_group_roster`, `test_compact_cards` and `test_feed_counts` cover it. `/dw test`, then hover a raid
 boss's header in the full layout → the gold title is the boss, then rows with gold labels and the
 values lined up in one column: `Instance`, `Difficulty`, `When` (`4m ago`), `Drops` (`5`, or `5 · 3 shown`
@@ -1566,7 +1568,7 @@ with Their eq `… ▲14 Holy` in cyan beside the item the off-spec was judged a
 Kaelith's off-spec the same way, after Littlewolf's sidegrade and before Uniquerogue's downgrade. The
 row's `Upgrade for N` and the Trade count do not count Kaelith. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-82. The compact card's trade on line 3, `Trade <word>` (feedback-20).** Client: Retail. The headless
+**FEED-82. The compact card's trade on line 3, `Trade <word>` (feedback-20).** Client: both. The headless
 `test_compact_cards`, `test_compact_group` and `test_compact_history` cover the pieces and the least
 width. `/dw compact`, `/dw test` → each Drops and History card's line 2 reads looter · slot · type with no
 trade word; line 3 reads `You … Them … Trade Likely`, the three labels gold, the trade word in its tone
@@ -1575,7 +1577,7 @@ least width (440) the fullest line (two worn levels and `⊘ Not wanted` on each
 trade word, cut with `…` at the card's right edge rather than past it. A looter from another realm has no
 `⊕` after the name on either tab; hovering the name still says `From another realm: <realm>.`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-83. The gray `No action` button says why on hover (feedback-20).** Client: Retail. The headless `test_window`
+**FEED-83. The gray `No action` button says why on hover (feedback-20).** Client: both. The headless `test_window`
 covers the widget flag. In a party, a drop with no action (a warbound trinket, a looter's upgrade, a
 downgrade for you) → hover the gray `⊘ No action` on the row, the compact card and the detail card's first
 action → the tooltip `No action` and its reason appears, though the button stays unclickable. Result: passed in the client, 2026-10-23 (the owner).
@@ -1591,7 +1593,7 @@ best first, the name in class color, the icon of the item it would replace, `276
 five or more, three names and `and N more: Offer shows all`. A downgrade-for-you drop nobody gains from
 shows only Them; an upgrade for you shows `Hidden` and no names until its Offer panel is opened. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-85. Trade muted beside Can't use; a drop opens the window on Drops (feedback-20).** Client: Retail. The headless
+**FEED-85. Trade muted beside Can't use; a drop opens the window on Drops (feedback-20).** Client: both. The headless
 `test_window_group` and `test_window_shell` cover it. In a group, a groupmate loots an item your class
 can't wear that they can trade → its Trade reads `Likely` (or `Yes`) in a muted green (superseded by
 feedback-21, 2026-10-18: it reads `Can't use` in dim red, the muted green removed; FEED-88), in the table, the
@@ -1606,7 +1608,7 @@ Finish a Mythic+ key, stay in the dungeon past two minutes, then win a bonus rol
 late loot come in) → it joins the key's header, with no second header for the same dungeon. Leave the
 dungeon and loot something → a new header for where you are. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-87. Can't use reads dim red everywhere (feedback-21).** Client: Retail. The headless `test_window_group`,
+**FEED-87. Can't use reads dim red everywhere (feedback-21).** Client: both. The headless `test_window_group`,
 `test_side_cells`, `test_compact_cards`, `test_offspec_cells` and `test_toast` cover the tone. `/dw test`,
 expand every group. Ashveil's chest under the first raid boss: Me reads `Can't use` in a dim red, darker
 and softer than a downgrade's red `▼`, and with no spec name (a wrong armor type). Mistveil's shoulders
@@ -1616,7 +1618,7 @@ wanted` in gray, so the two words read apart at a glance. Expand Ashveil's chest
 YOU chip reads `CAN'T USE` in that dim red. Open History → its `Can't use` cells are dim red too; `/dw
 compact` → the cards' `You Can't use` and `Them Can't use` halves the same, on Drops and History. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-88. Trade reads Can't use when none of your specs can use the drop (feedback-21).** Client: Retail. The headless
+**FEED-88. Trade reads Can't use when none of your specs can use the drop (feedback-21).** Client: both. The headless
 `test_window_group` covers it. In a group, a groupmate loots an item your class can't wear (a wrong armor
 type, say plate on a cloth wearer) that they can trade, or `/dw add <such a link> <member>` → its Trade
 reads `Can't use` in the dim red of FEED-87, not `Likely` or `Yes`, in the table, the compact card's line 3
@@ -1629,7 +1631,7 @@ upgrade for Ashveil). The last raid boss → Brightmane's one-hander, Solenne's 
 bracers and Thornbrew's boots, all Can't use for your spec but usable by Holy, keep Trade `Likely` in its
 own green (an off-spec use is a use). Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-89. Every tooltip is bulleted rows, one per fact (feedback-21).** Client: Retail. The headless `test_tip_marks`
+**FEED-89. Every tooltip is bulleted rows, one per fact (feedback-21).** Client: both. The headless `test_tip_marks`
 (its row-shape cases and the test-mode audit) covers the strings. `/dw test`, expand every group, then
 hover Seta's head item's Trade (`Likely`, the third raid boss) → the title `Trade: Likely`, then one row
 per fact, each `• Label: value`: `Rule`, `This item`, `Seta wears`, `Inspected`, `Basis`, the bullet
@@ -1643,7 +1645,7 @@ gear grid as columns (the grids are unchanged), and at most one closing hint las
 bullet (the Offer panel's `Hover for why.`). The bullet draws as a dot, never a box or `?`. Settings
 panel tooltips are unchanged prose. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-90. A gear grid right under the title, muted gold labels, an arrow on every worn item (feedback-21 H3).** Client: Retail.
+**FEED-90. A gear grid right under the title, muted gold labels, an arrow on every worn item (feedback-21 H3).** Client: both.
 The headless `test_tip_marks` (every tooltip's grid on line 2, the labels' color), `test_side_cells` (each
 worn item's arrow) and `test_evaluate` (`ItemVerdict`) cover the data. `/dw test`, expand every group, then
 hover a Me and a Them cell, a History Me and Them cell, the Offer panel's Their eq, your own drop's `Upgrade
@@ -1656,7 +1658,7 @@ glyph and difference against the drop's item level, each in its own tone (a 311 
 arrow and the `empty` row the verdict's `▲`. With Settings › Comparison › Sidegrade band above the gap,
 the other item's arrow reads `≈` yellow. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-91. The detail card's glyphs, titles, stat colors and Replaces row (feedback-21 H5).** Client: Retail. The headless
+**FEED-91. The detail card's glyphs, titles, stat colors and Replaces row (feedback-21 H5).** Client: both. The headless
 `test_detail_card` (the titles' color codes, the Stats row's colors, the Replaces row's lead and quality
 color, the chips' and rows' glyphs in the monospace face), `test_offspec_cells` and `test_own_drops` cover
 the data. `/dw test`, expand a row with an upgrade for you and a downgrade for the looter → the `FOR YOU`
@@ -1672,7 +1674,7 @@ item's icon, then its name in its quality color (purple for an epic). On an off-
 Item level glyph is cyan. On your own drop, FOR THE GROUP's member rows read `276 → 287 ▲ 11` in green.
 Compact layout: the stacked card shows the same. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-92. A mark per worn item on a two-item slot, everywhere a verdict mark is drawn (feedback-21 H7).** Client: Retail.
+**FEED-92. A mark per worn item on a two-item slot, everywhere a verdict mark is drawn (feedback-21 H7).** Client: both.
 The headless `test_side_cells` (the parts, their order and tones, every one-mark case, the painted cell
 and the widths), `test_compact_cards` and `test_compact_group` (line 3 at the least width),
 `test_offer_panel`, `test_toast` (the parts and the widened frame) and `test_detail_card` (the Item level
@@ -1693,7 +1695,7 @@ it takes off. With the toast on, a trinket toast whose looter wears two reads `Y
 usual width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-93. One mark where the drop was not judged against either worn item, or where two do not fit
-(feedback-21 R5).** Client: Retail. The headless `test_evaluate` (the kernel's `either`), `test_side_cells` (one mark for
+(feedback-21 R5).** Client: both. The headless `test_evaluate` (the kernel's `either`), `test_side_cells` (one mark for
 a one-hander without dual wield, a two-hander against both hands, a bag baseline; the painted cell at a
 wider character measure), `test_compact_group` (line 3 at the least width, a wider measure) and
 `test_test_mode` cover the data. On a character that cannot dual wield (a Protection Paladin, a priest),
@@ -1706,7 +1708,7 @@ a ring drop's Me reads one mark. Settings › Window › Font size 16 or larger:
 read reads `321/324 ▼10`, one mark, nothing running into the Trade column; in `/dw compact` at 440 wide
 line 3 reads the same and Trade stays on the line. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-94. A ring slot always reads both rings, a unique-equipped copy too (feedback-22).** Client: Retail. The
+**FEED-94. A ring slot always reads both rings, a unique-equipped copy too (feedback-22).** Client: both. The
 headless `test_evaluate` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
 and `test_test_mode` (the unique ring samples) cover the data. Wear a unique-equipped ring (say
 Pilfered Precious Band, 315) and another ring (295); when a 318 copy of it drops for someone else →
@@ -1717,7 +1719,7 @@ the looter's Them once their rings are read, and for a candidate in the Offer pa
 Vexxa's ring (second key run, not inspected) and Mistveil's (last boss, read for both) show it.
 Without dual wield, a one-hander drop still reads the main hand alone, `320 ▼5`. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-95. Trade as Yes, No or ? with its reason (feedback-22).** Client: Retail. The headless `test_window_group`
+**FEED-95. Trade as Yes, No or ? with its reason (feedback-22).** Client: both. The headless `test_window_group`
 (`Trade shows Yes, No or ? and a short reason`), `test_compact_cards`, `test_compact_group`,
 `test_compact_modes` and `test_test_mode` cover the data. `/dw test`, full layout: the Trade column reads
 `Yes Not their upgrade`, `No Bonus roll`, `No Their upgrade`, `? Not inspected`, `Yes BoE`, the word in
@@ -1728,19 +1730,19 @@ Trade column reads the same. `/dw compact`: each card is four lines, Trade alone
 (`Trade No Bonus roll`; on line 3, above You and Them, since FEED-103), the icon taller to span the four lines, the window opening about 440 x 560 on
 a new profile. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-96. The glow only on an upgrade that can come to you (feedback-22).** Client: Retail. The headless `test_glow`
+**FEED-96. The glow only on an upgrade that can come to you (feedback-22).** Client: both. The headless `test_glow`
 (`an upgrade its looter can't trade`) covers the decision. In a group, an upgrade for you that its
 looter can't trade (a bonus roll, their own upgrade, warbound) shows no glow on the Drops row, the
 compact card or the detail card's icon; one whose Trade reads Yes (Likely or a BoE) glows as before.
 An upgrade whose estimate is still `?` (their gear not read) glows once it turns Yes. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-97. The trade box first on the detail card (feedback-22).** Client: Retail. The headless `test_compact_group`
+**FEED-97. The trade box first on the detail card (feedback-22).** Client: both. The headless `test_compact_group`
 (the stacked card's order) covers the anchors. Expand a drop, full layout → the NOT TRADEABLE (or
 TRADEABLE) box sits right under the item header, across the card, with FOR YOU and FOR LOOTER side by
 side under it; `/dw compact` → the trade box, then FOR YOU, then FOR LOOTER, one under another.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-98. The compact button on lines 2 and 3, the narrower pane (feedback-23).** Client: Retail. The headless
+**FEED-98. The compact button on lines 2 and 3, the narrower pane (feedback-23).** Client: both. The headless
 `test_compact_group` (the button's anchor, Them on line 4, both rings at the least width) and
 `test_window_compact` (400 x 560) cover it. `/dw test`, `/dw compact` on a new profile (or Reset position)
 → the window opens about 400 x 560 and its grip stops at 400. Each Drops card's Ask, Offer or No action
@@ -1751,7 +1753,7 @@ and Them fit beside the button keeps them both on line 3, Trade alone on line 4.
 the button, and no card drops to one ring. (Since FEED-103 Trade is line 3, beside the button, and You
 and Them line 4, under it: nothing wraps.) Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-99. The settings pages regrouped (feedback-24).** Client: Retail. The headless `test_settings_pages` (each
+**FEED-99. The settings pages regrouped (feedback-24).** Client: both. The headless `test_settings_pages` (each
 page's strip, the pairings, the moved rows, the Columns note, the five-column situation table) covers
 the layout; no stored value moved (`/dw get` reads every path as before). `/dw config` → the list
 reads General, Situations, Drops, Comparison, Messages, Window, Alerts, Profiles. General: Master
@@ -1768,7 +1770,7 @@ Alerts: Toast (Show a toast alone, `Least gain | Duration`, `Show in combat | Pl
 Upgrade glow (Effect, Offset, then Pixel border, Auto cast sparkles, Button, Proc, the Style dropdown
 listing them in that order). Each page's Defaults resets only its own tabs. Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-100. The test-mode banner is LibKa0s-Widgets' strip (DW-06, LibKa0s#48).** Client: Retail. The headless
+**FEED-100. The test-mode banner is LibKa0s-Widgets' strip (DW-06, LibKa0s#48).** Client: both. The headless
 `test_window` (the strip built once through `NS.MakeTestStrip` with Drop Watcher's line and the info
 mark, its anchors under the filter bar, `BANNER_H - 4` equal to the strip's height, the full text's
 right edge and no wrap, compact wrapping, and a window with no Widgets library drawing no banner and
@@ -1786,7 +1788,7 @@ reserving nothing) covers the wiring. Owed in the client, never marked passed by
 Result: passed in the client, 2026-10-23 (the owner). (Superseded by DW-10, 2026-10-23: expanded, the strip
 alone marks test mode and the title word shows only while minimized; FEED-102.)
 
-**FEED-101. The filter bar's search box is LibKa0s-Widgets' SearchBox (DW-07, LibKa0s#52).** Client: Retail. The
+**FEED-101. The filter bar's search box is LibKa0s-Widgets' SearchBox (DW-07, LibKa0s#52).** Client: both. The
 headless `test_window_shell` (the box built once through `NS.MakeSearchBox` with Drop Watcher's hint
 and no icon, the flat skin, height, face, insets and hint place unchanged, the gold focus line and back,
 a focus loss still writing the filter's debug line, and a window with no Widgets library drawing no
@@ -1799,7 +1801,7 @@ search box) covers the wiring. Owed in the client, never marked passed by an age
 Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-102. A cyan simulation strip; the title words only while minimized (DW-10, LibKa0s v1.76.0
-Widgets minor 14; OWNER_SCOPE A).** Client: Retail. The ids below are the 2026-10-23 sim/preview/strips run's
+Widgets minor 14; OWNER_SCOPE A).** Client: both. The ids below are the 2026-10-23 sim/preview/strips run's
 (`SM-DW-10..13` in its bundle), not FEED-100's or SIM's older ones of the same number. The headless
 `test_window_shell` (the words hidden expanded and shown minimized, the strip's `kind` and SimTip),
 `test_window` (both strips built through `NS.MakeTestStrip` at one anchor; no Widgets: both nil, the
@@ -1822,7 +1824,7 @@ agent:
 
 Result: passed in the client, 2026-10-23 (the owner).
 
-**FEED-103. Trade beside the compact button, You and Them under it, on both tabs (feedback-25).** Client: Retail. The headless
+**FEED-103. Trade beside the compact button, You and Them under it, on both tabs (feedback-25).** Client: both. The headless
 `test_compact_group` (Trade's anchor on line 3 and its cut before the button, You under Trade's label,
 both rings on both halves at the least width) and `test_compact_cards` (the line order) cover the
 wiring. Owed in the client, never marked passed by an agent: `/dw test`, `/dw compact` → each Drops
@@ -1841,18 +1843,18 @@ The resolver's rules are headless-tested (`test_roster`); these checks confirm t
 of names and realms. Each reads the `roster` lines of `/dw diagnostics`, with `/dw debug on` for the
 `[ROSTER]` change lines.
 
-**ROSTER-1. Names and realms.** Client: Retail. In a party with at least one player from another realm, ideally one
+**ROSTER-1. Names and realms.** Client: both. In a party with at least one player from another realm, ideally one
 whose realm has a space or a hyphen (`Area 52`, `Azjol-Nerub`) → one `roster:` line per member,
 the same-realm ones as `Name-<YourRealm>` and the cross-realm ones as `Name-<Realm>` with no space
 or hyphen, each with the right `unit=party1..4` and `class=`. Then compare each cross-realm name
 against how a loot line in chat spells it: the same `Name-Realm`, realm spelled the same way.
 Record any member whose realm differs. Result: passed in the client, 2026-10-23 (the owner).
 
-**ROSTER-2. Raid and online state.** Client: Retail. In a raid (or a converted party) → `unit=raid1..N`, your own
+**ROSTER-2. Raid and online state.** Client: both. In a raid (or a converted party) → `unit=raid1..N`, your own
 line carrying `player=true`. Have a member log out → after the next `[ROSTER]` line their
 `online=false`. Leave the group → `roster: 1 members` with you alone at `unit=player`. Result: passed in the client, 2026-10-23 (the owner).
 
-**ROSTER-3. The roster survives a raising handler on its shared event (DW-P18, review C-03).** Client: Retail. In a
+**ROSTER-3. The roster survives a raising handler on its shared event (DW-P18, review C-03).** Client: both. In a
 party with a second character, `/console scriptErrors 1`. Run
 `/run local D=LibStub("AceAddon-3.0"):GetAddon("DropWatcher"); D._s=D.OnSituationEvent; D.OnSituationEvent=function() error("probe") end`,
 then have the second character leave and rejoin the party → one Lua error `probe` per roster update,
@@ -1868,7 +1870,7 @@ The facts and the load are headless-tested (`test_item_facts`); these checks con
 client answers, which the mock models from the API documentation. Each is a `/dump` on an item link
 (shift-click the item into the chat box after `/dump `).
 
-**ITEM-1. The readers' shapes.** Client: Retail. On a unique-equipped ring or trinket →
+**ITEM-1. The readers' shapes.** Client: both. On a unique-equipped ring or trinket →
 `/dump C_Item.GetItemUniquenessByID(link)` answers four values, the last a category id above 0 when
 the item names a category ("Unique-Equipped: <Category> (2)"). On a drop with spec icons →
 `/dump C_Item.GetItemSpecInfo(link)` answers a list of spec ids. On a tier token →
@@ -1882,7 +1884,7 @@ Champion, Hero, Myth) → `/dump C_Item.GetItemUpgradeInfo(link)` answers `track
 `trackStringID`. Record each pair: they fill `C.TRACK_TIER_BY_STRING_ID` so a localized client gets
 a track tier. Result: passed in the client, 2026-10-23 (the owner).
 
-**ITEM-3. A real drop reads at its real level and quality (BUG-1).** Client: Retail. `/dw debug on`, run a Mythic+
+**ITEM-3. A real drop reads at its real level and quality (BUG-1).** Client: both. `/dw debug on`, run a Mythic+
 dungeon (or any content whose loot carries an upgrade track or scales to your level) and loot an
 item yourself, ideally one that also reaches the feed through the encounter's report. → Drops
 lists it at the item level and in the quality color its own game tooltip shows (the owner's case:
@@ -1894,7 +1896,7 @@ ilvl=<the tooltip's level> (current) quality=<4 for Epic> (location) mine=true b
 verdict and its Trade window agree with the game tooltip's own "You may trade this item…" line.
 Record any drop whose level or color differs from its tooltip, and paste its `drops:` line. Result: passed in the client, 2026-10-23 (the owner).
 
-**ITEM-4. The real game tooltip, everywhere (BUG-2).** Client: Retail. Hover an item in each place: a Drops row of
+**ITEM-4. The real game tooltip, everywhere (BUG-2).** Client: both. Hover an item in each place: a Drops row of
 your own (the icon and the name), another player's Drops row (the icon and the name), the detail card's icon, name and
 Replaces row for you and for the looter, the Offer panel's icon and name, a History row, the toast's
 icon, and the Them icons (the Their eq column until DW-F1). → Each shows the game's own item tooltip, exactly as hovering the
@@ -1950,7 +1952,7 @@ the collection APIs and the surfaces. Every collectible is feed-only: its Ask re
 toast pops for it, auto-ask skips it, it is never offered, announced or posted, and no inspect is
 asked for it.
 
-**COLL-1. The collection APIs' shapes.** Client: Retail. `/dump C_MountJournal.GetMountFromItem(<mount item id>)`,
+**COLL-1. The collection APIs' shapes.** Client: both. `/dump C_MountJournal.GetMountFromItem(<mount item id>)`,
 `/dump C_MountJournal.GetMountInfoByID(<that mount id>)` (the 11th return is `isCollected`), `/dump
 C_PetJournal.GetPetInfoByItemID(<companion item id>)` (the 13th return is the species), `/dump
 C_PetJournal.GetNumCollectedInfo(<species>)`, `/dump C_ToyBox.GetToyInfo(<toy id>)`, `/dump
@@ -1959,20 +1961,20 @@ PlayerHasToy(<toy id>)`, `/dump C_Item.IsCosmeticItem(<cosmetic link>)`, `/dump 
 → record each answer's shape, and any that answers nil or secret right after login or in combat (it
 goes in `docs/midnight-quirks.md`). Result: Passed (owner, 2026-11-05)
 
-**COLL-2. A mount, new then collected.** Client: Retail. `/dw add <a mount item you have not learned> Somebody` → the
+**COLL-2. A mount, new then collected.** Client: both. `/dw add <a mount item you have not learned> Somebody` → the
 row's Me reads `New` in green, its tooltip `For you: New to your collection`, Them a dash
 (*Collectibles are judged for you alone.*), Ask `No action` (*collectibles are watched, not asked
 for*), the detail card's Retry inspect grayed (*collectibles are judged for you alone, not
 inspected*), and no toast. Learn that mount (or use one you have) → within a second the same row reads
 `Collected` in gray, with no `/reload`. Result: Passed (owner, 2026-11-05)
 
-**COLL-3. A pet's count.** Client: Retail. `/dw add <a companion pet item>` for a species you have none of → `New`;
+**COLL-3. A pet's count.** Client: both. `/dw add <a companion pet item>` for a species you have none of → `New`;
 for one you have 1 of 3 → `Collected 1/3`, its tooltip's Why naming `you have 1/3`. Learn one more
 → the count moves. Result: Passed (owner, 2026-11-05)
 
-**COLL-4. A toy.** Client: Retail. `/dw add <a toy you lack>` → `New`; one you own → `Collected`. Result: Passed (owner, 2026-11-05)
+**COLL-4. A toy.** Client: both. `/dw add <a toy you lack>` → `New`; one you own → `Collected`. Result: Passed (owner, 2026-11-05)
 
-**COLL-5. A recipe.** Client: Retail. On a character with that profession, `/dw add <a recipe you know>` → `Known`;
+**COLL-5. A recipe.** Client: both. On a character with that profession, `/dw add <a recipe you know>` → `Known`;
 `<one you have not learned>` → `New`. On a character without the profession → `Can't use` in dim
 red, Why *not one of your professions*. Fail: `?` on a recipe whose tooltip shows *Already known*.
 Result: Passed (owner, 2026-11-05)
@@ -1982,7 +1984,7 @@ the Trade window counts down the real trade time once the bag item is read (the 
 answer); Offer reads No action (*collectibles are watched, not offered*), and `/dw offer <link>` prints
 *Collectibles are watched, not offered.* Someone else's → Trade reads `?` *Collectible*. Result: Passed (owner, 2026-11-05)
 
-**COLL-7. Always watch and Never watch.** Client: Retail. Settings › Drops › Item lists → the strip reads Always watch
+**COLL-7. Always watch and Never watch.** Client: both. Settings › Drops › Item lists → the strip reads Always watch
 | Never watch. On Always watch, shift-click a reagent's link into the add box → it is listed with its
 icon and name; `/dw add <that reagent>` → it shows, Me `?` with Why *on your Always watch list*.
 On Never watch, type the same ID → refused with *That item is on Always watch: remove it there
@@ -2006,7 +2008,7 @@ tier token (`Token: Head`, ▲ +7, Ask offered) and your own recipe (`Can't use`
 journal lacks is drawn on another item, named for its kind. History in test mode holds a world boss
 with a mount at `New` and your pet at `Collected 2/3`. Result: Passed (owner, 2026-11-05)
 
-**COLL-9. New to my collection, and a collectible on every surface.** Client: Retail. `/dw test` → on Drops, the
+**COLL-9. New to my collection, and a collectible on every surface.** Client: both. `/dw test` → on Drops, the
 sixth boss's mount reads Slot `Mount`, Type a dash, and the recipe Slot `Recipe`, Type its profession
 in dim red (you lack it in the sample), or a dash when the sample is drawn on an item that is no
 recipe; `/dw add <a recipe>` reads its profession, plain when it is yours. The strip under the table ends with `1 new` (or more: the mounts, pets,
@@ -2030,14 +2032,14 @@ The snapshot, the owned best and the throttle are headless-tested (`test_gear`);
 confirm the client's answers. Each reads the `gear` lines of `/dw diagnostics`, with `/dw debug on`
 for the `[GEAR]` change lines.
 
-**GEAR-1. Worn and owned.** Client: Retail. With a full set on → `gear: class=<YOURCLASS> spec=<your spec id>` and
+**GEAR-1. Worn and owned.** Client: both. With a full set on → `gear: class=<YOURCLASS> spec=<your spec id>` and
 one line per slot whose `ilvl=` matches the item level on that item's tooltip, the shirt and tabard
 slots `empty` when you wear none. Put a better item for one slot (a higher-level ring, say) in your
 bags → after the next `[GEAR]` line that slot shows `owned=<its level>`. A dual wielder with a spare
 one-hander → the off hand shows it as owned when it beats the worn one. Record any slot whose level
 differs from the tooltip. Result: passed in the client, 2026-10-23 (the owner).
 
-**GEAR-2. The rebuild events.** Client: Retail. Swap one item → one `[GEAR]` line about half a second later, naming
+**GEAR-2. The rebuild events.** Client: both. Swap one item → one `[GEAR]` line about half a second later, naming
 the event that started it (`PLAYER_EQUIPMENT_CHANGED` or `BAG_UPDATE_DELAYED`); swapping several in
 a burst still writes one line. Change your
 specialization → a `[GEAR]` line with the new spec, naming `PLAYER_SPECIALIZATION_CHANGED`. Right
@@ -2052,28 +2054,28 @@ The queue, its timeouts, the hook and the cache are headless-tested on a mocked 
 warm-up starts every inspect: be in a party inside a dungeon (a tracked situation). Each reads the
 `inspect` lines of `/dw diagnostics`, with `/dw debug on` for the `[INSPECT]` lines (one per job).
 
-**INSPECT-1. Warm-up and spacing.** Client: Retail. In a dungeon with four others, all near you, `/dw debug on`
+**INSPECT-1. Warm-up and spacing.** Client: both. In a dungeon with four others, all near you, `/dw debug on`
 then `/reload` → about two seconds after the load, one `[INSPECT]` line per member, never two
 within two seconds of each other, each `fresh` (or `cached`) with `spec=` that member's spec id and
 `slots=` the number of items they wear (16 or so). `/dw diagnostics` then shows `queued=0
 inFlight=none` and one `inspect:` line per member, `status=fresh` with the same spec. Record a
 member whose spec or slot count is wrong. Result: passed in the client, 2026-10-23 (the owner).
 
-**INSPECT-2. The waits and the cache.** Client: Retail. With one member far away (another zone, or across the
+**INSPECT-2. The waits and the cache.** Client: both. With one member far away (another zone, or across the
 dungeon) during the warm-up → that member's line reads `outOfRange (range)` about 25 seconds later,
 and the others are not held up behind it. Have a near member swap one item → within a few seconds
 one new `[INSPECT]` line for them (stale, re-queued), and no further line for them after it: the
 inspect's own arrival must not set off another (the five-second echo guard). Record a loop of lines
 for one member, or a `fresh ... (incomplete)` line (a slot that never completed). Result: passed in the client, 2026-10-23 (the owner).
 
-**INSPECT-3. Courtesy and combat.** Client: Retail. During a warm-up, right-click a member → Inspect, and keep
+**INSPECT-3. Courtesy and combat.** Client: both. During a warm-up, right-click a member → Inspect, and keep
 Blizzard's inspect window open → no `[INSPECT]` line while it is open, and its contents are not
 blanked under you (the broker clears only its own inspect); close it → the queue moves on within a
 second or two. Start a pull while members are still queued → no `[INSPECT]` line until the combat
 ends, then the rest follow. With another inspect addon loaded (Details!, an item-level addon), the
 two take turns: no `failed (timeout)` lines in a quiet group. Result: passed in the client, 2026-10-23 (the owner).
 
-**INSPECT-4. The inspected item level, and the fast path.** Client: Retail. After INSPECT-1, for one member
+**INSPECT-4. The inspected item level, and the fast path.** Client: both. After INSPECT-1, for one member
 compare `/dump C_TooltipInfo.GetInventoryItem("party1", 1)` (its `ItemLevel` line) with
 `/dump C_Item.GetDetailedItemLevelInfo(GetInventoryItemLink("party1", 1))`. Record whether they
 differ, in normal content and in scaled content (timewalking): if they never do, the tooltip read
@@ -2086,7 +2088,7 @@ read whose neck, rings or trinkets are empty for that reason. Last, during a war
 Blizzard's inspect window on the member in flight → no `fresh` line with `slots=0` ever; a
 `failed (empty)` line, or a second send, is the expected answer. Result: passed in the client, 2026-10-23 (the owner).
 
-**INSPECT-5. A looter who left keeps their read (feedback-21 H2).** Client: Retail. In a key or dungeon, a member
+**INSPECT-5. A looter who left keeps their read (feedback-21 H2).** Client: both. In a key or dungeon, a member
 loots a piece once their `[INSPECT]` line has read `fresh` (or `cached`). Open that drop's detail
 card → the Spec row reads `<their spec> · inspected <age> ago`. Leave the group (or let the key's
 group break up) and open the card again → the Spec row still names their spec, its tooltip adds
@@ -2149,7 +2151,7 @@ looks like no `trade:` line for a tradeable item (the tooltip line or its senten
 record the tooltip text as shown), a time that drifts from the tooltip's, or a repeated warning.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**TRADE-6. The trade helper.** Client: Retail. The guards and the call are headless-tested (`test_trade_helper`);
+**TRADE-6. The trade helper.** Client: both. The guards and the call are headless-tested (`test_trade_helper`);
 this check confirms the client's side, through the detail card's Trade (the Offer panel's Trade and
 the give path behind it were retired with feedback-7 spec §0). In a dungeon, with a member standing
 next to you who looted a drop: open that drop's detail card and click Trade → an empty trade window
@@ -2176,7 +2178,7 @@ shows the `[MSG]` lines):
 
 Use a friend who knows the test is coming: every check whispers them.
 
-**ASK-1. A whisper and its confirmation.** Client: Retail. In a group, out of combat and outside any encounter, with
+**ASK-1. A whisper and its confirmation.** Client: both. In a group, out of combat and outside any encounter, with
 a drop the friend looted: run the line above → the friend receives "Hi <name>, if you don't need
 [item], could I have it? It'd be +N for me. No worries if not!" with the item link intact, the chat
 frame shows your own outgoing whisper, and the addon prints one line `Whispered <name>: [item]`;
@@ -2198,7 +2200,7 @@ pulls (record whether `challengeMode` holds it) goes out at the end of the key. 
 like a whisper that never leaves after the kill (`/dw diagnostics` → `messaging: queued ...` still
 listed), all of them at once, or a client "Interface action failed" message. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-3. Cancel.** Client: Retail. Queue an ask during a boss fight as in ASK-2, then run it again with `Press` in
+**ASK-3. Cancel.** Client: both. Queue an ask during a boss fight as in ASK-2, then run it again with `Press` in
 place of `Request` → the print reads `ready canceled`, `[MSG] canceled ...`, and the kill sends
 nothing. Queue another, then have the friend leave the group before the kill → `[MSG] canceled ...:
 left the group`, and nothing is whispered after the kill. Result: passed in the client, 2026-10-23 (the owner).
@@ -2227,7 +2229,7 @@ Announce button in the table: the Offer panel's `Announce to group` posts "[item
 me." in party (instance) chat and reads `Announced`, yellow and grayed; in a boss fight it reads `Queued`
 and goes out at the kill. Hover every cell and button → each tooltip says why; nothing is blank. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-6. The Offer panel, Offer and Trade.** Client: Retail. (Superseded by feedback-7, 2026-10-13: the stripe, the
+**ASK-6. The Offer panel, Offer and Trade.** Client: both. (Superseded by feedback-7, 2026-10-13: the stripe, the
 `291 → 305` text and the pill are one Their eq column in the Them look, and the panel's `Trade` button is
 removed; FEED-56, FEED-57. The rest holds.) On the downgrade's row click `Offer` → a panel
 `Who could use this? YOUR DROP` opens docked to the window's right edge (move the window to the screen's
@@ -2242,13 +2244,13 @@ with the item already placed; cancel it. `Announce to group` posts the announce 
 `Offer` opens the panel and the row's Trade count and `(Details)` are now drawn (FEED-43). Close the panel
 with its close mark. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-7. Post my tradeables.** Client: Retail. With two or more tradeable drops of yours, click `Post my
+**ASK-7. Post my tradeables.** Client: both. With two or more tradeable drops of yours, click `Post my
 tradeables` on the strip under the Drops table (since DW-E3) → one party (instance) chat line `Up for trade, whisper me:
 [item] [item]` with every link intact; with enough drops to pass 255 characters (or long names in a
 raid) it is two or more lines, none cut mid-link. Click it again → it posts again. With none
 tradeable the strip, and the button with it, is not shown (FEED-45). In test mode (`/dw test`) the lines are printed, not sent. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-8. Auto-ask.** Client: Retail. Its timing, its checks and its cancel rules are headless-tested (`test_auto_ask`); this
+**ASK-8. Auto-ask.** Client: both. Its timing, its checks and its cancel rules are headless-tested (`test_auto_ask`); this
 confirms the client's side. Settings › Messages › Auto-ask › Ask automatically on → chat reads the one-time
 notice (`Auto-ask is on: … 5 or more item levels … 10 seconds after the boss kill or the drop.` and how to
 turn it off); turn it off and on again → no second notice, and none after a `/reload`. `/dw test` with it on
@@ -2261,7 +2263,7 @@ group (none; dismissing the row was a cancel until DW-D2 removed it); each logs 
 with its reason. Pull the next boss while one is waiting → nothing goes during the fight, and it goes 10
 seconds after that boss dies. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-9. Auto-ask after leaving an encounter (DW-62).** Client: Retail. Auto-ask on, `/dw debug on`, in a dungeon
+**ASK-9. Auto-ask after leaving an encounter (DW-62).** Client: both. Auto-ask on, `/dw debug on`, in a dungeon
 group. Pull a boss, then hearth out (or release and run out) before it dies. After the loading
 screen (or a moment later, when the client reports the Encounter restriction lifted after it;
 M6 review) the console reads `[MSG] auto-ask: left the encounter without its end; …` (only when
@@ -2270,7 +2272,7 @@ tradeable upgrade for you (or `/dw add` one naming them) → the whisper goes af
 the next boss or `/reload`. Back inside, pull a boss and cross into another part of the instance
 during the fight → nothing is asked until the boss dies. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-10. A stored announce channel without its group is refused (DW-P17, review ANN-1).** Client: Retail. One of
+**ASK-10. A stored announce channel without its group is refused (DW-P17, review ANN-1).** Client: both. One of
 your own drops in the feed (`/dw add <item link>`), Settings › Messages › Announce channel = **Party**.
 Solo: open the drop's Offer panel and press **Announce to group** → chat says `Not announced: You are
 not in a group, so there is no channel to post in.`, no red system line about the party, and the
@@ -2293,7 +2295,7 @@ real group, with a drop your current spec can't use but another spec of your cla
 whispers the looter that text with the off-spec difference as the gain; a second Ask on the same
 drop is refused (one ask per item per looter). Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-12. The Offer button toggles the Offer panel (feedback-21 H4).** Client: Retail. The headless
+**ASK-12. The Offer button toggles the Offer panel (feedback-21 H4).** Client: both. The headless
 `test_offer_panel` covers it. `/dw test`, Drops tab: click one of your own drops' **Offer** → the
 Offer panel opens for it. Click the same **Offer** again → the panel closes. Open it again, then
 click another of your drops' **Offer** → the panel stays open and now shows that drop; its Offer
@@ -2302,7 +2304,7 @@ card (click the row, then the card's Offer) and in the compact layout (`/dw comp
 Offer): each opens and then closes it. `/dw offer <item link>` with the panel already open on that
 drop leaves it open. Result: passed in the client, 2026-10-23 (the owner).
 
-**ASK-13. No Offer when no other player is in your group (DW-07; image-66).** Client: Retail. The headless
+**ASK-13. No Offer when no other player is in your group (DW-07; image-66).** Client: both. The headless
 `test_offer_alone` covers it. Solo in the open world, loot a tradeable drop of your own (or add one
 with `/dw add <item link>`), Drops tab → its Actions reads the gray **No action**, not Offer; hover it
 → `• Why: no other player in your group`. Its detail card's first action and its compact card read
@@ -2323,7 +2325,7 @@ real client's answers land in the right row. Each reads the `situation` lines of
 with `/dw debug on` for the `[SIT]` change lines. The settings are Situations (PANEL-4);
 the `/dw situation` verb's check is SLASH-5.
 
-**SIT-1. Open world.** Client: Retail. Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
+**SIT-1. Open world.** Client: both. Alone in a city → `situation: solo`. Invite a friend → a `[SIT] situation
 solo -> openWorldGroup (GROUP_ROSTER_UPDATE)` line, and the report reads `openWorldGroup`. Leave the
 group → back to `solo`. Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2340,7 +2342,7 @@ leave. Result: passed in the client, 2026-10-23 (the owner).
 scenario → `scenario`. A battleground or an arena → `pvp`. If a difficulty id reads differently from
 these, record it: the ids live in `core/Constants.lua`. Result: passed in the client, 2026-10-23 (the owner).
 
-**SIT-5. Disabled and back.** Client: Retail. With `/dw debug on`, `/dw disable` in the open world, zone into a
+**SIT-5. Disabled and back.** Client: both. With `/dw debug on`, `/dw disable` in the open world, zone into a
 dungeon, `/dw enable` → one `[SIT] situation nil -> dungeon (standUp)` line, and no `[SIT]` line while
 disabled. Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2366,20 +2368,20 @@ The gate's decision is headless-tested (`test_quality_gate`); these checks confi
 Set the `feed.quality.*` rows on Settings › Drops › Quality (or with `/dw set`); its closing line,
 `In force now: …`, must read what the filter bar reads.
 
-**QUAL-1. Fixed.** Client: Retail. Drops › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
+**QUAL-1. Fixed.** Client: both. Drops › Quality mode `Fixed` at Rare, upgrade override off. In a dungeon, an
 Uncommon drop for another player is not listed and a Rare or Epic one is; the filter bar reads
 `Quality: Rare+`. With `/dw debug on`, the hidden drop's debug line names the threshold. Result: passed in the client, 2026-10-23 (the owner).
 
-**QUAL-2. Upgrade override.** Client: Retail. Same settings with the upgrade override on: an Uncommon drop that is an
+**QUAL-2. Upgrade override.** Client: both. Same settings with the upgrade override on: an Uncommon drop that is an
 upgrade for you (an empty or low slot) is listed; one that is not an upgrade stays hidden. Result: passed in the client, 2026-10-23 (the owner).
 
-**QUAL-3. Dynamic per slot and whole character.** Client: Retail. Mode `Dynamic per slot`: a Rare drop for a slot where
+**QUAL-3. Dynamic per slot and whole character.** Client: both. Mode `Dynamic per slot`: a Rare drop for a slot where
 you wear Epic is hidden, and a Rare ring is shown when your lower ring is Rare; the filter bar reads
 `Quality: Match slot`. Mode `Dynamic whole character`: the filter bar reads
 `Quality: Match gear (<quality>+)` with the most common quality you wear (shirt and tabard not
 counted), and the diagnostics report shows the same threshold. Result: passed in the client, 2026-10-23 (the owner).
 
-**QUAL-4. Per-situation override.** Client: Retail. Global mode `Fixed`, and Situations sets the dungeon's
+**QUAL-4. Per-situation override.** Client: both. Global mode `Fixed`, and Situations sets the dungeon's
 `Quality` to `Dynamic per slot`. Entering a dungeon switches the filter bar to `Quality: Match slot`;
 leaving it, back to `Quality: Rare+`. `Use global` restores the global mode. Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2394,7 +2396,7 @@ score uses their spec's scale. Turn Pawn off in the AddOns list and `/reload` �
 `weights` when you have set any), the footer reads `Pawn: off`, and verdicts are item level alone.
 Score with `Pawn` while Pawn is off → `scorer=pawn inUse=none`. Result: passed in the client, 2026-10-23 (the owner).
 
-**SCORE-3. Pawn counts once it is initialized (DW-62).** Client: Retail. Pawn installed, weights set for your spec,
+**SCORE-3. Pawn counts once it is initialized (DW-62).** Client: both. Pawn installed, weights set for your spec,
 Score with on `Automatic`. `/reload` and type `/dw diagnostics` straight away, then again ten
 seconds later → the scoring line never pairs `inUse=pawn` with `pawn ready=false`: before Pawn is
 ready it reads `inUse=weights`, after it `inUse=pawn`. Result: passed in the client, 2026-10-23 (the owner).
@@ -2427,7 +2429,7 @@ shows the weighted score's change and the verdict follows it as SCORE-1 describe
 
 ## History
 
-**HIST-1. A completed trade.** Client: Retail. Needs a group member and a tradeable drop. In a dungeon, let a
+**HIST-1. A completed trade.** Client: both. Needs a group member and a tradeable drop. In a dungeon, let a
 member loot an item that is a downgrade for them and an upgrade for you; press its Ask. Trade with
 them (they put the item in), both accept → with `/dw debug on`, the console shows `[TRADE] trade
 with <name> completed: gave 0, got 1` and `history: <item> received`; the Drops row's Ask
@@ -2440,7 +2442,7 @@ History row keeps its outcome. If no `completed` line appears after a real trade
 `/etrace` shows for `TRADE_ACCEPT_UPDATE`, `TRADE_CLOSED` and `UI_INFO_MESSAGE` (its message type
 beside `/dump LE_GAME_ERR_TRADE_COMPLETE`) around the accept, and in which order. Result: passed in the client, 2026-10-23 (the owner).
 
-**HIST-2. The History tab, and the Drops tab across a reload (DW-51; DW-Q0, feedback-15 spec §0).** Client: Retail.
+**HIST-2. The History tab, and the Drops tab across a reload (DW-51; DW-Q0, feedback-15 spec §0).** Client: both.
 In a dungeon, after a few drops (one of them yours, still tradeable), note the Drops tab's headers
 and rows, then `/reload` → the Drops tab shows the same drops under the same boss or key headers
 (Content: This session), each judged again: Me against your gear now, Them as the inspects return,
@@ -2459,7 +2461,7 @@ puts the earlier outcome back. Content: This session → only this login's drops
 Drops › Retention › Clear history (since DW-Q3; HIST-6) → a confirmation; No keeps everything, Yes empties the tab on this and your other characters, and chat
 reads `History cleared.` Result: passed in the client, 2026-10-23 (the owner).
 
-**HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** Client: Retail. On the first login on this build, `/dw
+**HIST-3. Keep history for (DW-A5, feedback-2 spec §5).** Client: both. On the first login on this build, `/dw
 debug on` → one held `[Migrate] v3 -> v4` line, and every kept group is still there; the History
 footer reads `n groups, m drops · kept for 30 days` (no `of 20 groups kept`). Settings › Drops ›
 Retention › Keep history for lists 7, 14, 30, 60, 90 and 180 days and Never delete. Pick 90 → taken at
@@ -2475,7 +2477,7 @@ the same groups (account-wide); switch profile → the window does not change. `
 `feed: history groups=n drops=m/5000 keep=30d`. Result: passed in the client, 2026-10-23 (the owner).
 
 **HIST-4. The prune after a disabled start, and a stale confirmation (DW-A9, feedback-2 spec §8,
-FB2-10).** Client: Retail. The headless `test_history_retention` (`enabled later in a session that started
+FB2-10).** Client: both. The headless `test_history_retention` (`enabled later in a session that started
 disabled`, `a later change that deletes nothing retires the open popup`, `only the latest popup's
 answer counts`) covers the same ground. With a group older than the window kept, `/dw disable`,
 `/reload`, wait ten seconds, then `/dw enable` → about five seconds later the old group leaves the
@@ -2495,7 +2497,7 @@ out stays `Expired`, and a row you marked `Declined` keeps that. In a dungeon wi
 first boss, Content: This instance, `/reload` → the same drops still show (This instance kept its
 start); leave and enter another instance, or log out and in → This instance starts again. Result: passed in the client, 2026-10-23 (the owner).
 
-**HIST-6. Clear history lives in Settings (DW-Q3, feedback-15 spec §3).** Client: Retail. The headless
+**HIST-6. Clear history lives in Settings (DW-Q3, feedback-15 spec §3).** Client: both. The headless
 `test_settings_pages`, `test_history`, `test_footer_row` and `test_compact_history` cover it. The
 History tab's strip reads, right to left, Sort and `Expand all` in the full layout and `Expand all`
 alone in compact: no `Clear history` on either. `/dw config` → Drops › Retention → `Clear history` sits
@@ -2505,7 +2507,7 @@ empties the History tab on this and your other characters and chat reads `Histor
 `/dw test` on, Yes empties only the sample groups: turn test mode off → the account's history is
 still there. Result: passed in the client, 2026-10-23 (the owner).
 
-**HIST-7. The History tab's detail card (DW-Q4, feedback-15 spec §4).** Client: Retail. The headless
+**HIST-7. The History tab's detail card (DW-Q4, feedback-15 spec §4).** Client: both. The headless
 `test_history_card` covers it. On the History tab each row has the Drops rows' chevron and is
 indented under its header. Click a row → a card opens under it in the Drops card's style (the rows
 below move down, the chevron points up, the row is tinted gold): the item and its chips (slot, type,
@@ -2520,7 +2522,7 @@ Show in Drops → the Drops tab, the drop's header open and its card expanded; o
 session's entry it is off and its tooltip says why. `/dw compact` → the same card, stacked, under
 the clicked card. Result: passed in the client, 2026-10-23 (the owner).
 
-**HIST-8. The row menu as the skinned Ka0s menu (V89A-DWH, SM-07).** Client: Retail. The headless `test_history` covers
+**HIST-8. The row menu as the skinned Ka0s menu (V89A-DWH, SM-07).** Client: both. The headless `test_history` covers
 the rows handed to the library and the fallback. `/dw history` (or `/dw test` for sample entries),
 right-click a row → a menu opens at the pointer, the same Ka0s menu Filters ▾ opens in compact (not the
 client's own), with one row, `Mark as declined` (`Clear declined` on a declined entry). Choose it → the menu
@@ -2537,7 +2539,7 @@ Issue #12 (DW-N1..DW-N4; [`superpowers/specs/2026-11-05-drop-watcher-insights-de
 The Insights tab draws charts over the kept history through LibKa0s-Charts-1.0. Its own bar holds seven
 filters, and the strip at the bottom names the period the kept history covers.
 
-**INSIGHT-1. The tab, its tooltip and the period.** Client: Retail. `/dw insights` → the window opens expanded on a
+**INSIGHT-1. The tab, its tooltip and the period.** Client: both. `/dw insights` → the window opens expanded on a
 third tab, Insights, after History, in both layouts. Hover the tab → the tooltip says what it holds
 and the period the kept history covers. The strip at the bottom reads `Kept for 30 days: <first day> –
 <today> · n drops in m groups` with the default retention. Set Settings › Drops › Retention › Keep
@@ -2546,7 +2548,7 @@ history for to 14 days (confirm if asked) → the caption reads `Kept for 14 day
 retention back after. Fail: no third tab, a caption that keeps the old window, or a Lua error.
 Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-2. The filters.** Client: Retail. On real history, open each of the seven dropdowns (Character, Instance,
+**INSIGHT-2. The filters.** Client: both. On real history, open each of the seven dropdowns (Character, Instance,
 Difficulty, Situation, Date, Quality, Category) → each lists only the values present in the kept
 history, each with its drop count (`Ruby Life Pools (14)`), under an `All …` head with the total.
 Closed, the head reads `All instances (n)`, where n is the number of values. Pick an instance → the
@@ -2561,7 +2563,7 @@ All. Switch to History and back → the picks are kept for the session. Fail: a 
 listed, a count that does not match the cards, a pick that leaves the tab empty with no way back, or a
 Lua error. Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-3. Cards and sections on real history.** Client: Retail. With every filter on All → eight cards in two
+**INSIGHT-3. Cards and sections on real history.** Client: both. With every filter on All → eight cards in two
 rows of four (Drops seen, Upgrades for me, Asks sent, Items received, Ask success, Active days,
 Offers sent, Traded away). Hover each → its numbers. Ask success reads a dash when no ask was sent,
 and is green from 50%. Below the cards the sections sit under four dividers, Loot, Upgrades, Trades
@@ -2577,7 +2579,7 @@ filters.` The footer shows no Sort on Insights, and Sort is back on History. The
 hidden on Insights and back on History. Fail: an overlapping section, a hover with no numbers, a
 blank section with no line, a Sort in the Insights footer, or a Lua error. Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-4. An ask that ends in a trade, then equip the item.** Client: Retail. Needs a group member and a tradeable
+**INSIGHT-4. An ask that ends in a trade, then equip the item.** Client: both. Needs a group member and a tradeable
 drop that is an upgrade for you, as HIST-1. Note Asks sent, Items received and Ask success. Press its
 Ask, trade with them and both accept → Asks sent and Items received each go up by 1 and Ask success
 moves with them. Item level gained from items received has a row for the item, `from <member> · <day>`,
@@ -2587,7 +2589,7 @@ equal to itself (sidegrade 0), but the Insights row still shows the gain from be
 verdict kept at the trade). Fail: the gain drops to 0 after equipping, or Asks sent does not move.
 Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-5. Test mode.** Client: Retail. `/dw test`, then the Insights tab → the amber test-mode strip sits directly
+**INSIGHT-5. Test mode.** Client: both. `/dw test`, then the Insights tab → the amber test-mode strip sits directly
 under the tabs (not one bar's height lower), and every card has a number: Offers sent and Traded away
 included. Every section draws rows and none shows its empty line: Drops by outcome has Expired among
 others' drops, Upgrades for me by boss lists raid bosses, Most generous group members has Kragmar
@@ -2598,14 +2600,14 @@ stamped. The Character dropdown lists you and Emberwick. Turn test mode off → 
 account's history again at once, with the filters corrected against it. Fail: an empty section, the
 strip a bar's height below the tabs, or the samples left behind. Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-6. The simulator.** Client: Retail. With some real history kept, `/dw sim start dungeon`, `/dw sim pause`,
+**INSIGHT-6. The simulator.** Client: both. With some real history kept, `/dw sim start dungeon`, `/dw sim pause`,
 `/dw sim loot 2 me`, then a member's drop, and `/dw sim trade <its id>` for one of each (as SIM-5)
 → the Insights tab shows only the simulation's drops (Drops seen counts them, not your real
 history), the cyan simulation strip sits under the tabs, and Items received or Traded away moves with
 the trade. `/dw sim stop` → the tab is back on your real history; `/dw history` shows no simulated
 drop. Fail: the real history mixed into the simulation's, or left behind after the stop. Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-7. Compact layout, a skin switch, a resize.** Client: Retail. Switch to the compact layout (`/dw compact`)
+**INSIGHT-7. Compact layout, a skin switch, a resize.** Client: both. Switch to the compact layout (`/dw compact`)
 at its 400-pixel minimum on Insights → the filter bar wraps to several rows, the cards are two to a
 row, and Top instances and Most generous stack one above the other; no text runs past the edge.
 Switch skins on General → Skin (Ka0s Default, then another) with the tab shown → the cards, bars and
@@ -2614,7 +2616,7 @@ and quality colors (Drops by quality, the item names in Item level gained) stay 
 full layout, drag the window's resize grip → the sections lay out again to the new width. Fail:
 clipped or overlapping charts, colors that keep the old skin, or a Lua error. Result: Passed (owner, 2026-11-05)
 
-**INSIGHT-8. The slot of an item you cannot equip, and a Watched item.** Client: Retail. Hold a mount, pet or toy
+**INSIGHT-8. The slot of an item you cannot equip, and a Watched item.** Client: both. Hold a mount, pet or toy
 item and a tier token in your bags, and run `/dump C_Item.GetItemInfoInstant(<itemID>)` for each →
 note the fourth value (the equip slot) for both. Pass if it matches docs/known-limitations.md's
 Insights note (both `INVTYPE_NON_EQUIP_IGNORE`, so a pre-#13 mount would read as a tier token);
@@ -2626,7 +2628,7 @@ or a Lua error. Result: Passed (owner, 2026-11-05)
 
 ## Toast
 
-**TOAST-1. The upgrade toast.** Client: Retail. Settings › Alerts › Toast › Show a toast on, then `/dw test` → a
+**TOAST-1. The upgrade toast.** Client: both. Settings › Alerts › Toast › Show a toast on, then `/dw test` → a
 toast under the top of the screen reads `Big upgrade for you`, the name of Seta's head item (a real
 item since DW-84) and `Looted by Seta · +19 ▲ · Likely tradeable` (superseded by feedback-9,
 2026-10-13: four rows, `Looted by Seta · You ▲19 · Them …` then `Likely tradeable · <reason>`; FEED-66), with an Ask button and a close mark; it stays while test mode is
@@ -2639,7 +2641,7 @@ left); press Ask → the button reads `Queued` or `Asked` and the whisper goes a
 second qualifying drop waits until the first goes. Pull a mob while one is due → nothing shows in
 combat, and it shows when combat ends; with Show in combat on, it shows at once. Result: passed in the client, 2026-10-23 (the owner).
 
-**TOAST-2. The toast leaves with its drop and with its switch (DW-62).** Client: Retail. Toast on, `/dw test` → the test
+**TOAST-2. The toast leaves with its drop and with its switch (DW-62).** Client: both. Toast on, `/dw test` → the test
 toast shows. Untick Settings › Alerts › Toast › Show a toast → it goes at once (a test toast has no
 countdown, so nothing else would take it down). Tick it again and turn test mode off and on → the toast is
 back. (The row's × that took the toast down is gone since DW-D2.) Out of test mode, in a group:
@@ -2647,14 +2649,14 @@ back. (The row's × that took the toast down is gone since DW-D2.) Out of test m
 then Settings › Profiles › switch to a profile with Show a toast off → it goes. In none of these does the
 toast's Ask stay pressable for a drop that is gone, and no Lua error shows. Result: passed in the client, 2026-10-23 (the owner).
 
-**TOAST-3. An upgrade into an empty slot toasts and auto-asks (DW-62).** Client: Retail. Take off a ring. Toast on
+**TOAST-3. An upgrade into an empty slot toasts and auto-asks (DW-62).** Client: both. Take off a ring. Toast on
 with Least gain 50, auto-ask on. In a group: `/dw add <a BoE ring link> <member>` → a toast reading
 `Looted by <member> · empty ▲ · Tradeable` (superseded by feedback-9, 2026-10-13: row 3 reads `Looted
 by <member> · You ▲ empty · Them …`, `empty` in green, and row 4 `Tradeable` with its reason; FEED-66); after the auto-ask delay the whisper goes and reads
 `It'd be an empty-slot upgrade for me`: never the ring's item level, never `+?` and never `+an`.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**TOAST-4. The toast with LibKa0s present (DW-P21).** Client: Retail. Toast on, `/dw test` → the close mark sits in the
+**TOAST-4. The toast with LibKa0s present (DW-P21).** Client: both. Toast on, `/dw test` → the close mark sits in the
 toast's top-right corner and Ask to its left; click the mark → the toast goes. (Without the library the
 mark is absent, never a typed `×`: DEGRADED-2.) Result: passed in the client, 2026-10-23 (the owner).
 
@@ -2666,7 +2668,7 @@ whisper. An off-spec sidegrade or downgrade raises no toast. Auto-ask on, with o
 and one off-spec upgrade from the same boss: the main-spec ask is whispered at its delay, and the
 off-spec ask about 5 s after it, never before it. Result: passed in the client, 2026-10-23 (the owner).
 
-**TOAST-6. The toast's Scale (feedback-21 G10).** Client: Retail. The headless `test_toast` (`toast.scale scales a toast
+**TOAST-6. The toast's Scale (feedback-21 G10).** Client: both. The headless `test_toast` (`toast.scale scales a toast
 on screen live`, `the first toast is built at toast.scale`) and `test_schema_rows` (`toast scale`) cover
 it. Settings › Alerts › Toast: Scale is the tab's last row, under Play a sound (since DW-T2, under the
 stack's two rows: TOAST-9), reads `100%` and dims
@@ -2679,7 +2681,7 @@ Master controls › Reset position → back under the top, at the stored scale. 
 still `100%` → a toast on screen takes today's size. `/dw get toast.scale` → the stored value (`1.5` at
 `150%`); `/dw set toast.scale 3` is refused. Result: Passed (owner, 2026-11-05)
 
-**TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** Client: Retail. The shell (the queue,
+**TOAST-7. The toast on LibKa0s-Toast-1.0: what you saw before is kept (AT-A2).** Client: both. The shell (the queue,
 the countdown and its pause, the close mark and right-click, the drag, the scale and the sound) moved
 to LibKa0s-Toast-1.0; the rows, the trigger and the combat hold stayed here. The headless `test_toast`
 covers each check below; this is the client's word on it. Run TOAST-1 first and keep its settings.
@@ -2715,7 +2717,7 @@ covers each check below; this is the client's word on it. Run TOAST-1 first and 
 
 Result: passed in the client, 2026-10-30 (the owner).
 
-**TOAST-8. The toast as tall as DpsRace's new-best toast, every element scaled to match (DW-05).** Client: Retail.
+**TOAST-8. The toast as tall as DpsRace's new-best toast, every element scaled to match (DW-05).** Client: both.
 Ka0sAddonsCommonTasks docs/2026-10-30-SKIN_FONTS_AND_FEEDBACK, Addendum 03. The headless `test_toast`
 (`90 px tall, DpsRace's new-best toast`, `its icon, Ask and every face scaled`, `with CreateFont, each
 scaled face is a named font object`) covers the figures; this is the client's word on the look. Every
@@ -2733,7 +2735,7 @@ both worn items read (two dual marks) still widens the toast so neither verdict 
 its larger size in the client's own font, never shrinking to the first release's. Under Obsidian and
 Glass → the same, in each skin's face. Result: Owner reported pass, 2026-10-31.
 
-**TOAST-9. Three upgrades at once, stacked (DW-T2, issue #14).** Client: Retail. The headless `test_toast_stack`
+**TOAST-9. Three upgrades at once, stacked (DW-T2, issue #14).** Client: both. The headless `test_toast_stack`
 covers the shape (min(N, stack) toasts, the re-flow, the queue past the stack, the combat hold, Up and
 Down, the rows live, Prune and Ask on a toast below the first) and `test_schema_rows` (`toast stack`)
 the rows; this is the client's word on it. Settings › Alerts › Toast: Toasts at once reads `3` and
@@ -2762,7 +2764,7 @@ The glow's decision, its settings and each surface's icon are headless-tested (`
 The settings are Settings › Alerts › Upgrade glow; the main spec's glow is the left column, the
 off-spec's the right.
 
-**GLOW-1. The main-spec glow on each surface, and nowhere else (feedback-21).** Client: Retail. Defaults (Defaults on
+**GLOW-1. The main-spec glow on each surface, and nowhere else (feedback-21).** Client: both. Defaults (Defaults on
 the Alerts page). `/dw test`, expand every group → the icons of the drops that are an upgrade for your
 current spec glow with the yellow pixel border (lines running around the icon): Kaelith's neck (the key run), Uniquerogue's trinket (the
 second raid boss), Seta's head and Littlewolf's ring (the third; Mistveil's shoulders are Can't use since
@@ -2785,12 +2787,12 @@ apart from the main glow's yellow on the same screen. Expand Brightmane's one-ha
 header icon glows blue; `/dw compact` → its card's too. With a real off-spec upgrade in the client (the
 toast on), the toast's icon shows no glow (G9). Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-3. The Button style (feedback-21).** Client: Retail. Main spec style → Button (rotating rays) → every main-spec
+**GLOW-3. The Button style (feedback-21).** Client: both. Main spec style → Button (rotating rays) → every main-spec
 upgrade icon (GLOW-1's list) at once shows the action-button rays instead of the pixel border, no old
 effect left under it. Main spec frequency 2 → the rays turn faster; 0.05 → slower. Main spec color →
 pick a red with alpha half way → the rays turn red and fainter. Defaults puts it back. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-4. The Proc style (feedback-21).** Client: Retail. Main spec style → Proc (flipbook) → the yellow flipbook
+**GLOW-4. The Proc style (feedback-21).** Client: both. Main spec style → Proc (flipbook) → the yellow flipbook
 around each upgrade icon, opening with a burst once: expand or collapse a row, or let
 another drop arrive, and the glowing icons keep looping with no second burst. Main spec start animation off → the next
 start has no burst (switch a setting or `/dw test` off and on to restart it); on again → the burst is
@@ -2798,26 +2800,26 @@ back. Main spec duration (seconds) 3 → one loop takes visibly longer. Main spe
 5 → the flipbook reaches 5 pixels further past the icon's sides and top and bottom; -5 → inside them.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-5. The Pixel border style (feedback-21).** Client: Retail. Main spec style Pixel border (the default, H6) → lines
+**GLOW-5. The Pixel border style (feedback-21).** Client: both. Main spec style Pixel border (the default, H6) → lines
 run around each main-spec upgrade icon. Main spec lines 20 → many short lines; 1 → one. Main spec frequency 2 → they run
 faster. Main spec line length (0 = automatic) 20 → long lines; back to 0 → sized from the icon. Main
 spec thickness 6 → thick lines. Main spec dark border on → a dark border inside the lines. Main spec X
 and Y offset move the lines out or in. The off-spec glow (pixel too) answers its own column's rows
 the same and never the main spec's. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-6. The Auto cast style (feedback-21).** Client: Retail. Main spec style → Auto cast sparkles → sparkles circle
+**GLOW-6. The Auto cast style (feedback-21).** Client: both. Main spec style → Auto cast sparkles → sparkles circle
 each main-spec upgrade icon. Main spec particles 12 → more sparkles in each ring; 1 → one. Main spec
 frequency 2 → they circle faster. Main spec scale 3 → bigger sparkles; 0.5 → smaller. The offsets move
 the rings out or in. Off-spec style → Auto cast sparkles too → the off-spec icons sparkle in blue, the
 main ones in their own color. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-7. Each glow turned off (feedback-21).** Client: Retail. `/dw test`. Untick Main spec glow → every main-spec
+**GLOW-7. Each glow turned off (feedback-21).** Client: both. `/dw test`. Untick Main spec glow → every main-spec
 icon's glow stops at once on every surface (table, compact cards, detail card), and the off-spec
 icons keep theirs. Tick it again → back at once. Untick Off-spec glow → the off-spec icons stop and the
 main ones keep glowing. Both off, `/reload` → nothing glows, and the rows stay off. Profiles › switch to
 a profile with the glows on → the icons glow again without a repaint by hand. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-8. A style's knobs dim for another style (feedback-21).** Client: Retail. Settings › Alerts › Upgrade glow with
+**GLOW-8. A style's knobs dim for another style (feedback-21).** Client: both. Settings › Alerts › Upgrade glow with
 the defaults (both Pixel border, H6): in each column the Pixel border and Offset rows are live and the
 Auto cast sparkles, Button (rotating rays) and Proc (flipbook) rows dimmed. Main spec style → Proc
 (flipbook) → its Proc and Offset rows live, its Pixel border rows dimmed, the off-spec column as it was.
@@ -2827,7 +2829,7 @@ off-spec row below it, its Style included, dims, but Off-spec color and its Use 
 (a color pair is never dimmed); Main spec's stay as they were. A dimmed row keeps its value and is
 never hidden. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-9. Use class color (feedback-21).** Client: Retail. Settings › Alerts › Upgrade glow: Main spec color | Off-spec
+**GLOW-9. Use class color (feedback-21).** Client: both. Settings › Alerts › Upgrade glow: Main spec color | Off-spec
 color on one line, Use class color (main spec) | Use class color (off-spec) (both off) on the next, each
 below its own swatch (H6, the documented options-ui-§17 deviation). `/dw test`. Untick Use the skin's color (main spec) and (off-spec), the line below. Main spec color → a red with alpha half way, then tick its Use class color → every
 main-spec upgrade icon's glow restarts at once in your character's class color, whoever looted the drop,
@@ -2849,7 +2851,7 @@ out of place. `/dw test` → the main-spec upgrades wear a yellow pixel border a
 blue one, their lines running slowly round the icon. On a profile that stored a glow's color or style
 before this build → it keeps the stored value; only what it never set takes the new default. Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-11. Every style on the LibKa0s-Glow-1.0 driver (SM-DW-15, DW-08, LibKa0s#56).** Client: Retail. The effect is now
+**GLOW-11. Every style on the LibKa0s-Glow-1.0 driver (SM-DW-15, DW-08, LibKa0s#56).** Client: both. The effect is now
 drawn through `NS.GlowLib` (`core/GlowSetup.lua`), the library's stateless LibCustomGlow-1.0 driver, in
 place of this addon's own mapping; `tests/test_glow.lua` (unchanged) and the Glow parity case cover the
 wiring headless. Owed in the client, never marked passed by an agent:
@@ -2864,7 +2866,7 @@ wiring headless. Owed in the client, never marked passed by an agent:
 
 Result: passed in the client, 2026-10-23 (the owner).
 
-**GLOW-12. Proc by default, #19FF19 and #3FC7EB (DW-03; D-18, image-39).** Client: Retail. Supersedes GLOW-10's
+**GLOW-12. Proc by default, #19FF19 and #3FC7EB (DW-03; D-18, image-39).** Client: both. Supersedes GLOW-10's
 defaults (a record, left as it was run). On a new profile, or after Defaults on the Alerts page:
 Settings › Alerts › Upgrade glow → Main spec style | Off-spec style both **Proc (flipbook)**, Main spec
 color a green, `#19FF19`, and Off-spec color the blue `#3FC7EB`, both opaque. `/dw test` → the
@@ -2872,7 +2874,7 @@ main-spec upgrades' icons wear a green flipbook glow and the off-spec ones a blu
 never chose a glow style or color before this build → it shows Proc and the new green too (AceDB's
 defaults; nothing is migrated); one that picked Pixel border or a color keeps its pick. Result: Owner reported pass, 2026-10-31.
 
-**GLOW-13. Only the chosen styles' sections show (DW-04; D-17, image-40..42).** Client: Retail. Supersedes GLOW-8's
+**GLOW-13. Only the chosen styles' sections show (DW-04; D-17, image-40..42).** Client: both. Supersedes GLOW-8's
 "dimmed, never hidden" for the style sections (a record, left as it was run). Settings › Alerts ›
 Upgrade glow on the defaults (both Proc) → the tab reads Effect, Offset and Proc (flipbook), and no
 Pixel border, Auto cast sparkles or Button (rotating rays) section. Off-spec style → Pixel border →
@@ -2890,7 +2892,7 @@ The look's decision, its rows and the surfaces' icons are headless-tested (`test
 `test_schema_rows`, `test_settings_pages`); the suites draw no texture and no backdrop, so what the
 crop and the border look like is checked here. The settings are Settings › Window › Icons.
 
-**ICON-1. The default look, and the tab (feedback-21 G11, H6).** Client: Retail. On a profile that never touched the
+**ICON-1. The default look, and the tab (feedback-21 G11, H6).** Client: both. On a profile that never touched the
 tab, `/dw test` → every item icon is cropped a little (its dark rim trimmed) inside a thin flat black
 border, 2 pixels, on the Drops rows and their Me
 and Them gear icons, the compact cards, the detail card's header and Replaces rows, the Offer panel,
@@ -2905,13 +2907,13 @@ SKIN-14 check it. Result for the amendment: passed in the client, 2026-10-30 (th
 Amended by R3-FIX, 2026-11-03: with Use the skin's border ticked (the default) the edge is the skin's 1 pixel, not 2; SKIN-45 checks it.
 Amended by R5-ICON, 2026-11-03: with Use the skin's color ticked (the default) a window's item icon is edged in the skin's icon outline, a mid gray under Ka0s Default, one physical pixel; the toast's icon keeps the black edge; SKIN-49 checks it.
 
-**ICON-2. Icon zoom on every surface.** Client: Retail. `/dw test`, expand a row, open your own drop's Offer panel,
+**ICON-2. Icon zoom on every surface.** Client: both. `/dw test`, expand a row, open your own drop's Offer panel,
 show a toast (Alerts › Toast › Show a toast, then `/dw test`), and open History beside it in turn. Drag
 Icon zoom to `0.00` → every item icon listed in ICON-1 shows its whole texture at once, the dark rim most
 item icons carry back, without a repaint or a reopen; `0.25` → a quarter off each side; `0.10` → the
 default crop again. Switch to compact (`/dw compact`) → the cards' icons wear the same crop. Result: passed in the client, 2026-10-23 (the owner).
 
-**ICON-3. The border, its class color, and the glow over it.** Client: Retail. Untick Show border → every item icon's
+**ICON-3. The border, its class color, and the glow over it.** Client: both. Untick Show border → every item icon's
 border goes at once and the three rows dim; tick it → the thin black Solid border is back and they dim
 no more. Border style → another border (any
 LibSharedMedia border another addon registers is listed) → the icons take it; Border thickness → 8 →
@@ -2921,14 +2923,14 @@ icon (Alerts › Upgrade glow) still draws over the border, never under it, in e
 Show border → the borders go; `/reload` → the settings are kept. Defaults on the Window page → the
 icons back to ICON-1's look. Result: passed in the client, 2026-10-23 (the owner).
 
-**ICON-4. Color by item quality.** Client: Retail. Show border ticked, tick Color by item quality → each icon's border
+**ICON-4. Color by item quality.** Client: both. Show border ticked, tick Color by item quality → each icon's border
 takes its item's quality color (green, blue, purple, orange) over the swatch and over Use class color,
 the swatch's alpha still applied; a Me or Them gear icon takes its worn item's. An item the client has
 not cached yet still shows its link's color; the toast's icon does too. Untick it → back to the swatch
 (or the class color). `/dw get icons.borderQuality` → `true` while ticked; `/dw set icons.borderSize 0`
 is refused. Result: passed in the client, 2026-10-23 (the owner).
 
-**ICON-5. Solid in the list, and a stored profile kept (feedback-21 H6).** Client: Retail. Border style's dropdown lists
+**ICON-5. Solid in the list, and a stored profile kept (feedback-21 H6).** Client: both. Border style's dropdown lists
 Solid (once, even with AuraMaster loaded, which registers the same name). Pick Blizzard Tooltip → the
 tooltip's edge; Solid → the flat edge again, its thickness the Border thickness. On a profile that
 stored Icons values before this build (Show border unticked, Icon zoom `0.00`) → after the update it
@@ -2952,7 +2954,7 @@ collect. Result: passed in the client, 2026-10-23 (the owner).
 
 ## Simulator
 
-**SIM-1. Start and stop, the refusals, nothing sent (DW-70).** Client: Retail. The headless `test_sim_core` covers
+**SIM-1. Start and stop, the refusals, nothing sent (DW-70).** Client: both. The headless `test_sim_core` covers
 the same ground. Solo, outside an instance and out of combat:
 `/dw sim start dungeon` → chat says `Simulation started (…): nothing is sent, and your saved history
 is not touched.` Ask for a simulated drop → chat prints `[sim] WHISPER to <name>: <text>` and your
@@ -2978,7 +2980,7 @@ WHISPER to <member>: <text>` and the whisper tab shows nothing sent. Each drop s
 within a few seconds, the looter's. `/dw diagnostics` → the `sim:` lines show `scenario=key`, the
 pool's size and `source=journal`, `timeline step=11/11` and the sends printed. Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-3. A `raid` run with a large roster (DW-73).** Client: Retail. The headless `test_sim_scenario` (`sim e2e raid`)
+**SIM-3. A `raid` run with a large roster (DW-73).** Client: both. The headless `test_sim_scenario` (`sim e2e raid`)
 covers the same ground. Turn on Settings > Messages > Auto-ask first, then `/dw sim start raid 19` → the Drops tab's roster shows 19 invented
 members besides you (raid2 onward), the footer reads `Simulating: Raid · 19 members`, and `/dw
 situation` says Raid. The run plays on its own (procedure amended for auto-play, DW-01, 2026-10-23) → two bosses, each
@@ -2988,7 +2990,7 @@ any automatic ask goes out (`[sim] WHISPER`, never a real whisper) once the seco
 the frame rate while the burst lands. `/dw sim trade <id>` on a member's drop → the History tab shows
 it `Received`. `/dw sim stop` → the roster is you alone, and the History tab shows only your real
 history. Result: passed in the client, 2026-10-23 (the owner).
-**SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** Client: Retail. The headless `test_sim_events`
+**SIM-4. Inspect replies, the lockdown queue and its flush (DW-72).** Client: both. The headless `test_sim_events`
 covers the same ground. Solo, outside an instance, with `/dw
 debug on`: `/dw sim start dungeon`, then `/dw sim pause` (procedure amended for auto-play, DW-01, 2026-10-23) → the Drops tab's roster shows four invented members, and
 the footer's situation is the dungeon. `/dw sim loot 1 <member>` → the drop shows the looter's name
@@ -3022,7 +3024,7 @@ again with it still open → the line is not printed a second time this session.
 5 seconds instead → the journal pool is read once it closes. Record the item count of each pool.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-7. The verbs' refusals and the automatic stop end to end (DW-73).** Client: Retail. The headless
+**SIM-7. The verbs' refusals and the automatic stop end to end (DW-73).** Client: both. The headless
 `test_sim_scenario` and `test_sim_core` cover the same ground. With no simulation running, `/dw sim
 run`, `step`, `pull`, `kill`, `loot`, `lockdown on`, `trade 1` and `stop` each print `No simulation is
 running: start one with /dw sim start <scenario>.`; `/dw sim start nowhere` prints `Unknown
@@ -3033,14 +3035,14 @@ real group invite mid-run (procedure amended for auto-play, DW-01, 2026-10-23) �
 step plays, and the footer shows the real situation. Start one, then zone into an instance (a
 follower dungeon will do) → `Simulation stopped: you entered an instance.` Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-8. Real loot during a simulation stays real (DW-70 review).** Client: Retail. The headless `test_sim_core`
+**SIM-8. Real loot during a simulation stays real (DW-70 review).** Client: both. The headless `test_sim_core`
 (`sim history: a real drop while a simulation runs …`) covers the same ground. Solo in the open
 world: `/dw sim start world`, then loot a real item from a mob or chest → it appears in the feed
 with your real situation (solo), not the simulated group's, and it is not marked as simulated. `/dw sim stop` → the simulated
 drops go, the real one stays in the feed, and the History tab (the account's log again) shows it.
 `/reload` → it is still in History. Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-9. A sim run fills the window under the default filters (DW-90, sim feedback §0).** Client: Retail. The
+**SIM-9. A sim run fills the window under the default filters (DW-90, sim feedback §0).** Client: both. The
 headless `test_sim_e2e` covers the same ground in every scenario, at the content's level and
 outgearing it. Solo, out of an instance, with the window's filters at their defaults (View:
 All, Quality: Rare+, Content: This session, as `test_sim_e2e` asserts) and your usual gear: `/dw sim start key`
@@ -3052,7 +3054,7 @@ start world` (both untracked by default) → each fills the window the same way.
 → an ask's announce goes to instance chat (`[sim] INSTANCE_CHAT: …`). In `/dw sim start raid 12`
 → you show online in the roster (`/dw diagnostics`, `unit=raid1`). Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-10. The simulation step panel (DW-91, sim feedback §1; LibKa0s-Sim-1.0's since DW-04).** Client: Retail. The
+**SIM-10. The simulation step panel (DW-91, sim feedback §1; LibKa0s-Sim-1.0's since DW-04).** Client: both. The
 headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is LibKa0s-Sim-1.0's.
 
 - SM-DW-7: solo, out of an instance, `/dw sim panel` → the panel `Ka0s Drop Watcher - Simulation`
@@ -3076,7 +3078,7 @@ headless `test_sim_panel` covers DropWatcher's part; the panel's own behavior is
 
 Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** Client: Retail. The headless `test_sim_scenario`
+**SIM-11. The simulation step delay (DW-A7, feedback-2 spec §8).** Client: both. The headless `test_sim_scenario`
 (`sim step delay`) covers the same ground. Settings › General › Simulator →
 `Simulation step delay` reads 1 on a profile that never set it (the default since the owner's
 2026-10-23 simulator feedback; 2 before) and runs from 0.5 to 10 in steps of 0.5. `/dw sim start dungeon`
@@ -3086,7 +3088,7 @@ sim.stepDelay 1.5` → the steps speed up from the next one, and `/dw get sim.st
 (Since DW-04 the run controls' tooltips are the library's and name only their typed commands; DW-01 removed the Run all button.) Result: passed in the client, 2026-10-23 (the owner).
 
 **SIM-12. The loot step says where its drops went, and the window reconciles (DW-B0, feedback-3 spec
-§0; one tab since DW-E3).** Client: Retail. The headless `test_sim_report` covers the same ground in every scenario. Solo,
+§0; one tab since DW-E3).** Client: both. The headless `test_sim_report` covers the same ground in every scenario. Solo,
 with the window's filters at their defaults: `/dw sim start key`, then play it to its loot step → the
 panel row and the chat line read `Loot: 2 drops` (`Simulation step 10 of 11: Loot: 2 drops.` since DW-04; the
 `(1 yours)` is gone since DW-E2); hover the row → it names each drop, its looter and where it is
@@ -3095,7 +3097,7 @@ with Offer, even when your drop is an upgrade you keep. `/dw set feed.minIlvlMod
 `/dw set feed.minIlvl 900`, then `/dw sim loot 2` → chat reads `Simulated loot: 2 drops (2
 hidden).` and the tables gain nothing (set both back afterwards). Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-13. The loot step honors the feed the window shows (DW-B5, feedback-3 spec §5).** Client: Retail. The headless
+**SIM-13. The loot step honors the feed the window shows (DW-B5, feedback-3 spec §5).** Client: both. The headless
 `test_sim_report` (its `View` cases) covers it. `/dw sim start key` and play to its loot step → the panel
 row and the chat line read `Loot: 2 drops`. Turn test mode on (`/dw test`) with the step played → the row
 reads `Loot: 2 drops (2 not shown in test mode)` and its tooltip `… not shown while test mode is on`; turn
@@ -3108,7 +3110,7 @@ the session, its stop, the timeline's step machine, the `/dw sim` grammar and th
 library's now, and DropWatcher keeps its scenarios, world, event drivers, restrictions and five
 verbs. Re-run each on the library (SM-DW-10); SIM-14..16 name what visibly changed.
 
-**SIM-14. The session on LibKa0s-Sim-1.0 (DW-02; SM-DW-4, SM-DW-5).** Client: Retail. The headless `test_sim_core`
+**SIM-14. The session on LibKa0s-Sim-1.0 (DW-02; SM-DW-4, SM-DW-5).** Client: both. The headless `test_sim_core`
 and `test_sim_scenario` cover DropWatcher's part; the session and the timeline are the library's
 (its `test_sim_session` and `test_sim_timeline`). Solo, outside an instance, out of combat:
 
@@ -3124,7 +3126,7 @@ and `test_sim_scenario` cover DropWatcher's part; the session and the timeline a
 
 Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** Client: Retail. The headless
+**SIM-15. `/dw sim` through the library's grammar (DW-03; SM-DW-6).** Client: both. The headless
 `test_sim_scenario` covers DropWatcher's six verbs (`drop <kind>` included); the grammar is the library's (its
 `test_sim_verbs`). SM-DW-6: `/dw sim` alone prints the status and the usage and opens the panel;
 `/dw sim start key`, `step`, `pull`, `kill`, `loot 3`, `lockdown on`, `trade <id>`, `status` and `stop`
@@ -3133,7 +3135,7 @@ each print the same lines as before; `/dw sim bogus` prints the usage; `/dw sim 
 change, OWNER_SCOPE C.7; it was `Unknown scenario.`); `/dw disable`, then `/dw sim run` → the one
 disabled refusal line. Result: Passed (owner, 2026-11-05)
 
-**SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** Client: Retail. The headless
+**SIM-16. The library's step panel, its position session-only (DW-04; SM-DW-7..9).** Client: both. The headless
 `test_sim_panel` covers DropWatcher's part; the panel is the library's (its `test_sim_panel` and
 `test_sim_panel_render`). Run SIM-10's SM-DW-7, SM-DW-8 and SM-DW-9 and confirm each accepted
 visible change (OWNER_SCOPE C.7, C.11): the panel's buttons are the library's default buttons, its
@@ -3141,7 +3143,7 @@ tips plain GameTooltip lines, and it has a width grip; and the panel forgets its
 drag it, `/reload`, `/dw sim panel` → it docks beside the window again, and `SavedVariables` holds no
 `simPanel` key (migration 9 removed an old one). Result: passed in the client, 2026-10-23 (the owner).
 
-**SIM-17. A started simulation plays on its own; Run all is gone (DW-01, LibKa0s v1.76.0; SM-DW-01..04).** Client: Retail.
+**SIM-17. A started simulation plays on its own; Run all is gone (DW-01, LibKa0s v1.76.0; SM-DW-01..04).** Client: both.
 The headless `test_sim_scenario` (`sim run: a typed start plays on its own`, `… waits for the pool,
 then plays`, `sim step: a typed step while it plays …`, `sim pause before the pool is ready …`) and
 `test_sim_panel` (`the controls are Pause, Restart and Stop`) cover DropWatcher's part; the step
@@ -3170,7 +3172,7 @@ to `core/CompatJournal.lua`. `/reload` → no Lua error. Run SIM-6's first steps
 `/dw sim start key` → the debug log shows the `[SIM] pool:` line with journal items, and the journal's
 selection comes back as it was. Fail: a Lua error, or the fallback line with the journal closed. Result:
 
-**SIM-19. Master controls' Sim mode box (R6-SIM).** Client: Retail. The owner's ask: a sim checkbox next to Test.
+**SIM-19. Master controls' Sim mode box (R6-SIM).** Client: both. The owner's ask: a sim checkbox next to Test.
 `/dw config` → General → Master controls: **Sim mode** sits on the line under Minimap button and Test
 mode, unticked, and its tooltip says it runs the simulation as the sim slash command does. Tick it → the
 same as a typed `/dw sim`: the status line prints and the Simulation panel opens; the box stays
@@ -3189,7 +3191,7 @@ unticked. Fail: a tick that starts something `/dw sim` would not, an untick that
 a box that disagrees with the running sim, a reset that starts a sim, or a Lua error.
 Result: Passed (owner, 2026-11-04)
 
-**SIM-20. The Sim mode box follows the Simulation panel as well as the sim (R7-SIM).** Client: Retail. The owner's rule:
+**SIM-20. The Sim mode box follows the Simulation panel as well as the sim (R7-SIM).** Client: both. The owner's rule:
 ticked while the sim window is open and/or a sim runs, unticked when neither. With `/dw config` → General
 → Master controls open, type `/dw sim` → the Simulation panel opens idle and the box is ticked. Untick
 it → the panel closes and the box is unticked. Tick it → the panel opens and the box stays ticked.
@@ -3202,7 +3204,7 @@ stops and the panel stays closed. Fail: a box or menu entry unticked with the pa
 the panel closed and nothing running, an untick that leaves the panel open, or a Lua error.
 Result: Passed (owner, 2026-11-04)
 
-**SIM-21. `/dw sim drop` and the item kinds in a burst (DW-CAT6, issue #13).** Client: Retail. `/dw sim` → the usage
+**SIM-21. `/dw sim drop` and the item kinds in a burst (DW-CAT6, issue #13).** Client: both. `/dw sim` → the usage
 lists `/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]` among the host verbs.
 `/dw sim start raid`, `/dw sim drop equipment` → one drop, a random looter; `/dw sim drop equipment
 <a member's name>` → that member's; `/dw sim drop mount Nobody` → *No one by that name is in the
@@ -3236,7 +3238,7 @@ running simulation → refused, nothing is held. Result:
 
 ## Compact
 
-**COMPACT-1. The layout switch (DW-C0).** Client: Retail. With the window open in its full layout, hover the title bar's new
+**COMPACT-1. The layout switch (DW-C0).** Client: both. With the window open in its full layout, hover the title bar's new
 mark between Scan group and minimize → `Compact view`, naming the Layout setting. Click it → the same window
 narrows to 440 x 460 with its top-right corner where the full window's was, and the mark turns to the
 enlarge mark (`Full view`). Drag it somewhere else and size it from the corner → it stops at 440 (its
@@ -3247,7 +3249,7 @@ and switching it there moves the window too. `/reload` → the window opens in t
 its own place; Reset position puts both back. An account that had the old compact preset on opens compact
 after the update. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-2. Drops cards (DW-C2).** Client: Retail. Turn test mode on (`/dw test`) and switch to the compact layout
+**COMPACT-2. Drops cards (DW-C2).** Client: both. Turn test mode on (`/dw test`) and switch to the compact layout
 (`/dw compact`) → each drop is a three-line card about 50 pixels tall under a one-line header
 (`Instance · Boss · Difficulty · 3m · 2 · <you>`, no `ago` and no `drops`; its tooltip has the long form and
 any hidden drops (superseded by feedback-17, 2026-10-16: the full view's rows, no long form; FEED-79); its chevron gold since DW-E0). Each card sits indented under its header with a
@@ -3272,7 +3274,7 @@ same drops under the same headers, in the same order, and the same counts on the
 defaults, `/dw sim start key` and close the window while it plays (procedure amended for auto-play, DW-01, 2026-10-23) → the next drop opens it compact; stop the
 simulation, close the window and open it → the full layout. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-3. Your own cards, the countdown, Offer and the strip (DW-C3; on Drops since DW-E3).** Client: Retail. Turn test
+**COMPACT-3. Your own cards, the countdown, Offer and the strip (DW-C3; on Drops since DW-E3).** Client: both. Turn test
 mode on and switch to the compact layout → on Drops each drop of yours is a three-line card among the
 others (no My drops tab since DW-E3). Line 1: the icon, the name in its quality color, the item level and
 `Offer` (cyan since DW-F2, red from DW-D1; yellow once an offer is out, green once traded away; it was gold
@@ -3289,7 +3291,7 @@ at its usual width, on the right; drag the window to the screen's right edge →
 make the window short → the panel keeps a usable height. Switch to full → the strip and the table are back
 as before. Run `/dw sim start` and step it → your own drops fill the cards the same way. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-4. History cards and their outcomes (DW-C3).** Client: Retail. In the compact layout, open History → each
+**COMPACT-4. History cards and their outcomes (DW-C3).** Client: both. In the compact layout, open History → each
 kept group is a one-line header (`Boss · Dungeon · 2m · 2 · <you>`, `3d` once a day old) and each
 entry a three-line card (four since feedback-22; the outcome on line 2's right and the time on line 3's since FEED-103): the item and its level (the level first since DW-J2: FEED-69) with the outcome on the right in its tone (Seen,
 Asked, Offered, Received, Traded away, Expired, Declined); the looter in class color (another
@@ -3300,7 +3302,7 @@ first. Switch to full → `Clear history` again (left of Sort since DW-J3: FEED-
 2026-10-16: it reads `Clear history` at the one footer width in both layouts; FEED-78. Then by DW-Q3: Clear
 history left both strips for Settings; HIST-6.) Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Client: Retail. Switch to the compact layout →
+**COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Client: both. Switch to the compact layout →
 the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
 centered together, and the yellow strip's shorter text, on two lines if the window is narrow; run
 `/dw sim start` → `SIM` in cyan instead. Scan group is an icon button with its tooltip; the layout
@@ -3328,18 +3330,18 @@ opens it full too.
 Close it inside a dungeon run, let a drop open it → compact; click the toggle → full at once, and it
 stays the player's choice. Turn the option off → an auto-open in a run keeps the Layout. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-7. Card tooltips at the card's top right (DW-C2).** Client: Retail. In the compact layout, hover each piece of a
+**COMPACT-7. Card tooltips at the card's top right (DW-C2).** Client: both. In the compact layout, hover each piece of a
 card (the item level, the looter, the slot, the trade, the freshness, You, Them, the worn levels and Ask)
 and a header → each tooltip rises from the card's top-right corner, just outside the window's right edge (or
 its left edge when the window sits against the right of the screen), never over the cards. Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-8. Compact headers read from the left and fit the pane (feedback-15).** Client: Retail. At the default compact
+**COMPACT-8. Compact headers read from the left and fit the pane (feedback-15).** Client: both. At the default compact
 width (440), open History and Drops with an LFR encounter's group (or `/dw sim` a raid finder boss) → every
 gold header starts beside its chevron, the difficulty reads `LFR`, and a long instance, boss or recorder name
 ends in `…` on its own piece while the age, the count and the recorder stay on the line; hovering the header
 shows the whole names in the long form (since feedback-17, in the tooltip's rows: FEED-79). Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-9. The compact strips are icons, the toggle chevrons, the empty state bare (feedback-16).** Client: Retail. The
+**COMPACT-9. The compact strips are icons, the toggle chevrons, the empty state bare (feedback-16).** Client: both. The
 headless `test_footer_row`, `test_drops_strip` and `test_window_group` cover the placement. `/dw compact` with
 something of yours tradeable → the Drops strip reads, right to left, an up/down chevron (Expand all /
 Collapse all), the people mark (Scan group) and the speech bubble (Post my tradeables), each a small square
@@ -3350,7 +3352,7 @@ buttons again, the toggle's mark a chevron there too. With
 no drop at all (`/dw clear`, out of test mode) → `No drops yet` and its line, no button, in both layouts.
 Result: passed in the client, 2026-10-23 (the owner).
 
-**COMPACT-10. The Filters menu closes on a press outside it (R5-DD).** Client: Retail. `/dw compact`, `/dw test`, then click
+**COMPACT-10. The Filters menu closes on a press outside it (R5-DD).** Client: both. `/dw compact`, `/dw test`, then click
 Filters ▾ → the menu opens. Press in turn on the window's rows, on the game world, and on the View dropdown on
 the bar → each press closes the menu (every level of it), and the last also opens View's list. Open the menu
 again, hover Character and pick a character in its child level → the pick applies and both levels stay open.
@@ -3359,7 +3361,7 @@ outside press, or closed by a Character pick. (Since V89A-DW, 2026-11-06, the li
 until then a hand-built panel listened for the press.)
 Result:
 
-**COMPACT-11. The Filters ▾ cascade (V89A-DW, SM-04).** Client: Retail. `/dw compact`, `/dw test`, click Filters ▾ → a menu
+**COMPACT-11. The Filters ▾ cascade (V89A-DW, SM-04).** Client: both. `/dw compact`, `/dw test`, click Filters ▾ → a menu
 under the button with four rows, `Quality`, `Content`, `Character` and `Sort`, each with the submenu arrow.
 Hover each → its child opens beside the row, the parent stays drawn, and the rows are the full bar's
 dropdown's own, the value in force ticked: Quality's mode, Content's value (This instance and This session on
@@ -3374,7 +3376,7 @@ Result:
 
 ## Non-English client
 
-**LOC-1. A deDE or frFR client.** Client: Retail. What this build reads that a locale can change, enumerated from the
+**LOC-1. A deDE or frFR client.** Client: both. What this build reads that a locale can change, enumerated from the
 code: the loot lines (`modules/LootParser.lua` reads `CHAT_MSG_LOOT` with patterns built from the
 client's own `LOOT_ITEM*`, `CHANGED_OWN_ITEM`, `LOOT_ITEM_CREATED_SELF*` and `CREATED_ITEM*`
 GlobalStrings, positional `%2$s` arguments in their own order), and the readers in
@@ -3397,7 +3399,7 @@ expand a drop that has an upgrade track → the detail card's track chip shows t
 (localized) track name and rank, never an English name; the track change line may be missing on
 this client (Known Limitations), and its absence is not a failure. Result: passed in the client, 2026-10-23 (the owner).
 
-**LOC-2. The enUS catalog reads the same (DW-P19).** Client: Retail. On an enUS client: open the window on both tabs,
+**LOC-2. The enUS catalog reads the same (DW-P19).** Client: both. On an enUS client: open the window on both tabs,
 expand a drop's detail card, open the Offer panel, every settings page and tab, `/dw help`,
 `/dw diagnostics` and the minimap tooltip → every string reads as it did before DW-P19 (the catalog
 now carries every routed string, so a typo in a key would show as different text). No raw key, no
@@ -3420,7 +3422,7 @@ taint warning.
 no Lua error and no new chat line; `/dump LibStub.minors["LibKa0s-Skin-1.0"]` prints a number (not
 `nil`). Then with every Ka0s addon enabled → the same. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-2. Ka0s Default keeps its colors, with three visible changes (DW-01 to DW-04; X1, D2, D3).** Client: Retail.
+**SKIN-2. Ka0s Default keeps its colors, with three visible changes (DW-01 to DW-04; X1, D2, D3).** Client: both.
 On a profile that never touched the Skin tab (Ka0s Default), `/dw test`, then walk both tabs in both
 layouts, expand a detail card, open your own drop's Offer panel, the compact Filters menu, a toast
 and the settings pages → every color is the one drawn before the skinning run: the verdict tones
@@ -3434,7 +3436,7 @@ compact, the Offer panel) are a **corridor with one flat knob** instead of Blizz
 whether the owner keeps the title band (D3 asks). Fail: any other changed color, edge or spacing, text
 clipped or overlapping because the face is wider, or a glyph drawn as a box. Result: Passed (owner, 2026-11-02)
 
-**SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Client: Retail. Before checking out
+**SKIN-3. The icon border's one-time reset, under Ka0s Default (DW-03; O2, X5).** Client: both. Before checking out
 the branch, set Window › Icons → Border style to something other than Solid (Blizzard Tooltip, say) and
 Border thickness to 6 on one profile; leave a second profile untouched. Fresh client start on the
 branch → on the first profile every item icon's border is now the skin's thin flat edge, 1 pixel
@@ -3446,7 +3448,7 @@ unticked (the reset ran once). The second profile looks exactly as before. Fail:
 vanished, a color that changed, the reset running again, or a stored style lost. Re-opened by R3-FIX: the
 skin's edge is 1 pixel. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-4. The Skin tab (DW-01).** Client: Retail. Settings → General → the strip reads Master controls, Simulator,
+**SKIN-4. The Skin tab (DW-01).** Client: both. Settings → General → the strip reads Master controls, Simulator,
 **Skin**, Keybindings → Skin shows **Skin source** (*Ka0s skins* chosen; *EllesmereUI* disabled with a
 line saying why, unless EllesmereUI can skin this addon), **Look** (nine skins three to a line, each with
 its swatches, Ka0s Default chosen), **Font and texture** (**Font** and **Texture**, both *Skin's default*
@@ -3455,7 +3457,7 @@ profile), **Copy to every Ka0s addon…** and the note that skins change every v
 **Obsidian** → no reload; `/dw get skin.skin` prints `obsidian`. `/dw set skin.skin azeroth` → the
 window and the tab follow. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-5. Each skin, live, on the window (DW-02).** Client: Retail. With `/dw test` on and the window open on Drops,
+**SKIN-5. Each skin, live, on the window (DW-02).** Client: both. With `/dw test` on and the window open on Drops,
 pick each skin in turn: Obsidian, Azeroth, Glass, High Contrast, Ember, WoW Default, WoW Midnight, WoW
 Forever, then Ka0s Default again → with **no reload** the window's edge and title bar, the tab strip and
 its underline, the filter bar (View dropdown and its menu, the search box), the column labels, the group
@@ -3465,31 +3467,31 @@ scroll bar all repaint in that skin and stay readable. Scroll so pooled rows com
 it too. Ka0s Default again → the first look comes back exactly. Fail: a surface that keeps the old skin
 until `/reload`. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-6. The detail card, the Offer panel and History (DW-02).** Client: Retail. Under **Azeroth** and **WoW
+**SKIN-6. The detail card, the Offer panel and History (DW-02).** Client: both. Under **Azeroth** and **WoW
 Forever**, expand a drop's detail card (its boxes, chips, the trade box, the stat names and arrows),
 open your own drop's Offer panel (its rows, stripes, Their eq column and buttons), then the History tab
 and a History detail card → each wears the skin. The four secondary stats' names keep their own hues
 (identity colors), and item names keep their quality color. Fail: a box, chip or row on the old skin.
 Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-7. Compact mode (DW-02).** Client: Retail. `/dw compact` under **Glass** and **Ember** → the cards, their lines
+**SKIN-7. Compact mode (DW-02).** Client: both. `/dw compact` under **Glass** and **Ember** → the cards, their lines
 and action buttons, the strip's icon buttons, the empty state and the **Filters ▾** button (the skin's
 inset; its menu is the library's, COMPACT-11) wear the skin; switch skins with the compact window open → they repaint. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-8. The toast (DW-02).** Client: Retail. Alerts › Toast on, `/dw test`, then show a toast; while it is on screen,
+**SKIN-8. The toast (DW-02).** Client: both. Alerts › Toast on, `/dw test`, then show a toast; while it is on screen,
 switch from Ka0s Default to **Obsidian** → the toast's frame and its four rows (title, verdicts, trade
 reason, the icon's border) repaint in place, with no reload; Ka0s Default again → as before. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-9. Tooltips (DW-02; X8).** Client: Retail. Under **Azeroth** and **High Contrast**, hover a Drops row, a gear
+**SKIN-9. Tooltips (DW-02; X8).** Client: both. Under **Azeroth** and **High Contrast**, hover a Drops row, a gear
 icon in Me and Them, the (Details) cell, a group header and a filter bar control → the lines Drop
 Watcher writes (labels, bullets, the gear grid, the hint line) take the skin's colors and are readable;
 the tooltip frame itself stays Blizzard's. Item links keep the game's quality color. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-10. The verdict glyphs under every skin (DW-02; R5).** Client: Retail. Walk all nine skins with `/dw test` on →
+**SKIN-10. The verdict glyphs under every skin (DW-02; R5).** Client: both. Walk all nine skins with `/dw test` on →
 every ▲ ≈ ▼ mark on the rows, the compact cards, the detail card and the tooltips draws as a glyph,
 never an empty square. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-11. The test and simulation strips (DW-02).** Client: Retail. Under a non-default skin, `/dw test` → the
+**SKIN-11. The test and simulation strips (DW-02).** Client: both. Under a non-default skin, `/dw test` → the
 TEST MODE strip wears the skin's test strip; `/dw test` again, then `/dw sim start key` → the cyan
 SIM strip and the library's step panel wear the skin; `/dw sim stop`. Minimize the window
 during each → the title word shows in the strip's color. On LibKa0s v1.81.0 also: each strip's line
@@ -3498,7 +3500,7 @@ row, command and button labels are in the skin's face, its scenario and size dro
 and open their menu in it, and its row and button tooltips take the skin's tooltip colors (the key
 column the skin's tooltip title color: Ka0s Default's tooltip gold). Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-12. The tool windows (DW-04).** Client: Retail. Under **Azeroth**, open the debug console (`/dw debug`) and its
+**SKIN-12. The tool windows (DW-04).** Client: both. Under **Azeroth**, open the debug console (`/dw debug`) and its
 **Copy** window, the perf panel (`/dw perf`) and the sim panel (`/dw sim start key`) → each wears Drop
 Watcher's skin: the window edge and title, the log lines, scroll bars and buttons; the console keeps its
 monospace face. Switch to **Ka0s Default** with the console open → it recolors with no reload. On
@@ -3510,7 +3512,7 @@ tinted alike, and under Ka0s Default and WoW Default each is the client's own gr
 game's face, live; **Ignore settings panel** changes nothing on these windows (they are windows, not
 the settings panel). Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-13. The settings panel follows the skin, and only when asked (DW-04).** Client: Retail. On **Obsidian** with
+**SKIN-13. The settings panel follows the skin, and only when asked (DW-04).** Client: both. On **Obsidian** with
 **Ignore settings panel** ticked → every Drop Watcher settings page is the client's own look. Untick it
 → with no reload the nav rail, the tab strips, headings, check boxes, sliders, dropdowns, edit boxes and
 buttons on every page wear the skin: Drops › Situations' table (its check boxes and dropdowns), the
@@ -3520,19 +3522,19 @@ the table's cells repaint. Then open another Ka0s addon's and another AceGUI add
 back and forth a few times → theirs stay stock every time. Fail: a control on the old skin, a skinned
 control with Ignore settings panel on, or another addon's widget wearing this skin. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-14. The icon border follows each skin (DW-03).** Client: Retail. With **Use the skin's border** ticked, walk all
+**SKIN-14. The icon border follows each skin (DW-03).** Client: both. With **Use the skin's border** ticked, walk all
 nine skins with `/dw test` on → the item icons' border takes each skin's icon border style and
 thickness (a skin whose icon border is None draws none), in your Border color only with **Use the skin's color** unticked; the upgrade glow
 still draws over it. Untick it → your own style and thickness, under any skin. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-15. Fonts (DW-02; R4).** Client: Retail. On an English client each skin draws its own family with no fallback
+**SKIN-15. Fonts (DW-02; R4).** Client: both. On an English client each skin draws its own family with no fallback
 squares: Ka0s Default Prototype, Obsidian Expressway, Azeroth Open Sans Semibold, Glass Avant Garde,
 High Contrast Doris PP, Ember Emblem, WoW Midnight Segoe UI Semibold, WoW Forever Fira Sans, WoW Default
 Ka0s Ubuntu (reopened by LibKa0s v1.83.0, DW-F01, and by R3-FRIZ: Ka0s Friz Quadrata TT before). Then set Window › Layout's Font size to its largest and switch skins → the size holds in
 the new face; back to the default size → the face holds. Fail: a table, card or countdown that keeps
 the old face, or a size that resets on a switch. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Client: Retail. Pick a clearly different font
+**SKIN-16. The font and texture overrides, and Ignore fonts (DW-01).** Client: both. Pick a clearly different font
 from **Font** → with no reload the window, cards, toast and tooltips' lines take it at their own sizes,
 and the verdict glyphs and the debug console keep their monospace face; switch skins → the override
 stays; *Skin's default* → the skin's face returns. Tick **Ignore fonts** → every string goes back to the
@@ -3552,7 +3554,7 @@ disable EllesmereUI) and `/reload` → the EllesmereUI choice is disabled, the f
 fix are listed, and Drop Watcher wears its Ka0s skin. With EllesmereUI as the source, pick **Ka0s
 skins** → a reload is offered; after it the Ka0s skin shows. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-19. The first-run skin picker (DW-04; O3, X6).** Client: Retail. On a profile that has never closed it (any
+**SKIN-19. The first-run skin picker (DW-04; O3, X6).** Client: both. On a profile that has never closed it (any
 profile after the run, `skin.pickerSeen` false), fresh client start → about two seconds after login a
 small window titled **Choose a skin** shows **Ka0s Drop Watcher** on its own line above the skin
 dropdown, never cut off (the window is as wide as the whole name needs; LibKa0s v1.81.0), then the
@@ -3566,25 +3568,25 @@ more on a new profile and press the gear → the pick is saved and the settings 
 
 Amended by R6-PV, 2026-11-04: the selector's preview is test mode through `spec.preview`, so with the window closed test mode turns on as the selector shows, the eye turns it off and on, and every close puts it back; SKIN-51 checks it.
 
-**SKIN-20. The picker waits (DW-04).** Client: Retail. Disable the addon (`/dw disable`) on a profile that has not
+**SKIN-20. The picker waits (DW-04).** Client: both. Disable the addon (`/dw disable`) on a profile that has not
 closed the picker, and start a fresh client → no picker; `/dw enable` → it shows about two seconds
 later. Start in combat on a target dummy (fresh client start, attack at once) → no picker while in
 combat; it shows when combat ends. With two Ka0s addons' pickers due → one shows, the other after it
 closes. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-21. Copy to every Ka0s addon (DW-01).** Client: Retail. With another Ka0s addon that uses skins loaded, pick
+**SKIN-21. Copy to every Ka0s addon (DW-01).** Client: both. With another Ka0s addon that uses skins loaded, pick
 **WoW Midnight** on Drop Watcher's Skin tab and press **Copy to every Ka0s addon…** → a confirmation
 names the other addons; confirm → each of them wears WoW Midnight with no reload. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-22. Profiles (DW-01).** Client: Retail. Give two profiles different skins and a different Ignore settings panel,
+**SKIN-22. Profiles (DW-01).** Client: both. Give two profiles different skins and a different Ignore settings panel,
 switch between them on the Profiles page, then copy one into the other and reset one → the skin, the
 scope and the overrides follow the profile each time, with no reload. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-23. Combat (R7).** Client: Retail. In combat on a target dummy, try to change the skin on the Skin tab and in the
+**SKIN-23. Combat (R7).** Client: both. In combat on a target dummy, try to change the skin on the Skin tab and in the
 picker → the change is refused as every setting is in combat, with no Lua error and no taint warning;
 the window, the toast and the countdown keep updating. Result: passed in the client, 2026-10-30 (the owner).
 
-**SKIN-24. The minimap button, popups and other addons (X7).** Client: Retail. Under every skin → the minimap button
+**SKIN-24. The minimap button, popups and other addons (X7).** Client: both. Under every skin → the minimap button
 and its tooltip, the reset and Clear history confirmations and the `[DW]` chat lines look as before the
 run. With Drop Watcher on a non-default skin, open two other Ka0s addons' windows and settings → each
 looks as it did before. Result: passed in the client, 2026-10-30 (the owner).
@@ -3596,7 +3598,7 @@ DW-01) re-vendors LibKa0s v1.82.0. Its faces supersede SKIN-2's and SKIN-15's fa
 left as they were run): Ka0s Default draws Prototype, Obsidian Expressway, WoW Forever Fira Sans
 Medium for its body text. Start from a fresh client start, as above.
 
-**SKIN-25. The Font outline (DW-01; D-06).** Client: Retail. General → **Skin** → Font and texture: under **Reset
+**SKIN-25. The Font outline (DW-01; D-06).** Client: both. General → **Skin** → Font and texture: under **Reset
 font** and **Reset texture** sits **Font outline**, *HUD text only* on a new profile (v1.83.0, D-10) →
 with `/dw test` on, the window's tables, the compact cards, the toast, the detail card and the strips'
 text are unoutlined under every skin (it is window text; Drop Watcher draws no HUD text). Pick *All
@@ -3604,26 +3606,26 @@ text* → with no reload all of that text takes its outline; *Off* → it goes a
 back. A profile that already stored *All text* keeps it. `/dw get skin.outline` prints the pick; switch profile and back → each profile's pick follows. Tick **Ignore fonts** → the
 dropdown grays out. The verdict glyphs ▲ ≈ ▼ and ⊘ are never outlined. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-26. From skin flags at any Font size (DW-01; D-07).** Client: Retail. Set Window › Layout › Tables' **Font
+**SKIN-26. From skin flags at any Font size (DW-01; D-07).** Client: both. Set Window › Layout › Tables' **Font
 size** to its largest, then walk *All text*, *HUD text only* and *Off* on the Skin tab → the tables'
 text keeps the large size and takes each outline, live; back to Default (0) → the template's size, still
 outlined while *All text* is picked. (The tables' Font flags stay at their default, From skin, for this check;
 SKIN-30 walks the rest of their font setting.) Result: Owner reported pass, 2026-10-31.
 
-**SKIN-27. `/dw skin` (DW-01; D-16).** Client: Retail. On a profile whose first-run picker was closed, `/dw skin` →
+**SKIN-27. `/dw skin` (DW-01; D-16).** Client: both. On a profile whose first-run picker was closed, `/dw skin` →
 the **Choose a skin** picker opens as a new profile shows it, whatever skin is worn; Escape closes it
 and nothing is saved. `/dw help` lists `skin` right after `config` ("Choose a skin: open the skin
 picker"). In combat on a target dummy, `/dw skin` twice → a gray "cannot open the skin picker during
 combat" line each time and no picker. `/dw disable`, `/dw skin` → the one disabled line; `/dw enable`.
 Result: Owner reported pass, 2026-10-31.
 
-**SKIN-28. Width parity of the windows (DW-01; D-08).** Client: Retail. With `/dw test` on, walk all nine skins with
+**SKIN-28. Width parity of the windows (DW-01; D-08).** Client: both. With `/dw test` on, walk all nine skins with
 *All text* on → the full window's column headers and cells (Item, Item level, Slot, Armor, Looter, Me,
 Them, Trade, Trade window, the Ask buttons), the compact cards' four lines, the detail card, the Offer
 panel, History, the toast and the title bar's buttons and badge fit as they do under Ka0s Default: no
 text newly cut off or overlapping in any skin, Obsidian and Glass in particular. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-29. The v1.82.0 faces and characters (DW-01; D-02, D-19).** Client: Retail. On an English client: Ka0s Default
+**SKIN-29. The v1.82.0 faces and characters (DW-01; D-02, D-19).** Client: both. On an English client: Ka0s Default
 draws Prototype, Obsidian Expressway, WoW Forever Fira Sans Medium (titles SemiBold), the rest as in
 SKIN-15 (as v1.83.0 restated it), with no fallback squares anywhere, the verdict glyphs ▲ ≈ ▼ and ⊘ included (the mono face).
 Pick a Font override, then another skin → the override goes back to the new skin's default (LibKa0s
@@ -3631,7 +3633,7 @@ v1.82.0); **Reset font** does the same without a skin change. The Skin tab reads
 source, Look (its note first), Font and texture, Scope, then **Other Ka0s addons** with the copy
 button. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-30. The tables' whole font setting (DW-01; the lead's ruling on D-07).** Client: Retail. Settings → Window →
+**SKIN-30. The tables' whole font setting (DW-01; the lead's ruling on D-07).** Client: both. Settings → Window →
 Layout → **Tables**: under Row height sit **Font** | **Font size**, **Font color** | **Use class
 color**, **Font flags** | **Font shadow**, then **Use the skin's font** and **Use the skin's shadow**, ticked. On a profile that never
 touched them, `/dw test` → the tables look exactly as before this run, under Ka0s Default and under
@@ -3653,70 +3655,70 @@ The font pickers and skin faces run (Ka0sAddonsCommonTasks
 `docs/2026-10-31-FONT_PICKERS_AND_SKIN_FACES/`) re-vendors LibKa0s v1.83.0. New font files need a full
 client restart, not a `/reload`.
 
-**SKIN-31. The window fits the new faces (DW-F01; D-06, D-07).** Client: Retail. With `/dw test` on, walk Azeroth,
+**SKIN-31. The window fits the new faces (DW-F01; D-06, D-07).** Client: both. With `/dw test` on, walk Azeroth,
 Glass, High Contrast, Ember, WoW Midnight and WoW Default, each once under the default *HUD text only*
 and once under *All text* → the full window's column headers and cells, the compact cards' four lines,
 the detail card, the Offer panel, History, the toast and the title bar's buttons and badge fit as they
 do under Ka0s Default, in the face SKIN-15 names. Ember's Emblem and Glass's Avant Garde are the ones to
 watch. Fail: text newly cut off or overlapping, or a square where a glyph should be. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-32. WoW Default is not Ka0s Default (DW-F01; D-01).** Client: Retail. Switch between Ka0s Default and WoW
+**SKIN-32. WoW Default is not Ka0s Default (DW-F01; D-01).** Client: both. Switch between Ka0s Default and WoW
 Default on the Skin tab → the window's text visibly changes face, Prototype to Ubuntu (R3-FRIZ). Then set
 the Skin tab's Font to *Ka0s Ubuntu* and back to *Skin's default* → the face follows. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-33. The media pickers preview (DW-F01, DW-F02; D-08).** Client: Retail. Open each: the Skin tab's **Font** and
+**SKIN-33. The media pickers preview (DW-F01, DW-F02; D-08).** Client: both. Open each: the Skin tab's **Font** and
 **Texture**, Window › Layout › Tables' **Font** (untick Use the skin's font first) and Window › Icons'
 **Border style** (with its skin companion off) → the closed row and every pull-out row show what they
 offer: fonts each in their own face, textures with their bar, borders with their swatch, and the Skin
 tab's lists start with *Skin's default (X)*. Pick one in each → it applies and survives a `/reload`.
 Fail: a list of plain names, a blank row, or a list holding only the no-media entry. Result: Owner reported pass, 2026-10-31.
 
-**SKIN-34. The tabs after the repaint change (FX-DW-PERF).** Client: Retail. `/dw`, then click between Drops and History
+**SKIN-34. The tabs after the repaint change (FX-DW-PERF).** Client: both. `/dw`, then click between Drops and History
 → the active tab's label is the skin's accent and the idle one gray, as before. Switch skin on the Skin
 tab with the window open → both labels change at once and keep the right role; repeat after switching
 tab. Fail: both labels the same color, a label stuck in the old skin's color until a tab click, or an
 empty label. Result:
 
-**SKIN-35. The tables' plain text color after the repaint change (FX-DW-PERF).** Client: Retail. With `/dw test` on, set
+**SKIN-35. The tables' plain text color after the repaint change (FX-DW-PERF).** Client: both. With `/dw test` on, set
 Window › Layout › Tables' Font color to a clear color → the plain text takes it at once. Tick Use
 class color → your class color. Untick it and reset the swatch to its default → plain text goes back
 to the skin's plain color with nothing left behind. Fail: a stale color in any row after the reset, in
 either layout. Result:
 
-**SKIN-36. Tooltip text after the locale split (FX-DW-SIZE).** Client: Retail. Hover a Drops row's Trade, You, Them and
+**SKIN-36. Tooltip text after the locale split (FX-DW-SIZE).** Client: both. Hover a Drops row's Trade, You, Them and
 Looter cells, the title bar's buttons, the filter bar and the footer → every tooltip reads as before,
 in English sentences. A key showing where a sentence should be is impossible on enUS; the failure to
 look for is a Lua error at login or a blank tooltip row. Result:
 
 **SKIN-37. LibKa0s v1.85.0 loads, and the look changes it brings for free (FS-DW-RV).** Client: Retail. Fresh client start → no Lua error. `/dw sim` → the Steps panel's title band is 30 high with its title and close mark on the middle, a tooltip title on that panel takes the skin's tooltip title color, and the test and simulation strips' icons take the skin's icon tint. Result: Passed (owner, 2026-11-02)
 
-**SKIN-38. Ka0s Default keeps the HUD's pixels (FS-DW-FLIP).** Client: Retail. On a new profile on Ka0s Default, `/dw test` → item icons wear the flat black border, a main-spec upgrade glows #19FF19, an off-spec one #3FC7EB, and the tables' text has its soft black shadow. Fail: any of those moved. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
+**SKIN-38. Ka0s Default keeps the HUD's pixels (FS-DW-FLIP).** Client: both. On a new profile on Ka0s Default, `/dw test` → item icons wear the flat black border, a main-spec upgrade glows #19FF19, an off-spec one #3FC7EB, and the tables' text has its soft black shadow. Fail: any of those moved. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-39. The tables' shadow follows the skin (D6).** Client: Retail. With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result: Passed (owner, 2026-11-02)
+**SKIN-39. The tables' shadow follows the skin (D6).** Client: both. With `/dw test` on, Azeroth → the table text's shadow is the skin's dark brown; High Contrast → a heavier one at 2, -2; Ka0s Default → black 1, -1. Tick **Ignore fonts** under Azeroth → the stored Font shadow decides. Do not judge the shadow's color by eye under a dark skin on a dark table; compare the offset. Result: Passed (owner, 2026-11-02)
 
-**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Client: Retail. Each skin states its own `glow.color` and `icon.border` from its palette (the owner's ruling of 2026-11-01). Switch between two non-default skins with `/dw test` on → a main-spec glow takes each skin's `glow.color`, an off-spec one its `sem.warband`, and the item icon's border each skin's `icon.border`. Ka0s Default draws what SKIN-38 says. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue, or the border or the main glow keeps one color across skins. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
+**SKIN-40. The border and glow colors leave Ka0s Default (D4, D5).** Client: both. Each skin states its own `glow.color` and `icon.border` from its palette (the owner's ruling of 2026-11-01). Switch between two non-default skins with `/dw test` on → a main-spec glow takes each skin's `glow.color`, an off-spec one its `sem.warband`, and the item icon's border each skin's `icon.border`. Ka0s Default draws what SKIN-38 says. The warning tints (urgent, restricted) do not move. Fail: the two glows draw one hue, or the border or the main glow keeps one color across skins. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-41. The companions.** Client: Retail. Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result: Passed (owner, 2026-11-02)
+**SKIN-41. The companions.** Client: both. Window → Icons → Border and Layout → Tables, Alerts → Upgrade glow: **Use the skin's color** (one per glow, under Use class color), **Use the skin's shadow**. Untick one → the stored swatch or Font shadow draws at once; the swatch is never grayed. Tick Use class color → the class color wins with the skin's ticked. On the border, Color by item quality wins too. Result: Passed (owner, 2026-11-02)
 
-**SKIN-42. The one step on an existing profile (schema 11).** Client: Retail. Before updating, give a profile its own border color, glow colors, Font shadow off and Thick outline flags. Update and log in → it follows the skin, Font flags *From skin*. Untick each companion → your color and shadow come back. Tick nothing more, `/reload` and press Window's and Alerts' **Defaults**, untick one again, `/reload` → it stays unticked. Result: Passed (owner, 2026-11-02)
+**SKIN-42. The one step on an existing profile (schema 11).** Client: both. Before updating, give a profile its own border color, glow colors, Font shadow off and Thick outline flags. Update and log in → it follows the skin, Font flags *From skin*. Untick each companion → your color and shadow come back. Tick nothing more, `/reload` and press Window's and Alerts' **Defaults**, untick one again, `/reload` → it stays unticked. Result: Passed (owner, 2026-11-02)
 
-**SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Client: Retail. Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result: Passed (owner, 2026-11-02)
+**SKIN-43. The window's own surfaces (FS-DW-FIX; A1, L4, L8, L9).** Client: both. Under Ka0s Default expect: tabs with the skin's backing, an idle tab in `tab.text` gray (0.7, a touch lighter), a faint band behind the column heads, a darker footer band, untoned buttons' marks in 0.85 gray, a white wash on the hovered row or card, from a cell inside it too. Under another skin each follows it; an untoned button's label takes the skin's hover color under the pointer, and a toned Ask or Offer keeps its tone. With **Ignore settings panel** cleared, the Situations table's heads and labels wear the skin's body face; ticked, the client's. Fail: a tab or head clipped, a wash left on a row after the pointer leaves, a toned label changing color on hover. Result: Passed (owner, 2026-11-02)
 
-**SKIN-44. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema 12).** Client: Retail. Before updating, set Window › Layout's table Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles and log out. Update and fully restart the client (a new font file) → the table draws in Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's own *Friz Quadrata TT* keeps it. Fail: the table on the game's default face, or a row still naming Ka0s Friz Quadrata TT. Result:
+**SKIN-44. A stored pick of the deleted Friz lands on Ka0s Ubuntu (R3-FRIZ, schema 12).** Client: both. Before updating, set Window › Layout's table Font (or the Skin tab's Font) to *Ka0s Friz Quadrata TT* in two profiles and log out. Update and fully restart the client (a new font file) → the table draws in Ubuntu and the Font row reads *Ka0s Ubuntu*; switch to the other profile → the same. A font set to Blizzard's own *Friz Quadrata TT* keeps it. Fail: the table on the game's default face, or a row still naming Ka0s Friz Quadrata TT. Result:
 
-**SKIN-45. Item icon borders are 1 pixel in every skin (R3-FIX).** Client: Retail. With Window › Icons → *Use the skin's border* ticked, `/dw test` on, pick Ka0s Default, Azeroth, Ember, WoW Midnight and WoW Default → every item icon (the Drops rows, the cards, the toast) has a flat 1-pixel edge, never 2 pixels and never the tooltip-style edge WoW Default drew before. Untick the box → your stored style and thickness come back. Fail: a 2-pixel or tooltip edge under any skin. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
+**SKIN-45. Item icon borders are 1 pixel in every skin (R3-FIX).** Client: both. With Window › Icons → *Use the skin's border* ticked, `/dw test` on, pick Ka0s Default, Azeroth, Ember, WoW Midnight and WoW Default → every item icon (the Drops rows, the cards, the toast) has a flat 1-pixel edge, never 2 pixels and never the tooltip-style edge WoW Default drew before. Untick the box → your stored style and thickness come back. Fail: a 2-pixel or tooltip edge under any skin. Result: Passed (owner, 2026-11-05, provisional: not yet run in the client; #15)
 
-**SKIN-46. No line under any window's title (R4-SEP).** Client: Retail. The Skin Tester's showroom is the reference: its title band meets the body with no rule between them. Under Ka0s Default, `/dw show` → the title band is a dark gold gradient and the body starts right under it with no gray line, in the full and the compact layout and minimized. Switch to Obsidian, Glass and WoW Midnight → still no line. Then open `/dw debug`, its Copy window, the skin selector (`/dw skin` or the Skin tab's picker) and `/dw sim`'s Steps panel → none draws a line under its title. The thin rules above the Drops and History bottom strips are body rules and stay. Fail: a 1-pixel line under any of those titles in any skin. Result:
+**SKIN-46. No line under any window's title (R4-SEP).** Client: both. The Skin Tester's showroom is the reference: its title band meets the body with no rule between them. Under Ka0s Default, `/dw show` → the title band is a dark gold gradient and the body starts right under it with no gray line, in the full and the compact layout and minimized. Switch to Obsidian, Glass and WoW Midnight → still no line. Then open `/dw debug`, its Copy window, the skin selector (`/dw skin` or the Skin tab's picker) and `/dw sim`'s Steps panel → none draws a line under its title. The thin rules above the Drops and History bottom strips are body rules and stay. Fail: a 1-pixel line under any of those titles in any skin. Result:
 
 **SKIN-47. LibKa0s v1.85.0, round 5 re-cut (R5-RV).** Client: Retail. Under Ka0s Default, `/dw show` → the title band is darker than round 4's, the same olive-gold gradient with its gold title. Open the skin selector (`/dw skin` or the Skin tab's picker) and open its skin list, then press in turn: the selector's own body, the game world, and its Font dropdown → each press closes the list, and the last also opens the Font list. Open `/dw debug`, its Copy window and `/dw sim`'s Steps panel under Ka0s Default and WoW Midnight → each has its title band flush inside the edge, the title and the close mark centered on it top to bottom. Fail: the band as light as round 4's, a skin list left open after any of the three presses, or a title or close mark sitting above or below the band's middle. Result:
 
-**SKIN-48. Every window's header on the band, like Ka0s Loot History's (R5-WIN).** Client: Retail. Under Ka0s Default, `/dw test`, then `/dw show` → the title band sits flush inside the window's edge with no dark strip between the edge and the band, and the title, the TEST MODE word, the minimize, layout and close marks are centered on the band top to bottom; in the compact layout and minimized the same, and minimized the window is the band and its edges alone. Open your own drop's Offer panel and the Edit message box (a drop's detail card → Edit message) → each has the same full band across its top, its title and close mark centered on it, and its content starting below the band, not touching it. Switch to WoW Midnight (a 2 px edge), Obsidian and EllesmereUI if installed → still flush, still centered, the minimized window showing the whole band. Fail: a strip of body color between the edge and a band, a band clipped by the edge, or a title or close mark above or below the band's middle. Result:
+**SKIN-48. Every window's header on the band, like Ka0s Loot History's (R5-WIN).** Client: both. Under Ka0s Default, `/dw test`, then `/dw show` → the title band sits flush inside the window's edge with no dark strip between the edge and the band, and the title, the TEST MODE word, the minimize, layout and close marks are centered on the band top to bottom; in the compact layout and minimized the same, and minimized the window is the band and its edges alone. Open your own drop's Offer panel and the Edit message box (a drop's detail card → Edit message) → each has the same full band across its top, its title and close mark centered on it, and its content starting below the band, not touching it. Switch to WoW Midnight (a 2 px edge), Obsidian and EllesmereUI if installed → still flush, still centered, the minimized window showing the whole band. Fail: a strip of body color between the edge and a band, a band clipped by the edge, or a title or close mark above or below the band's middle. Result:
 
-**SKIN-49. Item icons: a gray 1-pixel outline in the window, black on the toast (R5-ICON).** Client: Retail. Images 53 to 56 are the before. With Window › Icons at its defaults, `/dw test`, `/dw compact` → under Ka0s Default every card's big item icon has a thin mid-gray edge (#4D4D57), clearly visible against the dark card, one screen pixel wide and the same width on all four sides, its art cropped (no rough native rim); the same on the full layout's Drops rows and their Me and Them gear icons, the detail card's header and Replaces rows, History and the Offer panel. Show a toast (Alerts › Toast) → its icon keeps the black edge. Switch to WoW Forever → the window icons' edge is a warm gray-brown that stands out from the card (#5A5048), not the card-colored edge of image 56; the toast's is the skin's HUD edge. Change the UI scale (System › Graphics › UI Scale), the window's Scale and Alerts › Toast's Scale → the edge stays one pixel at once, before any new drop repaints a row. Tick Color by item quality → the quality colors still win; untick Use the skin's color → your swatch everywhere. Fail: a window icon edged in black under Ka0s Default, an edge two pixels or uneven, or the toast's icon gray. SKIN-38's black border now holds for the toast alone. Result:
+**SKIN-49. Item icons: a gray 1-pixel outline in the window, black on the toast (R5-ICON).** Client: both. Images 53 to 56 are the before. With Window › Icons at its defaults, `/dw test`, `/dw compact` → under Ka0s Default every card's big item icon has a thin mid-gray edge (#4D4D57), clearly visible against the dark card, one screen pixel wide and the same width on all four sides, its art cropped (no rough native rim); the same on the full layout's Drops rows and their Me and Them gear icons, the detail card's header and Replaces rows, History and the Offer panel. Show a toast (Alerts › Toast) → its icon keeps the black edge. Switch to WoW Forever → the window icons' edge is a warm gray-brown that stands out from the card (#5A5048), not the card-colored edge of image 56; the toast's is the skin's HUD edge. Change the UI scale (System › Graphics › UI Scale), the window's Scale and Alerts › Toast's Scale → the edge stays one pixel at once, before any new drop repaints a row. Tick Color by item quality → the quality colors still win; untick Use the skin's color → your swatch everywhere. Fail: a window icon edged in black under Ka0s Default, an edge two pixels or uneven, or the toast's icon gray. SKIN-38's black border now holds for the toast alone. Result:
 
 **SKIN-50. LibKa0s v1.85.0, round 6 re-cut (R6-RV).** Client: Retail. Only the skin selector moved (OptionsSkinPicker minor 11). `/dw skin` → the selector opens in front of everything, its skin list opens and closes, a pick previews live on the window, Apply keeps it, and reopening and closing with the close mark or Escape puts the stored skin back. `/dw debug` → no Lua error at login or on any of those steps. Fail: a Lua error, a selector behind the window, or a close that keeps an unapplied pick. Result:
 
-**SKIN-51. The skin selector's preview is test mode, and every close puts it back (R6-PV).** Client: Retail. Images 62, 63 and 66 are the owner's ask. With test mode off and the window closed (`/dw hide`), `/dw skin` → test mode turns on: the window opens with its TEST MODE strip and placeholder drops, and the selector stays in front of it. The eye is lit; hover it → its tooltip says test mode is on. Click the eye → test mode turns off and the window closes; the eye dims and its tooltip says test mode is off. Click it again → on, the window back. Now close the selector, once by each route in turn, reopening it each time with the window closed: the close mark, Escape, **Apply**, the gear (it also opens General → Skin) → after each, test mode is off and the window closed, as before the selector opened; the Master controls Test mode box and the launcher's Test mode entry agree. Then `/dw test` (test mode on, window open), `/dw skin`, click the eye (off), close with Escape → test mode is on again, its window open. Then `/dw show` with test mode off, `/dw skin` → the window stays as it is, test mode stays off and the eye is dimmed; close → the window still open. In combat with the selector up and test mode off, click the eye → `Test mode is not available in combat.` and nothing moves; close → nothing changes. Last, with test mode off and the window closed, `/dw skin` (test mode on, the window open), then `/dw disable` → the selector closes and the window goes; `/dw enable` → test mode stays off and the window stays closed. Fail: the selector behind the window, an eye that only turns test mode on, test mode or the window left changed by any close, or a window back after `/dw enable` that only the selector's test mode had opened. Result:
+**SKIN-51. The skin selector's preview is test mode, and every close puts it back (R6-PV).** Client: both. Images 62, 63 and 66 are the owner's ask. With test mode off and the window closed (`/dw hide`), `/dw skin` → test mode turns on: the window opens with its TEST MODE strip and placeholder drops, and the selector stays in front of it. The eye is lit; hover it → its tooltip says test mode is on. Click the eye → test mode turns off and the window closes; the eye dims and its tooltip says test mode is off. Click it again → on, the window back. Now close the selector, once by each route in turn, reopening it each time with the window closed: the close mark, Escape, **Apply**, the gear (it also opens General → Skin) → after each, test mode is off and the window closed, as before the selector opened; the Master controls Test mode box and the launcher's Test mode entry agree. Then `/dw test` (test mode on, window open), `/dw skin`, click the eye (off), close with Escape → test mode is on again, its window open. Then `/dw show` with test mode off, `/dw skin` → the window stays as it is, test mode stays off and the eye is dimmed; close → the window still open. In combat with the selector up and test mode off, click the eye → `Test mode is not available in combat.` and nothing moves; close → nothing changes. Last, with test mode off and the window closed, `/dw skin` (test mode on, the window open), then `/dw disable` → the selector closes and the window goes; `/dw enable` → test mode stays off and the window stays closed. Fail: the selector behind the window, an eye that only turns test mode on, test mode or the window left changed by any close, or a window back after `/dw enable` that only the selector's test mode had opened. Result:
 
 ## Rolls
 
@@ -3879,12 +3881,28 @@ No bonus roll ever appears. Result:
 groups are Forever's places and classes, with no Mythic+ run, no off-spec sample and no look chip;
 the sample roll sits in Rolling now and one History sample keeps its ROLLS box. Result:
 
-**FOREVER-16. The Retail checks to run again.** Client: WoW Forever. Every check outside this theme
-names Retail. Run these again on Forever and record each on its own `Result:` line here: INSTALL-2
-and INSTALL-3; SLASH-1..6; STATE-1..5; DIAG-1..3; FEED-2..6 (the feed's sources in a Forever group,
-`COMBAT-1` beside them); FEED-13..15 (the detail card); ASK-1..4 (sending, the queue and cancel);
-INSPECT-1..3; HIST-1..2; TOAST-1; GLOW-1 (the main glow); COMPACT-1..2; SKIN-5..12 under WoW
-Forever. Result:
+**FOREVER-16. Running the `both` checks on Forever (DW-FP22).** Client: WoW Forever. Every check
+outside this theme tagged `Client: both.` runs on Forever too: record its Forever result on its own
+`Result:` line in that check, not here. Skip the steps that need a feature FOREVER-2 lists as absent
+(a Mythic+ key, Raid Finder, a delve, a follower dungeon or scenario, an upgrade track, a look chip or
+a transmog ask, an off-spec verdict or glow, the Trade window column and its countdown, a bonus roll,
+a Loot rule cell): a skipped step is no fail, and a drop Retail would show with one of those reads
+as FOREVER-2 and FOREVER-8 say instead. Where a check starts the `key`, `lfr` or `delve` scenario,
+start `dungeon` (a party) or `raid` (a raid) on Forever; the step and drop counts it quotes are
+then that scenario's. Run the SKIN checks under the WoW Forever skin as well as the others. The 68
+older checks still tagged Retail are a Retail-only feature or lean on one throughout: Blizzard's
+restrictions and secret values (COMPAT-1, COMPAT-2, COMBAT-1, COMBAT-2, COMBAT-4, ASK-2, ASK-4), the
+upgrade track, Mythic+, delve and Devourer reads (FEED-5 to FEED-7, FEED-30, FEED-86, ITEM-2), the
+trade timer and the Retail trade rules (FEED-41, FEED-48, FEED-54, FEED-84, ASK-5, COLL-6, TRADE-1 to
+TRADE-5, HIST-5, SIM-5), off-spec and transmog (FEED-80, FEED-81, ASK-11, TOAST-5, GLOW-2, GLOW-10,
+TMOG-1, COMPAT-4), the Retail situations and their Loot rule (LAYOUT-1, LAYOUT-4, PANEL-4, SIT-2 to
+SIT-4, SIT-6, SIT-7), Pawn and the weights by spec (PANEL-5, COMPAT-3, SCORE-1, SCORE-2, SCORE-4,
+SCORE-5; Forever's are FOREVER-5), the Encounter Journal pool and Retail's test data (STATE-6,
+COLL-8, SIM-2, SIM-6, SIM-18, COMPACT-6; Forever's are FOREVER-14 and FOREVER-15), the primary-stat
+gate and Retail's tier tokens (ITEM-5 to ITEM-7; Forever's soft gate is FOREVER-4), the past LibKa0s
+re-vendors (INSTALL-4 to INSTALL-6, PANEL-11, SKIN-1, SKIN-37, SKIN-47, SKIN-50), EllesmereUI
+(SKIN-17, SKIN-18) and the collection census (SLASH-7). ROLLS-1 to ROLLS-7 stay Retail's: FOREVER-10
+to FOREVER-13 run them on Forever with its probes. Result:
 
 ## Pending sign-off
 
