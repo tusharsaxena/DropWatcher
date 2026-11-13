@@ -1156,7 +1156,7 @@ Total.
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_compat_loot.lua (14)
+### test_compat_loot.lua (15)
 
 - compat loot: rolls answer every row with its state and number
 - compat loot: a secret playerName drops the name, keeps the row
@@ -1172,6 +1172,7 @@ Total.
 - compat loot: no member raises with every API gone
 - compat loot: the simulator's seam wraps every loot member (the TOC order)
 - compat loot: no other shipped file names a loot roll API in code
+- compat loot: a secret winner counts as closed
 
 ### test_text_parse.lua (12)
 
@@ -1782,7 +1783,7 @@ Total.
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 
-### test_pending.lua (10)
+### test_pending.lua (15)
 
 - pending: an UPDATE_ENCOUNTER with an open drop opens one roll item
 - pending: each UPDATE_DROP that changes the table sends PENDING_CHANGED rolls once
@@ -1794,6 +1795,11 @@ Total.
 - pending: a drop below the quality gate is not pending
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
+- pending: a history clear during an item load never makes a second item
+- pending: a closed roll lets its popup go, so a later copy never claims it
+- pending: a history clear detaches open items, so a reused key never resolves the wrong drop
+- pending: your verdict is judged again on a gear change
+- pending: a pending score is judged again on the score retry
 
 ### test_roll_cells.lua (5)
 
@@ -2786,7 +2792,7 @@ Total.
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_compat_collect.lua | 21 |
-| test_compat_loot.lua | 14 |
+| test_compat_loot.lua | 15 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -2810,7 +2816,7 @@ Total.
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
-| test_pending.lua | 10 |
+| test_pending.lua | 15 |
 | test_roll_cells.lua | 5 |
 | test_window_pending.lua | 8 |
 | test_feed_counts.lua | 10 |
@@ -2861,4 +2867,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2359** |
+| **Total** | **2365** |

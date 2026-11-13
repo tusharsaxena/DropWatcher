@@ -44,6 +44,12 @@ local function plainGUID(v)
     return v
 end
 
+-- Whether a drop names a winner at all: a secret or half-filled winner still means the roll is
+-- over (M4 review), even when nothing of it reads plain.
+local function hasWinner(v)
+    return Compat.IsSecret(v) or v ~= nil
+end
+
 -- A drop table's key under either client's name (Retail lootListID, Forever lootListKey).
 local function dropKey(drop)
     return plainNumber(drop.lootListID) or plainNumber(drop.lootListKey)
@@ -89,10 +95,11 @@ local function history(getter)
 end
 
 --- A group-loot drop's roll table from C_LootHistory.GetSortedInfoForDrop, every field plain:
---- { link, key, startTime, duration, allPassed, isTied, myState, leader, winner, rolls }, where
+--- { link, key, startTime, duration, allPassed, isTied, myState, won, leader, winner, rolls }, where
 --- leader and winner are { name, guid, classFile, isSelf, roll } or nil (nobody plain, or nobody
 --- yet), and rolls is { { name, guid, classFile, isSelf, state, roll, isWinner } } (the states are
---- Enum.EncounterLootDropRollState's plain numbers 0-5; a nil roll stays nil). Nil for a non-plain
+--- Enum.EncounterLootDropRollState's plain numbers 0-5; a nil roll stays nil). `won` is true once the
+--- client names a winner, even one that reads nothing plain (then `winner` is nil). Nil for a non-plain
 --- id, a secret or malformed answer, or with no API.
 --- @param encounterID number
 --- @param key number
@@ -106,6 +113,7 @@ function Compat.LootHistoryRolls(encounterID, key)
         link = plainString(d.itemHyperlink), key = dropKey(d) or key,
         startTime = plainNumber(d.startTime), duration = plainNumber(d.duration),
         allPassed = isTrue(d.allPassed), isTied = isTrue(d.isTied), myState = plainNumber(d.playerRollState),
+        won = hasWinner(d.winner),
         leader = rollPlayer(d.currentLeader), winner = rollPlayer(d.winner), rolls = rollRows(d.rollInfos),
     }
 end
@@ -124,7 +132,8 @@ function Compat.LootHistoryDrop(encounterID, key)
 end
 
 --- An encounter's drops from C_LootHistory.GetSortedDropsForEncounter, in the client's order:
---- { { key, link, open } }, open while nobody has won and not everyone passed. A drop with no plain
+--- { { key, link, open } }, open while no winner is named (a secret one counts) and not everyone
+--- passed. A drop with no plain
 --- key is left out; empty for a non-plain id, a secret answer, or with no API.
 --- @param encounterID number
 --- @return table
@@ -137,7 +146,7 @@ function Compat.LootHistoryDropsFor(encounterID)
         local key = d and dropKey(d)
         if key then
             out[#out + 1] = { key = key, link = plainString(d.itemHyperlink),
-                open = not (rollPlayer(d.winner) or isTrue(d.allPassed)) }
+                open = not (hasWinner(d.winner) or isTrue(d.allPassed)) }
         end
     end
     return out

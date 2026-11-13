@@ -315,3 +315,22 @@ test("compat loot: no other shipped file names a loot roll API in code", functio
         end
     end
 end)
+
+-- M4 review: a winner the client names but that reads nothing plain (secret) is still a winner,
+-- so the drop is closed, never left open for Pending to hold forever.
+test("compat loot: a secret winner counts as closed", function()
+    local Compat, m = fresh()
+    local d = openDrop()
+    m.lootHistory["1:2"] = d
+    assertFalse(Compat.LootHistoryRolls(1, 2).won, "nobody has won it yet")
+    assertTrue(Compat.LootHistoryDropsFor(1)[1].open)
+    d.winner = { playerName = T.secret("Brakk"), playerGUID = T.secret(BRAKK) }
+    local r = Compat.LootHistoryRolls(1, 2)
+    assertNil(r.winner, "nothing plain to name"); assertTrue(r.won, "but it was won")
+    assertFalse(Compat.LootHistoryDropsFor(1)[1].open, "closed, not open")
+    d.winner = T.secret({})
+    assertTrue(Compat.LootHistoryRolls(1, 2).won)
+    assertFalse(Compat.LootHistoryDropsFor(1)[1].open)
+    d.winner = { playerName = "Brakk", playerGUID = BRAKK }
+    assertTrue(Compat.LootHistoryRolls(1, 2).won)
+end)

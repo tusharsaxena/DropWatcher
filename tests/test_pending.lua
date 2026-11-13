@@ -309,3 +309,91 @@ test("pending: standing down unregisters every event and stops the ticker", func
     assertEqual(#P.All(), 1, "the stand-up rebuilds the open roll")
     assertEqual(tickers(m), 1, "and its ticker")
 end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The M4 review's fixes
+-- ---------------------------------------------------------------------------------------------
+
+test("pending: a history clear during an item load never makes a second item", function()
+    local _, m, P = party()
+    m.addItem(link(300), ring(620, 4))
+    m.items[link(300)].loadsNeeded = 1
+    m.lootHistory["2900:1"] = openDrop(300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertEqual(#P.All(), 0, "still loading")
+    m.__fire("LOOT_HISTORY_CLEAR_HISTORY")
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    m.advance(1)
+    assertEqual(#P.All(), 1, "one item, not two")
+end)
+
+test("pending: a closed roll lets its popup go, so a later copy never claims it", function()
+    local _, m, P = party()
+    m.addItem(link(300), ring(620))
+    local first = openDrop(300)
+    m.lootHistory["2900:1"] = first
+    m.lootRolls[11] = { link = link(300), quality = 4 }
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    assertEqual(only(P).rollID, 11)
+    first.allPassed = true
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    m.advance(61)
+    assertEqual(#P.All(), 0)
+    m.lootHistory["2901:1"] = openDrop(300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2901)
+    assertNil(only(P).rollID, "rollID 11 was released when its roll closed")
+    assertNil(P.ForRoll(11))
+end)
+
+test("pending: a history clear detaches open items, so a reused key never resolves the wrong drop", function()
+    local NS, m, P = party()
+    m.addItem(link(300), ring(620)); m.addItem(link(301), ring(620))
+    m.lootHistory["2900:1"] = openDrop(300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local old = only(P)
+    m.__fire("LOOT_HISTORY_CLEAR_HISTORY")
+    local reused = openDrop(301)   -- the key comes back for another drop, already won
+    brakkWins(reused)
+    m.lootHistory["2900:1"] = reused
+    m.advance(1)
+    assertEqual(old.state, "expired", "its own drop is gone")
+    for _, rec in ipairs(NS.LootFeed.Drops()) do
+        assertFalse(rec.pendingKey == old.id, "the old item never took the new drop")
+    end
+end)
+
+test("pending: your verdict is judged again on a gear change", function()
+    local NS, m, P = party()
+    local seen = listen(NS)
+    m.addItem(link(300), ring(620))
+    m.lootHistory["2900:1"] = openDrop(300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local item = only(P)
+    assertEqual(item.me.verdict, "upgrade")
+    m.addItem(link(102), ring(640)); m.addItem(link(103), ring(640))
+    m.inventory.player[11], m.inventory.player[12] = link(102), link(103)
+    m.__fire("PLAYER_EQUIPMENT_CHANGED")
+    m.advance(1)
+    assertEqual(item.me.verdict, "downgrade")
+    assertEqual(seen[#seen], item.id .. ":verdict")
+end)
+
+test("pending: a pending score is judged again on the score retry", function()
+    local NS, m, P = party()
+    local answer = "pending"
+    NS.Scoring = { Scorer = function() return function() return answer end end }
+    m.addItem(link(300), ring(620))
+    m.lootHistory["2900:1"] = openDrop(300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local item = only(P)
+    assertTrue(NS.FeedRecords.HasReason(item.me, "scorePending"), "the scorer is not ready")
+    local seen = listen(NS)
+    answer = 12
+    m.advance(NS.LootFeed.SCORE_RETRY)
+    assertFalse(NS.FeedRecords.HasReason(item.me, "scorePending"), "re-scored")
+    assertEqual(table.concat(seen, ","), item.id .. ":verdict")
+    m.advance(NS.LootFeed.SCORE_RETRY * 10)
+    assertEqual(#seen, 1, "a ready score retries no more")
+    NS.Scoring = nil
+end)

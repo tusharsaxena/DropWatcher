@@ -378,7 +378,7 @@ local function rollTable(r)
     end
     local winner = r.winner and rows[r.winner] or nil
     return { link = r.link, key = r.key, startTime = r.startTime, duration = r.duration, allPassed = r.allPassed,
-        isTied = false, myState = mine, leader = playerOf(leaderOf(rows)), winner = playerOf(winner), rolls = rows }
+        isTied = false, myState = mine, won = r.winner ~= nil, leader = playerOf(leaderOf(rows)), winner = playerOf(winner), rolls = rows }
 end
 
 -- ── the providers ───────────────────────────────────────────────────────────────────────────

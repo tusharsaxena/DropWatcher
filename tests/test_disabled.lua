@@ -53,14 +53,15 @@ end
 -- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three,
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,
 -- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too; DW-FP15's
--- window hears PendingChanged for the Drops tab's Rolling now section).
+-- window hears PendingChanged for the Drops tab's Rolling now section; since the M4 review the
+-- pending store hears GearChanged too, to judge your verdict on a pending item again).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_DropUpdated",
-    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",

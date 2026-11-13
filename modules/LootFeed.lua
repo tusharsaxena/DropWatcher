@@ -314,6 +314,14 @@ function LF.GateFor(facts, situation)
     return NS.FeedFilter.PassesForMe(facts, ctx)
 end
 
+--- Your verdict on an item with no looter yet (modules/Pending.lua's re-judge): the feed's judge,
+--- with `forced` (GateFor's answer) kept as a shown drop keeps it.
+function LF.JudgeMe(facts, forced)
+    local rec = { facts = facts, forced = forced }
+    judgeMe(rec, LF.Config())
+    return rec.me
+end
+
 local CHECKING = { pending = true, combatParked = true }
 
 -- The looter's inspect as the drop shows it.

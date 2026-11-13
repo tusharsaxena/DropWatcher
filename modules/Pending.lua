@@ -26,8 +26,15 @@ local _, NS = ...
 -- PendingChanged(id, "closed"). Everyone passing, or the roll's time running out with no winner
 -- read, keeps the item LINGER seconds in that state, then closes it; nothing reaches the feed or
 -- History, because there is no looter. A drop with a winner and no item (gated, or never seen
--- open) goes to the feed as it always did. A key once closed or gated is not opened again until
--- LOOT_HISTORY_CLEAR_HISTORY drops the live mapping.
+-- open) goes to the feed as it always did; a winner the client names but that reads nothing plain
+-- (`roll.won` without `roll.winner`) closes the item all the same. A key once closed or gated is
+-- not opened again until LOOT_HISTORY_CLEAR_HISTORY drops the live mapping, which also detaches
+-- every open item from its key (a reused key never resolves the wrong drop). A roll that is over
+-- releases its popup's rollID.
+--
+-- YOUR VERDICT (`me`) is judged again as the feed judges a shown drop: on GearChanged, and on the
+-- feed's score retry schedule while the scorer is not ready (LootFeed.SCORE_RETRY, SCORE_TRIES),
+-- each sending PendingChanged(id, "verdict").
 --
 -- THE TICKER. One TICK-second C_Timer ticker, alive only while an open roll exists: it re-reads
 -- each open drop and closes it on a winner, everyone passing, or startTime + duration elapsed on
@@ -48,7 +55,7 @@ local TAG = "PENDING"
 P.LINGER = 60   -- seconds an all-passed or expired roll stays shown
 P.TICK = 1      -- the fallback ticker's period
 
-local ticker
+local ticker, scoreTimer
 local lingers = {}
 local generation = 0   -- bumped at every stand-down: an item load answering after it is ignored
 
@@ -149,8 +156,17 @@ end
 
 -- ── the lifecycle ───────────────────────────────────────────────────────────────────────────
 
+-- A roll that is over lets its popup go (M4 review): its rollID leaves your open popups, so a
+-- later copy of the item can never claim a stale one.
+local function release(item)
+    if item.rollID == nil then return end
+    store().mine[item.rollID] = nil
+    item.rollID = nil
+end
+
 local function remove(item)
     local s = store()
+    release(item)
     for i, it in ipairs(s.items) do
         if it == item then table.remove(s.items, i) break end
     end
@@ -168,6 +184,7 @@ end
 -- Everyone passed, or the time ran out: shown LINGER seconds in that state, then closed.
 local function linger(item, state)
     item.state = state
+    release(item)
     local gen = generation
     lingers[item.id] = C_Timer.NewTimer(P.LINGER, function()
         lingers[item.id] = nil
@@ -218,6 +235,9 @@ end
 -- An open drop past the item load: the gates, then the item.
 local function admit(encounterID, dropKey, roll, facts)
     local s, key = store(), encounterID .. ":" .. dropKey
+    -- Two loads of one key can answer (a history clear between them empties `loading`): the
+    -- first admits, the second finds the key held or closed (M4 review).
+    if s.byKey[key] or s.done[key] then return end
     local ok, why, out = NS.LootFeed.GateFor(facts, NS.Situations.Current())
     if not ok then
         s.done[key] = true
@@ -226,9 +246,10 @@ local function admit(encounterID, dropKey, roll, facts)
     s.seq = s.seq + 1
     local item = { id = s.seq, kind = "roll", key = key, encounterID = encounterID, dropKey = dropKey,
         link = roll.link, itemID = NS.Item.ItemIDFromLink(roll.link), at = now(), state = "open",
-        facts = facts, me = out.me, roll = roll, sig = signature(roll) }
+        facts = facts, forced = out.forced, me = out.me, roll = roll, sig = signature(roll) }
     s.items[#s.items + 1], s.byId[item.id], s.byKey[key] = item, item, item
     send(item.id, "open")
+    P.NoteScore(item)
     claimRolls()
     retune()
 end
@@ -260,7 +281,7 @@ function P.OnDrop(encounterID, dropKey)
     local roll = NS.Compat.LootHistoryRolls(encounterID, dropKey)
     if not roll then return NS.LootFeed.OnLootHistoryDrop(encounterID, dropKey) end
     local item = store().byKey[encounterID .. ":" .. dropKey]
-    if roll.winner then return resolve(item, encounterID, dropKey, roll) end
+    if roll.winner or roll.won then return resolve(item, encounterID, dropKey, roll) end
     if item then return update(item, roll) end
     if roll.allPassed then return NS.LootFeed.OnLootHistoryDrop(encounterID, dropKey) end
     open(encounterID, dropKey, roll)
@@ -274,12 +295,16 @@ function P.OnEncounter(encounterID)
     end
 end
 
---- LOOT_HISTORY_CLEAR_HISTORY: the live mapping goes (the keys may be reused); the items stay
---- until the ticker finds their drops gone.
+--- LOOT_HISTORY_CLEAR_HISTORY: the live mapping goes (the keys may be reused). Each open roll
+--- item is detached from its encounterID:dropKey, so a reused key can never resolve it into
+--- another drop (M4 review); the ticker expires it on its next pass.
 function P.OnClearHistory()
     if stoodDown() then return end
     local s = store()
     s.byKey, s.done, s.loading = {}, {}, {}
+    for _, item in ipairs(s.items) do
+        if item.kind == "roll" and item.state == "open" then item.detached = true end
+    end
 end
 
 --- START_LOOT_ROLL(rollID): your own roll popup, claimed by its item.
@@ -359,10 +384,10 @@ tick = function()
         if item.state == "open" then open_[#open_ + 1] = item end
     end
     for _, item in ipairs(open_) do
-        local roll = NS.Compat.LootHistoryRolls(item.encounterID, item.dropKey)
+        local roll = not item.detached and NS.Compat.LootHistoryRolls(item.encounterID, item.dropKey)
         if not roll then
             linger(item, "expired")
-        elseif roll.winner then
+        elseif roll.winner or roll.won then
             resolve(item, item.encounterID, item.dropKey, roll)
         else
             update(item, roll)
@@ -373,6 +398,63 @@ end
 
 --- Whether the ticker is running (the diagnostics and the tests).
 function P.Ticking() return ticker ~= nil end
+
+-- ── your verdict, judged again ──────────────────────────────────────────────────────────────
+
+-- The live items still waiting on their drop (not yet closed).
+local function waiting()
+    local out = {}
+    for _, item in ipairs(State.pending and State.pending.items or {}) do
+        if item.state == "open" or item.state == "awaiting" then out[#out + 1] = item end
+    end
+    return out
+end
+
+local function scorePending(item) return NS.FeedRecords.HasReason(item.me, "scorePending") end
+
+-- Your verdict on an item judged again by the feed's own judge (M4 review: the feed re-judges a
+-- drop on a score retry and a gear change, and a pending item is judged the same way).
+local function rejudge(item)
+    item.me = NS.LootFeed.JudgeMe(item.facts, item.forced)
+    send(item.id, "verdict")
+end
+
+local retryScores
+
+local function armScoreRetry()
+    if scoreTimer or stoodDown() then return end
+    local gen = generation
+    scoreTimer = C_Timer.NewTimer(NS.LootFeed.SCORE_RETRY, function()
+        scoreTimer = nil
+        if gen == generation then retryScores() end
+    end)
+end
+
+--- An item whose scorer is not ready yet starts its score retries (the feed's SCORE_RETRY and
+--- SCORE_TRIES); one that has used them up keeps its answer.
+function P.NoteScore(item)
+    if item.scoreTries ~= nil or not scorePending(item) then return end
+    item.scoreTries = 0
+    armScoreRetry()
+end
+
+retryScores = function()
+    local again = false
+    for _, item in ipairs(waiting()) do
+        if item.scoreTries and item.scoreTries < NS.LootFeed.SCORE_TRIES and scorePending(item) then
+            item.scoreTries = item.scoreTries + 1
+            rejudge(item)
+            if scorePending(item) and item.scoreTries < NS.LootFeed.SCORE_TRIES then again = true end
+        end
+    end
+    if again then armScoreRetry() end
+end
+
+--- Your gear moved: your verdict on every waiting item is judged again.
+function P.OnGearChanged()
+    if stoodDown() then return end
+    for _, item in ipairs(waiting()) do rejudge(item) end
+end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
@@ -393,11 +475,27 @@ for _, row in ipairs(EVENTS) do
     NS.addon[row[2]] = function(_, _, ...) fn(...) end
 end
 
+-- The bus receiver: tracked, so the stand-down takes it down and the stand-up replays it;
+-- without the bus library it is a bare target, unregistered here instead (NS.Bus.tracked).
+local target = NS.Bus:NewTarget()
+
+local function listen()
+    if not target then return end
+    target:RegisterMessage(NS.MSG.GEAR_CHANGED, function() P.OnGearChanged() end)
+end
+listen()
+
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     generation = generation + 1
     stopTicker()
+    if scoreTimer then scoreTimer:Cancel() end
+    scoreTimer = nil
+    if target and not NS.Bus.tracked then target:UnregisterAllMessages() end
     for _, t in pairs(lingers) do t:Cancel() end
     lingers = {}
     State.pending, State.pendingTest = nil, nil
 end
-NS.STAND_UP[#NS.STAND_UP + 1] = function() P.Rebuild() end
+NS.STAND_UP[#NS.STAND_UP + 1] = function()
+    if not NS.Bus.tracked then listen() end
+    P.Rebuild()
+end
