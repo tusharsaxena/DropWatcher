@@ -1,2 +1,3 @@
 date	milestone	evidence
 2026-11-13	M1	DW-FP01 006e2e5 + DW-FP02 bab2d77 + DW-FP03 10aeddf + DW-FP04 d0f6dec,a9cf190; 4 reviews approved (1 fix); retail 2258/0/1, forever 2251/7/1 (known spec set, DW-FP05), lint 0/0
+2026-11-13	M2	DW-FP05 5f9e641,7ffffe6 + DW-FP06 1f9d4c3,5d6956d + DW-FP07 bf3a2a6,9601d3f + DW-FP08 4ce1a95,0059c6f,62ec109; 4 reviews approved after fixes; retail 2289/0/1, forever 2289/0/1, lint 0/0, inventory in step
