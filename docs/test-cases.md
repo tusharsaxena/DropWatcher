@@ -1688,7 +1688,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (52)
+### test_feed.lua (53)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1742,6 +1742,7 @@ Total.
 - removal: the sinks hear every clear and every trim, with the feed's name (DW-62)
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
+- candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 
 ### test_feed_counts.lua (10)
 
@@ -2718,7 +2719,7 @@ Total.
 | test_gear.lua | 28 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 52 |
+| test_feed.lua | 53 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2767,4 +2768,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2281** |
+| **Total** | **2282** |

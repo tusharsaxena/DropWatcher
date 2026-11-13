@@ -963,3 +963,21 @@ test("stand-down: timers and pending loads are dropped, the drops kept", functio
     m.advance(1)
     assertEqual(LF.Stats().loading, 0)
 end)
+
+test("candidate: your unwanted types are read by your spec key, on Forever your talent tree's", function()
+    local NS, _, m = T.enableAddon({ mock = function(mm)
+        mm.__context.inInstance, mm.__context.instanceType = true, "party"
+        mm.instance = { name = "The Rookery", difficultyID = 2 }
+    end })
+    local forever = NS.Compat.ClientKey() == "forever"
+    -- WoW Forever keys the per-spec maps by "<classFile>:<tree>" (design §4.3); Retail by specID.
+    if forever then m.seedTalents(1487, { { name = "Arcane", spent = 0 }, { name = "Fire", spent = 31 } }) end
+    NS.Gear.Refresh("test")
+    local key = forever and "MAGE:2" or NS.Gear.Candidate().specID
+    -- red under: a feed that reads cfg.undesired[specID], the class-wide spec on Forever
+    assertTrue(NS.SchemaRuntime.Set("comparison.undesired", { [key] = { ["2:15"] = true } }))
+    m.addItem(link(400), def("INVTYPE_WEAPON", 650, { classID = 2, subClassID = 15 }))
+    NS.LootFeed.Add(link(400))
+    local rec = NS.LootFeed.Drops()[1]
+    assertEqual(rec.me.verdict, "doesntWant", "a dagger is unwanted for the spec on screen")
+end)
