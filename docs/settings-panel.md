@@ -315,7 +315,8 @@ there since DW-83, went with DW-F1, feedback-6 spec §1, when Me and Them took t
 **Trade window:** Mark a trade window ending within (seconds) (`trade.warnAt`; Trade › Timers'
 `Warn before a trade window closes` until feedback-24): your own drop's Trade window countdown takes
 its warning color this many seconds before it closes; 0 turns the mark off. It tints that column and
-does nothing else.
+does nothing else. The Trade window checkbox and this subsection are Retail's alone (DW-FP11,
+DW-FP21): on WoW Forever the table has no Trade window column and the tab is Shown columns alone.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
 Interesting, Likely tradeable, Usable by me, Upgrade for me and New to my collection

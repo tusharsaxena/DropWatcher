@@ -15,7 +15,9 @@ KA0S_KIT_CLIENT=forever lua tests/run.lua       # the same suite as WoW Forever 
 A per-client feature has a case on each profile, present where `docs/ARCHITECTURE.md`'s per-client
 feature table declares it and absent where not; a case takes its expectation from
 `NS.Compat.ClientKey()` (or `T.forever`). The Forever run skips the cases that pin a Retail-only
-feature's own behavior. The TOC's Forever number arms the kit's missing-globals gate
+feature's own behavior (`T.RETAIL_ONLY`); a case that mixes such a feature with something both
+clients share is split, so the shared half runs on Forever too (DW-FP21: the glow styles and Use
+class color on the main glow, the situation edge's inputs). The TOC's Forever number arms the kit's missing-globals gate
 (`test_client_globals`) for the `forever` name set as well as `live`.
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
@@ -719,7 +721,7 @@ stay as integration over this addon's host half: `test_sim_core` (the seam's mem
 the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
 every scenario through the real engine), `test_sim_events` (the event drivers and the world
 providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
-`test_sim_scenario` (the scenarios, the timeline's steps, the six verbs through `/dw sim`, `drop <kind>` included) and
+`test_sim_scenario` (the scenarios, the timeline's steps, the eight verbs through `/dw sim`, `drop <kind>` included) and
 `test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
@@ -771,5 +773,7 @@ For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka
 
 ## In game
 
-[`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make. They are the owner's
-to run; an agent never marks one passed.
+[`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make, each naming its
+client; the Forever port's are its ROLLS and FOREVER themes, and its open in-game reads are the
+probe sheet, [`forever-probes.md`](forever-probes.md). They are the owner's to run; an agent never
+marks one passed.

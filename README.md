@@ -46,17 +46,19 @@ It watches what your party or raid receives and compares each item with your gea
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon, key, raid, delve or scenario, or playing solo, the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
+Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon or raid, in a key, delve or scenario (those three are Retail only), or playing solo, the window opens by itself when someone loots something it shows. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and `/dw lock` pins the window in place.
 
 **Drops** lists every drop, yours included, under the boss or key it came from.
 
-- Me and Them tell you whether it's an upgrade for you and for the looter: green ▲ up, yellow ≈ about the same, red ▼ down, with the item-level difference. Rings, trinkets and one-handers get a mark for each item you wear, so `321 ▼10 / 324 ▼23` means 10 levels under one ring and 23 under the other. If your spec can't use it but another of yours can, Me says so in cyan: `▲20 Holy`.
-- Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. Trade window is how long they have left.
+- Me and Them tell you whether it's an upgrade for you and for the looter: green ▲ up, yellow ≈ about the same, red ▼ down, with the item-level difference. Rings, trinkets and one-handers get a mark for each item you wear, so `321 ▼10 / 324 ▼23` means 10 levels under one ring and 23 under the other. If your spec can't use it but another of yours can, Me says so in cyan: `▲20 Holy` (Retail only: WoW Forever has one spec per class).
+- Trade is Yes, No or ?, plus a short reason like `No Bonus roll` or `Yes Not their upgrade`. On Retail, Trade window is how long they have left. On WoW Forever a bind-on-pickup item is soulbound the moment it's looted, so Trade reads `No Soulbound`, only bind-on-equip drops can change hands, and there's no Trade window column.
 - **Ask** whispers the looter, once. In a boss fight it waits until the fight ends.
 
 It isn't only gear. Mounts, battle pets, toys and recipes are watched too, and Me says whether each one is **New** to your collection or already **Collected** (a pet shows how many you have, `Collected 1/3`; a recipe for a profession you don't have reads Can't use). They're there to see, not to ask for: no Ask, no toast. Tier tokens are judged like the piece they turn into, against what you wear in that slot, and can be asked for like gear. Cosmetics are off by default. Settings › Drops › Items › Item kinds turns each kind on or off, and Drops › Item lists keeps two lists of items by ID or shift-clicked link: **Always watch** shows an item whatever the other filters say, and **Never watch** hides it, gear included. `/dw whitelist add <id or link>` and `/dw blacklist add <id or link>` do the same from chat (`remove` and `list` too).
 
-Upgrades you could actually get glow, green for your spec and blue for an off-spec. Click a row for the full reasoning, or hover any cell to see what it's based on.
+**Rolling now** sits above the bosses while a group-loot roll is open: the item, what it means for you, who has picked Need, Greed or Pass so far, and the time left. Click it to see every player's choice, and once it's won the drop joins its boss's list with the whole roll table on its card and in History. The game's own roll popup gets a small card on top with your verdict and how many have picked Need. On WoW Forever a bind-on-pickup upgrade reads `Need: upgrade` there, and one you can't use `Greed / Pass: you can't use it`. Under master loot, an Epic in the corpse you opened waits in the same section until the master looter hands it out, and **Ask** whispers the master looter for it. Settings › Drops › Rolls turns each of these off.
+
+Upgrades you could actually get glow, green for your spec and blue for an off-spec (Retail only). Click a row for the full reasoning, or hover any cell to see what it's based on.
 
 Your own drops get **Offer** instead. It ranks the group by how much each person would gain, and you can whisper one of them or **Announce to group**. It needs another player in your group, so solo, or with only followers or a delve companion, the row reads No action. While you have something tradeable the strip at the bottom counts it, and **Post my tradeables** lists it all in group chat. **Scan group** sits there too: use it before the loot starts and you won't be waiting on inspects later.
 
@@ -68,16 +70,18 @@ When someone loots a big upgrade you could ask for, a toast pops up. It's on by 
 
 The look is yours to pick: Settings → General → Skin offers nine skins (or EllesmereUI's, when it's installed), and a small picker offers them the first time you log in. `/dw skin` brings it back. In the picker, hovering or selecting a skin previews it on the addon and **Apply** keeps it; close it any other way and your old skin comes back. The eye turns test mode on or off, so there are sample drops in the window to look at, and if the window is hidden when the picker opens, test mode comes on by itself and goes off again when you close it. The same tab sets the font, the bar texture and where text gets an outline, and those lists show each option as it will look. The tables have their own font settings under Settings › Window › Layout.
 
-`/dw test` fills the window with sample drops if you want a look around first, a mount, a pet, a toy, a recipe, a cosmetic and a tier token among them, plus four weeks of made-up history for History and Insights. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing, and `/dw sim drop mount` (or `token`, `pet`, `toy`, `recipe`, `cosmetic`, `equipment`) drops one item of that kind into it. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
+`/dw test` fills the window with sample drops if you want a look around first, a mount, a pet, a toy, a recipe, a cosmetic and a tier token among them, plus four weeks of made-up history for History and Insights. `/dw sim start key` goes further and plays a made-up group through a whole key, sending nothing (on WoW Forever, which has no keys, `/dw sim start dungeon`); `/dw sim roll` adds a group-loot roll and `/dw sim ml` an Epic waiting for a master looter, and `/dw sim drop mount` (or `token`, `pet`, `toy`, `recipe`, `cosmetic`, `equipment`) drops one item of that kind into it. Everything else is in **Settings → AddOns → Ka0s Drop Watcher**, and `/dw help` lists the commands.
 
 ## How the loot watching works
 
 - Drop Watcher reads your group's loot lines as they come in, along with the boss-loot and loot-history events, and merges the reports of one item into one drop.
 - Every item gets a kind (gear, tier token, mount, pet, toy, recipe or cosmetic) and a kind you've turned off goes no further, nor does anything on Never watch. Quest items, reagents, containers and the like aren't watched at all, unless you put them on Always watch.
-- Drops you don't care about stop there. Where you are (keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched by default), the minimum quality and the filters decide that before anyone is inspected.
+- Drops you don't care about stop there. Where you are (dungeons, raids and solo play are watched by default, and on Retail keys, follower dungeons, delves and scenarios too), the minimum quality and the filters decide that before anyone is inspected.
+- A drop still being rolled for, or waiting for the master looter, has no looter yet, so it waits in Rolling now and joins the list when it's won or handed out.
 - Each drop is compared with what you wear in that slot, and with what the looter wears once their gear has been inspected. Inspects go one at a time and never in combat.
-- The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a looter can only trade an item that isn't an upgrade for them by item level.
-- Your own drops get an exact countdown read from the item's tooltip, and a list of who in the group would gain from them.
+- The trade estimate looks at the bind type, the four-hour trade window and the game's rule that a looter can only trade an item that isn't an upgrade for them by item level. On WoW Forever only bind-on-equip items change hands.
+- Your own drops get a list of who in the group would gain from them, and on Retail an exact countdown read from the item's tooltip.
+- On WoW Forever a scorer's verdict comes first and item level breaks a tie, Pawn and your weights go by talent tree, and the ranged slot is compared on its own.
 - An ask is one whisper per item. While Blizzard's encounter restrictions block addon chat, it waits in a queue and goes out when they lift.
 
 ## FAQ
@@ -85,12 +89,13 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Question | Answer |
 |---|---|
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
-| Does it look at my other specs? | Yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
+| Does it look at my other specs? | On Retail, yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level, with Pawn's own default settings and no setup. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
-| Does it work in raids? | Yes. Keys, dungeons, follower dungeons, raids, delves, scenarios and solo play are watched out of the box. PvP and open-world groups are off until you turn them on under Settings › Drops › Situations. |
+| Does it work in raids? | Yes. Dungeons, raids and solo play are watched out of the box, and on Retail keys, follower dungeons, delves and scenarios too. PvP and open-world groups are off until you turn them on under Settings › Drops › Situations. |
 | Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin one-pixel edge by default, in the skin's color: a gray outline in the window, black on the toast. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
-| Can it tell me whether I have the look? | Yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. |
+| Can it tell me whether I have the look? | On Retail, yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. WoW Forever has no transmog. |
+| Does it show other people's rolls? | Yes, on both clients: everyone's Need, Greed and Pass while the roll is open, then the numbers and the winner, kept in History. Settings › Drops › Rolls has the switches. |
 
 ## Troubleshooting
 

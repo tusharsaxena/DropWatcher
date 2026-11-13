@@ -298,6 +298,14 @@ written by History (`modules/History.lua`) from `AskStateChanged`. The edit-firs
 `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; with
 `messages.editFirst` on, the Offer panel's Offer and Announce open it too. Whether a whisper really is blocked during an encounter is ASK-4.
 
+The master-loot ask (`askML`, Forever port design §6, DW-FP19) is filed against the pending item, not
+a feed drop, and under the master looter's full name (`NS.AskMLTargetOf`: the roster's `fullName`,
+`Name-Realm` on Retail, the whole name on WoW Forever), which is the name the whisper goes to. The Ask button's tooltip
+(`WindowPending.AskAction`) names the master looter by the item's `ml.name`, the short name the
+window shows everywhere else, so on Retail a cross-realm master looter reads `Name` there while the
+whisper goes to `Name-Realm`: one player, two spellings, read as the design's (the window never
+shows a realm). Auto-ask never sends an `askML`.
+
 ## The transmog-known flag
 
 The transmog-known flag (DW-53) settles how it reads design spec §4. Whether you have collected a
