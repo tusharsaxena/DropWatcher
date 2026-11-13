@@ -270,3 +270,11 @@ test("drops strip: the compact layout's summary is shortened", function()
     assertEqual(DS.SummaryText({ count = 1 }), "1 tradeable")
     assertEqual(DS.SummaryText({ count = 0 }), "0 tradeable")
 end)
+
+test("mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)", function()
+    -- red under: the item-level sentence on WoW Forever, where the score decides
+    local list = MC().Candidates(drop())
+    local want = T.forever and "• For them: a higher score than what they wear there (item level breaks a tie)"
+        or "• For them: a higher item level than they wear there"
+    assertEqual(T.tipPlain(list[1].explain), want)
+end)

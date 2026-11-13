@@ -81,6 +81,23 @@ local function window(out)
     if t.waiting > 0 then out:joined(TAG, "toast: queue", t.queue) end
 end
 
+-- The situation's two input lines, per client (clients-§4, as settings/SlashVerbs.lua's
+-- INPUT_LINES): WoW Forever has no keystone, delve or follower dungeon to name.
+local INPUT_LINES = {
+    retail = function(out, i)
+        out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s challengeMode=%s",
+            i.inInstance, i.instanceType, i.difficultyID or "none", i.isChallengeModeActive)
+        out:add(TAG, "situation inputs: delve=%s follower=%s group=%s raid=%s pvp=%s", i.isDelve,
+            i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
+    end,
+    forever = function(out, i)
+        out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s",
+            i.inInstance, i.instanceType, i.difficultyID or "none")
+        out:add(TAG, "situation inputs: group=%s raid=%s pvp=%s", i.inGroup, i.inRaid, i.isPvP)
+    end,
+}
+local inputLines = INPUT_LINES[NS.Compat.ClientKey() == "forever" and "forever" or "retail"]
+
 -- Where the addon thinks the player is, the inputs it read and that situation's settings
 -- (design spec §6.1, §13). The inputs are read live: the classifier's edge only reads.
 local function situation(out)
@@ -90,10 +107,7 @@ local function situation(out)
     local s = Sit.Settings(key)
     out:add(TAG, "situation: %s (last announced %s) track=%s autoOpen=%s quality=%s", key,
         NS.State.situation or "none", s.track, s.autoOpen, s.quality or "global")
-    out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s challengeMode=%s",
-        i.inInstance, i.instanceType, i.difficultyID or "none", i.isChallengeModeActive)
-    out:add(TAG, "situation inputs: delve=%s follower=%s group=%s raid=%s pvp=%s", i.isDelve,
-        i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
+    inputLines(out, i)
 end
 
 -- What the restrictions allow now, every reason in effect (sorted, the Map type included) and

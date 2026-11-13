@@ -203,7 +203,8 @@ test("offer panel: every part has a reason tooltip; Their eq's holds the old pil
     local tip = T.tipJoined(lines)
     assertEqual(lines[1], "For Seta: Upgrade")
     assertTrue(NS.TipMarks.IsGrid(lines[2]), "the worn gear as a grid (feedback-7 spec §3)")
-    assertTrue(T.tipPlainJoined(lines):find("• For them: a higher item level", 1, true) ~= nil, tip)
+    assertTrue(T.tipPlainJoined(lines):find(T.forever and "• For them: a higher score" or "• For them: a higher item level",
+        1, true) ~= nil, tip)
     assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
     assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)

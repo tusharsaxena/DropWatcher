@@ -357,6 +357,7 @@ L["a mount, pet, toy, recipe or look you have not collected"] = "a mount, pet, t
 L["%d members"] = "%d members"
 L["1 member"] = "1 member"
 L["a higher item level than they wear there"] = "a higher item level than they wear there"
+L["a higher score than what they wear there (item level breaks a tie)"] = "a higher score than what they wear there (item level breaks a tie)"
 L["about %s"] = "about %s"
 L["about what another of their specs has there (off-spec)"] =
     "about what another of their specs has there (off-spec)"
@@ -383,6 +384,7 @@ L["nobody whose gear was read"] = "nobody whose gear was read"
 L["nobody, unless you choose"] = "nobody, unless you choose"
 L["not tradeable"] = "not tradeable"
 L["no other player in your group"] = "no other player in your group"
+L["A player joining brings Offer back."] = "A player joining brings Offer back."
 L["Followers and companions cannot take it; a player joining brings Offer back."] =
     "Followers and companions cannot take it; a player joining brings Offer back."
 L["Offer shows who."] = "Offer shows who."

@@ -387,7 +387,9 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
     assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "• Inspected: 40s ago"), "the read's age")
     assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "  ▲13\n296  " .. OLDER_BAND .. "  ▲15",
         "both trinkets from the read, each with its own arrow (feedback-21 H3)")
-    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "• For them: a higher item level than they wear there"),
+    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, T.forever
+        and "• For them: a higher score than what they wear there (item level breaks a tie)"
+        or "• For them: a higher item level than they wear there"),
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
     assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)

@@ -465,8 +465,11 @@ local function window()
     pick("window.mode", W.mode, LAYOUTS, L["Window layout"],
         L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
         with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
+    -- Per client (clients-§4): WoW Forever has no Mythic+ key or delve to name.
     bool("window.compactInRuns", W.compactInRuns, L["Compact view when it auto-opens in a run"],
-        L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
+        NS.Compat.ClientKey() == "forever"
+            and L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."]
+            or L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
     layout = with(layout, { subgroup = L["Tables"] })
     -- The countdown bar's sentence is Retail's alone, like the Trade window column (clients-§4).

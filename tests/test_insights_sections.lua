@@ -140,7 +140,7 @@ test("insights sections: a section with no rows shows its heading and one line, 
     assertTrue(d.headers.byInstance:IsShown() and d.headers.byBoss:IsShown() and d.headers.gain:IsShown())
     local lines = emptyLines(NS, d)
     assertTrue(has(lines, "No upgrades for you in these filters."))
-    assertTrue(has(lines, "No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."))
+    assertTrue(has(lines, NS.InsightsSections.EMPTY.byBoss), "By boss's own line (its words per client)")
     assertTrue(has(lines, "No items received in these filters."))
     assertTrue(has(lines, "No asks in these filters."))
     assertTrue(has(lines, "No drops by others in these filters."))
@@ -210,4 +210,12 @@ test("insights sections: a skin switch marks a fresh layout, so the host's color
     assertTrue(d.pane.layoutKey == nil, "marked")
     m.advance(0.1)
     assertEqual(NS.WindowInsights.Drawn().pane.layoutKey, key, "laid out again")
+end)
+
+test("insights sections: By boss's empty line names Mythic+ keys on Retail alone (clients-§4)", function()
+    -- red under: the one Retail sentence on both clients (WoW Forever has no keystone)
+    local NS = T.newAddon()
+    local line = NS.InsightsSections.EMPTY.byBoss
+    assertEqual(line:find("Mythic+", 1, true) == nil, T.forever, line)
+    assertTrue(line:find("No upgrades for you from a boss kill in these filters.", 1, true) == 1, line)
 end)

@@ -112,6 +112,7 @@ L["No drops by others in these filters."] = "No drops by others in these filters
 L["No instance with an upgrade for you and two visits or more."] = "No instance with an upgrade for you and two visits or more."
 L["No item received here has an item level comparison."] = "No item received here has an item level comparison."
 L["No items received in these filters."] = "No items received in these filters."
+L["No upgrades for you from a boss kill in these filters."] = "No upgrades for you from a boss kill in these filters."
 L["No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."] = "No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."
 L["No upgrades for you in these filters."] = "No upgrades for you in these filters."
 L["No verdicts in these filters."] = "No verdicts in these filters."

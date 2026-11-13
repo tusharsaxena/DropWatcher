@@ -60,7 +60,9 @@ SX.EMPTY = {
     verdicts = L["No verdicts in these filters."],
     tradeStates = L["No drops by others in these filters."],
     byInstance = L["No upgrades for you in these filters."],
-    byBoss = L["No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."],
+    -- Per client (clients-§4): WoW Forever has no Mythic+ key to keep as a whole run.
+    byBoss = NS.Compat.ClientKey() == "forever" and L["No upgrades for you from a boss kill in these filters."]
+        or L["No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."],
     topRate = L["No instance with an upgrade for you and two visits or more."],
     generous = L["No items received in these filters."],
     gain = L["No items received in these filters."],

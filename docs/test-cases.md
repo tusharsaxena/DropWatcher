@@ -112,7 +112,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (28)
+### test_schema_rows.lua (29)
 
 - settings: no Retail-only row on the Forever panel
 - defaults: WoW Forever's profile has none of the Retail-only features' defaults
@@ -142,6 +142,7 @@ Total.
 - icons: the border rows refuse what they cannot draw, and dim with Show border off
 - icons: without LibKa0s the tab keeps its Zoom row and the border reads its defaults
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
+- rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
 ### test_settings_pages.lua (55)
 
@@ -939,7 +940,7 @@ Total.
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 
-### test_offer_alone.lua (15)
+### test_offer_alone.lua (16)
 
 - offer alone: the roster reads who is a player: solo, followers and a companion are nobody
 - offer alone: a secret UnitIsPlayer falls back to the GUID's kind
@@ -956,8 +957,9 @@ Total.
 - offer alone: Offer, Announce and Post my tradeables refuse and say why
 - offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
 - offer alone: /dw offer says why and opens nothing
+- offer alone: the No action hint names followers and companions on Retail alone (clients-§4)
 
-### test_mine_cells.lua (15)
+### test_mine_cells.lua (16)
 
 - mine cells: Clock reads h:mm:ss
 - mine cells: the countdown is exact from the item's timer, estimated from the drop before it
@@ -974,6 +976,7 @@ Total.
 - mine cells: ToneState is the button's own state, or tradedAway once you traded the drop away
 - drops strip: it counts your drops the tab lists, its filters applied, in the feed's order
 - drops strip: the compact layout's summary is shortened
+- mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
 ### test_row_tooltip.lua (13)
 
@@ -2232,7 +2235,7 @@ Total.
 - insights tab: without LibKa0s-Widgets-1.0 no dropdown draws and the cards still do
 - insights tab: compact lays the cards out two to a row and wraps the bar
 
-### test_insights_sections.lua (8)
+### test_insights_sections.lua (9)
 
 - insights sections: a filled log draws every section, each heading shown and in the spec's order
 - insights sections: the hovers carry the numbers
@@ -2242,6 +2245,7 @@ Total.
 - insights sections: D and E sit side by side in the full layout and stack in compact
 - insights sections: a second pass builds no frame
 - insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
+- insights sections: By boss's empty line names Mythic+ keys on Retail alone (clients-§4)
 
 ### test_toast.lua (50)
 
@@ -2627,7 +2631,7 @@ Total.
 - disabled 11: the latch holds in both orders, perf first and disabled first
 - disabled 12: disabling hides the simulation panel, idle or running, and it stays shut
 
-### test_diagnostics.lua (15)
+### test_diagnostics.lua (16)
 
 - diagnostics: the sections are the addon's, in report order
 - diagnostics: the report names the schema, the profile, the holds and the window decision
@@ -2644,6 +2648,7 @@ Total.
 - diagnostics: the messaging section counts the registry, the sends and lists each queued ask
 - diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue
 - diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries
+- diagnostics: the situation inputs name a keystone, a delve and a follower dungeon on Retail alone
 
 ### test_debug_coverage.lua (11)
 
@@ -2810,7 +2815,7 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 28 |
+| test_schema_rows.lua | 29 |
 | test_settings_pages.lua | 55 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
@@ -2846,8 +2851,8 @@ Total.
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 8 |
 | test_offer_panel.lua | 21 |
-| test_offer_alone.lua | 15 |
-| test_mine_cells.lua | 15 |
+| test_offer_alone.lua | 16 |
+| test_mine_cells.lua | 16 |
 | test_row_tooltip.lua | 13 |
 | test_test_mode.lua | 50 |
 | test_compat.lua | 75 |
@@ -2902,7 +2907,7 @@ Total.
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
 | test_window_insights.lua | 22 |
-| test_insights_sections.lua | 8 |
+| test_insights_sections.lua | 9 |
 | test_toast.lua | 50 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 18 |
@@ -2919,7 +2924,7 @@ Total.
 | test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
-| test_diagnostics.lua | 15 |
+| test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
 | test_vendor_sync.lua | 3 |
 | test_locale.lua | 7 |
@@ -2932,4 +2937,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2414** |
+| **Total** | **2419** |

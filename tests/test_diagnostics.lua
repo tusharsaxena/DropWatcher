@@ -36,7 +36,8 @@ test("diagnostics: the situation section names the key, its settings and the inp
     m.__fire("PLAYER_ENTERING_WORLD")
     local text = report(NS)
     assertTrue(text:find("situation: dungeon (last announced dungeon) track=true autoOpen=true quality=global", 1, true) ~= nil, text)
-    assertTrue(text:find("situation inputs: inInstance=true type=party difficulty=2 challengeMode=false", 1, true) ~= nil)
+    assertTrue(text:find(T.forever and "situation inputs: inInstance=true type=party difficulty=2"
+        or "situation inputs: inInstance=true type=party difficulty=2 challengeMode=false", 1, true) ~= nil)
 end)
 
 test("diagnostics: it runs while stood down and says so, without acting", function()
@@ -244,4 +245,15 @@ test("diagnostics: the scoring section names the scorer, the one in use, Pawn an
     NS.SchemaRuntime.Set("comparison.weights", { [250] = { ITEM_MOD_INTELLECT_SHORT = 1 } })
     text = report(NS)
     assertTrue(text:find("scoring: scorer=weights inUse=weights", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the situation inputs name a keystone, a delve and a follower dungeon on Retail alone", function()
+    -- red under: one input list on both clients (clients-§4; WoW Forever has none of the three)
+    local NS = T.enableAddon()
+    local text = report(NS)
+    for _, word in ipairs({ "challengeMode=", "delve=", "follower=" }) do
+        assertEqual(text:find(word, 1, true) == nil, T.forever, word)
+    end
+    assertTrue(text:find("situation inputs: inInstance=", 1, true) ~= nil, text)
+    assertTrue(text:find("group=false raid=false pvp=false", 1, true) ~= nil, text)
 end)

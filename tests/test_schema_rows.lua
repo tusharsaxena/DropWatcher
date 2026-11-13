@@ -897,3 +897,12 @@ test("rows: the layout changes keep every stored path, its type and its default 
     end
     assertEqual(seen, pinned, "every pinned path is still a row")
 end)
+
+test("rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)", function()
+    -- red under: the one Retail sentence on both clients (WoW Forever has no key and no delve)
+    local NS = T.newAddon()
+    local tip = NS.SchemaRuntime.FindRow("window.compactInRuns").tooltip
+    assertEqual(tip:find("Mythic+", 1, true) == nil, T.forever, tip)
+    assertEqual(tip:find("delve", 1, true) == nil, T.forever, tip)
+    assertTrue(tip:find("inside a dungeon", 1, true) ~= nil, tip)
+end)

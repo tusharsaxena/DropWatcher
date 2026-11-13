@@ -129,6 +129,8 @@ L["Full shows the drop tables with every column. Compact shows the same drops in
     "Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."
 L["Compact view when it auto-opens in a run"] = "Compact view when it auto-opens in a run"
 L["Tables"] = "Tables"
+L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
+    "When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
     "When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["Row height"] = "Row height"

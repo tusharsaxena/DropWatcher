@@ -205,8 +205,11 @@ end
 -- off-spec upgrade or equal (feedback-19 spec §3) ranks after every main-spec one.
 local RANK = { upgrade = 1, sidegrade = 2, offSpecUpgrade = 3, offSpecSidegrade = 4, downgrade = 5,
     cantUse = 6, doesntWant = 6, unknown = 7, checking = 8, unavailable = 9 }
+-- On WoW Forever the verdict is score first (Forever port design §4.5), so its upgrade says so.
 local EXPLAIN = {
-    upgrade = L["a higher item level than they wear there"],
+    upgrade = NS.Compat.ClientKey() == "forever"
+        and L["a higher score than what they wear there (item level breaks a tie)"]
+        or L["a higher item level than they wear there"],
     sidegrade = L["about what they wear there (the sidegrade band)"],
     offSpecUpgrade = L["an upgrade for another of their specs (off-spec)"],
     offSpecSidegrade = L["about what another of their specs has there (off-spec)"],
@@ -402,6 +405,10 @@ local OWN_OFFER_LOOK = {
 MC.OWN_OFFER_LOOK = OWN_OFFER_LOOK   -- read by the suites: every state has an icon
 
 --- Actions on your own drop (feedback-5 spec §2), in WindowCells.Ask's shape with `offer` true:
+-- The solo No action's hint, per client (clients-§4): WoW Forever has no follower or companion.
+local ALONE_HINT = NS.Compat.ClientKey() == "forever" and L["A player joining brings Offer back."]
+    or L["Followers and companions cannot take it; a player joining brings Offer back."]
+
 --- Offer, which opens the Offer panel (always clickable), labeled and toned by `toneState` (cyan
 --- until an offer was sent, feedback-6 spec §2: `kind` "offer"; yellow once offered or queued,
 --- green once given away); No action with the reason on a drop that cannot be traded
@@ -420,7 +427,7 @@ function MC.OwnOffer(drop, toneState, alone)
         none = WC.NoAction(WC.Append({ row(L["Why"], L["not tradeable"]) }, WC.TradeRows(t, L["you"])))
     elseif alone then
         none = WC.NoAction({ row(L["Why"], L["no other player in your group"]),
-            hint(L["Followers and companions cannot take it; a player joining brings Offer back."]) })
+            hint(ALONE_HINT) })
     end
     if none then
         none.offer = true
