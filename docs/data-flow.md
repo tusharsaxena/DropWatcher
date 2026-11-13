@@ -319,7 +319,7 @@ NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with th
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 /dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
-                   loot, drop, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   loot, drop, lockdown, trade, roll; else the usage) ─> no simulation running: "No simulation
                    is running: …" (but the bare form, status, start and panel)
 /dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
                    scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build

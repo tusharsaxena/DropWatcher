@@ -339,14 +339,6 @@ function W.Rolls()
     return w and w.rollList or {}
 end
 
---- Whether `key` (a pending item's `encounterID:dropKey`) is a simulated roll's.
---- @param key any
---- @return boolean
-function W.IsRollKey(key)
-    local w = world()
-    return w ~= nil and w.rolls ~= nil and w.rolls[key] ~= nil
-end
-
 -- You, as a roll table names you.
 local function you()
     local Compat = NS.Compat
