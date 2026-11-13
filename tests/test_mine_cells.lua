@@ -228,11 +228,14 @@ end)
 
 test("mine cells: the panel's header reads your change, the item level and the trade window", function()
     local M = MC()
-    local h = M.PanelHeader(drop(), NOW, 600)
+    -- The countdown is Retail's (Forever port design §4.4); a WoW Forever drop you can trade is a BoE,
+    -- whose answer stands bare (no "Trade window" words).
+    local d = T.forever and drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) or drop()
+    local h = M.PanelHeader(d, NOW, 600)
     assertEqual(h.name, "Bracers of the Tide")
-    assertEqual(h.text, "You: -5 ilvl · 305 · Trade window 1:47:12")
+    assertEqual(h.text, T.forever and "You: -5 ilvl · 305 · No limit (BoE)" or "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertTrue(#h.tip >= 3)
-end, T.RETAIL_ONLY)
+end)
 
 -- clients-§6: the words "Trade window" are Retail's alone (Forever port design §4.4). On WoW Forever
 -- the drop you offer is a bind-on-equip one, and the line says its answer bare.

@@ -405,16 +405,18 @@ test("sim pool: an empty journal falls back to your own gear, reported once", fu
     assertEqual(pool.source, "fallback")
     assertEqual(#pool.entries, 3, "two rings and the helm; the hearthstone is not gear")
     assertEqual(#NS.SimPool.Drops(pool), 3)
-    local line = "The Encounter Journal gave no items"
-    assertEqual(printed(m, line), 1)
+    -- The journal's report is Retail's (its pool, Forever port design §4.4): WoW Forever's pool is
+    -- your own gear from the start, so nothing fell back and nothing is said.
+    local line, said = "The Encounter Journal gave no items", T.forever and 0 or 1
+    assertEqual(printed(m, line), said)
     NS.Sim:Stop()
     T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "raid" })
     -- red under: a fallback that prints on every build
-    assertEqual(printed(m, line), 1, "reported once")
+    assertEqual(printed(m, line), said, "reported once")
     assertEqual(NS.SimPool.Status().source, "fallback")
     NS.Sim:Stop()
-end, T.RETAIL_ONLY)
+end)
 
 test("sim pool: without the journal API the fallback answers at once", function()
     local NS, m = solo()

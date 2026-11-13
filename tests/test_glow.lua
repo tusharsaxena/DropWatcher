@@ -91,19 +91,24 @@ end)
 
 -- ── Apply on a button ───────────────────────────────────────────────────────────────────────
 
+-- The main glow's halves run on both clients; the off-spec glow's are Retail's (Forever port design §4.4).
 test("glow: without the library Apply still records its decision; a glow turned off clears it", function()
     local NS, _, m = T.enableAddon()
     local G, b = NS.Glow, button(m)
     assertEqual(G.Apply(b, drop()), "main"); assertEqual(b.glowKind, "main")
-    assertEqual(G.Apply(b, drop({ me = offSpec() })), "offSpec"); assertEqual(b.glowKind, "offSpec")
+    if not T.forever then
+        assertEqual(G.Apply(b, drop({ me = offSpec() })), "offSpec"); assertEqual(b.glowKind, "offSpec")
+    end
     assertNil(G.Apply(b, side(2))); assertNil(b.glowKind, "a sidegrade clears it")
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
-    assertNil(G.Apply(b, drop({ me = offSpec() })), "the off-spec glow is off")
+    if not T.forever then
+        assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+        assertNil(G.Apply(b, drop({ me = offSpec() })), "the off-spec glow is off")
+    end
     assertEqual(G.Apply(b, drop()), "main", "the main glow is its own")
     assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
     assertNil(G.Apply(b, drop())); assertNil(b.glowKind)
     G.Stop(b); G.Stop(nil); assertNil(G.Apply(nil, drop()))
-end, T.RETAIL_ONLY)
+end)
 
 -- clients-§6: WoW Forever has the main glow alone (Forever port design §4.4): it records, styles and
 -- clears as on Retail, and there is no off-spec glow setting to turn; on Retail both are there.
@@ -377,9 +382,15 @@ test("glow: a glow row's write re-applies every drawn icon at once", function()
     local started = 0
     for _, c in ipairs(lib.calls) do if c[1] == "PixelGlow_Start" and c[2] == b then started = started + 1 end end
     assertEqual(started, 1)
+    -- the off-spec glow's own row is Retail's (Forever port design §4.4); the main glow's write is shared
+    if T.forever then
+        assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
+        assertNil(rowFor(NS, 1).cells.item.button.glowKind)
+        return
+    end
     assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
     assertNil(rowFor(NS, 2).cells.item.button.glowKind)
-end, T.RETAIL_ONLY)
+end)
 
 test("glow: a profile switch re-reads the glow settings", function()
     local NS, m = shown(THREE())

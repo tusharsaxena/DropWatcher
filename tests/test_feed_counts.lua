@@ -217,8 +217,17 @@ end)
 -- The group header counts every drop
 -- ---------------------------------------------------------------------------------------------
 
+-- The instance label the header leads with: the owner's Mythic+ 12 on Retail; Forever has no Mythic+
+-- (Forever port design §4.4), so its run is the heroic dungeon.
+local LABEL = T.forever and "Den of Nalorakk · Heroic" or "Den of Nalorakk · Mythic+ 12"
+
 test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`", function()
-    local NS, m, LF = run()
+    local NS, m, LF = run(T.forever and function(m)
+        m.instance.difficultyID, m.keystoneLevel = 2, nil
+    end or nil)
+    -- Keghunt's Yoke is interesting as likely given away: Retail's trade window passes the BoP one
+    -- on; a BoP item is soulbound on Forever, so there it is a BoE (Forever port design §4.6).
+    if T.forever then m.items[YOKE].bindType = 2 end
     playLines(m)
     local FB, WC = NS.WindowFilterBar, NS.WindowCells
     FB.State("group").view = { interesting = true }
@@ -230,7 +239,7 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(#h.hidden, 1); assertEqual(h.hidden[1].drop.looter.guid, BUNIAN)
     assertEqual(h.hidden[1].why, "interesting")
     local hd = WC.Header(h.group, h.count, nil, nil, false, h.hidden, ctx.filter)
-    assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ 12 · 2 drops · 1 shown · Testchar")
+    assertEqual(uncolored(hd.text), LABEL .. " · 2 drops · 1 shown · Testchar")
     local tip = T.tipPlainJoined(hd.tip, "\n")
     -- the short name: Bùnian on Retail, the whole name on Forever (never cut to its first word)
     local short = T.forever and BUNIAN_CHAT or "Bùnian"
@@ -239,8 +248,8 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     local all = WC.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
     assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
-        "Den of Nalorakk · Mythic+ 12 · 2 drops · Testchar")
-end, T.RETAIL_ONLY)
+        LABEL .. " · 2 drops · Testchar")
+end)
 
 test("header: your own drop is listed in Drops with the others, never counted as hidden", function()
     local NS, m, LF = run()

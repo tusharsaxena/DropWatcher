@@ -287,6 +287,22 @@ test("sim drop: one drop of a named kind goes through the parser into the feed, 
     -- red under: no `drop` entry point, so a mount could only come by chance in a burst
     local NS, m, members = sim({ before = withMount })
     local E = NS.SimEvents
+    if T.forever then
+        -- The mount is the Encounter Journal pool's (Retail's alone, Forever port design §4.4); WoW
+        -- Forever's pool is your own gear, so it has none. The kind, the looter and the stop are shared.
+        assertEqual(select(2, E.Drop("mount", "me")), "noSample", "no mount in your own gear")
+        assertEqual(E.Drop("equipment", "me"), 1)
+        m.advance(0)
+        assertEqual(lastDrop(NS).facts.category, "equipment"); assertTrue(lastDrop(NS).isMine and lastDrop(NS).sim)
+        assertEqual(E.Drop("equipment", members[1].name), 1)
+        m.advance(0)
+        assertEqual(lastDrop(NS).looter.guid, members[1].guid)
+        assertEqual(select(2, E.Drop("toy")), "noSample")
+        assertEqual(select(2, E.Drop("equipment", "Nobody")), "noLooter")
+        NS.Sim:Stop()
+        assertEqual(select(2, E.Drop("equipment")), "notRunning")
+        return
+    end
     assertEqual(E.Drop("mount", "me"), 1)
     m.advance(0)
     local rec = lastDrop(NS)
@@ -306,7 +322,7 @@ test("sim drop: one drop of a named kind goes through the parser into the feed, 
     NS.Sim:Stop()
     n, why = E.Drop("mount")
     assertEqual(n, 0); assertEqual(why, "notRunning")
-end, T.RETAIL_ONLY)
+end)
 
 -- ---------------------------------------------------------------------------------------------
 -- Inspect replies through the broker

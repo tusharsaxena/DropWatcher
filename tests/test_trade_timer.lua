@@ -10,7 +10,8 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 
 -- The countdown and its warning are Retail's alone (Forever port design §4.4, clients-§4): on WoW
 -- Forever nothing Bind on Pickup can be traded. Every case of the countdown is a declared skip on
--- the forever profile; the last case asserts each client's own answer (clients-§6).
+-- the forever profile; the last case asserts each client's own answer (clients-§6). The bag match
+-- and its scan run on both clients (the feed reads your drop from its bag item), so their cases do.
 local function retailTest(name, fn) test(name, fn, T.RETAIL_ONLY) end
 
 local BRAKK = "Player-1-0000000A"
@@ -141,7 +142,7 @@ retailTest("read: no timer line (bound, or the window gone) means no: expired, n
     assertNil(TT.TickerPeriod(), "nothing live, no ticker")
 end)
 
-retailTest("read: a BoE drop has no timer line and no window: permanent, never expired, never live", function()
+test("read: a BoE drop has no timer line and no window: permanent, never expired, never live", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590, 2))    -- Enum.ItemBind.OnEquip
     local id = NS.LootFeed.Add(link(300))
@@ -159,7 +160,7 @@ end)
 -- Matching bag items to your drops
 -- ---------------------------------------------------------------------------------------------
 
-retailTest("match: by exact link first, then by item id; each drop takes one item", function()
+test("match: by exact link first, then by item id; each drop takes one item", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590))
     local a = NS.LootFeed.Add(link(300))
@@ -169,10 +170,11 @@ retailTest("match: by exact link first, then by item id; each drop takes one ite
     m.advance(0)
     assertEqual(TT.Get("Item-1-0002").dropID, a, "the exact link takes the first drop")
     assertEqual(TT.Get("Item-1-0001").dropID, b, "the id match takes the other")
-    assertEqual(TT.LiveCount(), 2)
+    -- the countdown is Retail's: on WoW Forever both entries are permanent, none live
+    assertEqual(TT.LiveCount(), T.forever and 0 or 2)
 end)
 
-retailTest("match: an item that is none of your drops, and another member's drop, are not timed", function()
+test("match: an item that is none of your drops, and another member's drop, are not timed", function()
     local NS, m, TT = setup()
     m.setGroup({ { guid = BRAKK, name = "Brakk", class = "Warrior", classFile = "WARRIOR" } })
     NS.Roster.Refresh("test")
@@ -185,7 +187,7 @@ retailTest("match: an item that is none of your drops, and another member's drop
     assertNil(next(TT.Entries()))
 end)
 
-retailTest("match: test drops are never timed", function()
+test("match: test drops are never timed", function()
     local NS, m, TT = setup()
     m.addItem(link(300), ring(590))
     NS.LootFeed.Add(link(300), nil, { test = true })
@@ -195,7 +197,7 @@ retailTest("match: test drops are never timed", function()
     assertNil(next(TT.Entries()))
 end)
 
-retailTest("match: an item that left the bags drops its entry; a moved one keeps it", function()
+test("match: an item that left the bags drops its entry; a moved one keeps it", function()
     local NS, m, TT = setup()
     local id = ownDrop(NS, m, link(300), "1 hour")
     local e = TT.ForDrop(id)
@@ -213,7 +215,7 @@ end)
 -- The scan's triggers and throttle
 -- ---------------------------------------------------------------------------------------------
 
-retailTest("scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds", function()
+test("scan: BAG_UPDATE_DELAYED, LOOT_CLOSED and your DropAdded ask for it; once per 2 seconds", function()
     local NS, m, TT = setup()
     ownDrop(NS, m, link(300), "1 hour")    -- the DropAdded scan
     local scans = NS.State.tradeTimer.scans

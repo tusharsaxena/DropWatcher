@@ -287,6 +287,9 @@ test("trade rules: a collectible keeps the bind and rule answers, and is unknown
     local col = { collectible = true }
     check(TR.Estimate(drop({ bindType = B.ON_EQUIP }), nil, ctx("raid", 60, col)), "yes", "boe", "bind")
     check(TR.Estimate(drop({ warbound = true }), nil, ctx("raid", 60, col)), "no", "warbound", "bind")
+    -- The bind answers are both clients'; the rules' are Retail's (a Forever collectible BoP is
+    -- soulbound, the Forever case below).
+    if T.forever then return end
     check(TR.Estimate(drop(), nil, ctx("pvp", 60, col)), "no", "legacy", "rule")
     check(TR.Estimate(drop(), nil, ctx("raid", 99999, col)), "no", "expired", "rule")
     check(TR.Estimate(drop(), nil, ctx("raid", 60, { collectible = true, rules = { raid = "group" } })),
@@ -294,7 +297,7 @@ test("trade rules: a collectible keeps the bind and rule answers, and is unknown
     -- red under: the looter check run for a collectible (a `likely` claim an item level cannot back)
     check(TR.Estimate(drop(), looter(-20), ctx("raid", 60, col)), "unknown", "collectible", "rule")
     check(TR.Estimate(drop(), looter(-20), ctx("raid", 60)), "likely", "notUpgrade", "inspect", "gear unchanged")
-end, T.RETAIL_ONLY)
+end)
 
 -- ---------------------------------------------------------------------------------------------
 -- the Forever trade model (Forever port design §4.6, O2, O5): on WoW Forever a looted Bind on
