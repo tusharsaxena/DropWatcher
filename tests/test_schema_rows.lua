@@ -752,7 +752,7 @@ local PINNED_ROWS = {
     { "messages.oneAsk", "bool", "true" },
     { "messages.templates.announce", "string", "\"{item} is up for grabs, whisper me.\"" },
     { "messages.templates.ask", "string", "\"Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!\"" },
-    { "messages.templates.askML", "string", "\"Hi {player}, if nobody needs {item}, I'd love it: {mygain} for me. Thanks!\"" },
+    { "messages.templates.askML", "string", "\"Hi {player}, if nobody needs {item}, I'd love it: +{mygain} for me. Thanks!\"" },
     { "messages.templates.askOffSpec", "string", "\"Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!\"" },
     { "messages.templates.offer", "string", "\"Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?\"" },
     { "messages.templates.transmog", "string", "\"Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!\"" },

@@ -93,7 +93,7 @@ test("askML: one press whispers the master looter once; a second press is refuse
     local sent = m.chatSent[1]
     assertEqual(sent.chatType, "WHISPER")
     assertEqual(sent.target, DOOM_TO, "the master looter, not a looter")
-    assertEqual(sent.text, "Hi " .. DOOM_NAME .. ", if nobody needs " .. link(300) .. ", I'd love it: 20 for me. Thanks!")
+    assertEqual(sent.text, "Hi " .. DOOM_NAME .. ", if nobody needs " .. link(300) .. ", I'd love it: +20 for me. Thanks!")
     assertEqual(printed(m, "Whispered "), 1, "the confirmation line")
     assertEqual(NS.Asks.StateOf("askML", DOOM_TO, item.id), "sent")
     assertTrue(item.askedML, "the pending item remembers the ask")
