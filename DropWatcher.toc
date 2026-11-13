@@ -85,7 +85,8 @@ core\SimSetup.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # LOAD-BEARING: publishes the NS.Constants id tables, which core\ClassData.lua reads at load; FONT_MONO
-# is resolved from the seam above.
+# is resolved from the seam above, and the slot ids and slot plans are picked by
+# NS.Compat.ClientKey (core\Compat.lua, above) at load (clients-§5).
 core\Constants.lua
 # LOAD-BEARING: reads NS.Constants' ARMOR_SUBCLASS and WEAPON_SUBCLASS (core\Constants.lua, the line
 # above) and NS.Compat.ClientKey (core\Compat.lua, above) at load, and installs Retail's list unless the
@@ -283,8 +284,9 @@ modules\LootParser.lua
 # core\DropWatcher.lua's (PLAYER_REGEN_ENABLED after modules\Gear.lua's too); its NS.STAND_DOWN step
 # runs in TOC order, after those of the modules above. Publishes NS.Inspect, the inspect broker;
 # appends its handlers to NS.addon, hooks NotifyInspect through NS.Compat and takes NS.Perf as a
-# load-time upvalue at load. NS.Roster, NS.ItemFacts, NS.Restrictions and NS.Situations (above) are
-# read at call time.
+# load-time upvalue at load, and reads NS.Constants.SLOT (core\Constants.lua, above) at load for the
+# last slot read. NS.Roster, NS.ItemFacts, NS.Restrictions and NS.Situations (above) are read at
+# call time.
 modules\Inspect.lua
 # LOAD-BEARING: adds its sink to NS.LootParser (modules\LootParser.lua, above) at load, and appends
 # its rows to NS.FEATURE_EVENTS after other files' on shared events: CHALLENGE_MODE_START and

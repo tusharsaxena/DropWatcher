@@ -986,6 +986,14 @@ test("evaluate: on Forever a relic is its class's alone: libram, idol, totem", f
     assertEqual(equip(A.IDOL, nil), "unknown", "no class yet")
 end)
 
+-- Retail's class list has no relics (CD.RELIC is nil): a relic stays not gear there, never the
+-- Forever-only "relic" reason, which would read "a relic for another class" (DW-FP06 review).
+test("evaluate: on Retail's class list a relic is not gear, never the relic reason", function()
+    local E = load()
+    local status, why = E.Equippability(armor(650, "INVTYPE_RELIC", A.LIBRAM), who("PALADIN", 65))
+    assertEqual(status, "unknown"); assertEqual(why, "notGear")
+end)
+
 test("evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat", function()
     local E = loadForever()
     local helm = armor(650, "INVTYPE_HEAD", A.LEATHER, { stats = { [STR] = 15, [INT] = 10 } })

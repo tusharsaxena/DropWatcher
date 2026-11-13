@@ -105,7 +105,8 @@ local function armorCheck(facts, candidate, specID)
         return tri(CD.CanUseShield(classFile, specID, tree), "shield")
     end
     if loc == "INVTYPE_HOLDABLE" then return tri(CD.CanUseOffhand(classFile, specID, tree), "offhand") end
-    if loc == "INVTYPE_RELIC" then return tri(CD.CanUseRelic(classFile, facts.subClassID), "relic") end
+    -- A list with no relics (Retail) leaves a relic not gear, below.
+    if loc == "INVTYPE_RELIC" and CD.RELIC then return tri(CD.CanUseRelic(classFile, facts.subClassID), "relic") end
     if C.UNIVERSAL_EQUIPLOC[loc] then return "ok" end
     if C.ARMOR_TYPED_EQUIPLOC[loc] then return armorTypeCheck(facts, candidate) end
     return "unknown", "notGear"

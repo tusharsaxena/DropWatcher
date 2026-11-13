@@ -1196,7 +1196,7 @@ Total.
 - classdata: primary stat is the spec's, or the class's when every spec shares one
 - classdata: lookups never throw on junk input
 
-### test_evaluate.lua (42)
+### test_evaluate.lua (43)
 
 - evaluate: every equip location in SLOT_PLAN compares against its slot
 - evaluate: an equip location with no plan is unknown (not gear)
@@ -1239,6 +1239,7 @@ Total.
 - evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
 - evaluate: on Forever the item's spec list does not lift the armor level rule
 - evaluate: on Forever a relic is its class's alone: libram, idol, totem
+- evaluate: on Retail's class list a relic is not gear, never the relic reason
 - evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
 ### test_offspec.lua (11)
@@ -2688,7 +2689,7 @@ Total.
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
-| test_evaluate.lua | 42 |
+| test_evaluate.lua | 43 |
 | test_offspec.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
@@ -2756,4 +2757,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2270** |
+| **Total** | **2271** |
