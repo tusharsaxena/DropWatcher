@@ -36,7 +36,7 @@ local _, NS = ...
 -- GamepadGroupLootRollFrame and GroupLootFrame1..4 are not used (a recorded limitation).
 --
 -- THE SIMULATOR invents no Blizzard popup, so a simulated roll (START_LOOT_ROLL delivered by
--- NS.Sim) is drawn on an owned stand-in of the popup's size (RP.StandIn), centred above the
+-- NS.Sim) is drawn on an owned stand-in of the popup's size (RP.StandIn), centered above the
 -- middle of the screen, with its own overlay; it goes with the roll's CANCEL_LOOT_ROLL.
 
 NS.RollPopup = NS.RollPopup or {}
@@ -51,7 +51,7 @@ RP.PAD = 5            -- inside the card
 RP.LINE = 14          -- one line's height
 RP.GAP = 2            -- above the popup's top edge
 RP.STAND_IN_W, RP.STAND_IN_H = 280, 82   -- the size of Blizzard's popup, for the simulator's stand-in
-RP.STAND_IN_Y = 140   -- the stand-in's offset above the screen's centre
+RP.STAND_IN_Y = 140   -- the stand-in's offset above the screen's center
 RP.STAND_IN = "standIn"   -- the stand-in overlay's key
 
 -- The client, read once at load (clients-§5): the BoP wording is WoW Forever's.
