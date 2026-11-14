@@ -31,6 +31,16 @@ NS.OffSpec = NS.OffSpec or {}
 local OS = NS.OffSpec
 local CD = NS.ClassData
 
+-- RETAIL'S ALONE (Forever port design §4.4, clients-§4): WoW Forever's spec is class-wide, so it has
+-- no other spec to judge. The module initializes where NS.Constants.FEATURE.offSpec is true; on
+-- Forever Attach attaches nothing, the candidates bring no off-spec gear (Gear, Inspect) and its
+-- words (OffSpecCells' legend and notes) are absent. The readers (Of, EvalFor) stay pure.
+local INITIALIZED = NS.Constants.FEATURE.offSpec == true
+
+--- Whether the off-spec pass is initialized on this client (Retail only).
+--- @return boolean
+function OS.Initialized() return INITIALIZED end
+
 -- The cantUse reasons that depend on the spec: another spec of the class may answer otherwise.
 OS.SPEC_REASONS = { primaryStat = true, specList = true, shield = true, offhand = true, dualWield = true }
 
@@ -141,7 +151,11 @@ end
 --- Sets `out.offSpec` when another spec of the candidate's class can use what the main spec
 --- cannot (see the header). `run` is the kernel's own evaluation, `run(facts, candidate, opts)`.
 function OS.Attach(out, facts, candidate, opts, run)
+    if not INITIALIZED then return end
     local specID = knownSpec(candidate.specID)
+    -- A spec the list has no row for (WoW Forever's class-wide spec, whose trees are not specs a
+    -- candidate switches between here) has no off-spec to judge.
+    if not CD.Spec(specID) then return end
     local specs = CD.CLASS_SPECS[candidate.classFile]
     if not (specID and specs and type(candidate.offSpecGear) == "function" and specRefusal(out)) then return end
     local sub = { sidegradeBand = opts.sidegradeBand, heirloomProtect = opts.heirloomProtect }

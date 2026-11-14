@@ -2,8 +2,8 @@ local _, NS = ...
 -- modules/Inspect.lua — the inspect broker (design spec §8): another group member's worn gear and
 -- spec, read through the client's inspect, one member at a time, politely.
 --
---   entry = { status, at, gear = { [slot] = { link, ilvl } | false }, specID, reason, gen, stale,
---             loading }
+--   entry = { status, at, gear = { [slot] = { link, ilvl } | false }, specID, level, reason, gen,
+--             stale, loading }
 --
 -- STATUS. `pending` (queued or in flight), `fresh` (read after an INSPECT_READY, ours or anyone's),
 -- `cached` (read at once without an inspect: the client already held every link, the fast path),
@@ -25,7 +25,8 @@ local _, NS = ...
 -- times out, and the PLAYER_REGEN_ENABLED edge resumes the rest. A job no gate lets through is
 -- asked again every RECHECK seconds.
 --
--- READING. On the job's INSPECT_READY the slots 1-17 are read READ_DELAY seconds later; a slot whose
+-- READING. On the job's INSPECT_READY the slots 1-17 (1-18 on WoW Forever, whose ranged slot 18
+-- holds ranged and thrown weapons, wands and relics) are read READ_DELAY seconds later; a slot whose
 -- item id is known but whose link is not (or is nameless) is incomplete, and the read is retried up
 -- to LINK_TRIES times, LINK_RETRY seconds apart, then kept as it is (`reason` = `incomplete`).
 -- A read that finds no item at all, or a unit that no longer names the GUID, is NO DATA (the
@@ -81,7 +82,8 @@ I.WARMUP_DELAY = 2
 --- Queue priorities, lower first.
 I.PRIORITY = { looter = 1, offer = 2, warmup = 3 }
 
-local FIRST_SLOT, LAST_SLOT = 1, 17
+-- The last slot read: the ranged slot where the client has one (WoW Forever), else the off hand.
+local FIRST_SLOT, LAST_SLOT = 1, NS.Constants.SLOT.RANGED or NS.Constants.SLOT.OFFHAND
 
 --- The slots the client knows only from inspect data (neck, rings, trinkets): the fast path needs
 --- an item in each before it trusts a read made without an inspect.
@@ -232,7 +234,7 @@ local function readSlot(unit, slot)
     return { link = link, ilvl = Compat.InventoryItemLevel(unit, slot) }
 end
 
--- Slots 1-17 of `unit`: { items, missing (incomplete slots), worn (slots with an item) }.
+-- Slots FIRST_SLOT-LAST_SLOT of `unit`: { items, missing (incomplete slots), worn (slots with an item) }.
 local function readSlots(unit)
     local t0 = Perf.on and debugprofilestop()
     local snap = { items = {}, missing = 0, worn = 0 }
@@ -279,6 +281,10 @@ local function complete(guid, unit, snap, status)
     e.worn = snap.worn
     e.specID = NS.Compat.InspectSpecID(unit) or e.specID or (m and m.specID)
     if e.specID then NS.Roster.SetSpec(guid, e.specID) end
+    -- On WoW Forever the spec is class-wide and the armor a class wears depends on its level
+    -- (Forever port design §4.2): the inspect's level is kept beside it. Nobody's talent tree is
+    -- read but yours (LibKa0s-Role-1.0 reads the player's alone).
+    e.level = NS.Compat.UnitLevel(unit) or e.level
     logJob(guid, e)
     loadFacts(guid, e)
     schedulePump(0)
@@ -529,9 +535,10 @@ function I.Candidate(guid)
     local specID = e.specID or (m and m.specID)
     local gear = gearOf(e)
     return {
-        classFile = classFile, specID = specID, isPlayer = false, gear = gear,
+        classFile = classFile, specID = specID, level = e.level, isPlayer = false, gear = gear,
         dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
-        offSpecGear = function(x) return NS.OffSpec.WornGear(gear, NS.OffSpec.Who(classFile, x)) end,
+        -- Retail's alone (modules/OffSpec.lua): no off-spec gear where the pass is not initialized.
+        offSpecGear = NS.OffSpec.Initialized() and function(x) return NS.OffSpec.WornGear(gear, NS.OffSpec.Who(classFile, x)) end or nil,
     }
 end
 

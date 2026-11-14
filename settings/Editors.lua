@@ -35,9 +35,27 @@ end
 
 -- ── the specs a page edits ──────────────────────────────────────────────────────────────────
 
---- A class's specializations, in specID order, as sub-tab entries: { key = specID, label }.
+--- The name of a spec key for the strip: a specID's (`specName`, Compat.SpecName), or for WoW
+--- Forever's "<classFile>:<tree>" the talent tree's (`treeNames[tree]`, Compat.TalentTreeNames),
+--- else "Talent tree <n>". Answers the `nameOf` E.ClassSpecs takes.
+--- @param specName function|nil specID -> localized name or nil
+--- @param treeNames table|nil { [tree] = name }
+--- @return function
+function E.SpecNamer(specName, treeNames)
+    return function(key)
+        local tree = type(key) == "string" and tonumber(key:match(":(%d+)$"))
+        if not tree then return type(specName) == "function" and specName(key) or nil end
+        local name = isTable(treeNames) and treeNames[tree] or nil
+        if type(name) == "string" and name ~= "" then return name end
+        return L["Talent tree %d"]:format(tree)
+    end
+end
+
+--- A class's specializations, in spec key order, as sub-tab entries: { key, label }. The key is
+--- the specID on Retail and "<classFile>:<tree>" on WoW Forever, one per talent tree (Forever port
+--- design §4.3); NS.ClassData's active list decides.
 --- @param classFile string
---- @param nameOf function specID -> localized name or nil (Compat.SpecName)
+--- @param nameOf function spec key -> localized name or nil (E.SpecNamer)
 --- @return table
 function E.ClassSpecs(classFile, nameOf)
     local out = {}
@@ -51,9 +69,9 @@ end
 --- The spec a sub-strip shows: the remembered one while the list still has it, else the player's
 --- own, else the first. Nil for an empty list.
 --- @param list table E.ClassSpecs' answer
---- @param remembered number|nil
---- @param own number|nil
---- @return number|nil
+--- @param remembered number|string|nil
+--- @param own number|string|nil
+--- @return number|string|nil
 function E.PickSpec(list, remembered, own)
     local has = {}
     for _, e in ipairs(list) do has[e.key] = true end
@@ -209,7 +227,7 @@ end
 
 -- What each token fills in, for the chip's tooltip (design spec §9.1).
 E.TOKEN_TIPS = {
-    player = L["The player's name: the looter for an ask, the candidate for an offer."],
+    player = L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."],
     item   = L["The item's link."],
     ilvl   = L["The item's level."],
     slot   = L["The slot the item goes in."],
@@ -223,6 +241,7 @@ E.TEMPLATE_LABEL = {
     ask      = L["Ask (whisper to the looter)"],
     transmog = L["Ask for transmog (whisper to the looter)"],
     askOffSpec = L["Ask for off-spec (whisper to the looter)"],
+    askML    = L["Ask the master looter (whisper to the master looter)"],
     offer    = L["Offer (whisper to a candidate)"],
     announce = L["Announce (group, raid or instance)"],
 }
@@ -233,8 +252,8 @@ local function red(text) return (NS.SkinEscape("sem.badAlt") or "") .. text .. "
 
 -- A template's short name, for the preview's header.
 E.KIND_NAME = {
-    ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"], offer = L["Offer"],
-    announce = L["Announce"],
+    ask = L["Ask"], transmog = L["Ask for transmog"], askOffSpec = L["Ask for off-spec"],
+    askML = L["Ask the master looter"], offer = L["Offer"], announce = L["Announce"],
 }
 
 
@@ -303,6 +322,13 @@ local SAMPLE = {
         if strict and not offSpecGain(rec) then return nil end
         return { name = rec.looter.name, guid = rec.looter.guid }
     end,
+    -- No pending item lives in the feed: another member's drop, an upgrade for you when there is
+    -- one, stands in for it, its looter for the master looter.
+    askML = function(rec, strict)
+        if isMine(rec) or not isTable(rec.looter) then return nil end
+        if strict and (myGain(rec) or 0) <= 0 then return nil end
+        return { name = rec.looter.name, guid = rec.looter.guid }
+    end,
     offer = function(rec)
         if not isMine(rec) then return nil end
         return bestCandidate(rec)
@@ -361,9 +387,11 @@ end
 
 -- ── Situations ──────────────────────────────────────────────────────────────────────────────
 
---- The table's four setting columns, in order: three fields of `situations.<key>`, then the
---- situation's loot rule, `trade.rules.<key>` (Trade › Rules until feedback-24).
-E.SITUATION_FIELDS = { "track", "autoOpen", "quality", "rule" }
+--- The table's setting columns, in order: three fields of `situations.<key>`, then (Retail's alone,
+--- C.FEATURE_CLIENTS.tradeRuleRows) the situation's loot rule, `trade.rules.<key>` (Trade › Rules
+--- until feedback-24). WoW Forever has one rule, `soulbound`, so no column (Forever port design §4.4).
+E.SITUATION_FIELDS = { "track", "autoOpen", "quality" }
+if K.FEATURE.tradeRuleRows then E.SITUATION_FIELDS[#E.SITUATION_FIELDS + 1] = "rule" end
 local SITUATION_PATH = { rule = "trade.rules.%s" }
 
 -- One cell: its schema row, the value stored at its path, and whether it is live. Live unless the

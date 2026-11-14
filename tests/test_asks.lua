@@ -21,6 +21,11 @@ local function ring(ilvl)
         subClassID = 0, bindType = 1, stats = {} }
 end
 
+-- Lyra's realm (Area 52) on Retail; on Forever no surname, so the mock row is the whole name "Lyra"
+-- (a row's realm is the surname there, client-quirks-§5). Each whisper target in the client's shape.
+local LYRA_REALM = (not T.forever) and "Area 52" or nil
+local BRAKK_TO, LYRA_TO = T.rosterName("Brakk"), T.rosterName("Lyra", LYRA_REALM)
+
 local function row(guid, name, realm, classFile)
     return { guid = guid, name = name, realm = realm, class = classFile, classFile = classFile }
 end
@@ -32,7 +37,7 @@ local function party()
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", LYRA_REALM, "PRIEST") })
     m.INVTYPE_FINGER = "Finger"
     NS.Roster.Refresh("test")
     return NS, m, NS.Asks
@@ -79,7 +84,7 @@ test("send: an ask whispers the looter's Name-Realm with the expanded template, 
     assertEqual(#m.chatSent, 1)
     local sent = m.chatSent[1]
     assertEqual(sent.chatType, "WHISPER")
-    assertEqual(sent.target, "Brakk-Testrealm")
+    assertEqual(sent.target, BRAKK_TO)
     assertNil(sent.languageID)
     assertEqual(sent.text, "Hi Brakk, if you don't need " .. link(300)
         .. ", could I have it? It'd be +10 for me. No worries if not!")
@@ -88,7 +93,26 @@ test("send: an ask whispers the looter's Name-Realm with the expanded template, 
     assertEqual(A.StateOf("ask", BRAKK, id), "sent", "a GUID finds the same ask")
     assertEqual(#seen, 1)
     assertEqual(seen[1].dropID, id); assertEqual(seen[1].state, "sent")
-    assertEqual(seen[1].kind, "ask"); assertEqual(seen[1].target, "Brakk-Testrealm")
+    assertEqual(seen[1].kind, "ask"); assertEqual(seen[1].target, BRAKK_TO)
+end)
+
+test('asks: on Forever the whisper goes to the whole name "Doom Dock"', function()
+    local NS, m = T.enableAddon()
+    m.addItem(link(100), ring(600))
+    m.inventory.player[11] = link(100)
+    m.setGroup({ row(BRAKK, "Doom", "Dock", "WARRIOR") })
+    m.INVTYPE_FINGER = "Finger"
+    NS.Roster.Refresh("test")
+    local forever = NS.Compat.ClientKey() == "forever"
+    local whole = forever and "Doom Dock" or "Doom-Dock"
+    local id = drop(NS, m, 300, whole)
+    assertEqual(NS.Asks.Request("ask", whole, id), "sent")
+    local sent = m.chatSent[1]
+    assertEqual(sent.chatType, "WHISPER")
+    assertEqual(sent.target, whole, "the whole name, never Doom-Dock or Doom on Forever")
+    if forever then
+        assertTrue(sent.text:find("Hi Doom Dock,", 1, true) ~= nil, "the greeting names the whole name")
+    end
 end)
 
 test("send: every token comes from the drop: item, ilvl, slot, track and both gains", function()
@@ -96,7 +120,8 @@ test("send: every token comes from the drop: item, ilvl, slot, track and both ga
     NS.db.profile.messages = { templates = { ask = "{player}|{item}|{ilvl}|{slot}|{track}|{mygain}" } }
     local id = drop(NS, m, 300, "Brakk", 613)
     A.Request("ask", "Brakk", id)
-    assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|?|13")
+    -- On WoW Forever {track} is no token (Forever port design §4.4): it is sent as it is written.
+    assertEqual(m.chatSent[1].text, "Brakk|" .. link(300) .. "|613|Finger|" .. (T.forever and "{track}" or "?") .. "|13")
 end)
 
 test("send: into an empty slot the gain reads as words, never the item level or a ? (DW-62)", function()
@@ -113,11 +138,28 @@ test("send: into an empty slot the gain reads as words, never the item level or 
     assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, nil, "no gain and no empty slot: unknown")
 end)
 
+test("send: a score-led upgrade with no item-level gain reads its gain as words (Forever port §4.5)", function()
+    local NS = party()
+    -- WoW Forever's scoreFirst verdict: an upgrade by score at a lower item level.
+    local scored = { verdict = "upgrade", ilvlDelta = -3, scoreDelta = 12, led = "score", reasons = {} }
+    local rec = { link = link(300), facts = { ilvl = 308 }, me = scored, them = scored }
+    local ctx = NS.Asks.TokenContext("ask", rec, { name = "Brakk" })
+    assertEqual(ctx.mygain, "a score upgrade"); assertEqual(ctx.gain, "a score upgrade")
+    local text = NS.Messaging.Expand(NS.Messaging.Template("ask"), ctx)
+    assertEqual(text:find("-3", 1, true), nil, "a lower item level is never whispered as a gain")
+    assertTrue(text:find("It'd be a score upgrade for me", 1, true) ~= nil, text)
+    -- A score-led upgrade that also gains item levels keeps its number; an item-level-led one too.
+    rec.me = { verdict = "upgrade", ilvlDelta = 4, led = "score", reasons = {} }
+    assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, 4)
+    rec.me = { verdict = "upgrade", ilvlDelta = 0, led = "ilvl", reasons = {} }
+    assertEqual(NS.Asks.TokenContext("ask", rec, { name = "Brakk" }).mygain, 0)
+end)
+
 test("send: the one-ask guard refuses a repeat; with messages.oneAsk off a sent ask goes again", function()
     local NS, m, A = party()
     local id = drop(NS, m, 300, "Brakk")
     A.Request("ask", "Brakk", id)
-    local state, reason = A.Request("ask", "Brakk-Testrealm", id)
+    local state, reason = A.Request("ask", BRAKK_TO, id)
     assertEqual(state, "refused"); assertEqual(reason, "alreadyAsked")
     assertEqual(#m.chatSent, 1)
     NS.db.profile.messages = { oneAsk = false }
@@ -170,7 +212,7 @@ test("send: an offer whispers the candidate, named in {player}", function()
     local NS, m, A = party()
     local id = drop(NS, m, 300, nil)    -- your own drop
     A.Request("offer", "Lyra", id)
-    assertEqual(m.chatSent[1].target, "Lyra-Area52")
+    assertEqual(m.chatSent[1].target, LYRA_TO)
     assertTrue(m.chatSent[1].text:find("^Hi Lyra, " .. link(300):gsub("%p", "%%%0")) ~= nil)
 end)
 
@@ -212,7 +254,7 @@ test("fail: the deprecated global sender is the fallback", function()
     m.C_ChatInfo.SendChatMessage = nil
     m.SendChatMessage = function(text, chatType, _, to) calls[#calls + 1] = { text, chatType, to } end
     assertEqual((A.Request("ask", "Brakk", id)), "sent")
-    assertEqual(#calls, 1); assertEqual(calls[1][2], "WHISPER"); assertEqual(calls[1][3], "Brakk-Testrealm")
+    assertEqual(#calls, 1); assertEqual(calls[1][2], "WHISPER"); assertEqual(calls[1][3], BRAKK_TO)
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -319,8 +361,8 @@ test("flush: one send every 1.5 seconds, first in first out", function()
     assertEqual(#m.chatSent, 2)
     m.advance(1.5)
     assertEqual(#m.chatSent, 3)
-    assertEqual(m.chatSent[1].target, "Brakk-Testrealm")
-    assertEqual(m.chatSent[2].target, "Lyra-Area52")
+    assertEqual(m.chatSent[1].target, BRAKK_TO)
+    assertEqual(m.chatSent[2].target, LYRA_TO)
     assertTrue(m.chatSent[3].text:find("Item 302", 1, true) ~= nil)
     assertFalse(A.IsFlushing())
     assertEqual(A.Stats().flushes, 1)
@@ -344,6 +386,8 @@ test("flush: a restriction back mid-flush stops it; the rest wait for the next t
 end)
 
 test("flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that lifted silently", function()
+    -- A key's completion is Retail's alone (Forever port design §4.4): on WoW Forever the event is
+    -- not registered, so it reaches no flush and the ask stays queued.
     for _, event in ipairs({ "ENCOUNTER_END", "CHALLENGE_MODE_COMPLETED" }) do
         local NS, m, A = party()
         local id = drop(NS, m, 300, "Brakk")
@@ -352,7 +396,8 @@ test("flush: ENCOUNTER_END and CHALLENGE_MODE_COMPLETED re-read a lockdown that 
         m.chatLockdown = false
         assertEqual(#m.chatSent, 0)
         m.__fire(event)
-        assertEqual(#m.chatSent, 1, event)
+        local sent = (event == "CHALLENGE_MODE_COMPLETED" and T.forever) and 0 or 1
+        assertEqual(#m.chatSent, sent, event)
     end
 end)
 
@@ -394,15 +439,15 @@ test("cancel: an ask queued to a looter who leaves is dropped; others stay", fun
     local b = drop(NS, m, 301, "Lyra")
     restrict(m)
     A.Request("ask", "Brakk", a); A.Request("ask", "Lyra", b)
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", LYRA_REALM, "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
-    assertEqual(A.StateOf("ask", "Brakk-Testrealm", a), "ready")
+    assertEqual(A.StateOf("ask", BRAKK_TO, a), "ready")
     assertEqual(A.StateOf("ask", "Lyra", b), "queued")
     local last = seen[#seen]
     assertEqual(last.dropID, a); assertEqual(last.state, "ready"); assertEqual(last.reason, "left")
     lift(m)
     assertEqual(#m.chatSent, 1)
-    assertEqual(m.chatSent[1].target, "Lyra-Area52")
+    assertEqual(m.chatSent[1].target, LYRA_TO)
 end)
 
 test("cancel: a queued announce is dropped once you leave the group", function()

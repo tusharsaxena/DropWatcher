@@ -293,6 +293,9 @@ test("slash: `situation` prints the situation, its settings and the classifier's
     assertTrue(m.prints[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, m.prints[2])
     assertTrue(m.prints[3]:find("raid no", 1, true) ~= nil, m.prints[3])
     assertEqual(#NS.SlashVerbs.SituationLines(), 3)
+    -- Per client (Forever port design §4.4): WoW Forever names no keystone, delve or follower dungeon.
+    assertEqual(m.prints[2]:find("keystone", 1, true) == nil, T.forever, m.prints[2])
+    assertEqual(m.prints[3]:find("delve", 1, true) == nil, T.forever, m.prints[3])
 end)
 
 test("slash: `offer` opens the panel on your newest drop of that item", function()

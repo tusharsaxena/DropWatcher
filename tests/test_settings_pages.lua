@@ -9,15 +9,19 @@
 -- strip's button.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 -- The pages after the landing page, and each page's strip, in order. Stated here rather than read
 -- from the rows, so a tab that moves is a named failure.
 local PAGES = {
     -- "Appearance" is the Skin tab's key (the library labels it "Skin"; tests/test_skin_setup.lua).
-    { key = "general",    title = "General",    strip = { "Master controls", "Simulator", "Appearance", "Keybindings" } },
+    -- WoW Forever's Role tab (Forever port design §11.4) follows Master controls; Retail has none.
+    { key = "general",    title = "General",
+      strip = (os.getenv("KA0S_KIT_CLIENT") == "forever")
+          and { "Master controls", "Role", "Simulator", "Appearance", "Keybindings" }
+          or  { "Master controls", "Simulator", "Appearance", "Keybindings" } },
     -- item 020 folded the Situations page into Drops as its first tab (DRO-L01).
-    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Item lists", "Retention" } },
+    { key = "feed",       title = "Drops",      strip = { "Situations", "Quality", "Items", "Item lists", "Retention", "Rolls" } },
     { key = "comparison", title = "Comparison", strip = { "Scoring", "Weights", "Unwanted types" } },
     { key = "messages",   title = "Messages",   strip = { "Sending", "Auto-ask", "Templates" } },
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
@@ -167,6 +171,15 @@ test("situations: the global Auto-open row, then one table line per situation an
     for i, s in ipairs(S) do
         assertEqual(t.rows[i].label:GetText(), NS.WindowFooter.SituationLabel(s.key), s.key)
     end
+    -- Per client (Forever port design §4.4): WoW Forever's table has its five situations alone.
+    local labels = {}
+    for i, r in ipairs(t.rows) do labels[i] = r.label:GetText() end
+    if T.forever then
+        assertEqual(table.concat(labels, "|"), "Dungeon|Raid|PvP|Open world group|Solo")
+    else
+        assertEqual(table.concat(labels, "|"),
+            "Mythic+|Dungeon|Follower dungeon|Raid Finder|Raid|Delve|Scenario|PvP|Open world group|Solo")
+    end
 end)
 
 test("situations: five gold, left-aligned column headers, and a stripe on every second line", function()
@@ -179,7 +192,9 @@ test("situations: five gold, left-aligned column headers, and a stripe on every 
         local r, g, b = fs:GetTextColor()
         assertTrue(r > 0.8 and g > 0.7 and b < 0.5, "gold")
     end
-    assertEqual(table.concat(names, "|"), "Situation|Track|Auto-open|Quality|Loot rule")
+    -- The Loot rule column is Retail's alone (Forever port design §4.4): Forever has one rule.
+    assertEqual(table.concat(names, "|"), T.forever and "Situation|Track|Auto-open|Quality"
+        or "Situation|Track|Auto-open|Quality|Loot rule")
     for i, r in ipairs(t.rows) do
         assertEqual(r.stripe:IsShown() == true, i % 2 == 0, "stripe on line " .. i)
         assertEqual(r.label.__template, "GameFontHighlightSmall")
@@ -203,22 +218,34 @@ test("situations: the five columns fit beside the panel's scroll gutter, Loot ru
     assertTrue(C.quality + W.quality < C.rule, "the Quality dropdown ends before Loot rule starts")
     assertTrue(C.rule + W.rule <= P.SIT_TABLE_W, "the Loot rule dropdown ends inside the table")
     assertTrue(P.SIT_TABLE_W <= 600, "the table fits the ~600 units the panel leaves beside its gutter")
-    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width.
+    -- Drawn: each header at its column (the cells share SIT_COL), each dropdown at its width. WoW
+    -- Forever draws no Loot rule column (Forever port design §4.4).
     local _, _, t = whenToShow(NS, m)
-    for i, k in ipairs(order) do
+    local drawn = T.forever and { "situation", "track", "autoOpen", "quality" } or order
+    assertEqual(#t.headers, #drawn)
+    for i, k in ipairs(drawn) do
         local x = t.headers[i].__points[1][4]   -- the mock's regions record their points
         assertEqual(x, C[k], k .. "'s header sits over its cells")
     end
     local row = t.rows[1]
-    for _, k in ipairs({ "quality", "rule" }) do
+    for _, k in ipairs(T.forever and { "quality" } or { "quality", "rule" }) do
         assertEqual(row[k].width, W[k], k .. " dropdown width")   -- the kit's AceGUI fake records it
     end
+    if T.forever then assertNil(row.rule, "no Loot rule cell") end
 end)
+
+-- Each situation's table line, per client (Forever port design §4.4: WoW Forever has its five), and
+-- the first line's key (Mythic+ on Retail, Dungeon on Forever).
+local SIT_KEYS = T.forever and { "dungeon", "raid", "pvp", "openWorldGroup", "solo" }
+    or { "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp", "openWorldGroup", "solo" }
+local LINE = {}
+for i, key in ipairs(SIT_KEYS) do LINE[key] = i end
+local FIRST = SIT_KEYS[1]
 
 test("situations: each cell paints its stored value, and a toggle writes its path", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
-    local pvp = t.rows[8]   -- K.SITUATIONS order: PvP is eighth, untracked by default
+    local pvp = t.rows[LINE.pvp]   -- K.SITUATIONS order: PvP is eighth (third on Forever), untracked by default
     assertEqual(pvp.track.value, false)
     assertEqual(t.rows[1].track.value, true, "Mythic+ is tracked by default")
     assertEqual(t.rows[1].quality.value, "global")
@@ -226,34 +253,38 @@ test("situations: each cell paints its stored value, and a toggle writes its pat
     pvp.track:__fire("OnValueChanged", true)
     assertEqual(NS.addon.db.profile.situations.pvp.track, true)
     t.rows[1].quality:__fire("OnValueChanged", "dynamicSlot")
-    assertEqual(NS.addon.db.profile.situations.mythicPlus.quality, "dynamicSlot")
+    assertEqual(NS.addon.db.profile.situations[FIRST].quality, "dynamicSlot")
     t.rows[1].autoOpen:__fire("OnValueChanged", false)
-    assertEqual(NS.addon.db.profile.situations.mythicPlus.autoOpen, false)
-    assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
-    assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
-    t.rows[1].rule:__fire("OnValueChanged", "group")
-    assertEqual(NS.addon.db.profile.trade.rules.mythicPlus, "group")
+    assertEqual(NS.addon.db.profile.situations[FIRST].autoOpen, false)
+    if T.forever then   -- one rule, so no Loot rule cell (Forever port design §4.4)
+        assertNil(t.rows[1].rule)
+    else
+        assertEqual(t.rows[1].rule.value, "personal", "the loot rule (feedback-24)")
+        assertEqual(t.rows[1].rule.list.legacy, "Legacy loot", "its own value list")
+        t.rows[1].rule:__fire("OnValueChanged", "group")
+        assertEqual(NS.addon.db.profile.trade.rules[FIRST], "group")
+    end
     NS.SchemaRuntime.Set("situations.raid.track", false)
-    assertEqual(t.rows[5].track.value, false, "a write from elsewhere repaints it")
+    assertEqual(t.rows[LINE.raid].track.value, false, "a write from elsewhere repaints it")
 end)
 
 test("situations: an untracked situation's Auto-open, Quality and Loot rule are dimmed, and so is every Auto-open with the master off", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
-    local mp, pvp = t.rows[1], t.rows[8]
+    local mp, pvp = t.rows[1], t.rows[LINE.pvp]
     assertFalse(mp.autoOpen.disabled == true, "mythicPlus auto-open live")
     assertFalse(mp.quality.disabled == true)
     assertFalse(pvp.track.disabled == true, "Track is always live")
     assertTrue(pvp.autoOpen.disabled == true, "pvp (untracked) auto-open dimmed")
     assertTrue(pvp.quality.disabled == true, "and its quality")
-    assertTrue(pvp.rule.disabled == true, "and its loot rule")
-    assertFalse(mp.rule.disabled == true, "a tracked one's is live")
+    assertTrue(T.forever or pvp.rule.disabled == true, "and its loot rule")
+    assertTrue(T.forever or mp.rule.disabled ~= true, "a tracked one's is live")
     assertEqual(select(1, pvp.label:GetTextColor()), 0.5, "its label dims")
     Set("situations.pvp.track", true)
     assertFalse(pvp.autoOpen.disabled == true, "tracking it lights it")
     assertFalse(pvp.quality.disabled == true)
-    assertFalse(pvp.rule.disabled == true)
+    assertTrue(T.forever or pvp.rule.disabled ~= true)
     assertEqual(select(1, pvp.label:GetTextColor()), 0.86)
     Set("autoOpen", false)
     -- red under: a disabled rule that reads the situation's track alone
@@ -266,24 +297,24 @@ test("situations: Defaults repaints the table", function()
     local Set = NS.SchemaRuntime.Set
     local _, _, t = whenToShow(NS, m)
     Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
-    Set("situations.mythicPlus.quality", "fixed")
-    assertEqual(t.rows[8].track.value, true)
+    Set("situations." .. FIRST .. ".quality", "fixed")
+    assertEqual(t.rows[LINE.pvp].track.value, true)
     NS.addon.Settings.Helpers.RestoreAllDefaults()
-    assertEqual(t.rows[8].track.value, false)
+    assertEqual(t.rows[LINE.pvp].track.value, false)
     assertEqual(t.rows[1].quality.value, "global")
-    assertTrue(t.rows[8].autoOpen.disabled == true)
+    assertTrue(t.rows[LINE.pvp].autoOpen.disabled == true)
 end)
 
 test("situations: a profile switch repaints the table and re-hosts it", function()
     local NS, _, m = T.enableAddon()
     local ctx, _, t = whenToShow(NS, m)
     NS.SchemaRuntime.Set("situations.pvp.track", true)   -- PvP (row 8) is untracked by default
-    assertEqual(t.rows[8].track.value, true)
+    assertEqual(t.rows[LINE.pvp].track.value, true)
     NS.addon.db:SetProfile("Other")
     -- red under: a full re-render that builds a second table, or re-hosts nothing after the park
     assertTrue(ctx.dwSituations == t, "the same table")
-    assertEqual(t.rows[8].track.value, false, "the fresh profile's PvP is untracked")
-    assertTrue(t.rows[8].autoOpen.disabled == true, "and its auto-open dims again")
+    assertEqual(t.rows[LINE.pvp].track.value, false, "the fresh profile's PvP is untracked")
+    assertTrue(t.rows[LINE.pvp].autoOpen.disabled == true, "and its auto-open dims again")
     assertTrue(t.host:IsShown() == true, "still on the page")
     assertTrue(t.host:GetParent() ~= ctx.panel, "re-hosted off the park")
 end)
@@ -308,7 +339,7 @@ test("situations: the table is built once, parked before each render, and re-hos
     assertEqual(checks, 0)
     assertTrue(t.host:IsShown() == true)
     NS.SchemaRuntime.Set("situations.solo.track", false)   -- Solo is tracked by default (DW-06)
-    assertEqual(t.rows[10].track.value, false, "repainted after the re-host")
+    assertEqual(t.rows[LINE.solo].track.value, false, "repainted after the re-host")
 end)
 
 test("situations: releasing the placeholder outside the renderer parks the table (its OnRelease, options-ui-§19)", function()
@@ -336,7 +367,10 @@ end)
 test("situations: the per-situation rows are still schema rows, skipRender, with no subsection", function()
     local NS = T.enableAddon()
     for _, s in ipairs(NS.Constants.SITUATIONS) do
-        local paths = { "trade.rules." .. s.key }
+        -- The loot rule's row is Retail's alone (Forever port design §4.4).
+        local paths = {}
+        if not T.forever then paths[1] = "trade.rules." .. s.key end
+        if T.forever then assertNil(NS.SchemaRuntime.FindRow("trade.rules." .. s.key), s.key .. "'s loot rule") end
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do paths[#paths + 1] = "situations." .. s.key .. "." .. f end
         for _, path in ipairs(paths) do
             local row = NS.SchemaRuntime.FindRow(path)
@@ -358,26 +392,31 @@ test("situations: the pure rows carry each situation's label, values and live ce
     local function rows() return E.SituationRows(NS.SchemaRuntime.FindRow, NS.Setting, NS.WindowFooter.SituationLabel) end
     local list = rows()
     assertEqual(#list, #NS.Constants.SITUATIONS)
-    assertEqual(list[1].key, "mythicPlus")
-    assertEqual(list[1].label, "Mythic+")
-    assertEqual(list[1].track.path, "situations.mythicPlus.track")
+    assertEqual(list[1].key, FIRST)
+    assertEqual(list[1].label, NS.WindowFooter.SituationLabel(FIRST))
+    assertEqual(list[1].track.path, "situations." .. FIRST .. ".track")
     assertEqual(list[1].quality.value, "global")
-    assertEqual(list[1].rule.path, "trade.rules.mythicPlus")
-    assertEqual(list[1].rule.value, "personal")
-    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled and list[1].rule.enabled)
+    if T.forever then   -- no Loot rule column (Forever port design §4.4)
+        assertNil(list[1].rule)
+    else
+        assertEqual(list[1].rule.path, "trade.rules." .. FIRST)
+        assertEqual(list[1].rule.value, "personal")
+        assertTrue(list[1].rule.enabled)
+    end
+    assertTrue(list[1].active and list[1].autoOpen.enabled and list[1].quality.enabled)
     -- track x global auto-open: Auto-open is live only with both on; Quality with the track on.
     local cases = { { true, true, true, true }, { true, false, false, true },
                     { false, true, false, false }, { false, false, false, false } }
     for _, c in ipairs(cases) do
         Set("situations.dungeon.track", c[1])
         Set("autoOpen", c[2])
-        local d = rows()[2]
+        local d = rows()[LINE.dungeon]
         local tag = tostring(c[1]) .. "/" .. tostring(c[2])
         assertEqual(d.active, c[1], tag)
         assertTrue(d.track.enabled, tag .. " track always live")
         assertEqual(d.autoOpen.enabled, c[3], tag .. " auto-open")
         assertEqual(d.quality.enabled, c[4], tag .. " quality")
-        assertEqual(d.rule.enabled, c[4], tag .. " loot rule")
+        if not T.forever then assertEqual(d.rule.enabled, c[4], tag .. " loot rule") end
     end
 end)
 
@@ -552,6 +591,7 @@ end)
 
 test("comparison: Weights draws your class's specs as a sub-strip and one slider per stat", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     -- The mock player is a mage: Arcane, Fire and Frost, the first shown (250 is not a mage's).
@@ -564,6 +604,7 @@ end)
 
 test("comparison: a weight slider writes the whole map through the seam, for the spec on screen", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     find(drawn, "Slider", "Haste"):__fire("OnMouseUp", 1.5)
@@ -579,8 +620,25 @@ test("comparison: a weight slider writes the whole map through the seam, for the
     assertEqual(w[62].ITEM_MOD_HASTE_RATING_SHORT, 1.5)
 end)
 
+test("comparison: the Weights strip shows your specs on Retail and your class's talent trees on Forever", function()
+    local NS, _, m = T.enableAddon()
+    local forever = NS.Compat.ClientKey() == "forever"
+    if forever then
+        m.seedTalents(1487, { { name = "Arcane", spent = 0 }, { name = "Fire", spent = 31 }, { name = "Frost", spent = 5 } })
+    end
+    local ctx = open(NS, m, "comparison")
+    local drawn = tab(m, ctx, "Weights")
+    assertEqual(#ctx.__subTabKids, 3)
+    -- red under: a Forever strip keyed by the class-wide spec, or one that opens on the first tree
+    local own = forever and "MAGE:2" or 62
+    assertEqual(ctx.activeSubTab["Weights"], own, "your own tree on Forever; the first mage spec on Retail")
+    find(drawn, "Slider", "Haste"):__fire("OnMouseUp", 1.5)
+    assertEqual(NS.Setting("comparison.weights")[own].ITEM_MOD_HASTE_RATING_SHORT, 1.5)
+end)
+
 test("comparison: the Pawn import box replaces the spec on screen's weights and says what came in", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Weights")
     local box = find(drawn, "EditBox", "Import a Pawn scale")
@@ -603,6 +661,7 @@ end)
 
 test("comparison: Unwanted types lists the class's weapon types and marks one unwanted per spec", function()
     local NS, _, m = T.enableAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local ctx = open(NS, m, "comparison")
     local drawn = tab(m, ctx, "Unwanted types")
     local daggers = find(drawn, "CheckBox", "Daggers")
@@ -785,15 +844,37 @@ test("pages: Messages opens on Sending, its per-send switches on one line, the t
     local once, edit = find(drawn, "CheckBox", "Ask once"), find(drawn, "CheckBox", "Edit before sending")
     local channel, transmog = find(drawn, "Dropdown", "Announce channel"), find(drawn, "CheckBox", "Offer transmog asks")
     assertTrue(once ~= nil and edit ~= nil and lineOf(drawn, once) == lineOf(drawn, edit), "Ask once | Edit before sending")
-    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
-        "Announce channel | Offer transmog asks")
     local order = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("messages")) do
         if row.group == "Sending" then order[#order + 1] = row.path end
     end
+    if T.forever then
+        -- WoW Forever has no transmog (Forever port design §4.4): no switch for it, and the channel alone.
+        assertTrue(channel ~= nil and transmog == nil, "Announce channel, no transmog switch")
+        assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel")
+        return
+    end
+    assertTrue(channel ~= nil and transmog ~= nil and lineOf(drawn, channel) == lineOf(drawn, transmog),
+        "Announce channel | Offer transmog asks")
     assertEqual(table.concat(order, ","), "messages.oneAsk,messages.editFirst,messages.announceChannel,messages.transmogAsk")
     assertTrue(find(drawn, "CheckBox", "Ask for transmog") == nil, "no checkbox shares the template's label")
 end)
+
+-- The drawn widgets' heading texts, in draw order, joined by "|".
+local function headingsOf(drawn)
+    local heads = {}
+    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
+    return table.concat(heads, "|")
+end
+
+-- The last drawn widget labeled Font that is not a heading: the composed font block's face picker.
+local function fontFace(drawn)
+    local face
+    for _, w in ipairs(drawn) do
+        if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end
+    end
+    return face
+end
 
 test("pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in", function()
     local NS, _, m = T.enableAddon()
@@ -807,21 +888,20 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     assertTrue(inRuns ~= nil and lineOf(drawn, mode) == lineOf(drawn, inRuns), "Window layout | Compact view when it auto-opens in a run")
     -- DW-01 (the lead's ruling on D-07): Font size is the composed font block's, beside Font, on the
     -- line after Row height.
-    local face
-    for _, w in ipairs(drawn) do if (w.labelText or w.text) == "Font" and w.type ~= "Heading" then face = w end end
+    local face = fontFace(drawn)
     assertTrue(rowH ~= nil and font ~= nil and lineOf(drawn, rowH) ~= lineOf(drawn, font), "Row height, then the font block")
     assertTrue(face ~= nil and lineOf(drawn, face) == lineOf(drawn, font), "Font | Font size")
     assertEqual(NS.SchemaRuntime.FindRow("window.mode").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
     assertEqual(NS.SchemaRuntime.FindRow("window.fontSize").subgroup, "Tables")
-    local heads = {}
-    for _, w in ipairs(drawn) do if w.type == "Heading" then heads[#heads + 1] = w.labelText or w.text end end
-    assertEqual(table.concat(heads, "|"), "Mode|Tables", "the two headings, in row order")
+    assertEqual(headingsOf(drawn), "Mode|Tables", "the two headings, in row order")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")
-    assertTrue(find(drawn, "Slider", "Mark a trade window ending within (seconds)") ~= nil, "Trade › Timers' slider")
+    -- The ending-soon mark is Retail's alone: WoW Forever has no countdown (Forever port design §4.4).
+    assertEqual(find(drawn, "Slider", "Mark a trade window ending within (seconds)") ~= nil, not T.forever,
+        "Trade › Timers' slider")
     drawn = tab(m, ctx, "Starting view")
     for _, label in ipairs({ "Interesting", "Likely tradeable", "Usable by me", "Upgrade for me" }) do
         assertTrue(find(drawn, "CheckBox", label) ~= nil, label)
@@ -833,7 +913,9 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
         assertEqual(tip:sub(-#tail), tail, key)
     end
     assertTrue(find(drawn, "Dropdown", "Content") ~= nil and find(drawn, "Dropdown", "Sort") ~= nil)
-    assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
+    if not T.forever then
+        assertEqual(NS.SchemaRuntime.FindRow("trade.warnAt").page, "window", "the path kept, the page moved")
+    end
     assertEqual(NS.SchemaRuntime.FindRow("feed.view.likely").page, "window")
 end)
 
@@ -842,10 +924,14 @@ end)
 test("pages: a page's Defaults resets that page's rows and no other page's", function()
     local NS, _, m = T.enableAddon()
     local Set = NS.SchemaRuntime.Set
+    -- A Window page row, and the loot rules: the warning and the rules are Retail's alone (Forever
+    -- port design §4.4), so Forever takes Row height and has no rule to reset.
+    local winPath, winValue = "trade.warnAt", 120
+    if T.forever then winPath, winValue = "window.rowHeight", 30 end
     Set("feed.categories.mount", false)
-    Set("trade.warnAt", 120)
+    assertTrue(Set(winPath, winValue))
     Set("situations.pvp.track", true)   -- off its default (PvP is untracked by default)
-    Set("trade.rules.raid", "group")
+    if not T.forever then Set("trade.rules.raid", "group") end
     Set("autoOpen", false)
     Set("comparison.weights", { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 2 } })
     local ctx = open(NS, m, "feed")
@@ -855,7 +941,7 @@ test("pages: a page's Defaults resets that page's rows and no other page's", fun
     assertEqual(NS.Setting("situations.pvp.track"), NS.C.PROFILE.situations.pvp.track, "the situations table reset")
     assertEqual(NS.Setting("trade.rules.raid"), NS.C.PROFILE.trade.rules.raid, "and its loot rules")
     assertEqual(NS.Setting("autoOpen"), NS.C.PROFILE.autoOpen, "and the global auto-open")
-    assertEqual(NS.Setting("trade.warnAt"), 120, "Window's row untouched")
+    assertEqual(NS.Setting(winPath), winValue, "Window's row untouched")
     local cctx = open(NS, m, "comparison")
     cctx.panel.defaultsOnClick()
     assertTrue(next(NS.Setting("comparison.weights")) == nil, "the weights map reset whole")
@@ -865,7 +951,7 @@ test("pages: the Drops page's Defaults tooltip names the situations it now reset
     local NS = T.enableAddon()
     local tip = NS.addon.Settings.Helpers.__panelFor("feed").panel.defaultsTooltip
     -- red under: the pre-020 tooltip, which left the situations out
-    assertEqual(tip, "Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept.")
+    assertEqual(tip, "Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept.")
     assertTrue(NS.addon.Settings.Helpers.__panelFor("situations") == nil, "no Situations page")
 end)
 
@@ -886,6 +972,7 @@ end)
 
 test("editors: a spec's stats are its primary stat, Stamina and the four secondaries", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E = NS.addon.Settings.Editors
     local fury = E.StatsFor(72)
     assertEqual(fury[1], "ITEM_MOD_STRENGTH_SHORT")
@@ -899,6 +986,7 @@ end)
 
 test("editors: unwanted types are the class's weapons, then shields where a spec carries one", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E, K = NS.addon.Settings.Editors, NS.Constants
     local keys = {}
     for _, c in ipairs(E.UndesiredChoices("PALADIN")) do keys[#keys + 1] = c.key end
@@ -921,6 +1009,7 @@ end)
 
 test("editors: the spec strip keeps the remembered spec, else yours, else the first", function()
     local NS = T.newAddon()
+    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
     local E = NS.addon.Settings.Editors
     local list = E.ClassSpecs("MAGE", function(id) return id == 63 and "Fire" or nil end)
     assertEqual(#list, 3)
@@ -930,6 +1019,18 @@ test("editors: the spec strip keeps the remembered spec, else yours, else the fi
     assertEqual(E.PickSpec(list, 250, 63), 63)
     assertEqual(E.PickSpec(list, nil, 250), 62)
     assertEqual(E.PickSpec({}, 62, 62), nil)
+end)
+
+test("editors: on Forever the strip lists your class's talent trees by name", function()
+    local NS = T.newAddon()
+    NS.ClassData.Install(NS.ClassData.LISTS.forever)
+    local E = NS.addon.Settings.Editors
+    local list = E.ClassSpecs("MAGE", E.SpecNamer(function() return "spec" end, { "Arcane", "Fire" }))
+    assertEqual(#list, 3)
+    assertEqual(list[1].key, "MAGE:1"); assertEqual(list[1].label, "Arcane")
+    assertEqual(list[3].key, "MAGE:3"); assertEqual(list[3].label, "Talent tree 3", "a tree the client does not name")
+    assertEqual(E.PickSpec(list, nil, "MAGE:2"), "MAGE:2")
+    assertEqual(E.SpecNamer(function(id) return id == 62 and "Arcane" end)(62), "Arcane", "a Retail spec by its name")
 end)
 
 test("editors: the counter label counts bytes and turns red past the limit", function()
@@ -1044,16 +1145,18 @@ test("glow sections: two styles chosen draw both sections; a re-pick re-renders 
     drawn, heads = restyle(NS, m, ctx, "glow.main.type", "autocast")
     assertEqual(heads, "Effect|Offset|Auto cast sparkles|Button (rotating rays)")
     assertTrue(find(drawn, "Slider", "Main spec particles") ~= nil)
-end)
+end, T.RETAIL_ONLY)
 
 test("glow sections: a glow turned off still opens its style's section, dimmed (DW-04)", function()
     -- D-17: hiding follows the style alone, never the on/off check box.
+    -- WoW Forever has the main glow alone (Forever port design §4.4): it is the one turned off there.
     local NS, _, m = T.enableAddon()
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.type", "pixel"))
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+    local key = T.forever and "main" or "offSpec"
+    assertTrue(NS.SchemaRuntime.Set("glow." .. key .. ".type", "pixel"))
+    assertTrue(NS.SchemaRuntime.Set("glow." .. key .. ".enabled", false))
     local _, drawn, heads = glowTab(NS, m)
-    assertEqual(heads, "Effect|Offset|Pixel border|Proc (flipbook)")
-    local off = find(drawn, "Slider", "Off-spec lines")
+    assertEqual(heads, T.forever and "Effect|Offset|Pixel border" or "Effect|Offset|Pixel border|Proc (flipbook)")
+    local off = find(drawn, "Slider", T.forever and "Main spec lines" or "Off-spec lines")
     assertTrue(off ~= nil and off.disabled == true, "the off glow's section shows, dimmed")
     -- The hidden rows stay in the schema: /dw set and Defaults still reach them.
     assertTrue(NS.SchemaRuntime.Set("glow.main.buttonFrequency", 0.5))

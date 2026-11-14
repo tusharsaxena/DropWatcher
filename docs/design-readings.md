@@ -14,12 +14,25 @@ follows. With the spec unknown, an item whose primary stat suits only some of th
 is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
 an ilvl and a score that agree in sign give that sign, so one inside its band and the other
 outside is a sidegrade (`scoreDisagrees`); the band is in item levels, so the score's band is 0.
+That is `opts.verdictMode = "ilvlFirst"`, Retail's and the default. WoW Forever's is `"scoreFirst"`
+(Forever port design §4.5), set once by client in the feed (`LootFeed.VERDICT_MODE`, read into
+`evalOpts`): the score's sign decides, so a lower item level with a higher score is an upgrade;
+a score within 1% of the worn item's (`|scoreDelta| <= 0.01 * wornScore`) is a tie, and item level
+decides it by `sidegradeBand`; with no score, item level decides and the reasons carry `noScore`.
+Under `scoreFirst` a compared verdict carries `led`, `"score"` or `"ilvl"`, naming which one
+decided (nil under `ilvlFirst`): the toast's and auto-ask's least gain are in item levels, so they
+apply only to an item-level-led verdict, and a score-led upgrade with no item-level gain fills
+`{mygain}` with `a score upgrade`. The verdict tooltip's Means row has Forever's own words for the
+three compared verdicts (`VERDICT_MEANS`, `modules/WindowCells.lua`).
 A candidate whose class is not known yet is `unknown` (`unknownClass`), even for a
 class-restricted item. The track delta orders tracks by a numeric `tier` from ItemFacts and
 falls back to the enUS track names, so a localized name with no tier leaves it unset. Bows
 (`INVTYPE_RANGED`) and guns, crossbows and wands (`INVTYPE_RANGEDRIGHT`) fill both hands, so the
 off-hand and one-hander plans compare against them as two-handers; a ranged drop compares like a
-two-hander for hunters and against the main hand for everyone else. A unique-equipped drop at
+two-hander for hunters and against the main hand for everyone else. That is Retail's slot plan;
+WoW Forever's keeps the ranged slot 18 (`C.SLOT.RANGED`, picked once by `ClientKey()` in
+`core/Constants.lua`, DW-FP06), so there a bow, gun, crossbow, wand, thrown weapon or relic
+compares against what is worn in slot 18 alone, and the snapshot and the inspect read it. A unique-equipped drop at
 its category's maximum compares against the lowest holder in its own slots when one of them
 holds the category, else the lowest holder anywhere.
 
@@ -38,7 +51,15 @@ starter one; `NS.Compat.PawnVisibleScale`, feedback-21 R4), else your spec's sta
 `scoreDelta` is a value difference, not Pawn's percent. For a looter it is `PawnFindScaleForSpec`
 for their class and spec, the spec given as its place in the class (Pawn numbers its scales so, not
 by specID; `NS.ClassData.SpecIndex`); with no scale for that spec there is no
-score (item level alone), not a pending one. The kernel hands every scorer the drop beside the
+score (item level alone), not a pending one. On WoW Forever (the class list's `PAWN_BY_TREE`, Forever
+port design §4.3) Pawn has one Classic scale per talent tree and no specs, and the drop's best
+visible scale is never used: for you, your visible custom scale, else your top talent tree's
+(the Druid's Feral 2 or 3 by your role, Restoration 4), else with no tree the best of your
+class's scales; for a looter the best of their class's scales, the one that values the drop
+highest (`NS.Compat.PawnClassScales`). Weights there are keyed `"<classFile>:<tree>"`, and a
+looter with no tree is scored with the class's tree whose weights score the drop highest.
+`NS.Scoring.ScoreFor(link, who)` answers one item's score and how its scale or weights were
+chosen (`tree`, `bestOfClass`, `custom` or `none`). The kernel hands every scorer the drop beside the
 item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
 that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
 (the Weights tab's box) replaces the weights of the spec on screen, whatever `Class=` and `Spec=`
@@ -74,7 +95,9 @@ Loot History's Price sources look; the rows are `skipRender` and the table write
 
 The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
 yet, or whose class the item's spec list does not cover; an item's own spec list wins whenever it
-exists for the candidate's class. The client lists the specs of the class playing alone, so the
+exists for the candidate's class, save one rule on WoW Forever: an armor type the class wears only
+from a later level (`armorLevel`) still refuses, since the list names a class-wide spec and knows
+the class, not the level (Forever port Review Focus 5). The client lists the specs of the class playing alone, so the
 list carries that class (`specsClass`) and every other class is judged by the tables, its primary
 stat read from every primary the tooltip shows (midnight-quirks.md). Devourer Demon Hunter (spec 1480, from the
 client's trait-tree data) is recorded as an Intellect dual wielder that takes no held off hand,
@@ -275,6 +298,14 @@ written by History (`modules/History.lua`) from `AskStateChanged`. The edit-firs
 `Preview` (the template filled in, nothing sent or filed) and passes the edited text in; with
 `messages.editFirst` on, the Offer panel's Offer and Announce open it too. Whether a whisper really is blocked during an encounter is ASK-4.
 
+The master-loot ask (`askML`, Forever port design §6, DW-FP19) is filed against the pending item, not
+a feed drop, and under the master looter's full name (`NS.AskMLTargetOf`: the roster's `fullName`,
+`Name-Realm` on Retail, the whole name on WoW Forever), which is the name the whisper goes to. The Ask button's tooltip
+(`WindowPending.AskAction`) names the master looter by the item's `ml.name`, the short name the
+window shows everywhere else, so on Retail a cross-realm master looter reads `Name` there while the
+whisper goes to `Name-Realm`: one player, two spellings, read as the design's (the window never
+shows a realm). Auto-ask never sends an `askML`.
+
 ## The transmog-known flag
 
 The transmog-known flag (DW-53) settles how it reads design spec §4. Whether you have collected a
@@ -333,7 +364,8 @@ The toast (DW-52, `modules/Toast.lua`) settles what design spec §11.5 leaves op
 is the item-level change for you (`me.ilvlDelta`), as the `toast.minGain` row says, whatever the
 scorer; an upgrade into an empty slot has no change to measure and clears any least gain (DW-62:
 spec §5.2 makes it an upgrade, so it is the clearest case), reading `empty` where the gain would
-go; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
+go; on WoW Forever a score-led upgrade (`led = "score"`, the verdict kernel's `scoreFirst`) clears
+it too, since the least gain is in item levels; your own drops never toast. **Once per drop:** a drop is considered on `DropAdded` and on
 each `DropUpdated` until it has toasted, so one whose trade turns `likely` after the looter's
 inspect still toasts. **The queue** keeps the newest five; a drop asked for meanwhile, gone from the
 feed or no longer qualifying is skipped when its turn comes. **Combat** holds the queue until
@@ -366,7 +398,8 @@ reads right in game is FEED-66.
 Auto-ask (DW-54, `modules/AutoAsk.lua`) settles what design spec §9.4 leaves open. **What qualifies** is the
 toast's own test (`NS.Toast.Qualifies`) with `messages.autoAsk.minGain`: the item-level change for you,
 whatever the scorer (an empty slot clears any least gain, and the ask's `{mygain}` then reads
-`an empty-slot upgrade`, never the drop's item level, which is no gain), never your own drop, and an upgrade
+`an empty-slot upgrade`, never the drop's item level, which is no gain; on WoW Forever a score-led
+upgrade clears it too, its `{mygain}` reading `a score upgrade` when its item level is no higher), never your own drop, and an upgrade
 only, so it always fills the plain `ask` template, never the transmog one. **Once per drop:** a drop is
 considered on `DropAdded` and on each `DropUpdated` until it is scheduled, so one whose trade turns `likely`
 after the looter's inspect still qualifies; a drop scheduled, sent or canceled is never scheduled again that

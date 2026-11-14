@@ -185,7 +185,7 @@ local function selfLooter()
     local me = NS.Roster.Player()
     if me then return me.fullName or me.name, me.guid end
     local guid = NS.Compat.UnitGUID("player")
-    return usable(NS.Compat.UnitName("player")), NS.Compat.IsSafeKey(guid) and guid or nil
+    return usable(NS.Compat.UnitCharacterName("player")), NS.Compat.IsSafeKey(guid) and guid or nil
 end
 
 -- A third-person looter: the roster's member when it can place the name, else the name as captured

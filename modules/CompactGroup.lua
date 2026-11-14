@@ -553,7 +553,7 @@ end
 local function sharedCtx(now)
     local snap = NS.Gear.Snapshot()
     return { now = now, equipped = snap and snap.equipped, classFile = snap and snap.classFile, transmogAsk = NS.Setting("messages.transmogAsk") == true,
-        ownRealm = NS.Compat.NormalizedRealm() }
+        ownRealm = NS.Compat.NameRealm() }
 end
 
 local function cardCtx(drop, shared)
@@ -583,6 +583,91 @@ local function paintCard(card, drop, width, m, shared)
     paintLineOne(card, drop, cc, width, m)
     CG.PaintLineTwo(card, cc)
     CG.PaintHalves(card, cc, width - CG.TextLeft(m, CG.LEAD) - CG.PAD)
+end
+
+-- ── a pending item's card (Forever port design §5.3) ────────────────────────────────────────
+--
+-- The Rolling now section's card (modules/WindowPending.lua draws the section): four lines, the
+-- item button spanning them and the quality bar at the left edge, as a drop's card.
+--   line 1  the item's name, in its quality color (the game's tooltip)
+--   line 2  You, then your verdict (the glyph and the words, in the verdict's tone)
+--   line 3  the roll summary (`Need 3 · Greed 2 · waiting 4`, `Won by Name (Need 87)`)
+--   line 4  the time left (`0:42`), or `awaiting master looter`
+-- No action button on a roll: it is rolled on the game's own popup. A master-loot item has the Ask
+-- master looter button (WindowPending.PaintAsk) at lines 2 and 3's right, where a drop card's Ask
+-- sits, and its summary and time left give way to it. A click expands its roll table.
+
+--- A pending item's card, built once and repainted (the section's pool).
+--- @param content table the compact view's scroll child
+--- @return table card
+function CG.NewPendingCard(content)
+    local WG = NS.WindowGroup
+    local card = CreateFrame("Button", nil, content)
+    card.tipRow = true
+    NS.WindowRows.HoverWash(card)
+    card.cells = {}
+    buildBackground(card)
+    card.chevron = WG.RowChevron(card)
+    card.icon = WG.ItemButton(card, K.ROW_ICON)
+    card.icon:SetPoint("LEFT", card, "LEFT", CG.PAD + CG.QUALITY_W + CG.LEAD, 0)
+    local item = piece(card, "item")
+    item.hit.showItem = true
+    WG.ItemHover(item.hit, card.icon)
+    card.cells.youLabel = { text = fontString(card) }
+    local me = piece(card, "me")
+    me.glyph = monoString(card)
+    piece(card, "summary")
+    piece(card, "timer")
+    return card
+end
+
+local function pendingLayout(card, m, width)
+    if card.dwLine == m.line and card.dwWidth == width then return end
+    card.dwLine, card.dwWidth = m.line, width
+    local x, c = CG.TextLeft(m, CG.LEAD), card.cells
+    local room = max(width - x - CG.PAD, 20)
+    card.icon:SetSize(m.icon, m.icon)
+    at(card.chevron, "LEFT", card, "TOPLEFT", CG.PAD + CG.QUALITY_W, CG.LineY(m, 1))
+    at(c.item.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 1))
+    at(c.youLabel.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 2))
+    at(c.me.glyph, "LEFT", c.youLabel.text, "RIGHT", CG.HALF_GAP, 0)
+    at(c.summary.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 3))
+    at(c.timer.text, "LEFT", card, "TOPLEFT", x, CG.LineY(m, 4))
+    for _, key in ipairs({ "item", "summary", "timer" }) do c[key].text:SetWidth(room) end
+end
+
+--- Paint a pending item's card from its model (NS.WindowPending.Model).
+--- @param card table CG.NewPendingCard's
+--- @param item table the NS.Pending item
+--- @param model table { item, me, summary, timer }
+--- @param width number the card's width
+--- @param m table CG.Metrics' answer
+function CG.PaintPendingCard(card, item, model, width, m)
+    local WP, c = NS.WindowPending, card.cells
+    card.item = item
+    card:SetHeight(m.height)
+    pendingLayout(card, m, width)
+    NS.WindowRows.ApplyRowFont(card, m.fontSize, m.font)
+    NS.WindowGroup.PaintChevron(card.chevron, WP.Expanded() == item.id)
+    NS.WindowGroup.SetItem(card.icon, item.link)
+    card.icon.pendingId, card.icon.dropId = item.id, nil
+    card.quality:SetColorTexture(qualityColor(item))
+    c.item.text:SetText(model.item.text)
+    c.item.text:SetTextColor(qualityColor(item))
+    c.youLabel.text:SetText(NS.L["You"])
+    NS.Skin.Text(c.youLabel.text, "text.heading")
+    WP.PaintPiece(c.me, model.me)
+    WP.PaintVerdict(c.me, model.me)
+    WP.PaintPiece(c.summary, model.summary)
+    WP.PaintPiece(c.timer, model.timer)
+    local b = WP.PaintAsk(card, model.action, item.id)
+    local room = max(width - CG.TextLeft(m, CG.LEAD) - CG.PAD, 20)
+    if b then
+        at(b, "RIGHT", card, "TOPRIGHT", -CG.PAD, CG.AskY(m))
+        b:SetHeight(CG.AskHeight(m))
+        room = max(room - K.ASK_W - CG.HALF_GAP, 20)
+    end
+    for _, key in ipairs({ "summary", "timer" }) do c[key].text:SetWidth(room) end
 end
 
 --- A one-line header painted with a short form (`hd`, CompactCards.Header's or HistoryHeader's).
@@ -711,7 +796,8 @@ end
 --- { newCard = fn(content), paint = fn(card, drop, width, m, st), header = fn(e, st) -> { text, tip },
 ---   toggle = OnClick for its headers (nil keeps Drops'), after = fn(cv, drop, y, width, st) ->
 ---   extra height under a card (the detail card), indent = how far a card sits in from its header
----   (nil none) }; `st` is the repaint's shared state. A card's `width` is the view's less its indent.
+---   (nil none), top = fn(cv, width, m) -> the height drawn above the first entry (nil none) }; `st`
+---   is the repaint's shared state. A card's `width` is the view's less its indent.
 --- @param cv table
 --- @param entries table
 --- @param width number
@@ -720,7 +806,7 @@ end
 function CG.Draw(cv, entries, width, spec, st)
     local m = CG.Metrics(NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
     m.font = NS.WindowRows.ReadFont()   -- the Tables font block, once per repaint (DW-01)
-    local y, Pool = 0, NS.Pool
+    local y, Pool = spec.top and spec.top(cv, width, m) or 0, NS.Pool
     local indent = spec.indent or 0
     local cardW = width - indent
     factories(cv, spec)
@@ -761,8 +847,11 @@ end
 
 local function cardIcon(card) return card.icon end
 
+-- The Rolling now section above the groups (modules/WindowPending.lua): its height.
+local function pendingTop(cv, width, m) return NS.WindowPending.DrawCompact(cv, width, m) end
+
 local GROUP_SPEC = { newCard = newCard, paint = paintCard, header = groupHeader, after = drawDetail,
-    indent = K.ROW_INDENT }
+    indent = K.ROW_INDENT, top = pendingTop }
 
 --- Draw the compact layout's cards for `entries` (WindowGroup's refresh, every repaint), or, in the
 --- full layout, hide them (carrying the scroll offset over to the table on the way out).

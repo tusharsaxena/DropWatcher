@@ -19,7 +19,7 @@ local lib = LibStub and LibStub("LibKa0s-Perf-1.0", true)
 -- bucket is never left unreached.
 local BUCKETS = {
     { key = "parse" },            -- modules/LootParser.lua Parse: one CHAT_MSG_LOOT line
-    { key = "inspect.read" },     -- modules/Inspect.lua readSlots: one read of a unit's 17 slots
+    { key = "inspect.read" },     -- modules/Inspect.lua readSlots: one read of a unit's slots (17, or 18 on Forever)
     { key = "feed.add" },         -- modules/LootFeed.lua Receive: one receipt taken into the feed
     -- evaluate and quality.gate run inside Receive when the item is cached, and at top level when
     -- it loads later or a re-judge (inspect, gear, bag) runs: each note passes `feed.add` or Perf

@@ -16,7 +16,9 @@ NS.addon = DW
 NS.Print = NS.Util.print
 
 -- Every game event this addon owns, as { event, handlerMethodName } pairs. Two rows may name the
--- same event; registerFeatureEvents (below) fans it out to both handlers.
+-- same event; registerFeatureEvents (below) fans it out to both handlers. A row that serves one
+-- client carries `clients = { "retail" }` (clients-§4): it is registered, unregistered and replayed
+-- only where NS.Compat.ForClient(row.clients) is true, so on the other client it is absent.
 NS.FEATURE_EVENTS = NS.FEATURE_EVENTS or {}
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_DISABLED", "OnCombatStart" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombatEnd" }
@@ -25,12 +27,17 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED",  "OnCombat
 NS.STAND_DOWN = NS.STAND_DOWN or {}
 NS.STAND_UP   = NS.STAND_UP or {}
 
---- The declared feature events, each once, in the order of their first row.
+-- Whether a NS.FEATURE_EVENTS row serves this client (no `clients`: both).
+local function serves(row)
+    return NS.Compat.ForClient(row.clients)
+end
+
+--- The declared feature events this client serves, each once, in the order of their first row.
 --- @return table names
 function NS.FeatureEventNames()
     local names, seen = {}, {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if not seen[row[1]] then
+        if serves(row) and not seen[row[1]] then
             seen[row[1]] = true
             names[#names + 1] = row[1]
         end
@@ -42,9 +49,11 @@ end
 local function handlersByEvent()
     local by = {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        by[row[1]] = by[row[1]] or {}
-        local list = by[row[1]]
-        list[#list + 1] = row[2]
+        if serves(row) then
+            by[row[1]] = by[row[1]] or {}
+            local list = by[row[1]]
+            list[#list + 1] = row[2]
+        end
     end
     return by
 end
@@ -79,7 +88,7 @@ end
 --- The simulator's replay of the registration (modules/Sim.lua's Fire and DeliverForCleanup):
 --- every handler NS.FEATURE_EVENTS declares for `event`, in row order, with payload `...`, as the
 --- client would call them. An event the client rejected at registration (NS.rejectedEvents) is
---- never delivered, as the client never delivers it. Each handler is isolated under pcall, and
+--- never delivered, as the client never delivers it, and nor is a row for the other client. Each handler is isolated under pcall, and
 --- here a raise is a SIM debug line and is NEVER rethrown (the deliberate difference from
 --- DW:OnSharedFeatureEvent above, which rethrows the first error): a simulated event's driver, its
 --- sequence and the timeline go on. Answers how many handlers were called.
@@ -89,7 +98,7 @@ function NS.DeliverEvent(event, ...)
     if isRejected(event) then return 0 end
     local n = 0
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if row[1] == event then
+        if row[1] == event and serves(row) then
             local ok, err = pcall(DW[row[2]], DW, event, ...)
             if not ok then
                 NS.Debug("SIM", "handler %s for %s failed: %s", tostring(row[2]), tostring(event), NS.SafeToString(err))
@@ -361,6 +370,66 @@ function NS.PressAsk(dropID, opts)
         local why = ASK_REFUSAL[reason]
         why = why and why:format(target or "?") or tostring(reason)
         NS.Print(L["Not asked: %s"]:format(why))
+    end
+    return state, reason
+end
+
+-- Why a master-loot ask was not sent, in words (modules/Asks.lua's askML refusals, then the ask's).
+local ASK_ML_REFUSAL = {
+    isML = NS.L["You are the master looter."], noUpgrade = NS.L["It is not an upgrade for you."],
+    noDrop = NS.L["That item is no longer waiting for the master looter."],
+    noTarget = NS.L["The master looter is not known."], self = NS.L["You are the master looter."],
+    alreadyAsked = NS.L["You already asked %s for it."],
+}
+
+--- Who a master-loot ask for pending item `item` is filed under and whispered (NS.Asks.Request's
+--- and StateOf's `target`): the roster's whole name for the master looter (`Name-Realm`, or a
+--- Forever "First Surname", never split: client-quirks-§5), else what the item read
+--- (NS.Pending.MLTargetOf); a master looter the roster no longer knows is named as the item read
+--- them (`Name-Realm`, or the whole Forever name), never by GUID; nil when it read no name
+--- (the refusal then reads that the master looter is not known).
+--- @param item table|nil a NS.Pending item of kind `ml`
+--- @return string|nil
+function NS.AskMLTargetOf(item)
+    local target = NS.Pending.MLTargetOf(item)
+    local m = target and NS.Roster.Resolve(target)
+    if m then return m.fullName end
+    local ml = target and item.ml
+    if not (ml and ml.name) then return nil end
+    return ml.realm and (ml.name .. "-" .. ml.realm) or ml.name
+end
+
+--- Ask the master looter for an item awaiting them (Forever port design §6, plan DW-FP19): the
+--- Rolling now row's and card's Ask, through the messaging edge's Press (kind `askML`, filed
+--- against the pending item), so a queued ask is canceled by a second click. A refusal is said in
+--- chat (`isML`, `noUpgrade`, `offline`, `alreadyAsked`, `noDrop`, ...); a send confirms itself.
+--- Refused while stood down. With `messages.editFirst` on, a press without `opts` opens the Edit
+--- message box instead (state `editing`). Auto-ask never calls it.
+--- @param pendingID any NS.Pending's item id
+--- @param opts table|nil { text = the edited message } (the Edit message box's Send)
+--- @return string state, string|nil reason (as NS.Asks.Press, or `editing`)
+function NS.PressAskML(pendingID, opts)
+    local item = NS.Pending.Get(pendingID)
+    local target = NS.AskMLTargetOf(item)
+    local state, reason
+    local stoodDown = NS.StoodDownRefusal()
+    if stoodDown then
+        state, reason = "refused", NS.StoodDownReason()
+    elseif not (item and item.kind == "ml") then
+        state, reason = "refused", "noDrop"
+    elseif not target then
+        state, reason = "refused", "noTarget"
+    elseif editFirst("askML", target, pendingID, opts) then
+        state = "editing"
+    else
+        state, reason = NS.Asks.Press("askML", target, pendingID, opts)
+    end
+    if stoodDown then
+        NS.Print(stoodDown)
+    elseif state == "refused" then
+        local why = ASK_ML_REFUSAL[reason] or ASK_REFUSAL[reason]
+        why = why and why:format(target or "?") or tostring(reason)
+        NS.Print(NS.L["Not asked: %s"]:format(why))
     end
     return state, reason
 end
@@ -675,6 +744,8 @@ end
 -- The optional integrations, said once when logging is turned on (debug-logging-§8).
 local function logDependencies()
     local function state(name) return NS.Compat.IsAddOnLoaded(name) and "loaded" or "absent" end
+    -- CanIMogIt serves transmog, Retail's alone (Forever port design §4.4).
+    if not NS.Constants.FEATURE.transmog then return NS.DebugAtEnable("Init", "optional: Pawn %s", state("Pawn")) end
     NS.DebugAtEnable("Init", "optional: Pawn %s, CanIMogIt %s", state("Pawn"), state("CanIMogIt"))
 end
 
@@ -688,6 +759,10 @@ function DW:OnEnable()
     if NS.Launcher then NS.Launcher:Register() end
 
     logDependencies()
+
+    -- The roll popup mark's overlays and its one-way hooks on Blizzard's popups (modules/RollPopup.lua,
+    -- Forever port design §7): installed once, whatever the latch says; the hooks gate on it.
+    if NS.RollPopup then NS.RollPopup.Install() end
 
     -- The first-run skin picker's login fuse (core/SkinSetup.lua), before the latch: a profile
     -- stored disabled stands down below, which puts it out again.

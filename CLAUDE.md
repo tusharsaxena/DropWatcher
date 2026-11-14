@@ -36,12 +36,13 @@ Start here, then read the docs:
 - The design specs and checkpointed plans of every run, v1 onward (`specs/`, `plans/`, `research/`),
   live in `docs/superpowers/` (frozen; read as evidence, never edited).
 
-Green gate before every commit: `lua tests/run.lua` and
+Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua`
+(Retail and WoW Forever, both 0 failed; clients-§6) and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
 `luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never edit `libs/` or
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.93.0 (MIT).
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.95.0 (MIT).
 LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, clock, close, confirm, copy, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, move, people, reset, settings, speech-bubble, transfer, volume-high.
 

@@ -130,6 +130,8 @@ local function readUnique(link, itemID)
 end
 
 local function readTransmog(link, equipLoc)
+    -- Retail's alone (Forever port design §4.4): WoW Forever has no transmog, so no look is read.
+    if not C.FEATURE.transmog then return nil end
     if not equipLoc or equipLoc == "" or NO_APPEARANCE[equipLoc] then return nil end
     return NS.Compat.PlayerHasTransmog(link)
 end
@@ -356,7 +358,8 @@ end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────
 
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRANSMOG_COLLECTION_UPDATED", "OnTransmogCollectionUpdated",
+    clients = C.FEATURE_CLIENTS.transmog }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "SPELL_TEXT_UPDATE", "OnSpellTextUpdate" }
 
 -- A spell's text arrived: every cached item still waiting on it as its use spell is read again

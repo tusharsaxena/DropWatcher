@@ -163,7 +163,7 @@ function CH.Refresh(pane, entries, compact)
     local CG = NS.CompactGroup
     local cv = CG.Swap(pane, compact, buildView)
     if not cv then return end
-    local st = { nowEpoch = time(), dateFn = date, ownRealm = NS.Compat.NormalizedRealm(),
+    local st = { nowEpoch = time(), dateFn = date, ownRealm = NS.Compat.NameRealm(),
         expanded = NS.WindowHistory.Expanded() }
     cv.card:Hide()
     cv.cardEntry = nil

@@ -1,4 +1,4 @@
-## Interface: 120105
+## Interface: 120105, 16001
 ## Title: Ka0s Drop Watcher
 ## Notes: Watches your group's loot, shows who each drop is an upgrade for and whether it can be traded, and asks for it politely in one click.
 ## Author: add1kted2ka0s
@@ -59,6 +59,14 @@ core\TextParse.lua
 # LOAD-BEARING: takes NS.TextParse (core\TextParse.lua, the line above) at load, and LibStub.
 # NS.Compat (every version-variant client call and the secret guards) is read inside functions only.
 core\Compat.lua
+# LOAD-BEARING: adds the character's client-variant reads (the realm, names, specs, the talent tree
+# and the role, LibKa0s-Role-1.0) to NS.Compat; it loads before core\SimSetup.lua (below), which
+# wraps every member at load. Read inside functions only.
+core\CompatClient.lua
+# LOAD-BEARING: adds the loot history and group-loot roll reads (a drop's roll table, an encounter's
+# drops, your open rolls) to NS.Compat; it loads before core\SimSetup.lua (below), which wraps every
+# member at load. Read inside functions only.
+core\CompatLoot.lua
 # LOAD-BEARING: adds the stable world reads (the group, a unit, the instance) to NS.Compat; it
 # loads before core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatWorld.lua
@@ -74,18 +82,23 @@ core\CompatJournal.lua
 # which wraps every member at load. Read inside functions only.
 core\CompatCollect.lua
 # LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
-# CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
+# CompatClient.lua, CompatLoot.lua, CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
 # NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
 # and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
 core\SimSetup.lua
 # LOAD-BEARING: publishes NS.MediaFont, which core\Constants.lua resolves FONT_MONO from at load.
 core\MediaSetup.lua
 # LOAD-BEARING: publishes the NS.Constants id tables, which core\ClassData.lua reads at load; FONT_MONO
-# is resolved from the seam above.
+# is resolved from the seam above, and the slot ids and slot plans are picked by
+# NS.Compat.ClientKey (core\Compat.lua, above) at load (clients-§5).
 core\Constants.lua
 # LOAD-BEARING: reads NS.Constants' ARMOR_SUBCLASS and WEAPON_SUBCLASS (core\Constants.lua, the line
-# above) at load. NS.ClassData, data plus pure lookups, is read by the feature modules at call time.
+# above) and NS.Compat.ClientKey (core\Compat.lua, above) at load, and installs Retail's list unless the
+# client is WoW Forever. NS.ClassData, data plus pure lookups, is read by the feature modules at call time.
 core\ClassData.lua
+# LOAD-BEARING: builds WoW Forever's list with NS.ClassData's CD.Build (core\ClassData.lua, the line
+# above) at load, and installs it when NS.Compat.ClientKey() is "forever" (clients-§5).
+core\ClassDataForever.lua
 # Conventional: session-only state (NS.State), read by everything below at call time.
 core\State.lua
 # Conventional: NS.Meta / NS.Version are read inside functions only.
@@ -131,7 +144,9 @@ core\DebugLogSetup.lua
 # LOAD-BEARING: promotes NS to the AceAddon object (NS.addon) and reclaims NS.Print; modules\ and
 # settings\ read NS.addon at load.
 core\DropWatcher.lua
-# Conventional: NS:RunMigrations is called from OnInitialize.
+# LOAD-BEARING: reads NS.Constants.FEATURE (core\Constants.lua, above) at load, for the skin
+# step's key list (the off-spec glow's companion is Retail's alone). NS:RunMigrations is called from
+# OnInitialize.
 core\Database.lua
 # LOAD-BEARING relative to core\Namespace.lua only: the Show window key binding's header label reads
 # NS.BRAND at load (launcher-§6). The launcher is built here and registered from OnEnable.
@@ -142,6 +157,8 @@ core\LauncherSetup.lua
 # take at load, and so do modules\QualityGate.lua, modules\Situations.lua, modules\TradeRules.lua and
 # modules\WindowFilterBar.lua (their defaults, as file-scope upvalues); modules\Messaging.lua,
 # modules\TradeTimer.lua and modules\MineCells.lua read it at call time. It stays above every module.
+# Reads NS.Constants (core\Constants.lua, above) at load: its tones, and C.FEATURE, which adds the
+# Retail-only features' defaults on Retail alone (clients-§4).
 defaults\Profile.lua
 
 # Modules
@@ -166,7 +183,7 @@ modules\TierTokens.lua
 modules\Evaluate.lua
 # Conventional: publishes NS.OffSpec, the pure off-spec pass NS.Evaluate's run calls at call time;
 # read by modules\Gear.lua and modules\Inspect.lua at call time only, and itself reads NS.ClassData
-# (core\, above) at load. NS.Evaluate (above) is read at call time.
+# and NS.Constants' FEATURE (core\, above) at load. NS.Evaluate (above) is read at call time.
 modules\OffSpec.lua
 # Conventional: publishes NS.Scoring, the scorers behind the kernel's opts.scorer (Pawn, your weights,
 # none); read by the feed and the diagnostics at call time only, and itself reads NS.ClassData
@@ -275,8 +292,9 @@ modules\LootParser.lua
 # core\DropWatcher.lua's (PLAYER_REGEN_ENABLED after modules\Gear.lua's too); its NS.STAND_DOWN step
 # runs in TOC order, after those of the modules above. Publishes NS.Inspect, the inspect broker;
 # appends its handlers to NS.addon, hooks NotifyInspect through NS.Compat and takes NS.Perf as a
-# load-time upvalue at load. NS.Roster, NS.ItemFacts, NS.Restrictions and NS.Situations (above) are
-# read at call time.
+# load-time upvalue at load, and reads NS.Constants.SLOT (core\Constants.lua, above) at load for the
+# last slot read. NS.Roster, NS.ItemFacts, NS.Restrictions and NS.Situations (above) are read at
+# call time.
 modules\Inspect.lua
 # LOAD-BEARING: adds its sink to NS.LootParser (modules\LootParser.lua, above) at load, and appends
 # its rows to NS.FEATURE_EVENTS after other files' on shared events: CHALLENGE_MODE_START and
@@ -287,6 +305,20 @@ modules\Inspect.lua
 # receivers on a NS.Bus target and takes NS.Perf as a load-time upvalue at load. Every module above,
 # and NS.TradeTimer and NS.Window (below), are read at call time.
 modules\LootFeed.lua
+# LOAD-BEARING: appends its PLAYER_ENTERING_WORLD row to NS.FEATURE_EVENTS after
+# modules\Situations.lua's, so the situation its gates read is fresh when a reload rebuilds the open
+# rolls, and its LOOT_HISTORY_UPDATE_DROP row in place of the feed's; its NS.STAND_DOWN / NS.STAND_UP
+# steps run in TOC order, after those of the modules above. Publishes NS.Pending, the drops seen but
+# not yet assigned (Forever port design §5.2); appends its handlers to NS.addon and registers its
+# GearChanged receiver on a NS.Bus target at load. NS.LootFeed (above), NS.Compat, NS.ItemFacts,
+# NS.Item, NS.Situations and NS.FeedRecords are read at call time.
+modules\Pending.lua
+# LOAD-BEARING: takes NS.Pending (above) at load and adds the master-loot kind to it (Forever port
+# design §6); its NS.STAND_DOWN step runs in TOC order, after modules\Pending.lua's. Appends its
+# LOOT_READY, LOOT_OPENED, PARTY_LOOT_METHOD_CHANGED, GROUP_ROSTER_UPDATE and PLAYER_ENTERING_WORLD
+# rows and its handlers to NS.addon at load. NS.LootFeed, NS.Compat, NS.ItemFacts, NS.Item and
+# NS.Situations are read at call time.
+modules\PendingML.lua
 # LOAD-BEARING: appends its BAG_UPDATE_DELAYED row to NS.FEATURE_EVENTS after modules\Gear.lua's, so
 # the gear handler runs first; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of
 # the modules above. Publishes NS.TradeTimer, the own-item trade countdown; appends its LOOT_CLOSED
@@ -404,6 +436,11 @@ modules\MineCells.lua
 # Publishes NS.SideCells, the drop tables' pure Me and Them cells (the worn gear and the verdict in
 # one cell; feedback-6 spec §1); takes NS.L at load.
 modules\SideCells.lua
+# Conventional: publishes NS.RollCells, what a group-loot roll table says (the summary, one row per
+# player, the time left, the rows' grid; Forever port design §5.3); takes NS.L at load. NS.TipMarks and
+# NS.Compat (a name's class color) are read at call time, by modules\WindowPending.lua,
+# modules\DetailCells.lua and modules\RowTooltip.lua.
+modules\RollCells.lua
 # LOAD-BEARING: takes NS.MineCells (modules\MineCells.lua, above) at load. Publishes NS.WindowOwn,
 # your own drops on Drops (the session's reveal state, the Offer and Announce tone states, the
 # message buttons' look, the own-drop cell reads and the Ask-or-Offer click); takes NS.State at load,
@@ -414,9 +451,10 @@ modules\WindowOwn.lua
 # right, like Ka0s Loot History; feedback-3 spec §2, DW-B2); takes NS.Constants at load. NS.MineCells
 # (above) is read at call time; NS.Window (above) and the tabs' bodies (below) call it at hover time.
 modules\RowTooltip.lua
-# Conventional: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
-# libs\, above, which LibKa0s-Glow-1.0 resolves at call time through NS.GlowLib, core\GlowSetup.lua);
-# reads nothing at load. NS.OffSpec, NS.Setting, NS.C, NS.GlowLib and NS.Window are read at call
+# LOAD-BEARING: publishes NS.Glow, the upgrade glow on a drop's icon (feedback-21: LibCustomGlow-1.0,
+# libs\, above, which LibKa0s-Glow-1.0 resolves at call time through NS.GlowLib, core\GlowSetup.lua),
+# and Glow.KINDS, picked by NS.Constants.FEATURE (above) at load, which settings\SchemaRows.lua (below)
+# takes at load for the Upgrade glow tab's columns. NS.OffSpec, NS.Setting, NS.C, NS.GlowLib and NS.Window are read at call
 # time; modules\WindowGroup.lua, modules\DetailCard.lua and modules\CompactGroup.lua (below) call it
 # when they paint an icon (the toast never glows, G9).
 modules\Glow.lua
@@ -431,6 +469,12 @@ modules\IconStyle.lua
 # (modules\DetailCard.lua, below) and the host handlers (core\DropWatcher.lua) are read at call time,
 # when the tab is built and repainted.
 modules\WindowGroup.lua
+# Conventional: publishes NS.WindowPending, the Drops tab's Rolling now section (the pending items
+# above the boss groups, in both layouts) and the Rolls box a roll table is drawn in (Forever port
+# design §5.3); takes NS.Constants and NS.L at load. NS.Pending, NS.RollCells, NS.WindowCells,
+# NS.WindowGroup, NS.CompactGroup, NS.DetailCard and NS.Window are read at call time, when
+# modules\WindowGroup.lua and modules\CompactGroup.lua repaint the tab.
+modules\WindowPending.lua
 # Conventional: publishes NS.FooterRow, the strips' one footer button kind, their row's placement
 # and Expand all / Collapse all (feedback-15 spec §2); takes NS.Constants and NS.L at load.
 # NS.Window is read at call time, when modules\DropsStrip.lua and modules\WindowHistory.lua (below)
@@ -511,8 +555,8 @@ modules\TestData.lua
 # in TOC order, after those of the modules above. Publishes NS.TestMode, test mode's edge (the item
 # pool, populate and clear) and the hooks the drop tables read (InspectOf, AskState) and the History
 # log (HistoryLog); takes NS.L and NS.State at load. NS.LootFeed, NS.SimPool (below), NS.ItemFacts,
-# NS.ItemRead, NS.WindowFilterBar and NS.Inspect are read at call time; core\DropWatcher.lua's
-# NS.SetTestMode calls Populate and Clear.
+# NS.ItemRead, NS.WindowFilterBar, NS.Inspect and NS.Pending (its test-mode samples) are read at
+# call time; core\DropWatcher.lua's NS.SetTestMode calls Populate and Clear.
 modules\TestMode.lua
 # LOAD-BEARING: adds its removal sink to NS.LootFeed (modules\LootFeed.lua, above) at load, and
 # appends both PLAYER_REGEN rows to NS.FEATURE_EVENTS after core\DropWatcher.lua's and
@@ -528,14 +572,26 @@ modules\Toast.lua
 # LOAD-BEARING: appends its ENCOUNTER_START, ENCOUNTER_END, GROUP_ROSTER_UPDATE,
 # PLAYER_ENTERING_WORLD and ZONE_CHANGED_NEW_AREA rows to NS.FEATURE_EVENTS after every other file's
 # on those events (modules\Sim.lua's, modules\Session.lua's, modules\Situations.lua's,
-# modules\Roster.lua's, modules\Inspect.lua's, modules\LootFeed.lua's, modules\Asks.lua's,
-# modules\HistoryRetention.lua's and modules\FeedRestore.lua's), so its handler runs last; its
-# NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes
-# NS.AutoAsk, the opt-in auto-ask; appends its handlers to NS.addon and registers its DropAdded,
-# DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus target at load. NS.LootFeed,
+# modules\Roster.lua's, modules\Inspect.lua's, modules\LootFeed.lua's, modules\Pending.lua's,
+# modules\PendingML.lua's,
+# modules\Asks.lua's, modules\HistoryRetention.lua's and modules\FeedRestore.lua's), so its handler
+# runs last; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
+# above. Publishes NS.AutoAsk, the opt-in auto-ask; appends its handlers to NS.addon and registers
+# its DropAdded, DropUpdated, AskStateChanged and HistoryChanged receivers on a NS.Bus target at
+# load. NS.LootFeed,
 # NS.Toast's qualifier, NS.Asks, NS.Roster, NS.Restrictions, NS.History, NS.Setting and
 # NS.AskTargetOf are read at call time.
 modules\AutoAsk.lua
+# LOAD-BEARING: appends its START_LOOT_ROLL and CANCEL_LOOT_ROLL rows to NS.FEATURE_EVENTS after
+# modules\Pending.lua's, so your roll popup has claimed its pending item before the mark is drawn;
+# its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules above.
+# Publishes NS.RollPopup, your verdict on Blizzard's roll popup (Forever port design §7); appends its
+# handlers to NS.addon and registers its PendingChanged and GearChanged receivers on a NS.Bus target
+# at load; takes NS.Constants, NS.L and NS.Compat's client at load. NS.Pending, NS.RollCells,
+# NS.LootFeed, NS.ItemFacts, NS.Item, NS.TipMarks, NS.WindowCells, NS.CollectCells, NS.WindowRows,
+# NS.DetailCard, NS.Sim and NS.Setting are read at call time; core\DropWatcher.lua's OnEnable calls
+# Install, which builds the overlays and hooks GroupLootFrame1..4 through NS.Compat.
+modules\RollPopup.lua
 # Conventional: publishes NS.SimRoster, the simulator's invented group and its gear (pure, but for
 # Create); reads NS.Constants and NS.ClassData at load. NS.Sim, NS.SimPool (below) and NS.Compat are
 # read at call time.
@@ -548,12 +604,12 @@ modules\SimRoster.lua
 modules\SimPool.lua
 # Conventional: publishes NS.SimWorld, the simulated world's client answers, and registers them as
 # providers on NS.SimSeam (core\SimSetup.lua) at load; reads NS.Constants and NS.L at load. NS.SimRoster,
-# NS.SimPool, NS.SimEvents (below) and NS.Compat are read at call time.
+# NS.SimPool, NS.SimEvents (below), NS.ItemRead and NS.Compat are read at call time.
 modules\SimWorld.lua
 # LOAD-BEARING: adds its stop step through NS.Sim:OnStop (modules\Sim.lua, above) at load, before
 # modules\SimScenario.lua (below) has modules\Sim.lua register the engine steps after it. Publishes
-# NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.Roster, NS.LootFeed and
-# NS.Compat are read at call time.
+# NS.SimEvents, the simulator's event drivers. NS.SimWorld, NS.SimPool, NS.SimRoster, NS.Roster,
+# NS.LootFeed, NS.Pending and NS.Compat are read at call time.
 modules\SimEvents.lua
 # Conventional: publishes NS.SimReport, where a simulated loot burst's drops went; reads NS.L at
 # load. NS.State, NS.SimEvents (above), NS.LootFeed and NS.WindowCells are read at call time.
@@ -563,7 +619,7 @@ modules\SimReport.lua
 # modules\SimEvents.lua's; fills NS.SimScenarioDefs in place at load (LibKa0s-Sim-1.0 reads them when
 # a simulation starts). Publishes NS.SimScenario, the simulator's scenarios, its world's prepare and
 # its steps' play (the step machine is the library's); reads NS.L at load. NS.Sim, NS.SimPool,
-# NS.SimRoster, NS.SimEvents, NS.SimReport and NS.Window are read at call time.
+# NS.SimRoster, NS.SimEvents, NS.SimReport, NS.WindowCells and NS.Window are read at call time.
 modules\SimScenario.lua
 # LOAD-BEARING: fills NS.SimPanel.FIELDS, the Sim:New descriptor's `panel` that modules\Sim.lua
 # (above) created and passed, in place at load (LibKa0s-Sim-1.0 reads each field when it draws);
@@ -581,8 +637,8 @@ settings\SchemaSetup.lua
 # settings\Panel.lua and settings\Slash.lua read NS.SchemaRuntime at load.
 settings\Schema.lua
 # LOAD-BEARING: appends every hand-written row to NS.SchemaRuntime at file scope; reads NS.C,
-# NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup
-# (modules\, above) at load.
+# NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup,
+# NS.Glow (modules\, above) at load.
 settings\SchemaRows.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.

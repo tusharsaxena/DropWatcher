@@ -134,7 +134,8 @@ test("offer panel: Offer opens it docked right, the candidates ranked with Their
     assertTrue(NS.OfferPanel.IsShown()); assertEqual(NS.OfferPanel.DropId(), 1)
     assertEqual(p.panel.dock, "right")
     assertEqual(textOf(p.panel.name.text), "Bracers of the Tide")
-    assertEqual(textOf(p.panel.line.text), "You: -5 ilvl · 305 · Trade window 1:47:12")
+    -- The words "Trade window" are Retail's (Forever port design §4.4, test_mine_cells' per-client case)
+    assertEqual(textOf(p.panel.line.text), T.forever and "You: -5 ilvl · 305 · 1:47:12" or "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertEqual(#p.rows, 5)
     local cells = {}
     for i, r in ipairs(p.rows) do cells[i] = textOf(r.member.text) .. " " .. eqOf(r) end
@@ -202,7 +203,8 @@ test("offer panel: every part has a reason tooltip; Their eq's holds the old pil
     local tip = T.tipJoined(lines)
     assertEqual(lines[1], "For Seta: Upgrade")
     assertTrue(NS.TipMarks.IsGrid(lines[2]), "the worn gear as a grid (feedback-7 spec §3)")
-    assertTrue(T.tipPlainJoined(lines):find("• For them: a higher item level", 1, true) ~= nil, tip)
+    assertTrue(T.tipPlainJoined(lines):find(T.forever and "• For them: a higher score" or "• For them: a higher item level",
+        1, true) ~= nil, tip)
     assertTrue(W.TooltipOf(p.rows[5].eq)[1] == "Fifth: Checking")
     assertTrue(table.concat(W.TooltipOf(p.panel.heads.actions), " "):find("Trade", 1, true) == nil, "no Trade sentence")
     assertTrue(#W.TooltipOf(p.panel.line) >= 3); assertTrue(#W.TooltipOf(p.panel.announce) >= 2)

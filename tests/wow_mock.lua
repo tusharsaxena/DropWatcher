@@ -22,8 +22,8 @@
 --                  __context.inInstance (IsInInstance reads them)
 --   challengeModeActive  C_ChallengeMode.IsChallengeModeActive()'s answer; challengeMaps[mapID] is
 --                  the keystone dungeon's name C_ChallengeMode.GetMapUIInfo answers
---   lootHistory    C_LootHistory.GetSortedInfoForDrop's answers, keyed "encounterID:lootListID"
---                  ({ itemHyperlink, winner = { playerName, playerGUID, playerClass, isSelf } })
+--   lootHistory    C_LootHistory's drops, keyed "encounterID:key": tests/wow_mock_loot.lua's family
+--                  (with the roll globals, the loot method, the loot slots and the roll popups)
 --   unknownDifficulties  ids GetDifficultyInfo answers nil for (a retired or renumbered difficulty);
 --                  difficultyNames[id] is the name it answers for the rest (`Difficulty <id>` unlisted)
 --   keystoneLevel  C_ChallengeMode.GetActiveKeystoneInfo()'s level (0: no active key);
@@ -44,9 +44,16 @@
 --   inventory      GetInventoryItemLink's answers: inventory[unit][slot] = link
 --   bags           C_Container's bags: bags[bag] = { size = n, [slot] = link }; an absent bag has 0 slots
 --   specID         GetSpecializationInfo's first return (the base's 250 by default)
+--   seedTalents(specID, groups)  WoW Forever's spec and talent trees, opt-in (Forever port design
+--                  §4.2): C_SpecializationInfo's spec ladder answers `specID` (the class-wide id,
+--                  e.g. Hunter 1485) and the C_Traits reads LibKa0s-Role-1.0's Groups() takes
+--                  answer `groups` = { { name = "Beast Mastery", spent = 10 }, ... } in display
+--                  order; M.talents holds them, read live, so a case moves points by editing it
 --   units          the group's unit tokens: units[token] = { guid, name, realm, class, classFile,
 --                  connected }; "player" is read from the base's __context unless set. setGroup()
---                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer
+--                  seeds a party or a raid. normalizedRealm is GetNormalizedRealmName()'s answer.
+--                  RegionalUniqueNamesEnabled() follows the kit profile (true on forever, where a
+--                  row's `realm` then stands for UnitName's second value, the surname)
 --   inspect        the inspect surface (modules/Inspect.lua): inspect.notified lists every
 --                  NotifyInspect(unit) call as { unit, at }; inspect.cleared counts ClearInspectPlayer;
 --                  inspect.cannot[unit] = true makes CanInspect false; inspect.far[unit] = true makes
@@ -98,7 +105,8 @@
 --                  EncounterJournal (the frame) is nil until a case sets one; loadJournal() loads
 --                  every entry and fires EJ_LOOT_DATA_RECIEVED once per entry it loaded;
 --                  seedGearJournal() adds a newest tier whose dungeon, raid and world boss drop gear
---                  for every slot
+--                  for every slot; journalToBags() (called by seedGearJournal) puts every journal
+--                  item in the player's bag 4 on the forever profile, whose pool is your own gear
 --   Enum           the members core/Compat.lua resolves by name; the enUS GlobalStrings it parses
 --                  and the LOOT_ITEM* lines modules/LootParser.lua reads (overwrite one to model a
 --                  locale or a chat addon rewriting it)
@@ -449,6 +457,32 @@ local function installCompatSurface(M)
     M.specID = 250
     M.GetSpecializationInfo = function() return M.specID, M.__context.spec end
     M.InitiateTrade = recorder("InitiateTrade")
+    M.seedTalents = function(specID, groups)
+        M.specID, M.talents = specID, groups or {}
+        M.C_SpecializationInfo = {
+            GetSpecialization = function() return 1 end,
+            GetSpecializationInfo = function(i) if i == 1 then return M.specID, M.__context.class end end,
+            GetActiveSpecGroup = function() return 1 end,
+            GetCombatConfigIDForSpecGroup = function(group) if group == 1 then return 7001 end end,
+        }
+        M.C_Traits = {
+            GetConfigInfo = function(id) if id == 7001 then return { treeIDs = { 801 } } end end,
+            GetGroupDisplayInfoByTreeID = function(treeID)
+                if treeID ~= 801 then return nil end
+                local out = {}
+                for i, g in ipairs(M.talents) do out[i] = { groupID = 11000 + i, displayName = g.name, orderIndex = i } end
+                return out
+            end,
+            GetGroupCurrencyInfo = function(configID)
+                if configID ~= 7001 then return nil end
+                local out = {}
+                for i, g in ipairs(M.talents) do
+                    out[i] = { traitNodeGroupID = 11000 + i, currencyInfos = { { spent = g.spent } } }
+                end
+                return out
+            end,
+        }
+    end
 end
 
 -- The group's units (modules/Roster.lua). The player's row is the base's __context, read live, so
@@ -491,6 +525,10 @@ local function installUnits(M)
         return r ~= nil and r.npc ~= true
     end
     M.GetNormalizedRealmName = function() return M.normalizedRealm end
+    -- Forever's regional names (client-quirks-§5), read at call time, after the kit stamped the profile.
+    M.RegionalUniqueNamesEnabled = function()
+        return M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT
+    end
     M.UNKNOWNOBJECT = "Unknown"
 
     --- Seed a group: `others` are the rows besides the player, in unit order. A party gives the
@@ -826,6 +864,26 @@ local GEAR_INSTANCES = {
       bosses = { "Grumbleroot", "Skyshatter" } },
 }
 
+-- On the forever profile every item the journal lists is also the player's own, in the last bag
+-- (C.BAG_IDS' 4): WoW Forever's pool is your own gear, never the journal (modules/SimPool.lua,
+-- Forever port design §4.4), so a case that seeds the journal seeds the same items on either
+-- client. Nothing on the retail profile.
+local function journalToBags(M)
+    if not (M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT) then return end
+    local own, seen, links = { size = 0 }, {}, {}
+    for _, byDifficulty in pairs(M.journal.loot) do
+        for _, list in pairs(byDifficulty) do
+            for _, e in ipairs(list) do
+                if e.link and not seen[e.link] then seen[e.link] = true; links[#links + 1] = e.link end
+            end
+        end
+    end
+    table.sort(links)
+    for i, l in ipairs(links) do own[i] = l end
+    own.size = #links
+    M.bags[4] = own
+end
+
 local function seedGearJournal(M)
     local j = M.journal
     local tier = { dungeons = {}, raids = {} }
@@ -853,6 +911,7 @@ local function seedGearJournal(M)
             j.loot[inst.id][row[1]] = list
         end
     end
+    journalToBags(M)
 end
 
 local function build()
@@ -918,18 +977,11 @@ local function build()
         GetChallengeCompletionInfo = function() return { level = M.completionLevel or 0 } end,
     }
 
-    -- C_LootHistory: lootHistory["encounterID:lootListID"] is GetSortedInfoForDrop's answer.
-    M.lootHistory = {}
-    M.C_LootHistory = {
-        GetSortedInfoForDrop = function(encounterID, lootListID)
-            return M.lootHistory[encounterID .. ":" .. lootListID]
-        end,
-    }
-
     M.fireEvent = function(event, ...) return M.__fireEvent(event, ...) end
 
     installCompatSurface(M)
     dofile("tests/wow_mock_collect.lua")(M)   -- the collection reads (core/CompatCollect.lua)
+    dofile("tests/wow_mock_loot.lua")(M)      -- the loot history and the rolls (core/CompatLoot.lua)
     installUnits(M)
     installInspect(M)
     installClock(M)
@@ -938,20 +990,24 @@ local function build()
     installSound(M)
     installJournal(M)
     M.seedGearJournal = function() seedGearJournal(M) end
+    M.journalToBags = function() journalToBags(M) end
 
     -- A NAMED Button is filed in the environment under its name, as the client files it in _G: the
     -- Show window key binding (launcher-§6, Bindings.xml) reaches its button by global name and
     -- nothing else, so "the button exists under that name" is a question a suite has to ask. A
     -- Button also records RegisterForClicks, which the stub frame's metatable would swallow: a
     -- CLICK binding fires the button only for a registered click, so the registration is behavior.
-    -- Its OnClick fires through the kit's `__fire`.
+    -- Its OnClick fires through the kit's `__fire`. A case that sets `M.__decorateUIParent` before
+    -- the load also gets the geometry and text regions on every frame parented to UIParent (the roll
+    -- popup mark's owned cards, DW-FP20), so it can read what they say.
     local baseCreateFrame = M.CreateFrame
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
         local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
             and name:sub(#TOAST_NAME + 1):match("^%d*$") ~= nil
         if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME
-            or (type(parent) == "table" and parent.__dwTree) then
+            or (type(parent) == "table" and parent.__dwTree)
+            or (M.__decorateUIParent and parent ~= nil and parent == M.UIParent) then
             decorateGeometry(M, f)
         end
         -- An undecorated frame is its own font string (the base's CreateFontString), so the stub's

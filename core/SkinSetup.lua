@@ -10,8 +10,11 @@ local addonName, NS = ...
 --                           no library token holds exactly, named `dw.<name>`, with its Ka0s Default
 --                           value (the pixel the addon drew before skins, X1) and the library ROLE
 --                           token every other skin draws it in (X2).
+--   NS.DEFAULT_SKIN         the skin a new profile wears, `Skin:DefaultSkin()` (skinning-§2, Skin
+--                           minor 18): Ka0s Default on Retail, WoW Forever on the Forever client;
+--                           "ka0s" with the library absent. defaults/Profile.lua's skin.skin reads it.
 --   NS.SkinChoice()         the stored (source, skin) pair, read through NS.SchemaRuntime.Get;
---                           "ka0s", "ka0s" before AceDB has built the profile store.
+--                           "ka0s", NS.DEFAULT_SKIN before AceDB has built the profile store.
 --   NS.WriteSkinChoice(s,k,i,m) the write seam: every half through NS.SchemaRuntime.Set, the one
 --                           seam `/dw set` and the panel already write through (architecture-§5);
 --                           `i`, the Scope's `{ panel, fonts }`, writes the two exceptions, and `m`,
@@ -96,7 +99,11 @@ local SOURCE_PATH, SKIN_PATH = "skin.source", "skin.skin"
 local PANEL_PATH, FONTS_PATH = "skin.ignorePanel", "skin.ignoreFonts"
 local FONT_PATH, TEXTURE_PATH = "skin.font", "skin.texture"
 local OUTLINE_PATH, OUTLINE_DEFAULT = "skin.outline", "hud"
-local DEFAULT = "ka0s"
+-- The source is the Ka0s skins on both clients; the skin is the client's (Skin:DefaultSkin, which
+-- answers only a registered skin and else Ka0s Default).
+local SOURCE_DEFAULT = "ka0s"
+NS.DEFAULT_SKIN = Skin and type(Skin.DefaultSkin) == "function" and Skin:DefaultSkin() or "ka0s"
+local DEFAULT = NS.DEFAULT_SKIN
 local TONE = NS.Constants.TONE
 
 -- The owner tokens (LibKa0s-Skin-1.0 minor 7; Ka0sAddonsCommonTasks docs/2026-10-29-SKINNING_ROLLOUT,
@@ -405,9 +412,9 @@ local function stored(path)
     return S.Get(path)
 end
 
---- The stored pair, lazily and nil-safely: Ka0s Default until the profile store exists.
+--- The stored pair, lazily and nil-safely: the client's default skin until the profile store exists.
 function NS.SkinChoice()
-    return stored(SOURCE_PATH) or DEFAULT, stored(SKIN_PATH) or DEFAULT
+    return stored(SOURCE_PATH) or SOURCE_DEFAULT, stored(SKIN_PATH) or DEFAULT
 end
 
 --- A stored override as the profile keeps it: the LSM key, or "" for the skin's own (false, nil, "").

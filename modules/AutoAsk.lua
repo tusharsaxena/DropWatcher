@@ -5,6 +5,8 @@ local _, NS = ...
 -- OFF BY DEFAULT (`messages.autoAsk.enabled`). A drop qualifies by the toast's own test
 -- (NS.Toast.Qualifies, pure): someone else's drop, `upgrade` for you by at least
 -- `messages.autoAsk.minGain` item levels (default 5), with a trade estimate of `likely` or `yes`.
+-- On WoW Forever a score-led upgrade (`led = "score"`) qualifies whatever `minGain`: the least gain
+-- applies only when the verdict was item-level-led (Forever port design §4.5).
 -- Each drop is considered on DropAdded and on each DropUpdated (an inspect can turn its trade
 -- `likely` later) and is scheduled at most once a session. Only drops the feed recorded after
 -- auto-ask was turned on are considered, so turning it on never asks for the drops already there;

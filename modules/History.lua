@@ -11,7 +11,8 @@ local _, NS = ...
 --             me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
 --                    reasonKey? }, them = { ... } | nil,
 --             trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
---             askedAt?, offeredAt?, settledAt?, got? } } } } }
+--             askedAt?, offeredAt?, settledAt?, got?,
+--             rolls? = { at, allPassed, n, w, r = { { name, class, s, n? }, ... } } } } } } }
 --
 -- `at` is time() (seconds since the epoch), never GetTime(), so it means the same after a reload.
 -- `roster` is who was in the group (feedback-2 spec §3, modules/GroupRoster.lua): copied from the
@@ -51,6 +52,15 @@ local _, NS = ...
 -- before them and settled after gets its stamp back-filled at settling (the drop's `at`), since
 -- settling overwrites the outcome that held it. Additive: `v` stays 1.
 --
+-- `rolls` is a group-loot drop's final roll table (Forever port design §5.4, DW-FP16), kept while
+-- `rolls.keep` is on: `r` one row per player in NS.RollCells.Rows' order (the winner first),
+-- at most ROLL_ROWS (a full raid), each its name, classFile (`class`), state number (`s`, 0 Need
+-- to 5 Pass) and roll number (`n`, none for a pass or no roll); `w` the winner's place in `r`;
+-- `n` every player who rolled, the rows cut or not; `at` (time()) when it was kept. No GUIDs.
+-- RollTable reads it back as the plain roll table the roll cells draw (the History card, and the
+-- drop FeedRestore rebuilds). It lands with the drop, or later on the DropUpdated of the merge
+-- that attaches it. Additive: `v` stays 1.
+--
 -- HOW LONG IT IS KEPT (feedback-2 spec §5). By age, not by count: modules/HistoryRetention.lua
 -- deletes the groups older than `global.history.retentionDays` (Keep history for, default 30 days).
 -- Here, MAX_DROPS (50) drops per group and CEILING (5,000) drops in all, a safety ceiling that keeps
@@ -87,7 +97,7 @@ local _, NS = ...
 -- `timer`) puts an `expired` back to the outcome it replaced (`beforeExpired`; `seen` for an entry
 -- expired before that field existed). A rule estimate never does.
 --
--- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (UnitName("NPC")); every
+-- TRADE COMPLETION (spec §10). TRADE_SHOW opens a trade with its partner (TradePartnerName); every
 -- TRADE_PLAYER_ITEM_CHANGED / TRADE_TARGET_ITEM_CHANGED re-reads the window's items (core/Compat.lua,
 -- TradeItemLinks), and every TRADE_ACCEPT_UPDATE with either side accepted re-reads them and keeps
 -- them as the offer, since the window is empty by the time the trade ends and any later item change
@@ -98,10 +108,10 @@ local _, NS = ...
 -- each item you gave marks your own matching drop `tradedAway`. TRADE_CLOSED alone is a cancel or a
 -- failure (out of range, a full bag) and completes nothing.
 --
--- PURE: Normalize, Snapshot, Refresh, Record, Trim, Advance, SetDeclined, Stamp, Settle, WasAsked,
--- WasOffered and MatchTrade take plain
+-- PURE: Normalize, Snapshot, Refresh, RollTable, Record, Trim, Advance, SetDeclined, Stamp, Settle,
+-- WasAsked, WasOffered and MatchTrade take plain
 -- tables and the clock as arguments and read nothing else but the pure link parse
--- (NS.ItemRead.BetterLink); test_history and test_item_read drive them. The edge
+-- (NS.ItemRead.BetterLink) and the pure roll rows (NS.RollCells.Rows); test_history and test_item_read drive them. The edge
 -- below reads the account table, the feed and the bus, and sends HistoryChanged on every change
 -- to what it stores, never for a DropUpdated that changed nothing kept.
 
@@ -114,6 +124,7 @@ local TAG = "FEED"
 H.VERSION = 1
 H.MAX_DROPS = 50
 H.CEILING = 5000
+H.ROLL_ROWS = 40   -- the roll rows an entry keeps: a full raid
 
 -- How far each outcome has come: an automatic move never goes back. `declined` is the player's.
 H.RANK = { seen = 0, asked = 1, offered = 1, expired = 2, declined = 3, received = 4, tradedAway = 4 }
@@ -190,11 +201,84 @@ local function itemIDOf(rec)
     return type(rec.link) == "string" and tonumber(rec.link:match("item:(%d+)")) or nil
 end
 
---- One entry from a feed drop record, its outcome `seen`.
+-- ── the kept roll table (Forever port design §5.4) ─────────────────────────────────────────
+
+-- The winner's place among the kept rows: the row Blizzard marks, else the one named `winner`.
+local function winnerAt(rows, winner)
+    for i, r in ipairs(rows) do
+        if r.winner then return i end
+    end
+    local name = type(winner) == "table" and winner.name or nil
+    for i, r in ipairs(rows) do
+        if name and r.name == name then return i end
+    end
+    return nil
+end
+
+-- A plain roll table, kept compact: the rows in the roll cells' order (the winner first), cut at
+-- ROLL_ROWS, with no GUIDs. `count` is a restored table's own tally of every roller.
+local function rollSnap(roll, now)
+    local rows = NS.RollCells.Rows(roll)
+    local r = {}
+    for i = 1, math.min(#rows, H.ROLL_ROWS) do
+        local x = rows[i]
+        r[i] = { name = x.name ~= "?" and x.name or nil, class = x.classFile, s = x.state, n = x.roll }
+    end
+    local w = winnerAt(rows, roll.winner)
+    if w and w > #r then w = nil end
+    local n = math.max(#(type(roll.rolls) == "table" and roll.rolls or {}), num(roll.count) or 0)
+    return { at = now, allPassed = roll.allPassed == true, n = n, w = w, r = r }
+end
+
+local function sameRow(x, y) return x.name == y.name and x.class == y.class and x.s == y.s and x.n == y.n end
+
+-- Two kept roll tables say the same (their `at` aside).
+local function sameRolls(a, b)
+    if a == nil or b == nil then return a == b end
+    if a.allPassed ~= b.allPassed or a.n ~= b.n or a.w ~= b.w or #a.r ~= #b.r then return false end
+    for i, x in ipairs(a.r) do
+        if not sameRow(x, b.r[i]) then return false end
+    end
+    return true
+end
+
+-- The record's roll table into the entry while rolls are kept (`now` given, `keep` not false); a
+-- roll never un-happens, so a record with none leaves the kept one. Answers whether it moved.
+local function takeRolls(e, rec, now, keep)
+    if keep == false or not num(now) or type(rec.roll) ~= "table" then return false end
+    local snap = rollSnap(rec.roll, now)
+    if sameRolls(e.rolls, snap) then return false end
+    e.rolls = snap
+    return true
+end
+
+--- A kept roll table read back as the plain roll table NS.RollCells draws: { allPassed, count,
+--- winner = { name, classFile, roll }, rolls = { { name, classFile, state, roll, isWinner } } },
+--- or nil with none kept.
+--- @param rolls table|nil an entry's `rolls`
+--- @return table|nil
+function H.RollTable(rolls)
+    if type(rolls) ~= "table" or type(rolls.r) ~= "table" then return nil end
+    local out = { allPassed = rolls.allPassed == true, count = num(rolls.n), rolls = {} }
+    for i, x in ipairs(rolls.r) do
+        if type(x) == "table" then
+            out.rolls[#out.rolls + 1] = { name = type(x.name) == "string" and x.name or nil,
+                classFile = type(x.class) == "string" and x.class or nil, state = num(x.s), roll = num(x.n),
+                isWinner = i == rolls.w }
+        end
+    end
+    local w = out.rolls[num(rolls.w) or 0]
+    if w and w.isWinner then out.winner = { name = w.name, classFile = w.classFile, roll = w.roll } end
+    return out
+end
+
+--- One entry from a feed drop record, its outcome `seen`; its roll table kept unless `keepRolls`
+--- is false (`rolls.keep`).
 --- @param rec table the feed's drop record
 --- @param now number time()
+--- @param keepRolls boolean|nil
 --- @return table entry
-function H.Snapshot(rec, now)
+function H.Snapshot(rec, now, keepRolls)
     local who = type(rec.looter) == "table" and rec.looter or {}
     local facts = type(rec.facts) == "table" and rec.facts or {}
     local e = {
@@ -206,7 +290,7 @@ function H.Snapshot(rec, now)
         quality = num(facts.quality), outcome = "seen", at = now, sim = rec.sim == true or nil,
         seenBy = rec.seenBy, seenByClass = rec.seenByClass,
     }
-    H.Refresh(e, rec)
+    H.Refresh(e, rec, now, keepRolls)
     return e
 end
 
@@ -271,22 +355,26 @@ local function takeItem(e, rec)
     return moved
 end
 
-local function takeSnaps(e, rec)
+local function takeSnaps(e, rec, now, keepRolls)
     local me, them, trade = verdictSnap(rec.me), verdictSnap(rec.them), tradeSnap(rec.trade)
     local moved = not (sameSnap(e.me, me) and sameSnap(e.them, them) and sameSnap(e.trade, trade))
     e.me, e.them, e.trade = me, them, trade
+    moved = takeRolls(e, rec, now, keepRolls) or moved
     return takeItem(e, rec) or moved
 end
 
---- Take a drop record's latest verdicts, trade estimate, more complete link, level and quality;
---- a trade gone `no expired` makes the outcome `expired` (H.Advance), and the trade timer's live
---- `yes` puts back the outcome it replaced (feedback-15 spec §0).
+--- Take a drop record's latest verdicts, trade estimate, more complete link, level and quality,
+--- and its roll table when `now` is given and `keepRolls` is not false (the table stamped `now`
+--- when it lands or changes); a trade gone `no expired` makes the outcome `expired` (H.Advance),
+--- and the trade timer's live `yes` puts back the outcome it replaced (feedback-15 spec §0).
 --- @param e table
 --- @param rec table
+--- @param now number|nil time()
+--- @param keepRolls boolean|nil
 --- @return boolean outcomeChanged
---- @return boolean changed whether anything stored changed (the snapshots or the outcome)
-function H.Refresh(e, rec)
-    local moved = takeSnaps(e, rec)
+--- @return boolean changed whether anything stored changed (the snapshots, the rolls or the outcome)
+function H.Refresh(e, rec, now, keepRolls)
+    local moved = takeSnaps(e, rec, now, keepRolls)
     local t = e.trade
     local advanced = t ~= nil and t.state == "no" and t.reasonKey == "expired" and H.Advance(e, "expired")
     advanced = advanced or unexpire(e)
@@ -309,10 +397,10 @@ function H.SetDeclined(e, on)
     return true
 end
 
-local STAMP = { ask = "askedAt", offer = "offeredAt", announce = "offeredAt" }
+local STAMP = { ask = "askedAt", offer = "offeredAt", announce = "offeredAt", askML = "askedAt" }
 
---- Stamp when an ask (kind `ask`) or an offer (`offer`, `announce`) was first sent; a later send
---- never moves it.
+--- Stamp when an ask (kind `ask`, or the master-loot `askML`) or an offer (`offer`, `announce`) was
+--- first sent; a later send never moves it.
 --- @param e table
 --- @param kind string
 --- @param now number time()
@@ -516,6 +604,9 @@ local trade             -- the trade: { partner, accepted, given, received, offe
 
 local function clock() return time() end
 
+-- Whether a drop's roll table is kept (Drops > Rolls > Keep rolls in History, `rolls.keep`).
+local function keepRolls() return NS.Setting("rolls.keep") ~= false end
+
 local function changed()
     NS.addon:SendMessage(NS.MSG.HISTORY_CHANGED)
 end
@@ -660,6 +751,19 @@ function H.GrowRoster(feedGroup)
     return true
 end
 
+-- What a sent message makes an entry: an ask (or the master-loot ask) `asked`, an offer or an
+-- announce `offered`.
+local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered", askML = "asked" }
+
+-- A drop that assigned a master-loot item you asked the master looter for (`rec.askedML`, plan
+-- DW-FP19) is recorded asked and stamped as an ask is: the ask was filed against the pending item,
+-- before the drop existed.
+local function askedForML(e, rec)
+    if rec.askedML ~= true then return end
+    H.Stamp(e, "askML", clock())
+    H.Advance(e, SENT_OUTCOME.askML)
+end
+
 --- DropAdded: record a live drop.
 --- @param id any
 function H.OnDropAdded(id)
@@ -669,7 +773,9 @@ function H.OnDropAdded(id)
     -- a simulation runs (the record's own origin decides, never whether one runs).
     local hist = H.LogFor(rec.sim)
     if not hist then return end
-    index[id] = H.Record(hist, groupInfo(rec), H.Snapshot(rec, clock()))
+    local e = H.Snapshot(rec, clock(), keepRolls())
+    askedForML(e, rec)
+    index[id] = H.Record(hist, groupInfo(rec), e)
     changed()
 end
 
@@ -679,15 +785,16 @@ end
 function H.OnDropUpdated(id)
     local e, rec = H.EntryOf(id), NS.LootFeed.Get(id)
     if not (e and rec) then return end
-    local _, moved = H.Refresh(e, rec)
+    local _, moved = H.Refresh(e, rec, clock(), keepRolls())
     if moved then changed() end
 end
 
-local SENT_OUTCOME = { ask = "asked", offer = "offered", announce = "offered" }
-
 --- AskStateChanged: a sent ask is `asked`; a sent offer or announce `offered`. Either is stamped
---- (H.Stamp) even when the outcome does not move, and HistoryChanged follows either change.
+--- (H.Stamp) even when the outcome does not move, and HistoryChanged follows either change. A
+--- master-loot ask's id is a pending item's, never a drop's (the two stores' ids may meet): its drop
+--- is recorded asked when it arrives (`askedML`), so it is skipped here.
 function H.OnAskState(dropId, state, kind)
+    if kind == "askML" then return end
     local e = H.EntryOf(dropId)
     if state ~= "sent" or not e or not SENT_OUTCOME[kind] then return end
     local stamped = H.Stamp(e, kind, clock())

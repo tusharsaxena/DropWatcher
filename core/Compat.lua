@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/Compat.lua — the root of the compat family (compat, design spec §4), the only caller of
--- version-variant, deprecated and optional client APIs; core/CompatWorld.lua, core/CompatItem.lua,
--- core/CompatJournal.lua and core/CompatCollect.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
+-- version-variant, deprecated and optional client APIs; core/CompatClient.lua, core/CompatWorld.lua,
+-- core/CompatItem.lua, core/CompatJournal.lua, core/CompatCollect.lua and core/CompatLoot.lua add reads to the same NS.Compat. Callers never name the client API. Every shim is tabled in
 -- docs/compat-layer.md; the text parsing is core/TextParse.lua's (pure), handed this file's strings.
 -- THE RULES. Client globals are read bare and at CALL time, never captured at load, so a late
 -- namespace still wins and a suite can swap any rung. A value that may be secret meets nothing but
@@ -13,11 +13,13 @@ NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 local TextParse = NS.TextParse -- core/TextParse.lua, above in the TOC: the pure parsers
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
+local RoleLib = LibStub and LibStub("LibKa0s-Role-1.0", true)
 
 -- ── Secret guards: LibKa0s-Compat-1.0 ───────────────────────────────────────────────────────
 -- The library's answer, or the same one-rung body, on purpose: for a GUARD "the library is absent"
 -- is not "the client has no secrets" (LibKa0s docs/api/Compat/version-1-docs.md, "Degradation").
--- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID.
+-- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID's
+-- library-absent ladder; the client helpers and the character-name readers are routed below.
 
 --- True when `v` is a 12.0 secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
@@ -35,6 +37,50 @@ Compat.IsSafeKey = CompatLib and CompatLib.IsSafeKey or function(v)
     if Compat.IsSecret(v) then return false end
     return v ~= nil
 end
+
+-- ── The client: LibKa0s-Compat-1.0's, with the stub arm (clients-§3) ─────────────────────────
+-- The stub is the library's body, both constants read bare at call time; the nil guard keeps a
+-- client with neither from reading as Forever. No other file reads a WOW_PROJECT_* global.
+
+local function isForeverStub()
+    return WOW_PROJECT_CAMELOT ~= nil and WOW_PROJECT_ID == WOW_PROJECT_CAMELOT
+end
+
+local function isRetailStub()
+    return WOW_PROJECT_MAINLINE ~= nil and WOW_PROJECT_ID == WOW_PROJECT_MAINLINE and not isForeverStub()
+end
+
+local function clientKeyStub()
+    if isForeverStub() then return "forever" end
+    if isRetailStub() then return "retail" end
+    return nil
+end
+
+local CLIENT_TOKENS = { retail = true, forever = true, both = true }
+
+local function forClientStub(clients)
+    if clients == nil or clients == "both" then return true end
+    if type(clients) ~= "table" then error('ForClient: unknown client "' .. tostring(clients) .. '"', 2) end
+    local key, hit = clientKeyStub(), false
+    for _, token in ipairs(clients) do
+        if not CLIENT_TOKENS[token] then error('ForClient: unknown client "' .. tostring(token) .. '"', 2) end
+        hit = hit or token == "both" or token == key
+    end
+    return hit
+end
+
+--- Whether this is a WoW Forever client. Exactly one boolean.
+Compat.IsForever = CompatLib and CompatLib.IsForever or isForeverStub
+
+--- Whether this is a Retail client (the mainline project id and NOT Forever). Exactly one boolean.
+Compat.IsRetail = CompatLib and CompatLib.IsRetail or isRetailStub
+
+--- The client's key: "retail", "forever", or nil when the project constants say neither.
+Compat.ClientKey = CompatLib and CompatLib.ClientKey or clientKeyStub
+
+--- Whether a `clients` declaration (nil, "both", or an array of "retail" / "forever" / "both")
+--- includes this client; nil means both (clients-§4). An unknown token raises on any client.
+Compat.ForClient = CompatLib and CompatLib.ForClient or forClientStub
 
 -- A plain (non-secret) string, or nil.
 local function plainString(v)
@@ -264,25 +310,47 @@ end
 
 -- ── Identity ────────────────────────────────────────────────────────────────────────────────
 
---- The player's realm as chat and unit names spell it: GetNormalizedRealmName (spaces and hyphens
---- dropped), which answers nil early in the login, then GetRealmName with the same characters
---- dropped. Nil when neither answers a plain, non-empty string.
---- @return string|nil
-function Compat.NormalizedRealm()
-    local realm = GetNormalizedRealmName and plainString(GetNormalizedRealmName())
-    if realm and realm ~= "" then return realm end
-    realm = GetRealmName and plainString(GetRealmName())
-    realm = realm and realm:gsub("[%s%-]", "")
-    if realm and realm ~= "" then return realm end
-    return nil
+--- Whether character names are unique per region (LibKa0s Compat.RegionalNames, client-quirks-§5):
+--- true on WoW Forever, where a character is its first name and surname together and carries no
+--- realm. The stub reads RegionalUniqueNamesEnabled itself; false where it is absent. One boolean.
+--- @return boolean
+Compat.RegionalNames = CompatLib and CompatLib.RegionalNames or function()
+    return RegionalUniqueNamesEnabled ~= nil and RegionalUniqueNamesEnabled() == true
 end
 
---- The player's own specialization id: LibKa0s-Compat-1.0's GetSpecialization (the index) and
---- GetSpecializationInfo (its first return), each C_SpecializationInfo first and the global second.
---- Nil before the client knows the spec, for a secret answer, and with the library absent (the
---- major's reader stubs answer nil, so no rung is re-implemented here).
+--- A unit's whole character name and its realm (LibKa0s Compat.UnitCharacterName, client-quirks-§5):
+--- "Traxex Silentshot" and a nil realm with regional names (WoW Forever); UnitName's name and realm
+--- otherwise (the realm nil on the player's own). With the library absent, UnitName's first value,
+--- and its second as the realm only without regional names: never a surname read as a realm. The
+--- name is nil for no unit, a secret or ""; the realm nil for a secret or "".
+--- @param unit string
+--- @return string|nil name, string|nil realm
+function Compat.UnitCharacterName(unit)
+    local read = CompatLib and CompatLib.UnitCharacterName or UnitName
+    if not (unit and read) then return nil end
+    local name, realm = read(unit)
+    name = plainString(name)
+    if not name or name == "" then return nil end
+    realm = plainString(realm)
+    if realm == "" or (not CompatLib and Compat.RegionalNames()) then realm = nil end
+    return name, realm
+end
+
+--- The player's character key, AceDB-3.0 40's (LibKa0s Compat.CharacterKey): "First Surname" with
+--- regional names, "Name - Realm" otherwise. Nil until the client can answer, for a secret, and
+--- with the library absent.
+--- @return string|nil
+function Compat.CharacterKey()
+    if not (CompatLib and CompatLib.CharacterKey) then return nil end
+    return plainString(CompatLib.CharacterKey())
+end
+
+--- The player's own specialization id: LibKa0s-Role-1.0's Spec() (class-wide on WoW Forever),
+--- else LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo's first return. Nil before
+--- the client knows, for a secret, and with the library absent (no rung is re-implemented here).
 --- @return number|nil
 function Compat.PlayerSpecID()
+    if RoleLib and RoleLib.Spec then return plainNumber((RoleLib.Spec())) end
     if not (CompatLib and CompatLib.GetSpecialization and CompatLib.GetSpecializationInfo) then
         return nil
     end
@@ -373,16 +441,6 @@ function Compat.ClearInspectPlayer()
     return true
 end
 
---- The inspected unit's specialization id (GetInspectSpecialization), or nil: 0 (not known), a
---- secret answer or no API.
---- @return number|nil
-function Compat.InspectSpecID(unit)
-    if not GetInspectSpecialization then return nil end
-    local id = plainNumber(GetInspectSpecialization(unit))
-    if not id or id <= 0 then return nil end
-    return id
-end
-
 --- True when Blizzard's inspect window is open (the player is inspecting someone).
 --- @return boolean
 function Compat.IsInspectFrameShown()
@@ -405,34 +463,7 @@ function Compat.HookNotifyInspect(fn)
 end
 
 -- ── The loot sources beside chat (the feed, design spec §3) ─────────────────────────────────
-
--- The winner of a C_LootHistory drop, plain fields only, or nil.
-local function lootWinner(w)
-    if Compat.IsSecret(w) or type(w) ~= "table" then return nil end
-    local guid = w.playerGUID
-    if not (Compat.IsSafeKey(guid) and type(guid) == "string") then guid = nil end
-    local isSelf = w.isSelf
-    return { name = plainString(w.playerName), guid = guid, classFile = plainString(w.playerClass),
-        isSelf = not Compat.IsSecret(isSelf) and isSelf == true }
-end
-
---- A group-loot drop that has a winner, from C_LootHistory.GetSortedInfoForDrop: { link, name,
---- guid, classFile, isSelf }, every field plain. Nil while nobody has won it (rolls still open, or
---- everyone passed), for a secret or malformed answer, or with no API.
---- @param encounterID number
---- @param lootListID number
---- @return table|nil
-function Compat.LootHistoryDrop(encounterID, lootListID)
-    local api = C_LootHistory
-    if not (api and api.GetSortedInfoForDrop) then return nil end
-    if not (plainNumber(encounterID) and plainNumber(lootListID)) then return nil end
-    local info = api.GetSortedInfoForDrop(encounterID, lootListID)
-    if Compat.IsSecret(info) or type(info) ~= "table" then return nil end
-    local link, winner = plainString(info.itemHyperlink), lootWinner(info.winner)
-    if not (link and winner) or not (winner.name or winner.guid) then return nil end
-    winner.link = link
-    return winner
-end
+-- The loot history (the feed's won group-loot drops, and everyone's rolls) is core/CompatLoot.lua's.
 
 --- A keystone dungeon's name from C_ChallengeMode.GetMapUIInfo, or nil (no map, a secret answer,
 --- or no API).
@@ -709,12 +740,19 @@ end
 
 -- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
 -- Pawn is CC BY-NC-ND: its API is called, never copied. Every call is behind PawnIsReady and in
--- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries. The
--- shapes below are Pawn 2.13.6's (Pawn.lua; line numbers cite that file).
+-- pcall (its error is never this addon's). Nil means "not ready yet": the scorer retries. Line
+-- numbers cite Pawn 2.14.1's Pawn.lua (the WoW Forever install, Forever port research R4 §10);
+-- the two that research did not re-read (PawnIsInitialized, PawnGetAllScales) still cite 2.13.6's.
+--
+-- THE SCALE INDEX. Pawn numbers a class's scales by their place in the class (Arms is 1); on WoW
+-- Forever it has no specs and one Classic scale per talent tree, its SpecID the tree's index (the
+-- Druid's are four: Balance 1, Feral 2 for damage and 3 to tank, Restoration 4). Both clients
+-- translate through NS.ClassData.SpecIndex(specID, tree, role, classFile), the active list's:
+-- Retail's answers by specID, Forever's by the talent tree's row.
 
---- True when Pawn is loaded and has finished initializing: Pawn's own PawnIsReady() (line 4916),
---- which answers its file-local PawnIsInitialized (line 28; true, or nil while it initializes).
---- Without that function, a global PawnIsInitialized (flag or function) is read instead.
+--- True when Pawn is loaded and has finished initializing: Pawn's own PawnIsReady() (line 4949),
+--- which answers its file-local PawnIsInitialized (2.13.6 line 28; true, or nil while it
+--- initializes). Without that function, a global PawnIsInitialized (flag or function) is read instead.
 --- @return boolean
 function Compat.PawnIsReady()
     local flag = type(PawnIsReady) == "function" and PawnIsReady or PawnIsInitialized
@@ -733,14 +771,14 @@ local function pawnCall(fn, ...)
     return v, w
 end
 
---- Pawn's item object for a link (PawnGetItemData, line 1314), or nil while the item is not cached.
+--- Pawn's item object for a link (PawnGetItemData, line 1324), or nil while the item is not cached.
 function Compat.PawnItemData(link)
     if not plainString(link) then return nil end
     return (pawnCall(PawnGetItemData, link))
 end
 
 --- Pawn's upgrade list for a link against YOUR gear (PawnIsItemAnUpgrade's first return, line
---- 3552): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
+--- 3586): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
 --- visible scale it upgrades, empty when it upgrades nothing (Pawn answers nil); nil while not ready.
 --- @return table|nil
 function Compat.PawnUpgradeInfo(link)
@@ -750,20 +788,37 @@ function Compat.PawnUpgradeInfo(link)
     return type(list) == "table" and list or {}
 end
 
+-- The classFile of a classID, read off the active class list's CLASS_ID.
+local function classFileOf(classID)
+    for file, id in pairs(NS.ClassData.CLASS_ID or {}) do
+        if id == classID then return file end
+    end
+    return nil
+end
+
+-- Pawn's scale index for a class, a spec and (on Forever) a talent tree and role; nil when unknown.
+local function pawnIndex(classID, specID, tree, role)
+    if classID == nil then return nil end
+    return NS.ClassData.SpecIndex(specID, tree, role, classFileOf(classID))
+end
+
 --- The Pawn scale name for a class and spec, or nil when Pawn has none. `specID` is the client's
 --- specID (71); Pawn's scales carry the spec's place in its class instead (Arms is 1;
---- PawnFindScaleForSpec, line 4531), so it is translated through NS.ClassData.SpecIndex.
+--- PawnFindScaleForSpec, line 4565), so it is translated through NS.ClassData.SpecIndex. On WoW
+--- Forever `tree` is the talent tree's index (the specID is class-wide) and `role` the role played
+--- ("TANK" makes the Druid's Feral Pawn 3); with no tree there, there is no scale.
 --- @return string|nil
-function Compat.PawnScaleForSpec(classID, specID)
-    local index = classID and NS.ClassData.SpecIndex(specID)
+function Compat.PawnScaleForSpec(classID, specID, tree, role)
+    local index = pawnIndex(classID, specID, tree, role)
     if index == nil then return nil end
     return (pawnCall(PawnFindScaleForSpec, classID, index))
 end
 
 -- Your visible scales for a class and spec index (PawnCommon.Scales and PawnIsScaleVisible, line
--- 5467): a scale that names another class or spec is skipped, and so is an abandoned provider's
--- (PawnGetAllScales, line 5168). A custom scale outranks a starter one, one that names your spec
--- outranks one that names none, and the name breaks a tie, so the answer never depends on order.
+-- 5500): a scale that names another class or spec is skipped, and so is an abandoned provider's
+-- (PawnGetAllScales, 2.13.6 line 5168). A custom scale outranks a starter one, one that names your
+-- spec outranks one that names none, and the name breaks a tie, so the answer never depends on
+-- order. With no index (`index` nil) only a scale that names no spec fits.
 -- Whether a scale is one of yours for the class and spec index: it names neither another class nor
 -- another spec, its provider (if any) is active, and Pawn shows it.
 local function scaleFits(name, scale, classID, index)
@@ -777,16 +832,17 @@ end
 -- A fitting scale's rank: a custom one (no provider) 2, one naming the spec 1 more.
 local function scaleRank(scale, index)
     local r = scale.Provider == nil and 2 or 0
-    if scale.SpecID == index then r = r + 1 end
+    if index ~= nil and scale.SpecID == index then r = r + 1 end
     return r
 end
 
-local function visibleScale(classID, index)
+local function visibleScale(classID, index, customOnly)
     local scales = type(PawnCommon) == "table" and PawnCommon.Scales
     if type(scales) ~= "table" or type(PawnIsScaleVisible) ~= "function" then return nil end
     local best, rank
     for name, scale in pairs(scales) do
-        local r = scaleFits(name, scale, classID, index) and scaleRank(scale, index)
+        local fits = scaleFits(name, scale, classID, index) and not (customOnly and scale.Provider ~= nil)
+        local r = fits and scaleRank(scale, index)
         if r and (rank == nil or r > rank or (r == rank and name < best)) then best, rank = name, r end
     end
     return best
@@ -794,16 +850,56 @@ end
 
 --- The Pawn scale YOU show in tooltips for your class and spec, or nil when none is visible: the
 --- one Pawn itself values your gear on, your custom or imported scale included, where
---- PawnScaleForSpec answers a starter (provider) scale only. `specID` as PawnScaleForSpec's.
+--- PawnScaleForSpec answers a starter (provider) scale only. The arguments as PawnScaleForSpec's.
 --- @return string|nil
-function Compat.PawnVisibleScale(classID, specID)
-    local index = classID and NS.ClassData.SpecIndex(specID)
+function Compat.PawnVisibleScale(classID, specID, tree, role)
+    local index = pawnIndex(classID, specID, tree, role)
     if index == nil then return nil end
     return (pawnCall(visibleScale, classID, index))
 end
 
+--- Your visible custom scale for a class (one you made or imported: no provider, naming neither
+--- another class nor a spec), or nil. What WoW Forever scores you with when no talent tree is known
+--- and you picked a scale of your own (Forever port design §4.3).
+--- @param classID number
+--- @return string|nil
+function Compat.PawnCustomScale(classID)
+    if classID == nil then return nil end
+    return (pawnCall(visibleScale, classID, nil, true))
+end
+
+-- The class's starter scales from active providers, sorted by spec index then name.
+local function classScales(classID)
+    local scales = type(PawnCommon) == "table" and PawnCommon.Scales
+    local out = {}
+    if type(scales) ~= "table" then return out end
+    for name, scale in pairs(scales) do
+        if type(name) == "string" and type(scale) == "table" and scale.ClassID == classID
+            and scale.Provider ~= nil and scale.ProviderActive then
+            out[#out + 1] = { name = name, index = scale.SpecID }
+        end
+    end
+    table.sort(out, function(a, b)
+        local x, y = tonumber(a.index) or math.huge, tonumber(b.index) or math.huge
+        if x ~= y then return x < y end
+        return a.name < b.name
+    end)
+    return out
+end
+
+--- Every starter scale Pawn has for a class (WoW Forever's Classic scales, one per talent tree), as
+--- `{ { name, index }, ... }` sorted by tree, shown or hidden: what another player, or you with no
+--- talent tree, is scored with at best (Forever port design §4.3). Empty without Pawn, while it is
+--- not ready, or for a class it has none for.
+--- @param classID number
+--- @return table
+function Compat.PawnClassScales(classID)
+    if classID == nil then return {} end
+    return pawnCall(classScales, classID) or {}
+end
+
 --- One item's value on scale `scale`, or nil while not ready. PawnGetSingleValueFromItem (line
---- 1663) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
+--- 1690) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
 --- Pawn's own upgrade test compares (PawnIsItemAnUpgrade), so worn enchants and gems do not
 --- outweigh a bare drop. A Pawn that answers one value gives that one.
 --- @return number|nil
@@ -873,18 +969,6 @@ function Compat.IsTradeCompleteMessage(messageType, message)
     if id then return plainNumber(messageType) == id end
     local text = plainString(ERR_TRADE_COMPLETE)
     return text ~= nil and plainString(message) == text
-end
-
---- Whom you are trading with (UnitName("NPC"), the trade window's partner unit), as `Name-Realm`
---- when the client names a realm, else `Name`. Nil for a secret or missing name.
---- @return string|nil
-function Compat.TradePartnerName()
-    if not UnitName then return nil end
-    local name, realm = UnitName("NPC")
-    name, realm = plainString(name), plainString(realm)
-    if not name or name == "" then return nil end
-    if realm and realm ~= "" then return name .. "-" .. realm end
-    return name
 end
 
 --- Opens a context menu on `owner` with one button per entry ({ text, fn }), through
@@ -963,17 +1047,4 @@ function Compat.DressUpItem(link)
     if type(link) ~= "string" or not fn then return false end
     fn(link)
     return true
-end
-
---- A specialization's localized name (the detail card's looter spec): GetSpecializationInfoByID's
---- second return. Nil for no API, an unknown or non-number id, or a secret or empty answer.
---- @param specID number
---- @return string|nil
-function Compat.SpecName(specID)
-    if type(specID) ~= "number" or Compat.IsSecret(specID) then return nil end
-    local fn = GetSpecializationInfoByID
-    if not fn then return nil end
-    local _, name = fn(specID)
-    if Compat.IsSecret(name) or type(name) ~= "string" or name == "" then return nil end
-    return name
 end

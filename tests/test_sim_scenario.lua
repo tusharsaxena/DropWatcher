@@ -48,6 +48,7 @@ local function addon()
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     return NS, m
 end
 
@@ -85,19 +86,19 @@ end
 -- Pure: the verb parser and the timeline
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: DropWatcher's six host verbs on the descriptor, each parsing its arguments", function()
+test("sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments", function()
     local V = T.newAddon().SimVerbs
     local names = {}
     for verb in pairs(V.VERBS) do names[#names + 1] = verb end
     table.sort(names)
     -- red under: a generic verb (start, run, step, ...) kept in SimVerbs (the library owns them, C.7)
-    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,pull,trade")
+    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,ml,pull,roll,trade")
     local function P(line)
         local w = {}
         for x in line:gmatch("%S+") do w[#w + 1] = x end
         return V.VERBS[w[1]].parse(w)
     end
-    assertTrue(P("pull") ~= nil); assertTrue(P("kill") ~= nil)
+    assertTrue(P("pull") ~= nil); assertTrue(P("kill") ~= nil); assertTrue(P("roll") ~= nil)
     local c = P("loot")
     assertNil(c.n); assertNil(c.who)
     c = P("loot 3 me")
@@ -129,11 +130,35 @@ test("sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key
     assertEqual(kinds({ bosses = 2, keystone = true }),
         "runStart,pull,kill,pull,kill,lockdownOn,runEnd,loot,lockdownOff")
     assertEqual(SC.Timeline({ bosses = 1, burst = 4 })[4].n, 4, "the burst size rides on the loot step")
+    assertEqual(kinds({ bosses = 1, rolls = true }), "pull,lockdownOn,kill,loot,roll,lockdownOff",
+        "a scenario with rolls drops a group-loot roll after each boss's loot (DW-FP17)")
+    -- WoW Forever's own scenarios roll (group loot is its parties' and raids' way); Retail's never do.
+    for _, name in ipairs(SC.NAMES) do
+        assertEqual(SC.SCENARIOS[name].rolls == true, T.forever == true, name .. " rolls on WoW Forever alone")
+    end
     assertEqual(#SC.Timeline(nil), 0)
     for _, name in ipairs(SC.NAMES) do
         local def = SC.SCENARIOS[name]
         assertTrue(def ~= nil and #SC.Timeline(def) > 0, name)
     end
+end)
+
+test("sim scenario: Forever lists no key, lfr or delve", function()
+    local NS = T.newAddon()
+    local SC = NS.SimScenario
+    local names = table.concat(SC.NAMES, ",")
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(names, "dungeon,raid,world")
+        for _, name in ipairs({ "key", "lfr", "delve" }) do assertNil(SC.SCENARIOS[name], name) end
+    else
+        assertEqual(names, "key,dungeon,raid,lfr,delve,world")
+    end
+    for _, name in ipairs(SC.NAMES) do
+        local def = SC.SCENARIOS[name]
+        assertTrue(NS.Constants.SITUATION[def.situation] ~= nil, name .. " simulates a situation this client has")
+        assertTrue(def.keystone == nil or not T.forever, name .. ": no keystone run on Forever")
+    end
+    assertEqual(table.concat(NS.SimScenarioDefs.names, ","), names, "the library's list is the client's")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -144,7 +169,8 @@ test("sim verbs: `/dw sim` through RunVerb prints the status and the usage and o
     local NS, m = addon()
     slash(NS, "sim")
     -- The library's status and usage (LibKa0s-Sim-1.0 RunVerb), then DropWatcher's six verbs.
-    assertEqual(printed(m, "Simulation: idle. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
+    -- Each client's own scenarios (Forever port design §4.4).
+    assertEqual(printed(m, "Simulation: idle. Scenarios: " .. table.concat(NS.SimScenario.NAMES, ", ") .. "."), 1)
     assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1)
     for _, line in ipairs({ "/dw sim pull: ", "/dw sim kill: ", "/dw sim loot [n] [player|me]: ",
         "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: ", "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
@@ -169,7 +195,7 @@ test("sim verbs: every verb but the free ones needs a running simulation; an unk
     assertTrue(#m.prints - before >= 15)
     slash(NS, "sim start nowhere")
     -- The library's line since DW-02 (OWNER_SCOPE C.7; smoke SM-DW-5): it names the scenarios.
-    assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: key, dungeon, raid, lfr, delve, world."), 1)
+    assertEqual(printed(m, "Unknown scenario 'nowhere'. Scenarios: " .. table.concat(NS.SimScenario.NAMES, ", ") .. "."), 1)
     assertFalse(NS.Sim:IsActive())
 end)
 
@@ -253,7 +279,8 @@ test("sim start: the scenario's pool, group and situation, and the window open",
     slash(NS, "sim start dungeon")
     assertTrue(NS.Sim:IsActive())
     local st = NS.SimScenario.Status()
-    assertTrue(st.ready); assertEqual(st.pos, 0); assertEqual(st.steps, 15)
+    -- WoW Forever's bosses each drop a group-loot roll too (the `roll` step, DW-FP17)
+    assertTrue(st.ready); assertEqual(st.pos, 0); assertEqual(st.steps, T.forever and 18 or 15)
     assertEqual(NS.Roster.Count(), 5)
     assertEqual(NS.Situations.Current(), "dungeon")
     assertTrue(NS.Window.IsShown(), "the window opened")
@@ -261,7 +288,7 @@ test("sim start: the scenario's pool, group and situation, and the window open",
     slash(NS, "sim start raid")
     assertEqual(printed(m, "A simulation is already running."), 1)
     slash(NS, "sim status")
-    assertTrue(printed(m, "Simulation: dungeon, seed ") == 1 and printed(m, ", step 0 of 15, playing.") == 1,
+    assertTrue(printed(m, "Simulation: dungeon, seed ") == 1 and printed(m, (", step 0 of %d, playing."):format(T.forever and 18 or 15)) == 1,
         "the library's status line")
     assertEqual(printed(m, "Simulated Dungeon: 4 members, 0 sends printed."), 1, "then DropWatcher's")
 end)
@@ -272,9 +299,11 @@ test("sim start: a raid takes its size; a party is always four", function()
     assertEqual(#NS.SimRoster.Get(), 15)
     assertEqual(NS.Situations.Current(), "raid")
     slash(NS, "sim stop")
-    slash(NS, "sim start delve 12")
+    -- A party each client has (WoW Forever has no delve, Forever port design §4.4).
+    local party, situation = T.forever and "world" or "delve", T.forever and "openWorldGroup" or "delve"
+    slash(NS, "sim start " .. party .. " 12")
     assertEqual(#NS.SimRoster.Get(), 4)
-    assertEqual(NS.Situations.Current(), "delve")
+    assertEqual(NS.Situations.Current(), situation)
 end)
 
 test("sim step: the timeline waits for the pool, then plays one step at a time", function()
@@ -298,7 +327,7 @@ test("sim step: the timeline waits for the pool, then plays one step at a time",
     assertEqual(printed(m, "A simulated boss is already engaged"), 1)
     m.advance(10)
     assertEqual(NS.SimScenario.Status().pos, 2, "paused before the pool was ready: nothing played on its own")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim restart: a stale pool callback from the first session never readies the restarted one (C.1)", function()
     local NS, m = addon()
@@ -321,7 +350,7 @@ test("sim restart: a stale pool callback from the first session never readies th
     m.advance(1)
     assertTrue(NS.Sim:Status().ready, "its own pool readies it")
     assertEqual(printed(m, "Simulation ready:"), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim run: Run while the panel's click-ahead plays answers playing (C.2)", function()
     local NS, m = addon()
@@ -363,14 +392,15 @@ test("sim run: a typed start plays on its own", function()
     assertEqual(printed(m, ". It plays now: /dw sim pause holds it, /dw sim step plays one event at a time."), 1,
         "the ready line says it plays")
     m.advance(0)
+    local n = T.forever and 6 or 5   -- WoW Forever's boss drops a group-loot roll too (DW-FP17)
     assertEqual(NS.SimScenario.Status().pos, 1, "the first step on the next frame")
-    assertEqual(printed(m, "Simulation step 1 of 5: Pull: Warden Ashvane."), 1)
+    assertEqual(printed(m, ("Simulation step 1 of %d: Pull: Warden Ashvane."):format(n)), 1)
     local delay = NS.SimScenario.StepDelay()
-    for pos = 2, 5 do
+    for pos = 2, n do
         m.advance(delay)
         assertEqual(NS.SimScenario.Status().pos, pos, "one step per step delay")
     end
-    m.advance(delay * 5)
+    m.advance(delay * n)
     st = NS.SimScenario.Status()
     assertEqual(st.pos, st.steps); assertFalse(st.playing)
     assertEqual(printed(m, "The simulation's timeline has finished."), 1)
@@ -391,7 +421,7 @@ test("sim run: a typed start waits for the pool, then plays", function()
     -- red under: LibKa0s v1.75.2, where the ready pool waited for a verb
     assertTrue(NS.SimScenario.Status().pos >= 1, "the ready pool plays with no further verb")
     assertEqual(printed(m, "Simulation step 1 of 15: Pull: Warden Ashvane."), 1)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim step: a typed step while it plays pauses it and plays one step", function()
     local NS, m = addon()
@@ -434,14 +464,20 @@ test("sim run: plays every step a few seconds apart, each with its line, then sa
     -- The typed start already plays (LibKa0s v1.76.0): run, the resume synonym, has nothing to do.
     slash(NS, "sim run")
     assertEqual(printed(m, "The timeline is already playing."), 1)
-    m.advance(NS.SimScenario.STEP_DELAY * 5)
+    m.advance(NS.SimScenario.STEP_DELAY * 6)
     local st = NS.SimScenario.Status()
     assertEqual(st.pos, st.steps); assertFalse(st.playing)
     assertEqual(printed(m, "The simulation's timeline has finished."), 1)
     -- red under: the M7 run, which printed no step it played itself (sim feedback §0)
-    -- Since DW-04 each line names the step as the panel does (its stepLabel).
-    for _, line in ipairs({ "2 of 5: Combat and chat lockdown.", "3 of 5: Kill: Warden Ashvane.", "4 of 5: Loot: 3 drops",
-        "5 of 5: Lockdown lifts." }) do
+    -- Since DW-04 each line names the step as the panel does (its stepLabel). WoW Forever's boss
+    -- drops a group-loot roll after its loot (DW-FP17).
+    local lines = { "2 of 5: Combat and chat lockdown.", "3 of 5: Kill: Warden Ashvane.", "4 of 5: Loot: 3 drops",
+        "5 of 5: Lockdown lifts." }
+    if T.forever then
+        lines = { "2 of 6: Combat and chat lockdown.", "3 of 6: Kill: Warden Ashvane.", "4 of 6: Loot: 3 drops",
+            "5 of 6: Roll: ", "6 of 6: Lockdown lifts." }
+    end
+    for _, line in ipairs(lines) do
         assertEqual(printed(m, "Simulation step " .. line), 1, line)
     end
     assertEqual(NS.SimEvents.Status().kills, 1)
@@ -587,12 +623,18 @@ end
 test("sim diagnostics: the section reads the session, the pool, the timeline and the sends", function()
     local NS = addon()
     assertTrue(diagnostics(NS):find("sim: active=false sendsPrinted=0", 1, true) ~= nil)
-    slash(NS, "sim start key")
+    -- A key on Retail, a dungeon on WoW Forever, which has no key (Forever port design §4.4).
+    local name = T.forever and "dungeon" or "key"
+    slash(NS, "sim start " .. name)
     slash(NS, "sim step")   -- a typed step holds the run that the typed start armed
     local text = diagnostics(NS)
-    assertTrue(text:find("sim: active=true scenario=key situation=mythicPlus members=4", 1, true) ~= nil, text)
-    assertTrue(text:find("sim: pool size=", 1, true) ~= nil and text:find("source=journal", 1, true) ~= nil)
-    assertTrue(text:find("sim: timeline step=1/11 next=pull ready=true playing=false", 1, true) ~= nil, text)
+    local want = T.forever and "scenario=dungeon situation=dungeon" or "scenario=key situation=mythicPlus"
+    assertTrue(text:find("sim: active=true " .. want .. " members=4", 1, true) ~= nil, text)
+    -- WoW Forever's pool is your own gear (modules/SimPool.lua, Forever port design §4.4).
+    local source = T.forever and "source=fallback" or "source=journal"
+    assertTrue(text:find("sim: pool size=", 1, true) ~= nil and text:find(source, 1, true) ~= nil)
+    local timeline = T.forever and "step=1/18 next=lockdownOn" or "step=1/11 next=pull"
+    assertTrue(text:find("sim: timeline " .. timeline .. " ready=true playing=false", 1, true) ~= nil, text)
     assertTrue(text:find("sim: sendsPrinted=0", 1, true) ~= nil)
 end)
 
@@ -603,7 +645,8 @@ test("sim debug: the SIM tag logs every injected event and every step", function
     slash(NS, "sim step")
     local log = table.concat(NS.DebugLog.buffer, "\n")
     assertTrue(log:find("[SIM] event ENCOUNTER_START", 1, true) ~= nil, "the injected event")
-    assertTrue(log:find("[SIM] timeline step 1/15: pull", 1, true) ~= nil, "the step")
+    local steps = T.forever and 18 or 15   -- WoW Forever's bosses each drop a roll too (DW-FP17)
+    assertTrue(log:find(("[SIM] timeline step 1/%d: pull"):format(steps), 1, true) ~= nil, "the step")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -673,7 +716,7 @@ test("sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and
     slash(NS, "sim stop")
     assertEqual(#drops(NS), 0)
     assertEqual(savedHistory(NS), 0)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved", function()
     local NS, m = addon()
@@ -692,9 +735,14 @@ test("sim e2e raid: a large roster, auto-ask after its delay, a trade received, 
     playUntil(NS, m, nil)
     m.advance(NS.AutoAsk.Config().delay + 2)
     local aa = NS.AutoAsk.Stats()
-    assertTrue(aa.scheduled >= 1, "auto-ask scheduled")
-    assertTrue(aa.sent >= 1, "auto-ask fired after its delay")
-    assertTrue(printed(m, "[sim] WHISPER to ") >= 1, "printed, not sent")
+    if T.forever then   -- the boss drops bind on pickup: soulbound, so nothing to ask for (design §4.6)
+        assertEqual(aa.scheduled, 0, "no auto-ask for a soulbound drop")
+        assertEqual(printed(m, "[sim] WHISPER to "), 0)
+    else
+        assertTrue(aa.scheduled >= 1, "auto-ask scheduled")
+        assertTrue(aa.sent >= 1, "auto-ask fired after its delay")
+        assertTrue(printed(m, "[sim] WHISPER to ") >= 1, "printed, not sent")
+    end
     -- The newest such drop: a trade settles the newest open drop of its item from its partner.
     local rec = lastWhere(drops(NS), function(r) return not r.isMine and r.them ~= nil end)
     assertTrue(rec ~= nil, "a member's drop with the looter's verdict")

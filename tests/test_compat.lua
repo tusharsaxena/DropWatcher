@@ -5,7 +5,7 @@
 -- seam (spec §5.4), the trade action and the drop tables' item icon, class color, chat link and
 -- dressing room (spec §11.1). Every shim is also driven with its API absent, where it
 -- must answer its documented absent value and never raise, the inspect calls (spec §8) and the
--- feed's loot history and keystone map readers included.
+-- feed's keystone map reader included (the loot history readers are tests/test_compat_loot.lua's).
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
@@ -13,7 +13,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
 
 local function fresh(opts)
     local NS, _, m = T.newAddon(opts)
-    return NS.Compat, m
+    return NS.Compat, m, NS
 end
 
 local function installSecrets(m)
@@ -619,7 +619,8 @@ test("compat: Pawn ready answers the upgrade list, an empty list, or nil while u
 end)
 
 test("compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m)
     -- red under: a seam that passes the specID (71), which no Pawn scale carries
     assertEqual(Compat.PawnScaleForSpec(1, 71), "1:1", "Arms")
@@ -654,7 +655,8 @@ local function installScales(m, scales, visible)
 end
 
 test("compat: your visible Pawn scale is the one you show, a custom one before a starter", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index (Forever's by talent tree is below)
     installPawn(m)
     installScales(m, {
         Starter = { ClassID = 1, SpecID = 1, Provider = "Wowhead", ProviderActive = true },
@@ -677,6 +679,50 @@ test("compat: your visible Pawn scale is the one you show, a custom one before a
     assertNil(Compat.PawnVisibleScale(1, 71))
     m.PawnCommon = nil
     assertNil(Compat.PawnVisibleScale(1, 71))
+end)
+
+test("compat: on Forever Pawn's scale is asked by the talent tree, the Druid's Feral by role", function()
+    local Compat, m, NS = fresh()
+    NS.ClassData.Install(NS.ClassData.LISTS.forever)
+    installPawn(m)
+    -- red under: a seam that asks SpecIndex(specID) alone, which the class-wide spec never answers
+    assertEqual(Compat.PawnScaleForSpec(3, 1485, 2), "3:2", "a Hunter's second tree")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 2, "TANK"), "11:3", "Feral to tank")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 2, "DAMAGER"), "11:2", "Feral for damage")
+    assertEqual(Compat.PawnScaleForSpec(11, 1447, 3), "11:4", "Restoration")
+    assertNil(Compat.PawnScaleForSpec(3, 1485), "no tree: no scale")
+    installScales(m, {
+        HUNTER1 = { ClassID = 3, SpecID = 1, Provider = "Classic", ProviderActive = true },
+        HUNTER2 = { ClassID = 3, SpecID = 2, Provider = "Classic", ProviderActive = true },
+    }, { HUNTER1 = true, HUNTER2 = true })
+    assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "HUNTER2")
+    assertNil(Compat.PawnVisibleScale(3, 1485), "no tree: no visible scale")
+    assertNil(Compat.PawnCustomScale(3), "a starter scale is not a custom one")
+    m.PawnCommon.Scales.Mine = {}
+    m.PawnIsScaleVisible = function(name) return name ~= "HUNTER1" end
+    assertEqual(Compat.PawnCustomScale(3), "Mine", "your visible custom scale")
+    assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "Mine", "a custom scale before the tree's starter")
+end)
+
+test("compat: PawnClassScales lists a class's Classic scales by tree, shown or hidden", function()
+    local Compat, m = fresh()
+    installPawn(m)
+    installScales(m, {
+        HUNTER2 = { ClassID = 3, SpecID = 2, Provider = "Classic", ProviderActive = true },
+        HUNTER1 = { ClassID = 3, SpecID = 1, Provider = "Classic", ProviderActive = true },
+        Old = { ClassID = 3, SpecID = 3, Provider = "Gone" },
+        Mine = { ClassID = 3 },
+        MAGE1 = { ClassID = 8, SpecID = 1, Provider = "Classic", ProviderActive = true },
+    }, {})
+    local list = Compat.PawnClassScales(3)
+    assertEqual(#list, 2, "a custom, another class's and an abandoned provider's scale are left out")
+    assertEqual(list[1].name, "HUNTER1"); assertEqual(list[2].name, "HUNTER2")
+    assertNil(next(Compat.PawnClassScales(4)), "a class with none")
+    assertNil(next(Compat.PawnClassScales(nil)))
+    m.PawnCommon = nil
+    assertNil(next(Compat.PawnClassScales(3)), "no Pawn table: an empty list")
+    m.PawnIsReady = function() return nil end
+    assertNil(next(Compat.PawnClassScales(3)), "not ready: an empty list")
 end)
 
 test("compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts", function()
@@ -732,13 +778,26 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     assertNil(Compat.NormalizedRealm())
 end)
 
+-- Per profile (clients-§6): Retail answers through the deprecated globals the base mocks; WoW
+-- Forever has no such globals, so its one class-wide spec (Hunter 1485) comes from
+-- C_SpecializationInfo, which the case seeds there as the client carries it.
 test("compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library", function()
     local Compat, m = fresh()
-    m.specID = 72
-    assertEqual(Compat.PlayerSpecID(), 72)
-    m.GetSpecialization = function() return nil end
+    local forever = Compat.ClientKey() == "forever"
+    local index = 1
+    if forever then
+        m.C_SpecializationInfo = {
+            GetSpecialization = function() return index end,
+            GetSpecializationInfo = function(i) if i == 1 then return m.specID, "Hunter" end end,
+        }
+    else
+        m.GetSpecialization = function() return index end
+    end
+    m.specID = forever and 1485 or 72
+    assertEqual(Compat.PlayerSpecID(), forever and 1485 or 72)
+    index = nil
     assertNil(Compat.PlayerSpecID(), "no spec chosen yet")
-    m.GetSpecialization = function() return 2 end
+    index = 1
     installSecrets(m)
     m.specID = T.secret(72)
     assertNil(Compat.PlayerSpecID(), "a secret answer is never passed on")
@@ -826,35 +885,6 @@ end)
 -- ---------------------------------------------------------------------------------------------
 -- The loot sources beside chat (the feed)
 -- ---------------------------------------------------------------------------------------------
-
-test("compat: LootHistoryDrop answers a won drop's plain fields, else nil", function()
-    local Compat, m = fresh()
-    local LINK = "|Hitem:9::|h[Band]|h"
-    assertNil(Compat.LootHistoryDrop(1, 2), "no answer")
-    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = "Brakk",
-        playerGUID = "Player-1-0000000A", playerClass = "WARRIOR", isSelf = false } }
-    local d = Compat.LootHistoryDrop(1, 2)
-    assertEqual(d.link, LINK); assertEqual(d.name, "Brakk"); assertEqual(d.guid, "Player-1-0000000A")
-    assertEqual(d.classFile, "WARRIOR"); assertFalse(d.isSelf)
-    m.lootHistory["1:2"].winner = {}
-    assertNil(Compat.LootHistoryDrop(1, 2), "rolls still open: nobody won it")
-    m.lootHistory["1:2"].winner = nil
-    assertNil(Compat.LootHistoryDrop(1, 2))
-    assertNil(Compat.LootHistoryDrop("1", 2), "the ids must be numbers")
-    installSecrets(m)
-    m.lootHistory["1:2"] = { itemHyperlink = T.secret(LINK), winner = { playerName = "Brakk" } }
-    assertNil(Compat.LootHistoryDrop(1, 2), "a secret link")
-    m.lootHistory["1:2"] = { itemHyperlink = LINK, winner = { playerName = T.secret("Brakk"),
-        playerGUID = T.secret("Player-1-0000000A"), isSelf = T.secret(true) } }
-    assertNil(Compat.LootHistoryDrop(1, 2), "a winner with nothing plain")
-    m.lootHistory["1:2"].winner.playerName = "Brakk"
-    d = Compat.LootHistoryDrop(1, 2)
-    assertEqual(d.name, "Brakk"); assertNil(d.guid); assertFalse(d.isSelf)
-    m.lootHistory["1:2"] = T.secret({})
-    assertNil(Compat.LootHistoryDrop(1, 2))
-    m.C_LootHistory = nil
-    assertNil(Compat.LootHistoryDrop(1, 2), "no API")
-end)
 
 test("compat: ChallengeMapName answers a keystone dungeon's name, else nil", function()
     local Compat, m = fresh()
@@ -964,7 +994,12 @@ test("compat: TradePartnerName names the trade window's partner, with a realm wh
     m.units.NPC = { name = "Brakk" }
     assertEqual(Compat.TradePartnerName(), "Brakk")
     m.units.NPC = { name = "Lyra", realm = "Area52" }
-    assertEqual(Compat.TradePartnerName(), "Lyra-Area52")
+    if Compat.ClientKey() == "forever" then
+        -- UnitName's second value is the surname there: the whole name, never Lyra-Area52 (client-quirks-§5)
+        assertEqual(Compat.TradePartnerName(), "Lyra Area52")
+    else
+        assertEqual(Compat.TradePartnerName(), "Lyra-Area52")
+    end
     m.units.NPC = { name = T.secret("Lyra") }
     assertNil(Compat.TradePartnerName(), "a secret name")
     m.UnitName = nil
@@ -1013,6 +1048,26 @@ end)
 -- The seam is the only caller
 -- ---------------------------------------------------------------------------------------------
 
+test("compat: UnitLevel answers a plain level, nil for a secret, a skull, 0 or no API", function()
+    local Compat, m = fresh()
+    installSecrets(m)
+    local answer
+    m.UnitLevel = function() return answer end
+    answer = 30
+    assertEqual(Compat.UnitLevel("player"), 30)
+    -- a read that handed the secret on would let the armor rule compare it, and raise
+    answer = T.secret(30)
+    assertNil(Compat.UnitLevel("party1"), "a secret level")
+    answer = -1
+    assertNil(Compat.UnitLevel("target"), "a skull: not known")
+    answer = 0
+    assertNil(Compat.UnitLevel("party2"))
+    answer = "30"
+    assertNil(Compat.UnitLevel("party3"), "not a number")
+    m.UnitLevel = nil
+    assertNil(Compat.UnitLevel("player"), "no API")
+end)
+
 local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown", "C_RestrictedActions",
     "GetItemUpgradeInfo", "IsItemBindToAccount", "GetItemGUID", "DropItemOnUnit", "PickupContainerItem",
     "InitiateTrade", "Pawn%u%a+", "issecretvalue", "canaccessvalue", "GetNormalizedRealmName",
@@ -1023,11 +1078,13 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
     "GetMapUIInfo", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
-    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]" }
+    "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]",
+    "WOW_PROJECT_%u+", "RegionalUniqueNamesEnabled", "UnitGroupRolesAssigned" }
 
 test("compat: no other shipped file names a seam-only client API in code", function()
     for _, rel in ipairs(T.loadAddon.tocFiles) do
-        if rel ~= "core/Compat.lua" and rel ~= "core/CompatJournal.lua" and rel ~= "core/CompatCollect.lua" then
+        if rel ~= "core/Compat.lua" and rel ~= "core/CompatClient.lua" and rel ~= "core/CompatJournal.lua"
+            and rel ~= "core/CompatCollect.lua" and rel ~= "core/CompatLoot.lua" then
             local fh = assert(io.open(T.root .. "/" .. rel, "rb"))
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", "")

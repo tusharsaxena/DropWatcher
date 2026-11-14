@@ -53,6 +53,34 @@ test("toast: Qualifies wants someone else's upgrade for you of minGain or more, 
     end
 end)
 
+test("toast: on Forever a score-led upgrade passes the gain gate", function()
+    local NS = T.newAddon()
+    local forever = NS.Compat.ClientKey() == "forever"
+    -- The feed's verdict mode, picked once by client (Forever port design §4.5).
+    assertEqual(NS.LootFeed.VERDICT_MODE, forever and "scoreFirst" or "ilvlFirst")
+    -- A cloak 3 item levels below the worn one, with a score 10% higher, judged the feed's way.
+    local C = NS.Constants
+    local function cloak(ilvl, score)
+        return { itemID = 500, ilvl = ilvl, equipLoc = "INVTYPE_CLOAK", classID = C.ITEM_CLASS.ARMOR,
+            subClassID = C.ARMOR_SUBCLASS.CLOTH, score = score }
+    end
+    local cand = { classFile = "WARRIOR", gear = { [C.SLOT.BACK] = cloak(311, 100) } }
+    local me = NS.Evaluate.Evaluate(cloak(308, 110), cand,
+        { scorer = function(f) return f.score end, verdictMode = NS.LootFeed.VERDICT_MODE })
+    local ok, why = NS.Toast.Qualifies(drop({ me = me }), 10)
+    if forever then
+        assertEqual(me.verdict, "upgrade"); assertEqual(me.led, "score")
+        assertTrue(ok, "a score-led upgrade clears any least gain"); assertNil(why)
+    else
+        assertEqual(me.verdict, "sidegrade", "Retail: item level and score disagree")
+        assertFalse(ok); assertEqual(why, "notUpgrade")
+    end
+    -- On either client: minGain applies only when the verdict was item-level-led.
+    assertTrue(NS.Toast.Qualifies(drop({ me = { verdict = "upgrade", ilvlDelta = -3, led = "score" } }), 50))
+    local _, gain = NS.Toast.Qualifies(drop({ me = { verdict = "upgrade", ilvlDelta = 3, led = "ilvl" } }), 10)
+    assertEqual(gain, "gain")
+end)
+
 test("toast: Compose answers the four rows' parts (feedback-9 spec §0)", function()
     local NS = T.newAddon()
     local Toast = NS.Toast

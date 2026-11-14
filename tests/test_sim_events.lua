@@ -55,6 +55,7 @@ local function sim(opts)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
     if opts.before then opts.before(NS, m) end
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     local situation = opts.situation or "dungeon"
     assertTrue(T.simBare(NS):Start({ scenario = "test", situation = situation, seed = opts.seed or 11 }))
     NS.SimPool.Build({ situation = situation })
@@ -81,7 +82,10 @@ local function lastDrop(NS)
     return list[#list]
 end
 
+-- On Forever no member has a realm (client-quirks-§5): any member stands for "another realm", and
+-- the last for "your realm", each named by its whole name.
 local function otherRealm(members)
+    if T.forever then return members[1] end
     for _, mem in ipairs(members) do
         if mem.realm ~= "Testrealm" then return mem end
     end
@@ -89,6 +93,7 @@ local function otherRealm(members)
 end
 
 local function sameRealm(members)
+    if T.forever then return members[#members] end
     for _, mem in ipairs(members) do
         if mem.realm == "Testrealm" then return mem end
     end
@@ -158,6 +163,21 @@ test("sim lines: a burst has one to three lines, your own when asked, and a loot
     assertEqual(E.ChatName(brakk, "Elsewhere"), brakk.fullName, "another realm: Name-Realm")
 end)
 
+-- Bonus rolls are Retail's alone (Forever port design §4.4, clients-§6): a seeded burst plays the
+-- same lines on both clients, and on WoW Forever none of them is a bonus roll.
+test("sim lines: no bonus roll on Forever", function()
+    local NS = T.newAddon()
+    local E, R = NS.SimEvents, NS.SimRoster
+    local members = R.Members({ kind = "raid", size = 12, ownRealm = "Testrealm" }, R.Random(3))
+    local bonus = 0
+    for seed = 1, 60 do
+        for _, line in ipairs(E.Plan(3, members, { { link = "a" } }, R.Random(seed), nil, "Testrealm")) do
+            if line.kind == "bonus" then bonus = bonus + 1 end
+        end
+    end
+    assertEqual(bonus > 0, NS.Compat.ClientKey() == "retail", "bonus rolls: " .. bonus)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The group and the world, through NS.Compat
 -- ---------------------------------------------------------------------------------------------
@@ -173,7 +193,8 @@ test("sim world: the roster, the situation and the announce channel read the inv
     assertEqual(NS.Situations.Current(), "dungeon")
     assertEqual(NS.Asks.AnnounceChannel(), "PARTY")
     local name = NS.Compat.InstanceInfo()
-    assertEqual(name, "Ashen Vault", "the instance the pool came from")
+    -- WoW Forever's pool is your own gear, from no instance (modules/SimPool.lua).
+    assertEqual(name, T.forever and "Simulated instance" or "Ashen Vault", "the instance the pool came from")
     local real = NS.SimSeam:Live(NS.Situations.ReadInputs)
     assertFalse(real.inGroup, "a live read sees the real world"); assertFalse(real.inInstance)
     assertEqual(#m.inspect.notified, 0)
@@ -266,6 +287,22 @@ test("sim drop: one drop of a named kind goes through the parser into the feed, 
     -- red under: no `drop` entry point, so a mount could only come by chance in a burst
     local NS, m, members = sim({ before = withMount })
     local E = NS.SimEvents
+    if T.forever then
+        -- The mount is the Encounter Journal pool's (Retail's alone, Forever port design §4.4); WoW
+        -- Forever's pool is your own gear, so it has none. The kind, the looter and the stop are shared.
+        assertEqual(select(2, E.Drop("mount", "me")), "noSample", "no mount in your own gear")
+        assertEqual(E.Drop("equipment", "me"), 1)
+        m.advance(0)
+        assertEqual(lastDrop(NS).facts.category, "equipment"); assertTrue(lastDrop(NS).isMine and lastDrop(NS).sim)
+        assertEqual(E.Drop("equipment", members[1].name), 1)
+        m.advance(0)
+        assertEqual(lastDrop(NS).looter.guid, members[1].guid)
+        assertEqual(select(2, E.Drop("toy")), "noSample")
+        assertEqual(select(2, E.Drop("equipment", "Nobody")), "noLooter")
+        NS.Sim:Stop()
+        assertEqual(select(2, E.Drop("equipment")), "notRunning")
+        return
+    end
     assertEqual(E.Drop("mount", "me"), 1)
     m.advance(0)
     local rec = lastDrop(NS)
@@ -402,7 +439,7 @@ test("sim encounter: a keystone run groups its loot and holds the ChallengeMode 
     assertFalse(NS.Compat.ChallengeModeActive())
     assertNil(NS.Restrictions.ActiveSet().challengeMode)
     assertEqual(select(2, E.RunEnd()), "noRun")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim combat: the stop ends a combat edge it raised", function()
     local NS = sim()
@@ -439,7 +476,7 @@ test("sim own drops: they land in your bags with a trade window the trade timer 
     assertTrue(NS.TradeTimer.ForDrop(own[1].id).expired, "the window closed")
     assertFalse(NS.TradeTimer.ForDrop(own[2].id).expired)
     assertEqual(#m.chatSent, 0)
-end)
+end, T.RETAIL_ONLY)
 
 test("sim own drops: read at their bag slot from their link, and their tooltip is their link's (DW-80)", function()
     local NS, m = sim()
@@ -466,7 +503,7 @@ test("sim own drops: the scenario sets the window and the ending-soon count", fu
     NS.Sim:Stop()
     assertFalse(E.Configure({}), "no simulation")
     assertEqual(#NS.SimWorld.BagItems(), 0)
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- A simulated completed trade
@@ -549,9 +586,179 @@ test("sim stop: your simulated bag items leave the gear snapshot and the trade t
     local NS, m = sim()
     NS.SimEvents.Loot(1, "me")
     m.advance(3)
-    assertEqual(NS.TradeTimer.LiveCount(), 1)
+    local id = lastDrop(NS).id
+    -- WoW Forever matches the bag item with no countdown (Forever port design §4.4).
+    assertEqual(NS.TradeTimer.LiveCount(), T.forever and 0 or 1)
+    assertTrue(NS.TradeTimer.ForDrop(id) ~= nil, "matched to its simulated bag item")
     NS.Sim:Stop()
     m.advance(3)
     assertEqual(NS.TradeTimer.LiveCount(), 0)
+    assertTrue(NS.TradeTimer.ForDrop(id) == nil, "its entry left with the bag item")
     assertEqual(#NS.SimWorld.BagItems(), 0)
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Group-loot rolls (Forever port design §8, plan DW-FP17): a both-clients feature
+-- ---------------------------------------------------------------------------------------------
+
+-- One roll plan's rows: each chosen before the close, Need, Greed or Pass, and a pass carries no
+-- number while every other row carries a distinct one from 1 to 100.
+local function assertRollRows(plan)
+    local numbers = {}
+    for _, r in ipairs(plan.rows) do
+        assertTrue(r.at > 0 and r.at < plan.close, "chosen before the close")
+        assertTrue(r.state == 0 or r.state == 3 or r.state == 5, "Need, Greed or Pass")
+        if r.state == 5 then
+            assertNil(r.roll, "a pass has no number")
+        else
+            assertTrue(r.roll >= 1 and r.roll <= 100)
+            assertNil(numbers[r.roll], "no tie")
+            numbers[r.roll] = true
+        end
+    end
+end
+
+test("sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing", function()
+    local NS = T.newAddon()
+    local E = NS.SimEvents
+    local members = { { guid = "g1" }, { guid = "g2" }, { guid = "g3" }, { guid = "g4" } }
+    local won, passed = 0, 0
+    for seed = 1, 60 do
+        local plan = E.RollPlan(nil, members, NS.SimRoster.Random(seed))
+        assertEqual(#plan.rows, 5, "you and every member roll")
+        assertNil(plan.rows[1].member, "you first")
+        assertEqual(plan.close, E.ROLL_CLOSE)
+        assertRollRows(plan)
+        if plan.allPassed then
+            passed = passed + 1
+            assertNil(plan.winner)
+            for _, r in ipairs(plan.rows) do assertEqual(r.state, 5) end
+        else
+            won = won + 1
+            local w = plan.rows[plan.winner]
+            for _, r in ipairs(plan.rows) do
+                if r ~= w and r.state ~= 5 then
+                    assertTrue(r.state > w.state or (r.state == w.state and r.roll < w.roll),
+                        "Need beats Greed, then the higher number wins")
+                end
+            end
+        end
+    end
+    assertTrue(won > 0 and passed > 0, ("sometimes everyone passes (%d won, %d passed)"):format(won, passed))
+    assertEqual(#E.RollPlan(2, members, NS.SimRoster.Random(3)).rows, 3, "n members take part, and you")
+end)
+
+-- Every PendingChanged's cause, in order.
+local function pendingCauses(NS)
+    local seen = {}
+    NS.Bus:NewTarget():RegisterMessage(NS.MSG.PENDING_CHANGED, function(_, _, cause) seen[#seen + 1] = cause end)
+    return seen
+end
+
+local function count(list, want)
+    local n = 0
+    for _, v in ipairs(list) do if v == want then n = n + 1 end end
+    return n
+end
+
+test("sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll", function()
+    local NS, m, members = sim()
+    local E, P = NS.SimEvents, NS.Pending
+    local causes = pendingCauses(NS)
+    local before = #drops(NS)
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    assertEqual(printed(m, "Simulated roll opened: "), 1)
+    local items = P.All()
+    assertEqual(#items, 1, "one open roll")
+    local item = items[1]
+    assertEqual(item.state, "open"); assertEqual(count(causes, "open"), 1)
+    assertEqual(#item.roll.rolls, #members + 1, "you and every member")
+    for _, r in ipairs(item.roll.rolls) do assertEqual(r.state, 4, "waiting at the open") end
+    assertTrue(item.rollID ~= nil, "your own popup claimed the item")
+    assertEqual(#drops(NS), before, "nothing in the feed while it rolls")
+    -- The choices land over the next seconds, each one update.
+    m.advance(E.ROLL_CLOSE - 0.25)
+    assertTrue(count(causes, "rolls") >= 2, "the table changed as they chose")
+    assertEqual(P.All()[1].state, "open")
+    -- The close: the numbers, the winner, the drop.
+    m.advance(1)
+    assertEqual(#P.All(), 0, "the roll resolved")
+    assertEqual(count(causes, "closed"), 1)
+    assertEqual(#drops(NS), before + 1, "exactly one drop (the winner's loot line merged into it)")
+    local rec = lastDrop(NS)
+    assertTrue(rec.sim, "a simulated drop")
+    assertEqual(type(rec.roll), "table"); assertTrue(rec.roll.winner ~= nil, "won (this seed's plan has a winner)")
+    local winner = rec.roll.winner
+    if winner.isSelf then
+        assertTrue(rec.isMine)
+    else
+        assertEqual(rec.looter.guid, winner.guid, "the winner is the looter")
+    end
+    assertEqual(E.Status().rolls.won, 1)
+    -- An open roll leaves with the stop, and its popup with it.
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    assertEqual(#P.All(), 1)
+    NS.Sim:Stop()
+    m.advance(0)
+    assertEqual(#P.All(), 0, "the stop took the open roll away")
+    assertEqual(next(NS.State.pending and NS.State.pending.mine or {}), nil, "and your simulated popup")
+    assertEqual(#NS.Compat.ActiveLootRolls(), 0)
+end)
+
+-- Master loot (Forever port design §8, plan DW-FP19): a both-clients feature.
+test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it", function()
+    -- Two 500 rings worn, so whichever ring the pool offers (WoW Forever's is your own gear) is worth asking for.
+    local NS, m = sim({ before = function(_, mock)
+        mock.addItem(link(102, 500), ring(500))
+        mock.inventory.player[11], mock.inventory.player[12] = link(102, 500), link(102, 500)
+    end })
+    local E, P = NS.SimEvents, NS.Pending
+    local before = #drops(NS)
+    NS.addon:OnSlashCommand("sim ml")
+    m.advance(0)
+    assertEqual(printed(m, "Simulated master loot: "), 1)
+    local items = P.All()
+    assertEqual(#items, 1, "one item awaiting the master looter")
+    local item = items[1]
+    assertEqual(item.kind, "ml"); assertEqual(item.state, "awaiting")
+    local ml = NS.SimWorld.Member(item.ml.guid)
+    assertTrue(ml ~= nil, "a simulated member is the master looter")
+    assertEqual(item.ml.name, ml.name, "named whole, as the client names them")
+    assertEqual(#drops(NS), before, "nothing in the feed while it waits")
+    -- Ask: the guarded sender prints the whisper to the master looter's whole name.
+    local v = item.me.verdict
+    assertTrue(v == "upgrade" or v == "sidegrade", "the pool's ring is worth asking for over the worn 500s: " .. tostring(v))
+    assertEqual(NS.PressAskML(item.id), "sent")
+    assertEqual(printed(m, "[sim] WHISPER to " .. ml.fullName .. ": Hi "), 1, "the [sim] whisper")
+    assertEqual(#m.chatSent, 0, "nothing reached the real chat")
+    -- About 20 s later the master looter hands it out: the item resolves into one drop.
+    m.advance(E.ML_ASSIGN - 1)
+    assertEqual(#P.All(), 1, "still waiting")
+    m.advance(1)
+    assertEqual(#P.All(), 0, "assigned")
+    assertEqual(#drops(NS), before + 1)
+    local rec = lastDrop(NS)
+    assertTrue(rec.sim); assertTrue(rec.askedML, "the drop carries the ask"); assertEqual(rec.pendingKey, item.id)
+    -- A held item leaves with the stop.
+    NS.addon:OnSlashCommand("sim ml")
+    m.advance(0)
+    assertEqual(#P.All(), 1, "a second one held")
+    NS.Sim:Stop()
+    m.advance(0)
+    assertEqual(#P.All(), 0, "the stop took the held item away")
+    assertEqual(NS.Compat.LootMethod(), nil, "the client's own loot method again (none in the mock)")
+end)
+
+test("sim ml: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local loot, why = NS.SimEvents.MasterLoot()
+    assertNil(loot); assertEqual(why, "notRunning")
+end)
+
+test("sim roll: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local roll, why = NS.SimEvents.Roll()
+    assertNil(roll); assertEqual(why, "notRunning")
 end)

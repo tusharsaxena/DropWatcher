@@ -16,7 +16,30 @@
    path). Never write the profile directly.
 5. Read it with `NS.Setting(path)` in the module that uses it.
 6. Add it to [`schema.md`](schema.md) and [`settings-panel.md`](settings-panel.md), then run
-   `lua tests/run.lua`: `test_schema` and `test_schema_rows` validate the row against the defaults.
+   `lua tests/run.lua` and `KA0S_KIT_CLIENT=forever lua tests/run.lua`: `test_schema` and
+   `test_schema_rows` validate the row against the defaults on each client.
+
+A setting of a feature one client lacks takes that feature's declaration on its row (`clients =
+K.FEATURE_CLIENTS.<feature>`), and its default goes in `defaults/Profile.lua`'s Retail-only block
+(added where `NS.Constants.FEATURE.<feature>` is true), so the other client has neither (see *Add a
+feature that serves one client*).
+
+## Add a feature that serves one client
+
+Drop Watcher serves Retail and WoW Forever (clients-§4 to §6).
+
+1. Name it in `C.FEATURE_CLIENTS` (`core/Constants.lua`) with its client, `{ "retail" }` or
+   `{ "forever" }`; `C.FEATURE.<name>` is its `ForClient` answer, read once at load.
+2. Declare it where it registers: `clients = ...` on its schema rows, its `NS.FEATURE_EVENTS` rows,
+   its Drops column (`WG.COLUMNS`), its glow kind; gate a module's load-time work and a default on
+   `C.FEATURE.<name>`. Never read `WOW_PROJECT_*` or the interface number outside `NS.Compat`.
+3. A list both clients have in their own shape (seeds, situations, slots, rules) is one list per
+   client picked once by `NS.Compat.ClientKey()` (clients-§5), never a filtered Retail list.
+4. Add a per-client case: present where declared, absent where not, picking the expectation with
+   `NS.Compat.ClientKey()`; a Retail-only feature's own cases take `T.RETAIL_ONLY`, and a case that
+   mixes it with something both clients share is split so the shared half runs on both.
+5. Add its rows to `ARCHITECTURE.md` → Per-client features (`retail`, `forever` or `both`, and the
+   file that gates it), and its checks to `smoke-tests.md` naming their client.
 
 ## Add a slash verb
 
@@ -35,7 +58,9 @@ fails unless the fire reaches your handler.
 
 Add `KEY = "Ka0s_DropWatcher_Event"` to the catalog in `core/Bus.lua`, with its one sender in the
 comment. Receivers take their own target, `NS.Bus:NewTarget()`, and use `NS.MSG.KEY`, never the literal. Each new receiver adds its message to `PINNED_MESSAGES` in
-`tests/test_disabled.lua` (one entry per receiver), or `test_disabled` 1 fails.
+`tests/test_disabled.lua` (one entry per receiver), or `test_disabled` 1 fails. Add its row (sender,
+payload, consumers) to [`message-bus.md`](message-bus.md) and its count to `ARCHITECTURE.md` →
+Message Bus.
 
 ## Add a Compat shim
 
@@ -45,7 +70,7 @@ A version-variant, deprecated or optional client API is called from `core/Compat
    `Compat.IsSecret` before comparing or matching anything the client hands back; answer a
    documented absent value (nil, false or `{}`) when the API is missing.
 2. Declare the client global in `.luacheckrc` under `files["core/Compat.lua"]` (a stable world read
-   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`, a collection read (the mount, pet and toy journals, the professions, a recipe's tooltip) in `core/CompatCollect.lua` under `files["core/CompatCollect.lua"]`), never globally, and
+   in `core/CompatWorld.lua` goes under `files["core/CompatWorld.lua"]`, a character read (the realm, a name, a spec, the role) in `core/CompatClient.lua` under `files["core/CompatClient.lua"]`, an exact item read or tooltip setter in `core/CompatItem.lua` under `files["core/CompatItem.lua"]`, an Encounter Journal call in `core/CompatJournal.lua` under `files["core/CompatJournal.lua"]`, a loot history, roll, loot method, loot window or roll popup read in `core/CompatLoot.lua` under `files["core/CompatLoot.lua"]` (its fakes in `tests/wow_mock_loot.lua`), a collection read (the mount, pet and toy journals, the professions, a recipe's tooltip) in `core/CompatCollect.lua` under `files["core/CompatCollect.lua"]`), never globally, and
    add its name to `SEAM_ONLY` in `tests/test_compat.lua`.
 3. Add a controllable fake to `tests/wow_mock.lua` and cases to `tests/test_compat.lua`, the API
    absent among them (a collection read: its fake in `tests/wow_mock_collect.lua` and its cases, and its name in

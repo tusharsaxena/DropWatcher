@@ -81,6 +81,23 @@ local function window(out)
     if t.waiting > 0 then out:joined(TAG, "toast: queue", t.queue) end
 end
 
+-- The situation's two input lines, per client (clients-§4, as settings/SlashVerbs.lua's
+-- INPUT_LINES): WoW Forever has no keystone, delve or follower dungeon to name.
+local INPUT_LINES = {
+    retail = function(out, i)
+        out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s challengeMode=%s",
+            i.inInstance, i.instanceType, i.difficultyID or "none", i.isChallengeModeActive)
+        out:add(TAG, "situation inputs: delve=%s follower=%s group=%s raid=%s pvp=%s", i.isDelve,
+            i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
+    end,
+    forever = function(out, i)
+        out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s",
+            i.inInstance, i.instanceType, i.difficultyID or "none")
+        out:add(TAG, "situation inputs: group=%s raid=%s pvp=%s", i.inGroup, i.inRaid, i.isPvP)
+    end,
+}
+local inputLines = INPUT_LINES[NS.Compat.ClientKey() == "forever" and "forever" or "retail"]
+
 -- Where the addon thinks the player is, the inputs it read and that situation's settings
 -- (design spec §6.1, §13). The inputs are read live: the classifier's edge only reads.
 local function situation(out)
@@ -90,10 +107,7 @@ local function situation(out)
     local s = Sit.Settings(key)
     out:add(TAG, "situation: %s (last announced %s) track=%s autoOpen=%s quality=%s", key,
         NS.State.situation or "none", s.track, s.autoOpen, s.quality or "global")
-    out:add(TAG, "situation inputs: inInstance=%s type=%s difficulty=%s challengeMode=%s",
-        i.inInstance, i.instanceType, i.difficultyID or "none", i.isChallengeModeActive)
-    out:add(TAG, "situation inputs: delve=%s follower=%s group=%s raid=%s pvp=%s", i.isDelve,
-        i.isFollowerDungeon, i.inGroup, i.inRaid, i.isPvP)
+    inputLines(out, i)
 end
 
 -- What the restrictions allow now, every reason in effect (sorted, the Map type included) and
@@ -160,8 +174,9 @@ end
 local function gear(out)
     local s = NS.State.gear
     if not s then return out:add(TAG, "gear: not read yet") end
-    out:add(TAG, "gear: class=%s spec=%s dualWield=%s titanGrip=%s loading=%s", s.classFile or "?",
-        s.specID or "unknown", s.dualWield, s.titanGrip, s.loading)
+    out:add(TAG, "gear: class=%s spec=%s dualWield=%s titanGrip=%s loading=%s tree=%s level=%s",
+        s.classFile or "?", s.specID or "unknown", s.dualWield, s.titanGrip, s.loading, s.tree or "none",
+        s.level or "unknown")
     local names = slotNames()
     for _, id in ipairs(NS.Gear.SLOTS) do
         local worn, owned = s.equipped[id], s.owned[id]
@@ -332,6 +347,8 @@ local function trade(out)
         out:add(TAG, "trade helper: opens=%s refused=%s last=%s", th.opens, th.refused,
             th.lastReason or "none")
     end
+    -- WoW Forever: the bag match alone, every entry permanent (Forever port design §4.4).
+    if not NS.TradeTimer.Initialized() then out:add(TAG, "trade: no countdown on this client (bag match only)") end
     local st = NS.TradeTimer.Stats()
     if not st then return out:add(TAG, "trade: no scan yet") end
     out:add(TAG, "trade: timers live=%s expired=%s boe=%s scans=%s ticker=%s", st.live, st.expired,
@@ -358,28 +375,44 @@ local function messaging(out)
         lengths[i] = name .. "=" .. #M.Template(name, cfg.templates)
     end
     out:joined(TAG, "messaging: template lengths", lengths)
-    out:add(TAG, "messaging: oneAsk=%s announceChannel=%s transmogAsk=%s", cfg.oneAsk, cfg.announceChannel,
-        cfg.transmogAsk)
+    -- The transmog opt-in is Retail's alone (Forever port design §4.4).
+    if NS.Constants.FEATURE.transmog then
+        out:add(TAG, "messaging: oneAsk=%s announceChannel=%s transmogAsk=%s", cfg.oneAsk, cfg.announceChannel,
+            cfg.transmogAsk)
+    else
+        out:add(TAG, "messaging: oneAsk=%s announceChannel=%s", cfg.oneAsk, cfg.announceChannel)
+    end
+    -- A master-loot ask is filed against a pending item, not a drop (DW-FP19).
     for _, a in ipairs(A.Queued()) do
-        out:add(TAG, "messaging: queued %s to %s, drop %s", a.kind, a.target, a.dropID)
+        out:add(TAG, "messaging: queued %s to %s, %s %s", a.kind, a.target, a.kind == "askML" and "pending" or "drop",
+            a.dropID)
     end
     local aa = NS.AutoAsk.Stats()
     out:add(TAG, "auto-ask: enabled=%s delay=%s minGain=%s waiting=%s nextDue=%s inEncounter=%s", aa.enabled,
         aa.delay, aa.minGain, aa.waiting, aa.nextDue and math.floor(aa.nextDue) or "none", aa.inEncounter)
     out:add(TAG, "auto-ask: scheduled=%s sent=%s canceled=%s", aa.scheduled, aa.sent, aa.canceled)
+    -- The off-spec word is Retail's alone (Forever port design §4.4): no Forever ask is off-spec.
+    local offSpec = NS.Constants.FEATURE.offSpec
     for _, w in ipairs(NS.AutoAsk.Waiting()) do
-        out:add(TAG, "auto-ask: waiting drop %s to %s due=%s offSpec=%s", w.id, w.target or "?",
-            w.due and (math.floor(w.due) .. "s") or "held", w.offSpec == true)
+        local due = w.due and (math.floor(w.due) .. "s") or "held"
+        if offSpec then
+            out:add(TAG, "auto-ask: waiting drop %s to %s due=%s offSpec=%s", w.id, w.target or "?", due, w.offSpec == true)
+        else
+            out:add(TAG, "auto-ask: waiting drop %s to %s due=%s", w.id, w.target or "?", due)
+        end
     end
 end
 
--- Your Pawn scale, read from the stored gear snapshot's class and spec (never a fresh read): the
--- one you show in Pawn, else your spec's starter scale, as the scorer falls back (modules/Scoring.lua).
+-- Your Pawn scale, read from the stored gear snapshot's class, spec and talent tree (never a fresh
+-- read): the one you show in Pawn, else your spec's (on WoW Forever your tree's) starter scale, as
+-- the scorer falls back (modules/Scoring.lua).
 local function pawnScale()
     local g = NS.State.gear
     local classID = g and NS.ClassData.CLASS_ID[g.classFile]
     if not (classID and g.specID) then return nil end
-    return NS.Compat.PawnVisibleScale(classID, g.specID) or NS.Compat.PawnScaleForSpec(classID, g.specID)
+    local role = g.tree and (NS.Compat.PlayerRole()) or nil
+    return NS.Compat.PawnVisibleScale(classID, g.specID, g.tree, role)
+        or NS.Compat.PawnScaleForSpec(classID, g.specID, g.tree, role)
 end
 
 -- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:
@@ -433,6 +466,11 @@ local function integrations(out)
     local Lc = NS.Launcher
     out:add(TAG, "launcher: registered=%s shown=%s", Lc and read(Lc.IsRegistered, Lc),
         Lc and read(Lc.IsShown, Lc))
+    -- Transmog, and CanIMogIt with it, is Retail's alone (Forever port design §4.4).
+    if not NS.Constants.FEATURE.transmog then
+        out:add(TAG, "optional: Pawn=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"))
+        return
+    end
     out:add(TAG, "optional: Pawn=%s CanIMogIt=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"),
         read(NS.Compat.IsAddOnLoaded, "CanIMogIt"))
     out:add(TAG, "transmog: source=%s", NS.Compat.TransmogSource())

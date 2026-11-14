@@ -9,7 +9,10 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- An enabled addon with the window shown.
 local function shown(opts)
-    local NS, _, m = T.enableAddon(opts)
+    -- Ka0s Default by name (DW-FP03): these cases pin the look before skins on both clients.
+    local o = { skin = "ka0s" }
+    for k, v in pairs(opts or {}) do o[k] = v end
+    local NS, _, m = T.enableAddon(o)
     NS.ShowWindow()
     return NS, NS.Window.Frame(), m
 end
@@ -483,7 +486,7 @@ end)
 -- LibKa0s#52 (DW-07): the box is the library's; DW passes its hint and its filter write, and hooks
 -- (never sets) the focus loss for its debug line.
 test("shell: the search box is LibKa0s-Widgets' SearchBox with DW's hint, and a focus loss still writes the filter's debug line", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local W = m.LibStub("LibKa0s-Widgets-1.0")
     local real, calls = W.SearchBox, {}
     W.SearchBox = function(parent, width, opts)

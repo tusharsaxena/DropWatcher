@@ -42,14 +42,17 @@ local HOLD = { canSend = false, now = 100 }
 
 test("messaging: the default templates are the spec §9.1 text, one per kind", function()
     local _, C, D = load()
-    assertEqual(#C.MESSAGE_KINDS, 3)
+    assertEqual(#C.MESSAGE_KINDS, 4, "ask, offer, announce and the master-loot askML (DW-FP19)")
+    assertEqual(C.MESSAGE_KINDS[4], "askML")
+    assertEqual(D.templates.askML, "Hi {player}, if nobody needs {item}, I'd love it: +{mygain} for me. Thanks!")
     assertEqual(D.templates.ask,
         "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!")
     assertEqual(D.templates.offer, "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?")
     assertEqual(D.templates.announce, "{item} is up for grabs, whisper me.")
     assertEqual(C.MESSAGE_MAX_LEN, 255)
     assertEqual(C.MESSAGE_FLUSH_INTERVAL, 1.5)
-    assertEqual(#C.MESSAGE_TOKENS, 7)
+    -- WoW Forever has no upgrade tracks, so no {track} (Forever port design §4.4).
+    assertEqual(#C.MESSAGE_TOKENS, T.forever and 6 or 7)
 end)
 
 test("messaging: Template takes the owner's text, and the default for an empty or absent one", function()
@@ -64,7 +67,8 @@ end)
 test("messaging: Expand fills every token, and formats the gains as numbers", function()
     local M = load()
     local text = M.Expand("{player}|{item}|{ilvl}|{slot}|{track}|{gain}|{mygain}", tokens())
-    assertEqual(text, "Seta-Silvermoon|" .. LINK .. "|619|Finger|Hero|4.3|12")
+    -- On WoW Forever {track} is no token (Forever port design §4.4): it is left as it is.
+    assertEqual(text, "Seta-Silvermoon|" .. LINK .. "|619|Finger|" .. (T.forever and "{track}" or "Hero") .. "|4.3|12")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 5.0 })), "+5")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 0.04 })), "+0")
 end)
@@ -264,7 +268,8 @@ test("messaging: the flush triggers are a lift to can-send, ENCOUNTER_END and CH
     M.Request(book, ask("d1"), HOLD)
     assertTrue(M.ShouldFlush(book, "restrictionLifted", true))
     assertTrue(M.ShouldFlush(book, "ENCOUNTER_END", true))
-    assertTrue(M.ShouldFlush(book, "CHALLENGE_MODE_COMPLETED", true))
+    -- A key's completion is Retail's alone (Forever port design §4.4): no trigger on WoW Forever.
+    assertEqual(M.ShouldFlush(book, "CHALLENGE_MODE_COMPLETED", true), not T.forever)
     assertFalse(M.ShouldFlush(book, "restrictionLifted", false))
     assertFalse(M.ShouldFlush(book, "ENCOUNTER_END", false))
     assertFalse(M.ShouldFlush(book, "PLAYER_REGEN_ENABLED", true))

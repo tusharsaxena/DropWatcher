@@ -10,7 +10,7 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 local function shown(mode)
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     NS.ShowWindow()
     if mode then NS.SetWindowMode(mode) end
     return NS, NS.Window.Frame(), m
@@ -89,7 +89,7 @@ test("chrome: the Filters count is Quality, Content and Character off their defa
 end)
 
 test("chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow", function()
-    local CC = T.newAddon().CompactChrome
+    local CC = T.newAddon{ skin = "ka0s" }.CompactChrome
     assertEqual(CC.FiltersLabel(0), "Filters"); assertEqual(CC.FiltersLabel(2), "Filters · 2")
     local tip = CC.FiltersTip({ quality = "Quality: Rare+", content = "Content: All", char = "Character: Current",
         sort = "Sort: Newest" }, { "content" })
@@ -329,7 +329,7 @@ test("chrome: each child's tick reads its own dropdown, and a pick goes through 
     assertEqual(ticked(quality), c.quality._value, "Quality ticks the mode in force")
     -- Current is the preset that selects exactly you: its own predicate and your row, both lit, as
     -- the dropdown's own menu lights them.
-    assertEqual(ticked(char), "current,Testchar-Testrealm", "Character: Current")
+    assertEqual(ticked(char), "current," .. T.ME, "Character: Current")
     pick(child(content, "instance"))
     assertEqual(FB.State("group").content, "instance", "through the dropdown's own onSelect")
     assertEqual(c.content._value, "instance", "the full bar's dropdown holds the pick")

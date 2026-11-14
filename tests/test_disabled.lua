@@ -11,14 +11,39 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local PINNED = {
     "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
     "CHAT_MSG_LOOT", "DISPLAY_SIZE_CHANGED", "EJ_LOOT_DATA_RECIEVED", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
-    "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_UPDATE_DROP",
-    "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_RECIPE_LEARNED", "NEW_TOY_ADDED",
+    "CANCEL_LOOT_ROLL", "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_CLEAR_HISTORY",
+    "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER", "LOOT_OPENED", "LOOT_READY",
+    "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_RECIPE_LEARNED", "NEW_TOY_ADDED", "PARTY_LOOT_METHOD_CHANGED",
     "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED", "SKILL_LINES_CHANGED",
-    "SPELL_TEXT_UPDATE",
+    "SPELL_TEXT_UPDATE", "START_LOOT_ROLL",
     "TRADE_ACCEPT_UPDATE", "TRADE_CLOSED", "TRADE_PLAYER_ITEM_CHANGED", "TRADE_SHOW", "TRADE_TARGET_ITEM_CHANGED",
     "TRANSMOG_COLLECTION_UPDATED", "UI_INFO_MESSAGE", "UI_SCALE_CHANGED", "UNIT_INVENTORY_CHANGED", "ZONE_CHANGED_NEW_AREA",
 }
+
+-- Per client (clients-§4, §6): a row for the other client is not registered. Retail's spec change
+-- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2); the keystone events
+-- are Retail's alone (Forever port design §4.4), as are the journal pool's loot event and the
+-- transmog collection's, and a level gained rebuilds Forever's gear (its armor type moves at 40).
+local OTHER_CLIENT = {
+    retail  = { PLAYER_SPECIALIZATION_CHANGED = true, CHALLENGE_MODE_COMPLETED = true, CHALLENGE_MODE_START = true,
+                EJ_LOOT_DATA_RECIEVED = true, TRANSMOG_COLLECTION_UPDATED = true },
+    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true },
+}
+do
+    local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"
+    local out = {}
+    for _, e in ipairs(PINNED) do
+        if not OTHER_CLIENT[theirs][e] then out[#out + 1] = e end
+    end
+    for e in pairs(OTHER_CLIENT[mine]) do
+        local listed = false
+        for _, have in ipairs(out) do listed = listed or have == e end
+        if not listed then out[#out + 1] = e end
+    end
+    table.sort(out)
+    PINNED = out
+end
 
 -- The bus messages the addon's receivers listen for (tracked, so the stand-down takes them down),
 -- one entry per receiver: a message two modules hear is listed twice (the window, DW-30, hears
@@ -27,17 +52,22 @@ local PINNED = {
 -- DW-51's history hears DropAdded, DropUpdated and AskStateChanged, and its tab HistoryChanged;
 -- DW-52's toast hears the same three as the history; DW-54's auto-ask hears those three,
 -- HistoryChanged and, since the M6 review, RestrictionChanged; DW-83's window hears GearChanged,
--- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too).
+-- beside the feed's, for the My eq column; issue #12's Insights tab hears HistoryChanged too; DW-FP15's
+-- window hears PendingChanged for the Drops tab's Rolling now section; since the M4 review the
+-- pending store hears GearChanged too, to judge your verdict on a pending item again; DW-FP20's roll
+-- popup mark hears PendingChanged and GearChanged, to repaint the marks on the shown popups).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_DropUpdated",
-    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
+    "Ka0s_DropWatcher_PendingChanged", "Ka0s_DropWatcher_PendingChanged",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_SituationChanged",
@@ -54,11 +84,12 @@ local function registered(m, kind)
     return table.concat(out, ",")
 end
 
--- Each declared event once: two rows may share one (core/DropWatcher.lua fans it out).
+-- Each declared event this client serves once: two rows may share one (core/DropWatcher.lua fans
+-- it out), and a row for the other client is not registered (clients-§4).
 local function declared(NS)
     local out, seen = {}, {}
     for _, row in ipairs(NS.FEATURE_EVENTS) do
-        if not seen[row[1]] then
+        if NS.Compat.ForClient(row.clients) and not seen[row[1]] then
             seen[row[1]] = true
             out[#out + 1] = row[1]
         end
@@ -355,7 +386,7 @@ test("disabled 12: disabling hides the simulation panel, idle or running, and it
         assertFalse(NS.Sim:ShowPanel(), d[1] .. ": the library refuses it while stood down")
     end
     local NS = T.enableAddon()
-    NS.Sim:Start({ scenario = "key" })
+    NS.Sim:Start({ scenario = "dungeon" })
     assertTrue(NS.Sim:IsActive())
     assertTrue(NS.Sim:ShowPanel())
     NS.addon:OnSlashCommand("disable")

@@ -10,6 +10,15 @@ local SITUATIONS = {
     "mythicPlus", "dungeon", "followerDungeon", "raidLFR", "raid", "delve", "scenario", "pvp",
     "openWorldGroup", "solo",
 }
+-- WoW Forever's own five (Forever port design §4.4): the others are Retail's alone, with no row there.
+local RETAIL_ONLY_SITUATION = { mythicPlus = true, followerDungeon = true, raidLFR = true, delve = true, scenario = true }
+if T.forever then SITUATIONS = { "dungeon", "raid", "pvp", "openWorldGroup", "solo" } end
+
+-- Whether a stored path is a Retail-only situation's (its `situations.<key>.*` or `trade.rules.<key>`).
+local function retailOnlyPath(path)
+    local key = path:match("^situations%.([^.]+)%.") or path:match("^trade%.rules%.(.+)$")
+    return key ~= nil and RETAIL_ONLY_SITUATION[key] == true
+end
 -- `myEq` and `theirEq` were retired by schema step 7 (feedback-6 spec §1: merged into Me and Them).
 local COLUMNS = { "ilvl", "slot", "looter", "me", "them", "trade", "tradeWindow", "actions" }
 
@@ -30,11 +39,13 @@ local function specPaths()
         "comparison.heirloomProtect", "comparison.undesired",
         "trade.warnAt",
         "messages.templates.ask", "messages.templates.offer", "messages.templates.announce",
+        "messages.templates.askML",   -- the master-loot ask (Forever port design §6, DW-FP19), both clients
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
         "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
+        "rolls.show", "rolls.keep", "rolls.popupMark",   -- Drops › Rolls (Forever port design §5.3, DW-FP15)
     }
     for _, key in ipairs(SITUATIONS) do
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do out[#out + 1] = "situations." .. key .. "." .. f end
@@ -52,10 +63,69 @@ local function profileDefault(NS, path)
     return node
 end
 
+-- The Retail-only rows (Forever port design §4.4, clients-§4): the transmog opt-in and template, the
+-- off-spec template, every row of the off-spec glow, the trade timer's warning and its Trade window
+-- column, and every situation's loot rule (WoW Forever has one rule, `soulbound`, §4.6). Each
+-- carries `clients = { "retail" }`.
+local function retailOnlyRow(path)
+    return path == "messages.transmogAsk" or path == "messages.templates.transmog"
+        or path == "messages.templates.askOffSpec" or path:match("^glow%.offSpec%.") ~= nil
+        or path == "trade.warnAt" or path == "window.columns.tradeWindow" or path:match("^trade%.rules%.") ~= nil
+end
+
+-- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
+-- `/dw list` and the defaults reset have none); on Retail every one is a row declaring Retail, and
+-- no other row declares a client.
+test("settings: no Retail-only row on the Forever panel", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    local seen = 0
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        local path = row.path or ""
+        if path == "char.role" then
+            -- WoW Forever's alone (Forever port design §11.4): Retail never reads the role.
+            assertTrue(not retail, "the Role row on Retail")
+            assertEqual(table.concat(row.clients or {}, ","), "forever", path .. " declares its client")
+        elseif retailOnlyRow(path) then
+            seen = seen + 1
+            assertTrue(retail, "a Retail-only row on Forever: " .. path)
+            assertEqual(table.concat(row.clients or {}, ","), "retail", path .. " declares its client")
+        else
+            assertNil(row.clients, path .. " serves both clients")
+        end
+    end
+    local glowKeys = 0
+    for _ in pairs(NS.C.PROFILE.glow.main) do glowKeys = glowKeys + 1 end
+    -- Three messaging rows, the off-spec glow's, the warning, the Trade window column and Retail's
+    -- ten loot rules.
+    assertEqual(seen, retail and (3 + glowKeys + 1 + 1 + 10) or 0, "the declared rows")
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
+        assertTrue(retail or not retailOnlyRow(row.path or ""), "the Alerts page")
+    end
+end)
+
+-- clients-§6: a default only a Retail-only feature reads is Retail's alone too, so WoW Forever's
+-- profile carries no value nothing on that client reads or writes (Forever port design §4.4).
+-- `trade.rules` stays: Forever's one rule, `soulbound`, is read there.
+test("defaults: WoW Forever's profile has none of the Retail-only features' defaults", function()
+    local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    for _, path in ipairs({ "messages.transmogAsk", "messages.templates.transmog", "messages.templates.askOffSpec",
+            "glow.offSpec", "trade.warnAt", "window.columns.tradeWindow" }) do
+        assertEqual(profileDefault(NS, path) ~= nil, retail, path)
+    end
+    assertTrue(profileDefault(NS, "glow.main.enabled") == true, "the main glow serves both clients")
+    assertTrue(type(profileDefault(NS, "trade.rules")) == "table", "Forever reads its one loot rule")
+end)
+
 test("rows: every spec §12.1 setting has a row", function()
     local NS = T.newAddon()
     for _, path in ipairs(specPaths()) do
-        assertTrue(NS.SchemaRuntime.FindRow(path) ~= nil, path)
+        if T.forever and retailOnlyRow(path) then   -- clients-§6: absent where not declared
+            assertNil(NS.SchemaRuntime.FindRow(path), path .. " is Retail's alone")
+        else
+            assertTrue(NS.SchemaRuntime.FindRow(path) ~= nil, path)
+        end
     end
 end)
 
@@ -74,6 +144,7 @@ test("rows: every default is defaults/Profile.lua's, and passes the row's own ch
     local NS = T.newAddon()
     for _, row in ipairs(NS.addon.Settings.Rows) do
         local want = row.path == "global.history.retentionDays" and NS.C.GLOBAL_DEFAULTS.history.retentionDays
+            or row.path == "char.role" and NS.C.ROLE_DEFAULT
             or profileDefault(NS, row.path)
         -- red under: a row whose `default` is a literal of its own that drifted from defaults/
         assertTrue(row.default == want, row.path .. " default is the defaults table's")
@@ -84,7 +155,7 @@ end)
 test("rows: NS.Setting answers the default before the database, and the stored value after", function()
     local NS = T.newAddon()
     assertEqual(NS.Setting("feed.quality.fixed"), 3)
-    assertEqual(NS.Setting("situations.raidLFR.autoOpen"), false)
+    assertEqual(NS.Setting("situations.pvp.autoOpen"), false)
     NS.addon:OnInitialize()
     assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 4))
     assertEqual(NS.addon.db.profile.feed.quality.fixed, 4)
@@ -99,8 +170,9 @@ test("rows: a value outside a row's list or range is refused and stores nothing"
     assertFalse(S.Set("messages.announceChannel", "SAY"), "never say or yell")
     assertFalse(S.Set("messages.autoAsk.delay", 2), "the delay is 3 to 30 seconds")
     assertFalse(S.Set("messages.templates.ask", "  "), "an empty template is refused")
-    assertFalse(S.Set("trade.rules.raid", "bogus"))
     assertFalse(S.Set("window.columns.slot", "no"))
+    if T.forever then return end   -- the loot rule rows are Retail's alone (Forever port design §4.4)
+    assertFalse(S.Set("trade.rules.raid", "bogus"))
     assertTrue(S.Set("trade.rules.raid", "group"))
     assertEqual(p.trade.rules.raid, "group")
 end)
@@ -141,21 +213,30 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertTrue(cfg.undesired[62]["4:1"] == true, "the feed reads the stored map")
     assertEqual(NS.addon.Settings.FormatValue(S.FindRow("comparison.undesired"), cfg.undesired,
         function() return "lib" end), "{1}", "the CLI renders a map as its entry count")
+    -- WoW Forever keys both maps by class and talent tree (Forever port design §4.3).
+    assertTrue(S.Set("comparison.weights", { ["HUNTER:2"] = { INTELLECT = 1 } }))
+    assertTrue(S.Set("comparison.undesired", { ["HUNTER:2"] = { ["4:1"] = true } }))
+    assertFalse(S.Set("comparison.weights", { ["HUNTER"] = { INTELLECT = 1 } }), "a class with no tree")
+    assertFalse(S.Set("comparison.weights", { ["hunter:x"] = { INTELLECT = 1 } }))
 end)
 
 test("rows: the feed, the situations and the messaging edge read the rows", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
-    S.Set("trade.rules.dungeon", "group")
+    if not T.forever then S.Set("trade.rules.dungeon", "group") end
     S.Set("feed.minIlvlMode", "absolute")
     S.Set("situations.openWorldGroup.track", true)   -- off its default (untracked)
     S.Set("situations.raid.quality", "dynamicSlot")
     S.Set("messages.oneAsk", false)
     S.Set("messages.announceChannel", "RAID")
-    S.Set("trade.warnAt", 120)
+    if not T.forever then S.Set("trade.warnAt", 120) end
     local cfg = NS.LootFeed.Config()
-    assertEqual(cfg.rules.dungeon, "group")
-    assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
+    if T.forever then   -- no rule rows: every situation reads its one default, soulbound
+        assertEqual(cfg.rules.dungeon, "soulbound"); assertEqual(cfg.rules.pvp, "soulbound")
+    else
+        assertEqual(cfg.rules.dungeon, "group")
+        assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
+    end
     assertEqual(cfg.minIlvlMode, "absolute")
     assertTrue(NS.Situations.IsTracking("openWorldGroup"))
     assertEqual(NS.Situations.QualityOverride("raid"), "dynamicSlot")
@@ -164,7 +245,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     assertFalse(a.oneAsk)
     assertEqual(a.announceChannel, "RAID")
     assertEqual(a.templates.ask, NS.C.PROFILE.messages.templates.ask)
-    assertEqual(NS.TradeTimer.WarnAt(), 120)
+    assertEqual(NS.TradeTimer.WarnAt(), T.forever and 0 or 120, "WoW Forever has no warning (Forever port design §4.4)")
 end)
 
 -- DW-CAT2 (issue #13, categories design spec §5.1): one Item kinds switch per category, in
@@ -279,10 +360,15 @@ local GLOW_KNOBS = {
     { "xOffset", -10, 10, 0 }, { "yOffset", -10, 10, 0 },
 }
 
+-- The glows this client has: WoW Forever has no off-spec glow (Forever port design §4.4), so a case
+-- driving "the other glow" drives the main one there, and a pair's right column is absent.
+local GLOW_KEYS = T.forever and { "main" } or { "main", "offSpec" }
+local OTHER = T.forever and "main" or "offSpec"
+
 test("glow: both glows have every knob's row on Alerts › Upgrade glow, with the plan's defaults", function()
     local NS = T.newAddon()
     local S, TONE = NS.SchemaRuntime, NS.Constants.TONE
-    for _, key in ipairs({ "main", "offSpec" }) do
+    for _, key in ipairs(GLOW_KEYS) do
         local base = "glow." .. key .. "."
         for _, k in ipairs(GLOW_KNOBS) do
             local row = S.FindRow(base .. k[1])
@@ -305,6 +391,7 @@ test("glow: both glows have every knob's row on Alerts › Upgrade glow, with th
     -- DW-03 (owner ruling D-18, image-39; was feedback-21 H6's two pixel borders and #FFF468): both
     -- Proc (flipbook), the main spec #19FF19 and the off-spec #3FC7EB, opaque.
     assertEqual(NS.Setting("glow.main.type"), "proc")
+    if T.forever then return assertNil(S.FindRow("glow.offSpec.type"), "no off-spec glow on WoW Forever") end
     assertEqual(NS.Setting("glow.offSpec.type"), "proc")
     local main, off = NS.Setting("glow.main.color"), NS.Setting("glow.offSpec.color")
     assertTrue(main.r == TONE.glowMain.r and main.g == TONE.glowMain.g and main.b == TONE.glowMain.b and main.a == 1,
@@ -322,6 +409,11 @@ test("glow: the main and off-spec rows alternate, so each line reads main left, 
     local rows = {}
     for _, row in ipairs(NS.addon.Settings.RowsForPage("alerts")) do
         if row.group == "Upgrade glow" then rows[#rows + 1] = row end
+    end
+    if T.forever then
+        -- WoW Forever: the main spec's column alone (Forever port design §4.4).
+        for _, row in ipairs(rows) do assertTrue(row.path:match("^glow%.main%.") ~= nil, row.path) end
+        return
     end
     assertEqual(#rows % 2, 0)
     -- Every row, the colors and their companions too (feedback-21 H6): main left, off-spec right.
@@ -361,16 +453,16 @@ test("glow: an out-of-range knob, an unknown style and a malformed color are ref
     local S, p = NS.SchemaRuntime, NS.addon.db.profile
     assertFalse(S.Set("glow.main.pixelLines", 0), "1 to 20 lines")
     assertFalse(S.Set("glow.main.pixelLines", 21))
-    assertFalse(S.Set("glow.offSpec.xOffset", 11), "-10 to 10")
-    assertFalse(S.Set("glow.offSpec.procDuration", 0.1), "0.25 to 3 seconds")
+    assertFalse(S.Set("glow." .. OTHER .. ".xOffset", 11), "-10 to 10")
+    assertFalse(S.Set("glow." .. OTHER .. ".procDuration", 0.1), "0.25 to 3 seconds")
     assertFalse(S.Set("glow.main.type", "sparkle"), "only LibCustomGlow's four styles")
     assertFalse(S.Set("glow.main.color", { r = 2, g = 0, b = 0 }), "a channel past 1")
     assertFalse(S.Set("glow.main.color", "green"), "a color is a table")
     assertFalse(S.Set("glow.main.enabled", "yes"))
     assertEqual(p.glow.main.pixelLines, 8, "nothing stored")
     assertTrue(S.Set("glow.main.type", "autocast"))
-    assertTrue(S.Set("glow.offSpec.color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
-    assertEqual(p.glow.offSpec.color.g, 0.5)
+    assertTrue(S.Set("glow." .. OTHER .. ".color", { r = 1, g = 0.5, b = 0, a = 0.5 }))
+    assertEqual(p.glow[OTHER].color.g, 0.5)
     assertTrue(S.Set("glow.main.pixelLength", 0), "0 is automatic")
 end)
 
@@ -378,13 +470,16 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
     local function dim(path) return S.FindRow(path).disabledIf() == true end
-    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here
-    assertTrue(S.Set("glow.offSpec.type", "pixel"))
+    -- both proc by default (DW-03, D-18); the off-spec set to pixel and main to proc here (WoW
+    -- Forever has the main glow alone, Forever port design §4.4)
+    if not T.forever then assertTrue(S.Set("glow.offSpec.type", "pixel")) end
     assertTrue(S.Set("glow.main.type", "proc"))
     assertFalse(dim("glow.main.procDuration")); assertTrue(dim("glow.main.pixelLines"))
-    assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    if not T.forever then
+        assertFalse(dim("glow.offSpec.pixelLines")); assertTrue(dim("glow.offSpec.procDuration"))
+    end
     assertFalse(dim("glow.main.xOffset"), "the offsets serve proc")
-    assertTrue(dim("glow.offSpec.buttonFrequency"))
+    if not T.forever then assertTrue(dim("glow.offSpec.buttonFrequency")) end
     S.Set("glow.main.type", "button")
     assertTrue(dim("glow.main.xOffset"), "but not button")
     assertFalse(dim("glow.main.buttonFrequency"))
@@ -392,12 +487,12 @@ test("glow: a knob is dimmed while its glow is in another style, the style while
     S.Set("glow.main.enabled", false)
     assertTrue(dim("glow.main.type") and dim("glow.main.buttonFrequency"), "off dims the style and every knob")
     -- anti-pattern #74: the swatch is read under either mode (its alpha), so neither half is dimmed
-    for _, key in ipairs({ "main", "offSpec" }) do
+    for _, key in ipairs(GLOW_KEYS) do
         assertNil(S.FindRow("glow." .. key .. ".color").disabledIf, key .. " color")
         assertNil(S.FindRow("glow." .. key .. ".useClassColor").disabledIf, key .. " Use class color")
     end
     assertTrue(S.FindRow("glow.main.enabled").disabledIf == nil, "the switch itself is never dimmed")
-    assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own")
+    if not T.forever then assertFalse(dim("glow.offSpec.pixelLines"), "the other glow is its own") end
 end)
 
 test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color and Automatic", function()
@@ -407,15 +502,15 @@ test("glow: a glow row's write asks NS.Glow to repaint, and `/dw` reads a color 
     local real = NS.Glow.Refresh
     NS.Glow.Refresh = function() calls = calls + 1 end
     assertTrue(NS.SchemaRuntime.Set("glow.main.pixelThickness", 3))
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.color", { r = 0, g = 1, b = 0, a = 1 }))
+    assertTrue(NS.SchemaRuntime.Set("glow." .. OTHER .. ".color", { r = 0, g = 1, b = 0, a = 1 }))
     assertTrue(NS.SchemaRuntime.Set("glow.main.useClassColor", true))
     assertFalse(NS.SchemaRuntime.Set("glow.main.useClassColor", "yes"), "a boolean")
     assertEqual(calls, 3)
     NS.Glow.Refresh = real
     local row = NS.SchemaRuntime.FindRow("glow.main.pixelLength")
     assertEqual(NS.addon.Settings.FormatValue(row, 0, function(_, v) return tostring(v) end), "0 (Automatic)")
-    NS.addon:OnSlashCommand("set glow.offSpec.color 1 0 0 1")
-    assertEqual(NS.addon.db.profile.glow.offSpec.color.r, 1)
+    NS.addon:OnSlashCommand("set glow." .. OTHER .. ".color 1 0 0 1")
+    assertEqual(NS.addon.db.profile.glow[OTHER].color.r, 1)
 end)
 
 -- ── Alerts › Toast: Scale (feedback-21 G10; Window's until feedback-24) ─────────────────────
@@ -575,6 +670,10 @@ local function serialize(v)
     return "{" .. table.concat(parts, ",") .. "}"
 end
 
+-- skin.skin's default is the client's default skin (DW-FP03, skinning-§2, Skin:DefaultSkin): Ka0s
+-- Default on Retail, WoW Forever on the Forever kit profile (clients-§6).
+local CLIENT_SKIN = ({ retail = "ka0s", forever = "forever" })[os.getenv("KA0S_KIT_CLIENT") or "retail"]
+
 local PINNED_ROWS = {
     { "alpha", "number", "1" },
     { "autoOpen", "bool", "true" },
@@ -673,10 +772,15 @@ local PINNED_ROWS = {
     { "messages.oneAsk", "bool", "true" },
     { "messages.templates.announce", "string", "\"{item} is up for grabs, whisper me.\"" },
     { "messages.templates.ask", "string", "\"Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!\"" },
+    { "messages.templates.askML", "string", "\"Hi {player}, if nobody needs {item}, I'd love it: +{mygain} for me. Thanks!\"" },
     { "messages.templates.askOffSpec", "string", "\"Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!\"" },
     { "messages.templates.offer", "string", "\"Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?\"" },
     { "messages.templates.transmog", "string", "\"Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!\"" },
     { "messages.transmogAsk", "bool", "false" },
+    -- DW-FP15 (Forever port design §5.3): Drops › Rolls, three new rows on both clients.
+    { "rolls.keep", "bool", "true" },
+    { "rolls.popupMark", "bool", "true" },
+    { "rolls.show", "bool", "true" },
     { "scale", "number", "1" },
     { "sim.stepDelay", "number", "1" },
     -- The skinning rollout (DW-01) adds the seven skin.* keys, General's Skin tab: new rows, not a
@@ -687,7 +791,7 @@ local PINNED_ROWS = {
     -- LibKa0s v1.82.0 (DW-01 of the skin fonts run, ruling D-06): the Font outline, a new row.
     { "skin.outline", "string", "\"hud\"" },
     { "skin.pickerSeen", "bool", "false" },
-    { "skin.skin", "string", "\"ka0s\"" },
+    { "skin.skin", "string", "\"" .. CLIENT_SKIN .. "\"" },
     { "skin.source", "string", "\"ka0s\"" },
     { "skin.texture", "string", "\"\"" },
     { "situations.delve.autoOpen", "bool", "true" },
@@ -766,12 +870,19 @@ local PINNED_ROWS = {
     { "window.tableFontFlags", "string", "\"@skin\"" },
     { "window.tableFontFromSkin", "bool", "true" },
     { "window.tableFontShadow", "bool", "true" },
+    -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
+    { "char.role", "string", "\"auto\"" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
     local NS = T.newAddon()
-    local want = {}
-    for _, p in ipairs(PINNED_ROWS) do want[p[1]] = p end
+    local want, pinned = {}, 0
+    for _, p in ipairs(PINNED_ROWS) do
+        -- On WoW Forever a Retail-only situation's paths, and the Retail-only rows, are absent
+        -- (clients-§4), not moved.
+        if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1])))
+            and not (not T.forever and p[1] == "char.role") then want[p[1]], pinned = p, pinned + 1 end
+    end
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do
         if row.path then
@@ -784,5 +895,14 @@ test("rows: the layout changes keep every stored path, its type and its default 
             seen = seen + 1
         end
     end
-    assertEqual(seen, #PINNED_ROWS, "every pinned path is still a row")
+    assertEqual(seen, pinned, "every pinned path is still a row")
+end)
+
+test("rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)", function()
+    -- red under: the one Retail sentence on both clients (WoW Forever has no key and no delve)
+    local NS = T.newAddon()
+    local tip = NS.SchemaRuntime.FindRow("window.compactInRuns").tooltip
+    assertEqual(tip:find("Mythic+", 1, true) == nil, T.forever, tip)
+    assertEqual(tip:find("delve", 1, true) == nil, T.forever, tip)
+    assertTrue(tip:find("inside a dungeon", 1, true) ~= nil, tip)
 end)

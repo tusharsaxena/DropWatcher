@@ -18,6 +18,10 @@ local _, NS = ...
 --                   (NS.DetailCells.TradeBox over the snapshot: the basis, never a rule or an age)
 --   WHEN AND WHERE  the time (and how long ago), the kept group's place (instance, boss,
 --                   difficulty: NS.GroupPlace.Parts, as its header) and the character that saw it
+--   ROLLS           a group-loot drop's kept roll table (Forever port design §5.4: the entry's
+--                   `rolls` read back by WindowHistory.AsDrop), the Drops card's Rolls box
+--                   (NS.DetailCells.RollsBox, NS.WindowPending's frame) under the boxes, the card
+--                   that much taller, while `rolls.show` is on
 --   actions         Link in chat; Mark declined or Clear declined (the row's right-click menu
 --                   stays); Show in Drops while the drop is also live in the feed (History.DropOf):
 --                   it selects the Drops tab, opens the drop's header and expands its card
@@ -203,13 +207,14 @@ end
 --- The card's words for a kept entry (pure).
 --- @param drop table WindowHistory.AsDrop's record, with its kept `group`
 --- @param ctx table { nowEpoch = time(), dateFn = date, classFile (yours), situationLabel,
----   liveId (History.DropOf: the drop's id in the feed, or nil) }
---- @return table { chips, me, them, trade, where, actions }
+---   liveId (History.DropOf: the drop's id in the feed, or nil), showRolls (`rolls.show`; on unless false) }
+--- @return table { chips, me, them, trade, where, rolls (nil with no kept table), actions }
 function HC.Model(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
     return {
         chips = chips(drop), me = forYou(drop, ctx.classFile), them = forGroup(drop),
         trade = DC.TradeBox(drop, ctx.situationLabel), where = whenWhere(drop, ctx),
+        rolls = DC.RollsBox(drop, ctx.showRolls ~= false),
         actions = { linkAction(drop), declinedAction(drop), showAction(ctx.liveId) },
     }
 end
@@ -294,6 +299,7 @@ function HC.Build(content, stacked)
     for _, side in ipairs({ card.me, card.them, card.where }) do side:SetHeight(HC.SIDE_H) end
     DCard.BuildTrade(card)
     if card.stacked then placeStacked(card) else placeSideBySide(card) end
+    card.rolls = NS.WindowPending.BuildRollsBox(card)   -- under the boxes, while the entry kept a roll
     buildActions(card)
     card:Hide()
     return card
@@ -343,8 +349,19 @@ local function paintActions(card, drop, list, liveId)
     end
 end
 
+-- The Rolls box under the last box: the kept roll table (HC.Model's `rolls`). Answers the height it
+-- adds to the card.
+local function paintRolls(card, model, width)
+    card.rolls:SetShown(model ~= nil)
+    if not model then return 0 end
+    local under = card.stacked and card.where or card.trade
+    card.rolls:ClearAllPoints()
+    card.rolls:SetPoint("TOPLEFT", under, "BOTTOMLEFT", 0, -P)
+    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P) + P
+end
+
 --- Paint the card for a kept entry, `width` pixels wide; answers its height (HC.CARD_H, or the
---- stacked card's).
+--- stacked card's, and the Rolls box's under them).
 --- @param card table HC.Build's answer
 --- @param drop table WindowHistory.AsDrop's record
 --- @param width number
@@ -368,5 +385,10 @@ function HC.Paint(card, drop, width, ctx)
     DCard.PaintSide(card.where, m.where, sideW)
     DCard.PaintTrade(card.trade, m.trade)
     paintActions(card, drop, m.actions, ctx and ctx.liveId)
+    local extra = paintRolls(card, m.rolls, width)
+    if extra > 0 then
+        height = height + extra
+        card:SetHeight(height)
+    end
     return height
 end

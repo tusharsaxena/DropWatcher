@@ -58,7 +58,7 @@ end
 test("skin HUD: the icon border's companion is on by default, and Ka0s Default draws Solid 1px, gray in a window and black on the HUD", function()
     -- 1 px in every skin since LibKa0s v1.85.0's R3-FIX, the owner's "exactly 1 px in every skin"
     -- (Ka0s Default's icon family was DW's Solid 2px until then).
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     assertEqual(NS.C.PROFILE.icons.borderStyleFromSkin, true, "X3: a new profile follows the skin")
     assertEqual(NS.Setting("icons.borderStyleFromSkin"), true)
     local Skin = m.LibStub("LibKa0s-Skin-1.0")

@@ -49,16 +49,35 @@ files["core/Compat.lua"] = {
     "C_ChatInfo", "SendChatMessage", "C_TooltipInfo", "C_RestrictedActions", "C_Container",
     "ItemLocation", "DropItemOnUnit", "InitiateTrade", "CursorHasItem", "ClearCursor",
     "PawnIsReady", "PawnIsInitialized", "PawnGetItemData", "PawnIsItemAnUpgrade", "PawnFindScaleForSpec",
-    "PawnGetSingleValueFromItem", "PawnCommon", "PawnIsScaleVisible", "CanIMogIt", "GetNormalizedRealmName", "GetRealmName",
+    "PawnGetSingleValueFromItem", "PawnCommon", "PawnIsScaleVisible", "CanIMogIt",
     "C_TransmogCollection", "LOCALIZED_CLASS_NAMES_MALE", "LOCALIZED_CLASS_NAMES_FEMALE",
     "GetInventoryItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
-    "GetInspectSpecialization", "InspectFrame", "hooksecurefunc", "C_LootHistory",
+    "InspectFrame", "hooksecurefunc",
     "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
-    "DressUpLink", "GetSpecializationInfoByID", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
+    "DressUpLink", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
     "C_ChallengeMode", "UnitName",
+    "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",  -- the client stub (clients-§3)
+    "RegionalUniqueNamesEnabled",  -- the regional-names stub (client-quirks-§5)
   },
+}
+
+-- The character's client-variant reads (Forever port design §4.1): core/CompatClient.lua alone names
+-- the realm, a spec's name, the inspected spec and the group role (the trade partner's name goes
+-- through the root's UnitCharacterName).
+files["core/CompatClient.lua"] = {
+  read_globals = { "GetNormalizedRealmName", "GetRealmName", "GetSpecializationInfoByID",
+    "C_SpecializationInfo", "GetInspectSpecialization", "UnitGroupRolesAssigned" },
+}
+
+-- The loot history and the group-loot rolls (Forever port design §5.1), the loot method and the
+-- loot window (§6), the roll popups' gamepad switch (§7): core/CompatLoot.lua alone names C_LootHistory,
+-- C_PartyInfo, InputUtil and those globals.
+files["core/CompatLoot.lua"] = {
+  read_globals = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink",
+    "C_PartyInfo", "Constants", "GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "GetLootSourceInfo",
+    "InputUtil" },
 }
 
 -- The Encounter Journal: core/CompatJournal.lua alone names it, for the simulator's item pool.
@@ -85,7 +104,7 @@ files["core/CompatCollect.lua"] = {
 files["core/CompatWorld.lua"] = {
   read_globals = {
     "GetInstanceInfo", "GetDifficultyInfo", "IsInInstance", "IsInGroup", "IsInRaid", "C_ChallengeMode",
-    "GetNumGroupMembers", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
+    "GetNumGroupMembers", "UnitGUID", "UnitClass", "UnitLevel", "UnitIsConnected",
     "UnitIsPlayer", "LE_PARTY_CATEGORY_INSTANCE", "InCombatLockdown", "UnitAffectingCombat",
   },
 }

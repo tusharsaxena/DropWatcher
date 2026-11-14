@@ -51,6 +51,7 @@ local function addon()
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
     m.INVTYPE_FINGER = "Finger"
     seedJournal(m)
+    m.journalToBags()   -- WoW Forever's pool is your own gear (modules/SimPool.lua)
     local create = m.CreateFrame
     m.CreateFrame = function(kind, name, ...)
         local f = create(kind, name, ...)
@@ -103,7 +104,7 @@ test("sim panel: a key's preview names every step with its boss, and every comma
     assertEqual(r[2].command, "/dw sim step")
     assertEqual(r[#r].command, "/dw sim stop")
     assertEqual(lines(r[11].tip), "Injects: 2 loot lines | Through: the real loot handler (CHAT_MSG_LOOT)")
-end)
+end, T.RETAIL_ONLY)
 
 test("sim panel: a step names the boss it played, and a loot step its count or its detail", function()
     local NS = T.newAddon()
@@ -136,7 +137,9 @@ test("sim panel: every step kind's tooltip says what it injects; Start and Stop 
     for kind, text in pairs(want) do assertEqual(lines(SP.StepTip({ kind = kind })), text, kind) end
     assertEqual(lines(SP.StepTip({ kind = "loot", n = 1 })), "Injects: 1 loot line | Through: the real loot handler (CHAT_MSG_LOOT)")
     local r = NS.Sim:PanelRows()
-    assertEqual(lines(r[1].tip), "Builds: the item pool, from the Encounter Journal | Invents: the group | Opens: the window")
+    -- WoW Forever's pool is your own gear (modules/SimPool.lua, Forever port design §4.4).
+    assertEqual(lines(r[1].tip), "Builds: the item pool, from " .. (T.forever and "your own gear" or "the Encounter Journal")
+        .. " | Invents: the group | Opens: the window")
     assertEqual(lines(r[#r].tip), "Ends: the simulation | Cleans up: everything it made")
 end)
 
@@ -145,10 +148,14 @@ test("sim panel: the scenarios carry their names, and the raids the sizes the pi
     local defs = NS.SimScenarioDefs.defs
     local names = {}
     for i, name in ipairs(NS.SimScenarioDefs.names) do names[i] = defs[name].label end
-    assertEqual(table.concat(names, "|"), "Mythic+ key|Dungeon|Raid|Raid Finder|Delve|Open world")
+    if T.forever then   -- WoW Forever's own three (Forever port design §4.4)
+        assertEqual(table.concat(names, "|"), "Dungeon|Raid|Open world")
+    else
+        assertEqual(table.concat(names, "|"), "Mythic+ key|Dungeon|Raid|Raid Finder|Delve|Open world")
+        assertEqual(table.concat(defs.lfr.sizes, ","), "9,12,15,19")
+    end
     assertEqual(table.concat(defs.raid.sizes, ","), "9,12,15,19")
-    assertEqual(table.concat(defs.lfr.sizes, ","), "9,12,15,19")
-    assertNil(defs.key.sizes, "a party has no size")
+    assertNil(defs.dungeon.sizes, "a party has no size")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -241,7 +248,7 @@ test("sim panel: opened before the window, it docks beside the window once a slo
     assertEqual(m.simPanel.__dock, "right", "re-docked beside the window, not over it")
     local pt = { m.simPanel:GetPoint(1) }
     assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == NS.Window.Frame())
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- The session-only position and the stand-down

@@ -7,7 +7,7 @@ local _, NS = ...
 --                owned    = { [slot] = entry },           -- the best you own per slot, worn or not
 --                pool     = { entry, ... },               -- every gear item read, worn and in bags
 --                bySpec   = { [specID] = gear },          -- OffSpecGear's memo
---                classFile, specID, dualWield, titanGrip,
+--                classFile, specID, tree, level, dualWield, titanGrip,
 --                loading  = n,                            -- links still loading
 --                signature }
 --
@@ -18,9 +18,12 @@ local _, NS = ...
 -- are never written.
 --
 -- THE CANDIDATE. Candidate() answers spec §5.1's candidate for you: classFile (UnitClass), specID
--- (NS.Compat.PlayerSpecID), dualWield and titanGrip (NS.ClassData for that spec, else for the
--- class when every spec agrees, else nil), `gear` = equipped, `owned` and `offSpecGear`. `prefs` is
--- left for the feed to add from the `comparison.undesired` setting.
+-- (NS.Compat.PlayerSpecID: on WoW Forever the class-wide spec), tree (your talent tree's index,
+-- NS.Compat.PlayerTalentTree: nil on Retail, and on Forever with no points or a tie), level
+-- (NS.Compat.UnitLevel: the armor a Forever class wears depends on it), dualWield and titanGrip
+-- (NS.ClassData for that spec or tree, else for the class when every spec agrees, else nil), `gear`
+-- = equipped, `owned` and `offSpecGear`. `prefs` is left for the feed to add from the
+-- `comparison.undesired` setting (Forever port design §4.2).
 --
 -- OFF-SPEC (feedback-19 spec §0). The snapshot keeps every gear item it reads, worn and in bags,
 -- before your spec's filter, as `pool`. OffSpecGear(specID) places that pool for another spec of
@@ -34,16 +37,20 @@ local _, NS = ...
 -- tier token, or an item with no slot plan, is not gear) is placed by its slot plan: a single-slot
 -- item in its slot; a ring or trinket in either of its pair; a one-hander in the main hand, and in
 -- the off hand too for a dual wielder; a two-hander or ranged weapon in the main hand, and in the
--- off hand too with Titan's Grip; an off hand, shield or held item in the off hand. The slots are
+-- off hand too with Titan's Grip; an off hand, shield or held item in the off hand. On WoW Forever a
+-- ranged or thrown weapon, a wand or a relic goes in the ranged slot 18 instead (C.SLOT.RANGED),
+-- which the snapshot reads with every other slot of C.SLOT. The slots are
 -- filled in id order, each with the highest-level item that fits and is not already placed, so a
 -- pair gets your best two and one item never fills two slots. It is a per-slot best, not a loadout
 -- planner: unique-equipped limits and a two-hander's claim on both hands are not weighed.
 --
--- THE EDGE AND THE THROTTLE. PLAYER_EQUIPMENT_CHANGED, BAG_UPDATE_DELAYED and the player's
--- PLAYER_SPECIALIZATION_CHANGED arm one THROTTLE-second timer; the events inside it share one
--- rebuild. A link not cached yet is requested through ItemFacts.Request, and its load arms the
--- same timer. A rebuild whose signature (spec, class, every worn and owned link with its level,
--- and every bag gear item in the pool, in sorted order so sorting your bags moves nothing) moved
+-- THE EDGE AND THE THROTTLE. PLAYER_EQUIPMENT_CHANGED, BAG_UPDATE_DELAYED and a spec change (on
+-- Retail the player's PLAYER_SPECIALIZATION_CHANGED; on WoW Forever, where the talent trees are the
+-- specs, TRAIT_CONFIG_UPDATED and CHARACTER_POINTS_CHANGED) arm one THROTTLE-second timer; the
+-- events inside it share one rebuild. A link not cached yet is requested through ItemFacts.Request,
+-- and its load arms the same timer. A rebuild whose signature (spec, tree, level, class, every worn
+-- and owned link with its level, and every bag gear item in the pool, in sorted order so sorting
+-- your bags moves nothing) moved
 -- sends GearChanged (no payload). The first read, lazily from a caller, announces nothing: nobody
 -- has judged against the old one. Stood down, the timer is canceled and the snapshot dropped; the
 -- stand-up rebuilds it.
@@ -126,12 +133,14 @@ local function classFileOf()
     return classFile
 end
 
--- The candidate fields that are not gear: class, spec and the two hand flags.
+-- The candidate fields that are not gear: class, spec, talent tree, level and the two hand flags.
 local function readIdentity()
     local classFile, specID = classFileOf(), NS.Compat.PlayerSpecID()
+    local talents = NS.Compat.PlayerTalentTree()
+    local tree = talents and talents.index or nil
     return {
-        classFile = classFile, specID = specID,
-        dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
+        classFile = classFile, specID = specID, tree = tree, level = NS.Compat.UnitLevel("player"),
+        dualWield = CD.DualWieldFor(classFile, specID, tree), titanGrip = CD.TitanGripFor(classFile, specID, tree),
     }
 end
 
@@ -242,7 +251,7 @@ end
 -- The bag items go in too, so a change to one only another spec could wear still moves it. They
 -- go in sorted: sorting your bags moves no gear.
 local function signature(snap, bagItems)
-    local parts = { tostring(snap.classFile), tostring(snap.specID) }
+    local parts = { tostring(snap.classFile), tostring(snap.specID), tostring(snap.tree), tostring(snap.level) }
     for _, slot in ipairs(SLOTS) do
         parts[#parts + 1] = slot .. "=" .. entryKey(snap.equipped[slot]) .. "/" .. entryKey(snap.owned[slot] or false)
     end
@@ -349,8 +358,9 @@ end
 function G.Candidate()
     local s = G.Snapshot()
     return {
-        classFile = s.classFile, specID = s.specID, dualWield = s.dualWield, titanGrip = s.titanGrip,
-        gear = s.equipped, owned = s.owned, isPlayer = true, offSpecGear = G.OffSpecGear,
+        classFile = s.classFile, specID = s.specID, tree = s.tree, level = s.level,
+        dualWield = s.dualWield, titanGrip = s.titanGrip, gear = s.equipped, owned = s.owned, isPlayer = true,
+        offSpecGear = NS.OffSpec.Initialized() and G.OffSpecGear or nil,   -- Retail's alone (modules/OffSpec.lua)
     }
 end
 
@@ -394,7 +404,12 @@ end
 
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_EQUIPMENT_CHANGED", "OnGearEvent" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "BAG_UPDATE_DELAYED", "OnGearEvent" }
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_SPECIALIZATION_CHANGED", "OnGearSpecEvent" }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_SPECIALIZATION_CHANGED", "OnGearSpecEvent", clients = { "retail" } }
+-- WoW Forever's spec change is a talent change: the trees are the specs (design §4.2).
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "TRAIT_CONFIG_UPDATED", "OnGearTalentEvent", clients = { "forever" } }
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "CHARACTER_POINTS_CHANGED", "OnGearTalentEvent", clients = { "forever" } }
+-- WoW Forever: a level gained moves what you can wear (plate or mail from level 40, design §4.2).
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_LEVEL_UP", "OnGearLevelEvent", clients = { "forever" } }
 -- Shared (core/DropWatcher.lua's dispatcher): this row comes after core/DropWatcher.lua's, which
 -- hands the edge to the restriction tracker first, so InCombat already reads false.
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnGearRegenEvent" }
@@ -411,6 +426,18 @@ end
 -- be yours: a spare rebuild costs less than a stale spec.
 function NS.addon.OnGearSpecEvent(_, event, unit)
     if NS.Compat.IsSecret(unit) or unit == nil or unit == "player" then G.Schedule(event) end
+end
+
+-- WoW Forever: your talents moved (a point spent, a respec, a config switch); the rebuild re-reads
+-- your top talent tree. Both events are the player's own.
+function NS.addon.OnGearTalentEvent(_, event)
+    G.Schedule(event)
+end
+
+-- WoW Forever: you gained a level. The rebuild re-reads your level (the armor by level) once the
+-- throttle runs, when UnitLevel answers the new one.
+function NS.addon.OnGearLevelEvent(_, event)
+    G.Schedule(event)
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

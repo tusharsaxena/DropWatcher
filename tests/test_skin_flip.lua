@@ -16,6 +16,15 @@ local COMPANIONS = {
     "window.tableFontFromSkin", "window.tableFontShadowFromSkin", "icons.borderStyleFromSkin",
     "icons.borderColorFromSkin", "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin",
 }
+-- The off-spec glow is Retail's alone (Forever port design §4.4): on WoW Forever it has no rows.
+local function here(list)
+    if not T.forever then return list end
+    local out = {}
+    for _, path in ipairs(list) do
+        if not path:find("^glow%.offSpec%.") then out[#out + 1] = path end
+    end
+    return out
+end
 
 local function near(a, b) return math.abs(a - b) < 1e-6 end
 
@@ -50,15 +59,15 @@ end
 
 test("skin flip: every companion is a bool row, on by default in both places", function()
     local NS = T.bootAddon()
-    for _, path in ipairs(COMPANIONS) do
+    for _, path in ipairs(here(COMPANIONS)) do
         local row = NS.SchemaRuntime.FindRow(path)
         assertTrue(row ~= nil, "no row " .. path)
         assertEqual(row.type, "bool", path)
         assertEqual(row.default, true, path .. " defaults on on the row")
         assertEqual(leaf(NS.C.PROFILE, path), true, path .. " defaults on in AceDB")
     end
-    for _, path in ipairs({ "window.tableFontShadowFromSkin", "icons.borderColorFromSkin",
-        "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin" }) do
+    for _, path in ipairs(here({ "window.tableFontShadowFromSkin", "icons.borderColorFromSkin",
+        "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin" })) do
         local row = NS.SchemaRuntime.FindRow(path)
         assertTrue(row.tooltip:find("not read while this is on", 1, true) ~= nil,
             path .. "'s tooltip says the row it governs is not read")
@@ -70,7 +79,7 @@ end)
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
-    for _, path in ipairs({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontShadow" }) do
+    for _, path in ipairs(here({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontShadow" })) do
         assertNil(S.FindRow(path).disabledIf, path)
     end
     for _, path in ipairs({ "icons.useClassColorBorderFromSkin", "glow.main.useClassColorFromSkin",
@@ -107,11 +116,11 @@ test("skin flip: a stored partial profile moves, and nothing but companions and 
     }
     local before = dump(p)
     assertTrue(NS.ResetProfileToSkin(p) == true, "the first run moves it")
-    for _, path in ipairs(COMPANIONS) do assertEqual(leaf(p, path), true, path) end
+    for _, path in ipairs(here(COMPANIONS)) do assertEqual(leaf(p, path), true, path) end
     assertEqual(p.skin.fullSkinReset, true, "recorded on the profile")
     assertEqual(p.window.tableFontFlags, "@skin", "the one key that takes the sentinel")
     -- Take off what the step owed: the rest is the profile it was handed.
-    for _, path in ipairs(COMPANIONS) do
+    for _, path in ipairs(here(COMPANIONS)) do
         local parent, key = path:match("^(.*)%.([^.]+)$")
         leaf(p, parent)[key] = nil
     end
@@ -291,7 +300,7 @@ test("skin flip: a skin switch redraws the icon border's color; class and qualit
 end)
 
 test("skin flip: Ka0s Default keeps the glows' own colors; a skin switch restarts them in the skin's", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local Skin = m.LibStub("LibKa0s-Skin-1.0")
     local calls = {}
     NS.GlowLib = { Start = function(_, _, cfg) calls[#calls + 1] = cfg.color; return true end, Stop = function() end }
@@ -310,8 +319,12 @@ test("skin flip: Ka0s Default keeps the glows' own colors; a skin switch restart
         offSpec = { verdict = "upgrade" } } }
     NS.OffSpec.Of = function(me) return me.offSpec end
     NS.Glow.Apply(button, off)
-    local warband = Skin:Token(OWNER, "sem.warband")
-    assertTrue(near(calls[3][1], warband[1]) and near(calls[3][2], warband[2]), "the off-spec glow's own")
+    if T.forever then   -- clients-§6: the off-spec glow is Retail's alone (Forever port design §4.4)
+        assertEqual(#calls, 2, "no off-spec glow on WoW Forever")
+    else
+        local warband = Skin:Token(OWNER, "sem.warband")
+        assertTrue(near(calls[3][1], warband[1]) and near(calls[3][2], warband[2]), "the off-spec glow's own")
+    end
     setSkin(m, "ka0s")
 end)
 
@@ -390,7 +403,7 @@ local function tableString(m)
 end
 
 test("skin flip: Ka0s Default keeps the tables' black shadow; a skin switch redraws it", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local WR = NS.WindowRows
     fakeCreateFont(m)
     local fs = tableString(m)

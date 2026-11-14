@@ -87,8 +87,8 @@ local WORLD_READS = { "IsInInstance", "GetInstanceInfo", "GetDifficultyInfo", "C
     "UnitIsConnected", "UnitIsPlayer", "InCombatLockdown", "UnitAffectingCombat", "C_AddOns%.IsAddOnLoaded", "UNKNOWNOBJECT" }
 
 -- The seam's own files, and the two that read GlobalStrings once at load, before any simulation.
-local SKIPPED = { ["core/Compat.lua"] = true, ["core/CompatWorld.lua"] = true, ["core/CompatItem.lua"] = true,
-    ["core/CompatJournal.lua"] = true,
+local SKIPPED = { ["core/Compat.lua"] = true, ["core/CompatClient.lua"] = true, ["core/CompatWorld.lua"] = true,
+    ["core/CompatItem.lua"] = true, ["core/CompatJournal.lua"] = true,
     ["core/Constants.lua"] = true, ["core/ItemSetup.lua"] = true }
 
 -- A file's code with its comments and strings blanked, so a member key or a GlobalString's name
@@ -125,7 +125,7 @@ test("sim e2e: the seam wraps every world read, the combat flags and the GlobalS
     local NS = T.newAddon()
     local wrapped = {}
     for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
-    for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitName", "UnitClass", "UnitIsConnected",
+    for _, key in ipairs({ "GroupSize", "InRaid", "InGroup", "UnitGUID", "UnitCharacterName", "UnitClass", "UnitIsConnected",
         "UnitIsPlayer", "InstanceState", "InstanceInfo", "DifficultyKnown", "ChallengeModeActive", "InCombatLockdown", "PlayerInCombat",
         "GlobalString", "IsAddOnLoaded" }) do
         assertTrue(wrapped[key], key .. " is answered through the seam")
@@ -140,6 +140,26 @@ test("sim e2e: nothing escapes the seam", function()
         .. table.concat(NS.SimSeam:Unwrapped(), ", "))
 end)
 
+test("sim: every CompatLoot member is wrapped", function()
+    -- DW-FP17 (Forever port design §8): every roll reader core/CompatLoot.lua publishes answers
+    -- through the seam, and the simulator answers it (a provider in modules/SimWorld.lua). The
+    -- members are read off the file itself, so a reader added later is covered.
+    -- red under: no LootHistory* or roll provider on the seam
+    local NS = T.newAddon()
+    assertEqual(#NS.SimSeam:Unwrapped(), 0, "nothing escapes: " .. table.concat(NS.SimSeam:Unwrapped(), ", "))
+    local wrapped = {}
+    for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
+    local fh = assert(io.open(T.root .. "/core/CompatLoot.lua", "rb"))
+    local src = fh:read("*a"); fh:close()
+    local n = 0
+    for key in src:gmatch("\nfunction Compat%.([%w_]+)%(") do
+        n = n + 1
+        assertTrue(wrapped[key], key .. " is wrapped by the seam")
+        assertTrue(NS.SimWorld.PROVIDERS[key] ~= nil, key .. " has a simulator provider")
+    end
+    assertTrue(n >= 8, "the readers were found: " .. n)
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Every scenario fills the window under the default filters
 -- ---------------------------------------------------------------------------------------------
@@ -152,6 +172,8 @@ local SCENARIOS = {
     { name = "delve",   situation = "Delve",            members = 4 },
     { name = "world",   situation = "Open world group", members = 4 },
 }
+-- The scenarios WoW Forever has none of (Forever port design §4.4): their cases are Retail's.
+local RETAIL_SCENARIO = { key = true, lfr = true, delve = true }
 
 -- The mock answers the real solo world (spec §0 step 1), as the client did for the owner.
 local function assertSoloWorld(NS)
@@ -173,7 +195,7 @@ local function assertDefaultFilters(NS)
         assertEqual(next(st.view), nil, "View: All"); assertEqual(st.search, "")
         if tab == "group" then
             assertEqual(st.content, "session")
-            assertTrue(st.char["Testchar-Testrealm"] == true and next(st.char, next(st.char)) == nil,
+            assertTrue(st.char[T.ME] == true and next(st.char, next(st.char)) == nil,
                 "Character: Current (feedback-2 spec §4)")
         else
             assertEqual(st.content, "all"); assertNil(next(st.char), "Character: All")
@@ -255,7 +277,7 @@ end
 -- (the simulator never answers for "player"), so Character: Current shows the run on every tab
 -- (feedback-2 spec §4).
 local function assertRecorder(NS, label)
-    local me = "Testchar-Testrealm"
+    local me = T.ME
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
         assertEqual(rec.seenBy, me, label .. ": drop " .. rec.id .. " says who saw it")
     end
@@ -320,7 +342,7 @@ for _, mode in ipairs({ "full", "compact" }) do
                 for _, ilvl in ipairs({ 600, 660 }) do
                     for seed = 1, 3 do runScenario(sc, ilvl, seed, mode) end
                 end
-            end)
+            end, RETAIL_SCENARIO[sc.name] and T.RETAIL_ONLY or nil)
     end
 end
 
@@ -335,7 +357,8 @@ local function closeWindow(NS)
 end
 
 test("sim e2e: a simulated key's auto-open is compact by default, full with the option off, then the stored layout", function()
-    for _, case in ipairs({ { "key", "compact", true }, { "key", "full", false } }) do
+    local run = T.forever and "dungeon" or "key"   -- WoW Forever has no key (Forever port design §4.4)
+    for _, case in ipairs({ { run, "compact", true }, { run, "full", false } }) do
         local NS, m = addon(600)
         assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", case[3]) or case[3], "the option")
         assertTrue(NS.SimScenario.Start(case[1], nil, { seed = 1 }), case[1])
@@ -398,7 +421,7 @@ test("sim e2e: in a raid, raid1 is you, online, for every unit read", function()
     local Compat = NS.Compat
     local guid = NS.SimSeam:Live(Compat.UnitGUID, "player")
     assertEqual(Compat.UnitGUID("raid1"), guid)
-    assertEqual(Compat.UnitName("raid1"), NS.SimSeam:Live(Compat.UnitName, "player"))
+    assertEqual(Compat.UnitCharacterName("raid1"), NS.SimSeam:Live(Compat.UnitCharacterName, "player"))
     -- red under: the M7 provider, which asked the client about raid1 and read you offline
     assertTrue(Compat.UnitIsConnected("raid1") == true, "you are online")
     local me = NS.Roster.Player()
@@ -421,4 +444,4 @@ test("sim e2e: Raid Finder is an instance group, so asks announce in instance ch
     NS.Sim:Stop("stop")
     NS.SimScenario.Start("key", nil, { seed = 1 })
     assertEqual(NS.Asks.AnnounceChannel(), "PARTY")
-end)
+end, T.RETAIL_ONLY)

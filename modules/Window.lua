@@ -130,6 +130,11 @@ local function feedName() return NS.State.testMode == true and "test" or "live" 
 --- @return table { feed }
 function Window.FeedView() return { feed = feedName() } end
 
+--- The feed the window shows (`test` in test mode, else `live`), with no table built: the repaint's
+--- own read (WindowPending), which FeedView's fresh table would bill to every pass.
+--- @return string
+function Window.FeedName() return feedName() end
+
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
 -- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's
@@ -1032,6 +1037,8 @@ local function listen()
     target:RegisterMessage(M.SITUATION_CHANGED, function(_, key) onSituation(key) end)
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
+    -- Drops' Rolling now section (modules/WindowPending.lua): an item opened, changed or closed.
+    target:RegisterMessage(M.PENDING_CHANGED, function() scheduleRepaint() end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)

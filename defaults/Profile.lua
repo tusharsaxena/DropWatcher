@@ -40,6 +40,50 @@ local function glow(enabled, style, tone)
 end
 local TONE = NS.Constants.TONE
 
+-- The client picked once (clients-§5): the per-situation defaults below are one table per client,
+-- keyed like that client's C.SITUATIONS (Forever port design §4.4).
+local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
+
+-- Where Drop Watcher is active (design spec §6.1). Retail's are the owner's defaults since DW-06:
+-- follower dungeons, delves, scenarios and solo tracked and auto-opening too. WoW Forever's are
+-- the same values for the five situations it has.
+local SITUATIONS = {
+    retail = {
+        mythicPlus      = situation(true, true),
+        dungeon         = situation(true, true),
+        followerDungeon = situation(true, true),
+        raidLFR         = situation(true, false),
+        raid            = situation(true, true),
+        delve           = situation(true, true),
+        scenario        = situation(true, true),
+        pvp             = situation(false, false),
+        openWorldGroup  = situation(false, false),
+        solo            = situation(true, true),
+    },
+    forever = {
+        dungeon         = situation(true, true),
+        raid            = situation(true, true),
+        pvp             = situation(false, false),
+        openWorldGroup  = situation(false, false),
+        solo            = situation(true, true),
+    },
+}
+
+-- The rule each situation takes (design spec §7.2): Retail's follower dungeons `personal` since
+-- DW-06, the owner's default; `raid` is the conservative `personal` until smoke check TRADE-3
+-- confirms it. WoW Forever's keys are its own situations', each `soulbound`: a looted Bind on
+-- Pickup item can't change hands there (Forever port design §4.6).
+local TRADE_RULES = {
+    retail = {
+        mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
+        raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
+        pvp = "legacy", openWorldGroup = "personal", solo = "personal",
+    },
+    forever = {
+        dungeon = "soulbound", raid = "soulbound", pvp = "soulbound", openWorldGroup = "soulbound", solo = "soulbound",
+    },
+}
+
 NS.C = {
     PROFILE = {
         enabled    = true,       -- master switch (the `disabled` hold reads it)
@@ -49,20 +93,8 @@ NS.C = {
         locked     = false,      -- Lock frame: the window cannot be dragged or resized
         autoOpen   = true,       -- master auto-open: false keeps every situation from opening the window
 
-        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS. The owner's defaults
-        -- since DW-06: follower dungeons, delves, scenarios and solo tracked and auto-opening too.
-        situations = {
-            mythicPlus      = situation(true, true),
-            dungeon         = situation(true, true),
-            followerDungeon = situation(true, true),
-            raidLFR         = situation(true, false),
-            raid            = situation(true, true),
-            delve           = situation(true, true),
-            scenario        = situation(true, true),
-            pvp             = situation(false, false),
-            openWorldGroup  = situation(false, false),
-            solo            = situation(true, true),
-        },
+        -- Where Drop Watcher is active (design spec §6.1), keyed like C.SITUATIONS (SITUATIONS above).
+        situations = SITUATIONS[CLIENT],
 
         -- The feed's gates and the filter bar's seeds (design spec §6.2, §6.3, §11.1).
         feed = {
@@ -95,6 +127,16 @@ NS.C = {
             clearOnBossKill = false,     -- the feed's session drops cleared at each boss kill
         },
 
+        -- Everyone's loot rolls (Forever port design §5.3, both clients): `show` the Drops tab's
+        -- Rolling now section and a resolved drop's Rolls box (the store tracks every roll either
+        -- way), `keep` the roll table in History (DW-FP16), `popupMark` your verdict on the game's
+        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration.
+        rolls = {
+            show      = true,
+            keep      = true,
+            popupMark = true,
+        },
+
         -- How a drop is judged (design spec §5). `weights` and `undesired` are keyed by specID:
         -- weights[specID] = { STAT_KEY = weight }, undesired[specID] = { ["<classID>:<subClassID>"] = true }.
         comparison = {
@@ -106,17 +148,10 @@ NS.C = {
             undesired       = {},
         },
 
-        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2; follower
-        -- dungeons `personal` since DW-06, the owner's default), the
-        -- owner's override once changed (§7.3); `raid` is the conservative `personal` until smoke
-        -- check TRADE-3 confirms it.
+        -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2,
+        -- TRADE_RULES above), the owner's override once changed (§7.3).
         trade = {
-            rules = {
-                mythicPlus = "personal", dungeon = "personal", followerDungeon = "personal",
-                raidLFR = "personal", raid = "personal", delve = "personal", scenario = "personal",
-                pvp = "legacy", openWorldGroup = "personal", solo = "personal",
-            },
-            warnAt     = 600,     -- seconds left when your own item's trade timer warns; 0 is off
+            rules = TRADE_RULES[CLIENT],
         },
 
         -- Messaging (design spec §9).
@@ -125,10 +160,9 @@ NS.C = {
                 ask      = "Hi {player}, if you don't need {item}, could I have it? It'd be +{mygain} for me. No worries if not!",
                 offer    = "Hi {player}, {item} is tradeable and looks like +{gain} for you. Want it?",
                 announce = "{item} is up for grabs, whisper me.",
-                transmog = "Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!",
-                askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!",
+                -- To the master looter, for an item awaiting them (Forever port design §6).
+                askML    = "Hi {player}, if nobody needs {item}, I'd love it: +{mygain} for me. Thanks!",
             },
-            transmogAsk     = false,    -- offer the For transmog ask on a drop whose look you lack
             editFirst       = false,    -- open the edit box before a send
             oneAsk          = true,     -- each (drop, target, kind) is sent once
             announceChannel = "auto",   -- auto | INSTANCE_CHAT | RAID | PARTY
@@ -149,7 +183,7 @@ NS.C = {
                 -- `me` and `them` show the worn gear too (feedback-6 spec §1); schema step 7 retired
                 -- the `myEq` and `theirEq` toggles.
                 ilvl = true, slot = true, armorType = true, looter = true,
-                me = true, them = true, trade = true, tradeWindow = true, actions = true,
+                me = true, them = true, trade = true, actions = true,
             },
             -- The layout (compact spec §1): `full` (the tables) or `compact` (the narrow card
             -- view). Schema step 5 maps the retired `compact` preset to it.
@@ -200,10 +234,10 @@ NS.C = {
         -- Both Proc (flipbook), in their own colors (DW-03, owner ruling D-18, image-39; two pixel
         -- borders and the main spec's #FFF468 from feedback-21 H6 until then): the main spec's green
         -- #19FF19, the off-spec's blue #3FC7EB. AceDB's defaults carry a profile that never chose a
-        -- style or a color onto these; a stored choice stays, so no migration is owed.
+        -- style or a color onto these; a stored choice stays, so no migration is owed. The off-spec
+        -- glow is Retail's alone, added below.
         glow = {
             main    = glow(true, "proc", TONE.glowMain),
-            offSpec = glow(true, "proc", TONE.glowOffSpec),
         },
 
         -- Every item icon's look (feedback-21 G11, Window › Icons; modules/IconStyle.lua). The
@@ -241,7 +275,9 @@ NS.C = {
         -- The skin this addon wears (skinning-§2: per addon, per profile), applied through
         -- core/SkinSetup.lua and written only through the schema seam (settings/SchemaRows.lua's
         -- skipRender rows; General › Skin draws them). `source` is "ka0s" (the Ka0s skins) or "eui"
-        -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. The
+        -- (EllesmereUI's); "ka0s"/"ka0s" is Ka0s Default, the look the addon drew before skins. `skin`
+        -- is the client's default (NS.DEFAULT_SKIN, Skin:DefaultSkin, skinning-§2): Ka0s Default on
+        -- Retail, WoW Forever on the Forever client; core/SkinSetup.lua loads first and sets it. The
         -- Scope's two exceptions: a new profile leaves the settings panel the client's and skins
         -- the fonts (LootHistory's defaults). `font` and `texture` are the Skin tab's overrides, an
         -- LSM key each, "" for the skin's own. `outline` (LibKa0s v1.82.0, Skin minor 9, ruling
@@ -252,7 +288,7 @@ NS.C = {
         -- and no migration is owed.
         skin = {
             source      = "ka0s",
-            skin        = "ka0s",
+            skin        = NS.DEFAULT_SKIN or "ka0s",
             ignorePanel = true,
             ignoreFonts = false,
             font        = "",
@@ -274,4 +310,30 @@ NS.C = {
         -- never replaces the table whole.
         history = { retentionDays = 30 },
     },
+
+    -- General › Role's default (WoW Forever alone, Forever port design §11.4): `auto`, no override,
+    -- so LibKa0s Role.Resolve's ladder answers. The row stores per character in `db.char.role`
+    -- (settings/Schema.lua's CHAR closure row), so this is no AceDB default: nothing hands it to
+    -- AceDB, and `db.char.role` stays the role store's own table.
+    ROLE_DEFAULT = "auto",
 }
+
+-- THE RETAIL-ONLY DEFAULTS (clients-§4, Forever port design §4.4): a value only a Retail-only
+-- feature reads is added where that feature's declaration (C.FEATURE, core/Constants.lua) is true,
+-- so WoW Forever's profile carries nothing that client never reads, and its schema rows, which
+-- declare the same clients, are not registered there.
+do
+    local F, P = NS.Constants.FEATURE, NS.C.PROFILE
+    if F.tradeTimer then
+        P.trade.warnAt = 600                   -- seconds left when your own item's trade timer warns; 0 is off
+        P.window.columns.tradeWindow = true    -- the Trade window column, the countdown's
+    end
+    if F.transmog then
+        P.messages.templates.transmog = "Hi {player}, if you don't need {item}, could I have it for transmog? I haven't collected its look. No worries if not!"
+        P.messages.transmogAsk = false         -- offer the For transmog ask on a drop whose look you lack
+    end
+    if F.offSpec then
+        P.messages.templates.askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!"
+        P.glow.offSpec = glow(true, "proc", TONE.glowOffSpec)
+    end
+end

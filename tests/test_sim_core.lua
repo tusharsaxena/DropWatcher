@@ -124,7 +124,7 @@ test("sim seam: an ask goes through the real messaging edge and is printed, neve
     local state = NS.Asks.Request("ask", "Brakk", id)
     assertEqual(state, "sent", "the edge ran its whole pipeline")
     assertEqual(#m.chatSent, 0)
-    assertEqual(printed(m, "[sim] WHISPER to Brakk-Testrealm: Hi Brakk"), 1)
+    assertEqual(printed(m, "[sim] WHISPER to " .. T.rosterName("Brakk") .. ": Hi Brakk"), 1)
 end)
 
 test("sim seam: no real inspect and no real trade while a simulation runs", function()
@@ -168,14 +168,16 @@ end
 
 test("sim start: a second start is refused; test mode is refused while one runs", function()
     local NS, m, Sim = solo()
-    assertTrue(Sim:Start({ scenario = "key", situation = "mythicPlus" }))
-    assertEqual(printed(m, "Simulation started (Mythic+ key)"), 1)
+    -- A key on Retail, a dungeon on WoW Forever, which has no key (Forever port design §4.4).
+    local name, situation = T.forever and "dungeon" or "key", T.forever and "dungeon" or "mythicPlus"
+    assertTrue(Sim:Start({ scenario = name, situation = situation }))
+    assertEqual(printed(m, "Simulation started (" .. (T.forever and "Dungeon" or "Mythic+ key") .. ")"), 1)
     assertTrue(Sim:IsActive()); assertTrue(Sim:Session().sim, "the session carries sim = true")
     assertFalse((Sim:Start({ scenario = "raid" })), "one at a time")
     -- red under: drop the NS.Sim:IsActive() line from testModeRefusal (core/DropWatcher.lua)
     assertFalse(NS.SetTestMode(true)); assertFalse(NS.State.testMode)
     assertEqual(printed(m, "Test mode is not available while a simulation runs."), 1)
-    assertEqual(Sim:Status().scenario, "key"); assertEqual(NS.SimHost.Status().situation, "mythicPlus")
+    assertEqual(Sim:Status().scenario, name); assertEqual(NS.SimHost.Status().situation, situation)
 end)
 
 -- ---------------------------------------------------------------------------------------------

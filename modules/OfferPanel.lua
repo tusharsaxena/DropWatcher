@@ -52,15 +52,20 @@ local panel   -- built on the first Open
 local COLS = {
     { key = "member", label = L["Member"], x = 8, tip = { TM.Row(L["Shows"], L["a member of your group, in their class color"]) } },
     { key = "eq", label = L["Their eq"], x = 124,
-      tip = { TM.Row(L["Shows"], L["what they wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+      tip = NS.OffSpecCells.WithLegend({ TM.Row(L["Shows"], L["what they wear there (two for rings, trinkets, one-hand weapons), its item level"]),
           TM.Row(L["Then"], L["your drop judged for them, and the item-level difference"]),
           TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
-              TM.Mark("downgrade"))),
-          NS.OffSpecCells.Legend(), TM.Hint(L["Hover for why."]) } },
+              TM.Mark("downgrade"))) }, TM.Hint(L["Hover for why."])) },
     { key = "actions", label = L["Actions"], x = 314, tip = { TM.Row(L["Offer"], L["whispers them your offer template"]) } },
 }
 OP.COLS = COLS
+
+-- The note's tooltip: the list's order. Off-spec upgrades are Retail's alone (Forever port design
+-- §4.4), so WoW Forever's second tier is the equals alone.
+OP.ORDER_TIP = { L["Order"], TM.Row(L["First"], L["upgrades, by how much they gain"]),
+    TM.Row(L["Then"], NS.OffSpec.Initialized() and L["equals, off-spec upgrades and equals"] or L["equals"]),
+    TM.Row(L["Last"], L["no upgrade, can't use, checking, unavailable"]), TM.Hint(L["The list scrolls in a raid."]) }
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
 
@@ -368,9 +373,7 @@ local function paintFoot(p, drop, n)
     end
     p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
     setTone(p.note.text, "muted")
-    p.note.tipLines = { L["Order"], TM.Row(L["First"], L["upgrades, by how much they gain"]),
-        TM.Row(L["Then"], L["equals, off-spec upgrades and equals"]),
-        TM.Row(L["Last"], L["no upgrade, can't use, checking, unavailable"]), TM.Hint(L["The list scrolls in a raid."]) }
+    p.note.tipLines = OP.ORDER_TIP
 end
 
 --- Repaint the panel from its drop, or close it when the drop is gone or nobody could take it

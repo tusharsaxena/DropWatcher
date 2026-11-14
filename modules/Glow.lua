@@ -46,7 +46,9 @@ local Glow = NS.Glow
 -- never touched (the button style has no key: one per frame).
 Glow.KEY = "DropWatcherUpgrade"
 Glow.FRAME_LEVEL = NS.Constants.LAYERS.LEVEL.EFFECT   -- border + 1 (modules/IconStyle.lua)
-Glow.KINDS = { "main", "offSpec" }
+-- The glows this client has: the off-spec one is Retail's alone (C.FEATURE.offSpec, Forever port
+-- design §4.4), and settings/SchemaRows.lua builds the Upgrade glow tab's columns from this list.
+Glow.KINDS = NS.Constants.FEATURE.offSpec and { "main", "offSpec" } or { "main" }
 
 local gen = 1      -- the settings generation: Refresh moves it on
 local configs = {} -- kind -> its settings read at `gen` (false while that glow is off)

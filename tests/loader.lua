@@ -46,6 +46,11 @@ return function(root, mockBuilder)
     ---                    load the addon with the library genuinely ABSENT (testing-§8).
     ---   opts.mock      = function(mock) end runs against the fresh mock before any source loads.
     ---   opts.<field>   for each MOCK_OPTS name, seeds that mock field.
+    ---   opts.skin      = "<skin key>" makes that skin the client's default skin on this instance
+    ---                    (LibKa0s-Skin-1.0's DefaultSkin, so NS.DEFAULT_SKIN and skin.skin's
+    ---                    default), set after the library loads and before the addon's first file.
+    ---                    A case pinning Ka0s Default's values chooses it by name with
+    ---                    `skin = "ka0s"`, the same on both kit profiles (DW-FP03, skinning-§2).
     local function build(opts)
         opts = opts or {}
         local skipSet = {}
@@ -63,7 +68,16 @@ return function(root, mockBuilder)
         -- instance's saved tables would otherwise be adopted by this one.
         _G.DropWatcherDB, _G.DropWatcherPerfDB = nil, nil
 
+        local skinChosen = opts.skin == nil
         for _, src in ipairs(sources) do
+            if not skinChosen and not src.lib then
+                skinChosen = true
+                local Skin = mock.LibStub and mock.LibStub("LibKa0s-Skin-1.0", true)
+                if Skin then
+                    local key = opts.skin
+                    Skin.DefaultSkin = function() return key end
+                end
+            end
             if not skipSet[src.path] then
                 local chunk = chunkFor(src.path)
                 setfenv(chunk, env)

@@ -15,6 +15,12 @@ local OLD2 = "|cffa335ee|Hitem:301::|h[Older Band]|h|r"
 
 local NONE = {}
 
+-- The Means row of an upgrade, in the client's words (Forever port design §4.5: score first there).
+local function upgradeMeans(NS)
+    if NS.Compat.ClientKey() == "forever" then return "• Means: a higher score (item level breaks a tie)" end
+    return "• Means: a higher item level (and score, when scored)"
+end
+
 -- A judged drop: an upgrade for you (+19), a downgrade for its looter (-13), the looter inspected
 -- 40s before t = 100.
 local function drop(over)
@@ -211,7 +217,7 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     assertEqual(me.tip[1], "For you: Upgrade")
     assertEqual(T.tipText(me.tip[2]), "|cff40c7ebYou|r  292  " .. OLD_BAND .. "  ▲19", "[Name] [ilvl] [item] [arrow and difference]")
     assertEqual(me.tip[2].grid[1][4].tone, "good", "the glyph and the difference in the verdict's tone")
-    assertEqual(P(me.tip[3]), "• Means: a higher item level (and score, when scored)")
+    assertEqual(P(me.tip[3]), upgradeMeans(T.newAddon()))
     assertFalse(has(me.tip, "You wear"), "the X wears line gives way to the grid")
     for _, l in ipairs(me.tip) do assertTrue(T.tipText(l):find("against", 1, true) == nil, "no comparison prose: " .. T.tipText(l)) end
     local them = S.Them(drop(), HERS, 100)
@@ -219,7 +225,8 @@ test("side cells: the tooltip is the verdict's title, the worn gear as a grid, t
     assertEqual(T.tipText(them.tip[2]), "|cffffffffSeta|r  324  " .. OLD_BAND .. "  ▼13", "the looter in their class color")
     assertEqual(them.tip[2].grid[1][4].tone, "red")
     assertEqual(P(them.tip[3]), "• Inspected: 40s ago", "the read's age after the grid")
-    assertEqual(P(them.tip[4]), "• Means: a lower item level, no score gain")
+    assertEqual(P(them.tip[4]), T.forever and "• Means: a lower score (item level breaks a tie)"
+        or "• Means: a lower item level, no score gain")
     local range = S.Them(drop({ them = NONE, inspect = { status = "outOfRange" } }), nil, 100)
     local seen = {}
     for _, l in ipairs(range.tip) do
@@ -281,7 +288,23 @@ test("side cells: History's verdict alone keeps its own one-row grid from the ju
         baseline = { link = OLD1, ilvl = 305 }, reasons = {} } })))
     assertEqual(v.tip[1], "For you: Upgrade")
     assertEqual(T.tipText(v.tip[2]), "You  305  " .. OLD_BAND .. "  ▲6", "right under the title, above the rows (feedback-21 H3)")
-    assertEqual(P(v.tip[3]), "• Means: a higher item level (and score, when scored)")
+    assertEqual(P(v.tip[3]), upgradeMeans(T.newAddon()))
+end)
+
+test("side cells: the Means words are the client's, picked once, and noScore is a Why row (Forever port §4.5)", function()
+    local NS = T.newAddon()
+    local forever = NS.Compat.ClientKey() == "forever"
+    local function means(verdict)
+        local v = NS.SideCells.Merge(NS.WindowCells.Me(drop({ me = { verdict = verdict, ilvlDelta = verdict == "downgrade"
+            and -3 or (verdict == "sidegrade" and 0 or 3), reasons = { { key = "noScore" } } } })))
+        assertTrue(has(v.tip, "• Why: no score, so item level decides"), "noScore in words: " .. verdict)
+        return P(v.tip[3])
+    end
+    assertEqual(means("upgrade"), upgradeMeans(NS))
+    assertEqual(means("sidegrade"), forever and "• Means: a score within 1%, and item level within the sidegrade band"
+        or "• Means: within the sidegrade band, or level and score disagree")
+    assertEqual(means("downgrade"), forever and "• Means: a lower score (item level breaks a tie)"
+        or "• Means: a lower item level, no score gain")
 end)
 
 test("side cells: your own drop's Them is Upgrade for N or No upgrades, in its tones, with every upgrade in the tooltip", function()
@@ -364,7 +387,9 @@ test("side cells: the Offer panel's Their eq reads like Them: both worn items fr
     assertEqual(up.tip[1], "For Butterz: Upgrade"); assertTrue(has(up.tip, "• Inspected: 40s ago"), "the read's age")
     assertEqual(T.tipText(up.tip[2]), "|cff40c7ebButterz|r  298  " .. OLD_BAND .. "  ▲13\n296  " .. OLDER_BAND .. "  ▲15",
         "both trinkets from the read, each with its own arrow (feedback-21 H3)")
-    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, "• For them: a higher item level than they wear there"),
+    assertTrue(has(up.tip, "For Butterz: Upgrade")); assertTrue(has(up.tip, T.forever
+        and "• For them: a higher score than what they wear there (item level breaks a tie)"
+        or "• For them: a higher item level than they wear there"),
         "the old pill's explanation moved into the tooltip")
     local noRead = candidate(NS, mine(), entry("ready", { verdict = "downgrade", ilvlDelta = -4, baseline = base, reasons = {} }))
     assertEqual(#noRead.items, 1, "without a read, the item it was judged against"); assertEqual(noRead.items[1].link, OLD2)
@@ -523,13 +548,14 @@ test("widths: the column set and the shed order keep Me and Them where the verdi
     local WG = NS.WindowGroup
     local keys = {}
     for _, col in ipairs(WG.COLUMNS) do keys[#keys + 1] = col.key end
-    assertEqual(table.concat(keys, ","), "item,ilvl,slot,armorType,looter,me,them,trade,tradeWindow,actions")
+    local TW = T.forever and "" or "tradeWindow,"   -- Retail's alone (Forever port design §4.4)
+    assertEqual(table.concat(keys, ","), "item,ilvl,slot,armorType,looter,me,them,trade," .. TW .. "actions")
     local byShed = {}
     for _, col in ipairs(WG.COLUMNS) do if col.shed then byShed[#byShed + 1] = col end end
     table.sort(byShed, function(a, b) return a.shed < b.shed end)
     local order = {}
     for _, col in ipairs(byShed) do order[#order + 1] = col.key end
-    assertEqual(table.concat(order, ","), "armorType,slot,looter,tradeWindow,ilvl,them,trade,me")
+    assertEqual(table.concat(order, ","), "armorType,slot,looter," .. TW .. "ilvl,them,trade,me")
     for _, col in ipairs(WG.COLUMNS) do
         if col.key == "me" or col.key == "them" then
             assertEqual(col.label, col.key == "me" and "Me" or "Them")

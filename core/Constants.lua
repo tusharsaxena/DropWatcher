@@ -297,6 +297,7 @@ C.RECIPE_SKILL_LINE = {
 }
 
 -- Enum.ItemArmorSubclass. GENERIC is jewelry, trinkets and held off hands; COSMETIC is never gear.
+-- LIBRAM, IDOL and TOTEM are WoW Forever's relics (the ranged slot, core/ClassDataForever.lua).
 C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
     GENERIC  = { "Generic", 0 },
     CLOTH    = { "Cloth", 1 },
@@ -305,6 +306,9 @@ C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
     PLATE    = { "Plate", 4 },
     COSMETIC = { "Cosmetic", 5 },
     SHIELD   = { "Shield", 6 },
+    LIBRAM   = { "Libram", 7 },
+    IDOL     = { "Idol", 8 },
+    TOTEM    = { "Totem", 9 },
 })
 
 -- Enum.ItemWeaponSubclass.
@@ -323,6 +327,7 @@ C.WEAPON_SUBCLASS = fromEnum(Enum.ItemWeaponSubclass, {
     FIST      = { "Unarmed", 13 },
     GENERIC   = { "Generic", 14 },
     DAGGER    = { "Dagger", 15 },
+    THROWN    = { "Thrown", 16 },   -- WoW Forever's ranged slot (core/ClassDataForever.lua)
     CROSSBOW  = { "Crossbow", 18 },
     WAND      = { "Wand", 19 },
 })
@@ -386,12 +391,37 @@ C.TIER_TOKENS = {}
 -- Inventory slots and slot plans (design spec §5.2)
 -- ---------------------------------------------------------------------------------------------
 
+-- The client picked once (clients-§5): the slot ids and the slot plans below are per client.
+local FOREVER = NS.Compat.ClientKey() == "forever"
+
+-- The Retail-only features (Forever port design §4.4), each declared with the clients it serves
+-- (clients-§4) and gated where it registers by C.FEATURE, its ForClient answer read once: the
+-- Encounter Journal source of the simulator's pool (modules/SimPool.lua), transmog (the look read,
+-- its event, chips, ask and rows), upgrade tracks (the Track row, the track in the item level chip
+-- and tooltip, the {track} token), off-spec (modules/OffSpec.lua, its glow, ask and words) and the
+-- simulator's bonus rolls (modules/SimEvents.lua), your own BoP drop's trade countdown and its
+-- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
+-- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,
+-- `soulbound` (design §4.6). docs/ARCHITECTURE.md's per-client feature table names each one's gate.
+C.FEATURE_CLIENTS = {
+    journalPool   = { "retail" },
+    transmog      = { "retail" },
+    tracks        = { "retail" },
+    offSpec       = { "retail" },
+    bonusRollSim  = { "retail" },
+    tradeTimer    = { "retail" },
+    tradeRuleRows = { "retail" },
+}
+C.FEATURE = {}
+for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end
+
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
--- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items.
+-- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items. WoW Forever keeps
+-- it (INVSLOT_RANGED, research R4 §9) for ranged and thrown weapons, wands and relics.
 C.SLOT = {
     HEAD = 1, NECK = 2, SHOULDER = 3, SHIRT = 4, CHEST = 5, WAIST = 6, LEGS = 7, FEET = 8,
     WRIST = 9, HANDS = 10, FINGER1 = 11, FINGER2 = 12, TRINKET1 = 13, TRINKET2 = 14, BACK = 15,
-    MAINHAND = 16, OFFHAND = 17, TABARD = 19,
+    MAINHAND = 16, OFFHAND = 17, RANGED = FOREVER and 18 or nil, TABARD = 19,
 }
 local S = C.SLOT
 
@@ -403,8 +433,9 @@ C.SLOT_KIND = {
 }
 
 -- equipLoc -> { kind, slots }. An equip location absent here (shirt, tabard, bag, ammo,
--- non-equippable) is not gear the feed compares.
-C.SLOT_PLAN = {
+-- non-equippable) is not gear the feed compares. The rows both clients share; each client's own
+-- ranged rows follow (SLOT_PLAN_RANGED), and the two are joined once, by ClientKey().
+local SLOT_PLAN_SHARED = {
     INVTYPE_HEAD           = { kind = "single", slots = { S.HEAD } },
     INVTYPE_NECK           = { kind = "single", slots = { S.NECK } },
     INVTYPE_SHOULDER       = { kind = "single", slots = { S.SHOULDER } },
@@ -427,10 +458,29 @@ C.SLOT_PLAN = {
     INVTYPE_SHIELD         = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_HOLDABLE       = { kind = "offhand", slots = { S.OFFHAND } },
     INVTYPE_2HWEAPON       = { kind = "weapon2H", slots = { S.MAINHAND, S.OFFHAND } },
-    -- Bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) fill both hands.
-    INVTYPE_RANGED         = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
-    INVTYPE_RANGEDRIGHT    = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
 }
+
+-- Each client's ranged rows: two lists, one per client, picked once (clients-§5).
+local SLOT_PLAN_RANGED = {
+    -- Retail: bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) fill both hands; there are
+    -- no thrown weapons or relics.
+    retail = {
+        INVTYPE_RANGED      = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+        INVTYPE_RANGEDRIGHT = { kind = "ranged", slots = { S.MAINHAND, S.OFFHAND } },
+    },
+    -- WoW Forever: bows, guns, crossbows, wands, thrown weapons and relics (a libram, idol or totem)
+    -- go in the ranged slot, compared with what is worn there (research R4 §9).
+    forever = {
+        INVTYPE_RANGED      = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_RANGEDRIGHT = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_THROWN      = { kind = "single", slots = { S.RANGED } },
+        INVTYPE_RELIC       = { kind = "single", slots = { S.RANGED } },
+    },
+}
+
+C.SLOT_PLAN = {}
+for loc, plan in pairs(SLOT_PLAN_SHARED) do C.SLOT_PLAN[loc] = plan end
+for loc, plan in pairs(SLOT_PLAN_RANGED[FOREVER and "forever" or "retail"]) do C.SLOT_PLAN[loc] = plan end
 
 -- Equip locations any class can use whatever their armor subclass (cloaks are cloth for everyone).
 C.UNIVERSAL_EQUIPLOC = {
@@ -456,13 +506,21 @@ C.BAG_IDS = { 0, 1, 2, 3, 4 }
 -- Situations and difficulties (design spec §6.1)
 -- ---------------------------------------------------------------------------------------------
 
--- Every situation key in display order. Each one's `track`, `autoOpen` and `quality` defaults are
--- defaults/Profile.lua's `situations`.
-C.SITUATIONS = {
-    { key = "mythicPlus" }, { key = "dungeon" }, { key = "followerDungeon" }, { key = "raidLFR" },
-    { key = "raid" }, { key = "delve" }, { key = "scenario" }, { key = "pvp" },
-    { key = "openWorldGroup" }, { key = "solo" },
+-- Every situation key in display order, one list per client, picked once (clients-§5). Each
+-- one's `track`, `autoOpen` and `quality` defaults are defaults/Profile.lua's `situations`. WoW
+-- Forever has no Mythic+, follower dungeons, Raid Finder, delves or scenarios (Forever port design
+-- §4.4), so its list is the five situations it has.
+local SITUATION_LISTS = {
+    retail = {
+        { key = "mythicPlus" }, { key = "dungeon" }, { key = "followerDungeon" }, { key = "raidLFR" },
+        { key = "raid" }, { key = "delve" }, { key = "scenario" }, { key = "pvp" },
+        { key = "openWorldGroup" }, { key = "solo" },
+    },
+    forever = {
+        { key = "dungeon" }, { key = "raid" }, { key = "pvp" }, { key = "openWorldGroup" }, { key = "solo" },
+    },
 }
+C.SITUATIONS = SITUATION_LISTS[FOREVER and "forever" or "retail"]
 C.SITUATION = {}
 for _, s in ipairs(C.SITUATIONS) do C.SITUATION[s.key] = s end
 
@@ -490,11 +548,15 @@ C.DIFFICULTY = {
     LFR_TIMEWALKING     = 151,
     FOLLOWER_DUNGEON    = 205,
     DELVE               = 208,
+    RAID_CLASSIC_20     = 242,   -- WoW Forever's 20-player raids (DifficultyUtil.ID, research R4 §12)
+    RAID_CLASSIC_10     = 243,   -- WoW Forever's 10-player raids
 }
 local D = C.DIFFICULTY
 
--- difficultyID -> the situation it implies. Ids not listed here fall back to instanceType.
-C.DIFFICULTY_KIND = {
+-- difficultyID -> the situation it implies, one map per client, picked once (clients-§5). Ids not
+-- listed here fall back to instanceType.
+local DIFFICULTY_KINDS = {}
+DIFFICULTY_KINDS.retail = {
     [D.MYTHIC_KEYSTONE]     = "mythicPlus",
     [D.NORMAL_DUNGEON]      = "dungeon",
     [D.HEROIC_DUNGEON]      = "dungeon",
@@ -515,6 +577,15 @@ C.DIFFICULTY_KIND = {
     [D.TIMEWALKING_RAID]    = "raid",
     [D.DELVE]               = "delve",
 }
+-- WoW Forever: a dungeon's one difficulty, the 40-player raids and the classic 20- and 10-player
+-- ones. None of its ids implies a situation Retail alone has.
+DIFFICULTY_KINDS.forever = {
+    [D.NORMAL_DUNGEON]  = "dungeon",
+    [D.RAID_40]         = "raid",
+    [D.RAID_CLASSIC_20] = "raid",
+    [D.RAID_CLASSIC_10] = "raid",
+}
+C.DIFFICULTY_KIND = DIFFICULTY_KINDS[FOREVER and "forever" or "retail"]
 
 -- ---------------------------------------------------------------------------------------------
 -- Trade rules (design spec §7.2). modules/TradeRules.lua reads them; the rule each situation takes
@@ -541,14 +612,24 @@ C.TRADE_ACCOUNT_BIND = {
 
 C.TRADE_WINDOW = 14400  -- seconds a tradeable drop stays tradeable (four hours since 12.1.5, seen in game 2026-10-16)
 
--- The rule names in Settings › Trade's display order, and the rule an unknown situation takes.
-C.TRADE_RULE_NAMES = { "personal", "group", "legacy" }
-C.TRADE_RULE_DEFAULT = "personal"
+-- The rule names in Settings › Trade's display order, and the rule an unknown situation takes, one
+-- list per client, picked once (clients-§5). WoW Forever has no personal loot and no trade window:
+-- a looted Bind on Pickup item is soulbound (Forever port design §4.6), so its one rule is
+-- `soulbound` and only a BoE drop changes hands.
+local TRADE_RULE_LISTS = {
+    retail  = { "personal", "group", "legacy" },
+    forever = { "soulbound" },
+}
+C.TRADE_RULE_NAMES = TRADE_RULE_LISTS[FOREVER and "forever" or "retail"]
+C.TRADE_RULE_DEFAULT = C.TRADE_RULE_NAMES[1]
 
+-- Every rule's data. TradeRules takes only the client's own names (C.TRADE_RULE_NAMES) as rules.
+-- `bopOnly`: every drop the bind checks did not answer (anything not BoE) is `no soulbound`.
 C.TRADE_RULES = {
-    personal = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },
-    group    = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "none" },
-    legacy   = { tradeable = false },
+    personal  = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "notUpgradeForLooter" },
+    group     = { tradeable = true,  window = C.TRADE_WINDOW, ilvlRule = "none" },
+    legacy    = { tradeable = false },
+    soulbound = { tradeable = false, bopOnly = true },
 }
 
 -- ---------------------------------------------------------------------------------------------
@@ -557,17 +638,37 @@ C.TRADE_RULES = {
 -- ---------------------------------------------------------------------------------------------
 
 -- The message kinds, in Settings › Messages' display order. Their default templates are
--- defaults/Profile.lua's `messages.templates`.
-C.MESSAGE_KINDS = { "ask", "offer", "announce" }
+-- defaults/Profile.lua's `messages.templates`. `askML` (Forever port design §6, both clients) is the
+-- polite whisper to the master looter for an item awaiting them: its own kind, because it goes to
+-- the master looter, is filed against a pending item (modules/PendingML.lua), not a feed drop, and
+-- auto-ask never sends it.
+C.MESSAGE_KINDS = { "ask", "offer", "announce", "askML" }
 -- The templates, in Settings › Messages' display order: one per kind, plus two more wordings of
 -- the ask, each sent as an `ask` and filed under the ask's one-ask key (NS.Messaging.AskTemplate
 -- picks them): `transmog`, for a drop that is no gain for you but whose appearance you have not
 -- collected, and `askOffSpec` (feedback-19 spec §2), for a drop your spec cannot use but another
 -- spec of your class gains from.
-C.MESSAGE_TEMPLATES = { "ask", "transmog", "askOffSpec", "offer", "announce" }
--- The tokens a template may name, in the token chips' order.
-C.MESSAGE_TOKENS = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" }
+-- One list per client, picked once (clients-§5): WoW Forever has no transmog and no off-spec
+-- (Forever port design §4.4), so it has neither of their templates.
+-- The master-loot ask's template follows the ask's wordings on both.
+local TEMPLATE_LISTS = {
+    retail  = { "ask", "transmog", "askOffSpec", "askML", "offer", "announce" },
+    forever = { "ask", "askML", "offer", "announce" },
+}
+C.MESSAGE_TEMPLATES = TEMPLATE_LISTS[FOREVER and "forever" or "retail"]
+-- The tokens a template may name, in the token chips' order, per client: WoW Forever has no
+-- upgrade tracks, so no {track} (Forever port design §4.4).
+local TOKEN_LISTS = {
+    retail  = { "player", "item", "ilvl", "slot", "track", "gain", "mygain" },
+    forever = { "player", "item", "ilvl", "slot", "gain", "mygain" },
+}
+C.MESSAGE_TOKENS = TOKEN_LISTS[FOREVER and "forever" or "retail"]
 C.MESSAGE_MAX_LEN = 255          -- the chat limit, in bytes of the raw text (a link counts whole)
 C.MESSAGE_FLUSH_INTERVAL = 1.5   -- seconds between two queued sends
--- What empties the queue once the player can send: the restriction lift and these two events.
-C.MESSAGE_FLUSH_TRIGGERS = { restrictionLifted = true, ENCOUNTER_END = true, CHALLENGE_MODE_COMPLETED = true }
+-- What empties the queue once the player can send: the restriction lift and these events, one set
+-- per client, picked once (a key's completion is Retail's alone).
+local FLUSH_TRIGGERS = {
+    retail  = { restrictionLifted = true, ENCOUNTER_END = true, CHALLENGE_MODE_COMPLETED = true },
+    forever = { restrictionLifted = true, ENCOUNTER_END = true },
+}
+C.MESSAGE_FLUSH_TRIGGERS = FLUSH_TRIGGERS[FOREVER and "forever" or "retail"]

@@ -50,7 +50,7 @@ test("item lists panel: the tab follows Items, with an Always watch | Never watc
         buttons[i]:__fire("OnClick")
         order[i] = ctx.activeTab
     end
-    assertEqual(table.concat(order, "|"), "Situations|Quality|Items|Item lists|Retention")
+    assertEqual(table.concat(order, "|"), "Situations|Quality|Items|Item lists|Retention|Rolls")
 end)
 
 test("item lists panel: a sub-tab click draws the other list, and a stale pointer heals to the first", function()

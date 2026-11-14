@@ -48,7 +48,7 @@ end
 
 --- An enabled addon whose login fuse is put out, so a case starts the picker itself.
 local function enabled()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     NS.ArmSkinPicker(false)
     return NS, m
 end

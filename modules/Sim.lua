@@ -65,7 +65,7 @@ local TAG = "SIM"
 NS.SimScenarioDefs = NS.SimScenarioDefs or { names = {}, defs = {} }
 
 --- `/dw sim`'s host half, filled in place by settings/SimVerbs.lua at its load (the library reads
---- them when a verb runs): VERBS (the descriptor's `verbs`: pull, kill, loot, lockdown, trade), WHY
+--- them when a verb runs): VERBS (the descriptor's `verbs`: pull, kill, loot, drop, lockdown, trade, roll), WHY
 --- (`why`: their failure lines by code) and USAGE (`usage`: their usage lines).
 NS.SimVerbs = NS.SimVerbs or {}
 NS.SimVerbs.VERBS = NS.SimVerbs.VERBS or {}

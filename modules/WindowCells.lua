@@ -6,9 +6,9 @@ local _, NS = ...
 --
 -- PURE. Every composer takes the drop record (modules/LootFeed.lua's shape) and plain inputs (an
 -- inspect entry's gear, an ask's state, the clock) and answers a plain table; nothing here reads a
--- module's state, the client or a saved variable (only NS.TipMarks, at call time: a verdict
--- tooltip's gear grid takes the class and quality colors), so test_window_group drives each state
--- case by case.
+-- module's state or a saved variable (only NS.TipMarks, at call time: a verdict tooltip's gear grid
+-- takes the class and quality colors), and the client once, at load (the Means words, VERDICT_MEANS),
+-- so test_window_group drives each state case by case.
 -- The frame edge that paints them is modules/WindowGroup.lua; the detail card (DW-32) and the
 -- compact cards take the same composers. The Me and Them cells merge two of them each (the worn gear,
 -- then the verdict): modules/SideCells.lua.
@@ -50,11 +50,17 @@ local VERDICT_WORD = {
 }
 -- What a glyph-less verdict shows in its cell.
 local VERDICT_SHORT = { cantUse = L["Can't use"], doesntWant = L["Not wanted"], unknown = "?" }
--- Board 03's explanation of each verdict, the Means row under every verdict tooltip's title.
+-- Board 03's explanation of each verdict, the Means row under every verdict tooltip's title. On WoW
+-- Forever the verdict is score first (Forever port design §4.5), so its three compared verdicts have
+-- their own words, picked once by client (the one client read here, at load).
+local FOREVER_MEANS = NS.Compat.ClientKey() == "forever"
 local VERDICT_MEANS = {
-    upgrade    = L["a higher item level (and score, when scored)"],
-    sidegrade  = L["within the sidegrade band, or level and score disagree"],
-    downgrade  = L["a lower item level, no score gain"],
+    upgrade    = FOREVER_MEANS and L["a higher score (item level breaks a tie)"]
+        or L["a higher item level (and score, when scored)"],
+    sidegrade  = FOREVER_MEANS and L["a score within 1%, and item level within the sidegrade band"]
+        or L["within the sidegrade band, or level and score disagree"],
+    downgrade  = FOREVER_MEANS and L["a lower score (item level breaks a tie)"]
+        or L["a lower item level, no score gain"],
     cantUse    = L["wrong armor, weapon or primary stat for the spec"],
     doesntWant = L["usable, but excluded by your preferences"],
     unknown    = L["no inspect, no spec, or a protected value"],
@@ -65,9 +71,11 @@ local VERDICT_TONE = {
 -- NS.Evaluate's reason keys, in words: each a Why row's value (feedback-21).
 local EVAL_REASON = {
     armorType = L["wrong armor type for the class"],
+    armorLevel = L["an armor type the class wears only at a higher level"],
     weaponType = L["a weapon type the class can't use"],
     shield = L["the spec can't use a shield"],
     offhand = L["the spec can't use a held off hand"],
+    relic = L["a relic for another class"],
     dualWield = L["the spec can't dual wield"],
     primaryStat = L["its primary stat doesn't suit the spec"],
     classRestricted = L["for other classes"],
@@ -81,6 +89,7 @@ local EVAL_REASON = {
     vsTwoHand = L["compared with the two-hander it would replace"],
     scorePending = L["the score is not ready yet (retried)"],
     scoreDisagrees = L["item level and score disagree"],
+    noScore = L["no score, so item level decides"],
     heirloomProtected = L["the slot holds an heirloom you protect"],
     undesired = L["you marked this item type not wanted"],
     badFacts = L["the item's details have not loaded"],
@@ -121,6 +130,8 @@ local SLOT_LABEL = {
     INVTYPE_TRINKET = L["Trinket"], INVTYPE_WEAPON = L["One-hand"], INVTYPE_WEAPONMAINHAND = L["Main hand"],
     INVTYPE_WEAPONOFFHAND = L["Off hand"], INVTYPE_SHIELD = L["Shield"], INVTYPE_HOLDABLE = L["Held in off hand"],
     INVTYPE_2HWEAPON = L["Two-hand"], INVTYPE_RANGED = L["Ranged"], INVTYPE_RANGEDRIGHT = L["Ranged"],
+    -- WoW Forever's ranged slot alone holds these (core/Constants.lua's Forever slot plan).
+    INVTYPE_THROWN = L["Ranged"], INVTYPE_RELIC = L["Relic"],
 }
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
@@ -207,11 +218,11 @@ local function hasReasons(eval) return type(eval.reasons) == "table" end
 local TRACK_WORD = { [1] = L["a higher track or rank"], [0] = L["the same track and rank"], [-1] = L["a lower track or rank"] }
 
 --- The Track row of a verdict tooltip from NS.Evaluate's trackDelta, or nil with none (the
---- off-spec cell's too).
+--- off-spec cell's too). Nil on WoW Forever, which has no upgrade tracks (Forever port design §4.4).
 --- @param td table|nil { sign }
 --- @return string|nil
 function WC.TrackRow(td)
-    if type(td) ~= "table" then return nil end
+    if type(td) ~= "table" or not C.FEATURE.tracks then return nil end
     return NS.TipMarks.Row(L["Track"], TRACK_WORD[td.sign > 0 and 1 or td.sign < 0 and -1 or 0])
 end
 
@@ -346,6 +357,7 @@ local TRADE_REASON = {
     boe = function() return L["Bind on equip: anyone can trade this."] end,
     warbound = function() return L["Warbound: it can't be traded."] end,
     bonusRoll = function() return L["Bonus roll loot can't be traded."] end,
+    soulbound = function() return L["Bind on Pickup items can't change hands once looted."] end,   -- WoW Forever
     legacy = function() return L["Loot from this content can't be traded."] end,
     groupLoot = function() return L["Group loot: its winner may trade it for four hours."] end,
     badFacts = function() return L["The item's details have not loaded yet."] end,
@@ -395,6 +407,7 @@ local TRADE_ROWS = {
     boe = function() return ruleRows(L["bind on equip"], L["Tradeable"], L["by anyone, until equipped"]) end,
     warbound = function() return ruleRows(L["warbound"], L["Tradeable"], L["no"]) end,
     bonusRoll = function() return ruleRows(L["bonus roll loot"], L["Tradeable"], L["no"]) end,
+    soulbound = function() return ruleRows(L["bind on pickup"], L["Tradeable"], L["no"]) end,
     legacy = function() return ruleRows(L["legacy loot"], L["Tradeable"], L["no"]) end,
     groupLoot = function() return ruleRows(L["group loot"], L["Tradeable"], L["by its winner, for 4h"]) end,
     badFacts = function() return { row(L["Item"], L["details not loaded yet"]) } end,
@@ -469,6 +482,7 @@ local TRADE_SHORT = {
     groupLoot = L["Group loot"], badFacts = L["Not loaded"], expired = L["Window passed"],
     timer = L["Window open"], notUpgrade = L["Not their upgrade"], upgradeForYou = L["Your upgrade"],
     noInspect = L["Not inspected"], error = L["Failed"], collectible = L["Collectible"],
+    soulbound = L["Soulbound"],
 }
 WC.TRADE_SHORT = TRADE_SHORT   -- read-only, for the test that sizes the Trade column
 
@@ -726,6 +740,8 @@ function WC.Ilvl(drop)
     local f = facts(drop)
     local ilvl = num(f.ilvl)
     if not ilvl then return cell("?", "muted", L["Item level"], row(L["Item"], L["details not loaded yet"])) end
+    -- WoW Forever has no upgrade tracks (Forever port design §4.4): the item level alone.
+    if not C.FEATURE.tracks then return cell(tostring(ilvl), "plain", L["Item level %d"]:format(ilvl), row(L["Item level"], ilvl)) end
     local tr = type(f.track) == "table" and f.track or nil
     local track = L["none"]
     if tr and tr.name then track = ("%s %s/%s"):format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?")) end
@@ -766,6 +782,7 @@ local LOC_TYPE = {
 local WEAPON_LOC = {
     INVTYPE_WEAPON = true, INVTYPE_2HWEAPON = true, INVTYPE_WEAPONMAINHAND = true, INVTYPE_WEAPONOFFHAND = true,
     INVTYPE_SHIELD = true, INVTYPE_HOLDABLE = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true,
+    INVTYPE_THROWN = true,
 }
 
 local function typeTitle(word) return L["Type: %s"]:format(word) end

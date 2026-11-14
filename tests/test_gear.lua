@@ -37,6 +37,22 @@ local function enabled(seed)
     return NS, m, NS.Gear
 end
 
+-- The same, with Retail's class list pinned (T.retailList): the off-spec cases are Retail's spec
+-- model (Forever's spec is class-wide, and off-spec is Retail's alone). The snapshot is dropped so
+-- its first read is on the pinned list.
+local function retailEnabled(seed)
+    local NS, m, G = enabled(seed)
+    T.retailList(NS)
+    NS.State.gear = nil
+    return NS, m, G
+end
+
+-- WoW Forever's talent trees, as the owner's Hunter probe read them (research R4 §3.1).
+local function hunterTrees(bm, mm, sv)
+    return { { name = "Beast Mastery", spent = bm }, { name = "Marksmanship", spent = mm },
+        { name = "Survival", spent = sv } }
+end
+
 local function wear(m, slot, id, d)
     m.addItem(link(id), d)
     m.inventory.player[slot] = link(id)
@@ -77,9 +93,35 @@ test("gear: each worn slot is a copy of its facts at the current level; an empty
     assertEqual(s.loading, 0)
 end)
 
-test("gear: the candidate carries the class, the spec and the hand flags from ClassData", function()
+-- Per profile (clients-§6, Forever port design §4.2): Retail's candidate carries its specID and no
+-- tree; WoW Forever's the class-wide spec ID, your top talent tree and your level.
+local function foreverCandidate()
+    local _, m, G = enabled(function(m)
+        m.__context.class, m.__context.classToken, m.__context.level = "Hunter", "HUNTER", 30
+        m.seedTalents(1485, hunterTrees(10, 3, 0))
+    end)
+    local c = G.Candidate()
+    assertEqual(c.classFile, "HUNTER"); assertEqual(c.specID, 1485, "the class-wide spec")
+    assertEqual(c.tree, 1, "Beast Mastery, the most points"); assertEqual(c.level, 30)
+    assertTrue(c.dualWield, "a Forever hunter dual wields"); assertFalse(c.titanGrip)
+    assertTrue(c.isPlayer)
+    m.__context.class, m.__context.classToken, m.__context.level = "Warrior", "WARRIOR", 60
+    m.seedTalents(1491, { { name = "Arms", spent = 5 }, { name = "Fury", spent = 31 }, { name = "Protection", spent = 0 } })
+    G.Refresh("test")
+    c = G.Candidate()
+    assertEqual(c.specID, 1491); assertEqual(c.tree, 2, "Fury"); assertEqual(c.level, 60)
+    assertTrue(c.dualWield); assertFalse(c.titanGrip, "no Titan's Grip on Forever")
+    m.talents[1].spent = 31
+    G.Refresh("test")
+    assertNil(G.Candidate().tree, "a tie names no tree")
+end
+
+test("gear: the candidate carries the class-wide spec and your talent tree", function()
+    if T.forever then return foreverCandidate() end
     local _, m, G = enabled()
     local c = G.Candidate()
+    assertNil(c.tree, "Retail has no talent tree: the spec is the tree")
+    assertEqual(c.level, 80)
     assertEqual(c.classFile, "ROGUE"); assertEqual(c.specID, 260)
     assertTrue(c.dualWield); assertFalse(c.titanGrip)
     assertTrue(c.isPlayer)
@@ -103,6 +145,10 @@ test("gear: a spec the class flags disagree on leaves the hand flag unknown", fu
         m.__context.classToken = "WARRIOR"
         m.GetSpecialization = function() return nil end
     end)
+    if T.forever then
+        assertFalse(G.Candidate().titanGrip, "no Forever tree has Titan's Grip: the class answers")
+        return
+    end
     assertNil(G.Candidate().titanGrip, "Fury alone has it: unknown without the spec")
 end)
 
@@ -186,6 +232,10 @@ test("gear: with Titan's Grip a two-hander can fill the off hand too", function(
     end)
     local s = G.Snapshot()
     assertEqual(s.owned[SLOT.MAINHAND].ilvl, 640)
+    if T.forever then
+        assertNil(s.owned[SLOT.OFFHAND], "no Titan's Grip on Forever: one two-hander, in the main hand")
+        return
+    end
     assertEqual(s.owned[SLOT.OFFHAND].ilvl, 630)
 end)
 
@@ -234,6 +284,32 @@ test("gear: the candidate judges a drop against the worn item, and against the b
     assertEqual(r.verdict, "downgrade", "the 640 in the bags is the baseline"); assertEqual(r.ilvlDelta, -20)
 end)
 
+-- The ranged slot (Forever port design §4.4, research R4 §9): WoW Forever's bows, guns, crossbows,
+-- wands, thrown weapons and relics go in slot 18, which the snapshot reads; on Retail slot 18 is
+-- unused and a bow fills both hands.
+test("gear: on Forever a bow compares against slot 18, on Retail against the hands", function()
+    local RANGED = 18
+    local NS, _, G = enabled(function(m)
+        m.__context.class, m.__context.classToken, m.__context.level = "Hunter", "HUNTER", 60
+        if T.forever then m.seedTalents(1485, hunterTrees(0, 31, 5)) else m.specID = 254 end
+        wear(m, SLOT.MAINHAND, 3001, def("INVTYPE_2HWEAPON", 600, 2, 6))
+        wear(m, RANGED, 3002, def("INVTYPE_RANGED", 610, 2, 2))
+        m.addItem(link(3020), def("INVTYPE_RANGED", 620, 2, 2))
+    end)
+    G.Refresh("test")
+    local r = NS.Evaluate.Evaluate(NS.ItemFacts.Get(link(3020)), G.Candidate(), {})
+    assertEqual(r.verdict, "upgrade")
+    if T.forever then
+        assertEqual(NS.Constants.SLOT.RANGED, RANGED)
+        assertEqual(G.Snapshot().equipped[RANGED].ilvl, 610, "the snapshot reads the ranged slot")
+        assertEqual(r.baselineSlot, RANGED); assertEqual(r.ilvlDelta, 10)
+    else
+        assertNil(NS.Constants.SLOT.RANGED, "Retail has no ranged slot")
+        assertNil(G.Snapshot().equipped[RANGED], "slot 18 is never read on Retail")
+        assertEqual(r.baselineSlot, SLOT.MAINHAND); assertEqual(r.ilvlDelta, 20)
+    end
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- Off-spec gear (feedback-19 spec §0)
 -- ---------------------------------------------------------------------------------------------
@@ -251,7 +327,7 @@ local function protPaladin(m)
 end
 
 test("gear: the pool keeps every gear item read, the off-spec ones too", function()
-    local _, _, G = enabled(function(m)
+    local _, _, G = retailEnabled(function(m)
         protPaladin(m)
         carry(m, 0, 1, 3010, mace(600))
         carry(m, 0, 2, 3011, def("", 1, 7, 0, { name = "Reagent" }))
@@ -266,7 +342,7 @@ test("gear: the pool keeps every gear item read, the off-spec ones too", functio
 end)
 
 test("gear: OffSpecGear is the best item per slot that spec could wear, false where nothing fits", function()
-    local _, _, G = enabled(function(m)
+    local _, _, G = retailEnabled(function(m)
         protPaladin(m)
         carry(m, 0, 1, 3010, mace(600))
         carry(m, 0, 2, 3012, mace(590))
@@ -286,7 +362,7 @@ test("gear: OffSpecGear is the best item per slot that spec could wear, false wh
 end)
 
 test("gear: a worn slot still loading leaves no off-spec gear until it loads", function()
-    local NS, m, G = enabled(function(m)
+    local NS, m, G = retailEnabled(function(m)
         protPaladin(m)
         wear(m, SLOT.CHEST, 3003, plate("INVTYPE_CHEST", 600))
         m.items[link(3003)].loadsNeeded = 1
@@ -298,7 +374,7 @@ test("gear: a worn slot still loading leaves no off-spec gear until it loads", f
 end)
 
 test("gear: a bag item still loading leaves no off-spec gear, so no slot reads as empty", function()
-    local NS, m, G = enabled(function(m)
+    local NS, m, G = retailEnabled(function(m)
         protPaladin(m)
         carry(m, 0, 1, 3010, mace(600))
         m.items[link(3010)].loadsNeeded = 1
@@ -319,17 +395,24 @@ test("gear: the candidate brings its off-spec gear, and the kernel judges Holy a
         carry(m, 0, 1, 3010, mace(600))
     end)
     local c = G.Candidate()
-    assertTrue(c.offSpecGear == G.OffSpecGear)
+    -- off-spec gear is Retail's alone (modules/OffSpec.lua): a Forever candidate carries none
+    if T.forever then assertNil(c.offSpecGear) else assertTrue(c.offSpecGear == G.OffSpecGear) end
     assertTrue(c.gear == G.Snapshot().equipped, "gear and owned stay as they were")
     local drop = NS.ItemFacts.Get(m.addItem(link(3020), def("INVTYPE_WEAPON", 650, 2, 0, { stats = { [INT] = 100 } })))
     local r = NS.Evaluate.Evaluate(drop, c, {})
+    if T.forever then
+        -- The soft stat gate (design §4.5): the Intellect axe is a paladin's, judged on its level;
+        -- Forever's class-wide spec has no off-spec.
+        assertEqual(r.verdict, "upgrade"); assertNil(r.offSpec)
+        return
+    end
     assertEqual(r.verdict, "cantUse")
     assertEqual(r.offSpec.specID, 65); assertEqual(r.offSpec.verdict, "upgrade")
     assertEqual(r.offSpec.ilvlDelta, 50); assertEqual(r.offSpec.baseline.link, link(3010))
 end)
 
 test("gear: a bag change that touches only an off-spec item still sends GearChanged", function()
-    local NS, m, G = enabled(protPaladin)
+    local NS, m, G = retailEnabled(protPaladin)
     G.Snapshot()
     local seen = listen(NS)
     carry(m, 0, 1, 3010, mace(600))
@@ -341,7 +424,7 @@ test("gear: a bag change that touches only an off-spec item still sends GearChan
 end)
 
 test("gear: sorting your bags moves no gear, so it sends no GearChanged", function()
-    local NS, m, G = enabled(function(m)
+    local NS, m, G = retailEnabled(function(m)
         protPaladin(m)
         carry(m, 0, 1, 3010, mace(600))
         carry(m, 0, 2, 3012, mace(590))
@@ -442,7 +525,30 @@ test("gear: a bag-only rebuild keeps the worn slots as read; an equipment change
     assertEqual(reads.n, n)
 end)
 
+-- WoW Forever: the trees are the specs, so a talent change rebuilds (design §4.2).
+local function foreverTalentChange()
+    local NS, m, G = enabled(function(m)
+        m.__context.class, m.__context.classToken = "Hunter", "HUNTER"
+        m.seedTalents(1485, hunterTrees(10, 3, 0))
+    end)
+    assertEqual(G.Candidate().tree, 1)
+    local seen = listen(NS)
+    m.talents[2].spent = 31
+    m.__fire("TRAIT_CONFIG_UPDATED", 7001)
+    m.__fireTimers()
+    assertEqual(seen.n, 1)
+    assertEqual(G.Candidate().tree, 2, "Marksmanship now")
+    m.talents[3].spent = 40
+    m.__fire("CHARACTER_POINTS_CHANGED", -1)
+    m.__fireTimers()
+    assertEqual(seen.n, 2)
+    assertEqual(G.Candidate().tree, 3)
+    m.__fire("PLAYER_SPECIALIZATION_CHANGED", "player")
+    assertFalse(G.IsScheduled(), "Retail's spec event is not Forever's")
+end
+
 test("gear: the player's spec change rebuilds; another unit's does not", function()
+    if T.forever then return foreverTalentChange() end
     local NS, m, G = enabled()
     G.Snapshot()
     local seen = listen(NS)
@@ -453,6 +559,25 @@ test("gear: the player's spec change rebuilds; another unit's does not", functio
     m.__fireTimers()
     assertEqual(seen.n, 1)
     assertEqual(G.Candidate().specID, 261)
+end)
+
+test("gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen", function()
+    local NS, m, G = enabled(function(m)
+        m.__context.class, m.__context.classToken = "Hunter", "HUNTER"
+        if T.forever then m.seedTalents(1485, hunterTrees(10, 3, 0)) end
+    end)
+    local registered = false
+    for _, r in ipairs(m.__registrations()) do registered = registered or r.event == "PLAYER_LEVEL_UP" end
+    assertEqual(registered, T.forever, "PLAYER_LEVEL_UP is Forever's alone")
+    if not T.forever then return end
+    G.Snapshot()
+    local seen = listen(NS)
+    m.__context.level = (G.Candidate().level or 39) + 1
+    m.__fire("PLAYER_LEVEL_UP", m.__context.level)
+    assertTrue(G.IsScheduled())
+    m.__fireTimers()
+    assertEqual(seen.n, 1)
+    assertEqual(G.Candidate().level, m.__context.level)
 end)
 
 test("gear: the first lazy read announces nothing", function()

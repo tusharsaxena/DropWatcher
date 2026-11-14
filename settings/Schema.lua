@@ -95,12 +95,34 @@ local GLOBAL = {
     },
 }
 
+-- The per-character rows: AceDB's `db.char`, which no profile switch, copy or reset reaches.
+-- General › Role (WoW Forever alone, Forever port design §11.4) is LibKa0s-Role's override in
+-- `db.char.role`, through NS.Compat.SetRoleOverride. Its values are the CLI's lower-case words;
+-- `auto` is no override, so Role.Resolve's ladder answers.
+local ROLE_PATH = "char.role"
+Settings.ROLE_PATH = ROLE_PATH
+local ROLE_OF_CHOICE = { tank = "TANK", healer = "HEALER", damage = "DAMAGER" }
+local CHOICE_OF_ROLE = { TANK = "tank", HEALER = "healer", DAMAGER = "damage" }
+Settings.ROLE_OF_CHOICE = ROLE_OF_CHOICE
+
+local CHAR = {
+    [ROLE_PATH] = {
+        get = function()
+            local store = NS.Compat.RoleStore()
+            return store and CHOICE_OF_ROLE[store.override] or "auto"
+        end,
+        set = function(v)
+            NS.Compat.SetRoleOverride(ROLE_OF_CHOICE[v])
+        end,
+    },
+}
+
 --- Bind get/set closures onto the rows whose storage is not a profile path.
 --- @param rows table
 function Settings.StampClosureRows(rows)
     for _, row in ipairs(rows or {}) do
         local path = type(row) == "table" and row.path or nil
-        local spec = SESSION[path] or GLOBAL[path]
+        local spec = SESSION[path] or GLOBAL[path] or CHAR[path]
         if spec then
             row.get = spec.get
             row.set = spec.set
@@ -271,7 +293,7 @@ function Settings.BuildDefaults()
         global  = deepcopy(C.GLOBAL_DEFAULTS),
     }
     for _, def in ipairs(Schema) do
-        if def.path and not def.sessionOnly and not GLOBAL[def.path] then
+        if def.path and not def.sessionOnly and not GLOBAL[def.path] and not CHAR[def.path] then
             local segs = {}
             for part in string.gmatch(def.path, "[^.]+") do segs[#segs + 1] = part end
             local parent = out.profile
@@ -285,7 +307,8 @@ function Settings.BuildDefaults()
     return out
 end
 
-local function notGlobal(row) return not GLOBAL[row.path] end
+-- A profile reset reaches neither the global rows nor the per-character ones, so neither is counted.
+local function notGlobal(row) return not (GLOBAL[row.path] or CHAR[row.path]) end
 
 --- The global reset IS a profile reset (options-ui-§12); the walk keeps only session rows.
 --- @param row table

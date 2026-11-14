@@ -16,6 +16,13 @@
  Restrictions ──> Messaging queue ──> Compat.ChatSender (pcall)   TradeHelper ──> InitiateTrade
 ```
 
+Beside the feed, the pending store (`modules/Pending.lua`) holds the drops seen but not yet
+assigned: an open group-loot roll from the loot history, and on master loot an Epic awaiting the
+master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
+it hands over to it when the drop resolves (below, *Rolls and master-loot pending*). The pipeline is
+the same on Retail and WoW Forever; where a stage differs per client, its section says so, and
+`ARCHITECTURE.md` → Per-client features lists every difference.
+
 Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only
 listens. Each stage is drawn in its own section below. The README's `## How the loot watching works`
 is the same pipeline told for players.
@@ -259,6 +266,17 @@ NS.StandDown ─> State.testMode = false; TestMode's stand-down row ─> TestMod
 Ask, Offer, Announce, Post my tradeables on a sample ─> NS.Asks ─> printed ("Test mode, not sent: …")
 ```
 
+Test mode also puts one open sample roll in the pending store's own test store
+(`TestData.PendingSamples` ─> `Pending.AddTest`, `State.pendingTest`; `Pending.ClearTest` on off), and
+one History sample group's drop keeps a roll table (DW-FP17). **Rolling now follows the feed the
+window shows**: `WindowPending.Items` reads `Pending.All(Window.FeedName())`, so while test mode
+is on the section shows the test store alone, never a live roll beside the samples (even before the
+first sample lands: a missing test store reads as empty), as the boss groups show the test feed
+alone; off, it reads the live store again. Every repaint first asks `WindowPending.None`
+(`rolls.show` off, or `Pending.Count` of that store at 0), so a window with nothing pending builds
+no list and no feed-view table for the section (`tests/perf.lua`'s refresh pairs). A sample roll is never read
+from the client, never ticked and never handed to the feed.
+
 A placeholder is never judged, re-estimated or inspected: its verdicts, trade, inspect entry
 (`testInspect`) and ask state (`testAsk`) are the data's. The ask state shows only while the
 messaging edge holds none for it, so a click on Ask moves it like a live row's. Its off-spec part is
@@ -319,7 +337,7 @@ NS.SimEvents.RunStart() / RunEnd() ─> CHALLENGE_MODE_START / COMPLETED with th
 NS.SimEvents.Trade(dropID) ─> NS.SimWorld.SetTrade ─> TRADE_SHOW, the item change, TRADE_ACCEPT_UPDATE,
                    TRADE_CLOSED, UI_INFO_MESSAGE ─> History settles received or tradedAway in the session log
 /dw sim <verb> ─> NS.Sim:RunVerb (LibKa0s-Sim-1.0's grammar, then NS.SimVerbs.VERBS: pull, kill,
-                   loot, drop, lockdown, trade; else the usage) ─> no simulation running: "No simulation
+                   loot, drop, lockdown, trade, roll; else the usage) ─> no simulation running: "No simulation
                    is running: …" (but the bare form, status, start and panel)
 /dw sim start <scenario> [size] ─> NS.Sim:Start (refusals, an unknown
                    scenario among them) ─> prepare: NS.SimScenario.Prepare ─> NS.SimPool.Build
@@ -499,9 +517,9 @@ GROUP_ROSTER_UPDATE ─> DW:OnSharedFeatureEvent (each handler under pcall; the 
   raised after the rest ran) ─> DW.OnSituationEvent (above), then
   └─> DW.OnRosterEvent ─> Roster.Refresh
         ├─> tokens: raid1..N, or player + party1..N-1, or player alone
-        ├─> per token: UnitGUID (secret or missing: skipped), UnitName (secret or Unknown: no
-        │              name), UnitClass, UnitIsConnected; same-realm realm from
-        │              Compat.NormalizedRealm
+        ├─> per token: UnitGUID (secret or missing: skipped), UnitCharacterName (secret or
+        │              Unknown: no name; the whole name, no realm, on WoW Forever), UnitClass,
+        │              UnitIsConnected; same-realm realm from Compat.NameRealm (nil on Forever)
         ├─> NS.State.roster = { byGUID, list }, each member's specID carried over
         └─> changed: the change sinks ─> GroupRoster.Grow
               └─> LootFeed.OpenGroup (the live group a drop now would join, if it exists)
@@ -716,6 +734,62 @@ Window OnShow / OnHide (NS.Window.AddVisibilityListener) ─> the ticker retuned
 
 The stand-down cancels the ticker and the pending scan and keeps the entries (their warned flags
 with them); the stand-up scans again.
+
+The countdown and the warning are Retail's alone (`C.FEATURE.tradeTimer`): on WoW Forever the scan
+still matches your drops to their bag items (for the exact level), every entry is permanent, nothing
+warns, and the Drops table has no Trade window column (DW-FP11, DW-FP21).
+
+## Rolls and master-loot pending (Forever port design §5, §6)
+
+```
+LOOT_HISTORY_UPDATE_ENCOUNTER(encounterID)
+  ─> Compat.LootHistoryDropsFor ─> each open drop, keyed encounterID:dropKey (not held, not done)
+      ─> ItemFacts ─> LootFeed.GateFor (the feed's pre-looter gates, design §11.1) ─> refused: done
+      ─> Pending item { kind = "roll", state = open, facts, me, roll } ─> PendingChanged(id, "open")
+LOOT_HISTORY_UPDATE_DROP(encounterID, dropKey) / the 1s ticker while any roll is open
+  ─> Compat.LootHistoryRolls ─> a changed table ─> PendingChanged(id, "rolls")
+  ─> a winner ─> LootFeed.OnLootHistoryDrop(…, roll, pendingKey) ─> the feed's history source
+        (merged into a chat or encounter receipt that came first) ─> Pending.Close ─> PendingChanged(id, "closed")
+  ─> everyone passed, or startTime + duration passed on Compat.LootHistoryNow with no winner
+        ─> state allPassed | expired, LINGER (60s) on screen, then closed; nothing reaches the feed
+START_LOOT_ROLL(rollID) ─> your popup claims the oldest unclaimed item of the same item ID (rollID)
+GearChanged, the score retry ─> me judged again ─> PendingChanged(id, "verdict")
+LOOT_HISTORY_CLEAR_HISTORY ─> open items detached from their keys; PLAYER_ENTERING_WORLD and the
+  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two)
+
+LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (Compat.LootMethod)
+  ─> Compat.LootSlots ─> each slot at or above the threshold with a link and a source GUID
+      ─> LootFeed.GateFor ─> Pending item { kind = "ml", key = sourceGUID:itemID, state = awaiting, ml }
+  ─> the Ask master looter button ─> NS.PressAskML ─> NS.Asks (kind askML, the master looter's name)
+        ─> sent ─> Pending.NoteAskedML
+  ─> a chat or encounter receipt for the same item ID within 600s ─> Pending.ClaimML: the oldest
+        awaiting item assigned, its askedML on the drop and in History ─> closed
+  ─> expired: 900s, leaving the group or the instance, or you becoming the master looter
+        ─> closed, an ask still queued for it canceled
+
+PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending), RollPopup (the mark)
+```
+
+The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's
+feed names (the live one, or test mode's), oldest first, above the boss groups in both layouts while
+`rolls.show` is on; a roll row's time left and summary repaint each second on the window's countdown
+ticker. A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
+on, into its History entry (`rolls`), which the detail card's and the History card's ROLLS box draw. On Retail
+master loot is Guild Master Loot alone (design §11.2); the store is the same on both clients.
+
+## The roll popup mark (Forever port design §7)
+
+```
+RP.Install (OnEnable) ─> one owned card per GroupLootFrame1..4, parented to UIParent, anchored
+  BOTTOM to the popup's TOP; Compat.HookRollPopup: HookScript OnShow / OnHide once
+START_LOOT_ROLL(rollID) ─> Compat.LootRollInfo (link, bop) ─> LootFeed.JudgeMe ─> cache[rollID]
+popup OnShow ─> Compat.RollPopupOpen (still shown, a plain rollID) ─> not disabled, rolls.popupMark
+  on, not the gamepad UI ─> line 1: the verdict's mark, word and gain (Forever BoP: Need: upgrade,
+  Greed / Pass: you can't use it); line 2: Need so far from Pending.ForRoll(rollID)
+PendingChanged, GearChanged, the rolls.popupMark row, the stand-up ─> the shown cards repainted
+CANCEL_LOOT_ROLL / popup OnHide ─> the card down, the cache entry dropped
+a simulated START_LOOT_ROLL ─> the same card on an owned stand-in of the popup's size (RP.StandIn)
+```
 
 ## Opening a trade (design spec §4)
 

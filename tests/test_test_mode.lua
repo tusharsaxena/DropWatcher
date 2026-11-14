@@ -73,8 +73,87 @@ local function idOf(link) return tonumber(link:match("item:(%d+)")) end
 
 -- ── the data (pure) ─────────────────────────────────────────────────────────────────────────
 
+-- WoW Forever's nine classes (CLASS_SORT_ORDER there).
+local FOREVER_CLASSES = { WARRIOR = true, PALADIN = true, HUNTER = true, ROGUE = true, PRIEST = true,
+    SHAMAN = true, MAGE = true, WARLOCK = true, DRUID = true }
+
+-- One sample spec's Forever checks: its looter and roster draw on the nine classes, and no key run.
+local function assertForeverSpec(s)
+    assertTrue(FOREVER_CLASSES[s.looter.classFile], s.group.key .. ": " .. tostring(s.looter.classFile))
+    assertTrue(s.group.kind ~= "run", "no key run on Forever")
+    for _, e in ipairs(s.group.roster) do
+        assertTrue(e.me or FOREVER_CLASSES[e.class], s.group.key .. ": " .. tostring(e.class))
+    end
+end
+
+test("test mode: Forever samples use only the nine classes", function()
+    local NS, specs = placeholders()
+    local TD, CD, C = NS.TestData, NS.ClassData, NS.Constants
+    local forever = NS.Compat.ClientKey() == "forever"
+    local classes = {}
+    for key, m in pairs(TD.MEMBERS) do
+        classes[m.classFile] = true
+        local row = CD.SPECS[m.specID]
+        assertTrue(row ~= nil and row.class == m.classFile, key .. ": a spec of this client's list")
+        if forever then assertTrue(FOREVER_CLASSES[m.classFile], key .. " is " .. m.classFile) end
+    end
+    if forever then
+        for class in pairs(FOREVER_CLASSES) do assertTrue(classes[class], class .. " is among the samples") end
+        assertTrue(FOREVER_CLASSES[TD.ALT.classFile], "the alt is " .. TD.ALT.classFile)
+    else
+        assertTrue(classes.EVOKER and classes.DEMONHUNTER and classes.MONK and classes.DEATHKNIGHT,
+            "Retail's samples keep its thirteen classes")
+    end
+    assertTrue(#specs > 0)
+    for _, s in ipairs(specs) do
+        assertTrue(C.SITUATION[s.group.situation] ~= nil, s.group.key .. ": " .. s.group.situation)
+        if forever then assertForeverSpec(s) end
+    end
+    for _, g in ipairs(TD.History(5000000, YOU, source(NS)).groups) do
+        assertTrue(C.SITUATION[g.situation] ~= nil, g.key .. ": " .. g.situation)
+        for _, d in ipairs(g.drops) do
+            if forever then assertTrue(FOREVER_CLASSES[d.class], g.key .. ": " .. tostring(d.class)) end
+        end
+    end
+end)
+
+test("test mode: Forever samples name Forever places, whatever pool they draw on", function()
+    local NS, specs = placeholders()
+    local TD = NS.TestData
+    local session, history = {}, {}
+    for _, s in ipairs(specs) do session[s.group.key] = s.group end
+    for _, g in ipairs(TD.History(5000000, YOU, source(NS)).groups) do history[g.key] = g end
+    if not T.forever then
+        for _, g in pairs(session) do assertTrue(g.label ~= "Molten Core" and g.instance ~= "Zul'Gurub", g.key) end
+        return
+    end
+    -- The fake pool names no place (as your own gear does): every group takes its content's own.
+    local places = { ["Shadowfang Keep"] = "dungeon", ["Zul'Gurub"] = "raid", ["Molten Core"] = "raid" }
+    for key, g in pairs(session) do
+        assertEqual(places[g.instance], g.situation, key .. ": " .. tostring(g.instance))
+        assertTrue(g.label ~= "Placeholder boss", key .. ": a real boss, " .. tostring(g.label))
+    end
+    assertEqual(session["test:session:1"].instance, "Shadowfang Keep")
+    assertEqual(session["test:session:3"].label, "High Priestess Jeklik")
+    assertEqual(session["test:session:3"].difficulty, "20 Player")
+    local seen = {}
+    for key, g in pairs(history) do
+        seen[g.situation] = true
+        if g.situation == "openWorldGroup" then
+            assertTrue(g.instance == nil and g.difficulty == nil, key .. ": a world boss names no instance")
+            assertTrue(g.label == "Azuregos" or g.label == "Lord Kazzak", key .. ": " .. tostring(g.label))
+        else
+            assertEqual(places[g.instance], g.situation, key .. ": " .. tostring(g.instance))
+        end
+    end
+    hasAll(seen, { "dungeon", "raid", "openWorldGroup" }, "situation")
+end)
+
 -- The group size each content brings (feedback-17): a party, a raid of twenty, Raid Finder's 25.
-local SIZE = { key = 5, heroicDungeon = 5, worldBoss = 5, raidHeroic = 20, raidMythic = 20, raidLFR = 25 }
+-- WoW Forever's own contents (Forever port design §4.4): a dungeon, a 20- and a 40-player raid (the
+-- samples name 25 for the 40) and a world boss.
+local SIZE = { key = 5, heroicDungeon = 5, worldBoss = 5, raidHeroic = 20, raidMythic = 20, raidLFR = 25,
+    dungeon = 5, raid20 = 20, raid = 25 }
 
 test("test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)", function()
     local NS, specs = placeholders()
@@ -87,7 +166,7 @@ test("test mode data: each sample group names who was in it, you first, as many 
             if s.looter.name == e.name then sizes.looterIn = (sizes.looterIn or 0) + 1 end
         end
     end
-    assertEqual(sizes.run, 5, "the key run: a party of five")
+    if not T.forever then assertEqual(sizes.run, 5, "the key run: a party of five") end
     assertEqual(sizes.encounter, 20, "a Heroic raid boss: twenty")
     assertEqual(sizes.looterIn, #specs, "every looter is in their group")
     local src = source(NS)
@@ -107,7 +186,7 @@ test("test mode data: the session drops what such groups see; History holds far 
     for _, s in ipairs(TD.SESSION) do
         local n = #s.yours + #s.theirs
         sessionDrops = sessionDrops + n
-        if s.content == "key" then assertEqual(n, 2, "a key run's chest: two items")
+        if s.content == "key" or s.content == "dungeon" then assertEqual(n, 2, "a key run's chest, a dungeon boss: two items")
         elseif s.n == 6 then assertEqual(n, 6, "the boss with the item kinds: its gear and six of them")
         else assertTrue(n >= 4 and n <= 5, "a raid boss of twenty: four or five, not " .. n) end
     end
@@ -116,11 +195,13 @@ test("test mode data: the session drops what such groups see; History holds far 
     for _, g in ipairs(TD.HISTORY) do
         per[g.content] = true
         total = total + g.drops
-        local most = ({ key = 2, heroicDungeon = 2, worldBoss = 3, raidHeroic = 5, raidMythic = 5, raidLFR = 5 })[g.content]
+        local most = ({ key = 2, heroicDungeon = 2, worldBoss = 3, raidHeroic = 5, raidMythic = 5, raidLFR = 5,
+            dungeon = 2, raid20 = 5, raid = 5 })[g.content]
         assertTrue(g.drops >= 1 and g.drops <= most, g.content .. ": " .. g.drops)
     end
     assertTrue(#TD.HISTORY >= 20 and total >= 60, #TD.HISTORY .. " groups, " .. total .. " drops")
-    hasAll(per, { "key", "heroicDungeon", "raidHeroic", "raidMythic", "raidLFR", "worldBoss" }, "content")
+    hasAll(per, T.forever and { "dungeon", "raid20", "raid", "worldBoss" }
+        or { "key", "heroicDungeon", "raidHeroic", "raidMythic", "raidLFR", "worldBoss" }, "content")
     for _, g in ipairs(TD.HISTORY) do assertTrue(g.ago <= 28 * 86400, "inside the default 30 days") end
 end)
 
@@ -179,7 +260,7 @@ test("test mode data: each group is one real place, its loot that place's at the
         end
     end
     hasAll(seen, { "mythicPlus", "dungeon", "raid", "raidLFR", "openWorldGroup" }, "situation")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: the other members' drops cover every Me and Them verdict (board 03)", function()
     local _, specs = placeholders()
@@ -225,8 +306,10 @@ test("test mode data: your own drops cover every countdown and every candidate s
         for _, c in ipairs(MC.Candidates(drop)) do pills[c.status] = true end
     end
     hasAll(kinds, { "exact", "soon", "estimated", "boe", "expired" }, "countdown")
-    hasAll(pills, { "upgrade", "sidegrade", "offSpecUpgrade", "downgrade", "cantUse", "checking", "unavailable" },
-        "status")
+    -- Off-spec is Retail's alone (Forever port design §4.4): no candidate of WoW Forever's is one.
+    local statuses = { "upgrade", "sidegrade", "downgrade", "cantUse", "checking", "unavailable" }
+    if T.forever then assertNil(pills.offSpecUpgrade, "no off-spec candidate") else statuses[#statuses + 1] = "offSpecUpgrade" end
+    hasAll(pills, statuses, "status")
 end)
 
 -- ── off-spec (feedback-19 spec §4) ──────────────────────────────────────────────────────────
@@ -273,7 +356,7 @@ test("test mode data: off-spec samples show every off-spec verdict, an empty slo
     hasAll(verdicts, { "upgrade", "sidegrade", "downgrade" }, "off-spec verdict")
     hasAll(kinds, { "empty", "worn", "bag" }, "off-spec baseline")
     assertTrue(armorRefusal, "a class-wide refusal stays Can't use")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spec upgrades, above a downgrade", function()
     local NS, specs = placeholders()
@@ -296,16 +379,21 @@ test("test mode data: an Offer candidate's off-spec upgrade ranks below main-spe
         end
     end
     assertEqual(shown, 2, "the trinket's candidate and the off-spec showcase's")
-end)
+end, T.RETAIL_ONLY)
 
+-- Per client (Forever port design §4.4, clients-§4, §6): off-spec is Retail's alone, so on WoW
+-- Forever no History sample carries an off-spec part (the History card's Spec row, the Me cell's
+-- Cyan verdict); on Retail one you asked for and one you received do.
 test("test mode data: History holds an off-spec entry you asked for and one you received", function()
     local NS = T.newAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
     local log = NS.TestData.History(5000000, YOU, (source(NS)))
-    local outcomes = {}
+    local outcomes, n = {}, 0
     for _, g in ipairs(log.groups) do
         for _, e in ipairs(g.drops) do
             local off = NS.OffSpec.Of(e.me)
-            if off then
+            if off then n = n + 1 end
+            if off and retail then
                 outcomes[e.outcome] = true
                 assertEqual(g.seenBy, YOU.seenBy, "only your own: the Warlock alt has no Holy spec")
                 assertEqual(off.specID, 65); assertEqual(off.mainSpecID, 66)
@@ -313,6 +401,7 @@ test("test mode data: History holds an off-spec entry you asked for and one you 
             end
         end
     end
+    if not retail then return assertEqual(n, 0, "no off-spec History sample on Forever") end
     hasAll(outcomes, { "asked", "received" }, "off-spec outcome")
 end)
 
@@ -478,7 +567,7 @@ test("window: test mode shows an off-spec verdict, cyan with the spec's name, an
         end
     end
     assertEqual(shown, 5, "the Crescent row and four showcase rows")
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode data: a key run and four bosses, every item a pool item that keeps its slot", function()
     local NS, specs, ids = placeholders()
@@ -490,7 +579,7 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
         slots[s.facts.equipLoc] = true
         assertTrue(s.situation ~= nil)
     end
-    hasAll(groups, { "encounter", "run" }, "group")
+    hasAll(groups, T.forever and { "encounter" } or { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
     assertEqual(#specs, 35)
     assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
@@ -633,8 +722,13 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
     NS.SetTestMode(true)
     assertEqual(#LF.Drops("test"), 35)
     assertEqual(#LF.Drops("live"), 0)
-    assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
-    assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
+    -- The journal is Retail's alone (Forever port design §4.4): WoW Forever's pool is your own gear.
+    if not T.forever then
+        assertEqual(m.journal.previews[1], 10, "the keys' loot read at Mythic+ 10")
+        assertEqual(m.journal.keystoneLevel, 0, "and the journal's own preview put back")
+    else
+        assertNil(m.journal.previews[1], "the journal is never read")
+    end
     local ids = journalIds(m)
     for _, rec in ipairs(LF.Drops("test")) do
         assertTrue(ids[rec.itemID] == true, "a journal item, never an unknown id: " .. tostring(rec.link))
@@ -642,7 +736,8 @@ test("test mode: on fills the test feed from the item pool, off empties it; the 
         -- feedback-17: the key run's loot is its dungeon's at Mythic Keystone, the bosses' their raid's at Heroic
         -- an item kind's stand-in (issue #13) is any unused pool item once the place has none of it
         local standIn = rec.facts.category ~= nil and rec.facts.category ~= "equipment"
-        if not standIn then
+        -- WoW Forever's contents are no journal difficulty (its pool is your gear, design §4.4)
+        if not standIn and not T.forever then
             assertEqual(rec.facts.ilvl, rec.situation == "mythicPlus" and 300 or 295, "the drop's own level")
         end
         assertTrue(NS.Compat.ItemIcon(rec.link) ~= 134400, "a real icon, not the question mark")
@@ -668,7 +763,7 @@ test("test mode: while the pool loads the tab says so and holds no drop; the dro
     m.advance(1)
     assertFalse(NS.TestMode.IsLoading())
     assertEqual(#NS.LootFeed.Drops("test"), 35)
-end)
+end, T.RETAIL_ONLY)
 
 test("test mode: turned off while the pool loads, nothing arrives later", function()
     local NS, _, m = T.enableAddon()
@@ -746,7 +841,7 @@ test("history: test mode shows its sample groups, every outcome, and never write
     assertEqual(#NS.WindowHistory.Drawn().headers, n - 1, "Character: Current hides the alt's group (feedback-2 spec §4)")
     local listed = {}
     for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
-    assertEqual(table.concat(listed, ","), "all,current,Emberwick-Testrealm,Testchar-Testrealm")
+    assertEqual(table.concat(listed, ","), "all,current," .. T.rosterName("Emberwick") .. "," .. T.ME)
     dd:ToggleSelected("all"); dd.onMultiSelect(dd._selected)
     assertEqual(#NS.WindowHistory.Drawn().headers, n, "All shows it")
     H.Clear()
@@ -892,7 +987,8 @@ test("window: test mode's Can't use samples read Can't use on Trade, a No stays 
         end
     end
     hasAll(seen, { "Mistveil", "Ashveil" }, "Can't use sample")
-    assertTrue(offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
+    -- Off-spec is Retail's alone (Forever port design §4.4): WoW Forever's samples have none.
+    assertTrue(T.forever and offSpec == 0 or offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
 end)
 
 -- feedback-21 H2: Kaelith's wrists were read before they left, so the card keeps their spec and
@@ -937,6 +1033,13 @@ local function levelsOf(NS, drop)
     return #items > 0 and WC.Levels(items) or nil
 end
 
+-- Whether a sample's You cell shows the 999s you wear. On WoW Forever the pool is your own gear
+-- (modules/SimPool.lua), so a sample may be one of them; its worn gear is still its own.
+local function showsYours(d, level)
+    if T.forever and d.facts.ilvl == 999 then return false end
+    return level:find("999", 1, true) ~= nil
+end
+
 test("window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)", function()
     local NS, _, m = T.enableAddon()
     wearReal(NS, m)
@@ -950,7 +1053,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
         local d = NS.LootFeed.Get(r.dropId)
         local level = drawnLevels(r.cells.me)
         -- red under: `You 999`, your real gear beside a verdict judged against the sample's worn item
-        assertFalse(level:find("999", 1, true) ~= nil, "row " .. d.id .. ": " .. level)
+        assertFalse(showsYours(d, level), "row " .. d.id .. ": " .. level)
         local want = levelsOf(NS, d)
         if want then
             assertEqual(level, want, "row " .. d.id)
@@ -974,7 +1077,7 @@ test("window: a sample's You is its own worn gear in both layouts, the item its 
     for _, card in ipairs(NS.WindowGroup.Drawn().rows) do
         local d = NS.LootFeed.Get(card.dropId)
         local level = drawnLevels(card.cells.you)
-        assertFalse(level:find("999", 1, true) ~= nil, "card " .. d.id .. ": " .. level)
+        assertFalse(showsYours(d, level), "card " .. d.id .. ": " .. level)
         assertEqual(level, levelsOf(NS, d) or level, "card " .. d.id)
     end
 end)
@@ -1155,4 +1258,45 @@ test("window: test mode's item kinds read their collection words; only the tier 
     for _, kind in ipairs({ "mount", "pet", "toy", "cosmetic" }) do assertEqual(asks[kind], "No action", kind) end
     assertEqual(asks.recipe, "No action", "your own recipe: no Offer")
     assertEqual(asks.tierToken, "Ask", "a tier token is asked for as gear")
+end)
+
+test("test mode: shows one open roll and a History drop with rolls", function()
+    -- DW-FP17 (Forever port design §8): a both-clients feature. The open roll is test mode's own
+    -- pending item, shown in Rolling now while test mode is on and never in the live store; the
+    -- History sample keeps one drop's roll table, as a rolled live drop keeps it.
+    local NS, drawn = shownTest()
+    local P = NS.Pending
+    assertEqual(#P.All(), 0, "the live store is never touched")
+    local items = P.All("test")
+    assertEqual(#items, 1, "one sample roll")
+    local item = items[1]
+    assertEqual(item.kind, "roll"); assertEqual(item.state, "open")
+    assertTrue(P.Get(item.id) == item)
+    assertTrue(NS.Compat.ItemIcon(item.link) ~= 134400, "a real pool item")
+    assertTrue(type(item.me) == "table" and item.me.verdict ~= nil, "your verdict on it")
+    local states = {}
+    for _, r in ipairs(item.roll.rolls) do states[r.state] = true end
+    assertTrue(states[0] and states[3] and states[4] and states[5], "Need, Greed, waiting and Pass among them")
+    local wp = NS.WindowPending.Drawn(drawn.pane)
+    assertTrue(wp.header:IsShown()); assertEqual(textOf(wp.header.text), "Rolling now (1)")
+    assertEqual(#wp.rows, 1)
+    -- The History sample: one drop kept its roll table, the winner its looter.
+    local rolled
+    for _, g in ipairs(NS.History.Groups()) do
+        for _, e in ipairs(g.drops) do
+            if e.rolls then
+                assertNil(rolled, "one rolled drop")
+                rolled = e
+            end
+        end
+    end
+    assertTrue(rolled ~= nil, "a History drop with rolls")
+    local t = NS.History.RollTable(rolled.rolls)
+    assertTrue(t.winner ~= nil); assertEqual(t.winner.name, rolled.looter, "won by its looter")
+    assertTrue(#t.rolls >= 5); assertEqual(rolled.rolls.n, #t.rolls)
+    for _, x in ipairs(rolled.rolls.r) do assertNil(x.guid, "no GUIDs kept") end
+    -- Off: the sample roll goes with the samples.
+    NS.SetTestMode(false)
+    assertEqual(#P.All("test"), 0)
+    assertNil(P.Get(item.id))
 end)

@@ -39,6 +39,13 @@ local _, NS = ...
 --
 -- Stood down, the ticker and the throttle timer are canceled; the entries are kept (their warned
 -- flags with them), and the stand-up scans again.
+--
+-- THE COUNTDOWN IS RETAIL'S ALONE (Forever port design §4.4, clients-§4): on WoW Forever a looted
+-- Bind on Pickup item is soulbound, with no trade window, so there is nothing to count down. Where
+-- NS.Constants.FEATURE.tradeTimer is false (TT.Initialized) the scan still matches your drops to
+-- their bag items (the feed reads their exact level, quality and link from them), but no tooltip
+-- is read: every entry is `permanent`, as a BoE's is, so no entry is ever live, the ticker never
+-- starts, nothing warns and LootFeed.FoldTimer folds nothing in.
 
 NS.TradeTimer = NS.TradeTimer or {}
 local TT = NS.TradeTimer
@@ -48,6 +55,12 @@ local State = NS.State
 local Perf = NS.Perf
 
 local TAG = "TRADE"
+
+local INITIALIZED = C.FEATURE.tradeTimer == true
+
+--- Whether the countdown and its warning run on this client (Retail only).
+--- @return boolean
+function TT.Initialized() return INITIALIZED end
 
 TT.THROTTLE = 2
 TT.FAST = 1
@@ -126,7 +139,7 @@ end
 function TT.WarnAt()
     local v = NS.Setting("trade.warnAt")
     if type(v) == "number" and v == v then return v end
-    return NS.C.PROFILE.trade.warnAt
+    return NS.C.PROFILE.trade.warnAt or 0   -- WoW Forever has no warning, and no default for it
 end
 
 --- The ticker's period in seconds, or nil while no ticker runs.
@@ -306,6 +319,10 @@ local function readEntry(it, timers, t, rec)
         e = { guid = it.guid, dropID = it.dropID, warned = false }
     end
     e.itemID, e.link, e.bag, e.slot = it.itemID, it.link, it.bag, it.slot
+    if not INITIALIZED then   -- WoW Forever: no trade window to read, nothing to count down
+        e.expiresAt, e.expired, e.permanent = nil, false, true
+        return e
+    end
     local left = NS.Compat.TradeTimeRemaining(it.bag, it.slot)
     e.permanent = false
     if left and left > 0 then

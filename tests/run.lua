@@ -153,6 +153,32 @@ local function withPlayer(m)
     return m
 end
 
+-- The kit profile in use (clients-§6), and the name the roster gives a mock unit row on it
+-- (client-quirks-§5): on Forever (regional names) a row's `realm` stands for UnitName's second
+-- value, the surname, so the member is "First Surname" with no realm; on Retail it is `Name-Realm`,
+-- the realm normalized, and the player's own (the mock's Testrealm) when the row names none.
+local FOREVER = (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever"
+
+-- Pins Retail's class list (core/ClassData.lua's CD.LISTS.retail) as NS.ClassData's active one on
+-- `NS`, on either kit profile: a case written against Retail's spec model (its specIDs, off-specs,
+-- Titan's Grip, Pawn's spec index) drives the same pure code under the forever profile, where the
+-- client installed Forever's list. The Forever list's own cases stand beside them (clients-§6).
+-- Answers NS.
+local function retailList(NS)
+    NS.ClassData.Install(NS.ClassData.LISTS.retail)
+    return NS
+end
+-- The declared-skip reason (the kit's `test(name, fn, reason)`) for a case of a Retail-only feature
+-- (Mythic+, Raid Finder, delves, follower dungeons, scenarios: Forever port design §4.4) on the
+-- forever profile, where the feature is absent and its own per-client case asserts the absence
+-- (clients-§6); nil on Retail, which runs it.
+local RETAIL_ONLY = FOREVER and "Retail-only feature (Forever port design §4.4): absent on Forever, "
+    .. "which its per-client case asserts" or nil
+local function rosterName(name, realm)
+    if FOREVER then return realm and (name .. " " .. realm) or name end
+    return name .. "-" .. (realm and (realm:gsub("[%s%-]", "")) or "Testrealm")
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -168,6 +194,11 @@ _G.DW_TEST = Kit.expose{
     tipPlain    = tipPlain,
     tipPlainJoined = tipPlainJoined,
     cardText    = cardText,
+    forever     = FOREVER,
+    retailList  = retailList,
+    RETAIL_ONLY = RETAIL_ONLY,
+    rosterName  = rosterName,
+    ME          = rosterName("Testchar"),
     root        = root,
     LibStub     = surfaceMock.LibStub,
     KIT_VERSION = Kit.VERSION,
@@ -193,7 +224,17 @@ Kit.diagnostics = {
 Kit.layoutCap = { hub = "docs/ARCHITECTURE.md" }
 
 -- The typed-value gate (skinning-§1, kit revision 50).
-Kit.skinValues = { calls = { Colored = { 2, 3, 4 }, Escape = { 2, 3, 4 }, tone = { 2, 3, 4 } } }
+Kit.skinValues = {
+    calls = { Colored = { 2, 3, 4 }, Escape = { 2, 3, 4 }, tone = { 2, 3, 4 } },
+    rows  = {   -- DW-FP15's roll glyphs: the game's own group-loot roll-button art, as DPS Race's countdown digits are
+        { file = "modules/RollCells.lua", substring = "local DICE =",
+          why = "the Need roll button's dice, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        { file = "modules/RollCells.lua", substring = "local COIN =",
+          why = "the Greed roll button's coin, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        { file = "modules/RollCells.lua", substring = "local CROSS =",
+          why = "the Pass roll button's cross, the game's group-loot art players know, the same under every skin", cause = "A6" },
+    },
+}
 
 -- The skin-switch test (skinning-§1, kit revision 50): the painted surfaces are declared there.
 Kit.skinSwitch = dofile("tests/skin_switch_facts.lua")(enableAddon, withPlayer)
@@ -249,7 +290,10 @@ Kit.run{
         "test_row_tooltip",
         "test_test_mode",
         "test_compat",
+        "test_compat_client",
+        "test_role_override",
         "test_compat_collect",
+        "test_compat_loot",
         "test_text_parse",
         "test_constants",
         "test_class_data",
@@ -273,6 +317,12 @@ Kit.run{
         "test_loot_parser",
         "test_inspect",
         "test_feed",
+        "test_pending",
+        "test_pending_ml",
+        "test_ask_ml",
+        "test_roll_cells",
+        "test_window_pending",
+        "test_roll_popup",
         "test_feed_counts",
         "test_collect_feed",
         "test_item_lists",

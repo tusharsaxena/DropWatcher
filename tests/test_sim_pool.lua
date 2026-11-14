@@ -327,7 +327,7 @@ test("sim pool: the journal is not read while its frame is shown", function()
     assertEqual(got.source, "journal")
     assertEqual(#NS.SimPool.Drops(got), 4, "Mythic: two dungeons, two items each")
     NS.Sim:Stop()
-end)
+end, T.RETAIL_ONLY)
 
 test("sim pool: a frame shown the whole time ends in the fallback at the timeout", function()
     local NS, m = solo()
@@ -359,7 +359,7 @@ test("sim pool: entries still loading are awaited through EJ_LOOT_DATA_RECIEVED"
     m.advance(NS.SimPool.TIMEOUT)
     assertEqual(calls, 1, "the timeout does not finish it twice")
     NS.Sim:Stop()
-end)
+end, T.RETAIL_ONLY)
 
 test("sim pool: at the timeout the build keeps what has loaded", function()
     local NS, m = solo()
@@ -375,7 +375,7 @@ test("sim pool: at the timeout the build keeps what has loaded", function()
     assertEqual(#got.entries, 15)
     assertEqual(#NS.SimPool.Drops(got), 3)
     NS.Sim:Stop()
-end)
+end, T.RETAIL_ONLY)
 
 test("sim pool: loot for me sets the journal's class filter to yours; any lists every class", function()
     local NS, m = solo()
@@ -391,7 +391,7 @@ test("sim pool: loot for me sets the journal's class filter to yours; any lists 
     assertEqual(#NS.SimPool.Get().entries, 16)
     assertEqual(m.journal.classID, 0, "the player's own filter is put back")
     NS.Sim:Stop()
-end)
+end, T.RETAIL_ONLY)
 
 test("sim pool: an empty journal falls back to your own gear, reported once", function()
     local NS, m = solo()
@@ -405,13 +405,15 @@ test("sim pool: an empty journal falls back to your own gear, reported once", fu
     assertEqual(pool.source, "fallback")
     assertEqual(#pool.entries, 3, "two rings and the helm; the hearthstone is not gear")
     assertEqual(#NS.SimPool.Drops(pool), 3)
-    local line = "The Encounter Journal gave no items"
-    assertEqual(printed(m, line), 1)
+    -- The journal's report is Retail's (its pool, Forever port design §4.4): WoW Forever's pool is
+    -- your own gear from the start, so nothing fell back and nothing is said.
+    local line, said = "The Encounter Journal gave no items", T.forever and 0 or 1
+    assertEqual(printed(m, line), said)
     NS.Sim:Stop()
     T.simBare(NS):Start({ scenario = "test" })
     NS.SimPool.Build({ situation = "raid" })
     -- red under: a fallback that prints on every build
-    assertEqual(printed(m, line), 1, "reported once")
+    assertEqual(printed(m, line), said, "reported once")
     assertEqual(NS.SimPool.Status().source, "fallback")
     NS.Sim:Stop()
 end)
@@ -424,6 +426,31 @@ test("sim pool: without the journal API the fallback answers at once", function(
     NS.SimPool.Build({ situation = "dungeon" }, function(pool) got = pool end)
     assertEqual(got.source, "fallback")
     NS.Sim:Stop()
+end)
+
+-- Forever port design §4.4 (clients-§4, §6): the Encounter Journal source is Retail's alone. On
+-- WoW Forever the journal is never read, its loot event is not registered, and the pool is your own
+-- gear, with no word about the journal; on Retail the same seeded journal is the source.
+test("sim pool: no journal source on Forever", function()
+    local NS, m = solo()
+    seedJournal(m)
+    local reads, select = 0, m.EJ_SelectTier
+    m.EJ_SelectTier = function(...) reads = reads + 1; return select(...) end
+    local retail = NS.Compat.ClientKey() == "retail"
+    T.simBare(NS):Start({ scenario = "test" })
+    local got
+    NS.SimPool.Build({ situation = "dungeon" }, function(pool) got = pool end)
+    assertTrue(got ~= nil, "the pool is ready at once")
+    assertEqual(got.source, retail and "journal" or "fallback")
+    assertEqual(reads > 0, retail, "the journal is read on Retail only")
+    if not retail then
+        assertEqual(#got.entries, 2, "your two rings")
+        assertEqual(printed(m, "Encounter Journal"), 0, "no word about the journal")
+    end
+    NS.Sim:Stop()
+    local names = {}
+    for _, name in ipairs(NS.FeatureEventNames()) do names[name] = true end
+    assertEqual(names.EJ_LOOT_DATA_RECIEVED == true, retail, "the journal's loot event")
 end)
 
 test("sim pool: the stop ends a waiting build, and a late event does nothing", function()
@@ -439,7 +466,7 @@ test("sim pool: the stop ends a waiting build, and a late event does nothing", f
     assertNil(NS.SimPool.Get())
     assertFalse(NS.SimPool.Status().building)
     assertFalse(NS.SimPool.Build({}), "no simulation: no build")
-end)
+end, T.RETAIL_ONLY)
 
 -- ---------------------------------------------------------------------------------------------
 -- The roster and its gear
@@ -478,7 +505,13 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
             assertNil(names[mem.name], "distinct names"); names[mem.name] = true
             assertNil(guids[mem.guid], "distinct GUIDs"); guids[mem.guid] = true
             assertTrue(mem.guid:find("^Player%-%d+%-%x+$") ~= nil, "a client-shaped GUID")
-            assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
+            if T.forever then
+                -- Forever's spec is class-wide and the client's alone (core/ClassDataForever.lua)
+                assertNil(mem.specID, "no Retail specID on Forever")
+                assertTrue(CD.CLASS_SPECS[mem.classFile] ~= nil, "one of Forever's nine classes")
+            else
+                assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
+            end
             assertEqual(mem.classID, CD.CLASS_ID[mem.classFile])
             assertEqual(mem.fullName, mem.name .. "-" .. mem.realm)
         end
@@ -530,6 +563,23 @@ test("sim roster: gear is what the class can wear, worn at a level inside the ba
     local band = R.BandAround(600)
     assertEqual(band.low, 601); assertEqual(band.high, 612)
     assertEqual(R.BandAround(600, { low = -20, high = 0 }).low, 580)
+end)
+
+test("sim roster: on Forever a member wears its bow in the ranged slot; Retail's order has no slot 18", function()
+    local NS = T.newAddon()
+    local R, S = NS.SimRoster, NS.Constants.SLOT
+    local W = NS.Constants.WEAPON_SUBCLASS
+    local has18 = false
+    for _, slot in ipairs(R.ORDER) do has18 = has18 or slot == 18 end
+    assertEqual(has18, T.forever, "slot 18 is drawn on Forever only")
+    if not T.forever then return end
+    local entries = {
+        { link = "bow", equipLoc = "INVTYPE_RANGED", ilvl = 60, classID = 2, subClassID = W.BOWS },
+        { link = "dagger", equipLoc = "INVTYPE_WEAPON", ilvl = 60, classID = 2, subClassID = W.DAGGER },
+    }
+    local gear = R.Gear({ classFile = "HUNTER", specID = "HUNTER:2" }, entries, { low = 55, high = 60 }, R.Random(5))
+    assertEqual(gear[S.RANGED], "bow", "the bow is worn in the ranged slot")
+    assertEqual(gear[S.MAINHAND], "dagger", "and leaves the hands free")
 end)
 
 test("sim roster: the content's level is the median of the pool's drops", function()

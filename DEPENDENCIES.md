@@ -9,8 +9,10 @@ marked as such rather than listed as a requirement.
 
 ## Runtime (in-game) — what a player needs
 
-- **World of Warcraft (Retail).** Single `## Interface: 120105` line in `DropWatcher.toc` — Retail
-  only.
+- **World of Warcraft: Retail or WoW Forever.** One unsuffixed `DropWatcher.toc` carries both
+  numbers, `## Interface: 120105, 16001` (Retail 12.1.5, WoW Forever 1.60.1), and no load-gating
+  line (toc-file-§3, the roster's `Retail · Forever`). What one client lacks is gated per feature,
+  in `docs/ARCHITECTURE.md`'s per-client feature table (clients-§4).
 - **Nothing else.** Every library is vendored under `libs/` and committed (library-stack), so the
   player installs no separate library addon. `## OptionalDeps:` names the vendored libs for load
   ordering, not as things to download. `libs/LibCustomGlow-1.0/` (MIT, minor 24, copied whole from
@@ -18,12 +20,16 @@ marked as such rather than listed as a requirement.
   LibKa0s-Glow-1.0 (the bundled LibKa0s payload, through `core/GlowSetup.lua`), which resolves it at
   every call.
   Ace3: WoWUIDev/Ace3@ac3d1225 (untagged master; LibKa0s#76).
-- **Optional: Pawn and CanIMogIt.** Named in `## OptionalDeps:` so they load first when installed,
-  and reached only through `core/Compat.lua` (their API is called under `pcall`, never copied).
+- **Optional: Pawn (both clients) and CanIMogIt (Retail only).** Named in `## OptionalDeps:` so they
+  load first when installed, and reached only through `core/Compat.lua` (their API is called under
+  `pcall`, never copied).
   **Pawn**, once it has initialized (its `PawnIsReady()`), drives the `pawn` scorer
   (`modules/Scoring.lua`, design spec §5.4): `comparison.scorer` `auto` picks it then, and until
-  then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights. **CanIMogIt**,
-  when loaded, answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
+  then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights.
+  On WoW Forever (Pawn 2.14.1 there) Pawn has no specs and one Classic scale per talent tree, so you
+  are scored with the scale of your top talent tree, and another player with the best of their
+  class's scales (`modules/Scoring.lua`, Forever port design §4.3). **CanIMogIt** serves transmog, which
+  WoW Forever lacks, so it is read on Retail alone (design §4.4); when loaded, it answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
   Without Pawn, the comparison uses your own weights when any are set, else item level alone;
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is
   reported by `core/DropWatcher.lua` `logDependencies` and the diagnostics' `integrations` and
@@ -92,6 +98,7 @@ python3 -c 'import PIL; print(PIL.__version__)'
 
 ```sh
 lua tests/run.lua                                     # the suite — must be green
+KA0S_KIT_CLIENT=forever lua tests/run.lua             # the same suite as WoW Forever — must be green too
 lua tests/run.lua -j auto                             # same, fanned across CPUs (testing-§14)
 # every run above is bounded by the vendored kit on load (testing-§15); KA0S_KIT_GUARD=off only under a debugger
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .     # must be 0 warnings / 0 errors

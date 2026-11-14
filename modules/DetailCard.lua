@@ -8,7 +8,10 @@ local _, NS = ...
 -- fresh the data is; above the comparisons since feedback-22, so whether it can be had at all reads
 -- first); the For you and For the looter boxes side by side (what it replaces, the item-level
 -- change, the track change, the stat change, and Pawn's score for you or the looter's spec and the
--- inspect's age, each under a verdict chip); and the actions: Ask, Edit message, Link in chat, Retry inspect,
+-- inspect's age, each under a verdict chip, the score's and the spec's tooltips naming the scale it
+-- used, NS.Scoring.ScoreFor); a group-loot drop resolved from its roll then has its ROLLS box
+-- (Forever port design §5.3: NS.WindowPending's box over NS.DetailCells.RollsBox, the card that much
+-- taller, while `rolls.show` is on); and the actions: Ask, Edit message, Link in chat, Retry inspect,
 -- and Trade (disabled with its reason). Every line and chip has a reason tooltip. On your own drop
 -- (feedback-5 spec §2) the looter's box is FOR THE GROUP, its Looter row `Name [YOU]` and its Them
 -- row `Upgrade for N` (feedback-7 spec §2) with every member it upgrades in the tooltip, and Offer takes the Ask's place: it opens the Offer panel
@@ -66,6 +69,14 @@ local editor   -- the Edit message box, built on its first use
 local EDIT_REFUSAL = {
     notInGroup = L["the looter is not in your group"], offline = L["the looter is offline"],
     self = L["that is your own drop"], noTarget = L["the looter is not known"], disabled = L["%s is disabled"]:format(NS.BRAND),
+}
+
+-- A master-loot ask's refusals name the master looter and the item (plan DW-FP19).
+local ML_REFUSAL = {
+    notInGroup = L["the master looter is not in your group"], offline = L["the master looter is offline"],
+    self = L["you are the master looter"], isML = L["you are the master looter"],
+    noUpgrade = L["it is not an upgrade for you"], noDrop = L["the item is no longer waiting"],
+    noTarget = L["the master looter is not known"],
 }
 
 -- An offer's refusals name the member, not the looter.
@@ -342,6 +353,7 @@ function DCard.Build(content, stacked)
     buildTrade(card)
     if card.stacked then placeStacked(card) else placeSideBySide(card) end
     buildActions(card)
+    card.rolls = NS.WindowPending.BuildRollsBox(card)   -- under the comparisons, while the drop has a roll
     card:Hide()
     return card
 end
@@ -572,8 +584,33 @@ local function placeStackedActions(card, width)
     end
 end
 
+-- The Rolls box under the comparisons (Forever port design §5.3): a resolved drop with a roll table
+-- while `rolls.show` is on (NS.DetailCells.RollsBox). Answers the height it adds to the card.
+local function paintRolls(card, drop, width)
+    local model = DC.RollsBox(drop, NS.Setting("rolls.show") ~= false)
+    card.rolls:SetShown(model ~= nil)
+    if not model then return 0 end
+    local P = K.CARD_PAD
+    local under = card.stacked and card.them or card.me
+    card.rolls:ClearAllPoints()
+    card.rolls:SetPoint("TOPLEFT", under, "BOTTOMLEFT", 0, -P)
+    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P) + P
+end
+
+-- The scale or weights each score used (NS.Scoring.ScoreFor's `how`, DW-FP07): yours, and the
+-- looter's on another player's drop.
+local function scoreHows(drop, insp)
+    local S = NS.Scoring
+    local _, mine = S.ScoreFor(drop.link, NS.Gear.Candidate())
+    if drop.isMine then return mine, nil end
+    local looter = type(drop.looter) == "table" and drop.looter or {}
+    local _, theirs = S.ScoreFor(drop.link, { isPlayer = false, classFile = looter.classFile,
+        specID = type(insp) == "table" and insp.specID or nil })
+    return mine, theirs
+end
+
 --- Paint the card for `drop`, `width` pixels wide; answers its height (CARD_H, or the stacked
---- card's, DCard.StackedHeight).
+--- card's, DCard.StackedHeight, and the Rolls box's under them).
 --- @param card table DCard.Build's answer
 --- @param drop table the feed record
 --- @param width number
@@ -592,16 +629,22 @@ function DCard.Paint(card, drop, width, now)
         placeStackedActions(card, width)
     end
     local snap = NS.Gear.Snapshot()
+    local myHow, theirHow = scoreHows(drop, insp)
     paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile,
-        NS.TestMode.GearOf(drop, snap and snap.equipped)), sideW)
+        NS.TestMode.GearOf(drop, snap and snap.equipped), myHow), sideW)
     local WO = NS.WindowOwn
-    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop)), sideW)
+    paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop), theirHow), sideW)
     local situation = NS.WindowFooter.SITUATION_LABEL[drop.situation]
     paintTrade(card.trade, DC.TradeBox(drop, situation))
     local state, reason = askState(drop)
     paintActions(card, drop, { askState = state, askReason = reason, inspect = insp, now = now, trade = tradeGuard(drop),
         transmogAsk = NS.Setting("messages.transmogAsk") == true,
         offerTone = drop.isMine and (WO.ToneStates(drop)) or nil, alone = drop.isMine and WO.Alone(drop) })
+    local extra = paintRolls(card, drop, width)
+    if extra > 0 then
+        height = height + extra
+        card:SetHeight(height)
+    end
     return height
 end
 
@@ -625,6 +668,7 @@ end
 -- Send, by the box's kind: back through the host handler with the edited text.
 local SENDERS = {
     ask = function(e, opts) NS.PressAsk(e.dropId, opts) end,
+    askML = function(e, opts) NS.PressAskML(e.dropId, opts) end,   -- e.dropId: the pending item's
     offer = function(e, opts) NS.PressOffer(e.dropId, e.target, opts) end,
     announce = function(e, opts) NS.PressAnnounce(e.dropId, opts) end,
 }
@@ -632,6 +676,7 @@ local SENDERS = {
 -- The Send button's rows by what the box sends: where the text goes, then its limit.
 local SEND_TIP = {
     ask = { { L["Whispers"], L["the looter"] }, { L["Limit"], L["one per item per looter"] } },
+    askML = { { L["Whispers"], L["the master looter"] }, { L["Limit"], L["one per item"] } },
     offer = { { L["Whispers"], L["this member"] }, { L["Limit"], L["one per item per member"] } },
     announce = { { L["Posts to"], L["the group's channel"] } },
 }
@@ -707,7 +752,8 @@ local function editorTitle(kind, target)
     return L["Edit message to %s"]:format(who)
 end
 
-local REFUSAL_LINE = { ask = L["Can't ask: %s."], offer = L["Can't offer: %s."], announce = L["Can't announce: %s."] }
+local REFUSAL_LINE = { ask = L["Can't ask: %s."], askML = L["Can't ask: %s."], offer = L["Can't offer: %s."],
+    announce = L["Can't announce: %s."] }
 
 -- What the box opens with: the template filled in for `target`, or nil and why it would be refused.
 local function previewFor(kind, target, dropID)
@@ -716,11 +762,12 @@ local function previewFor(kind, target, dropID)
 end
 
 --- Open the Edit message box for drop `dropID`: the `kind` template (`ask` by default, to the
---- drop's looter; `offer` to `target`; `announce` to the group) filled in, ready to change and
---- send. Says in the box why nothing can be sent when the send would be refused.
+--- drop's looter; `offer` to `target`; `announce` to the group; `askML` to `target`, the master
+--- looter, with `dropID` a pending item's id: plan DW-FP19) filled in, ready to change and send.
+--- Says in the box why nothing can be sent when the send would be refused.
 --- @param dropID number
---- @param kind string|nil "ask" (default), "offer" or "announce"
---- @param target string|nil the offer's member (an ask's is the drop's looter)
+--- @param kind string|nil "ask" (default), "offer", "announce" or "askML"
+--- @param target string|nil the offer's member or the master looter (an ask's is the drop's looter)
 --- @return table|nil the box, or nil before the window is built
 function DCard.OpenEditor(dropID, kind, target)
     if not NS.Window.Frame() then return nil end
@@ -733,7 +780,8 @@ function DCard.OpenEditor(dropID, kind, target)
     editor.box:SetText(preview and preview.text or "")
     refreshEditor(editor)
     if not preview then
-        local words = (kind == "offer" and OFFER_REFUSAL[why]) or EDIT_REFUSAL[why] or tostring(why)
+        local words = (kind == "offer" and OFFER_REFUSAL[why]) or (kind == "askML" and ML_REFUSAL[why])
+            or EDIT_REFUSAL[why] or tostring(why)
         editor.counter:SetText(REFUSAL_LINE[kind]:format(words))
     end
     editor:Show()

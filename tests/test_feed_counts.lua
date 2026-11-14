@@ -43,6 +43,10 @@ local function wears(m, unit, base, ilvl)
     end
 end
 
+-- How chat names the two cross-realm members on the kit profile: Name-Realm on Retail, the whole
+-- name on Forever (the mock row's realm is the surname there, client-quirks-§5).
+local BUNIAN_CHAT, KEGHUNT_CHAT = T.rosterName("Bùnian", "Azralon"), T.rosterName("Keghunt", "Thrall")
+
 -- The owner's group in a Mythic+ dungeon: you wear two 600 rings; Bùnian (Azralon, accented,
 -- cross-realm) wears 596, so the 596 Yoke is a sidegrade for him; Keghunt (Thrall) wears 630.
 local function run(seed)
@@ -88,10 +92,10 @@ local LATE_CURRENCY = "You receive currency: |cffa335ee|Hcurrency:3292:12|h[Myth
 
 local function playLines(m)
     for _, line in ipairs(CURRENCY) do loot(m, line) end
-    loot(m, "Bùnian-Azralon receives loot: " .. VOIDWHISPER .. "x50.")
-    loot(m, "Bùnian-Azralon receives loot: " .. YOKE .. ".")
-    loot(m, "Keghunt-Thrall receives loot: " .. YOKE .. ".")
-    loot(m, "Keghunt-Thrall receives loot: " .. ALTAR .. ".")
+    loot(m, BUNIAN_CHAT .. " receives loot: " .. VOIDWHISPER .. "x50.")
+    loot(m, BUNIAN_CHAT .. " receives loot: " .. YOKE .. ".")
+    loot(m, KEGHUNT_CHAT .. " receives loot: " .. YOKE .. ".")
+    loot(m, KEGHUNT_CHAT .. " receives loot: " .. ALTAR .. ".")
     loot(m, MONEY)
     loot(m, LATE_CURRENCY)
     m.advance(0)    -- the looters' inspects, on the fast path
@@ -115,8 +119,8 @@ test("two yokes: both Yokes are separate drops with the right looters, the accen
     local b, k = d[BUNIAN], d[KEGHUNT]
     assertTrue(b ~= nil and k ~= nil, "one each")
     assertTrue(b.id ~= k.id)
-    assertEqual(b.looter.name, "Bùnian-Azralon"); assertEqual(b.looter.classFile, "PALADIN")
-    assertEqual(k.looter.name, "Keghunt-Thrall"); assertEqual(k.looter.classFile, "WARRIOR")
+    assertEqual(b.looter.name, BUNIAN_CHAT); assertEqual(b.looter.classFile, "PALADIN")
+    assertEqual(k.looter.name, KEGHUNT_CHAT); assertEqual(k.looter.classFile, "WARRIOR")
     assertEqual(b.link, YOKE); assertEqual(k.link, YOKE)
     assertEqual(b.me.verdict, "downgrade", "596 against your 600 ring")
     assertEqual(b.them.verdict, "sidegrade", "596 against Bùnian's 596")
@@ -213,8 +217,17 @@ end)
 -- The group header counts every drop
 -- ---------------------------------------------------------------------------------------------
 
+-- The instance label the header leads with: the owner's Mythic+ 12 on Retail; Forever has no Mythic+
+-- (Forever port design §4.4), so its run is the heroic dungeon.
+local LABEL = T.forever and "Den of Nalorakk · Heroic" or "Den of Nalorakk · Mythic+ 12"
+
 test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`", function()
-    local NS, m, LF = run()
+    local NS, m, LF = run(T.forever and function(m)
+        m.instance.difficultyID, m.keystoneLevel = 2, nil
+    end or nil)
+    -- Keghunt's Yoke is interesting as likely given away: Retail's trade window passes the BoP one
+    -- on; a BoP item is soulbound on Forever, so there it is a BoE (Forever port design §4.6).
+    if T.forever then m.items[YOKE].bindType = 2 end
     playLines(m)
     local FB, WC = NS.WindowFilterBar, NS.WindowCells
     FB.State("group").view = { interesting = true }
@@ -226,20 +239,22 @@ test("header: View Interesting hides Bùnian's Yoke and the header reads `2 drop
     assertEqual(#h.hidden, 1); assertEqual(h.hidden[1].drop.looter.guid, BUNIAN)
     assertEqual(h.hidden[1].why, "interesting")
     local hd = WC.Header(h.group, h.count, nil, nil, false, h.hidden, ctx.filter)
-    assertEqual(uncolored(hd.text), "Den of Nalorakk · Mythic+ 12 · 2 drops · 1 shown · Testchar")
+    assertEqual(uncolored(hd.text), LABEL .. " · 2 drops · 1 shown · Testchar")
     local tip = T.tipPlainJoined(hd.tip, "\n")
-    assertTrue(tip:find("• Hidden: Yoke of the Charging Bear (Bùnian), View: Interesting", 1, true) ~= nil, tip)
+    -- the short name: Bùnian on Retail, the whole name on Forever (never cut to its first word)
+    local short = T.forever and BUNIAN_CHAT or "Bùnian"
+    assertTrue(tip:find("• Hidden: Yoke of the Charging Bear (" .. short .. "), View: Interesting", 1, true) ~= nil, tip)
     FB.State("group").view = {}
     local all = WC.Entries(LF.Groups(ctx.feed), LF.Get, NS.Window.TabContext("group"), {})
     assertEqual(all[1].count, 2); assertEqual(#all[1].hidden, 0)
     assertEqual(uncolored(WC.Header(all[1].group, 2, nil, nil, false, all[1].hidden).text),
-        "Den of Nalorakk · Mythic+ 12 · 2 drops · Testchar")
+        LABEL .. " · 2 drops · Testchar")
 end)
 
 test("header: your own drop is listed in Drops with the others, never counted as hidden", function()
     local NS, m, LF = run()
     loot(m, "You receive loot: " .. YOKE .. ".")
-    loot(m, "Keghunt-Thrall receives loot: " .. YOKE .. ".")
+    loot(m, KEGHUNT_CHAT .. " receives loot: " .. YOKE .. ".")
     m.advance(0)
     NS.WindowFilterBar.State("group").view = "all"
     local ctx = NS.Window.TabContext("group")

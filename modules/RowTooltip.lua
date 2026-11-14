@@ -26,6 +26,9 @@ local _, NS = ...
 -- tooltip names a token's or a collectible's kind and, for a collectible, its collection verdict
 -- now (RT.AddKindRows: NS.CollectCells.KindRows over the item's facts, NS.ItemFacts.Get). Gear
 -- gets none: the game's tooltip names its kind.
+--
+-- THE ROLL ROW (Forever port design §5.3). Under them, a rolled drop's summary line
+-- (RT.AddRollRow: NS.RollCells.Summary over the drop's or the pending item's roll table).
 
 NS.RowTooltip = NS.RowTooltip or {}
 local RT = NS.RowTooltip
@@ -153,6 +156,25 @@ function RT.AddKindRows(tip, link)
     local r, g, b = NS.Skin.Color("gtip.value")   -- the skin's tooltip value color, as every cell tip's lines
     for _, line in ipairs(lines) do tip:AddLine(line, r, g, b, true) end
     return #lines
+end
+
+--- Add a drop's roll summary under the game's lines (Forever port design §5.3): `Rolls: Won by
+--- Name (Need 87)` for a resolved drop with a roll table (`button.dropId`, the feed's `rec.roll`),
+--- or the live summary for a pending item (`button.pendingId`, NS.Pending). Nothing while
+--- `rolls.show` is off, with no table, or for a tooltip with no AddLine.
+--- @param tip table a GameTooltip
+--- @param button table the hovered item button
+--- @return number the rows added
+function RT.AddRollRow(tip, button)
+    if not (tip and tip.AddLine and type(button) == "table") or NS.Setting("rolls.show") == false then return 0 end
+    local src = button.pendingId and NS.Pending.Get(button.pendingId)
+        or button.dropId and NS.LootFeed.Get(button.dropId) or nil
+    local roll = type(src) == "table" and src.roll or nil
+    if type(roll) ~= "table" then return 0 end
+    local s = NS.RollCells.Summary(roll, NS.Compat.LootHistoryNow(), src.state)
+    local r, g, b = NS.Skin.Color("gtip.value")
+    tip:AddLine(NS.TipMarks.Row(NS.L["Rolls"], s.text), r, g, b, true)
+    return 1
 end
 
 --- Place a shown tooltip for a row: RT.Place, else (unknown geometry) on the hovered frame's top

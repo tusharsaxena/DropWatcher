@@ -12,9 +12,17 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
 local UP = { verdict = "upgrade", ilvlDelta = 9 }
 
+-- An hour ago, but never before today's midnight: the Drops strip's last column is today, so a run
+-- in the first hour after midnight must not file the log's recent drops under yesterday.
+local function recent(now)
+    local d = os.date("*t", now)
+    d.hour, d.min, d.sec = 0, 0, 0
+    return math.max(os.time(d), now - 3600)
+end
+
 local function drop(now, over)
     local e = { itemLink = LINK, itemID = 212, looter = "Brakk-Testrealm", class = "WARRIOR", outcome = "seen",
-        at = now - 3600, quality = 4, equipLoc = "INVTYPE_HEAD", me = { verdict = "downgrade", ilvlDelta = -3 },
+        at = recent(now), quality = 4, equipLoc = "INVTYPE_HEAD", me = { verdict = "downgrade", ilvlDelta = -3 },
         trade = { state = "likely" } }
     for k, v in pairs(over or {}) do e[k] = v end
     return e
@@ -22,7 +30,7 @@ end
 
 local function group(now, over, drops)
     local g = { key = "k", label = "Kyveza", kind = "encounter", instance = "Ruby Life Pools", difficulty = "Mythic",
-        situation = "raid", at = now - 3600, drops = drops }
+        situation = "raid", at = recent(now), drops = drops }
     for k, v in pairs(over or {}) do g[k] = v end
     return g
 end
@@ -132,7 +140,7 @@ test("insights sections: a section with no rows shows its heading and one line, 
     assertTrue(d.headers.byInstance:IsShown() and d.headers.byBoss:IsShown() and d.headers.gain:IsShown())
     local lines = emptyLines(NS, d)
     assertTrue(has(lines, "No upgrades for you in these filters."))
-    assertTrue(has(lines, "No upgrades for you from a boss kill in these filters. Mythic+ keys are kept as whole runs."))
+    assertTrue(has(lines, NS.InsightsSections.EMPTY.byBoss), "By boss's own line (its words per client)")
     assertTrue(has(lines, "No items received in these filters."))
     assertTrue(has(lines, "No asks in these filters."))
     assertTrue(has(lines, "No drops by others in these filters."))
@@ -202,4 +210,12 @@ test("insights sections: a skin switch marks a fresh layout, so the host's color
     assertTrue(d.pane.layoutKey == nil, "marked")
     m.advance(0.1)
     assertEqual(NS.WindowInsights.Drawn().pane.layoutKey, key, "laid out again")
+end)
+
+test("insights sections: By boss's empty line names Mythic+ keys on Retail alone (clients-§4)", function()
+    -- red under: the one Retail sentence on both clients (WoW Forever has no keystone)
+    local NS = T.newAddon()
+    local line = NS.InsightsSections.EMPTY.byBoss
+    assertEqual(line:find("Mythic+", 1, true) == nil, T.forever, line)
+    assertTrue(line:find("No upgrades for you from a boss kill in these filters.", 1, true) == 1, line)
 end)

@@ -1,0 +1,26 @@
+id	milestone	repo	title	depends_on
+DW-FP00	M0	DropWatcher	Research notes, design and plan	
+DW-FP01	M1	DropWatcher	Re-vendor LibKa0s v1.95.0 (kit 54)	DW-FP00
+DW-FP02	M1	DropWatcher	CompatClient: client routing, Role, names; FEATURE_EVENTS take clients	DW-FP01
+DW-FP03	M1	DropWatcher	Default skin per client (skinning-§2)	DW-FP01
+DW-FP04	M1	DropWatcher	Names through UnitCharacterName and CharacterKey	DW-FP02
+DW-FP05	M2	DropWatcher	ClassData per client; Forever classes, armor by level, soft stat gate, talent events	DW-FP02
+DW-FP06	M2	DropWatcher	Forever slot plan with the ranged slot	DW-FP05
+DW-FP07	M2	DropWatcher	Pawn and custom weights on Forever by talent tree	DW-FP05
+DW-FP08	M2	DropWatcher	Score-first verdicts on Forever	DW-FP07
+DW-FP09	M3	DropWatcher	Situations, difficulties, sim and test seeds per client	DW-FP02
+DW-FP10	M3	DropWatcher	Journal pool, transmog, tracks, off-spec, bonus-roll sim are Retail-only	DW-FP02
+DW-FP11	M3	DropWatcher	Forever trade model: BoP soulbound, BoE only	DW-FP02
+DW-FP12	M3	DropWatcher	Retail and WoW Forever (Interface 120105, 16001): TOC, README, DEPENDENCIES, feature table, gate docs	DW-FP05,DW-FP06,DW-FP07,DW-FP08,DW-FP09,DW-FP10,DW-FP11
+WS-FP12	M3	WowAddonStandards	DropWatcher roster row Retail · Forever	DW-FP12
+DW-FP13	M4	DropWatcher	CompatLoot: roll tables, active rolls, roll info	DW-FP12
+DW-FP14	M4	DropWatcher	Pending store and the roll lifecycle	DW-FP13
+DW-FP15	M4	DropWatcher	Rolling now section, Rolls box and roll cells	DW-FP14
+DW-FP16	M4	DropWatcher	Rolls kept in History	DW-FP14
+DW-FP17	M4	DropWatcher	Sim and test mode for rolls	DW-FP15,DW-FP16
+DW-FP18	M5	DropWatcher	Loot method and master-loot pending	DW-FP14
+DW-FP19	M5	DropWatcher	Ask the master looter	DW-FP18
+DW-FP20	M6	DropWatcher	Your verdict on Blizzard's roll popup	DW-FP14
+DW-FP21	M7	DropWatcher	Docs, FOREVER smoke theme and probe sheet	DW-FP20
+LK-FP21	M7	LibKa0s	Retire the Role one-consumer register row	DW-FP12
+DW-FP22	M7	DropWatcher	Whole-run review fixes and automated-test bundle	DW-FP21

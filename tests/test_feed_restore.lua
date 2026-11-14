@@ -9,7 +9,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local BRAKK = "Player-1-0000000A"
-local ME_KEY = "Testchar-Testrealm"
+local ME_KEY = T.ME   -- your recorder key on the kit profile
 local T0 = 1800000000
 
 local function link(id) return ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Item %d]|h|r"):format(id, id) end
@@ -135,7 +135,7 @@ test("restore: after a reload this session's drops come back under their headers
     assertEqual(a.source, "restore"); assertEqual(a.groupKey, before[1].groupKey, "the feed key, its suffix gone")
     assertEqual(LF.Groups()[1].label, NS.LootFeed.Groups()[1].label)
     assertEqual(#LF.Groups(), 1)
-    assertEqual(a.looter.name, "Brakk-Testrealm"); assertEqual(a.looter.guid, BRAKK, "read from the roster")
+    assertEqual(a.looter.name, T.rosterName("Brakk")); assertEqual(a.looter.guid, BRAKK, "read from the roster")
     assertFalse(a.isMine); assertTrue(b.isMine)
     assertEqual(a.at, m2.GetTime() - 600, "its epoch turned into the client clock")
     assertEqual(a.situation, "dungeon")
@@ -339,4 +339,28 @@ test("session: This instance survives a reload in the same instance, and only th
     m4.advance(1000)
     login(m4)
     assertEqual(NS4.Window.TabContext("group").ctx.instanceSince, 1000, "a login starts now")
+end)
+
+test("feed restore: a reload brings the roll table back", function()
+    local kept = { at = T0, allPassed = false, n = 2, w = 1, r = {
+        { name = "Brakk", class = "WARRIOR", s = 0, n = 87 },
+        { name = "Doom Dock", class = "MAGE", s = 3, n = 50 },
+    } }
+    local NS, m = seeded({ group("enc:2:5@" .. T0, { entry({ rolls = kept }), entry({ itemID = 301, itemLink = link(301) }) }) })
+    -- red under: FeedRestore.Receipt not naming the roll (a restored drop with no Rolls box)
+    reload(m)
+    local drops = NS.LootFeed.Drops()
+    assertEqual(#drops, 2)
+    local roll = drops[1].roll
+    assertEqual(type(roll), "table", "the roll table came back")
+    assertEqual(roll.winner.name, "Brakk"); assertEqual(roll.winner.roll, 87)
+    assertEqual(#roll.rolls, 2); assertEqual(roll.rolls[2].name, "Doom Dock")
+    assertTrue(roll.rolls[1].isWinner); assertNil(roll.rolls[1].guid)
+    local s = NS.RollCells.Summary(roll).text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    assertEqual(s, "Won by Brakk (Need 87)")
+    assertNil(drops[2].roll, "a drop with none has none")
+    -- The restored drop's next refresh keeps the entry's table as it was.
+    NS.addon:SendMessage(NS.MSG.DROP_UPDATED, drops[1].id, "inspect")
+    local e = NS.History.Store().groups[1].drops[1]
+    assertEqual(e.rolls.at, T0); assertEqual(e.rolls.n, 2); assertEqual(#NS.History.Store().groups[1].drops, 2)
 end)

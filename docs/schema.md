@@ -4,6 +4,13 @@ The SavedVariables shape, every default, and the migration path. Defaults live i
 `defaults/Profile.lua` (`NS.C`); `settings/Schema.lua`'s `Settings.BuildDefaults` merges them with
 every stored schema row's own default and hands the tree to AceDB.
 
+A default only a Retail-only feature reads (clients-§4) is added on Retail alone, from the feature's
+declaration (`NS.Constants.FEATURE`, DW-FP21): `trade.warnAt`, `window.columns.tradeWindow`,
+`messages.templates.transmog`, `messages.transmogAsk`, `messages.templates.askOffSpec` and the whole
+`glow.offSpec` table. On WoW Forever the profile has none of them and their rows are not registered,
+so `/dw list` and Defaults never reach them; a value a Retail profile stored stays in a shared
+profile untouched and unread.
+
 ## The write seam
 
 One write, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher and
@@ -22,7 +29,8 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
 - A row with nothing to do carries a `disabledIf` predicate that dims it on the panel; its `default`
   references `defaults/Profile.lua`; its `validate` refuses a value outside its list or range
   before the seam stores it.
-- `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID
+- `comparison.weights` and `comparison.undesired` are whole-value `map` rows keyed by specID (on
+  WoW Forever by `"<classFile>:<tree>"`, one per talent tree: `NS.ClassData.SpecKey`)
   (architecture-§5's value route: a membership change is a whole write through the seam), drawn by
   their own editors (`skipRender`); the CLI shows them as their entry count. So are the two item
   lists, `feed.whitelist` and `feed.blacklist` (issue #13), flat `{ [itemID] = true }` sets on the
@@ -40,6 +48,11 @@ Upgrade glow; Icons' composed Border block (`settings/ComposedRows.lua`) is appe
   repaint on the Columns, Layout and Quality rows. Paths `enabled` and `locked` are declared
   `writeThrough`, so the host verbs still land on a load where the composers are hollow
   (options-ui-§1 route (a)).
+- The per-character closure row is General › Role (`char.role`, WoW Forever alone, Forever port
+  design §11.4): `auto`, `tank`, `healer` or `damage`, onto `db.char.role.override` through
+  `Compat.SetRoleOverride` (`auto` clears it). No profile default and no profile reset reach it;
+  `/dw reset char.role` is Automatic. Its tooltip names what Automatic answers now
+  (`Compat.AutomaticRole`), rewritten each time the General page draws.
 - The global closure rows are the Minimap button (`global.minimap.shown`, onto LibDBIcon's `hide`)
   and Keep history for (onto `global.history.retentionDays`, whose change to a shorter window asks
   before it deletes anything, `modules/HistoryRetention.lua`; until the player answers, its
@@ -72,9 +85,10 @@ Every module reads a setting through `NS.Setting(path)`.
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
 | `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
+| `char.role` | `"auto"` | Role (WoW Forever alone) | the role your gear is judged for: `auto`, `tank`, `healer` or `damage`; stored per character as `db.char.role.override` (no profile key; see the closure rows above), and on a Druid the Feral Pawn scale (2 for Damage, 3 for Tank, Forever port design §11.4) |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
-| `skin.skin` | `"ka0s"` | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); `ka0s` is Ka0s Default, the look before skins |
+| `skin.skin` | `NS.DEFAULT_SKIN` (`"ka0s"` on Retail, `"forever"` on Forever) | Skin (skipRender) | the Ka0s skin worn, one of LibKa0s-Skin-1.0's registered keys (`/dw set` refuses another); the default is `Skin:DefaultSkin()` (skinning-§2): `ka0s` is Ka0s Default, the look before skins, and `forever` is WoW Forever |
 | `skin.ignorePanel`, `skin.ignoreFonts` | `true`, `false` | Skin › Scope (skipRender) | the two exceptions: the settings panel stays the client's; every font stays the game's (the skin still colors the text) |
 | `skin.font`, `skin.texture` | `""`, `""` | Skin › Font and texture (skipRender) | the overrides, each a LibSharedMedia key, `""` for the skin's default |
 | `skin.outline` | `"hud"` | Skin › Font and texture (skipRender) | the Font outline (LibKa0s v1.82.0, ruling D-06; the default moved to `hud` in v1.83.0, D-10, and a stored mode stays): `hud` text only, `all` text, or `off`; applied with `Skin:SetOutline` at load, on every profile event and on the row's write. The window, the cards and the toast are window text |
@@ -92,7 +106,7 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 | `situations.<key>.track` | per situation (below; the owner's defaults since DW-06) | Track | loot is watched in that situation |
 | `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
-| `trade.rules.<key>` | `personal`; `legacy` for PvP (follower dungeons were `legacy` too, design spec §7.2, until DW-06) | Loot rule | the rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
+| `trade.rules.<key>` | `personal`; `legacy` for PvP (follower dungeons were `legacy` too, design spec §7.2, until DW-06) | Loot rule | Retail only (`clients = { "retail" }`, DW-FP11: WoW Forever has one rule, `soulbound`, and no Loot rule column). The rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
 
 `<key>` is each of `mythicPlus`, `dungeon`, `followerDungeon`, `raidLFR`, `raid`, `delve`,
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
@@ -118,6 +132,9 @@ button and profiles reach them as any row.
 | `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
+| `rolls.show` | `true` | Rolls | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
+| `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (the entry's `rolls`) |
+| `rolls.popupMark` | `true` | Rolls | your verdict on the game's roll popup (`modules/RollPopup.lua`, since DW-FP20); a change repaints the marks on the shown popups |
 
 ### Comparison
 
@@ -127,7 +144,7 @@ button and profiles reach them as any row.
 | `comparison.sidegradeBand` | `0` | Scoring | item levels either side of equal that read as a sidegrade, 0 to 20 |
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
 | `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |
-| `comparison.weights` | `{}` | Weights (`map`) | `{ [specID] = { STAT_KEY = weight } }`, the Weights adapter's scores; the Pawn scale import writes one spec's |
+| `comparison.weights` | `{}` | Weights (`map`) | `{ [specKey] = { STAT_KEY = weight } }` (the specID, or on WoW Forever `"<classFile>:<tree>"`), the Weights adapter's scores; the Pawn scale import writes one spec's |
 | `comparison.undesired` | `{}` | Unwanted types (`map`) | `{ [specID] = { ["<classID>:<subClassID>"] = true } }`, the item types a spec never wants |
 
 The two `map` rows are whole values: a write replaces the whole table through the seam, and the
@@ -138,8 +155,8 @@ row refuses a key that is not a specID, a weight that is not a number, or a type
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `messages.templates.<kind>` | design spec §9.1's text | Templates | the `ask`, `transmog`, `askOffSpec`, `offer` and `announce` templates; an empty one is refused. `transmog` is the ask's wording for a drop that is no gain for you but whose look you have not collected (DW-53); `askOffSpec` is its wording for a drop your current spec can't use but another spec of your class gains from (feedback-19 spec §2; no migration, AceDB backfills the default) |
-| `messages.transmogAsk` | `false` | Sending | also offer an ask, with the `transmog` template, on a drop that is no gain for you but whose look you have not collected (DW-53) |
+| `messages.templates.<kind>` | design spec §9.1's text | Templates | the `ask`, `transmog`, `askOffSpec`, `askML`, `offer` and `announce` templates; an empty one is refused. `askML` (DW-FP19, both clients) is the master-loot ask, whispered to the master looter for an item awaiting them, `{player}` the master looter; auto-ask never sends it. `transmog` and `askOffSpec` are Retail only (`clients = { "retail" }`, DW-FP10: WoW Forever has neither transmog nor off-spec, `C.MESSAGE_TEMPLATES` per client). `transmog` is the ask's wording for a drop that is no gain for you but whose look you have not collected (DW-53); `askOffSpec` is its wording for a drop your current spec can't use but another spec of your class gains from (feedback-19 spec §2; no migration, AceDB backfills the default) |
+| `messages.transmogAsk` | `false` | Sending | Retail only (`clients = { "retail" }`, DW-FP10). Also offer an ask, with the `transmog` template, on a drop that is no gain for you but whose look you have not collected (DW-53) |
 | `messages.editFirst` | `false` | Sending | open the Edit message box before an ask, offer or announce (the host handlers) |
 | `messages.oneAsk` | `true` | Sending | each (drop, target, kind) is sent once |
 | `messages.announceChannel` | `"auto"` | Sending | `auto`, `INSTANCE_CHAT`, `RAID` or `PARTY`; never say or yell |
@@ -154,7 +171,7 @@ toast Window › Toast until feedback-24.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `me` and `them` (since DW-F1, feedback-6 spec §1, the merged cells: the worn gear and the verdict; the `myEq` and `theirEq` toggles DW-83 added are retired by step 7), `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step), `actions`); Item never hides |
+| `window.columns.<col>` | `true` | Columns | `false` hides that Drops column (`ilvl`, `slot`, `armorType` (the Type column, since DW-D3, feedback-4 spec §3; AceDB's default fills it in for a stored profile, no migration step), `looter`, `me` and `them` (since DW-F1, feedback-6 spec §1, the merged cells: the worn gear and the verdict; the `myEq` and `theirEq` toggles DW-83 added are retired by step 7), `trade`, `tradeWindow` (Trade window, since DW-E1, feedback-5 spec §1; AceDB's default fills it in for a stored profile, no migration step; Retail only, its row and default too, `clients = { "retail" }`, DW-FP21: WoW Forever has no countdown and no Trade window column), `actions`); Item never hides |
 | `window.mode` | `"full"` | Layout; `NS.SetWindowMode`, the title-bar toggle, `/dw compact`, `/dw full` (DW-C0) | the window's layout, `full` or `compact` (compact spec §1, `modules/WindowCompact.lua`); its reaction lets a run override go and lays the window out. Replaced the compact preset `window.compact` (DW-42), which step 5 maps here |
 | `window.compactInRuns` | `true` | Layout (DW-C0) | Compact view when it auto-opens in a run (Open in compact view during a run until item 020): an auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever `window.mode`, until the situation leaves that run (the override itself is session-only, `NS.State.compactRun`) |
 | `window.rowHeight`, `window.fontSize` | `18`, `0` | Layout | the drop tables' row height (18 to 40) and text size on both tabs (`modules/WindowRows.lua`, at each repaint; feedback-2 spec §8, FB2-9): `fontSize` 0 is Default, the template's own size like Ka0s Loot History's table (the CLI shows `0 (Default)`), else 8 to 20; a Drops row is taller by its countdown bar's room while the Trade window column shows (feedback-5 spec §1). Since DW-A8 (was `24`, `12`, Group drops only); a value the player stored stays as it is |
@@ -164,7 +181,7 @@ toast Window › Toast until feedback-24.
 | `window.tableFontShadowFromSkin` | `true` | Layout › Tables (FS-DW-FLIP) | Use the skin's shadow: `dw.tableShadow` at `hud.shadowX`, `hud.shadowY`, which keeps black 1, -1 under Ka0s Default; `window.tableFontShadow` is not read while it is on, and stands under Ignore fonts. Step 11 turns it on once per stored profile |
 | `feed.view.interesting`, `feed.view.likely`, `feed.view.usable`, `feed.view.upgrade`, `feed.view.newCollect` | `false` each | Starting view | the View a fresh filter bar tab opens on, a set (DW-A1, feedback-2 spec §1): each row on adds its value (Interesting; Likely tradeable, the trade estimate yes or likely; Usable by me, not can't use or doesn't want; Upgrade for me; New to my collection, issue #13, DW-CAT7: the verdict for you is new to your collection, a row added with no migration since a missing value reads its default), the values combine as AND; a Can't use whose off-spec is an upgrade counts for Interesting and Upgrade for me, and one whose off-spec is an upgrade or a sidegrade for Usable by me (feedback-19 spec §1), and all off is All, the default |
 | `feed.content`, `feed.sort` | `"session"` (`"instance"` until feedback-13 spec §0), `"newest"` | Starting view | the Drops tab's Content when it opens (`instance` or `session`; `all` is History's alone since DW-Q1, feedback-15 spec §1, and step 8 turns a stored one into `session`), and a fresh tab's Sort (History always opens on Content: All) |
-| `trade.warnAt` | `600` | Columns (Trade window) | Mark a trade window ending within: seconds left when your own drop's Trade window countdown takes its warning color (`modules/MineCells.lua`, `modules/TradeTimer.lua`), 0 to 1800; 0 is off |
+| `trade.warnAt` | `600` | Columns (Trade window) | Retail only (`clients = { "retail" }`, DW-FP11: WoW Forever has no countdown). Mark a trade window ending within: seconds left when your own drop's Trade window countdown takes its warning color (`modules/MineCells.lua`, `modules/TradeTimer.lua`), 0 to 1800; 0 is off |
 | `toast.enabled` | `true` (`false` until 2026-10-25; no migration, so an existing profile keeps its value) | Alerts › Toast | Show a toast |
 | `toast.inCombat`, `toast.sound` | `false` | Alerts › Toast | the upgrade toast (`modules/Toast.lua`, read at each drop and each toast); turning `toast.enabled` off takes the toast on screen down and empties its queue (the row's reaction); in combat, turning `toast.inCombat` on shows what waits and turning it off holds what follows the toast on screen, which stays up (its reaction, `NS.Toast.OnInCombatChanged`, AT-A3) |
 | `toast.minGain`, `toast.duration` | `10`, `8` | Alerts › Toast | its least gain for you and its seconds on screen |
@@ -176,7 +193,9 @@ toast Window › Toast until feedback-24.
 
 Two glows on a drop's icon (`modules/Glow.lua`, LibCustomGlow-1.0): `glow.main` for an upgrade for
 your current spec, `glow.offSpec` for a drop your spec can't use whose off-spec part is an upgrade;
-either only on a drop whose trade estimate is Yes or Likely (feedback-22).
+either only on a drop whose trade estimate is Yes or Likely (feedback-22). Every `glow.offSpec` row
+is Retail only (`clients = { "retail" }`, DW-FP10): WoW Forever has no off-spec, so its tab is the
+main spec's column alone.
 Each has the same keys, below as `glow.<g>.<key>`; the knob set, its ranges and defaults are shared
 with KickCD's glow slots, but `pixelFrequency`'s default, 0.1, which is this addon's own
 (feedback-21 H6; KickCD keeps the library's 0.25). On the tab every row is a main | off-spec pair,
@@ -281,7 +300,8 @@ history = { retentionDays = 30, v = 1, groups = {
           me = { verdict, ilvlDelta, scoreDelta, offSpec?, collect?, category?, count?, limit?,
                  reasonKey? }, them = { ... } | nil,
           trade = { state, reasonKey, basis, args }, outcome, before, beforeExpired, at,
-          askedAt?, offeredAt?, settledAt?, got? } } } } }
+          askedAt?, offeredAt?, settledAt?, got?,
+          rolls? = { at, allPassed, n, w, r = { { name, class, s, n? }, ... } } } } } } }
 ```
 
 - A group is one feed group of one session: its `key` is the feed group's key and the session's
@@ -337,6 +357,14 @@ history = { retentionDays = 30, v = 1, groups = {
   no `settledAt`, and `NS.History.WasAsked` / `WasOffered` read it as asked (someone else's drop
   received) or offered (your drop traded away). No migration step: the fields are optional and
   additive, and `v` stays 1.
+- `rolls` (Forever port design §5.4, DW-FP16) is a group-loot drop's final roll table, kept while
+  `rolls.keep` is on: `r` one row per player in the roll cells' order (the winner first), at most
+  40 (`NS.History.ROLL_ROWS`), each its name, classFile (`class`), state number (`s`, 0 Need to
+  5 Pass) and roll number (`n`, none for a pass); `w` the winner's place in `r`; `n` every player
+  who rolled, the rows cut or not; `at` the `time()` it was kept. No GUIDs. It lands with the drop
+  or on the later merge that attaches it (that change sends `HistoryChanged`);
+  `NS.History.RollTable` reads it back for the History card's Rolls box and the drop a reload
+  restores. Additive, `v` stays 1.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all
@@ -395,6 +423,11 @@ it is named.
   hears, but a reload's first one in the stored place) and `Session.MarkCleared` (`time()` at each
   live `LootFeed.Clear`, `/dw clear` or Clear this session's drops on boss kill: a reload restores no entry dated
   before it).
+- `char.role.override` and `char.role.last` (`{ role, specID }`) are the player's role store
+  (Forever port design §4.2, DW-FP02). Owner `core/CompatClient.lua` (`Compat.RoleStore`, made on
+  first use); writers LibKa0s-Role-1.0's `Resolve` (`last`, on each answer from the group's
+  assignment, the talent tree or the spec, read through `Compat.PlayerRole`) and `SetOverride`
+  (`override`, through `Compat.SetRoleOverride`, the General › Role row's write on WoW Forever).
 
 While a simulation runs, History writes a simulated drop (`sim = true`) and a simulated trade to
 the simulation's session-only log instead (`NS.SimHost.HistoryLog`, `modules/Sim.lua`), never

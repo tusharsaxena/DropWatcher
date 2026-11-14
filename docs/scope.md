@@ -8,6 +8,11 @@ yes", it asks for the item in one polite click. It also lists your own tradeable
 trade countdown and the group members each one would help (design spec §1, in
 [`superpowers/specs/2026-10-10-drop-watcher-v1-design.md`](superpowers/specs/2026-10-10-drop-watcher-v1-design.md)).
 
+It serves Retail and WoW Forever from one codebase (the Forever port,
+[`superpowers/specs/2026-11-13-drop-watcher-forever-port-design.md`](superpowers/specs/2026-11-13-drop-watcher-forever-port-design.md)):
+each client's own rules, a feature the other lacks absent there (`ARCHITECTURE.md` → Per-client
+features), and everyone's loot rolls on both.
+
 It respects Midnight's addon restrictions: asks queue while chat sending is restricted, and every
 value the client may hand over as a secret is guarded. It is quiet by default; auto-ask, toasts and
 sound are opt-in.
@@ -72,6 +77,22 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   title-bar toggle, the Layout setting, `/dw compact` and `/dw full` switch it, each layout keeps its
   own size and place, and an auto-open inside a run opens it compact until the run ends (on by
   default).
+- **Everyone's rolls** (the Forever port, design §5 and §7, both clients). Every group-loot roll
+  the client's loot history reports is held beside the feed while it is open, in the Drops tab's
+  Rolling now section above the boss groups: the item, your verdict, who chose Need, Greed or Pass
+  so far and the time left, with each player's choice and number in a ROLLS box under it. Won, it
+  joins the feed as its drop with the final roll table on its detail card and in History (Drops ›
+  Rolls' Show rolls and Keep rolls in history). The game's own roll popup carries a small card with
+  your verdict and `Need so far` (Mark the roll popup).
+- **Master-loot pending and Ask the master looter** (design §6, both clients; on Retail Guild Master
+  Loot alone). An Epic in a loot window you opened, while someone else is the master looter, waits in
+  Rolling now as awaiting the master looter until a receipt names who got it, with one Ask that
+  whispers the master looter.
+- **WoW Forever** (the port, design §4). The nine classes by talent tree with the armor level rule,
+  the ranged slot, Pawn and your weights by talent tree, score-first verdicts, whole two-word names,
+  and Forever's trade model: a looted bind-on-pickup drop is soulbound, so only a bind-on-equip drop
+  is tradeable. Mythic+, delves, follower dungeons, Raid Finder, scenarios, transmog, upgrade tracks,
+  off-spec, the Encounter Journal pool and the trade countdown are Retail's alone.
 - **The extras.** The upgrade toast (with its own scale, and up to five stacked at once, three by
   default: DW-T2), on for a new profile since 2026-10-25, and
   auto-ask, off by default.
@@ -111,7 +132,8 @@ a `|Hbattlepet:` link and is never watched; only companion items are.
 
 ## What it deliberately does not do (v1)
 
-- Loot council, voting and rolls.
+- Loot council and voting, and rolling for you: the rolls are shown, but you roll on the game's own
+  popup.
 - Wishlists, BiS lists, tier and catalyst flags, Droptimizer import.
 - Addon-to-addon communication, and interop with other loot-trading addons.
 - Void Core tracking, loot-spec nudges.

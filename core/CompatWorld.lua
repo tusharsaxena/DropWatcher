@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/CompatWorld.lua — the stable world reads, published on NS.Compat so the simulator's answer
 -- seam (core/SimSetup.lua, simulator spec §2) answers them too: the group's size and kind, a unit's
--- GUID, name, class, connection and whether it is a player, where the player is (the instance, its difficulty and that
+-- GUID, name, class, level (plain), connection and whether it is a player, where the player is (the instance, its difficulty and that
 -- difficulty's name, a keystone run in progress and its level), whether the player is fighting, and
 -- whether an optional addon (Pawn, CanIMogIt) is loaded. (The GlobalString reads are the root's,
 -- core/Compat.lua's Compat.GlobalString: they are not world reads.)
@@ -54,20 +54,24 @@ function Compat.UnitGUID(unit)
     return UnitGUID(unit)
 end
 
---- UnitName(unit): name, realm, raw (either may be secret; realm is nil on your own realm).
---- @param unit string
---- @return any name, any realm
-function Compat.UnitName(unit)
-    if not UnitName then return nil end
-    return UnitName(unit)
-end
-
 --- UnitClass(unit): localized name, classFile, classID, raw.
 --- @param unit string
 --- @return any, any, any
 function Compat.UnitClass(unit)
     if not UnitClass then return nil end
     return UnitClass(unit)
+end
+
+--- UnitLevel(unit) as a plain level: nil for a secret, a non-number, 0 or less (the client's "not
+--- known", and -1 for a skull), or no API. The armor a WoW Forever class wears depends on it
+--- (core/ClassDataForever.lua, Forever port design §4.2).
+--- @param unit string
+--- @return number|nil
+function Compat.UnitLevel(unit)
+    if not UnitLevel then return nil end
+    local level = UnitLevel(unit)
+    if Compat.IsSecret(level) or type(level) ~= "number" or level <= 0 then return nil end
+    return level
 end
 
 --- UnitIsConnected(unit), raw (it may be secret). True without the API.
@@ -133,11 +137,12 @@ end
 
 --- The keystone's level: the active run's (C_ChallengeMode.GetActiveKeystoneInfo), else the
 --- completed run's (C_ChallengeMode.GetChallengeCompletionInfo, which still answers while its end
---- chest is looted), else nil. Feedback-3 spec §4: a key run's header reads `Mythic+ 12`.
+--- chest is looted), else nil. Feedback-3 spec §4: a key run's header reads `Mythic+ 12`. Retail's
+--- alone: nil on WoW Forever, which has no keystones (Forever port design §4.4).
 --- @return number|nil
 function Compat.KeystoneLevel()
     local cm = C_ChallengeMode
-    if cm == nil then return nil end
+    if cm == nil or Compat.IsForever() then return nil end
     local level = type(cm.GetActiveKeystoneInfo) == "function" and keyLevel((cm.GetActiveKeystoneInfo())) or nil
     if level then return level end
     if type(cm.GetChallengeCompletionInfo) ~= "function" then return nil end
@@ -147,10 +152,12 @@ function Compat.KeystoneLevel()
 end
 
 --- C_ChallengeMode.IsChallengeModeActive() as a plain boolean (a keystone run in progress).
+--- Retail's alone: false on WoW Forever, which has no keystones (Forever port design §4.4).
 --- @return boolean
 function Compat.ChallengeModeActive()
     local cm = C_ChallengeMode
-    return cm ~= nil and type(cm.IsChallengeModeActive) == "function" and cm.IsChallengeModeActive() == true
+    if cm == nil or Compat.IsForever() then return false end
+    return type(cm.IsChallengeModeActive) == "function" and cm.IsChallengeModeActive() == true
 end
 
 --- InCombatLockdown() as a plain boolean (false without the API).

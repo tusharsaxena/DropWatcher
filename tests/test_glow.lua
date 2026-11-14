@@ -91,27 +91,51 @@ end)
 
 -- ── Apply on a button ───────────────────────────────────────────────────────────────────────
 
+-- The main glow's halves run on both clients; the off-spec glow's are Retail's (Forever port design §4.4).
 test("glow: without the library Apply still records its decision; a glow turned off clears it", function()
     local NS, _, m = T.enableAddon()
     local G, b = NS.Glow, button(m)
     assertEqual(G.Apply(b, drop()), "main"); assertEqual(b.glowKind, "main")
-    assertEqual(G.Apply(b, drop({ me = offSpec() })), "offSpec"); assertEqual(b.glowKind, "offSpec")
+    if not T.forever then
+        assertEqual(G.Apply(b, drop({ me = offSpec() })), "offSpec"); assertEqual(b.glowKind, "offSpec")
+    end
     assertNil(G.Apply(b, side(2))); assertNil(b.glowKind, "a sidegrade clears it")
-    assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
-    assertNil(G.Apply(b, drop({ me = offSpec() })), "the off-spec glow is off")
+    if not T.forever then
+        assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
+        assertNil(G.Apply(b, drop({ me = offSpec() })), "the off-spec glow is off")
+    end
     assertEqual(G.Apply(b, drop()), "main", "the main glow is its own")
     assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
     assertNil(G.Apply(b, drop())); assertNil(b.glowKind)
     G.Stop(b); G.Stop(nil); assertNil(G.Apply(nil, drop()))
 end)
 
-test("glow: each style starts with the knob table's arguments, under the addon's key", function()
-    local NS, _, m = T.enableAddon()
+-- clients-§6: WoW Forever has the main glow alone (Forever port design §4.4): it records, styles and
+-- clears as on Retail, and there is no off-spec glow setting to turn; on Retail both are there.
+test("glow: Forever has the main glow alone, and it still starts, styles and stops", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
-    -- main: proc (both default to proc since DW-03, D-18), its own #19FF19, opaque; the off-spec
-    -- set to pixel here, so the style change is driven
-    assertTrue(S("glow.offSpec.type", "pixel"))
+    assertEqual(NS.SchemaRuntime.FindRow("glow.offSpec.enabled") ~= nil, not T.forever, "the off-spec glow's row")
+    assertEqual(table.concat(G.KINDS, ","), T.forever and "main" or "main,offSpec", "the kinds")
+    assertTrue(S("glow.main.type", "pixel"))
+    assertEqual(G.Apply(b, drop()), "main"); assertEqual(b.glowKind, "main")
+    assertEqual(names(lib), "PixelGlow_Start")
+    assertTrue(S("glow.main.type", "button"))
+    lib.calls = {}
+    G.Apply(b, drop())
+    assertEqual(names(lib), "PixelGlow_Stop,ButtonGlow_Start", "the old style stops first")
+    assertTrue(S("glow.main.enabled", false))
+    assertNil(G.Apply(b, drop())); assertNil(b.glowKind, "turned off, it clears")
+end)
+
+-- The main glow's styles run on both clients; the off-spec glow's own knobs are the next case,
+-- Retail's alone (Forever port design §4.4).
+test("glow: each style starts with the knob table's arguments, under the addon's key", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    local b = button(m)
+    -- main: proc (both default to proc since DW-03, D-18), its own #19FF19, opaque
     assertTrue(S("glow.main.type", "proc"))
     G.Apply(b, drop())
     local c = lib.calls[1]
@@ -120,22 +144,10 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     assertEqual(c[3].color[1], tone.r); assertEqual(c[3].color[3], tone.b); assertEqual(c[3].color[4], 1)
     assertEqual(c[3].duration, 1); assertEqual(c[3].startAnim, true); assertEqual(c[3].key, G.KEY)
     assertEqual(c[3].frameLevel, G.FRAME_LEVEL); assertEqual(c[3].xOffset, 0)
-    -- off-spec: pixel, length 0 is automatic (nil), the border a boolean (nil would draw it)
-    lib.calls = {}
-    G.Apply(b, drop({ me = offSpec() }))
-    assertEqual(names(lib), "ProcGlow_Stop,PixelGlow_Start", "the old style stops first")
-    c = lib.calls[2]
-    assertEqual(c[4], 8); assertEqual(c[5], 0.1); assertNil(c[6]); assertEqual(c[7], 1)
-    assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
-    assertTrue(S("glow.offSpec.pixelLength", 6)); assertTrue(S("glow.offSpec.pixelBorder", false))
-    lib.calls = {}
-    G.Apply(b, drop({ me = offSpec() }))
-    c = lib.calls[2]
-    assertEqual(c[6], 6); assertEqual(c[10], false)
     assertTrue(S("glow.main.type", "button")); assertTrue(S("glow.main.buttonFrequency", 0.5))
     lib.calls = {}
     G.Apply(b, drop())
-    assertEqual(names(lib), "PixelGlow_Stop,ButtonGlow_Start")
+    assertEqual(names(lib), "ProcGlow_Stop,ButtonGlow_Start", "the old style stops first")
     assertEqual(lib.calls[2][4], 0.5); assertEqual(lib.calls[2][5], G.FRAME_LEVEL)
     assertTrue(S("glow.main.type", "autocast")); assertTrue(S("glow.main.autocastParticles", 6))
     assertTrue(S("glow.main.xOffset", -3))
@@ -149,6 +161,27 @@ test("glow: each style starts with the knob table's arguments, under the addon's
     G.Apply(b, side(2))
     assertEqual(names(lib), "AutoCastGlow_Stop"); assertNil(b.glowStyle)
 end)
+
+test("glow: the off-spec glow takes its own style and knobs", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    local b = button(m)
+    assertTrue(S("glow.offSpec.type", "pixel"))
+    assertTrue(S("glow.main.type", "proc"))
+    G.Apply(b, drop())
+    -- off-spec: pixel, length 0 is automatic (nil), the border a boolean (nil would draw it)
+    lib.calls = {}
+    G.Apply(b, drop({ me = offSpec() }))
+    assertEqual(names(lib), "ProcGlow_Stop,PixelGlow_Start", "the old style stops first")
+    local c = lib.calls[2]
+    assertEqual(c[4], 8); assertEqual(c[5], 0.1); assertNil(c[6]); assertEqual(c[7], 1)
+    assertEqual(c[10], true); assertEqual(c[11], G.KEY); assertEqual(c[12], G.FRAME_LEVEL)
+    assertTrue(S("glow.offSpec.pixelLength", 6)); assertTrue(S("glow.offSpec.pixelBorder", false))
+    lib.calls = {}
+    G.Apply(b, drop({ me = offSpec() }))
+    c = lib.calls[2]
+    assertEqual(c[6], 6); assertEqual(c[10], false)
+end, T.RETAIL_ONLY)
 
 test("glow: a repaint that changes nothing calls the library not at all; a setting or a size restarts it", function()
     local NS, _, m = T.enableAddon()
@@ -176,11 +209,10 @@ end)
 -- drop (a Priest here), keeps the swatch's alpha, and falls through to the swatch when the class
 -- has no color.
 test("glow: Use class color draws in the player's class color with the swatch's alpha, and restarts it", function()
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     local b = button(m)
     assertTrue(S("glow.main.type", "proc"))
-    assertTrue(S("glow.offSpec.type", "pixel"))   -- its color is a positional argument (c[3])
     assertTrue(S("glow.main.colorFromSkin", false))   -- the swatch: the skin's is tests/test_skin_flip.lua's
     assertTrue(S("glow.main.color", { r = 1, g = 0, b = 0, a = 0.5 }))
     G.Apply(b, drop())
@@ -195,17 +227,39 @@ test("glow: Use class color draws in the player's class color with the swatch's 
     assertTrue(c[1] == mage.r and c[2] == mage.g and c[3] == mage.b, "the player's Mage blue, not the looter's")
     assertEqual(c[4], 0.5, "the swatch's alpha survives the mode")
     lib.calls = {}
-    G.Apply(b, drop({ me = offSpec() }))
-    c = lib.calls[2]
-    assertEqual(c[3][1], NS.Constants.TONE.glowOffSpec.r, "the off-spec glow's own companion is still off")
-    lib.calls = {}
     assertTrue(S("glow.main.useClassColor", false))
     G.Apply(b, drop())
     c = lib.calls[2][3].color
     assertTrue(c[1] == 1 and c[2] == 0 and c[3] == 0, "off again: the swatch")
 end)
 
+test("glow: the off-spec glow's Use class color is its own", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    local b = button(m)
+    assertTrue(S("glow.offSpec.type", "pixel"))   -- its color is a positional argument (c[3])
+    assertTrue(S("glow.main.useClassColor", true))
+    G.Apply(b, drop({ me = offSpec() }))
+    assertEqual(lib.calls[1][3][1], NS.Constants.TONE.glowOffSpec.r, "the off-spec glow's own companion is still off")
+end, T.RETAIL_ONLY)
+
+-- The main glow on both clients; the off-spec glow's own companion is the same code (Glow's read).
 test("glow: Use class color with a class that has no color falls through to the swatch", function()
+    local NS, _, m = T.enableAddon()
+    local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
+    m.__context.classToken = "NOPE"
+    assertTrue(S("glow.main.type", "pixel"))
+    assertTrue(S("glow.main.useClassColor", true))
+    G.Apply(button(m), drop())
+    local c, tone = lib.calls[1], NS.Constants.TONE.glowMain
+    assertEqual(c[1], "PixelGlow_Start")
+    assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
+        "the stored main-spec green, never white or a substitute")
+end)
+
+-- The off-spec glow's own fallback (its companion, its stored blue): Retail's alone, as the off-spec
+-- glow is (Forever port design §4.4).
+test("glow: the off-spec glow's Use class color with a class that has no color falls through to its swatch", function()
     local NS, _, m = T.enableAddon()
     local G, lib, S = NS.Glow, fakeLib(m), NS.SchemaRuntime.Set
     m.__context.classToken = "NOPE"
@@ -216,7 +270,7 @@ test("glow: Use class color with a class that has no color falls through to the 
     assertEqual(c[1], "PixelGlow_Start")
     assertTrue(c[3][1] == tone.r and c[3][2] == tone.g and c[3][3] == tone.b and c[3][4] == 1,
         "the stored off-spec blue, never white or a substitute")
-end)
+end, T.RETAIL_ONLY)
 
 -- The library's proc frame replays its opening burst from its own OnShow, and a repaint hides and
 -- shows every pooled row and card: once the button has been on screen the burst is spent.
@@ -270,15 +324,18 @@ local function rowFor(NS, id)
 end
 
 local THREE = function() return { drop(), drop({ id = 2, link = RING, me = offSpec() }), side(3) } end
+-- The off-spec glow is Retail's alone (Forever port design §4.4): WoW Forever has no off-spec glow
+-- settings, so the off-spec drop wears none there; the main glow's halves run on both clients.
+local OFF = not T.forever and "offSpec" or nil
 
 test("glow: the full table's Drops row icon wears its drop's glow; the detail card's header too", function()
     local NS = shown(THREE())
     assertEqual(rowFor(NS, 1).cells.item.button.glowKind, "main")
-    assertEqual(rowFor(NS, 2).cells.item.button.glowKind, "offSpec")
+    assertEqual(rowFor(NS, 2).cells.item.button.glowKind, OFF)
     assertNil(rowFor(NS, 3).cells.item.button.glowKind)
     NS.WindowGroup.ToggleExpand(2)
     local drawn = NS.WindowGroup.Drawn()
-    assertEqual(drawn.cardDropId, 2); assertEqual(drawn.card.icon.glowKind, "offSpec")
+    assertEqual(drawn.cardDropId, 2); assertEqual(drawn.card.icon.glowKind, OFF)
     NS.WindowGroup.ToggleExpand(3)
     assertNil(NS.WindowGroup.Drawn().card.icon.glowKind, "the card repainted for a sidegrade")
 end)
@@ -305,7 +362,7 @@ test("glow: the compact card's icon wears it; the table's rows stop theirs in th
     assertTrue(drawn.compact == true)
     local by = {}
     for _, c in ipairs(drawn.rows) do by[c.dropId] = c end
-    assertEqual(by[1].icon.glowKind, "main"); assertEqual(by[2].icon.glowKind, "offSpec"); assertNil(by[3].icon.glowKind)
+    assertEqual(by[1].icon.glowKind, "main"); assertEqual(by[2].icon.glowKind, OFF); assertNil(by[3].icon.glowKind)
     for _, r in ipairs(pool.free) do assertNil(r.cells.item.button.glowKind) end
     seed(NS, { side(1) })
     NS.Window.Refresh()
@@ -340,6 +397,12 @@ test("glow: a glow row's write re-applies every drawn icon at once", function()
     local started = 0
     for _, c in ipairs(lib.calls) do if c[1] == "PixelGlow_Start" and c[2] == b then started = started + 1 end end
     assertEqual(started, 1)
+    -- the off-spec glow's own row is Retail's (Forever port design §4.4); the main glow's write is shared
+    if T.forever then
+        assertTrue(NS.SchemaRuntime.Set("glow.main.enabled", false))
+        assertNil(rowFor(NS, 1).cells.item.button.glowKind)
+        return
+    end
     assertTrue(NS.SchemaRuntime.Set("glow.offSpec.enabled", false))
     assertNil(rowFor(NS, 2).cells.item.button.glowKind)
 end)

@@ -161,7 +161,8 @@ test("skin settings: the Situations cells follow a skin switch and the Ignore se
     local t = open(NS, "feed").dwSituations
     local function each(want, why)
         for _, r in ipairs(t.rows) do
-            for _, k in ipairs({ "track", "autoOpen", "quality", "rule" }) do
+            -- The Loot rule cell is Retail's alone (Forever port design §4.4).
+            for _, k in ipairs({ "track", "autoOpen", "quality", (not T.forever) and "rule" or nil }) do
                 assertEqual(ownerOf(m, r[k]), want, k .. ": " .. why)
             end
         end

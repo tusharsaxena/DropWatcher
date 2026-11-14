@@ -14,8 +14,8 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 | Page | Covers |
 |---|---|
 | Ka0s Drop Watcher (landing) | The logo, the TOC notes line and the slash command list, drawn by the library's `BuildLandingPage` |
-| General | `Master controls`, `Simulator`, `Skin`, `Keybindings` |
-| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention` |
+| General | `Master controls`, `Role` (WoW Forever alone), `Simulator`, `Skin`, `Keybindings` |
+| Drops (key `feed`) | `Situations`, `Quality`, `Items`, `Item lists`, `Retention`, `Rolls` |
 | Comparison | `Scoring`, `Weights`, `Unwanted types` |
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
@@ -84,6 +84,17 @@ on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, throu
 reset, so its tooltip is the very text Reset all settings carries, read from the library
 (`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting" lead),
 then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
+
+## General → Role (WoW Forever alone)
+
+One dropdown, `Role` (`char.role`, Forever port design §11.4): Automatic, Tank, Healer or Damage,
+saved for this character in `db.char.role` through LibKa0s `Role.SetOverride`. Automatic is
+`Role.Resolve`'s ladder: the role your group gave you, else your talents. On a Druid the role picks
+the Feral Pawn scale (cat for Damage, bear for Tank), so a Feral tank in a group with no assigned
+roles picks Tank here. The tooltip ends with what Automatic picks now and where from (`Automatic
+now picks Damage: your talents (Feral Combat).`), read each time the page draws. Reset all
+settings does not reach it (it is not a profile setting); `/dw set char.role tank` and `/dw reset
+char.role` do. Retail has no such tab: Retail never reads the role.
 
 ## General → Simulator
 
@@ -186,7 +197,7 @@ belt-and-braces. Until DW-H0 the tab drew one block per situation,
 since LibKa0s has no grid composer for mixed controls;
 [LibKa0s#50](https://github.com/tusharsaxena/LibKa0s/issues/50) was rejected at one consumer; the table stays the tab's own editor.
 
-## Drops → Quality, Items and Retention
+## Drops → Quality, Items, Retention and Rolls
 
 The page key stays `feed` (a page key is no stored path, but it names the page's section in
 `/dw list`, which holds the situation rows too since item 020). What the addon lists at all, and how
@@ -224,7 +235,7 @@ the other list, or already on this one) is raised again as its sentence, so the 
 text and says why. The write repaints the scalar widgets only, and IdList redraws this page alone
 through `ctx.rebuild`. The page's Defaults keeps both lists (the seam's `resetExempt`; plan #13, Q9),
 which its tooltip says: *Reset the Drops page's settings (situations, quality, item kinds and item
-level, and how long drops are kept) to their defaults. The item lists are kept.*
+level, how long drops are kept, and rolls) to their defaults. The item lists are kept.*
 
 **Retention:** two subsections. **History:** Keep history for (7 to 180 days or Never delete,
 default 30; account-wide, which its tooltip opens by saying, `Account-wide: shared by every profile.`,
@@ -237,13 +248,27 @@ simulation's session-only log while one is on). Window › Layout's until feedba
 Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
 
+**Rolls** (Forever port design §5.3, DW-FP15; both clients): **Show rolls** (`rolls.show`: the Drops
+tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
+off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`:
+a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`: your verdict, and
+`Need so far` while the roll is open, on a small card above the game's own roll popup,
+`modules/RollPopup.lua`, DW-FP20), all on by default. A change to the first two repaints the shown
+window; a change to the third repaints the marks on the popups shown now. The design (§7) placed
+Mark the roll popup under Alerts › Roll popup; it stays here beside Show rolls and Keep rolls, the
+plan's placement, as Claude's call (2026-11-13), because it is one of the three roll switches and the
+Alerts page holds the toast's rows. The owner can move it at the merge gate.
+
 ## Comparison
 
 **Scoring:** Score with, Sidegrade band, Compare against items in my bags, Protect heirlooms.
 
 **Weights** and **Unwanted types** edit the two per-spec maps (`comparison.weights`,
 `comparison.undesired`). Each opens with a secondary strip of your class's specs (options-ui-§13:
-session state in `ctx.activeSubTab`, keyed by the tab, never stored), on your own spec first.
+session state in `ctx.activeSubTab`, keyed by the tab, never stored), on your own spec first. On
+WoW Forever the strip is your class's talent trees instead, named by the client
+(`Compat.TalentTreeNames`, else "Talent tree N") and keyed `"<classFile>:<tree>"`, on your top
+tree first (Forever port design §4.3).
 Weights draws a slider (0 to 5) per stat: the spec's primary stat, Stamina and the four secondaries,
 keyed by `GetItemStats`' own stat keys; 0 leaves a stat out. Under the sliders, **Import a Pawn
 scale** takes a Pawn scale string (`( Pawn: v1: "name": Key=value, ... )`): Enter replaces the
@@ -301,7 +326,8 @@ there since DW-83, went with DW-F1, feedback-6 spec §1, when Me and Them took t
 **Trade window:** Mark a trade window ending within (seconds) (`trade.warnAt`; Trade › Timers'
 `Warn before a trade window closes` until feedback-24): your own drop's Trade window countdown takes
 its warning color this many seconds before it closes; 0 turns the mark off. It tints that column and
-does nothing else.
+does nothing else. The Trade window checkbox and this subsection are Retail's alone (DW-FP11,
+DW-FP21): on WoW Forever the table has no Trade window column and the tab is Shown columns alone.
 
 **Starting view** (Feed › Filters until feedback-24): what a fresh Drops tab opens on. **View:**
 Interesting, Likely tradeable, Usable by me, Upgrade for me and New to my collection

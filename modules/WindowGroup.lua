@@ -53,6 +53,10 @@ local _, NS = ...
 -- player never toggled is open when it is the first one shown and collapsed otherwise (board 01);
 -- toggles are session-only (NS.State.windowGroup).
 --
+-- ROLLING NOW (Forever port design §5.3). Above the first header, the drops still being rolled for:
+-- modules/WindowPending.lua draws the section (WP.Draw) and the rows below start under it; the
+-- empty state stays hidden while it shows, and its roll timers tick with the countdowns.
+--
 -- THE DETAIL CARD (design spec §11.3, board 02). A click on a row (anywhere but a button) expands
 -- it inline: modules/DetailCard.lua's card is placed under it and the rows below move down by the
 -- card's height. Only one row is expanded at a time (NS.State.windowGroup.expanded); a second click
@@ -110,8 +114,12 @@ WG.PART_SEP = "/"
 -- `tip` is the header's tooltip rows (feedback-21); `desc` the prose the settings panel's Columns
 -- checkbox shows for it (settings/SchemaRows.lua), which stays prose.
 -- `shed` is the order a too-narrow window lets columns go (1 first; WG.Layout): what they say is
--- also on the row's detail card. Item and Actions never go.
-WG.COLUMNS = {
+-- also on the row's detail card. Item and Actions never go. A column declaring `clients` (clients-§4)
+-- is a column only where NS.Compat.ForClient(clients) is true: the Trade window column is Retail's
+-- alone (Forever port design §4.4; WoW Forever has no countdown, and its Trade column says
+-- Soulbound or No limit), and so is its Shown columns row, which settings/SchemaRows.lua makes per
+-- column here.
+local COLUMNS = {
     { key = "item", label = L["Item"], flex = true,
       tip = { TM.Row(L["Shows"], L["the drop"]),
           TM.Hint(L["Hover its icon for the game's tooltip; shift-click links it, ctrl-click tries it on."]) } },
@@ -128,13 +136,12 @@ WG.COLUMNS = {
     { key = "me", label = L["Me"], width = 127, shed = 7,
       desc = L["What you wear in that slot (two items for rings, trinkets and one-hand weapons) and its item level, then the drop judged for you: %s upgrade (green), %s sidegrade (yellow) or %s downgrade (red) and the item-level difference. Hover an icon for the item."]:format(
           TM.Mark("upgrade"), TM.Mark("sidegrade"), TM.Mark("downgrade"))
-          .. " " .. L["Cyan: an upgrade for another of your specs (off-spec); your current spec can't use it."],
-      tip = { TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
+          .. NS.OffSpecCells.MeNote(),
+      tip = NS.OffSpecCells.WithLegend({ TM.Row(L["Shows"], L["what you wear there (two for rings, trinkets, one-hand weapons), its item level"]),
           TM.Row(L["Then"], L["the drop judged for you, and the item-level difference"]),
           TM.Row(L["Two worn"], L["a mark each, the drop against each"]),
           TM.Row(L["Colors"], L["%s upgrade, %s sidegrade, %s downgrade"]:format(TM.Mark("upgrade"), TM.Mark("sidegrade"),
-              TM.Mark("downgrade"))),
-          NS.OffSpecCells.Legend(), TM.Hint(L["Hover an icon for the item."]) } },
+              TM.Mark("downgrade"))) }, TM.Hint(L["Hover an icon for the item."])) },
     { key = "them", label = L["Them"], width = 127, shed = 5,
       desc = L["What the looter wears in that slot and its item level, then the drop judged for them in the same colors. Hover for how old their read is. On your own drop, Upgrade for N lists who it would help."],
       tip = { TM.Row(L["Shows"], L["what the looter wears there, its item level"]),
@@ -144,7 +151,7 @@ WG.COLUMNS = {
     { key = "trade", label = L["Trade"], width = 112, shed = 6,
       tip = { TM.Row(L["Shows"], L["whether the looter can trade it"]), TM.Row(L["Values"], L["Yes, No or ?, then why in a few words"]) },
       desc = L["Whether the looter can trade it: Yes, No or ?, then why in a few words."] },
-    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3,
+    { key = "tradeWindow", label = L["Trade window"], width = 76, shed = 3, clients = C.FEATURE_CLIENTS.tradeTimer,
       desc = L["The time left to trade it, over its bar: exact for your own item once it is in your bags, else estimated from when it dropped. Amber and bold when it is ending soon."],
       tip = { TM.Row(L["Shows"], L["the time left to trade it, over its bar"]),
           TM.Row(L["Exact"], L["your own item, once it is in your bags"]), TM.Row(L["Estimated"], L["from when it dropped"]),
@@ -153,6 +160,10 @@ WG.COLUMNS = {
       desc = L["Ask the looter for it, once. On your own drop, Offer shows who it would help."],
       tip = { TM.Row(L["Shows"], L["Ask the looter for it, once"]), TM.Row(L["Your own drop"], L["Offer, who it would help"]) } },
 }
+WG.COLUMNS = {}
+for _, col in ipairs(COLUMNS) do
+    if NS.Compat.ForClient(col.clients) then WG.COLUMNS[#WG.COLUMNS + 1] = col end
+end
 
 local NO_MATCH = L["No drop matches the filters. View: All shows everything."]
 local TEST_LOADING = L["Gathering real items for test mode."]
@@ -448,6 +459,7 @@ local function itemEnter(self, owner)
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     WG.SetItemTooltip(GameTooltip, self)
     NS.RowTooltip.AddKindRows(GameTooltip, self.link)   -- a collectible's kind and collection (issue #13)
+    NS.RowTooltip.AddRollRow(GameTooltip, self)          -- the roll summary (Forever port design §5.3)
     local r, g, b = NS.Skin.Color("dw.tipHint")
     GameTooltip:AddLine(L["Shift-click to link it in chat; ctrl-click to try it on."], r, g, b)
     GameTooltip:Show()
@@ -1019,14 +1031,14 @@ end
 -- The open row's detail card under it, indented with its row; answers the height it takes.
 local function drawCard(pane, drop, y, width, now)
     place(pane.card, pane.content, y, width, K.ROW_INDENT)
-    NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)
+    local h = NS.DetailCard.Paint(pane.card, drop, width - K.ROW_INDENT, now)   -- taller with a Rolls box
     pane.card:Show()
     pane.cardDropId = drop.id
-    return K.CARD_H
+    return h
 end
 
 local function drawEntries(pane, entries, layout, width)
-    local now, y, metrics = GetTime(), 0, NS.WindowRows.Metrics()
+    local now, y, metrics = GetTime(), NS.WindowPending.Draw(pane, width), NS.WindowRows.Metrics()   -- Rolling now first
     metrics.rowH = layout.tradeWindow and metrics.countdownHeight or metrics.height
     metrics.warnAt = NS.TradeTimer.WarnAt()
     local Pool = NS.Pool
@@ -1058,7 +1070,7 @@ local function paintEmpty(pane, entries, ctx, compact)
     local none = #entries == 0
     local nothing = none and #NS.LootFeed.Drops(ctx.feed) == 0
     local test = nothing and ctx.feed == "test"
-    pane.emptyState:SetShown(nothing and not test)
+    pane.emptyState:SetShown(nothing and not test and NS.WindowPending.None())   -- not over Rolling now
     pane.placeholder:SetShown(none and (test or not nothing))
     pane.placeholder:SetText(not test and NO_MATCH or NS.TestMode.IsLoading() and TEST_LOADING or TEST_NONE)
     pane.colHead:SetShown(not (none or compact))
@@ -1122,7 +1134,7 @@ function WG.LiveCountdown()
     if not pane then return false end
     local s = pane.summaryData
     if s and s.next and s.next > 0 then return true end
-    return rowsLive(pane)
+    return NS.WindowPending.Live(pane) or rowsLive(pane)   -- a roll's time left moves too
 end
 
 --- Move every shown countdown on to the clock: the Trade window cells of the drawn rows and the
@@ -1132,6 +1144,7 @@ function WG.TickCountdowns()
     if not pane then return end
     local compact = WG.IsCompact()
     NS.DropsStrip.Tick(pane, compact)
+    NS.WindowPending.Tick(pane)
     if compact then return end
     if not (pane.layout and pane.layout.tradeWindow) then return end
     local now, warnAt = GetTime(), NS.TradeTimer.WarnAt()

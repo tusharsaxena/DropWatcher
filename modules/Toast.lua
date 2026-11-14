@@ -28,7 +28,9 @@ local _, NS = ...
 -- keeps what it had). A drop toasts when it is not yours, its verdict for you is
 -- `upgrade` with an item-level gain of at least `toast.minGain` (default 10), and its trade
 -- estimate is `likely` or `yes` (Qualifies, pure). An upgrade into an empty slot (the kernel's
--- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`. Each drop
+-- `emptySlot` reason, with no item-level change) clears any least gain and reads `empty`. A score-led
+-- upgrade (WoW Forever's scoreFirst verdict, `led = "score"`, Forever port design §4.5) clears any
+-- least gain too: the least gain is in item levels, so it applies only to an item-level-led verdict. Each drop
 -- is considered on DropAdded and again on each DropUpdated until it has toasted once (an inspect can
 -- turn its trade `likely` later).
 --
@@ -150,6 +152,7 @@ local function intoEmptySlot(eval)
 end
 
 local function gainPasses(eval, minGain)
+    if eval.led == "score" then return true end   -- the score decided: no item-level gain to test
     local gain = num(eval.ilvlDelta)
     if not gain then return intoEmptySlot(eval) end
     return gain >= (num(minGain) or 0)
@@ -165,7 +168,7 @@ local function upgradeOf(me)
 end
 
 --- Whether `drop` earns a toast: someone else's drop, an upgrade for you by at least `minGain` item
---- levels (or into an empty slot, whatever `minGain`), with a trade estimate of `likely` or `yes`.
+--- levels (or into an empty slot, or score-led, whatever `minGain`), with a trade estimate of `likely` or `yes`.
 --- A drop your spec can't use qualifies the same way through another spec's off-spec upgrade, its
 --- gain tested on the off-spec difference; the third value then says so.
 --- @param drop table a feed record

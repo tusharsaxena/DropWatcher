@@ -6,13 +6,27 @@
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
+-- The kernel is pure over NS.ClassData's ACTIVE list, so a case pins the list it is written
+-- against: the cases below Retail's (installed on either kit profile), the WoW Forever section's
+-- Forever's (Forever port design §4.2). Which list a client installs is test_class_data's.
 local cached
 local function load()
     if not cached then
         local NS = T.newAddon()
+        NS.ClassData.Install(NS.ClassData.LISTS.retail)
         cached = { E = NS.Evaluate, C = NS.Constants, CD = NS.ClassData }
     end
     return cached.E, cached.C, cached.CD
+end
+
+local cachedForever
+local function loadForever()
+    if not cachedForever then
+        local NS = T.newAddon()
+        NS.ClassData.Install(NS.ClassData.LISTS.forever)
+        cachedForever = { E = NS.Evaluate, C = NS.Constants, CD = NS.ClassData }
+    end
+    return cachedForever.E, cachedForever.C, cachedForever.CD
 end
 
 local _, C0 = load()
@@ -83,15 +97,30 @@ test("evaluate: every equip location in SLOT_PLAN compares against its slot", fu
         { "INVTYPE_HOLDABLE", armor(650, "INVTYPE_HOLDABLE", A.GENERIC), who("MAGE", 64), S.OFFHAND, 617 },
         { "INVTYPE_2HWEAPON", weapon(650, "INVTYPE_2HWEAPON", W.SWORD_2H), who("WARRIOR", 71), S.MAINHAND,
             616.5 },
+    }
+    -- The client's own ranged rows (clients-§6): Retail's fill both hands; WoW Forever's, thrown
+    -- weapons and relics with them, go in the ranged slot (DW-FP06), judged on Forever's class list.
+    local EF = T.forever and loadForever() or nil
+    local ranged = T.forever and {
+        { "INVTYPE_RANGED", weapon(650, "INVTYPE_RANGED", W.BOWS), who("HUNTER", 1485, { tree = 2 }), S.RANGED, 618 },
+        { "INVTYPE_RANGEDRIGHT", weapon(650, "INVTYPE_RANGEDRIGHT", W.WAND), who("PRIEST", nil, { tree = 1 }),
+            S.RANGED, 618 },
+        { "INVTYPE_THROWN", weapon(650, "INVTYPE_THROWN", W.THROWN), who("ROGUE", nil, { tree = 2 }), S.RANGED, 618 },
+        { "INVTYPE_RELIC", armor(650, "INVTYPE_RELIC", A.LIBRAM), who("PALADIN", nil, { tree = 1 }), S.RANGED, 618 },
+    } or {
         { "INVTYPE_RANGED", weapon(650, "INVTYPE_RANGED", W.BOWS), who("HUNTER", 254), S.MAINHAND, 616.5 },
         { "INVTYPE_RANGEDRIGHT", weapon(650, "INVTYPE_RANGEDRIGHT", W.WAND), who("PRIEST", 256), S.MAINHAND,
             616 },
     }
+    for _, row in ipairs(ranged) do
+        row.E = EF
+        cases[#cases + 1] = row
+    end
     local seen = 0
     for _, row in ipairs(cases) do
         local loc = row[1]
         assertTrue(C.SLOT_PLAN[loc] ~= nil, loc .. " has a plan")
-        local res = E.Evaluate(row[2], row[3])
+        local res = (row.E or E).Evaluate(row[2], row[3])
         assertEqual(res.equip, "ok", loc .. " equip")
         assertEqual(res.verdict, "upgrade", loc .. " verdict")
         assertEqual(res.baselineSlot, row[4], loc .. " baselineSlot")
@@ -319,7 +348,22 @@ test("evaluate: an off hand against a wielded two-hander compares with the two-h
     assertTrue(hasReason(res, "vsTwoHand"))
 end)
 
+-- WoW Forever's ranged slot (DW-FP06): a bow, gun or wand compares against slot 18 alone, never
+-- the hands.
+local function foreverRanged()
+    local E = loadForever()
+    local h = who("HUNTER", 1485, { tree = 1, level = 60 })
+    h.gear[S.MAINHAND] = weapon(640, "INVTYPE_2HWEAPON", W.POLEARM)
+    h.gear[S.RANGED] = weapon(630, "INVTYPE_RANGED", W.BOWS)
+    local res = E.Evaluate(weapon(650, "INVTYPE_RANGEDRIGHT", W.GUNS), h)
+    assertEqual(res.baselineSlot, S.RANGED); assertEqual(res.ilvlDelta, 20)
+    assertNil(res.either, "one slot, one worn item")
+    h.gear[S.RANGED] = false
+    assertTrue(hasReason(E.Evaluate(weapon(650, "INVTYPE_RANGED", W.BOWS), h), "emptySlot"))
+end
+
 test("evaluate: ranged weapons are two-handers for hunters and main hand for wand users", function()
+    if T.forever then return foreverRanged() end
     local E = load()
     local h = who("HUNTER", 253)
     h.gear[S.MAINHAND] = weapon(640, "INVTYPE_RANGED", W.BOWS)
@@ -718,7 +762,11 @@ test("evaluate: the scorer is optional, may be pending, and may fail without har
     assertEqual(res.verdict, "upgrade")
     -- The scorer is handed the candidate too.
     local seen
-    E.Evaluate(drop, c, { scorer = function(_, cand) seen = cand return 1 end })
+    local function spy(_, cand)
+        seen = cand
+        return 1
+    end
+    E.Evaluate(drop, c, { scorer = spy })
     assertEqual(seen, c)
 end)
 
@@ -731,6 +779,89 @@ test("evaluate: a two-hander's score baseline is the average of both hands' scor
         { scorer = function(f) return f.score end })
     assertEqual(res.scoreDelta, 10)
     assertEqual(res.verdict, "upgrade")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The verdict mode (Forever port design §4.5): ilvlFirst (Retail, the default), scoreFirst (Forever)
+-- ---------------------------------------------------------------------------------------------
+
+local function scoredHead(E, dropIlvl, dropScore, mode, band)
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE, { score = 200 })
+    local drop = armor(dropIlvl, "INVTYPE_HEAD", A.PLATE, { score = dropScore })
+    return E.Evaluate(drop, c, { scorer = function(f) return f.score end, sidegradeBand = band, verdictMode = mode })
+end
+
+test("evaluate: scoreFirst, a lower item level with a higher score is an upgrade", function()
+    local E = load()
+    local res = scoredHead(E, 630, 210, "scoreFirst", 0)
+    assertEqual(res.verdict, "upgrade")
+    assertEqual(res.led, "score", "the score led")
+    assertTrue(not hasReason(res, "scoreDisagrees"), "no disagreement under scoreFirst")
+    res = scoredHead(E, 650, 190, "scoreFirst", 0)
+    assertEqual(res.verdict, "downgrade", "a higher item level with a lower score")
+    assertEqual(res.led, "score")
+end)
+
+test("evaluate: scoreFirst, a score within 1% defers to item level", function()
+    local E = load()
+    -- The worn score is 200, so a tie is |delta| <= 2.
+    -- { drop ilvl, drop score, band, verdict }
+    local cases = {
+        { 650, 202, 0, "upgrade" },     -- +1%: a tie, item level up
+        { 630, 198, 0, "downgrade" },   -- -1%: a tie, item level down
+        { 643, 201, 5, "sidegrade" },   -- both tie: a sidegrade
+        { 646, 200, 5, "upgrade" },     -- an equal score, item level past the band
+        { 630, 203, 0, "upgrade" },     -- past 1%: the score decides
+    }
+    for i, row in ipairs(cases) do
+        local res = scoredHead(E, row[1], row[2], "scoreFirst", row[3])
+        assertEqual(res.verdict, row[4], "case " .. i)
+        assertEqual(res.led, i == 5 and "score" or "ilvl", "led " .. i)
+        assertEqual(res.scoreDelta, row[2] - 200, "scoreDelta " .. i)
+    end
+end)
+
+test("evaluate: scoreFirst, no score is item level with reason noScore", function()
+    local E = load()
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    local scorers = { false, function() return nil end, function() return "pending" end }
+    for i, scorer in ipairs(scorers) do
+        local opts = { verdictMode = "scoreFirst", sidegradeBand = 5, scorer = scorer or nil }
+        local res = E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c, opts)
+        assertEqual(res.verdict, "upgrade", "case " .. i)
+        assertEqual(res.led, "ilvl", "led " .. i)
+        assertTrue(hasReason(res, "noScore"), "noScore " .. i)
+        assertEqual(E.Evaluate(armor(643, "INVTYPE_HEAD", A.PLATE), c, opts).verdict, "sidegrade", "band " .. i)
+    end
+    -- An empty slot is still an upgrade with its own reason, not led by either.
+    c.gear[S.HEAD] = false
+    local res = E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c, { verdictMode = "scoreFirst" })
+    assertEqual(res.verdict, "upgrade"); assertTrue(hasReason(res, "emptySlot")); assertNil(res.led)
+end)
+
+test("evaluate: ilvlFirst unchanged", function()
+    local E = load()
+    -- The existing score cases, under the default and under ilvlFirst named: same verdicts, no `led`.
+    local cases = {
+        { 650, 220, 0, "upgrade" }, { 630, 180, 0, "downgrade" }, { 650, 180, 0, "sidegrade", true },
+        { 630, 220, 0, "sidegrade", true }, { 643, 220, 5, "sidegrade", true }, { 643, 200, 5, "sidegrade" },
+        { 640, 201, 0, "sidegrade", true },
+    }
+    for _, mode in ipairs({ "ilvlFirst", false }) do
+        for i, row in ipairs(cases) do
+            local res = scoredHead(E, row[1], row[2], mode or nil, row[3])
+            local tag = tostring(mode) .. " " .. i
+            assertEqual(res.verdict, row[4], "case " .. tag)
+            assertEqual(hasReason(res, "scoreDisagrees"), row[5] == true, "disagrees " .. tag)
+            assertNil(res.led, "led " .. tag)
+            assertTrue(not hasReason(res, "noScore"), "noScore " .. tag)
+        end
+    end
+    local c = who("WARRIOR", 71)
+    c.gear[S.HEAD] = armor(640, "INVTYPE_HEAD", A.PLATE)
+    assertTrue(not hasReason(E.Evaluate(armor(650, "INVTYPE_HEAD", A.PLATE), c), "noScore"), "no score, no reason")
 end)
 
 test("evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison", function()
@@ -885,4 +1016,84 @@ test("evaluate: heirloom protection keeps a slot holding an heirloom from being 
     assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
     c.gear[S.HEAD] = false
     assertEqual(E.Evaluate(helm, c, { heirloomProtect = true }).verdict, "upgrade")
+end)
+
+-- ---------------------------------------------------------------------------------------------
+-- WoW Forever's list (Forever port design §4.2, §4.5; Review Focus 5)
+-- ---------------------------------------------------------------------------------------------
+
+-- A Forever Hunter at `level`: the class-wide spec ID (1485) and a talent tree.
+local function hunter(level, over)
+    local c = who("HUNTER", 1485, { tree = 1, level = level })
+    for k, v in pairs(over or {}) do c[k] = v end
+    return c
+end
+
+test("evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel", function()
+    local E = loadForever()
+    local mail = armor(650, "INVTYPE_CHEST", A.MAIL, { stats = { [AGI] = 20 } })
+    local res = E.Evaluate(mail, hunter(30))
+    -- red under: the level-blind armor table, which reads mail as a hunter's at any level (Need: upgrade)
+    assertEqual(res.verdict, "cantUse")
+    assertEqual(res.equip, "cant")
+    assertTrue(hasReason(res, "armorLevel"), "can't use yet")
+    assertEqual(E.Evaluate(mail, hunter(40)).verdict, "upgrade", "from 40 it is the hunter's")
+    local leather = armor(650, "INVTYPE_CHEST", A.LEATHER)
+    assertEqual(E.Evaluate(leather, hunter(30)).verdict, "upgrade", "leather is fine below 40")
+    assertEqual(E.Evaluate(leather, hunter(60)).equip, "ok", "a lighter type stays wearable")
+    local res60 = E.Evaluate(armor(650, "INVTYPE_CHEST", A.PLATE), hunter(60))
+    assertEqual(res60.verdict, "cantUse"); assertTrue(hasReason(res60, "armorType"), "plate is never a hunter's")
+    assertEqual(E.Evaluate(mail, hunter(nil)).equip, "ok", "an unknown level is the cap's type")
+end)
+
+test("evaluate: on Forever the item's spec list does not lift the armor level rule", function()
+    local E = loadForever()
+    -- The client's spec list names the Hunter's class-wide spec (1485) for any mail piece: it knows
+    -- the class, not the level (Review Focus 5).
+    local mail = armor(650, "INVTYPE_CHEST", A.MAIL, { specs = { [1485] = true }, specsClass = "HUNTER" })
+    local res = E.Evaluate(mail, hunter(30))
+    -- red under: the spec-list path answering "ok" before the armor table is read (Need: upgrade)
+    assertEqual(res.verdict, "cantUse")
+    assertTrue(hasReason(res, "armorLevel"), "can't use yet")
+    assertEqual(E.Evaluate(mail, hunter(40)).verdict, "upgrade", "from 40 the list's answer stands")
+    local cloak = armor(650, "INVTYPE_CLOAK", A.CLOTH, { specs = { [1485] = true }, specsClass = "HUNTER" })
+    assertEqual(E.Evaluate(cloak, hunter(30)).equip, "ok", "a cloak has no armor level")
+end)
+
+test("evaluate: on Forever a relic is its class's alone: libram, idol, totem", function()
+    local E = loadForever()
+    local relic = function(sub) return armor(650, "INVTYPE_RELIC", sub) end
+    local function equip(sub, classFile) return E.Equippability(relic(sub), who(classFile, nil, { level = 60 })) end
+    -- red under: no relic rule, so every relic is unknown (notGear) for every class
+    assertEqual(equip(A.LIBRAM, "PALADIN"), "ok"); assertEqual(equip(A.IDOL, "DRUID"), "ok")
+    assertEqual(equip(A.TOTEM, "SHAMAN"), "ok")
+    local status, why = equip(A.LIBRAM, "DRUID")
+    assertEqual(status, "cant"); assertEqual(why, "relic")
+    assertEqual(equip(A.TOTEM, "WARRIOR"), "cant", "a class with no relic")
+    assertEqual(equip(A.IDOL, nil), "unknown", "no class yet")
+end)
+
+-- Retail's class list has no relics (CD.RELIC is nil): a relic stays not gear there, never the
+-- Forever-only "relic" reason, which would read "a relic for another class" (DW-FP06 review).
+test("evaluate: on Retail's class list a relic is not gear, never the relic reason", function()
+    local E = load()
+    local status, why = E.Equippability(armor(650, "INVTYPE_RELIC", A.LIBRAM), who("PALADIN", 65))
+    assertEqual(status, "unknown"); assertEqual(why, "notGear")
+end)
+
+test("evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat", function()
+    local E = loadForever()
+    local helm = armor(650, "INVTYPE_HEAD", A.LEATHER, { stats = { [STR] = 15, [INT] = 10 } })
+    local res = E.Evaluate(helm, hunter(30))
+    -- red under: the hard gate, where an Agility hunter's Strength helm is "can't use: primary stat"
+    assertEqual(res.equip, "ok")
+    assertTrue(res.verdict ~= "cantUse", res.verdict)
+    assertTrue(not hasReason(res, "primaryStat"))
+    local hood = armor(650, "INVTYPE_HEAD", A.CLOTH, { stats = { [STR] = 15 } })
+    assertEqual(E.Evaluate(hood, who("MAGE", nil, { level = 30 })).equip, "ok", "no tree, no spec")
+    -- armor, weapon type and the class list still refuse
+    local axe = weapon(650, "INVTYPE_WEAPON", W.AXE_1H, { stats = { [STR] = 15 } })
+    assertEqual(E.Evaluate(axe, who("MAGE", nil, { level = 30 })).equip, "cant", "a mage's axe")
+    local robe = E.Evaluate(helm, hunter(30, { classFile = "PRIEST" }))
+    assertEqual(robe.equip, "cant", "leather is heavier than a priest's cloth"); assertTrue(hasReason(robe, "armorType"))
 end)

@@ -126,6 +126,10 @@ local SIT_TABLE_W = 576   -- the table's right edge: the Loot rule cell's, plus 
 -- Published for the suite (tests/test_settings_pages.lua holds the fit).
 P.SIT_COL, P.SIT_TABLE_W = SIT_COL, SIT_TABLE_W
 P.SIT_WIDTHS = { quality = SIT_QUALITY_W, rule = SIT_RULE_W }
+-- The Loot rule column is Retail's alone (C.FEATURE_CLIENTS.tradeRuleRows): WoW Forever has one
+-- rule, `soulbound`, and no `trade.rules.<situation>` row (Forever port design §4.4).
+local RULE_COLUMN = K.FEATURE.tradeRuleRows == true
+P.SIT_RULE_COLUMN = RULE_COLUMN
 local SIT_ROW_H, SIT_HEAD_H, SIT_HEAD_Y = 28, 30, -6
 -- The colors are the skin's (the table is a raw frame the page owns, built once a session, so each
 -- paint is recorded with NS.SkinPaint and follows a skin switch without a re-render): the headers in
@@ -159,8 +163,10 @@ local function paintSituations(t)
         r.autoOpen:SetDisabled(not e.autoOpen.enabled)
         r.quality:SetValue(e.quality.value)
         r.quality:SetDisabled(not e.quality.enabled)
-        r.rule:SetValue(e.rule.value)
-        r.rule:SetDisabled(not e.rule.enabled)
+        if r.rule then
+            r.rule:SetValue(e.rule.value)
+            r.rule:SetDisabled(not e.rule.enabled)
+        end
     end
 end
 
@@ -240,7 +246,7 @@ local function situationSlot(t, i, key)
         track = situationCheck(t, rf, SIT_COL.track, base .. "track"),
         autoOpen = situationCheck(t, rf, SIT_COL.autoOpen, base .. "autoOpen"),
         quality = situationPick(t, rf, base .. "quality", SIT_COL.quality, SIT_QUALITY_W),
-        rule = situationPick(t, rf, "trade.rules." .. key, SIT_COL.rule, SIT_RULE_W),
+        rule = RULE_COLUMN and situationPick(t, rf, "trade.rules." .. key, SIT_COL.rule, SIT_RULE_W) or nil,
     }
 end
 
@@ -260,7 +266,7 @@ end
 -- repaints each in the new skin, or hands it back stock when the Scope's Ignore settings panel is
 -- turned on (a refused PaintAce restores what this owner painted).
 local situationTables = setmetatable({}, { __mode = "k" })
-local CELLS = { "track", "autoOpen", "quality", "rule" }
+local CELLS = { "track", "autoOpen", "quality", RULE_COLUMN and "rule" or nil }
 
 local function repaintSituationCells()
     for t in pairs(situationTables) do
@@ -282,7 +288,7 @@ local function buildSituationTable(ctx)
         situationHeader(t.host, SIT_COL.track, L["Track"]),
         situationHeader(t.host, SIT_COL.autoOpen, L["Auto-open"]),
         situationHeader(t.host, SIT_COL.quality, L["Quality"]),
-        situationHeader(t.host, SIT_COL.rule, L["Loot rule"]),
+        RULE_COLUMN and situationHeader(t.host, SIT_COL.rule, L["Loot rule"]) or nil,
     }
     for i, s in ipairs(K.SITUATIONS) do t.rows[i] = situationSlot(t, i, s.key) end
     return t
@@ -341,16 +347,30 @@ local function classFile()
     return file
 end
 
--- Draws the strip of your class's specs at the top of `tabKey`'s content and answers the spec it
--- shows. The selection is session state per primary tab (ctx.activeSubTab, options-ui-§13); a
--- click re-renders the page, which the library refuses in combat.
+-- A spec key's name on the strip: the spec's (Retail) or your talent tree's (WoW Forever).
+local function specNamer()
+    return E.SpecNamer(NS.Compat.SpecName, NS.Compat.TalentTreeNames())
+end
+
+-- Your own spec key: the specID on Retail, your top talent tree's "<classFile>:<tree>" on WoW
+-- Forever (NS.ClassData.SpecKey), so the strip opens on what you play.
+local function ownSpecKey()
+    local talents = NS.Compat.PlayerTalentTree()
+    local specID = NS.Compat.PlayerSpecID()
+    return NS.ClassData.SpecKey(classFile(), specID, talents and talents.index) or specID
+end
+
+-- Draws the strip of your class's specs (on WoW Forever its talent trees, Forever port design
+-- §4.3) at the top of `tabKey`'s content and answers the spec key it shows. The selection is
+-- session state per primary tab (ctx.activeSubTab, options-ui-§13); a click re-renders the page,
+-- which the library refuses in combat.
 local function specStrip(ctx, tabKey)
     local h = H()
     local scroll = h.EnsureScroll(ctx)
-    local list = E.ClassSpecs(classFile(), NS.Compat.SpecName)
+    local list = E.ClassSpecs(classFile(), specNamer())
     if not scroll or #list == 0 then return nil end
     ctx.activeSubTab = ctx.activeSubTab or {}
-    local spec = E.PickSpec(list, ctx.activeSubTab[tabKey], NS.Compat.PlayerSpecID())
+    local spec = E.PickSpec(list, ctx.activeSubTab[tabKey], ownSpecKey())
     ctx.activeSubTab[tabKey] = spec
     local host = acquire("SimpleGroup")
     host:SetLayout(nil)
@@ -382,7 +402,7 @@ local function weightRow(spec, stat)
 end
 
 local function specLabel(spec)
-    local name = NS.Compat.SpecName(spec)
+    local name = specNamer()(spec)
     return type(name) == "string" and name ~= "" and name or tostring(spec)
 end
 
@@ -587,7 +607,7 @@ function P.TemplatesTab(ctx, rows)
     previewBlock(ctx, st)
     h.InlineButtonPair(ctx, {
         text = L["Reset templates"],
-        tooltip = L["Put the five messages back to the shipped wording."],
+        tooltip = L["Put every message back to the shipped wording."],
         onClick = function() resetTemplates(rows or {}) end,
     })
 end

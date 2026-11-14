@@ -9,7 +9,7 @@
 -- the step's drops of yours.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function link(id, ilvl)
     return ("|cnIQ4:|Hitem:%d::::::::90:::::%d|h[Item %d]|h|r"):format(id, ilvl or 0, id)
@@ -85,40 +85,50 @@ local function pair(line) return type(line) == "table" and (line[1] .. ": " .. t
 -- The owner's case, reproduced before the fix
 -- ---------------------------------------------------------------------------------------------
 
+-- The owner's run is a Mythic+ key (Retail); Forever has no Mythic+ (Forever port design §4.4), so its
+-- burst is the dungeon's, three lines with yours first: the same path, the same nothing-lost proof.
+local OWNER_RUN = T.forever
+    and { scenario = "dungeon", n = 3, mine = "Item 100",
+        others = { "Item 100 (Tavi Frostvale): Drops", "Item 101 (Kaelis Ironhide): Drops" } }
+    or { scenario = "key", n = 2, mine = "Item 101081", others = { "Item 101081 (Kaelis): Drops" } }
+
 test("sim report: the owner's key run: the second drop is yours, on Drops, nothing lost", function()
     local NS = addon(600)
-    assertTrue(NS.SimScenario.Start("key", nil, { seed = 1 }))
+    local run = OWNER_RUN
+    assertTrue(NS.SimScenario.Start(run.scenario, nil, { seed = 1 }))
     local step = toLoot(NS)
     local drops = NS.LootFeed.Drops("live")
-    -- Root cause (proven): two lines, two drops in the feed, none hidden or merged; one is yours.
-    assertEqual(#drops, 2)
+    -- Root cause (proven): one line each, one drop each in the feed, none hidden or merged; one is yours.
+    assertEqual(#drops, run.n)
     assertEqual(NS.State.feed.merged, 0); assertEqual(next(NS.State.feed.hidden), nil)
     assertTrue(drops[1].isMine and not drops[2].isMine, "the burst's first line is yours")
     assertTrue(not NS.WindowFilterBar.IsTradeableMine(drops[1]), "an upgrade for you: not tradeable")
     NS.Window.SelectTab("group"); NS.Window.Refresh()
     local header = NS.WindowGroup.Drawn().headers[1]
     assertEqual(NS.WindowCells.Entries(NS.LootFeed.Groups("live"), NS.LootFeed.Get, NS.Window.TabContext("group"),
-        {})[1].count, 2, "Drops shows both, yours too (feedback-5 spec §2)")
+        {})[1].count, run.n, "Drops shows them all, yours too (feedback-5 spec §2)")
     -- What says so: the step, the panel row and its tooltip, the chat line, the header, the tab.
-    assertEqual(step.detail, "2 drops")
+    local shown = run.n .. " drops"
+    assertEqual(step.detail, shown)
     local row = panelRow(NS, step)
-    assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(pair(row.tip[3]), "Item 101081 (you): Drops")
-    assertEqual(pair(row.tip[4]), "Item 101081 (Kaelis): Drops")
+    assertEqual(row.label, "Loot: " .. shown)
+    assertEqual(pair(row.tip[3]), run.mine .. " (you): Drops")
+    -- a seed replays per client: Forever's members draw a surname too (client-quirks-§5)
+    for i, line in ipairs(run.others) do assertEqual(pair(row.tip[3 + i]), line) end
     assertTrue(header ~= nil)
     NS.Window.SelectTab("group"); NS.Window.Refresh()
     local text = NS.WindowGroup.Drawn().headers[1].text:GetText()
-    assertTrue(text:find("· 2 drops ·", 1, true) ~= nil, text)
+    assertTrue(text:find("· " .. shown .. " ·", 1, true) ~= nil, text)
     assertTrue(text:find("yours", 1, true) == nil, "no `yours` suffix: " .. text)
     assertEqual(NS.Window.Frame().tabs.group.label:GetText(), "Drops", "no tab label count (feedback-5 spec §3)")
 end)
 
 test("sim report: the step's chat line says where its drops went", function()
     local NS, m = addon(600)
-    NS.SimScenario.Start("key", nil, { seed = 1 })
+    NS.SimScenario.Start(OWNER_RUN.scenario, nil, { seed = 1 })
     toLoot(NS)
     local st = NS.SimScenario.Status()
-    assertEqual(printed(m, ("Simulation step %d of %d: Loot: 2 drops."):format(st.pos, st.steps)), 1)
+    assertEqual(printed(m, ("Simulation step %d of %d: Loot: %d drops."):format(st.pos, st.steps, OWNER_RUN.n)), 1)
 end)
 
 test("sim report: /dw sim loot says where its drops went", function()
@@ -218,6 +228,8 @@ end)
 -- ---------------------------------------------------------------------------------------------
 
 local SCENARIOS = { { "key" }, { "dungeon" }, { "raid", 12 }, { "lfr", 10 }, { "delve" }, { "world" } }
+-- The scenarios WoW Forever has none of (Forever port design §4.4): their cases are Retail's.
+local RETAIL_SCENARIO = { key = true, lfr = true, delve = true }
 
 local function inReport(report)
     local set = {}
@@ -301,7 +313,7 @@ for _, sc in ipairs(SCENARIOS) do
             for seed = 1, 3 do runAll(sc[1], sc[2], seed, ilvl) end
         end
         runAll(sc[1], sc[2], 1, 600, true)
-    end)
+    end, RETAIL_SCENARIO[sc[1]] and T.RETAIL_ONLY or nil)
 end
 
 -- ---------------------------------------------------------------------------------------------
@@ -342,13 +354,38 @@ end)
 
 test("sim report: the owner's step lists yours on Drops, and the tabs agree", function()
     local NS = addon(600)
-    NS.SimScenario.Start("key", nil, { seed = 1 })
+    NS.SimScenario.Start(OWNER_RUN.scenario, nil, { seed = 1 })
     local step = toLoot(NS)
-    assertEqual(step.detail, "2 drops")
+    assertEqual(step.detail, OWNER_RUN.n .. " drops")
     local row = panelRow(NS, step)
-    assertEqual(row.label, "Loot: 2 drops")
-    assertEqual(pair(row.tip[3]), "Item 101081 (you): Drops")
+    assertEqual(row.label, "Loot: " .. OWNER_RUN.n .. " drops")
+    assertEqual(pair(row.tip[3]), OWNER_RUN.mine .. " (you): Drops")
     local c = NS.SimReport.Summarize(step.report, NS.LootFeed.Get, NS.SimReport.View())
     local shown = groupShown(NS, step.report)
     assertEqual(shown, c.group); assertEqual(c.group + c.hidden, c.total)
+end)
+
+test("sim report: counts rolls", function()
+    -- DW-FP17: the roll line, pure, then end to end through /dw sim roll and the status line.
+    local NS0 = T.newAddon()
+    local R0 = NS0.SimReport
+    assertNil(R0.Rolls(nil), "no roll yet: no line")
+    assertNil(R0.Rolls({ started = 0, won = 0, allPassed = 0 }))
+    assertEqual(R0.Rolls({ started = 1, won = 1, allPassed = 0 }).text, "1 roll (1 won)")
+    local c = R0.Rolls({ started = 4, won = 2, allPassed = 1 })
+    assertEqual(c.open, 1)
+    assertEqual(c.text, "4 rolls (1 open, 2 won, 1 everyone passed)")
+    local NS, m = addon(600)
+    NS.SimScenario.Start("dungeon", nil, { seed = 1 })
+    NS.addon:OnSlashCommand("sim pause")
+    NS.addon:OnSlashCommand("sim roll")
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local r = NS.SimReport.Rolls(NS.SimEvents.Status().rolls)
+    assertEqual(r.started, 2); assertEqual(r.open, 2)
+    m.advance(NS.SimEvents.ROLL_CLOSE + 1)
+    r = NS.SimReport.Rolls(NS.SimEvents.Status().rolls)
+    assertEqual(r.open, 0); assertEqual(r.won + r.allPassed, 2)
+    NS.addon:OnSlashCommand("sim status")
+    assertEqual(printed(m, "Rolls: " .. r.text .. "."), 1, "the status line counts them")
 end)

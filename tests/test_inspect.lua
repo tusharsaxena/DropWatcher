@@ -134,6 +134,25 @@ test("inspect: a slot's level comes from its tooltip, else from the link", funct
     assertEqual(NS.ItemFacts.Get(link(4001)).ilvl, 600, "the cached facts are not written")
 end)
 
+-- The ranged slot (Forever port design §4.4): WoW Forever's slot 18 is read with the rest; on
+-- Retail it is unused and never read.
+test("inspect: on Forever the ranged slot 18 is read; on Retail it is not", function()
+    local _, m, I = party()
+    I.Request(A)
+    m.advance(0)
+    arrive(m, A)
+    m.addItem(link(4018), plate("INVTYPE_RANGED", 605, { classID = 2, subClassID = 2 }))
+    m.inventory[UNIT[A]][18] = link(4018)
+    ready(m, A)
+    m.advance(0.15)
+    local gear = I.Get(A).gear
+    if T.forever then
+        assertEqual(gear[18].link, link(4018), "the bow in the ranged slot")
+    else
+        assertNil(gear[18], "Retail has no slot 18 to read")
+    end
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The queue: spacing and priority
 -- ---------------------------------------------------------------------------------------------
@@ -560,6 +579,7 @@ end)
 
 test("inspect: the candidate carries the roster's class, the read spec and the hand flags", function()
     local NS, m, I = party()
+    T.retailList(NS)   -- Retail's specs (Fury's Titan's Grip); a Forever unit's spec is class-wide
     assertNil(I.Candidate(A), "nothing read yet")
     I.Request(A)
     inspectNow(m, A, 72)
@@ -574,6 +594,7 @@ end)
 
 test("inspect: the candidate's off-spec gear is the worn gear each other spec could wear", function()
     local NS, m, I = party()
+    T.retailList(NS)   -- Retail's off-specs (Arms, Fury, Protection); off-spec is Retail's alone
     I.Request(A)
     m.advance(0)
     arrive(m, A, 73)
@@ -594,7 +615,7 @@ test("inspect: the candidate's off-spec gear is the worn gear each other spec co
     local r = NS.Evaluate.Evaluate(drop, c, {})
     assertEqual(r.verdict, "cantUse")
     assertEqual(r.offSpec.specID, 72); assertEqual(r.offSpec.verdict, "upgrade")
-end)
+end, T.RETAIL_ONLY)
 
 test("inspect: InspectDone waits for the read's items to load", function()
     local NS, m, I = party()
@@ -629,7 +650,7 @@ test("inspect: one debug line per job", function()
     m.advance(0.15)
     NS.Debug = real
     assertEqual(#lines, 1, table.concat(lines, " | "))
-    assertTrue(lines[1]:find("Brakk%-Testrealm: fresh") ~= nil, lines[1])
+    assertTrue(lines[1]:find(T.rosterName("Brakk"):gsub("%-", "%%-") .. ": fresh") ~= nil, lines[1])
 end)
 
 -- ---------------------------------------------------------------------------------------------

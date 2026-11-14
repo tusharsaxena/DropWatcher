@@ -45,9 +45,15 @@ local KIND_TIP = {
     kill        = { { L["Injects"], L["ENCOUNTER_END"] }, { L["Lifts"], L["combat and the Encounter restriction"] }, THROUGH },
     lockdownOn  = { { L["Injects"], L["the simulated chat lockdown"] }, { L["Asks"], L["wait until it lifts"] } },
     lockdownOff = { { L["Lifts"], L["the chat lockdown"] }, { L["Waiting asks"], L["go out (printed, never sent)"] } },
+    roll        = { { L["Injects"], L["LOOT_HISTORY_UPDATE_ENCOUNTER, START_LOOT_ROLL, then LOOT_HISTORY_UPDATE_DROP"] },
+                    { L["Resolves"], L["into a drop with its roll table"] }, THROUGH },
 }
 
-local START_TIP = { { L["Builds"], L["the item pool, from the Encounter Journal"] }, { L["Invents"], L["the group"] },
+-- The pool's source is the Encounter Journal on Retail, your own gear on WoW Forever (its journal
+-- is disabled: modules/SimPool.lua, Forever port design §4.4).
+local POOL_FROM = NS.Constants.FEATURE.journalPool and L["the item pool, from the Encounter Journal"]
+    or L["the item pool, from your own gear"]
+local START_TIP = { { L["Builds"], POOL_FROM }, { L["Invents"], L["the group"] },
     { L["Opens"], L["the window"] } }
 local STOP_TIP = { { L["Ends"], L["the simulation"] }, { L["Cleans up"], L["everything it made"] } }
 
@@ -98,6 +104,7 @@ function SP.StepLabel(step, i, steps)
     if step.kind == "pull" then return L["Pull: %s"]:format(boss or "?") end
     if step.kind == "kill" then return L["Kill: %s"]:format(boss or "?") end
     if step.kind == "loot" then return lootLabel(step) end
+    if step.kind == "roll" then return step.detail and L["Roll: %s"]:format(step.detail) or L["Group-loot roll"] end
     return KIND_LABEL[step.kind] or step.kind
 end
 

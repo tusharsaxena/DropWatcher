@@ -69,7 +69,7 @@ test("transmog facts: the item facts read the look through CanIMogIt when it is 
     m.addItem(CHEST, chestDef(false))
     m.CanIMogIt = cimi(true)
     assertTrue(NS.ItemFacts.Read(CHEST).transmogKnown)
-end)
+end, T.RETAIL_ONLY)
 
 -- ── the template an ask fills ───────────────────────────────────────────────────────────────
 
@@ -88,12 +88,12 @@ test("transmog template: the plain ask for a gain; For transmog only when on and
     assertNil(M.AskTemplate(rec("downgrade", nil), true), "not known is not missing")
     assertNil(M.AskTemplate({ me = { verdict = "downgrade" } }, true), "no facts")
     assertNil(M.AskTemplate(nil, true))
-end)
+end, T.RETAIL_ONLY)
 
 test("transmog template: its default text, the owner's own, and a request that names it", function()
     local NS = T.newAddon()
     local M, C = NS.Messaging, NS.Constants
-    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,askOffSpec,offer,announce", "off-spec (feedback-19 spec §2) follows transmog")
+    assertEqual(table.concat(C.MESSAGE_TEMPLATES, ","), "ask,transmog,askOffSpec,askML,offer,announce", "off-spec (feedback-19 spec §2) follows transmog")
     local default = NS.C.PROFILE.messages.templates.transmog
     assertTrue(default:find("for transmog", 1, true) ~= nil)
     assertTrue(#default <= C.MESSAGE_MAX_LEN)
@@ -109,7 +109,7 @@ test("transmog template: its default text, the owner's own, and a request that n
     local res2 = M.Request(M.NewBook(), { kind = "ask", target = "B", dropID = 2, template = "bogus" },
         { canSend = true, templates = { ask = "plain" } })
     assertEqual(res2.ask.text, "plain", "an unknown template falls back to the kind's")
-end)
+end, T.RETAIL_ONLY)
 
 -- ── the Ask button and the detail card ──────────────────────────────────────────────────────
 
@@ -141,7 +141,7 @@ test("transmog card: the header's look chip says New look, Look known or nothing
     assertEqual(known[3].tone, "muted")
     local ring = DC.Chips(drop({ facts = { ilvl = 600, equipLoc = "INVTYPE_FINGER" } }))
     assertEqual(texts(ring), "Finger,Jewelry,600", "no appearance, no chip")
-end)
+end, T.RETAIL_ONLY)
 
 test("transmog ask: offered for a missing look only with transmogAsk on, with its own tooltip", function()
     local NS = T.newAddon()
@@ -161,7 +161,7 @@ test("transmog ask: offered for a missing look only with transmogAsk on, with it
     assertEqual(acts[1].key, "ask"); assertTrue(acts[1].enabled)
     assertTrue(acts[2].enabled, "Edit message too")
     assertFalse(NS.DetailCells.Actions(drop(), { askState = "ready", now = 1 })[1].enabled)
-end)
+end, T.RETAIL_ONLY)
 
 -- ── the messaging edge ──────────────────────────────────────────────────────────────────────
 
@@ -198,7 +198,7 @@ test("transmog edge: with transmogAsk on, an ask for a missing look sends the Fo
     assertEqual((NS.Asks.Request("ask", "Brakk", id)), "sent")
     assertTrue(m.chatSent[1].text:find("could I have it for transmog", 1, true) ~= nil, m.chatSent[1].text)
     assertEqual(NS.Asks.StateOf("ask", "Brakk", id), "sent", "filed as an ask")
-end)
+end, T.RETAIL_ONLY)
 
 test("transmog edge: a collected look keeps the plain ask", function()
     local NS, m, id = party(true)
@@ -222,7 +222,7 @@ test("transmog settings: the template and the opt-in are rows, the opt-in off by
     local E = NS.addon.Settings.Editors
     assertEqual(E.KIND_NAME.transmog, "Ask for transmog")
     assertTrue(E.TEMPLATE_LABEL.transmog ~= nil)
-end)
+end, T.RETAIL_ONLY)
 
 test("transmog settings: the preview sample is a drop whose look you have not collected", function()
     local E = T.newAddon().addon.Settings.Editors
@@ -246,7 +246,7 @@ test("transmog test mode: one sample's look is collected and one's is not", func
         if type(s.facts) == "table" and s.facts.transmogKnown ~= nil then seen[s.facts.transmogKnown] = true end
     end
     assertTrue(seen[true] and seen[false])
-end)
+end, T.RETAIL_ONLY)
 
 test("transmog diagnostics: the integrations name the look's source, messaging the opt-in", function()
     local NS, _, m = T.enableAddon()
@@ -257,4 +257,38 @@ test("transmog diagnostics: the integrations name the look's source, messaging t
     assertTrue(text:find("transmog: source=CanIMogIt", 1, true) ~= nil, text)
     assertTrue(text:find("transmogAsk=false", 1, true) ~= nil)
     assertTrue(text:find("transmog=", 1, true) ~= nil, "its template's length")
+end, T.RETAIL_ONLY)
+
+-- ── per client (Forever port design §4.4, clients-§4, §6) ───────────────────────────────────
+
+-- Transmog is Retail's alone: on WoW Forever there is no transmog template, no row for it or its
+-- opt-in, no TRANSMOG_COLLECTION_UPDATED, no look read (so no look chip and no transmog ask) and
+-- no word of it in the diagnostics. On Retail each is there.
+test("transmog: no transmog template, row or event on Forever", function()
+    local NS, _, m = T.enableAddon()
+    local retail = NS.Compat.ClientKey() == "retail"
+    local templates = {}
+    for _, name in ipairs(NS.Constants.MESSAGE_TEMPLATES) do templates[name] = true end
+    assertEqual(templates.transmog == true, retail, "the template")
+    assertEqual(NS.Messaging.Template("transmog", nil) ~= nil, retail, "its text")
+    local S = NS.SchemaRuntime
+    assertEqual(S.FindRow("messages.transmogAsk") ~= nil, retail, "the opt-in's row")
+    assertEqual(S.FindRow("messages.templates.transmog") ~= nil, retail, "the template's row")
+    local names = {}
+    for _, name in ipairs(NS.FeatureEventNames()) do names[name] = true end
+    assertEqual(names.TRANSMOG_COLLECTION_UPDATED == true, retail, "the collection event")
+    m.addItem(CHEST, chestDef(false))
+    m.CanIMogIt = cimi(false)
+    local known = NS.ItemFacts.Read(CHEST).transmogKnown
+    if retail then assertFalse(known) else assertNil(known, "the look is not read") end
+    assertEqual(#m.CanIMogIt.seen > 0, retail, "CanIMogIt is asked on Retail only")
+    assertEqual(NS.Messaging.AskTemplate(rec("downgrade", false), true), retail and "transmog" or nil,
+        "never the transmog ask on Forever, whatever the facts say")
+    local chips = texts(NS.DetailCells.Chips(drop()))
+    assertEqual(chips:find("New look", 1, true) ~= nil, retail, "the look chip: " .. chips)
+    NS.DebugLog:Clear()
+    NS.addon:OnSlashCommand("diagnostics")
+    local text = table.concat(NS.DebugLog.buffer, "\n")
+    assertEqual(text:find("transmog", 1, true) ~= nil, retail, "the diagnostics' transmog lines")
+    assertEqual(text:find("CanIMogIt", 1, true) ~= nil, retail, "the diagnostics' CanIMogIt word")
 end)

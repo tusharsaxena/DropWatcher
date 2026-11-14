@@ -242,8 +242,11 @@ end
 NS.FULL_SKIN_KEYS = {
     "window.tableFontFromSkin", "window.tableFontShadowFromSkin", "window.tableFontFlags",
     "icons.borderStyleFromSkin", "icons.borderColorFromSkin",
-    "glow.main.colorFromSkin", "glow.offSpec.colorFromSkin",
+    "glow.main.colorFromSkin",
 }
+-- The off-spec glow is Retail's alone (C.FEATURE.offSpec, Forever port design §4.4): on WoW Forever
+-- the walk never writes a table its profile has no default for.
+if NS.Constants.FEATURE.offSpec then NS.FULL_SKIN_KEYS[#NS.FULL_SKIN_KEYS + 1] = "glow.offSpec.colorFromSkin" end
 
 --- The hand-written walk, for the no-Skin-major arm only: the listed keys' same write. A path through
 --- a missing table is skipped, and no table is made on the way.

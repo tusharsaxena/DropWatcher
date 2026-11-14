@@ -129,11 +129,14 @@ L["Full shows the drop tables with every column. Compact shows the same drops in
     "Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."
 L["Compact view when it auto-opens in a run"] = "Compact view when it auto-opens in a run"
 L["Tables"] = "Tables"
+L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
+    "When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."] =
     "When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."
 L["Row height"] = "Row height"
 L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."] =
     "The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."
+L["The height of one row in the drop tables: Drops and History."] = "The height of one row in the drop tables: Drops and History."
 L["Toast"] = "Toast"
 L["Show a toast"] = "Show a toast"
 L["Pop up a toast for a likely tradeable upgrade for you."] = "Pop up a toast for a likely tradeable upgrade for you."
@@ -152,7 +155,6 @@ L["How many toasts show on screen at once, stacked. 1 shows one at a time; the r
 L["Stack direction"] = "Stack direction"
 L["Where each toast after the first goes: below the one before it, or above it."] =
     "Where each toast after the first goes: below the one before it, or above it."
-L["Scale"] = "Scale"
 L["The toast's size, from half to double. It grows or shrinks about the place you put it."] =
     "The toast's size, from half to double. It grows or shrinks about the place you put it."
 L["Upgrade glow"] = "Upgrade glow"
@@ -322,8 +324,6 @@ L["Guns"] = "Guns"
 L["Crossbows"] = "Crossbows"
 L["Wands"] = "Wands"
 L["Shields"] = "Shields"
-L["The player's name: the looter for an ask, the candidate for an offer."] =
-    "The player's name: the looter for an ask, the candidate for an offer."
 L["The item's link."] = "The item's link."
 L["The item's level."] = "The item's level."
 L["The slot the item goes in."] = "The slot the item goes in."
@@ -361,7 +361,7 @@ L["Click a token to put it in the message you last edited. Each is filled in whe
     "Click a token to put it in the message you last edited. Each is filled in when the message is sent."
 L["Your messages"] = "Your messages"
 L["Reset templates"] = "Reset templates"
-L["Put the five messages back to the shipped wording."] = "Put the five messages back to the shipped wording."
+L["Put every message back to the shipped wording."] = "Put every message back to the shipped wording."
 
 -- settings/Pages.lua
 L["Comparison"] = "Comparison"
@@ -373,8 +373,8 @@ L["Window"] = "Window"
 -- feedback-24: the pages regrouped (Situations, Drops, Comparison, Messages, Window, Alerts)
 L["Situations"] = "Situations"
 L["Loot rule"] = "Loot rule"
-L["Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."] =
-    "Reset the Drops page's settings (situations, quality, item kinds and item level, and how long drops are kept) to their defaults. The item lists are kept."
+L["Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept."] =
+    "Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept."
 L["Quality floor"] = "Quality floor"
 L["A situation can set a quality of its own: the Quality column on the Situations tab."] =
     "A situation can set a quality of its own: the Quality column on the Situations tab."
@@ -417,3 +417,33 @@ L["Alerts"] = "Alerts"
 L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."] =
     "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
 L["Simulator"] = "Simulator"
+-- settings/SchemaRows.lua: General › Role (Forever port design §11.4)
+L["Role"] = "Role"
+L["Tank"] = "Tank"
+L["Healer"] = "Healer"
+L["Damage"] = "Damage"
+L["The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."] =
+    "The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."
+L["the role your group gave you"] = "the role your group gave you"
+L["your talents (%s)"] = "your talents (%s)"
+L["your talents"] = "your talents"
+L["your specialization (%s)"] = "your specialization (%s)"
+L["your specialization"] = "your specialization"
+L["the last role it found"] = "the last role it found"
+L["Automatic now picks %s: %s."] = "Automatic now picks %s: %s."
+L["Automatic has no answer yet."] = "Automatic has no answer yet."
+-- settings/SchemaRows.lua: Drops › Rolls (Forever port design §5.3)
+L["Show rolls"] = "Show rolls"
+L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."] =
+    "Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."
+L["Keep rolls in history"] = "Keep rolls in history"
+L["Keep each rolled drop's rolls in the History tab."] = "Keep each rolled drop's rolls in the History tab."
+L["Mark the roll popup"] = "Mark the roll popup"
+L["Show your verdict on the game's Need and Greed roll popup."] =
+    "Show your verdict on the game's Need and Greed roll popup."
+-- settings/SchemaRows.lua, settings/Editors.lua: the master-loot ask template (DW-FP19)
+L["What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."] =
+    "What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."
+L["Ask the master looter (whisper to the master looter)"] = "Ask the master looter (whisper to the master looter)"
+L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."] =
+    "The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."

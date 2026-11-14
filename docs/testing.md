@@ -2,12 +2,23 @@
 
 ## The green commit gate
 
-Both MUST pass before every commit (testing-§4):
+All three MUST pass before every commit (testing-§4). Drop Watcher is `Retail · Forever` (the
+roster's Clients column, clients-§2), so the headless suite runs under both kit profiles, and a
+suite green on one and red on the other is a failing suite (clients-§6):
 
 ```sh
-lua tests/run.lua                               # the headless suite, Lua 5.1
+lua tests/run.lua                               # the headless suite, Lua 5.1, the Retail profile (the default)
+KA0S_KIT_CLIENT=forever lua tests/run.lua       # the same suite as WoW Forever (1.60.1, interface 16001)
 ~/.claude/dev-copilot/bin/ka0s-bounded luacheck .  # 0 warnings / 0 errors
 ```
+
+A per-client feature has a case on each profile, present where `docs/ARCHITECTURE.md`'s per-client
+feature table declares it and absent where not; a case takes its expectation from
+`NS.Compat.ClientKey()` (or `T.forever`). The Forever run skips the cases that pin a Retail-only
+feature's own behavior (`T.RETAIL_ONLY`); a case that mixes such a feature with something both
+clients share is split, so the shared half runs on Forever too (DW-FP21: the glow styles and Use
+class color on the main glow, the situation edge's inputs). The TOC's Forever number arms the kit's missing-globals gate
+(`test_client_globals`) for the `forever` name set as well as `live`.
 
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
 census in [`ARCHITECTURE.md`](ARCHITECTURE.md). Toolchain: [`DEPENDENCIES.md`](../DEPENDENCIES.md).
@@ -16,7 +27,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 46, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 54, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -29,12 +40,15 @@ and a mocked clock: `advance(seconds)` runs the kit's timer queue in due order, 
 `tests/wow_mock_collect.lua`, which `tests/wow_mock.lua`'s builder calls, holds the collection reads
 `core/CompatCollect.lua` wraps (the mount and pet journals, the toy box, the cosmetic flag, the
 professions, the recipe's known line and a tier token's slot names), split out to keep
-`tests/wow_mock.lua` out of the 1000-line band.
+`tests/wow_mock.lua` out of the 1000-line band. `tests/wow_mock_loot.lua`, its own mock family, holds
+the loot surface `core/CompatLoot.lua` wraps (`C_LootHistory`, which serves a drop's key as
+`lootListID` on the retail profile and `lootListKey` on the forever one, the roll globals,
+`C_PartyInfo.GetLootMethod`, the loot-window slots and plain `GroupLootFrame1`..`4` stand-ins).
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
-each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env, mock)`:
+each taking an `opts` table (`skip`, `mock`, `inCombat`, `skin`) and returning `(NS, env, mock)`:
 
 - `T.newAddon(opts)` — every file loaded.
 - `T.bootAddon(opts)` — plus `OnInitialize` (the database, the migrations, the chat commands).
@@ -42,6 +56,20 @@ each taking an `opts` table (`skip`, `mock`, `inCombat`) and returning `(NS, env
 
 `opts.skip = T.loadAddon.libFiles` loads the addon with the whole LibKa0s payload absent, which is how
 every degradation stub is tested: by a real load, never by a hand-written stub (testing-§8).
+
+`opts.skin = "ka0s"` makes that skin the instance's client default (`Skin:DefaultSkin()`, so
+`NS.DEFAULT_SKIN` and `skin.skin`'s default). A new profile wears Ka0s Default on Retail and WoW Forever
+on Forever (skinning-§2), so a case pinning Ka0s Default's pixels chooses it by name this way and
+reads the same on both kit profiles; `test_skin_setup` pins the per-client default itself.
+
+Names differ per kit profile (client-quirks-§5, DW-FP04): on Forever the mock's `RegionalUniqueNamesEnabled`
+answers true and a unit row's `realm` stands for UnitName's second value, the surname, so the roster
+names a member by the whole name with no realm. `T.forever` says which profile runs,
+`T.rosterName(name, realm)` is the name the roster gives a mock row on it (`Name-Realm` with the
+realm normalized, `Testrealm` when the row names none, on Retail; `Name Surname`, or `Name`, on
+Forever), and `T.ME` is the player's (`Testchar-Testrealm` on Retail, `Testchar` on Forever: your
+recorder key and your roster name both). A case that pins a looter, a whisper target or a recorder
+key takes its expectation from them; a cross-realm case states its Forever behavior beside it.
 
 Named suites the standard requires: `test_surface_parity` (testing-§8; since AT-A2 it also holds
 `core/ToastSetup.lua`'s `NS.ToastStub` to a live LibKa0s-Toast-1.0 instance), `test_vendor_sync`
@@ -126,8 +154,9 @@ over a kept entry, the header's chips, For you at the time, For the group and yo
 recorded trade estimate, when and where and the actions; then headless, a row click expanding it
 under the row with the chevron up and the rows below moved, one at a time, a right-click still the
 menu, the columns after the indent and chevron, Link in chat, Mark and Clear declined, Show in Drops
-selecting the Drops tab with the drop's header open and its card expanded, and the stacked card
-under a compact card),
+selecting the Drops tab with the drop's header open and its card expanded, the stacked card
+under a compact card, the Rolls box, and a kept roll table read back once across repaints until
+History replaces it),
 `test_compact_chrome` (the window's chrome in the compact layout, DW-C4: the short tab labels, `TEST`
 and `SIM`, the badge's count, the footer's one line and its tooltip, the Filters count, label and
 tooltip, pure; then headless: the short title centered with its word, the badge at the left with its
@@ -278,9 +307,18 @@ secret guards on both load paths, the localized duration decoder in three client
 tooltip line reader, the trade window's items and partner, the row menu, the optional-addon probe
 `IsAddOnLoaded` (DW-P20), the Pawn seam against a fake shaped like Pawn 2.13.6 (its `PawnIsReady()`,
 the scale asked by spec index, the unenchanted value; feedback-21 H1; the scale you show, a custom one
-first, R4), and each shim's fallback with its API absent), `test_compat_collect` (`core/CompatCollect.lua`'s
+first, R4), and each shim's fallback with its API absent), `test_compat_client` (DW-FP02, on each kit
+profile: the client helpers and their library-absent stub, `ForClient`'s tokens, the whole character name
+and the character key, the talent tree and the role through LibKa0s-Role-1.0 over `db.char.role`, the
+inspect spec's `C_SpecializationInfo` rung, and a `NS.FEATURE_EVENTS` row registered and replayed only on
+the client its `clients` names), `test_compat_collect` (`core/CompatCollect.lua`'s
 collection reads, issue #13: each member's answer, its API absent and a secret answer, the recipe's known line
-by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
+by its whole text, a curated sample's link by its id (`ItemLinkByID`, DW-CAT6), the seam wrapping every member, and no other file naming the APIs), `test_compat_loot` (`core/CompatLoot.lua`'s
+loot history and roll reads, DW-FP13, on both kit profiles: a drop's roll table field by field, a secret
+field, row or list degrading that field or row and never the table (Review Focus 2), the drop key under
+either client's name, `LootHistoryDrop` unchanged as a view, an encounter's drops and name, the history
+clock, your open rolls and a roll's bind on pickup flag, the seam wrapping every member, and no other file
+naming the APIs), `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the
 localized strings passed in, and that the module reads no global), `test_constants` and
 `test_class_data`
 (the game-data tables and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel, table-driven over
@@ -393,7 +431,32 @@ settings and a situation's mode; the pure filters row by row and the relative it
 still loading and one that never loads; your own drop with its trade by your verdict and every
 member a candidate, no inspects for an untradeable one, pushed items; `GearChanged`; the score
 retry and its limit; `Add`, the test feed and `Clear`; the cap; secret payloads; and the
-stand-down), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+stand-down), `test_pending` (`modules/Pending.lua`, DW-FP14, on both kit profiles: an open group-loot
+roll opening one item, a changed table sending `PendingChanged` once, a winner handing its final table to
+the feed (`rec.roll`) and closing the item, a chat receipt that came first taking the roll by merge, two
+identical items on one encounter kept apart with their own tables and roll popups (Review Focus 1), a
+reload mid-roll rebuilding one item whose winner makes one drop (Review Focus 3), everyone passing
+lingering 60 s with no feed record, the quality gate keeping a drop out, the 1 s ticker alive only while
+a roll is open, and the stand-down; since the M4 review also a history clear during an item load, a closed roll releasing its popup, a cleared history detaching open items, and your verdict judged again on a gear change and on the score retry), `test_pending_ml` (`modules/PendingML.lua`, DW-FP18, on both kit profiles: a slot at the client's master-loot threshold opening one `ml` item that a re-opened corpse does not duplicate, a receipt inside 600 s assigning it with `askedML` on the drop, a late or other receipt assigning nothing, nothing pending for the master looter, expiry at 900 s and on leaving the group or the instance, nothing from the loot window under group or personal loot, and the stand-down), `test_ask_ml` (the master-loot ask, `askML`, DW-FP19, on both kit profiles: one press whispering the master looter once and the one-ask guard refusing a second, queued under a chat restriction and sent on the lift (and canceled when its item is assigned first), refused when you are the master looter, when it is no upgrade for you and when the master looter is offline, the whole two-word name as the whisper target on Forever (Review Focus 4), the received drop's History entry reading `asked` while a feed drop with the pending item's id stays untouched, auto-ask never sending it, the Edit message box with `editFirst`, and the diagnostics line), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
+profiles: the open summary's counts in the state order, the won summary with the winner's choice and
+number, the rows' order (the winner, numbers high to low, chosen without a number, waiting, pass), a
+nameless row kept as `?` (Review Focus 2), win protection marked only once won, the time left on the
+history's clock and the grid a box flows its rows into), `test_window_pending` (`modules/WindowPending.lua`,
+DW-FP15, on both kit profiles: the Rolling now section above the boss groups only while an item
+exists and `rolls.show` is on, collapsing on its header, keeping the empty state away; a row's verdict,
+summary and time left with no action for a roll, a click expanding the roll table inline, the timer
+ticking and a won, ended or all-passed roll saying so, a master-loot item naming its master looter
+and never reading Roll ended (DW-FP18 review); the compact layout's card; the resolved drop's
+Rolls box on its detail card; the row tooltip's summary line; and the score and spec rows naming the
+scale each score used, through the shipped card's `S.ScoreFor` calls), `test_roll_popup`
+(`modules/RollPopup.lua`, DW-FP20, on both kit profiles: an upgrade roll marking GroupLootFrame1 from an
+overlay anchored above it at the alert tier, two identical items on two popups each with its own Need so
+far (Review Focus 1), a popup closed at once or with no rollID drawing nothing, the disabled state and
+`rolls.popupMark` off drawing nothing through the same one-way hooks, no key added to or changed on
+Blizzard's frame table and no second hook after a stand-up, gamepad mode skipped, the Forever BoP
+wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, the simulator's
+stand-in, and a popup shown before its drop reaches the loot history gaining its Need so far when
+the drop lands (DW-FP20 review); it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
@@ -659,7 +722,7 @@ stay as integration over this addon's host half: `test_sim_core` (the seam's mem
 the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
 every scenario through the real engine), `test_sim_events` (the event drivers and the world
 providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
-`test_sim_scenario` (the scenarios, the timeline's steps, the six verbs through `/dw sim`, `drop <kind>` included) and
+`test_sim_scenario` (the scenarios, the timeline's steps, the eight verbs through `/dw sim`, `drop <kind>` included) and
 `test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
@@ -667,13 +730,14 @@ DropWatcher case to library case.
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
-The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and no host row, and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
+The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and three host rows (DW-FP15's roll glyphs in `modules/RollCells.lua`, the game's group-loot roll-button art, cause A6), and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
 
 The offline perf scenario `insightsCompute` (`lua tests/perf.lua`, [`performance.md`](performance.md)) measures the Insights recompute's pure pass over a log at the 5,000-drop safety ceiling.
 
 `lua tests/run.lua --list` prints the case inventory; it is committed as
 [`test-cases.md`](test-cases.md), and its Total is the README's `[tests]` badge. Regenerate both in
-the change that moves the count (testing-§5).
+the change that moves the count (testing-§5). Both are the default (Retail) profile's run; the
+Forever run lists the same cases and skips more of them.
 
 ## Members only the suites call
 
@@ -700,7 +764,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | Suite | Command | Commit / run | Release (the tag) |
 |---|---|---|---|
 | `lint` | `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` | **gates** | gates |
-| `tests` | `lua tests/run.lua` | **gates** | gates |
+| `tests` | `lua tests/run.lua` (the runner's run, the Retail profile; the commit gate adds `KA0S_KIT_CLIENT=forever lua tests/run.lua`) | **gates** | gates |
 | `perf` | `lua tests/perf.lua` (offline scenarios; see [`performance.md`](performance.md)) | recorded, never fails a run or blocks a commit | gates |
 | `complexity` | `bash tests/_kit/run-automated-tests.sh --suite complexity` (the sighted shadow) | recorded, never fails a run or blocks a commit | gates, with zero functions above CCN 15 and `blindFiles` 0, and no crashed run (a crashed or bounded lizard run is a fail, its files listed as crashedFiles) |
 
@@ -710,5 +774,7 @@ For long batteries run through the bounded runner, `~/.claude/dev-copilot/bin/ka
 
 ## In game
 
-[`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make. They are the owner's
-to run; an agent never marks one passed.
+[`smoke-tests.md`](smoke-tests.md) — the checks the headless suite cannot make, each naming its
+client; the Forever port's are its ROLLS and FOREVER themes, and its open in-game reads are the
+probe sheet, [`forever-probes.md`](forever-probes.md). They are the owner's to run; an agent never
+marks one passed.

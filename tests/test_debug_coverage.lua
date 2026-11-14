@@ -85,11 +85,14 @@ test("debug: the encounter and the keystone run edges each write one FEED line",
     m.__fire("ENCOUNTER_END", 2902, "Kyrioss", 8, 5, 1)
     m.__fire("CHALLENGE_MODE_COMPLETED")
     local feed = logged(NS, "FEED")
-    assertEqual(count(feed, "keystone run started: The Rookery+"), 1, joined(feed))
     assertEqual(count(feed, "encounter 2902 started"), 2, joined(feed))
     assertEqual(count(feed, "encounter 2902 ended: wipe"), 1, joined(feed))
     assertEqual(count(feed, "encounter 2902 ended: kill"), 1, joined(feed))
-    assertEqual(count(feed, "keystone run completed: The Rookery+"), 1, joined(feed))
+    -- The keystone events are Retail's alone (Forever port design §4.4): not registered on WoW
+    -- Forever, so no run line there, while the encounter edges still write theirs.
+    local runs = T.forever and 0 or 1
+    assertEqual(count(feed, "keystone run started: The Rookery+"), runs, joined(feed))
+    assertEqual(count(feed, "keystone run completed: The Rookery+"), runs, joined(feed))
 end)
 
 test("debug: a drop re-judged on new facts says what it reads now", function()
@@ -148,7 +151,9 @@ test("diagnostics: an auto-ask waiting is listed with its looter and when it is 
     NS.addon:OnSlashCommand("diagnostics")
     local text = joined(NS.DebugLog.buffer)
     assertTrue(text:find("auto-ask: waiting drop 1 to Brakk", 1, true) ~= nil, text)
-    assertTrue(text:find("due=10s offSpec=false", 1, true) ~= nil, text)
+    -- clients-§6: the off-spec word is Retail's alone (Forever port design §4.4).
+    assertEqual(text:find("due=10s offSpec=false", 1, true) ~= nil, not T.forever, text)
+    assertTrue(text:find("due=10s", 1, true) ~= nil, text)
 end)
 
 test("debug: the toast queue held over combat says so when combat ends", function()

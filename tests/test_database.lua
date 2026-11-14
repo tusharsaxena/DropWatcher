@@ -71,7 +71,7 @@ test("database: step 2 reaches a stored profile that is not the active one", fun
                 window = { compact = "yes", columns = { slot = false, me = 1 } },
                 trade = { rules = { raid = "group", pvp = "nope" } },
                 messages = { templates = { ask = "", offer = "Mine: {item}" }, announceChannel = "SAY" },
-                situations = { delve = { track = true, quality = "loud" } },
+                situations = { solo = { track = false, quality = "loud" } },
             },
         },
     }
@@ -82,13 +82,17 @@ test("database: step 2 reaches a stored profile that is not the active one", fun
     assertEqual(raid.feed.quality.fixed, 4, "a valid value stays")
     assertTrue(raid.window.compact == nil and raid.window.columns.me == nil, "non-booleans are dropped")
     assertEqual(raid.window.columns.slot, false)
-    assertEqual(raid.trade.rules.raid, "group")
-    assertTrue(raid.trade.rules.pvp == nil)
+    -- The loot rule rows are Retail's alone (Forever port design §4.4): on WoW Forever no row checks
+    -- the stored rules, and TradeRules takes none of Retail's names as a rule there.
+    if not T.forever then
+        assertEqual(raid.trade.rules.raid, "group")
+        assertTrue(raid.trade.rules.pvp == nil)
+    end
     assertTrue(raid.messages.templates.ask == nil, "an empty template is dropped")
     assertEqual(raid.messages.templates.offer, "Mine: {item}")
     assertTrue(raid.messages.announceChannel == nil, "SAY is never a channel")
-    assertEqual(raid.situations.delve.track, true)
-    assertTrue(raid.situations.delve.quality == nil)
+    assertEqual(raid.situations.solo.track, false)
+    assertTrue(raid.situations.solo.quality == nil)
     assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
 end)
 

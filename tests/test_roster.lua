@@ -37,7 +37,7 @@ test("roster: solo, the player alone, read lazily", function()
     local Ro = NS.Roster
     assertEqual(Ro.Count(), 1)
     local me = Ro.Player()
-    assertEqual(me.fullName, "Testchar-Testrealm", "a same-realm name carries the normalized realm")
+    assertEqual(me.fullName, T.ME, "a same-realm name carries the normalized realm (the whole name on Forever)")
     assertEqual(me.unit, "player")
     assertEqual(me.classFile, "MAGE")
     assertTrue(me.online)
@@ -51,11 +51,11 @@ test("roster: a party, in unit order, keyed by GUID, with realm, class and onlin
     assertEqual(list[1].unit, "player")
     assertEqual(list[2].unit, "party1"); assertEqual(list[4].unit, "party3")
     local b = Ro.Get("Player-1-0000000A")
-    assertEqual(b.fullName, "Brakk-Testrealm")
+    assertEqual(b.fullName, T.rosterName("Brakk"))
     assertEqual(b.classFile, "WARRIOR")
     assertFalse(b.isPlayer)
-    assertEqual(Ro.Get("Player-2-0000000B").fullName, "Lyra-Area52", "the realm is normalized")
-    assertEqual(Ro.Get("Player-3-0000000C").realm, "AzjolNerub")
+    assertEqual(Ro.Get("Player-2-0000000B").fullName, T.rosterName("Lyra", "Area 52"), "the realm is normalized")
+    assertEqual(Ro.Get("Player-3-0000000C").realm, (not T.forever) and "AzjolNerub" or nil, "no realm on Forever")
     assertFalse(Ro.Get("Player-3-0000000C").online)
     assertNil(Ro.Get("Player-9-00000009"))
 end)
@@ -74,8 +74,17 @@ end)
 
 test("roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, without case", function()
     local _, _, Ro = party()
-    assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra")
     assertEqual(Ro.Resolve("Brakk").guid, "Player-1-0000000A")
+    if T.forever then
+        -- no realms on Forever: a query is the whole name, never split on a hyphen (client-quirks-§5)
+        assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra Area 52")
+        assertEqual(Ro.Resolve("lyra area 52").guid, "Player-2-0000000B")
+        assertEqual(Ro.Resolve("Lyra Azjol-Nerub").guid, "Player-3-0000000C", "a hyphen is part of the name")
+        assertNil(Ro.Resolve("brakk-testrealm"), "no realm to split off")
+        assertNil(Ro.Resolve("Lyra"), "the first word names nobody")
+        return
+    end
+    assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra")
     assertEqual(Ro.Resolve("brakk-testrealm").guid, "Player-1-0000000A")
     assertEqual(Ro.Resolve("Lyra-Area52").guid, "Player-2-0000000B")
     assertEqual(Ro.Resolve("Lyra-Area 52").guid, "Player-2-0000000B", "the query's realm is normalized too")
@@ -86,6 +95,12 @@ end)
 
 test("roster: a bare name two members share is settled by classFile, else unresolved", function()
     local _, _, Ro = party()
+    if T.forever then
+        -- two Lyras are two whole names on Forever, so neither is ever ambiguous
+        assertEqual(Ro.Resolve("Lyra Area 52", "MAGE").guid, "Player-2-0000000B", "a class neither has is ignored")
+        assertEqual(Ro.Resolve("Lyra Azjol-Nerub").guid, "Player-3-0000000C")
+        return
+    end
     assertNil(Ro.Resolve("Lyra"), "two cross-realm Lyras and no class: ambiguous")
     assertEqual(Ro.Resolve("Lyra", "PRIEST").guid, "Player-2-0000000B")
     assertEqual(Ro.Resolve("Lyra", "WARRIOR").guid, "Player-3-0000000C")
@@ -153,8 +168,35 @@ test("roster: secret answers never raise; a secret GUID drops the unit, a secret
     assertTrue(c.online, "a secret online flag reads as online")
     assertNil(Ro.Resolve(T.secret("Brakk")))
     assertNil(Ro.Get(T.secret("Player-1-0000000A")))
-    assertEqual(Ro.Resolve("Lyra", T.secret("PRIEST")).guid, "Player-3-0000000C",
+    assertEqual(Ro.Resolve(T.forever and "Lyra Azjol-Nerub" or "Lyra", T.secret("PRIEST")).guid, "Player-3-0000000C",
         "a secret class is ignored; the one Lyra left answers")
+end)
+
+-- client-quirks-§5: on Forever UnitName answers the first name and the surname ("Doom", "Dock"), and
+-- a chat sender is the whole name with no realm; on Retail the second value is the realm.
+test('roster: a Forever chat sender "Doom Dock" matches the member Doom Dock', function()
+    local NS, _, m = T.enableAddon()
+    m.setGroup({ row("Player-1-0000000A", "Doom", "Dock", "WARRIOR"), row("Player-2-0000000B", "Doom", "Hammer", "PRIEST") })
+    m.__fire(EVENT)
+    local Ro = NS.Roster
+    local d = Ro.Get("Player-1-0000000A")
+    if NS.Compat.ClientKey() == "forever" then
+        assertEqual(d.name, "Doom Dock", "the whole name, never the first word")
+        assertNil(d.realm, "no realm on Forever")
+        assertEqual(d.fullName, "Doom Dock", "never Doom-Dock")
+        assertEqual(Ro.Resolve("Doom Dock").guid, "Player-1-0000000A")
+        assertEqual(Ro.Resolve("doom dock").guid, "Player-1-0000000A", "without case")
+        assertEqual(Ro.Resolve("Doom Hammer").guid, "Player-2-0000000B", "two Dooms never collide")
+        assertNil(Ro.Resolve("Doom"), "the first word names nobody")
+        assertNil(Ro.Resolve("Doom-Dock"), "the surname is never a realm")
+        assertEqual(Ro.Player().fullName, "Testchar", "you: the whole name, no realm")
+    else
+        assertEqual(d.name, "Doom"); assertEqual(d.realm, "Dock")
+        assertEqual(d.fullName, "Doom-Dock", "Name-Realm, unchanged")
+        assertEqual(Ro.Resolve("Doom-Dock").guid, "Player-1-0000000A")
+        assertNil(Ro.Resolve("Doom Dock"), "a space is no realm separator")
+        assertEqual(Ro.Player().fullName, "Testchar-Testrealm")
+    end
 end)
 
 test("roster: garbage queries answer nil", function()

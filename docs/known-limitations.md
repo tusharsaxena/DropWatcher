@@ -122,15 +122,52 @@ the code reads every case the design leaves open, module by module, is in
   - **Character.** Insights names a drop's character from the drop, else from its group's recorder,
     so a drop only the group recorded counts under that character. History's Character filter reads
     the drop's recorder alone and calls the same drop Not recorded.
+- **The roll popup mark** (Forever port design §7, DW-FP20) is drawn only over Blizzard's four roll
+  popups, `GroupLootFrame1..4`. In WoW Forever's gamepad mode the client lists rolls in
+  `GamepadGroupLootRollFrame` instead, and the mark is skipped while `InputUtil.IsGamepadUIEnabled()`
+  is true. Its `Need so far` line needs the drop to be pending (the Drops tab's own gates, design
+  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line. The
+  score part of the gain is the score's difference, not a percentage. None of it is confirmed in
+  game yet (FOREVER-13 and ROLLS-4).
+- **Everyone's rolls** (Forever port design §5, DW-FP13 to DW-FP17) come from the client's loot
+  history, `C_LootHistory`, on both clients. When a player's number appears, and whether the history
+  fires once per choice or only at the close, is unconfirmed (probes P-R1 and P-R2 in
+  [`forever-probes.md`](forever-probes.md)); the Rolling now row's time left reads the roll's
+  `startTime` and `duration` on the history's own clock, whose units are probe P-R4's. A trash or
+  open-world roll is keyed by whatever encounter the client files it under (P-R3). Nothing of a roll
+  is saved across a reload: an open roll comes back from the client (`PLAYER_ENTERING_WORLD`).
+- **Master-loot pending** (Forever port design §6, DW-FP18) holds an Epic only when the loot window
+  you opened lists it, and whether a raider who is not the master looter sees those slots at all is
+  probe P-ML1; if not, nothing is ever held and the drop arrives as a plain receipt when it is given.
+  An item is keyed by its corpse and item ID (`sourceGUID:itemID`), so **two copies of one item on
+  one corpse collapse to one awaiting item**; the second copy's receipt arrives as a plain drop. On
+  Retail the method exists only under Guild Master Loot (design §11.2). The Ask master looter
+  button's tooltip names the master looter by the short name the window shows, while the whisper
+  goes to the whole `Name-Realm` (on WoW Forever the whole name, which has no realm); the two are
+  the same player.
+- **WoW Forever** (the Forever port, DW-FP01 to DW-FP21). Mythic+, delves, follower dungeons, Raid
+  Finder, scenarios, transmog, upgrade tracks, off-spec, the Encounter Journal pool and the trade
+  countdown are absent there by design (`ARCHITECTURE.md` → Per-client features); a bound-on-pickup
+  drop is soulbound once looted, so only a bind-on-equip drop is ever tradeable, and the Drops table
+  has no Trade window column. Verdicts there are score-first. The class data, the armor level rule,
+  the ranged slot, Pawn by talent tree and the names have no recorded client pass yet: the FOREVER
+  smoke theme and the probe sheet ([`forever-probes.md`](forever-probes.md)) are the owner's to run.
 
 ## The simulator
+
+- **Master loot in the simulator and test mode** (Forever port design §8). `/dw sim ml` plays one
+  master-loot drop on demand, but no scenario's timeline has an `ml` step, the status line counts
+  rolls and not master-loot items, and test mode has no awaiting-master-looter sample (its Rolling
+  now section shows one open roll). Declared out of scope for the port (DW-FP21): the verb drives
+  the whole path (the loot method, the loot window, the awaiting item, the ask and the assignment),
+  and SIM and FOREVER smoke checks run it.
 
 - **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
   pool and the group, `run` and `step` play the scenario's timeline, and the `SIM` title text, the footer's
   `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). Since
   DW-02..DW-04 the session, the timeline's step machine, the `/dw sim` grammar and the step panel
   are LibKa0s-Sim-1.0's (LibKa0s#54); this addon supplies the scenarios, the world, the event
-  drivers, the restrictions and six verbs, and the panel's position lasts the session only. The
+  drivers, the restrictions and eight verbs (`roll` and `ml` since DW-FP17 and DW-FP18), and the panel's position lasts the session only. The
   timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
   A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
   Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default

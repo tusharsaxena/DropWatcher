@@ -331,7 +331,7 @@ test("compact: the chest after a key completes still belongs to the run, so its 
     announce(NS, drop(1))   -- the chest: the window's first open in this key
     assertTrue(NS.IsWindowShown())
     assertTrue(NS.WindowCompact.InRun()); assertEqual(NS.Window.Frame():GetWidth(), 400)
-end)
+end, T.RETAIL_ONLY)
 
 test("compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it", function()
     local NS, m = inKey()
@@ -347,7 +347,7 @@ test("compact: a key's grace running out with the window shown lets go when it i
     assertTrue(NS.IsWindowShown())
     assertFalse(NS.WindowCompact.InRun(), "a completed key never re-arms the override")
     assertEqual(f:GetWidth(), 1080)
-end)
+end, T.RETAIL_ONLY)
 
 test("compact: a key's grace running out with the window hidden lets go at once", function()
     local NS, m = inKey()
@@ -359,7 +359,7 @@ test("compact: a key's grace running out with the window hidden lets go at once"
     assertFalse(NS.WindowCompact.InRun())
     NS.ShowWindow()
     assertEqual(NS.Window.Frame():GetWidth(), 1080)
-end)
+end, T.RETAIL_ONLY)
 
 test("compact: the completion latch clears on leaving, so the next run opens compact again", function()
     local NS, m = inKey()
@@ -376,7 +376,7 @@ test("compact: the completion latch clears on leaving, so the next run opens com
     m.__fire("CHALLENGE_MODE_START")
     announce(NS, drop(2))
     assertTrue(NS.WindowCompact.InRun()); assertEqual(NS.Window.Frame():GetWidth(), 400)
-end)
+end, T.RETAIL_ONLY)
 
 test("compact: a window the player opened is never switched by a drop", function()
     local NS = inDungeon()

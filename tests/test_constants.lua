@@ -2,7 +2,7 @@
 -- §6.2, §7.2): well-formed, consistent with each other, and resolved from Enum when the client has it.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
+local test, assertEqual, assertTrue, assertNil = T.test, T.assertEqual, T.assertTrue, T.assertNil
 
 local function C() return (T.newAddon()).Constants end
 -- The setting defaults (defaults/Profile.lua), where the spec's default values live.
@@ -118,7 +118,7 @@ test("constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 ste
     assertEqual(#keysOf(c.TRACK_TIER), #order)
 end)
 
-test("constants: the inventory slot ids are the client's, 1 through 19 with no slot 18 in use", function()
+test("constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone", function()
     local c = C()
     assertEqual(c.SLOT.HEAD, 1)
     assertEqual(c.SLOT.SHIRT, 4)
@@ -128,9 +128,11 @@ test("constants: the inventory slot ids are the client's, 1 through 19 with no s
     assertEqual(c.SLOT.MAINHAND, 16)
     assertEqual(c.SLOT.OFFHAND, 17)
     assertEqual(c.SLOT.TABARD, 19)
+    -- WoW Forever keeps the ranged slot (research R4 §9); Retail's slot 18 is unused (clients-§6).
+    if T.forever then assertEqual(c.SLOT.RANGED, 18) else assertEqual(c.SLOT.RANGED, nil) end
     local seen = {}
     for name, id in pairs(c.SLOT) do
-        assertTrue(type(id) == "number" and id >= 1 and id <= 19 and id ~= 18, name)
+        assertTrue(type(id) == "number" and id >= 1 and id <= 19 and (id ~= 18 or T.forever), name)
         assertTrue(not seen[id], "slot id " .. id .. " is unique")
         seen[id] = true
     end
@@ -172,9 +174,19 @@ test("constants: the slot plan maps each equip location to the spec §5.2 kind",
         INVTYPE_2HWEAPON = { "weapon2H", { S.MAINHAND, S.OFFHAND } },
         INVTYPE_SHIELD = { "offhand", { S.OFFHAND } },
         INVTYPE_HOLDABLE = { "offhand", { S.OFFHAND } },
-        INVTYPE_RANGED = { "ranged", { S.MAINHAND, S.OFFHAND } },
-        INVTYPE_RANGEDRIGHT = { "ranged", { S.MAINHAND, S.OFFHAND } },
     }
+    -- The client's own ranged rows (clients-§5): Retail's bows, guns, crossbows and wands fill both
+    -- hands; WoW Forever's, with thrown weapons and relics, go in the ranged slot.
+    if T.forever then
+        for _, loc in ipairs({ "INVTYPE_RANGED", "INVTYPE_RANGEDRIGHT", "INVTYPE_THROWN", "INVTYPE_RELIC" }) do
+            cases[loc] = { "single", { S.RANGED } }
+        end
+    else
+        cases.INVTYPE_RANGED = { "ranged", { S.MAINHAND, S.OFFHAND } }
+        cases.INVTYPE_RANGEDRIGHT = { "ranged", { S.MAINHAND, S.OFFHAND } }
+        assertTrue(c.SLOT_PLAN.INVTYPE_THROWN == nil and c.SLOT_PLAN.INVTYPE_RELIC == nil, "no Retail plan")
+    end
+    assertEqual(#keysOf(c.SLOT_PLAN), #keysOf(cases), "no plan beyond the client's own")
     for equipLoc, want in pairs(cases) do
         local plan = c.SLOT_PLAN[equipLoc]
         assertTrue(plan ~= nil, equipLoc .. " has a plan")
@@ -211,6 +223,10 @@ test("constants: every situation key is listed once, in order, with the spec §6
         { "scenario", true, true }, { "pvp", false, false }, { "openWorldGroup", false, false },
         { "solo", true, true },
     }
+    if T.forever then   -- WoW Forever's own five (Forever port design §4.4), the same defaults
+        want = { { "dungeon", true, true }, { "raid", true, true }, { "pvp", false, false },
+            { "openWorldGroup", false, false }, { "solo", true, true } }
+    end
     assertEqual(#c.SITUATIONS, #want)
     assertEqual(#keysOf(d), #want)
     for i, row in ipairs(want) do
@@ -227,14 +243,30 @@ test("constants: every difficulty id maps to a situation kind the classifier kno
     local c = C()
     local kinds = { mythicPlus = true, dungeon = true, followerDungeon = true, raidLFR = true,
         raid = true, delve = true, scenario = true }
+    -- Each client maps its own ids (Forever port design §4.4): WoW Forever's classic raids are no
+    -- Retail difficulty, and Retail's Mythic+, LFR, delves and the rest none of Forever's.
+    local FOREVER_IDS = { NORMAL_DUNGEON = true, RAID_40 = true, RAID_CLASSIC_20 = true, RAID_CLASSIC_10 = true }
+    local RETAIL_IDS = { RAID_CLASSIC_20 = false, RAID_CLASSIC_10 = false }
     for name, id in pairs(c.DIFFICULTY) do
         assertTrue(type(id) == "number", name)
-        assertTrue(kinds[c.DIFFICULTY_KIND[id]] == true, name .. " -> " .. tostring(c.DIFFICULTY_KIND[id]))
+        local mapped = (T.forever and FOREVER_IDS[name] == true) or (not T.forever and RETAIL_IDS[name] ~= false)
+        if mapped then
+            assertTrue(kinds[c.DIFFICULTY_KIND[id]] == true, name .. " -> " .. tostring(c.DIFFICULTY_KIND[id]))
+            assertTrue(c.SITUATION[c.DIFFICULTY_KIND[id]] ~= nil, name .. " maps to a situation this client has")
+        else
+            assertNil(c.DIFFICULTY_KIND[id], name .. " is not this client's")
+        end
     end
     for id in pairs(c.DIFFICULTY_KIND) do
         local named = false
         for _, v in pairs(c.DIFFICULTY) do if v == id then named = true end end
         assertTrue(named, "difficulty " .. id .. " has a name")
+    end
+    if T.forever then
+        assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.NORMAL_DUNGEON], "dungeon")
+        assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.RAID_40], "raid")
+        assertEqual(c.DIFFICULTY_KIND[242], "raid"); assertEqual(c.DIFFICULTY_KIND[243], "raid")
+        return
     end
     assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.MYTHIC_KEYSTONE], "mythicPlus")
     assertEqual(c.DIFFICULTY_KIND[c.DIFFICULTY.MYTHIC_DUNGEON], "dungeon")
@@ -257,14 +289,20 @@ test("constants: the trade rules are the spec §7.2 table, and every situation h
     assertEqual(c.TRADE_RULES.group.window, 14400)
     assertEqual(c.TRADE_RULES.group.ilvlRule, "none")
     assertEqual(c.TRADE_RULES.legacy.tradeable, false)
+    assertEqual(c.TRADE_RULES.soulbound.tradeable, false)
+    assertEqual(c.TRADE_RULES.soulbound.bopOnly, true)
     for _, s in ipairs(c.SITUATIONS) do
         local rule = rules[s.key]
         assertTrue(c.TRADE_RULES[rule] ~= nil, s.key .. " -> " .. tostring(rule))
     end
     assertEqual(#keysOf(rules), #c.SITUATIONS)
+    if T.forever then   -- WoW Forever: every situation's rule is soulbound (Forever port design §4.6)
+        for _, s in ipairs(c.SITUATIONS) do assertEqual(rules[s.key], "soulbound", s.key) end
+        return
+    end
     assertEqual(rules.raid, "personal")
-    assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.pvp, "legacy")
+    assertEqual(rules.followerDungeon, "personal")
     assertEqual(rules.mythicPlus, "personal")
 end)
 
@@ -280,7 +318,9 @@ test("constants: the bind ids are Enum.ItemBind's, and the trade bind sets name 
     assertTrue(c.TRADE_BOE_BIND[c.BIND.ON_EQUIP] and c.TRADE_BOE_BIND[c.BIND.ON_USE])
     assertEqual(#keysOf(c.TRADE_ACCOUNT_BIND), 3)
     assertTrue(c.TRADE_BOE_BIND[c.BIND.ON_ACQUIRE] == nil and c.TRADE_ACCOUNT_BIND[c.BIND.ON_ACQUIRE] == nil)
-    assertEqual(#c.TRADE_RULE_NAMES, #keysOf(c.TRADE_RULES))
+    -- The rule names are per client (clients-§5); every one has its data, and the default is first.
+    assertEqual(table.concat(c.TRADE_RULE_NAMES, ","), T.forever and "soulbound" or "personal,group,legacy")
     for _, name in ipairs(c.TRADE_RULE_NAMES) do assertTrue(c.TRADE_RULES[name] ~= nil, name) end
-    assertEqual(c.TRADE_RULES[c.TRADE_RULE_DEFAULT].ilvlRule, "notUpgradeForLooter")
+    assertEqual(c.TRADE_RULE_DEFAULT, c.TRADE_RULE_NAMES[1])
+    if not T.forever then assertEqual(c.TRADE_RULES[c.TRADE_RULE_DEFAULT].ilvlRule, "notUpgradeForLooter") end
 end)

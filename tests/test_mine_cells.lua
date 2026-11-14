@@ -228,10 +228,22 @@ end)
 
 test("mine cells: the panel's header reads your change, the item level and the trade window", function()
     local M = MC()
-    local h = M.PanelHeader(drop(), NOW, 600)
+    -- The countdown is Retail's (Forever port design §4.4); a WoW Forever drop you can trade is a BoE,
+    -- whose answer stands bare (no "Trade window" words).
+    local d = T.forever and drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }) or drop()
+    local h = M.PanelHeader(d, NOW, 600)
     assertEqual(h.name, "Bracers of the Tide")
-    assertEqual(h.text, "You: -5 ilvl · 305 · Trade window 1:47:12")
+    assertEqual(h.text, T.forever and "You: -5 ilvl · 305 · No limit (BoE)" or "You: -5 ilvl · 305 · Trade window 1:47:12")
     assertTrue(#h.tip >= 3)
+end)
+
+-- clients-§6: the words "Trade window" are Retail's alone (Forever port design §4.4). On WoW Forever
+-- the drop you offer is a bind-on-equip one, and the line says its answer bare.
+test("mine cells: the panel's header names the trade window on Retail alone", function()
+    local NS = T.newAddon()
+    local h = NS.MineCells.PanelHeader(drop({ trade = { state = "yes", reasonKey = "boe", basis = "bind" } }), NOW, 600)
+    assertEqual(h.text, NS.Compat.ClientKey() == "retail" and "You: -5 ilvl · 305 · Trade window No limit (BoE)"
+        or "You: -5 ilvl · 305 · No limit (BoE)")
 end)
 
 -- ── whose move it is (feedback-4 spec §1) ───────────────────────────────────────────────────
@@ -257,4 +269,12 @@ test("drops strip: the compact layout's summary is shortened", function()
     assertEqual(DS.SummaryText({ count = 3, next = 521 }), "3 tradeable · next 0:08:41")
     assertEqual(DS.SummaryText({ count = 1 }), "1 tradeable")
     assertEqual(DS.SummaryText({ count = 0 }), "0 tradeable")
+end)
+
+test("mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)", function()
+    -- red under: the item-level sentence on WoW Forever, where the score decides
+    local list = MC().Candidates(drop())
+    local want = T.forever and "• For them: a higher score than what they wear there (item level breaks a tie)"
+        or "• For them: a higher item level than they wear there"
+    assertEqual(T.tipPlain(list[1].explain), want)
 end)

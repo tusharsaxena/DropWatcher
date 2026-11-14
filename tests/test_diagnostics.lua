@@ -36,7 +36,8 @@ test("diagnostics: the situation section names the key, its settings and the inp
     m.__fire("PLAYER_ENTERING_WORLD")
     local text = report(NS)
     assertTrue(text:find("situation: dungeon (last announced dungeon) track=true autoOpen=true quality=global", 1, true) ~= nil, text)
-    assertTrue(text:find("situation inputs: inInstance=true type=party difficulty=2 challengeMode=false", 1, true) ~= nil)
+    assertTrue(text:find(T.forever and "situation inputs: inInstance=true type=party difficulty=2"
+        or "situation inputs: inInstance=true type=party difficulty=2 challengeMode=false", 1, true) ~= nil)
 end)
 
 test("diagnostics: it runs while stood down and says so, without acting", function()
@@ -76,7 +77,7 @@ test("diagnostics: the roster section lists the stored members without reading t
     m.__fire("GROUP_ROSTER_UPDATE")
     local text = report(NS)
     assertTrue(text:find("roster: 2 members", 1, true) ~= nil, text)
-    assertTrue(text:find("roster: Brakk-Testrealm unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
+    assertTrue(text:find("roster: " .. T.rosterName("Brakk") .. " unit=party1 class=WARRIOR online=false spec=unknown player=false", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the gear section lists the stored slots without reading the client", function()
@@ -91,9 +92,18 @@ test("diagnostics: the gear section lists the stored slots without reading the c
         subClassID = 0, stats = {} })
     m.inventory.player[1] = HEAD
     m.bags[0] = { size = 1, [1] = RING }
+    if T.forever then
+        -- WoW Forever (design §4.2): the class-wide spec, your top talent tree and your level.
+        m.seedTalents(1487, { { name = "Arcane", spent = 0 }, { name = "Fire", spent = 31 }, { name = "Frost", spent = 5 } })
+    end
     NS.Gear.Refresh("test")
     local text = report(NS)
-    assertTrue(text:find("gear: class=MAGE spec=250 dualWield=false", 1, true) ~= nil, text)
+    if T.forever then
+        assertTrue(text:find("gear: class=MAGE spec=1487 dualWield=false titanGrip=false loading=0 tree=2 level=80", 1, true) ~= nil, text)
+    else
+        assertTrue(text:find("gear: class=MAGE spec=250 dualWield=false", 1, true) ~= nil, text)
+        assertTrue(text:find("tree=none level=80", 1, true) ~= nil, text)
+    end
     assertTrue(text:find("gear: HEAD ilvl=610 quality=4", 1, true) ~= nil, text)
     assertTrue(text:find("gear: NECK empty", 1, true) ~= nil, text)
     assertTrue(text:find("gear: FINGER1 empty owned=620", 1, true) ~= nil, text)
@@ -109,7 +119,7 @@ test("diagnostics: the feed section counts the parser's lines and names the last
     m.__now = 62
     local text = report(NS)
     assertTrue(text:find("feed: parser hits=1 ignored=1 rejected=1 secret=0", 1, true) ~= nil, text)
-    assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by Testchar-Testrealm", 1, true) ~= nil, text)
+    assertTrue(text:find("feed: last loot 12s ago (chat, bonus) by " .. T.ME, 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the feed section counts the drops, the hidden ones and the context", function()
@@ -148,8 +158,15 @@ test("diagnostics: the trade section shows the timers, the ticker and each entry
     m.tooltips.bag["0:1"] = { lines = { { type = 36, leftText = m.BIND_TRADE_TIME_REMAINING:format("1 hour") } } }
     m.advance(0)
     local text = report(NS)
-    assertTrue(text:find("trade: timers live=1 expired=0 boe=0 scans=1 ticker=60s", 1, true) ~= nil, text)
     assertTrue(text:find("trade: drop " .. id .. " ", 1, true) ~= nil, text)
+    if T.forever then   -- the bag match alone: no countdown there (Forever port design §4.4)
+        assertTrue(text:find("trade: no countdown on this client (bag match only)", 1, true) ~= nil, text)
+        assertTrue(text:find("trade: timers live=0 expired=0 boe=1 scans=1 ticker=off", 1, true) ~= nil, text)
+        assertTrue(text:find("left=0s expired=false boe=true warned=false guid=Item-1-0001", 1, true) ~= nil, text)
+        return
+    end
+    assertTrue(text:find("trade: no countdown", 1, true) == nil, text)
+    assertTrue(text:find("trade: timers live=1 expired=0 boe=0 scans=1 ticker=60s", 1, true) ~= nil, text)
     assertTrue(text:find("left=3600s expired=false boe=false warned=false guid=Item-1-0001", 1, true) ~= nil, text)
 end)
 
@@ -163,7 +180,7 @@ test("diagnostics: the inspect section shows the queue and each member's entry",
     m.advance(3)
     local text = report(NS)
     assertTrue(text:find("inspect: queued=0 inFlight=Player-1-0000000A parked=false", 1, true) ~= nil, text)
-    assertTrue(text:find("inspect: Brakk-Testrealm status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
+    assertTrue(text:find("inspect: " .. T.rosterName("Brakk") .. " status=pending reason=none spec=unknown slots=0", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the messaging section counts the registry, the sends and lists each queued ask", function()
@@ -177,7 +194,7 @@ test("diagnostics: the messaging section counts the registry, the sends and list
     NS.Asks.Request("ask", "Brakk", 7)
     text = report(NS)
     assertTrue(text:find("messaging: asks=1 queued=1", 1, true) ~= nil, text)
-    assertTrue(text:find("messaging: queued ask to Brakk-Testrealm, drop 7", 1, true) ~= nil, text)
+    assertTrue(text:find("messaging: queued ask to " .. T.rosterName("Brakk") .. ", drop 7", 1, true) ~= nil, text)
 end)
 
 test("diagnostics: the state section is one read of enabled, situation, test mode, restriction and queue", function()
@@ -199,6 +216,10 @@ end)
 
 test("diagnostics: the scoring section names the scorer, the one in use, Pawn and the pending retries", function()
     local NS, _, m = T.enableAddon()
+    -- Retail's spec model: the player's spec (250) and Pawn's spec index. On WoW Forever the mock
+    -- seeds the same spec through C_SpecializationInfo; Forever's tree-led Pawn scale is DW-FP07's.
+    T.retailList(NS)
+    if T.forever then m.seedTalents(250, {}) end
     local text = report(NS)
     assertTrue(text:find("scoring: scorer=auto inUse=none", 1, true) ~= nil, text)
     assertTrue(text:find("scoring: pawn ready=false scale=none", 1, true) ~= nil, text)
@@ -224,4 +245,15 @@ test("diagnostics: the scoring section names the scorer, the one in use, Pawn an
     NS.SchemaRuntime.Set("comparison.weights", { [250] = { ITEM_MOD_INTELLECT_SHORT = 1 } })
     text = report(NS)
     assertTrue(text:find("scoring: scorer=weights inUse=weights", 1, true) ~= nil, text)
+end)
+
+test("diagnostics: the situation inputs name a keystone, a delve and a follower dungeon on Retail alone", function()
+    -- red under: one input list on both clients (clients-§4; WoW Forever has none of the three)
+    local NS = T.enableAddon()
+    local text = report(NS)
+    for _, word in ipairs({ "challengeMode=", "delve=", "follower=" }) do
+        assertEqual(text:find(word, 1, true) == nil, T.forever, word)
+    end
+    assertTrue(text:find("situation inputs: inInstance=", 1, true) ~= nil, text)
+    assertTrue(text:find("group=false raid=false pvp=false", 1, true) ~= nil, text)
 end)

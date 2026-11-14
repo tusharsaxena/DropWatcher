@@ -105,7 +105,8 @@ local TRADE_CHIP = {
     yes = L["TRADEABLE"], likely = L["LIKELY TRADEABLE"], unknown = L["TRADE UNKNOWN"], no = L["NOT TRADEABLE"],
 }
 local TRADE_TONE = WC.TRADE_TONE   -- the Trade column's tones (No red, feedback-7 spec §2)
-local RULE_WORD = { personal = L["personal loot"], group = L["group loot"], legacy = L["legacy loot"] }
+local RULE_WORD = { personal = L["personal loot"], group = L["group loot"], legacy = L["legacy loot"],
+    soulbound = L["bind on pickup"] }
 local BASIS_WORD = { bind = L["the item's bind"], rule = L["the content's rule"], inspect = L["inspect"], timer = L["your bag's timer"] }
 
 -- ── small helpers ───────────────────────────────────────────────────────────────────────────
@@ -189,7 +190,15 @@ local function trackText(tr)
     return ("%s %s/%s"):format(tr.name, tostring(tr.rank or "?"), tostring(tr.max or "?"))
 end
 
+-- WoW Forever has no upgrade tracks (Forever port design §4.4): its chip is the item level alone.
+local function ilvlChip(f)
+    local ilvl = num(f.ilvl)
+    if not ilvl then return nil end
+    return chip(tostring(ilvl), L["Item level %d"]:format(ilvl), trow(L["Item level"], ilvl))
+end
+
 local function trackChip(f)
+    if not C.FEATURE.tracks then return ilvlChip(f) end
     local text, ilvl = trackText(f.track), num(f.ilvl)
     if not text then
         if not ilvl then return nil end
@@ -203,6 +212,7 @@ end
 -- The look: `New look` when you have not collected the appearance, `Look known` when you have,
 -- nothing when it is not known or the item has none (design spec §4, transmog-known).
 local function transmogChip(f)
+    if not C.FEATURE.transmog then return nil end   -- Retail's alone (Forever port design §4.4)
     if f.transmogKnown == false then
         local c = chip(L["New look"], L["Transmog"], trow(L["Appearance"], L["not collected yet"], "good"))
         c.tone = "good"
@@ -399,7 +409,37 @@ local SCORER_LINE = {
     none    = { label = L["Score"], none = { L["no scorer in use (item level alone)"] } },
 }
 
-local function scoreRow(eval, scorer, offSpec)
+-- Which scale or weights a score used (NS.Scoring.ScoreFor's `how`), for you and for a looter:
+-- the tooltip names it (DW-FP07's Forever scorer: a talent tree's own, or the best of the class's).
+local SCALE_WORD = {
+    you = { tree = L["your own spec's"], custom = L["your own (shown in Pawn, or your weights)"],
+            bestOfClass = L["the best of your class's, for this drop"] },
+    them = { tree = L["their spec's"], custom = L["their spec's weights"],
+             bestOfClass = L["the best of their class's, for this drop"] },
+}
+
+--- The tooltip row naming the scale or weights a score used, or nil (`how` "none" or unknown).
+--- @param how string|nil "tree" | "custom" | "bestOfClass" | "none"
+--- @param whose string "you" | "them"
+--- @return string|nil
+function DC.ScaleRow(how, whose)
+    local word = SCALE_WORD[whose] and SCALE_WORD[whose][how]
+    if not word then return nil end
+    return trow(L["Scale"], word)
+end
+
+-- A score-led verdict (WoW Forever's scoreFirst, `led = "score"`) says so, and an upgrade by score at
+-- a lower item level says that too: the Item level row reads down while the verdict reads up.
+local function ledRows(eval, tip)
+    if type(eval) ~= "table" or eval.led ~= "score" then return end
+    tip[#tip + 1] = trow(L["Decided by"], L["the score (item level breaks a tie)"])
+    local d = num(eval.ilvlDelta)
+    if eval.verdict == "upgrade" and d and d < 0 then
+        tip[#tip + 1] = hint(L["An upgrade by score, though its item level is lower."])
+    end
+end
+
+local function scoreRow(eval, scorer, offSpec, how)
     if scorer == true then scorer = "pawn" end
     local line = SCORER_LINE[scorer] or SCORER_LINE.none
     if offSpec then
@@ -407,8 +447,11 @@ local function scoreRow(eval, scorer, offSpec)
     end
     local sd = type(eval) == "table" and num(eval.scoreDelta) or nil
     if sd then
-        return row("score", line.label, ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
+        local r = row("score", line.label, ("%+.1f"):format(sd), sd >= 0 and "good" or "bad", L["Score"],
             trow(L["Scorer"], line.label), trow(L["Change"], ("%+.1f"):format(sd), sd >= 0 and "good" or "bad"))
+        r.tip[#r.tip + 1] = DC.ScaleRow(how, "you")
+        ledRows(eval, r.tip)
+        return r
     end
     local r = row("score", line.label, DASH, "muted", L["Score"], trow(L["Score"], line.none[1]))
     r.tip[3] = line.none[2] and hint(line.none[2]) or nil
@@ -418,17 +461,22 @@ end
 -- The looter's spec and the read's age. A looter who left the group (`left`) keeps the read the
 -- drop was judged with, and the row says they are gone; with no read it says so in place of
 -- `spec unknown`, since no inspect can reach them now (feedback-21 H2).
-local function specRow(drop, inspect, specName, now, left)
+-- The Spec row's tooltip also names the scale their score used (`how`, NS.Scoring.ScoreFor's).
+local function specRow(drop, inspect, specName, now, left, how)
     local who = looterName(drop)
     local spec = specName or (left and L["not in your group"]) or L["spec unknown"]
     local gone = left and trow(L["Looter"], L["not in your group"]) or nil
     local at = type(inspect) == "table" and num(inspect.at) or nil
+    local r
     if not (at and num(now)) then
-        return row("spec", L["Spec"], spec, "muted", L["Spec"], trow(L["Inspected"], L["not yet"]), gone)
+        r = row("spec", L["Spec"], spec, "muted", L["Spec"], trow(L["Inspected"], L["not yet"]), gone)
+    else
+        local age = WC.Duration(now - at)
+        r = row("spec", L["Spec"], L["%s · inspected %s ago"]:format(spec, age), "plain", L["Spec"],
+            trow(L["%s's spec"]:format(who), spec), trow(L["Inspected"], L["%s ago"]:format(age)), gone)
     end
-    local age = WC.Duration(now - at)
-    return row("spec", L["Spec"], L["%s · inspected %s ago"]:format(spec, age), "plain", L["Spec"],
-        trow(L["%s's spec"]:format(who), spec), trow(L["Inspected"], L["%s ago"]:format(age)), gone)
+    r.tip[#r.tip + 1] = DC.ScaleRow(how, "them")
+    return r
 end
 
 local function verdictChip(cell)
@@ -441,10 +489,13 @@ local function verdictChip(cell)
 end
 DC.VerdictChip = verdictChip   -- the History card's verdicts too (modules/HistoryCard.lua)
 
+-- The Track row is Retail's alone (Forever port design §4.4): WoW Forever has no upgrade tracks.
 local function sideRows(eval, f, tone, whose, mine, glyphTone, parts)
     local ilvl = num(f.ilvl)
-    return { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone, parts), trackRow(eval, f.track),
-        statsRow(eval, f.stats) }
+    local rows = { replacesRow(eval, whose, mine), ilvlRow(eval, ilvl, tone, glyphTone, parts) }
+    if C.FEATURE.tracks then rows[#rows + 1] = trackRow(eval, f.track) end
+    rows[#rows + 1] = statsRow(eval, f.stats)
+    return rows
 end
 
 -- The dual mark of a verdict cell against `gear` in the drop's slot (NS.SideCells.Parts), or nil.
@@ -463,8 +514,9 @@ local function gold(text) return toned(text, "mutedGold") end
 --- @param scorer string|boolean the scorer in use, "pawn" | "weights" | "none" (true reads "pawn")
 --- @param classFile string|nil your class (the gear snapshot's): the verdict tooltip's grid names you in it
 --- @param equipped table|nil your worn gear (the snapshot's `equipped`): the Item level row's dual mark
+--- @param how string|nil the scale or weights your score used (NS.Scoring.ScoreFor's `how`)
 --- @return table side
-function DC.ForYou(drop, scorer, classFile, equipped)
+function DC.ForYou(drop, scorer, classFile, equipped, how)
     local cell = WC.Me(drop, classFile)
     if cell.collect then   -- a collection verdict: its kind and collection, no gear rows (issue #13)
         return { title = L["FOR %s"]:format(gold(L["YOU"])), verdict = verdictChip(cell),
@@ -474,7 +526,7 @@ function DC.ForYou(drop, scorer, classFile, equipped)
     local rows = sideRows(off or drop.me, facts(drop), cell.tone, L["you"], true, off and cell.tone,
         partsOf(cell, drop, equipped))
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off)) end
-    rows[#rows + 1] = scoreRow(drop.me, scorer, off ~= nil)
+    rows[#rows + 1] = scoreRow(drop.me, scorer, off ~= nil, how)
     return { title = L["FOR %s"]:format(gold(L["YOU"])), verdict = verdictChip(cell), rows = rows }
 end
 
@@ -527,8 +579,9 @@ end
 --- @param now number|nil GetTime()
 --- @param revealed boolean|nil your own drop's Offer panel was opened this session (WindowOwn)
 --- @param left boolean|nil the looter is no longer in your group (`inspect` is then the drop's own copy)
+--- @param how string|nil the scale or weights their score used (NS.Scoring.ScoreFor's `how`)
 --- @return table side
-function DC.ForLooter(drop, inspect, specName, now, revealed, left)
+function DC.ForLooter(drop, inspect, specName, now, revealed, left, how)
     if drop.isMine then return ownSide(drop, revealed) end
     local who = looterName(drop)
     local classFile = type(drop.looter) == "table" and drop.looter.classFile or nil
@@ -542,8 +595,22 @@ function DC.ForLooter(drop, inspect, specName, now, revealed, left)
     local gear = type(inspect) == "table" and inspect.gear or nil   -- what the Them cell reads (WindowGroup's)
     local rows = sideRows(off or drop.them, facts(drop), cell.tone, who, nil, off and cell.tone, partsOf(cell, drop, gear))
     if off then table.insert(rows, 1, NS.OffSpecCells.SpecRow(off, "them")) end
-    rows[#rows + 1] = specRow(drop, inspect, specName, now, left)
+    rows[#rows + 1] = specRow(drop, inspect, specName, now, left, how)
     return { title = title, verdict = verdictChip(cell), rows = rows }
+end
+
+-- ── the Rolls box (Forever port design §5.3) ────────────────────────────────────────────────
+
+--- The resolved drop's Rolls box: its roll table's summary and rows (NS.RollCells), or nil with no
+--- table (`rec.roll`: a group-loot drop resolved from its roll) or while `show` (`rolls.show`) is off.
+--- @param drop table
+--- @param show boolean
+--- @return table|nil { title, summary, rows, roll }
+function DC.RollsBox(drop, show)
+    local roll = type(drop) == "table" and drop.roll or nil
+    if not show or type(roll) ~= "table" then return nil end
+    local RC = NS.RollCells
+    return { title = L["ROLLS"], summary = RC.Summary(roll), rows = RC.Rows(roll), roll = roll }
 end
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────
@@ -551,6 +618,9 @@ end
 local function metaLine(t, situationLabel)
     local parts = {}
     local rule = RULE_WORD[t.rule]
+    -- WoW Forever's one rule names a bind (bind on pickup): only a soulbound drop says it, so a BoE
+    -- drop under it never reads "Rule: bind on pickup" (Forever port design §4.6).
+    if t.rule == "soulbound" and t.reasonKey ~= "soulbound" then rule = nil end
     if rule then
         parts[#parts + 1] = situationLabel and L["Rule: %s, %s"]:format(rule, situationLabel) or L["Rule: %s"]:format(rule)
     end
@@ -576,10 +646,11 @@ function DC.TradeBox(drop, situationLabel)
             meta = L["The estimate is made once the item's details load."], tip = cell.tip }
     end
     -- The Trade cell's tooltip (the reason as rows, the read's age, the basis), so the box and the
-    -- row never disagree; your own drop's basis is your bag's timer.
+    -- row never disagree; your own drop's basis is your bag's timer, where there is one (Retail's
+    -- alone: WoW Forever has no trade timer, Forever port design §4.4).
     local tip = {}
     for i, l in ipairs(cell.tip) do tip[i] = l end
-    if drop.isMine then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
+    if drop.isMine and C.FEATURE.tradeTimer then tip[#tip + 1] = trow(L["Basis"], L["your bag's trade timer"]) end
     -- The cell's Can't use (a Yes or Likely none of your specs can use, feedback-21) is the chip's
     -- too, so the chip agrees with its tooltip and with the row; the reason stays the trade's.
     local face = { text = TRADE_CHIP[t.state], tone = TRADE_TONE[t.state] }

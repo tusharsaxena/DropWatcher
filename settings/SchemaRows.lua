@@ -14,10 +14,10 @@ local _, NS = ...
 -- tab; it takes this file's checks from Settings.Checks.
 --
 -- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
--- specID (architecture-§5's value route): written whole through the seam, drawn by their own
--- editors (`skipRender`). Drops › Situations' per-situation rows (`situations.<key>.track`,
--- `.autoOpen`, `.quality` and `trade.rules.<key>`) are `skipRender` too: its table draws them, one
--- line per situation. The window's geometry, its minimized flag and the toast's position have no
+-- specID, or on WoW Forever by "<classFile>:<tree>" (architecture-§5's value route): written
+-- whole through the seam, drawn by their own editors (`skipRender`). Drops › Situations'
+-- per-situation rows (`situations.<key>.track`, `.autoOpen`, `.quality` and `trade.rules.<key>`)
+-- are `skipRender` too: its table draws them, one line per situation. The window's geometry, its minimized flag and the toast's position have no
 -- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
 -- `glow.<main|offSpec>.color` rows are typed `color`, stored {r=,g=,b=,a=} (the library's codec).
 
@@ -68,14 +68,20 @@ end
 
 local function isSpecID(k) return type(k) == "number" and k > 0 and k == math.floor(k) end
 
+-- A per-spec map's key: a specID (Retail), or WoW Forever's "<classFile>:<tree>" (Forever port
+-- design §4.3, NS.ClassData.SpecKey).
+local function isSpecKey(k)
+    return isSpecID(k) or (type(k) == "string" and k:match("^%u+:%d+$") ~= nil)
+end
+
 -- The checks a composed block's rows take too (settings/ComposedRows.lua): the composer emits none.
 Settings.Checks = { isBool = isBool, inRange = inRange, nonEmptyString = nonEmptyString, isColor = isColor }
 
--- weights: { [specID] = { [STAT_KEY] = number } }.
+-- weights: { [specKey] = { [STAT_KEY] = number } }.
 local function validWeights(v)
     if type(v) ~= "table" then return false end
     for spec, w in pairs(v) do
-        if not isSpecID(spec) or type(w) ~= "table" then return false end
+        if not isSpecKey(spec) or type(w) ~= "table" then return false end
         for stat, n in pairs(w) do
             if type(stat) ~= "string" or type(n) ~= "number" or n ~= n then return false end
         end
@@ -98,7 +104,7 @@ end
 local function validUndesired(v)
     if type(v) ~= "table" then return false end
     for spec, set in pairs(v) do
-        if not isSpecID(spec) or type(set) ~= "table" then return false end
+        if not isSpecKey(spec) or type(set) ~= "table" then return false end
         for key, on in pairs(set) do
             if type(key) ~= "string" or not key:match("^%d+:%d+$") or on ~= true then return false end
         end
@@ -209,7 +215,11 @@ end
 
 -- ── the row makers ──────────────────────────────────────────────────────────────────────────
 
+-- A row declaring `clients` (clients-§4) is registered only where NS.Compat.ForClient(clients) is
+-- true: on the other client it is not in the schema at all, so the panel, `/dw list|get|set|reset`
+-- and the defaults reset never see it (Forever port design §4.4's Retail-only rows).
 local function add(row)
+    if not NS.Compat.ForClient(row.clients) then return row end
     Rows[#Rows + 1] = row
     return row
 end
@@ -276,9 +286,10 @@ local function situations()
             L["The minimum quality here: the feed's own mode, or one of its own."],
             with(sit, { disabledIf = untracked }))
         -- Its label stays the situation's name: `/dw list` reads it under the Drops page's `feed` section.
+        -- Retail's alone: WoW Forever has one rule, `soulbound` (Forever port design §4.4, §4.6).
         pick("trade.rules." .. key, T.rules[key], RULES, NS.WindowFooter.SituationLabel(key),
             L["The loot rule that decides whether a drop here can be traded."],
-            with(sit, { disabledIf = untracked }))
+            with(sit, { disabledIf = untracked, clients = K.FEATURE_CLIENTS.tradeRuleRows }))
     end
 end
 
@@ -357,6 +368,17 @@ local function feed()
     history(retention)
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
+
+    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients.
+    local R = P.rolls
+    local rolls = { page = "feed", group = L["Rolls"], onChange = repaintWindow }
+    bool("rolls.show", R.show, L["Show rolls"],
+        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."], rolls)
+    bool("rolls.keep", R.keep, L["Keep rolls in history"],
+        L["Keep each rolled drop's rolls in the History tab."], rolls)
+    bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
+        L["Show your verdict on the game's Need and Greed roll popup."],
+        with(rolls, { onChange = function() if NS.RollPopup then NS.RollPopup.Refresh() end end }))
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────
@@ -393,9 +415,11 @@ local function messages()
         L["Open the message in an edit box before it is sent."], sending)
     pick("messages.announceChannel", M.announceChannel, CHANNELS, L["Announce channel"],
         L["Automatic picks the instance channel, then raid, then party. Never say or yell."], sending)
+    -- Transmog and off-spec are Retail's alone (Forever port design §4.4): their rows declare it.
+    local transmog = { clients = K.FEATURE_CLIENTS.transmog }
     bool("messages.transmogAsk", M.transmogAsk, L["Offer transmog asks"],
         L["Also offer an ask on a drop that is no gain for you but whose look you have not collected, with the Ask for transmog template."],
-        sending)
+        with(sending, transmog))
 
     local A = M.autoAsk
     local auto = { page = "messages", group = L["Auto-ask"] }
@@ -414,9 +438,15 @@ local function messages()
     text("messages.templates.ask", M.templates.ask, L["Ask"],
         L["What you whisper a looter to ask for their drop."], templates)
     text("messages.templates.transmog", M.templates.transmog, L["Ask for transmog"],
-        L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."], templates)
+        L["What you whisper a looter to ask for a drop that is no gain for you but whose look you have not collected."],
+        with(templates, transmog))
     text("messages.templates.askOffSpec", M.templates.askOffSpec, L["Ask for off-spec"],
-        L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."], templates)
+        L["What you whisper a looter to ask for a drop your current spec can't use but another of your specs gains from."],
+        with(templates, { clients = K.FEATURE_CLIENTS.offSpec }))
+    -- Both clients (Forever port design §11.2): wherever the group's method is master loot.
+    text("messages.templates.askML", M.templates.askML, L["Ask the master looter"],
+        L["What you whisper the master looter to ask for an item waiting for them to hand out. Never sent automatically."],
+        templates)
     text("messages.templates.offer", M.templates.offer, L["Offer"],
         L["What you whisper someone your own drop would help."], templates)
     text("messages.templates.announce", M.templates.announce, L["Announce"],
@@ -435,27 +465,36 @@ local function window()
     pick("window.mode", W.mode, LAYOUTS, L["Window layout"],
         L["Full shows the drop tables with every column. Compact shows the same drops in a narrow window, so it stays out of the way during a run. The title bar's toggle, /dw compact and /dw full switch it too."],
         with(layout, { onChange = function() NS.WindowCompact.OnModeChanged() end }))
+    -- Per client (clients-§4): WoW Forever has no Mythic+ key or delve to name.
     bool("window.compactInRuns", W.compactInRuns, L["Compact view when it auto-opens in a run"],
-        L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
+        NS.Compat.ClientKey() == "forever"
+            and L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."]
+            or L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
     layout = with(layout, { subgroup = L["Tables"] })
+    -- The countdown bar's sentence is Retail's alone, like the Trade window column (clients-§4).
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
-        L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."], layout)
+        K.FEATURE.tradeTimer
+            and L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."]
+            or L["The height of one row in the drop tables: Drops and History."], layout)
     -- The tables' font follows Row height: the whole font setting (DW-01, the lead's ruling on
     -- D-07), the library's composed block, so settings/ComposedRows.lua declares it (it needs the
     -- Options instance). `window.fontSize` keeps its path, its 0 (Default) and its range there.
 
     -- The full layout's Drops table columns, then the Trade window column's ending-soon mark (Trade ›
-    -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else).
+    -- Timers until feedback-24: it tints that column's countdown on your own drops, nothing else). The
+    -- mark is Retail's alone: WoW Forever has no countdown (Forever port design §4.4).
     local columns = { page = "window", group = L["Columns"], subgroup = L["Shown columns"], onChange = repaintWindow }
     for _, col in ipairs(NS.WindowGroup.COLUMNS) do
         if col.key ~= "item" then
-            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc, columns)
+            -- A column's declaration is its row's (the Trade window column is Retail's alone).
+            bool("window.columns." .. col.key, W.columns[col.key], col.label, col.desc,
+                col.clients and with(columns, { clients = col.clients }) or columns)
         end
     end
     slider("trade.warnAt", P.trade.warnAt, 0, 1800, 60, L["Mark a trade window ending within (seconds)"],
         L["Your own drop's Trade window countdown turns to its warning color this many seconds before the item stops being tradeable. 0 turns the mark off."],
-        { page = "window", group = L["Columns"], subgroup = L["Trade window"] })
+        { page = "window", group = L["Columns"], subgroup = L["Trade window"], clients = K.FEATURE_CLIENTS.tradeTimer })
 
     -- What a fresh Drops tab opens on (Feed › Filters until feedback-24): the View, a set
     -- (feedback-2 spec §1: one row per value, all off is All, combined as AND, as the filter bar's
@@ -508,7 +547,11 @@ end
 -- The two glows, side by side: each knob is a main | off-spec pair, so the left column is the main
 -- spec's glow and the right the off-spec's. The tab mixes kinds of control, so each block carries a
 -- subsection heading (options-ui-§7), a style's heading its name in the Style dropdown.
-local GLOWS = { "main", "offSpec" }
+-- The off-spec glow is Retail's alone (Forever port design §4.4): its rows declare it, so on WoW
+-- Forever the tab is the main spec's column alone. NS.Glow.KINDS is the glows this client has, so
+-- a loop reads only a glow whose defaults exist (defaults/Profile.lua adds the off-spec's on Retail).
+local GLOWS = NS.Glow.KINDS
+local GLOW_CLIENTS = { offSpec = K.FEATURE_CLIENTS.offSpec }
 
 -- Each style's knobs, with its ranges and the styles it applies to; the defaults are
 -- defaults/Profile.lua's. `labels` is { main, off-spec }. Offset first, as it applies to three of the
@@ -572,12 +615,14 @@ local function glow()
     end
     bool("glow.main.enabled", G.main.enabled, L["Main spec glow"],
         L["Glow a drop's icon when it is an upgrade for your current spec: in the drop table, the compact card and the drop's card."], at)
-    bool("glow.offSpec.enabled", G.offSpec.enabled, L["Off-spec glow"],
-        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."], at)
+    local GO = G.offSpec or {}   -- nil on WoW Forever, whose off-spec rows are not registered
+    bool("glow.offSpec.enabled", GO.enabled, L["Off-spec glow"],
+        L["Glow a drop's icon when your current spec can't use it but another of your specs gains from it: in the drop table, the compact card and the drop's card."],
+        with(at, { clients = GLOW_CLIENTS.offSpec }))
     pick("glow.main.type", G.main.type, GLOW_STYLES, L["Main spec style"],
         L["How the main spec glow looks."], with(at, { disabledIf = off("main") }))
-    pick("glow.offSpec.type", G.offSpec.type, GLOW_STYLES, L["Off-spec style"],
-        L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec") }))
+    pick("glow.offSpec.type", GO.type, GLOW_STYLES, L["Off-spec style"],
+        L["How the off-spec glow looks."], with(at, { disabledIf = off("offSpec"), clients = GLOW_CLIENTS.offSpec }))
     -- Main spec left, off-spec right on every line, the colors too (feedback-21 H6, the owner's
     -- choice): the two swatches share a line and their Use class color companions the next,
     --     [Main spec color]             | [Off-spec color]
@@ -600,11 +645,11 @@ local function glow()
              label = i == 1 and L["Main spec color"] or L["Off-spec color"],
              tooltip = L["The glow's color. Its alpha makes the glow fainter. Not read while Use the skin's color is on, or while Use class color is on, except for its opacity, which then applies."],
              validate = isColor, startsLine = i == 1 or nil, classColorSource = "player",
-             page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow }
+             page = at.page, group = at.group, subgroup = at.subgroup, onChange = refreshGlow, clients = GLOW_CLIENTS[key] }
     end
     for i, key in ipairs(GLOWS) do
         bool("glow." .. key .. ".useClassColor", G[key].useClassColor, CLASS_COLOR[key][1], CLASS_COLOR[key][2],
-            with(at, { classColorSource = "player", startsLine = i == 1 or nil }))
+            with(at, { classColorSource = "player", startsLine = i == 1 or nil, clients = GLOW_CLIENTS[key] }))
     end
     -- The skin's companions (FS-DW-FLIP, cause D5): the same two columns, one line down. No
     -- `disabledIf`, as for the swatch above. Use class color comes first.
@@ -616,7 +661,7 @@ local function glow()
     }
     for i, key in ipairs(GLOWS) do
         bool("glow." .. key .. ".colorFromSkin", G[key].colorFromSkin, FROM_SKIN[key][1], FROM_SKIN[key][2],
-            with(at, { startsLine = i == 1 or nil }))
+            with(at, { startsLine = i == 1 or nil, clients = GLOW_CLIENTS[key] }))
     end
     -- A style's section is drawn only while EITHER glow's style selects it (DW-04, owner ruling D-17,
     -- image-40/41; LibKa0s OptionsSwitch minor 1's `shownWhen = { any = ... }`): both rows of every
@@ -629,14 +674,18 @@ local function glow()
         local list = {}
         for style in pairs(styles) do list[#list + 1] = style end
         table.sort(list)
-        return { any = { { path = "glow.main.type", equals = list }, { path = "glow.offSpec.type", equals = list } } }
+        local any = {}
+        for _, key in ipairs(GLOWS) do
+            if NS.Compat.ForClient(GLOW_CLIENTS[key]) then any[#any + 1] = { path = "glow." .. key .. ".type", equals = list } end
+        end
+        return { any = any }
     end
     for _, knob in ipairs(GLOW_KNOBS) do
         local switch = knob.heading ~= L["Offset"] and chosen(knob.styles) or nil
         for i, key in ipairs(GLOWS) do
             local path = "glow." .. key .. "." .. knob.key
             local extra = with(at, { subgroup = knob.heading, disabledIf = knobOff(key, knob.styles),
-                                     zeroText = knob.zeroText, shownWhen = switch })
+                                     zeroText = knob.zeroText, shownWhen = switch, clients = GLOW_CLIENTS[key] })
             if knob.kind == "bool" then
                 bool(path, G[key][knob.key], knob.labels[i], knob.tip, extra)
             else
@@ -655,6 +704,51 @@ local function icons()
     slider("icons.zoom", P.icons.zoom, 0, 0.25, 0.01, L["Icon zoom"],
         L["Crop each item icon's edges: 0 shows the whole icon, 0.25 crops a quarter off each side. A little zoom trims the dark edge baked into most item icons."],
         { page = "window", group = L["Icons"], subgroup = L["Zoom"], onChange = refreshIcons })
+end
+
+-- ── General › Role (Forever port design §11.4): the role you play, WoW Forever alone ─────────
+--
+-- Saved per character in `db.char.role` through LibKa0s Role.SetOverride (settings/Schema.lua's
+-- CHAR closure row); Automatic is Role.Resolve's ladder. On a Druid it decides the Feral scale
+-- (Pawn 2 or 3), which is what a Feral tank whose group role reads none needs to correct. Retail
+-- never reads the role, so the row is not registered there (clients-§4). Its tooltip names what
+-- Automatic answers now: RefreshRoleTooltip rewrites it each time the General page draws.
+
+local ROLE_CHOICES = choices{
+    "auto", L["Automatic"], "tank", L["Tank"], "healer", L["Healer"], "damage", L["Damage"],
+}
+local ROLE_NAME = { TANK = L["Tank"], HEALER = L["Healer"], DAMAGER = L["Damage"] }
+local ROLE_TIP = L["The role your gear is judged for, saved for this character. On a Druid it picks the Feral scale: the cat's for Damage, the bear's for Tank. Automatic takes the role your group gave you, else your talents."]
+
+-- Where Automatic's answer came from, in words (LibKa0s Role.Resolve's `source` and `detail`).
+local function roleSource(source, detail)
+    if source == "assigned" then return L["the role your group gave you"] end
+    if source == "talents" then
+        return detail and L["your talents (%s)"]:format(detail) or L["your talents"]
+    end
+    if source == "spec" then
+        return detail and L["your specialization (%s)"]:format(detail) or L["your specialization"]
+    end
+    if source == "saved" then return L["the last role it found"] end
+    return nil
+end
+
+--- The Role row's tooltip with what Automatic answers now and its source (NS.Compat.AutomaticRole).
+--- A no-op where the row is not registered (Retail).
+function Settings.RefreshRoleTooltip()
+    local row = NS.SchemaRuntime.FindRow(Settings.ROLE_PATH)
+    if not row then return end
+    local role, source, detail = NS.Compat.AutomaticRole()
+    local why = roleSource(source, detail)
+    local now = (ROLE_NAME[role] and why) and L["Automatic now picks %s: %s."]:format(ROLE_NAME[role], why)
+        or L["Automatic has no answer yet."]
+    row.tooltip = ROLE_TIP .. "\n\n" .. now
+end
+
+local function role()
+    local row = pick(Settings.ROLE_PATH, NS.C.ROLE_DEFAULT, ROLE_CHOICES, L["Role"], ROLE_TIP,
+        { page = "general", group = L["Role"], clients = { "forever" } })
+    Settings.StampClosureRows({ row })
 end
 
 -- ── General › Simulator (feedback-2 spec §8): the simulator's pace ─────────────────────────────
@@ -718,6 +812,7 @@ local function skin()
         L["Whether the first-run skin picker was closed on this profile."], at)
 end
 
+role()
 simulation()
 skin()
 situations()

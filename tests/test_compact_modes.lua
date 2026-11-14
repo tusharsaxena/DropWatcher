@@ -279,7 +279,9 @@ test("modes: test mode's Drops cards show every state, each saying what its full
     hasAll(seen.trade, { "Yes", "?", "No" }, "trade")
     hasAll(seen.fresh, { "(cached)", "(range)", "(combat)", "(!)", "" }, "inspect freshness, bracketed or left out (pending: Them says it)")
     hasAll(seen.you, { "▲", "≈", "▼", "⊘" }, "your verdict")
-    hasAll(seen.them, { "▲", "≈", "▼", "⊘" }, "their verdict")
+    -- On WoW Forever every Them sidegrade sample lands on a two-slot item (a ring, a trinket, a
+    -- one-hander worn beside another), so its cell reads the other slot's arrow, never ≈.
+    hasAll(seen.them, T.forever and { "▲", "▼", "⊘" } or { "▲", "≈", "▼", "⊘" }, "their verdict")
     hasAll(seen.eq, { "…", "range", "combat", "!" }, "their gear's states")
     local levels = 0
     for k in pairs(seen.eq) do if tostring(k):match("^%d+$") then levels = levels + 1 end end
@@ -290,8 +292,9 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
     local NS = testWindow()
     NS.WindowFilterBar.Set("group", "view", {})
     local full = fullPieces(NS, "group", function(c, r)
-        return { mine = r.drop.isMine == true, window = textOf(c.tradeWindow.text),
-            windowTip = c.tradeWindow.tipLines, offer = askWord(c.actions.ask),
+        -- The Trade window column is Retail's alone (Forever port design §4.4).
+        return { mine = r.drop.isMine == true, window = c.tradeWindow and textOf(c.tradeWindow.text),
+            windowTip = c.tradeWindow and c.tradeWindow.tipLines, offer = askWord(c.actions.ask),
             isOffer = c.actions.ask.offer == true }
     end)
     local seen = { window = {}, offer = {} }
@@ -304,12 +307,16 @@ test("modes: test mode's own drops on Drops show Offer as the full rows, no coun
             assertEqual(askWord(card.ask), f.offer, what .. ": Offer")
             assertEqual(card.ask.offer == true, f.isOffer, what .. ": your own drop's button is Offer")
             assertTrue(card.cells.countdown == nil, what .. ": no trade window on the card (feedback-10 spec §2)")
-            seen.window[f.window:gsub("%d", "9")] = true
+            if f.window then seen.window[f.window:gsub("%d", "9")] = true end
             seen.offer[f.offer] = true
         end
     end
     assertEqual(n, 9, "every sample of yours")
-    hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
+    if T.forever then
+        assertTrue(next(seen.window) == nil, "no Trade window column on WoW Forever")
+    else
+        hasAll(seen.window, { "9:99:99", "~9:99:99", "No limit (BoE)" }, "Trade window")
+    end
     hasAll(seen.offer, { "Offer", "No action" }, "Offer, or No action on a dead drop")
 end)
 
