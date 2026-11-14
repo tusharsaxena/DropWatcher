@@ -1083,3 +1083,26 @@ test("table: the Type column sits after Slot and is painted on every row", funct
     for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
     assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
 end)
+
+-- Rolls UX spec §3.1 (ruling 5): a two-word name on your own drop keeps `[YOU]` whole in the Looter
+-- column, and the action button draws above every text cell of its row.
+test("table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    m.__now = 100
+    m.textCharWidth = 5
+    m.normalizedRealm = "Realm"
+    seed(NS, { GROUP }, { drop({ isMine = true, looter = { name = "Bloodthornwick Ironfist-Realm", guid = "Player-1-ME",
+        classFile = "WARRIOR", isSelf = true } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    local row = rowFor(NS.WindowGroup.Drawn(), 1)
+    local l = row.cells.looter
+    assertEqual(textOf(l.text), "Bloodthornwick Ironfist")
+    assertTrue(l.mark:IsShown()); assertEqual(textOf(l.mark), "[YOU]")
+    assertTrue(l.text:GetWidth() + NS.WindowRows.MARK_GAP + l.mark:GetUnboundedStringWidth() <= l:GetWidth(),
+        "the name and the mark fit the column")
+    local level = row.cells.actions.ask:GetFrameLevel()
+    for key, cell in pairs(row.cells) do
+        if key ~= "actions" then assertTrue(level > cell:GetFrameLevel(), key .. ": the button is above it") end
+    end
+end)

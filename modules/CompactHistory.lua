@@ -100,7 +100,7 @@ end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
 
-local function paintCard(card, drop, _, m, st)
+local function paintCard(card, drop, width, m, st)
     local CG, WG, c = NS.CompactGroup, NS.WindowGroup, card.cells
     card.dropId, card.entry = drop.id, drop.entry
     card:SetHeight(m.height)
@@ -119,7 +119,9 @@ local function paintCard(card, drop, _, m, st)
     c.item.hit.tipLines = nil   -- the real item tooltip instead
     CG.PaintText(c.ilvl, cc.ilvl)
     CG.PaintText(c.outcome, cc.outcome)
-    CG.PaintLineTwo(card, cc, "time")
+    -- Line 2 ends CG.ASK_GAP before the outcome, line 2's right piece (rolls UX spec §3.1).
+    local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.outcome.text:GetStringWidth() or 0) - CG.ASK_GAP
+    CG.PaintLineTwo(card, cc, "time", room, m)
     CG.PaintHalves(card, cc)
 end
 

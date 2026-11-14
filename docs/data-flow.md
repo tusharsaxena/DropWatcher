@@ -223,7 +223,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> four lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right of lines 2 and 3 (the gray
+  │     type, ` [YOU]` in gold after your own name, each piece cut at its cap (WindowRows.LineTwoWidths, the
+  │     name first, the mark never: rolls UX §3.1), the Ask or Offer on the right of lines 2 and 3 (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 the Trade cell, `Trade No Bonus
   │     roll`, its Yes, No or ? then its short reason in the muted gray (WindowCells.TradeText,

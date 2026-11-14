@@ -332,6 +332,7 @@ function WP.AskButton(parent)
     local b = parent.ask
     if b then return b end
     b = NS.Window.TextButton(parent, K.ASK_W, "chat", L["Ask"], function(self) NS.PressAskML(self.pendingId) end)
+    NS.WindowRows.RaiseAction(b, parent)   -- over the row's or card's text (rolls UX spec §3.1)
     NS.Window.AttachTooltip(b, function() return tipOf(b) end, "row")
     parent.ask = b
     return b

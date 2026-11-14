@@ -558,7 +558,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (23)
+### test_compact_group.lua (27)
 
 - compact group: a card is four lines at the text size, about 64 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -583,8 +583,12 @@ Total.
 - compact group: at the least width Trade's longest reason ends before the button
 - compact group: at the least width line 4's two dual marks fit, each worn item its own mark (H7)
 - compact group: dual marks that do not fit the card are the one mark instead (R5)
+- line 2: each piece is cut at its cap, scaled with the text; the name gives up width first
+- compact group: a two-word name is cut, [YOU] whole after it, and line 2 ends before the button
+- compact group: a one-word name keeps its own width, uncut
+- compact group: the action button draws above line 2's text and its hit frames
 
-### test_compact_history.lua (11)
+### test_compact_history.lua (12)
 
 - compact history: kept groups as one-line headers, the newest open, each entry a three-line card
 - compact history: at the least width Trade's longest reason ends before the date
@@ -597,6 +601,7 @@ Total.
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
+- compact history: a two-word name is cut, [YOU] whole after it, and line 2 ends before the outcome
 
 ### test_history_card.lua (17)
 
@@ -659,7 +664,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (52)
+### test_window_group.lua (53)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -713,6 +718,7 @@ Total.
 - table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
+- table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text
 
 ### test_table_font.lua (10)
 
@@ -2853,12 +2859,12 @@ Total.
 | test_window_shell.lua | 64 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 23 |
-| test_compact_history.lua | 11 |
+| test_compact_group.lua | 27 |
+| test_compact_history.lua | 12 |
 | test_history_card.lua | 17 |
 | test_compact_chrome.lua | 28 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 52 |
+| test_window_group.lua | 53 |
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
@@ -2956,4 +2962,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2438** |
+| **Total** | **2444** |

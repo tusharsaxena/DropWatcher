@@ -337,7 +337,10 @@ the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
 frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names), with the roll popup mark's cards and the simulator's stand-in popup on the same tier (`modules/RollPopup.lua`, parented to UIParent, never toplevel); the Edit message box (`DIALOG`, toplevel), beside
 the library's debug console, perf and sim panels; the library's Copy window (`FULLSCREEN`); the
 library's dropdown menu (`FULLSCREEN_DIALOG`, the compact Filters ▾ cascade included); tooltips. Inside an item button, the border frame sits
-under the upgrade glow. No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
+under the upgrade glow. A row's or card's action button (Ask, Offer, No action, Ask ML) sits at
+`LAYERS.LEVEL.ROW_ACTION` over its row, above the row's text cells and their hit frames
+(`WindowRows.RaiseAction`, rolls UX spec §3.1), so a long line never covers it or takes its clicks.
+No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
 
 ## Skins
 

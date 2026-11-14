@@ -246,3 +246,35 @@ test("history: your own entry's looter reads Name [YOU] in both layouts, the mar
     assertEqual(marked, 1, "only your own entry is marked")
 end)
 
+
+-- Line 2's font strings record the widths they are given (the kit's regions no-op SetWidth), then
+-- the window repaints so they are given them again.
+local function spyWidths(NS, c)
+    for _, fs in ipairs({ c.looter.text, c.looter.mark, c.slot.text, c.armorType.text }) do
+        rawset(fs, "SetWidth", function(s, w) rawset(s, "__width", w); return s end)
+        rawset(fs, "GetWidth", function(s) return rawget(s, "__width") or 0 end)
+    end
+    NS.Window.Refresh()
+end
+
+test("compact history: a two-word name is cut, [YOU] whole after it, and line 2 ends before the outcome", function()
+    local NS, _, m = shownCompact()
+    local CG, WR = NS.CompactGroup, NS.WindowRows
+    m.textCharWidth = 5
+    local hist = NS.History.Store()
+    hist.groups[2].drops[2].looter = "Bloodthornwick Ironfist-Testrealm"
+    NS.Window.Refresh()
+    local card = cardWith(NS.WindowHistory.Drawn(), "Expired")
+    spyWidths(NS, card.cells)
+    card = cardWith(NS.WindowHistory.Drawn(), "Expired")
+    local c = card.cells
+    assertEqual(textOf(c.looter.text), "Bloodthornwick Ironfist")
+    local nameW = c.looter.text:GetWidth()
+    assertTrue(nameW > 0 and nameW < c.looter.text:GetUnboundedStringWidth(), "the name is cut")
+    assertTrue(c.looter.mark:IsShown()); assertEqual(textOf(c.looter.mark), "[YOU]")
+    assertEqual(c.looter.mark.__width, nil, "the mark is never cut")
+    local lineEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + nameW + WR.MARK_GAP + c.looter.mark:GetUnboundedStringWidth()
+        + WR.LINE_TWO_GAP + c.slot.text:GetWidth() + WR.LINE_TWO_GAP + c.armorType.text:GetWidth()
+    local outcomeAt = card:GetWidth() - CG.PAD - c.outcome.text:GetUnboundedStringWidth()
+    assertTrue(lineEnd + CG.ASK_GAP <= outcomeAt, ("line 2 ends at %d, the outcome at %d"):format(lineEnd, outcomeAt))
+end)

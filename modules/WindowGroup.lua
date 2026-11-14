@@ -626,6 +626,7 @@ local function actionsCell(row)
     f.key = "actions"
     f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
+    NS.WindowRows.RaiseAction(f.ask, row)   -- over the row's text cells (rolls UX spec §3.1)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
     return f
 end

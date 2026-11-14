@@ -146,7 +146,8 @@ C.WINDOW = {
 --   MEDIUM     the main window, full and compact (WINDOW, toplevel, clamped) at W; its chrome W+1
 --              (title bar, tab strip, body, strips, and the Offer panel docked beside it, DOCKED);
 --              its content W+2 to W+8 (tables, cards, the detail card, item buttons: an icon's
---              border at button + BORDER, its glow at button + EFFECT; the detail card's deepest glow
+--              border at button + BORDER, its glow at button + EFFECT; a row's or card's action
+--              button at row + ROW_ACTION, over its text cells and their hit frames, row + 1; the detail card's deepest glow
 --              reaches W+10, beside the grip in the footer corner, which the scroll keeps clear);
 --              the library's resize grip W+10 (LibKa0s-Core-1.0 sets it; GRIP names it); the
 --              floating Offer panel W+30, a popover over the window's own content in the window's
@@ -167,6 +168,7 @@ C.LAYERS = {
     LEVEL = {
         BORDER          = 1,    -- an item button's border frame, over the icon's art
         EFFECT          = 2,    -- the upgrade glow (modules/Glow.lua), over the border
+        ROW_ACTION      = 2,    -- a row's or card's action button, over its text cells and hit frames (+1)
         DOCKED          = 1,    -- the Offer panel docked beside the window
         CONTENT_MAX     = 8,    -- the window's content stays at or below W+8 (frame-layering-§3)
         GRIP            = 10,   -- the library's resize grip: named here, set by LibKa0s-Core-1.0
