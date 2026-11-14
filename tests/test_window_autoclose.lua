@@ -278,3 +278,25 @@ test("autoclose: the pointer leaving the window starts a full count from then", 
     m.advance(0.2)
     assertFalse(NS.IsWindowShown())
 end)
+
+-- RX-12 review fix: the hooks go only on frames that already take the mouse. A frame the window
+-- leaves mouse-transparent on purpose (a row's text cells, an icon's border and glow, a pane)
+-- gets no mouse script, which the client can answer by mouse-enabling it, so it would start
+-- eating the hover and the click meant for the control beneath it.
+-- red under: hookOne checking only HasScript (every frame under the window got the hooks)
+test("autoclose: the hooks skip a frame that does not take the mouse", function()
+    local NS, m, f = autoOpened()
+    local glass = m.CreateFrame("Frame", nil, f)
+    local live = m.CreateFrame("Frame", nil, f)
+    live:EnableMouse(true)
+    NS.Window.Refresh()
+    assertFalse(glass:IsMouseEnabled(), "a plain frame starts mouse-transparent")
+    for _, script in ipairs({ "OnEnter", "OnLeave", "OnMouseDown" }) do
+        assertEqual(glass:GetScript(script), nil, "no " .. script .. " on the transparent frame")
+    end
+    assertTrue(live:GetScript("OnMouseDown") ~= nil, "a mouse-enabled frame is hooked")
+    assertFalse(glass:IsMouseEnabled(), "and it stays transparent")
+    live:__fire("OnMouseDown", "LeftButton")
+    m.advance(60)
+    assertTrue(NS.IsWindowShown(), "a press on the mouse-enabled frame cancels it")
+end)

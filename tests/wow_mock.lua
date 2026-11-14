@@ -1006,6 +1006,17 @@ local function build()
     -- the load also gets the geometry and text regions on every frame parented to UIParent (the roll
     -- popup mark's owned cards, DW-FP20), so it can read what they say.
     local baseCreateFrame = M.CreateFrame
+    -- Mouse input, TRACKED (RX-12): the stub's catch-all answered IsMouseEnabled with the frame,
+    -- truthy for every frame, so "is this frame mouse-transparent" could not be asked. As in the
+    -- client, a Frame starts transparent and a clickable type (Button, CheckButton, EditBox,
+    -- Slider) takes the mouse; EnableMouse sets it either way.
+    local MOUSE_TYPES = { Button = true, CheckButton = true, EditBox = true, Slider = true }
+    local function trackMouse(f, frameType)
+        if rawget(f, "EnableMouse") ~= nil then return end
+        f.__mouseEnabled = MOUSE_TYPES[frameType] == true
+        f.EnableMouse = function(self, on) self.__mouseEnabled = on and true or false; return self end
+        f.IsMouseEnabled = function(self) return self.__mouseEnabled == true end
+    end
     M.CreateFrame = function(frameType, name, parent, template)
         local f = baseCreateFrame(frameType, name, parent, template)
         local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
@@ -1028,6 +1039,7 @@ local function build()
         if rawget(f, "IsMouseOver") == nil then
             f.IsMouseOver = function(self) return self.__mouseOver == true end
         end
+        trackMouse(f, frameType)
         if frameType == "Button" then
             function f:RegisterForClicks(...) self.__clicks = { ... }; return self end
             if type(name) == "string" then rawset(M, name, f) end

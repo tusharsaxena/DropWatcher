@@ -61,7 +61,8 @@ starts over. A window the visibility ladder hides (General visibility in or out 
 player's open and is not closed: the count waits, and starts over when the window shows (a
 visibility listener), so the auto-open is not lost to a long fight (RX-12). A
 drag, or a press on the frame or any frame under it (a tab, a title bar button, a row: one-way
-`OnMouseDown` hooks, laid at the arm and after each repaint while armed), disarms it for that show; with `window.autoClose.enabled` or `autoOpen` off
+`OnMouseDown` hooks, laid at the arm and after each repaint while armed, and only on a frame that
+already takes the mouse, so a mouse-transparent cell, border or glow stays transparent, RX-12), disarms it for that show; with `window.autoClose.enabled` or `autoOpen` off
 it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
 
 ## What the window repaints on

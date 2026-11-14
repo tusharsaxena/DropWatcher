@@ -92,9 +92,13 @@ AC.Cancel = AC.Disarm
 -- the window and every frame under it hear the press and the pointer entering and leaving: one-way
 -- HookScripts on frames this addon made, none of them protected. A frame is hooked once (`hooked`);
 -- the walk runs at Arm and after each repaint while armed (AC.OnRefresh), so a row a repaint built
--- after the open is reached too.
+-- after the open is reached too. Only a frame that already takes the mouse is hooked: one the
+-- window leaves mouse-transparent on purpose (a row's text cells, an icon's border and glow, a
+-- pane) is skipped, since a mouse script on it can mouse-enable it and steal the hover and the
+-- press from the control beneath; the pointer over it is over a mouse-enabled frame anyway.
 local function hookOne(f)
     if hooked[f] or not f.HookScript then return end
+    if f.IsMouseEnabled and not f:IsMouseEnabled() then return end
     if f.HasScript and not (f:HasScript("OnMouseDown") and f:HasScript("OnEnter") and f:HasScript("OnLeave")) then
         return
     end

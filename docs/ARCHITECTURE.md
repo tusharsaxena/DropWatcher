@@ -527,7 +527,8 @@ container's managed layout is not tainted. None of it is protected, so it draws 
 Auto-close (`modules/WindowAutoClose.lua`, RX-10) closes the window with a `Hide` of that owned
 frame, so it runs in combat as the auto-open's `Show` does. The one-way `OnMouseDown`, `OnEnter` and
 `OnLeave` `HookScript`s it lays (each once per frame) are on the window's own frames, none of them protected,
-and never on a Blizzard frame.
+and never on a Blizzard frame; only on a frame that already takes the mouse (`IsMouseEnabled`), so a
+frame the window leaves mouse-transparent is never mouse-enabled by a script (RX-12).
 The master-loot pending kind (`modules/PendingML.lua`, DW-FP18) only reads the loot window you
 opened, through `core/CompatLoot.lua` (`LootSlots`: each slot's link, quality, lock and source GUID,
 after LOOT_READY or LOOT_OPENED, and the group's loot threshold, `Compat.LootThreshold`, once per
