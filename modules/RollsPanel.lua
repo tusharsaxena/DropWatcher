@@ -327,6 +327,17 @@ local function buildBody(p)
     local bar = rawget(scroll, "ScrollBar")
     if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     p.bar = bar
+    -- The body and its bar take the pointer, so the panel hears no leave when the pointer goes
+    -- straight out from them: each restarts the linger itself (design §3.4), as the close button.
+    local function holds(f)
+        if f and f.HookScript then f:HookScript("OnLeave", function() onLeave() end) end
+    end
+    holds(scroll)
+    holds(bar)
+    if bar then
+        holds(rawget(bar, "ScrollUpButton"))
+        holds(rawget(bar, "ScrollDownButton"))
+    end
     p.headerPool, p.linePool = NS.Pool.New(), NS.Pool.New()
 end
 

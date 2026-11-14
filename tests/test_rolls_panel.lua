@@ -320,6 +320,21 @@ test("rolls panel: the pointer over the panel holds a finished roll; leaving res
     assertFalse(NS.RollsPanel.HasBlocks())
 end)
 
+-- red under: the scroll body (which takes the pointer) leaving the panel without restarting the count
+test("rolls panel: leaving the panel from its scroll body restarts a held roll's count", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    win(m, d)
+    local p = NS.RollsPanel.Drawn().panel
+    p.__mouseOver = true
+    m.advance(15)
+    assertTrue(NS.RollsPanel.HasBlocks(), "held while hovered")
+    p.__mouseOver = false
+    p.scroll:__fire("OnLeave")
+    m.advance(10.1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the body's leave restarted the count")
+end)
+
 test("rolls panel: the close button hides it until the next roll starts", function()
     local NS, m = shown()
     rollOpens(m, "2900:1", LINK)
