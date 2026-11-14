@@ -51,7 +51,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | GLOW-1..13 | [Upgrade glow](#upgrade-glow) | The glow on an upgrade's icon (feedback-21): the main-spec glow on each of the three surfaces and nowhere else, the toast's icon never (GLOW-1, G9), the off-spec glow (GLOW-2), each style: Button (GLOW-3), Proc (GLOW-4), Pixel border (GLOW-5), Auto cast (GLOW-6), each glow turned off (GLOW-7), a style's knobs dimmed for another style (GLOW-8), Use class color (GLOW-9), the H6 defaults and the color rows main left, off-spec right (GLOW-10), every style on the LibKa0s-Glow-1.0 driver (GLOW-11, SM-DW-15); the Proc defaults, #19FF19 and #3FC7EB (GLOW-12, DW-03); only the chosen styles' sections drawn (GLOW-13, DW-04) |
 | ICON-1..5 | [Item icons](#item-icons) | Every item icon's look, Settings › Window › Icons (feedback-21 G11): the default look (H6: zoom 0.1, a Solid border, the skin's color since R5-ICON) and the tab's rows (ICON-1), Icon zoom on every surface (ICON-2), the border block with its Use class color and the glow over it (ICON-3), Color by item quality (ICON-4), Solid in the Border style list and a stored profile keeping its values (ICON-5) |
 | TMOG-1 | [Transmog](#transmog) | The look chip and the opt-in For transmog ask, with and without CanIMogIt (TMOG-1), DW-53 |
-| SIM-1..23 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIM` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6); `/dw sim roll` (SIM-22, DW-FP17); `/dw sim ml` and the master-loot ask (SIM-23, DW-FP18, DW-FP19) |
+| SIM-1..24 | [Simulator](#simulator) | Start and stop, the refusals, the automatic stop, nothing sent and saved history untouched (SIM-1, DW-70); a full `key` run and a `raid` run with a large roster, with the `SIM` title text, the footer and the `sim` diagnostics section (SIM-2..3, DW-73), the inspect replies, the lockdown queue and its flush (SIM-4, DW-72), your own drops' trade windows and a simulated trade into History (SIM-5, DW-72), the item pool from the Encounter Journal and its own-gear fallback (SIM-6, DW-71), the verbs' refusals and the automatic stop end to end (SIM-7, DW-73), real loot during a simulation kept and saved (SIM-8), a sim run that fills the window under the default filters, every step in chat, Raid Finder's instance chat and you online in a raid (SIM-9, DW-90), the step panel: its highlight following the run, a click ahead running the steps in between, Pause and Resume, Restart and Stop, the picker (SIM-10, DW-91), the step delay (SIM-11, DW-A7), the loot step saying where its drops went and the window reconciling with it (SIM-12, DW-B0), the loot step honoring test mode's feed (SIM-13, DW-B5; `feed.showOwn` retired by DW-E2); the session on LibKa0s-Sim-1.0 and its Restart stop line (SIM-14, DW-02), `/dw sim` through the library's grammar and its unknown-scenario line (SIM-15, DW-03), the library's step panel and its session-only position (SIM-16, DW-04); SIM-1..13 owed again on the library (DW-05); a started simulation playing on its own, Run all gone (SIM-17, DW-01); Master controls' Sim mode box beside Test mode (SIM-19, R6-SIM); the box and the launcher entry ticked while the panel is open or a sim runs (SIM-20, R7-SIM); `/dw sim drop <kind>` and the item kinds in a burst (SIM-21, DW-CAT6); `/dw sim roll` (SIM-22, DW-FP17); `/dw sim ml` and the master-loot ask (SIM-23, DW-FP18, DW-FP19); `/dw sim raid` (SIM-24, RX-19) |
 | COMPACT-1..11 | [Compact](#compact) | Compact mode (compact spec, M12): the title-bar toggle, `/dw compact` and `/dw full` swap the layouts, each remembering its own size and position, and the old preset migrates (COMPACT-1, DW-C0); the Drops cards in every state from test mode and `/dw sim`, the stacked detail card and the same drops in both layouts (COMPACT-2, DW-C2, DW-C5); your own cards, the countdown, Offer and the strip, the Offer panel docked beside (COMPACT-3, DW-C3, on Drops since DW-E3); History cards and their outcomes (COMPACT-4, DW-C3); the compact chrome and the Filters ▾ menu matching the full bar's choices (COMPACT-5, DW-C4); Open in compact view during a run opens an auto-open inside a key compact and the stored layout after it ends (COMPACT-6, DW-C0); the card tooltips at the card's top right, outside the window (COMPACT-7, DW-C2); the headers left aligned, LFR, each piece cut to its own limit (COMPACT-8, feedback-15); the strips as icons with Scan group, the chevron toggle and the bare empty state (COMPACT-9, feedback-16); the Filters menu closing on a press outside it (COMPACT-10, R5-DD); the Filters ▾ cascade of the full bar's own dropdowns (COMPACT-11, V89A-DW) |
 | LOC-1..2 | [Non-English client](#non-english-client) | What a deDE or frFR client changes: the loot lines, the trade-time decode, the track names (spec §15); the completed enUS catalog reading the same (LOC-2, DW-P19) |
 | SKIN-1..24 | [Skins](#skins) | The skinning rollout (DW-RV to DW-05, LibKa0s v1.80.0), re-vendored to LibKa0s v1.81.0 by the library follow-ups (DW-RV to DW-02, 2026-10-30): the load (SKIN-1); Ka0s Default's colors kept with its three visible changes, Oxanium, the title band and the scroll bars (SKIN-2); the icon border's one-time reset (SKIN-3, O2); the Skin tab (SKIN-4); each skin live on the window, the detail card, the Offer panel, History, compact, the toast, the tooltip lines, the verdict glyphs, the strips and the tool windows (SKIN-5..12); the settings panel and Ignore settings panel (SKIN-13); the icon border per skin (SKIN-14); fonts, overrides and Ignore fonts (SKIN-15..16); EllesmereUI on and off (SKIN-17..18); the first-run picker and its waits (SKIN-19..20); Copy to every Ka0s addon, profiles, combat, and what stays stock (SKIN-21..24) |
@@ -63,7 +63,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
-| ROLLS-1..11 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15) |
+| ROLLS-1..18 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -3302,6 +3302,17 @@ later the master looter hands the Epic to you or a member: the row leaves Rollin
 lands as a plain receipt under its boss, its History entry marked as asked. `/dw sim ml` without a
 running simulation → refused, nothing is held. Result:
 
+**SIM-24. `/dw sim raid` (RX-19; rolls panel design §3.6).** Client: both. `/dw sim` → the usage lists
+`/dw sim raid: a simulated 40-player raid roll on several items, to show the Rolls panel's raid mode.`
+among the host verbs. `/dw sim raid` without a running simulation → refused, nothing opens. `/dw sim
+start dungeon`, then `/dw sim raid` → *Simulated raid roll opened: 6 items, 40 players.*; Rolling now
+gains six rolls, up to four stand-ins stack mid-screen with their side cards, and the Rolls panel
+shows raid mode (ROLLS-15). The forty are you, the simulated group and invented raiders, every name
+apart and none numbered (on WoW Forever each a two-word name). The items close about two seconds
+apart, each won or everyone passing as `/dw sim roll`'s; a won one lands under its boss. The status
+line counts the six. `/dw sim stop` while they roll → the rolls and the stand-ins go at once; the
+panel's blocks read `done` and leave after the linger. Nothing is whispered and saved history is untouched (SIM-1). Result:
+
 ## Compact
 
 **COMPACT-1. The layout switch (DW-C0).** Client: both. With the window open in its full layout, hover the title bar's new
@@ -3789,8 +3800,8 @@ look for is a Lua error at login or a blank tooltip row. Result:
 ## Rolls
 
 Everyone's group-loot rolls (Forever port design §5 to §7). ROLLS-1 to ROLLS-7 are Retail's; the
-same checks on WoW Forever are FOREVER-10 to FOREVER-13. ROLLS-8 to ROLLS-11, the rolls UX round
-(2026-11-14), are both clients': record a result per client. The in-game reads the design leaves open (when the numbers appear, how
+same checks on WoW Forever are FOREVER-10 to FOREVER-13. ROLLS-8 to ROLLS-18, the rolls UX round
+(2026-11-14) and its Rolls panel (2026-11-15), are both clients': record a result per client. The in-game reads the design leaves open (when the numbers appear, how
 often the loot history fires, a trash roll's encounter, your popup's own timer, a Disenchant pick's state) are probes P-R1 to P-R7 in
 [`forever-probes.md`](forever-probes.md); run them alongside.
 
@@ -3908,6 +3919,76 @@ the catch-all on. A lockbox, a bag and a reagent rolled together with the defaul
 the bag show, the reagent does not. Untick Lockboxes → the next lockbox roll is not in the window,
 though the popup's card still reads its kind, and a bag still shows; tick it again and untick
 Containers → the next bag roll is not in the window, and a lockbox still shows. Result:
+
+ROLLS-12 to ROLLS-18 are the Rolls panel (rolls panel design, RX-17 to RX-19). The headless
+`test_rolls_panel` covers the rules; these checks are what it cannot see. Each runs on both clients
+(on WoW Forever a two-word name stays whole in the panel's rows, and no row reads Disenchant) and,
+where it names a layout, in both: the dungeon layout from `/dw sim start dungeon` then `/dw sim roll`
+(or a real party's roll), raid mode from `/dw sim raid` (SIM-24) or a real raid's roll.
+
+**ROLLS-12. The Rolls panel in a dungeon (RX-17; design §3.1, §3.2).** Client: both. With the window
+open on Drops, `/dw sim start dungeon`, then `/dw sim roll` → a panel titled `Rolls` docks right of
+the window, 3 px off it, top edges level, in the window's skin (its panel, edge, title band and close
+button). One block: the item's icon, its name in its quality color (a long one cut with `…`), the time
+left counting down each second with a thin bar under the header shrinking with it. A row per player:
+Need first, then Greed, Pass and still to roll (the hourglass), highest roll first in each, each mark
+the same art as Rolling now's count line, names in class color, `[YOU]` in gold on yours; your verdict
+at the foot (a lockbox or bag its kind word, neutral). Over the next seconds the rows move as the
+choices land; at the close the numbers show, the winner's row turns gold and `Won by <name> (<choice>
+<roll>)` appears under the rows, or `Everyone passed`, and the time reads `done`. `/dw sim roll` again
+while one is open → a second block under the first, both open. No button in the panel does anything
+but close it. Result:
+
+**ROLLS-13. The panel's side and its flip (RX-17; design §3.1; Review Focus 1).** Client: both. With a
+roll in the panel (ROLLS-12), drag the window toward the screen's right edge until the panel would
+leave the screen → it moves to the window's left, its top-right on the window's top-left; drag back →
+it returns right. Resize the window and change its Scale (Window › Layout) → the panel follows, as tall
+as its blocks, never taller than the window. Settings › Drops › Rolls › Panel › Side: Left → it docks
+left; near the left edge it flips right; the Side tooltip says it flips when there is no room. With a
+roll popup's side card and the Offer panel up (known limitation: the Offer panel on the panel's side
+overlaps it), note which frames touch. Result:
+
+**ROLLS-14. The linger and the hover (RX-17; design §3.4).** Client: both. Let a roll in the panel end
+→ it stays about 10 seconds with its result, then leaves; the last one leaving hides the panel. Rest
+the pointer on the panel as a roll ends and keep it there past 10 seconds → nothing leaves; move the
+pointer off (from the body, the scroll bar or the close button too) → the count starts over, about 10
+seconds from then. Keep a finished roll for: 0 → a finished roll leaves at once; 60 → about a minute.
+An auto-opened window (STATE-9, STATE-10) does not close while the panel holds a roll, and closes its
+own count later. Result:
+
+**ROLLS-15. Raid mode (RX-18; design §3.3).** Client: both. `/dw sim start dungeon`, then `/dw sim
+raid` → the title reads `Rolls · 6`; one block is open (the one you still have to roll on, else the
+one ending soonest) and the other five are one header each with the count line under the name. Need
+and Greed list every player; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
+→ a tooltip lists every name in class color, bulleted; click it → that block lists every player in the
+group. Click a closed header → it opens and stays open until its roll ends, then the rule picks again.
+A resolved block is a dimmed header reading its winner and roll, `done`. The body scrolls when the
+blocks pass the window's height, its bar shown only then; the frame rate holds while 40 players
+choose. Untick Fold Pass and Waiting in a raid → every player is a row. In a real raid (more than five
+members) a roll reads the same. Result:
+
+**ROLLS-16. The compact layout (RX-18; design §3.1).** Client: both. With a roll in the panel in each
+layout (ROLLS-12, ROLLS-15), `/dw compact` → the panel narrows (220 against the full layout's 250),
+stays docked to the compact window's side and flips the same way; names and the roll number never
+overlap, a long name cut with `…`; `/dw full` → it widens again. Result:
+
+**ROLLS-17. Minimized or closed, the close button and `/dw rolls` (RX-17; design §3.1, §3.4).**
+Client: both. With a roll in the panel, minimize the window → the panel hides; expand it → the panel
+returns with its rolls. Close the window → it hides; reopen it while the roll lingers → it returns; a
+roll starting with the window closed never shows the panel by itself (STATE-10's auto-open may open
+the window, and then the panel shows beside it). Click the panel's close (its tooltip says until the
+next roll starts) → it hides; a change to the same roll keeps it hidden; the next roll shows it.
+`/dw rolls` with no roll → an empty panel reading `No rolls right now`, which stays until closed or
+`/dw rolls` again; with the window closed → *The Rolls panel shows beside the window: open the window
+first.*; with Show the Rolls panel beside the window unticked → the line naming it, and no roll shows
+the panel. Result:
+
+**ROLLS-18. Test mode's sample in the panel (RX-19; design §3.6).** Client: both. With no roll on,
+`/dw test` → the window opens (or stays) with the sample roll in Rolling now, and the Rolls panel
+docks beside it with that roll: nine players, so raid mode (`Rolls · 1`, Pass and Waiting folded).
+`/dw test` off → the panel's sample leaves at once and the panel hides; `/dw test` on again → it is
+back. Hover the folded lines and the header: every tooltip is bulleted rows, no glyph boxes.
+Result:
 
 ## WoW Forever
 

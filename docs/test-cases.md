@@ -1957,7 +1957,7 @@ Total.
 - roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 
-### test_rolls_panel.lua (29)
+### test_rolls_panel.lua (30)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -1984,6 +1984,7 @@ Total.
 - rolls panel: a group of 6 is raid mode (one block open, titled Rolls · N); a group of 5 opens every block
 - rolls panel: raid mode opens your pending roll, else the soonest ending; a clicked header sticks until it resolves
 - rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
+- rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads
 - rolls panel: a dungeon group never folds
 - rolls panel: 40 players on 6 items fit, the body scrolls, and a repaint makes no frame
 - rolls panel: the compact layout is 220 wide, the full one 250
@@ -2537,7 +2538,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (26)
+### test_sim_pool.lua (27)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2561,12 +2562,13 @@ Total.
 - sim pool: the stop ends a waiting build, and a late event does nothing
 - sim roster: the random source replays a seed and stays in range
 - sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
+- sim roster: Raiders fills a 40-player raid past the group, every name and GUID apart, no unit
 - sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
 - sim roster: on Forever a member wears its bow in the ranged slot; Retail's order has no slot 18
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (31)
+### test_sim_events.lua (34)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2599,10 +2601,13 @@ Total.
 - sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it
 - sim ml: refused without a running simulation
 - sim roll: refused without a running simulation
+- sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving
+- sim raid: refused without a running simulation
+- sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout
 
 ### test_sim_scenario.lua (32)
 
-- sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's nine host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim scenario: Forever lists no key, lfr or delve
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
@@ -3002,7 +3007,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 16 |
-| test_rolls_panel.lua | 29 |
+| test_rolls_panel.lua | 30 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3029,8 +3034,8 @@ Total.
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 26 |
-| test_sim_events.lua | 31 |
+| test_sim_pool.lua | 27 |
+| test_sim_events.lua | 34 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
@@ -3051,4 +3056,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2525** |
+| **Total** | **2530** |

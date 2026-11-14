@@ -40,11 +40,14 @@ local _, NS = ...
 -- then).
 --
 -- RAID MODE (design §3.3, plan RX-18): a group of more than five (RollsPanelRows.IsRaid on
--- NS.Compat.GroupSize, read on every paint). The title reads `Rolls · N`; one block is open
--- (RollsPanelRows.PickOpen); the rest are headers with the count line, a resolved one dimmed with its
--- winner. A closed header the player clicks opens (`sticky`) until its roll is over; with
--- `rolls.panel.foldInRaid` on, Pass and Waiting are one line each, hovering lists every name, and a
--- click lists that group's players for that block (the block's `unfolded`).
+-- NS.Compat.GroupSize, read on every paint), or a watched roll of more than five players (a roll
+-- lists the group's players, so that many is a raid's too; RX-19: the simulated raid roll's raiders
+-- are no group's members, and test mode's sample roll is nine players with no group at all). The
+-- title reads `Rolls · N`; one block is open (RollsPanelRows.PickOpen); the rest are headers with
+-- the count line, a resolved one dimmed with its winner. A closed header the player clicks opens
+-- (`sticky`) until its roll is over; with `rolls.panel.foldInRaid` on, Pass and Waiting are one line
+-- each, hovering lists every name, and a click lists that group's players for that block (the
+-- block's `unfolded`).
 --
 -- THE LAYOUT. Every block open (the dungeon layout; raid mode opens one): the header (the
 -- item's icon, its name in its quality color, cut by the font string, the time left or `done`), the
@@ -466,10 +469,21 @@ local function pickOpen(now)
     return id
 end
 
+-- The most players on one block's roll table.
+local function mostRollers()
+    local n = 0
+    for _, b in ipairs(blocks) do
+        local roll = b.item.roll
+        local rows = type(roll) == "table" and type(roll.rolls) == "table" and #roll.rolls or 0
+        if rows > n then n = rows end
+    end
+    return n
+end
+
 -- What this paint draws: raid mode or not, its open block, the fold, the clock and the width.
 local function viewOf()
     local now = NS.Compat.LootHistoryNow()
-    local raid = NS.RollsPanelRows.IsRaid(NS.Compat.GroupSize())
+    local raid = NS.RollsPanelRows.IsRaid(math.max(num(NS.Compat.GroupSize()) or 0, mostRollers()))
     return { now = now, raid = raid, w = width(), openId = raid and pickOpen(now) or nil,
         fold = raid and NS.Setting("rolls.panel.foldInRaid") ~= false }
 end

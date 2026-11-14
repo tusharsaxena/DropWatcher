@@ -827,7 +827,7 @@ a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the p
   first free of four (RP.StandIn(n)), each next one stacked above the last
 ```
 
-## The Rolls panel (rolls panel design, RX-17, RX-18)
+## The Rolls panel (rolls panel design, RX-17 to RX-19)
 
 ```
 PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() less kind `ml`
@@ -837,7 +837,8 @@ PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() les
   done ─> rolls.panel.linger s (0: at once) ─> leaves, unless the pointer is over the panel (held:
     the panel's OnLeave counts every finished block again) ─> the last one ─> WindowAutoClose.Bump
 paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
-  ─> raid mode? (RollsPanelRows.IsRaid on Compat.GroupSize: more than 5) ─> the open block
+  ─> raid mode? (RollsPanelRows.IsRaid on the larger of Compat.GroupSize and the most players on one
+    block's roll: more than 5) ─> the open block
     (RollsPanelRows.PickOpen: a clicked header while its roll runs, else your pending roll, else the
     soonest ending); the rest headers with the count line, a resolved one dimmed with its result;
     rolls.panel.foldInRaid ─> Pass and Waiting one line each (RollsPanelRows.Fold), a click unfolds
@@ -847,6 +848,8 @@ paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a
     while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
 WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
+test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
+/dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
 ```
 
 ## Opening a trade (design spec §4)

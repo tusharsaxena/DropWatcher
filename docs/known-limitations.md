@@ -176,8 +176,11 @@ the code reads every case the design leaves open, module by module, is in
   its tooltip says it needs Auto-open the window (options-ui-§21).
 - **The Rolls panel's width and raid mode's group size.** The panel is 250 wide (220 in the compact
   layout) in the window's units whatever the font size. Raid mode reads the group's size
-  (`GetNumGroupMembers`) on each repaint, so a group crossing five members between rolls switches
-  layout on the next repaint (a roll change or the one-second ticker). An unfolded Pass or Waiting
+  (`GetNumGroupMembers`) and the most players on one watched roll on each repaint, so a group
+  crossing five members between rolls switches layout on the next repaint (a roll change or the
+  one-second ticker). A roll of more than five players is raid mode whatever the group's size reads:
+  test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
+  party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. An unfolded Pass or Waiting
   group stays unfolded for that block; there is no click to fold it again.
 - **The Rolls panel and the Offer panel on one side.** Both dock beside the window; with the Offer
   panel open on the side the Rolls panel takes, the two overlap until one closes.

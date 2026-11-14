@@ -792,3 +792,69 @@ test("sim roll: refused without a running simulation", function()
     local roll, why = NS.SimEvents.Roll()
     assertNil(roll); assertEqual(why, "notRunning")
 end)
+
+-- The Rolls panel's two layouts from the simulator (rolls panel design §3.6, plan RX-19): `/dw sim
+-- raid` is a 40-player roll on several items, past the simulated group, which shows raid mode.
+-- red under: no `raid` host verb (E.Raid)
+test("sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving", function()
+    local NS, m, members = sim()
+    local E, P = NS.SimEvents, NS.Pending
+    NS.addon:OnSlashCommand("sim raid")
+    m.advance(0)
+    assertEqual(printed(m, ("Simulated raid roll opened: %d items, %d players."):format(E.RAID_ITEMS, E.RAID_PLAYERS)), 1)
+    local items = P.All()
+    assertEqual(#items, E.RAID_ITEMS, "one pending roll per item")
+    assertTrue(E.RAID_ITEMS > 1 and E.RAID_PLAYERS == 40)
+    local group = {}
+    for _, mem in ipairs(members) do group[mem.guid] = true end
+    for _, item in ipairs(items) do
+        local rolls, names, inGroup = item.roll.rolls, {}, 0
+        assertEqual(#rolls, E.RAID_PLAYERS, "you, the group and the raiders")
+        for _, r in ipairs(rolls) do
+            assertNil(names[r.name], "every name apart: " .. tostring(r.name)); names[r.name] = true
+            if group[r.guid] then inGroup = inGroup + 1 end
+            if not r.isSelf then assertTrue(NS.SimHost.IsSimGUID(r.guid), "a simulated GUID") end
+        end
+        assertEqual(inGroup, #members, "the group rolls too")
+    end
+    assertEqual(E.Status().rolls.started, E.RAID_ITEMS)
+    -- The closes come one after another; by the last every roll is over.
+    m.advance(E.ROLL_CLOSE + (E.RAID_ITEMS - 1) * E.RAID_STAGGER + 1)
+    for _, item in ipairs(P.All()) do assertTrue(item.state ~= "open", "every roll over") end
+    local st = E.Status().rolls
+    assertEqual(st.won + st.allPassed, E.RAID_ITEMS)
+    local raider = items[1].roll.rolls[#items[1].roll.rolls]
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(NS.SimHost.IsSimGUID(raider.guid), "the stop forgets the raiders")
+end)
+
+test("sim raid: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local rolls, why = NS.SimEvents.Raid()
+    assertNil(rolls); assertEqual(why, "notRunning")
+end)
+
+-- red under: the panel's raid mode read from the group's size alone (a simulated party of five)
+test("sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout", function()
+    local NS, m = sim()
+    NS.ShowWindow()
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local d = NS.RollsPanel.Drawn()
+    assertTrue(NS.RollsPanel.IsShown(), "the roll shows the panel")
+    assertFalse(d.raid, "a party's roll: the dungeon layout")
+    assertEqual(d.panel.title:GetText(), "Rolls")
+    m.advance(NS.SimEvents.ROLL_CLOSE + NS.Setting("rolls.panel.linger") + 1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the roll left after its linger")
+    NS.addon:OnSlashCommand("sim raid")
+    m.advance(0)
+    d = NS.RollsPanel.Drawn()
+    assertTrue(d.raid, "40 rollers: raid mode")
+    assertEqual(d.panel.title:GetText(), "Rolls · " .. #d.blocks)
+    local open = 0
+    for _, h in ipairs(d.headers) do if h.open then open = open + 1 end end
+    assertEqual(open, 1, "one block open")
+    NS.Sim:Stop()
+    m.advance(0)
+end)

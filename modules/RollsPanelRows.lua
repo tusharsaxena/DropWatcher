@@ -14,7 +14,7 @@ local _, NS = ...
 -- tone). `open` says whether its rows show: every block in a dungeon; raid mode closes all but one.
 --
 -- RAID MODE (design §3.3, plan RX-18) is a group of more than RPR.RAID_OVER members (RPR.IsRaid, on
--- NS.Compat.GroupSize). One block is open (RPR.PickOpen: a header the player clicked while its roll
+-- NS.Compat.GroupSize, or on the most players on one watched roll: RX-19, modules/RollsPanel.lua). One block is open (RPR.PickOpen: a header the player clicked while its roll
 -- runs, else the roll you still have to roll on, else the one ending soonest); the rest are headers
 -- with the count line (RollCells.CountLine) under the name, a resolved one dimmed with its result
 -- (the winner and the roll) in the count line's place. With `rolls.panel.foldInRaid` on, Pass and
@@ -59,13 +59,14 @@ local function rowOf(r, g)
     return { mark = mark, text = text, roll = r.roll, winner = r.winner == true, isSelf = r.isSelf == true, group = g.key }
 end
 
--- A folded group's tooltip: its word and count, then every name in class color, RPR.TIP_NAMES a line.
+-- A folded group's tooltip: its word and count, then every name in class color, RPR.TIP_NAMES a
+-- row (the tooltip row shape: a bulleted row with no label, then the closing hint).
 local function foldTip(g, rows)
     local tip, line = { ("%s (%d)"):format(g.word, #rows) }, {}
     for i, r in ipairs(rows) do
         line[#line + 1] = NS.TipMarks.ClassName(r.name, r.classFile)
         if #line == RPR.TIP_NAMES or i == #rows then
-            tip[#tip + 1] = table.concat(line, ", ")
+            tip[#tip + 1] = NS.TipMarks.Row(nil, table.concat(line, ", "))
             line = {}
         end
     end

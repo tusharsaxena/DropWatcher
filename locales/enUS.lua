@@ -279,6 +279,9 @@ L["Simulated trade completed for drop %d."] = "Simulated trade completed for dro
 -- The simulated group-loot rolls (DW-FP17: settings/SimVerbs.lua, modules/SimReport.lua, modules/SimPanel.lua)
 L["Simulated roll opened: %s, %d players."] = "Simulated roll opened: %s, %d players."
 L["%s roll: a simulated group-loot roll, chosen and won over the next seconds."] = "%s roll: a simulated group-loot roll, chosen and won over the next seconds."
+L["Simulated raid roll opened: %d items, %d players."] = "Simulated raid roll opened: %d items, %d players."
+L["%s raid: a simulated 40-player raid roll on several items, to show the Rolls panel's raid mode."] =
+    "%s raid: a simulated 40-player raid roll on several items, to show the Rolls panel's raid mode."
 -- settings/SimVerbs.lua: master loot (DW-FP19)
 L["Simulated master loot: %s, waiting for %s."] = "Simulated master loot: %s, waiting for %s."
 L["%s ml: an Epic waiting for a simulated master looter, handed out after a while."] =

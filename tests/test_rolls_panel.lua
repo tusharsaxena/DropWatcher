@@ -346,7 +346,8 @@ test("rolls panel: the close button hides it until the next roll starts", functi
     assertTrue(NS.RollsPanel.IsShown(), "the next roll shows it")
 end)
 
--- red under: settle() lingering a test sample the store dropped, and `left` keeping its recycled id
+-- red under: settle() lingering a test sample the store dropped, `left` keeping its recycled id, or
+-- test mode not refreshing the panel (RX-19)
 test("rolls panel: test mode's samples leave at once when it ends, and show again when it comes back", function()
     local NS, m = shown()
     m.seedGearJournal()
@@ -356,15 +357,14 @@ test("rolls panel: test mode's samples leave at once when it ends, and show agai
         fn()
         m.print = p
     end
-    -- RX-19 wires test mode to the panel; here any later PendingChanged reads the samples in
+    -- test mode fills the panel on its own (RX-19): no Refresh here
     quietly(function() NS.SetTestMode(true) end)
-    NS.RollsPanel.Refresh()
+    assertTrue(NS.RollsPanel.IsShown(), "test mode shows the panel")
     local n = #NS.RollsPanel.Drawn().blocks
     assertTrue(n > 0, "test mode's samples fill the panel")
     quietly(function() NS.SetTestMode(false) end)
     assertFalse(NS.RollsPanel.HasBlocks(), "no linger for samples the store dropped")
     quietly(function() NS.SetTestMode(true) end)
-    NS.RollsPanel.Refresh()
     assertEqual(#NS.RollsPanel.Drawn().blocks, n, "the samples' recycled ids join again")
     quietly(function() NS.SetTestMode(false) end)
 end)
@@ -565,6 +565,17 @@ test("rolls panel: in a raid Pass and Waiting fold to a line each, hovering list
     NS.RollsPanel.Refresh()
     assertEqual(#lines(NS), 10, "the setting off lists all nine players")
     assertTrue(foldOf(NS, "waiting") == nil)
+end)
+
+-- red under: raid mode read from the group's size alone
+test("rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads", function()
+    local NS, m = shown()
+    groupOf(m, 5)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 2, 2, 1, 1))   -- six rollers, you among them
+    local d = NS.RollsPanel.Drawn()
+    assertTrue(d.raid, "six on the roll: a raid's")
+    assertEqual(d.panel.title:GetText(), "Rolls · 1")
+    assertTrue(NS.RollsPanelRows.IsRaid(6) and not NS.RollsPanelRows.IsRaid(5))
 end)
 
 test("rolls panel: a dungeon group never folds", function()

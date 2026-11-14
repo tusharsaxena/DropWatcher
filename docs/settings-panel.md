@@ -272,12 +272,14 @@ Alerts page holds the toast's rows. The owner can move it at the merge gate.
 (`rolls.panel.enabled`, on), **Side** (`rolls.panel.side`, a Right / Left dropdown; its tooltip says it
 flips when the screen has no room), **Keep a finished roll for (seconds)** (`rolls.panel.linger`, a 0
 to 60 slider, whole seconds, default 10) and **Fold Pass and Waiting in a raid**
-(`rolls.panel.foldInRaid`, on; raid mode, a group of more than 5, RX-18: each folded line lists every
-name on hover and every player on a click). The three sub-rows dim while the panel is off,
+(`rolls.panel.foldInRaid`, on; raid mode, a group of more than 5 or a roll of more than 5 players,
+RX-18, RX-19: each folded line lists every name on hover and every player on a click). The three sub-rows dim while the panel is off,
 each tooltip ending "Needs Show the Rolls panel beside the window." (options-ui-§21). A change
 repaints the panel. The design named the subsection `Rolls panel`; it is `Panel`, because a
 subsection never restates its tab's name (options-ui-§7), and the location strings read
-`Drops > Rolls > Panel`.
+`Drops > Rolls > Panel`. To see the rows act without a group (RX-19): `/dw test` fills the panel
+with test mode's sample roll (nine players, so raid mode), `/dw sim start dungeon` then `/dw sim roll`
+shows the dungeon layout, and `/dw sim raid` a 40-player roll on six items in raid mode.
 
 ## Comparison
 
