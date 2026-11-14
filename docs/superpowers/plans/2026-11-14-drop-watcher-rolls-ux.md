@@ -134,3 +134,34 @@ Lockbox, Container and Other loot as separate labels.
 - Tests: a roll for a watched item opens the window when closed; an unwatched (filtered) roll does not; situation
   Auto-open off or master off does not; an ML hold does not; auto-close arms and does not close while the roll runs;
   a window already open keeps its tab.
+
+## M7 — The Rolls panel (2026-11-15)
+
+Spec: `docs/superpowers/specs/2026-11-15-drop-watcher-rolls-panel-design.md` (owner signed off the mockup
+https://claude.ai/artifact/72o22p9d8Q8wnqEdbKMcyF with every recommended answer). The panel lives in its own
+module(s); Window.lua only exposes what the panel needs to dock (frame, layout, shown/minimized state).
+
+### RX-17: The panel, docked, in a dungeon
+- Spec §3.1, §3.2, §3.4, §3.5: owned frame docked right/left with the off-screen flip; skin and title bar; close
+  button; dungeon layout (all blocks open, per-player rows grouped and sorted, `[YOU]`, verdict foot, winner
+  highlight and result line); lifecycle (first watched roll shows it, linger 0–60 s, hover holds, hides with the
+  window closed/minimized; WindowAutoClose not idle while the panel has blocks); settings rows and defaults;
+  `/dw rolls`.
+- Tests: docks right, flips left near the right edge, Left setting; shows on a watched roll, not on a filtered one,
+  not with the window closed; rows grouped and sorted with `[YOU]`; Disenchant Retail only; winner highlight and
+  result line; a block leaves after linger, 0 at once; hover holds; auto-close waits while the panel lingers;
+  setting off shows nothing; `/dw rolls` toggles.
+
+### RX-18: Raid mode
+- Spec §3.3: group > 5 members; one block open, rest headers; the open rule (your pending roll, else soonest ending;
+  a clicked header sticks until it resolves); folded Pass/Waiting lines with a hover tooltip and click to unfold;
+  a resolved block dims to a header with the winner; the body scrolls; title "Rolls · N"; compact layout width 220;
+  rows from a pool. A perf scenario for a 40-player, 6-item roll refresh, with a ceiling recorded from its first
+  measurement.
+- Tests: a 6-member group uses raid mode, 5 does not; the open rule and sticky click; fold and unfold; 40 players
+  fit with no frame created per refresh; compact width.
+
+### RX-19: Simulation, test mode and docs
+- Spec §3.6: test mode fills the panel; `/dw sim roll` adds a dungeon roll; `/dw sim raid` starts a 40-player
+  simulated roll with several items. README Usage, ARCHITECTURE, module-map, schema.md, settings-panel.md,
+  smoke-tests.md (checks for both clients and both layouts), slash surface.
