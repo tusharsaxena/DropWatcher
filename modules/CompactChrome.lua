@@ -6,7 +6,8 @@ local _, NS = ...
 --
 --   title bar   `Drop Watcher` centered, alone while a mode's strip marks the mode; `TEST` / `SIM`
 --               beside it in their red and cyan only while minimized or with no strip; the
---               restriction badge its lock and the queued count, at the left; the layout toggle,
+--               lock button at the left (RX-08), the restriction badge its lock and the queued
+--               count beside it; the layout toggle,
 --               minimize and close at the right (Scan group is the Drops strip's icon, feedback-16)
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu lists
@@ -392,7 +393,7 @@ local function layoutTitleBar(f, compact)
     f.badge:ClearAllPoints()
     if compact then
         f.badge:SetWidth(CC.BADGE_W)
-        f.badge:SetPoint("LEFT", f.titleBar, "LEFT", 6, 0)
+        f.badge:SetPoint("LEFT", f.lockButton, "RIGHT", 4, 0)
     else
         f.badge:SetWidth(170)
         f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)

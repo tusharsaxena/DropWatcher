@@ -142,6 +142,11 @@ local function decorateText(f)
         return c[1], c[2], c[3], c[4]
     end
     f.SetTexture = function(self, tex) self.__texture = tex; return self end
+    -- A region's alpha and desaturation (the header lock mark's unlocked look, RX-08).
+    f.SetAlpha = function(self, a) self.__alpha = a; return self end
+    f.GetAlpha = function(self) return self.__alpha or 1 end
+    f.SetDesaturated = function(self, on) self.__desaturated = on and true or false; return self end
+    f.IsDesaturated = function(self) return self.__desaturated == true end
     -- A color texture (a stripe, a wash, a rule; the skin's colors since DW-02), as given.
     f.SetColorTexture = function(self, r, g, b, a) self.__colorTexture = { r, g, b, a }; return self end
     f.GetTexture = function(self) return self.__texture end

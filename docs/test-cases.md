@@ -433,7 +433,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (64)
+### test_window_shell.lua (68)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -481,6 +481,10 @@ Total.
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
 - shell: a double-click on the title bar expands a minimized window
+- shell: the lock button sits at the title bar's left, dimmed while unlocked, apart from the badge
+- shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both
+- shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip
+- shell: the grip shows only while the window is expanded and unlocked
 - shell: minimized, the corner grip does not resize and the stored size is kept
 - shell: a minimized window comes back minimized after a settings repaint
 - shell: minimize and expand keep the title bar in place, whatever point it was saved at
@@ -623,7 +627,7 @@ Total.
 - history card: shows the rolls rows
 - history card: a repaint reads each kept roll table back once, reusing it until the roll moves
 
-### test_compact_chrome.lua (28)
+### test_compact_chrome.lua (29)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIM shorten to TEST and SIM
@@ -636,7 +640,8 @@ Total.
 - chrome: compact and minimized in test mode, TEST shows beside the title and the two center together
 - chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line
 - chrome: the panes reserve the sim strip's height while a simulation runs
-- chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
+- chrome: the badge collapses to its lock and the queued count at the left (after the lock button), its tooltip unchanged
+- chrome: the lock button stays at the left in compact, the badge beside it; a click locks
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
 - chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
@@ -2866,13 +2871,13 @@ Total.
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 64 |
+| test_window_shell.lua | 68 |
 | test_window_compact.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
 | test_history_card.lua | 17 |
-| test_compact_chrome.lua | 28 |
+| test_compact_chrome.lua | 29 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 53 |
 | test_table_font.lua | 10 |
@@ -2972,4 +2977,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2454** |
+| **Total** | **2459** |

@@ -4,7 +4,7 @@ local _, NS = ...
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
 -- simulator's `SIM` text in its own color (simulator spec §6), each drawn only while minimized
 -- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
--- restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
+-- lock button at the left (RX-08, rolls UX design §3.7), the restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
 -- through NS.Window.SetButtonMark). Scan group is the Drops strip's in both layouts
 -- (modules/DropsStrip.lua, feedback-7 spec §4; compact's title-bar icon removed by feedback-16), and
@@ -91,6 +91,17 @@ local function minimizeTip()
     end
     return L["Minimize"], TM.Row(L["Collapses"], L["the window to its title bar"]), TM.Row(L["Position"], L["kept"]),
         TM.Row(L["Counter"], L["the drops that arrive meanwhile"])
+end
+
+-- The lock button's tooltip (RX-08): what a click does, its verb and the setting it writes.
+local function lockTip()
+    local TM = NS.TipMarks
+    if NS.Window.IsLocked() then
+        return L["Unlock the window"], TM.Row(L["Lets"], L["it be dragged and resized again"]),
+            TM.Row(L["Typed"], L["/dw unlock"]), TM.Row(L["Stored as"], L["General, Lock frame"])
+    end
+    return L["Lock the window"], TM.Row(L["Keeps"], L["it from being dragged or resized"]),
+        TM.Row(L["Typed"], L["/dw lock"]), TM.Row(L["Stored as"], L["General, Lock frame"])
 end
 
 -- The layout toggle's tooltip: what a click switches to, and the setting that stores it.
@@ -328,8 +339,22 @@ local function buildNewChip(f, bar)
     f.newChip:Hide()
 end
 
+--- The lock mark's strength while unlocked (RX-08): the catalog has no unlock mark, so the one
+--- lock mark reads unlocked dimmed and desaturated, locked at full strength.
+TB.UNLOCKED_ALPHA = 0.4
+
+-- The lock button at the bar's left (RX-08, rolls UX design §3.7), the same in both layouts. A
+-- click toggles `locked` through the write seam (NS.ToggleLock, the launcher's and the Lock frame
+-- checkbox's write). Not the restriction badge, which wears the same mark in the restricted tone.
+local function buildLock(f, bar)
+    f.lockButton = iconButton(bar, "lock", "L", function() NS.ToggleLock() end)
+    f.lockButton:SetPoint("LEFT", bar, "LEFT", 6, 0)
+    NS.Window.AttachTooltip(f.lockButton, lockTip)
+end
+
 local function buildControls(f, bar)
     local W = NS.Window
+    buildLock(f, bar)
     f.closeButton = NS.MakeCloseButton(bar, function() W.Close() end)
     local right, rightPoint = bar, "RIGHT"
     if f.closeButton then
@@ -349,7 +374,7 @@ local function buildControls(f, bar)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
---- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
+--- f.newChip, f.lockButton, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
 --- anchor under the bar). The drag goes through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
@@ -370,7 +395,9 @@ function TB.Build(f, host)
     f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
-    NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
+    -- A LEFT title stays clear of the lock button too (RX-08).
+    NS.Skin.TitleBar(bar, { text = f.title,
+        place = { left = TB.TITLE_RESERVE + K.ICON + 6, right = TB.TITLE_RESERVE } })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
     f.simText = buildModeText(bar, f.title, L["SIM"], TB.SIM_TOKEN, TB.SimTip)
@@ -431,4 +458,17 @@ function TB.PaintMinimized(f, minimized, newCount)
     end
     f.newChip.text:SetText(L["%d new"]:format(newCount))
     f.newChip:SetShown(minimized and newCount > 0)
+end
+
+--- The lock button's state (RX-08): the lock mark at full strength while locked, dimmed and
+--- desaturated while unlocked. Its tooltip reads the state when shown.
+--- @param f table the window frame
+--- @param locked boolean
+function TB.PaintLock(f, locked)
+    local b = f.lockButton
+    if not b or b.dwLocked == locked then return end
+    b.dwLocked = locked
+    b.art:SetAlpha(locked and 1 or TB.UNLOCKED_ALPHA)
+    if b.art.SetDesaturated then b.art:SetDesaturated(not locked) end
+    b.glyph:SetAlpha(locked and 1 or TB.UNLOCKED_ALPHA)
 end

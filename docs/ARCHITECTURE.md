@@ -394,7 +394,7 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
 - **Headers on the band (R5-WIN, LibKa0s v1.85.0's `S.Band` and `S.Header`).** Every window's
   header sits on the title band S.Shell lays, flush inside the edge at its inset (`win.borderSize`
   in from a flat edge, else 1) and `title.height` high, as Ka0s Loot History's. The main window's
-  title bar takes the band's rect (`S.Header` `bars`), so its title, mode words, badge and
+  title bar takes the band's rect (`S.Header` `bars`), so its title, mode words, lock button (RX-08), badge and
   controls, anchored to the bar at y 0, sit on the band's middle; minimized, the window is the band
   and its two edges. The Offer panel and the Edit message box keep the band S.Shell draws, put
   their title (by `title.align`) and close on it through `S.Header`, and start their content

@@ -84,7 +84,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `enabled` | `true` | Master controls; `/dw enable|disable`, the launcher | the master switch; `false` takes the latch's `disabled` hold |
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
-| `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
+| `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher, the title bar's lock button (RX-08) | the window cannot be dragged or resized; its resize grip is hidden |
 | `char.role` | `"auto"` | Role (WoW Forever alone) | the role your gear is judged for: `auto`, `tank`, `healer` or `damage`; stored per character as `db.char.role.override` (no profile key; see the closure rows above), and on a Druid the Feral Pawn scale (2 for Damage, 3 for Tank, Forever port design §11.4) |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |

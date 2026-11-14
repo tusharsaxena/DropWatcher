@@ -684,8 +684,10 @@ end
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
-    if frame.resizeGrip then frame.resizeGrip:SetShown(not m) end
+    -- The grip shows only while the window can be resized: expanded and unlocked (RX-08).
+    if frame.resizeGrip then frame.resizeGrip:SetShown(not m and not isLocked()) end
     NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
+    NS.WindowTitleBar.PaintLock(frame, isLocked())
 end
 
 --- One repaint pass: the title bar's badge and counter, the tabs, and (expanded) the mode strips, the
@@ -841,6 +843,10 @@ function Window.ToggleMinimized() Window.SetMinimized(not isMinimized()) end
 
 --- @return boolean
 function Window.IsMinimized() return isMinimized() end
+
+--- Whether `locked` (Lock frame, `/dw lock`) holds the window in place: no drag, no resize grip.
+--- @return boolean
+function Window.IsLocked() return isLocked() end
 
 --- The interesting drops counted since the window was minimized.
 --- @return number

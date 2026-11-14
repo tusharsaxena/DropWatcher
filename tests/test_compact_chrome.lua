@@ -178,13 +178,13 @@ test("chrome: the panes reserve the sim strip's height while a simulation runs",
     assertEqual(f.panes.group.__points[1][5], base)
 end)
 
-test("chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged", function()
+test("chrome: the badge collapses to its lock and the queued count at the left (after the lock button), its tooltip unchanged", function()
     local NS, f, m = shown("compact")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
     m.advance(0)
     assertTrue(f.badge:IsShown())
     assertEqual(textOf(f.badge.text), "", "the lock alone")
-    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], f.titleBar)
+    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], f.lockButton)
     NS.Asks.Queued = function() return { { kind = "ask", target = "Seta-Realm" }, { kind = "offer", target = "Bo-Realm" } } end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
     assertEqual(textOf(f.badge.text), "2")
@@ -193,6 +193,23 @@ test("chrome: the badge collapses to its lock and the queued count at the left, 
     NS.SetWindowMode("full")
     assertEqual(textOf(f.badge.text), "Encounter · 2 queued")
     assertEqual(f.badge.__points[1][2], f.modeButton, "back beside the layout toggle (Scan group is the strip's)")
+end)
+
+test("chrome: the lock button stays at the left in compact, the badge beside it; a click locks", function()
+    -- RX-08 (rolls UX design §3.7): the same button in both layouts.
+    local NS, f, m = shown("compact")
+    local b = f.lockButton
+    assertEqual(b.__points[1][1], "LEFT"); assertEqual(b.__points[1][2], f.titleBar)
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    m.advance(0)
+    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], b)
+    assertEqual(f.badge.__points[1][3], "RIGHT", "the badge after the lock button, never under it")
+    b:__fire("OnClick", "LeftButton")
+    assertEqual(NS.addon.db.profile.locked, true)
+    assertFalse(f.resizeGrip:IsShown())
+    NS.SetWindowMode("full")
+    assertEqual(b.__points[1][2], f.titleBar, "full: still at the left")
+    assertEqual(f.badge.__points[1][2], f.modeButton)
 end)
 
 test("chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon", function()

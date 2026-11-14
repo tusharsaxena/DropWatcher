@@ -77,7 +77,8 @@ already refuse each other (`core/DropWatcher.lua`, `modules/Sim.lua`), so the bo
 their own.
 
 The launcher's right-click menu mirrors five of these: Enabled, Locked, Test mode, Sim mode and Show window
-(launcher-§2). Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
+(launcher-§2). Lock frame has a third surface in the window itself: the title bar's lock button
+(RX-08), which toggles `locked` through the same seam. Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
 Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
 on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
 `DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults is the global
