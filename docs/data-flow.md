@@ -55,8 +55,9 @@ auto-open made: the auto-open arms it after its `Window.Open`, and every `Window
 `Window.Close` disarms it first, so a manual show never closes by itself. Armed, one
 `C_Timer.NewTimer` of `window.autoClose.seconds` runs; `DropAdded`, `PendingChanged` and the pointer
 entering or leaving the frame or any frame under it start it over (so it closes a full count after
-the pointer left, RX-12). At its end, the frame on screen, Rolling now empty
-(`Pending.Count` of the shown feed) and the pointer elsewhere, it calls `Window.Close`; otherwise it
+the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a
+roll (`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
+does not count, RX-12) and the pointer elsewhere, it calls `Window.Close`; otherwise it
 starts over. A window the visibility ladder hides (General visibility in or out of combat) keeps the
 player's open and is not closed: the count waits, and starts over when the window shows (a
 visibility listener), so the auto-open is not lost to a long fight (RX-12). A

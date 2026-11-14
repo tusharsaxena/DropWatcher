@@ -127,6 +127,7 @@ test("autoclose: while Rolling now holds an item it waits, and a roll or pending
     local NS, m = autoOpened()
     local held = 1
     NS.Pending.Count = function() return held end
+    NS.Pending.All = function() return held > 0 and { { id = 7, kind = "roll" } } or {} end
     NS.addon:SendMessage(NS.MSG.PENDING_CHANGED, 7, "open")
     m.advance(25)
     assertTrue(NS.IsWindowShown(), "something is rolling: no close")
@@ -299,4 +300,22 @@ test("autoclose: the hooks skip a frame that does not take the mouse", function(
     live:__fire("OnMouseDown", "LeftButton")
     m.advance(60)
     assertTrue(NS.IsWindowShown(), "a press on the mouse-enabled frame cancels it")
+end)
+
+-- RX-12 review fix: ruling 4 waits on something rolling. A master-loot item awaiting the master
+-- looter (modules/PendingML.lua, held up to 900 s) is in the same store but is not a roll.
+-- red under: idle reading Pending.Count alone (the held greens kept the window up for 15 minutes)
+test("autoclose: a master-loot item awaiting the master looter does not hold the window open", function()
+    local NS, m = autoOpened()
+    local items = { { id = 9, kind = "ml", state = "awaiting" } }
+    NS.Pending.Count = function() return #items end
+    NS.Pending.All = function() return items end
+    m.advance(10.1)
+    assertFalse(NS.IsWindowShown(), "nothing rolls: it closes")
+    local NS2, m2 = autoOpened()
+    local mixed = { { id = 9, kind = "ml", state = "awaiting" }, { id = 10, kind = "roll" } }
+    NS2.Pending.Count = function() return #mixed end
+    NS2.Pending.All = function() return mixed end
+    m2.advance(30)
+    assertTrue(NS2.IsWindowShown(), "a roll beside it still holds it")
 end)

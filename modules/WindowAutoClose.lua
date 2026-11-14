@@ -11,8 +11,8 @@ local _, NS = ...
 -- A new drop (DropAdded) and a roll or pending item opening, changing or closing (PendingChanged)
 -- start it over; so does the pointer entering or leaving the frame or any frame under it (OnEnter
 -- and OnLeave hooks), so the window closes a full count after the pointer left it.
--- When it runs out it closes the window only while Rolling now is empty (NS.Pending.Count of the
--- shown feed) and the pointer is not over it; otherwise it starts over, so the window closes a full count after the last
+-- When it runs out it closes the window only while nothing in Rolling now is a roll (a master-loot
+-- item awaiting the master looter does not count) and the pointer is not over it; otherwise it starts over, so the window closes a full count after the last
 -- roll closed or the pointer left. `window.autoClose.enabled` off, or the master `autoOpen` off, and
 -- the count lets go when it runs out. Combat does not matter: the close is a Hide of an owned frame
 -- with no protected child (events-frames-taint), the same as the auto-open's Show. A window the
@@ -51,12 +51,24 @@ local function restart()
     if armed then timer = C_Timer.NewTimer(seconds(), function() fire() end) end
 end
 
--- On screen, nothing in Rolling now, and the pointer elsewhere. A window the visibility ladder
+-- Whether anything in the shown feed's pending store is a roll. A master-loot item awaiting the
+-- master looter (kind `ml`, modules/PendingML.lua, held up to 900 s) is listed in Rolling now but
+-- rolls nothing, so it does not hold the window open (ruling 4: "after nothing is rolling").
+local function rolling()
+    local feed = NS.Window.FeedName()
+    if NS.Pending.Count(feed) == 0 then return false end   -- the common case builds no list
+    for _, item in ipairs(NS.Pending.All(feed)) do
+        if item.kind ~= "ml" then return true end
+    end
+    return false
+end
+
+-- On screen, nothing rolling, and the pointer elsewhere. A window the visibility ladder
 -- hides (General visibility, in or out of combat) keeps NS.State.windowOpen true and is not idle:
 -- it waits, and the count starts over when it shows (the visibility listener below).
 local function idle(f)
     if not (f and f:IsShown()) then return false end
-    if NS.Pending.Count(NS.Window.FeedName()) > 0 then return false end
+    if rolling() then return false end
     return not (f and f:IsMouseOver())
 end
 
