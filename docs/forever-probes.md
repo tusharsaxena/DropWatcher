@@ -185,13 +185,14 @@ Expected `true` and the ranged item's or relic's link: slot 18 is `C.SLOT.RANGED
 Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5) Result:
 
 **P-BOX. A lockbox's tooltip lines.** On both clients, link a lockbox (a Junkbox, or a Heavy or
-Ornate Bronze Lockbox), the same lockbox once picked, and a bag:
+Ornate Bronze Lockbox), the same lockbox once picked, a bag and, on Forever, a quiver and an ammo pouch:
 `/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
 then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
-The code (rolls UX RX-04, `Compat.ItemOpens`) takes any Container-class item (class 1) as a bag,
-`Container`, and a Miscellaneous Junk item (class 15, subclass 0) as a container only when one of
-its lines is exactly `LOCKED` (a lockbox, `Lockbox`) or `ITEM_OPENABLE` (`<Right Click to Open>`,
-`Container`). Read whether both globals exist, the class and subclass each item answers, whether a
+The code (rolls UX RX-04, RX-15, `Compat.ItemOpens`) takes any Container-class item (class 1) and
+any Quiver-class item (class 11: quivers and ammo pouches) as a container, `Container`, and a
+Miscellaneous Junk item (class 15, subclass 0) as a lockbox, `Lockbox`, only when one of its lines
+is exactly `LOCKED` or `ITEM_OPENABLE` (`<Right Click to Open>`). Read the class a quiver and an ammo
+pouch answer too. Read whether both globals exist, the class and subclass each item answers, whether a
 locked box's line equals `LOCKED` exactly (no color code, nothing after it), what a picked box reads,
 and whether `C_TooltipInfo.GetHyperlink` answers on Forever at all. With no answer a lockbox has no
 kind, and shows only through the catch-all, as `Item`. Result:

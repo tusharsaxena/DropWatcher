@@ -1042,22 +1042,32 @@ test("candidate: your unwanted types are read by your spec key, on Forever your 
     assertEqual(rec.me.verdict, "doesntWant", "a dagger is unwanted for the spec on screen")
 end)
 
--- RX-04 (rolls UX design §3.5, ruling 3): Lockboxes and containers is on by default; Everything
--- else that is rolled on is off, and takes an item of no kind only when it is rolled on.
--- red under: the container kind missing from the defaults, or the catch-all taking an item no one rolled
+-- RX-04, RX-15 (rolls UX design §3.5, ruling 3; plan M6): Lockboxes and Containers are on by
+-- default, each switched off on its own; Everything else that is rolled on is off, and takes an
+-- item of no kind only when it is rolled on.
+-- red under: the lockbox or container kind missing from the defaults, one switch turning both off,
+-- or the catch-all taking an item no one rolled
 test("filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on", function()
     local NS = T.newAddon()
     local F = NS.FeedFilter.Filter
-    assertEqual(NS.Setting("feed.categories.container"), true); assertEqual(NS.Setting("feed.categories.other"), false)
-    local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "container" }
+    assertEqual(NS.Setting("feed.categories.lockbox"), true); assertEqual(NS.Setting("feed.categories.container"), true)
+    assertEqual(NS.Setting("feed.categories.other"), false)
+    local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "lockbox" }
+    local bag = { itemID = 4496, classID = 1, subClassID = 0, quality = 1, category = "container" }
+    local quiver = { itemID = 2101, classID = 11, subClassID = 2, quality = 1, category = "container" }
     local reagent = { itemID = 2589, classID = 7, subClassID = 5, quality = 2 }
-    local defaults = { categories = { container = true, other = false } }
+    local defaults = { categories = { lockbox = true, container = true, other = false } }
     local function check(facts, cfg, ctx, pass, why)
         local ok, reason = F(facts, cfg, ctx)
         assertEqual(ok, pass); assertEqual(reason, why)
     end
     check(lockbox, defaults, {}, true, nil)
-    check(lockbox, { categories = { container = false } }, {}, false, "category")
+    check(bag, defaults, {}, true, nil); check(quiver, defaults, { rolled = true }, true, nil)
+    check(lockbox, { categories = { lockbox = false } }, {}, false, "category")
+    check(bag, { categories = { lockbox = false } }, {}, true, nil)
+    check(lockbox, { categories = { container = false } }, {}, true, nil)
+    check(bag, { categories = { container = false } }, {}, false, "category")
+    check(quiver, { categories = { container = false } }, {}, false, "category")
     check(lockbox, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
     check(reagent, defaults, { rolled = true }, false, "notWatched")
     check(reagent, { categories = { other = true } }, { rolled = true }, true, nil)

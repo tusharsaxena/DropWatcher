@@ -123,10 +123,11 @@ sixth boss's samples) produce every kind. Enum values are resolved by name (the 
 | Toys | on | `C_ToyBox.GetToyInfo` answers the item | `PlayerHasToy` | New or Collected |
 | Recipes | on | Recipe [9]; its subclass names the profession's skill line (`C.RECIPE_SKILL_LINE`; Book and First Aid none) | the tooltip's whole `ITEM_SPELL_KNOWN` line; a profession you lack is can't use | New, Known or Can't use |
 | Cosmetics | off | Armor › Cosmetic [5], or `C_Item.IsCosmeticItem` on armor or a weapon (cosmetic weapons are Weapon-class) | the appearance, as today | New look or Look known |
-| Lockboxes and containers | on | Container [1] (a bag), or Miscellaneous › Junk [0] whose tooltip carries the whole `LOCKED` ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line (RX-04, rolls UX design §3.5) | n/a: not gear | Lockbox (it reads Locked), else Container |
+| Lockboxes | on | Miscellaneous › Junk [0] whose tooltip carries the whole `LOCKED` ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line (RX-04, RX-15, rolls UX design §3.5) | n/a: not gear | Lockbox |
+| Containers | on | Container [1] (a bag), or Quiver [11] (WoW Forever's quivers and ammo pouches; RX-15) | n/a: not gear | Container |
 | Everything else that is rolled on | off | no kind above, and a group rolls on it (a roll table, or Rolling now): the catch-all | n/a: not gear | Item |
 
-A collectible (mount, pet, toy, recipe, cosmetic), a lockbox or container, and an item the
+A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, and an item the
 catch-all lets in are feed-only: no Ask, toast, AutoAsk, Offer, Announce, Post my tradeables or
 glow, and no Me/Them gain (the kind word stands where gear shows a verdict, never Unknown; your roll
 popup reads the same word for any roll). Not watched unless rolled on with the catch-all on: quest

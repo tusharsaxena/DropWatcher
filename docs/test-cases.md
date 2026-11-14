@@ -1641,13 +1641,13 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_collectibles.lua (18)
+### test_collectibles.lua (19)
 
 - collectibles: CategoryOf names each category
 - collectibles: CategoryOf's precedence
 - collectibles: the out-of-scope classes are not watched
 - collectibles: IsCollectible is true for the collectible categories alone
-- collectibles: a lockbox and a bag are containers; other Junk and a reagent are not
+- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; a reagent neither
 - collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
 - collectibles: Verdict reads new, collected and no answer
 - collectibles: a pet carries its count, and a partial collection says n/limit
@@ -1657,6 +1657,7 @@ Total.
 - collectibles: Read fills a mount's, a pet's and a toy's collection state
 - collectibles: Read fills a recipe's profession and known line
 - collectibles: Read tells a lockbox and a box that opens from Junk that does not
+- collectibles: Read files a bag, a quiver and an ammo pouch as containers
 - collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
 - collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
 - collectibles: Read leaves a tier token's category to its flag and probes nothing
@@ -2226,7 +2227,7 @@ Total.
 - insights stats: a period over 62 days buckets by week
 - insights stats: the mixes: class, quality, slot, category, verdicts and trade estimates
 - insights stats: a Watched item counts as itself, listed after every category
-- insights stats: a lockbox and a rolled reagent count as their kinds
+- insights stats: a lockbox, a bag and a rolled reagent count as their own kinds
 - insights stats: nothing in gives zeros and empty lists
 - insights stats: one pass: each reducer sees each row once
 
@@ -2949,7 +2950,7 @@ Total.
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
 | test_item_facts.lua | 25 |
-| test_collectibles.lua | 18 |
+| test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
@@ -3009,4 +3010,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2487** |
+| **Total** | **2488** |

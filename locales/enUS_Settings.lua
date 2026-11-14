@@ -74,8 +74,12 @@ L["Recipes and patterns"] = "Recipes and patterns"
 L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] = "Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."
 L["Cosmetics"] = "Cosmetics"
 L["Cosmetic armor and weapons: a look to collect, never gear."] = "Cosmetic armor and weapons: a look to collect, never gear."
-L["Lockboxes and containers"] = "Lockboxes and containers"
-L["Lockboxes and bags, shown as their kind: no gain for anyone."] = "Lockboxes and bags, shown as their kind: no gain for anyone."
+L["Lockboxes"] = "Lockboxes"
+L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] =
+    "Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."
+L["Containers"] = "Containers"
+L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] =
+    "Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."
 L["Everything else that is rolled on"] = "Everything else that is rolled on"
 L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] =
     "Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."

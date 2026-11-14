@@ -72,7 +72,7 @@ test("collect cells: a lockbox, a bag and an item of no kind read their kind, pl
     local NS = ns()
     local L = NS.L
     for verdict, word in pairs({ lockbox = L["Lockbox"], container = L["Container"], item = L["Item"] }) do
-        local c = NS.CollectCells.Verdict(collect(verdict, { category = verdict == "item" and "other" or "container" }),
+        local c = NS.CollectCells.Verdict(collect(verdict, { category = verdict == "item" and "other" or verdict }),
             "me", L["For you"])
         assertEqual(c.text, word, verdict); assertEqual(c.tone, "plain", verdict)
         assertTrue(c.tip[1]:find(word, 1, true) ~= nil, "titled by its kind")

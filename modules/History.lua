@@ -25,7 +25,8 @@ local _, NS = ...
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
 -- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
--- mount, pet, toy, recipe, cosmetic, container; `other` for an item of no kind rolled on, RX-04),
+-- mount, pet, toy, recipe, cosmetic, lockbox, container; `other` for an item of no kind rolled on,
+-- RX-04, RX-15),
 -- `tokenSlot` a tier token's made slot and `tokenUsers` who may
 -- use a token naming no classes (`every`, a Curio; `yours`, a Use text alone; modules/ItemFacts.lua),
 -- since TT-1 (an older token entry has none, and its Type reads a dash); an entry kept before

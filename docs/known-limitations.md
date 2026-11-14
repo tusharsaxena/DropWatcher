@@ -38,10 +38,12 @@ the code reads every case the design leaves open, module by module, is in
   `collectUnknown` until it is read again when combat ends. Someone else's bound collectible reads
   trade `unknown`; your own reads the trade timer's exact answer once its bag item is matched
   (COLL-6). The collection APIs' answers were confirmed in game on 2026-11-05 (COLL-1).
-- **Lockboxes and containers** (RX-04). A lockbox is told by its tooltip's whole `LOCKED` ("Locked")
-  or `ITEM_OPENABLE` ("<Right Click to Open>") line on a Miscellaneous Junk item: Junk with neither
-  line, or one whose tooltip cannot be read, has no kind (the catch-all's Item when rolled on). A bag
-  is any Container-class item. The catch-all ("Everything else that is rolled on") knows an item is
+- **Lockboxes and containers** (RX-04, RX-15). A lockbox is told by its tooltip's whole `LOCKED`
+  ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line on a Miscellaneous Junk item: Junk with
+  neither line, or one whose tooltip cannot be read, has no kind (the catch-all's Item when rolled
+  on), and a box that opens with no lock reads `Lockbox` too. A container is any Container-class
+  item (a bag) or Quiver-class item (WoW Forever's quivers and ammo pouches); a box of another class
+  that opens is neither. The catch-all ("Everything else that is rolled on") knows an item is
   rolled on from its roll table (Pending's open roll, or the drop's own): a master-loot hold and a
   personal-loot line are not rolled on, so an item of no kind never shows there.
 - **Item kinds and item lists apply to drops from then on.** Turning an item kind off, or putting an

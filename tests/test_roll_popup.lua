@@ -235,7 +235,7 @@ end)
 -- A non-gear item: its kind word in the neutral tone, no gain (rolls UX design §3.3, §3.5).
 test("roll popup: a lockbox's line 1 is its kind in the neutral tone", function()
     local _, _, RP = party()
-    local v = RP.Verdict({ collect = true, verdict = "lockbox", category = "container", reasons = {} }, false)
+    local v = RP.Verdict({ collect = true, verdict = "lockbox", category = "lockbox", reasons = {} }, false)
     assertEqual(plain(v.text), "Lockbox"); assertEqual(v.tone, "plain")
     v = RP.Verdict({ collect = true, verdict = "item", category = "other", reasons = {} }, true, "forever")
     assertEqual(plain(v.text), "Item"); assertEqual(v.tone, "plain", "BoP on Forever: still the kind")

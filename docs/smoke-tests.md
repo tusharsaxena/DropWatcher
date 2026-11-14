@@ -63,7 +63,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
-| ROLLS-1..11 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes and the catch-all (ROLLS-11, RX-04) |
+| ROLLS-1..11 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -3879,19 +3879,22 @@ on, or one whose timer stopped answering after your choice) → a time of at mos
 all. At the end → `Roll ended` or the winner, never a negative time. Record on each client what the
 row read at the start and after your choice. Result:
 
-**ROLLS-11. Lockboxes, bags and the catch-all (RX-04, rolls UX ruling 3; Review Focus 3).** Client:
-both. Probe P-BOX first. The headless `test_collectibles`, `test_pending` and `test_feed` cover the
-kinds. Settings › Drops › Items › Item kinds lists Lockboxes and containers (ticked) and Everything
-else that is rolled on (unticked). A group roll on a lockbox (a Junkbox, a Heavy or Ornate Bronze
+**ROLLS-11. Lockboxes, bags and the catch-all (RX-04, RX-15, rolls UX ruling 3; Review Focus 3).**
+Client: both. Probe P-BOX first. The headless `test_collectibles`, `test_pending` and `test_feed`
+cover the kinds. Settings › Drops › Items › Item kinds lists Lockboxes (ticked), Containers (ticked)
+and Everything else that is rolled on (unticked). A group roll on a lockbox (a Junkbox, a Heavy or Ornate Bronze
 Lockbox) → Rolling now shows it with `Lockbox` where gear shows a verdict, in the neutral color, with
 no ▲ or ▼ gain; the popup's card reads `Lockbox` too. Once won it lands under its boss reading
-`Lockbox`, with no gain and no Ask, and in History. A bag rolled on → `Container`. Nothing reads
+`Lockbox`, with no gain and no Ask, and in History. A bag rolled on → `Container`; on WoW Forever a
+quiver or an ammo pouch rolled on → `Container` too. Nothing reads
 `Unknown`. A reagent, cloth or other item of no kind rolled on → not in the window; tick Everything
 else that is rolled on → the next one shows as `Item`, neutral, no gain, and lands in History, where
-Insights' item kind counts it as Other loot. The same item looted with no roll → still not shown,
+Insights' item kind counts it as Other loot, a lockbox as Lockbox and a bag as Container, three
+separate labels. The same item looted with no roll → still not shown,
 the catch-all on. A lockbox, a bag and a reagent rolled together with the defaults → the lockbox and
-the bag show, the reagent does not. Untick Lockboxes and containers → the next lockbox roll is not in
-the window, though the popup's card still reads its kind. Result:
+the bag show, the reagent does not. Untick Lockboxes → the next lockbox roll is not in the window,
+though the popup's card still reads its kind, and a bag still shows; tick it again and untick
+Containers → the next bag roll is not in the window, and a lockbox still shows. Result:
 
 ## WoW Forever
 

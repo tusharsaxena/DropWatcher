@@ -226,7 +226,8 @@ end
 -- for an Always watch item that fits no category (NS.Constants.CATEGORY_WATCHED), never a live one.
 local KIND = {
     equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
-    recipe = L["Recipe"], cosmetic = L["Cosmetic"], container = L["Container"], other = L["Other loot"],
+    recipe = L["Recipe"], cosmetic = L["Cosmetic"], lockbox = L["Lockbox"], container = L["Container"],
+    other = L["Other loot"],
     watched = L["Watched item"],
 }
 

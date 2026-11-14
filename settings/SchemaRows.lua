@@ -177,9 +177,11 @@ local CATEGORY_ROWS = {
     { key = "recipe", label = L["Recipes and patterns"],
       tip = L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] },
     { key = "cosmetic", label = L["Cosmetics"], tip = L["Cosmetic armor and weapons: a look to collect, never gear."] },
-    -- RX-04 (rolls UX design §3.5, ruling 3)
-    { key = "container", label = L["Lockboxes and containers"],
-      tip = L["Lockboxes and bags, shown as their kind: no gain for anyone."] },
+    -- RX-04 (rolls UX design §3.5, ruling 3); RX-15 (plan M6): lockboxes are their own kind
+    { key = "lockbox", label = L["Lockboxes"],
+      tip = L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] },
+    { key = "container", label = L["Containers"],
+      tip = L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] },
     { key = "other", label = L["Everything else that is rolled on"],
       tip = L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] },
 }
