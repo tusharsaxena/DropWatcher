@@ -50,6 +50,15 @@ frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibility
 (the trade timer, which paces its ticker by the window; compact mode's run override; and the compact
 Filters menu, which closes with the window); the window calls no engine module.
 
+Auto-close (rolls UX design §3.6, RX-10, `modules/WindowAutoClose.lua`) closes only a show an
+auto-open made: the auto-open arms it after its `Window.Open`, and every `Window.Open` and
+`Window.Close` disarms it first, so a manual show never closes by itself. Armed, one
+`C_Timer.NewTimer` of `window.autoClose.seconds` runs; `DropAdded`, `PendingChanged` and the pointer
+entering the frame start it over. At its end, Rolling now empty (`Pending.Count` of the shown feed)
+and the pointer elsewhere, it calls `Window.Close`; otherwise it starts over. A drag or a click on the
+frame or its title bar disarms it for that show; with `window.autoClose.enabled` or `autoOpen` off
+it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
+
 ## What the window repaints on
 
 ```
@@ -64,6 +73,7 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
                                │   own included; no latch; DW-83, FB-12; never a restored drop),
                                │   on the Drops tab (an open window keeps its tab; feedback-20)
+                               │   and, with auto-close on, arms its count (RX-10, below)
                                ├─> minimized: stays minimized, `n new` counts it (never a
                                │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body

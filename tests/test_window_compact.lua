@@ -335,6 +335,8 @@ end, T.RETAIL_ONLY)
 
 test("compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it", function()
     local NS, m = inKey()
+    -- Auto-close off (RX-10): the grace's idle seconds would close the window the drop opened.
+    NS.SchemaRuntime.Set("window.autoClose.enabled", false)
     announce(NS, drop(1))
     local f = NS.Window.Frame()
     complete(NS, m)

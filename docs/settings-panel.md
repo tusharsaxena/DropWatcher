@@ -166,7 +166,11 @@ never in the profile: Defaults, Reset all settings and `/dw set` never touch the
 ## Drops → Situations
 
 Everything set per situation, on the Drops page's first tab (General › When to show and Trade ›
-Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen` row (Auto-open the window), then the per-situation
+Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen` row (Auto-open the window); on the line
+beneath it (`startsLine`), Auto-close the window (`window.autoClose.enabled`) and Close after (seconds)
+(`window.autoClose.seconds`, a 5 to 120 slider), both dimmed while Auto-open the window is off and the
+seconds while Auto-close is off too, each tooltip ending "Needs <row>." (options-ui-§21, rolls UX design
+§3.6, RX-10); then the per-situation
 settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order
 (design spec §6.1):
 

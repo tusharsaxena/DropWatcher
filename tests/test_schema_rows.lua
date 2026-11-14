@@ -43,6 +43,7 @@ local function specPaths()
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
         "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
+        "window.autoClose.enabled", "window.autoClose.seconds",   -- auto-close (rolls UX design §3.6, RX-10)
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
         "rolls.show", "rolls.keep", "rolls.popupMark",   -- Drops › Rolls (Forever port design §5.3, DW-FP15)
@@ -881,6 +882,8 @@ local PINNED_ROWS = {
     { "window.columns.them", "bool", "true" },
     { "window.columns.trade", "bool", "true" },
     { "window.columns.tradeWindow", "bool", "true" },
+    { "window.autoClose.enabled", "bool", "true" },   -- auto-close (rolls UX design §3.6, RX-10)
+    { "window.autoClose.seconds", "number", "10" },
     { "window.compactInRuns", "bool", "true" },
     { "window.fontSize", "number", "0" },
     { "window.mode", "string", "\"full\"" },

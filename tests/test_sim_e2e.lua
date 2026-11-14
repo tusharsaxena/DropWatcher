@@ -362,6 +362,8 @@ test("sim e2e: a simulated key's auto-open is compact by default, full with the 
     for _, case in ipairs({ { run, "compact", true }, { run, "full", false } }) do
         local NS, m = addon(600)
         assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", case[3]) or case[3], "the option")
+        -- Auto-close off (RX-10): the run's 30 idle seconds would close the window its drop opened.
+        NS.SchemaRuntime.Set("window.autoClose.enabled", false)
         assertTrue(NS.SimScenario.Start(case[1], nil, { seed = 1 }), case[1])
         assertTrue(NS.Window.IsShown(), case[1] .. ": the simulation opened the window")
         assertEqual(NS.WindowCompact.Mode(), "full", case[1] .. ": its own open is the stored layout")

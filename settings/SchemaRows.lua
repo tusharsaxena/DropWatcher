@@ -274,6 +274,15 @@ local function situations()
     local at = { page = "feed", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
         L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
+    -- Auto-close (rolls UX design §3.6, RX-10), on the line beneath Auto-open the window, which it
+    -- needs: a window it opened closes by itself (modules/WindowAutoClose.lua).
+    local autoOpenOff = unless("autoOpen", true)
+    bool("window.autoClose.enabled", P.window.autoClose.enabled, L["Auto-close the window"],
+        L["Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."],
+        with(at, { startsLine = true, disabledIf = autoOpenOff }))
+    slider("window.autoClose.seconds", P.window.autoClose.seconds, 5, 120, 1, L["Close after (seconds)"],
+        L["How long a window that opened by itself stays once nothing is rolling and no new drop has come. Needs Auto-close the window."],
+        with(at, { disabledIf = function() return autoOpenOff() or NS.Setting("window.autoClose.enabled") ~= true end }))
     local T = P.trade
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]

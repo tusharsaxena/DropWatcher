@@ -182,6 +182,25 @@ test("situations: the global Auto-open row, then one table line per situation an
     end
 end)
 
+-- Rolls UX design §3.6 (RX-10): Auto-close and its seconds on the line beneath Auto-open the window,
+-- dimmed while it is off.
+test("situations: Auto-close the window and its seconds sit on the line beneath Auto-open the window", function()
+    local NS, _, m = T.enableAddon()
+    local _, drawn = whenToShow(NS, m)
+    local open_ = find(drawn, "CheckBox", "Auto-open the window")
+    local close = find(drawn, "CheckBox", "Auto-close the window")
+    local secs = find(drawn, "Slider", "Close after (seconds)")
+    assertTrue(open_ ~= nil and close ~= nil and secs ~= nil, "all three drawn")
+    -- red under: the auto-close checkbox paired with Auto-open on its line
+    assertTrue(lineOf(drawn, open_) ~= lineOf(drawn, close), "Auto-close starts its own line")
+    assertEqual(lineOf(drawn, close), lineOf(drawn, secs), "its seconds beside it")
+    assertFalse(close.disabled == true, "live while auto-open is on")
+    NS.SchemaRuntime.Set("autoOpen", false)
+    local again = rerender(NS, m, NS.addon.Settings.Helpers.__panelFor("feed"))
+    assertTrue(find(again, "CheckBox", "Auto-close the window").disabled == true, "auto-open off dims it")
+    assertTrue(find(again, "Slider", "Close after (seconds)").disabled == true, "and its seconds")
+end)
+
 test("situations: five gold, left-aligned column headers, and a stripe on every second line", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)

@@ -103,6 +103,8 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 | Key | Default | Column | What it is |
 |---|---|---|---|
 | `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window |
+| `window.autoClose.enabled` | `true` (both clients) | (the line beneath Auto-open the window) | Auto-close the window (rolls UX design §3.6, owner ruling 4, RX-10): a window that opened by itself closes once nothing is rolling and no new drop has come for `window.autoClose.seconds`; a new drop, a roll or a pending item starts the count over, hovering the window starts it over, and a manual show, a drag or a click inside cancels it for that show (`modules/WindowAutoClose.lua`). Dimmed while `autoOpen` is off |
+| `window.autoClose.seconds` | `10` | (beside it) | Close after (seconds), a slider 5 to 120 in steps of 1; dimmed while `autoOpen` or `window.autoClose.enabled` is off |
 | `situations.<key>.track` | per situation (below; the owner's defaults since DW-06) | Track | loot is watched in that situation |
 | `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
 | `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |

@@ -269,6 +269,7 @@ Kit.run{
         "test_window",
         "test_window_shell",
         "test_window_compact",
+        "test_window_autoclose",
         "test_compact_cards",
         "test_compact_group",
         "test_compact_history",

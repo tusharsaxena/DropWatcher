@@ -145,13 +145,14 @@ Total.
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 - rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
-### test_settings_pages.lua (55)
+### test_settings_pages.lua (56)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
 - situations: the global Auto-open row, then one table line per situation and no per-situation rows
+- situations: Auto-close the window and its seconds sit on the line beneath Auto-open the window
 - situations: five gold, left-aligned column headers, and a stripe on every second line
 - situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)
 - situations: each cell paints its stored value, and a toggle writes its path
@@ -531,6 +532,22 @@ Total.
 - compact: the completion latch clears on leaving, so the next run opens compact again
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
+
+### test_window_autoclose.lua (13)
+
+- autoclose: on by default with 10 seconds, on this client
+- autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
+- autoclose: both rows sit on Drops › Situations and dim while auto-open (or auto-close) is off
+- autoclose: an auto-opened window closes 10 seconds after the drop, once idle
+- autoclose: the seconds setting sets the count
+- autoclose: a new drop resets the count
+- autoclose: while Rolling now holds an item it waits, and a roll or pending change resets it
+- autoclose: hovering the window restarts the count, and the pointer over it holds it open
+- autoclose: a manually opened window never closes by itself
+- autoclose: a manual show, a drag or a click inside cancels it for that show
+- autoclose: off, or with auto-open off, an auto-opened window stays
+- autoclose: a window the player closes disarms, and the next auto-open arms again
+- autoclose: the stand-down cancels the countdown
 
 ### test_compact_cards.lua (27)
 
@@ -2863,7 +2880,7 @@ Total.
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
-| test_settings_pages.lua | 55 |
+| test_settings_pages.lua | 56 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2880,6 +2897,7 @@ Total.
 | test_window.lua | 19 |
 | test_window_shell.lua | 68 |
 | test_window_compact.lua | 25 |
+| test_window_autoclose.lua | 13 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
@@ -2984,4 +3002,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2466** |
+| **Total** | **2480** |

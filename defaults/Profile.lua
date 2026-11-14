@@ -199,6 +199,10 @@ NS.C = {
             -- An auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever
             -- `mode` says, until that run ends.
             compactInRuns = true,
+            -- Auto-close (rolls UX design §3.6, owner ruling 4): a window that opened by itself
+            -- closes `seconds` (5 to 120) after nothing is rolling and no new drop has come; on by
+            -- default on both clients. Drops › Situations, under Auto-open the window.
+            autoClose = { enabled = true, seconds = 10 },
             -- Like Ka0s Loot History's table (feedback-2 spec §8, FB2-9): 18-pixel rows, and the
             -- text at its template's own size (0 is Default). Both tabs read both; a Drops row
             -- while Trade window shows adds the room its countdown bar needs. A value the player stored stays as it is.

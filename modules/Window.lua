@@ -400,6 +400,7 @@ end
 -- ── construction: the title bar's drag (the bar is modules/WindowTitleBar.lua) ────────────────
 
 local function onDragStart()
+    NS.WindowAutoClose.Cancel()   -- a drag keeps an auto-opened window open (rolls UX design §3.6)
     if isLocked() then return end
     frame:StartMoving()
 end
@@ -903,12 +904,14 @@ end
 -- ── the player's own actions ────────────────────────────────────────────────────────────────
 
 function Window.Open()
+    NS.WindowAutoClose.Disarm()   -- a manual show never closes by itself (an auto-open re-arms after)
     NS.State.windowOpen = true
     openedByTestMode = false
     Window.UpdateVisibility()
 end
 
 function Window.Close()
+    NS.WindowAutoClose.Disarm()
     NS.State.windowOpen = false
     openedByTestMode = false
     Window.UpdateVisibility()
@@ -1008,6 +1011,7 @@ local function maybeAutoOpen(rec)
     Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
+    NS.WindowAutoClose.Arm()   -- auto-close (rolls UX design §3.6): only an auto-open's show counts down
 end
 
 local function onDropAdded(id)
