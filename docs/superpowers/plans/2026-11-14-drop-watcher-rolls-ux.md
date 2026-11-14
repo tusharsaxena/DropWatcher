@@ -123,3 +123,14 @@ Lockbox, Container and Other loot as separate labels.
   Other loot separately.
 - Tests: an Ornate Bronze Lockbox is `lockbox`; a bag and a Forever quiver/ammo pouch are `container`; each passes by
   default and can be switched off on its own; Insights labels.
+
+### RX-16: A roll popup for a watched item opens the window
+- Owner request (2026-11-15): the window opens when a Blizzard loot-roll popup appears for an item that would show in
+  Drop Watcher (it passes the feed's gates and lands in Rolling now). Same rules as a drop's auto-open: master
+  Auto-open on, the situation's Auto-open on, not already open, nothing for a restored roll; opens on Drops; compact
+  in runs as today; it is an auto-open, so auto-close arms (and waits until the roll is done). A master-loot hold has
+  no roll popup and opens nothing. Implemented on Pending's `open` change for a roll item (Window.lua's
+  maybeAutoOpen path, not a hook on the Blizzard frame).
+- Tests: a roll for a watched item opens the window when closed; an unwatched (filtered) roll does not; situation
+  Auto-open off or master off does not; an ML hold does not; auto-close arms and does not close while the roll runs;
+  a window already open keeps its tab.
