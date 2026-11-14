@@ -64,6 +64,7 @@ if not lib then
     H.ID_NAME_HINT         = {}
     H.SelectTab            = function() end
     H.NavRail              = function() end
+    H.SideTabs             = function() return nil end   -- LibKa0s v1.100.0, OptionsNav minor 7
     H.Drawer               = function() end
     H.SetRenderer          = function() end
     H.RegisterOptionsPage  = function() end
