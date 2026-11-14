@@ -98,3 +98,28 @@ surface.
 - Multi-lens adversarial review of `master..feat/2026-11-14-rolls-ux` (correctness + Review Focus, taint, standard,
   Retail regressions, Forever behavior); fix verified Critical/Important; `/dev-copilot:wow-automated-tests` bundle.
 - **Stop:** owner smoke and merge go-ahead.
+
+## M6 — Owner smoke follow-ups (2026-11-15)
+
+Owner rulings after the first smoke: the lock button moves to the title bar's top-right cluster; the waiting
+mark is an hourglass everywhere the clock icon was used (re-vendor LibKa0s, which ships the hourglass only from
+v1.102.0); quivers and ammo pouches are containers, and lockboxes are their own kind, not containers; Insights keeps
+Lockbox, Container and Other loot as separate labels.
+
+### RX-13: LibKa0s re-vendor and the hourglass
+- Re-vendor LibKa0s v1.95.0 → v1.102.0 with the re-vendor skill; declare `ph:hourglass`; the roll waiting mark and
+  the Queued offer state use it; drop `clock` from the declaration if nothing else uses it. Adopt no other new surface
+  in this item: list the candidates for the owner.
+- Tests: the waiting mark and the Queued offer icon read the hourglass; both kit profiles green on the new kit.
+
+### RX-14: The lock button at the top right
+- Full and compact title bars: the lock button joins the right-hand button cluster (left of the layout toggle);
+  the left of the title bar is empty again. Behavior unchanged.
+- Tests: the lock button's anchor is in the right cluster on both layouts; buttons do not overlap at minimum width.
+
+### RX-15: Lockboxes are their own kind; quivers and ammo pouches are containers
+- Categories `lockbox` (on by default; kind word "Lockbox") and `container` (on; bags, quivers, ammo pouches; kind
+  word "Container"); `other` unchanged (off). Drops › Items rows for both. Insights lists Lockbox, Container and
+  Other loot separately.
+- Tests: an Ornate Bronze Lockbox is `lockbox`; a bag and a Forever quiver/ammo pouch are `container`; each passes by
+  default and can be switched off on its own; Insights labels.

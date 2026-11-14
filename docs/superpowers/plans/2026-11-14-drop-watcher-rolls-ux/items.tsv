@@ -12,3 +12,6 @@ RX-09	M4	DropWatcher	One footer line	RX-08
 RX-10	M4	DropWatcher	Auto-close	RX-00
 RX-11	M5	DropWatcher	Docs and smoke	RX-10
 RX-12	M5	DropWatcher	Whole-run review and automated-test bundle	RX-11
+RX-13	M6	DropWatcher	LibKa0s re-vendor and the hourglass	RX-12
+RX-14	M6	DropWatcher	The lock button at the top right	RX-12
+RX-15	M6	DropWatcher	Lockboxes their own kind; quivers containers	RX-12
