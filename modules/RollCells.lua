@@ -12,6 +12,12 @@ local _, NS = ...
 -- read at call time for a name's class color. A field the reader dropped (a secret name, a nil
 -- roll) degrades its row, never the table (Review Focus 2): a nameless row reads `?`.
 --
+-- THE TIME LEFT (rolls UX design §3.4). A roll your own popup claimed (the pending item's
+-- `rollID`) reads the client's timer, NS.Compat.LootRollTimeLeft, read at call time. Any other
+-- roll derives it from startTime + duration on the history's clock, and only a plausible answer
+-- (at most RC.MAX_LEFT seconds) is shown: a duration in milliseconds over a startTime in seconds
+-- reads no time at all, never 2717:57, and never ends the roll.
+--
 -- THE STATES are Enum.EncounterLootDropRollState's plain numbers: 0 Need, 1 Need (off-spec),
 -- 2 Transmog, 3 Greed, 4 waiting (not chosen yet), 5 Pass. Each row carries its word, a glyph (the
 -- game's own roll button art, a texture both clients ship: dice for a Need, a coin for Greed and
@@ -31,6 +37,8 @@ local RC = NS.RollCells
 local L  = NS.L
 
 local floor = math.floor
+
+RC.MAX_LEFT = 300   -- seconds: the longest time left a derived roll timer may read (5 min)
 
 RC.NEED, RC.OFFSPEC, RC.TRANSMOG, RC.GREED, RC.WAITING, RC.PASS = 0, 1, 2, 3, 4, 5
 
@@ -132,25 +140,32 @@ function RC.Rows(roll)
     return out
 end
 
---- The seconds left while the roll is open on the history's clock, or nil (no times, or `now`
---- not read).
+--- The seconds left while the roll is open, or nil. Your claimed popup's roll (`rollID`) reads the
+--- client's timer while it reads time left; otherwise startTime + duration on the history's clock,
+--- nil with no times, `now` not read, or an implausible answer (over RC.MAX_LEFT: mismatched units).
 --- @param roll table|nil
 --- @param now number|nil NS.Compat.LootHistoryNow()
+--- @param rollID number|nil the pending item's claimed popup id
 --- @return number|nil
-function RC.Left(roll, now)
+function RC.Left(roll, now, rollID)
     if type(roll) ~= "table" or roll.winner or roll.allPassed then return nil end
+    local own = rollID ~= nil and NS.Compat.LootRollTimeLeft(rollID) or nil
+    if own and own > 0 then return own end
     local start, dur = num(roll.startTime), num(roll.duration)
     if not (start and dur and num(now)) then return nil end
-    return math.max(0, start + dur - now)
+    local left = start + dur - now
+    if left > RC.MAX_LEFT then return nil end
+    return math.max(0, left)
 end
 
 --- The time left while the roll is open, `0:42`, or nil once it has a winner, everyone passed, or
 --- the times are not known.
 --- @param roll table|nil
 --- @param now number|nil NS.Compat.LootHistoryNow()
+--- @param rollID number|nil the pending item's claimed popup id (RC.Left)
 --- @return string|nil
-function RC.Timer(roll, now)
-    local left = RC.Left(roll, now)
+function RC.Timer(roll, now, rollID)
+    local left = RC.Left(roll, now, rollID)
     if not left then return nil end
     left = floor(left + 0.5)
     return ("%d:%02d"):format(floor(left / 60), left % 60)
@@ -171,7 +186,7 @@ local function counts(roll)
 end
 
 -- The tooltip's rows over a table: the leader while open, the winner once won, and the count.
-local function summaryTip(roll, title, now)
+local function summaryTip(roll, title, now, rollID)
     local tip = { title }
     local leader = type(roll.leader) == "table" and roll.leader or nil
     if not roll.winner and leader then
@@ -180,7 +195,7 @@ local function summaryTip(roll, title, now)
             or colored(nameOf(leader), leader.classFile))
     end
     if roll.isTied then tip[#tip + 1] = row(L["Tied"], L["the highest rolls are equal"]) end
-    local t = RC.Timer(roll, now)
+    local t = RC.Timer(roll, now, rollID)
     if t then tip[#tip + 1] = row(L["Time left"], t) end
     tip[#tip + 1] = row(L["Players"], num(roll.count) or #(roll.rolls or {}))   -- a kept table's own tally
     return tip
@@ -193,8 +208,9 @@ end
 --- @param now number|nil NS.Compat.LootHistoryNow() (for the time left)
 --- @param state string|nil the pending item's state (`expired` reads Roll ended; a master-loot
 --- item's `awaiting` reads awaiting master looter)
+--- @param rollID number|nil the pending item's claimed popup id (RC.Left)
 --- @return table cell { text, tone, tip }
-function RC.Summary(roll, now, state)
+function RC.Summary(roll, now, state, rollID)
     if state == "awaiting" then   -- a master-loot item (modules/PendingML.lua): no roll to read
         return { text = L["awaiting master looter"], tone = "muted",
             tip = { L["Master loot"], row(nil, L["awaiting master looter"]) } }
@@ -210,18 +226,18 @@ function RC.Summary(roll, now, state)
         local how = n and ("%s %d"):format(word, n) or word
         local name = colored(nameOf(w), w.classFile)
         return { text = L["Won by %s (%s)"]:format(name, how), tone = "good",
-            tip = summaryTip(roll, L["Rolls"], now) }
+            tip = summaryTip(roll, L["Rolls"], now, rollID) }
     end
     if roll.allPassed then
-        return { text = L["Everyone passed"], tone = "muted", tip = summaryTip(roll, L["Rolls"], now) }
+        return { text = L["Everyone passed"], tone = "muted", tip = summaryTip(roll, L["Rolls"], now, rollID) }
     end
-    local left = RC.Left(roll, now)
+    local left = RC.Left(roll, now, rollID)
     if state == "expired" or (left ~= nil and left <= 0) then
-        return { text = L["Roll ended"], tone = "muted", tip = summaryTip(roll, L["Rolls"], now) }
+        return { text = L["Roll ended"], tone = "muted", tip = summaryTip(roll, L["Rolls"], now, rollID) }
     end
     local text = counts(roll)
     if text == "" then text = L["no one has chosen yet"] end
-    return { text = text, tone = "plain", tip = summaryTip(roll, L["Rolling now"], now) }
+    return { text = text, tone = "plain", tip = summaryTip(roll, L["Rolling now"], now, rollID) }
 end
 
 --- One row's tooltip: its name in class color, the choice, the number, and why a protected row

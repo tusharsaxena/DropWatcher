@@ -720,6 +720,18 @@ function P.ActiveLootRolls(live)
     return out
 end
 
+-- Your simulated popup's time left, in seconds as the reader answers it: the roll's own startTime
+-- + duration on the session's clock while its popup is open.
+function P.LootRollTimeLeft(live, rollID)
+    for _, r in ipairs(W.Rolls()) do
+        if r.rollID == rollID then
+            if not (r.popupOpen and r.duration) then return nil end
+            return math.max(0, r.startTime + r.duration - GetTime())
+        end
+    end
+    return live(rollID)
+end
+
 -- Your simulated popup's item: an epic you can Need or Greed, bound on pickup.
 function P.LootRollInfo(live, rollID)
     for _, r in ipairs(W.Rolls()) do

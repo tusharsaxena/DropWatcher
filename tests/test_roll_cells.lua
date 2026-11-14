@@ -101,6 +101,45 @@ test("roll cells: a higher roll that did not win is protected", function()
     for _, e in ipairs(C.Rows(openRoll())) do assertFalse(e.protected, e.name) end
 end)
 
+test("roll cells: your claimed popup's roll reads the client's own timer", function()
+    -- RX-02 (rolls UX design §3.4): a roll your popup claimed reads GetLootRollTimeLeft (through
+    -- NS.Compat), not the history's startTime + duration; once the client reads no time it falls
+    -- back to the history's.
+    -- red under: RC.Timer ignoring the rollID
+    local NS, _, m = T.newAddon()
+    local C = NS.RollCells
+    m.lootRolls[11] = { link = "x", timeLeft = 42000 }
+    assertEqual(C.Timer(openRoll(), 100, 11), "0:42", "the client's 42 s, not the history's 1:00")
+    assertEqual(C.Left(openRoll(), nil, 11), 42, "no history clock needed")
+    m.lootRolls[11].timeLeft = 0
+    assertEqual(C.Timer(openRoll(), 100, 11), "1:00", "no client time left: the history's")
+    assertEqual(C.Timer(openRoll(), 100, 12), "1:00", "no such popup: the history's")
+    local tipped = false
+    m.lootRolls[11].timeLeft = 42000
+    for _, line in ipairs(C.Summary(openRoll(), 100, nil, 11).tip) do
+        if plain(line):find("0:42", 1, true) then tipped = true end
+    end
+    assertTrue(tipped, "the summary's tooltip reads the client's time left")
+end)
+
+test("roll cells: a time left in mismatched units reads no time, a normal one m:ss", function()
+    -- RX-02 (rolls UX design §3.4, Review Focus 5): duration in milliseconds over a startTime in
+    -- seconds (or the reverse) gives an implausible time left; it reads no time, never 2717:57,
+    -- and never ends the roll.
+    -- red under: no plausibility guard on the derived time left
+    local C = RC()
+    local ms = openRoll(); ms.duration = 120000
+    assertNil(C.Timer(ms, 110), "duration in ms, startTime in s: no time")
+    assertNil(C.Left(ms, 110))
+    assertTrue(C.Summary(ms, 110).text ~= "Roll ended", "an implausible time never ends the roll")
+    local startMs = openRoll(); startMs.startTime, startMs.duration = 100000, 120
+    assertNil(C.Timer(startMs, 110), "startTime in ms, now in s: no time")
+    local normal = openRoll(); normal.duration = 120
+    assertEqual(C.Timer(normal, 110), "1:50", "a two-minute roll ten seconds in")
+    normal.duration = 300
+    assertEqual(C.Timer(normal, 100), "5:00", "five minutes is the most a roll can read")
+end)
+
 test("roll cells: the timer reads the time left on the history's clock, and the grid flows rows", function()
     local C = RC()
     assertEqual(C.Timer(openRoll(), 100), "1:00")

@@ -1171,7 +1171,7 @@ Total.
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_compat_loot.lua (18)
+### test_compat_loot.lua (19)
 
 - compat loot: rolls answer every row with its state and number
 - compat loot: a secret playerName drops the name, keeps the row
@@ -1184,6 +1184,7 @@ Total.
 - compat loot: LootHistoryNow answers the history clock, else nil
 - compat loot: ActiveLootRolls answers the open roll ids, plain ones only
 - compat loot: LootRollInfo answers bop from bindOnPickUp
+- compat loot: LootRollTimeLeft answers your popup's time left in seconds
 - loot method: ML unit and name from masterLooterRaidID
 - loot method: threshold falls back to 4
 - loot slots: every slot with its link, quality, lock and source
@@ -1847,12 +1848,14 @@ Total.
 - askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
 - askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
-### test_roll_cells.lua (5)
+### test_roll_cells.lua (7)
 
 - roll cells: summary counts Need 3 · Greed 2 · Pass 1 · waiting 4
 - roll cells: won reads Won by Name (Need 87)
 - roll cells: rows sort winner first, then numbers high to low, waiting, pass
 - roll cells: a higher roll that did not win is protected
+- roll cells: your claimed popup's roll reads the client's own timer
+- roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
 ### test_window_pending.lua (11)
@@ -2862,7 +2865,7 @@ Total.
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
-| test_compat_loot.lua | 18 |
+| test_compat_loot.lua | 19 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -2889,7 +2892,7 @@ Total.
 | test_pending.lua | 16 |
 | test_pending_ml.lua | 9 |
 | test_ask_ml.lua | 12 |
-| test_roll_cells.lua | 5 |
+| test_roll_cells.lua | 7 |
 | test_window_pending.lua | 11 |
 | test_roll_popup.lua | 10 |
 | test_feed_counts.lua | 10 |
@@ -2940,4 +2943,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2422** |
+| **Total** | **2425** |

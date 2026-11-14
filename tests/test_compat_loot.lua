@@ -276,6 +276,26 @@ test("compat loot: LootRollInfo answers bop from bindOnPickUp", function()
     assertNil(Compat.LootRollInfo(11), "no API")
 end)
 
+test("compat loot: LootRollTimeLeft answers your popup's time left in seconds", function()
+    -- RX-02 (rolls UX design §3.4): GetLootRollTimeLeft answers milliseconds; the reader answers
+    -- seconds, plain ones only.
+    -- red under: no LootRollTimeLeft, or the milliseconds passed on as seconds
+    local Compat, m = fresh()
+    m.lootRolls[11] = { link = LINK, timeLeft = 42000 }
+    assertEqual(Compat.LootRollTimeLeft(11), 42)
+    m.lootRolls[11].timeLeft = 0
+    assertEqual(Compat.LootRollTimeLeft(11), 0)
+    m.lootRolls[11].timeLeft = T.secret(42000)
+    assertNil(Compat.LootRollTimeLeft(11), "a secret answer")
+    m.lootRolls[11].timeLeft = -5
+    assertNil(Compat.LootRollTimeLeft(11), "a negative answer")
+    assertNil(Compat.LootRollTimeLeft(12), "no such roll")
+    assertNil(Compat.LootRollTimeLeft(T.secret(11)), "a secret id is never passed on")
+    assertNil(Compat.LootRollTimeLeft(nil), "no id")
+    m.GetLootRollTimeLeft = nil
+    assertNil(Compat.LootRollTimeLeft(11), "no API")
+end)
+
 -- ---------------------------------------------------------------------------------------------
 -- The loot method and the loot window (DW-FP18, design §6)
 -- ---------------------------------------------------------------------------------------------

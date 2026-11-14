@@ -147,7 +147,7 @@ end
 --- @return table
 function WP.Model(item, now, classFile)
     local WC, RC = NS.WindowCells, NS.RollCells
-    local t = RC.Timer(item.roll, now)
+    local t = RC.Timer(item.roll, now, item.rollID)
     local timer = t and cellOf(t, "plain", { L["Time left"], NS.TipMarks.Row(L["Rolls end in"], t) })
         or cellOf("", "muted")
     local summary
@@ -158,7 +158,7 @@ function WP.Model(item, now, classFile)
         timer = cellOf(L["awaiting master looter"], "muted", tip)
         summary = cellOf(name and L["Master looter: %s"]:format(name) or L["Master loot"], "muted", tip)
     end
-    return { item = WC.Item(item), me = WC.Me(item, classFile), summary = summary or RC.Summary(item.roll, now, item.state),
+    return { item = WC.Item(item), me = WC.Me(item, classFile), summary = summary or RC.Summary(item.roll, now, item.state, item.rollID),
         timer = timer, action = actionOf(item) }
 end
 
@@ -285,10 +285,11 @@ end
 --- @param width number
 --- @param now number|nil the loot history's clock
 --- @param state string|nil the pending item's state
+--- @param rollID number|nil the pending item's claimed popup id (its own timer)
 --- @return number height
-function WP.PaintRollsBox(box, roll, width, now, state)
+function WP.PaintRollsBox(box, roll, width, now, state, rollID)
     local RC = NS.RollCells
-    local s = RC.Summary(roll, now, state)
+    local s = RC.Summary(roll, now, state, rollID)
     box.summary:SetText(s.text)
     setTone(box.summary, s.tone)
     box.summaryHit.tipLines = s.tip
@@ -523,7 +524,8 @@ function WP.Draw(pane, width)
         y = y + metrics.height
         if view().expanded == item.id then
             place(s.box, pane.content, y, width, K.ROW_INDENT)
-            y = y + WP.PaintRollsBox(s.box, item.roll, width - K.ROW_INDENT, now, item.state) + 2
+            y = y + WP.PaintRollsBox(s.box, item.roll, width - K.ROW_INDENT, now, item.state,
+                item.rollID) + 2
             s.box:Show()
         end
     end
@@ -583,7 +585,8 @@ function WP.DrawCompact(cv, width, m)
         y = y + m.height + NS.CompactGroup.GAP
         if view().expanded == item.id then
             place(s.box, cv.content, y, cardW + K.ROW_INDENT, K.ROW_INDENT)
-            y = y + WP.PaintRollsBox(s.box, item.roll, cardW, now, item.state) + NS.CompactGroup.GAP
+            y = y + WP.PaintRollsBox(s.box, item.roll, cardW, now, item.state, item.rollID)
+                + NS.CompactGroup.GAP
             s.box:Show()
         end
     end

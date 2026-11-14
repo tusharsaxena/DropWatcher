@@ -17,8 +17,9 @@
 --                  startTime, duration }; GetInfoForEncounter(id) answers the one with that id
 --   lootHistoryTime  GetLootHistoryTime()'s answer (the clock startTime is on)
 --   lootRolls      the open group-loot rolls by rollID: { link, texture, name, count, quality, bop,
---                  canNeed, canGreed, canDisenchant, canTransmog }, read by GetLootRollItemInfo (its
---                  thirteen returns) and GetLootRollItemLink; activeLootRolls is
+--                  canNeed, canGreed, canDisenchant, canTransmog, timeLeft }, read by GetLootRollItemInfo
+--                  (its thirteen returns), GetLootRollItemLink and GetLootRollTimeLeft (timeLeft, in
+--                  milliseconds as the client answers it); activeLootRolls is
 --                  GetActiveLootRollIDs()'s list
 --   lootMethod     C_PartyInfo.GetLootMethod()'s three answers as { method, masterLootPartyID,
 --                  masterLooterRaidID } (nil: a case that leaves it unset)
@@ -104,6 +105,10 @@ return function(M)
     M.GetLootRollItemLink = function(rollID)
         local r = M.lootRolls[rollID]
         return r and r.link
+    end
+    M.GetLootRollTimeLeft = function(rollID)
+        local r = M.lootRolls[rollID]
+        return r and r.timeLeft
     end
     M.GetLootRollItemInfo = function(rollID)
         local r = M.lootRolls[rollID]

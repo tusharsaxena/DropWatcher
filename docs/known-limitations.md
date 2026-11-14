@@ -132,8 +132,10 @@ the code reads every case the design leaves open, module by module, is in
 - **Everyone's rolls** (Forever port design §5, DW-FP13 to DW-FP17) come from the client's loot
   history, `C_LootHistory`, on both clients. When a player's number appears, and whether the history
   fires once per choice or only at the close, is unconfirmed (probes P-R1 and P-R2 in
-  [`forever-probes.md`](forever-probes.md)); the Rolling now row's time left reads the roll's
-  `startTime` and `duration` on the history's own clock, whose units are probe P-R4's. A trash or
+  [`forever-probes.md`](forever-probes.md)); the Rolling now row's time left reads your own
+  popup's timer (`GetLootRollTimeLeft`, milliseconds) for a roll your popup claimed, and otherwise the
+  roll's `startTime` and `duration` on the history's own clock, whose units are probe P-R4's: a
+  derived time over 5 minutes (mismatched units) shows no time at all (rolls UX RX-02). A trash or
   open-world roll is keyed by whatever encounter the client files it under (P-R3). Nothing of a roll
   is saved across a reload: an open roll comes back from the client (`PLAYER_ENTERING_WORLD`).
 - **Master-loot pending** (Forever port design §6, DW-FP18) holds an Epic only when the loot window

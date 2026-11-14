@@ -59,7 +59,16 @@ Read whether rollID and the key are equal or stably related, and **the units of 
 `duration`**: is `startTime` on `GetLootHistoryTime()`'s clock, and are both seconds or milliseconds?
 The code assumes one clock and one unit: Rolling now's time left is `startTime + duration` minus
 `GetLootHistoryTime()`, and an open roll with no winner expires there. A roll of about two minutes
-should read about 120 left at the start. Do it on both clients. (R2 P4; M4 carry) Result:
+should read about 120 left at the start. Also read `GetLootRollTimeLeft(id)` beside it: the code
+(since rolls UX RX-02) assumes it answers **milliseconds** and divides by 1000. What the fix
+assumes, and what to confirm: a roll your own popup claimed reads `GetLootRollTimeLeft` (through
+`Compat.LootRollTimeLeft`) while it answers more than 0, so the client's timer needs neither the
+history's clock nor its units; every other roll derives `startTime + duration - GetLootHistoryTime()`
+and shows it only when it is at most 300 s (5 min), so a mismatch (the observed 2717:57 is a
+`duration` in milliseconds over a `startTime` in seconds) shows no time and never ends the roll.
+Record which of `startTime` and `duration` are seconds or milliseconds on each client, and whether
+`GetLootRollTimeLeft` still answers after you have chosen (if it answers 0, the history's time
+shows). Do it on both clients. (R2 P4; M4 carry; rolls UX design §3.4) Result:
 
 **P-R5. The drop key's field name.** During a roll:
 `/dump C_LootHistory.GetSortedDropsForEncounter(<encounterID>)[1]`. Read `lootListID` (Retail) or

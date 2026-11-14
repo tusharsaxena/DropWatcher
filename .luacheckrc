@@ -76,8 +76,8 @@ files["core/CompatClient.lua"] = {
 -- C_PartyInfo, InputUtil and those globals.
 files["core/CompatLoot.lua"] = {
   read_globals = { "C_LootHistory", "GetActiveLootRollIDs", "GetLootRollItemInfo", "GetLootRollItemLink",
-    "C_PartyInfo", "Constants", "GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo", "GetLootSourceInfo",
-    "InputUtil" },
+    "GetLootRollTimeLeft", "C_PartyInfo", "Constants", "GetNumLootItems", "GetLootSlotLink", "GetLootSlotInfo",
+    "GetLootSourceInfo", "InputUtil" },
 }
 
 -- The Encounter Journal: core/CompatJournal.lua alone names it, for the simulator's item pool.

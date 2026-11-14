@@ -1,7 +1,7 @@
 local _, NS = ...
 -- core/CompatLoot.lua — the loot history and group-loot roll reads (Forever port design §5.1, plan
 -- DW-FP13): a drop's whole roll table, an encounter's drops and its name, the history clock, your
--- open rolls and one roll's item, and the loot method and the loot window's slots (design §6,
+-- open rolls, one roll's item and its time left (rolls UX RX-02), and the loot method and the loot window's slots (design §6,
 -- DW-FP18), published on NS.Compat like the rest of the compat family, split
 -- out of core/Compat.lua to keep it under its cap. LootHistoryDrop (the feed's won drop) lives here
 -- as a view over LootHistoryRolls, so the history has one call path. Both clients have the same
@@ -218,6 +218,18 @@ function Compat.LootRollInfo(rollID)
     local _, _, _, quality, bop, canNeed, canGreed, _, _, _, _, _, canTransmog = GetLootRollItemInfo(rollID)
     return { link = link, quality = plainNumber(quality), bop = plainBool(bop), canNeed = plainBool(canNeed),
         canGreed = plainBool(canGreed), canTransmog = plainBool(canTransmog) }
+end
+
+--- Your open roll popup's time left in seconds (GetLootRollTimeLeft answers milliseconds; rolls UX
+--- design §3.4): the client's own timer for the popup, which needs no reading of the history's
+--- clock or units. Nil for a non-plain id, a secret, negative or missing answer, or with no API.
+--- @param rollID number
+--- @return number|nil
+function Compat.LootRollTimeLeft(rollID)
+    if not (GetLootRollTimeLeft and plainNumber(rollID)) then return nil end
+    local ms = plainNumber(GetLootRollTimeLeft(rollID))
+    if not ms or ms < 0 then return nil end
+    return ms / 1000
 end
 
 -- ── the loot method and the loot window (DW-FP18, design §6) ────────────────────────────────
