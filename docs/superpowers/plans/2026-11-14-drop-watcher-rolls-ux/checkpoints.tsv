@@ -1,3 +1,5 @@
 date	milestone	evidence
 2026-11-14	M1	RX-01..RX-04 (29f3991 f970b2f 0be02aa d4cbec4) built and reviewed (approved); gate at 2d69ccc: Retail 2444/0/1, Forever 2336/0/108, luacheck 0/0, lizard silent, test-cases.md no drift, badge 2444
 2026-11-14	M2	RX-05 (2d69ccc) built and reviewed (approved, 4 minors); same gate
+2026-11-14	M3	RX-06 (91e002a), RX-07 (3b736c4) built and reviewed (approved); gate at 81fb26e: Retail 2481/0/1, Forever 2373/0/108, luacheck 0/0 (261 files), lizard silent, test-cases.md no drift, badge 2481
+2026-11-14	M4	RX-08 (9082f44), RX-09 (d141787), RX-10 (6cadf9a + review fix 81fb26e) approved; same gate
