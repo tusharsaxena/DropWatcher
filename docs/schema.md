@@ -112,7 +112,9 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
 dungeons, follower dungeons, raids, delves, scenarios and solo, `track` alone for Raid Finder, and off
 for PvP and the open-world group (the owner's defaults since DW-06; design spec §6.1 had follower
-dungeons, delves, scenarios and solo off). They are AceDB defaults, so a profile that never changed a
+dungeons, delves, scenarios and solo off). WoW Forever's five take the same values but for the
+open-world group, whose `track` and `autoOpen` both default on there (RX-01, rolls UX ruling 7);
+Retail's stays off. They are AceDB defaults, so a profile that never changed a
 cell takes them and a stored choice stays, with no migration. The four per-situation rows
 are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0; the loot rule since
 feedback-24): the Situations table draws them, one line per situation (`settings/PageEditors.lua`
@@ -124,7 +126,7 @@ button and profiles reach them as any row.
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `feed.quality.mode` | `"fixed"` | Quality; the filter bar's Quality control (`NS.SetQualityMode`) | the minimum-quality mode new drops are gated with |
-| `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
+| `feed.quality.fixed` | `3` (Rare) on Retail, `2` (Uncommon) on WoW Forever (RX-01, rolls UX ruling 7) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you, or a collectible new to your collection, shows below the threshold (issue #13); an Always watch item passes whatever its quality (`whitelisted`) |
 | `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |

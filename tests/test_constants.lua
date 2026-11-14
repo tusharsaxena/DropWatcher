@@ -101,9 +101,9 @@ test("constants: the categories in display order, the tier slots and the empty t
     assertEqual(next(c.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")
 end)
 
-test("constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)", function()
+test("constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)", function()
     local c, q = C(), D().feed.quality
-    assertEqual(q.fixed, c.QUALITY.RARE)
+    assertEqual(q.fixed, T.forever and c.QUALITY.UNCOMMON or c.QUALITY.RARE, "rolls UX ruling 7 (RX-01)")
     assertEqual(q.floor, c.QUALITY.UNCOMMON)
     assertEqual(q.mode, c.QUALITY_MODES[1])
     assertEqual(c.QUALITY_MODES[1], "fixed")
@@ -223,9 +223,10 @@ test("constants: every situation key is listed once, in order, with the spec §6
         { "scenario", true, true }, { "pvp", false, false }, { "openWorldGroup", false, false },
         { "solo", true, true },
     }
-    if T.forever then   -- WoW Forever's own five (Forever port design §4.4), the same defaults
+    if T.forever then   -- WoW Forever's own five (Forever port design §4.4); the open world group
+        -- tracked and auto-opening there (rolls UX ruling 7)
         want = { { "dungeon", true, true }, { "raid", true, true }, { "pvp", false, false },
-            { "openWorldGroup", false, false }, { "solo", true, true } }
+            { "openWorldGroup", true, true }, { "solo", true, true } }
     end
     assertEqual(#c.SITUATIONS, #want)
     assertEqual(#keysOf(d), #want)

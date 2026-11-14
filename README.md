@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2421%2F2421_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2422%2F2422_passing-green)
 
 Supports Retail and WoW Forever. When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -91,7 +91,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Does it whisper people on its own? | Only if you turn on auto-ask (Settings › Messages › Auto-ask). Otherwise every whisper is a click. |
 | Does it look at my other specs? | On Retail, yes, when your current spec can't use a drop. It compares the drop with the best item you own for each of your other specs, worn or in your bags, by item level only. For other players it can only see what they have on. |
 | Does it need Pawn? | No. With Pawn installed, its scale scores each drop next to the item level, with Pawn's own default settings and no setup. Without it you can enter your own stat weights, paste a Pawn scale string in Settings › Comparison, or go by item level alone. |
-| Does it work in raids? | Yes. Dungeons, raids and solo play are watched out of the box, and on Retail keys, follower dungeons, delves and scenarios too. PvP and open-world groups are off until you turn them on under Settings › Drops › Situations. |
+| Does it work in raids? | Yes. Dungeons, raids and solo play are watched out of the box, and on Retail keys, follower dungeons, delves and scenarios too. PvP is off until you turn it on under Settings › Drops › Situations, and so are open-world groups on Retail; on WoW Forever open-world groups are watched out of the box too. |
 | Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin one-pixel edge by default, in the skin's color: a gray outline in the window, black on the toast. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
 | Can it tell me whether I have the look? | On Retail, yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. WoW Forever has no transmog. |

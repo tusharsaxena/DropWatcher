@@ -179,7 +179,9 @@ fixed-height lines, every second line faintly striped, the cells' text in `GameF
 the panel's own CheckBox and Dropdown widgets. The columns sit at fixed offsets, 8, 128, 188, 262
 and 424, with both dropdowns 150 wide, so the table ends at 574, clear of the panel's scroll gutter in
 every skin (DW-02, owner ruling D-18; it ended at 610 before, cutting Loot rule off). An untracked situation's `Auto-open`, `Quality` and
-`Loot rule` are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off.
+`Loot rule` are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off. On WoW Forever the Open world group
+line starts with Track and Auto-open both checked (RX-01, rolls UX ruling 7); on Retail both start
+unchecked.
 Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
 rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the
 situation.
@@ -210,7 +212,7 @@ the fixed mode, `Quality floor` (`Floor` until feedback-24) while either is a ma
 drawn when the two differ, and a value nothing picks is hidden (LibKa0s#67, options-ui-§22). A
 situation's selector is a `skipRender` row the library does not watch: the Situations tab's change shows
 on coming back here, and a `/dw set` on one with this tab open shows on the next render. Then the closing
-line `In force now: Quality: Rare+`: the filter bar's label for where you stand, naming the situation
+line `In force now: Quality: Rare+` (`Uncommon+` at WoW Forever's default, RX-01): the filter bar's label for where you stand, naming the situation
 when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
 at the Situations tab's Quality column, where a situation sets its own.
 

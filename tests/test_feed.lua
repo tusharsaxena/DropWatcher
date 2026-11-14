@@ -477,6 +477,8 @@ test("gates: an untracked situation hides the drop before its item is even loade
     local NS, m, LF = party(function(m)
         m.__context.inInstance, m.__context.instanceType = false, "none"
     end)
+    -- untracked: Retail's default, and WoW Forever's off its own (rolls UX ruling 7, RX-01)
+    NS.addon.db.profile.situations.openWorldGroup.track = false
     m.addItem(link(300), ring(620, { loadsNeeded = 1 }))
     brakkLoots(m, 300)
     assertEqual(#LF.Drops(), 0)
@@ -485,8 +487,13 @@ test("gates: an untracked situation hides the drop before its item is even loade
     assertEqual(NS.Inspect.QueueState().queued, 0)
 end)
 
+-- Retail's default Fixed Rare, pinned so these gates read the same on WoW Forever, whose default is
+-- Uncommon (rolls UX ruling 7, RX-01).
+local function fixedRare(NS) NS.addon.db.profile.feed.quality.fixed = 3 end
+
 test("gates: below the quality threshold a downgrade for you is hidden, and costs no inspect", function()
     local NS, m, LF = party()
+    fixedRare(NS)
     m.addItem(link(300), ring(590, { quality = 2 }))
     brakkLoots(m, 300)
     m.advance(1)
@@ -497,7 +504,8 @@ test("gates: below the quality threshold a downgrade for you is hidden, and cost
 end)
 
 test("gates: the upgrade override shows an upgrade for you below the threshold", function()
-    local _, m, LF = party()
+    local NS, m, LF = party()
+    fixedRare(NS)
     m.addItem(link(300), ring(620, { quality = 2 }))
     brakkLoots(m, 300)
     local rec = only(LF)
@@ -507,7 +515,7 @@ end)
 test("gates: the stored quality settings and the situation's override are read", function()
     local NS, m, LF = party()
     m.addItem(link(300), ring(620, { quality = 2 }))
-    NS.addon.db.profile.feed = { quality = { upgradeOverride = false } }
+    NS.addon.db.profile.feed = { quality = { fixed = 3, upgradeOverride = false } }   -- Rare on both clients
     brakkLoots(m, 300)
     assertEqual(#LF.Drops(), 0, "the override off")
     NS.addon.db.profile.feed = { quality = { fixed = 2 } }

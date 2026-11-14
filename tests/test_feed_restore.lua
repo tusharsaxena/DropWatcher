@@ -193,6 +193,7 @@ test("restore: the quality gate still runs; the situation gate and the feed filt
     m.addItem(link(306), ring(590, { quality = 2 }))
     m.addItem(link(307), ring(620, { classID = 15, subClassID = 0, equipLoc = "" }))
     m.__context.inInstance, m.__context.instanceType = false, "none"
+    NS.addon.db.profile.feed.quality.fixed = 3   -- Rare: WoW Forever's default is Uncommon (RX-01)
     NS.Situations.Refresh("test")
     reload(m)
     assertEqual(links(NS.LootFeed), "307", "Uncommon is under Rare; gear only and the solo row are not asked")

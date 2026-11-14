@@ -46,7 +46,9 @@ local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
 
 -- Where Drop Watcher is active (design spec §6.1). Retail's are the owner's defaults since DW-06:
 -- follower dungeons, delves, scenarios and solo tracked and auto-opening too. WoW Forever's are
--- the same values for the five situations it has.
+-- the same values for the five situations it has, but for the open world group, tracked and
+-- auto-opening there (rolls UX design ruling 7): grouped open-world play is where much of that
+-- client's loot drops.
 local SITUATIONS = {
     retail = {
         mythicPlus      = situation(true, true),
@@ -64,10 +66,14 @@ local SITUATIONS = {
         dungeon         = situation(true, true),
         raid            = situation(true, true),
         pvp             = situation(false, false),
-        openWorldGroup  = situation(false, false),
+        openWorldGroup  = situation(true, true),
         solo            = situation(true, true),
     },
 }
+
+-- The feed's Fixed minimum quality per client (rolls UX design ruling 7): Rare on Retail, Uncommon
+-- on WoW Forever, where a green is still worth a look.
+local FIXED_QUALITY = { retail = 3, forever = 2 }
 
 -- The rule each situation takes (design spec §7.2): Retail's follower dungeons `personal` since
 -- DW-06, the owner's default; `raid` is the conservative `personal` until smoke check TRADE-3
@@ -105,7 +111,7 @@ NS.C = {
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
                 mode            = "fixed",   -- fixed | dynamicSlot | dynamicCharacter
-                fixed           = 3,         -- Rare (Enum.ItemQuality.Rare)
+                fixed           = FIXED_QUALITY[CLIENT],   -- Retail Rare, WoW Forever Uncommon (Enum.ItemQuality)
                 floor           = 2,         -- Uncommon: the dynamic modes' least threshold
                 upgradeOverride = true,      -- an upgrade for me (or new to my collection) shows below it
             },

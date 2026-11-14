@@ -202,7 +202,8 @@ local function assertDefaultFilters(NS)
         end
     end
     local mode, threshold = FB.QualityReadout()
-    assertEqual(mode, "fixed"); assertEqual(threshold, 3)
+    -- Rare on Retail, Uncommon on WoW Forever (rolls UX ruling 7, RX-01)
+    assertEqual(mode, "fixed"); assertEqual(threshold, T.forever and 2 or 3)
 end
 
 local function assertDrops(NS, label)

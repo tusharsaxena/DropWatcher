@@ -308,11 +308,14 @@ end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
+-- The default Fixed threshold's label: Rare on Retail, Uncommon on WoW Forever (rolls UX ruling 7, RX-01).
+local DEFAULT_QUALITY_LABEL = T.forever and "Quality: Uncommon+" or "Quality: Rare+"
+
 test("shell: the filter bar holds View, Quality, Content and the search box, and no checkbox", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
     assertEqual(textOf(c.view.text), "View: All", "All is the default View (FB2-1)")
-    assertEqual(textOf(c.quality.text), "Quality: Rare+")
+    assertEqual(textOf(c.quality.text), DEFAULT_QUALITY_LABEL)
     assertEqual(textOf(c.content.text), "Content: This session", "the default since feedback-13 spec §0")
     assertTrue(c.likelyOnly == nil and c.usableOnly == nil and c.upgradeOnly == nil,
         "the checkboxes are View values now (FB2-2)")
@@ -582,12 +585,13 @@ test("shell: each tab opens on its own defaults, Drops this session's and yours,
         return table.concat({ textOf(c.view.text), textOf(c.quality.text), textOf(c.content.text),
             textOf(c.char.text) }, " | ")
     end
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current")
+    local q = DEFAULT_QUALITY_LABEL
+    assertEqual(bar(), "View: All | " .. q .. " | Content: This session | Character: Current")
     NS.Window.SelectTab("history")
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: All | Character: All")
+    assertEqual(bar(), "View: All | " .. q .. " | Content: All | Character: All")
     assertFalse(c.quality:IsEnabled(), "History does not honor Quality")
     NS.Window.SelectTab("group")
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current", "each tab its own")
+    assertEqual(bar(), "View: All | " .. q .. " | Content: This session | Character: Current", "each tab its own")
 end)
 
 test("shell: a fresh tab's state is seeded from the profile's feed settings when valid", function()

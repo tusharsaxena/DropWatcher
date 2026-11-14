@@ -112,7 +112,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (29)
+### test_schema_rows.lua (30)
 
 - settings: no Retail-only row on the Forever panel
 - defaults: WoW Forever's profile has none of the Retail-only features' defaults
@@ -120,6 +120,7 @@ Total.
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
 - rows: NS.Setting answers the default before the database, and the stored value after
+- rows: each client's defaults for the open world group and the fixed quality (RX-01)
 - rows: a value outside a row's list or range is refused and stores nothing
 - rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
@@ -1213,7 +1214,7 @@ Total.
 - constants: the category ids fall back to the 12.x literals and read Enum by name (issue #13)
 - constants: each recipe subclass names its profession's skill line; book and first aid none
 - constants: the categories in display order, the tier slots and the empty token table
-- constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+- constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)
 - constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone
 - constants: every slot plan has a known kind and real slot ids
@@ -1428,7 +1429,7 @@ Total.
 ### test_quality_gate.lua (26)
 
 - quality gate: fixed passes at or above the threshold and hides below it
-- quality gate: fixed defaults to Rare, and the floor does not apply to it
+- quality gate: fixed defaults to Rare (Uncommon on WoW Forever), and the floor does not apply to it
 - quality gate: no mode or an unknown mode is the default fixed mode
 - quality gate: dynamicSlot uses the baseline slot's equipped quality
 - quality gate: dynamicSlot is floored, Uncommon by default
@@ -2817,7 +2818,7 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 29 |
+| test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 55 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
@@ -2939,4 +2940,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2421** |
+| **Total** | **2422** |

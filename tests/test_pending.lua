@@ -276,6 +276,7 @@ end)
 
 test("pending: a drop below the quality gate is not pending", function()
     local NS, m, P = party()
+    NS.addon.db.profile.feed.quality.fixed = 3   -- Rare: WoW Forever's default is Uncommon (RX-01)
     m.addItem(link(300), ring(590, 2))   -- an Uncommon side ring: under Rare, and no upgrade
     m.lootHistory["2900:1"] = openDrop(300)
     local seen = listen(NS)

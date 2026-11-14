@@ -17,6 +17,8 @@ end
 local _, C0 = load()
 local S, QL = C0.SLOT, C0.QUALITY
 local POOR, COMMON, UNCOMMON, RARE, EPIC = QL.POOR, QL.COMMON, QL.UNCOMMON, QL.RARE, QL.EPIC
+-- The default Fixed threshold: Rare on Retail, Uncommon on WoW Forever (rolls UX ruling 7, RX-01).
+local DEFAULT_FIXED = T.forever and UNCOMMON or RARE
 
 -- Equipped qualities: every gear slot at `q`, shirt and tabard included; `over` replaces slots.
 local function gearAt(q, over)
@@ -48,11 +50,13 @@ test("quality gate: fixed passes at or above the threshold and hides below it", 
     end
 end)
 
-test("quality gate: fixed defaults to Rare, and the floor does not apply to it", function()
+test("quality gate: fixed defaults to Rare (Uncommon on WoW Forever), and the floor does not apply to it", function()
     local Q = load()
     local pass, threshold = Q.Passes(UNCOMMON, "fixed", { upgradeOverride = false })
-    assertEqual(pass, false)
-    assertEqual(threshold, RARE)
+    assertEqual(pass, T.forever, "an Uncommon drop passes WoW Forever's default alone")
+    assertEqual(threshold, DEFAULT_FIXED)
+    pass = Q.Passes(COMMON, "fixed", { upgradeOverride = false })
+    assertEqual(pass, false, "a Common drop is under either client's default")
     -- A fixed threshold below the floor stands: the floor is the dynamic modes' only.
     pass, threshold = Q.Passes(COMMON, "fixed", { fixed = COMMON, floor = RARE })
     assertEqual(pass, true)
@@ -62,7 +66,7 @@ end)
 test("quality gate: no mode or an unknown mode is the default fixed mode", function()
     local Q = load()
     local _, threshold = Q.Passes(EPIC, nil, {})
-    assertEqual(threshold, RARE)
+    assertEqual(threshold, DEFAULT_FIXED)
     _, threshold = Q.Passes(EPIC, "bogus", { fixed = EPIC })
     assertEqual(threshold, EPIC)
     assertEqual(Q.NormalizeMode("bogus"), "fixed")
@@ -343,7 +347,7 @@ test("quality gate: nil and garbage inputs never throw", function()
     end
     -- Garbage inside ctx: bad fixed and floor fall back to the defaults.
     local _, threshold = Q.Passes(RARE, "fixed", { fixed = "Epic" })
-    assertEqual(threshold, RARE)
+    assertEqual(threshold, DEFAULT_FIXED)
     _, threshold = Q.Passes(RARE, "dynamicSlot", { floor = {}, gear = "x", baselineSlot = "head" })
     assertEqual(threshold, UNCOMMON)
     _, threshold = Q.Passes(RARE, "dynamicCharacter", { gear = { [S.HEAD] = "Epic", [S.NECK] = {} } })
