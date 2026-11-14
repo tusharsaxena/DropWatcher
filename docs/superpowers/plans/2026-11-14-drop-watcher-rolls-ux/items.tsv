@@ -1,0 +1,14 @@
+id	milestone	repo	title	depends_on
+RX-00	M0	DropWatcher	Mockups, design and plan	
+RX-01	M1	DropWatcher	Forever defaults	RX-00
+RX-02	M1	DropWatcher	The roll time left	RX-00
+RX-03	M1	DropWatcher	Master-loot pending at the group loot threshold	RX-00
+RX-04	M1	DropWatcher	Lockboxes and the catch-all	RX-00
+RX-05	M2	DropWatcher	Line-2 caps and the button on top	RX-04
+RX-06	M3	DropWatcher	The roll count line and the all-rolls tooltip	RX-04
+RX-07	M3	DropWatcher	The roll side card	RX-06
+RX-08	M4	DropWatcher	Header lock button	RX-00
+RX-09	M4	DropWatcher	One footer line	RX-08
+RX-10	M4	DropWatcher	Auto-close	RX-00
+RX-11	M5	DropWatcher	Docs and smoke	RX-10
+RX-12	M5	DropWatcher	Whole-run review and automated-test bundle	RX-11
