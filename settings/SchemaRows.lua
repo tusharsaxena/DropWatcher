@@ -275,7 +275,7 @@ end
 local function situations()
     local at = { page = "feed", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
-        L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
+        L["Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."], at)
     -- Auto-close (rolls UX design §3.6, RX-10), on the line beneath Auto-open the window, which it
     -- needs: a window it opened closes by itself (modules/WindowAutoClose.lua).
     local autoOpenOff = unless("autoOpen", true)

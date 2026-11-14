@@ -433,3 +433,10 @@ test("roll open: a test-mode sample roll opens nothing while test mode is off", 
     NS.Pending.AddTest({ link = ROLL_LINK, facts = ring(620) })
     assertFalse(NS.IsWindowShown(), "not the shown feed")
 end)
+
+-- red under: the master row's tooltip naming only a drop added to the feed
+test("roll open: the Auto-open the window tooltip names a roll popup too", function()
+    local NS = inDungeon()
+    local tip = NS.SchemaRuntime.FindRow("autoOpen").tooltip
+    assertTrue(tip:find("loot-roll popup", 1, true) ~= nil, "it names the roll popup")
+end)

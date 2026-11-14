@@ -34,8 +34,8 @@ L["Full"] = "Full"
 L["Compact"] = "Compact"
 L["Personal loot"] = "Personal loot"
 L["Auto-open the window"] = "Auto-open the window"
-L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."] =
-    "Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."
+L["Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."] =
+    "Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."
 L["Auto-close the window"] = "Auto-close the window"
 L["Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."] =
     "Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."
