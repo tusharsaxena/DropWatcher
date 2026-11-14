@@ -87,7 +87,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
   tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
   icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
-  mode's switch and bodies, test mode and the diagnostics.
+  mode's switch and bodies, auto-close (`WindowAutoClose.lua`, RX-10: a window an auto-open showed closes
+  once nothing is rolling and no drop has come for `window.autoClose.seconds`), test mode and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
   `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in
@@ -114,6 +115,8 @@ Retail-only feature reads is added on Retail alone (`defaults/Profile.lua`, DW-F
 |---|---|---|
 | The default skin: Ka0s Default (`NS.DEFAULT_SKIN = Skin:DefaultSkin()`, skinning-§2, DW-FP03) | `retail` | `core/SkinSetup.lua`, `defaults/Profile.lua` (`skin.skin`) |
 | The default skin: WoW Forever (the same read) | `forever` | `core/SkinSetup.lua`, `defaults/Profile.lua` (`skin.skin`) |
+| The open-world group's defaults, untracked and not auto-opening, and the feed's Fixed minimum quality, Rare (`feed.quality.fixed = 3`) | `retail` | `defaults/Profile.lua` (`SITUATIONS`, `FIXED_QUALITY`, picked by the client once at load) |
+| The open-world group's defaults, tracked and auto-opening, and the Fixed minimum quality, Uncommon (`2`; rolls UX ruling 7, RX-01) | `forever` | `defaults/Profile.lua` (`SITUATIONS`, `FIXED_QUALITY`) |
 | Character names: `Name-Realm` (`Compat.UnitCharacterName`, `Compat.CharacterKey`, client-quirks-§5, DW-FP04) | `retail` | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` (sim names per client) |
 | Character names: the whole name, first name and surname, no realm (the same reads) | `forever` | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` |
 | The class data: Retail's classes and specs (DW-FP05) | `retail` | `core/ClassData.lua` (the list picked at load), `modules/Evaluate.lua` |
@@ -142,9 +145,10 @@ Retail-only feature reads is added on Retail alone (`defaults/Profile.lua`, DW-F
 | The trade timer's countdown and warning (`TradeTimer.Initialized`; on Forever the bag match runs and every entry is permanent), the Drops table's Trade window column and its Shown columns row (`window.columns.tradeWindow`), the `trade.warnAt` row and default, the card's bag-timer basis line, the words `Trade window` on the Offer panel's item line | `retail` | `modules/TradeTimer.lua`, `modules/WindowGroup.lua` (the column's `clients`), `settings/SchemaRows.lua`, `defaults/Profile.lua`, `modules/DetailCells.lua`, `modules/MineCells.lua` (`PanelHeader`), `modules/Diagnostics.lua` |
 | General › Role, the role override (`char.role`: Automatic, Tank, Healer or Damage, saved per character through LibKa0s `Role.SetOverride`; on a Druid it picks the Feral Pawn scale, design §11.4, DW-FP22) | `forever` | `settings/SchemaRows.lua` (`role`, `Settings.RefreshRoleTooltip`), `settings/Schema.lua` (the `CHAR` closure row), `core/CompatClient.lua` (`Compat.AutomaticRole`, `Compat.SetRoleOverride`), `settings/Panel.lua`, `defaults/Profile.lua` (`ROLE_DEFAULT`) |
 | The per-situation loot rule rows (`trade.rules.<situation>`) and the Situations table's Loot rule column | `retail` | `settings/SchemaRows.lua`, `settings/Editors.lua` (`SITUATION_FIELDS`), `settings/PageEditors.lua` |
-| Everyone's group-loot rolls: the pending store's roll kind, the Drops tab's Rolling now section, a rolled drop's Rolls box, the roll table kept in History, the Drops › Rolls rows, `/dw sim roll` and test mode's sample roll (design §5, §8; DW-FP13 to DW-FP17) | `both` | `core/CompatLoot.lua`, `modules/Pending.lua`, `modules/WindowPending.lua`, `modules/RollCells.lua`, `modules/History.lua`, `modules/SimEvents.lua`, `modules/TestData.lua` |
+| Everyone's group-loot rolls: the pending store's roll kind, the Drops tab's Rolling now section, a rolled drop's Rolls box, the roll table kept in History, the Drops › Rolls rows, `/dw sim roll` and test mode's sample roll (design §5, §8; DW-FP13 to DW-FP17); since the rolls UX round the icon count line and the every-roll tooltip that Rolling now (full and compact), the Rolls box, History and the popup mark share (`RollCells.CountLine`, `RollCells.Tooltip`, RX-06), and the time left read from your own popup's timer (`Compat.LootRollTimeLeft`) or derived from the history and shown only up to 5 minutes (`RollCells.MAX_LEFT`, RX-02) | `both` | `core/CompatLoot.lua`, `modules/Pending.lua`, `modules/WindowPending.lua`, `modules/RollCells.lua`, `modules/History.lua`, `modules/SimEvents.lua`, `modules/TestData.lua` |
 | Master-loot pending and Ask the master looter: an item at or above the group's loot threshold in the loot window you opened, held as awaiting the master looter until a receipt names who got it, the `askML` template and its row, `/dw sim ml` (design §6; DW-FP18, DW-FP19). On Retail the method is Guild Master Loot alone (design §11.2): a declared reach of the client, not a client gate | `both` | `core/CompatLoot.lua` (`LootMethod`, `LootThreshold`, `LootSlots`), `modules/PendingML.lua`, `modules/Asks.lua`, `modules/WindowPending.lua` (`AskAction`), `modules/SimEvents.lua` |
 | The roll popup mark: a side card beside each of Blizzard's `GroupLootFrame1..4` (flipped to its left near the screen's right edge), in the window's skin, with your verdict (a non-gear item its kind), the RollCells count line, and every roll on hover (design §7, DW-FP20; rolls UX design §3.3, RX-07; not drawn in the gamepad UI) | `both` | `modules/RollPopup.lua`, `modules/RollCells.lua`, `core/CompatLoot.lua` (`HookRollPopup`, `RollPopupOpen`, `RollPopupRight`) |
+| Disenchant in the roll count line and the roll tooltip: its icon (the game's DE button art), its count and its group (`RollCells.DISENCHANT`, the addon's own key; RX-06). On Forever a table that named one would count it as Greed, and the word is never shown | `retail` | `modules/RollCells.lua` (`RETAIL`, the client read once at load) |
 | The roll popup mark's wording on any verdict: the verdict word | `retail` | `modules/RollPopup.lua` (`RP.Verdict`, the client read once at load) |
 | The roll popup mark's wording on a bound-on-pickup drop: an upgrade reads `Need: upgrade` and one you can't use `Greed / Pass: you can't use it` (a BoP drop is soulbound once looted, design §4.6, §7); any other verdict, the verdict word | `forever` | `modules/RollPopup.lua` (`RP.Verdict`) |
 
@@ -520,9 +524,14 @@ bodies gate on the disabled state; OnShow re-checks the popup is still shown wit
 a popup or its table: no field, no `SetScript`, `SetParent`, `SetPoint` or strata change, and the
 buttons (on the frame on Retail, in `LootButtonContainer` on Forever) are never touched, so the
 container's managed layout is not tainted. None of it is protected, so it draws in combat too.
+Auto-close (`modules/WindowAutoClose.lua`, RX-10) closes the window with a `Hide` of that owned
+frame, so it runs in combat as the auto-open's `Show` does. The one-way `OnMouseDown` and `OnEnter`
+`HookScript`s it lays (each once per frame) are on the window's own frames, none of them protected,
+and never on a Blizzard frame.
 The master-loot pending kind (`modules/PendingML.lua`, DW-FP18) only reads the loot window you
 opened, through `core/CompatLoot.lua` (`LootSlots`: each slot's link, quality, lock and source GUID,
-after LOOT_READY or LOOT_OPENED); it never touches the loot frame or its buttons, never loots a slot
+after LOOT_READY or LOOT_OPENED, and the group's loot threshold, `Compat.LootThreshold`, once per
+opening, RX-03); it never touches the loot frame or its buttons, never loots a slot
 and never calls a master-loot assignment.
 The addon's three confirmations, Clear history (`modules/History.lua`'s `AskClear`, since DW-Q3), a
 shorter Keep history for (`modules/HistoryRetention.lua`, since DW-A5) and Reset all settings
@@ -537,11 +546,11 @@ unconfirmed; a non-English client shows no upgrade-track change; a delve's tier 
 tier token's slot is read from its English text (TT-1), and a token it misses is judged in any slot; a caged
 battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
 *Already known* tooltip line (`ITEM_SPELL_KNOWN`), a lockbox from its *Locked* or *<Right Click to
-Open>* line (RX-04), the rolled-on catch-all sees only rolls (never a master-loot hold), and the item kinds and item lists apply to new
+Open>* line (RX-04, probe P-BOX), the rolled-on catch-all sees only rolls (never a master-loot hold), and the item kinds and item lists apply to new
 drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
-(the session is the login); the roll popup mark is not drawn in WoW Forever's gamepad mode, whose roll list (`GamepadGroupLootRollFrame`) is not the four popups; the roll clock's units and when a roll's numbers appear are unconfirmed (probes P-R1 and P-R4); under master loot two copies of one item on one corpse collapse to one awaiting item, and a raider may not see the master looter's slots at all (probe P-ML1); the simulator and test mode have no master-loot timeline step or sample beyond `/dw sim ml`; the Forever port's features have no recorded client pass yet; the History card shows only what a kept entry holds; Insights reads only the kept history (the
+(the session is the login); the roll popup mark is not drawn in WoW Forever's gamepad mode, whose roll list (`GamepadGroupLootRollFrame`) is not the four popups; the roll clock's units, your popup's own timer and when a roll's numbers appear are unconfirmed (probes P-R1, P-R4 and P-R6), the loot history gives the count line no Disenchant choice (probe P-R7) and its still-to-roll mark is the clock icon, not the design's hourglass (RX-06); under master loot two copies of one item on one corpse collapse to one awaiting item, and a raider may not see the master looter's slots at all (probe P-ML1), nor is the loot threshold a raider reads confirmed (probe P-ML3); the simulator and test mode have no master-loot timeline step or sample beyond `/dw sim ml`; the Forever port's features have no recorded client pass yet; the History card shows only what a kept entry holds; Insights reads only the kept history (the
 retention window, pruned a whole group at a time), infers asks and offers from trades settled before
 they were stamped (so the old success rate reads high, and an old gain is the verdict as last
 judged), has no per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before

@@ -61,7 +61,7 @@ Read whether rollID and the key are equal or stably related, and **the units of 
 `duration`**: is `startTime` on `GetLootHistoryTime()`'s clock, and are both seconds or milliseconds?
 The code assumes one clock and one unit: Rolling now's time left is `startTime + duration` minus
 `GetLootHistoryTime()`, and an open roll with no winner expires there. A roll of about two minutes
-should read about 120 left at the start. Also read `GetLootRollTimeLeft(id)` beside it: the code
+should read about 120 left at the start. Also read `GetLootRollTimeLeft(id)` beside it (P-R6 types the line): the code
 (since rolls UX RX-02) assumes it answers **milliseconds** and divides by 1000. What the fix
 assumes, and what to confirm: a roll your own popup claimed reads `GetLootRollTimeLeft` (through
 `Compat.LootRollTimeLeft`) while it answers more than 0, so the client's timer needs neither the
@@ -75,6 +75,25 @@ shows). Do it on both clients. (R2 P4; M4 carry; rolls UX design §3.4) Result:
 **P-R5. The drop key's field name.** During a roll:
 `/dump C_LootHistory.GetSortedDropsForEncounter(<encounterID>)[1]`. Read `lootListID` (Retail) or
 `lootListKey` (Forever) at run time; the code reads either. (R2 P8) Result:
+
+**P-R6. Your popup's own timer, and after your choice.** On both clients, with a roll popup up:
+`/run local f=CreateFrame("Frame") f.t=0 f:SetScript("OnUpdate",function(s,e) s.t=s.t+e if s.t<1 then return end s.t=0 local ids=GetActiveLootRollIDs() if #ids==0 then print("no rolls") s:SetScript("OnUpdate",nil) return end for _,id in ipairs(ids) do print(GetTime(),id,GetLootRollTimeLeft(id)) end end)`.
+Read the units: a roll of about two minutes starts near 120000 in milliseconds or near 120 in
+seconds. Read whether it counts down once a second, and what it answers once you have chosen Need,
+Greed or Pass: the same count, 0, or nothing, and whether the rollID stays in
+`GetActiveLootRollIDs()`. The code (rolls UX RX-02, `Compat.LootRollTimeLeft`) assumes
+milliseconds and divides by 1000. It reads the timer only while it answers more than 0; after that
+Rolling now falls back to the history's derived time when that is plausible (P-R4). A seconds answer
+is a finding: the time would read a thousandth of the real one. (rolls UX design §3.4) Result:
+
+**P-R7. The history's Disenchant state.** On Retail, and on Forever wherever P-ROLLINFO's
+canDisenchant is true, run P-R1's frame and have a player choose Disenchant. Read the `state` P-R1
+prints for that player, and `/dump Enum.EncounterLootDropRollState`. The code (rolls UX RX-06)
+knows the states 0 Need, 1 Need (off-spec), 2 Transmog, 3 Greed, 4 waiting and 5 Pass, and no
+Disenchant: the count line's Disenchant (Retail only; `RollCells.DISENCHANT` is the addon's own
+key) is never fed, so a Disenchant choice counts as whatever state the history gives it. Record
+that state. A state of its own (6 or a named value) is a finding: a reader can then feed the
+Disenchant count. Result:
 
 **P-SECRET. Secrets inside an instance.** Inside a dungeon, during and after a boss:
 `/run local d=C_LootHistory.GetSortedDropsForEncounter((C_LootHistory.GetAllEncounterInfos()[1] or {}).encounterID or 0) print(d and #d, d and d[1] and issecretvalue(d[1].itemHyperlink), C_ChatInfo.InChatMessagingLockdown())`.
@@ -108,6 +127,16 @@ lists nothing, nothing is ever held. Retail too, under Guild Master Loot. (desig
 `/dump C_LootHistory.GetAllEncounterInfos()` with P-R1's frame and P-CHAT's. Read whether anything
 lands in the loot history and which chat lines appear. The code resolves an awaiting item from the
 receipt, not the history. (R1 #10, R2 P9) Result:
+
+**P-ML3. The loot threshold under master loot.** Under master loot (on Retail, Guild Master Loot),
+as a raider who is not the master looter and again as the master looter:
+`/dump GetLootThreshold(), C_PartyInfo.GetLootMethod()`, before and after the leader moves the Loot
+Threshold (Uncommon, Rare, Epic). Then open a boss corpse with P-ML1's line and set each slot's
+quality beside the threshold. Master-loot pending (rolls UX RX-03, `Compat.LootThreshold`) holds
+every slot at or above `GetLootThreshold()`, read once per opening, and assumes Uncommon (2) when it
+reads nothing. Confirm a raider reads the threshold the leader set, that it moves when the leader
+changes it, and that the items below it are not handed out by the master looter. (rolls UX
+ruling 6) Result:
 
 **P-FFA. Free for all as a bystander.** Under free for all: `/etrace ENCOUNTER_LOOT_RECEIVED CHAT_MSG_LOOT`
 while someone else loots a boss. Read both events and their payloads. (R1 #11) Result:
@@ -154,6 +183,18 @@ Expected `true` and the ranged item's or relic's link: slot 18 is `C.SLOT.RANGED
 **P-ITEM. A vanilla drop's item reads.** Link a vanilla drop:
 `/dump C_Item.GetItemSpecInfo(<link>), C_Item.GetItemUpgradeInfo(<link>), C_Item.GetItemStats(<link>)`.
 Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5) Result:
+
+**P-BOX. A lockbox's tooltip lines.** On both clients, link a lockbox (a Junkbox, or a Heavy or
+Ornate Bronze Lockbox), the same lockbox once picked, and a bag:
+`/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
+then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
+The code (rolls UX RX-04, `Compat.ItemOpens`) takes any Container-class item (class 1) as a bag,
+`Container`, and a Miscellaneous Junk item (class 15, subclass 0) as a container only when one of
+its lines is exactly `LOCKED` (a lockbox, `Lockbox`) or `ITEM_OPENABLE` (`<Right Click to Open>`,
+`Container`). Read whether both globals exist, the class and subclass each item answers, whether a
+locked box's line equals `LOCKED` exactly (no color code, nothing after it), what a picked box reads,
+and whether `C_TooltipInfo.GetHyperlink` answers on Forever at all. With no answer a lockbox has no
+kind, and shows only through the catch-all, as `Item`. Result:
 
 **P-STATS. Which secondary stats the weights editor should offer.** The weights strip (Comparison ›
 Weights) offers Strength, Agility, Intellect, Stamina, Critical Strike, Haste, Mastery and Versatility

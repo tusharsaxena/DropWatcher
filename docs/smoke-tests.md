@@ -29,12 +29,12 @@ read, are [`forever-probes.md`](forever-probes.md).
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..11 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10); LibKa0s v1.85.0's sim checkbox re-cut, the panel unchanged (PANEL-11, R6-RV2) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..7 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17) |
+| STATE-1..9 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button and the grip it hides (STATE-8, RX-08); auto-close (STATE-9, RX-10) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..4 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat; both combat edges announced under the Combat restriction (COMBAT-4, DW-I11) |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
 | DEGRADED-1..4 | Degraded | The install with LibKa0s missing; the toast's close degrading to nothing (DEGRADED-2, DW-P21; superseded by AT-A2); no toast at all without LibKa0s, the toast's shell being LibKa0s-Toast-1.0 (DEGRADED-3, SM-DW-AT8, AT-A2); the Insights tab without LibKa0s-Charts-1.0 (DEGRADED-4, DW-N2, issue #12) |
-| FEED-1..103 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24); the test-mode banner as LibKa0s-Widgets' strip (FEED-100, DW-06); the filter bar's search box as LibKa0s-Widgets' SearchBox (FEED-101, DW-07); the cyan simulation strip, and the title words only while minimized (FEED-102, DW-10); Trade on the compact card's line 3 beside the button, You and Them on line 4 to the card's edge (FEED-103, feedback-25) |
+| FEED-1..105 | Feed | The loot parser (FEED-1, DW-25), the feed (FEED-2..6, DW-27), a Devourer looter (FEED-7, DW-10/DW-11), the window's shell (FEED-8..9, DW-30), the Drops table (the Group drops table until DW-E3; FEED-10..12, DW-31), the detail card (FEED-13..15, DW-32), the header beside Loot History (FEED-16, DW-81), the filter bar beside it (FEED-17, DW-82) and the equipment columns, the two new filters and auto-open on every drop (FEED-18, DW-83); the two-Yoke regression, nothing hidden or refused silently and `n drops · m shown` (FEED-19, DW-A0); View: All by default, the checkboxes as multi-select View values, the bullet tooltip and the settings migration (FEED-20, DW-A1); item tooltips beside the window (FEED-21, DW-A2); group headers naming the party, class-colored, on Drops and History (FEED-22, DW-A3); the Character dropdown, Current by default, filtering History by who saw each drop (FEED-23, DW-A4); the tables' font and row height beside Loot History's, on both tabs (FEED-24, DW-A8); your own drops under the same group headers, and a tooltip that never covers the docked Offer panel (FEED-25, DW-A9) every row tooltip at the row's top right (FEED-26, DW-B2) and the filter bar's tooltips above their controls (FEED-27, DW-B1); group headers naming the instance, the boss, the difficulty and only your character (FEED-28, DW-B4); the filter bar's tooltips below their controls near the top of the screen (FEED-29, DW-B5; its tab counts retired by DW-E3); what a delve's header names, and whether the client gives its tier (FEED-30, DW-B4); one tone per verdict in Me and Them, the arrow before the number (FEED-31, DW-D0); the action buttons colored by whose move it is, full and compact, your own drops' Offer and the Offer panel (FEED-32, DW-D1); nothing dismisses or hides a drop (FEED-33, DW-D2); the Type column's values (FEED-34, DW-D3); gold column labels, the search box spanning to the window's edge and the least width equal to the default in both layouts (FEED-35..37, DW-D4); the gold header chevron (FEED-38, DW-E0), the row chevron and indent (FEED-39, DW-E0), the Actions width (FEED-40, DW-E0), the Trade window column on every drop, ticking each second (FEED-41, DW-E1), your own drop's Trade count (FEED-42, DW-E2), `(Details)` (`(Multiple)` until DW-F3) and the keep? rule (FEED-43, DW-E2), Offer and its tones (FEED-44, DW-E2), the strip and Post (FEED-45, DW-E3), the tabs Drops and History (FEED-46, DW-E3), the least width and the compact card's line 2 (FEED-47, DW-E4); the Trade window column fitted to its widest answer (FEED-48, DW-F0), My eq merged into Me and Their eq into Them, on Drops, History and compact line 3 (FEED-49, DW-F1), the retired My eq and Their eq toggles (FEED-50, DW-F1), Offer in cyan everywhere (FEED-51, DW-F2), the (Details) tooltip's lines and fit (FEED-52, DW-F3), no glyph boxes in any tooltip (FEED-53, DW-F3), the least width 1038 (FEED-54, DW-F1), no glyph boxes outside tooltips: the toast, the detail card and the Offer panel (FEED-55, DW-F5); the Offer panel's Their eq column and no Trade button (FEED-56, DW-G0), its rows without the class bar and striped (FEED-57, DW-G0), an icon on every action button (FEED-58, DW-G1), Trade `No` in red (FEED-59, DW-G2), `Name [YOU]` (FEED-60, DW-G2), `Upgrade for N` and Trade without its count (FEED-61, DW-G2), columnar gear tooltips with the table's arrows (FEED-62, DW-G3), Post above Sort and Scan group beside it (FEED-63, DW-G4), the empty state's buttons centered (FEED-64, DW-G4); Situations as one table, a line per situation (FEED-65, DW-H0); the toast as four rows beside a four-row icon, its colors, verdicts, trade reason and right-click close (FEED-66, DW-I0); the filled downgrade glyph `▼` (FEED-67, DW-J0), Offer's `external-link` icon (FEED-68, DW-J1), the compact cards' new lines with no countdown (FEED-69, DW-J2), Sort on the tab's strip beside Scan group, Post and Clear history (FEED-70, DW-J3); no `(…)` after a compact card's name while Them reads `…`, Them cut at the card's right inset (FEED-71, DW-K0), the gray `No action` button wherever a drop has no action (FEED-72, DW-K1); History's outcomes in the action buttons' colors (FEED-73, DW-L0); no `0 shown` header where Character or Content left a group empty (FEED-74, DW-L1); each tab's default filters (FEED-75, DW-M0); no Lua error from a gear tooltip in combat (FEED-76, DW-N0); Content per tab (FEED-77, DW-Q1); one footer button kind and Expand all / Collapse all on both tabs and layouts (FEED-78, DW-Q2); a group's tooltip as rows (FEED-79, feedback-17); an off-spec upgrade cyan with the spec's name and its detail card's chip and Spec row (FEED-80, DW-O1), an off-spec groupmate below main-spec upgrades in the Offer panel (FEED-81, DW-O3); the compact card's `Trade <word>` on line 3 and no ⊕ after a cross-realm looter, the gray `No action`'s tooltip while disabled and your own upgrade's trade reason, no Looter row on your own drop's detail card (FEED-82..84, feedback-20); Trade muted green beside Can't use and auto-open on Drops (FEED-85); a late bonus roll in the same dungeon joins the key's group (FEED-86); Can't use in dim red on every surface, Not wanted still gray (FEED-87, feedback-21), Trade's `Can't use` on a drop none of your specs can use and Yes or Likely kept beside an off-spec use (FEED-88, feedback-21), every tooltip as bulleted rows, one per fact (FEED-89, feedback-21), a gear grid under the title, muted gold labels and an arrow on every worn item (FEED-90, feedback-21 H3), the detail card's glyphs, titles, stat colors and Replaces row (FEED-91, feedback-21 H5), a mark per worn item on a two-item slot wherever a verdict mark is drawn (FEED-92, feedback-21 H7), one mark where the drop was judged against one item or a bag item, or a larger Font size leaves no room (FEED-93, feedback-21 R5); both rings on a unique-equipped ring drop (FEED-94), Trade as Yes, No or ? and a short reason, on its own compact line 4, the taller compact card and the wider Trade column (FEED-95), the glow only on a tradeable upgrade (FEED-96), the trade box above the comparisons on the detail card (FEED-97; feedback-22); the compact action button on lines 2 and 3, Them on line 4 when it does not fit beside You, and the 400 compact width (FEED-98, feedback-23); the settings pages regrouped (FEED-99, feedback-24); the test-mode banner as LibKa0s-Widgets' strip (FEED-100, DW-06); the filter bar's search box as LibKa0s-Widgets' SearchBox (FEED-101, DW-07); the cyan simulation strip, and the title words only while minimized (FEED-102, DW-10); Trade on the compact card's line 3 beside the button, You and Them on line 4 to the card's edge (FEED-103, feedback-25); line 2's caps with `[YOU]` whole and the action button on top (FEED-104, RX-05); one footer line, the status after the strip's words and the grip in its corner (FEED-105, RX-09) |
 | ROSTER-1..3 | Roster | The group's members and the name resolver (DW-22); the roster kept current when another handler on its shared event raises (ROSTER-3, DW-P18) |
 | ITEM-1..7 | Item facts | The item readers' shapes and the track ids (ITEM-1..2, DW-23); a real drop read at its real level and quality, and the `drops` diagnostics line (ITEM-3, DW-80, BUG-1); the real game tooltip on every item (ITEM-4, DW-80, BUG-2); a multi-stat item judged for every primary stat (ITEM-5, the Fireproof Drape fix); a tier token's slot read from its own text: its Use text, a slot line or its name, the wait on a use spell not loaded yet, and an omni Curio by its name (ITEM-6, TT-1); a token judged against your worn piece, a Curio's best slot (ITEM-7; DW-CAT4, issue #13) |
 | COLL-1..9 | [Collectibles](#collectibles) | Issue #13 (DW-CAT1..DW-CAT7): the collection APIs' `/dump` shapes (COLL-1); a mount new to you that turns Collected once learned (COLL-2); a pet's count (COLL-3); a toy (COLL-4); a recipe known, and one for a profession you lack (COLL-5); a bound collectible's trade, yours and someone else's (COLL-6); Always watch and Never watch from the panel and the CLI, the refusals, Never watch hiding gear and the Drops Defaults keeping both lists (COLL-7); each `/dw sim drop <kind>` and test mode's item-kind samples (COLL-8); the View's New to my collection and a collectible's Slot, Type, detail card, History, item tooltip, Drops strip and diagnostics (COLL-9) |
@@ -63,8 +63,8 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
-| ROLLS-1..7 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7) |
-| FOREVER-1..16 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16) |
+| ROLLS-1..11 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes and the catch-all (ROLLS-11, RX-04) |
+| FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -267,7 +267,7 @@ item level, how long drops are kept, and rolls) to their defaults. The item list
 Track, set Mythic+'s Loot rule to Group loot, put an item on Always watch, press Defaults → both go
 back, with the Quality tab's rows; the Always watch entry and a Window value stay.
 `/dw list` → the situation rows are listed in the `feed` section, and there is no `situations`
-section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment → its
+section. Untick Solo's Track, then, solo with the window open, hover the footer's situation segment (since RX-09 the status after the strip's words, one tooltip holding every segment's rows: FEED-105) → its
 Turned on in row reads `Settings > Drops > Situations`. Items: the seven item kinds two to a line, `Equipment` | `Tier tokens` first and `Cosmetics` alone last (`Gear only` | `Include tier tokens` before DW-CAT2). Retention: the tab is still
 Retention; hover Keep history for → its tooltip opens `Account-wide: shared by every profile.`;
 under Session the checkbox reads `Clear this session's drops on boss kill`, ticked or not as before.
@@ -488,8 +488,8 @@ your own History is back. Result: passed in the client, 2026-10-16 (the owner).
 **STATE-7. Test mode's sample roll, and Rolling now following the feed (DW-FP17).** Client: both. The
 headless `test_test_mode` and `test_window_pending` cover the shape. Solo, out of combat, `/dw test` →
 above the boss groups on Drops a `Rolling now (1)` header holds one open roll on a drop of the last
-sample boss: Me reads an upgrade, the summary counts three Need, two Greed, one Pass and the rest
-still choosing, and the time left does not move (a sample is never ticked). Click the row → its ROLLS
+sample boss: Me reads an upgrade, the count line reads three by the dice, two by the coin, one by the pass and the rest by the
+clock (RX-06), and the time left does not move (a sample is never ticked). Click the row → its ROLLS
 box opens under it: you and eight members, each in class color with the choice word and no number;
 click again → it closes. `/dw compact` → the same roll is a card above the groups; `/dw full`. Open
 History → one sample group's drop keeps a roll table: expand it → its ROLLS box lists the final
@@ -497,6 +497,31 @@ numbers with the winner marked `Won`. While test mode is on, a real roll in your
 the sample (Rolling now reads test mode's own store, as Drops reads test mode's feed); `/dw test` off
 → the sample roll is gone and Rolling now shows only the live rolls, none when there are none.
 Result:
+
+**STATE-8. The title bar's lock button (RX-08, rolls UX ruling 8).** Client: both. The headless
+`test_window_shell` and `test_compact_chrome` cover the toggle. Open the window → at the title bar's
+left, a lock mark, dimmed while the window is unlocked; hover → `Lock the window`, its rows naming
+`/dw lock` and General, Lock frame. Click it → the mark is at full strength, the tooltip reads
+`Unlock the window`, the window can't be dragged or resized, and the resize grip in the footer's
+corner is gone; General › Lock frame is ticked, and so is the minimap menu's Locked. Click again →
+unlocked, the grip back. `/dw lock` and `/dw unlock` → the button follows at once. `/dw compact` →
+the same button at the compact title bar's left, the restriction badge (when one shows) just after
+it, the title clear of both. Minimized → no grip, locked or not. Result:
+
+**STATE-9. Auto-close (RX-10, rolls UX ruling 4; Review Focus 4).** Client: both. The headless
+`test_window_autoclose` covers the timer. Settings › Drops › Situations → on the line beneath
+Auto-open the window, Auto-close the window (ticked) and Close after (seconds) at 10, on both
+clients; untick Auto-open the window → both dim; tick it again. Close the window. In a tracked
+situation (a dungeon, or `/dw sim start dungeon`), let a drop open the window by itself → with
+nothing rolling and no new drop, it closes about 10 seconds later. Again, and before the count runs
+out another drop lands → the count starts over from it. With a roll open → the window stays while
+Rolling now has the roll, and closes about 10 seconds after it ends. Auto-opened, rest the pointer
+on the window → it does not close while the pointer is over it; move off → it closes about 10
+seconds later. Auto-opened, click a tab, a row's button or the title bar, or drag the window → it
+stays open for that show. Open the window yourself (`/dw show`, the minimap button, the key binding)
+→ it never closes by itself, whatever drops then arrive. Set Close after to 30 → the next
+auto-opened window waits about 30 seconds. Untick Auto-close the window → an auto-opened window
+stays. In combat it closes too, with no Lua error. Result:
 
 ## Compat
 
@@ -1446,7 +1471,7 @@ right-aligned`, `Sort follows the active tab`, `the slots, pure`, `full layout, 
 `test_compact_chrome` (`the full layout takes every control back`) cover the anchors. Research
 `04-strip-sort.png` shows Sort in the footer. `/dw test` in the full layout → the Drops strip reads, at its
 right, `[Post my tradeables] [Scan group] [Sort]`, about 8 pixels apart, Sort at the strip's right edge, Post
-as wide and tall as Sort; the footer holds only its health segments, nothing beside the corner grip. With
+as wide and tall as Sort; the footer holds only its health segments, nothing beside the corner grip (since RX-09 there is no separate footer bar: the status rides the strip after its words and the grip sits in the band's corner, FEED-105). With
 nothing of yours tradeable (as FEED-63) → Post is gone and Scan group stays beside Sort, nothing slides.
 Click History → Sort is at the right edge of History's strip, Clear history just left of it; set Sort to
 Oldest there, back to Drops → Sort is on the Drops strip again and reads Drops' own value. `/dw compact` →
@@ -1836,6 +1861,31 @@ covers History's cards: History → each card reads Trade on line 3 and You then
 order as Drops; the outcome (`Seen`, `Asked`, `Offered`) sits at the right of line 2 and the date or
 time at the right of line 3, where Drops' button is, in the same colors as before; line 1's item name
 runs to the card's right edge, and Trade is cut before the date. Result: passed in the client, 2026-10-30 (the owner).
+
+**FEED-104. Line 2's caps, `[YOU]` whole, and the action button on top (RX-05, rolls UX ruling 5;
+Review Focus 2).** Client: both. The headless `test_compact_group`, `test_compact_history` and
+`test_window_group` cover the widths and the levels. `/dw compact` and drag the window to its
+narrowest. A drop looted by someone with a long name (on WoW Forever a two-word name, FOREVER-3) →
+the card's line 2 reads `Name · Slot · Type`, the name cut with `…` first, then the slot, then the
+type, none of it running under the card's button; hover the card → its tooltip gives the whole name,
+slot and type. Your own drop → `Name [YOU] · …`, `[YOU]` gold and never cut, even when the name is.
+History's compact cards cut the same way, ending before the outcome. On full Drops rows, compact
+cards and Rolling now's rows, hover and click the Ask, Offer, No action or Ask ML button at its left
+edge, over the end of a long line → the button takes the hover and the click. The full tables'
+Looter, Slot and Type columns cut at their own widths as before, `[YOU]` whole. A short Retail name
+reads as before. Result:
+
+**FEED-105. One footer line (RX-09, rolls UX ruling 9).** Client: both. The headless
+`test_footer_row`, `test_compact_chrome` and `test_window_shell` cover the layout. `/dw test` in the
+full layout → under the Drops table is one line: the strip's own words (the tradeable count), then
+the status (inspect freshness, the last loot, the situation or `Simulating: …`, Pawn), then the
+strip's buttons on the right. There is no second status bar under it, and the table reaches down to
+that line. The resize grip sits in the line's bottom-right corner, clear of Sort. Hover the status →
+one tooltip with every segment's words and reasons, hints last. Narrow the window → the status cuts
+with `…` before the buttons, never under them. Click History → the status follows, after `n groups,
+m drops · kept for 30 days`; Insights → after its period line. `/dw compact` → the same one line
+with the short status and the same tooltip. Lock the window (STATE-8) → the grip goes; unlock → it
+is back. Result:
 
 ## Roster
 
@@ -3215,9 +3265,11 @@ is whispered and saved history is untouched (SIM-1). Result: Passed (owner, 2026
 **SIM-22. `/dw sim roll` (DW-FP17).** Client: both. `/dw sim` → the usage lists `/dw sim roll: a
 simulated group-loot roll, chosen and won over the next seconds.` among the host verbs. `/dw sim roll`
 without a running simulation → refused, nothing opens. `/dw sim start dungeon`, then `/dw sim roll` →
-*Simulated roll opened: [item], N players.*; a stand-in card titled `Roll popup (simulated)` shows
-above the middle of the screen with your verdict on it (ROLLS-4), and Drops' `Rolling now` header
-gains the roll. Over about six seconds the summary counts the choices as they land, Need before
+*Simulated roll opened: [item], N players.*; a stand-in titled `Roll popup (simulated)` shows
+above the middle of the screen with your verdict on its side card (ROLLS-4, ROLLS-9), and Drops'
+`Rolling now` header gains the roll. `/dw sim roll` again while it is open → a second stand-in
+stacked just above the first, its own card beside it (up to four). Over about six seconds the count
+line counts the choices as they land, Need before
 Greed, the numbers appear at the close and the winner is set: the row leaves Rolling now and the drop
 lands under its boss with its ROLLS box on the detail card; the stand-in goes with it. About one roll
 in six everyone passes: the row reads `Everyone passed` for a minute, then goes, and nothing reaches
@@ -3722,9 +3774,10 @@ look for is a Lua error at login or a blank tooltip row. Result:
 
 ## Rolls
 
-Everyone's group-loot rolls on Retail (Forever port design §5 to §7). The same checks on WoW Forever
-are FOREVER-10 to FOREVER-13. The in-game reads the design leaves open (when the numbers appear, how
-often the loot history fires, a trash roll's encounter) are probes P-R1 to P-R4 in
+Everyone's group-loot rolls (Forever port design §5 to §7). ROLLS-1 to ROLLS-7 are Retail's; the
+same checks on WoW Forever are FOREVER-10 to FOREVER-13. ROLLS-8 to ROLLS-11, the rolls UX round
+(2026-11-14), are both clients': record a result per client. The in-game reads the design leaves open (when the numbers appear, how
+often the loot history fires, a trash roll's encounter, your popup's own timer, a Disenchant pick's state) are probes P-R1 to P-R7 in
 [`forever-probes.md`](forever-probes.md); run them alongside.
 
 **ROLLS-1. Rolling now, live (DW-FP14, DW-FP15).** Client: Retail. In a group whose loot method is
@@ -3759,7 +3812,7 @@ card beside it goes at once. Result:
 (the game's own Need, Greed and Pass frame) → a small card in the window's skin sits beside its right
 edge, top-aligned (to its left when the popup is near the screen's right edge, RX-07): line 1 your
 verdict's mark and word with the gain (`▲ Upgrade +12`, with `· score +N` while a scorer is in use),
-line 2 the count line (dice, coin, pass and still-to-roll icons with their counts) as the choices
+line 2 the count line (dice, coin, Disenchant, pass and still-to-roll icons with their counts, ROLLS-8) as the choices
 land; hover the card → every roll in its tooltip. Choose on the popup → the popup and its card go
 together. A drop the Drops tab's own filters hide still gets line 1, without line 2.
 Nothing on the popup itself moves, its buttons and their tooltips work as before, and it works in
@@ -3772,7 +3825,7 @@ own count. Each resolves into its own drop with its own ROLLS box. Result:
 
 **ROLLS-6. A `/reload` mid-roll (Review Focus 3).** Client: Retail. With a roll open, `/reload` → the
 roll is back in Rolling now once, not twice, with the choices already made; the popup's card is back
-on the popup. It resolves into exactly one drop with its ROLLS box. Result:
+beside the popup. It resolves into exactly one drop with its ROLLS box. Result:
 
 **ROLLS-7. Guild Master Loot: the awaiting item and Ask master looter (DW-FP18, DW-FP19).** Client:
 Retail. In a guild group under Guild Master Loot, as a raider who is not the master looter, open a
@@ -3783,6 +3836,61 @@ template, its gain written `+N`; the button reads Asked. The master looter hands
 and the drop lands under its boss, its History entry marked as asked. Re-opening the corpse adds no
 second row. Become the master looter → your held items go. Whether the loot window lists the slots
 to a raider at all is probe P-ML1; record what it showed. Result:
+
+**ROLLS-8. The icon count line and the every-roll tooltip (RX-06, rolls UX rulings 1 and 2).**
+Client: both. The headless `test_roll_cells` and `test_window_pending` cover the counts and the
+order. During an open group-loot roll (or `/dw sim start dungeon`, then `/dw sim roll`) → Rolling
+now's row, and its compact card, read one line of icons with a count after each: the dice for Need
+(an off-spec Need too), the coin for Greed (a Transmog too), the cross for Pass and the clock for
+those still to roll, a choice nobody made left out; the counts move as the choices land. Hover the
+row → the tooltip names the item, then a row per choice (`Need (3): Brakk 87, Seta 12, Lyra`), the
+numbers highest first, each name in its class color and yours marked `[YOU]`, then those still to
+roll, the time left, and your verdict on a `You` row at the foot. Once it is won, the drop's ROLLS
+box on its detail card, and the same drop's History card, draw the same count line beside `Won by
+<name> (Need 87)`. On Retail a Disenchant choice has its own icon (the game's DE button art), count
+and tooltip group when the roll table names one; the loot history gives no Disenchant state today
+(probe P-R7, a known limitation), so record what a Disenchant pick showed. On WoW Forever no
+Disenchant icon, group or word appears anywhere: not on the line, in the tooltip, in the ROLLS box
+or on the popup's card (clients-§4). Fail: a `?` where the name is plain, a count that disagrees
+with the tooltip, or the word Disenchant on Forever. Result:
+
+**ROLLS-9. The roll popup's side card and its flip (RX-07, rolls UX ruling 1; Review Focus 1).**
+Client: both. The headless `test_roll_popup` covers the anchors. With Blizzard's roll popup where
+the game puts it → the card sits to the popup's right, 4 px out, its top level with the popup's, in
+the window's skin (the skin's background, edge and text, not a gray box), and follows a skin change
+(General › Skin). Line 1 is your verdict (a lockbox reads `Lockbox` in the neutral color,
+ROLLS-11); line 2 is ROLLS-8's count line. No `Need so far` anywhere, and nothing above the popup.
+Hover the card → ROLLS-8's tooltip, read again on each hover. Where the client lets you move the
+popups (Edit Mode on Retail), put them near the screen's right edge → each card flips to its popup's
+left, top-aligned. A boss with several rolls at once (four if you can get them) → a popup each, each
+with its own card; no card covers a popup or another card, on either side. Choose on one popup →
+its card goes with it and the others stay. `/dw sim start dungeon`, then `/dw sim roll` twice → two
+stand-ins stacked, each with its own card on its right (the stand-ins sit mid-screen, so they never
+show the flip). Nothing on Blizzard's popups moves or stops working, in combat too. Result:
+
+**ROLLS-10. The roll's time left (RX-02, rolls UX design §3.4; Review Focus 5).** Client: both.
+The headless `test_roll_cells` and `test_compat_loot` cover the guard. Run probes P-R4 and P-R6
+beside it. A roll your own popup shows → Rolling now's time left starts near the roll's length (a
+minute or two, never hours: the old 2717:57) and counts down each second in step with the popup's
+own timer bar; the tooltip's Time left reads the same. Choose on the popup → the time keeps counting
+or goes away, and never jumps to a large number. A roll with no popup of yours (one you can't roll
+on, or one whose timer stopped answering after your choice) → a time of at most 5:00, or none at
+all. At the end → `Roll ended` or the winner, never a negative time. Record on each client what the
+row read at the start and after your choice. Result:
+
+**ROLLS-11. Lockboxes, bags and the catch-all (RX-04, rolls UX ruling 3; Review Focus 3).** Client:
+both. Probe P-BOX first. The headless `test_collectibles`, `test_pending` and `test_feed` cover the
+kinds. Settings › Drops › Items › Item kinds lists Lockboxes and containers (ticked) and Everything
+else that is rolled on (unticked). A group roll on a lockbox (a Junkbox, a Heavy or Ornate Bronze
+Lockbox) → Rolling now shows it with `Lockbox` where gear shows a verdict, in the neutral color, with
+no ▲ or ▼ gain; the popup's card reads `Lockbox` too. Once won it lands under its boss reading
+`Lockbox`, with no gain and no Ask, and in History. A bag rolled on → `Container`. Nothing reads
+`Unknown`. A reagent, cloth or other item of no kind rolled on → not in the window; tick Everything
+else that is rolled on → the next one shows as `Item`, neutral, no gain, and lands in History, where
+Insights' item kind counts it as Other loot. The same item looted with no roll → still not shown,
+the catch-all on. A lockbox, a bag and a reagent rolled together with the defaults → the lockbox and
+the bag show, the reagent does not. Untick Lockboxes and containers → the next lockbox roll is not in
+the window, though the popup's card still reads its kind. Result:
 
 ## WoW Forever
 
@@ -3855,8 +3963,9 @@ a battleground → PvP; a group in the open world → Open-world group; alone �
 names the instance and the difficulty the client answers. Result:
 
 **FOREVER-10. Rolls live (DW-FP13 to DW-FP15).** Client: WoW Forever. ROLLS-1 on Forever, where group
-loot is the party's and the raid's default: an open roll in Rolling now with your verdict, the summary
-and the time left; a click opens its ROLLS box. Run probes P-R1, P-R2 and P-R4 during the roll and
+loot is the party's and the raid's default: an open roll in Rolling now with your verdict, the count line
+(never a Disenchant icon, ROLLS-8) and the time left (ROLLS-10); a click opens its ROLLS box. Run
+probes P-R1, P-R2, P-R4 and P-R6 during the roll and
 record whether the numbers show before the close. Result:
 
 **FOREVER-11. Rolls final (DW-FP15, DW-FP16).** Client: WoW Forever. ROLLS-2 on Forever: the won drop's
@@ -3866,12 +3975,14 @@ A roll on trash or an open-world elite → recorded under the encounter the clie
 
 **FOREVER-12. Master-loot pending and Ask master looter (DW-FP18, DW-FP19).** Client: WoW Forever.
 Probe P-ML1 first. ROLLS-7 under Forever's master loot (any group, no guild needed), with the master
-looter a two-word name (FOREVER-3). Result:
+looter a two-word name (FOREVER-3). The threshold is the party's Loot Threshold (Uncommon unless
+the leader moves it): a green at or above it is held, and nothing below it (probe P-ML3). Result:
 
 **FOREVER-13. The roll popup mark (DW-FP20).** Client: WoW Forever. Probe P-POPUP first. ROLLS-4 on
 Forever, plus the bound-on-pickup wording: a BoP upgrade's card reads `▲ Need: upgrade +N`, a BoP
 drop you can't use `Greed / Pass: you can't use it`; a BoE drop keeps the verdict word. Two copies
-of one item (ROLLS-5) each keep their own count. Turn on the gamepad UI → no card is drawn (the
+of one item (ROLLS-5) each keep their own count. ROLLS-9 on Forever: the card beside the popup,
+flipping to its left near the screen's right edge. Turn on the gamepad UI → no card is drawn (the
 client lists rolls in its own gamepad frame, a known limitation). Result:
 
 **FOREVER-14. The simulator (DW-FP09, DW-FP17).** Client: WoW Forever. `/dw sim start dungeon` → the
@@ -3906,6 +4017,16 @@ gate and Retail's tier tokens (ITEM-5 to ITEM-7; Forever's soft gate is FOREVER-
 re-vendors (INSTALL-4 to INSTALL-6, PANEL-11, SKIN-1, SKIN-37, SKIN-47, SKIN-50), EllesmereUI
 (SKIN-17, SKIN-18) and the collection census (SLASH-7). ROLLS-1 to ROLLS-7 stay Retail's: FOREVER-10
 to FOREVER-13 run them on Forever with its probes. Result:
+
+**FOREVER-17. Forever's defaults (RX-01, rolls UX ruling 7).** Client: WoW Forever. Settings ›
+Profiles → create a new profile. Drops › Situations → Open-world group has Track and Auto-open
+ticked, as Dungeon, Raid and Solo do, and PvP neither; Auto-open the window and Auto-close the
+window are ticked and Close after reads 10. Drops › Quality → Minimum quality Fixed at Uncommon,
+Always show upgrades for me ticked, and the closing line reads `In force now: Quality: Uncommon+`;
+the filter bar's Quality reads `Uncommon+`. In a group in the open world, someone loots a green you
+could use → the window opens by itself with the drop, and closes as STATE-9 says. Switch back to
+your old profile → its stored values are unchanged. On Retail a new profile keeps the open-world
+group untracked and Fixed at Rare (SIT-7, QUAL-1). Result:
 
 ## Pending sign-off
 
