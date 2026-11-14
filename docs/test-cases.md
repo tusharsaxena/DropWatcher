@@ -1988,7 +1988,7 @@ Total.
 - item lists: `/dw get` shows a list as its size, and a named `/dw reset` empties it
 - item lists: `/dw set` on a list is refused by the generic verb, and the list is unchanged
 - item lists: Never watch hides gear as blacklist, and beats Always watch on an overlap
-- item lists: Always watch shows an item of no kind as a feed-only unknown on its list
+- item lists: Always watch shows an item of no kind as a feed-only Item on its list
 - item lists: Always watch passes a kind turned off and the quality gate, gear judged as gear
 - item lists: Always watch never overrides the situation gate
 

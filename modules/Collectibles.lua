@@ -19,8 +19,8 @@ local _, NS = ...
 -- no kind. Verdict(facts, forced) answers the `me` evaluation of a collectible (new,
 -- collected, unknown, or can't use for a recipe of a profession you lack), of a container (its kind
 -- word, `lockbox` or `container`), of an item of no kind (`item`, category `other`: the feed shows
--- one only through its rolled-on catch-all, and your roll popup judges every roll), or of a
--- whitelisted item with no category (`unknown`); nil for gear. None of these carries a gain, and
+-- one only through its rolled-on catch-all, and your roll popup judges every roll; a whitelisted
+-- one reads `item` too, and `unknown` only while its class is not read, RX-12); nil for gear. None of these carries a gain, and
 -- each is feed-only. IsCollectible says whether a category gets a collection verdict (C.CATEGORIES'
 -- `collectible`).
 --
@@ -134,16 +134,23 @@ end
 -- A lockbox's kind word (its tooltip read Locked: `facts.lockbox`), else a bag's or a box's.
 local function containerWord(facts) return facts.lockbox == true and "lockbox" or "container" end
 
+local function readsAsGear(facts) return isGearClass(facts) or C.SLOT_PLAN[facts.equipLoc or ""] ~= nil end
+
+-- An Always watch item of no kind whose class is not read yet, or that reads as gear.
+local function forcedUnknown()
+    return { verdict = "unknown", equip = "collect", collect = true, reasons = { reason("whitelisted") } }
+end
+
 -- The verdict of an item that is not gear and not collected (RX-04): a container's kind word, an
--- item of no kind's `item`, an Always watch item of no kind `unknown`; nil for gear and a token.
+-- item of no kind's `item` (an Always watch one too, ruling 3: never Unknown, RX-12); nil for gear
+-- and a token. An Always watch item of no category answers `unknown` only while its class is not
+-- read, or when it reads as gear.
 kindVerdict = function(facts, forced)
     if type(facts) ~= "table" then return nil end
     local category = facts.category
     if category ~= nil and category ~= "container" then return nil end
-    if category == nil and forced then
-        return { verdict = "unknown", equip = "collect", collect = true, reasons = { reason("whitelisted") } }
-    end
-    if category == nil and (isGearClass(facts) or C.SLOT_PLAN[facts.equipLoc or ""]) then return nil end
+    if category == nil and readsAsGear(facts) then return forced and forcedUnknown() or nil end
+    if category == nil and forced and facts.classID == nil then return forcedUnknown() end
     local out = { verdict = category and containerWord(facts) or "item", equip = "collect", collect = true,
         category = category or "other", reasons = { reason("notGear") } }
     if forced then out.reasons[2] = reason("whitelisted") end
@@ -154,7 +161,8 @@ end
 ---   { verdict = "newCollect" | "collected" | "collectUnknown" | "cantUse", equip = "collect",
 ---     collect = true, category, count?, limit?, reasons = { { key, detail } } }
 --- `forced` (the whitelist let the item through) adds the `whitelisted` reason; a forced item with
---- no category answers verdict `unknown`. A container answers its kind word (`lockbox`, `container`)
+--- no category answers its kind word like any other (`item`), and verdict `unknown` only while its
+--- class is not read or when it reads as gear. A container answers its kind word (`lockbox`, `container`)
 --- and an unforced item of no kind `item` (category `other`), reason `notGear`. Nil for gear and a
 --- tier token (the gear kernel judges them) and for no facts.
 --- @param facts table|nil

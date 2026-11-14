@@ -232,7 +232,7 @@ test("item lists: Never watch hides gear as blacklist, and beats Always watch on
     assertEqual(LF.Stats().hidden.blacklist, 2)
 end)
 
-test("item lists: Always watch shows an item of no kind as a feed-only unknown on its list", function()
+test("item lists: Always watch shows an item of no kind as a feed-only Item on its list", function()
     local NS, m, LF = party()
     m.addItem(link(300), { name = "Potion", quality = 1, ilvl = 1, equipLoc = "", classID = 0, subClassID = 0,
         stats = {} })
@@ -241,8 +241,9 @@ test("item lists: Always watch shows an item of no kind as a feed-only unknown o
     local rec = LF.Drops()[1]
     -- red under: judgeMe not reading the whitelist (the gear kernel's `unknown notGear`)
     assertTrue(rec ~= nil, "shown past notWatched and the quality gate")
-    assertEqual(rec.me.verdict, "unknown"); assertTrue(rec.me.collect)
-    assertEqual(rec.me.reasons[1].key, "whitelisted")
+    -- ruling 3 (RX-12 review fix): its kind word, never Unknown
+    assertEqual(rec.me.verdict, "item"); assertTrue(rec.me.collect)
+    assertEqual(rec.me.reasons[#rec.me.reasons].key, "whitelisted")
     assertTrue(rec.forced); assertEqual(rec.quality.reason, "whitelisted")
     assertTrue(NS.Collectibles.IsFeedOnly(rec), "no Ask, toast or inspect")
     assertNil(rec.them)

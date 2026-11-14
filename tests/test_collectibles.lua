@@ -107,7 +107,13 @@ test("collectibles: a lockbox reads lockbox, a bag container, an item of no kind
     assertEqual(v.verdict, "item"); assertEqual(v.category, "other"); assertTrue(v.collect)
     v = c.Verdict({ category = "container", classID = MISC, subClassID = JUNK_SUB, lockbox = true }, true)
     assertEqual(v.verdict, "lockbox"); assertEqual(v.reasons[#v.reasons].key, "whitelisted")
-    assertEqual(c.Verdict({ classID = REAGENT_CLASS }, true).verdict, "unknown", "an Always watch item keeps its own")
+    -- RX-12 review fix (ruling 3: never Unknown): an Always watch item of a known class and no kind
+    -- reads its kind word too, with the whitelisted reason; only one whose class is not read yet
+    -- stays unknown (red under: the forced path answering unknown before the class was looked at).
+    v = c.Verdict({ classID = REAGENT_CLASS, subClassID = 1 }, true)
+    assertEqual(v.verdict, "item", "an Always watch reagent reads Item, never Unknown")
+    assertEqual(v.category, "other"); assertEqual(v.reasons[#v.reasons].key, "whitelisted")
+    assertEqual(c.Verdict({ itemID = 7 }, true).verdict, "unknown", "its class not read yet: unknown")
 end)
 
 -- ---------------------------------------------------------------------------------------------
