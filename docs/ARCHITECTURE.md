@@ -525,8 +525,8 @@ a popup or its table: no field, no `SetScript`, `SetParent`, `SetPoint` or strat
 buttons (on the frame on Retail, in `LootButtonContainer` on Forever) are never touched, so the
 container's managed layout is not tainted. None of it is protected, so it draws in combat too.
 Auto-close (`modules/WindowAutoClose.lua`, RX-10) closes the window with a `Hide` of that owned
-frame, so it runs in combat as the auto-open's `Show` does. The one-way `OnMouseDown` and `OnEnter`
-`HookScript`s it lays (each once per frame) are on the window's own frames, none of them protected,
+frame, so it runs in combat as the auto-open's `Show` does. The one-way `OnMouseDown`, `OnEnter` and
+`OnLeave` `HookScript`s it lays (each once per frame) are on the window's own frames, none of them protected,
 and never on a Blizzard frame.
 The master-loot pending kind (`modules/PendingML.lua`, DW-FP18) only reads the loot window you
 opened, through `core/CompatLoot.lua` (`LootSlots`: each slot's link, quality, lock and source GUID,

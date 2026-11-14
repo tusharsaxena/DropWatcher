@@ -262,3 +262,19 @@ test("autoclose: a window the combat ladder hides is not closed; the count start
     m.advance(0.2)
     assertFalse(NS.IsWindowShown())
 end)
+
+-- RX-12 review fix: the pointer leaving starts a full count, whenever it leaves.
+-- red under: no OnLeave hook (the count that restarted under the pointer ran out 0.6 s after it left)
+test("autoclose: the pointer leaving the window starts a full count from then", function()
+    local NS, m, f = autoOpened()
+    f.__mouseOver = true
+    f:__fire("OnEnter")
+    m.advance(19.5)
+    assertTrue(NS.IsWindowShown(), "held open under the pointer")
+    f.__mouseOver = false
+    f:__fire("OnLeave")
+    m.advance(9.9)
+    assertTrue(NS.IsWindowShown(), "a full count after the pointer left")
+    m.advance(0.2)
+    assertFalse(NS.IsWindowShown())
+end)

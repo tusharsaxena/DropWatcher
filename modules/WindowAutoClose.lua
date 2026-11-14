@@ -9,7 +9,8 @@ local _, NS = ...
 --
 -- THE COUNT is one C_Timer.NewTimer handle of `window.autoClose.seconds` (5 to 120, default 10).
 -- A new drop (DropAdded) and a roll or pending item opening, changing or closing (PendingChanged)
--- start it over; so does the pointer entering the frame or any frame under it (an OnEnter hook).
+-- start it over; so does the pointer entering or leaving the frame or any frame under it (OnEnter
+-- and OnLeave hooks), so the window closes a full count after the pointer left it.
 -- When it runs out it closes the window only while Rolling now is empty (NS.Pending.Count of the
 -- shown feed) and the pointer is not over it; otherwise it starts over, so the window closes a full count after the last
 -- roll closed or the pointer left. `window.autoClose.enabled` off, or the master `autoOpen` off, and
@@ -88,15 +89,18 @@ AC.Cancel = AC.Disarm
 
 -- A press lands on the control under the pointer and never bubbles to its parent, and the window's
 -- face is mostly controls (its tabs, the title bar and its buttons, the rows, the filter bar). So
--- the window and every frame under it hear the press and the pointer entering themselves: one-way
+-- the window and every frame under it hear the press and the pointer entering and leaving: one-way
 -- HookScripts on frames this addon made, none of them protected. A frame is hooked once (`hooked`);
 -- the walk runs at Arm and after each repaint while armed (AC.OnRefresh), so a row a repaint built
 -- after the open is reached too.
 local function hookOne(f)
     if hooked[f] or not f.HookScript then return end
-    if f.HasScript and not (f:HasScript("OnMouseDown") and f:HasScript("OnEnter")) then return end
+    if f.HasScript and not (f:HasScript("OnMouseDown") and f:HasScript("OnEnter") and f:HasScript("OnLeave")) then
+        return
+    end
     hooked[f] = true
     f:HookScript("OnEnter", function() AC.Bump() end)
+    f:HookScript("OnLeave", function() AC.Bump() end)
     f:HookScript("OnMouseDown", function() AC.Cancel() end)
 end
 

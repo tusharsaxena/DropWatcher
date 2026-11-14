@@ -533,7 +533,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_window_autoclose.lua (15)
+### test_window_autoclose.lua (16)
 
 - autoclose: on by default with 10 seconds, on this client
 - autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
@@ -550,6 +550,7 @@ Total.
 - autoclose: a window the player closes disarms, and the next auto-open arms again
 - autoclose: the stand-down cancels the countdown
 - autoclose: a window the combat ladder hides is not closed; the count starts when it shows
+- autoclose: the pointer leaving the window starts a full count from then
 
 ### test_compact_cards.lua (27)
 
@@ -2899,7 +2900,7 @@ Total.
 | test_window.lua | 19 |
 | test_window_shell.lua | 68 |
 | test_window_compact.lua | 25 |
-| test_window_autoclose.lua | 15 |
+| test_window_autoclose.lua | 16 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
@@ -3004,4 +3005,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2482** |
+| **Total** | **2483** |
