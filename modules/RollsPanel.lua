@@ -10,7 +10,8 @@ local _, NS = ...
 -- has closed (a won roll leaves Pending at once) still shows its winner: the block keeps the item
 -- table the store handed out, whose final roll the store wrote before it closed it. A block whose
 -- item the store still holds but Rolling now no longer lists (`rolls.show` off, test mode turned
--- on or off) leaves at once, with no linger.
+-- on), or a test sample the store let go (test mode turned off), leaves at once, with no linger;
+-- a sample's id is never kept as left, since the next test mode numbers its samples from 1 again.
 --
 -- THE LIFECYCLE (design §3.4). PendingChanged reconciles the blocks: a new roll adds one (and
 -- clears the close button's dismissal); a roll that is over (won, everyone passed, expired, or
@@ -129,7 +130,8 @@ local function leave(b)
         return
     end
     drop(b)
-    left[b.id] = true
+    -- a test sample's id (`test:<n>`) comes back the next time test mode starts
+    if not b.item.test then left[b.id] = true end
     NS.Debug(TAG, "rolls panel: roll %s left (%d left)", tostring(b.id), #blocks)
     if #blocks == 0 then NS.WindowAutoClose.Bump() end
     paint()
@@ -181,8 +183,9 @@ local function settle(shown)
             local item = shown[b.id]
             if item then
                 if item.state ~= "open" then stale[#stale + 1] = { b, false } end
-            elseif NS.Pending.Get(b.id) then
-                stale[#stale + 1] = { b }           -- still held, no longer listed: leaves at once
+            elseif NS.Pending.Get(b.id) or b.item.test then
+                -- still held but no longer listed, or a test sample (test mode ended): leaves at once
+                stale[#stale + 1] = { b }
             else
                 stale[#stale + 1] = { b, true }     -- the store closed it (a won roll)
             end

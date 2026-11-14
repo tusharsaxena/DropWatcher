@@ -328,6 +328,29 @@ test("rolls panel: the close button hides it until the next roll starts", functi
     assertTrue(NS.RollsPanel.IsShown(), "the next roll shows it")
 end)
 
+-- red under: settle() lingering a test sample the store dropped, and `left` keeping its recycled id
+test("rolls panel: test mode's samples leave at once when it ends, and show again when it comes back", function()
+    local NS, m = shown()
+    m.seedGearJournal()
+    local function quietly(fn)
+        local p = m.print
+        m.print = function() end
+        fn()
+        m.print = p
+    end
+    -- RX-19 wires test mode to the panel; here any later PendingChanged reads the samples in
+    quietly(function() NS.SetTestMode(true) end)
+    NS.RollsPanel.Refresh()
+    local n = #NS.RollsPanel.Drawn().blocks
+    assertTrue(n > 0, "test mode's samples fill the panel")
+    quietly(function() NS.SetTestMode(false) end)
+    assertFalse(NS.RollsPanel.HasBlocks(), "no linger for samples the store dropped")
+    quietly(function() NS.SetTestMode(true) end)
+    NS.RollsPanel.Refresh()
+    assertEqual(#NS.RollsPanel.Drawn().blocks, n, "the samples' recycled ids join again")
+    quietly(function() NS.SetTestMode(false) end)
+end)
+
 -- ── auto-close ──────────────────────────────────────────────────────────────────────────────
 
 -- red under: WindowAutoClose's idle() not asking RollsPanel.HasBlocks
