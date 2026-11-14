@@ -796,7 +796,7 @@ LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (
         ─> closed, an ask still queued for it canceled
 
 PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending; a roll's `open` auto-opens
-  a closed window, RX-16), RollPopup (the mark)
+  a closed window, RX-16), RollPopup (the mark), RollsPanel (its blocks, RX-17)
 ```
 
 The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's
@@ -825,6 +825,22 @@ PendingChanged, GearChanged, the rolls.popupMark row, the stand-up ─> the show
 CANCEL_LOOT_ROLL / popup OnHide ─> the card down, the cache entry dropped
 a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the popup's size, the
   first free of four (RP.StandIn(n)), each next one stacked above the last
+```
+
+## The Rolls panel (rolls panel design, RX-17)
+
+```
+PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() less kind `ml`
+  a new id (not seen, not left) ─> a block, in start order; the close button's dismissal clears
+  a block's item not open (allPassed, expired) ─> done; closed by the store (a won roll: Get nil,
+    the block keeps the item table, its final roll) ─> done; still held but not listed ─> dropped
+  done ─> rolls.panel.linger s (0: at once) ─> leaves, unless the pointer is over the panel (held:
+    the panel's OnLeave counts every finished block again) ─> the last one ─> WindowAutoClose.Bump
+paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
+  ─> pooled headers and lines (RollsPanelRows.Block: Grouped rows, result, verdict foot) ─> docked
+  right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s ticker while open
+Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
+WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
 ```
 
 ## Opening a trade (design spec §4)

@@ -462,3 +462,16 @@ L["What you whisper the master looter to ask for an item waiting for them to han
 L["Ask the master looter (whisper to the master looter)"] = "Ask the master looter (whisper to the master looter)"
 L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."] =
     "The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."
+
+-- Drops > Rolls (settings/SchemaRows.lua): the subsections, and the Rolls panel rows (RX-17)
+L["Window and popup"] = "Window and popup"
+L["Panel"] = "Panel"
+L["Right"] = "Right"
+L["Show the Rolls panel beside the window"] = "Show the Rolls panel beside the window"
+L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand."] = "While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand."
+L["Side"] = "Side"
+L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."] = "Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."
+L["Keep a finished roll for (seconds)"] = "Keep a finished roll for (seconds)"
+L["How long a roll stays in the Rolls panel after it is won or everyone passed; 0 removes it at once. Nothing leaves while the pointer is over the panel. Needs Show the Rolls panel beside the window."] = "How long a roll stays in the Rolls panel after it is won or everyone passed; 0 removes it at once. Nothing leaves while the pointer is over the panel. Needs Show the Rolls panel beside the window."
+L["Fold Pass and Waiting in a raid"] = "Fold Pass and Waiting in a raid"
+L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."] = "In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."

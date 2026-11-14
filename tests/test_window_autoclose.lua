@@ -369,8 +369,12 @@ test("roll open: a roll for a watched item opens a closed window on Drops, and a
     d.rollInfos[1].isWinner = true
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
     assertEqual(NS.Pending.Count(), 0, "the roll is done")
-    m.advance(9.9)
-    assertTrue(NS.IsWindowShown(), "a full count after the roll closed")
+    -- RX-17: the finished roll lingers 10 s in the Rolls panel, which holds the window open, and
+    -- the count starts over when its block leaves
+    m.advance(10.1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the panel's block left")
+    m.advance(9.8)
+    assertTrue(NS.IsWindowShown(), "a full count after the panel's last block left")
     m.advance(0.2)
     assertFalse(NS.IsWindowShown(), "then it closes")
 end)

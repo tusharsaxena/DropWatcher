@@ -257,7 +257,7 @@ simulation's session-only log while one is on). Window › Layout's until feedba
 Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
 
-**Rolls** (Forever port design §5.3, DW-FP15; both clients): **Show rolls** (`rolls.show`: the Drops
+**Rolls** (Forever port design §5.3, DW-FP15; both clients), two subsections since RX-17 (options-ui-§7: two subjects on one tab). **Window and popup:** **Show rolls** (`rolls.show`: the Drops
 tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
 off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`:
 a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`: your verdict, and
@@ -267,6 +267,16 @@ window; a change to the third repaints the marks on the popups shown now. The de
 Mark the roll popup under Alerts › Roll popup; it stays here beside Show rolls and Keep rolls, the
 plan's placement, as Claude's call (2026-11-13), because it is one of the three roll switches and the
 Alerts page holds the toast's rows. The owner can move it at the merge gate.
+
+**Panel** (rolls panel design §3.5, RX-17; both clients): **Show the Rolls panel beside the window**
+(`rolls.panel.enabled`, on), **Side** (`rolls.panel.side`, a Right / Left dropdown; its tooltip says it
+flips when the screen has no room), **Keep a finished roll for (seconds)** (`rolls.panel.linger`, a 0
+to 60 slider, whole seconds, default 10) and **Fold Pass and Waiting in a raid**
+(`rolls.panel.foldInRaid`, on; raid mode is RX-18). The three sub-rows dim while the panel is off,
+each tooltip ending "Needs Show the Rolls panel beside the window." (options-ui-§21). A change
+repaints the panel. The design named the subsection `Rolls panel`; it is `Panel`, because a
+subsection never restates its tab's name (options-ui-§7), and the location strings read
+`Drops > Rolls > Panel`.
 
 ## Comparison
 

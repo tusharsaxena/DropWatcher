@@ -174,6 +174,13 @@ the code reads every case the design leaves open, module by module, is in
 - **Auto-close's indent.** Rolls UX design §3.6 asks for Auto-close indented beneath Auto-open the
   window; the settings flow (LibKa0s-Options) has no indent, so it sits on the line beneath it, and
   its tooltip says it needs Auto-open the window (options-ui-§21).
+- **The Rolls panel in a dungeon only (RX-17).** Every block is open; raid mode (one block open,
+  folded Pass and Waiting, a scrolling body, `Rolls · N`, the compact layout's 220 width) is RX-18,
+  so until then a raid's panel is as tall as the window and clips what does not fit, and
+  `rolls.panel.foldInRaid` is stored but read by nothing. The panel is 250 wide in the window's
+  units whatever the font size.
+- **The Rolls panel and the Offer panel on one side.** Both dock beside the window; with the Offer
+  panel open on the side the Rolls panel takes, the two overlap until one closes.
 
 ## The simulator
 

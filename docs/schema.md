@@ -136,9 +136,13 @@ button and profiles reach them as any row.
 | `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
-| `rolls.show` | `true` | Rolls | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
-| `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (the entry's `rolls`) |
-| `rolls.popupMark` | `true` | Rolls | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
+| `rolls.show` | `true` | Rolls › Window and popup | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
+| `rolls.keep` | `true` | Rolls › Window and popup | keep a rolled drop's roll table in History (the entry's `rolls`) |
+| `rolls.popupMark` | `true` | Rolls › Window and popup | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
+| `rolls.panel.enabled` | `true` (both clients) | Rolls › Panel | the Rolls panel docked beside the window (rolls panel design §3.5, RX-17, `modules/RollsPanel.lua`): every watched roll and every player's roll on it, while rolled and `rolls.panel.linger` seconds after; off shows nothing and tracks nothing |
+| `rolls.panel.side` | `"right"` | Rolls › Panel | `right` or `left`: the window side the panel docks on; it flips to the other when the screen has no room |
+| `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds a finished roll stays in the panel (0: removed at once); nothing leaves while the pointer is over it |
+| `rolls.panel.foldInRaid` | `true` | Rolls › Panel | raid mode's Pass and Waiting folded to one line each (RX-18; stored since RX-17) |
 
 ### Comparison
 

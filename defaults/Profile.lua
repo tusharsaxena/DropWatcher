@@ -139,11 +139,16 @@ NS.C = {
         -- Everyone's loot rolls (Forever port design §5.3, both clients): `show` the Drops tab's
         -- Rolling now section and a resolved drop's Rolls box (the store tracks every roll either
         -- way), `keep` the roll table in History (DW-FP16), `popupMark` your verdict on the game's
-        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration.
+        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration. `panel` is
+        -- the Rolls panel docked beside the window (rolls panel design §3.5, RX-17), on both clients:
+        -- `enabled`, the `side` it docks on (`right` or `left`; it flips when the screen has no
+        -- room), how many seconds a finished roll `linger`s (0 to 60), and `foldInRaid`, Pass and
+        -- Waiting folded to one line each in raid mode (RX-18).
         rolls = {
             show      = true,
             keep      = true,
             popupMark = true,
+            panel     = { enabled = true, side = "right", linger = 10, foldInRaid = true },
         },
 
         -- How a drop is judged (design spec §5). `weights` and `undesired` are keyed by specID:

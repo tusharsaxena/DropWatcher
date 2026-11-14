@@ -222,15 +222,19 @@ function RC.Counts(roll)
     return n
 end
 
--- One group's mark as an inline texture at the text's height: the game's art as it is, a LibKa0s
--- icon in its tone (its word when the library is absent).
-local function markOf(g)
+--- One group's mark (a RC.GROUPS entry) as an inline texture at the text's height: the game's art
+--- as it is, a LibKa0s icon in its tone (its word when the library is absent). The count line, the
+--- tooltip and the Rolls panel's rows (modules/RollsPanelRows.lua) draw it.
+--- @param g table
+--- @return string
+function RC.Mark(g)
     if g.glyph then return ("|T%s:0:0|t"):format(g.glyph) end
     local path = NS.Icon(g.icon)
     if not path then return g.word end
     local t = NS.Constants.TONE[g.tone]
     return NS.TipMarks.Escape(path, t.r, t.g, t.b)
 end
+local markOf = RC.Mark
 
 --- The count line: each choice's icon and how many made it, in RC.GROUPS' order, two spaces apart
 --- (`[dice] 3  [coin] 2  [pass] 1  [hourglass] 4`); "" for a table with nobody on it.
@@ -276,9 +280,32 @@ local function highFirst(a, b)
     return a.name < b.name
 end
 
+--- Every roll grouped by choice, in RC.GROUPS' order (Need, Greed, Disenchant on Retail, Pass,
+--- still to roll), a choice nobody made left out, each group's RC.Rows rows highest roll first (the
+--- rest by name): { { group = RC.GROUPS entry, rows = { row, ... } }, ... }. The tooltip and the
+--- Rolls panel (modules/RollsPanelRows.lua) both read it, so the two never order a roll apart.
+--- @param roll table|nil the plain roll table
+--- @return table[]
+function RC.Grouped(roll)
+    local by = {}
+    for _, e in ipairs(RC.Rows(roll)) do
+        local g = groupOf(e)
+        by[g] = by[g] or {}
+        table.insert(by[g], e)
+    end
+    local out = {}
+    for _, g in ipairs(RC.GROUPS) do
+        local list = by[g.key]
+        if list then
+            table.sort(list, highFirst)
+            out[#out + 1] = { group = g, rows = list }
+        end
+    end
+    return out
+end
+
 -- One group's row: `• [dice] Need (3): Brakk 87, Seta 12, Lyra`, highest roll first.
 local function groupRow(g, list)
-    table.sort(list, highFirst)
     local names = {}
     for i, e in ipairs(list) do names[i] = playerText(e) end
     return row(("%s %s"):format(markOf(g), L["%s (%d)"]:format(g.word, #list)), table.concat(names, ", "))
@@ -305,15 +332,7 @@ function RC.Tooltip(roll, opts)
     opts = opts or {}
     roll = type(roll) == "table" and roll or {}
     local tip = { itemTitle(roll) or L["Rolls"] }
-    local by = {}
-    for _, e in ipairs(RC.Rows(roll)) do
-        local g = groupOf(e)
-        by[g] = by[g] or {}
-        table.insert(by[g], e)
-    end
-    for _, g in ipairs(RC.GROUPS) do
-        if by[g.key] then tip[#tip + 1] = groupRow(g, by[g.key]) end
-    end
+    for _, e in ipairs(RC.Grouped(roll)) do tip[#tip + 1] = groupRow(e.group, e.rows) end
     footerRows(tip, roll, opts)
     return tip
 end

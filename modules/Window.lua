@@ -85,6 +85,7 @@ local TAB_PLACEHOLDER = {
 local frame   -- built on the first show
 local openedByTestMode = false   -- test mode, not the player, opened the window
 local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
+local geometryListeners = {}     -- fn(cause), told when the frame moves, resizes, rescales or minimizes
 local tabSpecs = {}              -- [tab] = { build = fn(pane), refresh = fn(pane, ctx) }
 local activeTab = "group"
 local newCount = 0               -- drops added to the shown feed since the window was minimized
@@ -99,6 +100,13 @@ local syncCountdownTicker        -- starts or stops the countdown ticker (define
 
 local function notifyVisibility(shown)
     for _, fn in ipairs(visibilityListeners) do fn(shown) end
+end
+
+-- `cause` is `move` (a drag's stop, Reset position), `resize` (the grip's stop), `layout` (scale,
+-- alpha, the layout's size and point: Window.ApplyLayout) or `minimize` (Window.SetMinimized).
+local function notifyGeometry(cause)
+    if not frame then return end
+    for _, fn in ipairs(geometryListeners) do fn(cause) end
 end
 
 local function profile()
@@ -408,6 +416,7 @@ end
 local function onDragStop()
     frame:StopMovingOrSizing()
     savePoint()
+    notifyGeometry("move")
 end
 
 --- A flat button in the window's look (the Scan group button's, and each Drops row's Ask):
@@ -570,6 +579,7 @@ local function makeResizable(f)
             NS.WindowFilterBar.Layout(width)
             -- The table's columns take the new width.
             Window.Refresh()
+            notifyGeometry("resize")
         end,
     })
 end
@@ -846,6 +856,7 @@ function Window.SetMinimized(on)
     applySize()
     if on then stopTicker() else startTicker() end
     Window.Refresh()
+    notifyGeometry("minimize")
 end
 
 function Window.ToggleMinimized() Window.SetMinimized(not isMinimized()) end
@@ -931,6 +942,14 @@ function Window.AddVisibilityListener(fn)
     visibilityListeners[#visibilityListeners + 1] = fn
 end
 
+--- Be told `fn(cause)` whenever the built frame moves (`move`), resizes (`resize`), takes the
+--- layout's scale, size and point again (`layout`) or minimizes and expands (`minimize`): the Rolls
+--- panel docked beside it (modules/RollsPanel.lua) re-checks its side. Listeners are never removed.
+--- @param fn function
+function Window.AddGeometryListener(fn)
+    geometryListeners[#geometryListeners + 1] = fn
+end
+
 --- @return boolean
 function Window.IsShown()
     return frame ~= nil and frame:IsShown() == true
@@ -956,6 +975,7 @@ function Window.ApplyLayout()
     if frame then
         applyLook(); applySize(); applyPoint()
         NS.IconStyle.Resnap()   -- the Scale moved under the icons on screen: one pixel again (R5-ICON)
+        notifyGeometry("layout")
     end
 end
 
@@ -974,6 +994,7 @@ function Window.ResetPosition()
     if frame then
         applySize()
         applyPoint()
+        notifyGeometry("move")
     end
     if NS.Toast then NS.Toast.ResetPosition() end
     if NS.Sim then NS.Sim:ResetPanelPosition() end

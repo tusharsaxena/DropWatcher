@@ -89,7 +89,10 @@ one-line responsibility and why its position is load-bearing or conventional is 
   tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
   icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
   mode's switch and bodies, auto-close (`WindowAutoClose.lua`, RX-10: a window an auto-open showed closes
-  once nothing is rolling and no drop has come for `window.autoClose.seconds`), test mode and the diagnostics.
+  once nothing is rolling and no drop has come for `window.autoClose.seconds`), the Rolls panel
+  (`RollsPanel.lua` and the pure `RollsPanelRows.lua`, RX-17: a read-only panel docked beside the
+  window listing every watched roll and every player's roll on it, a finished roll kept
+  `rolls.panel.linger` seconds; auto-close waits while it holds a block), test mode and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
   `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in
@@ -217,7 +220,7 @@ list, are in [`message-bus.md`](message-bus.md).
 `/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
 reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
 `test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
-add`, plus compact spec §1's `full` and issue #12's `insights`, which opens the Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
+add`, plus compact spec §1's `full`, RX-17's `rolls` (shows or hides the Rolls panel beside the shown window, `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
 issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through the item
 lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the live-while-disabled set and the handlers are in
 [`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
@@ -346,7 +349,8 @@ boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 Every strata and frame level the addon sets reads one table, `NS.Constants.LAYERS`
 (`core/Constants.lua`, frame-layering-§5), whose header comment states the whole stack with its
 levels; every level is relative to the frame's parent. The tiers, low to high: the main window
-(`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel docked beside it; the
+(`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel and the Rolls panel
+docked beside it (both children of the window at its `DOCKED` level); the
 library's resize grip; the window's popover in its own strata, by level (the floating Offer panel);
 the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
 frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names), with the roll popup mark's side cards and the simulator's stand-in popups on the same tier (`modules/RollPopup.lua`, parented to UIParent, never toplevel); the Edit message box (`DIALOG`, toplevel), beside

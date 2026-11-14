@@ -47,6 +47,8 @@ local function specPaths()
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
         "rolls.show", "rolls.keep", "rolls.popupMark",   -- Drops › Rolls (Forever port design §5.3, DW-FP15)
+        -- Drops › Rolls › Panel, the Rolls panel (rolls panel design §3.5, RX-17)
+        "rolls.panel.enabled", "rolls.panel.side", "rolls.panel.linger", "rolls.panel.foldInRaid",
     }
     for _, key in ipairs(SITUATIONS) do
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do out[#out + 1] = "situations." .. key .. "." .. f end
@@ -803,6 +805,11 @@ local PINNED_ROWS = {
     { "messages.transmogAsk", "bool", "false" },
     -- DW-FP15 (Forever port design §5.3): Drops › Rolls, three new rows on both clients.
     { "rolls.keep", "bool", "true" },
+    -- RX-17 (rolls panel design §3.5): the Rolls panel, four new rows on both clients.
+    { "rolls.panel.enabled", "bool", "true" },
+    { "rolls.panel.foldInRaid", "bool", "true" },
+    { "rolls.panel.linger", "number", "10" },
+    { "rolls.panel.side", "string", "\"right\"" },
     { "rolls.popupMark", "bool", "true" },
     { "rolls.show", "bool", "true" },
     { "scale", "number", "1" },

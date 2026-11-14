@@ -197,6 +197,7 @@ local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 -- Where each stacked toast after the first goes (issue #14): the shell's DOWN and UP.
 local STACK_GROW = choices{ "down", L["Down"], "up", L["Up"] }
+local PANEL_SIDES = choices{ "right", L["Right"], "left", L["Left"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
 -- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
 -- Proc since DW-03, D-18, and the order did not move).
@@ -267,6 +268,27 @@ local function map(path, default, validate, label, tip, extra)
 end
 
 -- ── Drops › Situations (design spec §6.1, §7; feedback-24, item 020) ───────────────────────
+
+-- Drops › Rolls › Panel (rolls panel design §3.5, RX-17): the Rolls panel docked beside the window,
+-- on both clients. The sub-rows dim while the panel is off, each tooltip ending "Needs <row>."
+-- (options-ui-§21).
+local function rollsPanel(D)
+    local at = { page = "feed", group = L["Rolls"], subgroup = L["Panel"],
+        onChange = function() if NS.RollsPanel then NS.RollsPanel.Refresh() end end }
+    bool("rolls.panel.enabled", D.enabled, L["Show the Rolls panel beside the window"],
+        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand."],
+        at)
+    local sub = with(at, { disabledIf = unless("rolls.panel.enabled", true) })
+    pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
+        L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
+        sub)
+    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep a finished roll for (seconds)"],
+        L["How long a roll stays in the Rolls panel after it is won or everyone passed; 0 removes it at once. Nothing leaves while the pointer is over the panel. Needs Show the Rolls panel beside the window."],
+        with(sub, { validate = wholeIn(0, 60) }))
+    bool("rolls.panel.foldInRaid", D.foldInRaid, L["Fold Pass and Waiting in a raid"],
+        L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."],
+        sub)
+end
 
 -- Everything set per situation, on one tab: the global Auto-open, then a table line per situation
 -- (Track, Auto-open, Quality and its loot rule). General › When to show and Trade › Rules until
@@ -385,9 +407,11 @@ local function feed()
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
 
-    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients.
+    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients. Two
+    -- subjects since RX-17 (options-ui-§7): the window and popup switches, then the Rolls panel
+    -- (`Panel`: a subsection never restates its tab's name, so not `Rolls panel`).
     local R = P.rolls
-    local rolls = { page = "feed", group = L["Rolls"], onChange = repaintWindow }
+    local rolls = { page = "feed", group = L["Rolls"], subgroup = L["Window and popup"], onChange = repaintWindow }
     bool("rolls.show", R.show, L["Show rolls"],
         L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."], rolls)
     bool("rolls.keep", R.keep, L["Keep rolls in history"],
@@ -395,6 +419,7 @@ local function feed()
     bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
         L["Show your verdict on the game's Need and Greed roll popup."],
         with(rolls, { onChange = function() if NS.RollPopup then NS.RollPopup.Refresh() end end }))
+    rollsPanel(R.panel)
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────

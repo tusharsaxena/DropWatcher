@@ -56,7 +56,8 @@ end
 -- window hears PendingChanged for the Drops tab's Rolling now section; since the M4 review the
 -- pending store hears GearChanged too, to judge your verdict on a pending item again; DW-FP20's roll
 -- popup mark hears PendingChanged and GearChanged, to repaint the marks on the shown popups; RX-10's
--- auto-close hears DropAdded and PendingChanged, to start its count over).
+-- auto-close hears DropAdded and PendingChanged, to start its count over; RX-17's Rolls panel hears
+-- PendingChanged, to follow the rolls).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -69,6 +70,7 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",
     "Ka0s_DropWatcher_PendingChanged", "Ka0s_DropWatcher_PendingChanged", "Ka0s_DropWatcher_PendingChanged",
+    "Ka0s_DropWatcher_PendingChanged",
     "Ka0s_DropWatcher_RestrictionChanged", "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_RestrictionChanged",
     "Ka0s_DropWatcher_SituationChanged", "Ka0s_DropWatcher_SituationChanged",

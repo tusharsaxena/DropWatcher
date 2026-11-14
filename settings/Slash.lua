@@ -84,6 +84,8 @@ local COMMANDS = {
         function() NS.SlashVerbs.Compact() end},
     {"full",     L["Show the window in its full view"],
         function() NS.SlashVerbs.Full() end},
+    {"rolls",    L["Show or hide the Rolls panel beside the window"],
+        function() NS.RollsPanel.Toggle() end},
     {"situation", L["Print the situation, its settings and the classifier's inputs"],
         function() NS.SlashVerbs.Situation() end},
     {"offer",    L["Open the Offer panel for a bag item — `/dw offer <item link>`"],

@@ -31,6 +31,7 @@ L["Shows or hides the drop feed."] = "Shows or hides the drop feed."
 L["Toggle drop feed"] = "Toggle drop feed"
 
 -- Slash command descriptions (settings/Slash.lua NS.COMMANDS)
+L["Show or hide the Rolls panel beside the window"] = "Show or hide the Rolls panel beside the window"
 L["Clear this session's drops from the feed"] = "Clear this session's drops from the feed"
 L["Disable the addon"] = "Disable the addon"
 L["Enable the addon"] = "Enable the addon"
@@ -1012,3 +1013,14 @@ L["you are the master looter"] = "you are the master looter"
 L["it is not an upgrade for you"] = "it is not an upgrade for you"
 L["the item is no longer waiting"] = "the item is no longer waiting"
 L["the master looter is not known"] = "the master looter is not known"
+
+-- The Rolls panel (modules/RollsPanel.lua, modules/RollsPanelRows.lua; rolls panel design, RX-17)
+L["done"] = "done"
+L["Close the Rolls panel"] = "Close the Rolls panel"
+L["Until"] = "Until"
+L["the next roll starts"] = "the next roll starts"
+L["Turn off"] = "Turn off"
+L["Show the Rolls panel beside the window on Drops > Rolls > Panel"] = "Show the Rolls panel beside the window on Drops > Rolls > Panel"
+L["No rolls right now"] = "No rolls right now"
+L["The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."] = "The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."
+L["The Rolls panel shows beside the window: open the window first."] = "The Rolls panel shows beside the window: open the window first."
