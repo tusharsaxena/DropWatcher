@@ -434,7 +434,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (68)
+### test_window_shell.lua (69)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -484,6 +484,7 @@ Total.
 - shell: a double-click on the title bar expands a minimized window
 - shell: the lock button sits at the title bar's left, dimmed while unlocked, apart from the badge
 - shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both
+- shell: the lock button's tooltip names Lock frame on its canonical location, in both states
 - shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip
 - shell: the grip shows only while the window is expanded and unlocked
 - shell: minimized, the corner grip does not resize and the stored size is kept
@@ -2900,7 +2901,7 @@ Total.
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
 | test_window.lua | 19 |
-| test_window_shell.lua | 68 |
+| test_window_shell.lua | 69 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 18 |
 | test_compact_cards.lua | 27 |
@@ -3007,4 +3008,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2485** |
+| **Total** | **2486** |

@@ -501,9 +501,9 @@ Result:
 **STATE-8. The title bar's lock button (RX-08, rolls UX ruling 8).** Client: both. The headless
 `test_window_shell` and `test_compact_chrome` cover the toggle. Open the window → at the title bar's
 left, a lock mark, dimmed while the window is unlocked; hover → `Lock the window`, its rows naming
-`/dw lock` and General, Lock frame. Click it → the mark is at full strength, the tooltip reads
+`/dw lock` and `Lock frame on General > Master controls`. Click it → the mark is at full strength, the tooltip reads
 `Unlock the window`, the window can't be dragged or resized, and the resize grip in the footer's
-corner is gone; General › Lock frame is ticked, and so is the minimap menu's Locked. Click again →
+corner is gone; General > Master controls' Lock frame is ticked, and so is the minimap menu's Locked. Click again →
 unlocked, the grip back. `/dw lock` and `/dw unlock` → the button follows at once. `/dw compact` →
 the same button at the compact title bar's left, the restriction badge (when one shows) just after
 it, the title clear of both. Minimized → no grip, locked or not. Result:

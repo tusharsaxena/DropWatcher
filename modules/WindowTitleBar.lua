@@ -98,10 +98,10 @@ local function lockTip()
     local TM = NS.TipMarks
     if NS.Window.IsLocked() then
         return L["Unlock the window"], TM.Row(L["Lets"], L["it be dragged and resized again"]),
-            TM.Row(L["Typed"], L["/dw unlock"]), TM.Row(L["Stored as"], L["General, Lock frame"])
+            TM.Row(L["Typed"], L["/dw unlock"]), TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
     end
     return L["Lock the window"], TM.Row(L["Keeps"], L["it from being dragged or resized"]),
-        TM.Row(L["Typed"], L["/dw lock"]), TM.Row(L["Stored as"], L["General, Lock frame"])
+        TM.Row(L["Typed"], L["/dw lock"]), TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
 end
 
 -- The layout toggle's tooltip: what a click switches to, and the setting that stores it.
@@ -113,7 +113,7 @@ local function modeTip()
             TM.Row(L["Typed"], L["/dw full"]) }
         or { L["Compact view"], TM.Row(L["Shows"], L["the window narrow, each drop a short card"]),
             TM.Row(L["Typed"], L["/dw compact"]) }
-    lines[#lines + 1] = TM.Row(L["Stored as"], L["Window settings, Layout"])
+    lines[#lines + 1] = TM.Row(L["Stored as"], L["Window layout on Window > Layout > Mode"])
     if WC.InRun() then
         lines[#lines + 1] = TM.Row(L["Held compact"], L["until this run ends (Compact view when it auto-opens in a run)"])
     end

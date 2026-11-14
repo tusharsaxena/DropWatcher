@@ -197,7 +197,8 @@ test("compact: the toggle's tooltip names the layout it switches to and the sett
     local NS, f = shown()
     local tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Compact view")
-    assertTrue(T.tipPlainJoined(tip):find("• Stored as: Window settings, Layout", 1, true) ~= nil)
+    -- options-ui-§21 Location strings (RX-12 review fix): the control on '<Page> > <Tab> > <Subsection>'
+    assertTrue(T.tipPlainJoined(tip):find("• Stored as: Window layout on Window > Layout > Mode", 1, true) ~= nil)
     NS.ToggleWindowMode()
     tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Full view")

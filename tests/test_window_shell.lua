@@ -856,6 +856,16 @@ test("shell: a click on the lock button writes `locked` and hides the grip; a se
     assertEqual(NS.Window.TooltipOf(f.lockButton)[1], "Lock the window")
 end)
 
+-- options-ui-§21 Location strings (RX-12 review fix): '<Page> > <Tab>' with ' > ', the control by
+-- its on-screen label. red under: the comma form "General, Lock frame"
+test("shell: the lock button's tooltip names Lock frame on its canonical location, in both states", function()
+    local NS, f = shown()
+    local want = "• Stored as: Lock frame on General > Master controls"
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(f.lockButton)):find(want, 1, true) ~= nil, "unlocked")
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(f.lockButton)):find(want, 1, true) ~= nil, "locked")
+end)
+
 test("shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip", function()
     local NS, f = shown()
     NS.addon:OnSlashCommand("lock")
