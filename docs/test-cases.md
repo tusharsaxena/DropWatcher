@@ -1865,9 +1865,12 @@ Total.
 - askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
 - askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
-### test_roll_cells.lua (7)
+### test_roll_cells.lua (10)
 
-- roll cells: summary counts Need 3 · Greed 2 · Pass 1 · waiting 4
+- roll cells: the count line is an icon and a count per choice
+- roll cells: Disenchant counts on Retail only
+- roll cells: the tooltip lists every roll by choice, highest first, then waiting, then the verdict
+- roll cells: a secret or unreadable name degrades its own tooltip row
 - roll cells: won reads Won by Name (Need 87)
 - roll cells: rows sort winner first, then numbers high to low, waiting, pass
 - roll cells: a higher roll that did not win is protected
@@ -1875,7 +1878,7 @@ Total.
 - roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (11)
+### test_window_pending.lua (12)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
 - window pending: a repaint with nothing pending never builds the item list
@@ -1884,6 +1887,7 @@ Total.
 - window pending: a master-loot item names its master looter, never a roll that ended
 - window pending: a master-loot item has the Ask master looter button, in its ask's state
 - compact: a pending item is a card
+- window pending: Rolling now's count line has every roll in its tooltip, in both layouts
 - detail card: a resolved drop with rec.roll has a Rolls box
 - row tooltip: a rolled drop's item tooltip has the roll summary line
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
@@ -2911,8 +2915,8 @@ Total.
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
-| test_roll_cells.lua | 7 |
-| test_window_pending.lua | 11 |
+| test_roll_cells.lua | 10 |
+| test_window_pending.lua | 12 |
 | test_roll_popup.lua | 11 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -2962,4 +2966,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2444** |
+| **Total** | **2448** |

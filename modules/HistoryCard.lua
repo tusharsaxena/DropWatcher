@@ -357,7 +357,7 @@ local function paintRolls(card, model, width)
     local under = card.stacked and card.where or card.trade
     card.rolls:ClearAllPoints()
     card.rolls:SetPoint("TOPLEFT", under, "BOTTOMLEFT", 0, -P)
-    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P) + P
+    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P, nil, nil, nil, model.verdict) + P
 end
 
 --- Paint the card for a kept entry, `width` pixels wide; answers its height (HC.CARD_H, or the

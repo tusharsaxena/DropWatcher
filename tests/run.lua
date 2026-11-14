@@ -231,6 +231,8 @@ Kit.skinValues = {
           why = "the Need roll button's dice, the game's group-loot art players know, the same under every skin", cause = "A6" },
         { file = "modules/RollCells.lua", substring = "local COIN =",
           why = "the Greed roll button's coin, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        { file = "modules/RollCells.lua", substring = "local DE =",
+          why = "the Disenchant roll button's art (Retail only), the game's group-loot art players know, the same under every skin", cause = "A6" },
         { file = "modules/RollCells.lua", substring = "local CROSS =",
           why = "the Pass roll button's cross, the game's group-loot art players know, the same under every skin", cause = "A6" },
     },

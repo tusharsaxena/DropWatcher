@@ -12,7 +12,8 @@ local _, NS = ...
 -- collapses it the same way; it is open until the player collapses it.
 --
 -- A ROW (the full layout) shows the item's icon and name, your verdict (Me: the feed's own
--- WindowCells.Me over the item's `me`), the roll summary (NS.RollCells.Summary) and the time left
+-- WindowCells.Me over the item's `me`), the roll summary (NS.RollCells.Summary: the count line while
+-- open, every roll in its tooltip with your verdict at the foot, rolls UX RX-06) and the time left
 -- (RollCells.Timer, on the loot history's clock); a master-loot item (modules/PendingML.lua) reads
 -- `Master looter: Name` and `awaiting master looter` there instead. A roll has no row action: the game's own popup is
 -- where you roll. A master-loot item has the Ask master looter button (plan DW-FP19, WP.AskAction:
@@ -158,8 +159,9 @@ function WP.Model(item, now, classFile)
         timer = cellOf(L["awaiting master looter"], "muted", tip)
         summary = cellOf(name and L["Master looter: %s"]:format(name) or L["Master loot"], "muted", tip)
     end
-    return { item = WC.Item(item), me = WC.Me(item, classFile), summary = summary or RC.Summary(item.roll, now, item.state, item.rollID),
-        timer = timer, action = actionOf(item) }
+    local me = WC.Me(item, classFile)
+    summary = summary or RC.Summary(item.roll, now, item.state, item.rollID, { verdict = me })
+    return { item = WC.Item(item), me = me, summary = summary, timer = timer, action = actionOf(item) }
 end
 
 --- The section header's text and tooltip: `Rolling now (n)`.
@@ -245,6 +247,11 @@ function WP.BuildRollsBox(parent)
     box.summaryHit = CreateFrame("Frame", nil, box)
     box.summaryHit:SetAllPoints(box.summary)
     NS.Window.AttachTooltip(box.summaryHit, function() return tipOf(box.summaryHit) end)
+    box.counts = faced(box)   -- a resolved roll's count line, beside its result (rolls UX spec §3.2)
+    box.counts:SetPoint("LEFT", box.summary, "RIGHT", 10, 0)
+    box.countsHit = CreateFrame("Frame", nil, box)
+    box.countsHit:SetAllPoints(box.counts)
+    NS.Window.AttachTooltip(box.countsHit, function() return tipOf(box.countsHit) end)
     box.lines = {}
     box:Hide()
     return box
@@ -278,7 +285,9 @@ local function paintMore(f, n, rows, from)
     f.tipLines = tip
 end
 
---- Paint `roll` into the box at `width`: the summary and every player's line, flowed into columns.
+--- Paint `roll` into the box at `width`: the summary, the count line beside a result (an open
+--- roll's summary is the count line, drawn once), and every player's line, flowed into columns; the
+--- summary and the count line hover every roll (RollCells.Tooltip, `verdict` at its foot).
 --- Answers the box's height.
 --- @param box table WP.BuildRollsBox's
 --- @param roll table|nil the plain roll table
@@ -286,13 +295,20 @@ end
 --- @param now number|nil the loot history's clock
 --- @param state string|nil the pending item's state
 --- @param rollID number|nil the pending item's claimed popup id (its own timer)
+--- @param verdict table|nil your verdict's cell (WindowCells.Me) for the tooltip's foot
 --- @return number height
-function WP.PaintRollsBox(box, roll, width, now, state, rollID)
+function WP.PaintRollsBox(box, roll, width, now, state, rollID, verdict)
     local RC = NS.RollCells
-    local s = RC.Summary(roll, now, state, rollID)
+    local s = RC.Summary(roll, now, state, rollID, { verdict = verdict })
     box.summary:SetText(s.text)
     setTone(box.summary, s.tone)
     box.summaryHit.tipLines = s.tip
+    local counts = s.counts ~= nil and s.counts ~= "" and s.counts ~= s.text and s.counts or nil
+    box.counts:SetText(counts or "")
+    setTone(box.counts, "plain")
+    box.counts:SetShown(counts ~= nil)
+    box.countsHit:SetShown(counts ~= nil)
+    box.countsHit.tipLines = s.tip
     local rows = RC.Rows(roll)
     local inner = width - 2 * WP.PAD
     local cols, lines, shown = RC.Grid(#rows, inner, WP.COL_W, WP.MAX_LINES)
@@ -521,12 +537,13 @@ function WP.Draw(pane, width)
         local row = NS.Pool.Acquire(s.rowPool, function() return newRow(pane.content) end)
         place(row, pane.content, y, width, K.ROW_INDENT)
         row.stripe:SetShown(i % 2 == 0)
-        paintRow(row, item, WP.Model(item, now, you), cols, metrics.height, metrics)
+        local model = WP.Model(item, now, you)
+        paintRow(row, item, model, cols, metrics.height, metrics)
         y = y + metrics.height
         if view().expanded == item.id then
             place(s.box, pane.content, y, width, K.ROW_INDENT)
             y = y + WP.PaintRollsBox(s.box, item.roll, width - K.ROW_INDENT, now, item.state,
-                item.rollID) + 2
+                item.rollID, model.me) + 2
             s.box:Show()
         end
     end
@@ -582,11 +599,12 @@ function WP.DrawCompact(cv, width, m)
         card.stripe:SetShown(i % 2 == 0)
         card.pendingId = item.id
         card.selected:SetShown(view().expanded == item.id)
-        NS.CompactGroup.PaintPendingCard(card, item, WP.Model(item, now, you), cardW, m)
+        local model = WP.Model(item, now, you)
+        NS.CompactGroup.PaintPendingCard(card, item, model, cardW, m)
         y = y + m.height + NS.CompactGroup.GAP
         if view().expanded == item.id then
             place(s.box, cv.content, y, cardW + K.ROW_INDENT, K.ROW_INDENT)
-            y = y + WP.PaintRollsBox(s.box, item.roll, cardW, now, item.state, item.rollID)
+            y = y + WP.PaintRollsBox(s.box, item.roll, cardW, now, item.state, item.rollID, model.me)
                 + NS.CompactGroup.GAP
             s.box:Show()
         end

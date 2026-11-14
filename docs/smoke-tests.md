@@ -3730,9 +3730,10 @@ often the loot history fires, a trash roll's encounter) are probes P-R1 to P-R4 
 **ROLLS-1. Rolling now, live (DW-FP14, DW-FP15).** Client: Retail. In a group whose loot method is
 group loot (a Normal or Heroic dungeon), kill a boss whose drop goes to a roll → while the roll is
 open a `Rolling now (N)` header sits above the boss groups on Drops, one row per open roll: the item,
-your verdict in Me (the same mark and words its drop row would get), the roll summary (who chose
-Need, Greed and Pass so far, `no one has chosen yet` at first) and the time left, counting down each
-second. Click the row → its ROLLS box opens under it: every player in class color with the choice
+your verdict in Me (the same mark and words its drop row would get), the roll count line (the dice,
+coin, Disenchant on Retail only, pass and clock icons, each with how many chose it so far; RX-06),
+whose tooltip lists every roll by choice with your verdict at the foot, and the time left, counting
+down each second. Click the row → its ROLLS box opens under it: every player in class color with the choice
 word, the numbers once the client gives them. Click the header → the section collapses like a boss
 header. The roll ends → the row leaves the section at once and the drop lands under its boss as a
 normal row, its looter the winner. `/dw compact` during a roll → the same roll as a card above the

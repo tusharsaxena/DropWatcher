@@ -594,7 +594,7 @@ local function paintRolls(card, drop, width)
     local under = card.stacked and card.them or card.me
     card.rolls:ClearAllPoints()
     card.rolls:SetPoint("TOPLEFT", under, "BOTTOMLEFT", 0, -P)
-    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P) + P
+    return NS.WindowPending.PaintRollsBox(card.rolls, model.roll, width - 2 * P, nil, nil, nil, model.verdict) + P
 end
 
 -- The scale or weights each score used (NS.Scoring.ScoreFor's `how`, DW-FP07): yours, and the

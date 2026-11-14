@@ -17,6 +17,9 @@ local OLD = "|cffa335ee|Hitem:301::|h[Old Band]|h|r"
 
 local function plain(s) return (tostring(s):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")) end
 local function textOf(region) return region and region:GetText() end
+-- The roll count line as the player reads it (RX-06): each icon as its texture's name, colors out.
+local function line(s) return plain(T.marks(s)) end
+local COUNTS = "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [clock] 2"
 local function yOf(frame) return select(5, frame:GetPoint(1)) end
 
 local function player(name, state, roll, isWinner, classFile)
@@ -176,7 +179,7 @@ test("window pending: a pending row has your verdict and no Ask button for a rol
     local c = row.cells
     assertEqual(textOf(c.item.text), "Band of Embers")
     assertEqual(textOf(c.me.glyph), "▲"); assertEqual(textOf(c.me.text), "+20")
-    assertEqual(textOf(c.summary.text), "Need 1 · Greed 1 · waiting 2")
+    assertEqual(line(textOf(c.summary.text)), COUNTS, "the roll count line (RX-06)")
     assertEqual(textOf(c.timer.text), "0:50", "the time left on the history's clock")
     assertNil(row.cells.actions, "no action cell"); assertNil(row.ask, "no Ask button for a roll")
     assertTrue(T.tipPlainJoined(c.me.tipLines):find("For you", 1, true) ~= nil, "the verdict's own tooltip")
@@ -275,7 +278,7 @@ test("compact: a pending item is a card", function()
     assertEqual(textOf(card.cells.item.text), "Band of Embers")
     assertEqual(textOf(card.cells.youLabel.text), "You")
     assertEqual(textOf(card.cells.me.text), "+20")
-    assertEqual(textOf(card.cells.summary.text), "Need 1 · Greed 1 · waiting 2")
+    assertEqual(line(textOf(card.cells.summary.text)), COUNTS, "the roll count line (RX-06)")
     assertEqual(textOf(card.cells.timer.text), "0:50")
     assertNil(card.ask, "no action button on a roll's card")
     assertTrue(yOf(drawn.headers[1]) < 0, "the boss group's header under the section")
@@ -300,6 +303,30 @@ test("compact: a pending item is a card", function()
     assertEqual(#wp2.cards, 0); assertFalse(wp2.compactHeader:IsShown())
 end)
 
+test("window pending: Rolling now's count line has every roll in its tooltip, in both layouts", function()
+    -- RX-06 (rolls UX design §3.2, ruling 2): the row's and the card's summary hover the all-rolls
+    -- tooltip: the item's name, the players by choice, those still to roll, your verdict at the foot.
+    -- red under: the summary's old tooltip (leader and players count)
+    local function check(tipLines, where)
+        local tip = line(T.tipPlainJoined(tipLines, "\n"))
+        assertTrue(tip:find("^Band of Embers") ~= nil, where .. ": the item's name first: " .. tip)
+        assertTrue(tip:find("• [UI-GroupLoot-Dice-Up] Need (1): Brakk 87\n", 1, true) ~= nil, where .. ": " .. tip)
+        assertTrue(tip:find("• [clock] Waiting (2): Dorn, Seta", 1, true) ~= nil, where .. ": " .. tip)
+        assertTrue(tip:find("• You: %+20$") ~= nil, where .. ": the verdict at the foot: " .. tip)
+    end
+    local NS, _, wp = shown({ drop() }, { item() })
+    check(wp.rows[1].cells.summary.tipLines, "row")
+    -- The inline Rolls box: its summary is the count line, the tooltip the same.
+    wp.rows[1]:__fire("OnClick")
+    local _, wp2 = refresh(NS)
+    assertEqual(line(textOf(wp2.box.summary)), COUNTS)
+    check(wp2.box.summaryHit.tipLines, "box")
+    assertFalse(wp2.box.counts:IsShown(), "an open roll's summary is the count line: not drawn twice")
+    local _, _, wp3 = shown({ drop() }, { item() }, true)
+    local card = wp3.cards[1]
+    check((card.cells.summary.hit or card.cells.summary).tipLines, "card")
+end)
+
 -- ── the resolved drop: its Rolls box and the row tooltip ────────────────────────────────────
 
 test("detail card: a resolved drop with rec.roll has a Rolls box", function()
@@ -309,6 +336,11 @@ test("detail card: a resolved drop with rec.roll has a Rolls box", function()
     local card = NS.WindowGroup.Drawn().card
     assertTrue(card.rolls:IsShown(), "the Rolls box")
     assertEqual(plain(textOf(card.rolls.summary)), "Won by Brakk (Need 87)")
+    -- RX-06 (ruling 2): the resolved drop's Rolls box draws the same count line beside its result.
+    assertTrue(card.rolls.counts:IsShown(), "the count line")
+    assertEqual(line(textOf(card.rolls.counts)), "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [clock] 2")
+    local bt = line(T.tipPlainJoined(card.rolls.countsHit.tipLines, "\n"))
+    assertTrue(bt:find("Brakk 87 (won it)", 1, true) ~= nil and bt:find("^Band of Embers") ~= nil, bt)
     assertEqual(textOf(card.rolls.lines[1].name), "Brakk"); assertEqual(textOf(card.rolls.lines[1].mark), "Won")
     assertTrue(card:GetHeight() > K.CARD_H, "the card is the box taller")
     -- The pure half: none without a table, none with rolls.show off.
@@ -332,7 +364,7 @@ test("row tooltip: a rolled drop's item tooltip has the roll summary line", func
     assertEqual(NS.RowTooltip.AddRollRow(tip, { pendingId = 9 }), 0, "no such pending item")
     NS.Pending.Get = function() return item() end
     assertEqual(NS.RowTooltip.AddRollRow(tip, { pendingId = 1 }), 1)
-    assertTrue(tip.lines[2]:find("Need 1", 1, true) ~= nil, "the live summary")
+    assertTrue(line(tip.lines[2]):find(COUNTS, 1, true) ~= nil, "the live summary: the count line")
     NS.SchemaRuntime.Set("rolls.show", false)
     assertEqual(NS.RowTooltip.AddRollRow(tip, { dropId = 1 }), 0, "rolls.show off")
 end)

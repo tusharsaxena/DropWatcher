@@ -777,7 +777,10 @@ PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending),
 The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's
 feed names (the live one, or test mode's), oldest first, above the boss groups in both layouts while
 `rolls.show` is on; a roll row's time left and summary repaint each second on the window's countdown
-ticker. A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
+ticker. An open roll's summary is `RollCells.CountLine`, an icon and a count per choice (Need, Greed,
+Disenchant on Retail only, Pass, still to roll), and it hovers `RollCells.Tooltip`, every roll by
+choice with your verdict at the foot; a ROLLS box draws the same count line beside a resolved
+result (rolls UX RX-06). A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
 on, into its History entry (`rolls`), which the detail card's and the History card's ROLLS box draw. On Retail
 master loot is Guild Master Loot alone (design §11.2); the store is the same on both clients.
 
