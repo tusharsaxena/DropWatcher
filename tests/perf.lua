@@ -29,6 +29,9 @@
 -- rebuilt its View and Character rows and selections on every sync; those are now built once and
 -- written only on change, which leaves 14168, the M10 work itself (a group header's hidden-drop
 -- predicates, DW-A0, and the Character dropdown's context, DW-A4) over the M9 figure of 13680.
+-- The rolls UX round took it to 14736 (bisected 2026-11-14: RX-04's two item kinds grew the feed
+-- config's kinds map +320, RX-09's footer line +128); the filter bar's quality readout now reads its
+-- three settings instead of building that whole config each pass, which leaves 12624.
 -- The compact refresh pair (DW-C5, compact spec §5) is the same pass in the compact layout: the
 -- same window, the cards' pane in place of the table, its chrome (the short title, the Filters
 -- button's count and tooltip, the one-line footer). Measured 2026-10-11 at 11065 bytes in both, under

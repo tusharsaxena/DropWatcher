@@ -499,15 +499,18 @@ end
 
 --- The minimum-quality mode in force, its threshold (nil for `dynamicSlot`, which differs per drop)
 --- and the bar's label. Reads the feed's settings, the situation's override and, for
---- `dynamicCharacter`, your worn qualities.
+--- `dynamicCharacter`, your worn qualities. It reads its three settings (NS.LootFeed.Config()'s
+--- qualityMode, fixed and floor) through the schema seam itself: the bar syncs on every window
+--- pass, and building the feed's whole config there allocated it each time (tests/perf.lua).
 --- @return string mode, number|nil threshold, string label
 function FB.QualityReadout()
-    local Q, cfg = NS.QualityGate, NS.LootFeed.Config()
-    local mode = Q.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride())
+    local Q = NS.QualityGate
+    local mode = Q.ResolveMode(NS.Setting("feed.quality.mode"), NS.Situations.QualityOverride())
     local threshold
     if mode ~= "dynamicSlot" then
         local gear = mode == "dynamicCharacter" and NS.Gear.Qualities() or nil
-        threshold = Q.Threshold(mode, { fixed = cfg.fixed, floor = cfg.floor, gear = gear })
+        threshold = Q.Threshold(mode, { fixed = NS.Setting("feed.quality.fixed"),
+            floor = NS.Setting("feed.quality.floor"), gear = gear })
     end
     return mode, threshold, Q.ThresholdLabel(mode, threshold)
 end
