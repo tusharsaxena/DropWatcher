@@ -360,7 +360,7 @@ test("drops strip: under the compact cards, the summary shortened, Post my trade
     assertTrue(strip:IsShown())
     assertEqual(textOf(strip.info.text), "3 tradeable · next 0:08:41")
     assertEqual(strip.post:GetWidth(), K.FOOTER_ICON_W); assertFalse(strip.post.label:IsShown())
-    assertEqual(select(3, anchorOf(strip.post)), -2 * (K.FOOTER_ICON_W + FR.GAP), "left of Scan group")
+    assertEqual(select(3, anchorOf(strip.post)), -(FR.START + 2 * (K.FOOTER_ICON_W + FR.GAP)), "left of Scan group")
     assertTrue(strip.scan:IsShown(), "Scan group on the strip, as in full (feedback-16)")
     assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip is unchanged")
     assertEqual(drawn.summary.count, 3)

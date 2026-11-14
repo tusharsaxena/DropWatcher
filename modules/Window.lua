@@ -514,10 +514,14 @@ local function buildBody(f)
 
     buildBanner(f, body)
 
+    -- The footer band under the active tab's strip, the one footer line (RX-09, rolls-UX spec §3.7):
+    -- the strip's height, so the panes reach the body's foot and the strip sits on the band; the
+    -- resize grip is built in its bottom-right corner (makeResizable). No status bar of its own: the
+    -- status line rides the active strip (NS.WindowFooter.AnchorStatus).
     f.footerHost = CreateFrame("Frame", nil, body)
     f.footerHost:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", K.INSET, 0)
     f.footerHost:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", -K.INSET, 0)
-    f.footerHost:SetHeight(K.FOOTER_H)
+    f.footerHost:SetHeight(K.STRIP_H)
     NS.Skin.Footer(f.footerHost)   -- its band, `foot.bg` (FS-DW-FIX, cause A1)
 
     buildPanes(f, body)
@@ -542,7 +546,7 @@ local function layoutPanes()
         local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H) + band
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
-        pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
+        pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, 0)
     end
 end
 
@@ -553,6 +557,9 @@ local function makeResizable(f)
         -- The owner's icon.grip tints the grip's art, live (Core minor 14): the tool windows' grips
         -- and this one wear one skin; under Ka0s Default and WoW Default it is the client's art.
         owner        = addonName,
+        -- In the footer band's bottom-right corner, the footer line's (RX-09); hidden while locked or
+        -- minimized (paintMinimized, RX-08).
+        gripParent   = f.footerHost,
         canResize    = function() return not isLocked() and not isMinimized() end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor, and a
         -- later ApplySettings re-anchors the stored size at the stored point.

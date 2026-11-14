@@ -37,6 +37,8 @@ local K  = NS.Constants.WINDOW
 local L  = NS.L
 
 FR.GAP = 8   -- between two controls of the row
+FR.START = K.GRIP_ROOM   -- the row's first control's inset: clear of the grip in the corner (RX-09)
+FR.STATUS_GAP = 12   -- between the strip's info and the status line after it (RX-09)
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
@@ -90,6 +92,20 @@ function FR.FoldAll(entries, collapsed, collapse)
     end
 end
 
+--- The width the strip's info takes ahead of the status line (pure, RX-09): nothing for no words; its
+--- words' width, never past the room the row leaves (so the game cuts it with an ellipsis), or its
+--- words' width while no room is known yet; the whole room (or none) when its words cannot be measured.
+--- @param text string|nil the info's words
+--- @param textW number|nil their one-line width
+--- @param room number the strip's width less its left margin and the row
+--- @return number
+function FR.InfoWidth(text, textW, room)
+    if text == nil or text == "" then return 0 end
+    if type(textW) ~= "number" then return math.max(room, 0) end
+    if room <= 0 then return textW end
+    return math.min(textW, room)
+end
+
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────
 
 --- A footer button: NS.Window.TextButton at the one width (K.FOOTER_BUTTON_W).
@@ -130,14 +146,59 @@ function FR.Place(strip, b, inset)
     b:SetPoint("RIGHT", strip, "RIGHT", -inset, 0)
 end
 
---- End the strip's info `region` GAP short of the row's leftmost control (FR.Slots' `left`).
+--- End the strip's info `region` GAP short of the row's leftmost control (FR.Slots' `left`), or, while
+--- the status line is on the strip, end that line there with the info ahead of it (FR.FitInfo).
 --- @param strip table
 --- @param region table the info frame or font string
 --- @param left number
 function FR.PlaceInfo(strip, region, left)
+    strip.dwInfo, strip.dwRowLeft = region, left
+    strip.dwFitW = nil
+    FR.FitInfo(strip)
+end
+
+-- The words a strip's info draws: its own font string, or the one inside its frame (Drops').
+local function infoText(region) return region.text or region end
+
+local function measure(fs)
+    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
+    local w = fn and fn(fs)
+    return type(w) == "number" and w or nil
+end
+
+-- One line, two parts (RX-09): the info as wide as its words from the strip's left, then the status
+-- line after it, ending GAP short of the row. Re-anchored only when the info's width moves.
+local function fitWithStatus(strip, region, status, rowEnd)
+    local fs = infoText(region)
+    local text = fs:GetText()
+    local room = (strip:GetWidth() or 0) - 2 - rowEnd
+    local w = FR.InfoWidth(text, measure(fs), room)
+    local gap = (text and text ~= "") and FR.STATUS_GAP or 0
+    if strip.dwFitW == w and strip.dwFitGap == gap and status.dwFitOn == strip then return end
+    strip.dwFitW, strip.dwFitGap, status.dwFitOn = w, gap, strip
     region:ClearAllPoints()
     region:SetPoint("LEFT", strip, "LEFT", 2, 0)
-    region:SetPoint("RIGHT", strip, "RIGHT", -(left + FR.GAP), 0)
+    region:SetWidth(w)
+    status:ClearAllPoints()
+    status:SetPoint("LEFT", region, "RIGHT", gap, 0)
+    status:SetPoint("RIGHT", strip, "RIGHT", -rowEnd, 0)
+end
+
+--- Lay out the strip's info for the words it holds now (each strip's paint calls it after setting them):
+--- with the window's status line on the strip (NS.WindowFooter.AnchorStatus), the info as wide as its
+--- words and the status after it, cut with an ellipsis when the row is narrow (RX-09); without it,
+--- the info spans the row to GAP short of its leftmost control.
+--- @param strip table
+function FR.FitInfo(strip)
+    local region, left = strip.dwInfo, strip.dwRowLeft
+    if not region then return end
+    local rowEnd, status = left + FR.GAP, strip.dwStatus
+    if status then return fitWithStatus(strip, region, status, rowEnd) end
+    if strip.dwFitW == false then return end
+    strip.dwFitW = false
+    region:ClearAllPoints()
+    region:SetPoint("LEFT", strip, "LEFT", 2, 0)
+    region:SetPoint("RIGHT", strip, "RIGHT", -rowEnd, 0)
 end
 
 local function foldTip(b)

@@ -126,6 +126,7 @@ local function buildStrip(p)
     strip.info:SetWordWrap(false)
     strip.reset = NS.FooterRow.Button(strip, "reset", L["Reset filters"], function() WI.ResetFilters() end)
     p.strip = strip
+    p.statusHost = strip   -- the status line after the period, both layouts (RX-09)
 end
 
 local function buildScroll(p)
@@ -241,11 +242,12 @@ local function placeStrip(p, compact)
     if strip.dwPlacedCompact ~= compact then
         strip.dwPlacedCompact = compact
         FR.SetCompact(strip.reset, compact)
-        local slots = FR.Slots({ { key = "reset", w = FR.Width(compact) } }, FR.GAP, 0)
+        local slots = FR.Slots({ { key = "reset", w = FR.Width(compact) } }, FR.GAP, FR.START)
         FR.Place(strip, strip.reset, slots.reset)
         FR.PlaceInfo(strip, strip.info, slots.left)
     end
     strip.info:SetText(NS.InsightsRows.PeriodText(p.data.period))
+    FR.FitInfo(strip)   -- the status line after these words (RX-09)
 end
 
 local function placeScroll(p, barH)

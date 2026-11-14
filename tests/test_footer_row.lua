@@ -151,8 +151,9 @@ test("footer row: full Drops, right to left: Sort, the toggle, Scan group, Post 
     assertEqual(p, "RIGHT"); assertTrue(rel == strip); assertEqual(x, -(WF.SORT_INSET + step))
     assertEqual(select(3, anchorOf(strip.scan)), -(WF.SORT_INSET + 2 * step))
     assertEqual(select(3, anchorOf(strip.post)), -(WF.SORT_INSET + 3 * step))
-    local irel, ix = rightOf(strip.info)
-    assertTrue(irel == strip, "the info ends where the buttons start")
+    local status = WF.Parts()
+    local irel, ix = rightOf(status)
+    assertTrue(irel == strip, "the line ends where the buttons start")
     assertEqual(ix, -(WF.SORT_INSET + 3 * step + K.FOOTER_BUTTON_W + FR.GAP))
     assertTrue((rightOf(strip.info.text)) == strip.info, "its text bounded too: one line, an ellipsis when narrow")
 end)
@@ -170,11 +171,12 @@ test("footer row: compact Drops is always shown: the toggle at the right, Post m
         assertFalse(b.label:IsShown(), "no label"); assertTrue(b.art:IsShown(), "its mark")
         assertEqual(b.art.__points[1][1], "CENTER", "the mark centered")
     end
-    assertEqual(select(3, anchorOf(strip.fold)), 0)
-    assertEqual(select(3, anchorOf(strip.scan)), -step, "Scan group beside the toggle, as in full")
+    local status = NS.WindowFooter.Parts()
+    assertEqual(select(3, anchorOf(strip.fold)), -FR.START, "clear of the grip in the corner (RX-09)")
+    assertEqual(select(3, anchorOf(strip.scan)), -(FR.START + step), "Scan group beside the toggle, as in full")
     assertEqual(NS.Window.TooltipOf(strip.scan)[1], "Scan group", "the tooltip names it")
     assertFalse(strip.post:IsShown())
-    assertEqual(select(2, rightOf(strip.info)), -(2 * step))
+    assertEqual(select(2, rightOf(status)), -(FR.START + 2 * step))
     assertEqual(textOf(strip.info.text), "")
     NS.SetWindowMode("full")
     NS.LootFeed.Drops()[3].isMine = true
@@ -185,8 +187,8 @@ test("footer row: compact Drops is always shown: the toggle at the right, Post m
     assertTrue(strip.post:IsShown())
     assertEqual(strip.post:GetWidth(), K.FOOTER_ICON_W); assertFalse(strip.post.label:IsShown())
     assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip names it")
-    assertEqual(select(3, anchorOf(strip.post)), -(2 * step))
-    assertEqual(select(2, rightOf(strip.info)), -(3 * step))
+    assertEqual(select(3, anchorOf(strip.post)), -(FR.START + 2 * step))
+    assertEqual(select(2, rightOf(status)), -(FR.START + 3 * step))
     assertTrue(drawn.summary ~= nil)
     NS.SetWindowMode("full")
     for _, b in ipairs({ strip.fold, strip.scan, strip.post }) do
@@ -207,14 +209,15 @@ test("footer row: History, full Sort then the toggle, compact the toggle; no Cle
     assertEqual(select(3, anchorOf(strip.fold)), -(WF.SORT_INSET + step))
     -- red under: Clear history beside the toggle (DW-Q3 moves it to Settings, feedback-15 spec §3)
     assertTrue(strip.clear == nil, "Clear history left the strip")
-    assertTrue((rightOf(strip.info)) == strip)
-    assertEqual(select(2, rightOf(strip.info)), -(WF.SORT_INSET + step + K.FOOTER_BUTTON_W + FR.GAP))
+    local status = WF.Parts()
+    assertTrue((rightOf(status)) == strip)
+    assertEqual(select(2, rightOf(status)), -(WF.SORT_INSET + step + K.FOOTER_BUTTON_W + FR.GAP))
     NS.SetWindowMode("compact")
     assertTrue(NS.WindowHistory.Drawn().compact == true)
-    assertEqual(select(3, anchorOf(strip.fold)), 0)
+    assertEqual(select(3, anchorOf(strip.fold)), -FR.START)
     assertEqual(strip.fold:GetWidth(), K.FOOTER_ICON_W, "icon only in compact")
     assertFalse(strip.fold.label:IsShown())
-    assertEqual(select(2, rightOf(strip.info)), -(K.FOOTER_ICON_W + FR.GAP))
+    assertEqual(select(2, rightOf(status)), -(FR.START + K.FOOTER_ICON_W + FR.GAP))
 end)
 
 -- ── Expand all / Collapse all ───────────────────────────────────────────────────────────────
@@ -272,4 +275,145 @@ test("footer row: the History toggle in both layouts, and each tab keeps its own
         assertTrue(NS.State.windowGroup == nil or next(NS.State.windowGroup.collapsed or {}) == nil,
             mode .. ": Drops' state untouched")
     end
+end)
+
+-- ── one footer line: the status after the count (RX-09, rolls-UX spec §3.7) ─────────────────
+
+-- A region's anchor of `point`: the frame it hangs from, its x and that frame's point.
+local function pointOf(region, point)
+    for _, pt in ipairs(region.__points or {}) do
+        if pt[1] == point then return pt[2], pt[4], pt[3] end
+    end
+end
+
+-- What a measured line draws, in characters (a UTF-8 character one), as the mock's textCharWidth counts.
+local function chars(text) return #((text or ""):gsub("[\128-\191]", "")) end
+
+test("footer row: the count's width and the status's room, pure (RX-09)", function()
+    local FR = T.newAddon().FooterRow
+    assertEqual(FR.InfoWidth("", 0, 300), 0, "nothing to say takes no room")
+    assertEqual(FR.InfoWidth("", nil, 300), 0)
+    assertEqual(FR.InfoWidth("2 tradeable", 55, 300), 55, "as wide as its words")
+    assertEqual(FR.InfoWidth("2 tradeable", 55, 40), 40, "never past the row: cut with an ellipsis")
+    assertEqual(FR.InfoWidth("2 tradeable", 55, 0), 55, "no width known yet: its words")
+    assertEqual(FR.InfoWidth("2 tradeable", nil, 300), 300, "not measured: the whole room, as before")
+    assertEqual(FR.InfoWidth("2 tradeable", nil, -5), 0, "not measured and no room known: none")
+end)
+
+test("footer row: the status is one line on Drops' strip, after the count, ending where the buttons start (RX-09)", function()
+    local NS, drawn = shownDrops(nil, true)
+    local K, WF, FR = NS.Constants.WINDOW, NS.WindowFooter, NS.FooterRow
+    local strip = drawn.pane.summary
+    local status = WF.Parts()
+    -- red under: the status bar, four segments on the window's footer under the strip
+    assertTrue(status ~= nil and status.text ~= nil, "one status line")
+    assertTrue(status:GetParent() == strip, "on the strip, not a bar of its own")
+    local text = textOf(status.text)
+    assertEqual(text, WF.StatusText(WF.Read(), nil, false), "every segment's words, one line")
+    assertTrue(text:find("^Inspect") and text:find(" · No loot seen yet · ", 1, true) and text:find("Pawn: off$"), text)
+    assertFalse(status.text:GetWordWrap(), "one line")
+    assertTrue(pointOf(status.text, "RIGHT") == status, "its words bounded: the game cuts them with an ellipsis")
+    local rel, x, relPoint = pointOf(status, "LEFT")
+    assertTrue(rel == strip.info and relPoint == "RIGHT", "after the tradeable count")
+    assertEqual(x, FR.STATUS_GAP)
+    local step = K.FOOTER_BUTTON_W + FR.GAP
+    local rrel, rx = pointOf(status, "RIGHT")
+    assertTrue(rrel == strip)
+    assertEqual(rx, -(WF.SORT_INSET + 3 * step + K.FOOTER_BUTTON_W + FR.GAP), "it ends where Post starts")
+    assertTrue(pointOf(strip.info, "RIGHT") == nil, "the count ends at its own words")
+end)
+
+test("footer row: the count keeps its words' width and the status the rest; narrow, the count is cut (RX-09)", function()
+    local NS, drawn, m = shownDrops(nil, true)
+    local FR = NS.FooterRow
+    local strip = drawn.pane.summary
+    local status = NS.WindowFooter.Parts()
+    m.textCharWidth = 5
+    strip:SetWidth(1200)
+    NS.Window.Refresh()
+    local words = chars(textOf(strip.info.text))
+    assertTrue(words > 0)
+    assertEqual(strip.info:GetWidth(), words * 5, "as wide as the count's words")
+    assertEqual(select(2, pointOf(status, "LEFT")), FR.STATUS_GAP)
+    local rowEnd = -select(2, pointOf(status, "RIGHT"))
+    strip:SetWidth(rowEnd + 2 + 40)   -- 40 px of room: less than the count
+    NS.Window.Refresh()
+    assertEqual(strip.info:GetWidth(), 40, "the count cut at the row; the status has no room")
+    m.textCharWidth = nil
+end)
+
+test("footer row: nothing tradeable, the status starts the line; compact, it is the short line (RX-09)", function()
+    local NS, drawn = shownDrops("compact", false)
+    local strip = drawn.pane.summary
+    local status = NS.WindowFooter.Parts()
+    assertTrue(status:GetParent() == strip)
+    assertEqual(textOf(strip.info.text), "")
+    assertEqual(strip.info:GetWidth(), 0)
+    assertEqual(select(2, pointOf(status, "LEFT")), 0, "no gap before it")
+    local WF = NS.WindowFooter
+    assertEqual(textOf(status.text), NS.CompactChrome.FooterLine(WF.Read()), "compact's one line")
+    NS.SetWindowMode("full")
+    assertEqual(textOf(status.text), WF.StatusText(WF.Read(), nil, false))
+end)
+
+test("footer row: the status follows the active tab, and the strip it leaves takes its row back (RX-09)", function()
+    local NS, hdrawn = shownHistory()
+    local K, WF, FR = NS.Constants.WINDOW, NS.WindowFooter, NS.FooterRow
+    local status = WF.Parts()
+    local hstrip = hdrawn.strip
+    assertTrue(status:GetParent() == hstrip, "on History's strip")
+    assertTrue(pointOf(status, "LEFT") == hstrip.info)
+    NS.Window.SelectTab("insights")
+    local istrip = NS.WindowInsights.Drawn().strip
+    assertTrue(status:GetParent() == istrip, "on Insights' strip")
+    assertEqual(select(2, pointOf(status, "RIGHT")), -(FR.START + K.FOOTER_BUTTON_W + FR.GAP), "left of Reset filters")
+    local rel, x = pointOf(hstrip.info, "RIGHT")
+    assertTrue(rel == hstrip, "History's info spans its row again")
+    assertEqual(x, -(WF.SORT_INSET + 2 * (K.FOOTER_BUTTON_W + FR.GAP)))
+    NS.Window.SelectTab("group")
+    assertTrue(status:GetParent() == NS.WindowGroup.Drawn().pane.summary, "back on Drops'")
+end)
+
+test("footer row: the status keeps its tooltip, every segment's words and reasons, rows then hints (RX-09)", function()
+    local NS = T.enableAddon()
+    NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
+    NS.ShowWindow()
+    local status = NS.WindowFooter.Parts()
+    local tip = NS.Window.TooltipOf(status)
+    assertEqual(tip[1], "Status")
+    local plain = {}
+    for i = 2, #tip do plain[#plain + 1] = T.tipPlain(tip[i]) end
+    local joined = table.concat(plain, "\n")
+    for _, want in ipairs({ "• Inspect: no group", "• Group: none, so no one to inspect", "• No loot seen yet",
+        "• Loot lines read: none this session", "• Not tracking in Solo · change in settings",
+        "• Turned on in: Settings > Drops > Situations", "• Pawn: off", "• Verdicts: do not use it" }) do
+        assertTrue(joined:find(want, 1, true) ~= nil, want)
+    end
+    assertEqual(plain[#plain], "If loot dropped and this stays, see /dw diagnostics.", "the hints close it")
+    NS.SetWindowMode("compact")
+    assertEqual(NS.Window.TooltipOf(status)[1], "Status", "the same tooltip in compact")
+    assertTrue(#NS.Window.TooltipOf(status) == #tip)
+end)
+
+test("footer row: no status bar: the panes reach the footer band, whose corner holds the grip (RX-09)", function()
+    local NS = T.enableAddon()
+    NS.ShowWindow()
+    local f, K, FR = NS.Window.Frame(), NS.Constants.WINDOW, NS.FooterRow
+    -- red under: the panes ending K.FOOTER_H over the body's foot, over the status bar
+    assertTrue(K.FOOTER_H == nil, "no status bar height")
+    for key, pane in pairs(f.panes) do
+        local rel, y = pane.__points[2][2], pane.__points[2][5]
+        assertTrue(rel == f.body); assertEqual(y, 0, key .. " reaches the body's foot")
+    end
+    assertEqual(f.footerHost:GetHeight(), K.STRIP_H, "the band is the footer row's height")
+    local grip = f.resizeGrip
+    assertTrue(grip:GetParent() == f.footerHost, "the grip is the footer's")
+    local p, rel = grip:GetPoint(1)
+    assertEqual(p, "BOTTOMRIGHT"); assertTrue(rel == f.footerHost, "in its bottom-right corner")
+    assertTrue(FR.START >= 17, "the row's first control clears the grip and its edge")
+    assertEqual(NS.WindowFooter.SORT_INSET, FR.START)
+    NS.SetLocked(true)
+    assertFalse(grip:IsShown(), "locked: no grip (RX-08)")
+    NS.SetLocked(false)
+    assertTrue(grip:IsShown())
 end)

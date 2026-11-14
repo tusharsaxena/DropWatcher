@@ -79,7 +79,7 @@ countdown ticker (1s) ─────> shown, expanded and Drops showing a live 
                              (WindowGroup.LiveCountdown, K.COUNTDOWN_TICK; feedback-5 §1): the same
                              countdowns alone; it stops when none is left
 TradeTimerExpiring ────────> shown: the whole repaint
-footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"), then what
+footer ticker (5s) ────────> shown and expanded: the status line on the active strip ("Last loot 12s ago"), then what
                              TradeTimerTick repaints
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
                              (Sort on the active tab's strip in the full layout, re-anchored by
@@ -172,8 +172,9 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
         right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
         at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
         K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
-        SORT_INSET); Post, the leftmost, hidden with nothing tradeable; the summary ends where the
-        row starts (FooterRow.PlaceInfo, one line); FooterRow.PaintFold(fold, pane.entries); the
+        FooterRow.START, clear of the grip); Post, the leftmost, hidden with nothing tradeable; the
+        summary as wide as its words, the status line after it to where the row starts
+        (FooterRow.PlaceInfo / FitInfo, one line, RX-09); FooterRow.PaintFold(fold, pane.entries); the
         scroll frame's bottom moved up over it
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint

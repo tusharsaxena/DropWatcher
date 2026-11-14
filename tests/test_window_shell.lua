@@ -768,9 +768,9 @@ test("shell: the live footer reads the client, and its Sort follows the active t
     local NS = T.enableAddon()
     NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
     NS.ShowWindow()
-    local segs, sort = NS.WindowFooter.Parts()
-    assertEqual(textOf(segs.situation.text), "Not tracking in Solo · change in settings")
-    assertEqual(textOf(segs.inspect.text), "Inspect: no group")
+    local status, sort = NS.WindowFooter.Parts()
+    assertEqual(textOf(status.text),
+        "Inspect: no group · No loot seen yet · Not tracking in Solo · change in settings · Pawn: off")
     assertEqual(textOf(sort.text), "Sort: Newest")
     sort.onSelect("gain")
     assertEqual(NS.WindowFilterBar.State("group").sort, "gain")
@@ -1070,11 +1070,11 @@ end)
 test("shell: every control on the chrome has a tooltip with a reason", function()
     local NS, f = shown()
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
-    local segs, sort = NS.WindowFooter.Parts()
+    local status, sort = NS.WindowFooter.Parts()
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
     local widgets = { NS.WindowGroup.Drawn().pane.summary.scan, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
         f.tabs.history, c.view, c.quality, c.content, c.search, sort,
-        segs.inspect, segs.loot, segs.situation, segs.pawn }
+        status }
     for i, w in ipairs(widgets) do
         local tip = W.TooltipOf(w)
         assertTrue(#tip >= 2 and type(tip[1]) == "string" and type(tip[2]) == "string", "widget " .. i)

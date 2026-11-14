@@ -558,6 +558,7 @@ local function buildStrip(pane)
     strip.fold = FR.BuildFold(strip, function(collapse) WH.FoldAll(pane.entries, collapse) end)
     pane.strip = strip
     pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
+    pane.statusHost = strip   -- the status line after the kept-history line, both layouts (RX-09)
 end
 
 local function build(pane)
@@ -647,7 +648,7 @@ local function placeStrip(strip, compact)
     FR.SetCompact(strip.fold, compact)
     local row = { { key = "fold", w = w } }
     if not compact then table.insert(row, 1, { key = "sort", w = WF.SORT_W }) end
-    local slots = FR.Slots(row, FR.GAP, compact and 0 or WF.SORT_INSET)
+    local slots = FR.Slots(row, FR.GAP, FR.START)
     FR.Place(strip, strip.fold, slots.fold)
     FR.PlaceInfo(strip, strip.info, slots.left)
 end
@@ -657,6 +658,7 @@ local function paintStrip(pane, groups, entries, compact)
     local strip = pane.strip
     strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
     placeStrip(strip, compact)
+    NS.FooterRow.FitInfo(strip)   -- the status line after these words (RX-09)
     NS.FooterRow.PaintFold(strip.fold, entries)
 end
 

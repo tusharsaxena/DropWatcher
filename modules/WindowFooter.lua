@@ -1,8 +1,15 @@
 local _, NS = ...
--- modules/WindowFooter.lua — the main window's footer (design spec §11.1, board 01 note 12): a
+-- modules/WindowFooter.lua — the main window's status line (design spec §11.1, board 01 note 12): a
 -- quick health check, so it is clear the addon is listening even with no drop on screen. Inspect
 -- freshness, the last loot seen, the situation and Pawn's status. While a simulation runs, the
 -- situation reads `Simulating: <situation> · n members` (simulator spec §6).
+--
+-- ONE FOOTER LINE (RX-09, rolls-UX spec §3.7). No status bar of its own: the line rides the active
+-- tab's strip (`pane.statusHost`), after that strip's words and ending where its buttons start
+-- (NS.FooterRow.FitInfo), one line the game cuts with an ellipsis; full, every segment's words
+-- (WF.StatusText), compact the short line (NS.CompactChrome.FooterLine); one tooltip in both, every
+-- segment's words and reasons (WF.StatusTip). The window's footer band under the strip holds the
+-- resize grip in its corner (modules/Window.lua).
 --
 -- THE TAB'S SORT is built here, once, and kept here (Parts, Refresh's state), but it no longer sits
 -- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
@@ -177,40 +184,74 @@ function WF.Read()
     return i
 end
 
--- ── the frame edge ──────────────────────────────────────────────────────────────────────────
+-- ── one line (pure) ─────────────────────────────────────────────────────────────────────────
 
-local segments = {}   -- [key] = { frame, text }
-local sortDropdown
-local footerHost
-
-local function textWidth(fs)
-    local w = fs:GetStringWidth()
-    if type(w) ~= "number" or w <= 0 then return 120 end
-    return w
+--- The status line from plain inputs (RX-09, rolls-UX spec §3.7): every segment's text in
+--- WF.SEGMENTS order, ` · ` between, in the full layout; compact's short line
+--- (NS.CompactChrome.FooterLine) in compact.
+--- @param i table WF.Read's inputs
+--- @param composed table|nil WF.Compose's (text only is enough); composed here when nil
+--- @param compact boolean|nil
+--- @return string
+function WF.StatusText(i, composed, compact)
+    if compact then return NS.CompactChrome.FooterLine(i) end
+    composed = composed or WF.Compose(i, true)
+    local parts = {}
+    for _, key in ipairs(WF.SEGMENTS) do parts[#parts + 1] = composed[key].text end
+    return table.concat(parts, " · ")
 end
 
-local function buildSegment(host, key, prev)
+local function isHint(line)
+    return type(line) == "string" and line:sub(1, 4) == "|cff" and not line:find(NS.TipMarks.BULLET, 1, true)
+end
+
+--- The status line's tooltip from plain inputs, in both layouts: `Status`, then per segment its words
+--- as a row and its own tooltip's rows under them, then every segment's closing hint. The status
+--- bar's four tooltips, kept in one (RX-09).
+--- @param i table WF.Read's inputs
+--- @return table { title, lines... }
+function WF.StatusTip(i)
+    i = type(i) == "table" and i or {}
+    local out, hints = { L["Status"] }, {}
+    for _, key in ipairs(WF.SEGMENTS) do
+        local seg = SEGMENT[key]
+        out[#out + 1] = NS.TipMarks.Row(nil, seg.text(i))
+        local tip = seg.tip(i)
+        for n = 2, #tip do
+            local line = tip[n]
+            if isHint(line) then hints[#hints + 1] = line else out[#out + 1] = line end
+        end
+    end
+    for _, h in ipairs(hints) do out[#out + 1] = h end
+    return out
+end
+
+-- ── the frame edge ──────────────────────────────────────────────────────────────────────────
+
+local status          -- the one status line: { text, tipRead }
+local sortDropdown
+local footerHost      -- the window's footer band (the Sort and status line's place on a tab with no strip)
+
+-- The status line: one frame and one font string, one line, its words in the idle gray, bounded by the
+-- frame so a narrow row cuts them with an ellipsis; its tooltip built on the hover from the last read.
+local function buildStatus(host)
     local s = CreateFrame("Frame", nil, host)
-    s:SetHeight(K.FOOTER_H)
+    s:SetHeight(K.STRIP_H)
     s.text = s:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     s.text:SetPoint("LEFT", s, "LEFT", 0, 0)
-    NS.Skin.Text(s.text, "dw.idle")   -- the idle gray (Ka0s Default 0.62), over the Footer band (Window)
-    if prev then s:SetPoint("LEFT", prev, "RIGHT", 12, 0) else s:SetPoint("LEFT", host, "LEFT", 2, 0) end
-    -- The compact layout's line sets tipLines (NS.CompactChrome.PaintFooter); the full layout's
-    -- segment keeps its read and builds its rows on the hover.
-    NS.Window.AttachTooltip(s, function()
-        local tip = s.tipLines or (s.tipRead and WF.SegmentTip(key, s.tipRead)) or {}
-        return unpack(tip)
-    end)
-    segments[key] = s
+    s.text:SetPoint("RIGHT", s, "RIGHT", 0, 0)
+    s.text:SetJustifyH("LEFT")
+    s.text:SetWordWrap(false)
+    NS.Skin.Text(s.text, "dw.idle")   -- the idle gray (Ka0s Default 0.62), as the status bar's was
+    NS.Window.AttachTooltip(s, function() return unpack(WF.StatusTip(s.tipRead)) end)
     return s
 end
 
 --- The Sort control's width (the one footer button width, K.FOOTER_BUTTON_W, so it lines up with the
 --- strip's buttons; feedback-15 spec §2) and its right edge's inset from its strip's right edge
---- (feedback-10 spec §3).
+--- (feedback-10 spec §3): the row's start, clear of the resize grip in the footer's corner (RX-09).
 WF.SORT_W = K.FOOTER_BUTTON_W
-WF.SORT_INSET = 0
+WF.SORT_INSET = K.GRIP_ROOM
 
 local function buildSort(host)
     local dd = NS.MakeDropdown(host, WF.SORT_W)
@@ -226,21 +267,26 @@ local function buildSort(host)
     return dd
 end
 
---- Build the footer on `host` (the window's footer frame). Once per window.
+--- Build the status line and the Sort control on `host` (the window's footer band). Once per window.
 --- @param host table
 function WF.Build(host)
-    segments, footerHost = {}, host
-    local prev
-    for _, key in ipairs(WF.SEGMENTS) do prev = buildSegment(host, key, prev) end
+    footerHost = host
+    status = buildStatus(host)
     sortDropdown = buildSort(host)
     WF.AnchorSort()
+    WF.AnchorStatus()
+end
+
+-- The active tab's pane, or nil before it is built.
+local function activePane()
+    local f = NS.Window.Frame()
+    return f and f.panes and f.panes[NS.Window.ActiveTab()]
 end
 
 -- The full layout's place for Sort: the active tab's strip (its pane's `sortHost`), else the footer
 -- (a tab whose pane is not built yet).
 local function sortHost()
-    local f = NS.Window.Frame()
-    local pane = f and f.panes and f.panes[NS.Window.ActiveTab()]
+    local pane = activePane()
     return pane and pane.sortHost or footerHost
 end
 
@@ -258,28 +304,46 @@ function WF.AnchorSort()
     dd:SetWidth(WF.SORT_W)
 end
 
---- Repaint every segment from a fresh read, and the Sort control from the active tab's state. The
---- compact layout's one line is NS.CompactChrome.PaintFooter's (compact spec §4).
-function WF.Refresh()
-    if not segments.inspect then return end
-    local read = WF.Read()
-    local composed = WF.Compose(read, true)
-    if NS.WindowCompact.Mode() == "compact" then
-        NS.CompactChrome.PaintFooter(segments, read, composed)
-    else
-        WF.AnchorSort()
-        for key, s in pairs(segments) do
-            local seg = composed[key]
-            s.text:SetText(seg.text)
-            s.tipLines, s.tipRead = nil, read
-            s:SetWidth(textWidth(s.text))
-        end
+--- Put the status line on the active tab's strip (its pane's `statusHost`), after that strip's info
+--- and ending where its row starts (NS.FooterRow.FitInfo, RX-09), in both layouts; the strip it leaves
+--- spans its row with its info again. A tab with no strip yet holds it on the footer band, at its left.
+function WF.AnchorStatus()
+    if not status then return end
+    local pane = activePane()
+    local host = pane and pane.statusHost or footerHost
+    if status.dwHost == host then return end
+    local FR, prev = NS.FooterRow, status.dwHost
+    if prev and prev.dwStatus == status then
+        prev.dwStatus = nil
+        FR.FitInfo(prev)
     end
+    status.dwHost, status.dwFitOn = host, nil
+    status:SetParent(host)
+    if host == footerHost then
+        status:ClearAllPoints()
+        status:SetPoint("LEFT", host, "LEFT", 2, 0)
+        status:SetPoint("RIGHT", host, "RIGHT", -FR.START, 0)
+        return
+    end
+    host.dwStatus = status
+    FR.FitInfo(host)
+end
+
+--- Repaint the status line from a fresh read (its words in the layout in force; its tooltip waits for a
+--- hover), and the Sort control from the active tab's state.
+function WF.Refresh()
+    if not status then return end
+    local compact = NS.WindowCompact.Mode() == "compact"
+    local read = WF.Read()
+    if not compact then WF.AnchorSort() end
+    WF.AnchorStatus()
+    status.text:SetText(WF.StatusText(read, nil, compact))
+    status.tipRead = read
     if sortDropdown then
         local tab = NS.Window.ActiveTab()
         local FB = NS.WindowFilterBar
         -- Insights sorts nothing: no dead Sort. Compact lists it in the Filters menu (CompactChrome).
-        sortDropdown:SetShown(not NS.Window.TabOwnsBar(tab) and NS.WindowCompact.Mode() ~= "compact")
+        sortDropdown:SetShown(not NS.Window.TabOwnsBar(tab) and not compact)
         sortDropdown:SelectValue(FB.State(tab).sort)
         local on = FB.HONORS[tab].sort == true
         sortDropdown:SetEnabled(on)
@@ -287,6 +351,6 @@ function WF.Refresh()
     end
 end
 
---- The built segments and the Sort control, for the suites.
---- @return table segments, table|nil sort
-function WF.Parts() return segments, sortDropdown end
+--- The status line and the Sort control, for the suites.
+--- @return table|nil status, table|nil sort
+function WF.Parts() return status, sortDropdown end

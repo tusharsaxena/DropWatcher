@@ -171,6 +171,7 @@ function DS.Build(pane)
     strip:Hide()
     pane.summary = strip
     pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
+    pane.statusHost = strip   -- the status line after the summary, both layouts (RX-09)
 end
 
 -- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
@@ -213,7 +214,7 @@ local function placeButtons(strip, tradeable, compact)
     if strip.dwPlacedCompact == compact and strip.dwPlacedPost == tradeable then return end
     strip.dwPlacedCompact, strip.dwPlacedPost = compact, tradeable
     local FR = NS.FooterRow
-    local slots = FR.Slots(DS.Row(tradeable, compact), FR.GAP, compact and 0 or NS.WindowFooter.SORT_INSET)
+    local slots = FR.Slots(DS.Row(tradeable, compact), FR.GAP, FR.START)
     FR.SetCompact(strip.fold, compact)
     FR.SetCompact(strip.scan, compact)
     FR.SetCompact(strip.post, compact)
@@ -232,6 +233,7 @@ local function paintText(pane, s, compact)
     local tone = C.TONE.muted
     info.text:SetTextColor(tone.r, tone.g, tone.b)
     info.tipLines = tip
+    NS.FooterRow.FitInfo(pane.summary)   -- the status line after these words (RX-09)
 end
 
 --- Repaint the strip for the tab's view (every refresh, after the table or the cards are drawn):

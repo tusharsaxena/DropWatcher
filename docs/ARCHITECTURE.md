@@ -156,6 +156,16 @@ shared bar and the footer's Sort, starts the pane under the tabs, re-anchors the
 simulation strips there, and never syncs the shared bar. This is a DropWatcher convention, not a rule
 of the standard (Insights design spec §4.1), so it owes no deviation row.
 
+The window has one footer line (RX-09, rolls-UX design §3.7): the active tab's strip, on the footer
+band (`f.footerHost`, `S.Footer`, the strip's height). There is no status bar under it: the status
+line (inspect freshness, the last loot, the situation or the simulation, Pawn; `NS.WindowFooter`)
+rides the active strip after its own words (the tradeable count, the kept-history line, the period),
+ending where the strip's buttons start, one line cut with an ellipsis, its tooltip every segment's
+reasons; it follows a tab switch (`WindowFooter.AnchorStatus`, the pane's `statusHost`), and the
+strip it leaves spans its row with its words again (`FooterRow.FitInfo`). The resize grip is built in
+the band's bottom-right corner (`MakeResizable` `gripParent`), each strip's row starting
+`K.GRIP_ROOM` clear of it, and hidden while the window is locked or minimized (RX-08).
+
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher

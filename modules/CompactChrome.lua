@@ -18,7 +18,9 @@ local _, NS = ...
 --               force.
 --   strip       the strip in force (test mode's or the simulation's) in shorter words, wrapping to
 --               two lines when the width needs it
---   footer      one line, `Inspect 4/4 · Mythic+`; the rest of the full footer is its tooltip
+--   footer      the status line's short words, `Inspect 4/4 · Mythic+` (CC.FooterLine), after the
+--               active strip's own on the one footer line (NS.WindowFooter, RX-09); its tooltip is
+--               the full layout's
 --
 -- A CASCADE OF THE DROPDOWNS THEMSELVES. Filters ▾ opens LibKa0s-Widgets' shared menu on its button
 -- (W.ContextMenu through NS.ContextMenu) with one `submenu` row per dropdown (Widgets minor 23), in
@@ -32,11 +34,10 @@ local _, NS = ...
 -- Filters ▾ opened a hand-built panel the dropdowns were reparented into, with an outside-press
 -- listener of its own; the library's menu closes on an outside press itself.
 --
--- PURE: TabText, ModeWord, BadgeShort, FooterLine, FooterTip, IsActive, ActiveKeys, CountActive,
+-- PURE: TabText, ModeWord, BadgeShort, FooterLine, IsActive, ActiveKeys, CountActive,
 -- FiltersLabel and FiltersTip. The edge: Paint (Window.Refresh's every pass; the layout itself only
 -- when the layout in force changed), ModeStrip (the strip of the mode in force), BannerH (its height,
--- which Window's pane layout reads),
--- PaintFooter (WindowFooter.Refresh in compact) and the Filters menu (FilterRows, ToggleFilters,
+-- which Window's pane layout reads) and the Filters menu (FilterRows, ToggleFilters,
 -- CloseFilters). WindowFilterBar.Layout
 -- stands aside in compact: the search box's anchors size it there.
 
@@ -114,21 +115,6 @@ function CC.FooterLine(i)
     local members = tonumber(i.members) or 0
     local inspect = members == 0 and L["No group"] or L["Inspect %d/%d"]:format(i.good or 0, members)
     return inspect .. " · " .. situationShort(i)
-end
-
---- The compact footer's tooltip: every segment the full footer shows, from WindowFooter.Compose.
---- @param composed table|nil { inspect, loot, situation, pawn }, each { text }
---- @return table lines
-function CC.FooterTip(composed)
-    composed = type(composed) == "table" and composed or {}
-    local TM = NS.TipMarks
-    local out = { L["Status"] }
-    for _, key in ipairs(NS.WindowFooter.SEGMENTS) do
-        local seg = composed[key]
-        if seg and seg.text then out[#out + 1] = TM.Row(nil, seg.text) end
-    end
-    out[#out + 1] = TM.Hint(L["The full view's footer shows each of these on its own."])
-    return out
 end
 
 local function sameSet(a, b)
@@ -464,18 +450,10 @@ local function compactBar(f)
     eb:Show()
 end
 
-local function layoutFooter(compact)
-    local segments = NS.WindowFooter.Parts()
-    for key, s in pairs(segments) do
-        if key ~= "inspect" then s:SetShown(not compact) end
-    end
-end
-
 local function layout(f, compact)
     layoutTitleBar(f, compact)
     layoutTabs(f, compact)
     layoutStrip(f, compact)
-    layoutFooter(compact)
     if compact then compactBar(f) else restoreBar(f) end
     NS.Debug(TAG, "chrome -> %s", compact and "compact" or "full")
 end
@@ -557,20 +535,6 @@ function CC.BannerH()
     if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
     if w and room > 0 and w <= room then return K.BANNER_H end
     return K.BANNER_H + CC.WRAP_H
-end
-
---- The compact footer (WindowFooter.Refresh): the inspect segment holds the one line, its tooltip
---- every full segment; the other segments are hidden by the layout.
---- @param segments table WindowFooter's built segments
---- @param read table WindowFooter.Read's inputs
---- @param composed table WindowFooter.Compose's segments
-function CC.PaintFooter(segments, read, composed)
-    local s = segments.inspect
-    if not s then return end
-    s.text:SetText(CC.FooterLine(read))
-    s.tipLines = CC.FooterTip(composed)
-    local w = s.text:GetStringWidth()
-    s:SetWidth(type(w) == "number" and w > 0 and w or 200)
 end
 
 --- The Filters button and the menu it opened, for the suites: { filters, menu }.

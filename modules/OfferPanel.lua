@@ -276,7 +276,7 @@ local function dock(p)
         p:SetPoint("BOTTOMRIGHT", win, "BOTTOMLEFT", -K.DOCK_GAP, 0)
     else
         p:SetPoint("TOPRIGHT", win, "TOPRIGHT", -K.INSET, -K.TITLE_H)
-        p:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
+        p:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -K.INSET, K.STRIP_H)   -- over the footer line (RX-09)
     end
     -- Floating over the window, it is drawn above the window's rows by its level, in the window's own
     -- strata (a popover, frame-layering-§3); docked beside it, at the window's chrome level.

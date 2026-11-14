@@ -60,7 +60,6 @@ C.WINDOW = {
     TAB_GAP     = 4,
     FILTER_H    = 30,
     BANNER_H    = 22,     -- = Widgets.TEST_STRIP.HEIGHT + 4: a 2 px gap above and below the strip
-    FOOTER_H    = 22,
     INSET       = 6,      -- the body's side margin
     CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
@@ -126,6 +125,10 @@ C.WINDOW = {
     -- tooltips naming them (feedback-16).
     FOOTER_BUTTON_W = 150,
     FOOTER_ICON_W = 24,
+    -- The footer row's first control's inset from the strip's right edge (RX-09, rolls-UX spec §3.7):
+    -- the resize grip (LibKa0s's, 16 px, 1 px inside its corner) sits in the footer band's bottom-right
+    -- corner, which is the strip's, so the row starts 3 px clear of it.
+    GRIP_ROOM   = 20,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_FOOT_H = 32,    -- its Announce to group strip

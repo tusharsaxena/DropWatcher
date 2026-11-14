@@ -52,16 +52,20 @@ test("chrome: the footer's one line is inspect freshness and the situation", fun
     assertEqual(CC.FooterLine(nil), "No group · ?")
 end)
 
-test("chrome: the footer's tooltip carries every full segment", function()
+test("chrome: the footer's tooltip carries every full segment, its words then its reasons (RX-09)", function()
     local NS = T.newAddon()
-    local tip = NS.CompactChrome.FooterTip(NS.WindowFooter.Compose({ members = 4, good = 3, outOfRange = 1,
-        lastLootAgo = 75, situation = "dungeon", tracking = true, pawn = "on" }))
+    local tip = NS.WindowFooter.StatusTip({ members = 4, good = 3, outOfRange = 1,
+        lastLootAgo = 75, situation = "dungeon", tracking = true, pawn = "on" })
     assertEqual(tip[1], "Status")
     assertEqual(T.tipPlain(tip[2]), "• Inspect 3/4 fresh · 1 out of range", "a row per segment (feedback-21)")
-    assertEqual(T.tipPlain(tip[3]), "• Last loot 1m ago")
-    assertEqual(T.tipPlain(tip[4]), "• Situation: Dungeon")
-    assertEqual(T.tipPlain(tip[5]), "• Pawn: on")
-    assertEqual(#tip, 6)
+    assertEqual(T.tipPlain(tip[3]), "• Read recently: 3/4", "then that segment's own rows")
+    local plain = {}
+    for i = 2, #tip do plain[#plain + 1] = T.tipPlain(tip[i]) end
+    local joined = table.concat(plain, "\n")
+    for _, want in ipairs({ "• Last loot 1m ago", "• Situation: Dungeon", "• Pawn: on", "• Status: ready" }) do
+        assertTrue(joined:find(want, 1, true) ~= nil, want)
+    end
+    assertEqual(plain[#plain], "Scan group asks for the rest.", "the hints last")
 end)
 
 local HONORS_ALL = { quality = true, content = true, char = true }
@@ -501,17 +505,14 @@ test("chrome: the footer is one line, inspect and situation, the rest in its too
     NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
     NS.ShowWindow()
     NS.SetWindowMode("compact")
-    local segs = NS.WindowFooter.Parts()
-    assertEqual(textOf(segs.inspect.text), "No group · Solo (not tracked)")
-    for _, key in ipairs({ "loot", "situation", "pawn" }) do assertFalse(segs[key]:IsShown(), key) end
-    local tip = NS.Window.TooltipOf(segs.inspect)
+    local status = NS.WindowFooter.Parts()
+    assertEqual(textOf(status.text), "No group · Solo (not tracked)")
+    local tip = NS.Window.TooltipOf(status)
     assertEqual(tip[1], "Status"); assertEqual(T.tipPlain(tip[2]), "• Inspect: no group")
-    assertEqual(T.tipPlain(tip[3]), "• No loot seen yet")
     NS.WindowFooter.Refresh()   -- the ticker's own repaint stays compact
-    assertEqual(textOf(segs.inspect.text), "No group · Solo (not tracked)")
+    assertEqual(textOf(status.text), "No group · Solo (not tracked)")
     NS.SetWindowMode("full")
-    assertEqual(textOf(segs.inspect.text), "Inspect: no group")
-    for _, key in ipairs({ "loot", "situation", "pawn" }) do assertTrue(segs[key]:IsShown(), key) end
+    assertEqual(textOf(status.text), "Inspect: no group · No loot seen yet · Not tracking in Solo · change in settings · Pawn: off")
 end)
 
 test("chrome: switching the chrome keeps every tab's filter state and builds no second window", function()

@@ -633,7 +633,7 @@ Total.
 - chrome: TEST MODE and SIM shorten to TEST and SIM
 - chrome: the compact badge shows the queued count beside its lock, or nothing
 - chrome: the footer's one line is inspect freshness and the situation
-- chrome: the footer's tooltip carries every full segment
+- chrome: the footer's tooltip carries every full segment, its words then its reasons (RX-09)
 - chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
 - chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow
 - chrome: compact shows the short title; in test mode the strip marks it, so the title stays centered alone
@@ -918,7 +918,7 @@ Total.
 - drops strip: under the compact cards, the summary shortened, Post my tradeables its icon
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_footer_row.lua (8)
+### test_footer_row.lua (15)
 
 - footer row: the slots, pure: right to left, a gap between, a hidden control takes no room
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
@@ -928,6 +928,13 @@ Total.
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
+- footer row: the count's width and the status's room, pure (RX-09)
+- footer row: the status is one line on Drops' strip, after the count, ending where the buttons start (RX-09)
+- footer row: the count keeps its words' width and the status the rest; narrow, the count is cut (RX-09)
+- footer row: nothing tradeable, the status starts the line; compact, it is the short line (RX-09)
+- footer row: the status follows the active tab, and the strip it leaves takes its row back (RX-09)
+- footer row: the status keeps its tooltip, every segment's words and reasons, rows then hints (RX-09)
+- footer row: no status bar: the panes reach the footer band, whose corner holds the grip (RX-09)
 
 ### test_offer_panel.lua (21)
 
@@ -2889,7 +2896,7 @@ Total.
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
-| test_footer_row.lua | 8 |
+| test_footer_row.lua | 15 |
 | test_offer_panel.lua | 21 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
@@ -2977,4 +2984,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2459** |
+| **Total** | **2466** |
