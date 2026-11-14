@@ -711,6 +711,9 @@ local PINNED_ROWS = {
     { "feed.categories.recipe", "bool", "true" },
     { "feed.categories.tierToken", "bool", "true" },
     { "feed.categories.toy", "bool", "true" },
+    -- RX-04 (rolls UX design §3.5): Lockboxes and containers, and the rolled-on catch-all.
+    { "feed.categories.container", "bool", "true" },
+    { "feed.categories.other", "bool", "false" },
     -- DW-CAT5 (issue #13): the Always watch and Never watch item lists, new stored paths.
     { "feed.blacklist", "map", "{}" },
     { "feed.whitelist", "map", "{}" },

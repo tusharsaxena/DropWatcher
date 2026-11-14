@@ -666,12 +666,15 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
   ItemFacts.Request ─> loading? wait for the load, then go on
   FeedFilter.Filter (Never watch `blacklist` first, beating Always watch; then Always watch, passing
-    with `forced`, kept as rec.forced, past everything after it; heirloom, no watched kind, a kind
-    turned off, minimum item level) ─> hidden with its reason
+    with `forced`, kept as rec.forced, past everything after it; heirloom, no watched kind (unless
+    rolled on, a roll table on the drop or Pending's gate, with the `other` catch-all on: RX-04), a
+    kind turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
     a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
       { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
+    a lockbox or bag (`container`) or an item of no kind: its kind word instead (RX-04)
+      { verdict = lockbox | container | item, collect = true, category }: feed-only, no gain
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
     (the upgrade override lets `upgrade` and `newCollect` through below the threshold; an Always
     watch drop (`ctx.forced`) passes as `whitelisted`; the situation gate above still holds)

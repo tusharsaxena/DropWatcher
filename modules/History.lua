@@ -25,7 +25,8 @@ local _, NS = ...
 -- Character dropdown (feedback-2 spec §4, modules/CharFilter.lua); an entry kept before they existed
 -- has neither.
 -- `category` is the drop's item kind (issue #13, categories design spec §3.3: equipment, tierToken,
--- mount, pet, toy, recipe, cosmetic), `tokenSlot` a tier token's made slot and `tokenUsers` who may
+-- mount, pet, toy, recipe, cosmetic, container; `other` for an item of no kind rolled on, RX-04),
+-- `tokenSlot` a tier token's made slot and `tokenUsers` who may
 -- use a token naming no classes (`every`, a Curio; `yours`, a Use text alone; modules/ItemFacts.lua),
 -- since TT-1 (an older token entry has none, and its Type reads a dash); an entry kept before
 -- they existed has neither and reads as equipment (Insights: a tier token for the slot
@@ -187,11 +188,13 @@ local function tradeSnap(t)
     return { state = t.state, reasonKey = t.reasonKey, basis = t.basis, args = args }
 end
 
--- The drop's item kind: its own, else Watched item for one the Always watch list let in with none
--- (a forced drop, or its collection verdict), so Insights never files it as an entry from before #13.
+-- The drop's item kind: its own, else Other loot for an item of no kind the catch-all let in (its
+-- verdict's `other`, RX-04), else Watched item for one the Always watch list let in with none (a
+-- forced drop, or its collection verdict), so Insights never files it as an entry from before #13.
 local function categoryOf(rec, facts)
     if type(facts.category) == "string" then return facts.category end
     local me = rec.me
+    if rec.forced ~= true and type(me) == "table" and me.category == "other" then return "other" end
     if rec.forced == true or (type(me) == "table" and me.collect == true) then return NS.Constants.CATEGORY_WATCHED end
     return nil
 end

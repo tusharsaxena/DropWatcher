@@ -2,25 +2,33 @@ local _, NS = ...
 -- modules/Collectibles.lua — which category a drop falls in, and the collection verdict of the
 -- collectible ones (issue #13, categories design spec §1, §3.1, §3.2).
 --
---   facts.category = "equipment" | "tierToken" | "mount" | "pet" | "toy" | "recipe" | "cosmetic" | nil
+--   facts.category = "equipment" | "tierToken" | "mount" | "pet" | "toy" | "recipe" | "cosmetic"
+--                    | "container" | nil
 --   facts.collect  = { kind, mountID?, speciesID?, known = true | false | nil, count?, limit?,
 --                      skillLine?, hasProfession? } | nil   (collectibles only; a cosmetic's
 --                      known is always nil: its state is facts.transmogKnown)
 --
 -- THE PURE HALF. CategoryOf(facts, probe) reads the facts and the probe's collection answers
 -- ({ mountID, speciesID, toy, cosmetic }, all optional) and names the category, first match wins:
--- tierToken, equipment, mount, pet, toy, recipe, cosmetic, else nil (not watched). Equipment is
+-- tierToken, equipment, mount, pet, toy, recipe, cosmetic, container, else nil (no kind). Equipment is
 -- armor and weapons that are not cosmetic (the Cosmetic armor subclass, or the client's cosmetic
 -- flag, which cosmetic weapons carry); a cosmetic comes after the collectibles, so a toy or mount
--- that carries the flag keeps its own category. Verdict(facts, forced) answers the `me` evaluation
--- of a collectible (new, collected, unknown, or can't use for a recipe of a profession you lack),
--- or of a whitelisted item with no category; nil for anything else. IsCollectible says whether a
--- category gets that verdict (C.CATEGORIES' `collectible`).
+-- that carries the flag keeps its own category. A container (RX-04, rolls UX design §3.5) is a bag
+-- (the Container class) or Miscellaneous Junk that opens (the probe's `opens`: its tooltip reads
+-- Locked, a lockbox, or <Right Click to Open>), the class the client gives a lockbox; other Junk has
+-- no kind. Verdict(facts, forced) answers the `me` evaluation of a collectible (new,
+-- collected, unknown, or can't use for a recipe of a profession you lack), of a container (its kind
+-- word, `lockbox` or `container`), of an item of no kind (`item`, category `other`: the feed shows
+-- one only through its rolled-on catch-all, and your roll popup judges every roll), or of a
+-- whitelisted item with no category (`unknown`); nil for gear. None of these carries a gain, and
+-- each is feed-only. IsCollectible says whether a category gets a collection verdict (C.CATEGORIES'
+-- `collectible`).
 --
 -- THE EDGE. Read(facts) asks NS.Compat (core/CompatCollect.lua) for the probes and the collection
 -- state and fills `category` and `collect`. The probes are spent where they can matter: the
 -- cosmetic flag on armor and weapons, the mount, pet and toy probes on anything else (cosmetic gear
--- included), none on a tier token; the recipe's known line and the professions on recipes alone.
+-- included), none on a tier token; the recipe's known line and the professions on recipes alone;
+-- the opens read (NS.Compat.ItemOpens) on Miscellaneous Junk alone, the class a lockbox has.
 -- modules/ItemFacts.lua calls it on the facts it is building, before they are cached: the cached
 -- tables stay ItemFacts' to write. A cosmetic's collection state is its `transmogKnown`, which
 -- ItemFacts keeps current: its `collect.known` stays nil (a copy would go stale once the
@@ -64,9 +72,16 @@ local function isMisc(facts, subClassID)
     return facts.classID == IC.MISCELLANEOUS and facts.subClassID == subClassID
 end
 
+-- A bag, or Junk that opens (a lockbox): `container`; nil for anything else (RX-04).
+local function containerOf(facts, probe)
+    if facts.classID == IC.CONTAINER then return "container" end
+    if probe.opens and isMisc(facts, MS.JUNK) then return "container" end
+    return nil
+end
+
 --- The category an item falls in, or nil when it is not watched (see the header for the order).
 --- @param facts table
---- @param probe table|nil { mountID, speciesID, toy, cosmetic }: the client's collection answers
+--- @param probe table|nil { mountID, speciesID, toy, cosmetic, opens }: the client's answers
 --- @return string|nil
 function CO.CategoryOf(facts, probe)
     if type(facts) ~= "table" then return nil end
@@ -79,7 +94,7 @@ function CO.CategoryOf(facts, probe)
     if probe.toy then return "toy" end
     if facts.classID == IC.RECIPE then return "recipe" end
     if cosmetic then return "cosmetic" end
-    return nil
+    return containerOf(facts, probe)
 end
 
 --- True when the facts' category gets a collection verdict (a mount, pet, toy, recipe or cosmetic).
@@ -88,6 +103,8 @@ end
 function CO.IsCollectible(facts)
     return type(facts) == "table" and COLLECTIBLE[facts.category] == true
 end
+
+local kindVerdict
 
 local function reason(key, detail)
     return { key = key, detail = detail }
@@ -114,19 +131,37 @@ local function judge(category, collect, known)
     return verdict, reasons
 end
 
+-- A lockbox's kind word (its tooltip read Locked: `facts.lockbox`), else a bag's or a box's.
+local function containerWord(facts) return facts.lockbox == true and "lockbox" or "container" end
+
+-- The verdict of an item that is not gear and not collected (RX-04): a container's kind word, an
+-- item of no kind's `item`, an Always watch item of no kind `unknown`; nil for gear and a token.
+kindVerdict = function(facts, forced)
+    if type(facts) ~= "table" then return nil end
+    local category = facts.category
+    if category ~= nil and category ~= "container" then return nil end
+    if category == nil and forced then
+        return { verdict = "unknown", equip = "collect", collect = true, reasons = { reason("whitelisted") } }
+    end
+    if category == nil and (isGearClass(facts) or C.SLOT_PLAN[facts.equipLoc or ""]) then return nil end
+    local out = { verdict = category and containerWord(facts) or "item", equip = "collect", collect = true,
+        category = category or "other", reasons = { reason("notGear") } }
+    if forced then out.reasons[2] = reason("whitelisted") end
+    return out
+end
+
 --- The `me` evaluation of a collectible:
 ---   { verdict = "newCollect" | "collected" | "collectUnknown" | "cantUse", equip = "collect",
 ---     collect = true, category, count?, limit?, reasons = { { key, detail } } }
 --- `forced` (the whitelist let the item through) adds the `whitelisted` reason; a forced item with
---- no category answers verdict `unknown`. Nil for an item that is neither.
+--- no category answers verdict `unknown`. A container answers its kind word (`lockbox`, `container`)
+--- and an unforced item of no kind `item` (category `other`), reason `notGear`. Nil for gear and a
+--- tier token (the gear kernel judges them) and for no facts.
 --- @param facts table|nil
 --- @param forced boolean|nil
 --- @return table|nil
 function CO.Verdict(facts, forced)
-    if not CO.IsCollectible(facts) then
-        if not forced then return nil end
-        return { verdict = "unknown", equip = "collect", collect = true, reasons = { reason("whitelisted") } }
-    end
+    if not CO.IsCollectible(facts) then return kindVerdict(facts, forced) end
     local category, collect = facts.category, facts.collect or {}
     local known = collect.known
     if category == "cosmetic" then known = facts.transmogKnown end
@@ -151,6 +186,7 @@ local function probeOf(facts)
     probe.speciesID = Compat.PetSpeciesFromItem(facts.itemID)
     if probe.speciesID then return probe end
     probe.toy = Compat.IsToy(facts.itemID)
+    if not probe.toy and isMisc(facts, MS.JUNK) then probe.opens = Compat.ItemOpens(facts.link) end
     return probe
 end
 
@@ -199,6 +235,7 @@ function CO.Read(facts)
     if type(facts) ~= "table" then return facts end
     local probe = probeOf(facts)
     facts.category = CO.CategoryOf(facts, probe)
+    facts.lockbox = facts.category == "container" and probe.opens == "locked" or nil
     facts.collect = COLLECTIBLE[facts.category] and collectOf(facts.category, facts, probe) or nil
     return facts
 end
@@ -238,7 +275,7 @@ local function reread(scope)
     local n = 0
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
         local facts = wanted(rec, scope) and NS.ItemFacts.Get(rec.link)
-        local now = facts and CO.Verdict(facts)
+        local now = facts and CO.Verdict(facts, rec.forced)
         if now and stateOf(now) ~= stateOf(rec.me) then
             NS.LootFeed.Refresh(rec, "collection")
             n = n + 1

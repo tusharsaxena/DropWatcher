@@ -218,8 +218,9 @@ at the Situations tab's Quality column, where a situation sets its own.
 
 **Items:** two subsections. **Item kinds:** one switch per watched kind, two to a line in
 `C.CATEGORIES`' order: Equipment | Tier tokens, Mounts | Battle pets, Toys | Recipes and patterns,
-then Cosmetics (off by default) alone (DW-CAT2, issue #13; they replaced Gear only | Include tier
-tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item
+Cosmetics (off by default) | Lockboxes and containers (on), then Everything else that is rolled on
+(off by default, the catch-all for an item of no kind a group rolls on, RX-04) alone (DW-CAT2,
+issue #13; they replaced Gear only | Include tier tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item
 level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
 under my average in the relative mode, and neither under Off (LibKa0s#67).
 

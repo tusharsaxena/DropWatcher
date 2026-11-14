@@ -50,24 +50,32 @@ local TM = NS.TipMarks
 
 local DASH = "–"
 
-CC.TONE = { newCollect = "good", collected = "bad", collectUnknown = "muted", cantUse = "redMuted", unknown = "muted" }
+CC.TONE = { newCollect = "good", collected = "bad", collectUnknown = "muted", cantUse = "redMuted", unknown = "muted",
+    lockbox = "plain", container = "plain", item = "plain" }
 
--- The cell's word per verdict, and the words a category says its own way.
-local WORD = { newCollect = L["New"], collected = L["Collected"], collectUnknown = "?", cantUse = L["Can't use"], unknown = "?" }
+-- The cell's word per verdict, and the words a category says its own way. A lockbox, a bag and an
+-- item of no kind (RX-04, rolls UX design §3.5) say their kind in the neutral tone: no gain.
+local WORD = { newCollect = L["New"], collected = L["Collected"], collectUnknown = "?", cantUse = L["Can't use"], unknown = "?",
+    lockbox = L["Lockbox"], container = L["Container"], item = L["Item"] }
 local CATEGORY_WORD = {
     recipe = { collected = L["Known"] },
     cosmetic = { newCollect = L["New look"], collected = L["Look known"] },
 }
+-- The verdicts that are a kind word, not a collection state.
+local KIND_VERDICT = { lockbox = true, container = true, item = true }
 -- The tooltip's title after `For you: `.
 local TITLE = {
     newCollect = L["New to your collection"], collected = L["Already collected"],
     collectUnknown = L["Collection unknown"], cantUse = L["Can't use"], unknown = L["Unknown"],
+    lockbox = L["Lockbox"], container = L["Container"], item = L["Item"],
 }
 -- The Means row under the title.
 local MEANS = {
     newCollect = L["not in your collection yet"], collected = L["already in your collection"],
     collectUnknown = L["the game gave no collection answer yet"],
     cantUse = L["a recipe for a profession you don't have"], unknown = L["watched for you, never judged"],
+    lockbox = L["not gear: no gain for anyone"], container = L["not gear: no gain for anyone"],
+    item = L["not gear: no gain for anyone"],
 }
 -- NS.Collectibles' reason keys, in words: each a Why row's value.
 local REASON = {
@@ -77,6 +85,7 @@ local REASON = {
     notYourProfession = L["not one of your professions"],
     petPartial = L["you have %s"],
     whitelisted = L["on your Always watch list"],
+    notGear = L["shown as its kind, never judged against gear"],
 }
 
 CC.NO_ASK = L["collectibles are watched, not asked for"]
@@ -217,7 +226,8 @@ end
 -- for an Always watch item that fits no category (NS.Constants.CATEGORY_WATCHED), never a live one.
 local KIND = {
     equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
-    recipe = L["Recipe"], cosmetic = L["Cosmetic"], watched = L["Watched item"],
+    recipe = L["Recipe"], cosmetic = L["Cosmetic"], container = L["Container"], other = L["Other loot"],
+    watched = L["Watched item"],
 }
 
 --- A category's word (`Mount`, `Tier token`), or nil for a key that is none (the Insights tab's
@@ -236,7 +246,8 @@ local PROFESSION = {
 -- The detail card's verdict chip per collection verdict (the Me side's).
 local CHIP = {
     newCollect = L["NEW TO COLLECTION"], collected = L["COLLECTED"], collectUnknown = L["COLLECTION UNKNOWN"],
-    cantUse = L["CAN'T USE"], unknown = L["UNKNOWN"],
+    cantUse = L["CAN'T USE"], unknown = L["UNKNOWN"], lockbox = L["LOCKBOX"], container = L["CONTAINER"],
+    item = L["ITEM"],
 }
 
 -- A collectible's facts: its category is one with a collection verdict.
@@ -302,7 +313,8 @@ function CC.CountChip(f)
 end
 
 --- The detail card's rows of a collection verdict (a live drop's or History's stored one), in
---- NS.DetailCells' row shape: Kind, Collection and, for a recipe, its Profession.
+--- NS.DetailCells' row shape: Kind, Collection and, for a recipe, its Profession; a lockbox, a bag
+--- or an item of no kind (RX-04) has the Kind row alone, its kind word the verdict.
 --- @param eval table the collection verdict (`collect` set)
 --- @param f table the drop's facts (a History entry's carry no profession)
 --- @return table rows
@@ -312,9 +324,10 @@ function CC.DetailRows(eval, f)
     local means = MEANS[v] or MEANS.unknown
     local rows = {
         { key = "kind", label = L["Kind"], text = kind, tone = "plain", tip = { L["Kind"], TM.Row(L["Item"], kind) } },
-        { key = "collection", label = L["Collection"], text = CC.Text(eval), tone = CC.TONE[v] or "muted",
-          tip = { L["Collection"], TM.Row(L["Means"], means) } },
     }
+    if KIND_VERDICT[v] then return rows end
+    rows[2] = { key = "collection", label = L["Collection"], text = CC.Text(eval), tone = CC.TONE[v] or "muted",
+        tip = { L["Collection"], TM.Row(L["Means"], means) } }
     local word, yours = professionOf(f)
     if (eval.category or f.category) == "recipe" and word then
         rows[3] = { key = "profession", label = L["Profession"], text = word, tone = yours == false and "redMuted" or "plain",

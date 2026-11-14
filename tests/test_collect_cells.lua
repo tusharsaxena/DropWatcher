@@ -66,6 +66,19 @@ test("collect cells: each collection verdict's word and tone", function()
     check(collect("unknown", { category = nil }), "?", "muted")
 end)
 
+-- RX-04 (rolls UX design §3.5): a non-gear item's Me cell is its kind word in the neutral tone.
+-- red under: CollectCells without the kind words (`?` then shows)
+test("collect cells: a lockbox, a bag and an item of no kind read their kind, plain", function()
+    local NS = ns()
+    local L = NS.L
+    for verdict, word in pairs({ lockbox = L["Lockbox"], container = L["Container"], item = L["Item"] }) do
+        local c = NS.CollectCells.Verdict(collect(verdict, { category = verdict == "item" and "other" or "container" }),
+            "me", L["For you"])
+        assertEqual(c.text, word, verdict); assertEqual(c.tone, "plain", verdict)
+        assertTrue(c.tip[1]:find(word, 1, true) ~= nil, "titled by its kind")
+    end
+end)
+
 test("collect cells: the tooltip's title, Means and one Why row per reason", function()
     local NS = ns()
     local L = NS.L

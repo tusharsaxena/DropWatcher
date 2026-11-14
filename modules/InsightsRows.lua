@@ -522,6 +522,7 @@ local VERDICT = {
     doesntWant = { L["Doesn't want"], "bad" }, unknown = { L["Unknown"], "muted" },
     newCollect = { L["New to your collection"], "good" }, collected = { L["Already collected"], "bad" },
     collectUnknown = { L["Collection unknown"], "muted" },
+    lockbox = { L["Lockbox"], "plain" }, container = { L["Container"], "plain" }, item = { L["Item"], "plain" },
 }
 local TRADE = { yes = L["Yes"], likely = L["Likely"], no = L["No"], unknown = L["Unknown"] }
 

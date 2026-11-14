@@ -770,9 +770,10 @@ Total.
 - table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_collect_cells.lua (11)
+### test_collect_cells.lua (12)
 
 - collect cells: each collection verdict's word and tone
+- collect cells: a lockbox, a bag and an item of no kind read their kind, plain
 - collect cells: the tooltip's title, Means and one Why row per reason
 - collect cells: WindowCells.Verdict hands a collection verdict to CollectCells, never a glyph
 - collect cells: History's stored collection verdict renders through the same cell
@@ -1598,12 +1599,14 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_collectibles.lua (15)
+### test_collectibles.lua (18)
 
 - collectibles: CategoryOf names each category
 - collectibles: CategoryOf's precedence
 - collectibles: the out-of-scope classes are not watched
 - collectibles: IsCollectible is true for the collectible categories alone
+- collectibles: a lockbox and a bag are containers; other Junk and a reagent are not
+- collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
 - collectibles: Verdict reads new, collected and no answer
 - collectibles: a pet carries its count, and a partial collection says n/limit
 - collectibles: a recipe for a profession you lack is can't use
@@ -1611,6 +1614,7 @@ Total.
 - collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
 - collectibles: Read fills a mount's, a pet's and a toy's collection state
 - collectibles: Read fills a recipe's profession and known line
+- collectibles: Read tells a lockbox and a box that opens from Junk that does not
 - collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
 - collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
 - collectibles: Read leaves a tier token's category to its flag and probes nothing
@@ -1745,7 +1749,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (54)
+### test_feed.lua (55)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1801,8 +1805,9 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
+- filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
 
-### test_pending.lua (16)
+### test_pending.lua (18)
 
 - pending: an UPDATE_ENCOUNTER with an open drop opens one roll item
 - pending: Count answers each store's size with no list built; a missing test store is empty
@@ -1813,6 +1818,8 @@ Total.
 - pending: reload mid-roll rebuilds one item, and its winner makes exactly one drop
 - pending: all passed closes after 60 s with no feed record
 - pending: a drop below the quality gate is not pending
+- pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on
+- pending: a rolled reagent's chat line first is shown once its roll merges in
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
 - pending: a history clear during an item load never makes a second item
@@ -1876,9 +1883,10 @@ Total.
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (10)
+### test_roll_popup.lua (11)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
+- roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
 - roll popup: two identical items on two popups each show their own Need so far
 - roll popup: a popup closed at once draws nothing
 - roll popup: disabled, the hook draws nothing
@@ -2151,7 +2159,7 @@ Total.
 - insights filters: difficulties in their natural order, situations in the constants' order
 - insights filters: you first among the characters, then by count; qualities and categories ordered
 
-### test_insights_stats.lua (16)
+### test_insights_stats.lua (17)
 
 - insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
 - insights stats: offers and traded away, your own drops only, the legacy one counted
@@ -2167,6 +2175,7 @@ Total.
 - insights stats: a period over 62 days buckets by week
 - insights stats: the mixes: class, quality, slot, category, verdicts and trade estimates
 - insights stats: a Watched item counts as itself, listed after every category
+- insights stats: a lockbox and a rolled reagent count as their kinds
 - insights stats: nothing in gives zeros and empty lists
 - insights stats: one pass: each reducer sees each row once
 
@@ -2853,7 +2862,7 @@ Total.
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
-| test_collect_cells.lua | 11 |
+| test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 34 |
 | test_own_drops.lua | 16 |
@@ -2887,18 +2896,18 @@ Total.
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
 | test_item_facts.lua | 25 |
-| test_collectibles.lua | 15 |
+| test_collectibles.lua | 18 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 54 |
-| test_pending.lua | 16 |
+| test_feed.lua | 55 |
+| test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 7 |
 | test_window_pending.lua | 11 |
-| test_roll_popup.lua | 10 |
+| test_roll_popup.lua | 11 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2912,7 +2921,7 @@ Total.
 | test_history.lua | 44 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
-| test_insights_stats.lua | 16 |
+| test_insights_stats.lua | 17 |
 | test_feed_restore.lua | 15 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
@@ -2947,4 +2956,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2429** |
+| **Total** | **2438** |

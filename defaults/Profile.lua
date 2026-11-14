@@ -121,6 +121,8 @@ NS.C = {
             categories = {
                 equipment = true, tierToken = true, mount = true, pet = true, toy = true, recipe = true,
                 cosmetic  = false,       -- a look to collect, never gear: off
+                container = true,        -- lockboxes and bags (RX-04, rolls UX design §3.5)
+                other     = false,       -- the catch-all: an item of no kind that is rolled on
             },
             -- The Always watch and Never watch item lists (issue #13, categories design spec §5.3):
             -- { [itemID] = true }, written whole by NS.ItemLists alone. An ID sits on one list only;

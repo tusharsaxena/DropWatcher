@@ -1041,3 +1041,25 @@ test("candidate: your unwanted types are read by your spec key, on Forever your 
     local rec = NS.LootFeed.Drops()[1]
     assertEqual(rec.me.verdict, "doesntWant", "a dagger is unwanted for the spec on screen")
 end)
+
+-- RX-04 (rolls UX design §3.5, ruling 3): Lockboxes and containers is on by default; Everything
+-- else that is rolled on is off, and takes an item of no kind only when it is rolled on.
+-- red under: the container kind missing from the defaults, or the catch-all taking an item no one rolled
+test("filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on", function()
+    local NS = T.newAddon()
+    local F = NS.FeedFilter.Filter
+    assertEqual(NS.Setting("feed.categories.container"), true); assertEqual(NS.Setting("feed.categories.other"), false)
+    local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "container" }
+    local reagent = { itemID = 2589, classID = 7, subClassID = 5, quality = 2 }
+    local defaults = { categories = { container = true, other = false } }
+    local function check(facts, cfg, ctx, pass, why)
+        local ok, reason = F(facts, cfg, ctx)
+        assertEqual(ok, pass); assertEqual(reason, why)
+    end
+    check(lockbox, defaults, {}, true, nil)
+    check(lockbox, { categories = { container = false } }, {}, false, "category")
+    check(lockbox, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
+    check(reagent, defaults, { rolled = true }, false, "notWatched")
+    check(reagent, { categories = { other = true } }, { rolled = true }, true, nil)
+    check(reagent, { categories = { other = true } }, {}, false, "notWatched")
+end)

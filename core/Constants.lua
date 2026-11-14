@@ -254,6 +254,7 @@ C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
     CONSUMABLE    = { "Consumable", 0 },
     WEAPON        = { "Weapon", 2 },
     ARMOR         = { "Armor", 4 },
+    CONTAINER     = { "Container", 1 },
     REAGENT       = { "Reagent", 5 },
     RECIPE        = { "Recipe", 9 },
     MISCELLANEOUS = { "Miscellaneous", 15 },
@@ -365,12 +366,16 @@ C.TRACK_TIER_BY_STRING_ID = {}
 
 -- Every category a drop can fall in, in display order. `collectible` ones get a collection verdict
 -- (new or collected) instead of a gear one, and are feed-only. NS.Collectibles.CategoryOf decides
--- which one an item is, in its own precedence order.
+-- which one an item is, in its own precedence order. `kind` ones (RX-04, rolls UX design §3.5) are
+-- not gear and not collected: their verdict is their kind word (Lockbox, Container, Item), and they
+-- are feed-only too. `container` is a lockbox or a bag; `other` is no item's category: the feed's
+-- filter takes an item of no kind under it when it is rolled on (NS.FeedFilter), its catch-all.
 C.CATEGORIES = {
     { key = "equipment", collectible = false }, { key = "tierToken", collectible = false },
     { key = "mount", collectible = true }, { key = "pet", collectible = true },
     { key = "toy", collectible = true }, { key = "recipe", collectible = true },
     { key = "cosmetic", collectible = true },
+    { key = "container", collectible = false, kind = true }, { key = "other", collectible = false, kind = true },
 }
 
 -- The kind History records for a drop the Always watch list let in that fits no category (a reagent,

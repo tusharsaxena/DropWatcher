@@ -90,6 +90,26 @@ test("roll popup: an upgrade roll shows the mark on GroupLootFrame1", function()
     assertFalse(o:IsShown(), "the popup's OnHide takes it down")
 end)
 
+-- RX-04 (rolls UX design §3.5): a lockbox's popup reads Lockbox and an item of no kind Item,
+-- never Unknown, and neither carries a gain.
+-- red under: the popup judging a lockbox through the gear kernel
+test("roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown", function()
+    local NS, m, RP = party()
+    m.addItem(link(400), { name = "Ornate Bronze Lockbox", quality = 2, ilvl = 20, equipLoc = "", classID = 15,
+        subClassID = 0, bindType = 0, stats = {} })
+    m.tooltips.hyperlink[link(400)] = { lines = { { type = 0, leftText = "Locked" } } }
+    m.addItem(link(401), { name = "Linen Cloth", quality = 2, ilvl = 5, equipLoc = "", classID = 7, subClassID = 5,
+        bindType = 0, stats = {} })
+    myRoll(m, 12, 400)
+    m.__fire("START_LOOT_ROLL", 12, 60000)
+    show(m, 1, 12)
+    assertEqual(line1(RP, 1), NS.L["Lockbox"])
+    myRoll(m, 13, 401)
+    m.__fire("START_LOOT_ROLL", 13, 60000)
+    show(m, 2, 13)
+    assertEqual(line1(RP, 2), NS.L["Item"])
+end)
+
 -- Review Focus 1: two copies of one item on one boss, each on its own popup, each with its own
 -- pending roll (claimed by item ID, the oldest unclaimed first) and its own Need so far.
 test("roll popup: two identical items on two popups each show their own Need so far", function()

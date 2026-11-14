@@ -290,6 +290,56 @@ test("pending: a drop below the quality gate is not pending", function()
     assertEqual(#NS.LootFeed.Drops(), 0)
 end)
 
+-- RX-04 (rolls UX design §3.5, Review Focus 3): Rolling now admits a rolled lockbox as a Lockbox;
+-- a rolled reagent is pending only with Everything else that is rolled on turned on, and its won
+-- drop reaches the feed as an Item, its chat line first or not.
+-- red under: Pending's gate not telling the filter the item is rolled on
+local function lockbox() return { name = "Ornate Bronze Lockbox", quality = 2, ilvl = 20, equipLoc = "", classID = 15,
+    subClassID = 0, bindType = 0, stats = {} } end
+local function reagent() return { name = "Linen Cloth", quality = 2, ilvl = 5, equipLoc = "", classID = 7,
+    subClassID = 5, bindType = 0, stats = {} } end
+
+test("pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on", function()
+    local NS, m, P = party()
+    assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 2))
+    m.addItem(link(400), lockbox())
+    m.tooltips.hyperlink[link(400)] = { lines = { { type = 0, leftText = "Locked" } } }
+    m.lootHistory["2900:1"] = openDrop(400)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local item = only(P)
+    assertEqual(item.me.verdict, "lockbox"); assertNil(item.me.ilvlDelta)
+    m.addItem(link(401), reagent())
+    m.lootHistory["2900:2"] = openDrop(401)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertEqual(#P.All(), 1, "a reagent: Everything else is off by default")
+    assertTrue(NS.SchemaRuntime.Set("feed.categories.other", true))
+    m.addItem(link(402), reagent())
+    local drop = openDrop(402)
+    m.lootHistory["2900:3"] = drop
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertEqual(#P.All(), 2, "the catch-all on: the reagent is pending")
+    brakkWins(drop)
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 3)
+    local drops = NS.LootFeed.Drops()
+    assertEqual(#drops, 1, "the won reagent is a drop"); assertEqual(drops[1].me.verdict, "item")
+end)
+
+test("pending: a rolled reagent's chat line first is shown once its roll merges in", function()
+    local NS, m = party()
+    assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 2))
+    assertTrue(NS.SchemaRuntime.Set("feed.categories.other", true))
+    m.addItem(link(402), reagent())
+    local drop = openDrop(402)
+    m.lootHistory["2900:1"] = drop
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    m.__fire("CHAT_MSG_LOOT", "Brakk receives loot: " .. link(402) .. ".", "", "", "", "", "", 0, 0, "", 0, 1, nil)
+    assertEqual(#NS.LootFeed.Drops(), 0, "a chat line alone: not rolled on as far as the feed knows")
+    brakkWins(drop)
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    local drops = NS.LootFeed.Drops()
+    assertEqual(#drops, 1, "merged and shown"); assertEqual(drops[1].me.verdict, "item")
+end)
+
 test("pending: the ticker stops when no roll is open", function()
     local _, m, P = party()
     m.addItem(link(300), ring(620))

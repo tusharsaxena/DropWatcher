@@ -273,16 +273,14 @@ end
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
 -- judged plainly, so a real upgrade for them never reads as one they would give away. A
 -- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's, and so
--- is an item of no kind on the Always watch list. The list is read once, when the drop is admitted
+-- are a container's and an item of no kind's (their kind word, RX-04), on the Always watch list or
+-- not. The list is read once, when the drop is admitted
 -- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
 -- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a
 -- list change applies to new drops only, so a shown drop never leaves the collect path untold.
 local function judgeMe(rec, cfg)
-    local f, forced = rec.facts, rec.forced == true
-    if NS.Collectibles.IsCollectible(f) or (forced and f.category == nil) then
-        rec.me = NS.Collectibles.Verdict(f, forced)
-        return
-    end
+    rec.me = NS.Collectibles.Verdict(rec.facts, rec.forced == true)   -- nil for gear and a tier token
+    if rec.me then return end
     local opts = evalOpts(cfg)
     opts.heirloomProtect = cfg.heirloomProtect == true
     rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
@@ -299,18 +297,21 @@ local function timedGate(quality, mode, ctx)
 end
 
 -- The pre-looter gates' context for NS.FeedFilter.PassesForMe (Forever port design §11.1): a test
--- drop skips them, a restored one the filters; your verdict lands on `rec` through judgeMe.
+-- drop skips them, a restored one the filters; a drop with a roll table is rolled on (the catch-all
+-- kind's, RX-04); your verdict lands on `rec` through judgeMe.
 local function gateCtx(rec, cfg)
     return { cfg = cfg, skipFilter = rec.test or rec.source == "restore", skipQuality = rec.test,
+        rolled = rec.rolled or rec.roll ~= nil,
         myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil, gear = NS.Gear.Qualities(), passes = timedGate,
         mode = NS.QualityGate.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation)),
         judge = function(forced) rec.forced = forced; judgeMe(rec, cfg); return rec.me end }
 end
 
 --- The feed's pre-looter gates for an item with no looter yet (modules/Pending.lua): `situation`'s
---- on/off, then PassesForMe with your verdict. Answers pass, why and { forced, me, quality }.
-function LF.GateFor(facts, situation)
-    local ctx = gateCtx({ facts = facts, situation = situation }, LF.Config())
+--- on/off, then PassesForMe with your verdict (`rolled`: a group rolls on it). Answers pass, why and
+--- { forced, me, quality }.
+function LF.GateFor(facts, situation, rolled)
+    local ctx = gateCtx({ facts = facts, situation = situation, rolled = rolled }, LF.Config())
     ctx.tracking = NS.Situations.IsTracking(situation)
     return NS.FeedFilter.PassesForMe(facts, ctx)
 end
@@ -673,13 +674,14 @@ local function merge(rec, r)
     local learned = not rec.looter.guid and r.looter.guid ~= nil
     if learned then rec.looter = r.looter end
     rec.encounterID = rec.encounterID or r.encounterID
+    local rolled = rec.roll == nil and r.roll ~= nil   -- a hidden drop now rolled on: its gates again
     rec.roll, rec.pendingKey = rec.roll or r.roll, rec.pendingKey or r.pendingKey
     local link = NS.FeedRecords.PreferredLink(rec.link, r.link, r.source)
     local relinked = link ~= rec.link
     rec.link = link
     NS.Debug(TAG, "drop %s: %s also reported by %s%s", rec.id, rec.link, r.source,
         relinked and " (its more complete link taken)" or "")
-    if relinked and rec.state == "hidden" then
+    if (relinked or rolled) and rec.state == "hidden" then
         rerun(rec)
         return rec.id, "merged"
     end

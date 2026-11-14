@@ -7,7 +7,7 @@ local _, NS = ...
 --             track = { name, rank, max, tier, stringID, maxItemLevel, source } | nil,
 --             stats = { [STAT_KEY] = n }, specs = { [specID] = true } | nil, specsClass,
 --             unique = { cat, max } | nil, isTierToken, classes = { [classFile] = true } | nil,
---             transmogKnown = true | false | nil, rawEquipLoc, category, collect, useText | nil,
+--             transmogKnown = true | false | nil, rawEquipLoc, category, collect, lockbox | nil, useText | nil,
 --             useSpellLoading = spellID | nil, tokenUsers = "every" | "yours" | nil,
 --             tokenSlot = "INVTYPE_*" | "any" | nil, tokenSlotSource = "table" | "use" | "name" | "any" | nil }
 --

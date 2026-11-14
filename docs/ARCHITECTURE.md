@@ -65,7 +65,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
   of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
   pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
-  collection events), the tier-token pass (`TierTokens.lua`: the slot a token makes, read from its
+  collection events; since RX-04 a lockbox or bag (`container`) and an item of no kind rolled on
+  under the catch-all (`other`) read their kind word, Lockbox, Container or Item, feed-only with no
+  gain, on the rows, the cards, Rolling now and the roll popup), the tier-token pass (`TierTokens.lua`: the slot a token makes, read from its
   Use text, else its name (TT-1), and the best tier slot of a token whose slot it cannot read or an
   omni Curio, so a token is judged as gear) and the scorers; the item lists' one writer
   (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
@@ -519,7 +521,8 @@ recorded client pass yet, so the encounter-time chat and loot readings and the r
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier is not read, and a
 tier token's slot is read from its English text (TT-1), and a token it misses is judged in any slot; a caged
 battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
-*Already known* tooltip line (`ITEM_SPELL_KNOWN`), and the item kinds and item lists apply to new
+*Already known* tooltip line (`ITEM_SPELL_KNOWN`), a lockbox from its *Locked* or *<Right Click to
+Open>* line (RX-04), the rolled-on catch-all sees only rolls (never a master-loot hold), and the item kinds and item lists apply to new
 drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
 session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
 header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab

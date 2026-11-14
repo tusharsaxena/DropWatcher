@@ -94,8 +94,8 @@ test("constants: the categories in display order, the tier slots and the empty t
     local c = C()
     local keys, collectible = {}, {}
     for i, cat in ipairs(c.CATEGORIES) do keys[i] = cat.key; collectible[#collectible + 1] = tostring(cat.collectible) end
-    assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic")
-    assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true")
+    assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic,container,other")
+    assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true,false,false")
     assertEqual(table.concat(c.TIER_SLOTS, ","), "INVTYPE_HEAD,INVTYPE_SHOULDER,INVTYPE_CHEST,INVTYPE_HAND,INVTYPE_LEGS")
     for _, loc in ipairs(c.TIER_SLOTS) do assertTrue(c.SLOT_PLAN[loc] ~= nil, loc .. " has a slot plan") end
     assertEqual(next(c.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")

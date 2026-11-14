@@ -56,7 +56,7 @@ test("collectibles: the out-of-scope classes are not watched", function()
     local c = CO()
     for _, f in ipairs({
         { classID = CONSUMABLE, subClassID = 0 }, { classID = REAGENT_CLASS, subClassID = 1 },
-        { classID = CONTAINER, subClassID = 0 }, { classID = MISC, subClassID = JUNK_SUB },
+        { classID = MISC, subClassID = JUNK_SUB }, { classID = MISC, subClassID = JUNK_SUB, quality = 0 },
         { classID = MISC, subClassID = 6 }, { classID = 13, subClassID = 0 }, {},
     }) do
         assertNil(c.CategoryOf(f), "class " .. tostring(f.classID) .. "/" .. tostring(f.subClassID))
@@ -73,6 +73,41 @@ test("collectibles: IsCollectible is true for the collectible categories alone",
         assertFalse(c.IsCollectible({ category = key }), key)
     end
     assertFalse(c.IsCollectible({})); assertFalse(c.IsCollectible(nil))
+end)
+
+-- RX-04 (rolls UX design §3.5, ruling 3): a lockbox (Junk whose tooltip says it opens) and a bag
+-- are the container kind; Junk that does not open, a reagent and a consumable are not, and a token
+-- stays one.
+-- red under: CategoryOf without the container rung, or one that takes every Junk item in
+test("collectibles: a lockbox and a bag are containers; other Junk and a reagent are not", function()
+    local c = CO()
+    local junk = { classID = MISC, subClassID = JUNK_SUB, quality = 2 }
+    assertEqual(c.CategoryOf(junk, { opens = "locked" }), "container", "a lockbox")
+    assertEqual(c.CategoryOf(junk, { opens = "opens" }), "container", "a box that opens")
+    assertEqual(c.CategoryOf({ classID = CONTAINER, subClassID = 0, quality = 2 }), "container", "a bag")
+    assertNil(c.CategoryOf({ classID = MISC, subClassID = JUNK_SUB, quality = 4 }, { opens = false }), "an altar")
+    assertNil(c.CategoryOf(junk), "not read")
+    assertNil(c.CategoryOf({ classID = MISC, subClassID = 4 }, { opens = "opens" }), "Junk alone")
+    assertNil(c.CategoryOf({ classID = REAGENT_CLASS, subClassID = 1, quality = 2 }), "a reagent")
+    assertNil(c.CategoryOf({ classID = CONSUMABLE, subClassID = 0, quality = 2 }), "a potion")
+    assertEqual(c.CategoryOf({ classID = MISC, subClassID = JUNK_SUB, isTierToken = true }, { opens = "opens" }),
+        "tierToken")
+    assertFalse(c.IsCollectible({ category = "container" })); assertFalse(c.IsCollectible({ category = "other" }))
+end)
+
+-- RX-04: a non-gear item's verdict is its kind word, never Unknown and never a gain.
+-- red under: Verdict answering nil for a container (the gear kernel's Unknown then shows)
+test("collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain", function()
+    local c = CO()
+    local v = c.Verdict({ category = "container", classID = MISC, subClassID = JUNK_SUB, lockbox = true })
+    assertEqual(v.verdict, "lockbox"); assertTrue(v.collect); assertEqual(v.category, "container")
+    assertNil(v.ilvlDelta); assertNil(v.scoreDelta)
+    assertEqual(c.Verdict({ category = "container", classID = CONTAINER, quality = 2 }).verdict, "container")
+    v = c.Verdict({ classID = REAGENT_CLASS, subClassID = 1, quality = 2 })
+    assertEqual(v.verdict, "item"); assertEqual(v.category, "other"); assertTrue(v.collect)
+    v = c.Verdict({ category = "container", classID = MISC, subClassID = JUNK_SUB, lockbox = true }, true)
+    assertEqual(v.verdict, "lockbox"); assertEqual(v.reasons[#v.reasons].key, "whitelisted")
+    assertEqual(c.Verdict({ classID = REAGENT_CLASS }, true).verdict, "unknown", "an Always watch item keeps its own")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -138,7 +173,7 @@ test("collectibles: whitelisted items get the whitelisted reason; gear and the r
     v = c.Verdict({ itemID = 7 }, true)
     assertEqual(v.verdict, "unknown"); assertEqual(v.equip, "collect"); assertTrue(v.collect)
     assertEqual(keys(v), "whitelisted")
-    assertNil(c.Verdict({ itemID = 7 }), "uncategorized, not forced")
+    assertEqual(c.Verdict({ itemID = 7 }).verdict, "item", "uncategorized, not forced: its kind word (RX-04)")
     assertNil(c.Verdict({ category = "equipment" }), "gear keeps the gear verdict")
     assertNil(c.Verdict({ category = "tierToken" }, false))
     assertNil(c.Verdict(nil))
@@ -204,6 +239,36 @@ test("collectibles: Read fills a recipe's profession and known line", function()
     assertNil(IF.Read(PATTERN).collect.hasProfession, "no answer: not claimed")
     m.items[PATTERN].subClassID = BOOK_SUB
     assertNil(IF.Read(PATTERN).collect.skillLine, "a book needs no profession")
+end)
+
+-- RX-04: the opens read is the lockbox's: Junk whose tooltip reads Locked is a lockbox, one reading
+-- <Right Click to Open> a container, Junk with neither no kind; a reagent's tooltip is never read.
+-- red under: Read not asking ItemOpens, or asking it of a class that is not Junk
+test("collectibles: Read tells a lockbox and a box that opens from Junk that does not", function()
+    local BOX, CRATE, ALTAR = "|cnIQ2:|Hitem:4632::::::::20:::::|h[Ornate Bronze Lockbox]|h|r",
+        "|cnIQ2:|Hitem:6010::::::::20:::::|h[Crate]|h|r", "|cnIQ4:|Hitem:6011::::::::90:::::|h[Altar]|h|r"
+    local CLOTH = "|cnIQ2:|Hitem:6012::::::::20:::::|h[Cloth]|h|r"
+    local IF, m, NS = facts(function(m)
+        m.addItem(BOX, item(MISC, JUNK_SUB, { quality = 2 }))
+        m.addItem(CRATE, item(MISC, JUNK_SUB, { quality = 2 }))
+        m.addItem(ALTAR, item(MISC, JUNK_SUB, { quality = 4 }))
+        m.addItem(CLOTH, item(REAGENT_CLASS, 5, { quality = 2 }))
+        m.tooltips.hyperlink[BOX] = { lines = { { type = 0, leftText = "Ornate Bronze Lockbox" }, { type = 0, leftText = "Locked" } } }
+        m.tooltips.hyperlink[CRATE] = { lines = { { type = 0, leftText = "<Right Click to Open>" } } }
+        m.tooltips.hyperlink[ALTAR] = { lines = { { type = 0, leftText = "Altar" } } }
+        m.tooltips.hyperlink[CLOTH] = { lines = { { type = 0, leftText = "Locked" } } }
+    end)
+    local box = IF.Get(BOX)
+    assertEqual(box.category, "container"); assertTrue(box.lockbox)
+    assertEqual(NS.Collectibles.Verdict(box).verdict, "lockbox")
+    local crate = IF.Get(CRATE)
+    assertEqual(crate.category, "container"); assertNil(crate.lockbox)
+    assertEqual(NS.Collectibles.Verdict(crate).verdict, "container")
+    assertNil(IF.Get(ALTAR).category, "Junk that does not open has no kind")
+    assertNil(IF.Get(CLOTH).category, "a reagent's tooltip is never read for it")
+    assertEqual(NS.Collectibles.Verdict(IF.Get(CLOTH)).verdict, "item")
+    m.LOCKED, m.ITEM_OPENABLE = nil, nil
+    assertNil(IF.Read(BOX).category, "no GlobalString: not read, no kind claimed")
 end)
 
 test("collectibles: Read tells cosmetics from gear, and spends the probes only where they decide", function()

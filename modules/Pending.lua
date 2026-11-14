@@ -258,7 +258,7 @@ local function admit(encounterID, dropKey, roll, facts)
     -- Two loads of one key can answer (a history clear between them empties `loading`): the
     -- first admits, the second finds the key held or closed (M4 review).
     if s.byKey[key] or s.done[key] then return end
-    local ok, why, out = NS.LootFeed.GateFor(facts, NS.Situations.Current())
+    local ok, why, out = NS.LootFeed.GateFor(facts, NS.Situations.Current(), true)
     if not ok then
         s.done[key] = true
         return NS.Debug(TAG, "drop %s: %s not pending (%s)", key, tostring(roll.link), tostring(why))

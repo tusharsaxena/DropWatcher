@@ -468,10 +468,12 @@ test("feed: Items draws Minimum item level alone, over the item kinds", function
     local mode = find(drawn, "Dropdown", "Minimum item level")
     assertTrue(mode ~= nil, "the mode is drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
-    -- DW-CAT2 (issue #13): the seven item kinds, two to a line in C.CATEGORIES' order.
+    -- DW-CAT2 (issue #13): the item kinds, two to a line in C.CATEGORIES' order; RX-04 adds
+    -- Lockboxes and containers beside Cosmetics and the rolled-on catch-all on a line of its own.
     -- red under: Gear only and Include tier tokens still drawn, or a kind left out.
     assertTrue(find(drawn, "CheckBox", "Gear only") == nil and find(drawn, "CheckBox", "Include tier tokens") == nil)
-    local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics" }
+    local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics",
+        "Lockboxes and containers", "Everything else that is rolled on" }
     local boxes = {}
     for i, label in ipairs(labels) do
         boxes[i] = find(drawn, "CheckBox", label)
@@ -480,7 +482,8 @@ test("feed: Items draws Minimum item level alone, over the item kinds", function
     for i = 1, #labels - 1, 2 do
         assertTrue(lineOf(drawn, boxes[i]) == lineOf(drawn, boxes[i + 1]), labels[i] .. " | " .. labels[i + 1])
     end
-    assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics on a line of its own")
+    assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics starts a line")
+    assertTrue(lineOf(drawn, boxes[9]) ~= lineOf(drawn, boxes[8]), "the catch-all on a line of its own")
 end)
 
 -- LibKa0s#67, options-ui-§22: a mode's own value is drawn while the mode picks it, not dimmed.

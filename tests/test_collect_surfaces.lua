@@ -259,7 +259,8 @@ test("collect surfaces: the diagnostics name the item kinds on, the lists' sizes
     -- red under: no collect lines in the Feed section
     local on = text:match("collect: on([^\n]*)")
     assertTrue(on ~= nil, text)
-    assertEqual((on:gsub("%W+", " ")), " equipment tierToken mount pet recipe", "in C.CATEGORIES' order, toy off")
+    assertEqual((on:gsub("%W+", " ")), " equipment tierToken mount pet recipe container",
+        "in C.CATEGORIES' order, toy off (the catch-all off by default)")
     assertTrue(text:find("collect: whitelist=1 blacklist=2", 1, true) ~= nil, text)
 end)
 
