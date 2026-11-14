@@ -340,8 +340,11 @@ test("pending: a rolled reagent's chat line first is shown once its roll merges 
     assertEqual(#drops, 1, "merged and shown"); assertEqual(drops[1].me.verdict, "item")
 end)
 
+-- These two count the 1 s tickers: Auto-open is off, so the window a roll would open (RX-16) adds
+-- none of its own.
 test("pending: the ticker stops when no roll is open", function()
-    local _, m, P = party()
+    local NS, m, P = party()
+    NS.SchemaRuntime.Set("autoOpen", false)
     m.addItem(link(300), ring(620))
     m.lootHistoryTime = 100
     m.lootHistory["2900:1"] = openDrop(300)
@@ -361,6 +364,7 @@ end)
 
 test("pending: standing down unregisters every event and stops the ticker", function()
     local NS, m, P = party()
+    NS.SchemaRuntime.Set("autoOpen", false)
     m.addItem(link(300), ring(620))
     m.lootHistory["2900:1"] = openDrop(300)
     m.lootEncounters = { { encounterID = 2900, encounterName = "Speaker Brokk" } }

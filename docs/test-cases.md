@@ -534,7 +534,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_window_autoclose.lua (18)
+### test_window_autoclose.lua (25)
 
 - autoclose: on by default with 10 seconds, on this client
 - autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
@@ -554,6 +554,13 @@ Total.
 - autoclose: the pointer leaving the window starts a full count from then
 - autoclose: the hooks skip a frame that does not take the mouse
 - autoclose: a master-loot item awaiting the master looter does not hold the window open
+- roll open: a roll for a watched item opens a closed window on Drops, and auto-close waits for it
+- roll open: a roll the feed's gates refuse opens nothing
+- roll open: the situation's Auto-open off, or the master off, opens nothing
+- roll open: a master-loot hold has no roll popup and opens nothing
+- roll open: a window already open keeps its tab and does not arm auto-close
+- roll open: a roll rebuilt after a reload opens nothing
+- roll open: a test-mode sample roll opens nothing while test mode is off
 
 ### test_compact_cards.lua (27)
 
@@ -2905,7 +2912,7 @@ Total.
 | test_window.lua | 19 |
 | test_window_shell.lua | 69 |
 | test_window_compact.lua | 25 |
-| test_window_autoclose.lua | 18 |
+| test_window_autoclose.lua | 25 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
@@ -3010,4 +3017,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2488** |
+| **Total** | **2495** |

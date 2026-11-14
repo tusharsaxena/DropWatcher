@@ -4,7 +4,7 @@ local _, NS = ...
 -- because a rolling drop has no looter yet and every feed consumer assumes one.
 --
 --   item = { id, kind = "roll", key = "encounterID:dropKey", encounterID, dropKey, link, itemID, at,
---            state = open | won | allPassed | expired, facts, me, roll, rollID }
+--            state = open | won | allPassed | expired, facts, me, roll, rollID, restored }
 --
 -- `roll` is NS.Compat.LootHistoryRolls' plain table (core/CompatLoot.lua), replaced whole on each
 -- change; `facts` is the item facts cache's table and `me` your verdict through the feed's own
@@ -59,6 +59,9 @@ P.TICK = 1      -- the fallback ticker's period
 local ticker, scoreTimer
 local lingers = {}
 local generation = 0   -- bumped at every stand-down: an item load answering after it is ignored
+-- True while P.Rebuild reads the client: a roll it opens was open before the reload or stand-up,
+-- so its item is `restored` and opens no window (RX-16; a drop's rec.source "restore" alike).
+local rebuilding = false
 -- The last id the live store handed out, kept across a stand-down so a new store never reuses an
 -- id: the Asks book keeps a sent askML filed under its pending item's id (modules/Asks.lua).
 local lastSeq = 0
@@ -253,7 +256,7 @@ local function claimRolls()
 end
 
 -- An open drop past the item load: the gates, then the item.
-local function admit(encounterID, dropKey, roll, facts)
+local function admit(encounterID, dropKey, roll, facts, restored)
     local s, key = store(), encounterID .. ":" .. dropKey
     -- Two loads of one key can answer (a history clear between them empties `loading`): the
     -- first admits, the second finds the key held or closed (M4 review).
@@ -266,7 +269,7 @@ local function admit(encounterID, dropKey, roll, facts)
     s.seq = s.seq + 1
     local item = { id = s.seq, kind = "roll", key = key, encounterID = encounterID, dropKey = dropKey,
         link = roll.link, itemID = NS.Item.ItemIDFromLink(roll.link), at = now(), state = "open",
-        facts = facts, forced = out.forced, me = out.me, roll = roll, sig = signature(roll) }
+        facts = facts, forced = out.forced, me = out.me, roll = roll, sig = signature(roll), restored = restored }
     s.items[#s.items + 1], s.byId[item.id], s.byKey[key] = item, item, item
     -- Claimed before the message, so a roll popup already up repaints with this item (DW-FP20 review).
     claimRolls()
@@ -280,18 +283,18 @@ end
 local function open(encounterID, dropKey, roll)
     local s, key = store(), encounterID .. ":" .. dropKey
     if s.byKey[key] or s.done[key] or s.loading[key] or not roll.link or timedOut(roll) then return end
-    local gen = generation
+    local gen, restored = generation, rebuilding or nil
     local facts, status = NS.ItemFacts.Request(roll.link, function(f)
         s.loading[key] = nil
         if gen ~= generation or stoodDown() then return end
         local again = NS.Compat.LootHistoryRolls(encounterID, dropKey)
-        if again and not (again.winner or again.allPassed) then admit(encounterID, dropKey, again, f) end
+        if again and not (again.winner or again.allPassed) then admit(encounterID, dropKey, again, f, restored) end
     end)
     if status == "loading" then
         s.loading[key] = true
         return
     end
-    if status == "ready" then admit(encounterID, dropKey, roll, facts) end
+    if status == "ready" then admit(encounterID, dropKey, roll, facts, restored) end
 end
 
 --- LOOT_HISTORY_UPDATE_DROP(encounterID, dropKey): re-read one drop. A winner goes to the feed (with
@@ -426,10 +429,12 @@ function P.ClearTest()
 end
 
 --- Rebuild from the client (a reload, the stand-up): every encounter's open drops, then your open
---- roll popups. Idempotent: a drop already held is not opened again.
+--- roll popups. Idempotent: a drop already held is not opened again. A roll it opens is `restored`.
 function P.Rebuild()
     if stoodDown() then return end
+    rebuilding = true
     for _, encounterID in ipairs(NS.Compat.LootHistoryEncounters()) do P.OnEncounter(encounterID) end
+    rebuilding = false
     for _, rollID in ipairs(NS.Compat.ActiveLootRolls()) do P.OnStartRoll(rollID) end
 end
 

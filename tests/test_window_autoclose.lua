@@ -3,6 +3,7 @@
 -- nothing is rolling and no new drop has arrived; a new drop, roll or pending item resets the
 -- count, hovering restarts it, and a manual show, a drag or a click inside cancels it for that show.
 -- The count is one C_Timer.NewTimer handle, read off the mock's timer queue.
+-- The `roll open:` cases (RX-16) pin the auto-open a roll popup for a watched item makes.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -318,4 +319,117 @@ test("autoclose: a master-loot item awaiting the master looter does not hold the
     NS2.Pending.All = function() return mixed end
     m2.advance(30)
     assertTrue(NS2.IsWindowShown(), "a roll beside it still holds it")
+end)
+
+-- ── a roll popup opens the window (RX-16) ───────────────────────────────────────────────────
+-- Owner request 2026-11-15: a Blizzard loot-roll popup for an item the window would show (it
+-- passed the feed's gates and landed in Rolling now) opens the window, by a drop's auto-open
+-- rules. Rolls are a both-clients feature, so every case runs on both kit profiles.
+
+local ROLL_LINK = "|cnIQ4:|Hitem:300::::::::90:::::|h[Item 300]|h|r"
+local BRAKK = "Player-1-0000000A"
+
+local function ring(ilvl, quality)
+    return { name = "Item", quality = quality or 4, ilvl = ilvl, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, bindType = 1, stats = {} }
+end
+
+-- An open group-loot drop of item 300: Brakk at Need 87, nobody has won yet.
+local function openRoll()
+    return {
+        itemHyperlink = ROLL_LINK, playerRollState = 4, isTied = false, allPassed = false,
+        startTime = 100, duration = 60,
+        currentLeader = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", roll = 87 },
+        rollInfos = { { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false,
+            state = 0, roll = 87, isWinner = false } },
+    }
+end
+
+-- The roll opens (its popup is up): the drop enters the loot history and Pending admits it.
+local function rollOpens(m, quality)
+    m.addItem(ROLL_LINK, ring(620, quality))
+    local d = openRoll()
+    m.lootHistory["2900:1"] = d
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    return d
+end
+
+-- red under: Window's PENDING_CHANGED only repainting (a roll popup opened nothing)
+test("roll open: a roll for a watched item opens a closed window on Drops, and auto-close waits for it", function()
+    local NS, m = inDungeon()
+    assertFalse(NS.IsWindowShown(), "closed before the roll")
+    local d = rollOpens(m)
+    assertEqual(NS.Pending.Count(), 1, "the roll is in Rolling now")
+    assertTrue(NS.IsWindowShown(), "the roll opened the window")
+    assertEqual(NS.Window.ActiveTab(), "group", "on Drops")
+    assertTrue(NS.WindowAutoClose.Armed(), "an auto-open: auto-close arms")
+    m.advance(45)
+    assertTrue(NS.IsWindowShown(), "no close while the roll runs")
+    d.winner = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false, roll = 87 }
+    d.rollInfos[1].isWinner = true
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    assertEqual(NS.Pending.Count(), 0, "the roll is done")
+    m.advance(9.9)
+    assertTrue(NS.IsWindowShown(), "a full count after the roll closed")
+    m.advance(0.2)
+    assertFalse(NS.IsWindowShown(), "then it closes")
+end)
+
+test("roll open: a roll the feed's gates refuse opens nothing", function()
+    local NS, m = inDungeon()
+    NS.addon.db.profile.feed.quality.fixed = 4   -- Epic: an Uncommon item no upgrade is refused
+    local worn = "|cnIQ4:|Hitem:100::::::::90:::::|h[Item 100]|h|r"
+    m.addItem(worn, ring(600))
+    m.inventory.player[11], m.inventory.player[12] = worn, worn   -- two 600 rings: 590 is no upgrade
+    m.addItem(ROLL_LINK, ring(590, 2))
+    m.lootHistory["2900:1"] = openRoll()
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertEqual(NS.Pending.Count(), 0, "not in Rolling now")
+    assertFalse(NS.IsWindowShown(), "an unwatched roll opens nothing")
+end)
+
+test("roll open: the situation's Auto-open off, or the master off, opens nothing", function()
+    local NS, m = inDungeon({ ["situations.dungeon.autoOpen"] = false })
+    rollOpens(m)
+    assertEqual(NS.Pending.Count(), 1, "still in Rolling now")
+    assertFalse(NS.IsWindowShown(), "the situation's Auto-open is off")
+    local NS2, m2 = inDungeon({ autoOpen = false })
+    rollOpens(m2)
+    assertEqual(NS2.Pending.Count(), 1)
+    assertFalse(NS2.IsWindowShown(), "the master Auto-open is off")
+end)
+
+test("roll open: a master-loot hold has no roll popup and opens nothing", function()
+    local NS = inDungeon()
+    NS.Pending.Hold({ kind = "ml", key = "Creature-0:300", link = ROLL_LINK, itemID = 300, at = 100,
+        state = "awaiting", facts = ring(620) })
+    assertEqual(NS.Pending.Count(), 1, "held in Rolling now")
+    assertFalse(NS.IsWindowShown(), "a master-loot hold opens nothing")
+end)
+
+test("roll open: a window already open keeps its tab and does not arm auto-close", function()
+    local NS, m = inDungeon()
+    NS.ShowWindow()
+    NS.Window.SelectTab("history")
+    rollOpens(m)
+    assertTrue(NS.IsWindowShown())
+    assertEqual(NS.Window.ActiveTab(), "history", "the tab it showed")
+    assertFalse(NS.WindowAutoClose.Armed(), "a manual open stays manual")
+end)
+
+-- red under: maybeAutoOpen reading only a drop's rec.source (a reload's rebuilt roll opened it)
+test("roll open: a roll rebuilt after a reload opens nothing", function()
+    local NS, m = inDungeon()
+    m.addItem(ROLL_LINK, ring(620))
+    m.lootHistory["2900:1"] = openRoll()
+    m.lootEncounters = { { encounterID = 2900, encounterName = "Speaker Brokk", startTime = 90, duration = 0 } }
+    m.__fire("PLAYER_ENTERING_WORLD", false, true)
+    assertEqual(NS.Pending.Count(), 1, "the roll is back in Rolling now")
+    assertFalse(NS.IsWindowShown(), "a restored roll opens nothing")
+end)
+
+test("roll open: a test-mode sample roll opens nothing while test mode is off", function()
+    local NS = inDungeon()
+    NS.Pending.AddTest({ link = ROLL_LINK, facts = ring(620) })
+    assertFalse(NS.IsWindowShown(), "not the shown feed")
 end)

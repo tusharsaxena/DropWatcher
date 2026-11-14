@@ -29,7 +29,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..11 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10); LibKa0s v1.85.0's sim checkbox re-cut, the panel unchanged (PANEL-11, R6-RV2) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..9 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button at the top right and the grip it hides (STATE-8, RX-08, RX-14); auto-close (STATE-9, RX-10) |
+| STATE-1..10 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button at the top right and the grip it hides (STATE-8, RX-08, RX-14); auto-close (STATE-9, RX-10); a roll popup for a watched item opening the window (STATE-10, RX-16) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..4 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat; both combat edges announced under the Combat restriction (COMBAT-4, DW-I11) |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
@@ -523,6 +523,19 @@ stays open for that show. Open the window yourself (`/dw show`, the minimap butt
 → it never closes by itself, whatever drops then arrive. Set Close after to 30 → the next
 auto-opened window waits about 30 seconds. Untick Auto-close the window → an auto-opened window
 stays. In combat it closes too, with no Lua error. Result:
+
+**STATE-10. A roll popup for a watched item opens the window (RX-16).** Client: both. The headless
+`test_window_autoclose` covers the rules (its `roll open:` cases). Close the window. In a tracked
+situation with Auto-open on (a dungeon in a group, or `/dw sim start dungeon` then `/dw sim roll`),
+let a group-loot roll start for an item the window would show → as the Blizzard roll popup comes up,
+the window opens by itself on Drops with the item in Rolling now, compact during a run as an
+auto-open is; it stays while the roll runs and closes about 10 seconds after it ends (STATE-9).
+With the window open on History, another roll → it keeps History. A roll for an item the feed
+refuses (under the minimum quality, or a kind switched off under Drops › Items) → it opens nothing.
+Untick the situation's Auto-open, or Auto-open the window → a roll opens nothing. `/reload` while a
+roll is up, with the window closed → it stays closed. On WoW Forever, a master-loot corpse (you are
+not the master looter) → its items wait in Rolling now with no popup and the window does not open.
+No Lua error throughout. Result:
 
 ## Compat
 

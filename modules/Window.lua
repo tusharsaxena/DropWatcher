@@ -1002,12 +1002,14 @@ end
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
 -- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
 -- a window minimized before the reload does not count it new.
-local function maybeAutoOpen(rec)
+-- A ROLL opens it too (RX-16): its Blizzard roll popup is up and Pending admitted it into Rolling
+-- now past the same gates (onPendingOpened). `what` names the drop or the roll in the debug line.
+local function maybeAutoOpen(rec, what)
     if NS.State.windowOpen == true or setting("autoOpen") == false or rec.source == "restore" then return end
     local Sit = NS.Situations
     local key = Sit.Current()
     if not Sit.ShouldAutoOpen(key) then return end
-    NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
+    NS.Debug(TAG, "auto-open: %s %s in %s", what or "drop", tostring(rec.id), tostring(key))
     NS.WindowCompact.OnAutoOpen(key)   -- compact during a run (`window.compactInRuns`)
     Window.SelectTab("group")
     Window.Open()
@@ -1025,6 +1027,16 @@ local function onDropAdded(id)
     maybeAutoOpen(rec)
     if isMinimized() and rec.source ~= "restore" then newCount = newCount + 1 end
     scheduleRepaint()
+end
+
+-- PendingChanged(id, "open"): a roll item entered Rolling now (RX-16), so its roll popup is up and
+-- it passed the feed's gates. A master-loot hold (kind `ml`) has no popup, and a roll Pending
+-- rebuilt after a reload or stand-up (`restored`) was seen before: neither opens anything. A test
+-- mode sample opens only the test feed's window, by test mode's own rule, as a test drop does.
+local function onPendingOpened(id)
+    local item = NS.Pending.Get(id)
+    if not item or item.kind == "ml" or item.restored or not inShownFeed(item) then return end
+    maybeAutoOpen(item, "roll")
 end
 
 local function onRestriction(reason)
@@ -1056,7 +1068,11 @@ local function listen()
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
     -- Drops' Rolling now section (modules/WindowPending.lua): an item opened, changed or closed.
-    target:RegisterMessage(M.PENDING_CHANGED, function() scheduleRepaint() end)
+    -- A roll item opening opens a closed window (RX-16).
+    target:RegisterMessage(M.PENDING_CHANGED, function(_, id, cause)
+        if cause == "open" then onPendingOpened(id) end
+        scheduleRepaint()
+    end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)
