@@ -54,9 +54,10 @@ Auto-close (rolls UX design §3.6, RX-10, `modules/WindowAutoClose.lua`) closes 
 auto-open made: the auto-open arms it after its `Window.Open`, and every `Window.Open` and
 `Window.Close` disarms it first, so a manual show never closes by itself. Armed, one
 `C_Timer.NewTimer` of `window.autoClose.seconds` runs; `DropAdded`, `PendingChanged` and the pointer
-entering the frame start it over. At its end, Rolling now empty (`Pending.Count` of the shown feed)
-and the pointer elsewhere, it calls `Window.Close`; otherwise it starts over. A drag or a click on the
-frame or its title bar disarms it for that show; with `window.autoClose.enabled` or `autoOpen` off
+entering the frame or any frame under it start it over. At its end, Rolling now empty (`Pending.Count`
+of the shown feed) and the pointer elsewhere, it calls `Window.Close`; otherwise it starts over. A
+drag, or a press on the frame or any frame under it (a tab, a title bar button, a row: one-way
+`OnMouseDown` hooks, laid at the arm and after each repaint while armed), disarms it for that show; with `window.autoClose.enabled` or `autoOpen` off
 it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
 
 ## What the window repaints on

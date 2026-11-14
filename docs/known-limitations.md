@@ -171,11 +171,6 @@ the code reads every case the design leaves open, module by module, is in
   has no Trade window column. Verdicts there are score-first. The class data, the armor level rule,
   the ranged slot, Pawn by talent tree and the names have no recorded client pass yet: the FOREVER
   smoke theme and the probe sheet ([`forever-probes.md`](forever-probes.md)) are the owner's to run.
-- **Auto-close and a click on a control** (RX-10, rolls UX design §3.6). A click on the window's
-  frame or its title bar cancels auto-close for that show, but a click on a control inside it (a
-  button, a row, a dropdown) is that control's and does not reach the frame, so it does not cancel
-  it. The pointer over the window holds it open and starts the count over when it leaves, so the
-  window never closes under the pointer; it may close a full count after the pointer left.
 - **Auto-close's indent.** Rolls UX design §3.6 asks for Auto-close indented beneath Auto-open the
   window; the settings flow (LibKa0s-Options) has no indent, so it sits on the line beneath it, and
   its tooltip says it needs Auto-open the window (options-ui-§21).

@@ -20,8 +20,12 @@ local function announce(NS, rec)
 end
 
 -- An enabled addon in a heroic dungeon (an auto-open situation on both clients).
+-- The kit's paint recorder is on (tests/_kit/mock_paint.lua), so the window built at the open
+-- answers GetChildren over its own frames, as the client does: the press and hover hooks reach the
+-- frames under the window through it.
 local function inDungeon(over)
     local NS, _, m = T.enableAddon()
+    dofile("tests/_kit/mock_paint.lua")(m)
     for path, v in pairs(over or {}) do NS.SchemaRuntime.Set(path, v) end
     m.__context.inInstance, m.__context.instanceType, m.__context.inGroup = true, "party", true
     m.instance.difficultyID = 2
@@ -177,6 +181,27 @@ test("autoclose: a manual show, a drag or a click inside cancels it for that sho
     f4.titleBar:__fire("OnMouseDown", "LeftButton")
     m4.advance(60)
     assertTrue(NS4.IsWindowShown(), "a click on the title bar")
+end)
+
+-- A press lands on the control under the pointer and never bubbles to the frame, so the window's
+-- tabs, title bar buttons and rows (most of its face) must hear it themselves.
+test("autoclose: a press on a tab, a title bar button or a control built after the open cancels it too", function()
+    local NS, m, f = autoOpened()
+    f.tabs.history:__fire("OnMouseDown", "LeftButton")
+    m.advance(60)
+    assertTrue(NS.IsWindowShown(), "a press on a tab")
+    local NS2, m2, f2 = autoOpened()
+    f2.minimizeButton:__fire("OnMouseDown", "LeftButton")
+    m2.advance(60)
+    assertTrue(NS2.IsWindowShown(), "a press on the minimize button")
+    -- A control built after the count was armed (a pooled row a repaint adds) is reached at the
+    -- next repaint.
+    local NS3, m3, f3 = autoOpened()
+    local late = m3.CreateFrame("Button", nil, m3.CreateFrame("Frame", nil, f3))
+    NS3.Window.Refresh()
+    late:__fire("OnMouseDown", "LeftButton")
+    m3.advance(60)
+    assertTrue(NS3.IsWindowShown(), "a press on a control the repaint reached")
 end)
 
 test("autoclose: off, or with auto-open off, an auto-opened window stays", function()

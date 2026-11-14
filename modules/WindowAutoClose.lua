@@ -4,14 +4,14 @@ local _, NS = ...
 --
 -- ARMED only by an auto-open (modules/Window.lua's maybeAutoOpen calls Arm after its Open). Window.Open
 -- and Window.Close disarm first, so a manual show over an auto-open, and a manual open, never close
--- by themselves; the window's drag (Cancel, from its onDragStart) and a click on the frame or its
--- title bar (an OnMouseDown hook) cancel it for that show too.
+-- by themselves; the window's drag (Cancel, from its onDragStart) and a press anywhere in it (an
+-- OnMouseDown hook on the frame and on every frame under it) cancel it for that show too.
 --
 -- THE COUNT is one C_Timer.NewTimer handle of `window.autoClose.seconds` (5 to 120, default 10).
 -- A new drop (DropAdded) and a roll or pending item opening, changing or closing (PendingChanged)
--- start it over; so does the pointer entering the frame (an OnEnter hook). When it runs out it
--- closes the window only while Rolling now is empty (NS.Pending.Count of the shown feed) and the
--- pointer is not over it; otherwise it starts over, so the window closes a full count after the last
+-- start it over; so does the pointer entering the frame or any frame under it (an OnEnter hook).
+-- When it runs out it closes the window only while Rolling now is empty (NS.Pending.Count of the
+-- shown feed) and the pointer is not over it; otherwise it starts over, so the window closes a full count after the last
 -- roll closed or the pointer left. `window.autoClose.enabled` off, or the master `autoOpen` off, and
 -- the count lets go when it runs out. Combat does not matter: the close is a Hide of an owned frame
 -- with no protected child (events-frames-taint), the same as the auto-open's Show.
@@ -81,21 +81,41 @@ function AC.Disarm()
 end
 AC.Cancel = AC.Disarm
 
-local function hook(f)
-    if not f or hooked[f] then return end
+-- A press lands on the control under the pointer and never bubbles to its parent, and the window's
+-- face is mostly controls (its tabs, the title bar and its buttons, the rows, the filter bar). So
+-- the window and every frame under it hear the press and the pointer entering themselves: one-way
+-- HookScripts on frames this addon made, none of them protected. A frame is hooked once (`hooked`);
+-- the walk runs at Arm and after each repaint while armed (AC.OnRefresh), so a row a repaint built
+-- after the open is reached too.
+local function hookOne(f)
+    if hooked[f] or not f.HookScript then return end
+    if f.HasScript and not (f:HasScript("OnMouseDown") and f:HasScript("OnEnter")) then return end
     hooked[f] = true
     f:HookScript("OnEnter", function() AC.Bump() end)
     f:HookScript("OnMouseDown", function() AC.Cancel() end)
-    if f.titleBar then f.titleBar:HookScript("OnMouseDown", function() AC.Cancel() end) end
+end
+
+-- `seen` is this walk's own: each frame is visited once whatever its children answer.
+local function hookTree(f, seen)
+    if type(f) ~= "table" or seen[f] then return end
+    seen[f] = true
+    hookOne(f)
+    if not f.GetChildren then return end
+    for _, child in ipairs({ f:GetChildren() }) do hookTree(child, seen) end
 end
 
 --- The window has just auto-opened (modules/Window.lua): count, when auto-close is on.
 function AC.Arm()
     if not enabled() then return end
-    hook(NS.Window.Frame())
+    hookTree(NS.Window.Frame(), {})
     armed = true
     NS.Debug(TAG, "auto-close armed: %d s", seconds())
     restart()
+end
+
+--- The window repainted (Window.Refresh): while armed, reach the frames it built since the walk.
+function AC.OnRefresh()
+    if armed then hookTree(NS.Window.Frame(), {}) end
 end
 
 --- Whether the count is armed for this show (the suites and the diagnostics).

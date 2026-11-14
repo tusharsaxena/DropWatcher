@@ -721,6 +721,7 @@ function Window.Refresh()
         if NS.OfferPanel then NS.OfferPanel.Refresh() end
     end
     syncCountdownTicker()
+    NS.WindowAutoClose.OnRefresh()   -- an armed auto-close reaches the frames this pass built
     if t0 then Perf.Note("window.refresh", debugprofilestop() - t0) end
 end
 

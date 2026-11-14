@@ -547,7 +547,7 @@ they were stamped (so the old success rate reads high, and an old gain is the ve
 judged), has no per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before
 issue #13 as equipment; an install
 missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a simulation does not exercise every live
-path (a member's spec, cross-source de-duplication, a situation's tracking switch); auto-close is canceled by a click on the frame or its title bar but not by one on a control inside it, and its settings row sits on the line beneath Auto-open the window rather than indented (RX-10). Every limitation,
+path (a member's spec, cross-source de-duplication, a situation's tracking switch); auto-close's settings row sits on the line beneath Auto-open the window rather than indented (RX-10). Every limitation,
 with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map
