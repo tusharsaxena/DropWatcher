@@ -131,8 +131,11 @@ the code reads every case the design leaves open, module by module, is in
 - **The roll popup mark** (Forever port design §7, DW-FP20) is drawn only over Blizzard's four roll
   popups, `GroupLootFrame1..4`. In WoW Forever's gamepad mode the client lists rolls in
   `GamepadGroupLootRollFrame` instead, and the mark is skipped while `InputUtil.IsGamepadUIEnabled()`
-  is true. Its `Need so far` line needs the drop to be pending (the Drops tab's own gates, design
-  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line. The
+  is true. Its count line needs the drop to be pending (the Drops tab's own gates, design
+  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line, and
+  its tooltip names the item alone. The side card picks its side when it is painted (the popup
+  shown, a roll or verdict change): a popup the game moves later keeps the card on the side it
+  had, beside it. The
   score part of the gain is the score's difference, not a percentage. None of it is confirmed in
   game yet (FOREVER-13 and ROLLS-4).
 - **Everyone's rolls** (Forever port design §5, DW-FP13 to DW-FP17) come from the client's loot

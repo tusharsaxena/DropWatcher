@@ -48,7 +48,7 @@ end
 -- size, seed }. A simulation runs with its pool, its group and the group joined.
 local function sim(opts)
     opts = opts or {}
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon(opts.mock and { mock = opts.mock } or nil)
     m.addItem(link(100, 590), ring(590))
     m.addItem(link(101, 590), ring(590))
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
@@ -705,6 +705,32 @@ test("sim: /dw sim roll opens a pending roll, updates it and resolves it into a 
     assertEqual(#P.All(), 0, "the stop took the open roll away")
     assertEqual(next(NS.State.pending and NS.State.pending.mine or {}), nil, "and your simulated popup")
     assertEqual(#NS.Compat.ActiveLootRolls(), 0)
+end)
+
+-- The roll side card (rolls UX design §3.3, RX-07): a simulation invents no Blizzard popup, so each
+-- simulated roll gets an owned stand-in with its side card; running it twice stacks two, to show
+-- the placement.
+test("sim: /dw sim roll twice stacks two stand-in popups, each with its side card", function()
+    local NS, m = sim({ mock = function(mock) mock.__decorateUIParent = true end })
+    local RP = NS.RollPopup
+    NS.addon:OnSlashCommand("sim roll")
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local s1, s2 = RP.StandIn(1), RP.StandIn(2)
+    assertTrue(s1 ~= nil and s1:IsShown(), "the first roll's stand-in")
+    assertTrue(s2 ~= nil and s2:IsShown() and s2 ~= s1, "the second roll's, a second frame")
+    local _, _, _, _, y1 = s1:GetPoint()
+    local _, _, _, _, y2 = s2:GetPoint()
+    assertTrue(y2 > y1, "stacked above the first")
+    for n = 1, 2 do
+        local card = RP.Overlay(RP.StandInKey(n))
+        assertTrue(card:IsShown(), "stand-in " .. n .. "'s side card")
+        local _, rel = card:GetPoint()
+        assertTrue(rel == RP.StandIn(n))
+    end
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(s1:IsShown()); assertFalse(s2:IsShown())
 end)
 
 -- Master loot (Forever port design §8, plan DW-FP19): a both-clients feature.

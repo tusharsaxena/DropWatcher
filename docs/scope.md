@@ -82,8 +82,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   Rolling now section above the boss groups: the item, your verdict, who chose Need, Greed or Pass
   so far and the time left, with each player's choice and number in a ROLLS box under it. Won, it
   joins the feed as its drop with the final roll table on its detail card and in History (Drops ›
-  Rolls' Show rolls and Keep rolls in history). The game's own roll popup carries a small card with
-  your verdict and `Need so far` (Mark the roll popup).
+  Rolls' Show rolls and Keep rolls in history). The game's own roll popup carries a small side card
+  with your verdict and the roll's count line, every roll on hover (Mark the roll popup).
 - **Master-loot pending and Ask the master looter** (design §6, both clients; on Retail Guild Master
   Loot alone). An Epic in a loot window you opened, while someone else is the master looter, waits in
   Rolling now as awaiting the master looter until a receipt names who got it, with one Ask that

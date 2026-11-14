@@ -1893,19 +1893,24 @@ Total.
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (11)
+### test_roll_popup.lua (16)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
 - roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
-- roll popup: two identical items on two popups each show their own Need so far
+- roll popup: two identical items on two popups each show their own count line
+- roll popup: the side card flips to the popup's left near the screen's right edge
+- roll popup: four popups by the right edge each flip and no card overlaps a frame
+- roll popup: the side card wears the window's skin (S.Shell, no detail box)
+- roll popup: a lockbox's line 1 is its kind in the neutral tone
+- roll popup: a hover over the side card shows every roll
 - roll popup: a popup closed at once draws nothing
 - roll popup: disabled, the hook draws nothing
 - roll popup: popupMark off draws nothing
 - roll popup: no write to the Blizzard frame table
 - roll popup: gamepad mode skips
 - roll popup: Forever BoP cantUse says Greed / Pass
-- roll popup: the sim draws it against a stand-in of the popup's size
-- roll popup: a popup shown before its history drop gets Need so far when the drop lands
+- roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
+- roll popup: a popup shown before its history drop gets its count line when the drop lands
 
 ### test_feed_counts.lua (10)
 
@@ -2484,7 +2489,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (30)
+### test_sim_events.lua (31)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2513,6 +2518,7 @@ Total.
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 - sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing
 - sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll
+- sim: /dw sim roll twice stacks two stand-in popups, each with its side card
 - sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it
 - sim ml: refused without a running simulation
 - sim roll: refused without a running simulation
@@ -2917,7 +2923,7 @@ Total.
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
-| test_roll_popup.lua | 11 |
+| test_roll_popup.lua | 16 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2945,7 +2951,7 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 26 |
-| test_sim_events.lua | 30 |
+| test_sim_events.lua | 31 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
@@ -2966,4 +2972,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2448** |
+| **Total** | **2454** |

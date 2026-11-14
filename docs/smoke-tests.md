@@ -3753,19 +3753,21 @@ Show rolls, Keep rolls in history and Mark the roll popup, all on. Untick Show r
 roll → the Rolling now section and the resolved drop's ROLLS box go at once; tick it again → they are
 back, the rolls in between still tracked. Untick Keep rolls in history, then win a roll → its History
 entry has no ROLLS box (earlier entries keep theirs). Untick Mark the roll popup with a popup up → the
-card above it goes at once. Result:
+card beside it goes at once. Result:
 
 **ROLLS-4. Your verdict on Blizzard's roll popup (DW-FP20).** Client: Retail. With a roll popup up
-(the game's own Need, Greed and Pass frame) → a small card sits just above it: line 1 your verdict's
-mark and word with the gain (`▲ Upgrade +12`, with `· score +N` while a scorer is in use), line 2
-`Need so far: N`, muted, counting the Need choices as they land. Choose on the popup → the popup and
-its card go together. A drop the Drops tab's own filters hide still gets line 1, without line 2.
+(the game's own Need, Greed and Pass frame) → a small card in the window's skin sits beside its right
+edge, top-aligned (to its left when the popup is near the screen's right edge, RX-07): line 1 your
+verdict's mark and word with the gain (`▲ Upgrade +12`, with `· score +N` while a scorer is in use),
+line 2 the count line (dice, coin, pass and still-to-roll icons with their counts) as the choices
+land; hover the card → every roll in its tooltip. Choose on the popup → the popup and its card go
+together. A drop the Drops tab's own filters hide still gets line 1, without line 2.
 Nothing on the popup itself moves, its buttons and their tooltips work as before, and it works in
 combat. Turn the addon off (`/dw disable`) → the next popup has no card. Result:
 
 **ROLLS-5. Two copies of one item (Review Focus 1).** Client: Retail. A boss that drops two copies of
 the same item to a roll → Rolling now has two rows, each with its own summary; the two popups each
-carry their own `Need so far`, matched oldest first, and choosing differently on each moves only its
+carry their own count line, matched oldest first, and choosing differently on each moves only its
 own count. Each resolves into its own drop with its own ROLLS box. Result:
 
 **ROLLS-6. A `/reload` mid-roll (Review Focus 3).** Client: Retail. With a roll open, `/reload` → the

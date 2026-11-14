@@ -986,7 +986,6 @@ L["and %d more"] = "and %d more"
 -- modules/RollPopup.lua: your verdict on the game's roll popup (Forever port design §7)
 L["Need: upgrade"] = "Need: upgrade"
 L["Greed / Pass: you can't use it"] = "Greed / Pass: you can't use it"
-L["Need so far: %d"] = "Need so far: %d"
 L["score %s"] = "score %s"
 L["Roll popup (simulated)"] = "Roll popup (simulated)"
 -- modules/DetailCells.lua: the scale a score used (DW-FP07) and a score-led verdict (DW-FP08)

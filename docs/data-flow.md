@@ -787,15 +787,19 @@ master loot is Guild Master Loot alone (design §11.2); the store is the same on
 ## The roll popup mark (Forever port design §7)
 
 ```
-RP.Install (OnEnable) ─> one owned card per GroupLootFrame1..4, parented to UIParent, anchored
-  BOTTOM to the popup's TOP; Compat.HookRollPopup: HookScript OnShow / OnHide once
+RP.Install (OnEnable) ─> one owned side card per GroupLootFrame1..4, parented to UIParent, in the
+  window's skin (NS.ApplySkin + S.Shell); Compat.HookRollPopup: HookScript OnShow / OnHide once
 START_LOOT_ROLL(rollID) ─> Compat.LootRollInfo (link, bop) ─> LootFeed.JudgeMe ─> cache[rollID]
 popup OnShow ─> Compat.RollPopupOpen (still shown, a plain rollID) ─> not disabled, rolls.popupMark
   on, not the gamepad UI ─> line 1: the verdict's mark, word and gain (Forever BoP: Need: upgrade,
-  Greed / Pass: you can't use it); line 2: Need so far from Pending.ForRoll(rollID)
+  Greed / Pass: you can't use it; a non-gear item its kind); line 2: RollCells.CountLine over
+  Pending.ForRoll(rollID)'s roll ─> placed: TOPLEFT on the popup's TOPRIGHT + 4, or, when
+  Compat.RollPopupRight + 4 + the card's width is past UIParent's width, TOPRIGHT on its TOPLEFT - 4
+card OnEnter ─> RollCells.Tooltip (every roll, the time left, your verdict), read on the hover
 PendingChanged, GearChanged, the rolls.popupMark row, the stand-up ─> the shown cards repainted
 CANCEL_LOOT_ROLL / popup OnHide ─> the card down, the cache entry dropped
-a simulated START_LOOT_ROLL ─> the same card on an owned stand-in of the popup's size (RP.StandIn)
+a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the popup's size, the
+  first free of four (RP.StandIn(n)), each next one stacked above the last
 ```
 
 ## Opening a trade (design spec §4)

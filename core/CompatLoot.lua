@@ -356,6 +356,23 @@ function Compat.RollPopupOpen(i)
     return plainNumber(f.rollID)
 end
 
+--- Roll popup `i`'s right edge in UIParent's units (its GetRight at its effective scale over
+--- UIParent's), so an owned card beside it can tell whether the screen has room on that side
+--- (rolls UX design §3.3, RX-07). A read only: nothing is written to the popup. Nil with no such
+--- frame, while it is unplaced, or for a secret or non-number answer.
+--- @param i number
+--- @return number|nil
+function Compat.RollPopupRight(i)
+    local f = popup(i)
+    if not (f and f.GetRight) then return nil end
+    local right = plainNumber(f:GetRight())
+    if not right then return nil end
+    local scale = f.GetEffectiveScale and plainNumber(f:GetEffectiveScale()) or 1
+    local ui = UIParent and UIParent.GetEffectiveScale and plainNumber(UIParent:GetEffectiveScale()) or 1
+    if scale <= 0 or ui <= 0 then return right end
+    return right * scale / ui
+end
+
 --- Whether the client's gamepad UI is on (InputUtil.IsGamepadUIEnabled): WoW Forever then shows
 --- its rolls in GamepadGroupLootRollFrame, not in GroupLootFrame1..4 (R2 §10.1). False when the
 --- API is absent, or for a secret answer.
