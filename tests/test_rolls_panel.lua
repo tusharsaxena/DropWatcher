@@ -5,6 +5,9 @@
 -- only), Pass, still to roll, highest first, `[YOU]` on yours; the winner washed gold and the result
 -- line; a block leaves after the linger (0 at once), the pointer over the panel holds it; the
 -- window's auto-close waits while it lingers; the setting off shows nothing; `/dw rolls` toggles.
+-- Raid mode (design §3.3, RX-18): a group past five opens one block (a click, your pending roll, the
+-- soonest ending), titles `Rolls · N`, folds Pass and Waiting, scrolls, and repaints from the pools;
+-- the compact layout is 220 wide.
 -- Rolls are a both-clients feature, so every case runs on both kit profiles.
 
 local T = _G.DW_TEST
@@ -414,4 +417,198 @@ test("rolls panel: Side keeps the wanted side that fits, else the other, and unk
     assertEqual(RPR.Side(nil, 200, 800, 250, 1920, 3), "right")
     assertEqual(RPR.Side("right", 10, 1910, 250, 1920, 3), "right", "neither fits: the wanted side")
     assertEqual(RPR.Fraction(30, 60), 0.5); assertEqual(RPR.Fraction(nil, 60), nil); assertEqual(RPR.Fraction(70, 60), 1)
+end)
+
+-- ── raid mode (rolls panel design §3.3, plan RX-18) ─────────────────────────────────────────
+
+-- A group of `n` counting you (Compat.GroupSize answers n): a raid past five.
+local function groupOf(m, n)
+    local others = {}
+    for i = 1, n - 1 do
+        others[i] = { guid = ("Player-9-%08X"):format(i), name = "Raider" .. i, class = "Warrior", classFile = "WARRIOR" }
+    end
+    m.setGroup(others, n > 5)
+end
+
+local function linkOf(i) return ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Item %d]|h|r"):format(300 + i, 300 + i) end
+
+-- A roll: `need` Need (rolls 99 down), `greed` Greed (rolls 60 down), `pass` Pass and `wait` still
+-- to roll (P1..), then you, on `mine` (Pass by default; 4 is still to roll).
+local function bigRoll(link, need, greed, pass, wait, mine)
+    local infos, n = {}, 0
+    local function add(state, roll)
+        n = n + 1
+        infos[#infos + 1] = info("P" .. n, ("Player-8-%08X"):format(n), "MAGE", state, roll)
+    end
+    for i = 1, need do add(0, 100 - i) end
+    for i = 1, greed do add(3, 61 - i) end
+    for _ = 1, pass do add(5) end
+    for _ = 1, wait do add(4) end
+    infos[#infos + 1] = info("Testchar", "Player-0-00000001", "PALADIN", mine or 5, nil, true)
+    return { itemHyperlink = link, playerRollState = mine or 5, isTied = false, allPassed = false,
+        startTime = 100, duration = 60, rollInfos = infos }
+end
+
+local function rollWith(m, key, link, d)
+    m.addItem(link, ring(620))
+    m.lootHistory[key] = d
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    return d
+end
+
+local function openHeaders(NS)
+    local out = {}
+    for _, h in ipairs(NS.RollsPanel.Drawn().headers) do
+        if h.open then out[#out + 1] = plain(h.name:GetText()) end
+    end
+    return out
+end
+
+local function headerNamed(NS, name)
+    for _, h in ipairs(NS.RollsPanel.Drawn().headers) do
+        if plain(h.name:GetText()) == name then return h end
+    end
+end
+
+local function foldOf(NS, key)
+    for _, f in ipairs(NS.RollsPanel.Drawn().lines) do
+        if f.fold == key then return f end
+    end
+end
+
+-- red under: no raid mode (every block open, the title `Rolls`)
+test("rolls panel: a group of 6 is raid mode (one block open, titled Rolls · N); a group of 5 opens every block", function()
+    local NS, m = shown()
+    groupOf(m, 6)
+    rollOpens(m, "2900:1", LINK)
+    rollOpens(m, "2900:2", LINK2)
+    local d = NS.RollsPanel.Drawn()
+    assertTrue(d.raid, "raid mode")
+    assertEqual(d.panel.title:GetText(), "Rolls · 2")
+    assertEqual(#openHeaders(NS), 1, "exactly one block open")
+    local closed = headerNamed(NS, "Item 301")
+    assertFalse(closed.open)
+    assertTrue(closed.counts:IsShown() and closed.counts:GetText() ~= "", "a closed header reads the count line")
+    assertEqual(#lines(NS), 6, "the open block's five players and its foot; the closed one has no lines")
+    groupOf(m, 5)
+    NS.RollsPanel.Refresh()
+    d = NS.RollsPanel.Drawn()
+    assertFalse(d.raid, "five is a dungeon group")
+    assertEqual(d.panel.title:GetText(), "Rolls")
+    assertEqual(#openHeaders(NS), 2, "every block open")
+    assertFalse(headerNamed(NS, "Item 301").counts:IsShown())
+end)
+
+-- red under: the open block picked by start order alone, or a click not sticking
+test("rolls panel: raid mode opens your pending roll, else the soonest ending; a clicked header sticks until it resolves", function()
+    local NS, m = shown()
+    groupOf(m, 6)
+    m.lootHistoryTime = 110
+    local d1 = rollOpens(m, "2900:1", LINK)           -- ends at 160
+    local d2 = openRoll(LINK2)
+    d2.duration = 30                                  -- ends at 130: the soonest
+    rollWith(m, "2900:2", LINK2, d2)
+    assertEqual(openHeaders(NS)[1], "Item 301", "nothing pending for you: the soonest ending")
+    d1.playerRollState, d1.rollInfos[4].state = 4, 4
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    assertEqual(openHeaders(NS)[1], "Item 300", "the one you still have to roll on")
+    headerNamed(NS, "Item 301"):__fire("OnMouseUp", "LeftButton")
+    assertEqual(openHeaders(NS)[1], "Item 301", "the clicked header opens")
+    m.lootHistoryTime = 112
+    NS.RollsPanel.Refresh()
+    assertEqual(openHeaders(NS)[1], "Item 301", "and stays open")
+    win(m, d2, 2)
+    assertEqual(openHeaders(NS)[1], "Item 300", "resolved: the rule picks again")
+    local done = headerNamed(NS, "Item 301")
+    assertTrue(done.dim, "a resolved block is a dimmed header")
+    assertEqual(plain(done.counts:GetText()), "Won by Brakk (Need 87)", "showing the winner and the roll")
+    assertEqual(done.time:GetText(), "done")
+    headerNamed(NS, "Item 301"):__fire("OnMouseUp", "LeftButton")
+    assertEqual(openHeaders(NS)[1], "Item 300", "a resolved header does not open")
+end)
+
+-- red under: Pass and Waiting listed a row per player in a raid
+test("rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds", function()
+    local NS, m = shown()
+    groupOf(m, 8)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 2, 1, 3, 2))   -- you pass too: Pass 4
+    local got = lines(NS)
+    assertEqual(#got, 6, "two Need, one Greed, the Pass line, the Waiting line, the foot: " .. table.concat(got, " / "))
+    local pass = foldOf(NS, "pass")
+    assertTrue(pass ~= nil, "the Pass line")
+    assertEqual(plain(pass.text:GetText()), "Pass 4 · P4, P5, P6…")
+    assertTrue(foldOf(NS, "waiting") ~= nil, "the Waiting line")
+    local tip = T.tipPlainJoined(NS.Window.TooltipOf(pass))
+    for _, name in ipairs({ "P4", "P5", "P6", "Testchar" }) do
+        assertTrue(tip:find(name, 1, true) ~= nil, name .. " in " .. tip)
+    end
+    pass:__fire("OnMouseUp", "LeftButton")
+    got = lines(NS)
+    assertEqual(#got, 9, "Pass unfolded: four rows in its place")
+    assertTrue(foldOf(NS, "pass") == nil and foldOf(NS, "waiting") ~= nil, "Waiting stays folded")
+    NS.SchemaRuntime.Set("rolls.panel.foldInRaid", false)
+    NS.RollsPanel.Refresh()
+    assertEqual(#lines(NS), 10, "the setting off lists all nine players")
+    assertTrue(foldOf(NS, "waiting") == nil)
+end)
+
+test("rolls panel: a dungeon group never folds", function()
+    local NS, m = shown()
+    groupOf(m, 5)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 1, 1, 2, 0))
+    assertTrue(foldOf(NS, "pass") == nil)
+    assertEqual(#lines(NS), 6)
+end)
+
+-- red under: a frame made per repaint, or the panel growing past the window
+test("rolls panel: 40 players on 6 items fit, the body scrolls, and a repaint makes no frame", function()
+    local NS, m = shown()
+    groupOf(m, 40)
+    for i = 0, 5 do rollWith(m, "2900:" .. (i + 1), linkOf(i), bigRoll(linkOf(i), 20, 10, 5, 4)) end
+    local d = NS.RollsPanel.Drawn()
+    assertEqual(#d.headers, 6)
+    assertEqual(d.panel.title:GetText(), "Rolls · 6")
+    assertEqual(#openHeaders(NS), 1)
+    assertEqual(#lines(NS), 33, "twenty Need, ten Greed, the two folded lines and the foot")
+    assertTrue(d.panel:GetHeight() <= 400, "never taller than the window")
+    assertTrue(d.panel.overflow, "the body scrolls")
+    local made, create = 0, m.CreateFrame
+    m.CreateFrame = function(...)
+        made = made + 1
+        return create(...)
+    end
+    for _ = 1, 3 do NS.RollsPanel.Refresh() end
+    headerNamed(NS, "Item 303"):__fire("OnMouseUp", "LeftButton")
+    m.CreateFrame = create
+    assertEqual(made, 0, "every header and line from the pools")
+end)
+
+test("rolls panel: the compact layout is 220 wide, the full one 250", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local p = NS.RollsPanel.Drawn().panel
+    assertEqual(p:GetWidth(), 250)
+    NS.SetWindowMode("compact")
+    NS.RollsPanel.Refresh()
+    assertEqual(p:GetWidth(), 220)
+    NS.SetWindowMode("full")
+    NS.RollsPanel.Refresh()
+    assertEqual(p:GetWidth(), 250)
+end)
+
+test("rolls panel: PickOpen keeps a live click, then your pending roll, then the soonest ending", function()
+    local RPR = T.enableAddon().RollsPanelRows
+    assertFalse(RPR.IsRaid(5)); assertTrue(RPR.IsRaid(6)); assertFalse(RPR.IsRaid(nil))
+    local list = {
+        { id = "a", left = 50 }, { id = "b", left = 20 }, { id = "c", left = 40, pending = true },
+        { id = "d", done = true, left = 1 },
+    }
+    assertEqual(RPR.PickOpen(list, nil), "c", "your pending roll")
+    list[3].pending = false
+    assertEqual(RPR.PickOpen(list, nil), "b", "the soonest ending")
+    assertEqual(RPR.PickOpen(list, "a"), "a", "a click sticks")
+    assertEqual(RPR.PickOpen(list, "d"), "b", "not on a resolved block")
+    assertEqual(RPR.PickOpen({ { id = "x" }, { id = "y", left = 9 } }, nil), "y", "a known time before none")
+    assertEqual(RPR.PickOpen({ { id = "x" }, { id = "y" } }, nil), "x", "no times: the first")
+    assertEqual(RPR.PickOpen({ { id = "x", done = true } }, nil), nil, "all resolved: none open")
 end)

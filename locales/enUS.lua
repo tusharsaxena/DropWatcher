@@ -1024,3 +1024,7 @@ L["Show the Rolls panel beside the window on Drops > Rolls > Panel"] = "Show the
 L["No rolls right now"] = "No rolls right now"
 L["The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."] = "The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."
 L["The Rolls panel shows beside the window: open the window first."] = "The Rolls panel shows beside the window: open the window first."
+-- raid mode (RX-18)
+L["Rolls · %d"] = "Rolls · %d"
+L["%s %d · %s"] = "%s %d · %s"
+L["Click to list every player"] = "Click to list every player"

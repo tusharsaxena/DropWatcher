@@ -35,10 +35,18 @@ local _, NS = ...
 -- (RollsPanelRows.Side, in pixels: the window's edges and the panel's width at the window's
 -- effective scale, the screen at UIParent's). Re-checked on every paint: the window's show, move,
 -- resize, layout and minimize (Window.AddVisibilityListener, Window.AddGeometryListener).
--- RP.WIDTH wide; as tall as its blocks, never taller than the window (it clips beyond; the raid
--- layout's scroll is RX-18).
+-- RP.WIDTH wide (RP.WIDTH_COMPACT in the compact layout); as tall as its blocks, never taller than
+-- the window: beyond that its body scrolls (a scroll frame under the title band, its bar shown only
+-- then).
 --
--- THE LAYOUT. Every block open (the dungeon layout; raid mode, RX-18, opens one): the header (the
+-- RAID MODE (design §3.3, plan RX-18): a group of more than five (RollsPanelRows.IsRaid on
+-- NS.Compat.GroupSize, read on every paint). The title reads `Rolls · N`; one block is open
+-- (RollsPanelRows.PickOpen); the rest are headers with the count line, a resolved one dimmed with its
+-- winner. A closed header the player clicks opens (`sticky`) until its roll is over; with
+-- `rolls.panel.foldInRaid` on, Pass and Waiting are one line each, hovering lists every name, and a
+-- click lists that group's players for that block (the block's `unfolded`).
+--
+-- THE LAYOUT. Every block open (the dungeon layout; raid mode opens one): the header (the
 -- item's icon, its name in its quality color, cut by the font string, the time left or `done`), the
 -- countdown bar under an open roll's header (the time left over the longest time left the block
 -- has read), a row per player (RollsPanelRows.Rows: the choice's mark, the name in class color,
@@ -56,6 +64,7 @@ local K = NS.Constants.WINDOW
 local TAG = "UI"
 
 RP.WIDTH = 250        -- the panel's width, in the window's units (design §3.1)
+RP.WIDTH_COMPACT = 220   -- in the compact layout
 RP.GAP = 3            -- between the window and the panel
 RP.PAD = 8            -- inside the panel
 RP.TOP = K.POPOVER_TOP   -- the title band and the gap under it
@@ -73,6 +82,7 @@ local byId = {}       -- [item id] = its block
 local left = {}       -- [item id] = true once its block has left: never added again
 local manual = false  -- shown by hand (`/dw rolls`): stays with no block
 local dismissed = false   -- the close button hid it: until the next roll starts
+local sticky          -- raid mode: the block the player clicked open, while its roll runs
 local ticker
 local paint           -- defined with the painting below
 
@@ -87,6 +97,11 @@ local function lingerSeconds()
 end
 
 local function num(v) return type(v) == "number" and v or nil end
+
+local function width()
+    local WC = NS.WindowCompact
+    return (WC and WC.Mode() == "compact") and RP.WIDTH_COMPACT or RP.WIDTH
+end
 
 -- A plain geometry read, a number or nil (an unplaced frame, a secret, the mock's catch-all).
 local function geom(f, method)
@@ -198,7 +213,7 @@ end
 
 local function clear()
     for _, b in ipairs(blocks) do cancel(b) end
-    blocks, byId, left = {}, {}, {}
+    blocks, byId, left, sticky = {}, {}, {}, nil
 end
 
 -- Read the store again: new rolls join, finished ones start their linger.
@@ -233,18 +248,26 @@ local function accentPaint(alpha)
     end
 end
 
--- A block's header: the item's icon, its name, the time left, and the countdown bar under it.
+local onLeave, onHeaderClick, onFoldClick
+
+-- A block's header: the item's icon, its name, the time left, the count line under them (a closed
+-- raid header), and the countdown bar under it (an open one). A closed raid header takes a click.
 local function newHeader(p)
     local h = CreateFrame("Frame", nil, p)
     h:SetHeight(RP.HEADER_H)
     h.icon = h:CreateTexture(nil, "ARTWORK")
     h.icon:SetSize(RP.ICON, RP.ICON)
-    h.icon:SetPoint("LEFT", h, "LEFT", 0, 0)
+    h.icon:SetPoint("TOPLEFT", h, "TOPLEFT", 0, -(RP.HEADER_H - RP.ICON) / 2)
     h.time = faced(h, nil, "RIGHT")
-    h.time:SetPoint("RIGHT", h, "RIGHT", 0, 0)
+    h.time:SetPoint("RIGHT", h, "TOPRIGHT", 0, -RP.HEADER_H / 2)
     h.name = faced(h, "GameFontNormalSmall")
     h.name:SetPoint("LEFT", h.icon, "RIGHT", 4, 0)
     h.name:SetPoint("RIGHT", h.time, "LEFT", -4, 0)
+    h.counts = faced(h)
+    h.counts:SetPoint("TOPLEFT", h, "TOPLEFT", RP.ICON + 4, -RP.HEADER_H)
+    h.counts:SetPoint("TOPRIGHT", h, "TOPRIGHT", 0, -RP.HEADER_H)
+    h:SetScript("OnMouseUp", function(self) onHeaderClick(self) end)
+    h:SetScript("OnLeave", function() onLeave() end)
     h.bar = h:CreateTexture(nil, "ARTWORK")
     h.bar:SetHeight(RP.BAR_H)
     h.bar:SetPoint("TOPLEFT", h, "BOTTOMLEFT", 0, -1)
@@ -252,8 +275,9 @@ local function newHeader(p)
     return h
 end
 
--- One line: a player's row, the result line or the foot. `text` holds the mark and the name,
--- `roll` the number at the right, `wash` the winner's gold.
+-- One line: a player's row, a folded group, the result line or the foot. `text` holds the mark and
+-- the name, `roll` the number at the right, `wash` the winner's gold. A folded group's line takes
+-- the pointer: its tooltip lists every name (`foldTip`), a click unfolds it.
 local function newLine(p)
     local f = CreateFrame("Frame", nil, p)
     f:SetHeight(RP.LINE_H)
@@ -265,10 +289,13 @@ local function newLine(p)
     f.text = faced(f)
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetPoint("RIGHT", f.roll, "LEFT", -4, 0)
+    NS.Window.AttachTooltip(f, function()
+        if f.foldTip then return unpack(f.foldTip) end
+    end)
+    f:HookScript("OnLeave", function() onLeave() end)
+    f:SetScript("OnMouseUp", function(self) onFoldClick(self) end)
     return f
 end
-
-local onLeave
 
 local function buildTitle(p)
     p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
@@ -288,6 +315,21 @@ local function buildTitle(p)
     NS.Skin.Header(p, { title = p.title, right = { p.closeButton } })
 end
 
+-- The body under the title band: a scroll frame whose child holds the blocks; its bar shows only
+-- while the blocks are taller than the panel may be (paint).
+local function buildBody(p)
+    local scroll = CreateFrame("ScrollFrame", nil, p, "UIPanelScrollFrameTemplate")
+    scroll.scrollBarHideable = true
+    local content = CreateFrame("Frame", nil, scroll)
+    content:SetSize(1, 1)
+    scroll:SetScrollChild(content)
+    p.scroll, p.content = scroll, content
+    local bar = rawget(scroll, "ScrollBar")
+    if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
+    p.bar = bar
+    p.headerPool, p.linePool = NS.Pool.New(), NS.Pool.New()
+end
+
 local function build()
     local win = NS.Window.Frame()
     local p = CreateFrame("Frame", nil, win, "BackdropTemplate")
@@ -297,7 +339,7 @@ local function build()
     p:SetClipsChildren(true)
     NS.ApplySkin(p)
     buildTitle(p)
-    p.headerPool, p.linePool = NS.Pool.New(), NS.Pool.New()
+    buildBody(p)
     p.empty = faced(p, "GameFontHighlight", "CENTER")
     p.empty:SetPoint("TOP", p, "TOP", 0, -RP.TOP - 4)
     NS.Skin.Text(p.empty, "text.highlight")
@@ -315,10 +357,10 @@ local function screenPx()
 end
 
 -- Beside the window, on the side the setting asks for, or the other with no room there.
-local function dock(p, win)
+local function dock(p, win, w)
     local s = geom(win, "GetEffectiveScale") or 1
     local l, r = geom(win, "GetLeft"), geom(win, "GetRight")
-    local side = NS.RollsPanelRows.Side(NS.Setting("rolls.panel.side"), l and l * s, r and r * s, RP.WIDTH * s,
+    local side = NS.RollsPanelRows.Side(NS.Setting("rolls.panel.side"), l and l * s, r and r * s, w * s,
         screenPx(), RP.GAP * s)
     p:ClearAllPoints()
     if side == "right" then
@@ -330,48 +372,114 @@ local function dock(p, win)
     p.dock = side
 end
 
-local function line(p, y, text, tone, roll, winner)
-    local f = NS.Pool.Acquire(p.linePool, function() return newLine(p) end)
+-- A pooled frame at `y` in the body, as wide as the body (both top corners anchored).
+local function place(f, p, y)
     f:ClearAllPoints()
-    f:SetPoint("TOPLEFT", p, "TOPLEFT", RP.PAD, -y)
-    f:SetWidth(RP.WIDTH - 2 * RP.PAD)
-    f.text:SetText(text)
-    setTone(f.text, tone or "plain")
-    f.roll:SetText(roll and tostring(roll) or "")
-    setTone(f.roll, winner and "accent" or "plain")
-    f.wash:SetShown(winner == true)
-    f.winner = winner == true
+    f:SetPoint("TOPLEFT", p.content, "TOPLEFT", 0, -y)
+    f:SetPoint("TOPRIGHT", p.content, "TOPRIGHT", 0, -y)
+end
+
+-- One line from row `r` ({ text, tone, roll, winner, fold, tip }) of block `id`.
+local function line(p, y, r, id)
+    local f = NS.Pool.Acquire(p.linePool, function() return newLine(p.content) end)
+    place(f, p, y)
+    f.text:SetText(r.text)
+    setTone(f.text, r.tone or "plain")
+    f.roll:SetText(r.roll and tostring(r.roll) or "")
+    setTone(f.roll, r.winner and "accent" or "plain")
+    f.wash:SetShown(r.winner == true)
+    f.winner = r.winner == true
+    f.fold, f.foldTip, f.blockId = r.fold, r.tip, id
+    f:EnableMouse(r.fold ~= nil)
     return y + RP.LINE_H
 end
 
-local function paintHeader(p, y, b, m)
-    local h = NS.Pool.Acquire(p.headerPool, function() return newHeader(p) end)
-    h:ClearAllPoints()
-    h:SetPoint("TOPLEFT", p, "TOPLEFT", RP.PAD, -y)
-    h:SetWidth(RP.WIDTH - 2 * RP.PAD)
+-- The header's top row: the icon, the name in its quality color, the time left or `done`.
+local function paintTitleRow(h, m)
     h.icon:SetTexture(NS.Compat.ItemIcon(m.link))
     h.name:SetText(m.name)
     local qr, qg, qb = NS.QualityColor(m.quality)
     if qr then h.name:SetTextColor(qr, qg, qb) else setTone(h.name, "plain") end
     h.time:SetText(m.time or "")
     setTone(h.time, m.done and "muted" or "plain")
-    if m.left then b.total = math.max(b.total or 0, m.left) end
-    local frac = not m.done and NS.RollsPanelRows.Fraction(m.left, b.total) or nil
-    h.bar:SetShown(frac ~= nil)
-    if frac then h.bar:SetWidth(math.max(1, frac * (RP.WIDTH - 2 * RP.PAD))) end
-    h.blockId = b.id
-    return y + RP.HEADER_H + (frac and RP.BAR_H + 2 or 0)
 end
 
--- One block, top to bottom, from `y`; answers the y under it.
-local function paintBlock(p, y, b, now)
-    local m = NS.RollsPanelRows.Block(b.item, { now = now, gone = b.gone })
+-- A closed raid header's count line (the result once over, dimmed with the header).
+local function paintCounts(h, m)
+    h.counts:SetText(m.counts or "")
+    h.counts:SetShown(m.counts ~= nil)
+    setTone(h.counts, m.dim and "muted" or "plain")
+    h:SetAlpha(m.dim and 0.5 or 1)
+end
+
+local function paintHeader(p, y, b, m)
+    local h = NS.Pool.Acquire(p.headerPool, function() return newHeader(p.content) end)
+    place(h, p, y)
+    paintTitleRow(h, m)
+    paintCounts(h, m)
+    if m.left then b.total = math.max(b.total or 0, m.left) end
+    h.frac = (m.open and not m.done) and NS.RollsPanelRows.Fraction(m.left, b.total) or nil
+    h.bar:SetShown(h.frac ~= nil)
+    h.blockId, h.open, h.done, h.dim = b.id, m.open, m.done, m.dim == true
+    h:EnableMouse(m.counts ~= nil and not m.done)   -- a closed raid header opens on a click
+    local tall = RP.HEADER_H + (m.counts and RP.LINE_H or 0)
+    h:SetHeight(tall)
+    return y + tall + (h.frac and RP.BAR_H + 2 or 0)
+end
+
+-- One block, top to bottom, from `y`; answers the y under it. A closed raid block is its header.
+local function paintBlock(p, y, b, view)
+    local open = not view.raid or b.id == view.openId
+    local m = NS.RollsPanelRows.Block(b.item, { now = view.now, gone = b.gone, open = open, raid = view.raid,
+        fold = view.fold, unfolded = b.unfolded })
     y = paintHeader(p, y, b, m)
-    if m.open then
-        for _, r in ipairs(m.rows) do y = line(p, y, r.mark .. " " .. r.text, "plain", r.roll, r.winner) end
+    if not open then return y end
+    for _, r in ipairs(m.rows) do
+        r.text = r.mark .. " " .. r.text
+        y = line(p, y, r, b.id)
     end
-    if m.result then y = line(p, y, m.result.text, m.result.tone) end
-    return line(p, y, m.foot.text, m.foot.tone)
+    if m.result then y = line(p, y, m.result) end
+    return line(p, y, m.foot)
+end
+
+-- Raid mode's open block (RollsPanelRows.PickOpen); a click's `sticky` lapses once its roll is over.
+local function pickOpen(now)
+    local RC, list = NS.RollCells, {}
+    for i, b in ipairs(blocks) do
+        local roll = type(b.item.roll) == "table" and b.item.roll or nil
+        list[i] = { id = b.id, done = b.done or NS.RollsPanelRows.IsDone(b.item, b.gone),
+            pending = NS.RollsPanelRows.YoursPending(roll), left = RC.Left(roll, now, b.item.rollID) }
+    end
+    local id = NS.RollsPanelRows.PickOpen(list, sticky)
+    if id ~= sticky then sticky = nil end
+    return id
+end
+
+-- What this paint draws: raid mode or not, its open block, the fold, the clock and the width.
+local function viewOf()
+    local now = NS.Compat.LootHistoryNow()
+    local raid = NS.RollsPanelRows.IsRaid(NS.Compat.GroupSize())
+    return { now = now, raid = raid, w = width(), openId = raid and pickOpen(now) or nil,
+        fold = raid and NS.Setting("rolls.panel.foldInRaid") ~= false }
+end
+
+-- The body's height `y` against the most the panel may be: the bar shows past it, the body narrows
+-- for it, and each countdown bar is laid at the body's width.
+local function fit(p, y, w, cap)
+    local h = RP.TOP + y + RP.PAD
+    local over = cap ~= nil and cap > 0 and h > cap
+    local inner = w - 2 * RP.PAD - (over and K.SCROLL_W + 4 or 0)
+    p.scroll:ClearAllPoints()
+    p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", RP.PAD, -RP.TOP)
+    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -(w - RP.PAD - inner), RP.PAD)
+    p.content:SetSize(inner, math.max(1, y))
+    if p.bar then p.bar:SetShown(over) end
+    if not over then p.scroll:SetVerticalScroll(0) end
+    for _, hd in ipairs(p.headerPool.active) do
+        if hd.frac then hd.bar:SetWidth(math.max(1, hd.frac * inner)) end
+    end
+    p.overflow = over
+    return over and cap or h
 end
 
 local function anyOpen()
@@ -411,17 +519,17 @@ paint = function()
     panel = panel or build()
     NS.Pool.ReleaseAll(panel.headerPool)
     NS.Pool.ReleaseAll(panel.linePool)
-    local now, y = NS.Compat.LootHistoryNow(), RP.TOP
+    local view, y = viewOf(), 0
     for i, b in ipairs(blocks) do
         if i > 1 then y = y + RP.BLOCK_GAP end
-        y = paintBlock(panel, y, b, now)
+        y = paintBlock(panel, y, b, view)
     end
+    panel.raid = view.raid
+    panel.title:SetText(NS.RollsPanelRows.Title(view.raid, #blocks))
     panel.empty:SetShown(#blocks == 0)
     if #blocks == 0 then y = y + RP.LINE_H + 4 end
-    local cap = geom(win, "GetHeight")
-    local h = y + RP.PAD
-    panel:SetSize(RP.WIDTH, (cap and cap > 0) and math.min(h, cap) or h)
-    dock(panel, win)
+    panel:SetSize(view.w, fit(panel, y, view.w, geom(win, "GetHeight")))
+    dock(panel, win, view.w)
     panel:Show()
     syncTicker()
 end
@@ -433,6 +541,23 @@ onLeave = function()
     for _, b in ipairs(blocks) do
         if b.done then startLinger(b) end
     end
+end
+
+-- A closed raid header was clicked: it opens, and stays open until its roll is over.
+onHeaderClick = function(h)
+    local b = byId[h.blockId]
+    if not (panel and panel.raid) or h.open or not b or b.done then return end
+    sticky = b.id
+    paint()
+end
+
+-- A folded group's line was clicked: that block lists the group's players.
+onFoldClick = function(f)
+    local b = f.fold and byId[f.blockId]
+    if not b then return end
+    b.unfolded = b.unfolded or {}
+    b.unfolded[f.fold] = true
+    paint()
 end
 
 -- ── the surface ─────────────────────────────────────────────────────────────────────────────
@@ -480,12 +605,13 @@ function RP.Toggle()
     return RP.IsShown()
 end
 
---- The built panel and what it drew, for the suites: { panel, headers, lines, blocks }, or nil
+--- The built panel and what it drew, for the suites: { panel, headers, lines, blocks, raid }, or nil
 --- before the build.
 --- @return table|nil
 function RP.Drawn()
     if not panel then return nil end
-    return { panel = panel, headers = panel.headerPool.active, lines = panel.linePool.active, blocks = blocks }
+    return { panel = panel, headers = panel.headerPool.active, lines = panel.linePool.active, blocks = blocks,
+        raid = panel.raid == true }
 end
 
 -- ── listening ───────────────────────────────────────────────────────────────────────────────

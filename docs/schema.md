@@ -142,7 +142,7 @@ button and profiles reach them as any row.
 | `rolls.panel.enabled` | `true` (both clients) | Rolls › Panel | the Rolls panel docked beside the window (rolls panel design §3.5, RX-17, `modules/RollsPanel.lua`): every watched roll and every player's roll on it, while rolled and `rolls.panel.linger` seconds after; off shows nothing and tracks nothing |
 | `rolls.panel.side` | `"right"` | Rolls › Panel | `right` or `left`: the window side the panel docks on; it flips to the other when the screen has no room |
 | `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds a finished roll stays in the panel (0: removed at once); nothing leaves while the pointer is over it |
-| `rolls.panel.foldInRaid` | `true` | Rolls › Panel | raid mode's Pass and Waiting folded to one line each (RX-18; stored since RX-17) |
+| `rolls.panel.foldInRaid` | `true` | Rolls › Panel | raid mode's (a group of more than 5) Pass and Waiting folded to one line each, `Pass 27 · P1, P2, P3…`, every name in its tooltip, a click listing every player for that block (RX-18) |
 
 ### Comparison
 

@@ -827,7 +827,7 @@ a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the p
   first free of four (RP.StandIn(n)), each next one stacked above the last
 ```
 
-## The Rolls panel (rolls panel design, RX-17)
+## The Rolls panel (rolls panel design, RX-17, RX-18)
 
 ```
 PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() less kind `ml`
@@ -837,8 +837,14 @@ PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() les
   done ─> rolls.panel.linger s (0: at once) ─> leaves, unless the pointer is over the panel (held:
     the panel's OnLeave counts every finished block again) ─> the last one ─> WindowAutoClose.Bump
 paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
-  ─> pooled headers and lines (RollsPanelRows.Block: Grouped rows, result, verdict foot) ─> docked
-  right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s ticker while open
+  ─> raid mode? (RollsPanelRows.IsRaid on Compat.GroupSize: more than 5) ─> the open block
+    (RollsPanelRows.PickOpen: a clicked header while its roll runs, else your pending roll, else the
+    soonest ending); the rest headers with the count line, a resolved one dimmed with its result;
+    rolls.panel.foldInRaid ─> Pass and Waiting one line each (RollsPanelRows.Fold), a click unfolds
+  ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, result,
+    verdict foot; title Rolls or Rolls · N; 250 wide, 220 compact; the bar past the window's height)
+  ─> docked right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s ticker
+    while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
 WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
 ```

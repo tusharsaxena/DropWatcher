@@ -92,7 +92,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   once nothing is rolling and no drop has come for `window.autoClose.seconds`), the Rolls panel
   (`RollsPanel.lua` and the pure `RollsPanelRows.lua`, RX-17: a read-only panel docked beside the
   window listing every watched roll and every player's roll on it, a finished roll kept
-  `rolls.panel.linger` seconds; auto-close waits while it holds a block), test mode and the diagnostics.
+  `rolls.panel.linger` seconds; auto-close waits while it holds a block; RX-18's raid mode past five
+  members: one block open, the rest headers, Pass and Waiting folded, the body scrolling), test mode
+  and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
   `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in

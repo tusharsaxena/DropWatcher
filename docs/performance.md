@@ -59,6 +59,7 @@ notes per iteration, never time:
 | `parseCaptureOff` | one third-person loot line parsed, the looter in the group; the bracket notes nothing | 700 bytes (the parse's own captures, record and roster lookup; 664 measured), 0 notes |
 | `parseCaptureOn` | the same with capture on: one note, and the same bytes, so the bracket adds none | 700 bytes, 1 note |
 | `insightsCompute` | the Insights recompute's pure pass alone (Rows, Normalize, Filter, Period, Compute) over a log at the safety ceiling, `NS.History.CEILING` (5,000) drops; it builds a row a drop and the options and stats tables by design, so its ceiling is that work; it calls no bracket, so it notes nothing | 5200000 bytes (4956816 measured 2026-11-05), 0 notes |
+| `rollsPanelRaid` | the Rolls panel's raid refresh (rolls panel design §3.3, RX-18): `RollsPanel.Refresh` over six watched rolls of 40 players in a group of 40, one block open with its rows and its folded Pass and Waiting lines, five headers with their count lines; every frame comes from the pools; it calls no bracket, so it notes nothing | 95000 bytes (89376 measured 2026-11-15), 0 notes |
 
 The warm-up and the measured loop call each scenario through one helper, so both run at the same Lua
 stack depth. Before DW-C5 the measured loop sat one frame deeper, and the first scenario paid a one-time

@@ -9,9 +9,10 @@
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
 -- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
--- too, DW-C5), the loot parser's line (DW-25) and the Insights tab's recompute over a full log
--- (issue #12, DW-N1). The questions are performance-§9's: does each bracket cost nothing with capture off
--- (zero overhead), and is the stood-down show decision free.
+-- too, DW-C5), the loot parser's line (DW-25), the Insights tab's recompute over a full log
+-- (issue #12, DW-N1) and the Rolls panel's raid refresh (RX-18). The questions are
+-- performance-§9's: does each bracket cost nothing with capture off (zero overhead), and is the
+-- stood-down show decision free.
 --
 -- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the stood-down early return
 -- must allocate nothing. Raise one only by re-measuring and saying why; a rise is the finding.
@@ -44,9 +45,14 @@
 -- one calendar midnight per quarter hour). It has no bracket of its own (the tab's are DW-N2's), so
 -- it notes nothing.
 local INSIGHTS_CEILING = 5200000
+-- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18) is RollsPanel.Refresh over six
+-- watched rolls of 40 players in a group of 40: the reconcile, raid mode's pick, the open block's
+-- rows and folded lines and the five headers' count lines, every frame from the pools. Its ceiling is
+-- that work: first measured 2026-11-15 at 89376 bytes, the ceiling that plus a small margin.
+local ROLLS_PANEL_RAID_CEILING = 95000
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
-    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING }
+    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING, rollsPanelRaid = ROLLS_PANEL_RAID_CEILING }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
@@ -57,7 +63,7 @@ local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
     parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1,
-    insightsCompute = 0 }
+    insightsCompute = 0, rollsPanelRaid = 0 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -212,6 +218,48 @@ local function insightsOnce()
 end
 NS.Perf.on = false
 measure("insightsCompute", 20, insightsOnce)
+
+-- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18): a group of 40 in a raid, six
+-- watched rolls of 40 players each (20 Need, 10 Greed, 5 Pass, 4 still to roll, and you), the panel
+-- docked beside the shown window: one block open with its rows and its two folded lines, five
+-- headers with their count lines. Its bytes are the pass's own tables and strings (the rows, the
+-- count lines, the fold lines); the frames all come from the pools. No bracket, so it notes nothing.
+do
+    local others = {}
+    for i = 1, 39 do
+        others[i] = { guid = ("Player-9-%08X"):format(i), name = "Raider" .. i, class = "Warrior", classFile = "WARRIOR" }
+    end
+    mock.setGroup(others, true)
+    mock.__context.inInstance, mock.__context.instanceType = true, "raid"
+    mock.instance.difficultyID = 14
+    mock.__fire("PLAYER_ENTERING_WORLD")
+    NS.ShowWindow()
+    mock.lootHistoryTime = 110
+    for i = 1, 6 do
+        local link = ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Item %d]|h|r"):format(3000 + i, 3000 + i)
+        mock.addItem(link, { name = "Item", quality = 4, ilvl = 620, equipLoc = "INVTYPE_FINGER", classID = 4,
+            subClassID = 0, bindType = 1, stats = {} })
+        local infos = {}
+        local function add(n, state, roll, isSelf)
+            infos[#infos + 1] = { playerName = n == 0 and "Testchar" or ("Raider" .. n),
+                playerGUID = n == 0 and "Player-0-00000001" or ("Player-9-%08X"):format(n), playerClass = "WARRIOR",
+                isSelf = isSelf == true, state = state, roll = roll, isWinner = false }
+        end
+        for n = 1, 39 do
+            local state = n <= 20 and 0 or n <= 30 and 3 or n <= 35 and 5 or 4
+            add(n, state, state <= 3 and (100 - n) or nil)
+        end
+        add(0, 5, nil, true)
+        mock.lootHistory["2900:" .. i] = { itemHyperlink = link, playerRollState = 5, isTied = false, allPassed = false,
+            startTime = 100, duration = 60 + i, rollInfos = infos }
+    end
+    mock.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local drawn = NS.RollsPanel.Drawn()
+    check(NS.RollsPanel.IsShown() and drawn ~= nil and drawn.raid and #drawn.headers == 6,
+        "the Rolls panel did not show six raid blocks")
+    NS.Perf.on = false
+    measure("rollsPanelRaid", 200, NS.RollsPanel.Refresh)
+end
 NS.Perf.Note = realNote
 
 for _, r in ipairs(results) do

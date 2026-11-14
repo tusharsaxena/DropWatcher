@@ -1957,7 +1957,7 @@ Total.
 - roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 
-### test_rolls_panel.lua (21)
+### test_rolls_panel.lua (28)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -1980,6 +1980,13 @@ Total.
 - rolls panel: /dw rolls shows an empty panel by hand, which stays, and hides it again
 - rolls panel: /dw rolls with the window closed, or the panel off, says why and shows nothing
 - rolls panel: Side keeps the wanted side that fits, else the other, and unknown geometry answers it
+- rolls panel: a group of 6 is raid mode (one block open, titled Rolls · N); a group of 5 opens every block
+- rolls panel: raid mode opens your pending roll, else the soonest ending; a clicked header sticks until it resolves
+- rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
+- rolls panel: a dungeon group never folds
+- rolls panel: 40 players on 6 items fit, the body scrolls, and a repaint makes no frame
+- rolls panel: the compact layout is 220 wide, the full one 250
+- rolls panel: PickOpen keeps a live click, then your pending roll, then the soonest ending
 
 ### test_feed_counts.lua (10)
 
@@ -2994,7 +3001,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 16 |
-| test_rolls_panel.lua | 21 |
+| test_rolls_panel.lua | 28 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3043,4 +3050,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2517** |
+| **Total** | **2524** |
