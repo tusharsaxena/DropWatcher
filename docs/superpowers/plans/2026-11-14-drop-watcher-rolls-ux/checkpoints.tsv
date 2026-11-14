@@ -3,3 +3,4 @@ date	milestone	evidence
 2026-11-14	M2	RX-05 (2d69ccc) built and reviewed (approved, 4 minors); same gate
 2026-11-14	M3	RX-06 (91e002a), RX-07 (3b736c4) built and reviewed (approved); gate at 81fb26e: Retail 2481/0/1, Forever 2373/0/108, luacheck 0/0 (261 files), lizard silent, test-cases.md no drift, badge 2481
 2026-11-14	M4	RX-08 (9082f44), RX-09 (d141787), RX-10 (6cadf9a + review fix 81fb26e) approved; same gate
+2026-11-14	M5	RX-11 (18119bf); RX-12 review 7 fixes (a1f7455 b7d7a50 1984059 ef24e57 0d6ef48 fe183b3), amber bundle 191609 (8be45a0) then fixes 6161b2e 2118228 and green bundle 20261114-194343 (89051db); gate at 89051db: Retail 2486/0/1, Forever 2378/0/108, luacheck 0/0, kit complexity max CCN 15 0 warnings, perf all pass (refresh 12624 < 14500), no inventory drift
