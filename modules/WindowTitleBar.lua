@@ -4,11 +4,12 @@ local _, NS = ...
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
 -- simulator's `SIM` text in its own color (simulator spec §6), each drawn only while minimized
 -- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
--- lock button at the left (RX-08, rolls UX design §3.7), the restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
+-- restriction badge, then the right-hand cluster: the lock button (RX-08, at the top right since
+-- RX-14), the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
 -- through NS.Window.SetButtonMark). Scan group is the Drops strip's in both layouts
 -- (modules/DropsStrip.lua, feedback-7 spec §4; compact's title-bar icon removed by feedback-16), and
--- the badge anchors to the layout toggle.
+-- the badge anchors to the lock button, the cluster's first.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
@@ -343,18 +344,20 @@ end
 --- lock mark reads unlocked dimmed and desaturated, locked at full strength.
 TB.UNLOCKED_ALPHA = 0.4
 
--- The lock button at the bar's left (RX-08, rolls UX design §3.7), the same in both layouts. A
--- click toggles `locked` through the write seam (NS.ToggleLock, the launcher's and the Lock frame
--- checkbox's write). Not the restriction badge, which wears the same mark in the restricted tone.
+-- The lock button (RX-08, rolls UX design §3.7), the same in both layouts: the right-hand cluster's
+-- first, immediately left of the layout toggle (RX-14, the owner's smoke ruling; it sat at the bar's
+-- left until then). A click toggles `locked` through the write seam (NS.ToggleLock, the launcher's
+-- and the Lock frame checkbox's write). Not the restriction badge, which wears the same mark in the
+-- restricted tone and stands left of the cluster.
 local function buildLock(f, bar)
     f.lockButton = iconButton(bar, "lock", "L", function() NS.ToggleLock() end)
-    f.lockButton:SetPoint("LEFT", bar, "LEFT", 6, 0)
+    f.lockButton:SetPoint("RIGHT", f.modeButton, "LEFT", -4, 0)
     NS.Window.AttachTooltip(f.lockButton, lockTip)
 end
 
+-- The right-hand cluster, right to left: close, minimize, the layout toggle, the lock (RX-14).
 local function buildControls(f, bar)
     local W = NS.Window
-    buildLock(f, bar)
     f.closeButton = NS.MakeCloseButton(bar, function() W.Close() end)
     local right, rightPoint = bar, "RIGHT"
     if f.closeButton then
@@ -369,8 +372,9 @@ local function buildControls(f, bar)
     f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
     f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
     W.AttachTooltip(f.modeButton, modeTip)
+    buildLock(f, bar)
     f.badge = buildBadge(bar)
-    f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
+    f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
@@ -395,9 +399,8 @@ function TB.Build(f, host)
     f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
-    -- A LEFT title stays clear of the lock button too (RX-08).
-    NS.Skin.TitleBar(bar, { text = f.title,
-        place = { left = TB.TITLE_RESERVE + K.ICON + 6, right = TB.TITLE_RESERVE } })
+    -- The bar's left is empty again (RX-14: the lock button joined the right-hand cluster).
+    NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
     f.simText = buildModeText(bar, f.title, L["SIM"], TB.SIM_TOKEN, TB.SimTip)

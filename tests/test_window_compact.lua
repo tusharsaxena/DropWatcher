@@ -117,7 +117,8 @@ test("compact: the title-bar toggle sits left of minimize, with a catalog mark",
     local pt = b.__points[1]
     assertEqual(pt[1], "RIGHT"); assertEqual(pt[2], f.minimizeButton); assertEqual(pt[3], "LEFT")
     assertTrue(f.scanButton == nil, "Scan group is the Drops strip's, in both layouts")
-    assertEqual(f.badge.__points[1][2], b, "the badge anchors to the toggle")
+    assertEqual(f.lockButton.__points[1][2], b, "the lock button left of it (RX-14)")
+    assertEqual(f.badge.__points[1][2], f.lockButton, "the badge anchors to the cluster's first, the lock")
     assertEqual(b.mark, "fullscreen-exit", "full: the shrink mark")
     assertTrue(b.art:IsShown() and not b.glyph:IsShown(), "the catalog mark, not the glyph")
 end)

@@ -482,7 +482,7 @@ Total.
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
 - shell: a double-click on the title bar expands a minimized window
-- shell: the lock button sits at the title bar's left, dimmed while unlocked, apart from the badge
+- shell: the lock button sits in the right-hand cluster left of the layout toggle, dimmed while unlocked, apart from the badge
 - shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both
 - shell: the lock button's tooltip names Lock frame on its canonical location, in both states
 - shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip
@@ -650,7 +650,7 @@ Total.
 - history card: shows the rolls rows
 - history card: a repaint reads each kept roll table back once, reusing it until the roll moves
 
-### test_compact_chrome.lua (29)
+### test_compact_chrome.lua (30)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIM shorten to TEST and SIM
@@ -663,8 +663,9 @@ Total.
 - chrome: compact and minimized in test mode, TEST shows beside the title and the two center together
 - chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line
 - chrome: the panes reserve the sim strip's height while a simulation runs
-- chrome: the badge collapses to its lock and the queued count at the left (after the lock button), its tooltip unchanged
-- chrome: the lock button stays at the left in compact, the badge beside it; a click locks
+- chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged
+- chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks
+- chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them
 - chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
 - chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
@@ -2908,7 +2909,7 @@ Total.
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
 | test_history_card.lua | 17 |
-| test_compact_chrome.lua | 29 |
+| test_compact_chrome.lua | 30 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 53 |
 | test_table_font.lua | 10 |
@@ -3008,4 +3009,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2486** |
+| **Total** | **2487** |

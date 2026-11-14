@@ -182,13 +182,15 @@ test("chrome: the panes reserve the sim strip's height while a simulation runs",
     assertEqual(f.panes.group.__points[1][5], base)
 end)
 
-test("chrome: the badge collapses to its lock and the queued count at the left (after the lock button), its tooltip unchanged", function()
+test("chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged", function()
     local NS, f, m = shown("compact")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
     m.advance(0)
     assertTrue(f.badge:IsShown())
     assertEqual(textOf(f.badge.text), "", "the lock alone")
-    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], f.lockButton)
+    -- RX-14: where the lock button left it, at the bar's left edge
+    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], f.titleBar)
+    assertEqual(f.badge.__points[1][3], "LEFT"); assertEqual(f.badge.__points[1][4], 6)
     NS.Asks.Queued = function() return { { kind = "ask", target = "Seta-Realm" }, { kind = "offer", target = "Bo-Realm" } } end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
     assertEqual(textOf(f.badge.text), "2")
@@ -196,24 +198,66 @@ test("chrome: the badge collapses to its lock and the queued count at the left (
     assertEqual(tip[1], "Encounter"); assertEqual(T.tipPlain(tip[5]), "• Queued: Ask to Seta-Realm")
     NS.SetWindowMode("full")
     assertEqual(textOf(f.badge.text), "Encounter · 2 queued")
-    assertEqual(f.badge.__points[1][2], f.modeButton, "back beside the layout toggle (Scan group is the strip's)")
+    assertEqual(f.badge.__points[1][1], "RIGHT")
+    assertEqual(f.badge.__points[1][2], f.lockButton, "full: left of the cluster, the lock its first button")
 end)
 
-test("chrome: the lock button stays at the left in compact, the badge beside it; a click locks", function()
-    -- RX-08 (rolls UX design §3.7): the same button in both layouts.
+-- RX-14 (plan M6, the owner's smoke ruling): the lock button joins the right-hand cluster in both
+-- layouts, immediately left of the layout toggle: lock, layout toggle, minimize, close.
+test("chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks", function()
     local NS, f, m = shown("compact")
     local b = f.lockButton
-    assertEqual(b.__points[1][1], "LEFT"); assertEqual(b.__points[1][2], f.titleBar)
+    -- red under: the RX-08 anchor, LEFT on the title bar
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
+    assertEqual(b.__points[1][3], "LEFT")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
     m.advance(0)
-    assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], b)
-    assertEqual(f.badge.__points[1][3], "RIGHT", "the badge after the lock button, never under it")
+    assertTrue(f.badge.__points[1][2] ~= b, "compact: the badge stays at the left, not on the lock")
     b:__fire("OnClick", "LeftButton")
     assertEqual(NS.addon.db.profile.locked, true)
     assertFalse(f.resizeGrip:IsShown())
     NS.SetWindowMode("full")
-    assertEqual(b.__points[1][2], f.titleBar, "full: still at the left")
-    assertEqual(f.badge.__points[1][2], f.modeButton)
+    assertEqual(b.__points[1][2], f.modeButton, "full: the same place")
+    assertEqual(f.badge.__points[1][2], b)
+    assertEqual(f.badge.__points[1][3], "LEFT", "full: the badge left of the lock, never under it")
+end)
+
+-- How far a cluster button's left edge stands from the bar's right edge, down its RIGHT anchors.
+local function fromRight(f, b)
+    local p = b.__points[1]
+    assertEqual(p[1], "RIGHT", "a cluster button hangs off its right edge")
+    assertTrue(p[4] <= 0, "each gap opens leftward")
+    local base = 0
+    if p[2] ~= f.titleBar then
+        assertEqual(p[3], "LEFT", "off its neighbor's left edge, so the two never overlap")
+        base = fromRight(f, p[2])
+    end
+    assertTrue(b:GetWidth() > 0)
+    return base - p[4] + b:GetWidth()
+end
+
+test("chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them", function()
+    local NS, f, m = shown("compact")
+    m.textCharWidth = 9   -- generous: GameFontNormal's widest glyphs
+    local K = NS.Constants.WINDOW
+    for _, mode in ipairs({ "compact", "full" }) do
+        NS.SetWindowMode(mode)
+        local minW = mode == "compact" and K.COMPACT_MIN_W or K.MIN_WIDTH
+        local order = { f.closeButton, f.minimizeButton, f.modeButton, f.lockButton }
+        local last = 0
+        for i, b in ipairs(order) do
+            local edge = fromRight(f, b)
+            assertTrue(edge > last, mode .. ": button " .. i .. " left of the one before")
+            last = edge
+        end
+        local half = (minW - 2) / 2   -- the bar is inset 1 px on each side
+        local title = f.title:GetUnboundedStringWidth()
+        local word = 11 * #NS.CompactChrome.ModeWord("test", mode == "compact")
+        -- TEST beside the title, the two centered together in compact; the title alone centered in full
+        local gap = NS.WindowTitleBar.MODE_GAP
+        local reach = mode == "compact" and (title + gap + word) / 2 or title / 2 + gap + word
+        assertTrue(reach < half - last, mode .. ": the title clears the lock button at " .. minW .. " px")
+    end
 end)
 
 test("chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon", function()

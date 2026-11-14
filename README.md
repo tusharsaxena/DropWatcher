@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2486%2F2486_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2487%2F2487_passing-green)
 
 Supports Retail and WoW Forever. When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -46,7 +46,7 @@ It watches what your party or raid receives and compares each item with your gea
 
 ## Usage
 
-Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon or raid, in a key, delve or scenario (those three are Retail only), or playing solo, the window opens by itself when someone loots something it shows (on WoW Forever a group in the open world does too). A window that opened by itself closes again about 10 seconds after the last roll ends and the last drop comes in, though never while your pointer is over it, and one you opened yourself stays put. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and the lock button at the left of the title bar (or `/dw lock`) pins the window in place and hides its resize grip.
+Type `/dw show`, or right-click the minimap button. You often won't need to: in a dungeon or raid, in a key, delve or scenario (those three are Retail only), or playing solo, the window opens by itself when someone loots something it shows (on WoW Forever a group in the open world does too). A window that opened by itself closes again about 10 seconds after the last roll ends and the last drop comes in, though never while your pointer is over it, and one you opened yourself stays put. During a run it's a narrow column of cards (the compact view), and afterwards it goes back to the full table. The button next to minimize switches between them, as do `/dw compact` and `/dw full`. Bind a key under Options → Keybindings → Ka0s Drop Watcher if you like, and the lock button at the top right of the title bar, next to the layout toggle (or `/dw lock`) pins the window in place and hides its resize grip.
 
 **Drops** lists every drop, yours included, under the boss or key it came from.
 
@@ -104,7 +104,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Symptom | Fix |
 |---|---|
 | The window does not open | Check **General visibility** is not set to Never, and that the addon is enabled (`/dw enable`). |
-| The window will not move | It is locked. Click the lock button at the left of the title bar, untick **Lock frame** or type `/dw unlock`. |
+| The window will not move | It is locked. Click the lock button at the top right of the title bar, untick **Lock frame** or type `/dw unlock`. |
 | The window closed by itself | That's auto-close: a window that opened by itself closes once the rolls and drops stop. Click inside it to keep it open, or see the FAQ above to turn it off. |
 | Test mode turned itself off | Combat ends test mode. Turn it back on after the fight. |
 | A simulation will not start | It refuses in a group, inside an instance, in combat and while test mode is on, and says which. Leave the group or instance, or wait out the fight. |

@@ -29,7 +29,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..11 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10); LibKa0s v1.85.0's sim checkbox re-cut, the panel unchanged (PANEL-11, R6-RV2) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..9 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button and the grip it hides (STATE-8, RX-08); auto-close (STATE-9, RX-10) |
+| STATE-1..9 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button at the top right and the grip it hides (STATE-8, RX-08, RX-14); auto-close (STATE-9, RX-10) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..4 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat; both combat edges announced under the Combat restriction (COMBAT-4, DW-I11) |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
@@ -498,15 +498,16 @@ the sample (Rolling now reads test mode's own store, as Drops reads test mode's 
 → the sample roll is gone and Rolling now shows only the live rolls, none when there are none.
 Result:
 
-**STATE-8. The title bar's lock button (RX-08, rolls UX ruling 8).** Client: both. The headless
-`test_window_shell` and `test_compact_chrome` cover the toggle. Open the window → at the title bar's
-left, a lock mark, dimmed while the window is unlocked; hover → `Lock the window`, its rows naming
+**STATE-8. The title bar's lock button (RX-08, rolls UX ruling 8; at the top right since RX-14).**
+Client: both. The headless `test_window_shell` and `test_compact_chrome` cover the toggle and its
+place. Open the window → at the title bar's top right, the first of the cluster (lock, layout toggle,
+minimize, close), a lock mark, dimmed while the window is unlocked; the bar's left is empty; hover → `Lock the window`, its rows naming
 `/dw lock` and `Lock frame on General > Master controls`. Click it → the mark is at full strength, the tooltip reads
 `Unlock the window`, the window can't be dragged or resized, and the resize grip in the footer's
 corner is gone; General > Master controls' Lock frame is ticked, and so is the minimap menu's Locked. Click again →
 unlocked, the grip back. `/dw lock` and `/dw unlock` → the button follows at once. `/dw compact` →
-the same button at the compact title bar's left, the restriction badge (when one shows) just after
-it, the title clear of both. Minimized → no grip, locked or not. Result:
+the same button in the same place, immediately left of the layout toggle, the restriction badge
+(when one shows) at the bar's left, the title clear of both, the window at its narrowest too. Minimized → no grip, locked or not. Result:
 
 **STATE-9. Auto-close (RX-10, rolls UX ruling 4; Review Focus 4).** Client: both. The headless
 `test_window_autoclose` covers the timer. Settings › Drops › Situations → on the line beneath
@@ -3357,8 +3358,8 @@ history left both strips for Settings; HIST-6.) Result: passed in the client, 20
 **COMPACT-5. The compact chrome and the Filters ▾ menu (DW-C4).** Client: both. Switch to the compact layout →
 the title reads `Drop Watcher`, centered; turn test mode on → `TEST` in red beside it, the two
 centered together, and the yellow strip's shorter text, on two lines if the window is narrow; run
-`/dw sim start` → `SIM` in cyan instead. Scan group is an icon button with its tooltip; the layout
-toggle, minimize and close sit at the right. Start a boss encounter with an ask queued → the badge
+`/dw sim start` → `SIM` in cyan instead. Scan group is an icon button with its tooltip; the lock
+button, the layout toggle, minimize and close sit at the right. Start a boss encounter with an ask queued → the badge
 at the bar's left is its lock and `1`, its tooltip the full reason and queue. The tabs read `Drops`
 and `History` (since DW-E3; `Group`, `Mine · n` and `History` before), with their tooltips. The filter bar is one row: View, the
 search box reading `Filter…`, and `Filters` on the right. Click Filters → a small panel under it

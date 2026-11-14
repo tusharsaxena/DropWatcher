@@ -830,11 +830,14 @@ test("shell: a double-click on the title bar expands a minimized window", functi
 end)
 
 -- RX-08 (rolls UX design §3.7, ruling 8): the header lock button, bound to `locked`.
-test("shell: the lock button sits at the title bar's left, dimmed while unlocked, apart from the badge", function()
+-- RX-14 (plan M6, the owner's smoke ruling): it moved to the right-hand cluster, left of the layout toggle.
+test("shell: the lock button sits in the right-hand cluster left of the layout toggle, dimmed while unlocked, apart from the badge", function()
     local NS, f = shown()
     local b = f.lockButton
     assertTrue(b ~= nil and b ~= f.badge, "its own button, not the restriction badge")
-    assertEqual(b.__points[1][1], "LEFT"); assertEqual(b.__points[1][2], f.titleBar)
+    -- red under: the RX-08 anchor, LEFT on the title bar
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
+    assertEqual(b.__points[1][3], "LEFT", "immediately left of the layout toggle")
     assertEqual(b.mark, "lock")
     assertTrue(b.art:IsShown(), "the catalog's lock mark")
     assertTrue(b.art:GetAlpha() < 1 and b.art:IsDesaturated(), "unlocked: the same mark, dimmed")
