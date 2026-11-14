@@ -46,8 +46,8 @@ local _, NS = ...
 --
 -- MASTER LOOT (Forever port design §8, plan DW-FP19). Once AddMasterLoot (modules/SimEvents.lua's
 -- MasterLoot, `/dw sim ml`) has run, the session's group answers master loot with that member as
--- the master looter (their unit, whole name and GUID) and a threshold of Epic (ML_THRESHOLD: the
--- sim plays WoW Forever's rule on both clients), and the loot window answers the item as one
+-- the master looter (their unit, whole name and GUID) holding an Epic (ML_QUALITY) over the group's
+-- Uncommon loot threshold (LOOT_THRESHOLD, rolls UX RX-03), and the loot window answers the item as one
 -- locked slot of an invented corpse until AssignMasterLoot hands it out. Before it, a simulated
 -- group plays group loot and opens no loot window.
 --
@@ -343,8 +343,12 @@ end
 
 -- ── master loot ─────────────────────────────────────────────────────────────────────────────
 
---- The master-loot threshold a simulated master looter answers: Epic.
-W.ML_THRESHOLD = 4
+--- The quality of the item a simulated master looter holds: Epic.
+W.ML_QUALITY = 4
+
+--- The loot threshold a simulated group answers (GetLootThreshold, rolls UX RX-03): Uncommon, the
+--- client's default.
+W.LOOT_THRESHOLD = 2
 
 -- The corpses a simulated master-loot item lies on, counted across sessions (the pending store
 -- remembers a key once it closed).
@@ -360,7 +364,7 @@ function W.AddMasterLoot(spec)
     if not (w and spec.member and spec.link) then return nil end
     mlSeq = mlSeq + 1
     local source = ("Creature-0-3900-0-0-%d-SIM%06X"):format(tonumber(spec.encounterID) or 0, mlSeq)
-    local loot = { member = spec.member, link = spec.link, quality = NS.ItemRead.QualityOf(spec.link) or W.ML_THRESHOLD,
+    local loot = { member = spec.member, link = spec.link, quality = NS.ItemRead.QualityOf(spec.link) or W.ML_QUALITY,
         sourceGUID = source, key = source .. ":" .. tostring(itemID(spec.link)), assigned = false }
     w.masterLoot = loot
     w.mlKeys = w.mlKeys or {}
@@ -744,9 +748,8 @@ function P.LootRollInfo(live, rollID)
 end
 
 -- The loot method and the loot window (DW-FP18, DW-FP19): a simulated group rolls under group
--- loot and opens no loot window (the threshold is the client's) until `/dw sim ml` makes a member
--- its master looter; from then on it is master loot, and the window holds the item until it is
--- handed out.
+-- loot and opens no loot window until `/dw sim ml` makes a member its master looter; from then on
+-- it is master loot, and the window holds the item until it is handed out.
 function P.LootMethod(live)
     local w = group()
     if not w then return live() end
@@ -754,10 +757,15 @@ function P.LootMethod(live)
     if loot then
         local m = loot.member
         return { method = "master", isML = false, mlUnit = m.unit, mlName = m.name, mlRealm = m.realm,
-            mlGUID = m.guid, threshold = W.ML_THRESHOLD }
+            mlGUID = m.guid }
     end
-    local real = live()
-    return { method = "group", isML = false, threshold = real and real.threshold or nil }
+    return { method = "group", isML = false }
+end
+
+-- A simulated group's loot threshold: Uncommon (LOOT_THRESHOLD), so the master looter's Epic is held.
+function P.LootThreshold(live)
+    if not group() then return live() end
+    return W.LOOT_THRESHOLD
 end
 
 function P.LootSlots(live)

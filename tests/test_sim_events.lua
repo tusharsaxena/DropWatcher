@@ -713,10 +713,13 @@ test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignmen
     local NS, m = sim({ before = function(_, mock)
         mock.addItem(link(102, 500), ring(500))
         mock.inventory.player[11], mock.inventory.player[12] = link(102, 500), link(102, 500)
+        mock.lootThreshold = 5   -- the client's own, which the simulated group answers over (RX-03)
     end })
     local E, P = NS.SimEvents, NS.Pending
     local before = #drops(NS)
     NS.addon:OnSlashCommand("sim ml")
+    assertEqual(NS.Compat.LootThreshold(), NS.SimWorld.LOOT_THRESHOLD, "the simulated group's loot threshold")
+    assertEqual(NS.SimWorld.LOOT_THRESHOLD, 2, "Uncommon, the client's default")
     m.advance(0)
     assertEqual(printed(m, "Simulated master loot: "), 1)
     local items = P.All()
@@ -749,6 +752,7 @@ test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignmen
     m.advance(0)
     assertEqual(#P.All(), 0, "the stop took the held item away")
     assertEqual(NS.Compat.LootMethod(), nil, "the client's own loot method again (none in the mock)")
+    assertEqual(NS.Compat.LootThreshold(), 5, "the client's own loot threshold again")
 end)
 
 test("sim ml: refused without a running simulation", function()

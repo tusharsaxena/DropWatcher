@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/PendingML.lua — the master-loot kind of the pending store (Forever port design §6, plan
--- DW-FP18): an item in the loot window you opened, at or above the master-loot threshold, held
+-- DW-FP18): an item in the loot window you opened, at or above the group's loot threshold, held
 -- beside the feed as "awaiting master looter" until a receipt names who got it. Split out of
 -- modules/Pending.lua, which keeps the store, the roll kind and the verdict re-judge; this file
 -- holds and closes its items through NS.Pending.Hold / Close.
@@ -16,7 +16,8 @@ local _, NS = ...
 --
 -- THE SOURCE. On LOOT_READY / LOOT_OPENED, while the group's method is master loot and you are not
 -- the master looter (Compat.LootMethod), every slot of the window (Compat.LootSlots) with a
--- readable link, a plain source GUID and a quality at or above the threshold becomes one item, if
+-- readable link, a plain source GUID and a quality at or above the group's loot threshold
+-- (Compat.LootThreshold, rolls UX RX-03) becomes one item, if
 -- it passes the feed's pre-looter gates (design §11.1, NS.LootFeed.GateFor). `locked` is allowed:
 -- it is the master looter's to give. The key is the source GUID and the item ID, so re-opening the
 -- corpse adds nothing, and a key once assigned or gated is not held again. Whether a raider who is
@@ -112,12 +113,14 @@ local function open(slot, lm)
     end
 end
 
---- LOOT_READY / LOOT_OPENED: hold every slot at or above the master-loot threshold, under master
---- loot, when you are not the master looter.
+--- LOOT_READY / LOOT_OPENED: hold every slot at or above the group's loot threshold, under master
+--- loot, when you are not the master looter. The threshold is read once per opening and rides on
+--- the loot method's (fresh) table to the item.
 function P.OnLootOpened()
     if stoodDown() then return end
     local lm = NS.Compat.LootMethod()
     if not (lm and lm.method == "master") or lm.isML then return end
+    lm.threshold = NS.Compat.LootThreshold()
     for _, slot in ipairs(NS.Compat.LootSlots()) do
         if slot.link and slot.sourceGUID and slot.quality and slot.quality >= lm.threshold then open(slot, lm) end
     end

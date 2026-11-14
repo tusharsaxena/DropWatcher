@@ -17,8 +17,8 @@
 ```
 
 Beside the feed, the pending store (`modules/Pending.lua`) holds the drops seen but not yet
-assigned: an open group-loot roll from the loot history, and on master loot an Epic awaiting the
-master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
+assigned: an open group-loot roll from the loot history, and on master loot an item at or above the
+group's loot threshold awaiting the master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
 it hands over to it when the drop resolves (below, *Rolls and master-loot pending*). The pipeline is
 the same on Retail and WoW Forever; where a stage differs per client, its section says so, and
 `ARCHITECTURE.md` → Per-client features lists every difference.

@@ -23,6 +23,8 @@
 --                  GetActiveLootRollIDs()'s list
 --   lootMethod     C_PartyInfo.GetLootMethod()'s three answers as { method, masterLootPartyID,
 --                  masterLooterRaidID } (nil: a case that leaves it unset)
+--   lootThreshold  GetLootThreshold()'s answer, the group's loot threshold (nil: a case that leaves it
+--                  unset; rolls UX RX-03)
 --   lootSlots      the open loot window's slots: { link, texture, name, count, quality, locked,
 --                  source }; GetNumLootItems is their count, GetLootSlotLink / GetLootSlotInfo read
 --                  one, GetLootSourceInfo answers its `source` GUID and the count
@@ -123,6 +125,8 @@ return function(M)
         if type(lm) ~= "table" then return lm end
         return lm[1], lm[2], lm[3]
     end
+
+    M.GetLootThreshold = function() return M.lootThreshold end
 
     M.lootSlots = {}
     M.GetNumLootItems = function() return #M.lootSlots end

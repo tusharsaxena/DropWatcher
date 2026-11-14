@@ -668,11 +668,11 @@ end
 --- Seconds the simulated master looter takes to hand the item out.
 E.ML_ASSIGN = 20
 
--- The pool's drops of at least the master-loot threshold's quality, else every drop.
+-- The pool's drops of at least the simulated master-loot item's quality (Epic), else every drop.
 local function mlCandidates(drops)
     local out = {}
     for _, entry in ipairs(drops) do
-        if (NS.ItemRead.QualityOf(entry.link) or 0) >= NS.SimWorld.ML_THRESHOLD then out[#out + 1] = entry end
+        if (NS.ItemRead.QualityOf(entry.link) or 0) >= NS.SimWorld.ML_QUALITY then out[#out + 1] = entry end
     end
     return #out > 0 and out or drops
 end

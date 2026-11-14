@@ -1186,7 +1186,7 @@ Total.
 - compat loot: LootRollInfo answers bop from bindOnPickUp
 - compat loot: LootRollTimeLeft answers your popup's time left in seconds
 - loot method: ML unit and name from masterLooterRaidID
-- loot method: threshold falls back to 4
+- loot threshold: the group's loot threshold, else Uncommon
 - loot slots: every slot with its link, quality, lock and source
 - compat loot: no member raises with every API gone
 - compat loot: the simulator's seam wraps every loot member (the TOC order)
@@ -1821,7 +1821,7 @@ Total.
 - pending: your verdict is judged again on a gear change
 - pending: a pending score is judged again on the score retry
 
-### test_pending_ml.lua (9)
+### test_pending_ml.lua (13)
 
 - ml pending: an Epic slot under master loot opens one ml item; re-opening the corpse does not duplicate it
 - ml pending: a receipt for that item assigns it and the drop carries askedML
@@ -1832,6 +1832,10 @@ Total.
 - ml pending: leaving the group or the instance expires it
 - ml pending: under group loot nothing is pending from the loot window
 - ml pending: standing down drops the items and their timers
+- ml pending: a Rare under master loot with an Uncommon threshold is held
+- ml pending: an Uncommon under a Rare threshold is not held
+- ml pending: with no threshold read, Uncommon and up is held
+- ml pending: master loot (Guild Master Loot on Retail) holds at the group's threshold
 
 ### test_ask_ml.lua (12)
 
@@ -2890,7 +2894,7 @@ Total.
 | test_inspect.lua | 34 |
 | test_feed.lua | 54 |
 | test_pending.lua | 16 |
-| test_pending_ml.lua | 9 |
+| test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 7 |
 | test_window_pending.lua | 11 |
@@ -2943,4 +2947,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2425** |
+| **Total** | **2429** |

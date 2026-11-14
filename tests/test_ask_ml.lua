@@ -49,7 +49,7 @@ local function raid()
     return NS, m
 end
 
-local TOP = T.forever and 4 or 5   -- the client's master-loot threshold
+local TOP = 4   -- an Epic, at or above the group's loot threshold (rolls UX RX-03)
 
 -- The boss corpse's loot window holding one ring at `ilvl` (620 by default, an upgrade for you)
 -- at the threshold's quality; answers the ml item it opens.

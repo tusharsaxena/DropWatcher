@@ -138,7 +138,8 @@ the code reads every case the design leaves open, module by module, is in
   derived time over 5 minutes (mismatched units) shows no time at all (rolls UX RX-02). A trash or
   open-world roll is keyed by whatever encounter the client files it under (P-R3). Nothing of a roll
   is saved across a reload: an open roll comes back from the client (`PLAYER_ENTERING_WORLD`).
-- **Master-loot pending** (Forever port design §6, DW-FP18) holds an Epic only when the loot window
+- **Master-loot pending** (Forever port design §6, DW-FP18) holds an item at or above the group's
+  loot threshold (`GetLootThreshold`, Uncommon when unread; rolls UX RX-03) only when the loot window
   you opened lists it, and whether a raider who is not the master looter sees those slots at all is
   probe P-ML1; if not, nothing is ever held and the drop arrives as a plain receipt when it is given.
   An item is keyed by its corpse and item ID (`sourceGUID:itemID`), so **two copies of one item on

@@ -339,18 +339,24 @@ test("loot method: ML unit and name from masterLooterRaidID", function()
     assertNil(Compat.LootMethod(), "no API")
 end)
 
-test("loot method: threshold falls back to 4", function()
+test("loot threshold: the group's loot threshold, else Uncommon", function()
+    -- RX-03 (rolls UX design ruling 6): master-loot pending holds at the group's loot threshold
+    -- (GetLootThreshold), not MasterLootQualityThreshold, which only gates Blizzard's confirm popup.
+    -- red under: no Compat.LootThreshold, or LootMethod still answering the LootConsts threshold
     local Compat, m = fresh()
     m.lootMethod = { 2, 0, nil }
-    m.Constants = { LootConsts = { MasterLootQualityThreshold = 5 }, LootConsts_Camelot = { MasterLootQualityThreshold = 4 } }
-    assertEqual(Compat.LootMethod().threshold, 5, "LootConsts first: the runtime key on both clients")
-    m.Constants = { LootConsts_Camelot = { MasterLootQualityThreshold = 4 } }
-    assertEqual(Compat.LootMethod().threshold, 4, "then LootConsts_Camelot")
-    m.Constants = { LootConsts = { MasterLootQualityThreshold = T.secret(3) } }
-    local fallback = Compat.ClientKey() == "forever" and 4 or 5
-    assertEqual(Compat.LootMethod().threshold, fallback, "a secret is skipped")
-    m.Constants = nil
-    assertEqual(Compat.LootMethod().threshold, fallback, "4 on Forever, 5 on Retail")
+    m.Constants = { LootConsts = { MasterLootQualityThreshold = 5 } }
+    m.lootThreshold = 3
+    assertEqual(Compat.LootThreshold(), 3, "the group's threshold")
+    assertNil(Compat.LootMethod().threshold, "the loot method carries no threshold of its own")
+    m.lootThreshold = T.secret(4)
+    assertEqual(Compat.LootThreshold(), 2, "a secret answers Uncommon")
+    m.lootThreshold = "4"
+    assertEqual(Compat.LootThreshold(), 2, "not a number")
+    m.lootThreshold = nil
+    assertEqual(Compat.LootThreshold(), 2, "no answer")
+    m.GetLootThreshold = nil
+    assertEqual(Compat.LootThreshold(), 2, "no API")
 end)
 
 test("loot slots: every slot with its link, quality, lock and source", function()

@@ -3773,8 +3773,8 @@ on the popup. It resolves into exactly one drop with its ROLLS box. Result:
 
 **ROLLS-7. Guild Master Loot: the awaiting item and Ask master looter (DW-FP18, DW-FP19).** Client:
 Retail. In a guild group under Guild Master Loot, as a raider who is not the master looter, open a
-boss's corpse whose loot is at or above the threshold → Drops' Rolling now section gains a row per
-Epic: `Master looter: <name>` and `awaiting master looter`, and an Ask button when it is an upgrade or
+boss's corpse whose loot is at or above the group's loot threshold → Drops' Rolling now section gains a
+row per item at or above it (rolls UX RX-03; a Rare under an Uncommon threshold too): `Master looter: <name>` and `awaiting master looter`, and an Ask button when it is an upgrade or
 sidegrade for you. Click Ask → one whisper to the master looter with the `Ask the master looter`
 template, its gain written `+N`; the button reads Asked. The master looter hands it out → the row goes
 and the drop lands under its boss, its History entry marked as asked. Re-opening the corpse adds no

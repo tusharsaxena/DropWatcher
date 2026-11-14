@@ -24,9 +24,11 @@ entering a dungeon and on entering a raid: `/dump C_PartyInfo.GetLootMethod()`. 
 read the second and third returns and compare them with `/dump GetRaidRosterInfo(1)`'s eleventh. The
 code reads the master looter from those returns (`Compat.LootMethod`). (R1 #3, R4 #14) Result:
 
-**P-LC. The loot threshold constants.** `/dump Constants.LootConsts, Constants.LootConsts_Camelot`.
-Read which table exists and its threshold. If `LootConsts` is nil, note it: Blizzard's own
-`GroupLootFrame.lua` reads it. (R1 #4) Result:
+**P-LC. The loot threshold.** `/dump GetLootThreshold(), Constants.LootConsts, Constants.LootConsts_Camelot`.
+Master-loot pending holds at `GetLootThreshold()` (rolls UX RX-03): confirm it answers the group's
+threshold as the party frame's Loot Threshold menu shows it, and that it moves when the leader changes
+it. The constants' `MasterLootQualityThreshold` only gates Blizzard's distribution-confirm popup; read
+which table exists for the record. (R1 #4) Result:
 
 ## Rolls
 

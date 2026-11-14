@@ -1076,7 +1076,8 @@ local SEAM_ONLY = { "C_TooltipInfo", "SendChatMessage", "InChatMessagingLockdown
     "GetInventoryItemLink", "GetContainerNumSlots", "GetContainerItemLink", "C_Container",
     "NotifyInspect", "ClearInspectPlayer", "GetInspectSpecialization", "CheckInteractDistance",
     "CanInspect%f[^%w_]", "GetInventoryItemID", "InspectFrame", "hooksecurefunc", "C_LootHistory",
-    "GetMapUIInfo", "GetLootRollTimeLeft", "CursorHasItem", "ClearCursor", "GetItemIconByID", "C_ClassColor", "RAID_CLASS_COLORS",
+    "GetMapUIInfo", "GetLootRollTimeLeft", "GetLootThreshold", "CursorHasItem", "ClearCursor", "GetItemIconByID",
+    "C_ClassColor", "RAID_CLASS_COLORS",
     "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink", "DressUpLink", "GetTradePlayerItemLink",
     "GetTradeTargetItemLink", "MenuUtil", "GetMouseFoc", "PixelUtil", "EJ_%u%l", "C_EncounterJournal", "EncounterJournal%f[^%w_]",
     "WOW_PROJECT_%u+", "RegionalUniqueNamesEnabled", "UnitGroupRolesAssigned" }
