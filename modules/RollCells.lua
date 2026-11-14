@@ -284,6 +284,16 @@ local function groupRow(g, list)
     return row(("%s %s"):format(markOf(g), L["%s (%d)"]:format(g.word, #list)), table.concat(names, ", "))
 end
 
+-- The tooltip's foot, appended to tip: Tied while the highest rolls are equal and nobody has won,
+-- the time left while open, and your verdict (opts.verdict, a cell { text, tone }).
+local function footerRows(tip, roll, opts)
+    if roll.isTied and not roll.winner then tip[#tip + 1] = row(L["Tied"], L["the highest rolls are equal"]) end
+    local t = RC.Timer(roll, opts.now, opts.rollID)
+    if t then tip[#tip + 1] = row(L["Time left"], t) end
+    local v = type(opts.verdict) == "table" and opts.verdict or nil
+    if v and v.text then tip[#tip + 1] = row(L["You"], v.text, v.tone) end
+end
+
 --- Every roll in a tooltip (rolls UX design §3.2): the item's name (`Rolls` with no link), then a
 --- row per choice in RC.GROUPS' order, `• [dice] Need (3): Brakk 87, Seta 12, Lyra`, highest roll
 --- first, those still to roll last; the time left while open, and your verdict (`opts.verdict`, a
@@ -304,11 +314,7 @@ function RC.Tooltip(roll, opts)
     for _, g in ipairs(RC.GROUPS) do
         if by[g.key] then tip[#tip + 1] = groupRow(g, by[g.key]) end
     end
-    if roll.isTied and not roll.winner then tip[#tip + 1] = row(L["Tied"], L["the highest rolls are equal"]) end
-    local t = RC.Timer(roll, opts.now, opts.rollID)
-    if t then tip[#tip + 1] = row(L["Time left"], t) end
-    local v = type(opts.verdict) == "table" and opts.verdict or nil
-    if v and v.text then tip[#tip + 1] = row(L["You"], v.text, v.tone) end
+    footerRows(tip, roll, opts)
     return tip
 end
 
