@@ -130,7 +130,7 @@ test("mine cells: Offer and Announce follow the ask's lifecycle; the Trade butto
         assertEqual(b.text, text, state); assertTrue(#b.tip >= 2, state)
     end
     assertFalse(M.OfferButton("sent", nil, "Seta").enabled)
-    assertEqual(M.OfferButton("queued", nil, "Seta").icon, "clock")
+    assertEqual(M.OfferButton("queued", nil, "Seta").icon, "ph:hourglass")
     assertEqual(T.tipPlainJoined(M.OfferButton("failed", "throttled", "Seta").tip),
         "Retry | • To: Seta | • Not sent: throttled | Click to try again.")
     assertEqual(M.AnnounceButton("sent").text, "Announced")
@@ -146,7 +146,8 @@ end)
 local function shipped(NS, icon, where)
     assertTrue(type(icon) == "string", where .. ": an icon")
     assertTrue(NS.Icon(icon) ~= nil, where .. ": " .. icon .. " is in the catalog")
-    local f = io.open("libs/LibKa0s/media/icons/" .. icon .. ".tga", "rb")
+    local file = icon:gsub("^ph:", "phosphor/"):gsub("^gi:", "game-icons/")
+    local f = io.open("libs/LibKa0s/media/icons/" .. file .. ".tga", "rb")
     assertTrue(f ~= nil, where .. ": " .. icon .. ".tga ships")
     if f then f:close() end
 end
@@ -174,13 +175,13 @@ test("action icons: the detail card's actions wear their state's icon, Ask and O
     local other = drop({ isMine = false, looter = { name = "Seta-Realm", guid = "Player-1-SETA", classFile = "PRIEST" },
         me = { verdict = "upgrade", ilvlDelta = 10, reasons = {} } })
     assertTrue(DC.Actions(other, { askState = "ready", now = NOW })[1].enabled, "an ask is offered")
-    local want = { ready = "chat", queued = "clock", sent = "confirm", failed = "reset" }
+    local want = { ready = "chat", queued = "ph:hourglass", sent = "confirm", failed = "reset" }
     for state, icon in pairs(want) do
         local acts = DC.Actions(other, { askState = state, now = NOW })
         for _, a in ipairs(acts) do shipped(NS, a.icon, state .. " " .. a.key) end
         assertEqual(acts[1].icon, icon, "Ask " .. state)
     end
-    local own = { ready = "external-link", failed = "external-link", queued = "clock", sent = "confirm", tradedAway = "confirm" }
+    local own = { ready = "external-link", failed = "external-link", queued = "ph:hourglass", sent = "confirm", tradedAway = "confirm" }
     for tone, icon in pairs(own) do
         local acts = DC.Actions(drop(), { offerTone = tone, now = NOW })
         for _, a in ipairs(acts) do shipped(NS, a.icon, tone .. " " .. a.key) end

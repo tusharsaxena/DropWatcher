@@ -546,7 +546,7 @@ test("toast edge: Ask goes through the shared host handler, and the button follo
     f.ask:GetScript("OnClick")(f.ask)
     assertEqual(pressed[1], 1)
     assertEqual(f.ask.label:GetText(), "Queued")
-    assertTrue(f.ask.art:GetTexture() == NS.Icon("clock"), "Queued wears clock")
+    assertTrue(f.ask.art:GetTexture() == NS.Icon("ph:hourglass"), "Queued wears the hourglass")
     NS.Asks.StateOf = function() return "sent" end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "sent", "ask", "Seta-Testrealm")
     assertEqual(f.ask.label:GetText(), "Asked"); assertFalse(f.ask:IsEnabled())

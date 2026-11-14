@@ -398,7 +398,7 @@ end
 -- (feedback-10 spec §1).
 local OWN_OFFER_LOOK = {
     ready = { text = L["Offer"], icon = "external-link" }, failed = { text = L["Offer"], icon = "external-link" },
-    queued = { text = L["Queued"], icon = "clock", line = L["an offer waits for chat to allow it"] },
+    queued = { text = L["Queued"], icon = "ph:hourglass", line = L["an offer waits for chat to allow it"] },
     sent = { text = L["Offered"], icon = "confirm", line = L["offered (the panel shows to whom)"] },
     tradedAway = { text = L["Traded"], icon = "confirm", line = L["traded away"] },
 }
@@ -448,7 +448,7 @@ end
 local function lookTable(ready, sent, readyIcon)
     return {
         ready  = { text = ready, icon = readyIcon, enabled = true },
-        queued = { text = L["Queued"], icon = "clock", enabled = true },
+        queued = { text = L["Queued"], icon = "ph:hourglass", enabled = true },
         sent   = { text = sent, icon = "confirm", enabled = false },
         failed = { text = L["Retry"], icon = "reset", enabled = true },
     }

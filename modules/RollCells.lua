@@ -29,7 +29,7 @@ local _, NS = ...
 -- THE COUNT LINE (rolls UX design §3.2, rulings 1 and 2; RC.CountLine, RC.Counts) is the open
 -- roll's summary and sits beside a resolved roll's result in the Rolls box: an icon and a count per
 -- choice, in RC.GROUPS' order, Need (the dice; an off-spec Need too), Greed (the coin; a Transmog
--- too), Disenchant (Retail only), Pass, and still to roll (the LibKa0s `clock` icon, in the
+-- too), Disenchant (Retail only), Pass, and still to roll (the LibKa0s `ph:hourglass` icon, in the
 -- muted tone), a choice nobody made left out. THE TOOLTIP (RC.Tooltip) lists every roll: the item's
 -- name, each choice with its players highest roll first, those still to roll, the time left while
 -- open, and your verdict at the foot. A name is shown only as the reader gave it plain (`?`
@@ -76,7 +76,7 @@ RC.TONE = { [0] = "good", [1] = "offspec", [2] = "cyan", [3] = "yellow", [4] = "
 -- The count line's and the tooltip's choices, in order: each with its word, the game's roll-button
 -- art (`glyph`) or a LibKa0s icon (`icon`, tinted `tone`); GROUP_OF names the group each state
 -- counts under.
-RC.WAITING_ICON = "clock"   -- the declared LibKa0s icon (CLAUDE.md `LibKa0s icons:`)
+RC.WAITING_ICON = "ph:hourglass"   -- the declared LibKa0s icon (CLAUDE.md `LibKa0s icons:`; RX-13)
 RC.GROUPS = {
     { key = "need", word = L["Need"], glyph = DICE },
     { key = "greed", word = L["Greed"], glyph = COIN },
@@ -233,7 +233,7 @@ local function markOf(g)
 end
 
 --- The count line: each choice's icon and how many made it, in RC.GROUPS' order, two spaces apart
---- (`[dice] 3  [coin] 2  [pass] 1  [clock] 4`); "" for a table with nobody on it.
+--- (`[dice] 3  [coin] 2  [pass] 1  [hourglass] 4`); "" for a table with nobody on it.
 --- @param roll table|nil the plain roll table
 --- @return string
 function RC.CountLine(roll)

@@ -676,7 +676,7 @@ local function offerAction(o)
     return a
 end
 
--- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `clock`, `confirm`, `reset`), as on the row.
+-- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `ph:hourglass`, `confirm`, `reset`), as on the row.
 local function askAction(drop, ask)
     local who = looterName(drop)
     if not ask.offered then   -- No action, gray, its reason (feedback-11 spec §1)

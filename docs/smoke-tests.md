@@ -102,7 +102,7 @@ than falling back to text, so this pass is the backstop the headless gate cannot
   which addons were enabled.
 - SM-DW-2: every declared icon draws, none blank: the title bar's minimize and add marks, fullscreen-enter
   and fullscreen-exit; the lock badge; the group-header and footer chevrons (down, right, up); the
-  dropdown's chevron and tick; the action buttons (chat, confirm, clock, reset, ban, external-link,
+  dropdown's chevron and tick; the action buttons (chat, confirm, the Phosphor hourglass, reset, ban, external-link,
   speech-bubble, people, link-intact, edit, transfer, cancel); the tooltip marks (arrow-up, arrow-down,
   arrow-right, transfer); the item cell's help fallback; and the `/dw test` banner's info mark.
 - SM-DW-3: the library-drawn set draws: the debug console's close, copy and clear (`/dw debug`), the
@@ -489,7 +489,7 @@ your own History is back. Result: passed in the client, 2026-10-16 (the owner).
 headless `test_test_mode` and `test_window_pending` cover the shape. Solo, out of combat, `/dw test` →
 above the boss groups on Drops a `Rolling now (1)` header holds one open roll on a drop of the last
 sample boss: Me reads an upgrade, the count line reads three by the dice, two by the coin, one by the pass and the rest by the
-clock (RX-06), and the time left does not move (a sample is never ticked). Click the row → its ROLLS
+hourglass (RX-06, RX-13), and the time left does not move (a sample is never ticked). Click the row → its ROLLS
 box opens under it: you and eight members, each in class color with the choice word and no number;
 click again → it closes. `/dw compact` → the same roll is a card above the groups; `/dw full`. Open
 History → one sample group's drop keeps a roll table: expand it → its ROLLS box lists the final
@@ -793,7 +793,7 @@ the bottom. Result: passed in the client, 2026-10-23 (the owner).
 click `Ask` (red: your move, DW-D1) → the looter is whispered your ask template and the chat line
 `Whispered <name>: [item]` appears; the button reads `Asked` with a check mark, yellow and grayed; its
 tooltip says it cannot be sent twice. In a boss fight, click `Ask` on another such drop → it reads `Queued`
-with a clock mark and the title bar's badge counts it; click it again → it is canceled and reads `Ask`;
+with an hourglass mark and the title bar's badge counts it; click it again → it is canceled and reads `Ask`;
 click once more and let the fight end → it is sent and reads `Asked`. A drop with Trade `No`, or one
 that is not an upgrade for you, shows a dash whose tooltip says why (superseded by feedback-11, 2026-10-14: the gray `No action` button with its reason; FEED-72); a drop of your own shows `Offer`
 instead (since DW-E2: FEED-44). Result: passed in the client, 2026-10-23 (the owner).
@@ -3784,7 +3784,7 @@ often the loot history fires, a trash roll's encounter, your popup's own timer, 
 group loot (a Normal or Heroic dungeon), kill a boss whose drop goes to a roll → while the roll is
 open a `Rolling now (N)` header sits above the boss groups on Drops, one row per open roll: the item,
 your verdict in Me (the same mark and words its drop row would get), the roll count line (the dice,
-coin, Disenchant on Retail only, pass and clock icons, each with how many chose it so far; RX-06),
+coin, Disenchant on Retail only, pass and hourglass icons, each with how many chose it so far; RX-06),
 whose tooltip lists every roll by choice with your verdict at the foot, and the time left, counting
 down each second. Click the row → its ROLLS box opens under it: every player in class color with the choice
 word, the numbers once the client gives them. Click the header → the section collapses like a boss
@@ -3841,7 +3841,7 @@ to a raider at all is probe P-ML1; record what it showed. Result:
 Client: both. The headless `test_roll_cells` and `test_window_pending` cover the counts and the
 order. During an open group-loot roll (or `/dw sim start dungeon`, then `/dw sim roll`) → Rolling
 now's row, and its compact card, read one line of icons with a count after each: the dice for Need
-(an off-spec Need too), the coin for Greed (a Transmog too), the cross for Pass and the clock for
+(an off-spec Need too), the coin for Greed (a Transmog too), the cross for Pass and the hourglass for
 those still to roll, a choice nobody made left out; the counts move as the choices land. Hover the
 row → the tooltip names the item, then a row per choice (`Need (3): Brakk 87, Seta 12, Lyra`), the
 numbers highest first, each name in its class color and yours marked `[YOU]`, then those still to

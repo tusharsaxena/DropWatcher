@@ -246,7 +246,7 @@ test("cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure", functio
     assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertEqual(ready.icon, "chat", "a whisper to the looter (feedback-7 spec §1)")
     assertEqual(T.tipPlainJoined(ready.tip), "Ask | • Whispers: Seta | • Template: your ask template | • Limit: one per item per looter")
     local queued = W.Ask(drop(), "queued")
-    assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "clock"); assertTrue(queued.enabled, "a click cancels it")
+    assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "ph:hourglass"); assertTrue(queued.enabled, "a click cancels it")
     assertEqual(T.tipPlainJoined(queued.tip), "Queued | • To: Seta | • Waiting: chat is restricted right now | • Sends: when it lifts"
         .. " | Click to cancel it.")
     local sent = W.Ask(drop(), "sent")

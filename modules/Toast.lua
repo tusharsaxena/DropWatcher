@@ -387,7 +387,7 @@ local function askState(rec)
     return NS.Asks.StateOf("ask", target, rec.id)
 end
 
--- The Ask in the row's look: its state's word and mark (feedback-7 spec §1: `chat`, `clock`, ...).
+-- The Ask in the row's look: its state's word and mark (feedback-7 spec §1: `chat`, `ph:hourglass`, ...).
 local function paintAsk(f, rec)
     local a = NS.WindowCells.Ask(rec, askState(rec))
     local b = f.ask

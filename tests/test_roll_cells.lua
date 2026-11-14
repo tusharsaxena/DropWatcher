@@ -33,12 +33,12 @@ end
 
 -- The count line as the player reads it: each icon as its texture's name (T.marks), color codes out.
 local DICE, COIN, DE, PASS, WAIT = "[UI-GroupLoot-Dice-Up]", "[UI-GroupLoot-Coin-Up]", "[UI-GroupLoot-DE-Up]",
-    "[UI-GroupLoot-Pass-Up]", "[clock]"
+    "[UI-GroupLoot-Pass-Up]", "[hourglass]"
 local function seen(s) return plain(T.marks(s)) end
 
 test("roll cells: the count line is an icon and a count per choice", function()
     -- RX-06 (rolls UX design §3.2, rulings 1 and 2): Need (dice), Greed (coin), Pass, still to roll
-    -- (the declared LibKa0s `clock` icon: CLAUDE.md's `LibKa0s icons:` line ships no hourglass), each
+    -- (the declared Phosphor hourglass, `ph:hourglass`, on the owner's ruling of 2026-11-15, RX-13), each
     -- with its count, the choices with none left out.
     -- red under: the word summary `Need 3 · Greed 2 · Pass 1 · waiting 4`
     local C = RC()
@@ -60,8 +60,9 @@ test("roll cells: the count line is an icon and a count per choice", function()
     assertEqual(C.CountLine(nil), "")
     assertEqual(C.Summary({ rolls = {} }, 110).text, "no one has chosen yet")
     -- The still-to-roll icon is one this addon ships; with the media library absent it is the word.
-    local fh = io.open("libs/LibKa0s/media/icons/" .. C.WAITING_ICON .. ".tga", "rb")
-    assertTrue(fh ~= nil, "the icon ships under libs/LibKa0s/media/icons/")
+    assertEqual(C.WAITING_ICON, "ph:hourglass", "the hourglass, not the clock (RX-13)")
+    local fh = io.open("libs/LibKa0s/media/icons/phosphor/hourglass.tga", "rb")
+    assertTrue(fh ~= nil, "the icon ships under libs/LibKa0s/media/icons/phosphor/")
     if fh then fh:close() end
     local NS = T.newAddon()
     NS.Icon = function() return nil end

@@ -19,7 +19,7 @@ local function plain(s) return (tostring(s):gsub("|c%x%x%x%x%x%x%x%x", ""):gsub(
 local function textOf(region) return region and region:GetText() end
 -- The roll count line as the player reads it (RX-06): each icon as its texture's name, colors out.
 local function line(s) return plain(T.marks(s)) end
-local COUNTS = "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [clock] 2"
+local COUNTS = "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [hourglass] 2"
 local function yOf(frame) return select(5, frame:GetPoint(1)) end
 
 local function player(name, state, roll, isWinner, classFile)
@@ -311,7 +311,7 @@ test("window pending: Rolling now's count line has every roll in its tooltip, in
         local tip = line(T.tipPlainJoined(tipLines, "\n"))
         assertTrue(tip:find("^Band of Embers") ~= nil, where .. ": the item's name first: " .. tip)
         assertTrue(tip:find("• [UI-GroupLoot-Dice-Up] Need (1): Brakk 87\n", 1, true) ~= nil, where .. ": " .. tip)
-        assertTrue(tip:find("• [clock] Waiting (2): Dorn, Seta", 1, true) ~= nil, where .. ": " .. tip)
+        assertTrue(tip:find("• [hourglass] Waiting (2): Dorn, Seta", 1, true) ~= nil, where .. ": " .. tip)
         assertTrue(tip:find("• You: %+20$") ~= nil, where .. ": the verdict at the foot: " .. tip)
     end
     local NS, _, wp = shown({ drop() }, { item() })
@@ -338,7 +338,7 @@ test("detail card: a resolved drop with rec.roll has a Rolls box", function()
     assertEqual(plain(textOf(card.rolls.summary)), "Won by Brakk (Need 87)")
     -- RX-06 (ruling 2): the resolved drop's Rolls box draws the same count line beside its result.
     assertTrue(card.rolls.counts:IsShown(), "the count line")
-    assertEqual(line(textOf(card.rolls.counts)), "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [clock] 2")
+    assertEqual(line(textOf(card.rolls.counts)), "[UI-GroupLoot-Dice-Up] 1  [UI-GroupLoot-Coin-Up] 1  [hourglass] 2")
     local bt = line(T.tipPlainJoined(card.rolls.countsHit.tipLines, "\n"))
     assertTrue(bt:find("Brakk 87 (won it)", 1, true) ~= nil and bt:find("^Band of Embers") ~= nil, bt)
     assertEqual(textOf(card.rolls.lines[1].name), "Brakk"); assertEqual(textOf(card.rolls.lines[1].mark), "Won")

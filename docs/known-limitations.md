@@ -152,8 +152,6 @@ the code reads every case the design leaves open, module by module, is in
   (`Enum.EncounterLootDropRollState`, 0 to 5) have no Disenchant, and no reader today supplies one
   (`RollCells.DISENCHANT` is the addon's own key, waiting for a source), so on a live roll a Disenchant
   choice is counted under whatever state the history files it as (unconfirmed; Greed is likely).
-  The still-to-roll mark is the declared LibKa0s `clock` icon: the design's hourglass (`ph:hourglass`)
-  is in the catalog but not in this addon's `LibKa0s icons:` line, and shipping it is a re-vendor.
 - **Master-loot pending** (Forever port design §6, DW-FP18) holds an item at or above the group's
   loot threshold (`GetLootThreshold`, Uncommon when unread; rolls UX RX-03) only when the loot window
   you opened lists it, and whether a raider who is not the master looter sees those slots at all is

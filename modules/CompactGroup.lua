@@ -610,7 +610,7 @@ end
 -- item button spanning them and the quality bar at the left edge, as a drop's card.
 --   line 1  the item's name, in its quality color (the game's tooltip)
 --   line 2  You, then your verdict (the glyph and the words, in the verdict's tone)
---   line 3  the roll summary (the count line, `[dice] 3  [coin] 2  [clock] 4`, or `Won by Name
+--   line 3  the roll summary (the count line, `[dice] 3  [coin] 2  [hourglass] 4`, or `Won by Name
 --           (Need 87)`), hovering every roll (NS.RollCells.Tooltip, rolls UX RX-06)
 --   line 4  the time left (`0:42`), or `awaiting master looter`
 -- No action button on a roll: it is rolled on the game's own popup. A master-loot item has the Ask

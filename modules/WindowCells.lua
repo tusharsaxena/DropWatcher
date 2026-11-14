@@ -863,7 +863,7 @@ end
 local ASK_LOOK = {
     ready  = { text = L["Ask"], icon = "chat", enabled = true },
     traded = { text = L["Traded"], icon = "confirm", enabled = false },
-    queued = { text = L["Queued"], icon = "clock", enabled = true },
+    queued = { text = L["Queued"], icon = "ph:hourglass", enabled = true },
     sent   = { text = L["Asked"], icon = "confirm", enabled = false },
     failed = { text = L["Retry"], icon = "reset", enabled = true },
 }
@@ -940,7 +940,7 @@ end
 
 --- The Ask button's look: `offered` false is WC.NoAction's (the gray No action with the reason,
 --- feedback-11 spec §1); else the label, the
---- catalog mark (`chat` ask, `clock` queued, `confirm` asked or traded, `reset` retry) and whether
+--- catalog mark (`chat` ask, `ph:hourglass` queued, `confirm` asked or traded, `reset` retry) and whether
 --- it can be clicked.
 --- @param drop table
 --- @param state string|nil NS.Asks.StateOf's state (`ready`, `queued`, `sent`, `failed`), or

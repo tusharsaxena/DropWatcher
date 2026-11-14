@@ -44,5 +44,5 @@ Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lu
 without an explicit instruction.
 
 Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.102.0 (MIT).
-LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, clock, close, confirm, copy, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, move, people, ph:hourglass, reset, settings, speech-bubble, transfer, volume-high.
+LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, close, confirm, copy, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, move, people, ph:hourglass, reset, settings, speech-bubble, transfer, volume-high.
 
