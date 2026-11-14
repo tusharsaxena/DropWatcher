@@ -240,3 +240,25 @@ test("autoclose: the stand-down cancels the countdown", function()
     assertFalse(NS.WindowAutoClose.Armed())
     assertEqual(liveCountdowns(NS, m), 0)
 end)
+
+-- RX-12 review fix: the visibility ladder can hide an auto-opened window (General visibility
+-- outOfCombat, in combat). The count waits while it is hidden, and starts over once it shows.
+-- red under: fire reading only NS.State.windowOpen (it closed the hidden window)
+test("autoclose: a window the combat ladder hides is not closed; the count starts when it shows", function()
+    local NS, m = inDungeon({ visibility = "outOfCombat" })
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    announce(NS, drop(1))
+    assertEqual(NS.State.windowOpen, true, "the drop auto-opened it")
+    assertFalse(NS.IsWindowShown(), "the ladder hides it in combat")
+    m.advance(45)
+    assertEqual(NS.State.windowOpen, true, "not closed while hidden")
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertTrue(NS.IsWindowShown(), "combat over: the auto-open shows")
+    NS.Window.Frame():__fire("OnShow")  -- the client fires it on Show; the mock frame does not
+    m.advance(9.9)
+    assertTrue(NS.IsWindowShown(), "a full count after it showed")
+    m.advance(0.2)
+    assertFalse(NS.IsWindowShown())
+end)

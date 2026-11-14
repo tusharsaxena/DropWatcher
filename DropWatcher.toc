@@ -391,7 +391,8 @@ modules\WindowCompact.lua
 # LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.WindowAutoClose (auto-close: a window that opened by itself closes once
 # idle, rolls UX design §3.6); registers its DropAdded and PendingChanged receivers on its own NS.Bus
-# target at load. NS.Window (above), NS.Pending and NS.Setting are read at call time.
+# target and adds a visibility listener to NS.Window (above) at load. NS.Pending and NS.Setting are
+# read at call time.
 modules\WindowAutoClose.lua
 # LOAD-BEARING: takes NS.CharFilter (modules\CharFilter.lua, above) as a load-time upvalue. Publishes
 # NS.WindowFilterBar (the filter bar, each tab's filter state and the row predicates); reads

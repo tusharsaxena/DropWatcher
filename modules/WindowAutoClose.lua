@@ -14,7 +14,9 @@ local _, NS = ...
 -- shown feed) and the pointer is not over it; otherwise it starts over, so the window closes a full count after the last
 -- roll closed or the pointer left. `window.autoClose.enabled` off, or the master `autoOpen` off, and
 -- the count lets go when it runs out. Combat does not matter: the close is a Hide of an owned frame
--- with no protected child (events-frames-taint), the same as the auto-open's Show.
+-- with no protected child (events-frames-taint), the same as the auto-open's Show. A window the
+-- visibility ladder hides (General visibility, in or out of combat) is never closed by the count:
+-- it waits, and starts over when the window shows.
 
 NS.WindowAutoClose = NS.WindowAutoClose or {}
 local AC = NS.WindowAutoClose
@@ -48,8 +50,11 @@ local function restart()
     if armed then timer = C_Timer.NewTimer(seconds(), function() fire() end) end
 end
 
--- Nothing in Rolling now, and the pointer elsewhere.
+-- On screen, nothing in Rolling now, and the pointer elsewhere. A window the visibility ladder
+-- hides (General visibility, in or out of combat) keeps NS.State.windowOpen true and is not idle:
+-- it waits, and the count starts over when it shows (the visibility listener below).
 local function idle(f)
+    if not (f and f:IsShown()) then return false end
     if NS.Pending.Count(NS.Window.FeedName()) > 0 then return false end
     return not (f and f:IsMouseOver())
 end
@@ -134,6 +139,9 @@ local function listen()
     target:RegisterMessage(NS.MSG.PENDING_CHANGED, function() AC.Bump() end)
 end
 listen()
+
+-- The ladder showed a window it hid: a full count from when it is on screen (Bump checks armed).
+NS.Window.AddVisibilityListener(function(shown) if shown then AC.Bump() end end)
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     AC.Disarm()
