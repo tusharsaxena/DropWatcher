@@ -1971,7 +1971,7 @@ Total.
 - roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
 - roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
 
-### test_rolls_panel.lua (64)
+### test_rolls_panel.lua (65)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -2035,6 +2035,7 @@ Total.
 - rolls panel: a click on an unfolded group's row folds it back to one line
 - rolls panel: a group growing into a raid folds the panel at once (GROUP_ROSTER_UPDATE)
 - rolls panel: its width scales with the window's text size, as the window's layout unit
+- rolls panel: a Font size change resizes the shown panel at once
 - rolls panel: the mode strip wraps to two lines when its words do not fit, as the compact window's
 - rolls panel: the window names the panel among its docked frames, for its row tooltips
 
@@ -3056,7 +3057,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 20 |
-| test_rolls_panel.lua | 64 |
+| test_rolls_panel.lua | 65 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3105,4 +3106,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2579** |
+| **Total** | **2580** |

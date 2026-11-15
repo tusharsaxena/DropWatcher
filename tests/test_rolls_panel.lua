@@ -1193,6 +1193,21 @@ test("rolls panel: its width scales with the window's text size, as the window's
     assertEqual(p:GetWidth(), 250, "Default: the plain width")
 end)
 
+-- red under: the Font size row repainting the window alone, so the shown panel kept its old width
+-- until its next paint (none at all once every roll is done)
+test("rolls panel: a Font size change resizes the shown panel at once", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    win(m, d)
+    NS.SchemaRuntime.Set("rolls.panel.linger", 60)
+    local p = NS.RollsPanel.Drawn().panel
+    assertEqual(p:GetWidth(), 290)
+    NS.SchemaRuntime.Set("window.fontSize", 15)
+    assertEqual(p:GetWidth(), 435, "the row's change reaches the panel")
+    NS.SchemaRuntime.Set("window.fontSize", 0)
+    assertEqual(p:GetWidth(), 290, "and back to Default")
+end)
+
 -- red under: the strip's words cut on one line with an ellipsis
 test("rolls panel: the mode strip wraps to two lines when its words do not fit, as the compact window's", function()
     local NS, m = shown()

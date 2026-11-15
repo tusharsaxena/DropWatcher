@@ -868,6 +868,7 @@ paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a
     ticker while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
 GROUP_ROSTER_UPDATE ─> OnRollsPanelRosterEvent ─> a shown panel repaints (raid mode at once, RX-28)
+Window › Layout › Font size (window.fontSize's onChange) ─> RollsPanel.Refresh (its width, RX-28)
 WindowAutoClose idle() ─> false while RollsPanel.HoldsWindow() (a block, not dismissed, RX-28)
 test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
 /dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
