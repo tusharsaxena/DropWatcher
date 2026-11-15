@@ -1,0 +1,147 @@
+{
+ "build": "1.60.1.70938",
+ "candidates": [
+  {
+   "apply": "weapons",
+   "cls": "DRUID",
+   "group": "weapon",
+   "key": "weapon:DRUID:POLEARM",
+   "name": "DRUID POLEARM",
+   "notes": [
+    "SkillRaceClassInfo 229 Polearms from level 20",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "DRUID:POLEARM",
+   "token": "POLEARM"
+  },
+  {
+   "apply": "weapons",
+   "cls": "ROGUE",
+   "group": "weapon",
+   "key": "weapon:ROGUE:AXE_1H",
+   "name": "ROGUE AXE_1H",
+   "notes": [
+    "SkillRaceClassInfo 44 Axes",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "ROGUE:AXE_1H",
+   "token": "AXE_1H"
+  },
+  {
+   "apply": "hand",
+   "group": "dualWield",
+   "key": "dualWield:SHAMAN",
+   "name": "SHAMAN",
+   "notes": [
+    "SkillRaceClassInfo 118 Dual Wield",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "SHAMAN"
+  }
+ ],
+ "checked": {
+  "ARMOR": 9,
+  "ARMOR_EARLY": 4,
+  "CLASS_ID": 9,
+  "RELIC": 3,
+  "SPECS": 27,
+  "SPEC_INDEX": 0,
+  "WEAPONS": 65,
+  "enum literals": 56,
+  "skill lines": 20
+ },
+ "date": "2026-11-15",
+ "flags": [
+  {
+   "build": "Feral Combat",
+   "key": "shipped:tree-name:DRUID:2",
+   "kind": "tree-name",
+   "notes": [],
+   "shipped": "Feral: Pawn 2 for damage, 3 to tank",
+   "subject": "DRUID:2"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:enum:RECIPE_SUBCLASS:INSCRIPTION",
+   "kind": "enum",
+   "notes": [],
+   "shipped": "Inscription = 11",
+   "subject": "RECIPE_SUBCLASS:INSCRIPTION"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:enum:RECIPE_SUBCLASS:JEWELCRAFTING",
+   "kind": "enum",
+   "notes": [],
+   "shipped": "Jewelcrafting = 10",
+   "subject": "RECIPE_SUBCLASS:JEWELCRAFTING"
+  },
+  {
+   "build": "Pet",
+   "key": "shipped:enum:MISC_SUBCLASS:COMPANION_PET",
+   "kind": "enum",
+   "notes": [],
+   "shipped": "CompanionPet = 2",
+   "subject": "MISC_SUBCLASS:COMPANION_PET"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:enum:MISC_SUBCLASS:MOUNT_EQUIPMENT",
+   "kind": "enum",
+   "notes": [],
+   "shipped": "MountEquipment = 6",
+   "subject": "MISC_SUBCLASS:MOUNT_EQUIPMENT"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:skill-line:RECIPE_SKILL_LINE:773",
+   "kind": "skill-line",
+   "notes": [],
+   "shipped": "INSCRIPTION",
+   "subject": "RECIPE_SKILL_LINE:773"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:skill-line:RECIPE_SKILL_LINE:755",
+   "kind": "skill-line",
+   "notes": [],
+   "shipped": "JEWELCRAFTING",
+   "subject": "RECIPE_SKILL_LINE:755"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:skill-line:PROFESSION:755",
+   "kind": "skill-line",
+   "notes": [],
+   "shipped": "Jewelcrafting",
+   "subject": "PROFESSION:755"
+  },
+  {
+   "build": "absent",
+   "key": "shipped:skill-line:PROFESSION:773",
+   "kind": "skill-line",
+   "notes": [],
+   "shipped": "Inscription",
+   "subject": "PROFESSION:773"
+  }
+ ],
+ "flavor": "forever",
+ "product": "wowf",
+ "seedFiles": [
+  "core/ClassDataForever.lua",
+  "core/Constants.lua",
+  "modules/CollectCells.lua",
+  "core/ItemRead.lua"
+ ],
+ "served": {
+  "ChrClasses": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "ChrSpecialization": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "ItemClass": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "ItemSubClass": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "SkillLine": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "SkillLineAbility": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "SkillRaceClassInfo": "Sun, 15 Nov 2026 16:41:52 GMT",
+  "TalentTab": "Sun, 15 Nov 2026 16:41:52 GMT"
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}

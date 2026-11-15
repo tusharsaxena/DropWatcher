@@ -1,0 +1,50 @@
+{
+  "dualWield:SHAMAN": {
+    "reason": "needs owner review: SkillRaceClassInfo has a Shaman Dual Wield row (Availability 0, no level), but research R4 §5 records no shaman dual wield in vanilla and the row is likely a talent- or rune-granted skill, which a class-wide flag cannot express",
+    "ruling": "reject"
+  },
+  "shipped:enum:MISC_SUBCLASS:COMPANION_PET": {
+    "reason": "Same id and meaning on Forever (Miscellaneous subclass 2), where the build names it Pet instead of Companion Pets",
+    "ruling": "keep"
+  },
+  "shipped:enum:MISC_SUBCLASS:MOUNT_EQUIPMENT": {
+    "reason": "Shared Retail fallback literal; Forever has no Mount Equipment subclass, so the literal is never matched there",
+    "ruling": "keep"
+  },
+  "shipped:enum:RECIPE_SUBCLASS:INSCRIPTION": {
+    "reason": "core/Constants.lua's literals are Retail's documented fallbacks shared by both clients; no Forever item carries recipe subclass 11, so the literal is never matched there",
+    "ruling": "keep"
+  },
+  "shipped:enum:RECIPE_SUBCLASS:JEWELCRAFTING": {
+    "reason": "Shared Retail fallback literal; no Forever item carries recipe subclass 10, so it is never matched there",
+    "ruling": "keep"
+  },
+  "shipped:skill-line:PROFESSION:755": {
+    "reason": "modules/CollectCells.lua's profession name for a Retail-only skill line; never looked up on Forever",
+    "ruling": "keep"
+  },
+  "shipped:skill-line:PROFESSION:773": {
+    "reason": "modules/CollectCells.lua's profession name for a Retail-only skill line; never looked up on Forever",
+    "ruling": "keep"
+  },
+  "shipped:skill-line:RECIPE_SKILL_LINE:755": {
+    "reason": "Jewelcrafting does not exist on Forever; the shared map's row is never reached there (no recipe subclass 10)",
+    "ruling": "keep"
+  },
+  "shipped:skill-line:RECIPE_SKILL_LINE:773": {
+    "reason": "Inscription does not exist on Forever; the shared map's row is never reached there (no recipe subclass 11)",
+    "ruling": "keep"
+  },
+  "shipped:tree-name:DRUID:2": {
+    "reason": "The comment names the tree Feral, TalentTab calls it Feral Combat; same tree (OrderIndex 1), the short name is the comment's own",
+    "ruling": "keep"
+  },
+  "weapon:DRUID:POLEARM": {
+    "reason": "needs owner review: SkillRaceClassInfo has a Druid-only Polearms row from level 20 (SkillLineAbility agrees), but the Forever list follows the vanilla proficiencies (research R4 §5: Druids no polearms) and tests/test_class_data.lua pins no polearms for druids; the rows are INFERRED until probed, so the owner decides after an in-game check",
+    "ruling": "reject"
+  },
+  "weapon:ROGUE:AXE_1H": {
+    "reason": "needs owner review: SkillRaceClassInfo grants Axes (44) to Rogues (rows shared with Warriors, by race; SkillLineAbility agrees), but the Forever list follows the vanilla proficiencies (research R4 §5, no axes for rogues); INFERRED until probed, so the owner decides after an in-game check",
+    "ruling": "reject"
+  }
+}

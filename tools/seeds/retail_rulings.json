@@ -1,0 +1,30 @@
+{
+  "weapon:DEMONHUNTER:DAGGER": {
+    "reason": "needs owner review: SkillRaceClassInfo grants Daggers (173) to Demon Hunters on 12.1.5 and already on 10.2.7, 11.2.7 and 12.0.7, and SkillLineAbility agrees, but the table leaves them out and nothing records why; confirm in game whether a Demon Hunter can equip a dagger before shipping it",
+    "ruling": "reject"
+  },
+  "weapon:ROGUE:BOWS": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone",
+    "ruling": "reject"
+  },
+  "weapon:ROGUE:CROSSBOW": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone",
+    "ruling": "reject"
+  },
+  "weapon:ROGUE:GUNS": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone",
+    "ruling": "reject"
+  },
+  "weapon:WARRIOR:BOWS": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone (the header's own example, a warrior's bow)",
+    "ruling": "reject"
+  },
+  "weapon:WARRIOR:CROSSBOW": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone",
+    "ruling": "reject"
+  },
+  "weapon:WARRIOR:GUNS": {
+    "reason": "Precedent, core/ClassData.lua header (WEAPONS): a skill the class has but no loot of its primary stat drops for is left out, so a ranged weapon reads as the hunter's alone",
+    "ruling": "reject"
+  }
+}
