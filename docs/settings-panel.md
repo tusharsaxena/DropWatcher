@@ -270,7 +270,7 @@ Alerts page holds the toast's rows. The owner can move it at the merge gate.
 
 **Panel** (rolls panel design §3.5, RX-17; both clients): **Show the Rolls panel beside the window**
 (`rolls.panel.enabled`, on), **Side** (`rolls.panel.side`, a Right / Left dropdown; its tooltip says it
-flips when the screen has no room), **Keep the panel open after the last roll** (`rolls.panel.linger`,
+flips when the screen has no room), **Keep the panel open after the last roll (seconds, 0 = at once)** (`rolls.panel.linger`,
 a 0 to 60 slider, whole seconds, default 10; RX-21's panel-level linger: finished rolls stay until
 every roll is over, then the panel stays that long and closes, a new roll canceling the count) and **Fold Pass and Waiting in a raid**
 (`rolls.panel.foldInRaid`, on; raid mode, a group of more than 5 or a roll of more than 5 players,

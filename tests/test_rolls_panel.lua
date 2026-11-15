@@ -118,7 +118,7 @@ test("rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the s
     end
     local linger = S.FindRow("rolls.panel.linger")
     assertEqual(linger.min, 0); assertEqual(linger.max, 60)
-    assertEqual(linger.label, "Keep the panel open after the last roll", "a panel-level linger (RX-21)")
+    assertEqual(linger.label, "Keep the panel open after the last roll (seconds, 0 = at once)", "its unit and sentinel (options-ui-§21)")
     assertFalse(linger.validate(61)); assertFalse(linger.validate(2.5)); assertTrue(linger.validate(0))
     for _, path in ipairs({ "rolls.panel.side", "rolls.panel.linger", "rolls.panel.foldInRaid" }) do
         local row = S.FindRow(path)

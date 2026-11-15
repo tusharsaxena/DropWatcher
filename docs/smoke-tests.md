@@ -3985,7 +3985,7 @@ second runs; when the second ends both stay about 10 seconds, then the panel clo
 another roll during those 10 seconds → the count stops and both finished rolls stay with the new one.
 Rest the pointer on the panel as the last roll ends and keep it there past 10 seconds → nothing
 closes; move the pointer off (from the body, the scroll bar, a button or the strip too) → the count
-starts over, about 10 seconds from then. Keep the panel open after the last roll: 0 → the panel
+starts over, about 10 seconds from then. Keep the panel open after the last roll (seconds, 0 = at once): 0 → the panel
 closes as the last roll ends; 60 → about a minute. An auto-opened window (STATE-9, STATE-10) does not
 close while the panel holds a roll, and closes its own count later. Result:
 

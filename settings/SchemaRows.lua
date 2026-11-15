@@ -283,7 +283,7 @@ local function rollsPanel(D)
     pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
         L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
         sub)
-    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep the panel open after the last roll"],
+    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep the panel open after the last roll (seconds, 0 = at once)"],
         L["Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."],
         with(sub, { validate = wholeIn(0, 60) }))
     bool("rolls.panel.foldInRaid", D.foldInRaid, L["Fold Pass and Waiting in a raid"],
