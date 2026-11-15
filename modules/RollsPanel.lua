@@ -560,11 +560,16 @@ paint = function()
 end
 
 -- The pointer left the panel (or its close button, which takes the mouse): every finished roll's
--- count starts over, so nothing leaves while it is read.
+-- count starts over, so nothing leaves while it is read. The finished blocks are listed first: a
+-- linger of 0 leaves at once, and a leave takes its block out of `blocks`.
 onLeave = function()
     if hovered() then return end
+    local done = {}
     for _, b in ipairs(blocks) do
-        if b.done then startLinger(b) end
+        if b.done then done[#done + 1] = b end
+    end
+    for _, b in ipairs(done) do
+        if byId[b.id] == b then startLinger(b) end
     end
 end
 

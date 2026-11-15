@@ -320,6 +320,24 @@ test("rolls panel: the pointer over the panel holds a finished roll; leaving res
     assertFalse(NS.RollsPanel.HasBlocks())
 end)
 
+-- red under: onLeave dropping blocks from the list it walks (a linger of 0 leaves at once, so the
+-- walk skipped the block after each one that left, and that one stayed held with no timer)
+test("rolls panel: with a linger of 0, leaving the panel lets every held roll go", function()
+    local NS, m = shown({ ["rolls.panel.linger"] = 0 })
+    local d1 = rollOpens(m, "2900:1", LINK)
+    local d2 = rollOpens(m, "2900:2", LINK2)
+    local p = NS.RollsPanel.Drawn().panel
+    p.__mouseOver = true
+    win(m, d1, 1)
+    win(m, d2, 2)
+    assertEqual(#NS.RollsPanel.Drawn().blocks, 2, "both held while hovered")
+    p.__mouseOver = false
+    p:__fire("OnLeave")
+    m.advance(1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "both left")
+    assertFalse(NS.RollsPanel.IsShown())
+end)
+
 -- red under: the scroll body (which takes the pointer) leaving the panel without restarting the count
 test("rolls panel: leaving the panel from its scroll body restarts a held roll's count", function()
     local NS, m = shown()
