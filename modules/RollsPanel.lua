@@ -390,21 +390,37 @@ local function newLine(p)
     return f
 end
 
-local function buttonTip(word, what, hint)
-    return function() return word, NS.TipMarks.Row(what, L["every item in the Rolls panel"]), NS.TipMarks.Hint(hint) end
+-- Whether any listed item is open: the toggle then collapses every one (RX-25).
+local function anyExpanded()
+    for _, b in ipairs(blocks) do
+        if not b.collapsed then return true end
+    end
+    return false
 end
 
--- Expand all and Collapse all (ruling A2): the catalog's chevrons, as the tabs' footer pair.
-local function buildFoldButtons(p)
-    local TB = NS.WindowTitleBar
-    p.collapseButton = TB.IconButton(p, "chevron-up", "^", function() setAll(true) end)
-    p.expandButton = TB.IconButton(p, "chevron-down", "v", function() setAll(false) end)
-    NS.Window.AttachTooltip(p.collapseButton,
-        buttonTip(L["Collapse all"], L["Closes"], L["Expand all opens them again."]))
-    NS.Window.AttachTooltip(p.expandButton,
-        buttonTip(L["Expand all"], L["Opens"], L["Collapse all closes them again."]))
-    for _, b in ipairs({ p.collapseButton, p.expandButton }) do
-        b:HookScript("OnLeave", function() onLeave() end)
+local function foldTip()
+    local rest = L["every item in the Rolls panel"]
+    if anyExpanded() then
+        return L["Collapse all"], NS.TipMarks.Row(L["Closes"], rest), NS.TipMarks.Hint(L["Expand all opens them again."])
+    end
+    return L["Expand all"], NS.TipMarks.Row(L["Opens"], rest), NS.TipMarks.Hint(L["Collapse all closes them again."])
+end
+
+-- Expand all and Collapse all, one toggle (RX-25 ruling: they are mutually exclusive): Collapse
+-- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down.
+local function buildFoldButton(p)
+    p.foldButton = NS.WindowTitleBar.IconButton(p, "chevron-up", "^", function() setAll(anyExpanded()) end)
+    NS.Window.AttachTooltip(p.foldButton, foldTip)
+    p.foldButton:HookScript("OnLeave", function() onLeave() end)
+end
+
+-- The toggle's mark follows the items on every paint (a header's click, a new roll, Expand or
+-- Collapse all, a refresh).
+local function paintFoldButton(p)
+    if anyExpanded() then
+        NS.WindowTitleBar.SetIconMark(p.foldButton, "chevron-up", "^")
+    else
+        NS.WindowTitleBar.SetIconMark(p.foldButton, "chevron-down", "v")
     end
 end
 
@@ -420,8 +436,8 @@ local function buildTitle(p)
     p.title:SetText(L["Rolls"])
     NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
     p.closeButton = NS.MakeCloseButton(p, function() RP.Close() end)
-    buildFoldButtons(p)
-    local right = { p.collapseButton, p.expandButton }
+    buildFoldButton(p)
+    local right = { p.foldButton }
     if p.closeButton then
         p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
         p.closeButton:HookScript("OnLeave", function() onLeave() end)
@@ -430,11 +446,10 @@ local function buildTitle(p)
                 NS.TipMarks.Row(L["Turn off"], L["Show the Rolls panel beside the window on Drops > Rolls > Panel"])
         end)
         table.insert(right, 1, p.closeButton)
-        p.collapseButton:SetPoint("RIGHT", p.closeButton, "LEFT", -4, 0)
+        p.foldButton:SetPoint("RIGHT", p.closeButton, "LEFT", -4, 0)
     else
-        p.collapseButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
+        p.foldButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
     end
-    p.expandButton:SetPoint("RIGHT", p.collapseButton, "LEFT", -4, 0)
     -- The band ApplySkin draws carries the title and the buttons, as the Offer panel's (R5-WIN).
     NS.Skin.Header(p, { title = p.title, right = right, bars = { p.titleBar } })
 end
@@ -713,6 +728,7 @@ paint = function()
         y = paintBlock(panel, y, b, view)
     end
     panel.raid = view.raid
+    paintFoldButton(panel)
     local top = paintStrips(panel, view)
     panel.empty:SetShown(#blocks == 0)
     panel.empty:ClearAllPoints()
@@ -743,7 +759,7 @@ onHeaderClick = function(h)
     paint()
 end
 
--- Expand all (false) or Collapse all (true).
+-- Expand all (false) or Collapse all (true): the title bar's one toggle.
 setAll = function(collapsed)
     for _, b in ipairs(blocks) do b.collapsed = collapsed end
     paint()

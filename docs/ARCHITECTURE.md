@@ -99,7 +99,7 @@ one-line responsibility and why its position is load-bearing or conventional is 
   of more than five players) folds Pass and Waiting, the body scrolling; RX-19: test mode's sample
   roll fills it and `/dw sim raid` shows raid mode; RX-21: flush with the window, 290 wide (250
   compact), the test or sim strip under its title bar, item headers in the section-header look with
-  a collapser, Expand all and Collapse all, every item open by default, no verdict line, alternate
+  a collapser, one Expand all / Collapse all toggle (RX-25), every item open by default, no verdict line, alternate
   row shading, every roll number, tooltips), test mode
   and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the

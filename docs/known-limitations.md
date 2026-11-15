@@ -188,8 +188,8 @@ the code reads every case the design leaves open, module by module, is in
   test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
   party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. Raid mode only
   folds Pass and Waiting since RX-21: every item starts open in any group size, so a 40-player raid
-  rolling six items scrolls a long body until the player collapses some (Collapse all on the title
-  bar). An unfolded Pass or Waiting group stays unfolded for that block; there is no click to fold it
+  rolling six items scrolls a long body until the player collapses some (the title bar's
+  toggle, Collapse all while any item is open). An unfolded Pass or Waiting group stays unfolded for that block; there is no click to fold it
   again.
 - **The Rolls panel and the Offer panel on one side.** Both dock beside the window. Since RX-20 the
   Rolls panel gives way: with the Offer panel docked on its side it takes the other side, and with no

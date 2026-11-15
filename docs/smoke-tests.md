@@ -4032,9 +4032,11 @@ dungeon`, then `/dw sim raid` → the title reads `Rolls`; every item is open. N
 player with their numbers; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
 → a tooltip lists every name in class color, bulleted; click it → that block lists every player in the
 group. Click an item's header → it collapses to its header with the count line under it and the
-chevron pointing right; it stays collapsed as the roll changes; click again → it opens. Collapse all
-→ every item is a header; Expand all → every item is open; a roll that starts after Collapse all is
-open. A resolved collapsed block is a dimmed header reading its winner and roll, `done`. The body
+chevron pointing right; it stays collapsed as the roll changes; click again → it opens. The title
+bar holds one toggle (RX-25): while any item is open it is chevron-up, `Collapse all` → every item is
+a header and it turns chevron-down, `Expand all` → every item is open. Collapse one item by hand → it
+still reads `Collapse all`; collapse the last open one → `Expand all`. A roll that starts after
+Collapse all is open, and the toggle reads `Collapse all` again. A resolved collapsed block is a dimmed header reading its winner and roll, `done`. The body
 scrolls when the blocks pass the window's height, its bar shown only then; the frame rate holds while
 40 players choose. Untick Fold Pass and Waiting in a raid → every player is a row. In a real raid
 (more than five members) a roll reads the same. Result:

@@ -1966,7 +1966,7 @@ Total.
 - roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
 - roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
 
-### test_rolls_panel.lua (47)
+### test_rolls_panel.lua (49)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -2005,7 +2005,9 @@ Total.
 - rolls panel: Side keeps the wanted side that fits, else the other, and unknown geometry answers it
 - rolls panel: a group of 6 is raid mode, every block still open, titled Rolls; a group of 5 too
 - rolls panel: an item header collapses and expands its block on a click, and the collapse sticks
-- rolls panel: Expand all and Collapse all on the title bar open and close every item
+- rolls panel: one title-bar toggle, Collapse all while an item is open, Expand all once all are collapsed
+- rolls panel: the toggle follows a header's click and a new roll
+- rolls panel: with no items the toggle reads Expand all
 - rolls panel: an item header is the section header's look: a band, a gold chevron, the icon and the name
 - rolls panel: the roller rows alternate their shading
 - rolls panel: a roll number on Need and Greed, none on Pass or Waiting
@@ -3034,7 +3036,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 20 |
-| test_rolls_panel.lua | 47 |
+| test_rolls_panel.lua | 49 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3083,4 +3085,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2557** |
+| **Total** | **2559** |

@@ -857,6 +857,8 @@ paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a
     (RollsPanelRows.Fold), a click unfolds
   ─> every block open unless the player collapsed it (its header's click, Collapse all; a collapsed
     header reads the count line, or its result once over, dimmed)
+  ─> the title bar's one toggle (RX-25): chevron-up, Collapse all, while any block is open; else
+    chevron-down, Expand all ─> a click sets every block's collapsed and repaints
   ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, kept while the
     roll reads the same, alternately shaded, a number on Need / Greed / Disenchant; the result; no
     verdict line; title Rolls; 290 wide, 250 compact; the bar past the window's height)
