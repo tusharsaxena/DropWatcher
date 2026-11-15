@@ -12,6 +12,8 @@ local _, NS = ...
 -- item the store still holds but Rolling now no longer lists (`rolls.show` off, test mode turned
 -- on), or a test sample the store let go (test mode turned off), leaves at once, with no linger;
 -- a sample's id is never kept as left, since the next test mode numbers its samples from 1 again.
+-- A finished live roll still lingering leaves at once too when test mode turns on or a simulation
+-- starts (RX-23): a real result never shows under the TEST or SIM strip.
 -- A roll that joined during a simulation (`sim`) leaves at once, open or finished, when the
 -- simulation stops (NS.Sim:OnStop): placeholder data never shows without its strip (preview-mode).
 --
@@ -215,11 +217,25 @@ local function adopt(items)
     return added
 end
 
--- Each open block against the store: over, closed by the store, or no longer Rolling now's.
+-- A finished block from outside the mode now on: a live roll's result while test mode or a
+-- simulation runs. Placeholder data and real results never
+-- share a strip (preview-mode), and test mode's samples never finish, so its linger would never end.
+local function foreign(b)
+    if NS.State.testMode == true then return not b.item.test end
+    return not b.sim and not b.item.test and NS.Sim:IsActive() == true
+end
+
+-- Each block against the store: an open one over, closed by the store, or no longer Rolling now's;
+-- a finished one from outside the mode now on leaves at once, its id kept as left.
 local function settle(shown)
     local stale = {}
     for _, b in ipairs(blocks) do
-        if not b.done then
+        if b.done then
+            if foreign(b) then
+                if not b.item.test then left[b.id] = true end
+                stale[#stale + 1] = b
+            end
+        else
             local item = shown[b.id]
             if item then
                 if item.state ~= "open" then b.done, b.gone = true, false end

@@ -471,6 +471,36 @@ local function quietTest(NS, m, on)
     m.print = p0
 end
 
+-- red under: settle() looking at open blocks alone (RX-23: a finished live roll lingering when test
+-- mode turned on stayed beside the samples, under the TEST strip, and the samples never finish, so
+-- the linger never closed it)
+test("rolls panel: a finished live roll still lingering leaves at once when test mode turns on", function()
+    local NS, m = shown()
+    m.seedGearJournal()
+    local d = rollOpens(m)
+    win(m, d)
+    assertTrue(NS.RollsPanel.HasBlocks(), "the won roll lingers")
+    quietTest(NS, m, true)
+    for _, b in ipairs(NS.RollsPanel.Drawn().blocks) do
+        assertTrue(b.item.test == true, "only test mode's samples under the TEST strip: " .. tostring(b.id))
+    end
+    quietTest(NS, m, false)
+    assertFalse(NS.RollsPanel.HasBlocks(), "and the live roll does not come back")
+end)
+
+-- red under: the same gap for a simulation started during the linger (the live result under SIM)
+test("rolls panel: a finished live roll still lingering leaves at once when a simulation starts", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    win(m, d)
+    assertTrue(NS.RollsPanel.HasBlocks(), "the won roll lingers")
+    local active = NS.Sim.IsActive
+    NS.Sim.IsActive = function() return true end
+    NS.RollsPanel.Refresh()
+    NS.Sim.IsActive = active
+    assertFalse(NS.RollsPanel.HasBlocks(), "the live result leaves, not shown under the SIM strip")
+end)
+
 -- red under: the panel's band still reading TEST MODE, or no strip of its own (preview-mode: a frame
 -- with a title band is a window, and every display of placeholder data says so; RX-21 ruling A1)
 test("rolls panel: in test mode a test strip sits directly under its title bar, with no header word", function()

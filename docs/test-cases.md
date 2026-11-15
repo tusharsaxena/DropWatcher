@@ -1964,7 +1964,7 @@ Total.
 - roll popup: test mode shows a stand-in popup with its side card per sample roll, and off hides them
 - roll popup: combat ends test mode and takes its stand-in down; the popup mark off draws none
 
-### test_rolls_panel.lua (45)
+### test_rolls_panel.lua (47)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -1989,6 +1989,8 @@ Total.
 - rolls panel: leaving the panel from its scroll body restarts a held roll's count
 - rolls panel: the close button hides it until the next roll starts
 - rolls panel: test mode's samples leave at once when it ends, and show again when it comes back
+- rolls panel: a finished live roll still lingering leaves at once when test mode turns on
+- rolls panel: a finished live roll still lingering leaves at once when a simulation starts
 - rolls panel: in test mode a test strip sits directly under its title bar, with no header word
 - rolls panel: during a simulation the sim strip sits under its title bar instead
 - rolls panel: test mode's sample roll shows a number on every Need and Greed row, none on Pass or Waiting
@@ -3029,7 +3031,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 18 |
-| test_rolls_panel.lua | 45 |
+| test_rolls_panel.lua | 47 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3078,4 +3080,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2552** |
+| **Total** | **2554** |
