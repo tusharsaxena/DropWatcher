@@ -71,6 +71,12 @@ local function rollOpens(m, key, link, quality)
     return d
 end
 
+-- Your roll popup `rollID` for `link` comes up (START_LOOT_ROLL), claimed by its pending item.
+local function popup(m, rollID, link)
+    m.lootRolls[rollID] = { link = link or LINK, quality = 4 }
+    m.__fire("START_LOOT_ROLL", rollID, 60000)
+end
+
 -- Brakk wins drop `d` (key 2900:`n`).
 local function win(m, d, n)
     d.winner = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false, roll = 87 }
@@ -422,6 +428,7 @@ end)
 test("rolls panel: an auto-opened window waits while the panel lingers, then a full count", function()
     local NS, m = inDungeon()
     local d = rollOpens(m)
+    popup(m, 11)   -- your popup opens the window (RX-16)
     assertTrue(NS.IsWindowShown(), "the roll opened the window")
     -- the client runs the frame's OnShow on the open: the panel follows the window, in either
     -- order of the two PendingChanged receivers
@@ -583,6 +590,9 @@ test("rolls panel: raid mode opens your pending roll, else the soonest ending; a
     assertEqual(openHeaders(NS)[1], "Item 301", "nothing pending for you: the soonest ending")
     d1.playerRollState, d1.rollInfos[4].state = 4, 4
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    -- red under: PickOpen trusting the history's NoRoll on a roll you got no popup for (RX-20)
+    assertEqual(openHeaders(NS)[1], "Item 301", "no popup of yours on it: still the soonest ending")
+    popup(m, 11, LINK)
     assertEqual(openHeaders(NS)[1], "Item 300", "the one you still have to roll on")
     headerNamed(NS, "Item 301"):__fire("OnMouseUp", "LeftButton")
     assertEqual(openHeaders(NS)[1], "Item 301", "the clicked header opens")

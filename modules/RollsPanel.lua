@@ -462,7 +462,7 @@ local function pickOpen(now)
     for i, b in ipairs(blocks) do
         local roll = type(b.item.roll) == "table" and b.item.roll or nil
         list[i] = { id = b.id, done = b.done or NS.RollsPanelRows.IsDone(b.item, b.gone),
-            pending = NS.RollsPanelRows.YoursPending(roll), left = RC.Left(roll, now, b.item.rollID) }
+            pending = NS.RollsPanelRows.YoursPending(roll, b.item), left = RC.Left(roll, now, b.item.rollID) }
     end
     local id = NS.RollsPanelRows.PickOpen(list, sticky)
     if id ~= sticky then sticky = nil end

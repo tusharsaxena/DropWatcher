@@ -237,10 +237,11 @@ local function update(item, roll)
     if changed then send(item.id, "rolls") end
 end
 
--- Your open roll popups claim their items: by item ID, the oldest unclaimed item first.
+-- Your open roll popups claim their items: by item ID, the oldest unclaimed item first. Answers
+-- the items it claimed.
 local function claimRolls()
     local s = store()
-    local ids = {}
+    local ids, claimed = {}, {}
     for rollID in pairs(s.mine) do ids[#ids + 1] = rollID end
     table.sort(ids)
     for _, rollID in ipairs(ids) do
@@ -248,11 +249,13 @@ local function claimRolls()
             for _, item in ipairs(P.All()) do
                 if item.rollID == nil and item.state == "open" and item.itemID == s.mine[rollID].itemID then
                     item.rollID = rollID
+                    claimed[#claimed + 1] = item
                     break
                 end
             end
         end
     end
+    return claimed
 end
 
 -- An open drop past the item load: the gates, then the item.
@@ -336,13 +339,15 @@ function P.OnClearHistory()
     end
 end
 
---- START_LOOT_ROLL(rollID): your own roll popup, claimed by its item.
+--- START_LOOT_ROLL(rollID): your own roll popup, claimed by its item. A popup that comes up after
+--- its item entered the store sends PendingChanged(id, "popup") (RX-20: a roll with your popup
+--- opens the window); one up before it is claimed as the item enters, before its `open`.
 function P.OnStartRoll(rollID)
     if stoodDown() then return end
     local info = NS.Compat.LootRollInfo(rollID)
     if not info then return end
     store().mine[rollID] = { itemID = NS.Item.ItemIDFromLink(info.link), link = info.link, bop = info.bop }
-    claimRolls()
+    for _, item in ipairs(claimRolls()) do send(item.id, "popup") end
 end
 
 --- CANCEL_LOOT_ROLL(rollID): that popup is gone.

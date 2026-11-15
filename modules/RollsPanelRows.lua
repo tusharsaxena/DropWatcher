@@ -115,12 +115,15 @@ function RPR.IsRaid(size)
     return size ~= nil and size > RPR.RAID_OVER
 end
 
---- Whether you still have to roll on `roll`: your roll state is still to roll (the history's
---- playerRollState, else your own row's).
+--- Whether you still have to roll on `roll`: its item holds your roll popup (`rollID`; a test
+--- sample stands in for one) and your roll state is still to roll (the history's playerRollState,
+--- else your own row's). The history reads still to roll on a drop you get no popup for (RX-20).
 --- @param roll table|nil
+--- @param item table|nil the pending item; nil reads the roll alone
 --- @return boolean
-function RPR.YoursPending(roll)
+function RPR.YoursPending(roll, item)
     if type(roll) ~= "table" then return false end
+    if type(item) == "table" and item.rollID == nil and not item.test then return false end
     local RC = NS.RollCells
     if num(roll.myState) then return roll.myState == RC.WAITING end
     for _, r in ipairs(roll.rolls or {}) do

@@ -84,7 +84,8 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                ├─> minimized: stays minimized, `n new` counts it (never a
                                │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
-PendingChanged(id, cause) ─> shown: the same repaint; `open` of a roll item (NS.Pending.Get(id): not
+PendingChanged(id, cause) ─> shown: the same repaint; `open` or `popup` of a roll item holding your
+                             roll popup (its rollID, RX-20; NS.Pending.Get(id): not
                              kind `ml`, which has no roll popup, nor `restored`, which Pending.Rebuild
                              opened after a reload or stand-up) of the feed shown, with `rolls.show`
                              on (off, Rolling now lists nothing and the roll opens nothing): the drop's
@@ -781,6 +782,8 @@ LOOT_HISTORY_UPDATE_DROP(encounterID, dropKey) / the 1s ticker while any roll is
   ─> everyone passed, or startTime + duration passed on Compat.LootHistoryNow with no winner
         ─> state allPassed | expired, LINGER (60s) on screen, then closed; nothing reaches the feed
 START_LOOT_ROLL(rollID) ─> your popup claims the oldest unclaimed item of the same item ID (rollID)
+  ─> an item already in the store ─> PendingChanged(id, "popup") (RX-20); a popup up first is
+     claimed as its item enters, before its `open`
 GearChanged, the score retry ─> me judged again ─> PendingChanged(id, "verdict")
 LOOT_HISTORY_CLEAR_HISTORY ─> open items detached from their keys; PLAYER_ENTERING_WORLD and the
   stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item it
@@ -796,8 +799,8 @@ LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (
   ─> expired: 900s, leaving the group or the instance, or you becoming the master looter
         ─> closed, an ask still queued for it canceled
 
-PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending; a roll's `open` auto-opens
-  a closed window, RX-16), RollPopup (the mark), RollsPanel (its blocks, RX-17)
+PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending; a roll's `open` or `popup`
+  auto-opens a closed window once the item holds your popup, RX-16, RX-20), RollPopup (the mark), RollsPanel (its blocks, RX-17)
 ```
 
 The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's

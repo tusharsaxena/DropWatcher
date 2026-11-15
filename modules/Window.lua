@@ -1050,15 +1050,17 @@ local function onDropAdded(id)
     scheduleRepaint()
 end
 
--- PendingChanged(id, "open"): a roll item entered Rolling now (RX-16), so its roll popup is up and
--- it passed the feed's gates. A master-loot hold (kind `ml`) has no popup, and a roll Pending
--- rebuilt after a reload or stand-up (`restored`) was seen before: neither opens anything, nor does
--- a roll with `rolls.show` off (Rolling now lists nothing). A test mode sample opens only the test
--- feed's window, by test mode's own rule, as a test drop does.
+-- PendingChanged(id, "open" or "popup"): a roll item in Rolling now (RX-16) holds your roll popup
+-- (`rollID`, claimed as it entered or when the popup came up after it) and passed the feed's gates.
+-- A roll the loot history lists that you get no popup for opens nothing (RX-20). A master-loot
+-- hold (kind `ml`) has no popup, and a roll Pending rebuilt after a reload or stand-up (`restored`)
+-- was seen before: neither opens anything, nor does a roll with `rolls.show` off (Rolling now lists
+-- nothing). A test mode sample opens only the test feed's window, by test mode's own rule, as a
+-- test drop does.
 local function onPendingOpened(id)
     local item = NS.Pending.Get(id)
     if not item or item.kind == "ml" or item.restored or not inShownFeed(item) then return end
-    if not NS.WindowPending.Shown() then return end
+    if not NS.WindowPending.Shown() or (item.rollID == nil and not item.test) then return end
     maybeAutoOpen(item, "roll")
 end
 
@@ -1093,7 +1095,7 @@ local function listen()
     -- Drops' Rolling now section (modules/WindowPending.lua): an item opened, changed or closed.
     -- A roll item opening opens a closed window (RX-16).
     target:RegisterMessage(M.PENDING_CHANGED, function(_, id, cause)
-        if cause == "open" then onPendingOpened(id) end
+        if cause == "open" or cause == "popup" then onPendingOpened(id) end
         scheduleRepaint()
     end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).

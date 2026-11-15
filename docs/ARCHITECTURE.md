@@ -212,7 +212,7 @@ unregister and re-register its own receivers in its stand-down and stand-up step
 resolves the library itself.
 
 Eleven messages are sent today; the Forever port added the eleventh, `PENDING_CHANGED` (DW-FP14),
-which the Drops tab's Rolling now section and the roll popup mark receive (and the window's auto-open, when a roll item opens, RX-16), and the master-loot ask
+which the Drops tab's Rolling now section and the roll popup mark receive (and the window's auto-open, when a roll item holding your popup opens or is claimed by it, RX-16, RX-20), and the master-loot ask
 rides `ASK_STATE_CHANGED` as kind `askML` (DW-FP19). The window only listens:
 it reads records through the engine's read-only accessors, and a button goes through the host
 handler its slash verb shares. Every message's sender, payload and consumers, and every receiver's

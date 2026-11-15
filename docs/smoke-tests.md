@@ -535,6 +535,8 @@ refuses (under the minimum quality, or a kind switched off under Drops › Items
 Untick the situation's Auto-open, or Auto-open the window → a roll opens nothing. `/reload` while a
 roll is up, with the window closed → it stays closed. On WoW Forever, a master-loot corpse (you are
 not the master looter) → its items wait in Rolling now with no popup and the window does not open.
+On Retail, in a raid, a boss drop you are not eligible for (no popup comes up for you) that the
+feed still lists → it waits in Rolling now and the window does not open (RX-20).
 No Lua error throughout. Result:
 
 ## Compat

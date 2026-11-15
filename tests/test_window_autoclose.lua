@@ -345,12 +345,26 @@ local function openRoll()
     }
 end
 
--- The roll opens (its popup is up): the drop enters the loot history and Pending admits it.
-local function rollOpens(m, quality)
+-- Your roll popup 11 for item 300 comes up (START_LOOT_ROLL).
+local function popup(m)
+    m.lootRolls[11] = { link = ROLL_LINK, quality = 4 }
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+end
+
+-- The drop enters the loot history and Pending admits it, with no popup of yours.
+local function historyOnly(m, quality)
     m.addItem(ROLL_LINK, ring(620, quality))
     local d = openRoll()
     m.lootHistory["2900:1"] = d
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    return d
+end
+
+-- The roll opens (its popup is up): the drop enters the loot history, Pending admits it, and your
+-- popup comes up after it, the order the client and the simulator deliver.
+local function rollOpens(m, quality)
+    local d = historyOnly(m, quality)
+    popup(m)
     return d
 end
 
@@ -444,6 +458,27 @@ test("roll open: with Show rolls off a roll opens nothing, and does not hold an 
     assertTrue(NS.IsWindowShown(), "a drop opens it")
     m.advance(10.1)
     assertFalse(NS.IsWindowShown(), "the hidden roll does not hold it open")
+end)
+
+-- red under: onPendingOpened opening on any roll the history lists (one you get no popup for)
+test("roll open: a roll you get no popup for opens nothing; your popup coming up opens it", function()
+    local NS, m = inDungeon()
+    historyOnly(m)
+    assertEqual(NS.Pending.Count(), 1, "the history's roll is in Rolling now")
+    assertFalse(NS.IsWindowShown(), "no popup of yours: nothing opens")
+    popup(m)
+    assertTrue(NS.IsWindowShown(), "your popup claimed it: the window opens")
+    assertTrue(NS.WindowAutoClose.Armed())
+end)
+
+test("roll open: a popup up before the history lists the roll opens the window when it does", function()
+    local NS, m = inDungeon()
+    m.addItem(ROLL_LINK, ring(620))
+    popup(m)
+    assertFalse(NS.IsWindowShown(), "no item yet")
+    m.lootHistory["2900:1"] = openRoll()
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertTrue(NS.IsWindowShown(), "the item claims the popup as it enters Rolling now")
 end)
 
 test("roll open: a test-mode sample roll opens nothing while test mode is off", function()
