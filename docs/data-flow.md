@@ -864,6 +864,8 @@ Window show / hide / move / resize / layout / minimize (visibility and geometry 
 WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
 test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
 /dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
+Sim:OnStop (and any reconcile with no simulation running) ─> every block that joined during the
+  simulation leaves at once, open or finished, no linger (preview-mode: never unmarked; RX-21 review)
 ```
 
 ## Opening a trade (design spec §4)

@@ -12,6 +12,8 @@ local _, NS = ...
 -- item the store still holds but Rolling now no longer lists (`rolls.show` off, test mode turned
 -- on), or a test sample the store let go (test mode turned off), leaves at once, with no linger;
 -- a sample's id is never kept as left, since the next test mode numbers its samples from 1 again.
+-- A roll that joined during a simulation (`sim`) leaves at once, open or finished, when the
+-- simulation stops (NS.Sim:OnStop): placeholder data never shows without its strip (preview-mode).
 --
 -- THE LIFECYCLE (round 2 ruling A9: a panel-level linger). PendingChanged reconciles the blocks: a
 -- new roll adds one (and clears the close button's dismissal); a roll that is over (won, everyone
@@ -93,7 +95,7 @@ RP.TICK = 1           -- the time left's repaint
 RP.LINGER_MAX = 60
 
 local panel           -- built on its first show
-local blocks = {}     -- the blocks, in the order the rolls started: { id, item, at, done, gone, total, collapsed, unfolded }
+local blocks = {}     -- the blocks, in the order the rolls started: { id, item, at, sim, done, gone, total, collapsed, unfolded }
 local byId = {}       -- [item id] = its block
 local left = {}       -- [item id] = true once its block has left: never added again
 local manual = false  -- shown by hand (`/dw rolls`): stays with no block
@@ -201,7 +203,7 @@ local function adopt(items)
     for _, item in ipairs(items) do
         local b = byId[item.id]
         if not b and not left[item.id] then
-            b = { id = item.id, item = item, at = item.at }
+            b = { id = item.id, item = item, at = item.at, sim = not item.test and NS.Sim:IsActive() == true }
             blocks[#blocks + 1], byId[item.id] = b, b
             added = true
         elseif b then
@@ -231,6 +233,19 @@ local function settle(shown)
     for _, b in ipairs(stale) do drop(b) end
 end
 
+-- The simulation is over: its rolls leave at once, their ids kept as left (a live id never recurs).
+local function dropSim()
+    if NS.Sim:IsActive() == true then return end
+    local gone = {}
+    for _, b in ipairs(blocks) do
+        if b.sim then gone[#gone + 1] = b end
+    end
+    for _, b in ipairs(gone) do
+        left[b.id] = true
+        drop(b)
+    end
+end
+
 local function clear()
     dropLinger()
     blocks, byId, left = {}, {}, {}
@@ -242,6 +257,7 @@ local function reconcile()
         clear()
         return
     end
+    dropSim()
     local items = watched()
     local shown = {}
     for _, item in ipairs(items) do shown[item.id] = item end
@@ -790,6 +806,11 @@ local function listen()
     target:RegisterMessage(NS.MSG.PENDING_CHANGED, function() RP.Refresh() end)
 end
 listen()
+
+-- A simulation's stop: its rolls leave, and the sim strip with them, though no roll was open.
+NS.Sim:OnStop(function()
+    if not stoodDown() then RP.Refresh() end
+end)
 
 -- A skin switch recolors `[YOU]` and the marks the kept rows carry.
 if NS.Skin.OnLooksChanged then NS.Skin.OnLooksChanged(function() looks = looks + 1 end) end

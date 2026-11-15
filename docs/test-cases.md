@@ -2589,7 +2589,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (34)
+### test_sim_events.lua (36)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2625,6 +2625,8 @@ Total.
 - sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving
 - sim raid: refused without a running simulation
 - sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout
+- sim: the stop takes an open simulated roll out of the Rolls panel at once
+- sim: the stop takes a finished simulated roll out of the Rolls panel, though none is open
 
 ### test_sim_scenario.lua (32)
 
@@ -3056,7 +3058,7 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 27 |
-| test_sim_events.lua | 34 |
+| test_sim_events.lua | 36 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
@@ -3077,4 +3079,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2551** |
+| **Total** | **2553** |
