@@ -200,3 +200,24 @@ Spec part B. Worktrees cut from each repo's default branch; never touch another 
   pushed; merge waits for the owner. Drop Watcher adopts on this branch (UC-DW).
 
 **Scope change (owner, 2026-11-15):** no re-vendor into other addons in this run. M9 released WowAddonStandards v2.110.0 and LibKa0s v1.103.0 (Widgets minor 27). M10 is Drop Watcher only (UC-DW) plus LibKa0s issues #88 (strip adoption), #89 (Footer adoption) and #90 (the debug console footer), which track the other addons for the owner's later full re-vendor.
+
+## M11 — Owner smoke follow-ups after M10 (2026-11-15)
+
+### RX-24: The window footer on the library's lines and marks
+- Owner ruling: **rework** (not a deviation, not a standard change). The main window's footer uses W.Footer's own
+  `left` / `right` lines for its words (tradeable count, next expiry, new count, status, each tab's info) and its
+  `marks` slot for its controls as catalog icon buttons with tooltips (e.g. Post my tradeables, Scan group, Expand
+  all, History/Insights strip buttons). The labeled 150 px footer buttons go (supersedes feedback-15's labeled
+  buttons). Sort leaves the footer: it moves to the filter bar (or the nearest standard place the standard allows).
+  The Offer panel's Announce button follows the same rule. Icons from the LibKa0s v1.103.0 catalog; declaring more
+  catalog names in CLAUDE.md and re-pruning from the same tag is allowed.
+- Tests: footer words through foot:SetLeft/SetRight; each control is a mark with a tooltip and does what its button
+  did; no host font string or button laid over the footer; Sort on the filter bar sets the tab's order; both layouts;
+  locked still hides the grip.
+
+### RX-25: One Expand / Collapse toggle on the Rolls panel
+- Owner ruling: Expand all and Collapse all are mutually exclusive: one title-bar button that collapses every item
+  while any item is open (chevron-up, "Collapse all"), and expands every item when all are collapsed (chevron-down,
+  "Expand all"); its icon and tooltip follow the state.
+- Tests: with any item open the button collapses all and turns into Expand all; with all collapsed it expands all;
+  a manual header toggle updates the button.

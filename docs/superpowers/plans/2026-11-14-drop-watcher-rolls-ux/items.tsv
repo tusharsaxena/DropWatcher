@@ -26,3 +26,5 @@ UC-02	M9	LibKa0s	Footer primitive and TestStrip docking	UC-01
 UC-03	M10	(all addons)	Adopt the strip and footer in every addon	UC-02
 UC-DW	M10	DropWatcher	Re-vendor LibKa0s v1.103.0; strip under the title bar; Widgets Footer	UC-02
 RX-23	M10	DropWatcher	Whole-branch review of RX-21..UC-DW and bundle	UC-DW
+RX-24	M11	DropWatcher	Window footer on the library lines and marks	RX-23
+RX-25	M11	DropWatcher	One Expand/Collapse toggle on the Rolls panel	RX-23
