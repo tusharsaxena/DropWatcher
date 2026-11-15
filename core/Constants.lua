@@ -131,7 +131,6 @@ C.WINDOW = {
     GRIP_ROOM   = 20,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
-    OFFER_FOOT_H = 32,    -- its Announce to group strip
     OFFER_ROW_H = 26,     -- one candidate
     OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
     -- A candidate's Offer button: every state's icon and word (Offer, Offered, Queued, Retry) fits

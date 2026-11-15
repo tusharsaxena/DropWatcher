@@ -2332,7 +2332,8 @@ with the item already placed; cancel it. `Announce to group` posts the announce 
 with its close mark. Result: passed in the client, 2026-10-23 (the owner). (RX-23: `/dw test`, then
 `Offer` on a sample drop of yours → the panel shows an amber TEST strip directly under its title band,
 the item header below it; in a simulation a drop of yours shows the cyan SIM strip; a live drop shows
-none. Result: )
+none. The panel's foot is the window's footer look: no fill, a hairline along its top, Announce to group
+at its left and `N members · sorted by gain` muted at its right, hover it → the order. Result: )
 
 **ASK-7. Post my tradeables.** Client: both. With two or more tradeable drops of yours, click `Post my
 tradeables` on the strip under the Drops table (since DW-E3) → one party (instance) chat line `Up for trade, whisper me:

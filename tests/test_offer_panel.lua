@@ -478,3 +478,22 @@ test("offer panel: a test drop's panel carries the test strip under its title ba
     assertFalse(panel.simStrip:IsShown())
     assertEqual(itemTop(), -K.POPOVER_TOP, "and the body back under the band")
 end)
+
+-- red under: the hand-built 32 px foot strip (RX-23: spec B.2, a window's footer MUST be LibKa0s
+-- Widgets' Footer, FOOTER.HEIGHT 24, a hairline, text.muted; standalone-windows' *The footer*)
+test("offer panel: its foot is the library's Footer, the order note on its right line", function()
+    local NS, p = openPanel()
+    local panel, H = p.panel, NS.FooterMetric("HEIGHT")
+    local foot = panel.foot
+    assertTrue(foot ~= nil and foot.line ~= nil and foot.right ~= nil, "a Widgets Footer")
+    assertEqual(foot:GetHeight(), H)
+    assertEqual(H, 24)
+    assertTrue(foot:GetParent() == panel, "across the panel's foot")
+    assertTrue(panel.note.text == foot.right, "the note is the footer's right line")
+    assertEqual(panel.note.text:GetText(), "5 members · sorted by gain")
+    assertEqual(NS.Window.TooltipOf(panel.note)[1], NS.L["Order"], "the note keeps its tooltip")
+    local _, rel = panel.announce:GetPoint(1)
+    assertTrue(rel == foot, "Announce to group on the footer")
+    local sb = panel.scroll.__points[2]
+    assertEqual(sb[1], "BOTTOMRIGHT"); assertEqual(sb[5], H + 4, "the list ends above the footer")
+end)

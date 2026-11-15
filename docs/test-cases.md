@@ -973,7 +973,7 @@ Total.
 - footer row: the status keeps its tooltip, every segment's words and reasons, rows then hints (RX-09)
 - footer row: no status bar: the panes reach the footer band, whose corner holds the grip (RX-09)
 
-### test_offer_panel.lua (22)
+### test_offer_panel.lua (23)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -997,6 +997,7 @@ Total.
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 - offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip
+- offer panel: its foot is the library's Footer, the order note on its right line
 
 ### test_offer_alone.lua (16)
 
@@ -2996,7 +2997,7 @@ Total.
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 15 |
 | test_footer_row.lua | 15 |
-| test_offer_panel.lua | 22 |
+| test_offer_panel.lua | 23 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
 | test_row_tooltip.lua | 13 |
@@ -3084,4 +3085,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2558** |
+| **Total** | **2559** |

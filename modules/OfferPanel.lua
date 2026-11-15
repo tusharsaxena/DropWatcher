@@ -13,7 +13,9 @@ local _, NS = ...
 -- item on a two-item slot read in full, `321 ▼10 / 308 ▲3`, feedback-21 H7), or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
--- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
+-- list scrolls in a raid. The footer (LibKa0s Widgets' Footer, RX-23, spec B.2: no fill, a hairline in
+-- the skin's `divider`, FOOTER.HEIGHT tall) holds Announce to group at its left and the note on the
+-- order on its right line, in `text.muted`, with the order's tooltip. What each
 -- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no Offer shows the gray No action with the reason
 -- (feedback-11 spec §1).
@@ -197,17 +199,34 @@ local function announceTip(p)
     return unpack(p.announce.tipLines or { L["Announce to group"] })
 end
 
+-- The footer with no library: the same height and the right line, with no hairline.
+local function bareFoot(p)
+    local foot = CreateFrame("Frame", nil, p)
+    foot:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(NS.FooterMetric("HEIGHT"))
+    foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    foot.right:SetPoint("RIGHT", foot, "RIGHT", -NS.FooterMetric("PAD"), 0)
+    foot.right:SetJustifyH("RIGHT")
+    foot.right:SetWordWrap(false)
+    setTone(foot.right, "muted")
+    return foot
+end
+
 local function buildFoot(p)
     local W = NS.Window
-    p.announce = W.TextButton(p, 130, "speech-bubble", L["Announce to group"], function() NS.PressAnnounce(p.dropId) end)
-    p.announce:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 10, 8)
+    local foot = NS.MakeFooter(p) or bareFoot(p)
+    p.foot = foot
+    p.announce = W.TextButton(foot, 130, "speech-bubble", L["Announce to group"], function() NS.PressAnnounce(p.dropId) end)
+    p.announce:SetPoint("LEFT", foot, "LEFT", NS.FooterMetric("PAD"), 0)
     W.AttachTooltip(p.announce, function() return announceTip(p) end)
-    p.note = tipFrame(p)
-    p.note:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -10, 8)
-    p.note:SetSize(200, K.CONTROL_H)
-    p.note.text:ClearAllPoints()
-    p.note.text:SetPoint("RIGHT", p.note, "RIGHT", 0, 0)
-    p.note.text:SetJustifyH("RIGHT")
+    -- The note is the footer's right line (the library paints it `text.muted`); a frame over it
+    -- carries the order's tooltip.
+    p.note = CreateFrame("Frame", nil, foot)
+    p.note.text = foot.right
+    p.note:SetPoint("TOPLEFT", foot.right, "TOPLEFT", 0, 0)
+    p.note:SetPoint("BOTTOMRIGHT", foot.right, "BOTTOMRIGHT", 0, 0)
+    W.AttachTooltip(p.note, function() return tipOf(p.note) end)
 end
 
 local function buildList(p)
@@ -237,7 +256,7 @@ local function relayBody(p)
     end
     p.scroll:ClearAllPoints()
     p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.OFFER_HEAD_H - 2 - off)
-    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, K.OFFER_FOOT_H + 4)
+    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, NS.FooterMetric("HEIGHT") + 4)
     p.empty:ClearAllPoints()
     p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20 - off)
 end
@@ -433,7 +452,6 @@ local function paintFoot(p, drop, n)
         p.announce.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
     end
     p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
-    setTone(p.note.text, "muted")
     p.note.tipLines = OP.ORDER_TIP
 end
 
