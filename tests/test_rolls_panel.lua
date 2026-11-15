@@ -122,6 +122,21 @@ test("rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the s
     assertEqual(S.FindRow("rolls.show").subgroup, "Window and popup", "the tab's first subject has its heading")
 end)
 
+-- red under: the panel's rows not naming Show rolls, whose Rolling now is the panel's list
+test("rolls panel: every panel row dims while Show rolls is off, the switch naming the row it needs", function()
+    local NS = T.enableAddon()
+    local S = NS.SchemaRuntime
+    local on = S.FindRow("rolls.panel.enabled")
+    assertTrue(on.tooltip:find("Needs Show rolls.", 1, true) ~= nil, on.tooltip)
+    for _, path in ipairs({ "rolls.panel.enabled", "rolls.panel.side", "rolls.panel.linger", "rolls.panel.foldInRaid" }) do
+        local row = S.FindRow(path)
+        assertFalse(row.disabledIf(), path .. " live while Show rolls is on")
+        S.Set("rolls.show", false)
+        assertTrue(row.disabledIf(), path .. " dims while Show rolls is off")
+        S.Set("rolls.show", true)
+    end
+end)
+
 -- ── showing ─────────────────────────────────────────────────────────────────────────────────
 
 -- red under: no PendingChanged receiver (the panel never shows)
@@ -450,6 +465,16 @@ test("rolls panel: /dw rolls with the window closed, or the panel off, says why 
     local all = table.concat(m.prints, "\n")
     assertTrue(all:find("open the window first", 1, true) ~= nil, all)
     assertTrue(all:find("Drops > Rolls > Panel", 1, true) ~= nil, all)
+end)
+
+-- red under: Toggle showing an empty panel that no roll can fill while Show rolls is off
+test("rolls panel: /dw rolls with Show rolls off says why and shows nothing", function()
+    local NS, m = shown({ ["rolls.show"] = false })
+    m.prints = {}
+    NS.addon:OnSlashCommand("rolls")
+    assertFalse(NS.RollsPanel.IsShown())
+    local all = table.concat(m.prints, "\n")
+    assertTrue(all:find("Show rolls on Drops > Rolls > Window and popup", 1, true) ~= nil, all)
 end)
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────

@@ -270,15 +270,16 @@ end
 -- ── Drops › Situations (design spec §6.1, §7; feedback-24, item 020) ───────────────────────
 
 -- Drops › Rolls › Panel (rolls panel design §3.5, RX-17): the Rolls panel docked beside the window,
--- on both clients. The sub-rows dim while the panel is off, each tooltip ending "Needs <row>."
--- (options-ui-§21).
+-- on both clients. It lists Rolling now's rolls, so every row dims while Show rolls is off (RX-20),
+-- and the sub-rows while the panel is off too, each tooltip ending "Needs <row>." (options-ui-§21).
 local function rollsPanel(D)
     local at = { page = "feed", group = L["Rolls"], subgroup = L["Panel"],
         onChange = function() if NS.RollsPanel then NS.RollsPanel.Refresh() end end }
+    local rollsOff = unless("rolls.show", true)
     bool("rolls.panel.enabled", D.enabled, L["Show the Rolls panel beside the window"],
-        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand."],
-        at)
-    local sub = with(at, { disabledIf = unless("rolls.panel.enabled", true) })
+        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."],
+        with(at, { disabledIf = rollsOff }))
+    local sub = with(at, { disabledIf = function() return rollsOff() or NS.Setting("rolls.panel.enabled") ~= true end })
     pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
         L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
         sub)

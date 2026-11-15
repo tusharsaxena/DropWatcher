@@ -22,7 +22,7 @@ local _, NS = ...
 -- The blocks are tracked while the window is closed or minimized, and the panel shows with the
 -- window again while it holds any. It never opens the window itself (RX-16 does that).
 --
--- SHOWN while `rolls.panel.enabled` is on, the addon is up, the window is shown and not minimized,
+-- SHOWN while `rolls.panel.enabled` is on (its rows need `rolls.show`), the addon is up, the window is shown and not minimized,
 -- the close button has not dismissed it since the last roll started, and it holds a block or was
 -- shown by hand (`/dw rolls`, RP.Toggle: an empty panel reads `No rolls right now`, and stays until
 -- closed). Its close button hides it until the next roll starts.
@@ -615,7 +615,8 @@ function RP.Close()
 end
 
 --- `/dw rolls`: hide a shown panel, or show it by hand beside the shown window (empty, it reads
---- `No rolls right now`, and stays until closed). Says why when it cannot show.
+--- `No rolls right now`, and stays until closed). Says why when it cannot show: the panel off, Show
+--- rolls off (Rolling now, its list, empty) or the window closed or minimized.
 --- @return boolean shown
 function RP.Toggle()
     if RP.IsShown() then
@@ -624,6 +625,10 @@ function RP.Toggle()
     end
     if not enabled() then
         NS.Print(L["The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."])
+        return false
+    end
+    if not NS.WindowPending.Shown() then   -- `rolls.show` off: Rolling now, its list, is empty
+        NS.Print(L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window and popup."])
         return false
     end
     if not NS.Window.IsShown() or NS.Window.IsMinimized() then

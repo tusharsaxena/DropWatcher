@@ -1958,10 +1958,11 @@ Total.
 - roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 
-### test_rolls_panel.lua (32)
+### test_rolls_panel.lua (34)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
+- rolls panel: every panel row dims while Show rolls is off, the switch naming the row it needs
 - rolls panel: a watched roll shows it docked right of the shown window, titled Rolls
 - rolls panel: near the screen's right edge it flips left, and the Left setting docks left
 - rolls panel: the side flips on a window move, from the geometry seam
@@ -1983,6 +1984,7 @@ Total.
 - rolls panel: an auto-opened window waits while the panel lingers, then a full count
 - rolls panel: /dw rolls shows an empty panel by hand, which stays, and hides it again
 - rolls panel: /dw rolls with the window closed, or the panel off, says why and shows nothing
+- rolls panel: /dw rolls with Show rolls off says why and shows nothing
 - rolls panel: Side keeps the wanted side that fits, else the other, and unknown geometry answers it
 - rolls panel: a group of 6 is raid mode (one block open, titled Rolls · N); a group of 5 opens every block
 - rolls panel: raid mode opens your pending roll, else the soonest ending; a clicked header sticks until it resolves
@@ -3010,7 +3012,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 16 |
-| test_rolls_panel.lua | 32 |
+| test_rolls_panel.lua | 34 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3059,4 +3061,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2533** |
+| **Total** | **2535** |
