@@ -19,3 +19,8 @@ RX-16	M6	DropWatcher	A roll popup for a watched item opens the window	RX-15
 RX-17	M7	DropWatcher	The Rolls panel, docked, in a dungeon	RX-16
 RX-18	M7	DropWatcher	Rolls panel raid mode	RX-17
 RX-19	M7	DropWatcher	Rolls panel simulation, test mode and docs	RX-18
+RX-21	M8	DropWatcher	Rolls panel strip, headers, collapsers, rows, linger	RX-20
+RX-22	M8	DropWatcher	Test mode shows the simulated roll popup and side card	RX-21
+UC-01	M9	WowAddonStandards	Strip under the header, footer and its height	RX-20
+UC-02	M9	LibKa0s	Footer primitive and TestStrip docking	UC-01
+UC-03	M10	(all addons)	Adopt the strip and footer in every addon	UC-02

@@ -165,3 +165,36 @@ module(s); Window.lua only exposes what the panel needs to dock (frame, layout, 
 - Spec §3.6: test mode fills the panel; `/dw sim roll` adds a dungeon roll; `/dw sim raid` starts a 40-player
   simulated roll with several items. README Usage, ARCHITECTURE, module-map, schema.md, settings-panel.md,
   smoke-tests.md (checks for both clients and both layouts), slash surface.
+
+## M8 — Rolls panel round 2 (2026-11-15)
+
+Spec: `docs/superpowers/specs/2026-11-15-rolls-panel-round2-and-window-chrome-design.md` part A (owner rulings A1–A11).
+
+### RX-21: The panel's strip, item headers and collapsers, rows and linger
+- A1–A10: TestStrip under the title bar (no header word); item headers like Rolling now's section header with a
+  collapser; Expand all / Collapse all title buttons; all expanded by default, manual collapse sticks; raid one-open
+  rule removed (fold stays); width 290/250; no verdict line; alternate row shading; every roll number shown; tooltips;
+  title "Rolls"; panel-level linger replaces per-roll; flush docking.
+- Tests: strip shows in test and sim, no header word; headers toggle, Expand/Collapse all; all open by default in a
+  40-player group; no verdict line; alt shading; roll numbers on Need/Greed rows, none on Pass/Waiting; tooltips on
+  header, rows, buttons; finished rolls stay until all are done, then the panel closes after linger; a new roll
+  cancels; gap 0.
+
+### RX-22: Test mode shows the simulated roll popup and side card
+- A11. Tests: test mode on shows a stand-in popup with its side card per sample roll; test mode off hides them.
+
+## M9 — Window chrome standards upstream (2026-11-15)
+
+Spec part B. Worktrees cut from each repo's default branch; never touch another session's branch.
+
+### UC-01: WowAddonStandards — strip under the header (windows and HUDs), the footer and its height
+- B.1, B.2 as rules; ripple (anti-patterns, audit playbook, context pack, changelog, index); minor bump; merge, tag, push.
+
+### UC-02: LibKa0s — the Footer primitive and TestStrip docking
+- B.1 helper and B.2 primitive; tests, docs/api, changelog; minor bump; merge, tag, push.
+
+## M10 — Adoption in every addon (2026-11-15)
+
+### UC-03..: one item per roster addon
+- Re-vendor the UC-02 tag; strip under the title bar / HUD top; Footer where a footer exists; gate green; own branch,
+  pushed; merge waits for the owner. Drop Watcher adopts on this branch (UC-DW).
