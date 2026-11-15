@@ -263,6 +263,22 @@ test("toc: no position labeled Conventional is load-bearing under toc-file-§5 (
     assertTrue(#bad == 0, "Conventional positions that are load-bearing:\n" .. table.concat(bad, "\n"))
 end)
 
+-- RX-27 review fix: the split put modules\WindowTabs.lua between modules\Window.lua and its comment,
+-- so the shell's LOAD-BEARING block sat on the tab strip and the shell had none. Each keeps its own,
+-- and the tab strip's is LOAD-BEARING: the shell takes NS.WindowTabs as it loads (toc-file-§5 (a)).
+-- red under: move modules\WindowTabs.lua back under modules\Window.lua's comment
+test("toc: the tab strip and the shell each carry their own comment; the strip's is LOAD-BEARING", function()
+    local byFile = {}
+    for _, p in ipairs(tocPositions()) do byFile[p.file] = p end
+    local tabs, shell = byFile["modules/WindowTabs.lua"], byFile["modules/Window.lua"]
+    assertTrue(tabs ~= nil and shell ~= nil, "both are in the TOC")
+    assertEqual(tabs.label, "LOAD-BEARING", "modules/WindowTabs.lua's label")
+    assertTrue(tabs.text:find("NS.WindowTabs", 1, true) ~= nil, "the strip's comment names what it publishes")
+    assertEqual(shell.label, "LOAD-BEARING", "modules/Window.lua's label")
+    assertTrue(shell.text:find("Publishes NS.Window;", 1, true) ~= nil, "the shell keeps its own comment")
+    assertTrue(shell.text:find("NS.WindowTabs", 1, true) ~= nil, "the shell's comment names its load-time read")
+end)
+
 -- ── the repository's shape ──────────────────────────────────────────────────────────────────
 
 test("repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)", function()

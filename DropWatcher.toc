@@ -368,14 +368,18 @@ modules\InsightsStats.lua
 # handler to NS.addon (core\DropWatcher.lua) at load. NS.History, NS.LootFeed, NS.Roster,
 # NS.GroupRoster and NS.CharFilter (above) are read at call time.
 modules\FeedRestore.lua
+# LOAD-BEARING: publishes NS.WindowTabs, the main window's tab strip (its tabs, their panes and the
+# tabs' registry; RX-27), which modules\Window.lua (below) takes at load. Reads NS.Constants and
+# NS.L at load, and NS.Window, NS.Skin, NS.TipMarks, NS.CompactChrome and NS.HistoryRetention at
+# call time.
+modules\WindowTabs.lua
 # LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.Window; reads NS.Perf, NS.L, NS.Constants, NS.Bus and NS.MSG (core\ and
-# locales\, above) at load, and registers its bus receivers (RestrictionChanged, AskStateChanged,
-# SituationChanged, DropAdded, DropUpdated, InspectDone, TradeTimerTick, TradeTimerExpiring) on its
-# own NS.Bus target. Every engine module above, and NS.WindowTitleBar / NS.WindowFilterBar /
-# NS.WindowFooter / NS.OfferPanel (below), are read at call time: the frame is built on the first
-# show.
-modules\WindowTabs.lua
+# locales\, above) and NS.WindowTabs (modules\WindowTabs.lua, above) at load, and registers its bus
+# receivers (RestrictionChanged, AskStateChanged, SituationChanged, DropAdded, DropUpdated,
+# InspectDone, TradeTimerTick, TradeTimerExpiring) on its own NS.Bus target. Every engine module
+# above, and NS.WindowTitleBar / NS.WindowFilterBar / NS.WindowFooter / NS.OfferPanel (below), are
+# read at call time: the frame is built on the first show.
 modules\Window.lua
 # Conventional: publishes NS.WindowTitleBar (the title bar, the badge's words and the window's flat
 # and icon buttons); reads NS.Constants and NS.L at load, and NS.Window (above), NS.Asks and the

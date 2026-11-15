@@ -82,9 +82,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
   drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
   (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
-  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, its tab strip (`WindowTabs.lua`, RX-27: the tabs, their panes and
-  the tabs' registry), three tabs (Drops, History and
-  Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
+  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, its tab
+  strip (`WindowTabs.lua`, RX-27: the tabs, their panes and the tabs' registry), three tabs (Drops,
+  History and Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
   `InsightsSections.lua`, `WindowInsights.lua`), the footer's controls as the library footer's
   marks and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them), the two

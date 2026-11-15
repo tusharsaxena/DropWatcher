@@ -8,7 +8,7 @@ Total.
 
 **Generated — do not hand-edit.** Regenerate with `lua tests/run.lua --list > docs/test-cases.md`.
 
-### test_harness.lua (14)
+### test_harness.lua (15)
 
 - harness: the addon's file list is the TOC's, Namespace first and Profiles last
 - harness: every LibKa0s file comes from LibKa0s.xml, in its order
@@ -20,6 +20,7 @@ Total.
 - toc: OptionalDeps names Pawn and CanIMogIt, and no hard Dependencies
 - toc: no Conventional comment states the order of handlers on a shared event (toc-file-§5)
 - toc: no position labeled Conventional is load-bearing under toc-file-§5 (a) or (b)
+- toc: the tab strip and the shell each carry their own comment; the strip's is LOAD-BEARING
 - repo: no stored copy of the context pack (documentation-§3, anti-pattern #49)
 - repo: the root doc set is README, the CLAUDE stub, DEPENDENCIES and LICENSE
 - repo: every authored file opens with the bootstrap and a comment naming its path
@@ -2962,7 +2963,7 @@ Total.
 
 | Suite | Cases |
 |-------|------:|
-| test_harness.lua | 14 |
+| test_harness.lua | 15 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
@@ -3091,4 +3092,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2565** |
+| **Total** | **2566** |
