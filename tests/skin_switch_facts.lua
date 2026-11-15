@@ -145,9 +145,8 @@ return function(enableAddon, withPlayer)
             { name = "a row chevron", build = function() return NS.WindowGroup.RowChevron(window()) end },
             { name = "a column head", build = function() return window().panes.group.colHead.labels.item.text end },
             { name = "the column head band", build = function() return window().panes.group.colHead end },
-            { name = "the summary strip's rule", build = function() return window().panes.group.summary.line end },
             { name = "the detail card's box", build = function() return window().panes.group.card.trade end },
-            { name = "the footer band", build = function() return window().footerHost end },
+            { name = "the footer's hairline", build = function() return window().footerHost.line end },
             { name = "a Drops row's stripe and tone", build = function()
                 local _, row = listed()
                 return row.stripe, row.cells.level and row.cells.level.text or row.cells.ilvl.text

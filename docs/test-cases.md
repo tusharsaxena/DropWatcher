@@ -412,7 +412,7 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (19)
+### test_window.lua (20)
 
 - window: built lazily, on the first show, and not before
 - window: a tooltip shows on a disabled button too, so the gray No action says why
@@ -424,7 +424,8 @@ Total.
 - window: resizable from the corner grip, with the design's minimum size
 - window: test mode shows the banner (not the TEST MODE text), and its rows replace the empty state
 - window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark
-- window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT
+- window: the chrome heights are the library's, never copied into the constants file
+- window: the body moves down by the strip in force, and back when it hides
 - compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps
 - window: with no Widgets the window builds, test mode on raises nothing, f.banner is nil, the panes reserve 0 and the title word shows
 - window: combat ends test mode, and test mode cannot start in combat
@@ -674,7 +675,7 @@ Total.
 - chrome: compact shows the short title; in test mode the strip marks it, so the title stays centered alone
 - chrome: compact and minimized in test mode, TEST shows beside the title and the two center together
 - chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line
-- chrome: the panes reserve the sim strip's height while a simulation runs
+- chrome: the body moves down by the sim strip's height while a simulation runs
 - chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged
 - chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks
 - chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them
@@ -2347,7 +2348,7 @@ Total.
 
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
-- insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History
+- insights tab: the test-mode strip sits under the title bar on Insights and on History
 - insights tab: the footer's Sort is hidden on Insights and back on History
 - insights tab: switching in closes the compact Filters menu
 - insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
@@ -2888,7 +2889,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (49)
+### test_skin_switch.lua (47)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the window's title bar changes
@@ -2909,12 +2910,10 @@ Total.
 - skin switch: a column head changes with the Scope ignored
 - skin switch: the column head band changes
 - skin switch: the column head band changes with the Scope ignored
-- skin switch: the summary strip's rule changes
-- skin switch: the summary strip's rule changes with the Scope ignored
 - skin switch: the detail card's box changes
 - skin switch: the detail card's box changes with the Scope ignored
-- skin switch: the footer band changes
-- skin switch: the footer band changes with the Scope ignored
+- skin switch: the footer's hairline changes
+- skin switch: the footer's hairline changes with the Scope ignored
 - skin switch: a Drops row's stripe and tone changes
 - skin switch: a Drops row's stripe and tone changes with the Scope ignored
 - skin switch: the tables' shadow changes
@@ -2970,7 +2969,7 @@ Total.
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
-| test_window.lua | 19 |
+| test_window.lua | 20 |
 | test_window_shell.lua | 69 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 30 |
@@ -3076,7 +3075,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 49 |
+| test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2553** |
+| **Total** | **2552** |

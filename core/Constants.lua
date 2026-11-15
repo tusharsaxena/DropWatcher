@@ -59,7 +59,6 @@ C.WINDOW = {
     TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP
     TAB_GAP     = 4,
     FILTER_H    = 30,
-    BANNER_H    = 22,     -- = Widgets.TEST_STRIP.HEIGHT + 4: a 2 px gap above and below the strip
     INSET       = 6,      -- the body's side margin
     CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
@@ -117,7 +116,6 @@ C.WINDOW = {
     COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Expand all)
     -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
     -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in the full
     -- layout, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
@@ -126,8 +124,10 @@ C.WINDOW = {
     FOOTER_BUTTON_W = 150,
     FOOTER_ICON_W = 24,
     -- The footer row's first control's inset from the strip's right edge (RX-09, rolls-UX spec §3.7):
-    -- the resize grip (LibKa0s's, 16 px, 1 px inside its corner) sits in the footer band's bottom-right
-    -- corner, which is the strip's, so the row starts 3 px clear of it.
+    -- the resize grip (LibKa0s's, 16 px, 1 px inside its corner) sits in the footer's bottom-right
+    -- corner (LibKa0s Widgets' Footer, whose height, FOOTER.HEIGHT, is every tab strip's: read through
+    -- NS.FooterMetric, never copied here); the strip ends INSET short of that corner, so the row's
+    -- first control is INSET + GRIP_ROOM in from it, clear of the footer's own GRIP figure.
     GRIP_ROOM   = 20,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels

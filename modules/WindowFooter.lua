@@ -8,8 +8,8 @@ local _, NS = ...
 -- tab's strip (`pane.statusHost`), after that strip's words and ending where its buttons start
 -- (NS.FooterRow.FitInfo), one line the game cuts with an ellipsis; full, every segment's words
 -- (WF.StatusText), compact the short line (NS.CompactChrome.FooterLine); one tooltip in both, every
--- segment's words and reasons (WF.StatusTip). The window's footer band under the strip holds the
--- resize grip in its corner (modules/Window.lua).
+-- segment's words and reasons (WF.StatusTip). The window's footer under the strip (LibKa0s Widgets'
+-- Footer: no fill, its hairline, FOOTER.HEIGHT) holds the resize grip in its corner (modules/Window.lua).
 --
 -- THE TAB'S SORT is built here, once, and kept here (Parts, Refresh's state), but it no longer sits
 -- in the footer (feedback-10 spec §3): in the full layout it is at the right edge of the active tab's
@@ -230,19 +230,19 @@ end
 
 local status          -- the one status line: { text, tipRead }
 local sortDropdown
-local footerHost      -- the window's footer band (the Sort and status line's place on a tab with no strip)
+local footerHost      -- the window's footer (the Sort and status line's place on a tab with no strip)
 
 -- The status line: one frame and one font string, one line, its words in the idle gray, bounded by the
 -- frame so a narrow row cuts them with an ellipsis; its tooltip built on the hover from the last read.
 local function buildStatus(host)
     local s = CreateFrame("Frame", nil, host)
-    s:SetHeight(K.STRIP_H)
+    s:SetHeight(NS.FooterMetric("HEIGHT"))
     s.text = s:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
     s.text:SetPoint("LEFT", s, "LEFT", 0, 0)
     s.text:SetPoint("RIGHT", s, "RIGHT", 0, 0)
     s.text:SetJustifyH("LEFT")
     s.text:SetWordWrap(false)
-    NS.Skin.Text(s.text, "dw.idle")   -- the idle gray (Ka0s Default 0.62), as the status bar's was
+    NS.Skin.Text(s.text, "text.muted")   -- the footer's muted token (standalone-windows' *The footer*)
     NS.Window.AttachTooltip(s, function() return unpack(WF.StatusTip(s.tipRead)) end)
     return s
 end
@@ -267,7 +267,7 @@ local function buildSort(host)
     return dd
 end
 
---- Build the status line and the Sort control on `host` (the window's footer band). Once per window.
+--- Build the status line and the Sort control on `host` (the window's footer). Once per window.
 --- @param host table
 function WF.Build(host)
     footerHost = host
@@ -306,7 +306,7 @@ end
 
 --- Put the status line on the active tab's strip (its pane's `statusHost`), after that strip's info
 --- and ending where its row starts (NS.FooterRow.FitInfo, RX-09), in both layouts; the strip it leaves
---- spans its row with its info again. A tab with no strip yet holds it on the footer band, at its left.
+--- spans its row with its info again. A tab with no strip yet holds it on the footer, at its left.
 function WF.AnchorStatus()
     if not status then return end
     local pane = activePane()
@@ -321,8 +321,8 @@ function WF.AnchorStatus()
     status:SetParent(host)
     if host == footerHost then
         status:ClearAllPoints()
-        status:SetPoint("LEFT", host, "LEFT", 2, 0)
-        status:SetPoint("RIGHT", host, "RIGHT", -FR.START, 0)
+        status:SetPoint("LEFT", host, "LEFT", NS.FooterMetric("PAD"), 0)
+        status:SetPoint("RIGHT", host, "RIGHT", -NS.FooterMetric("GRIP"), 0)
         return
     end
     host.dwStatus = status

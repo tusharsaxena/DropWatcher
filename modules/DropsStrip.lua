@@ -42,7 +42,6 @@ local _, NS = ...
 NS.DropsStrip = NS.DropsStrip or {}
 local DS = NS.DropsStrip
 local K  = NS.Constants.WINDOW
-local C  = NS.Constants
 local L  = NS.L
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
@@ -146,20 +145,16 @@ function DS.Build(pane)
     local strip = CreateFrame("Frame", nil, pane)
     strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
     strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(K.STRIP_H)
-    strip.line = strip:CreateTexture(nil, "ARTWORK")
-    NS.SkinPaint(strip.line, function(t) t:SetColorTexture(NS.SkinColor("dw.rule")) end)
-    strip.line:SetHeight(1)
-    strip.line:SetPoint("TOPLEFT", strip, "TOPLEFT", 0, 0)
-    strip.line:SetPoint("TOPRIGHT", strip, "TOPRIGHT", 0, 0)
+    strip:SetHeight(NS.FooterMetric("HEIGHT"))
+    -- No rule of its own: the window's footer (LibKa0s Widgets' Footer) draws the hairline over it.
     local info = CreateFrame("Frame", nil, strip)
     info.text = info:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     info.text:SetPoint("LEFT", info, "LEFT", 0, 0)
     info.text:SetPoint("RIGHT", info, "RIGHT", 0, 0)
     info.text:SetJustifyH("LEFT")
-    NS.Skin.Font(info.text)
+    NS.Skin.Text(info.text, "text.muted")   -- the footer's muted token (standalone-windows' *The footer*)
     info.text:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
-    info:SetHeight(K.STRIP_H)
+    info:SetHeight(NS.FooterMetric("HEIGHT"))
     W.AttachTooltip(info, function() return tipOf(info) end, "row")
     strip.info = info
     local FR = NS.FooterRow
@@ -230,8 +225,6 @@ local function paintText(pane, s, compact)
     local info = pane.summary.info
     local text, tip = DS.Text(s, pane.newCount, compact)
     info.text:SetText(text)
-    local tone = C.TONE.muted
-    info.text:SetTextColor(tone.r, tone.g, tone.b)
     info.tipLines = tip
     NS.FooterRow.FitInfo(pane.summary)   -- the status line after these words (RX-09)
 end
@@ -255,7 +248,7 @@ function DS.Paint(pane, ctx, compact)
     paintText(pane, s, compact)
     placeButtons(strip, tradeable and DS.Postable(), compact)
     NS.FooterRow.PaintFold(strip.fold, pane.entries)
-    local bottom = K.STRIP_H
+    local bottom = NS.FooterMetric("HEIGHT")
     setBottom(pane.scroll, pane, pane.colHead, -2, bottom)
     local cv = pane.compactView
     setBottom(cv and cv.scroll, pane, pane, 0, bottom)

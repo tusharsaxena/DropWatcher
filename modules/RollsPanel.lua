@@ -49,7 +49,9 @@ local _, NS = ...
 -- THE MODE STRIP (ruling A1, preview-mode: a frame with a title band is a window, and every display
 -- of placeholder data says so). In test mode LibKa0s Widgets' TestStrip (NS.MakeTestStrip) sits
 -- directly under the title band, full width, saying the panel's own words; during a simulation its
--- sim flavor does. The body moves down by RP.STRIP_H while one shows; the band carries no mode word.
+-- sim flavor does. The library docks it (`dock = "title"`, Widgets minor 27) under `p.titleBar`, a
+-- bare frame NS.Skin.Header lays on the band's rect in every skin; the body moves down by the strip's
+-- `BodyOffset` while one shows; the band carries no mode word.
 --
 -- RAID MODE (design §3.3, plan RX-18): a group of more than five (RollsPanelRows.IsRaid on
 -- NS.Compat.GroupSize, read on every paint), or a watched roll of more than five players (a roll
@@ -85,7 +87,6 @@ RP.WIDTH_COMPACT = 250   -- in the compact layout
 RP.GAP = 0            -- between the window and the panel: flush (ruling A10)
 RP.PAD = 8            -- inside the panel
 RP.TOP = K.POPOVER_TOP   -- the title band and the gap under it
-RP.STRIP_H = K.BANNER_H - 4   -- the mode strip under the band (Widgets' TEST_STRIP.HEIGHT)
 RP.HEADER_H = K.GROUP_H   -- an item header, the window's section header's height
 RP.ICON = 16          -- the header's item icon
 RP.BAR_H = 3          -- the countdown bar
@@ -392,6 +393,12 @@ local function buildFoldButtons(p)
 end
 
 local function buildTitle(p)
+    -- The band's rect as a frame (no mouse), for the strips to dock under; NS.Skin.Header lays it on
+    -- the band (`bars`), so it follows the skin's edge and title height.
+    p.titleBar = CreateFrame("Frame", nil, p)
+    p.titleBar:SetPoint("TOPLEFT", p, "TOPLEFT", 1, -1)
+    p.titleBar:SetPoint("TOPRIGHT", p, "TOPRIGHT", -1, -1)
+    p.titleBar:SetHeight(K.TITLE_H)
     p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Rolls"])
@@ -413,21 +420,20 @@ local function buildTitle(p)
     end
     p.expandButton:SetPoint("RIGHT", p.collapseButton, "LEFT", -4, 0)
     -- The band ApplySkin draws carries the title and the buttons, as the Offer panel's (R5-WIN).
-    NS.Skin.Header(p, { title = p.title, right = right })
+    NS.Skin.Header(p, { title = p.title, right = right, bars = { p.titleBar } })
 end
 
--- The mode strips (ruling A1): test mode's and the simulation's, born hidden, directly under the
--- title band and full width, each with the title bar's tooltip for its mode. Nil with no library.
+-- The mode strips (ruling A1): test mode's and the simulation's, born hidden, docked directly under
+-- the title band and full width (the library places them), each with the title bar's tooltip for its
+-- mode. Nil with no library.
 local function buildStrips(p)
     local TB = NS.WindowTitleBar
+    local dock = { titleBar = p.titleBar, window = p }
     local function strip(text, kind, tip)
-        local s = NS.MakeTestStrip(p, text, kind)
+        local s = NS.MakeTestStrip(p, text, kind, dock)
         if not s then return nil end
-        s:SetPoint("TOPLEFT", p, "TOPLEFT", 1, -(RP.TOP - 4))
-        s:SetPoint("TOPRIGHT", p, "TOPRIGHT", -1, -(RP.TOP - 4))
         NS.Window.AttachTooltip(s, tip)
         s:HookScript("OnLeave", function() onLeave() end)
-        s:Hide()
         return s
     end
     p.testStrip = strip(L["TEST: sample rolls. Nothing is sent; combat ends it."], nil, TB.TestTip)
@@ -626,7 +632,7 @@ local function paintStrips(p, view)
     local strip = view.test and p.testStrip or view.sim and p.simStrip or nil
     if p.testStrip then p.testStrip:SetShown(strip == p.testStrip) end
     if p.simStrip then p.simStrip:SetShown(strip == p.simStrip) end
-    return RP.TOP + (strip and RP.STRIP_H or 0)
+    return RP.TOP + (strip and strip:BodyOffset() or 0)
 end
 
 -- The body's height `y` under `top` against the most the panel may be: the bar shows past it, the

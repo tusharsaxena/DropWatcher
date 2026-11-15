@@ -484,10 +484,12 @@ test("rolls panel: in test mode a test strip sits directly under its title bar, 
     assertTrue(strip ~= nil and strip:IsShown(), "the strip shows with the samples")
     assertEqual(strip.text:GetText(), "TEST: sample rolls. Nothing is sent; combat ends it.")
     local pt = strip.__points[1]
-    assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == p, "on the panel"); assertEqual(pt[3], "TOPLEFT")
-    assertEqual(pt[5], -(NS.RollsPanel.TOP - 4), "directly under the title band")
+    -- red under: a strip anchored by hand on the panel (anti-pattern #118)
+    assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == p.titleBar, "docked on the title band")
+    assertEqual(pt[3], "BOTTOMLEFT"); assertEqual(pt[5], 0, "directly under it")
     local sp = p.scroll.__points[1]
-    assertEqual(sp[5], -(NS.RollsPanel.TOP + NS.RollsPanel.STRIP_H), "the body moves down by the strip")
+    assertEqual(sp[5], -(NS.RollsPanel.TOP + strip:BodyOffset()), "the body moves down by the strip")
+    assertEqual(strip:BodyOffset(), NS.TestStripHeight())
     assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(strip)):find("Test mode", 1, true) ~= nil, "the strip has a tooltip")
     assertFalse(p.simStrip:IsShown())
     quietTest(NS, m, false)
@@ -509,7 +511,8 @@ test("rolls panel: during a simulation the sim strip sits under its title bar in
     assertTrue(p.simStrip:IsShown(), "the sim strip")
     assertFalse(p.testStrip:IsShown())
     assertEqual(p.simStrip.text:GetText(), "SIM: simulated rolls. Nothing is sent. /dw sim stop ends it.")
-    assertEqual(p.simStrip.__points[1][5], -(NS.RollsPanel.TOP - 4))
+    assertTrue(p.simStrip.__points[1][2] == p.titleBar, "docked under the title band")
+    assertEqual(p.simStrip.__points[1][5], 0)
     assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(p.simStrip)):find("SIM", 1, true) ~= nil)
     NS.Sim.IsActive = active
     NS.RollsPanel.Refresh()

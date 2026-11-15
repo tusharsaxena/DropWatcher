@@ -60,16 +60,18 @@ test("insights tab: the shared bar hides and the pane starts under the tabs, the
     assertEqual(topOf(f.panes.history), -(K.TAB_H + 4 + K.FILTER_H))
 end)
 
-test("insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History", function()
+test("insights tab: the test-mode strip sits under the title bar on Insights and on History", function()
     local NS, f = insights({ samples = true })
     local K = NS.Constants.WINDOW
     local pt = f.banner.__points[1]
     assertTrue(f.banner:IsShown())
-    assertEqual(pt[2], f.body); assertEqual(pt[5], -(K.TAB_H + 6))
-    assertEqual(topOf(f.panes.insights), -(K.TAB_H + 4 + NS.CompactChrome.BannerH()), "the pane under the strip")
+    -- red under: a strip that follows the tab's own bar (preview-mode, *Where the strip sits*)
+    assertEqual(pt[2], f.titleBar); assertEqual(pt[3], "BOTTOMLEFT"); assertEqual(pt[5], 0)
+    assertEqual(topOf(f.panes.insights), -(K.TAB_H + 4), "the pane under the tabs, in the moved body")
+    assertEqual(f.body.__points[1][5], -NS.CompactChrome.BannerH(), "the body under the strip")
     NS.Window.SelectTab("history")
     pt = f.banner.__points[1]
-    assertEqual(pt[2], f.filterHost); assertEqual(pt[3], "BOTTOMLEFT"); assertEqual(pt[5], -2)
+    assertEqual(pt[2], f.titleBar); assertEqual(pt[5], 0, "the same place on History")
 end)
 
 test("insights tab: the footer's Sort is hidden on Insights and back on History", function()

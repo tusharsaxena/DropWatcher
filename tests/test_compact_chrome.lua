@@ -167,19 +167,21 @@ test("chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim 
     assertTrue(NS.CompactChrome.ModeStrip(f) == f.banner, "no mode: the test strip (hidden)")
 end)
 
-test("chrome: the panes reserve the sim strip's height while a simulation runs", function()
+test("chrome: the body moves down by the sim strip's height while a simulation runs", function()
     local NS, f = shown()
     local K = NS.Constants.WINDOW
     local base = -(K.TAB_H + 4 + K.FILTER_H)
-    assertEqual(f.panes.group.__points[1][5], base, "no mode: no reserve")
+    assertEqual(f.panes.group.__points[1][5], base, "the panes under the filter bar")
+    assertEqual(f.body.__points[1][5], 0, "no mode: the body under the title bar")
     assertTrue(T.simBare(NS):Start({ scenario = "test" }))
     NS.Window.Refresh()
-    -- red under: layoutPanes reserving only in test mode
-    assertEqual(f.panes.group.__points[1][5], base - K.BANNER_H)
-    assertEqual(f.simBanner:GetHeight(), K.BANNER_H - 4, "CC.Paint sizes the strip in force")
+    -- red under: a body offset only in test mode
+    assertEqual(f.body.__points[1][5], -NS.TestStripHeight())
+    assertEqual(f.panes.group.__points[1][5], base, "the panes move with the body")
+    assertEqual(f.simBanner:GetHeight(), NS.TestStripHeight(), "CC.Paint sizes the strip in force")
     NS.Sim:Stop()
     NS.Window.Refresh()
-    assertEqual(f.panes.group.__points[1][5], base)
+    assertEqual(f.body.__points[1][5], 0)
 end)
 
 test("chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged", function()
@@ -498,12 +500,12 @@ test("chrome: the test-mode strip keeps its tooltip with shorter words that may 
     assertEqual(textOf(f.banner.text), "TEST: sample drops in every state. Nothing is whispered; combat ends it.")
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
     local h = NS.CompactChrome.BannerH()
-    assertTrue(h >= NS.Constants.WINDOW.BANNER_H)
-    assertEqual(f.banner:GetHeight(), h - 4)
+    assertTrue(h >= NS.TestStripHeight())
+    assertEqual(f.banner:GetHeight(), h)
     NS.SetWindowMode("full")
     assertEqual(textOf(f.banner.text), "TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it.")
-    assertEqual(NS.CompactChrome.BannerH(), NS.Constants.WINDOW.BANNER_H)
-    assertEqual(f.banner:GetHeight(), NS.Constants.WINDOW.BANNER_H - 4)
+    assertEqual(NS.CompactChrome.BannerH(), NS.TestStripHeight())
+    assertEqual(f.banner:GetHeight(), NS.TestStripHeight())
 end)
 
 -- Retail bounds GetStringWidth by the width the strip's anchors give its words (the window's less
@@ -519,10 +521,12 @@ test("chrome: the compact strip takes a second line exactly when its words wrap 
         NS.Window.Refresh()
         return CC.BannerH()
     end
-    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
-    assertEqual(f.banner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
-    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
-    assertEqual(f.banner:GetHeight(), K.BANNER_H - 4)
+    local one = NS.TestStripHeight()
+    assertEqual(at(380), one + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.banner:GetHeight(), one + CC.WRAP_H)
+    assertEqual(f.body.__points[1][5], -(one + CC.WRAP_H), "the body moves down by both lines")
+    assertEqual(at(520), one, "520 wide: one line")
+    assertEqual(f.banner:GetHeight(), one)
 end)
 
 test("chrome: the compact sim strip takes a second line when its words wrap at 380 px", function()
@@ -537,10 +541,12 @@ test("chrome: the compact sim strip takes a second line when its words wrap at 3
         return CC.BannerH()
     end
     -- red under: BannerH measuring f.banner, whose words are not the ones on screen
-    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
-    assertEqual(f.simBanner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
-    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H + K.BANNER_H + CC.WRAP_H), "the panes move down")
-    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
+    local one = NS.TestStripHeight()
+    assertEqual(at(380), one + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.simBanner:GetHeight(), one + CC.WRAP_H)
+    assertEqual(f.body.__points[1][5], -(one + CC.WRAP_H), "the body moves down")
+    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H), "the panes with it")
+    assertEqual(at(520), one, "520 wide: one line")
     NS.Sim:Stop()
 end)
 

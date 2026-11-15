@@ -480,41 +480,62 @@ local function buildPanes(f, body)
     end
 end
 
--- The mode strips (board 06 E), between the filter bar and the tab's body: the library's strip
--- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode at the same anchor, anchored and tipped
--- here: f.banner (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14,
--- a running simulation, SimTip). Both are born hidden; Refresh shows the one in force. No library,
--- no strips: both stay nil, the panes reserve nothing and the title bar's word marks the mode.
--- Under a tab with its own bar (`own`) the shared bar is hidden, so they sit under the tabs instead.
-local function placeStrip(f, s, own)
-    local to, x, y = own and f.body or f.filterHost, own and K.INSET or 0, own and -(K.TAB_H + 6) or -2
-    s:ClearAllPoints()
-    s:SetPoint("TOPLEFT", to, own and "TOPLEFT" or "BOTTOMLEFT", x, y)
-    s:SetPoint("TOPRIGHT", to, own and "TOPRIGHT" or "BOTTOMRIGHT", own and -x or 0, y)
-end
+-- The mode strips (board 06 E; preview-mode's *Where the strip sits*): the library's strip
+-- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode, docked directly under the title bar, full
+-- width, above the tabs, the filter bar and the tab's body (`dock = "title"`, Widgets minor 27: the
+-- library anchors it, and places it again on every show, hide and resize), and tipped here: f.banner
+-- (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14, a running
+-- simulation, SimTip). Both are born hidden; Refresh shows the one in force, and the body moves down
+-- by the strip in force's `BodyOffset` (relayBody). No library, no strips: both stay nil, the body
+-- moves nothing and the title bar's word marks the mode.
 
-local function anchorStrip(f, s, tip)
-    placeStrip(f, s, false)
-    Window.AttachTooltip(s, tip)
+-- The body's top under the title bar, moved down by the strip in force (0 with none showing); each
+-- strip's show and hide (its onOffset) and every layout pass call it, the latter because the
+-- compact layout's two-line strip changes its height with no show.
+local function relayBody(f)
+    local body = f.body
+    if not body then return end
+    local offset = math.max(f.banner and f.banner:BodyOffset() or 0, f.simBanner and f.simBanner:BodyOffset() or 0)
+    if body.dwOffset == offset then return end
+    body.dwOffset = offset
+    body:ClearAllPoints()
+    body:SetPoint("TOPLEFT", f.divider, "BOTTOMLEFT", 0, -offset)
+    body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, 1)
 end
 
 local function buildBanner(f, body)
-    local b = NS.MakeTestStrip(body, L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
+    local dock = { titleBar = f.titleBar, window = f, onOffset = function() relayBody(f) end }
+    local b = NS.MakeTestStrip(body,
+        L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."], nil, dock)
     if not b then return end
-    anchorStrip(f, b, NS.WindowTitleBar.TestTip)
+    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
     f.banner = b
     local s = NS.MakeTestStrip(body,
-        L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim")
+        L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim", dock)
     if not s then return end
-    anchorStrip(f, s, NS.WindowTitleBar.SimTip)
+    Window.AttachTooltip(s, NS.WindowTitleBar.SimTip)
     f.simBanner = s
+end
+
+-- The window's footer (standalone-windows' *The footer*, LibKa0s Widgets' Footer, minor 27): no fill,
+-- the hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` tall across the body's bottom
+-- edge (inset 0: the body is already 1 px inside the window's edge), the resize grip's corner cleared
+-- (`grip`, the grip itself built on it by makeResizable). Its words and controls are the active tab's
+-- strip, laid over it (NS.WindowFooter, NS.FooterRow). No library: a bare frame of the same height.
+local function buildFooter(body)
+    local foot = NS.MakeFooter(body, { grip = true, inset = 0 })
+    if foot then return foot end
+    foot = CreateFrame("Frame", nil, body)
+    foot:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(NS.FooterMetric("HEIGHT"))
+    return foot
 end
 
 local function buildBody(f)
     local body = CreateFrame("Frame", nil, f)
-    body:SetPoint("TOPLEFT", f.divider, "BOTTOMLEFT", 0, 0)
-    body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, 1)
     f.body = body
+    relayBody(f)
     buildTabs(f, body)
 
     f.filterHost = CreateFrame("Frame", nil, body)
@@ -524,36 +545,26 @@ local function buildBody(f)
 
     buildBanner(f, body)
 
-    -- The footer band under the active tab's strip, the one footer line (RX-09, rolls-UX spec §3.7):
-    -- the strip's height, so the panes reach the body's foot and the strip sits on the band; the
-    -- resize grip is built in its bottom-right corner (makeResizable). No status bar of its own: the
-    -- status line rides the active strip (NS.WindowFooter.AnchorStatus).
-    f.footerHost = CreateFrame("Frame", nil, body)
-    f.footerHost:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", K.INSET, 0)
-    f.footerHost:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", -K.INSET, 0)
-    f.footerHost:SetHeight(K.STRIP_H)
-    NS.Skin.Footer(f.footerHost)   -- its band, `foot.bg` (FS-DW-FIX, cause A1)
+    -- The footer under the active tab's strip, the one footer line (RX-09, rolls-UX spec §3.7): the
+    -- strip is the footer's height, so the panes reach the body's foot and the strip sits on the
+    -- footer; the resize grip is built in its bottom-right corner (makeResizable). No status bar of
+    -- its own: the status line rides the active strip (NS.WindowFooter.AnchorStatus).
+    f.footerHost = buildFooter(body)
 
     buildPanes(f, body)
     NS.WindowFilterBar.Build(f.filterHost)
     NS.WindowFooter.Build(f.footerHost)
 end
 
--- The panes fill between the filter bar (and the strip in force, in test mode or a simulation) and
--- the footer; a pane with its own bar (Window.TabOwnsBar) starts under the tabs, and while it is the
--- active tab the shared bar is hidden and the strips move up with it.
+-- The panes fill between the filter bar and the footer (the strip in force, in test mode or a
+-- simulation, is over the tabs: the body moved down by it, relayBody); a pane with its own bar
+-- (Window.TabOwnsBar) starts under the tabs, and while it is the active tab the shared bar is hidden.
 local function layoutPanes()
-    local marked = NS.State.testMode == true or NS.Sim:IsActive()
-    local band = marked and NS.CompactChrome.BannerH() or 0
     local own = Window.TabOwnsBar(activeTab)
     frame.filterHost:SetShown(not own)
-    if frame.stripsOwn ~= own then
-        frame.stripsOwn = own
-        if frame.banner then placeStrip(frame, frame.banner, own) end
-        if frame.simBanner then placeStrip(frame, frame.simBanner, own) end
-    end
+    relayBody(frame)
     for key, pane in pairs(frame.panes) do
-        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H) + band
+        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H)
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
         pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, 0)
@@ -567,7 +578,7 @@ local function makeResizable(f)
         -- The owner's icon.grip tints the grip's art, live (Core minor 14): the tool windows' grips
         -- and this one wear one skin; under Ka0s Default and WoW Default it is the client's art.
         owner        = addonName,
-        -- In the footer band's bottom-right corner, the footer line's (RX-09); hidden while locked or
+        -- In the footer's bottom-right corner (LibKa0s Widgets' Footer, RX-09); hidden while locked or
         -- minimized (paintMinimized, RX-08).
         gripParent   = f.footerHost,
         canResize    = function() return not isLocked() and not isMinimized() end,
@@ -702,8 +713,11 @@ end
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
-    -- The grip shows only while the window can be resized: expanded and unlocked (RX-08).
-    if frame.resizeGrip then frame.resizeGrip:SetShown(not m and not isLocked()) end
+    -- The grip shows only while the window can be resized: expanded and unlocked (RX-08); the
+    -- footer clears its corner only while it shows (foot:SetGrip).
+    local grip = not m and not isLocked()
+    if frame.resizeGrip then frame.resizeGrip:SetShown(grip) end
+    if frame.footerHost.SetGrip then frame.footerHost:SetGrip(grip) end
     NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
     NS.WindowTitleBar.PaintLock(frame, isLocked())
 end

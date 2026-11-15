@@ -405,7 +405,16 @@ test("footer row: no status bar: the panes reach the footer band, whose corner h
         local rel, y = pane.__points[2][2], pane.__points[2][5]
         assertTrue(rel == f.body); assertEqual(y, 0, key .. " reaches the body's foot")
     end
-    assertEqual(f.footerHost:GetHeight(), K.STRIP_H, "the band is the footer row's height")
+    -- red under: a hand-built footer band (anti-pattern #118)
+    local H = NS.FooterMetric("HEIGHT")
+    assertEqual(H, 24)
+    assertEqual(f.footerHost:GetHeight(), H, "the library's footer, FOOTER.HEIGHT")
+    assertTrue(f.footerHost.line ~= nil and f.footerHost.SetGrip ~= nil, "built by W.Footer")
+    assertTrue(f.footerHost.bg == nil, "no fill band")
+    for _, pane in pairs(f.panes) do
+        local strip = pane.strip or pane.summary
+        if strip then assertEqual(strip:GetHeight(), H, "the tab's row is the footer's height") end
+    end
     local grip = f.resizeGrip
     assertTrue(grip:GetParent() == f.footerHost, "the grip is the footer's")
     local p, rel = grip:GetPoint(1)

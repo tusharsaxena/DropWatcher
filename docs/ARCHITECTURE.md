@@ -30,7 +30,7 @@ lists the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and eight verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
@@ -39,9 +39,10 @@ lists the toolchain):
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
-(`NS.MakeTestStrip` answers nil, the panes reserve no room and the `TEST MODE` / `SIM` title word
+(`NS.MakeTestStrip` answers nil, the body moves nothing and the `TEST MODE` / `SIM` title word
 marks the mode; with the library, a word shows only while the window is minimized, DW-10; the Rolls panel then draws no strip either and its body stays under the band, RX-21). Each setup file holds a
-descriptor and a degradation stub, and `tests/test_surface_parity.lua` holds every stub to the live
+descriptor and a degradation stub (no library, `NS.MakeFooter` answers nil and the window lays a bare
+frame of the footer's height, with no hairline), and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
 The main window (`modules/Window.lua`) is a non-secure standalone frame with the shared Ka0s edge,
@@ -167,19 +168,35 @@ The filter bar is shared by the tabs and never reflows between them: a control a
 is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
 exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
 whose seven filters none of the shared controls apply to. While it is active the window hides the
-shared bar and the footer's Sort, starts the pane under the tabs, re-anchors the test-mode and
-simulation strips there, and never syncs the shared bar. This is a DropWatcher convention, not a rule
+shared bar and the footer's Sort, starts the pane under the tabs, and never syncs the shared bar. This is a DropWatcher convention, not a rule
 of the standard (Insights design spec §4.1), so it owes no deviation row.
 
-The window has one footer line (RX-09, rolls-UX design §3.7): the active tab's strip, on the footer
-band (`f.footerHost`, `S.Footer`, the strip's height). There is no status bar under it: the status
+The mode strips (test mode's amber, the simulation's cyan) sit directly under the title bar, full
+width, above the tabs, the filter bar and the body, on every tab (preview-mode, *Where the strip
+sits*; WowAddonStandards v2.110.0): the library docks them (`dock = "title"` on `f.titleBar`,
+LibKa0s Widgets minor 27, UC-DW) and the body's top moves down by the strip in force's
+`BodyOffset()` (`relayBody` in `modules/Window.lua`, on each strip's show and hide and on every
+layout pass, since the compact layout's two-line strip changes height with no show). The Rolls
+panel docks its two strips the same way under `p.titleBar`, a bare frame `NS.Skin.Header` lays on
+its title band's rect (`bars`), and its body starts `RP.TOP + BodyOffset()` down.
+
+The window has one footer line (RX-09, rolls-UX design §3.7): the active tab's strip, laid over the
+window's footer (`f.footerHost`, LibKa0s Widgets' `Footer`, Widgets minor 27, UC-DW: no fill, a
+hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` 24 px tall across the body's foot;
+every tab strip is that height, read through `NS.FooterMetric`, and draws no rule of its own; its
+words are in `text.muted`). There is no status bar under it: the status
 line (inspect freshness, the last loot, the situation or the simulation, Pawn; `NS.WindowFooter`)
 rides the active strip after its own words (the tradeable count, the kept-history line, the period),
 ending where the strip's buttons start, one line cut with an ellipsis, its tooltip every segment's
 reasons; it follows a tab switch (`WindowFooter.AnchorStatus`, the pane's `statusHost`), and the
 strip it leaves spans its row with its words again (`FooterRow.FitInfo`). The resize grip is built in
-the band's bottom-right corner (`MakeResizable` `gripParent`), each strip's row starting
-`K.GRIP_ROOM` clear of it, and hidden while the window is locked or minimized (RX-08).
+the footer's bottom-right corner (`MakeResizable` `gripParent`, the footer built with `grip = true`
+and told `SetGrip` as the grip shows and hides), each strip's row starting `K.GRIP_ROOM` in from the
+strip's edge (`K.INSET` short of the corner), and hidden while the window is locked or minimized (RX-08).
+The tab's words and controls on the footer are the host's own (the strip's info and status font
+strings, its labeled buttons and the Sort dropdown), not the footer's `left` / `right` lines and
+`marks` slot: flagged to the owner at UC-DW as an open question against standalone-windows'
+*The footer* (anti-pattern #118), not ratified here.
 
 ## Settings Schema
 

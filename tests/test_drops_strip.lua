@@ -143,7 +143,6 @@ end)
 
 test("drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it", function()
     local NS, drawn = shownMine()
-    local K = NS.Constants.WINDOW
     local strip = drawn.pane.summary
     assertTrue(strip:IsShown())
     assertEqual(drawn.summary.count, 3, "the bonus roll is listed but not tradeable")
@@ -152,7 +151,7 @@ test("drops strip: under the table, it counts your tradeable drops and the next 
     assertTrue(#NS.Window.TooltipOf(strip.info) >= 2); assertTrue(#NS.Window.TooltipOf(strip.post) >= 2)
     local point, rel = strip:GetPoint(1)
     assertEqual(point, "BOTTOMLEFT"); assertTrue(rel == drawn.pane, "at the pane's foot, above the footer")
-    assertEqual(bottomOf(drawn.pane.scroll), K.STRIP_H, "the table ends over it")
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"), "the table ends over it")
     assertEqual(#drawn.rows, 4, "the rows are the table's own")
 end)
 
@@ -244,7 +243,7 @@ test("drops strip: full layout, nothing tradeable: shown with Scan group beside 
     local _, _, x = anchorOf(strip.scan)
     local step = NS.Constants.WINDOW.FOOTER_BUTTON_W + NS.FooterRow.GAP
     assertEqual(x, -(WF.SORT_INSET + 2 * step), "Scan group stays beside the toggle")
-    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.STRIP_H)
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"))
     seed(NS, { drop(), OTHER }, { groupOf("Boss", NOW - 3000, { 1, 9 }, ROSTER) })
     NS.Window.Refresh()
     assertTrue(strip.post:IsShown())
@@ -286,14 +285,14 @@ test("drops strip: compact, shown while none of your listed drops can be traded:
     assertTrue(drawn.compact)
     assertTrue(drawn.pane.summary:IsShown(), "the toggle lives there"); assertTrue(drawn.summary == nil)
     assertFalse(drawn.pane.summary.post:IsShown())
-    assertEqual(bottomOf(drawn.scroll), NS.Constants.WINDOW.STRIP_H, "the cards end over it")
+    assertEqual(bottomOf(drawn.scroll), NS.FooterMetric("HEIGHT"), "the cards end over it")
     NS.SetWindowMode("full")
     seed(NS, { drop(), OTHER }, { groupOf("Boss", NOW - 3000, { 1, 9 }, ROSTER) })
     NS.Window.Refresh()
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.pane.summary:IsShown())
     assertEqual(textOf(drawn.pane.summary.info.text), "1 tradeable · next expiry 1:47:12", "another player's drop is not counted")
-    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.STRIP_H)
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"))
 end)
 
 test("drops strip: it counts the drops the tab lists, its filters applied, collapsed or not", function()
@@ -364,7 +363,7 @@ test("drops strip: under the compact cards, the summary shortened, Post my trade
     assertTrue(strip.scan:IsShown(), "Scan group on the strip, as in full (feedback-16)")
     assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip is unchanged")
     assertEqual(drawn.summary.count, 3)
-    assertEqual(bottomOf(drawn.scroll), K.STRIP_H, "the cards end over it")
+    assertEqual(bottomOf(drawn.scroll), NS.FooterMetric("HEIGHT"), "the cards end over it")
     NS.SetWindowMode("full")
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil and #drawn.rows == 4, "the table again")

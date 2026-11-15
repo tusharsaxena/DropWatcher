@@ -37,7 +37,7 @@ local _, NS = ...
 -- PURE: TabText, ModeWord, BadgeShort, FooterLine, IsActive, ActiveKeys, CountActive,
 -- FiltersLabel and FiltersTip. The edge: Paint (Window.Refresh's every pass; the layout itself only
 -- when the layout in force changed), ModeStrip (the strip of the mode in force), BannerH (its height,
--- which Window's pane layout reads) and the Filters menu (FilterRows, ToggleFilters,
+-- which the strip in force is sized to; Window's body moves down by the strip's BodyOffset) and the Filters menu (FilterRows, ToggleFilters,
 -- CloseFilters). WindowFilterBar.Layout
 -- stands aside in compact: the search box's anchors size it there.
 
@@ -492,7 +492,7 @@ function CC.Paint(f)
     end
     placeTitle(f, compact)
     local b = CC.ModeStrip(f)
-    local h = CC.BannerH() - 4
+    local h = CC.BannerH()
     if b and b.slotH ~= h then
         b.slotH = h
         b:SetHeight(h)
@@ -520,21 +520,23 @@ function CC.ModeStrip(f)
     return f.banner
 end
 
---- The height of the strip in force (CC.ModeStrip) in the layout in force: one line full; compact two
---- when its words do not fit on one line (their unwrapped width against the room their anchors give
---- them); 0 when the window has no such strip (the Widgets library absent).
+--- The height of the strip in force (CC.ModeStrip) in the layout in force: one line full (the
+--- library's TEST_STRIP.HEIGHT); compact two when its words do not fit on one line (their unwrapped
+--- width against the room their anchors give them); 0 when the window has no such strip (the Widgets
+--- library absent). The strip docks under the title bar and the body moves down by its height.
 --- @return number
 function CC.BannerH()
     local f = NS.Window.Frame()
     local strip = f and CC.ModeStrip(f)
     if f and not strip then return 0 end
-    if not (f and f.chromeCompact) then return K.BANNER_H end
+    local one = NS.TestStripHeight()
+    if not (f and f.chromeCompact) then return one end
     local fs = strip.text
     local w = unwrappedWidth(fs)
     local room = fs.GetWidth and fs:GetWidth()
     if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
-    if w and room > 0 and w <= room then return K.BANNER_H end
-    return K.BANNER_H + CC.WRAP_H
+    if w and room > 0 and w <= room then return one end
+    return one + CC.WRAP_H
 end
 
 --- The Filters button and the menu it opened, for the suites: { filters, menu }.

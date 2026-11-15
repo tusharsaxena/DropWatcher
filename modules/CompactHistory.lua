@@ -151,7 +151,7 @@ local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, tog
 
 -- The pane's own scroll view, above its strip, with its stacked detail card.
 local function buildView(pane)
-    local cv = NS.CompactGroup.BuildView(pane, K.STRIP_H)
+    local cv = NS.CompactGroup.BuildView(pane, NS.FooterMetric("HEIGHT"))
     cv.card = NS.HistoryCard.Build(cv.content, true)
     return cv
 end
