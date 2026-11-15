@@ -29,6 +29,13 @@ NS.ToastStub = {
         stack = 1, grow = "DOWN" } end,
 }
 
+--- The shell's gap between stacked toasts (LibKa0s-Toast's STACK_GAP, Toast-1.0 minor 4), or 0
+--- with no library, which stacks nothing.
+--- @return number
+function NS.ToastStackGap()
+    return Toast and Toast.STACK_GAP or 0
+end
+
 --- A toast for descriptor `d` (the library's Toast:New; `d.owner` defaults to this addon), or the
 --- stub when the library is absent.
 --- @param d table the descriptor: d.build is required

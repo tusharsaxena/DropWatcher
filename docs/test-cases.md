@@ -2385,7 +2385,7 @@ Total.
 - insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
 - insights sections: By boss's empty line names Mythic+ keys on Retail alone (clients-§4)
 
-### test_toast.lua (50)
+### test_toast.lua (51)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: on Forever a score-led upgrade passes the gain gate
@@ -2419,6 +2419,7 @@ Total.
 - toast edge: toast.scale scales a toast on screen live about its saved anchor, the point unchanged
 - toast edge: the first toast is built at toast.scale, and a profile switch takes the incoming scale
 - toast edge: test mode's placeholder toasts and stays until test mode ends
+- toast edge: test mode's placeholder toast carries the test strip on its top edge; a live one none
 - toast edge: a drop that leaves the feed takes its toast and its place in the queue
 - toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
 - toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
@@ -3053,7 +3054,7 @@ Total.
 | test_insights_rows.lua | 20 |
 | test_window_insights.lua | 22 |
 | test_insights_sections.lua | 9 |
-| test_toast.lua | 50 |
+| test_toast.lua | 51 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 18 |
 | test_icon_style.lua | 14 |
@@ -3082,4 +3083,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2556** |
+| **Total** | **2557** |

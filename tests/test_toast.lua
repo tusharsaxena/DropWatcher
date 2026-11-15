@@ -639,6 +639,28 @@ test("toast edge: test mode's placeholder toasts and stays until test mode ends"
     assertFalse(shown(NS)); assertEqual(NS.Toast.Stats().waiting, 0)
 end)
 
+-- red under: a placeholder toast with no strip (RX-23: from the LibKa0s v1.103.0 re-vendor,
+-- preview-mode's *Where the strip sits* puts the strip on a HUD display of test data, on its top
+-- edge and outside it; anti-pattern #97)
+test("toast edge: test mode's placeholder toast carries the test strip on its top edge; a live one none", function()
+    local NS, m = T.enableAddon()
+    assertTrue(NS.SchemaRuntime.Set("toast.enabled", true))
+    m.seedGearJournal()
+    NS.SetTestMode(true)
+    local f = NS.Toast.Frame()
+    local strip = f.testStrip
+    assertTrue(strip ~= nil and strip:IsShown(), "the test strip")
+    local pt = strip.__points[1]
+    assertEqual(pt[1], "BOTTOMLEFT"); assertTrue(pt[2] == f, "docked on the toast"); assertEqual(pt[3], "TOPLEFT")
+    assertFalse(strip:IsMouseEnabled(), "a HUD strip takes no mouse")
+    assertEqual(strip.text:GetText(), NS.L["TEST: a sample drop. Nothing is whispered; combat ends it."])
+    NS.SetTestMode(false)
+    local NS2 = enabled({ drop() })
+    added(NS2, 1)
+    local live = NS2.Toast.Frame()
+    assertTrue(live.testStrip == nil or not live.testStrip:IsShown(), "a live drop's toast carries none")
+end)
+
 -- ── the toast follows its drop and its switch (DW-62 review F-001, F-004) ───────────────────
 
 test("toast edge: a drop that leaves the feed takes its toast and its place in the queue", function()

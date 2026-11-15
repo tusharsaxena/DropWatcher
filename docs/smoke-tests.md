@@ -2719,7 +2719,8 @@ or a Lua error. Result: Passed (owner, 2026-11-05)
 toast under the top of the screen reads `Big upgrade for you`, the name of Seta's head item (a real
 item since DW-84) and `Looted by Seta · +19 ▲ · Likely tradeable` (superseded by feedback-9,
 2026-10-13: four rows, `Looted by Seta · You ▲19 · Them …` then `Likely tradeable · <reason>`; FEED-66), with an Ask button and a close mark; it stays while test mode is
-on. Drag it somewhere else, `/dw test` off (it goes), `/reload`, `/dw test` → it comes back where you
+on. An amber TEST strip sits on its top edge, outside it, and takes no click; each stacked
+placeholder has its own, clear of the toast beside it (RX-23). Drag it somewhere else, `/dw test` off (it goes), `/reload`, `/dw test` → it comes back where you
 left it. Outside test mode it cannot be dragged. General › Master controls › Reset position → back under the
 top. With Play a sound on, each toast plays the epic loot sound. In a dungeon with a group member,
 when a drop of theirs is a 10+ item-level upgrade for you and likely tradeable → the toast shows

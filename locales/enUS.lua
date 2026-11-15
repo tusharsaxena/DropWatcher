@@ -997,6 +997,8 @@ L["TEST: a sample roll. Nothing is rolled."] = "TEST: a sample roll. Nothing is 
 L["SIM: a simulated roll. Nothing is rolled."] = "SIM: a simulated roll. Nothing is rolled."
 L["TEST: a sample verdict."] = "TEST: a sample verdict."
 L["SIM: a simulated verdict."] = "SIM: a simulated verdict."
+-- modules/Toast.lua: a placeholder toast's HUD strip (RX-23)
+L["TEST: a sample drop. Nothing is whispered; combat ends it."] = "TEST: a sample drop. Nothing is whispered; combat ends it."
 -- modules/DetailCells.lua: the scale a score used (DW-FP07) and a score-led verdict (DW-FP08)
 L["your own spec's"] = "your own spec's"
 L["your own (shown in Pawn, or your weights)"] = "your own (shown in Pawn, or your weights)"

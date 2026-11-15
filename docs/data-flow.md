@@ -1159,7 +1159,8 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
        ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky), placed: the
           first (the head) at the saved point, each after it under the one before (toast.stackGrow
-          down) or above it (up), a gap between
+          down) or above it (up), a gap between (in test mode the gap grows by the strip's
+          height: a test drop's toast carries the TEST strip on its top edge, dock = "hud", RX-23)
     ─> expired ─> the shell's re-flow (the rest close up on the head) and next (at the tail)
 close mark / right-click anywhere on one (frame, icon, Ask) ─> the shell's dismiss of that toast
     (not asked, never toasts again) ─> re-flow and next

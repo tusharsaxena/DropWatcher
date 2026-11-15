@@ -77,7 +77,12 @@ local _, NS = ...
 -- window's point). A test drop's toast is sticky (the shell's Show with `sticky`): it stays until it
 -- is closed or test mode ends, since placing it takes longer than its duration. The placeholders
 -- that qualify stack as live drops do, so the stack's direction can be seen where it was placed; a
--- drag on any of them moves the first, and the rest follow it.
+-- drag on any of them moves the first, and the rest follow it. A placeholder's toast carries the
+-- amber TEST strip (LibKa0s Widgets' TestStrip, RX-23; preview-mode, *Where the strip sits*: a HUD
+-- display of test data carries it on its top edge, outside it, dock = "hud"); it takes no mouse and
+-- flips under the toast when the top would leave the screen. In test mode the stack's gap grows by
+-- the strip's height (the shell's `stackGap`), so no toast covers the strip of the one beside it. A
+-- live drop's toast carries none.
 --
 -- SCALE. `toast.scale` (0.5 to 2, Alerts › Toast's Scale, feedback-21 G10) is the frame's own scale,
 -- read by the shell at each toast, by the row's reaction (ApplyScale, live on a toast on screen) and
@@ -375,6 +380,8 @@ local function makeRows(f)
     buildTop(f)
     buildVerdicts(f)
     buildTrade(f)
+    -- The placeholder's strip (TEST MODE above), on the toast's top edge; nil with no library.
+    f.testStrip = NS.MakeTestStrip(f, L["TEST: a sample drop. Nothing is whispered; combat ends it."], nil, { target = f })
     -- The toast's tooltip is the Trade cell's: the full reason row 4 may cut (feedback-9 spec §0).
     NS.Window.AttachTooltip(f, function() return unpack(f.tipLines or {}) end)
     toast:Attach(f.icon)
@@ -480,6 +487,7 @@ local function paint(f, rec)
     NS.WindowGroup.SetItem(f.icon, t.link, NS.WindowGroup.Where(rec))
     f.icon.dropId = nil
     paintAsk(f, rec)
+    if f.testStrip then f.testStrip:SetShown(rec.test == true) end
 end
 
 -- Still worth showing when its turn comes: in the feed, qualifying, and not asked for yet.
@@ -539,6 +547,10 @@ toast = NS.NewToast({
     -- and a profile reload's Refresh reads these again.
     stack           = function() return setting("stack") end,
     stackGrow       = Toast.Grow,
+    -- In test mode each toast's strip sits in the gap (TEST MODE above); nil is the shell's own.
+    stackGap        = function()
+        return NS.State.testMode == true and NS.ToastStackGap() + NS.TestStripHeight() or nil
+    end,
     defaultPosition = Toast.POINT,
     duration        = function() return setting("duration") end,
     scale           = function() return setting("scale") end,
