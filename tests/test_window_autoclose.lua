@@ -481,6 +481,31 @@ test("roll open: a popup up before the history lists the roll opens the window w
     assertTrue(NS.IsWindowShown(), "the item claims the popup as it enters Rolling now")
 end)
 
+-- red under: hookTree walking into the Rolls panel (a child of the window), so a press on the
+-- read-only panel, its close button included, canceled the count for the rest of the show
+test("roll open: a press on the Rolls panel, or its close button, keeps the count, and the window closes by itself", function()
+    local NS, m = inDungeon()
+    local d = rollOpens(m)
+    NS.Window.Frame():__fire("OnShow")   -- the client runs the frame's OnShow on the open
+    assertTrue(NS.RollsPanel.IsShown(), "the panel docks beside the auto-opened window")
+    NS.Window.Refresh()                  -- the walk after a repaint reaches the panel's frames
+    local p = NS.RollsPanel.Drawn().panel
+    p:__fire("OnMouseDown", "LeftButton")
+    assertTrue(NS.WindowAutoClose.Armed(), "a press on the panel")
+    p.closeButton:__fire("OnMouseDown", "LeftButton")
+    p.closeButton:__fire("OnClick", "LeftButton")
+    assertTrue(NS.WindowAutoClose.Armed(), "a press on its close button")
+    d.winner = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false, roll = 87 }
+    d.rollInfos[1].isWinner = true
+    m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
+    m.advance(10.1)                      -- the finished roll's linger in the (closed) panel
+    assertFalse(NS.RollsPanel.HasBlocks())
+    m.advance(9.8)
+    assertTrue(NS.IsWindowShown(), "a full count from the block leaving")
+    m.advance(0.3)
+    assertFalse(NS.IsWindowShown(), "then the window closes by itself")
+end)
+
 test("roll open: a test-mode sample roll opens nothing while test mode is off", function()
     local NS = inDungeon()
     NS.Pending.AddTest({ link = ROLL_LINK, facts = ring(620) })

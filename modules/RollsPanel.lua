@@ -359,6 +359,9 @@ local function build()
     NS.Skin.Text(p.empty, "text.highlight")
     p.empty:SetText(L["No rolls right now"])
     p:SetScript("OnLeave", function() onLeave() end)
+    -- A child of the window, read-only: a press on it is no use of the window, so the auto-close
+    -- walk hooks only the pointer under it (RX-20).
+    NS.WindowAutoClose.PointerOnly(p)
     p:Hide()
     return p
 end

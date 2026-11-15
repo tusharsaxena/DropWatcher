@@ -5,7 +5,8 @@ local _, NS = ...
 -- ARMED only by an auto-open (modules/Window.lua's maybeAutoOpen calls Arm after its Open). Window.Open
 -- and Window.Close disarm first, so a manual show over an auto-open, and a manual open, never close
 -- by themselves; the window's drag (Cancel, from its onDragStart) and a press anywhere in it (an
--- OnMouseDown hook on the frame and on every frame under it) cancel it for that show too.
+-- OnMouseDown hook on the frame and on every frame under it, but the read-only Rolls panel's,
+-- AC.PointerOnly) cancel it for that show too.
 --
 -- THE COUNT is one C_Timer.NewTimer handle of `window.autoClose.seconds` (5 to 120, default 10).
 -- A new drop (DropAdded) and a roll or pending item opening, changing or closing (PendingChanged)
@@ -30,6 +31,7 @@ local MIN, MAX, DEFAULT = 5, 120, 10
 local armed = false
 local timer          -- the count's C_Timer handle, nil when none runs
 local hooked = setmetatable({}, { __mode = "k" })   -- frames the hover and click hooks are on
+local pointerOnly = setmetatable({}, { __mode = "k" })   -- subtrees a press does not cancel in (AC.PointerOnly)
 
 local function enabled()
     return NS.Setting("autoOpen") == true and NS.Setting("window.autoClose.enabled") == true
@@ -113,7 +115,10 @@ AC.Cancel = AC.Disarm
 -- window leaves mouse-transparent on purpose (a row's text cells, an icon's border and glow, a
 -- pane) is skipped, since a mouse script on it can mouse-enable it and steal the hover and the
 -- press from the control beneath; the pointer over it is over a mouse-enabled frame anyway.
-local function hookOne(f)
+-- Under a frame AC.PointerOnly named (the Rolls panel, a read-only companion docked beside the
+-- window, RX-20) the pointer still starts the count over, but a press does not cancel it: a click
+-- there reads a roll or puts the panel away, and is no use of the window.
+local function hookOne(f, passive)
     if hooked[f] or not f.HookScript then return end
     if f.IsMouseEnabled and not f:IsMouseEnabled() then return end
     if f.HasScript and not (f:HasScript("OnMouseDown") and f:HasScript("OnEnter") and f:HasScript("OnLeave")) then
@@ -122,16 +127,24 @@ local function hookOne(f)
     hooked[f] = true
     f:HookScript("OnEnter", function() AC.Bump() end)
     f:HookScript("OnLeave", function() AC.Bump() end)
-    f:HookScript("OnMouseDown", function() AC.Cancel() end)
+    if not passive then f:HookScript("OnMouseDown", function() AC.Cancel() end) end
 end
 
 -- `seen` is this walk's own: each frame is visited once whatever its children answer.
-local function hookTree(f, seen)
+local function hookTree(f, seen, passive)
     if type(f) ~= "table" or seen[f] then return end
     seen[f] = true
-    hookOne(f)
+    passive = passive or pointerOnly[f] == true
+    hookOne(f, passive)
     if not f.GetChildren then return end
-    for _, child in ipairs({ f:GetChildren() }) do hookTree(child, seen) end
+    for _, child in ipairs({ f:GetChildren() }) do hookTree(child, seen, passive) end
+end
+
+--- Name a frame under the window whose subtree only hears the pointer: a press there keeps the
+--- count (the Rolls panel, RX-20).
+--- @param f table
+function AC.PointerOnly(f)
+    if type(f) == "table" then pointerOnly[f] = true end
 end
 
 --- The window has just auto-opened (modules/Window.lua): count, when auto-close is on.

@@ -534,7 +534,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_window_autoclose.lua (29)
+### test_window_autoclose.lua (30)
 
 - autoclose: on by default with 10 seconds, on this client
 - autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
@@ -563,6 +563,7 @@ Total.
 - roll open: with Show rolls off a roll opens nothing, and does not hold an auto-opened window
 - roll open: a roll you get no popup for opens nothing; your popup coming up opens it
 - roll open: a popup up before the history lists the roll opens the window when it does
+- roll open: a press on the Rolls panel, or its close button, keeps the count, and the window closes by itself
 - roll open: a test-mode sample roll opens nothing while test mode is off
 - roll open: the Auto-open the window tooltip names a roll popup too
 
@@ -2957,7 +2958,7 @@ Total.
 | test_window.lua | 19 |
 | test_window_shell.lua | 69 |
 | test_window_compact.lua | 25 |
-| test_window_autoclose.lua | 29 |
+| test_window_autoclose.lua | 30 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
@@ -3063,4 +3064,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2537** |
+| **Total** | **2538** |
