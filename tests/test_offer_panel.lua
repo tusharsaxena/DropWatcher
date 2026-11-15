@@ -448,3 +448,33 @@ test("offer panel: beside the compact window it goes on the side with room, and 
     assertEqual(p.dock, "right")
     assertEqual(select(2, p:GetPoint(2)), win, "the full layout docks top and bottom again")
 end)
+
+-- red under: the Offer panel listing test mode's sample candidates (or a simulation's) with no strip
+-- (RX-23: the panel has a title band, so it is a window, and from the LibKa0s v1.103.0 re-vendor
+-- preview-mode's *Where the strip sits* puts the strip directly under its title bar; #97, #118)
+test("offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip", function()
+    local NS, p = openPanel()
+    local K, panel = NS.Constants.WINDOW, p.panel
+    assertFalse(panel.testStrip:IsShown(), "a live drop: no strip")
+    assertFalse(panel.simStrip:IsShown())
+    local function itemTop() return select(5, panel.item:GetPoint(1)) end
+    assertEqual(itemTop(), -K.POPOVER_TOP)
+    NS.LootFeed.Get(1).test = true
+    NS.OfferPanel.Refresh()
+    local strip = panel.testStrip
+    assertTrue(strip:IsShown(), "the test strip")
+    local pt = strip.__points[1]
+    assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == panel.titleBar, "docked under the title band"); assertEqual(pt[3], "BOTTOMLEFT")
+    assertEqual(pt[5], 0, "directly under it")
+    assertEqual(strip.text:GetText(), NS.L["TEST: sample members. Nothing is whispered; combat ends it."])
+    assertEqual(itemTop(), -(K.POPOVER_TOP + NS.TestStripHeight()), "the body moves down by the strip")
+    assertFalse(panel.simStrip:IsShown())
+    NS.LootFeed.Get(1).test, NS.LootFeed.Get(1).sim = nil, true
+    NS.OfferPanel.Refresh()
+    assertTrue(panel.simStrip:IsShown(), "the sim strip"); assertFalse(strip:IsShown())
+    assertTrue(panel.simStrip.__points[1][2] == panel.titleBar)
+    NS.LootFeed.Get(1).sim = nil
+    NS.OfferPanel.Refresh()
+    assertFalse(panel.simStrip:IsShown())
+    assertEqual(itemTop(), -K.POPOVER_TOP, "and the body back under the band")
+end)

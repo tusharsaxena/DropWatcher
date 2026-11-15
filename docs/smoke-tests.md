@@ -2329,7 +2329,10 @@ button reads `Offered` in yellow, as does the row's `Offer` on Drops (FEED-32). 
 `Trade` is grayed with "That player is out of trade range."; walk up → click it → the trade window opens
 with the item already placed; cancel it. `Announce to group` posts the announce once. On the upgrade's row,
 `Offer` opens the panel and the row's Trade count and `(Details)` are now drawn (FEED-43). Close the panel
-with its close mark. Result: passed in the client, 2026-10-23 (the owner).
+with its close mark. Result: passed in the client, 2026-10-23 (the owner). (RX-23: `/dw test`, then
+`Offer` on a sample drop of yours → the panel shows an amber TEST strip directly under its title band,
+the item header below it; in a simulation a drop of yours shows the cyan SIM strip; a live drop shows
+none. Result: )
 
 **ASK-7. Post my tradeables.** Client: both. With two or more tradeable drops of yours, click `Post my
 tradeables` on the strip under the Drops table (since DW-E3) → one party (instance) chat line `Up for trade, whisper me:

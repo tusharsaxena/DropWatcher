@@ -31,6 +31,15 @@ local _, NS = ...
 -- (TradeTimerTick). It closes itself when its drop is gone, and when no other player is left in your
 -- group to take it (DW-07: NS.WindowOwn.Alone; it will not open then either). Offer goes through
 -- NS.PressOffer, Announce to group through NS.PressAnnounce.
+--
+-- THE MODE STRIP (RX-23; preview-mode, *Where the strip sits*: a frame with a title band is a
+-- window, and every window of test or simulated data carries the strip directly under its title
+-- bar). Test mode's sample drops open the panel on their sample candidates (WindowOwn.Alone is never
+-- true for a test drop), and a simulation's drops on its simulated members, so a test drop
+-- (`drop.test`) shows LibKa0s Widgets' TestStrip and a simulated one (`drop.sim`) its sim flavor,
+-- docked by the library under `p.titleBar` (a bare frame NS.Skin.Header lays on the band's rect);
+-- the body (the item header, the column labels, the list) moves down by the strip's `BodyOffset`
+-- while one shows (relayBody). The band carries no mode word.
 
 NS.OfferPanel = NS.OfferPanel or {}
 local OP    = NS.OfferPanel
@@ -136,6 +145,12 @@ end
 -- ── building the panel ──────────────────────────────────────────────────────────────────────
 
 local function buildTitle(p)
+    -- The band's rect as a frame (no mouse), for the strips to dock under; NS.Skin.Header lays it on
+    -- the band (`bars`), so it follows the skin's edge and title height (as the Rolls panel's).
+    p.titleBar = CreateFrame("Frame", nil, p)
+    p.titleBar:SetPoint("TOPLEFT", p, "TOPLEFT", 1, -1)
+    p.titleBar:SetPoint("TOPRIGHT", p, "TOPRIGHT", -1, -1)
+    p.titleBar:SetHeight(K.TITLE_H)
     p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Who could use this?"])
@@ -149,12 +164,11 @@ local function buildTitle(p)
     -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and close sit on the
     -- band's middle, the title by the skin's `title.align`, in every skin (R5-WIN, the lead's call 3).
     -- With no library the anchors above stand.
-    NS.Skin.Header(p, { title = p.title, right = { p.closeButton } })
+    NS.Skin.Header(p, { title = p.title, right = { p.closeButton }, bars = { p.titleBar } })
 end
 
 local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
-    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.POPOVER_TOP)
     p.name = tipFrame(p, nil, "GameFontNormal")
     NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)
@@ -169,7 +183,7 @@ local function buildHeads(p)
     for _, col in ipairs(COLS) do
         local f = CreateFrame("Frame", nil, p)
         f:SetSize(100, K.COLHEAD_H)
-        f:SetPoint("TOPLEFT", p, "TOPLEFT", 10 + col.x, -(K.OFFER_HEAD_H - K.COLHEAD_H))
+        f.x = 10 + col.x
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetText(col.label)
@@ -198,8 +212,6 @@ end
 
 local function buildList(p)
     local scroll = CreateFrame("ScrollFrame", nil, p, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.OFFER_HEAD_H - 2)
-    scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, K.OFFER_FOOT_H + 4)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
@@ -208,8 +220,47 @@ local function buildList(p)
     if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     p.rowPool = NS.Pool.New()
     p.empty = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20)
     NS.Skin.Text(p.empty, "text.highlight")
+end
+
+-- The body under the title band, `off` lower while a strip shows: the item header, the column
+-- labels, the list and its empty line.
+local function relayBody(p)
+    local strip = (p.testStrip and p.testStrip:IsShown() and p.testStrip)
+        or (p.simStrip and p.simStrip:IsShown() and p.simStrip) or nil
+    local off = strip and strip:BodyOffset() or 0
+    p.item:ClearAllPoints()
+    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.POPOVER_TOP - off)
+    for _, f in pairs(p.heads) do
+        f:ClearAllPoints()
+        f:SetPoint("TOPLEFT", p, "TOPLEFT", f.x, -(K.OFFER_HEAD_H - K.COLHEAD_H) - off)
+    end
+    p.scroll:ClearAllPoints()
+    p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.OFFER_HEAD_H - 2 - off)
+    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, K.OFFER_FOOT_H + 4)
+    p.empty:ClearAllPoints()
+    p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20 - off)
+end
+
+-- The mode strips (THE MODE STRIP): test mode's and the simulation's, born hidden, docked directly
+-- under the title band, each with the title bar's tooltip for its mode. Nil with no library.
+local function buildStrips(p)
+    local TB = NS.WindowTitleBar
+    local dock = { titleBar = p.titleBar, window = p, onOffset = function() relayBody(p) end }
+    local function strip(text, kind, tip)
+        local s = NS.MakeTestStrip(p, text, kind, dock)
+        if s then NS.Window.AttachTooltip(s, tip) end
+        return s
+    end
+    p.testStrip = strip(L["TEST: sample members. Nothing is whispered; combat ends it."], nil, TB.TestTip)
+    p.simStrip = strip(L["SIM: simulated members. Nothing is sent. /dw sim stop ends it."], "sim", TB.SimTip)
+end
+
+-- The strip drop `drop` owes: test mode's for a test drop, the simulation's for a simulated one.
+local function paintStrips(p, drop)
+    if p.testStrip then p.testStrip:SetShown(drop.test == true) end
+    if p.simStrip then p.simStrip:SetShown(drop.test ~= true and drop.sim == true) end
+    relayBody(p)
 end
 
 local function build()
@@ -226,6 +277,8 @@ local function build()
     buildHeads(p)
     buildList(p)
     buildFoot(p)
+    buildStrips(p)
+    relayBody(p)
     p:Hide()
     return p
 end
@@ -392,6 +445,7 @@ function OP.Refresh()
     local drop = id ~= nil and NS.LootFeed.Get(id) or nil
     if not (drop and drop.isMine) or NS.WindowOwn.Alone(drop) or NS.Collectibles.IsFeedOnly(drop) then return OP.Close() end
     panel.dropId = id
+    paintStrips(panel, drop)
     dock(panel)
     local now = GetTime()
     paintHeader(panel, drop, now, NS.TradeTimer.WarnAt())

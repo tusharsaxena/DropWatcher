@@ -999,6 +999,9 @@ L["TEST: a sample verdict."] = "TEST: a sample verdict."
 L["SIM: a simulated verdict."] = "SIM: a simulated verdict."
 -- modules/Toast.lua: a placeholder toast's HUD strip (RX-23)
 L["TEST: a sample drop. Nothing is whispered; combat ends it."] = "TEST: a sample drop. Nothing is whispered; combat ends it."
+-- modules/OfferPanel.lua: the mode strips under its title band (RX-23)
+L["TEST: sample members. Nothing is whispered; combat ends it."] = "TEST: sample members. Nothing is whispered; combat ends it."
+L["SIM: simulated members. Nothing is sent. /dw sim stop ends it."] = "SIM: simulated members. Nothing is sent. /dw sim stop ends it."
 -- modules/DetailCells.lua: the scale a score used (DW-FP07) and a score-led verdict (DW-FP08)
 L["your own spec's"] = "your own spec's"
 L["your own (shown in Pawn, or your weights)"] = "your own (shown in Pawn, or your weights)"
