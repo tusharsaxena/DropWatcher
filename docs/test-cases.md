@@ -1966,7 +1966,7 @@ Total.
 - roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
 - roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
 
-### test_rolls_panel.lua (49)
+### test_rolls_panel.lua (53)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -2012,6 +2012,10 @@ Total.
 - rolls panel: the roller rows alternate their shading
 - rolls panel: a roll number on Need and Greed, none on Pass or Waiting
 - rolls panel: the item header shows the item and every roll, a row its player, choice, roll and class
+- rolls panel: docked right, a roller row's and an item header's tooltips open right of the panel
+- rolls panel: docked left, a roller row's and an item header's tooltips open left of the panel
+- rolls panel: in a raid a folded Pass line's tooltip opens beside the panel too
+- rolls panel: with the panel's geometry unknown a row's tooltip keeps its place below the row
 - rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
 - rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads
 - rolls panel: a dungeon group never folds
@@ -3036,7 +3040,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 20 |
-| test_rolls_panel.lua | 49 |
+| test_rolls_panel.lua | 53 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3085,4 +3089,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2559** |
+| **Total** | **2563** |

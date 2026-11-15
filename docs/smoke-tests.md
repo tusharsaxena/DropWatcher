@@ -4002,7 +4002,9 @@ Disenchant) row's number right-aligned as it lands; Pass and Waiting show none. 
 (<choice> <roll>)` appears under the rows, or `Everyone passed`, and the time reads `done`. `/dw sim
 roll` again while one is open → a second block under the first, both open. Hover the header → the
 item's own tooltip with every roll under it and the click hint; hover a row → the player, choice, roll
-and class; hover the strip, the buttons and the close → each has a tooltip. Result:
+and class; hover the strip, the buttons and the close → each has a tooltip. The header's and every
+row's tooltip opens outside the panel, beside its right edge (the side away from the window), its
+top level with the hovered line's top, never over the panel's own rows (RX-26). Result:
 
 **ROLLS-13. The panel's side and its flip (RX-17; design §3.1; Review Focus 1).** Client: both. With a
 roll in the panel (ROLLS-12), drag the window toward the screen's right edge until the panel would
@@ -4014,8 +4016,9 @@ there is no room. With the panel on the right and room on both sides, open the O
 your drops (or `/dw test` and Offer on a sample drop of yours) → the Rolls panel moves to the window's
 left, the Offer panel on the right, no overlap; close the Offer panel → the Rolls panel returns right.
 Drag the window to the screen's left edge and open the Offer panel again → the Rolls panel hides
-while it is up and comes back when it closes (RX-20). With a roll popup's side card up too, note
-which frames touch. Result:
+while it is up and comes back when it closes (RX-20). With the panel docked left, hover an item
+header and a row → each tooltip opens beside the panel's left edge, away from the window (RX-26). With
+a roll popup's side card up too, note which frames touch. Result:
 
 **ROLLS-14. The linger and the hover (RX-17, RX-21; design part A ruling 9).** Client: both. `/dw sim
 roll` twice, and let the first end before the second → the first stays with its result while the
@@ -4030,7 +4033,8 @@ close while the panel holds a roll, and closes its own count later. Result:
 **ROLLS-15. Raid mode, the collapsers (RX-18, RX-21; design §3.3).** Client: both. `/dw sim start
 dungeon`, then `/dw sim raid` → the title reads `Rolls`; every item is open. Need and Greed list every
 player with their numbers; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
-→ a tooltip lists every name in class color, bulleted; click it → that block lists every player in the
+→ a tooltip lists every name in class color, bulleted, beside the panel away from the window (RX-26);
+click it → that block lists every player in the
 group. Click an item's header → it collapses to its header with the count line under it and the
 chevron pointing right; it stays collapsed as the roll changes; click again → it opens. The title
 bar holds one toggle (RX-25): while any item is open it is chevron-up, `Collapse all` → every item is

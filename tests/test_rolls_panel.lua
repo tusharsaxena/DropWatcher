@@ -911,6 +911,72 @@ test("rolls panel: the item header shows the item and every roll, a row its play
     assertTrue(close:find("Close the Rolls panel", 1, true) ~= nil, close)
 end)
 
+-- RX-26: the panel's row tooltips open outside it, away from the window: beside its right edge
+-- docked right, its left edge docked left, the tooltip's top level with the hovered row's top.
+-- The panel's top at 700, the hovered frame's at 650; answers where the tooltip went.
+local function tipAt(m, p, f)
+    p.GetTop = function() return 700 end
+    f.GetTop = function() return 650 end
+    m.GameTooltip.__points = {}
+    f:__fire("OnEnter")
+    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
+    f:__fire("OnLeave")
+    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+end
+
+local function expectBeside(NS, m, p, f, side, label)
+    local pts, rel, x, y = tipAt(m, p, f)
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    if side == "right" then
+        assertEqual(pts, "TOPLEFT>TOPRIGHT", label .. ": beside the panel's right edge")
+        assertEqual(x, gap, label)
+    else
+        assertEqual(pts, "TOPRIGHT>TOPLEFT", label .. ": beside the panel's left edge")
+        assertEqual(x, -gap, label)
+    end
+    assertTrue(rel == p, label .. ": anchored on the panel, not the row")
+    assertEqual(y, -50, label .. ": its top level with the row's top")
+end
+
+-- red under: a roller row's tooltip below the row (ANCHOR_BOTTOM), the header's at the row-tooltip place
+test("rolls panel: docked right, a roller row's and an item header's tooltips open right of the panel", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local d = NS.RollsPanel.Drawn()
+    assertEqual(d.panel.dock, "right")
+    expectBeside(NS, m, d.panel, d.lines[1], "right", "roller row")
+    expectBeside(NS, m, d.panel, d.headers[1], "right", "item header")
+end)
+
+test("rolls panel: docked left, a roller row's and an item header's tooltips open left of the panel", function()
+    local NS, m = shown({ ["rolls.panel.side"] = "left" }, 400, 1000)
+    rollOpens(m)
+    local d = NS.RollsPanel.Drawn()
+    assertEqual(d.panel.dock, "left")
+    expectBeside(NS, m, d.panel, d.lines[1], "left", "roller row")
+    expectBeside(NS, m, d.panel, d.headers[1], "left", "item header")
+end)
+
+test("rolls panel: in a raid a folded Pass line's tooltip opens beside the panel too", function()
+    local NS, m = shown()
+    groupOf(m, 8)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 2, 1, 3, 2))
+    local d = NS.RollsPanel.Drawn()
+    expectBeside(NS, m, d.panel, foldOf(NS, "pass"), "right", "folded Pass")
+    expectBeside(NS, m, d.panel, foldOf(NS, "waiting"), "right", "folded Waiting")
+end)
+
+test("rolls panel: with the panel's geometry unknown a row's tooltip keeps its place below the row", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local row = NS.RollsPanel.Drawn().lines[1]
+    m.GameTooltip.__points = {}
+    row:__fire("OnEnter")
+    local point, rel, relPoint = m.GameTooltip:GetPoint(1)
+    assertEqual(tostring(point) .. ">" .. tostring(relPoint), "TOP>BOTTOM")
+    assertTrue(rel == row, "below the row, as ANCHOR_BOTTOM")
+end)
+
 -- red under: Pass and Waiting listed a row per player in a raid
 test("rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds", function()
     local NS, m = shown()

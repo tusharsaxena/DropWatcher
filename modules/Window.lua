@@ -219,10 +219,19 @@ function Window.PlaceAbove(tip, widget)
 end
 
 -- Each placement after Show: `above` (a filter-bar control, DW-B1) and `row` (a table row's cell,
--- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History).
+-- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History) and
+-- `rolls` (a Rolls panel line, RX-26: beside the panel away from the window, NS.RollsPanel.PlaceTip,
+-- else below the line as ANCHOR_BOTTOM would).
+local function placeRolls(tip, w)
+    if NS.RollsPanel.PlaceTip(tip, w) then return end
+    tip:ClearAllPoints()
+    tip:SetPoint("TOP", w, "BOTTOM", 0, 0)
+end
+
 local PLACERS = {
     above = function(tip, w) Window.PlaceAbove(tip, w) end,
     row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
+    rolls = placeRolls,
 }
 
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
@@ -268,7 +277,8 @@ end
 --- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
 --- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
---- control, DW-B1) or `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2).
+--- control, DW-B1), `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2) or `rolls`
+--- (NS.RollsPanel.PlaceTip: a Rolls panel line, beside the panel away from the window, RX-26).
 --- @param widget table
 --- @param fn function
 --- @param place string|nil

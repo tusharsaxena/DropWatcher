@@ -304,8 +304,35 @@ end
 
 local onLeave, onHeaderClick, onFoldClick, setAll
 
+local function scaleOf(f) return geom(f, "GetEffectiveScale") or 1 end
+
+--- Place a shown tooltip outside the panel, on the side away from the window (RX-26): its top level
+--- with the hovered frame's top, its near edge a TIP_GAP past the panel's right edge while the panel
+--- is docked right, past its left edge while docked left. Measured at each frame's effective scale
+--- (as NS.RowTooltip.Place). Answers `right` or `left`, or nil with no docked panel or unknown
+--- geometry (nothing is placed; the caller keeps its own place).
+--- @param tip table a GameTooltip, shown
+--- @param owner table the hovered row, folded line or item header
+--- @return string|nil
+function RP.PlaceTip(tip, owner)
+    local side = panel and panel.dock
+    if side ~= "right" and side ~= "left" then return nil end
+    local rowTop, top = geom(owner, "GetTop"), geom(panel, "GetTop")
+    if not (rowTop and top) then return nil end
+    local gap = K.TIP_GAP
+    local dy = (rowTop * scaleOf(owner) - top * scaleOf(panel)) / scaleOf(tip)
+    tip:ClearAllPoints()
+    if side == "right" then
+        tip:SetPoint("TOPLEFT", panel, "TOPRIGHT", gap, dy)
+    else
+        tip:SetPoint("TOPRIGHT", panel, "TOPLEFT", -gap, dy)
+    end
+    return side
+end
+
 -- An item header's tooltip: the item's own, then every roll and the click's hint
--- (RollsPanelRows.HeaderTip), at the row tooltips' place (modules/RowTooltip.lua).
+-- (RollsPanelRows.HeaderTip), beside the panel away from the window (RP.PlaceTip), else at the row
+-- tooltips' place (modules/RowTooltip.lua).
 local function headerEnter(h)
     local b = byId[h.blockId]
     if not (b and GameTooltip) then return end
@@ -317,7 +344,7 @@ local function headerEnter(h)
     local r, g, bl = NS.Skin.Color("gtip.value")
     for i = 2, #lines do GameTooltip:AddLine(lines[i], r, g, bl, true) end
     GameTooltip:Show()
-    NS.RowTooltip.PlaceOrFallback(GameTooltip, h)
+    if not RP.PlaceTip(GameTooltip, h) then NS.RowTooltip.PlaceOrFallback(GameTooltip, h) end
 end
 
 local function headerLeave()
@@ -384,7 +411,7 @@ local function newLine(p)
     f.text = faced(f)
     f.text:SetPoint("LEFT", f, "LEFT", 4, 0)
     f.text:SetPoint("RIGHT", f.roll, "LEFT", -4, 0)
-    NS.Window.AttachTooltip(f, function() return lineTip(f) end)
+    NS.Window.AttachTooltip(f, function() return lineTip(f) end, "rolls")
     f:HookScript("OnLeave", function() onLeave() end)
     f:SetScript("OnMouseUp", function(self) onFoldClick(self) end)
     return f
