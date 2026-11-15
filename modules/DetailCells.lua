@@ -601,16 +601,19 @@ end
 
 -- ── the Rolls box (Forever port design §5.3) ────────────────────────────────────────────────
 
---- The resolved drop's Rolls box: its roll table's summary and rows (NS.RollCells), or nil with no
---- table (`rec.roll`: a group-loot drop resolved from its roll) or while `show` (`rolls.show`) is off.
+--- The resolved drop's Rolls box: its roll table's summary and rows (NS.RollCells), and your verdict
+--- (WindowCells.Me) for the all-rolls tooltip's foot (rolls UX RX-06), or nil with no table
+--- (`rec.roll`: a group-loot drop resolved from its roll) or while `show` (`rolls.show`) is off.
 --- @param drop table
 --- @param show boolean
---- @return table|nil { title, summary, rows, roll }
+--- @return table|nil { title, summary, rows, roll, verdict }
 function DC.RollsBox(drop, show)
     local roll = type(drop) == "table" and drop.roll or nil
     if not show or type(roll) ~= "table" then return nil end
     local RC = NS.RollCells
-    return { title = L["ROLLS"], summary = RC.Summary(roll), rows = RC.Rows(roll), roll = roll }
+    local verdict = NS.WindowCells.Me(drop)
+    return { title = L["ROLLS"], summary = RC.Summary(roll, nil, nil, nil, { verdict = verdict }), rows = RC.Rows(roll),
+        roll = roll, verdict = verdict }
 end
 
 -- ── the trade box ───────────────────────────────────────────────────────────────────────────
@@ -673,7 +676,7 @@ local function offerAction(o)
     return a
 end
 
--- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `clock`, `confirm`, `reset`), as on the row.
+-- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `ph:hourglass`, `confirm`, `reset`), as on the row.
 local function askAction(drop, ask)
     local who = looterName(drop)
     if not ask.offered then   -- No action, gray, its reason (feedback-11 spec §1)

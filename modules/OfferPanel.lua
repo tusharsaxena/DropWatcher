@@ -13,7 +13,12 @@ local _, NS = ...
 -- item on a two-item slot read in full, `321 ▼10 / 308 ▲3`, feedback-21 H7), or a word:
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
--- list scrolls in a raid. The foot strip holds Announce to group and a note on the order. What each
+-- list scrolls in a raid. The footer (LibKa0s Widgets' Footer, RX-23, spec B.2: no fill, a hairline in
+-- the skin's `divider`, FOOTER.HEIGHT tall) holds the note on the order on its right line, in
+-- `text.muted`, with the order's tooltip, and Announce to group as its one mark in the corner (RX-24,
+-- WowAddonStandards v2.110.0 *The footer*: a footer's controls are catalog marks), its art and
+-- tooltip following its ask state (MineCells.AnnounceButton) and the state's word, once it is not
+-- ready (`Announced`, `Queued`, `Retry`), on the footer's left line. What each
 -- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no Offer shows the gray No action with the reason
 -- (feedback-11 spec §1).
@@ -31,6 +36,15 @@ local _, NS = ...
 -- (TradeTimerTick). It closes itself when its drop is gone, and when no other player is left in your
 -- group to take it (DW-07: NS.WindowOwn.Alone; it will not open then either). Offer goes through
 -- NS.PressOffer, Announce to group through NS.PressAnnounce.
+--
+-- THE MODE STRIP (RX-23; preview-mode, *Where the strip sits*: a frame with a title band is a
+-- window, and every window of test or simulated data carries the strip directly under its title
+-- bar). Test mode's sample drops open the panel on their sample candidates (WindowOwn.Alone is never
+-- true for a test drop), and a simulation's drops on its simulated members, so a test drop
+-- (`drop.test`) shows LibKa0s Widgets' TestStrip and a simulated one (`drop.sim`) its sim flavor,
+-- docked by the library under `p.titleBar` (a bare frame NS.Skin.Header lays on the band's rect);
+-- the body (the item header, the column labels, the list) moves down by the strip's `BodyOffset`
+-- while one shows (relayBody). The band carries no mode word.
 
 NS.OfferPanel = NS.OfferPanel or {}
 local OP    = NS.OfferPanel
@@ -136,6 +150,12 @@ end
 -- ── building the panel ──────────────────────────────────────────────────────────────────────
 
 local function buildTitle(p)
+    -- The band's rect as a frame (no mouse), for the strips to dock under; NS.Skin.Header lays it on
+    -- the band (`bars`), so it follows the skin's edge and title height (as the Rolls panel's).
+    p.titleBar = CreateFrame("Frame", nil, p)
+    p.titleBar:SetPoint("TOPLEFT", p, "TOPLEFT", 1, -1)
+    p.titleBar:SetPoint("TOPRIGHT", p, "TOPRIGHT", -1, -1)
+    p.titleBar:SetHeight(K.TITLE_H)
     p.title = p:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Who could use this?"])
@@ -149,12 +169,11 @@ local function buildTitle(p)
     -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and close sit on the
     -- band's middle, the title by the skin's `title.align`, in every skin (R5-WIN, the lead's call 3).
     -- With no library the anchors above stand.
-    NS.Skin.Header(p, { title = p.title, right = { p.closeButton } })
+    NS.Skin.Header(p, { title = p.title, right = { p.closeButton }, bars = { p.titleBar } })
 end
 
 local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
-    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.POPOVER_TOP)
     p.name = tipFrame(p, nil, "GameFontNormal")
     NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)
@@ -169,7 +188,7 @@ local function buildHeads(p)
     for _, col in ipairs(COLS) do
         local f = CreateFrame("Frame", nil, p)
         f:SetSize(100, K.COLHEAD_H)
-        f:SetPoint("TOPLEFT", p, "TOPLEFT", 10 + col.x, -(K.OFFER_HEAD_H - K.COLHEAD_H))
+        f.x = 10 + col.x
         f.text = f:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
         f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
         f.text:SetText(col.label)
@@ -183,23 +202,33 @@ local function announceTip(p)
     return unpack(p.announce.tipLines or { L["Announce to group"] })
 end
 
+-- A mark that stands in for Announce to group with no library (no marks: NS.BareFooter), so the
+-- paint runs unchanged; never shown.
+local function noMark(foot)
+    local b = CreateFrame("Button", nil, foot)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b:Hide()
+    return b
+end
+
 local function buildFoot(p)
     local W = NS.Window
-    p.announce = W.TextButton(p, 130, "speech-bubble", L["Announce to group"], function() NS.PressAnnounce(p.dropId) end)
-    p.announce:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 10, 8)
-    W.AttachTooltip(p.announce, function() return announceTip(p) end)
-    p.note = tipFrame(p)
-    p.note:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -10, 8)
-    p.note:SetSize(200, K.CONTROL_H)
-    p.note.text:ClearAllPoints()
-    p.note.text:SetPoint("RIGHT", p.note, "RIGHT", 0, 0)
-    p.note.text:SetJustifyH("RIGHT")
+    local foot = NS.MakeFooter(p, { marks = { { icon = NS.Icon("speech-bubble"),
+        onClick = function() NS.PressAnnounce(p.dropId) end } } }) or NS.BareFooter(p)
+    p.foot = foot
+    p.announce = foot.marks[1] or noMark(foot)
+    W.AttachTooltip(p.announce, function() return announceTip(p) end, "above")
+    -- The note is the footer's right line (the library paints it `text.muted`); a frame over it
+    -- carries the order's tooltip.
+    p.note = CreateFrame("Frame", nil, foot)
+    p.note.text = foot.right
+    p.note:SetPoint("TOPLEFT", foot.right, "TOPLEFT", 0, 0)
+    p.note:SetPoint("BOTTOMRIGHT", foot.right, "BOTTOMRIGHT", 0, 0)
+    W.AttachTooltip(p.note, function() return tipOf(p.note) end)
 end
 
 local function buildList(p)
     local scroll = CreateFrame("ScrollFrame", nil, p, "UIPanelScrollFrameTemplate")
-    scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.OFFER_HEAD_H - 2)
-    scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, K.OFFER_FOOT_H + 4)
     local content = CreateFrame("Frame", nil, scroll)
     content:SetSize(1, 1)
     scroll:SetScrollChild(content)
@@ -208,8 +237,47 @@ local function buildList(p)
     if bar then NS.Skin.ScrollBar(bar) end   -- the skin's corridor and knob (D2)
     p.rowPool = NS.Pool.New()
     p.empty = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-    p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20)
     NS.Skin.Text(p.empty, "text.highlight")
+end
+
+-- The body under the title band, `off` lower while a strip shows: the item header, the column
+-- labels, the list and its empty line.
+local function relayBody(p)
+    local strip = (p.testStrip and p.testStrip:IsShown() and p.testStrip)
+        or (p.simStrip and p.simStrip:IsShown() and p.simStrip) or nil
+    local off = strip and strip:BodyOffset() or 0
+    p.item:ClearAllPoints()
+    p.item:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.POPOVER_TOP - off)
+    for _, f in pairs(p.heads) do
+        f:ClearAllPoints()
+        f:SetPoint("TOPLEFT", p, "TOPLEFT", f.x, -(K.OFFER_HEAD_H - K.COLHEAD_H) - off)
+    end
+    p.scroll:ClearAllPoints()
+    p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -K.OFFER_HEAD_H - 2 - off)
+    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W - 4, NS.FooterMetric("HEIGHT") + 4)
+    p.empty:ClearAllPoints()
+    p.empty:SetPoint("TOP", p, "TOP", 0, -K.OFFER_HEAD_H - 20 - off)
+end
+
+-- The mode strips (THE MODE STRIP): test mode's and the simulation's, born hidden, docked directly
+-- under the title band, each with the title bar's tooltip for its mode. Nil with no library.
+local function buildStrips(p)
+    local TB = NS.WindowTitleBar
+    local dock = { titleBar = p.titleBar, window = p, onOffset = function() relayBody(p) end }
+    local function strip(text, kind, tip)
+        local s = NS.MakeTestStrip(p, text, kind, dock)
+        if s then NS.Window.AttachTooltip(s, tip) end
+        return s
+    end
+    p.testStrip = strip(L["TEST: sample members. Nothing is whispered; combat ends it."], nil, TB.TestTip)
+    p.simStrip = strip(L["SIM: simulated members. Nothing is sent. /dw sim stop ends it."], "sim", TB.SimTip)
+end
+
+-- The strip drop `drop` owes: test mode's for a test drop, the simulation's for a simulated one.
+local function paintStrips(p, drop)
+    if p.testStrip then p.testStrip:SetShown(drop.test == true) end
+    if p.simStrip then p.simStrip:SetShown(drop.test ~= true and drop.sim == true) end
+    relayBody(p)
 end
 
 local function build()
@@ -226,6 +294,8 @@ local function build()
     buildHeads(p)
     buildList(p)
     buildFoot(p)
+    buildStrips(p)
+    relayBody(p)
     p:Hide()
     return p
 end
@@ -262,6 +332,12 @@ local function dockCompact(p, win, side)
     p:SetHeight(OP.CompactHeight(edge(win, "GetHeight")))
 end
 
+-- The Rolls panel docks on the side this panel leaves free (RX-20): it repaints when this one
+-- opens, closes or changes side (modules/RollsPanel.lua, read at call time: it loads later).
+local function besideMoved()
+    if NS.RollsPanel then NS.RollsPanel.Refresh() end
+end
+
 local function dock(p)
     local win = NS.Window.Frame()
     local side = MC.DockSide(edge(win, "GetLeft"), edge(win, "GetRight"), K.OFFER_W, screenWidth(), K.DOCK_GAP)
@@ -276,14 +352,16 @@ local function dock(p)
         p:SetPoint("BOTTOMRIGHT", win, "BOTTOMLEFT", -K.DOCK_GAP, 0)
     else
         p:SetPoint("TOPRIGHT", win, "TOPRIGHT", -K.INSET, -K.TITLE_H)
-        p:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
+        p:SetPoint("BOTTOMRIGHT", win, "BOTTOMRIGHT", -K.INSET, NS.FooterMetric("HEIGHT"))   -- over the footer line (RX-09)
     end
     -- Floating over the window, it is drawn above the window's rows by its level, in the window's own
     -- strata (a popover, frame-layering-§3); docked beside it, at the window's chrome level.
     local LV = C.LAYERS.LEVEL
     p:SetFrameLevel(win:GetFrameLevel() + (side == "float" and LV.POPOVER_OFFER or LV.DOCKED))
     p:SetWidth(K.OFFER_W)
+    local moved = p.dock ~= side
     p.dock = side
+    if moved then besideMoved() end
 end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
@@ -362,17 +440,18 @@ end
 local function paintFoot(p, drop, n)
     local state, reason = NS.Asks.StateOf("announce", nil, drop.id)
     local look = MC.AnnounceButton(state, reason)
-    look.toneState = MC.ToneState(NS.History.OutcomeOf(drop.id), look.state)
     local tradeable = drop.trade and drop.trade.state ~= "no"
-    NS.WindowOwn.SetButtonLook(p.announce, look)
-    p.announce.label:SetText(look.state == "ready" and L["Announce to group"] or look.text)
+    local b = p.announce
+    b.icon:SetTexture(NS.Icon(look.icon))
+    b.tipLines, b.state = look.tip, look.state
+    local on = look.enabled and tradeable
+    b:SetEnabled(on)
+    b:SetAlpha(on and 1 or 0.4)
     if not tradeable then
-        p.announce:SetEnabled(false)
-        p.announce:SetAlpha(0.5)
-        p.announce.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
+        b.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
     end
-    p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
-    setTone(p.note.text, "muted")
+    p.foot:SetLeft(look.state ~= "ready" and look.text or "")
+    p.note.text:SetText(L["%d members · sorted by gain"]:format(n))   -- the footer's right line
     p.note.tipLines = OP.ORDER_TIP
 end
 
@@ -384,6 +463,7 @@ function OP.Refresh()
     local drop = id ~= nil and NS.LootFeed.Get(id) or nil
     if not (drop and drop.isMine) or NS.WindowOwn.Alone(drop) or NS.Collectibles.IsFeedOnly(drop) then return OP.Close() end
     panel.dropId = id
+    paintStrips(panel, drop)
     dock(panel)
     local now = GetTime()
     paintHeader(panel, drop, now, NS.TradeTimer.WarnAt())
@@ -409,6 +489,7 @@ function OP.Open(dropID)
     NS.Debug("UI", "offer panel: drop %s", tostring(dropID))
     panel:Show()
     if NS.Window.IsShown() then NS.Window.Refresh() else OP.Refresh() end
+    besideMoved()
     return panel
 end
 
@@ -416,6 +497,7 @@ end
 function OP.Close()
     State.offerPanel = nil
     if panel then panel:Hide() end
+    besideMoved()
 end
 
 --- A drop's Offer button (feedback-21 H4): it closes the panel when the panel already shows that
@@ -429,6 +511,11 @@ end
 
 --- @return boolean
 function OP.IsShown() return panel ~= nil and panel:IsShown() == true end
+
+--- The side the shown panel is docked on (`right`, `left`, or `float` over the window), or nil
+--- while it is closed: the Rolls panel takes the other side (RX-20).
+--- @return string|nil
+function OP.DockSide() return OP.IsShown() and panel.dock or nil end
 
 --- The drop the panel shows, or nil.
 --- @return number|nil

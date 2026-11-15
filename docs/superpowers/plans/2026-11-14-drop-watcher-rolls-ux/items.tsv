@@ -1,0 +1,31 @@
+id	milestone	repo	title	depends_on
+RX-00	M0	DropWatcher	Mockups, design and plan	
+RX-01	M1	DropWatcher	Forever defaults	RX-00
+RX-02	M1	DropWatcher	The roll time left	RX-00
+RX-03	M1	DropWatcher	Master-loot pending at the group loot threshold	RX-00
+RX-04	M1	DropWatcher	Lockboxes and the catch-all	RX-00
+RX-05	M2	DropWatcher	Line-2 caps and the button on top	RX-04
+RX-06	M3	DropWatcher	The roll count line and the all-rolls tooltip	RX-04
+RX-07	M3	DropWatcher	The roll side card	RX-06
+RX-08	M4	DropWatcher	Header lock button	RX-00
+RX-09	M4	DropWatcher	One footer line	RX-08
+RX-10	M4	DropWatcher	Auto-close	RX-00
+RX-11	M5	DropWatcher	Docs and smoke	RX-10
+RX-12	M5	DropWatcher	Whole-run review and automated-test bundle	RX-11
+RX-13	M6	DropWatcher	LibKa0s re-vendor and the hourglass	RX-12
+RX-14	M6	DropWatcher	The lock button at the top right	RX-12
+RX-15	M6	DropWatcher	Lockboxes their own kind; quivers containers	RX-12
+RX-16	M6	DropWatcher	A roll popup for a watched item opens the window	RX-15
+RX-17	M7	DropWatcher	The Rolls panel, docked, in a dungeon	RX-16
+RX-18	M7	DropWatcher	Rolls panel raid mode	RX-17
+RX-19	M7	DropWatcher	Rolls panel simulation, test mode and docs	RX-18
+RX-21	M8	DropWatcher	Rolls panel strip, headers, collapsers, rows, linger	RX-20
+RX-22	M8	DropWatcher	Test mode shows the simulated roll popup and side card	RX-21
+UC-01	M9	WowAddonStandards	Strip under the header, footer and its height	RX-20
+UC-02	M9	LibKa0s	Footer primitive and TestStrip docking	UC-01
+UC-03	M10	(all addons)	Adopt the strip and footer in every addon	UC-02
+UC-DW	M10	DropWatcher	Re-vendor LibKa0s v1.103.0; strip under the title bar; Widgets Footer	UC-02
+RX-23	M10	DropWatcher	Whole-branch review of RX-21..UC-DW and bundle	UC-DW
+RX-24	M11	DropWatcher	Window footer on the library lines and marks	RX-23
+RX-25	M11	DropWatcher	One Expand/Collapse toggle on the Rolls panel	RX-23
+RX-26	M11	DropWatcher	Rolls panel tooltips outside the panel, away from the window	RX-25

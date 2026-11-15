@@ -526,6 +526,30 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
     assertTrue(other > 0, "some come from another realm")
 end)
 
+-- red under: no R.Raiders (`/dw sim raid`'s rollers past the group, rolls panel design §3.6)
+test("sim roster: Raiders fills a 40-player raid past the group, every name and GUID apart, no unit", function()
+    local NS = T.newAddon()
+    local R = NS.SimRoster
+    local surnames = T.forever and R.SURNAMES or nil
+    local members = R.Members({ kind = "party", ownRealm = "Testrealm", surnames = surnames }, R.Random(7))
+    local raiders = R.Raiders(39 - #members, members, { ownRealm = "Testrealm", surnames = surnames }, R.Random(8))
+    assertEqual(#raiders, 35, "39 besides you, the group's four first")
+    local first, guids = {}, {}
+    local function firstOf(mem) return (mem.name:match("^(%S+)")) end
+    for _, mem in ipairs(members) do first[firstOf(mem)], guids[mem.guid] = true, true end
+    for _, mem in ipairs(raiders) do
+        assertTrue(mem.sim and mem.raider, "a simulated raider")
+        assertNil(mem.unit, "not a group member: no unit token")
+        assertNil(first[firstOf(mem)], "a name apart: " .. mem.name); first[firstOf(mem)] = true
+        assertTrue(firstOf(mem):find("%d") == nil, "from the roster's names, never numbered: " .. mem.name)
+        assertNil(guids[mem.guid], "a GUID apart"); guids[mem.guid] = true
+        assertTrue(mem.guid:find("^Player%-%d+%-%x+$") ~= nil, "a client-shaped GUID")
+        assertEqual(mem.classID, NS.ClassData.CLASS_ID[mem.classFile])
+        if T.forever then assertNil(mem.realm, "Forever: no realm") else assertTrue(mem.realm ~= nil) end
+    end
+    assertEqual(#R.Raiders(0, members, {}, R.Random(1)), 0)
+end)
+
 test("sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty", function()
     local NS = T.newAddon()
     local R, S = NS.SimRoster, NS.Constants.SLOT

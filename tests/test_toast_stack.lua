@@ -253,7 +253,10 @@ test("toast stack: in test mode the sticky placeholders stack too", function()
     assertTrue(#ids <= 3, "no more than the stack")
     for _, id in ipairs(ids) do assertTrue(NS.LootFeed.Get(id).test, "a test drop") end
     if #ids >= 2 then
-        assertEqual(pointOf(NS.Toast.Frame(ids[2]))[2], NS.Toast.Frame(ids[1]), "stacked under the first")
+        local pt = pointOf(NS.Toast.Frame(ids[2]))
+        assertEqual(pt[2], NS.Toast.Frame(ids[1]), "stacked under the first")
+        -- red under: the stack's gap leaving no room for each toast's strip (RX-23)
+        assertEqual(pt[5], -(NS.ToastStackGap() + NS.TestStripHeight()), "clear of the strip on the toast under it")
     end
     m.advance(60)
     assertEqual(#visible(NS), #ids, "sticky: they wait to be placed")

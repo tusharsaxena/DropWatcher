@@ -1,5 +1,6 @@
 -- tests/test_pending_ml.lua — modules/PendingML.lua, the master-loot kind of the pending store
--- (Forever port design §6, plan DW-FP18): under master loot, an Epic (the threshold's quality) in
+-- (Forever port design §6, plan DW-FP18): under master loot, an item at or above the group's loot
+-- threshold (GetLootThreshold, rolls UX RX-03; an Epic over an Epic threshold in most cases here) in
 -- the loot window you opened is held as one `ml` item awaiting the master looter, keyed by its
 -- source GUID and item ID so a re-opened corpse adds nothing; a receipt for that item inside
 -- 600 s assigns it and the drop carries `askedML`; you as the master looter see nothing pending;
@@ -37,12 +38,13 @@ local function raid()
     m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(DOOM, "Doom", "Dock", "HUNTER") }, true)
     NS.Roster.Refresh("test")
     m.lootMethod = { 2, nil, 3 }
+    m.lootThreshold = 4   -- the group's loot threshold: Epic
     return NS, m, NS.Pending
 end
 
--- The boss corpse's loot window: one ring at the client's master-loot threshold (Epic on Forever,
--- Legendary on Retail; locked: the master looter's to give) and one a quality under it.
-local TOP = T.forever and 4 or 5
+-- The boss corpse's loot window: one ring at the group's loot threshold (Epic; locked: the master
+-- looter's to give) and one a quality under it.
+local TOP = 4
 
 local function corpse(m, epicID)
     m.addItem(link(epicID), ring(620, TOP))
@@ -192,4 +194,48 @@ test("ml pending: standing down drops the items and their timers", function()
         assertEqual(m.__fire(e), 0, e .. " unregistered")
     end
     assertEqual(#m.__timers(), 0, "no live timer")
+end)
+
+-- RX-03 (rolls UX design ruling 6): the hold is the group's loot threshold (GetLootThreshold), not
+-- MasterLootQualityThreshold, which only gates Blizzard's distribution-confirm popup.
+-- red under: PendingML still reading the LootConsts threshold (Epic on Forever, Legendary on Retail)
+local function oneSlot(m, id, quality)
+    m.addItem(link(id), ring(620, quality))
+    m.lootSlots = { { link = link(id), quality = quality, locked = true, source = BOSS } }
+end
+
+test("ml pending: a Rare under master loot with an Uncommon threshold is held", function()
+    local _, m, P = raid()
+    m.Constants = { LootConsts = { MasterLootQualityThreshold = 4 }, LootConsts_Camelot = { MasterLootQualityThreshold = 4 } }
+    m.lootThreshold = 2
+    oneSlot(m, 310, 3)
+    m.__fire("LOOT_OPENED", false, false)
+    local items = mlItems(P)
+    assertEqual(#items, 1, "a Rare at or above the group's Uncommon threshold")
+    assertEqual(items[1].ml.threshold, 2, "the item records the group's threshold")
+end)
+
+test("ml pending: an Uncommon under a Rare threshold is not held", function()
+    local _, m, P = raid()
+    m.lootThreshold = 3
+    oneSlot(m, 311, 2)
+    m.__fire("LOOT_OPENED", false, false)
+    assertEqual(#mlItems(P), 0, "below the group's threshold")
+end)
+
+test("ml pending: with no threshold read, Uncommon and up is held", function()
+    local _, m, P = raid()
+    m.lootThreshold = nil
+    oneSlot(m, 312, 2)
+    m.__fire("LOOT_OPENED", false, false)
+    assertEqual(#mlItems(P), 1, "the fallback is Uncommon")
+end)
+
+test("ml pending: master loot (Guild Master Loot on Retail) holds at the group's threshold", function()
+    local _, m, P = raid()
+    m.Constants = { LootConsts = { MasterLootQualityThreshold = 5 } }   -- Retail's confirm-popup gate
+    m.lootThreshold = 4
+    oneSlot(m, 313, 4)
+    m.__fire("LOOT_OPENED", false, false)
+    assertEqual(#mlItems(P), 1, "an Epic at an Epic threshold, though the confirm gate is Legendary")
 end)

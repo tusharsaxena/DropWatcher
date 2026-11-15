@@ -586,6 +586,11 @@ right in game is FEED-70.
 width, the Drops strip reads `[Post my tradeables] [Scan group] [Expand all] [Sort]`, History's reads
 `[Expand all] [Sort]`, and Clear history lives in Settings › Window › Layout beside Keep history for. That it
 reads right in game is FEED-78 and HIST-6.
+**Superseded by RX-24 (2026-11-15)** (WowAddonStandards v2.110.0 standalone-windows' *The footer*,
+anti-pattern #118; the owner's ruling to rework): there is no strip and no labeled button. The tab's words
+start the library footer's own left line, the status after them; its controls are the footer's icon marks,
+right to left the toggle, Scan group and Post my tradeables on Drops, the toggle on History, Reset filters on
+Insights; Sort is the filter bar's last control, at its right edge. That it reads right in game is FEED-107.
 **Superseded by feedback-11 (2026-10-14)** (feedback-11 spec §1, DW-K1): a member it is no upgrade or equal
 for, and every member while the drop cannot be traded, shows the gray `No action` button with its reason in
 Actions where the dash stood, and a drop of yours that cannot be traded shows it on its row; `K.PANEL_BTN_W` is

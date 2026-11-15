@@ -127,6 +127,7 @@ test("situations: with nothing stored, every key takes the spec's track and auto
         scenario = { true, true }, pvp = { false, false }, openWorldGroup = { false, false },
         solo = { true, true },
     }
+    if T.forever then SPEC.openWorldGroup = { true, true } end   -- rolls UX ruling 7: Forever's own
     local want = T.forever and 5 or 10   -- WoW Forever's five (Forever port design §4.4)
     local n = 0
     for _, s in ipairs(C.SITUATIONS) do

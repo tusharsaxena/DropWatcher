@@ -43,9 +43,12 @@ local function specPaths()
         "messages.editFirst", "messages.oneAsk", "messages.announceChannel", "messages.autoAsk.enabled",
         "messages.autoAsk.delay", "messages.autoAsk.minGain",
         "window.mode", "window.compactInRuns", "window.rowHeight", "window.fontSize",
+        "window.autoClose.enabled", "window.autoClose.seconds",   -- auto-close (rolls UX design §3.6, RX-10)
         "toast.enabled", "toast.minGain", "toast.duration", "toast.inCombat", "toast.sound",
         "global.history.retentionDays",
         "rolls.show", "rolls.keep", "rolls.popupMark",   -- Drops › Rolls (Forever port design §5.3, DW-FP15)
+        -- Drops › Rolls › Panel, the Rolls panel (rolls panel design §3.5, RX-17)
+        "rolls.panel.enabled", "rolls.panel.side", "rolls.panel.linger", "rolls.panel.foldInRaid",
     }
     for _, key in ipairs(SITUATIONS) do
         for _, f in ipairs({ "track", "autoOpen", "quality" }) do out[#out + 1] = "situations." .. key .. "." .. f end
@@ -154,12 +157,30 @@ end)
 
 test("rows: NS.Setting answers the default before the database, and the stored value after", function()
     local NS = T.newAddon()
-    assertEqual(NS.Setting("feed.quality.fixed"), 3)
+    assertEqual(NS.Setting("feed.quality.fixed"), T.forever and 2 or 3)
     assertEqual(NS.Setting("situations.pvp.autoOpen"), false)
     NS.addon:OnInitialize()
     assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 4))
     assertEqual(NS.addon.db.profile.feed.quality.fixed, 4)
     assertEqual(NS.Setting("feed.quality.fixed"), 4)
+end)
+
+-- RX-01 (rolls UX design ruling 7): WoW Forever's own defaults, Retail's unchanged, pinned per profile.
+test("rows: each client's defaults for the open world group and the fixed quality (RX-01)", function()
+    local NS = T.bootAddon()
+    local p = NS.addon.db.profile
+    local Q = NS.Constants.QUALITY
+    if T.forever then
+        assertEqual(p.feed.quality.fixed, Q.UNCOMMON, "WoW Forever: Fixed Uncommon")
+        assertTrue(p.situations.openWorldGroup.track, "WoW Forever: the open world group tracked")
+        assertTrue(p.situations.openWorldGroup.autoOpen, "WoW Forever: and auto-opening")
+    else
+        assertEqual(p.feed.quality.fixed, Q.RARE, "Retail: Fixed Rare, unchanged")
+        assertFalse(p.situations.openWorldGroup.track, "Retail: the open world group untracked, unchanged")
+        assertFalse(p.situations.openWorldGroup.autoOpen, "Retail: and not auto-opening, unchanged")
+    end
+    assertEqual(p.feed.quality.mode, "fixed", "both clients: the fixed mode")
+    assertEqual(p.situations.openWorldGroup.quality, "global", "both clients: the feed's own quality")
 end)
 
 test("rows: a value outside a row's list or range is refused and stores nothing", function()
@@ -225,7 +246,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
     local S = NS.SchemaRuntime
     if not T.forever then S.Set("trade.rules.dungeon", "group") end
     S.Set("feed.minIlvlMode", "absolute")
-    S.Set("situations.openWorldGroup.track", true)   -- off its default (untracked)
+    S.Set("situations.pvp.track", true)   -- off its default (untracked on both clients)
     S.Set("situations.raid.quality", "dynamicSlot")
     S.Set("messages.oneAsk", false)
     S.Set("messages.announceChannel", "RAID")
@@ -238,7 +259,7 @@ test("rows: the feed, the situations and the messaging edge read the rows", func
         assertEqual(cfg.rules.pvp, "legacy", "an untouched situation keeps its default rule")
     end
     assertEqual(cfg.minIlvlMode, "absolute")
-    assertTrue(NS.Situations.IsTracking("openWorldGroup"))
+    assertTrue(NS.Situations.IsTracking("pvp"))
     assertEqual(NS.Situations.QualityOverride("raid"), "dynamicSlot")
     assertTrue(NS.Situations.QualityOverride("dungeon") == nil, "`global` means the feed's own mode")
     local a = NS.Asks.Settings()
@@ -693,13 +714,18 @@ local PINNED_ROWS = {
     { "feed.categories.recipe", "bool", "true" },
     { "feed.categories.tierToken", "bool", "true" },
     { "feed.categories.toy", "bool", "true" },
+    -- RX-04, RX-15 (rolls UX design §3.5; plan M6): Lockboxes, Containers, and the rolled-on catch-all.
+    { "feed.categories.lockbox", "bool", "true" },
+    { "feed.categories.container", "bool", "true" },
+    { "feed.categories.other", "bool", "false" },
     -- DW-CAT5 (issue #13): the Always watch and Never watch item lists, new stored paths.
     { "feed.blacklist", "map", "{}" },
     { "feed.whitelist", "map", "{}" },
     { "feed.content", "string", "\"session\"" },
     { "feed.minIlvl", "number", "0" },
     { "feed.minIlvlMode", "string", "\"off\"" },
-    { "feed.quality.fixed", "number", "3" },
+    -- RX-01 (rolls UX ruling 7): Uncommon on WoW Forever, Rare on Retail.
+    { "feed.quality.fixed", "number", T.forever and "2" or "3" },
     { "feed.quality.floor", "number", "2" },
     { "feed.quality.mode", "string", "\"fixed\"" },
     { "feed.quality.upgradeOverride", "bool", "true" },
@@ -779,6 +805,11 @@ local PINNED_ROWS = {
     { "messages.transmogAsk", "bool", "false" },
     -- DW-FP15 (Forever port design §5.3): Drops › Rolls, three new rows on both clients.
     { "rolls.keep", "bool", "true" },
+    -- RX-17 (rolls panel design §3.5): the Rolls panel, four new rows on both clients.
+    { "rolls.panel.enabled", "bool", "true" },
+    { "rolls.panel.foldInRaid", "bool", "true" },
+    { "rolls.panel.linger", "number", "10" },
+    { "rolls.panel.side", "string", "\"right\"" },
     { "rolls.popupMark", "bool", "true" },
     { "rolls.show", "bool", "true" },
     { "scale", "number", "1" },
@@ -806,9 +837,10 @@ local PINNED_ROWS = {
     { "situations.mythicPlus.autoOpen", "bool", "true" },
     { "situations.mythicPlus.quality", "string", "\"global\"" },
     { "situations.mythicPlus.track", "bool", "true" },
-    { "situations.openWorldGroup.autoOpen", "bool", "false" },
+    -- RX-01 (rolls UX ruling 7): the open world group tracked and auto-opening on WoW Forever alone.
+    { "situations.openWorldGroup.autoOpen", "bool", T.forever and "true" or "false" },
     { "situations.openWorldGroup.quality", "string", "\"global\"" },
-    { "situations.openWorldGroup.track", "bool", "false" },
+    { "situations.openWorldGroup.track", "bool", T.forever and "true" or "false" },
     { "situations.pvp.autoOpen", "bool", "false" },
     { "situations.pvp.quality", "string", "\"global\"" },
     { "situations.pvp.track", "bool", "false" },
@@ -858,6 +890,8 @@ local PINNED_ROWS = {
     { "window.columns.them", "bool", "true" },
     { "window.columns.trade", "bool", "true" },
     { "window.columns.tradeWindow", "bool", "true" },
+    { "window.autoClose.enabled", "bool", "true" },   -- auto-close (rolls UX design §3.6, RX-10)
+    { "window.autoClose.seconds", "number", "10" },
     { "window.compactInRuns", "bool", "true" },
     { "window.fontSize", "number", "0" },
     { "window.mode", "string", "\"full\"" },

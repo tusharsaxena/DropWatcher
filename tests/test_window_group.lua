@@ -246,7 +246,7 @@ test("cells: Ask moves Ask -> Queued -> Asked, with Retry on a failure", functio
     assertTrue(ready.offered and ready.enabled); assertEqual(ready.text, "Ask"); assertEqual(ready.icon, "chat", "a whisper to the looter (feedback-7 spec §1)")
     assertEqual(T.tipPlainJoined(ready.tip), "Ask | • Whispers: Seta | • Template: your ask template | • Limit: one per item per looter")
     local queued = W.Ask(drop(), "queued")
-    assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "clock"); assertTrue(queued.enabled, "a click cancels it")
+    assertEqual(queued.text, "Queued"); assertEqual(queued.icon, "ph:hourglass"); assertTrue(queued.enabled, "a click cancels it")
     assertEqual(T.tipPlainJoined(queued.tip), "Queued | • To: Seta | • Waiting: chat is restricted right now | • Sends: when it lifts"
         .. " | Click to cancel it.")
     local sent = W.Ask(drop(), "sent")
@@ -1082,4 +1082,27 @@ test("table: the Type column sits after Slot and is painted on every row", funct
     local keysShown = {}
     for _, col in ipairs(drawn.columns) do keysShown[#keysShown + 1] = col.key end
     assertEqual(keysShown[3] .. "," .. keysShown[4], "slot,armorType")
+end)
+
+-- Rolls UX spec §3.1 (ruling 5): a two-word name on your own drop keeps `[YOU]` whole in the Looter
+-- column, and the action button draws above every text cell of its row.
+test("table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text", function()
+    local NS, _, m = T.enableAddon{ skin = "ka0s" }
+    m.__now = 100
+    m.textCharWidth = 5
+    m.normalizedRealm = "Realm"
+    seed(NS, { GROUP }, { drop({ isMine = true, looter = { name = "Bloodthornwick Ironfist-Realm", guid = "Player-1-ME",
+        classFile = "WARRIOR", isSelf = true } }) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    local row = rowFor(NS.WindowGroup.Drawn(), 1)
+    local l = row.cells.looter
+    assertEqual(textOf(l.text), "Bloodthornwick Ironfist")
+    assertTrue(l.mark:IsShown()); assertEqual(textOf(l.mark), "[YOU]")
+    assertTrue(l.text:GetWidth() + NS.WindowRows.MARK_GAP + l.mark:GetUnboundedStringWidth() <= l:GetWidth(),
+        "the name and the mark fit the column")
+    local level = row.cells.actions.ask:GetFrameLevel()
+    for key, cell in pairs(row.cells) do
+        if key ~= "actions" then assertTrue(level > cell:GetFrameLevel(), key .. ": the button is above it") end
+    end
 end)

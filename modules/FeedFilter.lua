@@ -28,6 +28,12 @@ local function ilvlCheck(facts, cfg, ctx)
     return true
 end
 
+-- An item of no kind: in only rolled on with the catch-all kind on (RX-04), else `notWatched`.
+local function kindless(kinds, ctx)
+    if ctx.rolled and kinds.other == true then return true end
+    return false, "notWatched"
+end
+
 -- Is `id` on `list` (`cfg.whitelist` or `cfg.blacklist`, { [itemID] = true })?
 local function listed(list, id)
     return id ~= nil and type(list) == "table" and list[id] == true
@@ -54,7 +60,9 @@ end
 --- Always watch list (`cfg.whitelist[itemID]`) in, answering `forced`, past the kinds, the heirloom
 --- rule and the minimum item level (§4.2; the feed's quality gate lets it through too, the
 --- situation gate does not); heirlooms always out; an item in no watched category (facts.category
---- nil: NS.Collectibles.CategoryOf's answer) out as `notWatched`; an item kind turned off
+--- nil: NS.Collectibles.CategoryOf's answer) out as `notWatched`, unless it is rolled on
+--- (`ctx.rolled`) and the catch-all kind is on (`cfg.categories.other == true`, off by default: RX-04,
+--- rolls UX design §3.5), which lets it in with no item level check; an item kind turned off
 --- (`cfg.categories[category] == false`, the `feed.categories.<key>` rows) out as `category`; then
 --- equipment and tier tokens take the minimum item level by `minIlvlMode` (`absolute` against
 --- `minIlvl`, `relative` against `ctx.myIlvl - relativeIlvl`): a token's level is compared with your
@@ -63,7 +71,7 @@ end
 --- read pass, so the feed never hides what it could not judge.
 --- @param facts table|nil
 --- @param cfg table|nil NS.LootFeed.Config()'s fields
---- @param ctx table|nil { myIlvl }
+--- @param ctx table|nil { myIlvl, rolled }
 --- @return boolean pass, string|nil reasonKey (`blacklist`, `heirloom`, `notWatched`, `category`,
 --- `minIlvl`), boolean|nil forced (true: the Always watch list let the item through)
 function FF.Filter(facts, cfg, ctx)
@@ -72,12 +80,13 @@ function FF.Filter(facts, cfg, ctx)
     if listed(cfg.blacklist, facts.itemID) then return false, "blacklist" end
     if listed(cfg.whitelist, facts.itemID) then return true, nil, true end
     if facts.quality == C.QUALITY.HEIRLOOM then return false, "heirloom" end
+    ctx = type(ctx) == "table" and ctx or {}
     local category = facts.category
-    if category == nil then return false, "notWatched" end
     local kinds = type(cfg.categories) == "table" and cfg.categories or {}
+    if category == nil then return kindless(kinds, ctx) end
     if kinds[category] == false then return false, "category" end
     if category ~= "equipment" and category ~= "tierToken" then return true end
-    return ilvlCheck(facts, cfg, type(ctx) == "table" and ctx or {})
+    return ilvlCheck(facts, cfg, ctx)
 end
 
 --- Whether `cfg` forces `facts` in: on the Always watch list and not on the Never watch list, the
@@ -115,7 +124,8 @@ local function qualityPasses(facts, ctx, out)
 end
 
 --- The feed's pre-looter gates in their order (Forever port design §11.1): the situation's on/off
---- (`ctx.tracking == false` refuses as `notTracking`; nil skips it), the filters above (or, with
+--- (`ctx.tracking == false` refuses as `notTracking`; nil skips it), the filters above (`ctx.rolled`
+--- for an item a group rolls on: the catch-all kind's; or, with
 --- `ctx.skipFilter`, the Always watch list alone), your verdict (`ctx.judge(forced)`, the caller's
 --- judge, so the feed's own judgeMe path runs), then the quality gate in `ctx.mode` against
 --- `ctx.gear` (skipped with `ctx.skipQuality`; `ctx.passes` may stand in for QualityGate.Passes, so
@@ -123,7 +133,7 @@ end
 --- Pure apart from the two callbacks it is handed. `out` is { forced, me, quality }, filled as far
 --- as the gates got.
 --- @param facts table|nil
---- @param ctx table { cfg, myIlvl, tracking, skipFilter, skipQuality, judge, mode, gear, passes }
+--- @param ctx table { cfg, myIlvl, rolled, tracking, skipFilter, skipQuality, judge, mode, gear, passes }
 --- @return boolean pass, string|nil why, table out
 function FF.PassesForMe(facts, ctx)
     ctx = type(ctx) == "table" and ctx or {}

@@ -177,6 +177,13 @@ local CATEGORY_ROWS = {
     { key = "recipe", label = L["Recipes and patterns"],
       tip = L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] },
     { key = "cosmetic", label = L["Cosmetics"], tip = L["Cosmetic armor and weapons: a look to collect, never gear."] },
+    -- RX-04 (rolls UX design §3.5, ruling 3); RX-15 (plan M6): lockboxes are their own kind
+    { key = "lockbox", label = L["Lockboxes"],
+      tip = L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] },
+    { key = "container", label = L["Containers"],
+      tip = L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] },
+    { key = "other", label = L["Everything else that is rolled on"],
+      tip = L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
@@ -190,6 +197,7 @@ local LAYOUTS = choices{ "full", L["Full"], "compact", L["Compact"] }
 local RULES = choices{ "personal", L["Personal loot"], "group", L["Group loot"], "legacy", L["Legacy loot"] }
 -- Where each stacked toast after the first goes (issue #14): the shell's DOWN and UP.
 local STACK_GROW = choices{ "down", L["Down"], "up", L["Up"] }
+local PANEL_SIDES = choices{ "right", L["Right"], "left", L["Left"] }
 -- LibCustomGlow-1.0's four effects, named as KickCD's glow style dropdown names them, in the order
 -- the Upgrade glow tab's style subsections read (Pixel border first, feedback-24; the default is
 -- Proc since DW-03, D-18, and the order did not move).
@@ -261,6 +269,28 @@ end
 
 -- ── Drops › Situations (design spec §6.1, §7; feedback-24, item 020) ───────────────────────
 
+-- Drops › Rolls › Panel (rolls panel design §3.5, RX-17): the Rolls panel docked beside the window,
+-- on both clients. It lists Rolling now's rolls, so every row dims while Show rolls is off (RX-20),
+-- and the sub-rows while the panel is off too, each tooltip ending "Needs <row>." (options-ui-§21).
+local function rollsPanel(D)
+    local at = { page = "feed", group = L["Rolls"], subgroup = L["Panel"],
+        onChange = function() if NS.RollsPanel then NS.RollsPanel.Refresh() end end }
+    local rollsOff = unless("rolls.show", true)
+    bool("rolls.panel.enabled", D.enabled, L["Show the Rolls panel beside the window"],
+        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep it open for the time set below after the last roll. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."],
+        with(at, { disabledIf = rollsOff }))
+    local sub = with(at, { disabledIf = function() return rollsOff() or NS.Setting("rolls.panel.enabled") ~= true end })
+    pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
+        L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
+        sub)
+    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep the panel open after the last roll (seconds, 0 = at once)"],
+        L["Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."],
+        with(sub, { validate = wholeIn(0, 60) }))
+    bool("rolls.panel.foldInRaid", D.foldInRaid, L["Fold Pass and Waiting in a raid"],
+        L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."],
+        sub)
+end
+
 -- Everything set per situation, on one tab: the global Auto-open, then a table line per situation
 -- (Track, Auto-open, Quality and its loot rule). General › When to show and Trade › Rules until
 -- feedback-24; its own Situations page until item 020, which made it the Drops page's first tab (it
@@ -268,7 +298,16 @@ end
 local function situations()
     local at = { page = "feed", group = L["Situations"] }
     bool("autoOpen", P.autoOpen, L["Auto-open the window"],
-        L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."], at)
+        L["Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."], at)
+    -- Auto-close (rolls UX design §3.6, RX-10), on the line beneath Auto-open the window, which it
+    -- needs: a window it opened closes by itself (modules/WindowAutoClose.lua).
+    local autoOpenOff = unless("autoOpen", true)
+    bool("window.autoClose.enabled", P.window.autoClose.enabled, L["Auto-close the window"],
+        L["Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."],
+        with(at, { startsLine = true, disabledIf = autoOpenOff }))
+    slider("window.autoClose.seconds", P.window.autoClose.seconds, 5, 120, 1, L["Close after (seconds)"],
+        L["How long a window that opened by itself stays once nothing is rolling and no new drop has come. Needs Auto-close the window."],
+        with(at, { disabledIf = function() return autoOpenOff() or NS.Setting("window.autoClose.enabled") ~= true end }))
     local T = P.trade
     for _, s in ipairs(K.SITUATIONS) do
         local key, d = s.key, P.situations[s.key]
@@ -369,16 +408,24 @@ local function feed()
     bool("feed.clearOnBossKill", F.clearOnBossKill, L["Clear this session's drops on boss kill"],
         L["Clear the session's drops when a boss dies."], with(retention, { subgroup = L["Session"] }))
 
-    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients.
+    -- Drops › Rolls (Forever port design §5.3): everyone's group-loot rolls, on both clients. Two
+    -- subjects since RX-17 (options-ui-§7): the window and popup switches, then the Rolls panel
+    -- (`Panel`: a subsection never restates its tab's name, so not `Rolls panel`).
     local R = P.rolls
-    local rolls = { page = "feed", group = L["Rolls"], onChange = repaintWindow }
+    local rolls = { page = "feed", group = L["Rolls"], subgroup = L["Window and popup"], onChange = repaintWindow }
+    -- Rolling now is the Rolls panel's list too: turned off, the panel lets its rolls go at once.
     bool("rolls.show", R.show, L["Show rolls"],
-        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."], rolls)
+        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."],
+        with(rolls, { onChange = function()
+            repaintWindow()
+            if NS.RollsPanel then NS.RollsPanel.Refresh() end
+        end }))
     bool("rolls.keep", R.keep, L["Keep rolls in history"],
         L["Keep each rolled drop's rolls in the History tab."], rolls)
     bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
         L["Show your verdict on the game's Need and Greed roll popup."],
         with(rolls, { onChange = function() if NS.RollPopup then NS.RollPopup.Refresh() end end }))
+    rollsPanel(R.panel)
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────

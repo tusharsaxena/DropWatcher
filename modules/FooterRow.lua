@@ -1,65 +1,48 @@
 local _, NS = ...
--- modules/FooterRow.lua — one footer button kind, and Expand all / Collapse all (feedback-15 spec §2,
--- DW-Q2): the row of controls at the right of each tab's strip, and the toggle that opens or closes
--- every header the tab shows.
+-- modules/FooterRow.lua — the window footer's controls (RX-24; WowAddonStandards v2.110.0
+-- standalone-windows' *The footer*, anti-pattern #118): each tab's controls are the library
+-- footer's `marks`, catalog icon buttons at one size and one pitch with a tooltip naming each, and
+-- Expand all / Collapse all, the toggle that opens or closes every header the tab shows.
 --
--- ONE BUTTON KIND. Every button on a strip is K.FOOTER_BUTTON_W wide (sized so `Post my tradeables`
--- fits beside its icon) with the same icon and label in both layouts: no short `Post` or `Clear`.
--- The row, right to left, a GAP between two controls:
+-- THE MARKS. W.Footer lays its `opts.marks` right to left from the grip's corner, built once with the
+-- footer; the window passes FR.SLOTS of them (FR.MarkSpecs), the most any tab lays, and each tab
+-- binds its own controls to them on every paint (FR.Bind, through NS.WindowFooter.PaintTab): the
+-- first control takes the corner's mark, the next the one left of it, and a mark no control takes is
+-- hidden. A control is a plain table, built once with its pane (FR.Control): its key, its catalog
+-- mark, its tooltip and its action, and the state its paint sets (`enabled`, a new `icon`). Right to
+-- left, the same in both layouts:
 --
---             Full                                                 Compact (icon only)
---   Drops     Sort · Expand/Collapse · Scan group · Post my tradeables   Expand/Collapse · Scan group · Post
---   History   Sort · Expand/Collapse                                     Expand/Collapse
+--   Drops     Expand/Collapse · Scan group · Post my tradeables
+--   History   Expand/Collapse
+--   Insights  Reset filters
 --
--- Post my tradeables shows only while one of your drops the tab lists can be traded; a hidden
--- control takes no room. In compact, Sort is in the Filters menu (modules/CompactChrome.lua),
--- and every button is its mark alone, K.FOOTER_ICON_W wide and centered, its tooltip naming it
--- (FR.SetCompact; feedback-16: three labeled buttons do not fit the compact pane; Scan group joins the
--- strip, as in full, and stays the title bar's icon too). FR.Slots is that placement, pure; the info text on the strip's
--- left ends GAP short of the leftmost control (its `left`), one line, so a narrow row cuts it with an
--- ellipsis rather than run it under the buttons. (Clear history left the strips for Settings ›
--- Window › Layout in DW-Q3, feedback-15 spec §3.)
+-- Post my tradeables shows only while one of your drops the tab lists can be traded; it is the
+-- leftmost, so the others keep their places. Sort is on the filter bar (modules/WindowFilterBar.lua)
+-- and in the compact Filters menu, never on the footer. A mark's art is the host's to pass
+-- (NS.Icon, the catalog names CLAUDE.md declares); its tint at rest and under the pointer is the
+-- library's (`icon.tint`, `icon.hot`). Until RX-24 these were 150 px labeled buttons on a strip laid
+-- over the footer (feedback-15 spec §2, DW-Q2), which the standard's footer has no room for.
 --
--- THE TOGGLE. One button per strip, its mark a chevron (down to expand, up to collapse; feedback-16):
--- `Expand all` while any header the filters show is collapsed,
--- `Collapse all` once every one is open (FR.FoldState, pure). A click sets every shown header of the
--- active tab (FR.FoldAll over the tab's own collapsed map: Drops' NS.State.windowGroup, History's
--- NS.State.windowHistory, so each tab keeps its own); a group the filters hide keeps its state. A
--- header with no drop shown (the View filter hid them all) is drawn open whatever its state, so it
--- has nothing to fold and does not count; with no header that has one the button is off.
+-- THE TOGGLE (FR.FoldControl). Its mark a chevron (down to expand, up to collapse; feedback-16):
+-- `Expand all` while any header the filters show is collapsed, `Collapse all` once every one is open
+-- (FR.FoldState, pure). A click sets every shown header of the active tab (FR.FoldAll over the tab's
+-- own collapsed map: Drops' NS.State.windowGroup, History's NS.State.windowHistory, so each tab
+-- keeps its own); a group the filters hide keeps its state. A header with no drop shown (the View
+-- filter hid them all) is drawn open whatever its state, so it has nothing to fold and does not
+-- count; with no header that has one the toggle is off.
 --
--- The tabs build and place it (modules/DropsStrip.lua, modules/WindowHistory.lua); this file reads
--- NS.Window at call time only.
+-- The tabs build their controls (modules/DropsStrip.lua, modules/WindowHistory.lua,
+-- modules/WindowInsights.lua); this file reads NS.Window at call time only.
 
 NS.FooterRow = NS.FooterRow or {}
 local FR = NS.FooterRow
-local K  = NS.Constants.WINDOW
 local L  = NS.L
 
-FR.GAP = 8   -- between two controls of the row
+FR.SLOTS = 3   -- the most controls a tab lays on the footer (Drops')
+
+local foot   -- the window's footer, once FR.Attach has run
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
-
---- Where each control of a row goes (pure): its right edge, in pixels left of the strip's right
---- edge, right to left with `gap` between two shown controls; a hidden one (`shown == false`) is nil
---- and takes no room. `left` is the leftmost shown control's left edge, where the info text ends.
---- @param row table right to left: { { key, w, shown }, ... }
---- @param gap number
---- @param start number|nil the first control's inset (0)
---- @return table { [key] = number|nil, left = number }
-function FR.Slots(row, gap, start)
-    local out, x, first = {}, start or 0, true
-    for _, c in ipairs(row) do
-        if c.shown ~= false then
-            if not first then x = x + gap end
-            out[c.key] = x
-            x = x + c.w
-            first = false
-        end
-    end
-    out.left = x
-    return out
-end
 
 -- A header that folds: one with a drop the filters show (a header kept open with none does not).
 local function folds(e) return e.kind == "header" and (e.count or 0) > 0 end
@@ -90,88 +73,125 @@ function FR.FoldAll(entries, collapsed, collapse)
     end
 end
 
+--- A control (pure): what one footer mark does while it is bound to it.
+--- @param key string its name (`fold`, `scan`, `post`, `reset`)
+--- @param icon string a declared catalog name (CLAUDE.md's `LibKa0s icons:`)
+--- @param tip function control -> title, lines...
+--- @param onClick function control -> nil
+--- @return table { key, icon, tip, onClick, enabled = true }
+function FR.Control(key, icon, tip, onClick)
+    return { key = key, icon = icon, tip = tip, onClick = onClick, enabled = true }
+end
+
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────
 
---- A footer button: NS.Window.TextButton at the one width (K.FOOTER_BUTTON_W).
+-- A mark's press runs its control's action while it has one and is on.
+local function press(b)
+    local c = b.dwControl
+    if c and c.enabled ~= false then c.onClick(c) end
+end
+
+--- W.Footer's `opts.marks` for the window: FR.SLOTS marks with no art yet, each pressing the control
+--- bound to it (FR.Bind).
 --- @return table
-function FR.Button(parent, icon, text, onClick)
-    return NS.Window.TextButton(parent, K.FOOTER_BUTTON_W, icon, text, onClick)
+function FR.MarkSpecs()
+    local out = {}
+    for i = 1, FR.SLOTS do out[i] = { onClick = press } end
+    return out
 end
 
---- The width of a strip button in the layout in force: the labeled one, or compact's icon alone.
---- @param compact boolean
---- @return number
-function FR.Width(compact)
-    return compact and K.FOOTER_ICON_W or K.FOOTER_BUTTON_W
+local function markTip(b)
+    local c = b.dwControl
+    if not c then return end
+    return c.tip(c)
 end
 
---- Draw a strip button labeled (full) or as its mark alone, centered (compact); its tooltip
---- names it either way.
---- @param b table FR.Button's
---- @param compact boolean
-function FR.SetCompact(b, compact)
-    compact = compact == true
-    if b.dwCompact == compact then return end
-    b.dwCompact = compact
-    b:SetWidth(FR.Width(compact))
-    b.label:SetShown(not compact)
-    b.art:ClearAllPoints()
-    if compact then b.art:SetPoint("CENTER", b, "CENTER", 0, 0) else b.art:SetPoint("LEFT", b, "LEFT", 6, 0) end
+--- Take the window's footer (once per window): each mark's tooltip reads the control bound to it.
+--- @param f table the footer (W.Footer's, or NS.BareFooter's with no marks)
+function FR.Attach(f)
+    foot = f
+    for _, b in ipairs(f.marks or {}) do
+        b.dwControl = nil
+        b:Hide()
+        NS.Window.AttachTooltip(b, function() return markTip(b) end, "above")
+    end
 end
 
---- Put one control `inset` pixels left of the strip's right edge, or hide it (inset nil).
---- @param strip table
---- @param b table
---- @param inset number|nil
-function FR.Place(strip, b, inset)
-    b:SetShown(inset ~= nil)
-    if inset == nil then return end
-    b:ClearAllPoints()
-    b:SetPoint("RIGHT", strip, "RIGHT", -inset, 0)
+-- One mark bound to one control: its art when it moved, on or off, shown.
+local function bindMark(b, c)
+    b.dwControl = c
+    if b.dwIcon ~= c.icon then
+        b.dwIcon = c.icon
+        b.icon:SetTexture(NS.Icon(c.icon))
+    end
+    local on = c.enabled ~= false
+    if b.dwOn ~= on then
+        b.dwOn = on
+        b:SetEnabled(on)
+        b:SetAlpha(on and 1 or 0.4)
+    end
+    if not b:IsShown() then b:Show() end
 end
 
---- End the strip's info `region` GAP short of the row's leftmost control (FR.Slots' `left`).
---- @param strip table
---- @param region table the info frame or font string
---- @param left number
-function FR.PlaceInfo(strip, region, left)
-    region:ClearAllPoints()
-    region:SetPoint("LEFT", strip, "LEFT", 2, 0)
-    region:SetPoint("RIGHT", strip, "RIGHT", -(left + FR.GAP), 0)
+--- Bind the active tab's controls to the footer's marks, the first in the grip's corner; a mark left
+--- over is hidden. Nothing is re-painted that did not change, so a repaint costs no texture set.
+--- @param controls table|nil right to left
+function FR.Bind(controls)
+    if not foot then return end
+    controls = controls or {}
+    for i, b in ipairs(foot.marks) do
+        local c = controls[i]
+        if c then
+            bindMark(b, c)
+        elseif b.dwControl or b:IsShown() then
+            b.dwControl = nil
+            b:Hide()
+        end
+    end
 end
 
-local function foldTip(b)
-    if b.foldState == "collapse" then
+--- The shown mark bound to the control `key`, or nil, for the suites.
+--- @param key string
+--- @return table|nil
+function FR.Mark(key)
+    for _, b in ipairs(foot and foot.marks or {}) do
+        if b:IsShown() and b.dwControl and b.dwControl.key == key then return b end
+    end
+end
+
+--- The shown marks' control keys, right to left from the corner, for the suites.
+--- @return table
+function FR.Shown()
+    local out = {}
+    for _, b in ipairs(foot and foot.marks or {}) do
+        if b:IsShown() and b.dwControl then out[#out + 1] = b.dwControl.key end
+    end
+    return out
+end
+
+local function foldTip(c)
+    if c.state == "collapse" then
         return L["Collapse all"], NS.TipMarks.Row(L["Closes"], L["every group this tab shows"])
     end
     return L["Expand all"], NS.TipMarks.Row(L["Opens"], L["every group this tab shows"]),
         NS.TipMarks.Hint(L["Collapse all closes them again."])
 end
 
---- Build a strip's Expand all / Collapse all. `apply(collapse)` sets the tab's headers and repaints.
---- @param strip table
+--- A tab's Expand all / Collapse all. `apply(collapse)` sets the tab's headers and repaints.
 --- @param apply function boolean -> nil
---- @return table the button
-function FR.BuildFold(strip, apply)
-    local b
-    b = FR.Button(strip, "chevron-down", L["Expand all"], function()
-        if b.foldState then apply(b.foldState == "collapse") end
+--- @return table the control
+function FR.FoldControl(apply)
+    return FR.Control("fold", "chevron-down", foldTip, function(c)
+        if c.state then apply(c.state == "collapse") end
     end)
-    NS.Window.AttachTooltip(b, function() return foldTip(b) end)
-    return b
 end
 
---- Paint the toggle for the tab's entries: its word and mark, and off with no header that folds.
---- @param b table FR.BuildFold's
+--- Paint the toggle for the tab's entries: its mark, and off with no header that folds.
+--- @param c table FR.FoldControl's
 --- @param entries table|nil
-function FR.PaintFold(b, entries)
+function FR.PaintFold(c, entries)
     local state = FR.FoldState(entries)
-    b.foldState = state
-    if state == "collapse" then
-        NS.Window.SetButtonMark(b, L["Collapse all"], "chevron-up")
-    else
-        NS.Window.SetButtonMark(b, L["Expand all"], "chevron-down")
-    end
-    b:SetEnabled(state ~= nil)
-    b:SetAlpha(state and 1 or 0.5)
+    c.state = state
+    c.icon = state == "collapse" and "chevron-up" or "chevron-down"
+    c.enabled = state ~= nil
 end

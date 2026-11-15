@@ -112,7 +112,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (29)
+### test_schema_rows.lua (30)
 
 - settings: no Retail-only row on the Forever panel
 - defaults: WoW Forever's profile has none of the Retail-only features' defaults
@@ -120,6 +120,7 @@ Total.
 - rows: every hand-written row names its page, tab, label and a type the schema knows
 - rows: every default is defaults/Profile.lua's, and passes the row's own check
 - rows: NS.Setting answers the default before the database, and the stored value after
+- rows: each client's defaults for the open world group and the fixed quality (RX-01)
 - rows: a value outside a row's list or range is refused and stores nothing
 - rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
@@ -144,13 +145,14 @@ Total.
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 - rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
-### test_settings_pages.lua (55)
+### test_settings_pages.lua (56)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
 - situations: the global Auto-open row, then one table line per situation and no per-situation rows
+- situations: Auto-close the window and its seconds sit on the line beneath Auto-open the window
 - situations: five gold, left-aligned column headers, and a stripe on every second line
 - situations: the five columns fit beside the panel's scroll gutter, Loot rule included (DW-02)
 - situations: each cell paints its stored value, and a toggle writes its path
@@ -410,7 +412,7 @@ Total.
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
 
-### test_window.lua (19)
+### test_window.lua (20)
 
 - window: built lazily, on the first show, and not before
 - window: a tooltip shows on a disabled button too, so the gray No action says why
@@ -422,7 +424,8 @@ Total.
 - window: resizable from the corner grip, with the design's minimum size
 - window: test mode shows the banner (not the TEST MODE text), and its rows replace the empty state
 - window: the test banner is LibKa0s-Widgets' TestStrip with DW's text and the info mark
-- window: K.BANNER_H - 4 == W.TEST_STRIP.HEIGHT
+- window: the chrome heights are the library's, never copied into the constants file
+- window: the body moves down by the strip in force, and back when it hides
 - compact chrome: the full layout's text has a RIGHT point and no wrap; compact wraps
 - window: with no Widgets the window builds, test mode on raises nothing, f.banner is nil, the panes reserve 0 and the title word shows
 - window: combat ends test mode, and test mode cannot start in combat
@@ -432,7 +435,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (64)
+### test_window_shell.lua (70)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -456,8 +459,9 @@ Total.
 - shell: each tab grays the View values it does not use, and a grayed value does not toggle
 - shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
 - filter bar tooltip: AboveSide is right when the screen has room past the control, else left
-- filter bar tooltip: every bar control and the footer's Sort open above the control, top right
+- filter bar tooltip: every bar control, Sort included, opens above the control, top right
 - filter bar tooltip: with no room on the right it opens above the control, top left
+- filter bar: Sort at the bar's right edge, the search box between, room for it at the least width (RX-24)
 - filter bar tooltip: the room is measured in screen pixels, at each frame's scale
 - filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
 - shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)
@@ -476,10 +480,15 @@ Total.
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
 - shell: the not-tracking situation tooltip points at Settings > Drops > Situations
-- shell: the live footer reads the client, and its Sort follows the active tab
+- shell: the live footer reads the client; the filter bar's Sort follows the active tab
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
 - shell: a double-click on the title bar expands a minimized window
+- shell: the lock button sits in the right-hand cluster left of the layout toggle, dimmed while unlocked, apart from the badge
+- shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both
+- shell: the lock button's tooltip names Lock frame on its canonical location, in both states
+- shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip
+- shell: the grip shows only while the window is expanded and unlocked
 - shell: minimized, the corner grip does not resize and the stored size is kept
 - shell: a minimized window comes back minimized after a settings repaint
 - shell: minimize and expand keep the title bar in place, whatever point it was saved at
@@ -527,6 +536,39 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
+### test_window_autoclose.lua (30)
+
+- autoclose: on by default with 10 seconds, on this client
+- autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
+- autoclose: both rows sit on Drops › Situations and dim while auto-open (or auto-close) is off
+- autoclose: an auto-opened window closes 10 seconds after the drop, once idle
+- autoclose: the seconds setting sets the count
+- autoclose: a new drop resets the count
+- autoclose: while Rolling now holds an item it waits, and a roll or pending change resets it
+- autoclose: hovering the window restarts the count, and the pointer over it holds it open
+- autoclose: a manually opened window never closes by itself
+- autoclose: a manual show, a drag or a click inside cancels it for that show
+- autoclose: a press on a tab, a title bar button or a control built after the open cancels it too
+- autoclose: off, or with auto-open off, an auto-opened window stays
+- autoclose: a window the player closes disarms, and the next auto-open arms again
+- autoclose: the stand-down cancels the countdown
+- autoclose: a window the combat ladder hides is not closed; the count starts when it shows
+- autoclose: the pointer leaving the window starts a full count from then
+- autoclose: the hooks skip a frame that does not take the mouse
+- autoclose: a master-loot item awaiting the master looter does not hold the window open
+- roll open: a roll for a watched item opens a closed window on Drops, and auto-close waits for it
+- roll open: a roll the feed's gates refuse opens nothing
+- roll open: the situation's Auto-open off, or the master off, opens nothing
+- roll open: a master-loot hold has no roll popup and opens nothing
+- roll open: a window already open keeps its tab and does not arm auto-close
+- roll open: a roll rebuilt after a reload opens nothing
+- roll open: with Show rolls off a roll opens nothing, and does not hold an auto-opened window
+- roll open: a roll you get no popup for opens nothing; your popup coming up opens it
+- roll open: a popup up before the history lists the roll opens the window when it does
+- roll open: a press on the Rolls panel, or its close button, keeps the count, and the window closes by itself
+- roll open: a test-mode sample roll opens nothing while test mode is off
+- roll open: the Auto-open the window tooltip names a roll popup too
+
 ### test_compact_cards.lua (27)
 
 - compact cards: Truncate cuts by characters, not bytes, and marks the cut with …
@@ -557,7 +599,7 @@ Total.
 - compact cards: a group with no time or recorder, and the open world's area header
 - compact cards: the History header reads days once a day old, its tooltip the full view's
 
-### test_compact_group.lua (23)
+### test_compact_group.lua (27)
 
 - compact group: a card is four lines at the text size, about 64 pixels at Default, the icon spanning them
 - compact group: switching layouts carries the scroll offset over as a fraction of the range
@@ -582,8 +624,12 @@ Total.
 - compact group: at the least width Trade's longest reason ends before the button
 - compact group: at the least width line 4's two dual marks fit, each worn item its own mark (H7)
 - compact group: dual marks that do not fit the card are the one mark instead (R5)
+- line 2: each piece is cut at its cap, scaled with the text; the name gives up width first
+- compact group: a two-word name is cut, [YOU] whole after it, and line 2 ends before the button
+- compact group: a one-word name keeps its own width, uncut
+- compact group: the action button draws above line 2's text and its hit frames
 
-### test_compact_history.lua (11)
+### test_compact_history.lua (12)
 
 - compact history: kept groups as one-line headers, the newest open, each entry a three-line card
 - compact history: at the least width Trade's longest reason ends before the date
@@ -592,10 +638,11 @@ Total.
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
 - compact history: every tooltip opens at the card's top right, just outside the window
-- compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
+- compact history: the footer is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
+- compact history: a two-word name is cut, [YOU] whole after it, and line 2 ends before the outcome
 
 ### test_history_card.lua (17)
 
@@ -617,21 +664,23 @@ Total.
 - history card: shows the rolls rows
 - history card: a repaint reads each kept roll table back once, reusing it until the roll moves
 
-### test_compact_chrome.lua (28)
+### test_compact_chrome.lua (30)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIM shorten to TEST and SIM
 - chrome: the compact badge shows the queued count beside its lock, or nothing
 - chrome: the footer's one line is inspect freshness and the situation
-- chrome: the footer's tooltip carries every full segment
+- chrome: the footer's tooltip carries every full segment, its words then its reasons (RX-09)
 - chrome: the Filters count is Quality, Content and Character off their default, on a tab that honors them
 - chrome: the Filters label counts, and its tooltip lists each value, the active ones in yellow
 - chrome: compact shows the short title; in test mode the strip marks it, so the title stays centered alone
 - chrome: compact and minimized in test mode, TEST shows beside the title and the two center together
 - chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim strip marks it with the short wrapped line
-- chrome: the panes reserve the sim strip's height while a simulation runs
-- chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged
-- chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
+- chrome: the body moves down by the sim strip's height while a simulation runs
+- chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged
+- chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks
+- chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them
+- chrome: the title bar has no Scan group in either layout; compact's is the footer's mark
 - chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own
@@ -639,7 +688,7 @@ Total.
 - chrome: a control the tab does not honor is a disabled row, as its dropdown is grayed
 - chrome: a second click on Filters closes the menu, and so do hiding, minimizing and going back to full
 - chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filters button and no menu
-- chrome: the full layout takes every control back to its place on the bar and the tab's strip
+- chrome: the full layout takes every control back to its place on the bar, Sort at its right edge
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
 - chrome: the compact strip takes a second line exactly when its words wrap at the window's width
 - chrome: the compact sim strip takes a second line when its words wrap at 380 px
@@ -658,7 +707,7 @@ Total.
 - modes: test mode's own drops on Drops show Offer as the full rows, no countdown on the card
 - modes: test mode's History cards show every outcome, each saying what its full row says
 
-### test_window_group.lua (52)
+### test_window_group.lua (53)
 
 - cells: Me shows ▲ ≈ ▼ and the signed change, green up, yellow side, red down (feedback-4 §0)
 - cells: a verdict with no glyph says a word, and every verdict's tooltip says why
@@ -712,6 +761,7 @@ Total.
 - table: the Ask button wears its state's tone: red to ask, yellow once asked, green once traded
 - cells: Type names the armor type, Jewelry, Trinkets, Cloak or Weapons, else a dash with why
 - table: the Type column sits after Slot and is painted on every row
+- table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text
 
 ### test_table_font.lua (10)
 
@@ -730,7 +780,7 @@ Total.
 
 - layout: at the least width no tab sheds a column, and one pixel less would shed on Drops
 - layout: the Trade window column is its widest answer plus its bar's padding (feedback-6 spec §0)
-- layout: the search box spans from the bar's gap after Character to the bar's right edge
+- layout: the search box spans from the bar's gap after Character to Sort at the bar's right edge
 - layout: the column labels are gold on both full tables
 - layout: Actions is 84 pixels, the Ask button's width, so every state's icon and word fits
 - layout: every action button's icon and word fit its width (feedback-7 spec §1)
@@ -769,9 +819,10 @@ Total.
 - table: a dual mark that does not fit its cell at a larger font is the one mark instead (R5)
 - table: a word starts after the level, and a cell with nothing worn starts at its left edge
 
-### test_collect_cells.lua (11)
+### test_collect_cells.lua (12)
 
 - collect cells: each collection verdict's word and tone
+- collect cells: a lockbox, a bag and an item of no kind read their kind, plain
 - collect cells: the tooltip's title, Means and one Why row per reason
 - collect cells: WindowCells.Verdict hands a collection verdict to CollectCells, never a glyph
 - collect cells: History's stored collection verdict renders through the same cell
@@ -887,40 +938,44 @@ Total.
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
 
-### test_drops_strip.lua (15)
+### test_drops_strip.lua (12)
 
 - drops tab: the tabs are Drops, History and Insights, and the retired `mine` opens Drops
-- drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
-- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
-- drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
+- drops strip: the footer counts your tradeable drops and the next expiry, Post beside it (RX-24)
 - drops strip: Scan group goes through the shared handler
-- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide
-- drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
-- drops strip: a repaint that changes neither the layout nor Post re-anchors nothing; either change places it again
-- drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
+- drops strip: full layout, nothing tradeable: Scan group and the toggle, no count, no Post
+- drops strip: a repaint that changes nothing re-binds no mark; Post coming or going does
+- drops strip: compact, none of your listed drops can be traded: no count, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
-- drops strip: its next expiry moves each second with the countdowns
+- drops strip: its next expiry moves each second with the countdowns, on the footer's line
 - drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn
 - drops strip: Post my tradeables goes through the shared handler
-- drops strip: under the compact cards, the summary shortened, Post my tradeables its icon
+- drops strip: under the compact cards, the summary shortened, the same marks
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_footer_row.lua (8)
+### test_footer_row.lua (15)
 
-- footer row: the slots, pure: right to left, a gap between, a hidden control takes no room
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
-- footer row: full Drops, right to left: Sort, the toggle, Scan group, Post my tradeables, one width
-- footer row: compact Drops is always shown: the toggle at the right, Post my tradeables left of it
-- footer row: History, full Sort then the toggle, compact the toggle; no Clear history
+- footer row: the line, pure: the tab's info, then the status; the status alone with no info (RX-24)
+- footer row: the line's tooltip, pure: the info's lines, then every status row and hint (RX-24)
+- footer row: the footer is W.Footer; nothing of the host's is laid over it but the line's tooltip host (RX-24)
+- footer row: the footer's words, both layouts: the tab's info then the status, through foot:SetLeft (RX-24)
+- footer row: nothing tradeable, the status starts the line; it follows the active tab (RX-24)
+- footer row: the line keeps its tooltip: the info's rows, then every segment's words and reasons (RX-24)
+- footer row: Drops' marks, right to left: the toggle, Scan group, Post my tradeables, each a tooltip (RX-24)
+- footer row: Post my tradeables shows only while something of yours is tradeable; compact the same marks (RX-24)
+- footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)
+- footer row: History's mark is the toggle; Insights' is Reset filters, which resets them (RX-24)
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
+- footer row: the panes reach the footer, whose corner holds the grip; locked still hides it (RX-24)
 
-### test_offer_panel.lua (21)
+### test_offer_panel.lua (23)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
-- offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged
+- offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group the footer's mark
 - offer panel: every part has a reason tooltip; Their eq's holds the old pill's explanation
 - offer panel: Offer whispers through the shared handler
 - offer panel: Their eq shows both worn items from the member's inspect read
@@ -939,6 +994,8 @@ Total.
 - offer panel: it keeps its own least height beside the compact window
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
+- offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip
+- offer panel: its foot is the library's Footer, the order note on its right line, Announce its mark
 
 ### test_offer_alone.lua (16)
 
@@ -955,7 +1012,7 @@ Total.
 - offer alone: the detail card's first action and the compact card read No action too
 - offer alone: the Offer panel does not open, and closes when the last player leaves
 - offer alone: Offer, Announce and Post my tradeables refuse and say why
-- offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
+- offer alone: the Drops footer hides Post my tradeables until a player joins; test mode keeps it
 - offer alone: /dw offer says why and opens nothing
 - offer alone: the No action hint names followers and companions on Retail alone (clients-§4)
 
@@ -1036,7 +1093,7 @@ Total.
 - window: test mode's looter who left keeps their spec on the detail card, and says they are gone
 - window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
 - window: a sample's Them shows its own worn item, and its detail card its own inspect
-- window: Drops lists your samples with the others, and its strip counts the tradeable ones
+- window: Drops lists your samples with the others, and its footer counts the tradeable ones
 - window: the empty state comes back once test mode ends with nothing in the live feed
 - labels: your own rows on Drops say Offer, and no cell of theirs ends in an ellipsis
 - labels: no button the addon builds is labeled with a trailing ellipsis
@@ -1170,7 +1227,7 @@ Total.
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_compat_loot.lua (18)
+### test_compat_loot.lua (19)
 
 - compat loot: rolls answer every row with its state and number
 - compat loot: a secret playerName drops the name, keeps the row
@@ -1183,8 +1240,9 @@ Total.
 - compat loot: LootHistoryNow answers the history clock, else nil
 - compat loot: ActiveLootRolls answers the open roll ids, plain ones only
 - compat loot: LootRollInfo answers bop from bindOnPickUp
+- compat loot: LootRollTimeLeft answers your popup's time left in seconds
 - loot method: ML unit and name from masterLooterRaidID
-- loot method: threshold falls back to 4
+- loot threshold: the group's loot threshold, else Uncommon
 - loot slots: every slot with its link, quality, lock and source
 - compat loot: no member raises with every API gone
 - compat loot: the simulator's seam wraps every loot member (the TOC order)
@@ -1213,7 +1271,7 @@ Total.
 - constants: the category ids fall back to the 12.x literals and read Enum by name (issue #13)
 - constants: each recipe subclass names its profession's skill line; book and first aid none
 - constants: the categories in display order, the tier slots and the empty token table
-- constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)
+- constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)
 - constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone
 - constants: every slot plan has a known kind and real slot ids
@@ -1428,7 +1486,7 @@ Total.
 ### test_quality_gate.lua (26)
 
 - quality gate: fixed passes at or above the threshold and hides below it
-- quality gate: fixed defaults to Rare, and the floor does not apply to it
+- quality gate: fixed defaults to Rare (Uncommon on WoW Forever), and the floor does not apply to it
 - quality gate: no mode or an unknown mode is the default fixed mode
 - quality gate: dynamicSlot uses the baseline slot's equipped quality
 - quality gate: dynamicSlot is floored, Uncommon by default
@@ -1596,12 +1654,14 @@ Total.
 - item facts: a client that cannot load items answers unavailable
 - item facts: stood down, the cache and the loads are dropped and a late answer is ignored
 
-### test_collectibles.lua (15)
+### test_collectibles.lua (19)
 
 - collectibles: CategoryOf names each category
 - collectibles: CategoryOf's precedence
 - collectibles: the out-of-scope classes are not watched
 - collectibles: IsCollectible is true for the collectible categories alone
+- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; a reagent neither
+- collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
 - collectibles: Verdict reads new, collected and no answer
 - collectibles: a pet carries its count, and a partial collection says n/limit
 - collectibles: a recipe for a profession you lack is can't use
@@ -1609,6 +1669,8 @@ Total.
 - collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
 - collectibles: Read fills a mount's, a pet's and a toy's collection state
 - collectibles: Read fills a recipe's profession and known line
+- collectibles: Read tells a lockbox and a box that opens from Junk that does not
+- collectibles: Read files a bag, a quiver and an ammo pouch as containers
 - collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
 - collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
 - collectibles: Read leaves a tier token's category to its flag and probes nothing
@@ -1743,7 +1805,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (54)
+### test_feed.lua (55)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1799,8 +1861,9 @@ Total.
 - secrets: a secret link, name or encounter id is never used
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
+- filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
 
-### test_pending.lua (16)
+### test_pending.lua (18)
 
 - pending: an UPDATE_ENCOUNTER with an open drop opens one roll item
 - pending: Count answers each store's size with no list built; a missing test store is empty
@@ -1811,6 +1874,8 @@ Total.
 - pending: reload mid-roll rebuilds one item, and its winner makes exactly one drop
 - pending: all passed closes after 60 s with no feed record
 - pending: a drop below the quality gate is not pending
+- pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on
+- pending: a rolled reagent's chat line first is shown once its roll merges in
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
 - pending: a history clear during an item load never makes a second item
@@ -1819,7 +1884,7 @@ Total.
 - pending: your verdict is judged again on a gear change
 - pending: a pending score is judged again on the score retry
 
-### test_pending_ml.lua (9)
+### test_pending_ml.lua (13)
 
 - ml pending: an Epic slot under master loot opens one ml item; re-opening the corpse does not duplicate it
 - ml pending: a receipt for that item assigns it and the drop carries askedML
@@ -1830,6 +1895,10 @@ Total.
 - ml pending: leaving the group or the instance expires it
 - ml pending: under group loot nothing is pending from the loot window
 - ml pending: standing down drops the items and their timers
+- ml pending: a Rare under master loot with an Uncommon threshold is held
+- ml pending: an Uncommon under a Rare threshold is not held
+- ml pending: with no threshold read, Uncommon and up is held
+- ml pending: master loot (Guild Master Loot on Retail) holds at the group's threshold
 
 ### test_ask_ml.lua (12)
 
@@ -1846,15 +1915,20 @@ Total.
 - askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
 - askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
-### test_roll_cells.lua (5)
+### test_roll_cells.lua (10)
 
-- roll cells: summary counts Need 3 · Greed 2 · Pass 1 · waiting 4
+- roll cells: the count line is an icon and a count per choice
+- roll cells: Disenchant counts on Retail only
+- roll cells: the tooltip lists every roll by choice, highest first, then waiting, then the verdict
+- roll cells: a secret or unreadable name degrades its own tooltip row
 - roll cells: won reads Won by Name (Need 87)
 - roll cells: rows sort winner first, then numbers high to low, waiting, pass
 - roll cells: a higher roll that did not win is protected
+- roll cells: your claimed popup's roll reads the client's own timer
+- roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (11)
+### test_window_pending.lua (12)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
 - window pending: a repaint with nothing pending never builds the item list
@@ -1863,23 +1937,90 @@ Total.
 - window pending: a master-loot item names its master looter, never a roll that ended
 - window pending: a master-loot item has the Ask master looter button, in its ask's state
 - compact: a pending item is a card
+- window pending: Rolling now's count line has every roll in its tooltip, in both layouts
 - detail card: a resolved drop with rec.roll has a Rolls box
 - row tooltip: a rolled drop's item tooltip has the roll summary line
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (10)
+### test_roll_popup.lua (20)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
-- roll popup: two identical items on two popups each show their own Need so far
+- roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
+- roll popup: two identical items on two popups each show their own count line
+- roll popup: the side card flips to the popup's left near the screen's right edge
+- roll popup: four popups by the right edge each flip and no card overlaps a frame
+- roll popup: the side card wears the window's skin (S.Shell, no detail box)
+- roll popup: a lockbox's line 1 is its kind in the neutral tone
+- roll popup: a hover over the side card shows every roll
 - roll popup: a popup closed at once draws nothing
 - roll popup: disabled, the hook draws nothing
 - roll popup: popupMark off draws nothing
 - roll popup: no write to the Blizzard frame table
 - roll popup: gamepad mode skips
 - roll popup: Forever BoP cantUse says Greed / Pass
-- roll popup: the sim draws it against a stand-in of the popup's size
-- roll popup: a popup shown before its history drop gets Need so far when the drop lands
+- roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
+- roll popup: a popup shown before its history drop gets its count line when the drop lands
+- roll popup: test mode shows a stand-in popup with its side card per sample roll, and off hides them
+- roll popup: combat ends test mode and takes its stand-in down; the popup mark off draws none
+- roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
+- roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
+
+### test_rolls_panel.lua (53)
+
+- rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
+- rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
+- rolls panel: every panel row dims while Show rolls is off, the switch naming the row it needs
+- rolls panel: a watched roll shows it docked flush right of the shown window, titled Rolls, 290 wide
+- rolls panel: near the screen's right edge it flips left, and the Left setting docks left
+- rolls panel: the side flips on a window move, from the geometry seam
+- rolls panel: a roll the feed's gates refuse shows nothing
+- rolls panel: with the window closed it stays hidden, and shows when the window opens
+- rolls panel: a minimized window hides it, and expanding brings it back
+- rolls panel: the setting off shows nothing, and turning it on shows the roll
+- rolls panel: rows grouped Need, Greed, Pass, still to roll, highest first, [YOU] on yours, no verdict line
+- rolls panel: a changed roll repaints its rows, and an unchanged one keeps them
+- rolls panel: a Disenchant counts as Disenchant on Retail, as Greed on WoW Forever
+- rolls panel: a won roll washes the winner gold and reads the result line, then leaves after the linger
+- rolls panel: everyone passing reads Everyone passed; a linger of 0 removes it at once
+- rolls panel: two rolls are two blocks in the order they started; a finished one stays until both are over
+- rolls panel: a new roll during the linger cancels the countdown
+- rolls panel: the pointer over the panel holds a finished roll; leaving restarts its count
+- rolls panel: with a linger of 0, leaving the panel lets every held roll go
+- rolls panel: turning Show rolls off takes the panel's rolls away at once, and a win brings nothing back
+- rolls panel: leaving the panel from its scroll body restarts a held roll's count
+- rolls panel: the close button hides it until the next roll starts
+- rolls panel: test mode's samples leave at once when it ends, and show again when it comes back
+- rolls panel: a finished live roll still lingering leaves at once when test mode turns on
+- rolls panel: a finished live roll still lingering leaves at once when a simulation starts
+- rolls panel: in test mode a test strip sits directly under its title bar, with no header word
+- rolls panel: during a simulation the sim strip sits under its title bar instead
+- rolls panel: test mode's sample roll shows a number on every Need and Greed row, none on Pass or Waiting
+- rolls panel: the Offer panel docked on its side moves it to the other one, and back when it closes
+- rolls panel: with no room on the other side it waits hidden while the Offer panel holds its side
+- rolls panel: an auto-opened window waits while the panel lingers, then a full count
+- rolls panel: /dw rolls shows an empty panel by hand, which stays, and hides it again
+- rolls panel: /dw rolls with the window closed, or the panel off, says why and shows nothing
+- rolls panel: /dw rolls with Show rolls off says why and shows nothing
+- rolls panel: Side keeps the wanted side that fits, else the other, and unknown geometry answers it
+- rolls panel: a group of 6 is raid mode, every block still open, titled Rolls; a group of 5 too
+- rolls panel: an item header collapses and expands its block on a click, and the collapse sticks
+- rolls panel: one title-bar toggle, Collapse all while an item is open, Expand all once all are collapsed
+- rolls panel: the toggle follows a header's click and a new roll
+- rolls panel: with no items the toggle reads Expand all
+- rolls panel: an item header is the section header's look: a band, a gold chevron, the icon and the name
+- rolls panel: the roller rows alternate their shading
+- rolls panel: a roll number on Need and Greed, none on Pass or Waiting
+- rolls panel: the item header shows the item and every roll, a row its player, choice, roll and class
+- rolls panel: docked right, a roller row's and an item header's tooltips open right of the panel
+- rolls panel: docked left, a roller row's and an item header's tooltips open left of the panel
+- rolls panel: in a raid a folded Pass line's tooltip opens beside the panel too
+- rolls panel: with the panel's geometry unknown a row's tooltip keeps its place below the row
+- rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
+- rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads
+- rolls panel: a dungeon group never folds
+- rolls panel: 40 players on 6 items fit, all open, the body scrolls, and a repaint makes no frame
+- rolls panel: the compact layout is 250 wide, the full one 290
 
 ### test_feed_counts.lua (10)
 
@@ -1923,7 +2064,7 @@ Total.
 - item lists: `/dw get` shows a list as its size, and a named `/dw reset` empties it
 - item lists: `/dw set` on a list is refused by the generic verb, and the list is unchanged
 - item lists: Never watch hides gear as blacklist, and beats Always watch on an overlap
-- item lists: Always watch shows an item of no kind as a feed-only unknown on its list
+- item lists: Always watch shows an item of no kind as a feed-only Item on its list
 - item lists: Always watch passes a kind turned off and the quality gate, gear judged as gear
 - item lists: Always watch never overrides the situation gate
 
@@ -2090,7 +2231,7 @@ Total.
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click opens the library's skinned menu at the pointer, one flat row that marks the row declined
 - history tab: without LibKa0s-Widgets the row menu is the client's, and without that it acts at once
-- history tab: with nothing kept it says what it will hold, and the strip has no Clear history
+- history tab: with nothing kept it says what it will hold, and the footer has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
@@ -2143,7 +2284,7 @@ Total.
 - insights filters: difficulties in their natural order, situations in the constants' order
 - insights filters: you first among the characters, then by count; qualities and categories ordered
 
-### test_insights_stats.lua (16)
+### test_insights_stats.lua (17)
 
 - insights stats: asks from the stamp, the held outcomes and the legacy received; success over them
 - insights stats: offers and traded away, your own drops only, the legacy one counted
@@ -2159,6 +2300,7 @@ Total.
 - insights stats: a period over 62 days buckets by week
 - insights stats: the mixes: class, quality, slot, category, verdicts and trade estimates
 - insights stats: a Watched item counts as itself, listed after every category
+- insights stats: a lockbox, a bag and a rolled reagent count as their own kinds
 - insights stats: nothing in gives zeros and empty lists
 - insights stats: one pass: each reducer sees each row once
 
@@ -2216,8 +2358,8 @@ Total.
 
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
-- insights tab: the test-mode strip sits under the tabs on Insights and under the bar on History
-- insights tab: the footer's Sort is hidden on Insights and back on History
+- insights tab: the test-mode strip sits under the title bar on Insights and on History
+- insights tab: no Sort on Insights (the filter bar stands aside), back on History
 - insights tab: switching in closes the compact Filters menu
 - insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
 - insights tab: a pick redraws the cards and the strip; Reset puts every filter back
@@ -2249,7 +2391,7 @@ Total.
 - insights sections: a skin switch marks a fresh layout, so the host's colors are bound again
 - insights sections: By boss's empty line names Mythic+ keys on Retail alone (clients-§4)
 
-### test_toast.lua (50)
+### test_toast.lua (51)
 
 - toast: Qualifies wants someone else's upgrade for you of minGain or more, likely or yes to trade
 - toast: on Forever a score-led upgrade passes the gain gate
@@ -2283,6 +2425,7 @@ Total.
 - toast edge: toast.scale scales a toast on screen live about its saved anchor, the point unchanged
 - toast edge: the first toast is built at toast.scale, and a profile switch takes the incoming scale
 - toast edge: test mode's placeholder toasts and stays until test mode ends
+- toast edge: test mode's placeholder toast carries the test strip on its top edge; a live one none
 - toast edge: a drop that leaves the feed takes its toast and its place in the queue
 - toast edge: the cap's trim takes the trimmed drop's toast, through the real feed
 - toast edge: Ask on a toast whose drop is gone takes the toast down and asks nothing
@@ -2428,7 +2571,7 @@ Total.
 - sim auto-stop: entering an instance ends the simulation
 - sim stand-down: disabling the addon stops the simulation and leaves no timer
 
-### test_sim_pool.lua (26)
+### test_sim_pool.lua (27)
 
 - compat journal: the selection is read whole, the frame's part only once it loads
 - compat journal: Select applies the selection in the journal's order and resets the filters
@@ -2452,12 +2595,13 @@ Total.
 - sim pool: the stop ends a waiting build, and a late event does nothing
 - sim roster: the random source replays a seed and stays in range
 - sim roster: a party has four members, a raid nine to nineteen, each distinct and whole
+- sim roster: Raiders fills a 40-player raid past the group, every name and GUID apart, no unit
 - sim roster: gear is what the class can wear, worn at a level inside the band; the rest stays empty
 - sim roster: on Forever a member wears its bow in the ranged slot; Retail's order has no slot 18
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (30)
+### test_sim_events.lua (36)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2486,13 +2630,19 @@ Total.
 - sim stop: your simulated bag items leave the gear snapshot and the trade timer
 - sim roll plan: choices over a few seconds, numbers at the close, a winner or everyone passing
 - sim: /dw sim roll opens a pending roll, updates it and resolves it into a drop with rec.roll
+- sim: /dw sim roll twice stacks two stand-in popups, each with its side card
 - sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it
 - sim ml: refused without a running simulation
 - sim roll: refused without a running simulation
+- sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving
+- sim raid: refused without a running simulation
+- sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout
+- sim: the stop takes an open simulated roll out of the Rolls panel at once
+- sim: the stop takes a finished simulated roll out of the Rolls panel, though none is open
 
 ### test_sim_scenario.lua (32)
 
-- sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments
+- sim verbs: DropWatcher's nine host verbs on the descriptor, each parsing its arguments
 - sim timeline: a boss is pull, lockdown, kill, loot, lockdown lifted; a key ends with its completion
 - sim scenario: Forever lists no key, lfr or delve
 - sim verbs: `/dw sim` through RunVerb prints the status and the usage and opens the panel
@@ -2750,7 +2900,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (49)
+### test_skin_switch.lua (47)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the window's title bar changes
@@ -2771,12 +2921,10 @@ Total.
 - skin switch: a column head changes with the Scope ignored
 - skin switch: the column head band changes
 - skin switch: the column head band changes with the Scope ignored
-- skin switch: the summary strip's rule changes
-- skin switch: the summary strip's rule changes with the Scope ignored
 - skin switch: the detail card's box changes
 - skin switch: the detail card's box changes with the Scope ignored
-- skin switch: the footer band changes
-- skin switch: the footer band changes with the Scope ignored
+- skin switch: the footer's hairline changes
+- skin switch: the footer's hairline changes with the Scope ignored
 - skin switch: a Drops row's stripe and tone changes
 - skin switch: a Drops row's stripe and tone changes with the Scope ignored
 - skin switch: the tables' shadow changes
@@ -2817,8 +2965,8 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 29 |
-| test_settings_pages.lua | 55 |
+| test_schema_rows.lua | 30 |
+| test_settings_pages.lua | 56 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2832,27 +2980,28 @@ Total.
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
-| test_window.lua | 19 |
-| test_window_shell.lua | 64 |
+| test_window.lua | 20 |
+| test_window_shell.lua | 70 |
 | test_window_compact.lua | 25 |
+| test_window_autoclose.lua | 30 |
 | test_compact_cards.lua | 27 |
-| test_compact_group.lua | 23 |
-| test_compact_history.lua | 11 |
+| test_compact_group.lua | 27 |
+| test_compact_history.lua | 12 |
 | test_history_card.lua | 17 |
-| test_compact_chrome.lua | 28 |
+| test_compact_chrome.lua | 30 |
 | test_compact_modes.lua | 7 |
-| test_window_group.lua | 52 |
+| test_window_group.lua | 53 |
 | test_table_font.lua | 10 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
-| test_collect_cells.lua | 11 |
+| test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 34 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
-| test_drops_strip.lua | 15 |
-| test_footer_row.lua | 8 |
-| test_offer_panel.lua | 21 |
+| test_drops_strip.lua | 12 |
+| test_footer_row.lua | 15 |
+| test_offer_panel.lua | 23 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
 | test_row_tooltip.lua | 13 |
@@ -2861,7 +3010,7 @@ Total.
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
-| test_compat_loot.lua | 18 |
+| test_compat_loot.lua | 19 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -2879,18 +3028,19 @@ Total.
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
 | test_item_facts.lua | 25 |
-| test_collectibles.lua | 15 |
+| test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 54 |
-| test_pending.lua | 16 |
-| test_pending_ml.lua | 9 |
+| test_feed.lua | 55 |
+| test_pending.lua | 18 |
+| test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
-| test_roll_cells.lua | 5 |
-| test_window_pending.lua | 11 |
-| test_roll_popup.lua | 10 |
+| test_roll_cells.lua | 10 |
+| test_window_pending.lua | 12 |
+| test_roll_popup.lua | 20 |
+| test_rolls_panel.lua | 53 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -2904,21 +3054,21 @@ Total.
 | test_history.lua | 44 |
 | test_history_retention.lua | 16 |
 | test_insights_filters.lua | 12 |
-| test_insights_stats.lua | 16 |
+| test_insights_stats.lua | 17 |
 | test_feed_restore.lua | 15 |
 | test_content_tabs.lua | 6 |
 | test_insights_rows.lua | 20 |
 | test_window_insights.lua | 22 |
 | test_insights_sections.lua | 9 |
-| test_toast.lua | 50 |
+| test_toast.lua | 51 |
 | test_toast_stack.lua | 16 |
 | test_glow.lua | 18 |
 | test_icon_style.lua | 14 |
 | test_layers.lua | 9 |
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
-| test_sim_pool.lua | 26 |
-| test_sim_events.lua | 30 |
+| test_sim_pool.lua | 27 |
+| test_sim_events.lua | 36 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
@@ -2936,7 +3086,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 49 |
+| test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2421** |
+| **Total** | **2563** |

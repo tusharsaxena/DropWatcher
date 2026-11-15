@@ -48,7 +48,7 @@ end
 -- size, seed }. A simulation runs with its pool, its group and the group joined.
 local function sim(opts)
     opts = opts or {}
-    local NS, _, m = T.enableAddon()
+    local NS, _, m = T.enableAddon(opts.mock and { mock = opts.mock } or nil)
     m.addItem(link(100, 590), ring(590))
     m.addItem(link(101, 590), ring(590))
     m.inventory.player[11], m.inventory.player[12] = link(100, 590), link(101, 590)
@@ -707,16 +707,45 @@ test("sim: /dw sim roll opens a pending roll, updates it and resolves it into a 
     assertEqual(#NS.Compat.ActiveLootRolls(), 0)
 end)
 
+-- The roll side card (rolls UX design §3.3, RX-07): a simulation invents no Blizzard popup, so each
+-- simulated roll gets an owned stand-in with its side card; running it twice stacks two, to show
+-- the placement.
+test("sim: /dw sim roll twice stacks two stand-in popups, each with its side card", function()
+    local NS, m = sim({ mock = function(mock) mock.__decorateUIParent = true end })
+    local RP = NS.RollPopup
+    NS.addon:OnSlashCommand("sim roll")
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local s1, s2 = RP.StandIn(1), RP.StandIn(2)
+    assertTrue(s1 ~= nil and s1:IsShown(), "the first roll's stand-in")
+    assertTrue(s2 ~= nil and s2:IsShown() and s2 ~= s1, "the second roll's, a second frame")
+    local _, _, _, _, y1 = s1:GetPoint()
+    local _, _, _, _, y2 = s2:GetPoint()
+    assertTrue(y2 > y1, "stacked above the first")
+    for n = 1, 2 do
+        local card = RP.Overlay(RP.StandInKey(n))
+        assertTrue(card:IsShown(), "stand-in " .. n .. "'s side card")
+        local _, rel = card:GetPoint()
+        assertTrue(rel == RP.StandIn(n))
+    end
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(s1:IsShown()); assertFalse(s2:IsShown())
+end)
+
 -- Master loot (Forever port design §8, plan DW-FP19): a both-clients feature.
 test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignment resolves it", function()
     -- Two 500 rings worn, so whichever ring the pool offers (WoW Forever's is your own gear) is worth asking for.
     local NS, m = sim({ before = function(_, mock)
         mock.addItem(link(102, 500), ring(500))
         mock.inventory.player[11], mock.inventory.player[12] = link(102, 500), link(102, 500)
+        mock.lootThreshold = 5   -- the client's own, which the simulated group answers over (RX-03)
     end })
     local E, P = NS.SimEvents, NS.Pending
     local before = #drops(NS)
     NS.addon:OnSlashCommand("sim ml")
+    assertEqual(NS.Compat.LootThreshold(), NS.SimWorld.LOOT_THRESHOLD, "the simulated group's loot threshold")
+    assertEqual(NS.SimWorld.LOOT_THRESHOLD, 2, "Uncommon, the client's default")
     m.advance(0)
     assertEqual(printed(m, "Simulated master loot: "), 1)
     local items = P.All()
@@ -749,6 +778,7 @@ test("sim: /dw sim ml shows a pending item, Ask sends a [sim] whisper, assignmen
     m.advance(0)
     assertEqual(#P.All(), 0, "the stop took the held item away")
     assertEqual(NS.Compat.LootMethod(), nil, "the client's own loot method again (none in the mock)")
+    assertEqual(NS.Compat.LootThreshold(), 5, "the client's own loot threshold again")
 end)
 
 test("sim ml: refused without a running simulation", function()
@@ -761,4 +791,98 @@ test("sim roll: refused without a running simulation", function()
     local NS = T.newAddon()
     local roll, why = NS.SimEvents.Roll()
     assertNil(roll); assertEqual(why, "notRunning")
+end)
+
+-- The Rolls panel's two layouts from the simulator (rolls panel design §3.6, plan RX-19): `/dw sim
+-- raid` is a 40-player roll on several items, past the simulated group, which shows raid mode.
+-- red under: no `raid` host verb (E.Raid)
+test("sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving", function()
+    local NS, m, members = sim()
+    local E, P = NS.SimEvents, NS.Pending
+    NS.addon:OnSlashCommand("sim raid")
+    m.advance(0)
+    assertEqual(printed(m, ("Simulated raid roll opened: %d items, %d players."):format(E.RAID_ITEMS, E.RAID_PLAYERS)), 1)
+    local items = P.All()
+    assertEqual(#items, E.RAID_ITEMS, "one pending roll per item")
+    assertTrue(E.RAID_ITEMS > 1 and E.RAID_PLAYERS == 40)
+    local group = {}
+    for _, mem in ipairs(members) do group[mem.guid] = true end
+    for _, item in ipairs(items) do
+        local rolls, names, inGroup = item.roll.rolls, {}, 0
+        assertEqual(#rolls, E.RAID_PLAYERS, "you, the group and the raiders")
+        for _, r in ipairs(rolls) do
+            assertNil(names[r.name], "every name apart: " .. tostring(r.name)); names[r.name] = true
+            if group[r.guid] then inGroup = inGroup + 1 end
+            if not r.isSelf then assertTrue(NS.SimHost.IsSimGUID(r.guid), "a simulated GUID") end
+        end
+        assertEqual(inGroup, #members, "the group rolls too")
+    end
+    assertEqual(E.Status().rolls.started, E.RAID_ITEMS)
+    -- The closes come one after another; by the last every roll is over.
+    m.advance(E.ROLL_CLOSE + (E.RAID_ITEMS - 1) * E.RAID_STAGGER + 1)
+    for _, item in ipairs(P.All()) do assertTrue(item.state ~= "open", "every roll over") end
+    local st = E.Status().rolls
+    assertEqual(st.won + st.allPassed, E.RAID_ITEMS)
+    local raider = items[1].roll.rolls[#items[1].roll.rolls]
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(NS.SimHost.IsSimGUID(raider.guid), "the stop forgets the raiders")
+end)
+
+test("sim raid: refused without a running simulation", function()
+    local NS = T.newAddon()
+    local rolls, why = NS.SimEvents.Raid()
+    assertNil(rolls); assertEqual(why, "notRunning")
+end)
+
+-- red under: the panel's raid mode read from the group's size alone (a simulated party of five)
+test("sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout", function()
+    local NS, m = sim()
+    NS.ShowWindow()
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local d = NS.RollsPanel.Drawn()
+    assertTrue(NS.RollsPanel.IsShown(), "the roll shows the panel")
+    assertFalse(d.raid, "a party's roll: the dungeon layout")
+    assertEqual(d.panel.title:GetText(), "Rolls")
+    m.advance(NS.SimEvents.ROLL_CLOSE + NS.Setting("rolls.panel.linger") + 1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the roll left after its linger")
+    NS.addon:OnSlashCommand("sim raid")
+    m.advance(0)
+    d = NS.RollsPanel.Drawn()
+    assertTrue(d.raid, "40 rollers: raid mode")
+    assertEqual(d.panel.title:GetText(), "Rolls", "no count in the title (RX-21)")
+    local open = 0
+    for _, h in ipairs(d.headers) do if h.open then open = open + 1 end end
+    assertEqual(open, #d.blocks, "every block open (RX-21: the one-open rule is gone)")
+    assertTrue(d.panel.simStrip:IsShown(), "the sim strip under the title bar (RX-21)")
+    NS.Sim:Stop()
+    m.advance(0)
+end)
+
+-- red under: the simulation's rolls lingering in the panel after the stop with no strip (preview-mode:
+-- every display of placeholder data says so; RX-21 review)
+test("sim: the stop takes an open simulated roll out of the Rolls panel at once", function()
+    local NS, m = sim()
+    NS.ShowWindow()
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    assertTrue(NS.RollsPanel.IsShown(), "an open simulated roll")
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(NS.RollsPanel.HasBlocks(), "an open roll leaves with the stop, no linger")
+    assertFalse(NS.RollsPanel.IsShown())
+end)
+
+test("sim: the stop takes a finished simulated roll out of the Rolls panel, though none is open", function()
+    local NS, m = sim()
+    NS.ShowWindow()
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(NS.SimEvents.ROLL_CLOSE + 1)
+    assertTrue(NS.RollsPanel.HasBlocks(), "a finished simulated roll lingers while the simulation runs")
+    assertTrue(NS.RollsPanel.Drawn().panel.simStrip:IsShown(), "marked by the sim strip")
+    NS.Sim:Stop()
+    m.advance(0)
+    assertFalse(NS.RollsPanel.HasBlocks(), "and leaves with the stop")
+    assertFalse(NS.RollsPanel.IsShown())
 end)

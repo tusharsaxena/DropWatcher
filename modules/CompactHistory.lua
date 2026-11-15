@@ -100,7 +100,7 @@ end
 
 -- ── painting a card ─────────────────────────────────────────────────────────────────────────
 
-local function paintCard(card, drop, _, m, st)
+local function paintCard(card, drop, width, m, st)
     local CG, WG, c = NS.CompactGroup, NS.WindowGroup, card.cells
     card.dropId, card.entry = drop.id, drop.entry
     card:SetHeight(m.height)
@@ -119,7 +119,9 @@ local function paintCard(card, drop, _, m, st)
     c.item.hit.tipLines = nil   -- the real item tooltip instead
     CG.PaintText(c.ilvl, cc.ilvl)
     CG.PaintText(c.outcome, cc.outcome)
-    CG.PaintLineTwo(card, cc, "time")
+    -- Line 2 ends CG.ASK_GAP before the outcome, line 2's right piece (rolls UX spec §3.1).
+    local room = width - CG.TextLeft(m, CG.LEAD) - CG.PAD - (c.outcome.text:GetStringWidth() or 0) - CG.ASK_GAP
+    CG.PaintLineTwo(card, cc, "time", room, m)
     CG.PaintHalves(card, cc)
 end
 
@@ -147,9 +149,9 @@ end
 local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle, after = drawDetail,
     indent = K.ROW_INDENT }
 
--- The pane's own scroll view, above its strip, with its stacked detail card.
+-- The pane's own scroll view, above the window's footer, with its stacked detail card.
 local function buildView(pane)
-    local cv = NS.CompactGroup.BuildView(pane, K.STRIP_H)
+    local cv = NS.CompactGroup.BuildView(pane, NS.FooterMetric("HEIGHT"))
     cv.card = NS.HistoryCard.Build(cv.content, true)
     return cv
 end
@@ -178,5 +180,5 @@ function CH.Drawn(pane)
     local cv = pane.compactView
     if not cv then return nil end
     return { compact = true, rows = cv.cardPool.active, headers = cv.headPool.active, entries = pane.entries,
-        pane = pane, strip = pane.strip, scroll = cv.scroll, card = cv.card, cardEntry = cv.cardEntry }
+        pane = pane, foot = pane.foot, scroll = cv.scroll, card = cv.card, cardEntry = cv.cardEntry }
 end

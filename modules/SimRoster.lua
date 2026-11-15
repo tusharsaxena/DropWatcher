@@ -40,13 +40,25 @@ local NAMES = {
     "Fenwick", "Isolde", "Quillon", "Haskar", "Merrow",
 }
 local REALMS = { "Stormhold", "Ashcrest", "Duskmere", "Silverkeep", "Emberfall" }
+-- More names for a raid's rollers past the group (R.Raiders, `/dw sim raid`): with NAMES, enough for
+-- 39 players besides you, each named apart. A group draws from NAMES alone, so a seed's group keeps
+-- its names.
+local RAID_NAMES = {
+    "Aldric", "Bryony", "Corvane", "Delphine", "Eskar", "Faelan", "Grisha", "Halvard", "Ingrid", "Jorvik",
+    "Kestra", "Lothar", "Mirelle", "Nalgor", "Odessa", "Perrin", "Ravena", "Sorin", "Talwyn", "Ulric",
+}
 -- WoW Forever's surnames (client-quirks-§5): there a member is "First Surname", unique per region,
 -- with no realm. Forever's own list (clients-§5), picked once by ClientKey() in Create.
 local SURNAMES = {
     "Ironhide", "Silentshot", "Dock", "Ashwalker", "Brightmane", "Stormcall", "Duskwhisper",
     "Hollowbrook", "Emberjaw", "Frostvale", "Thornmantle", "Graywind",
 }
-R.NAMES, R.REALMS, R.SURNAMES = NAMES, REALMS, SURNAMES
+R.NAMES, R.REALMS, R.SURNAMES, R.RAID_NAMES = NAMES, REALMS, SURNAMES, RAID_NAMES
+-- The raiders' names: the group's list, then the raid's own.
+local RAIDER_NAMES = {}
+for _, list in ipairs({ NAMES, RAID_NAMES }) do
+    for _, name in ipairs(list) do RAIDER_NAMES[#RAIDER_NAMES + 1] = name end
+end
 
 -- Every classFile with specs in the client's list (core/ClassData.lua: nine on WoW Forever), sorted,
 -- so a seed draws the same classes on every load.
@@ -102,18 +114,18 @@ function R.Size(kind, size, rnd)
     return math.max(R.RAID_MIN, math.min(R.RAID_MAX, math.floor(size)))
 end
 
--- A name not taken yet: the list in a random order, then numbered once it runs out.
-local function pickName(rnd, taken)
-    for _ = 1, #NAMES do
-        local name = NAMES[rnd(#NAMES)]
+-- A name from `names` not taken yet: the list in a random order, then numbered once it runs out.
+local function pickName(rnd, taken, names)
+    for _ = 1, #names do
+        local name = names[rnd(#names)]
         if not taken[name] then return name end
     end
-    for _, name in ipairs(NAMES) do
+    for _, name in ipairs(names) do
         if not taken[name] then return name end
     end
     local n = 2
-    while taken[NAMES[1] .. n] do n = n + 1 end
-    return NAMES[1] .. n
+    while taken[names[1] .. n] do n = n + 1 end
+    return names[1] .. n
 end
 
 -- A member's name, realm and fullName in the client's shape: "First Surname" with no realm when
@@ -136,16 +148,22 @@ local function specIDOf(key)
     return nil
 end
 
-local function makeMember(i, kind, opts, rnd, taken)
+-- The unit token of member `i` in a group of `kind`; nil for a raider past the group (no kind).
+local function unitOf(kind, i)
+    if kind == nil then return nil end
+    return kind == "raid" and ("raid" .. (i + 1)) or ("party" .. i)
+end
+
+local function makeMember(i, kind, opts, rnd, taken, names)
     local classFile = CLASSES[rnd(#CLASSES)]
     local specs = CD.CLASS_SPECS[classFile]
-    local first = pickName(rnd, taken)
+    local first = pickName(rnd, taken, names or NAMES)
     taken[first] = true
     local name, realm, fullName = nameOf(first, opts.ownRealm, opts.surnames, rnd)
     return {
         sim = true, name = name, realm = realm, fullName = fullName,
         guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)),
-        unit = kind == "raid" and ("raid" .. (i + 1)) or ("party" .. i),
+        unit = unitOf(kind, i),
         classFile = classFile, classID = CD.CLASS_ID[classFile], specID = specIDOf(specs[rnd(#specs)]),
     }
 end
@@ -165,6 +183,32 @@ function R.Members(opts, rnd)
         local m = makeMember(i, kind, opts, rnd, taken)
         while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)) end
         guids[m.guid] = true
+        out[i] = m
+    end
+    return out
+end
+
+--- `n` roll-only raiders past the group (`/dw sim raid`, rolls panel design §3.6): invented players
+--- shaped as members (`raider = true`, a name, realm, fullName, GUID, class and spec), named apart
+--- from `members` and each other from NAMES then RAID_NAMES, with distinct GUIDs. They are no group
+--- member: no unit token, no gear, never in the roster; they only roll. `opts` = { ownRealm,
+--- surnames } as R.Members takes them.
+--- @param n number
+--- @param members table|nil the group's members
+--- @param opts table|nil
+--- @param rnd function a random source (R.Random)
+--- @return table raiders
+function R.Raiders(n, members, opts, rnd)
+    opts = type(opts) == "table" and opts or {}
+    local taken, guids, out = {}, {}, {}
+    for _, m in ipairs(members or {}) do
+        taken[tostring(m.name):match("^(%S+)") or ""], guids[m.guid or ""] = true, true
+    end
+    local base = #(members or {})
+    for i = 1, math.max(0, math.floor(tonumber(n) or 0)) do
+        local m = makeMember(base + i, nil, opts, rnd, taken, RAIDER_NAMES)
+        while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + base + i, rnd(0, 0x7FFFFFFF)) end
+        guids[m.guid], m.raider = true, true
         out[i] = m
     end
     return out

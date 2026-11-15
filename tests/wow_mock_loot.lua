@@ -17,11 +17,14 @@
 --                  startTime, duration }; GetInfoForEncounter(id) answers the one with that id
 --   lootHistoryTime  GetLootHistoryTime()'s answer (the clock startTime is on)
 --   lootRolls      the open group-loot rolls by rollID: { link, texture, name, count, quality, bop,
---                  canNeed, canGreed, canDisenchant, canTransmog }, read by GetLootRollItemInfo (its
---                  thirteen returns) and GetLootRollItemLink; activeLootRolls is
+--                  canNeed, canGreed, canDisenchant, canTransmog, timeLeft }, read by GetLootRollItemInfo
+--                  (its thirteen returns), GetLootRollItemLink and GetLootRollTimeLeft (timeLeft, in
+--                  milliseconds as the client answers it); activeLootRolls is
 --                  GetActiveLootRollIDs()'s list
 --   lootMethod     C_PartyInfo.GetLootMethod()'s three answers as { method, masterLootPartyID,
 --                  masterLooterRaidID } (nil: a case that leaves it unset)
+--   lootThreshold  GetLootThreshold()'s answer, the group's loot threshold (nil: a case that leaves it
+--                  unset; rolls UX RX-03)
 --   lootSlots      the open loot window's slots: { link, texture, name, count, quality, locked,
 --                  source }; GetNumLootItems is their count, GetLootSlotLink / GetLootSlotInfo read
 --                  one, GetLootSourceInfo answers its `source` GUID and the count
@@ -29,7 +32,8 @@
 --                  and HookScript recording each hook in .hooks[script]. Show runs the popup's own
 --                  handler first (`.blizzOnShow(self)`, a case's stand-in for Blizzard's
 --                  GroupLootFrame_OnShow, which can hide it again at once), then the OnShow hooks;
---                  Hide runs the OnHide hooks when it was shown (DW-FP20)
+--                  Hide runs the OnHide hooks when it was shown (DW-FP20); GetLeft / GetRight /
+--                  GetTop / GetBottom answer a case's `rect`, GetEffectiveScale its `scale` (RX-07)
 --   gamepadUI      InputUtil.IsGamepadUIEnabled()'s answer (WoW Forever's gamepad roll list)
 
 local function isForever(M)
@@ -64,6 +68,13 @@ local function popup(i)
     end
     function f.IsShown(self) return self.shown end
     function f.GetName() return "GroupLootFrame" .. i end
+    -- Its edges, as a case places it (`rect = { left, bottom, width, height }`, UIParent's units at
+    -- scale 1): nil while unplaced, as the client answers a frame with no resolved anchor (RX-07).
+    function f.GetLeft(self) return self.rect and self.rect[1] end
+    function f.GetBottom(self) return self.rect and self.rect[2] end
+    function f.GetRight(self) return self.rect and self.rect[1] + self.rect[3] end
+    function f.GetTop(self) return self.rect and self.rect[2] + self.rect[4] end
+    function f.GetEffectiveScale(self) return self.scale or 1 end
     function f.HookScript(self, script, fn)
         self.hooks[script] = self.hooks[script] or {}
         table.insert(self.hooks[script], fn)
@@ -105,6 +116,10 @@ return function(M)
         local r = M.lootRolls[rollID]
         return r and r.link
     end
+    M.GetLootRollTimeLeft = function(rollID)
+        local r = M.lootRolls[rollID]
+        return r and r.timeLeft
+    end
     M.GetLootRollItemInfo = function(rollID)
         local r = M.lootRolls[rollID]
         if not r then return nil end
@@ -118,6 +133,8 @@ return function(M)
         if type(lm) ~= "table" then return lm end
         return lm[1], lm[2], lm[3]
     end
+
+    M.GetLootThreshold = function() return M.lootThreshold end
 
     M.lootSlots = {}
     M.GetNumLootItems = function() return #M.lootSlots end

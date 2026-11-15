@@ -140,7 +140,8 @@ test("diagnostics: the feed section counts the drops, the hidden ones and the co
     assertTrue(text:find("feed: drops group=1 mine=1 test=0 groups=1 merged=0 loading=0", 1, true) ~= nil, text)
     assertTrue(text:find("feed: hidden notWatched=1", 1, true) ~= nil, text)
     assertTrue(text:find("feed: encounter=Speaker Brokk run=none", 1, true) ~= nil, text)
-    assertTrue(text:find("feed: quality mode=fixed threshold=3 (fixed)", 1, true) ~= nil, text)
+    local fixed = T.forever and 2 or 3   -- WoW Forever's default is Uncommon (rolls UX ruling 7, RX-01)
+    assertTrue(text:find(("feed: quality mode=fixed threshold=%d (fixed)"):format(fixed), 1, true) ~= nil, text)
     NS.addon.db.profile.feed = { quality = { mode = "dynamicSlot" } }
     text = report(NS)
     assertTrue(text:find("feed: quality mode=dynamicSlot thresholds HEAD=2", 1, true) ~= nil, text)

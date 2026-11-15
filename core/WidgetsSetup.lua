@@ -70,21 +70,97 @@ function NS.HasWidgets()
     return W ~= nil
 end
 
---- A mode strip (the library's W.TestStrip, born hidden and unanchored): the amber test-mode
---- flavor, or the cyan simulation flavor for kind "sim". Nil when the library is absent. The caller
---- anchors it, tips it and shows it. Its art is host-passed: the catalog's info mark, resolved here.
+--- A mode strip (the library's W.TestStrip, born hidden): the amber test-mode flavor, or the cyan
+--- simulation flavor for kind "sim". Nil when the library is absent. `dock` is the strip's docking
+--- (Widgets minor 27, preview-mode's *Where the strip sits*): `{ titleBar, window, onOffset }` puts
+--- it directly under that title bar, full width, and the library places it again on every show,
+--- hide and resize; the host moves its body by `strip:BodyOffset()` and never anchors the strip.
+--- `{ target, gap }` instead docks it on a HUD display's top edge, outside it (`dock = "hud"`): it
+--- takes no mouse, so it has no tooltip and no menu, and it flips under the display's bottom edge
+--- while the top would leave the screen.
+--- The caller tips it and shows it. Its art is host-passed: the catalog's info mark, resolved here.
 --- The title bar's mode word stands in for it only where it is nil, or while minimized.
 --- @param parent table the frame to parent it to
 --- @param text string the localized line it says
 --- @param kind string|nil "sim" for the simulation flavor; anything else is the test flavor
+--- @param dock table|nil { titleBar, window, onOffset } (dock = "title") or { target, gap } (dock = "hud")
 --- @return table|nil
-function NS.MakeTestStrip(parent, text, kind)
+function NS.MakeTestStrip(parent, text, kind, dock)
     if not W then return nil end
     -- sim / onEnd (LibKa0s Widgets minor 21, SF-F1): the strip's right-click menu ends the mode.
     local isSim = kind == "sim"
-    return W.TestStrip(parent, { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName,
+    local opts = { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName,
         sim = isSim and NS.Sim or nil,
-        onEnd = (not isSim) and function() NS.SetTestMode(false) end or nil })
+        onEnd = (not isSim) and function() NS.SetTestMode(false) end or nil }
+    if type(dock) == "table" and dock.target then
+        opts.dock, opts.target, opts.gap = "hud", dock.target, dock.gap
+    elseif type(dock) == "table" then
+        opts.dock, opts.titleBar, opts.window, opts.onOffset = "title", dock.titleBar, dock.window, dock.onOffset
+    end
+    return W.TestStrip(parent, opts)
+end
+
+--- The mode strip's height (W.TEST_STRIP.HEIGHT), read where the library publishes it; 0 with no
+--- library, which draws no strip.
+--- @return number
+function NS.TestStripHeight()
+    return W and W.TEST_STRIP and W.TEST_STRIP.HEIGHT or 0
+end
+
+--- A window footer (the library's W.Footer, Widgets minor 27; standalone-windows' *The footer*): no
+--- fill, a hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` tall across `parent`'s
+--- bottom edge, born shown, painted for this addon's skin owner. Nil when the library is absent.
+--- @param parent table the frame whose bottom edge it spans
+--- @param opts table|nil W.Footer's opts; `owner` is always this addon
+--- @return table|nil
+function NS.MakeFooter(parent, opts)
+    if not W or type(W.Footer) ~= "function" then return nil end
+    local o = {}
+    for k, v in pairs(opts or {}) do o[k] = v end
+    o.owner = addonName
+    return W.Footer(parent, o)
+end
+
+-- What a footer measures with no library: the published figures at Widgets minor 27, so a degraded
+-- window lays its rows out the same (it draws no hairline and no grip).
+local FOOTER_FALLBACK = { HEIGHT = 24, PAD = 8, GRIP = 22 }
+
+--- A footer with no library (a degraded install only; with the library every footer is W.Footer,
+--- anti-pattern #118): a bare frame of the same height across `parent`'s bottom edge with W.Footer's
+--- two lines and setters, and no hairline, no marks and no grip corner, so a host's paint runs
+--- unchanged and its controls are simply absent.
+--- @param parent table
+--- @return table { left, right, marks = {}, SetLeft, SetRight, SetGrip }
+function NS.BareFooter(parent)
+    local foot = CreateFrame("Frame", nil, parent)
+    foot:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(FOOTER_FALLBACK.HEIGHT)
+    local pad = FOOTER_FALLBACK.PAD
+    foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    foot.right:SetPoint("RIGHT", foot, "RIGHT", -pad, 0)
+    foot.left = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    foot.left:SetPoint("LEFT", foot, "LEFT", pad, 0)
+    foot.left:SetPoint("RIGHT", foot.right, "LEFT", -pad, 0)
+    for _, fs in ipairs({ foot.left, foot.right }) do
+        fs:SetWordWrap(false)
+        NS.Skin.Text(fs, "text.muted")
+    end
+    foot.left:SetJustifyH("LEFT")
+    foot.right:SetJustifyH("RIGHT")
+    foot.marks = {}
+    foot.SetLeft = function(self, text) self.left:SetText(type(text) == "string" and text or "") end
+    foot.SetRight = function(self, text) self.right:SetText(type(text) == "string" and text or "") end
+    foot.SetGrip = function() end
+    return foot
+end
+
+--- A footer figure (`HEIGHT`, `PAD`, `GRIP`), read from W.FOOTER, the library's published geometry.
+--- @param key string
+--- @return number
+function NS.FooterMetric(key)
+    local F = W and W.FOOTER
+    return F and F[key] or FOOTER_FALLBACK[key]
 end
 
 --- Open the shared popup menu on `rows` from `anchor` (W.ContextMenu, Widgets minor 21; `submenu`,

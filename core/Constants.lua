@@ -59,8 +59,6 @@ C.WINDOW = {
     TAB_W       = 118,    -- one tab button; the strip's pitch adds TAB_GAP
     TAB_GAP     = 4,
     FILTER_H    = 30,
-    BANNER_H    = 22,     -- = Widgets.TEST_STRIP.HEIGHT + 4: a 2 px gap above and below the strip
-    FOOTER_H    = 22,
     INSET       = 6,      -- the body's side margin
     CONTROL_H   = 20,     -- a title-bar button, a dropdown, the search box
     ICON        = 18,     -- a title-bar control's square slot (the close mark's size)
@@ -111,24 +109,15 @@ C.WINDOW = {
     -- The Drops table's empty state (board 06 D): its title and line (its two buttons gone, feedback-16).
     EMPTY_W     = 360,
     EMPTY_H     = 50,
-    -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops strip
+    -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops summary
     -- (modules/DropsStrip.lua, feedback-5 spec §3) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
     COUNTDOWN_EXTRA = 14, -- such a row's height over the row height (its countdown sits over its bar)
     COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    STRIP_H     = 26,     -- the Drops strip, with Post my tradeables (and History's, with Expand all)
-    -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
-    -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in the full
-    -- layout, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
-    -- (NS.WindowFooter.SORT_W). The compact layout draws them icon only, FOOTER_ICON_W wide, their
-    -- tooltips naming them (feedback-16).
-    FOOTER_BUTTON_W = 150,
-    FOOTER_ICON_W = 24,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
-    OFFER_FOOT_H = 32,    -- its Announce to group strip
     OFFER_ROW_H = 26,     -- one candidate
     OFFER_MIN_H = 320,    -- its least height beside the compact window (head, six candidates, foot)
     -- A candidate's Offer button: every state's icon and word (Offer, Offered, Queued, Retry) fits
@@ -146,7 +135,8 @@ C.WINDOW = {
 --   MEDIUM     the main window, full and compact (WINDOW, toplevel, clamped) at W; its chrome W+1
 --              (title bar, tab strip, body, strips, and the Offer panel docked beside it, DOCKED);
 --              its content W+2 to W+8 (tables, cards, the detail card, item buttons: an icon's
---              border at button + BORDER, its glow at button + EFFECT; the detail card's deepest glow
+--              border at button + BORDER, its glow at button + EFFECT; a row's or card's action
+--              button at row + ROW_ACTION, over its text cells and their hit frames, row + 1; the detail card's deepest glow
 --              reaches W+10, beside the grip in the footer corner, which the scroll keeps clear);
 --              the library's resize grip W+10 (LibKa0s-Core-1.0 sets it; GRIP names it); the
 --              floating Offer panel W+30, a popover over the window's own content in the window's
@@ -167,7 +157,8 @@ C.LAYERS = {
     LEVEL = {
         BORDER          = 1,    -- an item button's border frame, over the icon's art
         EFFECT          = 2,    -- the upgrade glow (modules/Glow.lua), over the border
-        DOCKED          = 1,    -- the Offer panel docked beside the window
+        ROW_ACTION      = 2,    -- a row's or card's action button, over its text cells and hit frames (+1)
+        DOCKED          = 1,    -- the Offer panel and the Rolls panel docked beside the window
         CONTENT_MAX     = 8,    -- the window's content stays at or below W+8 (frame-layering-§3)
         GRIP            = 10,   -- the library's resize grip: named here, set by LibKa0s-Core-1.0
         POPOVER_OFFER   = 30,   -- the floating Offer panel
@@ -254,9 +245,11 @@ C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
     CONSUMABLE    = { "Consumable", 0 },
     WEAPON        = { "Weapon", 2 },
     ARMOR         = { "Armor", 4 },
+    CONTAINER     = { "Container", 1 },
     REAGENT       = { "Reagent", 5 },
     RECIPE        = { "Recipe", 9 },
     MISCELLANEOUS = { "Miscellaneous", 15 },
+    QUIVER        = { "Quiver", 11 },     -- WoW Forever's quivers and ammo pouches (RX-15)
 })
 
 -- Enum.ItemMiscellaneousSubclass: a mount or companion pet item's class rung (categories design
@@ -365,12 +358,19 @@ C.TRACK_TIER_BY_STRING_ID = {}
 
 -- Every category a drop can fall in, in display order. `collectible` ones get a collection verdict
 -- (new or collected) instead of a gear one, and are feed-only. NS.Collectibles.CategoryOf decides
--- which one an item is, in its own precedence order.
+-- which one an item is, in its own precedence order. `kind` ones (RX-04, rolls UX design §3.5) are
+-- not gear and not collected: their verdict is their kind word (Lockbox, Container, Item), and they
+-- are feed-only too. `lockbox` is Miscellaneous Junk that opens (RX-15: its own kind, not a
+-- container); `container` is a bag, or on WoW Forever a quiver or ammo pouch (the Quiver class);
+-- `other` is no item's category: the feed's filter takes an item of no kind under it when it is
+-- rolled on (NS.FeedFilter), its catch-all.
 C.CATEGORIES = {
     { key = "equipment", collectible = false }, { key = "tierToken", collectible = false },
     { key = "mount", collectible = true }, { key = "pet", collectible = true },
     { key = "toy", collectible = true }, { key = "recipe", collectible = true },
     { key = "cosmetic", collectible = true },
+    { key = "lockbox", collectible = false, kind = true }, { key = "container", collectible = false, kind = true },
+    { key = "other", collectible = false, kind = true },
 }
 
 -- The kind History records for a drop the Always watch list let in that fits no category (a reagent,

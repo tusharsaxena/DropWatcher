@@ -520,6 +520,11 @@ end)
 
 test("stand-down: a request is refused, the flush timer is canceled and the queue is dropped", function()
     local NS, m, A = party()
+    -- The open world group as Retail's default leaves it, untracked and not auto-opening: on WoW
+    -- Forever (rolls UX ruling 7, RX-01) the drop would open the window, whose next-frame repaint
+    -- is a timer of its own, not the flush timer this case counts.
+    local owg = NS.addon.db.profile.situations.openWorldGroup
+    owg.track, owg.autoOpen = false, false
     local a = drop(NS, m, 300, "Brakk")
     local b = drop(NS, m, 301, "Lyra")
     local c = drop(NS, m, 302, "Brakk")

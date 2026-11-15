@@ -642,3 +642,93 @@ test("compact group: dual marks that do not fit the card are the one mark instea
         assertEqual(h.level.__points[1][2], c[key .. "Label"].text, key .. ": the level after the label")
     end
 end)
+
+-- ── line-2 caps (rolls UX spec §3.1, ruling 5) ──────────────────────────────────────────────
+
+test("line 2: each piece is cut at its cap, scaled with the text; the name gives up width first", function()
+    local WR = T.newAddon().WindowRows
+    local caps = WR.LINE_TWO_CAPS
+    assertEqual(caps.name, 96); assertEqual(caps.slot, 56); assertEqual(caps.kind, 52)
+    -- Short pieces keep their own width (+1, so the client never cuts an exact fit).
+    local n, s, k = WR.LineTwoWidths(400, 1, { name = 20, slot = 30, kind = 35 })
+    assertEqual(n, 21); assertEqual(s, 31); assertEqual(k, 36)
+    -- Long pieces stop at their caps, which scale with the text.
+    n, s, k = WR.LineTwoWidths(1000, 1, { name = 200, slot = 200, kind = 200 })
+    assertEqual(n, 96); assertEqual(s, 56); assertEqual(k, 52)
+    n, s, k = WR.LineTwoWidths(1000, 1.4, { name = 200, slot = 200, kind = 200 })
+    assertEqual(n, 96 * 1.4); assertEqual(s, 56 * 1.4); assertEqual(k, 52 * 1.4)
+    -- Too little room: the name shrinks first; the mark's width is kept whole.
+    n, s, k = WR.LineTwoWidths(180, 1, { name = 200, mark = 30, slot = 40, kind = 40 })
+    assertEqual(s, 41); assertEqual(k, 41)
+    assertEqual(n, 180 - 30 - WR.MARK_GAP - 41 - 41 - 2 * WR.LINE_TWO_GAP)
+    -- Less still: the name stops at its least, then the slot gives up width, then the type.
+    n, s, k = WR.LineTwoWidths(60, 1, { name = 200, mark = 30, slot = 40, kind = 40 })
+    assertEqual(n, WR.LINE_TWO_MIN); assertEqual(s, WR.LINE_TWO_MIN); assertTrue(k >= WR.LINE_TWO_MIN)
+    -- A width the client cannot measure yet takes its cap.
+    n = WR.LineTwoWidths(1000, 1, { slot = 10, kind = 10 })
+    assertEqual(n, 96)
+end)
+
+-- A two-word WoW Forever name on your own drop, at the least width: the name is cut, `[YOU]` shows
+-- whole after it, slot and type stay inside their caps and line 2 ends before the action button.
+-- Line 2's font strings record the widths they are given (the kit's regions no-op SetWidth), then
+-- the window repaints so they are given them again.
+local function spyWidths(NS, c)
+    for _, fs in ipairs({ c.looter.text, c.looter.mark, c.slot.text, c.armorType.text }) do
+        rawset(fs, "SetWidth", function(s, w) rawset(s, "__width", w); return s end)
+        rawset(fs, "GetWidth", function(s) return rawget(s, "__width") or 0 end)
+    end
+    NS.Window.Refresh()
+end
+
+local function longNameCard(name, mine)
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    m.normalizedRealm = "Testrealm"
+    m.textCharWidth = 5
+    local over = { looter = { name = name, guid = "Player-1-0000000A", classFile = "WARRIOR", isSelf = mine or nil },
+        isMine = mine or false, facts = { ilvl = 311, equipLoc = "INVTYPE_FEET", quality = 3, classID = 4, subClassID = 2 } }
+    seed(NS, { GROUP }, { drop(over) })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.SetWindowMode("compact")
+    NS.ShowWindow()
+    spyWidths(NS, cardFor(NS.WindowGroup.Drawn(), 1).cells)
+    return NS, cardFor(NS.WindowGroup.Drawn(), 1), m
+end
+
+test("compact group: a two-word name is cut, [YOU] whole after it, and line 2 ends before the button", function()
+    local NS, card = longNameCard("Bloodthornwick Ironfist-Testrealm", true)
+    local K, CG, WR = NS.Constants.WINDOW, NS.CompactGroup, NS.WindowRows
+    local c = card.cells
+    assertEqual(textOf(c.looter.text), "Bloodthornwick Ironfist")
+    local nameW = c.looter.text:GetWidth()
+    assertTrue(nameW > 0 and nameW < c.looter.text:GetUnboundedStringWidth(), "the name is cut")
+    assertTrue(nameW <= WR.LINE_TWO_CAPS.name, "within its cap")
+    assertTrue(c.looter.mark:IsShown()); assertEqual(textOf(c.looter.mark), "[YOU]")
+    assertEqual(c.looter.mark.__width, nil, "the mark is never given a width, so never cut")
+    local slotW, kindW = c.slot.text:GetWidth(), c.armorType.text:GetWidth()
+    assertTrue(slotW > 0 and slotW <= WR.LINE_TWO_CAPS.slot); assertTrue(kindW > 0 and kindW <= WR.LINE_TWO_CAPS.kind)
+    local markW = c.looter.mark:GetUnboundedStringWidth()
+    local lineEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + nameW + WR.MARK_GAP + markW + WR.LINE_TWO_GAP
+        + c.slot.text:GetWidth() + WR.LINE_TWO_GAP + c.armorType.text:GetWidth()
+    local buttonAt = card:GetWidth() - CG.PAD - K.ASK_W
+    assertTrue(lineEnd + CG.ASK_GAP <= buttonAt, ("line 2 ends at %d, the button at %d"):format(lineEnd, buttonAt))
+end)
+
+test("compact group: a one-word name keeps its own width, uncut", function()
+    local _, card = longNameCard("Seta-Testrealm", true)
+    local t = card.cells.looter.text
+    assertEqual(textOf(t), "Seta"); assertEqual(t:GetWidth(), t:GetUnboundedStringWidth() + 1)
+    assertTrue(card.cells.looter.mark:IsShown())
+end)
+
+test("compact group: the action button draws above line 2's text and its hit frames", function()
+    local _, card = longNameCard("Bloodthornwick Ironfist-Testrealm", true)
+    local level = card.ask:GetFrameLevel()
+    for key, cell in pairs(card.cells) do
+        if cell.hit then
+            assertTrue(level > cell.hit:GetFrameLevel(), key .. ": the button is over its hit frame")
+        end
+    end
+    assertTrue(level > card:GetFrameLevel() + 1)
+end)

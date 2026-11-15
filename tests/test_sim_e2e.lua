@@ -202,7 +202,8 @@ local function assertDefaultFilters(NS)
         end
     end
     local mode, threshold = FB.QualityReadout()
-    assertEqual(mode, "fixed"); assertEqual(threshold, 3)
+    -- Rare on Retail, Uncommon on WoW Forever (rolls UX ruling 7, RX-01)
+    assertEqual(mode, "fixed"); assertEqual(threshold, T.forever and 2 or 3)
 end
 
 local function assertDrops(NS, label)
@@ -294,7 +295,7 @@ end
 local function assertRetention(NS, m, label)
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
-    local text = NS.WindowHistory.Drawn().strip.info:GetText()
+    local text = NS.WindowHistory.Drawn().foot.info
     assertTrue(text:find("^%d+ groups, %d+ drops · kept for 30 days$") ~= nil, label .. ": " .. text)
     local groups, asked = #NS.History.Log().groups, #m.popupsShown
     assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 7), label)
@@ -361,6 +362,8 @@ test("sim e2e: a simulated key's auto-open is compact by default, full with the 
     for _, case in ipairs({ { run, "compact", true }, { run, "full", false } }) do
         local NS, m = addon(600)
         assertTrue(NS.SchemaRuntime.Set("window.compactInRuns", case[3]) or case[3], "the option")
+        -- Auto-close off (RX-10): the run's 30 idle seconds would close the window its drop opened.
+        NS.SchemaRuntime.Set("window.autoClose.enabled", false)
         assertTrue(NS.SimScenario.Start(case[1], nil, { seed = 1 }), case[1])
         assertTrue(NS.Window.IsShown(), case[1] .. ": the simulation opened the window")
         assertEqual(NS.WindowCompact.Mode(), "full", case[1] .. ": its own open is the stored layout")

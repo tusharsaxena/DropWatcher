@@ -177,17 +177,16 @@ test("compact history: every tooltip opens at the card's top right, just outside
     end
 end)
 
-test("compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)", function()
+test("compact history: the footer is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)", function()
     local NS, drawn = shownCompact()
-    local K = NS.Constants.WINDOW
     -- red under: Clear history on the compact strip beside the toggle
-    assertTrue(drawn.strip.clear == nil, "Clear history lives in Settings")
-    assertEqual(drawn.strip.fold:GetWidth(), K.FOOTER_ICON_W, "the toggle its icon (feedback-16)")
-    assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold", "the toggle alone, a mark (RX-24)")
+    assertEqual(drawn.foot.info, "2 groups, 3 drops · kept for 30 days")
+    assertTrue(NS.Window.Frame().footerHost.left:GetText():find("^2 groups, 3 drops · kept for 30 days · ") ~= nil)
     NS.SetWindowMode("full")
     drawn = NS.WindowHistory.Drawn()
     assertTrue(drawn.compact == nil and #drawn.rows == 2, "the table again")
-    assertTrue(drawn.strip.clear == nil)
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold")
 end)
 
 test("compact history: cards are pooled and follow the Font size row", function()
@@ -246,3 +245,35 @@ test("history: your own entry's looter reads Name [YOU] in both layouts, the mar
     assertEqual(marked, 1, "only your own entry is marked")
 end)
 
+
+-- Line 2's font strings record the widths they are given (the kit's regions no-op SetWidth), then
+-- the window repaints so they are given them again.
+local function spyWidths(NS, c)
+    for _, fs in ipairs({ c.looter.text, c.looter.mark, c.slot.text, c.armorType.text }) do
+        rawset(fs, "SetWidth", function(s, w) rawset(s, "__width", w); return s end)
+        rawset(fs, "GetWidth", function(s) return rawget(s, "__width") or 0 end)
+    end
+    NS.Window.Refresh()
+end
+
+test("compact history: a two-word name is cut, [YOU] whole after it, and line 2 ends before the outcome", function()
+    local NS, _, m = shownCompact()
+    local CG, WR = NS.CompactGroup, NS.WindowRows
+    m.textCharWidth = 5
+    local hist = NS.History.Store()
+    hist.groups[2].drops[2].looter = "Bloodthornwick Ironfist-Testrealm"
+    NS.Window.Refresh()
+    local card = cardWith(NS.WindowHistory.Drawn(), "Expired")
+    spyWidths(NS, card.cells)
+    card = cardWith(NS.WindowHistory.Drawn(), "Expired")
+    local c = card.cells
+    assertEqual(textOf(c.looter.text), "Bloodthornwick Ironfist")
+    local nameW = c.looter.text:GetWidth()
+    assertTrue(nameW > 0 and nameW < c.looter.text:GetUnboundedStringWidth(), "the name is cut")
+    assertTrue(c.looter.mark:IsShown()); assertEqual(textOf(c.looter.mark), "[YOU]")
+    assertEqual(c.looter.mark.__width, nil, "the mark is never cut")
+    local lineEnd = CG.TextLeft(CG.Metrics(nil), CG.LEAD) + nameW + WR.MARK_GAP + c.looter.mark:GetUnboundedStringWidth()
+        + WR.LINE_TWO_GAP + c.slot.text:GetWidth() + WR.LINE_TWO_GAP + c.armorType.text:GetWidth()
+    local outcomeAt = card:GetWidth() - CG.PAD - c.outcome.text:GetUnboundedStringWidth()
+    assertTrue(lineEnd + CG.ASK_GAP <= outcomeAt, ("line 2 ends at %d, the outcome at %d"):format(lineEnd, outcomeAt))
+end)

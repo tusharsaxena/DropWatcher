@@ -17,8 +17,8 @@
 ```
 
 Beside the feed, the pending store (`modules/Pending.lua`) holds the drops seen but not yet
-assigned: an open group-loot roll from the loot history, and on master loot an Epic awaiting the
-master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
+assigned: an open group-loot roll from the loot history, and on master loot an item at or above the
+group's loot threshold awaiting the master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
 it hands over to it when the drop resolves (below, *Rolls and master-loot pending*). The pipeline is
 the same on Retail and WoW Forever; where a stage differs per client, its section says so, and
 `ARCHITECTURE.md` → Per-client features lists every difference.
@@ -50,6 +50,24 @@ frame's `OnShow` and `OnHide`, by whatever path, tell each `Window.AddVisibility
 (the trade timer, which paces its ticker by the window; compact mode's run override; and the compact
 Filters menu, which closes with the window); the window calls no engine module.
 
+Auto-close (rolls UX design §3.6, RX-10, `modules/WindowAutoClose.lua`) closes only a show an
+auto-open made: the auto-open arms it after its `Window.Open`, and every `Window.Open` and
+`Window.Close` disarms it first, so a manual show never closes by itself. Armed, one
+`C_Timer.NewTimer` of `window.autoClose.seconds` runs; `DropAdded`, `PendingChanged` and the pointer
+entering or leaving the frame or any frame under it start it over (so it closes a full count after
+the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a
+roll (`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
+does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none, RX-20) and the pointer elsewhere, it calls `Window.Close`; otherwise it
+starts over. A window the visibility ladder hides (General visibility in or out of combat) keeps the
+player's open and is not closed: the count waits, and starts over when the window shows (a
+visibility listener), so the auto-open is not lost to a long fight (RX-12). A
+drag, or a press on the frame or any frame under it (a tab, a title bar button, a row: one-way
+`OnMouseDown` hooks, laid at the arm and after each repaint while armed, and only on a frame that
+already takes the mouse, so a mouse-transparent cell, border or glow stays transparent, RX-12), disarms it for that show,
+but a press on the read-only Rolls panel docked beside it (its child: its close button, a raid header,
+a fold line) does not: under it the walk hooks only the pointer, `AC.PointerOnly` (RX-20); with `window.autoClose.enabled` or `autoOpen` off
+it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
+
 ## What the window repaints on
 
 ```
@@ -64,34 +82,43 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                ├─> hidden, in an auto-open situation: opens it (every drop, your
                                │   own included; no latch; DW-83, FB-12; never a restored drop),
                                │   on the Drops tab (an open window keeps its tab; feedback-20)
+                               │   and, with auto-close on, arms its count (RX-10, below)
                                ├─> minimized: stays minimized, `n new` counts it (never a
                                │   restored drop)
                                └─> shown: tabs, filter bar, footer, active body
+PendingChanged(id, cause) ─> shown: the same repaint; `open` or `popup` of a roll item holding your
+                             roll popup (its rollID, RX-20; NS.Pending.Get(id): not
+                             kind `ml`, which has no roll popup, nor `restored`, which Pending.Rebuild
+                             opened after a reload or stand-up) of the feed shown, with `rolls.show`
+                             on (off, Rolling now lists nothing and the roll opens nothing): the drop's
+                             auto-open above, on Drops, arming auto-close, which then waits while the
+                             roll runs (RX-16); a minimized window counts nothing until it is a drop
 DropUpdated ───────────────> shown: the same repaint
 GearChanged ───────────────> shown: the same repaint (the Me cells' gear, My eq until DW-F1; DW-83)
 InspectDone ───────────────> shown: the footer's inspect freshness
 TradeTimerTick ────────────> shown and expanded: the Drops tab's countdowns while it is active
-                             (WindowGroup.TickCountdowns: the Trade window cells and the strip's
-                             next expiry; the compact cards show none, feedback-10 §2), the Offer
+                             (WindowGroup.TickCountdowns: the Trade window cells and the footer
+                             summary's next expiry; the compact cards show none, feedback-10 §2), the Offer
                              panel while it
                              is open; nothing else
 countdown ticker (1s) ─────> shown, expanded and Drops showing a live countdown
                              (WindowGroup.LiveCountdown, K.COUNTDOWN_TICK; feedback-5 §1): the same
                              countdowns alone; it stops when none is left
 TradeTimerExpiring ────────> shown: the whole repaint
-footer ticker (5s) ────────> shown and expanded: the footer ("Last loot 12s ago"), then what
+footer ticker (5s) ────────> shown and expanded: the status after the tab's words on the footer's left line
+                             ("Last loot 12s ago"; WindowFooter.Refresh, RX-24), then what
                              TradeTimerTick repaints
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
-                             (Sort on the active tab's strip in the full layout, re-anchored by
-                             WindowFooter.AnchorSort on every full pass; feedback-10 §3)
+                             (Sort at the filter bar's right edge in the full layout, the
+                             compact Filters menu's last row; RX-24)
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine;
-                             the Drops strip's button, its icon alone in compact (the title
-                             bar's removed by feedback-16); feedback-7 §4)
+                             the Drops footer's mark, in both layouts (the title bar's removed by
+                             feedback-16; RX-24); feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
                              under the layout's least width, its default (full 1080, compact 400;
-                             feedback-4 §4, recomputed by feedback-5 §4, feedback-6 §0-§1 and feedback-23); the search box, anchored 8px after Character and to
-                             the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
+                             feedback-4 §4, recomputed by feedback-5 §4, feedback-6 §0-§1 and feedback-23); the search box, anchored 8px after Character and
+                             8px before Sort at the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
 a skin switch ─────────────> NS.Skin.OnLooksChanged, after the library repainted the frames it
@@ -168,13 +195,13 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` (a collectible not
-        counted, as Post leaves it out) and Post my tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
-        right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
-        at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
-        K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
-        SORT_INSET); Post, the leftmost, hidden with nothing tradeable; the summary ends where the
-        row starts (FooterRow.PlaceInfo, one line); FooterRow.PaintFold(fold, pane.entries); the
-        scroll frame's bottom moved up over it
+        counted, as Post leaves it out) into the pane's `foot` model (info, tip, controls) ─>
+        WindowFooter.PaintTab(pane) ─> foot:SetLeft(LineText(info, status)) (the window footer's
+        own left line, the status after the words, one line the library cuts; RX-24) and
+        FooterRow.Bind(controls): the footer's marks, right to left from the grip's corner, the
+        toggle, Scan group and Post my tradeables (only while one is tradeable and someone can read
+        it), the same in both layouts; FooterRow.PaintFold(fold, pane.entries); the scroll frame's
+        bottom kept over the footer
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
 Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll:
@@ -223,7 +250,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     messages.transmogAsk, Compat.NormalizedRealm; your own drop: its WindowOwn.IsRevealed and
   │     offer tone }) ─> four lines of pieces (line 1: ilvl then item, then CompactCards.FreshMark's
   │     `(2m)` right after it or nothing, never `(…)` while Them reads `…` (feedback-11 §0), the name cut by WindowRows.MarkedWidth; line 2: looter · slot ·
-  │     type, ` [YOU]` in gold after your own name, the Ask or Offer on the right of lines 2 and 3 (the gray
+  │     type, ` [YOU]` in gold after your own name, each piece cut at its cap (WindowRows.LineTwoWidths, the
+  │     name first, the mark never: rolls UX §3.1), the Ask or Offer on the right of lines 2 and 3 (the gray
   │     `No action` with neither, feedback-11 §1), toned by WindowGroup.ToneButton as the
   │     row's; no trade window countdown, feedback-10 §2; line 3 the Trade cell, `Trade No Bonus
   │     roll`, its Yes, No or ? then its short reason in the muted gray (WindowCells.TradeText,
@@ -236,8 +264,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     hand alone for a one-hander it alone can take, SideCells.JudgedItem); the labels gold, Them
   │     CompactGroup.PlaceThem's fixed gap after You (Them wrapped to line 4 before Trade from
   │     feedback-23 until feedback-25); feedback-6 §1, feedback-7 §2)
-  └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
-        `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
+  └─> DropsStrip.Paint(pane, ctx, true): the summary shortened (DropsStrip.SummaryText) on the
+        footer's left line, the same marks as the full layout (RX-24)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
@@ -458,11 +486,10 @@ Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
                       no upgrade or equal for, or a drop that cannot be traded: WindowCells.NoAction
                       (reason) through WindowOwn.SetButtonLook, the gray `No action` on the same
                       80px button (K.PANEL_BTN_W; feedback-11 §1);
-      Announce to group: MineCells.AnnounceButton, WindowOwn.SetButtonLook, toned by
-                      WindowOwn.ToneStates(drop): NS.Asks.FurthestStateOf("offer", id)
-                      (Messaging.FurthestState: sent, else queued, else failed, else ready) and the
-                      announce's state, each through MineCells.ToneState (tradedAway wins)
-                      ─> WindowGroup.ToneButton (feedback-4 §1)
+      Announce to group: MineCells.AnnounceButton(NS.Asks.StateOf("announce", nil, id)) ─> the
+                      footer's one mark (RX-24): its catalog art and tooltip by state, off once
+                      sent or when the drop cannot be traded, and the state's word on the footer's
+                      left line once it is not ready; the order note on its right line
 
 panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
 Announce to group ─> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged
@@ -666,12 +693,15 @@ LootFeed.Receive   [Perf bucket `feed.add`]
   Situations.IsTracking(situation)? no ─> hidden `notTracking` (nothing loaded, no inspect)
   ItemFacts.Request ─> loading? wait for the load, then go on
   FeedFilter.Filter (Never watch `blacklist` first, beating Always watch; then Always watch, passing
-    with `forced`, kept as rec.forced, past everything after it; heirloom, no watched kind, a kind
-    turned off, minimum item level) ─> hidden with its reason
+    with `forced`, kept as rec.forced, past everything after it; heirloom, no watched kind (unless
+    rolled on, a roll table on the drop or Pending's gate, with the `other` catch-all on: RX-04), a
+    kind turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
     a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
       { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
+    a lockbox (`lockbox`), a bag, quiver or ammo pouch (`container`) or an item of no kind: its kind word (RX-04, RX-15)
+      { verdict = lockbox | container | item, collect = true, category }: feed-only, no gain
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
     (the upgrade override lets `upgrade` and `newCollect` through below the threshold; an Always
     watch drop (`ctx.forced`) passes as `whitelisted`; the situation gate above still holds)
@@ -753,9 +783,12 @@ LOOT_HISTORY_UPDATE_DROP(encounterID, dropKey) / the 1s ticker while any roll is
   ─> everyone passed, or startTime + duration passed on Compat.LootHistoryNow with no winner
         ─> state allPassed | expired, LINGER (60s) on screen, then closed; nothing reaches the feed
 START_LOOT_ROLL(rollID) ─> your popup claims the oldest unclaimed item of the same item ID (rollID)
+  ─> an item already in the store ─> PendingChanged(id, "popup") (RX-20); a popup up first is
+     claimed as its item enters, before its `open`
 GearChanged, the score retry ─> me judged again ─> PendingChanged(id, "verdict")
 LOOT_HISTORY_CLEAR_HISTORY ─> open items detached from their keys; PLAYER_ENTERING_WORLD and the
-  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two)
+  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item it
+  opens is `restored`, so it opens no window, RX-16)
 
 LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (Compat.LootMethod)
   ─> Compat.LootSlots ─> each slot at or above the threshold with a link and a source GUID
@@ -767,28 +800,76 @@ LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (
   ─> expired: 900s, leaving the group or the instance, or you becoming the master looter
         ─> closed, an ask still queued for it canceled
 
-PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending), RollPopup (the mark)
+PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending; a roll's `open` or `popup`
+  auto-opens a closed window once the item holds your popup, RX-16, RX-20), RollPopup (the mark), RollsPanel (its blocks, RX-17)
 ```
 
 The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's
 feed names (the live one, or test mode's), oldest first, above the boss groups in both layouts while
 `rolls.show` is on; a roll row's time left and summary repaint each second on the window's countdown
-ticker. A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
+ticker. An open roll's summary is `RollCells.CountLine`, an icon and a count per choice (Need, Greed,
+Disenchant on Retail only, Pass, still to roll), and it hovers `RollCells.Tooltip`, every roll by
+choice with your verdict at the foot; a ROLLS box draws the same count line beside a resolved
+result (rolls UX RX-06). A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
 on, into its History entry (`rolls`), which the detail card's and the History card's ROLLS box draw. On Retail
 master loot is Guild Master Loot alone (design §11.2); the store is the same on both clients.
 
 ## The roll popup mark (Forever port design §7)
 
 ```
-RP.Install (OnEnable) ─> one owned card per GroupLootFrame1..4, parented to UIParent, anchored
-  BOTTOM to the popup's TOP; Compat.HookRollPopup: HookScript OnShow / OnHide once
+RP.Install (OnEnable) ─> one owned side card per GroupLootFrame1..4, parented to UIParent, in the
+  window's skin (NS.ApplySkin + S.Shell); Compat.HookRollPopup: HookScript OnShow / OnHide once
 START_LOOT_ROLL(rollID) ─> Compat.LootRollInfo (link, bop) ─> LootFeed.JudgeMe ─> cache[rollID]
 popup OnShow ─> Compat.RollPopupOpen (still shown, a plain rollID) ─> not disabled, rolls.popupMark
   on, not the gamepad UI ─> line 1: the verdict's mark, word and gain (Forever BoP: Need: upgrade,
-  Greed / Pass: you can't use it); line 2: Need so far from Pending.ForRoll(rollID)
+  Greed / Pass: you can't use it; a non-gear item its kind); line 2: RollCells.CountLine over
+  Pending.ForRoll(rollID)'s roll ─> placed: TOPLEFT on the popup's TOPRIGHT + 4, or, when
+  Compat.RollPopupRight + 4 + the card's width is past UIParent's width, TOPRIGHT on its TOPLEFT - 4
+card OnEnter ─> RollCells.Tooltip (every roll, the time left, your verdict), read on the hover
 PendingChanged, GearChanged, the rolls.popupMark row, the stand-up ─> the shown cards repainted
 CANCEL_LOOT_ROLL / popup OnHide ─> the card down, the cache entry dropped
-a simulated START_LOOT_ROLL ─> the same card on an owned stand-in of the popup's size (RP.StandIn)
+a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the popup's size, the
+  first free of four (RP.StandIn(n)), each next one stacked above the last
+every repaint in test mode ─> a stand-in (`Roll popup (test)`) and its card per sample roll
+  (Pending.All("test"), keyed by its `test:<n>` id, read off the item, never the client); test mode
+  off or ended by combat (Pending.ClearTest's PendingChanged) ─> they go (RX-22, part A ruling 11)
+every repaint ─> each shown stand-in and its card carry the mode strip on their top edge, outside
+  them (NS.MakeTestStrip's `target`, dock = "hud"): the test strip for a sample, the sim strip for a
+  simulated roll; the next stand-in stacks the strip's height higher (RX-23, preview-mode)
+```
+
+## The Rolls panel (rolls panel design, RX-17 to RX-19)
+
+```
+PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() less kind `ml`
+  a new id (not seen, not left) ─> a block, in start order; the close button's dismissal clears
+  a block's item not open (allPassed, expired) ─> done; closed by the store (a won roll: Get nil,
+    the block keeps the item table, its final roll) ─> done; still held but not listed ─> dropped
+  done ─> stays (winner washed, result line) while any block still runs (RX-21)
+  every block done ─> one rolls.panel.linger s countdown (0: at once); a new roll cancels it ─> every
+    block leaves and the panel closes, unless the pointer is over the panel (held: the panel's
+    OnLeave starts the count again) ─> WindowAutoClose.Bump
+paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
+  ─> test mode ─> the test strip under the title band; a simulation ─> the sim strip; the body moves
+    down by the strip (RX-21)
+  ─> raid mode? (RollsPanelRows.IsRaid on the larger of Compat.GroupSize and the most players on one
+    block's roll: more than 5) ─> rolls.panel.foldInRaid ─> Pass and Waiting one line each
+    (RollsPanelRows.Fold), a click unfolds
+  ─> every block open unless the player collapsed it (its header's click, Collapse all; a collapsed
+    header reads the count line, or its result once over, dimmed)
+  ─> the title bar's one toggle (RX-25): chevron-up, Collapse all, while any block is open; else
+    chevron-down, Expand all ─> a click sets every block's collapsed and repaints
+  ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, kept while the
+    roll reads the same, alternately shaded, a number on Need / Greed / Disenchant; the result; no
+    verdict line; title Rolls; 290 wide, 250 compact; the bar past the window's height)
+  ─> docked flush right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s
+    ticker while open
+Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
+WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
+test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
+/dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
+Sim:OnStop (and any reconcile with no simulation running) ─> every block that joined during the
+  simulation leaves at once, open or finished, no linger (preview-mode: never unmarked; RX-21 review)
 ```
 
 ## Opening a trade (design spec §4)
@@ -1079,7 +1160,8 @@ DropAdded(id) / DropUpdated(id) ─> Toast.Consider: toast.enabled? not toasted 
        trade word (Trade tone) + short reason (muted, cut at the inset); tooltip = Trade cell's
        ─> the shell: sound? (toast.sound), toast.duration countdown (none when sticky), placed: the
           first (the head) at the saved point, each after it under the one before (toast.stackGrow
-          down) or above it (up), a gap between
+          down) or above it (up), a gap between (in test mode the gap grows by the strip's
+          height: a test drop's toast carries the TEST strip on its top edge, dock = "hud", RX-23)
     ─> expired ─> the shell's re-flow (the rest close up on the head) and next (at the tail)
 close mark / right-click anywhere on one (frame, icon, Ask) ─> the shell's dismiss of that toast
     (not asked, never toasts again) ─> re-flow and next

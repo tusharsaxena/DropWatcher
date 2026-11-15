@@ -1,0 +1,12 @@
+date	milestone	evidence
+2026-11-14	M1	RX-01..RX-04 (29f3991 f970b2f 0be02aa d4cbec4) built and reviewed (approved); gate at 2d69ccc: Retail 2444/0/1, Forever 2336/0/108, luacheck 0/0, lizard silent, test-cases.md no drift, badge 2444
+2026-11-14	M2	RX-05 (2d69ccc) built and reviewed (approved, 4 minors); same gate
+2026-11-14	M3	RX-06 (91e002a), RX-07 (3b736c4) built and reviewed (approved); gate at 81fb26e: Retail 2481/0/1, Forever 2373/0/108, luacheck 0/0 (261 files), lizard silent, test-cases.md no drift, badge 2481
+2026-11-14	M4	RX-08 (9082f44), RX-09 (d141787), RX-10 (6cadf9a + review fix 81fb26e) approved; same gate
+2026-11-14	M5	RX-11 (18119bf); RX-12 review 7 fixes (a1f7455 b7d7a50 1984059 ef24e57 0d6ef48 fe183b3), amber bundle 191609 (8be45a0) then fixes 6161b2e 2118228 and green bundle 20261114-194343 (89051db); gate at 89051db: Retail 2486/0/1, Forever 2378/0/108, luacheck 0/0, kit complexity max CCN 15 0 warnings, perf all pass (refresh 12624 < 14500), no inventory drift
+2026-11-15	M6	RX-13 (e5b131e 4ee0a01 86d76eb), RX-14 (2240f0f), RX-15 (0a2069a, committed by the orchestrator after a refused agent commit), RX-16 (9c706dd 0484056), all reviewed; gate at 0484056: Retail 2496/0/1, Forever 2388/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift
+2026-11-15	M7	RX-17 (5588534 dda2870), RX-18 (6b802a7 c10d4e4), RX-19 (8678042) reviewed; RX-20 whole-branch review of RX-13..RX-19: 8 fixes (251f6cb..20c6364), green bundle 20261115-064052 (6c4aca0); gate at 6c4aca0: Retail 2541/0/1, Forever 2433/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift
+2026-11-15	M8	RX-21 (cc2fcf6 f41633b), RX-22 (b9647ec) reviewed
+2026-11-15	M9	WowAddonStandards v2.110.0 (5b4b8a2, pushed) and LibKa0s v1.103.0 (e37c353d, tag on 48a166d5, pushed), both reviewed; issues LibKa0s #88 #89 #90
+2026-11-15	M10	UC-DW (b12996a bee9b9f 40b6958) reviewed; RX-23 review fixes edb917c..31873cb; green bundle 20261115-161114 (dbf3c90); gate at dbf3c90: Retail 2559/0/1, Forever 2451/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift
+2026-11-15	M11	RX-24 (c5d9613, reviewed), RX-25 (fa8cf5a, reviewed; committed by the orchestrator after refused agent commits); green bundle 20261115-183637; gate at fa8cf5a: Retail 2559/0/1, Forever 2451/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift

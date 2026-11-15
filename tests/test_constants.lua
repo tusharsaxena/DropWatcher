@@ -94,16 +94,16 @@ test("constants: the categories in display order, the tier slots and the empty t
     local c = C()
     local keys, collectible = {}, {}
     for i, cat in ipairs(c.CATEGORIES) do keys[i] = cat.key; collectible[#collectible + 1] = tostring(cat.collectible) end
-    assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic")
-    assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true")
+    assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic,lockbox,container,other")
+    assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true,false,false,false")
     assertEqual(table.concat(c.TIER_SLOTS, ","), "INVTYPE_HEAD,INVTYPE_SHOULDER,INVTYPE_CHEST,INVTYPE_HAND,INVTYPE_LEGS")
     for _, loc in ipairs(c.TIER_SLOTS) do assertTrue(c.SLOT_PLAN[loc] ~= nil, loc .. " has a slot plan") end
     assertEqual(next(c.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")
 end)
 
-test("constants: the quality defaults are Rare fixed and an Uncommon floor (spec §6.2)", function()
+test("constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)", function()
     local c, q = C(), D().feed.quality
-    assertEqual(q.fixed, c.QUALITY.RARE)
+    assertEqual(q.fixed, T.forever and c.QUALITY.UNCOMMON or c.QUALITY.RARE, "rolls UX ruling 7 (RX-01)")
     assertEqual(q.floor, c.QUALITY.UNCOMMON)
     assertEqual(q.mode, c.QUALITY_MODES[1])
     assertEqual(c.QUALITY_MODES[1], "fixed")
@@ -223,9 +223,10 @@ test("constants: every situation key is listed once, in order, with the spec §6
         { "scenario", true, true }, { "pvp", false, false }, { "openWorldGroup", false, false },
         { "solo", true, true },
     }
-    if T.forever then   -- WoW Forever's own five (Forever port design §4.4), the same defaults
+    if T.forever then   -- WoW Forever's own five (Forever port design §4.4); the open world group
+        -- tracked and auto-opening there (rolls UX ruling 7)
         want = { { "dungeon", true, true }, { "raid", true, true }, { "pvp", false, false },
-            { "openWorldGroup", false, false }, { "solo", true, true } }
+            { "openWorldGroup", true, true }, { "solo", true, true } }
     end
     assertEqual(#c.SITUATIONS, #want)
     assertEqual(#keysOf(d), #want)

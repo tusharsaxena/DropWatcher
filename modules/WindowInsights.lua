@@ -1,16 +1,17 @@
 local _, NS = ...
 -- modules/WindowInsights.lua — the Insights tab's body (issue #12, Insights design spec §4.3, §5):
 -- its own filter bar, the KPI cards and the chart sections over the kept history (the sections'
--- layout pass is modules/InsightsSections.lua) and the strip naming the period it covers, drawn
--- through LibKa0s-Charts-1.0 (NS.Charts, core/ChartsSetup.lua).
+-- layout pass is modules/InsightsSections.lua) and the period it covers on the window's footer,
+-- drawn through LibKa0s-Charts-1.0 (NS.Charts, core/ChartsSetup.lua).
 --
--- A BAR OF ITS OWN. The tab registers with `ownBar`, so the window hides the shared filter bar and
--- the footer's Sort while it shows (modules/Window.lua). Its seven dropdowns (Character, Instance,
+-- A BAR OF ITS OWN. The tab registers with `ownBar`, so the window hides the shared filter bar, its
+-- Sort included, while it shows (modules/Window.lua). Its seven dropdowns (Character, Instance,
 -- Difficulty, Situation, Date, Quality, Category) are single-select, data-driven and session-only
 -- (NS.State.insightsFilters): each lists the values present once the other six apply, with their
 -- counts (NS.InsightsFilters.Options), and a pick that empties another dropdown puts that one back
--- to All (Normalize). The bar wraps to the width (NS.InsightsRows.BarPlan). Reset filters, on the
--- strip, puts every one back to All.
+-- to All (Normalize). The bar wraps to the width (NS.InsightsRows.BarPlan). Reset filters, the
+-- footer's one mark on this tab (RX-24, NS.FooterRow), puts every one back to All; the period starts
+-- the footer's own left line, the status after it (NS.WindowFooter.PaintTab).
 --
 -- THE PASS. refresh runs on every window repaint while the tab is on screen (a hidden or minimized
 -- window does no Insights work; the frame's OnShow draws it), so it compares a cache key first: the
@@ -21,7 +22,7 @@ local _, NS = ...
 -- or the layout changed: the layout alone. Nothing changed: nothing. H.Log() already answers test
 -- mode's sample log and a running simulation's, so both fill the tab with no code of their own.
 --
--- DEGRADED. Without LibKa0s-Charts-1.0 the bar and the strip are built and one line says the charts
+-- DEGRADED. Without LibKa0s-Charts-1.0 the bar and the footer's words are built and one line says the charts
 -- are unavailable (no drawing stub, anti-pattern #73). Without LibKa0s-Widgets-1.0 NS.MakeDropdown
 -- answers nil: no dropdowns, the filters stay All, and the cards still draw.
 
@@ -110,22 +111,14 @@ local function buildBar(p)
     end
 end
 
-local function buildStrip(p)
-    local strip = CreateFrame("Frame", nil, p)
-    strip:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 0, 0)
-    strip:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(K.STRIP_H)
-    strip.line = strip:CreateTexture(nil, "ARTWORK")
-    NS.SkinPaint(strip.line, function(t) t:SetColorTexture(NS.SkinColor("dw.rule")) end)
-    strip.line:SetHeight(1)
-    strip.line:SetPoint("TOPLEFT", strip, "TOPLEFT", 0, 0)
-    strip.line:SetPoint("TOPRIGHT", strip, "TOPRIGHT", 0, 0)
-    strip.info = strip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    NS.Skin.Text(strip.info, "disabled")
-    strip.info:SetJustifyH("LEFT")
-    strip.info:SetWordWrap(false)
-    strip.reset = NS.FooterRow.Button(strip, "reset", L["Reset filters"], function() WI.ResetFilters() end)
-    p.strip = strip
+local function resetTip()
+    return L["Reset filters"], NS.TipMarks.Row(L["Sets"], L["every filter on this tab back to All"])
+end
+
+-- The tab's footer model (RX-24): the period and Reset filters, its one control.
+local function buildFoot(p)
+    local reset = NS.FooterRow.Control("reset", "reset", resetTip, function() WI.ResetFilters() end)
+    p.foot = { info = "", tip = nil, controls = { reset } }
 end
 
 local function buildScroll(p)
@@ -150,7 +143,7 @@ end
 
 local function build(p)
     buildBar(p)
-    buildStrip(p)
+    buildFoot(p)
     buildScroll(p)
     p.empty = p:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     NS.Skin.Text(p.empty, "text.muted")
@@ -236,16 +229,10 @@ local function placeBar(p, width)
     return h
 end
 
-local function placeStrip(p, compact)
-    local strip, FR = p.strip, NS.FooterRow
-    if strip.dwPlacedCompact ~= compact then
-        strip.dwPlacedCompact = compact
-        FR.SetCompact(strip.reset, compact)
-        local slots = FR.Slots({ { key = "reset", w = FR.Width(compact) } }, FR.GAP, 0)
-        FR.Place(strip, strip.reset, slots.reset)
-        FR.PlaceInfo(strip, strip.info, slots.left)
-    end
-    strip.info:SetText(NS.InsightsRows.PeriodText(p.data.period))
+-- The period, handed to the window's footer (RX-24), in both layouts.
+local function paintFoot(p)
+    p.foot.info = NS.InsightsRows.PeriodText(p.data.period)
+    NS.WindowFooter.PaintTab(p)
 end
 
 local function placeScroll(p, barH)
@@ -253,7 +240,7 @@ local function placeScroll(p, barH)
     p.scrollTop = barH
     p.scroll:ClearAllPoints()
     p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 0, -barH)
-    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W, K.STRIP_H)
+    p.scroll:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", -K.SCROLL_W, NS.FooterMetric("HEIGHT"))
 end
 
 local function toneColor(tone)
@@ -293,7 +280,7 @@ end
 local function layout(p, width, compact)
     local t0 = Perf.on and debugprofilestop()
     placeScroll(p, placeBar(p, width))
-    placeStrip(p, compact)
+    paintFoot(p)
     paintBar(p)
     local line = emptyLine(p)
     p.empty:SetShown(line ~= nil)
@@ -330,13 +317,13 @@ local function refresh(p)
     layout(p, width, compact)
 end
 
---- The drawn pane, for the suites: { pane, dropdowns, cards, strip, empty, data, computes, ctx, bar,
+--- The drawn pane, for the suites: { pane, dropdowns, cards, foot, empty, data, computes, ctx, bar,
 --- headers, dividers, panels, strips, sections (each section's row count this pass) } or nil.
 --- @return table|nil
 function WI.Drawn()
     local p = pane()
-    if not (p and p.strip) then return nil end
-    return { pane = p, dropdowns = p.dropdowns, cards = p.cards, strip = p.strip, empty = p.empty,
+    if not (p and p.foot) then return nil end
+    return { pane = p, dropdowns = p.dropdowns, cards = p.cards, foot = p.foot, empty = p.empty,
         data = p.data, computes = p.computes or 0, ctx = p.ctx, bar = p.bar, headers = p.headers,
         dividers = p.dividers, panels = p.panels, strips = p.strips, sections = p.drawn }
 end
@@ -348,7 +335,7 @@ NS.Window.RegisterTab("insights", { build = build, refresh = refresh, ownBar = t
 NS.Window.AddVisibilityListener(function(shown)
     if not shown or NS.IsStoodDown() or NS.Window.ActiveTab() ~= "insights" then return end
     local p = pane()
-    if p and p.strip then refresh(p) end
+    if p and p.foot then refresh(p) end
 end)
 
 -- ── the bus ─────────────────────────────────────────────────────────────────────────────────

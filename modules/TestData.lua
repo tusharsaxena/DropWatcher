@@ -859,15 +859,16 @@ end
 
 -- ── the pending samples (pure) ──────────────────────────────────────────────────────────────
 
--- Who is on the sample roll besides you, and what each has chosen so far (Enum.EncounterLootDropRollState:
--- 0 Need, 3 Greed, 4 still choosing, 5 Pass).
-local ROLLERS = { { "seta", 0 }, { "kaelith", 0 }, { "brightmane", 0 }, { "butterz", 3 }, { "littlewolf", 3 },
-    { "solenne", 4 }, { "kragmar", 4 }, { "ashveil", 5 } }
+-- Who is on the sample roll besides you, what each has chosen so far (Enum.EncounterLootDropRollState:
+-- 0 Need, 3 Greed, 4 still choosing, 5 Pass) and the number each Need and Greed rolled (rolls panel
+-- round 2, ruling A6: every actual roll shows, so test mode makes the numbers obvious).
+local ROLLERS = { { "seta", 0, 87 }, { "kaelith", 0, 64 }, { "brightmane", 0, 23 }, { "butterz", 3, 71 },
+    { "littlewolf", 3, 38 }, { "solenne", 4 }, { "kragmar", 4 }, { "ashveil", 5 } }
 
 --- Test mode's pending samples (Forever port design §8), as NS.Pending.AddTest takes them: one open
 --- group-loot roll on a drop of the session's last boss, an upgrade for you, with you and eight
---- members on it: three Need, two Greed, two still choosing, one Pass, you not chosen yet, no
---- numbers until it closes. Empty when `src` has no item. Pure.
+--- members on it: three Need, two Greed, two still choosing, one Pass, you not chosen yet, each
+--- Need and Greed with its number (RX-21). Empty when `src` has no item. Pure.
 --- @param you table your looter
 --- @param src table TD.Source's
 --- @return table specs
@@ -880,7 +881,7 @@ function TD.PendingSamples(you, src)
     for _, x in ipairs(ROLLERS) do
         local m = MEMBERS[x[1]]
         rows[#rows + 1] = { name = m.name, guid = m.guid, classFile = m.classFile, isSelf = false, state = x[2],
-            isWinner = false }
+            roll = x[3], isWinner = false }
     end
     return { { kind = "roll", link = item.link, facts = item.facts, me = ev(src, item, { "upgrade", 9 }), ago = 10,
         roll = { link = item.link, key = 1, allPassed = false, isTied = false, myState = 4, rolls = rows } } }

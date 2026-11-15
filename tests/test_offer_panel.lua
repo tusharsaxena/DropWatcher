@@ -168,7 +168,7 @@ test("offer panel: no class bar; every second row striped as the main window's; 
     assertEqual(table.concat({ p.rows[1].member.text:GetTextColor() }, ",", 1, 3), table.concat({ r, g, b }, ","))
 end)
 
-test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged", function()
+test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group the footer's mark", function()
     local NS, p = openPanel()
     local TONE = NS.Constants.TONE
     local b = p.rows[1].offer
@@ -176,9 +176,11 @@ test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Annou
     assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("external-link"), "Offer wears external-link (feedback-10 spec §1)")
     assertEqual(b:GetWidth(), NS.Constants.WINDOW.PANEL_BTN_W)
     local ann = p.panel.announce
-    assertTrue(ann.art:IsShown() and ann.art:GetTexture() == NS.Icon("speech-bubble"), "Announce to group keeps its mark")
+    -- red under: a 130 px labeled button laid over the footer (RX-24, anti-pattern #118)
+    assertTrue(ann == p.panel.foot.marks[1], "Announce to group is the footer's mark")
+    assertEqual(ann.icon:GetTexture(), NS.Icon("speech-bubble"), "Announce to group keeps its mark")
+    assertEqual(NS.Window.TooltipOf(ann)[1], "Announce", "its tooltip names it")
     assertEqual(select(3, b.label:GetTextColor()), TONE.cyan.b)
-    assertEqual(p.panel.announce.tone, "red", "Announce keeps its red (feedback-6 spec §2)")
     NS.Asks.StateOf = function(kind) return kind == "offer" and "sent" or "ready" end
     NS.Window.Refresh()
     b = NS.OfferPanel.Drawn().rows[1].offer
@@ -356,7 +358,7 @@ test("handlers: Post my tradeables announces every tradeable drop of yours, line
     local NS, _, m = shownMine()
     local sent = {}
     NS.Asks.Request = function(kind, target, id, opts) sent[#sent + 1] = { kind = kind, target = target, id = id, text = opts.text }; return "sent" end
-    NS.WindowGroup.Drawn().pane.summary.post:__fire("OnClick")
+    NS.FooterRow.Mark("post"):__fire("OnClick", "LeftButton")
     assertEqual(#sent, 1)
     assertEqual(sent[1].kind, "announce"); assertTrue(sent[1].target == nil)
     assertEqual(sent[1].text, "Up for trade, whisper me: " .. BRACERS .. " " .. RING .. " " .. TRINKET)
@@ -447,4 +449,59 @@ test("offer panel: beside the compact window it goes on the side with room, and 
     NS.Window.Refresh()
     assertEqual(p.dock, "right")
     assertEqual(select(2, p:GetPoint(2)), win, "the full layout docks top and bottom again")
+end)
+
+-- red under: the Offer panel listing test mode's sample candidates (or a simulation's) with no strip
+-- (RX-23: the panel has a title band, so it is a window, and from the LibKa0s v1.103.0 re-vendor
+-- preview-mode's *Where the strip sits* puts the strip directly under its title bar; #97, #118)
+test("offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip", function()
+    local NS, p = openPanel()
+    local K, panel = NS.Constants.WINDOW, p.panel
+    assertFalse(panel.testStrip:IsShown(), "a live drop: no strip")
+    assertFalse(panel.simStrip:IsShown())
+    local function itemTop() return select(5, panel.item:GetPoint(1)) end
+    assertEqual(itemTop(), -K.POPOVER_TOP)
+    NS.LootFeed.Get(1).test = true
+    NS.OfferPanel.Refresh()
+    local strip = panel.testStrip
+    assertTrue(strip:IsShown(), "the test strip")
+    local pt = strip.__points[1]
+    assertEqual(pt[1], "TOPLEFT"); assertTrue(pt[2] == panel.titleBar, "docked under the title band"); assertEqual(pt[3], "BOTTOMLEFT")
+    assertEqual(pt[5], 0, "directly under it")
+    assertEqual(strip.text:GetText(), NS.L["TEST: sample members. Nothing is whispered; combat ends it."])
+    assertEqual(itemTop(), -(K.POPOVER_TOP + NS.TestStripHeight()), "the body moves down by the strip")
+    assertFalse(panel.simStrip:IsShown())
+    NS.LootFeed.Get(1).test, NS.LootFeed.Get(1).sim = nil, true
+    NS.OfferPanel.Refresh()
+    assertTrue(panel.simStrip:IsShown(), "the sim strip"); assertFalse(strip:IsShown())
+    assertTrue(panel.simStrip.__points[1][2] == panel.titleBar)
+    NS.LootFeed.Get(1).sim = nil
+    NS.OfferPanel.Refresh()
+    assertFalse(panel.simStrip:IsShown())
+    assertEqual(itemTop(), -K.POPOVER_TOP, "and the body back under the band")
+end)
+
+-- red under: the hand-built 32 px foot strip (RX-23: spec B.2, a window's footer MUST be LibKa0s
+-- Widgets' Footer, FOOTER.HEIGHT 24, a hairline, text.muted; standalone-windows' *The footer*)
+test("offer panel: its foot is the library's Footer, the order note on its right line, Announce its mark", function()
+    local NS, p = openPanel()
+    local panel, H = p.panel, NS.FooterMetric("HEIGHT")
+    local foot = panel.foot
+    assertTrue(foot ~= nil and foot.line ~= nil and foot.right ~= nil, "a Widgets Footer")
+    assertEqual(foot:GetHeight(), H)
+    assertEqual(H, 24)
+    assertTrue(foot:GetParent() == panel, "across the panel's foot")
+    assertTrue(panel.note.text == foot.right, "the note is the footer's right line")
+    assertEqual(panel.note.text:GetText(), "5 members · sorted by gain")
+    assertEqual(NS.Window.TooltipOf(panel.note)[1], NS.L["Order"], "the note keeps its tooltip")
+    assertEqual(#foot.marks, 1, "one mark: Announce to group")
+    assertTrue(panel.announce == foot.marks[1] and panel.announce:GetParent() == foot)
+    assertEqual(textOf(foot.left), "", "ready: no state word")
+    NS.Asks.StateOf = function(kind) return kind == "announce" and "sent" or "ready" end
+    NS.Window.Refresh()
+    assertEqual(textOf(foot.left), "Announced", "the state word on the left line")
+    assertEqual(panel.announce.icon:GetTexture(), NS.Icon("confirm"))
+    assertFalse(panel.announce:IsEnabled(), "sent: one per item")
+    local sb = panel.scroll.__points[2]
+    assertEqual(sb[1], "BOTTOMRIGHT"); assertEqual(sb[5], H + 4, "the list ends above the footer")
 end)

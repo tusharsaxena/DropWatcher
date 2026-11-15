@@ -256,6 +256,25 @@ test("insights stats: a Watched item counts as itself, listed after every catego
     assertEqual(pairsOf(s.bySlot), "Watched item=2,Head=1,Toy=1")
 end)
 
+-- RX-04, RX-15 (rolls UX design §3.5; plan M6, owner: do not merge): a lockbox counts as a
+-- Lockbox, a bag as a Container and a rolled reagent as Other loot, three labels, each in the
+-- categories' order, and their kind verdicts are counted.
+-- red under: the new kinds or their verdicts missing from Insights' orders, or two kinds sharing a label
+test("insights stats: a lockbox, a bag and a rolled reagent count as their own kinds", function()
+    local s = compute({ group(nil, {
+        drop({ equipLoc = "INVTYPE_NON_EQUIP_IGNORE", category = "lockbox", me = { verdict = "lockbox", collect = true } }),
+        drop({ equipLoc = "INVTYPE_BAG", category = "container", me = { verdict = "container", collect = true } }),
+        drop({ equipLoc = "", category = "other", me = { verdict = "item", collect = true } }),
+        drop(),
+    }) })
+    assertEqual(pairsOf(s.byCategory), "equipment=1,lockbox=1,container=1,other=1")
+    assertEqual(pairsOf(s.bySlot), "Container=1,Head=1,Lockbox=1,Other loot=1")
+    assertEqual(pairsOf(s.verdicts), "downgrade=1,lockbox=1,container=1,item=1")
+    local CC = (T.newAddon()).CollectCells
+    assertEqual(CC.KindLabel("lockbox"), "Lockbox"); assertEqual(CC.KindLabel("container"), "Container")
+    assertEqual(CC.KindLabel("other"), "Other loot")
+end)
+
 -- ── the pass ────────────────────────────────────────────────────────────────────────────────
 
 test("insights stats: nothing in gives zeros and empty lists", function()

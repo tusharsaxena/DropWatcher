@@ -377,3 +377,54 @@ end
 function WR.PaintMark(f, word, at)
     if at then WR.PlaceMark(f.text, f.mark, word, at.w) end
 end
+
+-- ── line 2's caps (rolls UX spec §3.1, ruling 5) ────────────────────────────────────────────
+--
+-- A card's line 2 reads `Name [YOU] · Slot · Type`. Each piece has a most width in the window's
+-- layout unit (the caps at the small template's own size, scaled with the text), so a long WoW
+-- Forever name (a first name and a surname) never runs under the action button; a piece past its
+-- cap is cut with "…" by the client, its full text in its tooltip. `[YOU]` is never cut. When the
+-- line has less room than the capped pieces, the name gives up width first, down to LINE_TWO_MIN,
+-- then the slot, then the type. The full table's columns are their own caps (WindowGroup.COLUMNS).
+
+WR.LINE_TWO_CAPS = { name = 96, slot = 56, kind = 52 }
+WR.LINE_TWO_MIN = 16   -- the least a cut piece keeps, scaled with the text
+WR.LINE_TWO_GAP = 4    -- between line 2's pieces (the mark keeps MARK_GAP)
+
+-- `w` capped (+1 so an exact fit is never cut); unknown, the cap.
+local function capped(w, cap) return w and min(w + 1, cap) or cap end
+
+-- `w` less as much of `over` as it can give, keeping `least`; answers the width and what is left over.
+local function giveUp(w, over, least)
+    if over <= 0 then return w, over end
+    local cut = min(over, max(w - least, 0))
+    return w - cut, over - cut
+end
+
+--- Line 2's widths for the name, the slot and the type in `room`, at `scale` (text size over the
+--- small template's): each its own width up to its cap; the mark (`full.mark`, nil with none) kept
+--- whole. Pure.
+--- @param room number|nil the line's width (nil: unbounded)
+--- @param scale number|nil
+--- @param full table { name, mark, slot, kind } the pieces' unbounded widths (nil when not known)
+--- @return number name, number slot, number kind
+function WR.LineTwoWidths(room, scale, full)
+    local s, caps = scale or 1, WR.LINE_TWO_CAPS
+    local n, sl, k = capped(full.name, caps.name * s), capped(full.slot, caps.slot * s), capped(full.kind, caps.kind * s)
+    if not room then return n, sl, k end
+    local mark = full.mark and (full.mark + WR.MARK_GAP) or 0
+    local over = n + mark + sl + k + 2 * WR.LINE_TWO_GAP - room
+    local least = WR.LINE_TWO_MIN * s
+    n, over = giveUp(n, over, least)
+    sl, over = giveUp(sl, over, least)
+    k = giveUp(k, over, least)
+    return n, sl, k
+end
+
+--- Raise a row's or a card's action button (Ask, Offer, No action, Ask ML) above the row's text
+--- and its hit frames (rolls UX spec §3.1), so a long line never covers it or takes its clicks.
+--- @param button table
+--- @param row table the row or card the button sits on
+function WR.RaiseAction(button, row)
+    button:SetFrameLevel(row:GetFrameLevel() + NS.Constants.LAYERS.LEVEL.ROW_ACTION)
+end

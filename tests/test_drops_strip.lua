@@ -1,11 +1,11 @@
--- tests/test_drops_strip.lua — one tab for every drop, with the strip (feedback-5 spec §3, DW-E3):
--- the tab strip is Drops, History and Insights (the retired `mine` opens Drops); under the Drops table (or
--- its compact cards), above the footer, the summary strip (modules/DropsStrip.lua) counts your
--- drops the tab lists that you can still trade and names the next expiry, its next expiry moving
--- each second; Post my tradeables posts them. Both layouts always show it (feedback-15 spec §2):
--- full `[Post my tradeables] [Scan group] [Expand all] [Sort]`, compact `[Post my tradeables]
--- [Expand all]`, every button the one footer width with the same label; compact shortens the
--- summary. tests/test_footer_row.lua has the row and the toggle. Built headless under the mock.
+-- tests/test_drops_strip.lua — one tab for every drop, with its summary (feedback-5 spec §3, DW-E3):
+-- the tab strip is Drops, History and Insights (the retired `mine` opens Drops); the Drops tab's words
+-- on the window's footer (modules/DropsStrip.lua; RX-24, the footer's own left line) count your drops
+-- the tab lists that you can still trade and name the next expiry, its next expiry moving each
+-- second; the footer's Post my tradeables mark posts them. Both layouts lay the same marks, right to
+-- left the toggle, Scan group and Post (only while something is tradeable); compact shortens the
+-- summary. tests/test_footer_row.lua has the footer, its marks and the toggle. Built headless under
+-- the mock.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.assertTrue, T.assertFalse
@@ -139,141 +139,71 @@ test("drops tab: the tabs are Drops, History and Insights, and the retired `mine
     assertTrue(NS.WindowFilterBar.HONORS.mine == nil)
 end)
 
--- ── the strip, full layout ──────────────────────────────────────────────────────────────────
+-- ── the summary on the footer, full layout ──────────────────────────────────────────────────
 
-test("drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it", function()
+-- The window footer's left line, and the tab's own words on it.
+local function lineOf(NS) return textOf(NS.Window.Frame().footerHost.left) end
+local function infoOf(drawn) return drawn.pane.foot.info end
+
+test("drops strip: the footer counts your tradeable drops and the next expiry, Post beside it (RX-24)", function()
     local NS, drawn = shownMine()
-    local K = NS.Constants.WINDOW
-    local strip = drawn.pane.summary
-    assertTrue(strip:IsShown())
     assertEqual(drawn.summary.count, 3, "the bonus roll is listed but not tradeable")
-    assertEqual(textOf(strip.info.text), "3 tradeable · next expiry 0:08:41")
-    assertEqual(textOf(strip.post.label), "Post my tradeables")
-    assertTrue(#NS.Window.TooltipOf(strip.info) >= 2); assertTrue(#NS.Window.TooltipOf(strip.post) >= 2)
-    local point, rel = strip:GetPoint(1)
-    assertEqual(point, "BOTTOMLEFT"); assertTrue(rel == drawn.pane, "at the pane's foot, above the footer")
-    assertEqual(bottomOf(drawn.pane.scroll), K.STRIP_H, "the table ends over it")
+    assertEqual(infoOf(drawn), "3 tradeable · next expiry 0:08:41")
+    assertTrue(lineOf(NS):find("^3 tradeable · next expiry 0:08:41 · ") ~= nil, "the footer's own line, first")
+    local post = NS.FooterRow.Mark("post")
+    assertTrue(post ~= nil and post:IsShown())
+    assertTrue(#NS.Window.TooltipOf(NS.WindowFooter.Parts()) >= 2); assertTrue(#NS.Window.TooltipOf(post) >= 2)
+    assertEqual(NS.Window.TooltipOf(NS.WindowFooter.Parts())[1], "Your tradeable drops", "the count's tooltip first")
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"), "the table ends over the footer")
     assertEqual(#drawn.rows, 4, "the rows are the table's own")
 end)
 
--- A button's one anchor: its point, the frame it hangs from and its x.
-local function anchorOf(b)
-    local point, rel, _, x = b:GetPoint(1)
-    return point, rel, x
-end
-
-test("drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)", function()
-    local NS, drawn = shownMine()
-    local K, WF, FR = NS.Constants.WINDOW, NS.WindowFooter, NS.FooterRow
-    local strip = drawn.pane.summary
-    local step = K.FOOTER_BUTTON_W + FR.GAP
-    assertEqual(strip.post:GetWidth(), WF.SORT_W); assertEqual(strip.post:GetHeight(), K.CONTROL_H)
-    local _, sort = WF.Parts()
-    assertEqual(sort:GetWidth(), WF.SORT_W, "the same width as Post")
-    assertTrue(sort:GetParent() == strip, "Sort on the strip, not the footer")
-    local sp, srel, _, sx = sort:GetPoint(1)
-    assertEqual(sp, "RIGHT"); assertTrue(srel == strip); assertEqual(sx, -WF.SORT_INSET, "at the strip's right edge")
-    assertTrue(strip.scan:IsShown()); assertEqual(textOf(strip.scan.label), "Scan group")
-    assertEqual(strip.scan:GetHeight(), K.CONTROL_H, "the same height")
-    local p, rel, x = anchorOf(strip.scan)
-    assertEqual(p, "RIGHT"); assertTrue(rel == strip)
-    assertEqual(x, -(WF.SORT_INSET + 2 * step), "left of the toggle, which is left of Sort")
-    assertEqual(select(3, anchorOf(strip.fold)), -(WF.SORT_INSET + step))
-    p, rel, x = anchorOf(strip.post)
-    assertEqual(p, "RIGHT"); assertTrue(rel == strip)
-    assertEqual(x, -(WF.SORT_INSET + 3 * step), "immediately left of Scan group")
-    assertEqual(NS.Window.TooltipOf(strip.scan)[1], "Scan group")
-end)
-
-test("drops strip: Sort follows the active tab to History's strip, right of the toggle, and back", function()
-    local NS, drawn = shownMine()
-    local WF, FR, K = NS.WindowFooter, NS.FooterRow, NS.Constants.WINDOW
-    local _, sort = WF.Parts()
-    NS.Window.SelectTab("history")
-    local hstrip = NS.WindowHistory.Drawn().strip
-    assertTrue(sort:GetParent() == hstrip, "on History's strip")
-    local _, rel, _, x = sort:GetPoint(1)
-    assertTrue(rel == hstrip); assertEqual(x, -WF.SORT_INSET)
-    local _, frel, _, fx = hstrip.fold:GetPoint(1)
-    assertTrue(frel == hstrip)
-    assertEqual(fx, -(WF.SORT_INSET + K.FOOTER_BUTTON_W + FR.GAP), "the toggle left of Sort")
-    NS.Window.SelectTab("group")
-    assertTrue(sort:GetParent() == drawn.pane.summary, "back on Drops' strip")
-end)
-
 test("drops strip: Scan group goes through the shared handler", function()
-    local NS, drawn = shownMine()
+    local NS = shownMine()
     local scanned = 0
     NS.ScanGroup = function() scanned = scanned + 1 end
-    drawn.pane.summary.scan:__fire("OnClick")
+    NS.FooterRow.Mark("scan"):__fire("OnClick", "LeftButton")
     assertEqual(scanned, 1)
 end)
 
-test("drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide", function()
-    local NS = T.enableAddon()
-    local DS = NS.DropsStrip
-    local function keys(row)
-        local out = {}
-        for _, c in ipairs(row) do out[#out + 1] = c.key .. (c.shown == false and "-" or "") end
-        return table.concat(out, ",")
-    end
-    assertEqual(keys(DS.Row(true, false)), "sort,fold,scan,post")
-    assertEqual(keys(DS.Row(false, false)), "sort,fold,scan,post-", "Post hidden, the rest keep their places")
-    assertEqual(keys(DS.Row(true, true)), "fold,scan,post")
-    assertEqual(keys(DS.Row(false, true)), "fold,scan,post-")
-    assertEqual(DS.Row(true, true)[1].w, NS.Constants.WINDOW.FOOTER_ICON_W, "compact's buttons are icons")
-end)
-
-test("drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary", function()
+test("drops strip: full layout, nothing tradeable: Scan group and the toggle, no count, no Post", function()
     local NS, _, m = T.enableAddon()
     T.withPlayer(m)   -- someone to post to (DW-07)
     NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
-    local WF = NS.WindowFooter
     local dead = drop({ id = 4, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } })
     seed(NS, { dead, OTHER }, { groupOf("Boss", NOW - 3000, { 4, 9 }, ROSTER) })
     NS.WindowFilterBar.Set("group", "view", "all")
     NS.ShowWindow()
     local drawn = NS.WindowGroup.Drawn()
-    local strip = drawn.pane.summary
     assertEqual(#drawn.rows, 2)
-    assertTrue(strip:IsShown(), "Scan group lives here"); assertTrue(drawn.summary == nil)
-    assertEqual(textOf(strip.info.text), ""); assertEqual(#NS.Window.TooltipOf(strip.info), 0)
-    assertFalse(strip.post:IsShown())
-    assertTrue(strip.scan:IsShown())
-    local _, _, x = anchorOf(strip.scan)
-    local step = NS.Constants.WINDOW.FOOTER_BUTTON_W + NS.FooterRow.GAP
-    assertEqual(x, -(WF.SORT_INSET + 2 * step), "Scan group stays beside the toggle")
-    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.STRIP_H)
+    assertTrue(drawn.summary == nil)
+    assertEqual(infoOf(drawn), ""); assertTrue(drawn.pane.foot.tip == nil)
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold,scan")
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"))
     seed(NS, { drop(), OTHER }, { groupOf("Boss", NOW - 3000, { 1, 9 }, ROSTER) })
     NS.Window.Refresh()
-    assertTrue(strip.post:IsShown())
-    _, _, x = anchorOf(strip.scan)
-    assertEqual(x, -(WF.SORT_INSET + 2 * step), "still in its place, Post beside it")
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold,scan,post", "Post beside Scan group")
 end)
 
-test("drops strip: a repaint that changes neither the layout nor Post re-anchors nothing; either change places it again", function()
-    local NS, drawn = shownMine(false)
-    local strip = drawn.pane.summary
-    local clears = 0
-    for _, f in ipairs({ strip.fold, strip.scan, strip.post, strip.info }) do
-        local real = f.ClearAllPoints
-        f.ClearAllPoints = function(self) clears = clears + 1; return real(self) end
+test("drops strip: a repaint that changes nothing re-binds no mark; Post coming or going does", function()
+    local NS = shownMine(false)
+    local foot = NS.Window.Frame().footerHost
+    local sets = 0
+    for _, b in ipairs(foot.marks) do
+        local real = b.icon.SetTexture
+        b.icon.SetTexture = function(self, ...) sets = sets + 1; return real(self, ...) end
     end
-    -- red under: every repaint building the row and re-anchoring the three buttons and the text
+    -- red under: every repaint re-binding the three marks' art
     NS.Window.Refresh(); NS.Window.Refresh()
-    assertEqual(clears, 0, "the refresh's allocation ceiling (docs/performance.md)")
+    assertEqual(sets, 0, "the refresh's allocation ceiling (docs/performance.md)")
     seed(NS, { drop({ id = 4, trade = { state = "no", reasonKey = "bonusRoll", basis = "bind" } }) },
         { groupOf("Boss", NOW - 3000, { 4 }, ROSTER) })
     NS.Window.Refresh()
-    assertTrue(clears > 0, "nothing tradeable any more: placed again"); assertFalse(strip.post:IsShown())
-    clears = 0
-    NS.SetWindowMode("compact")
-    assertTrue(clears > 0, "the compact layout: placed again")
-    assertEqual(strip.scan:GetWidth(), NS.Constants.WINDOW.FOOTER_ICON_W)
+    assertFalse(foot.marks[3]:IsShown(), "nothing tradeable any more: Post gone")
 end)
 
-test("drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)", function()
+test("drops strip: compact, none of your listed drops can be traded: no count, no Post (feedback-15 spec §2)", function()
     local NS, _, m = T.enableAddon()
     NS.addon.db.char = { session = { start = m.time() - 86400 } }   -- logged in a day ago: these drops are this session's (feedback-15 spec §1)
     m.__now = NOW
@@ -284,16 +214,15 @@ test("drops strip: compact, shown while none of your listed drops can be traded:
     NS.ShowWindow()
     local drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact)
-    assertTrue(drawn.pane.summary:IsShown(), "the toggle lives there"); assertTrue(drawn.summary == nil)
-    assertFalse(drawn.pane.summary.post:IsShown())
-    assertEqual(bottomOf(drawn.scroll), NS.Constants.WINDOW.STRIP_H, "the cards end over it")
+    assertTrue(drawn.summary == nil)
+    assertTrue(NS.FooterRow.Mark("post") == nil)
+    assertEqual(bottomOf(drawn.scroll), NS.FooterMetric("HEIGHT"), "the cards end over the footer")
     NS.SetWindowMode("full")
     seed(NS, { drop(), OTHER }, { groupOf("Boss", NOW - 3000, { 1, 9 }, ROSTER) })
     NS.Window.Refresh()
     drawn = NS.WindowGroup.Drawn()
-    assertTrue(drawn.pane.summary:IsShown())
-    assertEqual(textOf(drawn.pane.summary.info.text), "1 tradeable · next expiry 1:47:12", "another player's drop is not counted")
-    assertEqual(bottomOf(drawn.pane.scroll), NS.Constants.WINDOW.STRIP_H)
+    assertEqual(infoOf(drawn), "1 tradeable · next expiry 1:47:12", "another player's drop is not counted")
+    assertEqual(bottomOf(drawn.pane.scroll), NS.FooterMetric("HEIGHT"))
 end)
 
 test("drops strip: it counts the drops the tab lists, its filters applied, collapsed or not", function()
@@ -301,24 +230,25 @@ test("drops strip: it counts the drops the tab lists, its filters applied, colla
     drawn.headers[1]:__fire("OnClick")
     drawn = NS.WindowGroup.Drawn()
     assertEqual(#drawn.rows, 0, "collapsed")
-    assertEqual(drawn.summary.text, "3 tradeable · next expiry 0:08:41", "the strip still counts them")
+    assertEqual(drawn.summary.text, "3 tradeable · next expiry 0:08:41", "the footer still counts them")
     NS.WindowFilterBar.Set("group", "search", "Bracers")
     drawn = NS.WindowGroup.Drawn()
     assertEqual(drawn.summary.text, "1 tradeable · next expiry 1:47:12")
     NS.WindowFilterBar.Set("group", "search", "nothing like it")
     drawn = NS.WindowGroup.Drawn()
-    assertFalse(drawn.pane.summary.post:IsShown(), "none listed: no Post")
+    assertTrue(NS.FooterRow.Mark("post") == nil, "none listed: no Post")
     assertTrue(drawn.summary == nil)
     assertTrue(drawn.pane.placeholder:IsShown())
 end)
 
-test("drops strip: its next expiry moves each second with the countdowns", function()
+test("drops strip: its next expiry moves each second with the countdowns, on the footer's line", function()
     local NS, drawn, m = shownMine()
     m.__now = NOW + 12
     NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
-    assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:29")
+    assertEqual(infoOf(drawn), "3 tradeable · next expiry 0:08:29")
     m.advance(1)   -- the countdown ticker, a second on
-    assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:28")
+    assertEqual(infoOf(drawn), "3 tradeable · next expiry 0:08:28")
+    assertTrue(lineOf(NS):find("^3 tradeable · next expiry 0:08:28 · ") ~= nil, lineOf(NS))
 end)
 
 test("drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn", function()
@@ -333,49 +263,43 @@ test("drops strip: its next expiry keeps the each-second ticker running with no 
     drawn.headers[1]:__fire("OnClick")
     drawn = NS.WindowGroup.Drawn()
     assertEqual(#drawn.rows, 0, "collapsed: no row draws a countdown")
-    assertTrue(NS.WindowGroup.LiveCountdown(), "the strip still shows one"); assertEqual(tickers(), 1)
+    assertTrue(NS.WindowGroup.LiveCountdown(), "the footer still shows one"); assertEqual(tickers(), 1)
     NS.SchemaRuntime.Set("window.columns.tradeWindow", false)
     NS.Window.Refresh()
     assertTrue(NS.WindowGroup.LiveCountdown(), "with the column off too"); assertEqual(tickers(), 1)
     m.advance(1)
-    assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next expiry 0:08:40")
+    assertEqual(infoOf(drawn), "3 tradeable · next expiry 0:08:40")
 end)
 
 test("drops strip: Post my tradeables goes through the shared handler", function()
-    local NS, drawn = shownMine()
+    local NS = shownMine()
     local sent = {}
     NS.Asks.Request = function(kind, _, id, opts) sent[#sent + 1] = { kind = kind, id = id, text = opts.text }; return "sent" end
-    drawn.pane.summary.post:__fire("OnClick")
+    NS.FooterRow.Mark("post"):__fire("OnClick", "LeftButton")
     assertEqual(#sent, 1); assertEqual(sent[1].kind, "announce")
     assertEqual(sent[1].text, "Up for trade, whisper me: " .. BRACERS .. " " .. RING .. " " .. TRINKET)
 end)
 
--- ── the strip, compact layout ───────────────────────────────────────────────────────────────
+-- ── the summary, compact layout ─────────────────────────────────────────────────────────────
 
-test("drops strip: under the compact cards, the summary shortened, Post my tradeables its icon", function()
+test("drops strip: under the compact cards, the summary shortened, the same marks", function()
     local NS, drawn = shownMine(true)
-    local K, FR = NS.Constants.WINDOW, NS.FooterRow
     assertTrue(drawn.compact)
-    local strip = drawn.pane.summary
-    assertTrue(strip:IsShown())
-    assertEqual(textOf(strip.info.text), "3 tradeable · next 0:08:41")
-    assertEqual(strip.post:GetWidth(), K.FOOTER_ICON_W); assertFalse(strip.post.label:IsShown())
-    assertEqual(select(3, anchorOf(strip.post)), -2 * (K.FOOTER_ICON_W + FR.GAP), "left of Scan group")
-    assertTrue(strip.scan:IsShown(), "Scan group on the strip, as in full (feedback-16)")
-    assertEqual(NS.Window.TooltipOf(strip.post)[1], "Post my tradeables", "the tooltip is unchanged")
+    assertEqual(infoOf(drawn), "3 tradeable · next 0:08:41")
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold,scan,post", "Scan group and Post, as in full (feedback-16)")
+    assertEqual(NS.Window.TooltipOf(NS.FooterRow.Mark("post"))[1], "Post my tradeables", "the tooltip is unchanged")
     assertEqual(drawn.summary.count, 3)
-    assertEqual(bottomOf(drawn.scroll), K.STRIP_H, "the cards end over it")
+    assertEqual(bottomOf(drawn.scroll), NS.FooterMetric("HEIGHT"), "the cards end over the footer")
     NS.SetWindowMode("full")
     drawn = NS.WindowGroup.Drawn()
     assertTrue(drawn.compact == nil and #drawn.rows == 4, "the table again")
-    assertEqual(textOf(strip.info.text), "3 tradeable · next expiry 0:08:41")
-    assertEqual(textOf(strip.post.label), "Post my tradeables"); assertEqual(strip.post:GetWidth(), NS.WindowFooter.SORT_W)
-    assertTrue(strip.scan:IsShown())
+    assertEqual(infoOf(drawn), "3 tradeable · next expiry 0:08:41")
 end)
 
 test("drops strip: the compact countdown tick moves its next expiry too", function()
     local NS, drawn, m = shownMine(true)
     m.__now = NOW + 12
     NS.addon:SendMessage(NS.MSG.TRADE_TIMER_TICK)
-    assertEqual(textOf(drawn.pane.summary.info.text), "3 tradeable · next 0:08:29")
+    assertEqual(infoOf(drawn), "3 tradeable · next 0:08:29")
+    assertTrue(lineOf(NS):find("^3 tradeable · next 0:08:29 · ") ~= nil)
 end)

@@ -199,7 +199,7 @@ test("tip rows: the compact cards and chrome (CompactCards, CompactChrome) are r
     shapes({ CC.Freshness(d, 100).tip, CC.Freshness(rowDrop({ isMine = true }), 100).tip, CC.Looter(d, "Realm").tip,
         CC.When(100, 200, function() return "17:02" end).tip, CC.When(nil, 200).tip,
         CH.FiltersTip({ quality = "Quality: Rare+", content = "This session" }, { "quality" }),
-        CH.FooterTip(NS.WindowFooter.Compose({ members = 4, good = 3, lastLootAgo = 60, situation = "dungeon", pawn = "on" })) },
+        NS.WindowFooter.StatusTip({ members = 4, good = 3, lastLootAgo = 60, situation = "dungeon", pawn = "on" }) },
         "compact")
 end)
 
@@ -236,6 +236,8 @@ test("tip rows: the chrome's own tooltips (title bar, footer) are rows", functio
     for _, s in pairs(seg) do tips[#tips + 1] = s.tip end
     local sim = WF.Compose({ members = 4, good = 4, sim = { members = 4 }, situation = "raid", lastLootAgo = 5 })
     for _, s in pairs(sim) do tips[#tips + 1] = s.tip end
+    tips[#tips + 1] = WF.StatusTip({ members = 0, situation = "solo", tracking = false, pawn = "off" })
+    tips[#tips + 1] = WF.StatusTip({ members = 4, good = 4, sim = { members = 4 }, situation = "raid", lastLootAgo = 5 })
     shapes(tips, "chrome")
 end)
 

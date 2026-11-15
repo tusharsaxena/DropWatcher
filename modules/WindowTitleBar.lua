@@ -4,11 +4,12 @@ local _, NS = ...
 -- title (no logo: the launcher and the TOC keep it), test mode's bright-red `TEST MODE` text, the
 -- simulator's `SIM` text in its own color (simulator spec §6), each drawn only while minimized
 -- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
--- restriction badge, the layout toggle (compact spec §1), minimize and the close mark, plus the
+-- restriction badge, then the right-hand cluster: the lock button (RX-08, at the top right since
+-- RX-14), the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
--- through NS.Window.SetButtonMark). Scan group is the Drops strip's in both layouts
--- (modules/DropsStrip.lua, feedback-7 spec §4; compact's title-bar icon removed by feedback-16), and
--- the badge anchors to the layout toggle.
+-- through NS.Window.SetButtonMark). Scan group is the Drops footer's mark in both layouts
+-- (modules/DropsStrip.lua, feedback-7 spec §4, RX-24; compact's title-bar icon removed by feedback-16), and
+-- the badge anchors to the lock button, the cluster's first.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
 -- that writes state: geometry (the drag's start and stop come in as `host` callbacks), the
@@ -93,6 +94,17 @@ local function minimizeTip()
         TM.Row(L["Counter"], L["the drops that arrive meanwhile"])
 end
 
+-- The lock button's tooltip (RX-08): what a click does, its verb and the setting it writes.
+local function lockTip()
+    local TM = NS.TipMarks
+    if NS.Window.IsLocked() then
+        return L["Unlock the window"], TM.Row(L["Lets"], L["it be dragged and resized again"]),
+            TM.Row(L["Typed"], L["/dw unlock"]), TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
+    end
+    return L["Lock the window"], TM.Row(L["Keeps"], L["it from being dragged or resized"]),
+        TM.Row(L["Typed"], L["/dw lock"]), TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
+end
+
 -- The layout toggle's tooltip: what a click switches to, and the setting that stores it.
 local function modeTip()
     local WC, TM = NS.WindowCompact, NS.TipMarks
@@ -102,14 +114,14 @@ local function modeTip()
             TM.Row(L["Typed"], L["/dw full"]) }
         or { L["Compact view"], TM.Row(L["Shows"], L["the window narrow, each drop a short card"]),
             TM.Row(L["Typed"], L["/dw compact"]) }
-    lines[#lines + 1] = TM.Row(L["Stored as"], L["Window settings, Layout"])
+    lines[#lines + 1] = TM.Row(L["Stored as"], L["Window layout on Window > Layout > Mode"])
     if WC.InRun() then
         lines[#lines + 1] = TM.Row(L["Held compact"], L["until this run ends (Compact view when it auto-opens in a run)"])
     end
     return unpack(lines)
 end
 
---- Scan group's tooltip, on the Drops strip's button.
+--- Scan group's tooltip, on the Drops footer's mark.
 function TB.ScanTip()
     local TM = NS.TipMarks
     return L["Scan group"], TM.Row(L["Inspects"], L["every other member of your group"]),
@@ -182,6 +194,23 @@ local function iconButton(parent, icon, glyph, onClick)
     b:SetScript("OnClick", onClick)
     return b
 end
+
+--- A title-bar icon button: the catalog's `icon` mark in the skin's bright icon tint, or `glyph`
+--- when the mark does not resolve; K.ICON square, unanchored. The Rolls panel's one Expand all /
+--- Collapse all toggle is built with it (modules/RollsPanel.lua, RX-21, RX-25).
+--- @param parent table
+--- @param icon string a declared LibKa0s icon
+--- @param glyph string the fallback text
+--- @param onClick function
+--- @return table the button
+TB.IconButton = iconButton
+
+--- Change a TB.IconButton's mark: the catalog's `icon`, or `glyph` when it does not resolve (the
+--- Rolls panel's toggle, RX-25).
+--- @param b table a TB.IconButton
+--- @param icon string a declared LibKa0s icon
+--- @param glyph string the fallback text
+TB.SetIconMark = setMark
 
 -- The flat button's box is the skin's Button (FS-DW-FIX, cause A1), so `btn.borderStyle` and
 -- `btn.borderSize` reach it, with the fill and edge remapped to the owner tokens `dw.btnBg` /
@@ -328,6 +357,22 @@ local function buildNewChip(f, bar)
     f.newChip:Hide()
 end
 
+--- The lock mark's strength while unlocked (RX-08): the catalog has no unlock mark, so the one
+--- lock mark reads unlocked dimmed and desaturated, locked at full strength.
+TB.UNLOCKED_ALPHA = 0.4
+
+-- The lock button (RX-08, rolls UX design §3.7), the same in both layouts: the right-hand cluster's
+-- first, immediately left of the layout toggle (RX-14, the owner's smoke ruling; it sat at the bar's
+-- left until then). A click toggles `locked` through the write seam (NS.ToggleLock, the launcher's
+-- and the Lock frame checkbox's write). Not the restriction badge, which wears the same mark in the
+-- restricted tone and stands left of the cluster.
+local function buildLock(f, bar)
+    f.lockButton = iconButton(bar, "lock", "L", function() NS.ToggleLock() end)
+    f.lockButton:SetPoint("RIGHT", f.modeButton, "LEFT", -4, 0)
+    NS.Window.AttachTooltip(f.lockButton, lockTip)
+end
+
+-- The right-hand cluster, right to left: close, minimize, the layout toggle, the lock (RX-14).
 local function buildControls(f, bar)
     local W = NS.Window
     f.closeButton = NS.MakeCloseButton(bar, function() W.Close() end)
@@ -344,12 +389,13 @@ local function buildControls(f, bar)
     f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
     f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
     W.AttachTooltip(f.modeButton, modeTip)
+    buildLock(f, bar)
     f.badge = buildBadge(bar)
-    f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
+    f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
 end
 
 --- Build the title bar into the window frame `f` (f.titleBar, f.title, f.testText, f.simText,
---- f.newChip, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
+--- f.newChip, f.lockButton, f.closeButton, f.minimizeButton, f.modeButton, f.badge, f.divider, the body's hidden
 --- anchor under the bar). The drag goes through `host`, the shell, which owns the geometry it writes.
 --- @param f table the window frame
 --- @param host table { onDragStart = fn, onDragStop = fn }
@@ -370,6 +416,7 @@ function TB.Build(f, host)
     f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
+    -- The bar's left is empty again (RX-14: the lock button joined the right-hand cluster).
     NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
@@ -431,4 +478,17 @@ function TB.PaintMinimized(f, minimized, newCount)
     end
     f.newChip.text:SetText(L["%d new"]:format(newCount))
     f.newChip:SetShown(minimized and newCount > 0)
+end
+
+--- The lock button's state (RX-08): the lock mark at full strength while locked, dimmed and
+--- desaturated while unlocked. Its tooltip reads the state when shown.
+--- @param f table the window frame
+--- @param locked boolean
+function TB.PaintLock(f, locked)
+    local b = f.lockButton
+    if not b or b.dwLocked == locked then return end
+    b.dwLocked = locked
+    b.art:SetAlpha(locked and 1 or TB.UNLOCKED_ALPHA)
+    if b.art.SetDesaturated then b.art:SetDesaturated(not locked) end
+    b.glyph:SetAlpha(locked and 1 or TB.UNLOCKED_ALPHA)
 end

@@ -195,7 +195,7 @@ local function head(p)
     return named
 end
 
---- The strip's caption: the period, then what it holds (`Kept for 30 days: Oct 11 – Nov 5 · 452
+--- The footer's caption (RX-24): the period, then what it holds (`Kept for 30 days: Oct 11 – Nov 5 · 452
 --- drops in 160 groups`).
 --- @param period table NS.InsightsFilters.Period's
 --- @return string
@@ -522,6 +522,7 @@ local VERDICT = {
     doesntWant = { L["Doesn't want"], "bad" }, unknown = { L["Unknown"], "muted" },
     newCollect = { L["New to your collection"], "good" }, collected = { L["Already collected"], "bad" },
     collectUnknown = { L["Collection unknown"], "muted" },
+    lockbox = { L["Lockbox"], "plain" }, container = { L["Container"], "plain" }, item = { L["Item"], "plain" },
 }
 local TRADE = { yes = L["Yes"], likely = L["Likely"], no = L["No"], unknown = L["Unknown"] }
 

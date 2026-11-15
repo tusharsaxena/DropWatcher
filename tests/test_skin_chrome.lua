@@ -73,7 +73,7 @@ local function surfaces(NS, f, m)
         { "badge lock", function() return f.badge.art.__vertex end, "dw.restricted" },
         { "TEST MODE", function() return textColor(f.testText.text) end, "sem.modeTest" },
         { "column head", function() return textColor(pane.colHead.labels.item.text) end, "list.header.text" },
-        { "strip rule", function() return pane.summary.line.__colorTexture end, "dw.rule" },
+        { "footer rule", function() return f.footerHost.line.__colorTexture end, "divider" },
         { "detail box fill", function() return pane.card.trade.__backdropColor end, "dw.cardBg" },
         { "detail box edge", function() return pane.card.trade.__backdropBorder end, "dw.cardBorder" },
         { "row chevron", function() return chevron.__vertex end, "dw.chevron" },
@@ -90,7 +90,7 @@ test("skin chrome: under Ka0s Default the window draws the pixels it drew before
         ["tab underline"] = { 1, 0.82, 0, 1 }, ["active tab"] = { 1, 0.82, 0 }, ["idle tab"] = { 0.7, 0.7, 0.72 },
         ["button fill"] = { 0.12, 0.12, 0.14, 1 }, ["button edge"] = { 0.24, 0.24, 0.27, 0.85 },
         ["badge text"] = { 1, 0.6, 0.2 }, ["badge lock"] = { 1, 0.6, 0.2 }, ["TEST MODE"] = { 1, 0.15, 0.15 },
-        ["column head"] = { 1, 0.82, 0 }, ["strip rule"] = { 1, 1, 1, 0.1 },
+        ["column head"] = { 1, 0.82, 0 }, ["footer rule"] = { 0.24, 0.24, 0.27, 0.85 },
         ["detail box fill"] = { 0.08, 0.08, 0.10, 0.9 }, ["detail box edge"] = { 0.24, 0.24, 0.27, 0.85 },
         ["row chevron"] = { 1, 1, 1, 0.55 },
     }

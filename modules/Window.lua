@@ -23,14 +23,14 @@ local addonName, NS = ...
 -- THREE TABS: Drops, History (feedback-5 spec §3) and Insights (issue #12). The Drops tab's key stays
 -- `group`, so its filter state and the suites keep their key; the retired tab's key, `mine`, opens
 -- Drops (Window.SelectTab), and your own drops are on Drops now. A tab with `ownBar` (Insights) draws
--- its own bar: the shared one, its Sync and the footer's Sort stand aside (Window.TabOwnsBar).
+-- its own bar: the shared one, its Sort and its Sync stand aside (Window.TabOwnsBar).
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
 -- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick, its own footer
 -- ticker and (while Drops shows a countdown still running: WindowGroup.LiveCountdown) a countdown
 -- ticker every K.COUNTDOWN_TICK second repaint only what shows a countdown: the Drops tab's Trade
--- window cells and its strip's next expiry (WindowGroup.TickCountdowns, feedback-5 spec §1 and §3)
+-- window cells and its footer summary's next expiry (WindowGroup.TickCountdowns, feedback-5 spec §1 and §3)
 -- and the Offer panel. It reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
@@ -85,6 +85,7 @@ local TAB_PLACEHOLDER = {
 local frame   -- built on the first show
 local openedByTestMode = false   -- test mode, not the player, opened the window
 local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
+local geometryListeners = {}     -- fn(cause), told when the frame moves, resizes, rescales or minimizes
 local tabSpecs = {}              -- [tab] = { build = fn(pane), refresh = fn(pane, ctx) }
 local activeTab = "group"
 local newCount = 0               -- drops added to the shown feed since the window was minimized
@@ -99,6 +100,13 @@ local syncCountdownTicker        -- starts or stops the countdown ticker (define
 
 local function notifyVisibility(shown)
     for _, fn in ipairs(visibilityListeners) do fn(shown) end
+end
+
+-- `cause` is `move` (a drag's stop, Reset position), `resize` (the grip's stop), `layout` (scale,
+-- alpha, the layout's size and point: Window.ApplyLayout) or `minimize` (Window.SetMinimized).
+local function notifyGeometry(cause)
+    if not frame then return end
+    for _, fn in ipairs(geometryListeners) do fn(cause) end
 end
 
 local function profile()
@@ -211,10 +219,19 @@ function Window.PlaceAbove(tip, widget)
 end
 
 -- Each placement after Show: `above` (a filter-bar control, DW-B1) and `row` (a table row's cell,
--- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History).
+-- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History) and
+-- `rolls` (a Rolls panel line, RX-26: beside the panel away from the window, NS.RollsPanel.PlaceTip,
+-- else below the line as ANCHOR_BOTTOM would).
+local function placeRolls(tip, w)
+    if NS.RollsPanel.PlaceTip(tip, w) then return end
+    tip:ClearAllPoints()
+    tip:SetPoint("TOP", w, "BOTTOM", 0, 0)
+end
+
 local PLACERS = {
     above = function(tip, w) Window.PlaceAbove(tip, w) end,
     row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
+    rolls = placeRolls,
 }
 
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
@@ -260,7 +277,8 @@ end
 --- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
 --- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
 --- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
---- control, DW-B1) or `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2).
+--- control, DW-B1), `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2) or `rolls`
+--- (NS.RollsPanel.PlaceTip: a Rolls panel line, beside the panel away from the window, RX-26).
 --- @param widget table
 --- @param fn function
 --- @param place string|nil
@@ -293,7 +311,7 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's strip says
+--- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's footer says
 --- how many of your drops you can still trade (feedback-5 spec §3).
 --- @param key string
 --- @return string
@@ -400,6 +418,7 @@ end
 -- ── construction: the title bar's drag (the bar is modules/WindowTitleBar.lua) ────────────────
 
 local function onDragStart()
+    NS.WindowAutoClose.Cancel()   -- a drag keeps an auto-opened window open (rolls UX design §3.6)
     if isLocked() then return end
     frame:StartMoving()
 end
@@ -407,6 +426,7 @@ end
 local function onDragStop()
     frame:StopMovingOrSizing()
     savePoint()
+    notifyGeometry("move")
 end
 
 --- A flat button in the window's look (the Scan group button's, and each Drops row's Ask):
@@ -470,41 +490,58 @@ local function buildPanes(f, body)
     end
 end
 
--- The mode strips (board 06 E), between the filter bar and the tab's body: the library's strip
--- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode at the same anchor, anchored and tipped
--- here: f.banner (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14,
--- a running simulation, SimTip). Both are born hidden; Refresh shows the one in force. No library,
--- no strips: both stay nil, the panes reserve nothing and the title bar's word marks the mode.
--- Under a tab with its own bar (`own`) the shared bar is hidden, so they sit under the tabs instead.
-local function placeStrip(f, s, own)
-    local to, x, y = own and f.body or f.filterHost, own and K.INSET or 0, own and -(K.TAB_H + 6) or -2
-    s:ClearAllPoints()
-    s:SetPoint("TOPLEFT", to, own and "TOPLEFT" or "BOTTOMLEFT", x, y)
-    s:SetPoint("TOPRIGHT", to, own and "TOPRIGHT" or "BOTTOMRIGHT", own and -x or 0, y)
-end
+-- The mode strips (board 06 E; preview-mode's *Where the strip sits*): the library's strip
+-- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode, docked directly under the title bar, full
+-- width, above the tabs, the filter bar and the tab's body (`dock = "title"`, Widgets minor 27: the
+-- library anchors it, and places it again on every show, hide and resize), and tipped here: f.banner
+-- (amber, test mode, TestTip) and f.simBanner (cyan, kind "sim" from Widgets minor 14, a running
+-- simulation, SimTip). Both are born hidden; Refresh shows the one in force, and the body moves down
+-- by the strip in force's `BodyOffset` (relayBody). No library, no strips: both stay nil, the body
+-- moves nothing and the title bar's word marks the mode.
 
-local function anchorStrip(f, s, tip)
-    placeStrip(f, s, false)
-    Window.AttachTooltip(s, tip)
+-- The body's top under the title bar, moved down by the strip in force (0 with none showing); each
+-- strip's show and hide (its onOffset) and every layout pass call it, the latter because the
+-- compact layout's two-line strip changes its height with no show.
+local function relayBody(f)
+    local body = f.body
+    if not body then return end
+    local offset = math.max(f.banner and f.banner:BodyOffset() or 0, f.simBanner and f.simBanner:BodyOffset() or 0)
+    if body.dwOffset == offset then return end
+    body.dwOffset = offset
+    body:ClearAllPoints()
+    body:SetPoint("TOPLEFT", f.divider, "BOTTOMLEFT", 0, -offset)
+    body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, 1)
 end
 
 local function buildBanner(f, body)
-    local b = NS.MakeTestStrip(body, L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."])
+    local dock = { titleBar = f.titleBar, window = f, onOffset = function() relayBody(f) end }
+    local b = NS.MakeTestStrip(body,
+        L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."], nil, dock)
     if not b then return end
-    anchorStrip(f, b, NS.WindowTitleBar.TestTip)
+    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
     f.banner = b
     local s = NS.MakeTestStrip(body,
-        L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim")
+        L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim", dock)
     if not s then return end
-    anchorStrip(f, s, NS.WindowTitleBar.SimTip)
+    Window.AttachTooltip(s, NS.WindowTitleBar.SimTip)
     f.simBanner = s
+end
+
+-- The window's footer (standalone-windows' *The footer*, LibKa0s Widgets' Footer, minor 27): no fill,
+-- the hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` tall across the body's bottom
+-- edge (inset 0: the body is already 1 px inside the window's edge), the resize grip's corner cleared
+-- (`grip`, the grip itself built on it by makeResizable). Its words are its own left line and its
+-- controls its marks (RX-24: NS.WindowFooter, NS.FooterRow), the active tab's. No library: a bare
+-- frame of the same height with the two lines and no marks (NS.BareFooter).
+local function buildFooter(body)
+    return NS.MakeFooter(body, { grip = true, inset = 0, marks = NS.FooterRow.MarkSpecs() })
+        or NS.BareFooter(body)
 end
 
 local function buildBody(f)
     local body = CreateFrame("Frame", nil, f)
-    body:SetPoint("TOPLEFT", f.divider, "BOTTOMLEFT", 0, 0)
-    body:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -1, 1)
     f.body = body
+    relayBody(f)
     buildTabs(f, body)
 
     f.filterHost = CreateFrame("Frame", nil, body)
@@ -514,35 +551,30 @@ local function buildBody(f)
 
     buildBanner(f, body)
 
-    f.footerHost = CreateFrame("Frame", nil, body)
-    f.footerHost:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", K.INSET, 0)
-    f.footerHost:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", -K.INSET, 0)
-    f.footerHost:SetHeight(K.FOOTER_H)
-    NS.Skin.Footer(f.footerHost)   -- its band, `foot.bg` (FS-DW-FIX, cause A1)
+    -- The footer, the one footer line (RX-09, rolls-UX spec §3.7; RX-24): the panes reach the body's
+    -- foot and their scroll frames end over it; the resize grip is built in its bottom-right corner
+    -- (makeResizable). No status bar and no strip of its own: the active tab's words and the status
+    -- are its left line, the tab's controls its marks.
+    f.footerHost = buildFooter(body)
 
     buildPanes(f, body)
     NS.WindowFilterBar.Build(f.filterHost)
+    NS.FooterRow.Attach(f.footerHost)
     NS.WindowFooter.Build(f.footerHost)
 end
 
--- The panes fill between the filter bar (and the strip in force, in test mode or a simulation) and
--- the footer; a pane with its own bar (Window.TabOwnsBar) starts under the tabs, and while it is the
--- active tab the shared bar is hidden and the strips move up with it.
+-- The panes fill between the filter bar and the footer (the strip in force, in test mode or a
+-- simulation, is over the tabs: the body moved down by it, relayBody); a pane with its own bar
+-- (Window.TabOwnsBar) starts under the tabs, and while it is the active tab the shared bar is hidden.
 local function layoutPanes()
-    local marked = NS.State.testMode == true or NS.Sim:IsActive()
-    local band = marked and NS.CompactChrome.BannerH() or 0
     local own = Window.TabOwnsBar(activeTab)
     frame.filterHost:SetShown(not own)
-    if frame.stripsOwn ~= own then
-        frame.stripsOwn = own
-        if frame.banner then placeStrip(frame, frame.banner, own) end
-        if frame.simBanner then placeStrip(frame, frame.simBanner, own) end
-    end
+    relayBody(frame)
     for key, pane in pairs(frame.panes) do
-        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H) + band
+        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H)
         pane:ClearAllPoints()
         pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
-        pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, K.FOOTER_H)
+        pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, 0)
     end
 end
 
@@ -553,6 +585,9 @@ local function makeResizable(f)
         -- The owner's icon.grip tints the grip's art, live (Core minor 14): the tool windows' grips
         -- and this one wear one skin; under Ka0s Default and WoW Default it is the client's art.
         owner        = addonName,
+        -- In the footer's bottom-right corner (LibKa0s Widgets' Footer, RX-09); hidden while locked or
+        -- minimized (paintMinimized, RX-08).
+        gripParent   = f.footerHost,
         canResize    = function() return not isLocked() and not isMinimized() end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor, and a
         -- later ApplySettings re-anchors the stored size at the stored point.
@@ -562,6 +597,7 @@ local function makeResizable(f)
             NS.WindowFilterBar.Layout(width)
             -- The table's columns take the new width.
             Window.Refresh()
+            notifyGeometry("resize")
         end,
     })
 end
@@ -684,8 +720,13 @@ end
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
-    if frame.resizeGrip then frame.resizeGrip:SetShown(not m) end
+    -- The grip shows only while the window can be resized: expanded and unlocked (RX-08); the
+    -- footer clears its corner only while it shows (foot:SetGrip).
+    local grip = not m and not isLocked()
+    if frame.resizeGrip then frame.resizeGrip:SetShown(grip) end
+    if frame.footerHost.SetGrip then frame.footerHost:SetGrip(grip) end
     NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
+    NS.WindowTitleBar.PaintLock(frame, isLocked())
 end
 
 --- One repaint pass: the title bar's badge and counter, the tabs, and (expanded) the mode strips, the
@@ -711,6 +752,7 @@ function Window.Refresh()
         if NS.OfferPanel then NS.OfferPanel.Refresh() end
     end
     syncCountdownTicker()
+    NS.WindowAutoClose.OnRefresh()   -- an armed auto-close reaches the frames this pass built
     if t0 then Perf.Note("window.refresh", debugprofilestop() - t0) end
 end
 
@@ -737,7 +779,7 @@ end
 Window.ScheduleRepaint = scheduleRepaint
 
 -- A countdown moved (TradeTimerTick, the footer ticker, the countdown ticker): only what shows one
--- repaints, Drops' Trade window cells and its strip while it is the active tab and the Offer panel
+-- repaints, Drops' Trade window cells and its footer summary while it is the active tab and the Offer panel
 -- while it is open; the rest of the table, the filter bar and the footer are left alone.
 -- The countdown ticker runs while the shown, expanded window's Drops tab has a countdown
 -- still running (WindowGroup.LiveCountdown), and stops with the last one.
@@ -835,12 +877,17 @@ function Window.SetMinimized(on)
     applySize()
     if on then stopTicker() else startTicker() end
     Window.Refresh()
+    notifyGeometry("minimize")
 end
 
 function Window.ToggleMinimized() Window.SetMinimized(not isMinimized()) end
 
 --- @return boolean
 function Window.IsMinimized() return isMinimized() end
+
+--- Whether `locked` (Lock frame, `/dw lock`) holds the window in place: no drag, no resize grip.
+--- @return boolean
+function Window.IsLocked() return isLocked() end
 
 --- The interesting drops counted since the window was minimized.
 --- @return number
@@ -890,12 +937,14 @@ end
 -- ── the player's own actions ────────────────────────────────────────────────────────────────
 
 function Window.Open()
+    NS.WindowAutoClose.Disarm()   -- a manual show never closes by itself (an auto-open re-arms after)
     NS.State.windowOpen = true
     openedByTestMode = false
     Window.UpdateVisibility()
 end
 
 function Window.Close()
+    NS.WindowAutoClose.Disarm()
     NS.State.windowOpen = false
     openedByTestMode = false
     Window.UpdateVisibility()
@@ -912,6 +961,14 @@ end
 --- @param fn function
 function Window.AddVisibilityListener(fn)
     visibilityListeners[#visibilityListeners + 1] = fn
+end
+
+--- Be told `fn(cause)` whenever the built frame moves (`move`), resizes (`resize`), takes the
+--- layout's scale, size and point again (`layout`) or minimizes and expands (`minimize`): the Rolls
+--- panel docked beside it (modules/RollsPanel.lua) re-checks its side. Listeners are never removed.
+--- @param fn function
+function Window.AddGeometryListener(fn)
+    geometryListeners[#geometryListeners + 1] = fn
 end
 
 --- @return boolean
@@ -939,6 +996,7 @@ function Window.ApplyLayout()
     if frame then
         applyLook(); applySize(); applyPoint()
         NS.IconStyle.Resnap()   -- the Scale moved under the icons on screen: one pixel again (R5-ICON)
+        notifyGeometry("layout")
     end
 end
 
@@ -957,6 +1015,7 @@ function Window.ResetPosition()
     if frame then
         applySize()
         applyPoint()
+        notifyGeometry("move")
     end
     if NS.Toast then NS.Toast.ResetPosition() end
     if NS.Sim then NS.Sim:ResetPanelPosition() end
@@ -985,16 +1044,19 @@ end
 -- NS.SetTestMode fills the feed before Window.OnTestModeChanged, so the drops can open it first.
 -- A drop restored after a reload (feedback-15 spec §0) was seen before it: it opens nothing, and
 -- a window minimized before the reload does not count it new.
-local function maybeAutoOpen(rec)
+-- A ROLL opens it too (RX-16): its Blizzard roll popup is up and Pending admitted it into Rolling
+-- now past the same gates (onPendingOpened). `what` names the drop or the roll in the debug line.
+local function maybeAutoOpen(rec, what)
     if NS.State.windowOpen == true or setting("autoOpen") == false or rec.source == "restore" then return end
     local Sit = NS.Situations
     local key = Sit.Current()
     if not Sit.ShouldAutoOpen(key) then return end
-    NS.Debug(TAG, "auto-open: drop %s added in %s", tostring(rec.id), tostring(key))
+    NS.Debug(TAG, "auto-open: %s %s in %s", what or "drop", tostring(rec.id), tostring(key))
     NS.WindowCompact.OnAutoOpen(key)   -- compact during a run (`window.compactInRuns`)
     Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
+    NS.WindowAutoClose.Arm()   -- auto-close (rolls UX design §3.6): only an auto-open's show counts down
 end
 
 local function onDropAdded(id)
@@ -1007,6 +1069,20 @@ local function onDropAdded(id)
     maybeAutoOpen(rec)
     if isMinimized() and rec.source ~= "restore" then newCount = newCount + 1 end
     scheduleRepaint()
+end
+
+-- PendingChanged(id, "open" or "popup"): a roll item in Rolling now (RX-16) holds your roll popup
+-- (`rollID`, claimed as it entered or when the popup came up after it) and passed the feed's gates.
+-- A roll the loot history lists that you get no popup for opens nothing (RX-20). A master-loot
+-- hold (kind `ml`) has no popup, and a roll Pending rebuilt after a reload or stand-up (`restored`)
+-- was seen before: neither opens anything, nor does a roll with `rolls.show` off (Rolling now lists
+-- nothing). A test mode sample opens only the test feed's window, by test mode's own rule, as a
+-- test drop does.
+local function onPendingOpened(id)
+    local item = NS.Pending.Get(id)
+    if not item or item.kind == "ml" or item.restored or not inShownFeed(item) then return end
+    if not NS.WindowPending.Shown() or (item.rollID == nil and not item.test) then return end
+    maybeAutoOpen(item, "roll")
 end
 
 local function onRestriction(reason)
@@ -1038,7 +1114,11 @@ local function listen()
     target:RegisterMessage(M.DROP_ADDED, function(_, id) onDropAdded(id) end)
     target:RegisterMessage(M.DROP_UPDATED, function() scheduleRepaint() end)
     -- Drops' Rolling now section (modules/WindowPending.lua): an item opened, changed or closed.
-    target:RegisterMessage(M.PENDING_CHANGED, function() scheduleRepaint() end)
+    -- A roll item opening opens a closed window (RX-16).
+    target:RegisterMessage(M.PENDING_CHANGED, function(_, id, cause)
+        if cause == "open" or cause == "popup" then onPendingOpened(id) end
+        scheduleRepaint()
+    end)
     -- The Me cell reads your gear snapshot: a new one repaints it (feedback spec §3, FB-6).
     target:RegisterMessage(M.GEAR_CHANGED, function() scheduleRepaint() end)
     target:RegisterMessage(M.INSPECT_DONE, function() repaintFooter() end)

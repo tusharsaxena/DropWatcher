@@ -42,8 +42,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
 - **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
   row's Me and Them showing the worn gear beside the verdict (a mark per worn item on a two-item slot), with a detail card that expands inline and a trade countdown on every row; on your own drops the
   upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with an
-  Offer per member (its Trade button retired by feedback-7), and a strip with Post my tradeables, Expand all / Collapse all and,
-  in the full layout, Scan group and the tab's Sort; a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
+  Offer per member (its Trade button retired by feedback-7), and on the footer the tradeable count with Post my tradeables, Expand all /
+  Collapse all and Scan group as its icon marks (RX-24; the tab's Sort on the filter bar); a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
 - **Insights** (issue #12, [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
@@ -53,7 +53,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   and by boss, top instances per visit, the most generous members, the item level items received
   gained you, asks and drops per day, and drops by looter class, quality, slot and item kind). Its
   own bar of seven filters (Character, Instance, Difficulty, Situation, Date, Quality, Category),
-  each listing only the values present with their counts; the strip names the period the kept history
+  each listing only the values present with their counts; the footer names the period the kept history
   covers. `/dw insights` opens it.
 - **The upgrade glow** (feedback-21). A drop that is an upgrade for you, and whose trade estimate
   is Yes or Likely (feedback-22), glows on its icon in the Drops table, the compact card and the
@@ -82,8 +82,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   Rolling now section above the boss groups: the item, your verdict, who chose Need, Greed or Pass
   so far and the time left, with each player's choice and number in a ROLLS box under it. Won, it
   joins the feed as its drop with the final roll table on its detail card and in History (Drops ›
-  Rolls' Show rolls and Keep rolls in history). The game's own roll popup carries a small card with
-  your verdict and `Need so far` (Mark the roll popup).
+  Rolls' Show rolls and Keep rolls in history). The game's own roll popup carries a small side card
+  with your verdict and the roll's count line, every roll on hover (Mark the roll popup).
 - **Master-loot pending and Ask the master looter** (design §6, both clients; on Retail Guild Master
   Loot alone). An Epic in a loot window you opened, while someone else is the master looter, waits in
   Rolling now as awaiting the master looter until a receipt names who got it, with one Ask that
@@ -123,10 +123,15 @@ sixth boss's samples) produce every kind. Enum values are resolved by name (the 
 | Toys | on | `C_ToyBox.GetToyInfo` answers the item | `PlayerHasToy` | New or Collected |
 | Recipes | on | Recipe [9]; its subclass names the profession's skill line (`C.RECIPE_SKILL_LINE`; Book and First Aid none) | the tooltip's whole `ITEM_SPELL_KNOWN` line; a profession you lack is can't use | New, Known or Can't use |
 | Cosmetics | off | Armor › Cosmetic [5], or `C_Item.IsCosmeticItem` on armor or a weapon (cosmetic weapons are Weapon-class) | the appearance, as today | New look or Look known |
+| Lockboxes | on | Miscellaneous › Junk [0] whose tooltip carries the whole `LOCKED` ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line (RX-04, RX-15, rolls UX design §3.5) | n/a: not gear | Lockbox |
+| Containers | on | Container [1] (a bag), or Quiver [11] (WoW Forever's quivers and ammo pouches; RX-15) | n/a: not gear | Container |
+| Everything else that is rolled on | off | no kind above, and a group rolls on it (a roll table, or Rolling now): the catch-all | n/a: not gear | Item |
 
-A collectible (mount, pet, toy, recipe, cosmetic) is feed-only: no Ask, toast, AutoAsk, Offer,
-Announce, Post my tradeables or glow. Not watched: quest starters, reagents (high quality included),
-containers, keystones, currencies (never `|Hitem:` loot lines), profession tools and accessories,
+A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, and an item the
+catch-all lets in are feed-only: no Ask, toast, AutoAsk, Offer, Announce, Post my tradeables or
+glow, and no Me/Them gain (the kind word stands where gear shows a verdict, never Unknown; your roll
+popup reads the same word for any roll). Not watched unless rolled on with the catch-all on: quest
+starters, reagents (high quality included), Junk that does not open, keystones, currencies (never `|Hitem:` loot lines), profession tools and accessories,
 gems, trade goods, item enhancements, consumables and housing decor. A caged battle pet arrives as
 a `|Hbattlepet:` link and is never watched; only companion items are.
 

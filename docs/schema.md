@@ -84,7 +84,7 @@ Every module reads a setting through `NS.Setting(path)`.
 | `enabled` | `true` | Master controls; `/dw enable|disable`, the launcher | the master switch; `false` takes the latch's `disabled` hold |
 | `visibility` | `"always"` | Master controls | `always`, `inCombat`, `outOfCombat` or `never` |
 | `scale`, `alpha` | `1.0`, `1.0` | Master controls | the window's scale and alpha |
-| `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher | the window cannot be dragged or resized |
+| `locked` | `false` | Master controls; `/dw lock|unlock`, the launcher, the title bar's lock button (RX-08) | the window cannot be dragged or resized; its resize grip is hidden |
 | `char.role` | `"auto"` | Role (WoW Forever alone) | the role your gear is judged for: `auto`, `tank`, `healer` or `damage`; stored per character as `db.char.role.override` (no profile key; see the closure rows above), and on a Druid the Feral Pawn scale (2 for Damage, 3 for Tank, Forever port design §11.4) |
 | `sim.stepDelay` | `1` | Simulator | the seconds the simulator waits between steps as it plays, 0.5 to 10 in steps of 0.5 (feedback-2 spec §8, DW-A7; the default was `2` until the owner's 2026-10-23 simulator feedback, and needs no migration because AceDB never stores a value equal to its default); read as each next step is set, so a change takes effect from the next step |
 | `skin.source` | `"ka0s"` | Skin (skipRender; the library's tab draws it) | where the look comes from: `ka0s` (the Ka0s skins) or `eui` (EllesmereUI's); applied through core/SkinSetup.lua, its onChange moving this half alone |
@@ -102,9 +102,11 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 
 | Key | Default | Column | What it is |
 |---|---|---|---|
-| `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window |
+| `autoOpen` | `true` | (the row above the table) | master auto-open: `false` keeps every situation from opening the window, for a drop or a roll popup (RX-16) |
+| `window.autoClose.enabled` | `true` (both clients) | (the line beneath Auto-open the window) | Auto-close the window (rolls UX design §3.6, owner ruling 4, RX-10): a window that opened by itself closes once nothing is rolling and no new drop has come for `window.autoClose.seconds`; a new drop, a roll or a pending item starts the count over, hovering the window starts it over, and a manual show, a drag or a click inside cancels it for that show (`modules/WindowAutoClose.lua`). Dimmed while `autoOpen` is off |
+| `window.autoClose.seconds` | `10` | (beside it) | Close after (seconds), a slider 5 to 120 in steps of 1; dimmed while `autoOpen` or `window.autoClose.enabled` is off |
 | `situations.<key>.track` | per situation (below; the owner's defaults since DW-06) | Track | loot is watched in that situation |
-| `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own) |
+| `situations.<key>.autoOpen` | per situation (below; the owner's defaults since DW-06) | Auto-open | every drop added to the feed there opens a hidden window, on the Drops tab (since DW-83; it was the first interesting drop, once per situation; the tab since feedback-20: an open window keeps its own), and so does a loot-roll popup for an item the feed would show, once its roll enters Rolling now holding your popup (RX-16, RX-20; not a roll the history lists that you get no popup for, not a master-loot hold, not a roll rebuilt after a reload, nothing while `rolls.show` is off) |
 | `situations.<key>.quality` | `"global"` | Quality | `global` (the feed's mode), `fixed`, `dynamicSlot` or `dynamicCharacter` |
 | `trade.rules.<key>` | `personal`; `legacy` for PvP (follower dungeons were `legacy` too, design spec §7.2, until DW-06) | Loot rule | Retail only (`clients = { "retail" }`, DW-FP11: WoW Forever has one rule, `soulbound`, and no Loot rule column). The rule (`personal`, `group` or `legacy`) that decides whether a drop there can be traded; dimmed while the situation is untracked |
 
@@ -112,7 +114,9 @@ from feedback-24 until item 020, which made it the Drops page's first tab. The r
 `scenario`, `pvp`, `openWorldGroup` and `solo`; `track` and `autoOpen` default on for Mythic+,
 dungeons, follower dungeons, raids, delves, scenarios and solo, `track` alone for Raid Finder, and off
 for PvP and the open-world group (the owner's defaults since DW-06; design spec §6.1 had follower
-dungeons, delves, scenarios and solo off). They are AceDB defaults, so a profile that never changed a
+dungeons, delves, scenarios and solo off). WoW Forever's five take the same values but for the
+open-world group, whose `track` and `autoOpen` both default on there (RX-01, rolls UX ruling 7);
+Retail's stays off. They are AceDB defaults, so a profile that never changed a
 cell takes them and a stored choice stays, with no migration. The four per-situation rows
 are `skipRender` with no subsection (since DW-H0, feedback-8 spec §0; the loot rule since
 feedback-24): the Situations table draws them, one line per situation (`settings/PageEditors.lua`
@@ -124,17 +128,21 @@ button and profiles reach them as any row.
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `feed.quality.mode` | `"fixed"` | Quality; the filter bar's Quality control (`NS.SetQualityMode`) | the minimum-quality mode new drops are gated with |
-| `feed.quality.fixed` | `3` (Rare) | Quality | the fixed mode's threshold, Uncommon to Legendary |
+| `feed.quality.fixed` | `3` (Rare) on Retail, `2` (Uncommon) on WoW Forever (RX-01, rolls UX ruling 7) | Quality | the fixed mode's threshold, Uncommon to Legendary |
 | `feed.quality.floor` | `2` (Uncommon) | Quality | the dynamic modes' least threshold, Common to Epic |
 | `feed.quality.upgradeOverride` | `true` | Quality | an upgrade for you, or a collectible new to your collection, shows below the threshold (issue #13); an Always watch item passes whatever its quality (`whitelisted`) |
-| `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic` | `true` each, `cosmetic` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13) |
-| `feed.whitelist` | `{}` | Item lists › Always watch (`map`) | `{ [itemID] = true }`: always watched, past the item kinds, the heirloom rule, the minimum item level and the quality gate, never past the situation gate; an item of no kind reads `unknown` and is feed-only (categories design spec §4.2) |
+| `feed.categories.equipment`, `.tierToken`, `.mount`, `.pet`, `.toy`, `.recipe`, `.cosmetic`, `.lockbox`, `.container`, `.other` | `true` each, `cosmetic` and `other` `false` | Items › Item kinds | the item kinds the feed watches (issue #13, categories design spec §1, §5.1), in `C.CATEGORIES`' order: a drop in no watched kind is hidden as `notWatched`, one in a kind turned off as `category` (`NS.FeedFilter`); they replaced `feed.gearOnly` and `feed.includeTokens` (step 13). `lockbox` (RX-04, RX-15) is Miscellaneous Junk that opens; `container` (RX-15) is a bag, or on WoW Forever a quiver or ammo pouch (the Quiver class), never a lockbox; `other` is the catch-all: an item of no kind is let in only when a group rolls on it (Pending's gate, or a drop with a roll table) and it is on. All three are additive stored paths, defaulted by AceDB: no schema step (RX-15 split `lockbox` from `container` before any release, so no stored profile carries the old meaning; a stored `container = false` still turns bags off alone) |
+| `feed.whitelist` | `{}` | Item lists › Always watch (`map`) | `{ [itemID] = true }`: always watched, past the item kinds, the heirloom rule, the minimum item level and the quality gate, never past the situation gate; an item of no kind reads its kind word, `item` (rolls UX ruling 3, RX-12; `unknown` only while its class is not read), and is feed-only (categories design spec §4.2) |
 | `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
-| `rolls.show` | `true` | Rolls | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
-| `rolls.keep` | `true` | Rolls | keep a rolled drop's roll table in History (the entry's `rolls`) |
-| `rolls.popupMark` | `true` | Rolls | your verdict on the game's roll popup (`modules/RollPopup.lua`, since DW-FP20); a change repaints the marks on the shown popups |
+| `rolls.show` | `true` | Rolls › Window and popup | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
+| `rolls.keep` | `true` | Rolls › Window and popup | keep a rolled drop's roll table in History (the entry's `rolls`) |
+| `rolls.popupMark` | `true` | Rolls › Window and popup | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
+| `rolls.panel.enabled` | `true` (both clients) | Rolls › Panel | the Rolls panel docked beside the window (rolls panel design §3.5, RX-17, `modules/RollsPanel.lua`): every watched roll and every player's roll on it, while rolled and `rolls.panel.linger` seconds after; off shows nothing and tracks nothing; needs `rolls.show` (its row dims while that is off, RX-20) |
+| `rolls.panel.side` | `"right"` | Rolls › Panel | `right` or `left`: the window side the panel docks on; it flips to the other when the screen has no room |
+| `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds the panel stays open once every roll in it is over (0: it closes at once), then it closes with every finished roll; finished rolls stay while any roll still runs, a new roll cancels the count, and nothing closes while the pointer is over it (RX-21: a panel-level linger, no longer per roll; the branch is unmerged, so no migration) |
+| `rolls.panel.foldInRaid` | `true` | Rolls › Panel | raid mode's (a group of more than 5, or a watched roll of more than 5 players; RX-19) Pass and Waiting folded to one line each, `Pass 27 · P1, P2, P3…`, every name in its tooltip, a click listing every player for that block (RX-18) |
 
 ### Comparison
 
@@ -318,7 +326,8 @@ history = { retentionDays = 30, v = 1, groups = {
   categories design spec §3.3); `tokenUsers` (TT-1) is who may use a token naming no classes:
   `every` for an omni Curio, `yours` for a token whose Use text alone names your class, absent
   otherwise (its Type then reads a dash, an `any` slot never taken for a Curio); an Always watch item that fits no kind is kept as `watched`
-  (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key). A collectible's `me`
+  (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key); a lockbox is
+  kept as `lockbox`, a bag, quiver or ammo pouch as `container` (RX-15), and a drop the rolled-on catch-all let in as `other` (RX-04). A collectible's `me`
   keeps its collection verdict: `collect` true, its `category`, a pet's `count` and `limit`, and
   `reasonKey` `notYourProfession` for a recipe of a profession you lack. The fields are additive:
   no migration, and `v` stays 1. An entry without `category` (one recorded before issue #13) reads
@@ -360,7 +369,7 @@ history = { retentionDays = 30, v = 1, groups = {
 - `rolls` (Forever port design §5.4, DW-FP16) is a group-loot drop's final roll table, kept while
   `rolls.keep` is on: `r` one row per player in the roll cells' order (the winner first), at most
   40 (`NS.History.ROLL_ROWS`), each its name, classFile (`class`), state number (`s`, 0 Need to
-  5 Pass) and roll number (`n`, none for a pass); `w` the winner's place in `r`; `n` every player
+  5 Pass; the loot history has no Disenchant state, so none is kept, RX-06) and roll number (`n`, none for a pass); `w` the winner's place in `r`; `n` every player
   who rolled, the rows cut or not; `at` the `time()` it was kept. No GUIDs. It lands with the drop
   or on the later merge that attaches it (that change sends `HistoryChanged`);
   `NS.History.RollTable` reads it back for the History card's Rolls box and the drop a reload
@@ -464,7 +473,9 @@ issue #12),
 came from; nil while stood down), and compact mode's run override (`NS.State.compactRun`,
 `{ key, ended }` while an auto-open inside a run holds the window compact, and
 `NS.State.compactRunSpent`, the situation a completed key's grace ran out in, where no auto-open
-re-arms it until the situation moves or a key starts; `modules/WindowCompact.lua`). The Debug console
+re-arms it until the situation moves or a key starts; `modules/WindowCompact.lua`), and auto-close's
+armed flag and its one timer (`modules/WindowAutoClose.lua`'s locals, RX-10: armed by an auto-open,
+let go by every Open and Close, a drag and a press inside the window). The Debug console
 and Test mode rows are `sessionOnly` and store through their own closures.
 
 The filter bar's View is a set (DW-A1): the multi-select View dropdown's values combine as AND, All

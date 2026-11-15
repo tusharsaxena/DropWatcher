@@ -117,7 +117,8 @@ test("compact: the title-bar toggle sits left of minimize, with a catalog mark",
     local pt = b.__points[1]
     assertEqual(pt[1], "RIGHT"); assertEqual(pt[2], f.minimizeButton); assertEqual(pt[3], "LEFT")
     assertTrue(f.scanButton == nil, "Scan group is the Drops strip's, in both layouts")
-    assertEqual(f.badge.__points[1][2], b, "the badge anchors to the toggle")
+    assertEqual(f.lockButton.__points[1][2], b, "the lock button left of it (RX-14)")
+    assertEqual(f.badge.__points[1][2], f.lockButton, "the badge anchors to the cluster's first, the lock")
     assertEqual(b.mark, "fullscreen-exit", "full: the shrink mark")
     assertTrue(b.art:IsShown() and not b.glyph:IsShown(), "the catalog mark, not the glyph")
 end)
@@ -197,7 +198,8 @@ test("compact: the toggle's tooltip names the layout it switches to and the sett
     local NS, f = shown()
     local tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Compact view")
-    assertTrue(T.tipPlainJoined(tip):find("• Stored as: Window settings, Layout", 1, true) ~= nil)
+    -- options-ui-§21 Location strings (RX-12 review fix): the control on '<Page> > <Tab> > <Subsection>'
+    assertTrue(T.tipPlainJoined(tip):find("• Stored as: Window layout on Window > Layout > Mode", 1, true) ~= nil)
     NS.ToggleWindowMode()
     tip = NS.Window.TooltipOf(f.modeButton)
     assertEqual(tip[1], "Full view")
@@ -335,6 +337,8 @@ end, T.RETAIL_ONLY)
 
 test("compact: a key's grace running out with the window shown lets go when it is next hidden, and nothing re-arms it", function()
     local NS, m = inKey()
+    -- Auto-close off (RX-10): the grace's idle seconds would close the window the drop opened.
+    NS.SchemaRuntime.Set("window.autoClose.enabled", false)
     announce(NS, drop(1))
     local f = NS.Window.Frame()
     complete(NS, m)

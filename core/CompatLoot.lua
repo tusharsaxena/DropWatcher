@@ -1,7 +1,8 @@
 local _, NS = ...
 -- core/CompatLoot.lua — the loot history and group-loot roll reads (Forever port design §5.1, plan
 -- DW-FP13): a drop's whole roll table, an encounter's drops and its name, the history clock, your
--- open rolls and one roll's item, and the loot method and the loot window's slots (design §6,
+-- open rolls, one roll's item and its time left (rolls UX RX-02), the loot method, the group's loot
+-- threshold (rolls UX RX-03) and the loot window's slots (design §6,
 -- DW-FP18), published on NS.Compat like the rest of the compat family, split
 -- out of core/Compat.lua to keep it under its cap. LootHistoryDrop (the feed's won drop) lives here
 -- as a view over LootHistoryRolls, so the history has one call path. Both clients have the same
@@ -220,22 +221,32 @@ function Compat.LootRollInfo(rollID)
         canGreed = plainBool(canGreed), canTransmog = plainBool(canTransmog) }
 end
 
+--- Your open roll popup's time left in seconds (GetLootRollTimeLeft answers milliseconds; rolls UX
+--- design §3.4): the client's own timer for the popup, which needs no reading of the history's
+--- clock or units. Nil for a non-plain id, a secret, negative or missing answer, or with no API.
+--- @param rollID number
+--- @return number|nil
+function Compat.LootRollTimeLeft(rollID)
+    if not (GetLootRollTimeLeft and plainNumber(rollID)) then return nil end
+    local ms = plainNumber(GetLootRollTimeLeft(rollID))
+    if not ms or ms < 0 then return nil end
+    return ms / 1000
+end
+
 -- ── the loot method and the loot window (DW-FP18, design §6) ────────────────────────────────
 
 -- Enum.LootMethod's values, the same on both clients (R1 §1.2), as plain names.
 local METHODS = { [0] = "freeForAll", [1] = "roundRobin", [2] = "master", [3] = "group",
     [4] = "needBeforeGreed", [5] = "personal" }
 
--- The master-loot quality threshold: Constants.LootConsts (the runtime key on both clients), then
--- Constants.LootConsts_Camelot (Forever's documented name), then 4 on Forever or 5 on Retail.
-local function mlThreshold()
-    local consts = plainTable(Constants)
-    for _, key in ipairs({ "LootConsts", "LootConsts_Camelot" }) do
-        local t = consts and plainTable(consts[key])
-        local v = t and plainNumber(t.MasterLootQualityThreshold)
-        if v then return v end
-    end
-    return Compat.ClientKey() == "forever" and 4 or 5
+--- The group's loot threshold (GetLootThreshold): the least quality the group rolls on or the master
+--- looter hands out, which master-loot pending holds at (rolls UX ruling 6, RX-03). Not
+--- Constants.LootConsts.MasterLootQualityThreshold, which only gates Blizzard's distribution-confirm
+--- popup. Uncommon (2, the client's default) for a secret or non-number answer, or with no API.
+--- @return number
+function Compat.LootThreshold()
+    if not GetLootThreshold then return 2 end
+    return plainNumber(GetLootThreshold()) or 2
 end
 
 -- The master looter's unit from GetLootMethod's ids: a raid index is raid<N>; a party index is
@@ -256,12 +267,12 @@ local function isYou(unit)
 end
 
 --- The group's loot method (C_PartyInfo.GetLootMethod): { method, isML, mlUnit, mlName, mlRealm,
---- mlGUID, threshold }. `method` is the plain name of Enum.LootMethod's value ("freeForAll", "roundRobin",
+--- mlGUID }. `method` is the plain name of Enum.LootMethod's value ("freeForAll", "roundRobin",
 --- "master", "group", "needBeforeGreed", "personal"); under master loot `mlUnit` is the master
 --- looter's unit (raid<N>, party<N> or player), `mlName` / `mlRealm` its Compat.UnitCharacterName
 --- (a Forever "First Surname" whole, no realm), `mlGUID` its GUID (a safe key only) and `isML`
---- whether that is you. `threshold` is the
---- master-loot quality threshold. Nil for a secret or unknown method, or with no API.
+--- whether that is you. The quality it applies to is Compat.LootThreshold's. Nil for a secret or
+--- unknown method, or with no API.
 --- @return table|nil
 function Compat.LootMethod()
     local api = C_PartyInfo
@@ -269,7 +280,7 @@ function Compat.LootMethod()
     local raw, partyID, raidID = api.GetLootMethod()
     local method = METHODS[plainNumber(raw)]
     if not method then return nil end
-    local out = { method = method, isML = false, threshold = mlThreshold() }
+    local out = { method = method, isML = false }
     if method ~= "master" then return out end
     local unit = mlUnitOf(partyID, raidID)
     if unit then
@@ -343,6 +354,23 @@ function Compat.RollPopupOpen(i)
     local f = popup(i)
     if not (f and f.IsShown and f:IsShown()) then return nil end
     return plainNumber(f.rollID)
+end
+
+--- Roll popup `i`'s right edge in UIParent's units (its GetRight at its effective scale over
+--- UIParent's), so an owned card beside it can tell whether the screen has room on that side
+--- (rolls UX design §3.3, RX-07). A read only: nothing is written to the popup. Nil with no such
+--- frame, while it is unplaced, or for a secret or non-number answer.
+--- @param i number
+--- @return number|nil
+function Compat.RollPopupRight(i)
+    local f = popup(i)
+    if not (f and f.GetRight) then return nil end
+    local right = plainNumber(f:GetRight())
+    if not right then return nil end
+    local scale = f.GetEffectiveScale and plainNumber(f:GetEffectiveScale()) or 1
+    local ui = UIParent and UIParent.GetEffectiveScale and plainNumber(UIParent:GetEffectiveScale()) or 1
+    if scale <= 0 or ui <= 0 then return right end
+    return right * scale / ui
 end
 
 --- Whether the client's gamepad UI is on (InputUtil.IsGamepadUIEnabled): WoW Forever then shows

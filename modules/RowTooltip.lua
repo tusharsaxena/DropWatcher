@@ -171,7 +171,7 @@ function RT.AddRollRow(tip, button)
         or button.dropId and NS.LootFeed.Get(button.dropId) or nil
     local roll = type(src) == "table" and src.roll or nil
     if type(roll) ~= "table" then return 0 end
-    local s = NS.RollCells.Summary(roll, NS.Compat.LootHistoryNow(), src.state)
+    local s = NS.RollCells.Summary(roll, NS.Compat.LootHistoryNow(), src.state, src.rollID)
     local r, g, b = NS.Skin.Color("gtip.value")
     tip:AddLine(NS.TipMarks.Row(NS.L["Rolls"], s.text), r, g, b, true)
     return 1

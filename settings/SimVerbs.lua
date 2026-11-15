@@ -1,7 +1,8 @@
 local _, NS = ...
 -- settings/SimVerbs.lua — `/dw sim`'s host half (simulator spec §4; OWNER_SCOPE C.7, C.10): the
--- eight verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`, `roll` (a
--- group-loot roll, chosen and won over the next seconds; DW-FP17), `ml` (an Epic awaiting a
+-- nine verbs only DropWatcher's simulation has, `pull`, `kill`, `loot [n] [player|me]`, `roll` (a
+-- group-loot roll, chosen and won over the next seconds; DW-FP17), `raid` (a 40-player raid roll on
+-- several items, for the Rolls panel's raid mode; rolls panel design §3.6, RX-19), `ml` (an Epic awaiting a
 -- simulated master looter, handed out after about 20 seconds; DW-FP19),
 -- `drop <kind> [player|me]` (one item of a kind: equipment, token, mount, pet, toy, recipe or
 -- cosmetic; issue #13), `lockdown on|off` and `trade <dropID>`, the lines that say why one did nothing, their usage
@@ -110,6 +111,14 @@ local function runRoll()
     return true
 end
 
+-- `raid`: a 40-player roll on several items opens; each is chosen and won over the next seconds.
+local function runRaid()
+    local rolls, code = NS.SimEvents.Raid()
+    if not rolls then return false, code end
+    NS.Print(L["Simulated raid roll opened: %d items, %d players."]:format(#rolls, #rolls[1].rows))
+    return true
+end
+
 -- `ml`: a member becomes the master looter with an Epic waiting; it is handed out after a while.
 local function runMasterLoot()
     local loot, code = NS.SimEvents.MasterLoot()
@@ -133,6 +142,7 @@ for verb, spec in pairs({
     lockdown = { parse = parseLockdown, run = runLockdown },
     trade    = { parse = parseTrade,    run = runTrade },
     roll     = { parse = bare,          run = runRoll },
+    raid     = { parse = bare,          run = runRaid },
     ml       = { parse = bare,          run = runMasterLoot },
 }) do V.VERBS[verb] = spec end
 
@@ -164,6 +174,7 @@ do
         L["%s lockdown on|off: turn the simulated chat lockdown on or off."]:format(s),
         L["%s trade <drop id>: complete a simulated trade of that drop."]:format(s),
         L["%s roll: a simulated group-loot roll, chosen and won over the next seconds."]:format(s),
+        L["%s raid: a simulated 40-player raid roll on several items, to show the Rolls panel's raid mode."]:format(s),
         L["%s ml: an Epic waiting for a simulated master looter, handed out after a while."]:format(s),
     }
     for i, line in ipairs(lines) do V.USAGE[i] = line end

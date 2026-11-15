@@ -32,16 +32,15 @@ local _, NS = ...
 -- buttons keep their own. While the Trade window column is shown a row is the room its countdown
 -- bar needs taller (WindowRows' countdownHeight), so the text and the bar never overlap.
 --
--- THE STRIP (feedback-5 spec §3, feedback-7 spec §4). Under the table (or the compact cards), above
--- the footer: `n tradeable · next expiry 0:08:41`, Post my tradeables (while one of your drops the
--- tab lists can be traded), Expand all / Collapse all (WG.FoldAll, feedback-15 spec §2) and, in the
--- full layout, Scan group; always shown, in both layouts (modules/DropsStrip.lua, built with the
--- pane and repainted with it).
+-- THE SUMMARY (feedback-5 spec §3, feedback-7 spec §4; RX-24). On the window's footer: `n tradeable ·
+-- next expiry 0:08:41` starting its left line, and its marks Expand all / Collapse all (WG.FoldAll,
+-- feedback-15 spec §2), Scan group and Post my tradeables (while one of your drops the tab lists can
+-- be traded), in both layouts (modules/DropsStrip.lua, built with the pane and repainted with it).
 --
--- THE COUNTDOWNS MOVE each second while a shown row or the strip has one (feedback-5 spec §1;
--- the strip counts your drops under a collapsed header too): Window.lua's
+-- THE COUNTDOWNS MOVE each second while a shown row or the summary has one (feedback-5 spec §1;
+-- the summary counts your drops under a collapsed header too): Window.lua's
 -- countdown ticker, its footer ticker and TradeTimerTick call WG.TickCountdowns, which repaints the
--- Trade window cells alone (the compact cards show none, feedback-10 spec §2) and the strip's next expiry, never
+-- Trade window cells alone (the compact cards show none, feedback-10 spec §2) and the summary's next expiry, never
 -- the whole table;
 -- WG.LiveCountdown tells Window.lua whether the ticker is still wanted.
 --
@@ -626,6 +625,7 @@ local function actionsCell(row)
     f.key = "actions"
     f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
+    NS.WindowRows.RaiseAction(f.ask, row)   -- over the row's text cells (rolls UX spec §3.1)
     NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
     return f
 end
@@ -1125,7 +1125,7 @@ local function rowsLive(pane)
     return false
 end
 
---- Whether anything on screen shows a countdown still running: a drawn row's Trade window, or the strip's next expiry, which also counts your drops under a collapsed header
+--- Whether anything on screen shows a countdown still running: a drawn row's Trade window, or the footer summary's next expiry, which also counts your drops under a collapsed header
 --- and shows whether the column is kept or not. Window.lua runs its each-second countdown ticker
 --- while this holds.
 --- @return boolean
@@ -1138,7 +1138,7 @@ function WG.LiveCountdown()
 end
 
 --- Move every shown countdown on to the clock: the Trade window cells of the drawn rows and the
---- strip's next expiry; nothing else is repainted (the compact cards show no countdown).
+--- footer summary's next expiry; nothing else is repainted (the compact cards show no countdown).
 function WG.TickCountdowns()
     local pane = shownPane()
     if not pane then return end
@@ -1155,7 +1155,7 @@ end
 
 --- The drawn pane's rows and headers, in order, for the suites: { headers, rows, entries, columns,
 --- pane, card, cardDropId, empty, summary } (`cardDropId` nil while no card is open on screen;
---- `empty` the empty state's frame; `summary` the strip's MineCells.Summary, nil while nothing is tradeable).
+--- `empty` the empty state's frame; `summary` the footer summary's MineCells.Summary, nil while nothing is tradeable).
 --- @return table|nil
 function WG.Drawn()
     local f = NS.Window.Frame()

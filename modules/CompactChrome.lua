@@ -6,8 +6,9 @@ local _, NS = ...
 --
 --   title bar   `Drop Watcher` centered, alone while a mode's strip marks the mode; `TEST` / `SIM`
 --               beside it in their red and cyan only while minimized or with no strip; the
---               restriction badge its lock and the queued count, at the left; the layout toggle,
---               minimize and close at the right (Scan group is the Drops strip's icon, feedback-16)
+--               restriction badge its lock and the queued count at the left; the lock button
+--               (RX-08; RX-14 moved it to the right-hand cluster), the layout toggle, minimize and
+--               close at the right (Scan group is the footer's mark on Drops, feedback-16, RX-24)
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu lists
 --               the full bar's Quality, Content and Character dropdowns and the tab's Sort, one child
@@ -17,7 +18,9 @@ local _, NS = ...
 --               force.
 --   strip       the strip in force (test mode's or the simulation's) in shorter words, wrapping to
 --               two lines when the width needs it
---   footer      one line, `Inspect 4/4 · Mythic+`; the rest of the full footer is its tooltip
+--   footer      the status line's short words, `Inspect 4/4 · Mythic+` (CC.FooterLine), after the
+--               active tab's own on the footer's one line (NS.WindowFooter, RX-09, RX-24); its
+--               tooltip is the full layout's, and its marks are the full layout's
 --
 -- A CASCADE OF THE DROPDOWNS THEMSELVES. Filters ▾ opens LibKa0s-Widgets' shared menu on its button
 -- (W.ContextMenu through NS.ContextMenu) with one `submenu` row per dropdown (Widgets minor 23), in
@@ -31,11 +34,10 @@ local _, NS = ...
 -- Filters ▾ opened a hand-built panel the dropdowns were reparented into, with an outside-press
 -- listener of its own; the library's menu closes on an outside press itself.
 --
--- PURE: TabText, ModeWord, BadgeShort, FooterLine, FooterTip, IsActive, ActiveKeys, CountActive,
+-- PURE: TabText, ModeWord, BadgeShort, FooterLine, IsActive, ActiveKeys, CountActive,
 -- FiltersLabel and FiltersTip. The edge: Paint (Window.Refresh's every pass; the layout itself only
 -- when the layout in force changed), ModeStrip (the strip of the mode in force), BannerH (its height,
--- which Window's pane layout reads),
--- PaintFooter (WindowFooter.Refresh in compact) and the Filters menu (FilterRows, ToggleFilters,
+-- which the strip in force is sized to; Window's body moves down by the strip's BodyOffset) and the Filters menu (FilterRows, ToggleFilters,
 -- CloseFilters). WindowFilterBar.Layout
 -- stands aside in compact: the search box's anchors size it there.
 
@@ -113,21 +115,6 @@ function CC.FooterLine(i)
     local members = tonumber(i.members) or 0
     local inspect = members == 0 and L["No group"] or L["Inspect %d/%d"]:format(i.good or 0, members)
     return inspect .. " · " .. situationShort(i)
-end
-
---- The compact footer's tooltip: every segment the full footer shows, from WindowFooter.Compose.
---- @param composed table|nil { inspect, loot, situation, pawn }, each { text }
---- @return table lines
-function CC.FooterTip(composed)
-    composed = type(composed) == "table" and composed or {}
-    local TM = NS.TipMarks
-    local out = { L["Status"] }
-    for _, key in ipairs(NS.WindowFooter.SEGMENTS) do
-        local seg = composed[key]
-        if seg and seg.text then out[#out + 1] = TM.Row(nil, seg.text) end
-    end
-    out[#out + 1] = TM.Hint(L["The full view's footer shows each of these on its own."])
-    return out
 end
 
 local function sameSet(a, b)
@@ -238,8 +225,7 @@ local parts = {}   -- filters (the button), menu (the shared menu while this ope
 
 local function controlsByKey()
     local c = NS.WindowFilterBar.Controls()
-    local _, sort = NS.WindowFooter.Parts()
-    return { quality = c.quality, content = c.content, char = c.char, sort = sort }
+    return { quality = c.quality, content = c.content, char = c.char, sort = c.sort }
 end
 
 local function labelsInForce()
@@ -395,7 +381,7 @@ local function layoutTitleBar(f, compact)
         f.badge:SetPoint("LEFT", f.titleBar, "LEFT", 6, 0)
     else
         f.badge:SetWidth(170)
-        f.badge:SetPoint("RIGHT", f.modeButton, "LEFT", -8, 0)
+        f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
     end
 end
 
@@ -433,17 +419,12 @@ local function layoutStrip(f, compact)
     end
 end
 
--- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
--- WindowFooter.Refresh shows Sort again on its next pass.
+-- The full bar back: the dropdowns on the bar, the tab's Sort at its right edge (RX-24).
 local function restoreBar(f)
     CC.CloseFilters()
     if parts.filters then parts.filters:Hide() end
-    local c = NS.WindowFilterBar.Controls()
-    for _, key in ipairs(CC.COUNTED) do
-        if c[key] then c[key]:Show() end
-    end
+    for _, dd in pairs(controlsByKey()) do dd:Show() end
     NS.WindowFilterBar.Anchor()
-    NS.WindowFooter.AnchorSort()
     NS.WindowFilterBar.Layout(f:GetWidth())
 end
 
@@ -463,18 +444,10 @@ local function compactBar(f)
     eb:Show()
 end
 
-local function layoutFooter(compact)
-    local segments = NS.WindowFooter.Parts()
-    for key, s in pairs(segments) do
-        if key ~= "inspect" then s:SetShown(not compact) end
-    end
-end
-
 local function layout(f, compact)
     layoutTitleBar(f, compact)
     layoutTabs(f, compact)
     layoutStrip(f, compact)
-    layoutFooter(compact)
     if compact then compactBar(f) else restoreBar(f) end
     NS.Debug(TAG, "chrome -> %s", compact and "compact" or "full")
 end
@@ -513,7 +486,7 @@ function CC.Paint(f)
     end
     placeTitle(f, compact)
     local b = CC.ModeStrip(f)
-    local h = CC.BannerH() - 4
+    local h = CC.BannerH()
     if b and b.slotH ~= h then
         b.slotH = h
         b:SetHeight(h)
@@ -541,35 +514,23 @@ function CC.ModeStrip(f)
     return f.banner
 end
 
---- The height of the strip in force (CC.ModeStrip) in the layout in force: one line full; compact two
---- when its words do not fit on one line (their unwrapped width against the room their anchors give
---- them); 0 when the window has no such strip (the Widgets library absent).
+--- The height of the strip in force (CC.ModeStrip) in the layout in force: one line full (the
+--- library's TEST_STRIP.HEIGHT); compact two when its words do not fit on one line (their unwrapped
+--- width against the room their anchors give them); 0 when the window has no such strip (the Widgets
+--- library absent). The strip docks under the title bar and the body moves down by its height.
 --- @return number
 function CC.BannerH()
     local f = NS.Window.Frame()
     local strip = f and CC.ModeStrip(f)
     if f and not strip then return 0 end
-    if not (f and f.chromeCompact) then return K.BANNER_H end
+    local one = NS.TestStripHeight()
+    if not (f and f.chromeCompact) then return one end
     local fs = strip.text
     local w = unwrappedWidth(fs)
     local room = fs.GetWidth and fs:GetWidth()
     if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
-    if w and room > 0 and w <= room then return K.BANNER_H end
-    return K.BANNER_H + CC.WRAP_H
-end
-
---- The compact footer (WindowFooter.Refresh): the inspect segment holds the one line, its tooltip
---- every full segment; the other segments are hidden by the layout.
---- @param segments table WindowFooter's built segments
---- @param read table WindowFooter.Read's inputs
---- @param composed table WindowFooter.Compose's segments
-function CC.PaintFooter(segments, read, composed)
-    local s = segments.inspect
-    if not s then return end
-    s.text:SetText(CC.FooterLine(read))
-    s.tipLines = CC.FooterTip(composed)
-    local w = s.text:GetStringWidth()
-    s:SetWidth(type(w) == "number" and w > 0 and w or 200)
+    if w and room > 0 and w <= room then return one end
+    return one + CC.WRAP_H
 end
 
 --- The Filters button and the menu it opened, for the suites: { filters, menu }.

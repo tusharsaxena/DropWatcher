@@ -9,9 +9,10 @@
 -- printed for orientation only: compare scenarios within a run, never across runs or machines.
 --
 -- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
--- too, DW-C5), the loot parser's line (DW-25) and the Insights tab's recompute over a full log
--- (issue #12, DW-N1). The questions are performance-§9's: does each bracket cost nothing with capture off
--- (zero overhead), and is the stood-down show decision free.
+-- too, DW-C5), the loot parser's line (DW-25), the Insights tab's recompute over a full log
+-- (issue #12, DW-N1) and the Rolls panel's raid refresh (RX-18). The questions are
+-- performance-§9's: does each bracket cost nothing with capture off (zero overhead), and is the
+-- stood-down show decision free.
 --
 -- CEILINGS (measured 2026-10-10, Lua 5.1.5). Pinned hard at 0 bytes: the stood-down early return
 -- must allocate nothing. Raise one only by re-measuring and saying why; a rise is the finding.
@@ -29,6 +30,9 @@
 -- rebuilt its View and Character rows and selections on every sync; those are now built once and
 -- written only on change, which leaves 14168, the M10 work itself (a group header's hidden-drop
 -- predicates, DW-A0, and the Character dropdown's context, DW-A4) over the M9 figure of 13680.
+-- The rolls UX round took it to 14736 (bisected 2026-11-14: RX-04's two item kinds grew the feed
+-- config's kinds map +320, RX-09's footer line +128); the filter bar's quality readout now reads its
+-- three settings instead of building that whole config each pass, which leaves 12624.
 -- The compact refresh pair (DW-C5, compact spec §5) is the same pass in the compact layout: the
 -- same window, the cards' pane in place of the table, its chrome (the short title, the Filters
 -- button's count and tooltip, the one-line footer). Measured 2026-10-11 at 11065 bytes in both, under
@@ -41,9 +45,17 @@
 -- one calendar midnight per quarter hour). It has no bracket of its own (the tab's are DW-N2's), so
 -- it notes nothing.
 local INSIGHTS_CEILING = 5200000
+-- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18) is RollsPanel.Refresh over six
+-- watched rolls of 40 players in a group of 40: the reconcile, each block's header and its rows and
+-- folded lines, every frame from the pools. Its ceiling is that work: first measured 2026-11-15 at
+-- 89376 bytes with one block open, the ceiling that plus a small margin. Round 2 (RX-21) opens all
+-- six blocks (the one-open rule is gone), which measured 427136 bytes until the panel kept each
+-- block's rows while its roll reads the same (RollsPanel's rowsOf) and left a pooled frame already
+-- in place where it is: 79328 bytes, under the same ceiling, which is not raised.
+local ROLLS_PANEL_RAID_CEILING = 95000
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
-    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING }
+    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING, rollsPanelRaid = ROLLS_PANEL_RAID_CEILING }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
@@ -54,7 +66,7 @@ local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
     parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1,
-    insightsCompute = 0 }
+    insightsCompute = 0, rollsPanelRaid = 0 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -209,6 +221,48 @@ local function insightsOnce()
 end
 NS.Perf.on = false
 measure("insightsCompute", 20, insightsOnce)
+
+-- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18): a group of 40 in a raid, six
+-- watched rolls of 40 players each (20 Need, 10 Greed, 5 Pass, 4 still to roll, and you), the panel
+-- docked beside the shown window: all six blocks open (RX-21), each with its rows and its two folded
+-- lines. Its bytes are the pass's own tables and strings (the blocks, the time left); the rows are
+-- kept from the first paint and the frames all come from the pools. No bracket, so it notes nothing.
+do
+    local others = {}
+    for i = 1, 39 do
+        others[i] = { guid = ("Player-9-%08X"):format(i), name = "Raider" .. i, class = "Warrior", classFile = "WARRIOR" }
+    end
+    mock.setGroup(others, true)
+    mock.__context.inInstance, mock.__context.instanceType = true, "raid"
+    mock.instance.difficultyID = 14
+    mock.__fire("PLAYER_ENTERING_WORLD")
+    NS.ShowWindow()
+    mock.lootHistoryTime = 110
+    for i = 1, 6 do
+        local link = ("|cnIQ4:|Hitem:%d::::::::90:::::|h[Item %d]|h|r"):format(3000 + i, 3000 + i)
+        mock.addItem(link, { name = "Item", quality = 4, ilvl = 620, equipLoc = "INVTYPE_FINGER", classID = 4,
+            subClassID = 0, bindType = 1, stats = {} })
+        local infos = {}
+        local function add(n, state, roll, isSelf)
+            infos[#infos + 1] = { playerName = n == 0 and "Testchar" or ("Raider" .. n),
+                playerGUID = n == 0 and "Player-0-00000001" or ("Player-9-%08X"):format(n), playerClass = "WARRIOR",
+                isSelf = isSelf == true, state = state, roll = roll, isWinner = false }
+        end
+        for n = 1, 39 do
+            local state = n <= 20 and 0 or n <= 30 and 3 or n <= 35 and 5 or 4
+            add(n, state, state <= 3 and (100 - n) or nil)
+        end
+        add(0, 5, nil, true)
+        mock.lootHistory["2900:" .. i] = { itemHyperlink = link, playerRollState = 5, isTied = false, allPassed = false,
+            startTime = 100, duration = 60 + i, rollInfos = infos }
+    end
+    mock.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    local drawn = NS.RollsPanel.Drawn()
+    check(NS.RollsPanel.IsShown() and drawn ~= nil and drawn.raid and #drawn.headers == 6,
+        "the Rolls panel did not show six raid blocks")
+    NS.Perf.on = false
+    measure("rollsPanelRaid", 200, NS.RollsPanel.Refresh)
+end
 NS.Perf.Note = realNote
 
 for _, r in ipairs(results) do

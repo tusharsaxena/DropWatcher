@@ -86,19 +86,20 @@ end
 -- Pure: the verb parser and the timeline
 -- ---------------------------------------------------------------------------------------------
 
-test("sim verbs: DropWatcher's eight host verbs on the descriptor, each parsing its arguments", function()
+test("sim verbs: DropWatcher's nine host verbs on the descriptor, each parsing its arguments", function()
     local V = T.newAddon().SimVerbs
     local names = {}
     for verb in pairs(V.VERBS) do names[#names + 1] = verb end
     table.sort(names)
     -- red under: a generic verb (start, run, step, ...) kept in SimVerbs (the library owns them, C.7)
-    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,ml,pull,roll,trade")
+    assertEqual(table.concat(names, ","), "drop,kill,lockdown,loot,ml,pull,raid,roll,trade")
     local function P(line)
         local w = {}
         for x in line:gmatch("%S+") do w[#w + 1] = x end
         return V.VERBS[w[1]].parse(w)
     end
     assertTrue(P("pull") ~= nil); assertTrue(P("kill") ~= nil); assertTrue(P("roll") ~= nil)
+    assertTrue(P("raid") ~= nil)
     local c = P("loot")
     assertNil(c.n); assertNil(c.who)
     c = P("loot 3 me")
@@ -173,7 +174,8 @@ test("sim verbs: `/dw sim` through RunVerb prints the status and the usage and o
     assertEqual(printed(m, "Simulation: idle. Scenarios: " .. table.concat(NS.SimScenario.NAMES, ", ") .. "."), 1)
     assertEqual(printed(m, "/dw sim start <scenario> [size]: start a simulation."), 1)
     for _, line in ipairs({ "/dw sim pull: ", "/dw sim kill: ", "/dw sim loot [n] [player|me]: ",
-        "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: ", "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: " }) do
+        "/dw sim drop equipment|token|mount|pet|toy|recipe|cosmetic [player|me]: ", "/dw sim lockdown on|off: ", "/dw sim trade <drop id>: ",
+        "/dw sim roll: ", "/dw sim raid: " }) do
         assertEqual(printed(m, line), 1, line)
     end
     assertTrue(NS.Sim:IsPanelShown(), "the bare form opens the step panel")

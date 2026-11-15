@@ -17,6 +17,7 @@
 --                archaeology, fishing, cooking); a false entry is a slot with no profession.
 --                GetProfessionInfo(index) answers the skill line seventh
 --   ITEM_SPELL_KNOWN  the enUS "Already known" line a known recipe's tooltip carries
+--   LOCKED, ITEM_OPENABLE  the enUS "Locked" and "<Right Click to Open>" lines of a box that opens
 --   INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND, _LEGS  the enUS slot names a tier token's tooltip may
 --                carry (Compat.TierTokenSlot, DW-CAT4)
 --   itemSpells   C_Item.GetItemSpell(link) answers "Spell", itemSpells[link] (its spell id; nothing for
@@ -88,6 +89,7 @@ return function(M)
         RequestLoadSpellData = function(spellID) M.spellLoadRequests[#M.spellLoadRequests + 1] = spellID end }
 
     M.ITEM_SPELL_KNOWN = "Already known"
+    M.LOCKED, M.ITEM_OPENABLE = "Locked", "<Right Click to Open>"   -- a lockbox's lines (RX-04)
     M.INVTYPE_HEAD, M.INVTYPE_SHOULDER, M.INVTYPE_CHEST = "Head", "Shoulder", "Chest"
     M.INVTYPE_HAND, M.INVTYPE_LEGS = "Hands", "Legs"
 end

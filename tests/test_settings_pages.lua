@@ -182,6 +182,25 @@ test("situations: the global Auto-open row, then one table line per situation an
     end
 end)
 
+-- Rolls UX design §3.6 (RX-10): Auto-close and its seconds on the line beneath Auto-open the window,
+-- dimmed while it is off.
+test("situations: Auto-close the window and its seconds sit on the line beneath Auto-open the window", function()
+    local NS, _, m = T.enableAddon()
+    local _, drawn = whenToShow(NS, m)
+    local open_ = find(drawn, "CheckBox", "Auto-open the window")
+    local close = find(drawn, "CheckBox", "Auto-close the window")
+    local secs = find(drawn, "Slider", "Close after (seconds)")
+    assertTrue(open_ ~= nil and close ~= nil and secs ~= nil, "all three drawn")
+    -- red under: the auto-close checkbox paired with Auto-open on its line
+    assertTrue(lineOf(drawn, open_) ~= lineOf(drawn, close), "Auto-close starts its own line")
+    assertEqual(lineOf(drawn, close), lineOf(drawn, secs), "its seconds beside it")
+    assertFalse(close.disabled == true, "live while auto-open is on")
+    NS.SchemaRuntime.Set("autoOpen", false)
+    local again = rerender(NS, m, NS.addon.Settings.Helpers.__panelFor("feed"))
+    assertTrue(find(again, "CheckBox", "Auto-close the window").disabled == true, "auto-open off dims it")
+    assertTrue(find(again, "Slider", "Close after (seconds)").disabled == true, "and its seconds")
+end)
+
 test("situations: five gold, left-aligned column headers, and a stripe on every second line", function()
     local NS, _, m = T.enableAddon()
     local _, _, t = whenToShow(NS, m)
@@ -427,7 +446,8 @@ test("feed: the Quality tab closes with the threshold in force now, repainted on
     local drawn = tab(m, open(NS, m, "feed"), "Quality")
     local readout = findPrefix(drawn, "Label", "In force now")
     assertTrue(readout ~= nil, "the readout is drawn")
-    assertEqual(readout.text, "In force now: Quality: Rare+")
+    -- WoW Forever's default is Uncommon (rolls UX ruling 7, RX-01)
+    assertEqual(readout.text, T.forever and "In force now: Quality: Uncommon+" or "In force now: Quality: Rare+")
     NS.SchemaRuntime.Set("feed.quality.fixed", NS.Constants.QUALITY.EPIC)
     assertEqual(readout.text, "In force now: Quality: Epic+")
     NS.SchemaRuntime.Set("feed.quality.mode", "dynamicSlot")
@@ -467,19 +487,24 @@ test("feed: Items draws Minimum item level alone, over the item kinds", function
     local mode = find(drawn, "Dropdown", "Minimum item level")
     assertTrue(mode ~= nil, "the mode is drawn")
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
-    -- DW-CAT2 (issue #13): the seven item kinds, two to a line in C.CATEGORIES' order.
+    -- DW-CAT2 (issue #13): the item kinds, two to a line in C.CATEGORIES' order; RX-04 adds the
+    -- rolled-on catch-all and RX-15 splits Lockboxes from Containers: Lockboxes beside Cosmetics,
+    -- Containers beside the catch-all.
     -- red under: Gear only and Include tier tokens still drawn, or a kind left out.
     assertTrue(find(drawn, "CheckBox", "Gear only") == nil and find(drawn, "CheckBox", "Include tier tokens") == nil)
-    local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics" }
+    local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics",
+        "Lockboxes", "Containers", "Everything else that is rolled on" }
     local boxes = {}
     for i, label in ipairs(labels) do
         boxes[i] = find(drawn, "CheckBox", label)
         assertTrue(boxes[i] ~= nil, label .. " is drawn")
     end
-    for i = 1, #labels - 1, 2 do
+    for i = 1, #labels, 2 do
         assertTrue(lineOf(drawn, boxes[i]) == lineOf(drawn, boxes[i + 1]), labels[i] .. " | " .. labels[i + 1])
     end
-    assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics on a line of its own")
+    assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics starts a line")
+    assertTrue(lineOf(drawn, boxes[9]) ~= lineOf(drawn, boxes[8]), "Containers starts a line")
+    assertTrue(find(drawn, "CheckBox", "Lockboxes and containers") == nil, "the merged row is gone")
 end)
 
 -- LibKa0s#67, options-ui-§22: a mode's own value is drawn while the mode picks it, not dimmed.

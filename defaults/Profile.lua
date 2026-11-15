@@ -46,7 +46,9 @@ local CLIENT = NS.Compat.ClientKey() == "forever" and "forever" or "retail"
 
 -- Where Drop Watcher is active (design spec §6.1). Retail's are the owner's defaults since DW-06:
 -- follower dungeons, delves, scenarios and solo tracked and auto-opening too. WoW Forever's are
--- the same values for the five situations it has.
+-- the same values for the five situations it has, but for the open world group, tracked and
+-- auto-opening there (rolls UX design ruling 7): grouped open-world play is where much of that
+-- client's loot drops.
 local SITUATIONS = {
     retail = {
         mythicPlus      = situation(true, true),
@@ -64,10 +66,14 @@ local SITUATIONS = {
         dungeon         = situation(true, true),
         raid            = situation(true, true),
         pvp             = situation(false, false),
-        openWorldGroup  = situation(false, false),
+        openWorldGroup  = situation(true, true),
         solo            = situation(true, true),
     },
 }
+
+-- The feed's Fixed minimum quality per client (rolls UX design ruling 7): Rare on Retail, Uncommon
+-- on WoW Forever, where a green is still worth a look.
+local FIXED_QUALITY = { retail = 3, forever = 2 }
 
 -- The rule each situation takes (design spec §7.2): Retail's follower dungeons `personal` since
 -- DW-06, the owner's default; `raid` is the conservative `personal` until smoke check TRADE-3
@@ -105,7 +111,7 @@ NS.C = {
             sort    = "newest",        -- newest | oldest | ilvl | gain
             quality = {
                 mode            = "fixed",   -- fixed | dynamicSlot | dynamicCharacter
-                fixed           = 3,         -- Rare (Enum.ItemQuality.Rare)
+                fixed           = FIXED_QUALITY[CLIENT],   -- Retail Rare, WoW Forever Uncommon (Enum.ItemQuality)
                 floor           = 2,         -- Uncommon: the dynamic modes' least threshold
                 upgradeOverride = true,      -- an upgrade for me (or new to my collection) shows below it
             },
@@ -115,6 +121,9 @@ NS.C = {
             categories = {
                 equipment = true, tierToken = true, mount = true, pet = true, toy = true, recipe = true,
                 cosmetic  = false,       -- a look to collect, never gear: off
+                lockbox   = true,        -- Junk that opens (RX-04, RX-15; rolls UX design §3.5)
+                container = true,        -- bags; on WoW Forever quivers and ammo pouches too (RX-15)
+                other     = false,       -- the catch-all: an item of no kind that is rolled on
             },
             -- The Always watch and Never watch item lists (issue #13, categories design spec §5.3):
             -- { [itemID] = true }, written whole by NS.ItemLists alone. An ID sits on one list only;
@@ -130,11 +139,17 @@ NS.C = {
         -- Everyone's loot rolls (Forever port design §5.3, both clients): `show` the Drops tab's
         -- Rolling now section and a resolved drop's Rolls box (the store tracks every roll either
         -- way), `keep` the roll table in History (DW-FP16), `popupMark` your verdict on the game's
-        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration.
+        -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration. `panel` is
+        -- the Rolls panel docked beside the window (rolls panel design §3.5, RX-17), on both clients:
+        -- `enabled`, the `side` it docks on (`right` or `left`; it flips when the screen has no
+        -- room), how many seconds the panel `linger`s open once every roll in it is over (0 to 60;
+        -- round 2, RX-21: a panel-level linger, no longer per roll), and `foldInRaid`, Pass and
+        -- Waiting folded to one line each in raid mode (RX-18).
         rolls = {
             show      = true,
             keep      = true,
             popupMark = true,
+            panel     = { enabled = true, side = "right", linger = 10, foldInRaid = true },
         },
 
         -- How a drop is judged (design spec §5). `weights` and `undesired` are keyed by specID:
@@ -191,6 +206,10 @@ NS.C = {
             -- An auto-open inside a dungeon, raid, key or delve opens the compact layout, whatever
             -- `mode` says, until that run ends.
             compactInRuns = true,
+            -- Auto-close (rolls UX design §3.6, owner ruling 4): a window that opened by itself
+            -- closes `seconds` (5 to 120) after nothing is rolling and no new drop has come; on by
+            -- default on both clients. Drops › Situations, under Auto-open the window.
+            autoClose = { enabled = true, seconds = 10 },
             -- Like Ka0s Loot History's table (feedback-2 spec §8, FB2-9): 18-pixel rows, and the
             -- text at its template's own size (0 is Default). Both tabs read both; a Drops row
             -- while Trade window shows adds the room its countdown bar needs. A value the player stored stays as it is.

@@ -21,6 +21,8 @@ local _, NS = ...
 --           `(…)`, none at all where there is nothing to say; the name is cut, the freshness not;
 --           feedback-10 spec §2)
 --   line 2  looter (class color; another realm named in its tooltip) · slot · type      [ Ask ]
+--           (each cut with "…" at its cap, the name first and ` [YOU]` never: NS.WindowRows.LineTwoWidths,
+--           rolls UX spec §3.1; the button raised over the text, NS.WindowRows.RaiseAction)
 --           (the full table's states; Offer on your own drop, which opens the Offer panel:
 --           NS.WindowOwn, feedback-5 spec §2; with neither the gray `No action` button, its reason
 --           in its tooltip, feedback-11 spec §1). The button is two lines tall, lines 2 and 3,
@@ -41,7 +43,7 @@ local _, NS = ...
 --           every member it upgrades in the tooltip)
 --
 -- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
--- strip's next expiry and the detail card say it; the card has nothing to tick each second.
+-- footer summary's next expiry and the detail card say it; the card has nothing to tick each second.
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -236,6 +238,7 @@ CG.Background = buildBackground
 local function buildAsk(card)
     local W = NS.Window
     card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
+    NS.WindowRows.RaiseAction(card.ask, card)   -- over line 2's text and hit frames (rolls UX spec §3.1)
     W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
 end
 
@@ -277,7 +280,7 @@ function CG.BuildLineTwo(card, right)
     local slot = piece(card, "slot")
     slot.text:SetPoint("LEFT", looter.text, "RIGHT", 4, 0)
     local kind = piece(card, "armorType")
-    kind.text:SetPoint("LEFT", slot.text, "RIGHT", 4, 0)
+    kind.text:SetPoint("LEFT", slot.text, "RIGHT", NS.WindowRows.LINE_TWO_GAP, 0)
     if right then piece(card, right) end
 end
 
@@ -405,12 +408,27 @@ local function paintLineOne(card, drop, cc, width, m)
     paintAsk(card, cc.ask, drop.id)
 end
 
+-- Line 2's pieces cut at their caps in `room` (NS.WindowRows.LineTwoWidths, rolls UX spec §3.1):
+-- the name first, `[YOU]` never; the caps scale with the text size (`m.size`).
+local function fitLineTwo(c, room, m, you)
+    local function full(fs) return fs.GetUnboundedStringWidth and fs:GetUnboundedStringWidth() or nil end
+    local mark = you and (full(c.looter.mark) or c.looter.mark:GetStringWidth() or 0) or nil
+    local n, sl, k = NS.WindowRows.LineTwoWidths(room, m and m.size / K.COUNTDOWN_FONT or 1,
+        { name = full(c.looter.text), mark = mark, slot = full(c.slot.text), kind = full(c.armorType.text) })
+    c.looter.text:SetWidth(n)
+    c.slot.text:SetWidth(sl)
+    c.armorType.text:SetWidth(k)
+end
+
 --- Line 2 painted from a card model: the looter in class color, its ` [YOU]`, slot, type
---- and `right`. Slot (and the looter's tooltip) follows the mark while it shows.
+--- and `right`. Slot (and the looter's tooltip) follows the mark while it shows. Each piece is cut
+--- at its cap within `room` (rolls UX spec §3.1: the name first, the mark never).
 --- @param card table
 --- @param cc table a CompactCards card
 --- @param right string|nil the right piece's key (History's `time`; nil on a Drops card)
-function CG.PaintLineTwo(card, cc, right)
+--- @param room number|nil line 2's width, from the text's left edge to what ends it (nil: unbounded)
+--- @param m table|nil CG.Metrics' answer (the caps' scale)
+function CG.PaintLineTwo(card, cc, right, room, m)
     local c = card.cells
     paintText(c.looter, cc.looter)
     local r, g, b = NS.Compat.ClassColor(cc.looter.classFile)
@@ -418,11 +436,12 @@ function CG.PaintLineTwo(card, cc, right)
     c.looter.mark:SetText(cc.looter.you or "")
     c.looter.mark:SetShown(cc.looter.you ~= nil)
     local last = cc.looter.you and c.looter.mark or c.looter.text
-    at(c.slot.text, "LEFT", last, "RIGHT", 4, 0)
+    at(c.slot.text, "LEFT", last, "RIGHT", NS.WindowRows.LINE_TWO_GAP, 0)
     c.looter.hit:SetPoint("BOTTOMRIGHT", last, "BOTTOMRIGHT", 0, 0)
     local dot = sep()
     paintText(c.slot, cc.slot, dot)
     paintText(c.armorType, cc.armorType, dot)
+    fitLineTwo(c, room, m, cc.looter.you)
     if right then paintText(c[right], cc[right]) end
 end
 
@@ -581,7 +600,7 @@ local function paintCard(card, drop, width, m, shared)
     local cc = NS.CompactCards.Group(drop, cardCtx(drop, shared))
     card.model = cc
     paintLineOne(card, drop, cc, width, m)
-    CG.PaintLineTwo(card, cc)
+    CG.PaintLineTwo(card, cc, nil, width - CG.TextLeft(m, CG.LEAD) - CG.TradeInset(), m)
     CG.PaintHalves(card, cc, width - CG.TextLeft(m, CG.LEAD) - CG.PAD)
 end
 
@@ -591,7 +610,8 @@ end
 -- item button spanning them and the quality bar at the left edge, as a drop's card.
 --   line 1  the item's name, in its quality color (the game's tooltip)
 --   line 2  You, then your verdict (the glyph and the words, in the verdict's tone)
---   line 3  the roll summary (`Need 3 · Greed 2 · waiting 4`, `Won by Name (Need 87)`)
+--   line 3  the roll summary (the count line, `[dice] 3  [coin] 2  [hourglass] 4`, or `Won by Name
+--           (Need 87)`), hovering every roll (NS.RollCells.Tooltip, rolls UX RX-06)
 --   line 4  the time left (`0:42`), or `awaiting master looter`
 -- No action button on a roll: it is rolled on the game's own popup. A master-loot item has the Ask
 -- master looter button (WindowPending.PaintAsk) at lines 2 and 3's right, where a drop card's Ask
@@ -689,8 +709,8 @@ end
 --- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
 --- hidden until the first compact repaint, and the card and header pools.
 --- @param pane table
---- @param bottom number|nil the strip under the cards (History's kept-history line; the Drops strip
----   moves the view's bottom edge itself, modules/DropsStrip.lua)
+--- @param bottom number|nil the room under the cards (the window's footer, History's; the Drops
+---   summary moves the view's bottom edge itself, modules/DropsStrip.lua)
 --- @return table cv { scroll, content, cardPool, headPool }
 function CG.BuildView(pane, bottom)
     local cv = {}

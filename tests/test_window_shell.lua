@@ -200,7 +200,7 @@ test("shell: Scan group asks the inspect broker through the shared handler, and 
     local NS, _, m = shown()
     local causes = {}
     NS.Inspect.Scan = function(cause) causes[#causes + 1] = cause; return 3 end
-    local scan = NS.WindowGroup.Drawn().pane.summary.scan
+    local scan = NS.FooterRow.Mark("scan")
     scan:__fire("OnClick")
     assertEqual(table.concat(causes, ","), "scan")
     assertTrue(m.prints[#m.prints]:find("Inspecting 3 group members") ~= nil)
@@ -308,11 +308,14 @@ end)
 
 -- ── the filter bar ──────────────────────────────────────────────────────────────────────────
 
+-- The default Fixed threshold's label: Rare on Retail, Uncommon on WoW Forever (rolls UX ruling 7, RX-01).
+local DEFAULT_QUALITY_LABEL = T.forever and "Quality: Uncommon+" or "Quality: Rare+"
+
 test("shell: the filter bar holds View, Quality, Content and the search box, and no checkbox", function()
     local NS = shown()
     local c = NS.WindowFilterBar.Controls()
     assertEqual(textOf(c.view.text), "View: All", "All is the default View (FB2-1)")
-    assertEqual(textOf(c.quality.text), "Quality: Rare+")
+    assertEqual(textOf(c.quality.text), DEFAULT_QUALITY_LABEL)
     assertEqual(textOf(c.content.text), "Content: This session", "the default since feedback-13 spec §0")
     assertTrue(c.likelyOnly == nil and c.usableOnly == nil and c.upgradeOnly == nil,
         "the checkboxes are View values now (FB2-2)")
@@ -407,12 +410,11 @@ local function hoverAbove(m, w, right, tipWidth)
     return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
 end
 
-test("filter bar tooltip: every bar control and the footer's Sort open above the control, top right", function()
+test("filter bar tooltip: every bar control, Sort included, opens above the control, top right", function()
     local NS, _, m = shown()
     local c = NS.WindowFilterBar.Controls()
-    local _, sort = NS.WindowFooter.Parts()
     for _, key in ipairs({ "view", "quality", "content", "char", "search", "sort" }) do
-        local w = key == "sort" and sort or c[key]
+        local w = c[key]
         assertTrue(w ~= nil, key .. " is built")
         local pts, rel, x, y = hoverAbove(m, w, 900, 300)
         assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", key)
@@ -425,12 +427,37 @@ end)
 
 test("filter bar tooltip: with no room on the right it opens above the control, top left", function()
     local NS, _, m = shown()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = NS.WindowFilterBar.Controls().sort
     local pts, rel = hoverAbove(m, sort, 1800, 300)
     assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
     assertTrue(rel == sort)
     pts = hoverAbove(m, NS.WindowFilterBar.Controls().view, 1800, 300)
     assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
+end)
+
+-- RX-24: Sort left the footer (WowAddonStandards v2.110.0, *The footer*: its controls are marks).
+test("filter bar: Sort at the bar's right edge, the search box between, room for it at the least width (RX-24)", function()
+    local NS, f = shown()
+    local FB = NS.WindowFilterBar
+    local c = FB.Controls()
+    -- red under: Sort on the tab's strip over the footer (WindowFooter.Parts' second value)
+    assertTrue(c.sort ~= nil, "Sort is a filter bar control")
+    assertTrue(c.sort:GetParent() == f.filterHost, "on the bar")
+    local p, rel, rp, x = c.sort:GetPoint(1)
+    assertEqual(p, "RIGHT"); assertTrue(rel == f.filterHost); assertEqual(rp, "RIGHT"); assertEqual(x, 0)
+    assertEqual(c.sort:GetWidth(), FB.SORT_W)
+    local right
+    for _, pt in ipairs(c.search.__points) do if pt[1] == "RIGHT" then right = pt end end
+    assertTrue(right[2] == c.sort and right[3] == "LEFT", "the search box ends at Sort")
+    local K = NS.Constants.WINDOW
+    assertTrue(FB.SearchWidth(K.MIN_WIDTH) >= 80, "the least width still leaves the search box room to type")
+    c.sort.onSelect("ilvl")
+    assertEqual(FB.State("group").sort, "ilvl", "it sets the tab's order")
+    NS.Window.SelectTab("history")
+    assertEqual(textOf(c.sort.text), "Sort: Newest", "History keeps its own")
+    assertTrue(c.sort:IsShown() and c.sort:IsEnabled())
+    NS.Window.SelectTab("insights")
+    assertFalse(f.filterHost:IsShown(), "Insights draws its own bar: no Sort")
 end)
 
 test("filter bar tooltip: the room is measured in screen pixels, at each frame's scale", function()
@@ -582,12 +609,13 @@ test("shell: each tab opens on its own defaults, Drops this session's and yours,
         return table.concat({ textOf(c.view.text), textOf(c.quality.text), textOf(c.content.text),
             textOf(c.char.text) }, " | ")
     end
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current")
+    local q = DEFAULT_QUALITY_LABEL
+    assertEqual(bar(), "View: All | " .. q .. " | Content: This session | Character: Current")
     NS.Window.SelectTab("history")
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: All | Character: All")
+    assertEqual(bar(), "View: All | " .. q .. " | Content: All | Character: All")
     assertFalse(c.quality:IsEnabled(), "History does not honor Quality")
     NS.Window.SelectTab("group")
-    assertEqual(bar(), "View: All | Quality: Rare+ | Content: This session | Character: Current", "each tab its own")
+    assertEqual(bar(), "View: All | " .. q .. " | Content: This session | Character: Current", "each tab its own")
 end)
 
 test("shell: a fresh tab's state is seeded from the profile's feed settings when valid", function()
@@ -760,13 +788,14 @@ test("shell: the not-tracking situation tooltip points at Settings > Drops > Sit
     assertFalse(stale, "no route to the retired Situations page")
 end)
 
-test("shell: the live footer reads the client, and its Sort follows the active tab", function()
+test("shell: the live footer reads the client; the filter bar's Sort follows the active tab", function()
     local NS = T.enableAddon()
     NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
     NS.ShowWindow()
-    local segs, sort = NS.WindowFooter.Parts()
-    assertEqual(textOf(segs.situation.text), "Not tracking in Solo · change in settings")
-    assertEqual(textOf(segs.inspect.text), "Inspect: no group")
+    local status = NS.WindowFooter.Parts()
+    local sort = NS.WindowFilterBar.Controls().sort
+    assertEqual(textOf(status.text),
+        "Inspect: no group · No loot seen yet · Not tracking in Solo · change in settings · Pawn: off")
     assertEqual(textOf(sort.text), "Sort: Newest")
     sort.onSelect("gain")
     assertEqual(NS.WindowFilterBar.State("group").sort, "gain")
@@ -823,6 +852,71 @@ test("shell: a double-click on the title bar expands a minimized window", functi
     m.advance(0.2)
     f.titleBar:__fire("OnMouseUp", "LeftButton")
     assertFalse(NS.Window.IsMinimized())
+end)
+
+-- RX-08 (rolls UX design §3.7, ruling 8): the header lock button, bound to `locked`.
+-- RX-14 (plan M6, the owner's smoke ruling): it moved to the right-hand cluster, left of the layout toggle.
+test("shell: the lock button sits in the right-hand cluster left of the layout toggle, dimmed while unlocked, apart from the badge", function()
+    local NS, f = shown()
+    local b = f.lockButton
+    assertTrue(b ~= nil and b ~= f.badge, "its own button, not the restriction badge")
+    -- red under: the RX-08 anchor, LEFT on the title bar
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
+    assertEqual(b.__points[1][3], "LEFT", "immediately left of the layout toggle")
+    assertEqual(b.mark, "lock")
+    assertTrue(b.art:IsShown(), "the catalog's lock mark")
+    assertTrue(b.art:GetAlpha() < 1 and b.art:IsDesaturated(), "unlocked: the same mark, dimmed")
+    assertEqual(NS.Window.TooltipOf(b)[1], "Lock the window")
+    assertFalse(f.badge:IsShown(), "the restriction badge stays hidden while nothing is restricted")
+end)
+
+test("shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both", function()
+    local NS, f = shown()
+    assertTrue(f.resizeGrip:IsShown())
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertEqual(NS.addon.db.profile.locked, true)
+    assertFalse(f.resizeGrip:IsShown(), "locked: no grip")
+    assertEqual(f.lockButton.art:GetAlpha(), 1, "locked: the mark at full strength")
+    assertEqual(NS.Window.TooltipOf(f.lockButton)[1], "Unlock the window")
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertEqual(NS.addon.db.profile.locked, false)
+    assertTrue(f.resizeGrip:IsShown())
+    assertEqual(NS.Window.TooltipOf(f.lockButton)[1], "Lock the window")
+end)
+
+-- options-ui-§21 Location strings (RX-12 review fix): '<Page> > <Tab>' with ' > ', the control by
+-- its on-screen label. red under: the comma form "General, Lock frame"
+test("shell: the lock button's tooltip names Lock frame on its canonical location, in both states", function()
+    local NS, f = shown()
+    local want = "• Stored as: Lock frame on General > Master controls"
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(f.lockButton)):find(want, 1, true) ~= nil, "unlocked")
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(f.lockButton)):find(want, 1, true) ~= nil, "locked")
+end)
+
+test("shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip", function()
+    local NS, f = shown()
+    NS.addon:OnSlashCommand("lock")
+    assertEqual(f.lockButton.art:GetAlpha(), 1)
+    assertFalse(f.resizeGrip:IsShown())
+    NS.addon:OnSlashCommand("unlock")
+    assertTrue(f.lockButton.art:GetAlpha() < 1)
+    assertTrue(f.resizeGrip:IsShown())
+end)
+
+test("shell: the grip shows only while the window is expanded and unlocked", function()
+    local NS, f = shown()
+    NS.SetLocked(true)
+    NS.Window.SetMinimized(true)
+    assertFalse(f.resizeGrip:IsShown())
+    NS.SetLocked(false)
+    assertFalse(f.resizeGrip:IsShown(), "minimized: still no grip")
+    NS.Window.SetMinimized(false)
+    assertTrue(f.resizeGrip:IsShown())
+    NS.SetLocked(true)
+    NS.Window.SetMinimized(true)
+    NS.Window.SetMinimized(false)
+    assertFalse(f.resizeGrip:IsShown(), "expanded but locked: no grip")
 end)
 
 test("shell: minimized, the corner grip does not resize and the stored size is kept", function()
@@ -1014,11 +1108,11 @@ end)
 test("shell: every control on the chrome has a tooltip with a reason", function()
     local NS, f = shown()
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
-    local segs, sort = NS.WindowFooter.Parts()
+    local status, sort = NS.WindowFooter.Parts(), c.sort
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
-    local widgets = { NS.WindowGroup.Drawn().pane.summary.scan, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
+    local widgets = { NS.FooterRow.Mark("scan"), NS.FooterRow.Mark("fold"), f.minimizeButton, f.badge, f.newChip, f.tabs.group,
         f.tabs.history, c.view, c.quality, c.content, c.search, sort,
-        segs.inspect, segs.loot, segs.situation, segs.pawn }
+        status }
     for i, w in ipairs(widgets) do
         local tip = W.TooltipOf(w)
         assertTrue(#tip >= 2 and type(tip[1]) == "string" and type(tip[2]) == "string", "widget " .. i)
@@ -1040,8 +1134,11 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     local c = NS.WindowFilterBar.Controls()
     assertTrue(c.view == nil and c.quality == nil and c.content == nil)
     assertTrue(c.search == nil, "no search box either: the bar degrades as the dropdowns do (LibKa0s#52)")
-    local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort == nil)
+    assertTrue(c.sort == nil, "no Sort either")
+    local line, foot = NS.WindowFooter.Parts()
+    assertTrue(foot ~= nil and line ~= nil, "a footer of the same height, with its line")
+    assertEqual(foot:GetHeight(), NS.FooterMetric("HEIGHT"))
+    assertTrue(line.text:GetText():find("Inspect", 1, true) ~= nil, "the status still reads")
     NS.CloseMenu()
 end)
 

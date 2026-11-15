@@ -113,7 +113,8 @@ test("skin host: the column heads wear list.header.bg and the footer foot.bg", f
     local Skin = toSkin(m)
     local head = f.panes.group.colHead
     assertTrue(Skin.painted[head].calls.SortHeaderBar ~= nil, "S.SortHeaderBar on the Drops head")
-    assertTrue(Skin.painted[f.footerHost].calls.Footer ~= nil, "S.Footer on the footer")
+    -- red under: the retired dark band (S.Footer's foot.bg) under the library's footer
+    assertTrue(not (Skin.painted[f.footerHost] and Skin.painted[f.footerHost].calls.Footer), "no S.Footer band")
     NS.Window.SelectTab("history")
     assertTrue(Skin.painted[f.panes.history.colHead].calls.SortHeaderBar ~= nil, "and on History's")
 end)

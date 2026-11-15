@@ -117,10 +117,11 @@ preview, token chips and Reset templates, Drops › Retention's Clear history be
 (asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
 page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
-chrome built headless: the title bar (no Scan group since feedback-16: the Drops strip's, in both
-layouts, feedback-7 spec §4), the restriction badge, the tabs and their lazy
+chrome built headless: the title bar (no Scan group since feedback-16: the Drops footer's mark, in
+both layouts, feedback-7 spec §4, RX-24), the restriction badge, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
-label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
+label, grayed values and bullet tooltip), Sort at the filter bar's right edge with the search box
+ending at it and room to type at the least width (RX-24), the footer's composer, minimize, auto-open on every drop, the
 default size, 1080 x 600, as the least width, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
@@ -257,19 +258,19 @@ library's shared menu at FULLSCREEN_DIALOG with no dropdown moved, the Edit mess
 toplevel (LibKa0s-Toast-1.0's T5 tier, `LAYERS.STRATA.ALERT`), an item
 button's border explicit at +1 under the glow at +2, and a static scan for strata literals and absolute
 levels in `core/`, `modules/` and `settings/`), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
-the strip under the table or the cards counting your listed tradeable drops, its filters applied,
-collapsed or not, its next expiry moving each second and keeping
-the ticker running, Post my tradeables through its handler, and the compact strip's summary
-shortened, shown there with nothing tradeable too; feedback-5 spec §3, DW-E3; feedback-7 spec §4,
-feedback-10 spec §3 and feedback-15 spec §2: one right-aligned row, `[Post my tradeables] [Scan group]
-[Expand all] [Sort]`, Post at Sort's size, Scan group through its handler, Sort following the active
-tab to History's strip right of the toggle and back, the pure `Row`, and the full
-layout's strip shown with nothing tradeable, Scan group in its place),
-`test_footer_row` (one footer button kind and Expand all / Collapse all, feedback-15 spec §2: the pure
-`Slots`, `FoldState` and `FoldAll`; every footer button `FOOTER_BUTTON_W` wide with the same label in
-both layouts, each tab's row right to left in both layouts, the info ending where the row starts, the
-compact Drops strip always shown, no Clear history on History's strip; the toggle's words, both directions, on both tabs in both layouts,
-off with no header, each tab's collapsed state its own), `test_offer_panel` (the Offer panel opened from your own drop's
+the Drops summary on the window footer's left line counting your listed tradeable drops, its filters
+applied, collapsed or not, its next expiry moving each second and keeping the ticker running, Post my
+tradeables and Scan group marks through their handlers, a repaint that changes nothing re-binding no
+mark, and compact's summary shortened with the same marks; feedback-5 spec §3, DW-E3; feedback-7
+spec §4; RX-24),
+`test_footer_row` (the window footer on the library's lines and marks, RX-24, WowAddonStandards
+v2.110.0 *The footer*, anti-pattern #118: the footer is W.Footer and nothing of the host's is laid
+over it but the line's tooltip host; the pure `LineText` and `LineTip`; the words through
+`foot:SetLeft`, the tab's info then the status, in both layouts and following the tab; each tab's
+marks right to left with a tooltip, Post only while something is tradeable, each doing what its
+button did; the pure `FoldState` and `FoldAll`, the toggle's words and mark, both directions, on both
+tabs in both layouts, off with no header, each tab's collapsed state its own; the grip in the
+footer's corner, the marks clearing it, locked hiding it), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's
@@ -437,7 +438,7 @@ the feed (`rec.roll`) and closing the item, a chat receipt that came first takin
 identical items on one encounter kept apart with their own tables and roll popups (Review Focus 1), a
 reload mid-roll rebuilding one item whose winner makes one drop (Review Focus 3), everyone passing
 lingering 60 s with no feed record, the quality gate keeping a drop out, the 1 s ticker alive only while
-a roll is open, and the stand-down; since the M4 review also a history clear during an item load, a closed roll releasing its popup, a cleared history detaching open items, and your verdict judged again on a gear change and on the score retry), `test_pending_ml` (`modules/PendingML.lua`, DW-FP18, on both kit profiles: a slot at the client's master-loot threshold opening one `ml` item that a re-opened corpse does not duplicate, a receipt inside 600 s assigning it with `askedML` on the drop, a late or other receipt assigning nothing, nothing pending for the master looter, expiry at 900 s and on leaving the group or the instance, nothing from the loot window under group or personal loot, and the stand-down), `test_ask_ml` (the master-loot ask, `askML`, DW-FP19, on both kit profiles: one press whispering the master looter once and the one-ask guard refusing a second, queued under a chat restriction and sent on the lift (and canceled when its item is assigned first), refused when you are the master looter, when it is no upgrade for you and when the master looter is offline, the whole two-word name as the whisper target on Forever (Review Focus 4), the received drop's History entry reading `asked` while a feed drop with the pending item's id stays untouched, auto-ask never sending it, the Edit message box with `editFirst`, and the diagnostics line), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
+a roll is open, and the stand-down; since the M4 review also a history clear during an item load, a closed roll releasing its popup, a cleared history detaching open items, and your verdict judged again on a gear change and on the score retry), `test_pending_ml` (`modules/PendingML.lua`, DW-FP18, on both kit profiles: a slot at the group's loot threshold opening one `ml` item that a re-opened corpse does not duplicate, the hold at `GetLootThreshold` and not the master-loot confirm constant (a Rare under an Uncommon threshold held, an Uncommon under a Rare one not, Uncommon when unread; rolls UX RX-03), a receipt inside 600 s assigning it with `askedML` on the drop, a late or other receipt assigning nothing, nothing pending for the master looter, expiry at 900 s and on leaving the group or the instance, nothing from the loot window under group or personal loot, and the stand-down), `test_ask_ml` (the master-loot ask, `askML`, DW-FP19, on both kit profiles: one press whispering the master looter once and the one-ask guard refusing a second, queued under a chat restriction and sent on the lift (and canceled when its item is assigned first), refused when you are the master looter, when it is no upgrade for you and when the master looter is offline, the whole two-word name as the whisper target on Forever (Review Focus 4), the received drop's History entry reading `asked` while a feed drop with the pending item's id stays untouched, auto-ask never sending it, the Edit message box with `editFirst`, and the diagnostics line), `test_roll_cells` (`modules/RollCells.lua`, DW-FP15, on both kit
 profiles: the open summary's counts in the state order, the won summary with the winner's choice and
 number, the rows' order (the winner, numbers high to low, chosen without a number, waiting, pass), a
 nameless row kept as `?` (Review Focus 2), win protection marked only once won, the time left on the
@@ -449,14 +450,18 @@ ticking and a won, ended or all-passed roll saying so, a master-loot item naming
 and never reading Roll ended (DW-FP18 review); the compact layout's card; the resolved drop's
 Rolls box on its detail card; the row tooltip's summary line; and the score and spec rows naming the
 scale each score used, through the shipped card's `S.ScoreFor` calls), `test_roll_popup`
-(`modules/RollPopup.lua`, DW-FP20, on both kit profiles: an upgrade roll marking GroupLootFrame1 from an
-overlay anchored above it at the alert tier, two identical items on two popups each with its own Need so
-far (Review Focus 1), a popup closed at once or with no rollID drawing nothing, the disabled state and
+(`modules/RollPopup.lua`, DW-FP20, on both kit profiles: an upgrade roll marking GroupLootFrame1 from a
+side card anchored beside its right edge (TOPLEFT on TOPRIGHT, 4 px, top-aligned) at the alert tier, two
+identical items on two popups each with its own RollCells count line (Review Focus 1), the card flipped to
+the popup's left near the screen's right edge (a popup's scale read too), four popups by the right edge
+with no card overlapping a popup or another card, the window's skin (S.Shell, not the detail box), a
+lockbox's kind in the neutral tone, the hover's every-roll tooltip (RX-07), a popup closed at once or with no rollID drawing nothing, the disabled state and
 `rolls.popupMark` off drawing nothing through the same one-way hooks, no key added to or changed on
 Blizzard's frame table and no second hook after a stand-up, gamepad mode skipped, the Forever BoP
 wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, the simulator's
-stand-in, and a popup shown before its drop reaches the loot history gaining its Need so far when
-the drop lands (DW-FP20 review); it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
+stand-ins stacked one per roll, each stand-in and its card carrying the test or sim strip on its top
+edge (RX-23), and a popup shown before its drop reaches the loot history gaining its
+count line when the drop lands (DW-FP20 review); it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency
 and money lines never read as loot; every hidden and refused receipt counted by reason, logged
@@ -730,7 +735,7 @@ DropWatcher case to library case.
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
-The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and three host rows (DW-FP15's roll glyphs in `modules/RollCells.lua`, the game's group-loot roll-button art, cause A6), and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
+The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit category takes, with this addon's color helpers named in `calls` and four host rows (DW-FP15's roll glyphs and RX-06's Disenchant one in `modules/RollCells.lua`, the game's group-loot roll-button art, cause A6), and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a host color and a strip column.
 
 The offline perf scenario `insightsCompute` (`lua tests/perf.lua`, [`performance.md`](performance.md)) measures the Insights recompute's pure pass over a log at the 5,000-drop safety ceiling.
 

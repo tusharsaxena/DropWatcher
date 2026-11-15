@@ -38,6 +38,14 @@ the code reads every case the design leaves open, module by module, is in
   `collectUnknown` until it is read again when combat ends. Someone else's bound collectible reads
   trade `unknown`; your own reads the trade timer's exact answer once its bag item is matched
   (COLL-6). The collection APIs' answers were confirmed in game on 2026-11-05 (COLL-1).
+- **Lockboxes and containers** (RX-04, RX-15). A lockbox is told by its tooltip's whole `LOCKED`
+  ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line on a Miscellaneous Junk item: Junk with
+  neither line, or one whose tooltip cannot be read, has no kind (the catch-all's Item when rolled
+  on), and a box that opens with no lock reads `Lockbox` too. A container is any Container-class
+  item (a bag) or Quiver-class item (WoW Forever's quivers and ammo pouches); a box of another class
+  that opens is neither. The catch-all ("Everything else that is rolled on") knows an item is
+  rolled on from its roll table (Pending's open roll, or the drop's own): a master-loot hold and a
+  personal-loot line are not rolled on, so an item of no kind never shows there.
 - **Item kinds and item lists apply to drops from then on.** Turning an item kind off, or putting an
   item on Always watch or Never watch, filters the drops that arrive after; a drop already in the
   feed stays, and a drop restored after a `/reload` is not filtered by a Never watch entry added
@@ -55,6 +63,12 @@ the code reads every case the design leaves open, module by module, is in
   their bags for that spec is not counted and an off-spec can read better for them than it is. Every
   other spec of the class counts, with no setting to leave one out. FEED-80, FEED-81, ASK-11 and
   TOAST-5 are the in-game checks.
+- **The footer's controls without LibKa0s-Widgets** (RX-24). The window's and the Offer panel's
+  controls are the library footer's marks (Expand all / Collapse all, Scan group, Post my
+  tradeables, Reset filters, Announce to group), so an install missing LibKa0s-Widgets-1.0 draws a
+  bare footer of the same height with the words and no controls. Scan group stays in reach through
+  `/dw scan` and the headers fold one at a time; Post my tradeables and Announce to group have no
+  other way in.
 - **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
   missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
   close mark. The shell is shared: when another addon registered an earlier copy of the same minor
@@ -66,7 +80,7 @@ the code reads every case the design leaves open, module by module, is in
 - **No Offer without another player** (DW-07, Addendum 08). Your own drop is offered only while
   another player is in your group: solo, in a delve with only a companion (Brann) and in a follower
   dungeon (its party all followers) its Actions reads No action, the Offer panel will not open, the
-  Drops strip hides Post my tradeables, and Offer, Announce, Post my tradeables and `/dw offer`
+  Drops footer hides its Post my tradeables mark, and Offer, Announce, Post my tradeables and `/dw offer`
   refuse; an announce queued under a restriction is canceled once the last other player leaves. A player is a unit the client answers
   `UnitIsPlayer` for; where that answer is secret, the GUID's kind decides (`Player-` is a player). A
   player in your group who is offline still counts, so the Offer stays while they are away. A test
@@ -125,18 +139,29 @@ the code reads every case the design leaves open, module by module, is in
 - **The roll popup mark** (Forever port design §7, DW-FP20) is drawn only over Blizzard's four roll
   popups, `GroupLootFrame1..4`. In WoW Forever's gamepad mode the client lists rolls in
   `GamepadGroupLootRollFrame` instead, and the mark is skipped while `InputUtil.IsGamepadUIEnabled()`
-  is true. Its `Need so far` line needs the drop to be pending (the Drops tab's own gates, design
-  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line. The
+  is true. Its count line needs the drop to be pending (the Drops tab's own gates, design
+  §11.1); a drop those gates refuse is still marked with your verdict, but has no second line, and
+  its tooltip names the item alone. The side card picks its side when it is painted (the popup
+  shown, a roll or verdict change): a popup the game moves later keeps the card on the side it
+  had, beside it. The
   score part of the gain is the score's difference, not a percentage. None of it is confirmed in
   game yet (FOREVER-13 and ROLLS-4).
 - **Everyone's rolls** (Forever port design §5, DW-FP13 to DW-FP17) come from the client's loot
   history, `C_LootHistory`, on both clients. When a player's number appears, and whether the history
   fires once per choice or only at the close, is unconfirmed (probes P-R1 and P-R2 in
-  [`forever-probes.md`](forever-probes.md)); the Rolling now row's time left reads the roll's
-  `startTime` and `duration` on the history's own clock, whose units are probe P-R4's. A trash or
+  [`forever-probes.md`](forever-probes.md)); the Rolling now row's time left reads your own
+  popup's timer (`GetLootRollTimeLeft`, milliseconds) for a roll your popup claimed, and otherwise the
+  roll's `startTime` and `duration` on the history's own clock, whose units are probe P-R4's: a
+  derived time over 5 minutes (mismatched units) shows no time at all (rolls UX RX-02). A trash or
   open-world roll is keyed by whatever encounter the client files it under (P-R3). Nothing of a roll
   is saved across a reload: an open roll comes back from the client (`PLAYER_ENTERING_WORLD`).
-- **Master-loot pending** (Forever port design §6, DW-FP18) holds an Epic only when the loot window
+- **The roll count line's Disenchant** (rolls UX RX-06, design §3.2) is drawn on Retail only, and only
+  for a roll table that names a Disenchant choice. The loot history's states
+  (`Enum.EncounterLootDropRollState`, 0 to 5) have no Disenchant, and no reader today supplies one
+  (`RollCells.DISENCHANT` is the addon's own key, waiting for a source), so on a live roll a Disenchant
+  choice is counted under whatever state the history files it as (unconfirmed; Greed is likely).
+- **Master-loot pending** (Forever port design §6, DW-FP18) holds an item at or above the group's
+  loot threshold (`GetLootThreshold`, Uncommon when unread; rolls UX RX-03) only when the loot window
   you opened lists it, and whether a raider who is not the master looter sees those slots at all is
   probe P-ML1; if not, nothing is ever held and the drop arrives as a plain receipt when it is given.
   An item is keyed by its corpse and item ID (`sourceGUID:itemID`), so **two copies of one item on
@@ -152,6 +177,26 @@ the code reads every case the design leaves open, module by module, is in
   has no Trade window column. Verdicts there are score-first. The class data, the armor level rule,
   the ranged slot, Pawn by talent tree and the names have no recorded client pass yet: the FOREVER
   smoke theme and the probe sheet ([`forever-probes.md`](forever-probes.md)) are the owner's to run.
+- **Auto-close's indent.** Rolls UX design §3.6 asks for Auto-close indented beneath Auto-open the
+  window; the settings flow (LibKa0s-Options) has no indent, so it sits on the line beneath it, and
+  its tooltip says it needs Auto-open the window (options-ui-§21).
+- **The Rolls panel's width and raid mode's group size.** The panel is 290 wide (250 in the compact
+  layout) in the window's units whatever the font size (RX-21). Raid mode reads the group's size
+  (`GetNumGroupMembers`) and the most players on one watched roll on each repaint, so a group
+  crossing five members between rolls switches layout on the next repaint (a roll change or the
+  one-second ticker). A roll of more than five players is raid mode whatever the group's size reads:
+  test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
+  party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. Raid mode only
+  folds Pass and Waiting since RX-21: every item starts open in any group size, so a 40-player raid
+  rolling six items scrolls a long body until the player collapses some (the title bar's
+  toggle, Collapse all while any item is open). An unfolded Pass or Waiting group stays unfolded for that block; there is no click to fold it
+  again.
+- **The Rolls panel and the Offer panel on one side.** Both dock beside the window. Since RX-20 the
+  Rolls panel gives way: with the Offer panel docked on its side it takes the other side, and with no
+  room on the screen there it waits hidden (its rolls still tracked and lingering) until the Offer
+  panel closes or moves. The two never stack, so on a window with room on one side only the Rolls
+  panel is out of sight while the Offer panel is open (Claude's call, RX-20: the owner has not ruled
+  on it; the Offer panel is the one the player opened to act).
 
 ## The simulator
 
@@ -175,7 +220,7 @@ the code reads every case the design leaves open, module by module, is in
   drops are spare for their looters whatever you wear; the M7 band around your own level left a
   group naked of content you outgear, and nothing read as Interesting), each random burst has a
   line of yours and a member's plain loot line, a simulation tracks the situation it simulates
-  whatever its row says (PvP and the open-world group are untracked by default), and every step
+  whatever its row says (PvP is untracked by default, and so is the open-world group on Retail), and every step
   prints its line. So a simulation does not exercise a situation's tracking switch.
 - **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
   cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on

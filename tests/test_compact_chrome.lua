@@ -52,16 +52,20 @@ test("chrome: the footer's one line is inspect freshness and the situation", fun
     assertEqual(CC.FooterLine(nil), "No group · ?")
 end)
 
-test("chrome: the footer's tooltip carries every full segment", function()
+test("chrome: the footer's tooltip carries every full segment, its words then its reasons (RX-09)", function()
     local NS = T.newAddon()
-    local tip = NS.CompactChrome.FooterTip(NS.WindowFooter.Compose({ members = 4, good = 3, outOfRange = 1,
-        lastLootAgo = 75, situation = "dungeon", tracking = true, pawn = "on" }))
+    local tip = NS.WindowFooter.StatusTip({ members = 4, good = 3, outOfRange = 1,
+        lastLootAgo = 75, situation = "dungeon", tracking = true, pawn = "on" })
     assertEqual(tip[1], "Status")
     assertEqual(T.tipPlain(tip[2]), "• Inspect 3/4 fresh · 1 out of range", "a row per segment (feedback-21)")
-    assertEqual(T.tipPlain(tip[3]), "• Last loot 1m ago")
-    assertEqual(T.tipPlain(tip[4]), "• Situation: Dungeon")
-    assertEqual(T.tipPlain(tip[5]), "• Pawn: on")
-    assertEqual(#tip, 6)
+    assertEqual(T.tipPlain(tip[3]), "• Read recently: 3/4", "then that segment's own rows")
+    local plain = {}
+    for i = 2, #tip do plain[#plain + 1] = T.tipPlain(tip[i]) end
+    local joined = table.concat(plain, "\n")
+    for _, want in ipairs({ "• Last loot 1m ago", "• Situation: Dungeon", "• Pawn: on", "• Status: ready" }) do
+        assertTrue(joined:find(want, 1, true) ~= nil, want)
+    end
+    assertEqual(plain[#plain], "Scan group asks for the rest.", "the hints last")
 end)
 
 local HONORS_ALL = { quality = true, content = true, char = true }
@@ -163,28 +167,32 @@ test("chrome: a simulation reads SIM in compact, in its cyan; expanded, the sim 
     assertTrue(NS.CompactChrome.ModeStrip(f) == f.banner, "no mode: the test strip (hidden)")
 end)
 
-test("chrome: the panes reserve the sim strip's height while a simulation runs", function()
+test("chrome: the body moves down by the sim strip's height while a simulation runs", function()
     local NS, f = shown()
     local K = NS.Constants.WINDOW
     local base = -(K.TAB_H + 4 + K.FILTER_H)
-    assertEqual(f.panes.group.__points[1][5], base, "no mode: no reserve")
+    assertEqual(f.panes.group.__points[1][5], base, "the panes under the filter bar")
+    assertEqual(f.body.__points[1][5], 0, "no mode: the body under the title bar")
     assertTrue(T.simBare(NS):Start({ scenario = "test" }))
     NS.Window.Refresh()
-    -- red under: layoutPanes reserving only in test mode
-    assertEqual(f.panes.group.__points[1][5], base - K.BANNER_H)
-    assertEqual(f.simBanner:GetHeight(), K.BANNER_H - 4, "CC.Paint sizes the strip in force")
+    -- red under: a body offset only in test mode
+    assertEqual(f.body.__points[1][5], -NS.TestStripHeight())
+    assertEqual(f.panes.group.__points[1][5], base, "the panes move with the body")
+    assertEqual(f.simBanner:GetHeight(), NS.TestStripHeight(), "CC.Paint sizes the strip in force")
     NS.Sim:Stop()
     NS.Window.Refresh()
-    assertEqual(f.panes.group.__points[1][5], base)
+    assertEqual(f.body.__points[1][5], 0)
 end)
 
-test("chrome: the badge collapses to its lock and the queued count at the left, its tooltip unchanged", function()
+test("chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged", function()
     local NS, f, m = shown("compact")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
     m.advance(0)
     assertTrue(f.badge:IsShown())
     assertEqual(textOf(f.badge.text), "", "the lock alone")
+    -- RX-14: where the lock button left it, at the bar's left edge
     assertEqual(f.badge.__points[1][1], "LEFT"); assertEqual(f.badge.__points[1][2], f.titleBar)
+    assertEqual(f.badge.__points[1][3], "LEFT"); assertEqual(f.badge.__points[1][4], 6)
     NS.Asks.Queued = function() return { { kind = "ask", target = "Seta-Realm" }, { kind = "offer", target = "Bo-Realm" } } end
     NS.addon:SendMessage(NS.MSG.ASK_STATE_CHANGED, 1, "queued", "ask", "Seta-Realm")
     assertEqual(textOf(f.badge.text), "2")
@@ -192,19 +200,78 @@ test("chrome: the badge collapses to its lock and the queued count at the left, 
     assertEqual(tip[1], "Encounter"); assertEqual(T.tipPlain(tip[5]), "• Queued: Ask to Seta-Realm")
     NS.SetWindowMode("full")
     assertEqual(textOf(f.badge.text), "Encounter · 2 queued")
-    assertEqual(f.badge.__points[1][2], f.modeButton, "back beside the layout toggle (Scan group is the strip's)")
+    assertEqual(f.badge.__points[1][1], "RIGHT")
+    assertEqual(f.badge.__points[1][2], f.lockButton, "full: left of the cluster, the lock its first button")
 end)
 
-test("chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon", function()
+-- RX-14 (plan M6, the owner's smoke ruling): the lock button joins the right-hand cluster in both
+-- layouts, immediately left of the layout toggle: lock, layout toggle, minimize, close.
+test("chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks", function()
+    local NS, f, m = shown("compact")
+    local b = f.lockButton
+    -- red under: the RX-08 anchor, LEFT on the title bar
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
+    assertEqual(b.__points[1][3], "LEFT")
+    NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
+    m.advance(0)
+    assertTrue(f.badge.__points[1][2] ~= b, "compact: the badge stays at the left, not on the lock")
+    b:__fire("OnClick", "LeftButton")
+    assertEqual(NS.addon.db.profile.locked, true)
+    assertFalse(f.resizeGrip:IsShown())
+    NS.SetWindowMode("full")
+    assertEqual(b.__points[1][2], f.modeButton, "full: the same place")
+    assertEqual(f.badge.__points[1][2], b)
+    assertEqual(f.badge.__points[1][3], "LEFT", "full: the badge left of the lock, never under it")
+end)
+
+-- How far a cluster button's left edge stands from the bar's right edge, down its RIGHT anchors.
+local function fromRight(f, b)
+    local p = b.__points[1]
+    assertEqual(p[1], "RIGHT", "a cluster button hangs off its right edge")
+    assertTrue(p[4] <= 0, "each gap opens leftward")
+    local base = 0
+    if p[2] ~= f.titleBar then
+        assertEqual(p[3], "LEFT", "off its neighbor's left edge, so the two never overlap")
+        base = fromRight(f, p[2])
+    end
+    assertTrue(b:GetWidth() > 0)
+    return base - p[4] + b:GetWidth()
+end
+
+test("chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them", function()
+    local NS, f, m = shown("compact")
+    m.textCharWidth = 9   -- generous: GameFontNormal's widest glyphs
+    local K = NS.Constants.WINDOW
+    for _, mode in ipairs({ "compact", "full" }) do
+        NS.SetWindowMode(mode)
+        local minW = mode == "compact" and K.COMPACT_MIN_W or K.MIN_WIDTH
+        local order = { f.closeButton, f.minimizeButton, f.modeButton, f.lockButton }
+        local last = 0
+        for i, b in ipairs(order) do
+            local edge = fromRight(f, b)
+            assertTrue(edge > last, mode .. ": button " .. i .. " left of the one before")
+            last = edge
+        end
+        local half = (minW - 2) / 2   -- the bar is inset 1 px on each side
+        local title = f.title:GetUnboundedStringWidth()
+        local word = 11 * #NS.CompactChrome.ModeWord("test", mode == "compact")
+        -- TEST beside the title, the two centered together in compact; the title alone centered in full
+        local gap = NS.WindowTitleBar.MODE_GAP
+        local reach = mode == "compact" and (title + gap + word) / 2 or title / 2 + gap + word
+        assertTrue(reach < half - last, mode .. ": the title clears the lock button at " .. minW .. " px")
+    end
+end)
+
+test("chrome: the title bar has no Scan group in either layout; compact's is the footer's mark", function()
     local NS, f = shown("compact")
     -- red under: compact's title bar carrying a second Scan group beside the strip's (feedback-16)
     assertTrue(f.scanButton == nil, "no Scan group in the title bar")
-    local b = NS.WindowGroup.Drawn().pane.summary.scan
-    assertTrue(b:IsShown(), "the strip's, as its icon")
+    local b = NS.FooterRow.Mark("scan")
+    assertTrue(b:IsShown(), "the footer's mark (RX-24)")
     assertEqual(NS.Window.TooltipOf(b)[1], "Scan group")
     local scanned = 0
     NS.ScanGroup = function() scanned = scanned + 1 end
-    b:__fire("OnClick")
+    b:__fire("OnClick", "LeftButton")
     assertEqual(scanned, 1)
     NS.SetWindowMode("full")
     assertTrue(f.scanButton == nil)
@@ -276,14 +343,14 @@ test("chrome: the bar is one row: View, the search box (Filter…) and Filters o
         assertTrue(c[key]:GetParent() == f.filterHost, key .. " stays on the full bar")
         assertFalse(c[key]:IsShown(), key .. " hidden in compact: the cascade lists it")
     end
-    local _, sort = NS.WindowFooter.Parts()
-    assertFalse(sort:IsShown(), "Sort hidden in compact too")
+    assertTrue(c.sort:GetParent() == f.filterHost, "Sort stays on the full bar (RX-24)")
+    assertFalse(c.sort:IsShown(), "Sort hidden in compact too")
 end)
 
 test("chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own", function()
     local NS = shown("compact")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = c.sort
     local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
     assertEqual(#seen, 1, "one W.ContextMenu call")
@@ -319,7 +386,7 @@ end)
 test("chrome: each child's tick reads its own dropdown, and a pick goes through it, count and tooltip in step", function()
     local NS, f = shown("compact")
     local FB, c, p = NS.WindowFilterBar, NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = c.sort
     local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
     local rows, menu = seen[1].rows, seen[1].menu
@@ -403,7 +470,7 @@ test("chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filter
     NS.CompactChrome.ToggleFilters()   -- no error, nothing opened
 end)
 
-test("chrome: the full layout takes every control back to its place on the bar and the tab's strip", function()
+test("chrome: the full layout takes every control back to its place on the bar, Sort at its right edge", function()
     local NS, f = shown("compact")
     NS.SetWindowMode("full")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
@@ -416,11 +483,12 @@ test("chrome: the full layout takes every control back to its place on the bar a
     assertEqual(#c.search.__points, 2, "both edges anchored (feedback-4 spec §4)")
     assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
     assertEqual(c.search.__points[1][4], 8, "the gap between the dropdowns")
-    assertEqual(c.search.__points[2][1], "RIGHT")
+    assertEqual(c.search.__points[2][1], "RIGHT"); assertTrue(c.search.__points[2][2] == c.sort)
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
     assertTrue(c.search:GetWidth() > 0)
-    local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort:GetParent() == f.panes.group.summary, "Sort on Drops' strip (feedback-10 spec §3)")
+    local sort = c.sort
+    -- red under: Sort on Drops' strip over the footer (feedback-10 spec §3; RX-24 moved it)
+    assertTrue(sort:GetParent() == f.filterHost and sort:IsShown(), "Sort back on the bar")
     assertEqual(sort.__points[1][1], "RIGHT"); assertEqual(sort:GetWidth(), 150)
 end)
 
@@ -433,12 +501,12 @@ test("chrome: the test-mode strip keeps its tooltip with shorter words that may 
     assertEqual(textOf(f.banner.text), "TEST: sample drops in every state. Nothing is whispered; combat ends it.")
     assertEqual(NS.Window.TooltipOf(f.banner)[1], "Test mode")
     local h = NS.CompactChrome.BannerH()
-    assertTrue(h >= NS.Constants.WINDOW.BANNER_H)
-    assertEqual(f.banner:GetHeight(), h - 4)
+    assertTrue(h >= NS.TestStripHeight())
+    assertEqual(f.banner:GetHeight(), h)
     NS.SetWindowMode("full")
     assertEqual(textOf(f.banner.text), "TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it.")
-    assertEqual(NS.CompactChrome.BannerH(), NS.Constants.WINDOW.BANNER_H)
-    assertEqual(f.banner:GetHeight(), NS.Constants.WINDOW.BANNER_H - 4)
+    assertEqual(NS.CompactChrome.BannerH(), NS.TestStripHeight())
+    assertEqual(f.banner:GetHeight(), NS.TestStripHeight())
 end)
 
 -- Retail bounds GetStringWidth by the width the strip's anchors give its words (the window's less
@@ -454,10 +522,12 @@ test("chrome: the compact strip takes a second line exactly when its words wrap 
         NS.Window.Refresh()
         return CC.BannerH()
     end
-    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
-    assertEqual(f.banner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
-    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
-    assertEqual(f.banner:GetHeight(), K.BANNER_H - 4)
+    local one = NS.TestStripHeight()
+    assertEqual(at(380), one + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.banner:GetHeight(), one + CC.WRAP_H)
+    assertEqual(f.body.__points[1][5], -(one + CC.WRAP_H), "the body moves down by both lines")
+    assertEqual(at(520), one, "520 wide: one line")
+    assertEqual(f.banner:GetHeight(), one)
 end)
 
 test("chrome: the compact sim strip takes a second line when its words wrap at 380 px", function()
@@ -472,10 +542,12 @@ test("chrome: the compact sim strip takes a second line when its words wrap at 3
         return CC.BannerH()
     end
     -- red under: BannerH measuring f.banner, whose words are not the ones on screen
-    assertEqual(at(380), K.BANNER_H + CC.WRAP_H, "380 wide: the words wrap")
-    assertEqual(f.simBanner:GetHeight(), K.BANNER_H + CC.WRAP_H - 4)
-    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H + K.BANNER_H + CC.WRAP_H), "the panes move down")
-    assertEqual(at(520), K.BANNER_H, "520 wide: one line")
+    local one = NS.TestStripHeight()
+    assertEqual(at(380), one + CC.WRAP_H, "380 wide: the words wrap")
+    assertEqual(f.simBanner:GetHeight(), one + CC.WRAP_H)
+    assertEqual(f.body.__points[1][5], -(one + CC.WRAP_H), "the body moves down")
+    assertEqual(f.panes.group.__points[1][5], -(K.TAB_H + 4 + K.FILTER_H), "the panes with it")
+    assertEqual(at(520), one, "520 wide: one line")
     NS.Sim:Stop()
 end)
 
@@ -484,17 +556,14 @@ test("chrome: the footer is one line, inspect and situation, the rest in its too
     NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
     NS.ShowWindow()
     NS.SetWindowMode("compact")
-    local segs = NS.WindowFooter.Parts()
-    assertEqual(textOf(segs.inspect.text), "No group · Solo (not tracked)")
-    for _, key in ipairs({ "loot", "situation", "pawn" }) do assertFalse(segs[key]:IsShown(), key) end
-    local tip = NS.Window.TooltipOf(segs.inspect)
+    local status = NS.WindowFooter.Parts()
+    assertEqual(textOf(status.text), "No group · Solo (not tracked)")
+    local tip = NS.Window.TooltipOf(status)
     assertEqual(tip[1], "Status"); assertEqual(T.tipPlain(tip[2]), "• Inspect: no group")
-    assertEqual(T.tipPlain(tip[3]), "• No loot seen yet")
     NS.WindowFooter.Refresh()   -- the ticker's own repaint stays compact
-    assertEqual(textOf(segs.inspect.text), "No group · Solo (not tracked)")
+    assertEqual(textOf(status.text), "No group · Solo (not tracked)")
     NS.SetWindowMode("full")
-    assertEqual(textOf(segs.inspect.text), "Inspect: no group")
-    for _, key in ipairs({ "loot", "situation", "pawn" }) do assertTrue(segs[key]:IsShown(), key) end
+    assertEqual(textOf(status.text), "Inspect: no group · No loot seen yet · Not tracking in Solo · change in settings · Pawn: off")
 end)
 
 test("chrome: switching the chrome keeps every tab's filter state and builds no second window", function()

@@ -635,6 +635,26 @@ local function close(d, roll, plan)
     end
 end
 
+-- The boss a roll drops from: the one engaged, else the last killed, else the first.
+local function rollEncounter(d)
+    return d.encounter or d.lastEncounter or { id = E.ENCOUNTER_BASE, name = BOSSES[1] }
+end
+
+-- One roll opens on `entry` and plays `plan`: the drop (LOOT_HISTORY_UPDATE_ENCOUNTER, your popup's
+-- START_LOOT_ROLL), each choice a LOOT_HISTORY_UPDATE_DROP at its moment, the close at plan.close.
+local function openRoll(d, enc, entry, plan)
+    local roll = NS.SimWorld.AddRoll({ encounterID = enc.id, encounterName = enc.name, link = entry.link,
+        duration = plan.close + E.ROLL_SLACK, rows = plan.rows })
+    d.rolls.started = d.rolls.started + 1
+    Sim:Fire("LOOT_HISTORY_UPDATE_ENCOUNTER", roll.encounterID)
+    if roll.rollID then Sim:Fire("START_LOOT_ROLL", roll.rollID, roll.duration * 1000) end
+    for i, row in ipairs(plan.rows) do Sim:After(row.at, function() choose(roll, i, row) end) end
+    Sim:After(plan.close, function() close(d, roll, plan) end)
+    NS.Debug(TAG, "roll %s: %d rollers, %s", tostring(entry.link), #plan.rows,
+        plan.winner and ("winner " .. plan.winner) or "everyone passes")
+    return roll
+end
+
 --- A group-loot roll now (`/dw sim roll`, the timeline's `roll` step): one of the pool's drops,
 --- rolled for by you and every member (E.RollPlan) on the boss engaged or last killed. The drop
 --- opens (LOOT_HISTORY_UPDATE_ENCOUNTER, your popup's START_LOOT_ROLL), each choice is a
@@ -649,18 +669,59 @@ function E.Roll()
     if #drops == 0 then return nil, "noPool" end
     local rnd = rollRandom(s)
     local entry = drops[rnd(#drops)]
-    local plan = E.RollPlan(nil, s.members or {}, rnd)
-    local enc = d.encounter or d.lastEncounter or { id = E.ENCOUNTER_BASE, name = BOSSES[1] }
-    local roll = NS.SimWorld.AddRoll({ encounterID = enc.id, encounterName = enc.name, link = entry.link,
-        duration = plan.close + E.ROLL_SLACK, rows = plan.rows })
-    d.rolls.started = d.rolls.started + 1
-    Sim:Fire("LOOT_HISTORY_UPDATE_ENCOUNTER", roll.encounterID)
-    if roll.rollID then Sim:Fire("START_LOOT_ROLL", roll.rollID, roll.duration * 1000) end
-    for i, row in ipairs(plan.rows) do Sim:After(row.at, function() choose(roll, i, row) end) end
-    Sim:After(plan.close, function() close(d, roll, plan) end)
-    NS.Debug(TAG, "roll %s: %d rollers, %s", tostring(entry.link), #plan.rows,
-        plan.winner and ("winner " .. plan.winner) or "everyone passes")
-    return roll
+    return openRoll(d, rollEncounter(d), entry, E.RollPlan(nil, s.members or {}, rnd))
+end
+
+--- A raid's roll (`/dw sim raid`, rolls panel design §3.6): RAID_PLAYERS players, you among them.
+E.RAID_PLAYERS = 40
+--- The items a raid's roll opens at once.
+E.RAID_ITEMS = 6
+--- Seconds between two of its items' closes, so they end one after another.
+E.RAID_STAGGER = 2
+
+-- The raid's rollers besides you: the group, then raiders past it (NS.SimRoster.Raiders), drawn
+-- once per session and marked as the simulation's (the stop forgets them).
+local function raidRollers(s, rnd)
+    local members = s.members or {}
+    if not s.raiders then
+        local forever = NS.Compat.ClientKey() == "forever"
+        s.raiders = NS.SimRoster.Raiders(E.RAID_PLAYERS - 1 - #members, members,
+            { ownRealm = NS.Compat.NameRealm(), surnames = forever and NS.SimRoster.SURNAMES or nil }, rnd)
+        for _, m in ipairs(s.raiders) do NS.SimHost.MarkGUID(m.guid) end
+    end
+    local out = {}
+    for _, list in ipairs({ members, s.raiders }) do
+        for _, m in ipairs(list) do out[#out + 1] = m end
+    end
+    return out
+end
+
+-- A plan `by` seconds later: every choice and the close.
+local function delayed(plan, by)
+    for _, r in ipairs(plan.rows) do r.at = r.at + by end
+    plan.close = plan.close + by
+    return plan
+end
+
+--- A 40-player raid roll now (`/dw sim raid`, rolls panel design §3.6, plan RX-19): RAID_ITEMS of
+--- the pool's drops (the pool's order from a random start, round again when it has fewer) open at
+--- once on the boss engaged or last killed, each rolled for by you, the group and raiders past it
+--- (RAID_PLAYERS in all, E.RollPlan), each closing RAID_STAGGER seconds after the last, as
+--- E.Roll's does. It shows the Rolls panel's raid mode whatever the group's size. Answers the rolls
+--- (modules/SimWorld.lua's), or nil and why: `notRunning`, `noPool`.
+--- @return table|nil rolls, string|nil why
+function E.Raid()
+    local d, s = drive(), Sim:Session()
+    if not d then return nil, "notRunning" end
+    local drops = NS.SimPool.LootDrops(s.pool)
+    if #drops == 0 then return nil, "noPool" end
+    local rnd = rollRandom(s)
+    local rollers, enc, start, rolls = raidRollers(s, rnd), rollEncounter(d), rnd(#drops), {}
+    for i = 1, E.RAID_ITEMS do
+        local entry = drops[(start + i - 2) % #drops + 1]
+        rolls[i] = openRoll(d, enc, entry, delayed(E.RollPlan(nil, rollers, rnd), (i - 1) * E.RAID_STAGGER))
+    end
+    return rolls
 end
 
 -- ── master loot (Forever port design §8, plan DW-FP19) ──────────────────────────────────────
@@ -668,11 +729,11 @@ end
 --- Seconds the simulated master looter takes to hand the item out.
 E.ML_ASSIGN = 20
 
--- The pool's drops of at least the master-loot threshold's quality, else every drop.
+-- The pool's drops of at least the simulated master-loot item's quality (Epic), else every drop.
 local function mlCandidates(drops)
     local out = {}
     for _, entry in ipairs(drops) do
-        if (NS.ItemRead.QualityOf(entry.link) or 0) >= NS.SimWorld.ML_THRESHOLD then out[#out + 1] = entry end
+        if (NS.ItemRead.QualityOf(entry.link) or 0) >= NS.SimWorld.ML_QUALITY then out[#out + 1] = entry end
     end
     return #out > 0 and out or drops
 end

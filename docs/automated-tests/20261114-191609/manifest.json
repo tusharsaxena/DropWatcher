@@ -1,0 +1,19 @@
+{
+  "schema": 1,
+  "addon": "DropWatcher",
+  "addonVersion": "1.1.0",
+  "run": "20261114-191609",
+  "startedAt": "2026-11-14T19:16:09+05:30",
+  "durationMs": 100395,
+  "label": "rolls UX round (RX-12)",
+  "release": null,
+  "git": { "sha": "fe183b371a99efb883f1b920c251a0ac8f0dd820", "branch": "feat/2026-11-14-rolls-ux", "dirty": false },
+  "host": { "lua": "Lua 5.1.5  Copyright (C) 1994-2012 Lua.org, PUC-Rio", "luacheck": "Luacheck: 1.2.0", "lizard": "1.24.0", "timingSource": "date +%s%3N" },
+  "suites": {
+    "lint": { "status": "pass", "durationMs": 7313, "warnings": 0, "errors": 0, "files": 261, "gating": true, "gates": { "commit": true, "release": true } },
+    "tests": { "status": "pass", "durationMs": 82621, "passed": 2486, "failed": 0, "skipped": 1, "total": 2487, "gating": true, "gates": { "commit": true, "release": true } },
+    "perf": { "status": "fail", "durationMs": 3435, "scenarios": 8, "gating": false, "gates": { "commit": false, "release": true } },
+    "complexity": { "status": "pass", "durationMs": 5433, "warnings": 1, "maxCcn": 16, "nloc": 73237, "functions": 8801, "avgCcn": 2.5, "avgNloc": 7.6, "avgToken": 79.0, "warnFunRatio": 0.00, "warnNlocRatio": 0.00, "bandFiles": 15, "overCapFiles": 0, "blindFiles": 0, "crashedFiles": 0, "gating": false, "gates": { "commit": false, "release": true } }
+  },
+  "verdict": "amber"
+}

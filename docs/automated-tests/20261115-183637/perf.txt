@@ -1,0 +1,15 @@
+Ka0s Drop Watcher — offline perf  (v1.1.0, label 'offline')
+
+scenario                    iters     ms/iter notes/iter  bytes/iter
+refreshCaptureOff            1000     0.09828       0.00     13552.0
+refreshCaptureOn             1000     0.08968       1.00     13552.0
+refreshCompactCaptureOff     1000     0.09885       0.00      9200.0
+refreshCompactCaptureOn      1000     0.09141       1.00      9200.0
+showDecisionStoodDown        1000     0.00012       0.00         0.0
+parseCaptureOff              1000     0.01245       0.00       664.0
+parseCaptureOn               1000     0.01334       1.00       664.0
+insightsCompute                20    29.74575       0.00   4957904.0
+rollsPanelRaid                200     0.52733       0.00     79392.0
+
+timings are for orientation only — compare scenarios within a run, never across machines
+wrote docs/automated-tests/20261115-183637/perf.json

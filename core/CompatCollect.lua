@@ -204,6 +204,25 @@ function Compat.TierTokenSlot(link)
     return Compat.ReadTooltipLine(data, "None", function(text) return names[text] end)
 end
 
+--- Whether an item opens (RX-04, rolls UX design §3.5): `locked` when its hyperlink tooltip carries
+--- a line whose left text EQUALS the localized LOCKED ("Locked", a lockbox), `opens` for one that
+--- equals ITEM_OPENABLE ("<Right Click to Open>"), false once the tooltip was read with neither; nil
+--- for no API, no GlobalString, a secret link, a missing or malformed tooltip or a secret line.
+--- modules/Collectibles.lua asks it of Miscellaneous Junk alone, the class a lockbox has.
+--- @param link string
+--- @return string|false|nil
+function Compat.ItemOpens(link)
+    local locked = plainString(Compat.GlobalString("LOCKED"))
+    local openable = plainString(Compat.GlobalString("ITEM_OPENABLE"))
+    local data = (locked or openable) and hyperlinkData(link)
+    if not data or anySecretLine(data) then return nil end
+    return Compat.ReadTooltipLine(data, "None", function(text)
+        if text == locked then return "locked" end
+        if text == openable then return "opens" end
+        return nil
+    end) or false
+end
+
 -- The text of an item's use spell (C_Item.GetItemSpell, then C_Spell.GetSpellDescription): the
 -- text, false for an item with no use spell, or nil when it could not be read (no API, a secret
 -- or empty answer). An empty description is a spell the client has not loaded yet: its id is the

@@ -34,8 +34,14 @@ L["Full"] = "Full"
 L["Compact"] = "Compact"
 L["Personal loot"] = "Personal loot"
 L["Auto-open the window"] = "Auto-open the window"
-L["Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."] =
-    "Open the window whenever a drop is added to the feed in a situation set to auto-open, your own included. A minimized window stays minimized and counts it. Off, no situation opens it."
+L["Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."] =
+    "Open the window whenever a drop is added to the feed, your own included, or a loot-roll popup comes up for an item it would show, in a situation set to auto-open. A minimized window stays minimized and counts each new drop. Off, no situation opens it."
+L["Auto-close the window"] = "Auto-close the window"
+L["Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."] =
+    "Close a window that opened by itself once nothing is rolling and no new drop has come for the time set beside it. Hovering the window starts the count again; opening it yourself, dragging it or clicking in it keeps it open. Needs Auto-open the window."
+L["Close after (seconds)"] = "Close after (seconds)"
+L["How long a window that opened by itself stays once nothing is rolling and no new drop has come. Needs Auto-close the window."] =
+    "How long a window that opened by itself stays once nothing is rolling and no new drop has come. Needs Auto-close the window."
 L["Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."] =
     "Watch the loot in this situation. Off, drops here are ignored and nobody is inspected for them."
 L["Auto-open"] = "Auto-open"
@@ -68,6 +74,15 @@ L["Recipes and patterns"] = "Recipes and patterns"
 L["Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."] = "Recipes, patterns and formulas, marked new or known, and can't use when you lack the profession."
 L["Cosmetics"] = "Cosmetics"
 L["Cosmetic armor and weapons: a look to collect, never gear."] = "Cosmetic armor and weapons: a look to collect, never gear."
+L["Lockboxes"] = "Lockboxes"
+L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] =
+    "Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."
+L["Containers"] = "Containers"
+L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] =
+    "Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."
+L["Everything else that is rolled on"] = "Everything else that is rolled on"
+L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] =
+    "Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."
 L["Minimum item level"] = "Minimum item level"
 L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."] =
     "Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."
@@ -447,3 +462,16 @@ L["What you whisper the master looter to ask for an item waiting for them to han
 L["Ask the master looter (whisper to the master looter)"] = "Ask the master looter (whisper to the master looter)"
 L["The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."] =
     "The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."
+
+-- Drops > Rolls (settings/SchemaRows.lua): the subsections, and the Rolls panel rows (RX-17)
+L["Window and popup"] = "Window and popup"
+L["Panel"] = "Panel"
+L["Right"] = "Right"
+L["Show the Rolls panel beside the window"] = "Show the Rolls panel beside the window"
+L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep it open for the time set below after the last roll. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."] = "While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep it open for the time set below after the last roll. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."
+L["Side"] = "Side"
+L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."] = "Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."
+L["Keep the panel open after the last roll (seconds, 0 = at once)"] = "Keep the panel open after the last roll (seconds, 0 = at once)"
+L["Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."] = "Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."
+L["Fold Pass and Waiting in a raid"] = "Fold Pass and Waiting in a raid"
+L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."] = "In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."

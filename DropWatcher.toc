@@ -388,6 +388,12 @@ modules\WindowTitleBar.lua
 # NS.Constants and registers its SituationChanged receiver on its own NS.Bus target at load.
 # NS.Setting, NS.WindowFilterBar, NS.Situations, NS.LootFeed and NS.State are read at call time.
 modules\WindowCompact.lua
+# LOAD-BEARING: its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
+# above. Publishes NS.WindowAutoClose (auto-close: a window that opened by itself closes once
+# idle, rolls UX design §3.6); registers its DropAdded and PendingChanged receivers on its own NS.Bus
+# target and adds a visibility listener to NS.Window (above) at load. NS.Pending and NS.Setting are
+# read at call time.
+modules\WindowAutoClose.lua
 # LOAD-BEARING: takes NS.CharFilter (modules\CharFilter.lua, above) as a load-time upvalue. Publishes
 # NS.WindowFilterBar (the filter bar, each tab's filter state and the row predicates); reads
 # NS.Constants, NS.L, NS.State and NS.C (defaults\, above) at load, and NS.Window (above) at call
@@ -592,6 +598,19 @@ modules\AutoAsk.lua
 # NS.DetailCard, NS.Sim and NS.Setting are read at call time; core\DropWatcher.lua's OnEnable calls
 # Install, which builds the overlays and hooks GroupLootFrame1..4 through NS.Compat.
 modules\RollPopup.lua
+# Conventional: publishes NS.RollsPanelRows, what the Rolls panel says (rolls panel design §3.2,
+# RX-17: a block per watched roll, its rows grouped as the all-rolls tooltip, its result and foot,
+# and the dock's side; RX-18's raid mode: the open block, the fold, the title; pure); takes NS.L at load. NS.RollCells, NS.RollPopup, NS.TipMarks,
+# NS.GroupRoster and NS.Skin are read at call time, by modules\RollsPanel.lua (below).
+modules\RollsPanelRows.lua
+# LOAD-BEARING: adds a visibility listener and a geometry listener to NS.Window (modules\Window.lua,
+# above) at load; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
+# above. Publishes NS.RollsPanel, the Rolls panel docked beside the window (rolls panel design,
+# RX-17); registers its PendingChanged receiver on a NS.Bus target at load; takes NS.Constants and
+# NS.L at load. NS.WindowPending, NS.Pending, NS.RollsPanelRows, NS.WindowAutoClose, NS.WindowRows,
+# NS.Compat, NS.Pool, NS.WindowCompact and NS.Setting are read at call time: the frame is built on
+# its first show.
+modules\RollsPanel.lua
 # Conventional: publishes NS.SimRoster, the simulator's invented group and its gear (pure, but for
 # Create); reads NS.Constants and NS.ClassData at load. NS.Sim, NS.SimPool (below) and NS.Compat are
 # read at call time.

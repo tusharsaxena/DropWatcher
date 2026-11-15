@@ -477,6 +477,8 @@ test("gates: an untracked situation hides the drop before its item is even loade
     local NS, m, LF = party(function(m)
         m.__context.inInstance, m.__context.instanceType = false, "none"
     end)
+    -- untracked: Retail's default, and WoW Forever's off its own (rolls UX ruling 7, RX-01)
+    NS.addon.db.profile.situations.openWorldGroup.track = false
     m.addItem(link(300), ring(620, { loadsNeeded = 1 }))
     brakkLoots(m, 300)
     assertEqual(#LF.Drops(), 0)
@@ -485,8 +487,13 @@ test("gates: an untracked situation hides the drop before its item is even loade
     assertEqual(NS.Inspect.QueueState().queued, 0)
 end)
 
+-- Retail's default Fixed Rare, pinned so these gates read the same on WoW Forever, whose default is
+-- Uncommon (rolls UX ruling 7, RX-01).
+local function fixedRare(NS) NS.addon.db.profile.feed.quality.fixed = 3 end
+
 test("gates: below the quality threshold a downgrade for you is hidden, and costs no inspect", function()
     local NS, m, LF = party()
+    fixedRare(NS)
     m.addItem(link(300), ring(590, { quality = 2 }))
     brakkLoots(m, 300)
     m.advance(1)
@@ -497,7 +504,8 @@ test("gates: below the quality threshold a downgrade for you is hidden, and cost
 end)
 
 test("gates: the upgrade override shows an upgrade for you below the threshold", function()
-    local _, m, LF = party()
+    local NS, m, LF = party()
+    fixedRare(NS)
     m.addItem(link(300), ring(620, { quality = 2 }))
     brakkLoots(m, 300)
     local rec = only(LF)
@@ -507,7 +515,7 @@ end)
 test("gates: the stored quality settings and the situation's override are read", function()
     local NS, m, LF = party()
     m.addItem(link(300), ring(620, { quality = 2 }))
-    NS.addon.db.profile.feed = { quality = { upgradeOverride = false } }
+    NS.addon.db.profile.feed = { quality = { fixed = 3, upgradeOverride = false } }   -- Rare on both clients
     brakkLoots(m, 300)
     assertEqual(#LF.Drops(), 0, "the override off")
     NS.addon.db.profile.feed = { quality = { fixed = 2 } }
@@ -1032,4 +1040,36 @@ test("candidate: your unwanted types are read by your spec key, on Forever your 
     NS.LootFeed.Add(link(400))
     local rec = NS.LootFeed.Drops()[1]
     assertEqual(rec.me.verdict, "doesntWant", "a dagger is unwanted for the spec on screen")
+end)
+
+-- RX-04, RX-15 (rolls UX design §3.5, ruling 3; plan M6): Lockboxes and Containers are on by
+-- default, each switched off on its own; Everything else that is rolled on is off, and takes an
+-- item of no kind only when it is rolled on.
+-- red under: the lockbox or container kind missing from the defaults, one switch turning both off,
+-- or the catch-all taking an item no one rolled
+test("filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on", function()
+    local NS = T.newAddon()
+    local F = NS.FeedFilter.Filter
+    assertEqual(NS.Setting("feed.categories.lockbox"), true); assertEqual(NS.Setting("feed.categories.container"), true)
+    assertEqual(NS.Setting("feed.categories.other"), false)
+    local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "lockbox" }
+    local bag = { itemID = 4496, classID = 1, subClassID = 0, quality = 1, category = "container" }
+    local quiver = { itemID = 2101, classID = 11, subClassID = 2, quality = 1, category = "container" }
+    local reagent = { itemID = 2589, classID = 7, subClassID = 5, quality = 2 }
+    local defaults = { categories = { lockbox = true, container = true, other = false } }
+    local function check(facts, cfg, ctx, pass, why)
+        local ok, reason = F(facts, cfg, ctx)
+        assertEqual(ok, pass); assertEqual(reason, why)
+    end
+    check(lockbox, defaults, {}, true, nil)
+    check(bag, defaults, {}, true, nil); check(quiver, defaults, { rolled = true }, true, nil)
+    check(lockbox, { categories = { lockbox = false } }, {}, false, "category")
+    check(bag, { categories = { lockbox = false } }, {}, true, nil)
+    check(lockbox, { categories = { container = false } }, {}, true, nil)
+    check(bag, { categories = { container = false } }, {}, false, "category")
+    check(quiver, { categories = { container = false } }, {}, false, "category")
+    check(lockbox, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
+    check(reagent, defaults, { rolled = true }, false, "notWatched")
+    check(reagent, { categories = { other = true } }, { rolled = true }, true, nil)
+    check(reagent, { categories = { other = true } }, {}, false, "notWatched")
 end)
