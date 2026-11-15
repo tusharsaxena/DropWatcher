@@ -198,3 +198,5 @@ Spec part B. Worktrees cut from each repo's default branch; never touch another 
 ### UC-03..: one item per roster addon
 - Re-vendor the UC-02 tag; strip under the title bar / HUD top; Footer where a footer exists; gate green; own branch,
   pushed; merge waits for the owner. Drop Watcher adopts on this branch (UC-DW).
+
+**Scope change (owner, 2026-11-15):** no re-vendor into other addons in this run. M9 released WowAddonStandards v2.110.0 and LibKa0s v1.103.0 (Widgets minor 27). M10 is Drop Watcher only (UC-DW) plus LibKa0s issues #88 (strip adoption), #89 (Footer adoption) and #90 (the debug console footer), which track the other addons for the owner's later full re-vendor.

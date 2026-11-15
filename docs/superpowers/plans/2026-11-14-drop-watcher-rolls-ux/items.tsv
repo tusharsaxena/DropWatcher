@@ -24,3 +24,5 @@ RX-22	M8	DropWatcher	Test mode shows the simulated roll popup and side card	RX-2
 UC-01	M9	WowAddonStandards	Strip under the header, footer and its height	RX-20
 UC-02	M9	LibKa0s	Footer primitive and TestStrip docking	UC-01
 UC-03	M10	(all addons)	Adopt the strip and footer in every addon	UC-02
+UC-DW	M10	DropWatcher	Re-vendor LibKa0s v1.103.0; strip under the title bar; Widgets Footer	UC-02
+RX-23	M10	DropWatcher	Whole-branch review of RX-21..UC-DW and bundle	UC-DW
