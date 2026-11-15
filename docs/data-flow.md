@@ -57,7 +57,7 @@ auto-open made: the auto-open arms it after its `Window.Open`, and every `Window
 entering or leaving the frame or any frame under it start it over (so it closes a full count after
 the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a
 roll (`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
-does not count, RX-12) and the pointer elsewhere, it calls `Window.Close`; otherwise it
+does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none, RX-20) and the pointer elsewhere, it calls `Window.Close`; otherwise it
 starts over. A window the visibility ladder hides (General visibility in or out of combat) keeps the
 player's open and is not closed: the count waits, and starts over when the window shows (a
 visibility listener), so the auto-open is not lost to a long fight (RX-12). A
@@ -86,7 +86,8 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
                                └─> shown: tabs, filter bar, footer, active body
 PendingChanged(id, cause) ─> shown: the same repaint; `open` of a roll item (NS.Pending.Get(id): not
                              kind `ml`, which has no roll popup, nor `restored`, which Pending.Rebuild
-                             opened after a reload or stand-up) of the feed shown: the drop's
+                             opened after a reload or stand-up) of the feed shown, with `rolls.show`
+                             on (off, Rolling now lists nothing and the roll opens nothing): the drop's
                              auto-open above, on Drops, arming auto-close, which then waits while the
                              roll runs (RX-16); a minimized window counts nothing until it is a drop
 DropUpdated ───────────────> shown: the same repaint

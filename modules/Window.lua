@@ -1052,11 +1052,13 @@ end
 
 -- PendingChanged(id, "open"): a roll item entered Rolling now (RX-16), so its roll popup is up and
 -- it passed the feed's gates. A master-loot hold (kind `ml`) has no popup, and a roll Pending
--- rebuilt after a reload or stand-up (`restored`) was seen before: neither opens anything. A test
--- mode sample opens only the test feed's window, by test mode's own rule, as a test drop does.
+-- rebuilt after a reload or stand-up (`restored`) was seen before: neither opens anything, nor does
+-- a roll with `rolls.show` off (Rolling now lists nothing). A test mode sample opens only the test
+-- feed's window, by test mode's own rule, as a test drop does.
 local function onPendingOpened(id)
     local item = NS.Pending.Get(id)
     if not item or item.kind == "ml" or item.restored or not inShownFeed(item) then return end
+    if not NS.WindowPending.Shown() then return end
     maybeAutoOpen(item, "roll")
 end
 

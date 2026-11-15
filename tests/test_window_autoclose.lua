@@ -432,6 +432,20 @@ test("roll open: a roll rebuilt after a reload opens nothing", function()
     assertFalse(NS.IsWindowShown(), "a restored roll opens nothing")
 end)
 
+-- red under: onPendingOpened not asking whether Rolling now shows rolls, and rolling() counting a
+-- roll the window does not show
+test("roll open: with Show rolls off a roll opens nothing, and does not hold an auto-opened window", function()
+    local NS, m = inDungeon({ ["rolls.show"] = false })
+    rollOpens(m)
+    assertEqual(NS.Pending.Count(), 1, "the store still holds it")
+    assertTrue(NS.WindowPending.None(), "Rolling now lists nothing")
+    assertFalse(NS.IsWindowShown(), "a roll the window would not show opens nothing")
+    announce(NS, drop(1))
+    assertTrue(NS.IsWindowShown(), "a drop opens it")
+    m.advance(10.1)
+    assertFalse(NS.IsWindowShown(), "the hidden roll does not hold it open")
+end)
+
 test("roll open: a test-mode sample roll opens nothing while test mode is off", function()
     local NS = inDungeon()
     NS.Pending.AddTest({ link = ROLL_LINK, facts = ring(620) })

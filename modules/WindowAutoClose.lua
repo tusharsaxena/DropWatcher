@@ -55,10 +55,11 @@ end
 
 -- Whether anything in the shown feed's pending store is a roll. A master-loot item awaiting the
 -- master looter (kind `ml`, modules/PendingML.lua, held up to 900 s) is listed in Rolling now but
--- rolls nothing, so it does not hold the window open (ruling 4: "after nothing is rolling").
+-- rolls nothing, so it does not hold the window open (ruling 4: "after nothing is rolling"); with
+-- `rolls.show` off Rolling now lists nothing, and a roll the window does not show holds nothing.
 local function rolling()
     local feed = NS.Window.FeedName()
-    if NS.Pending.Count(feed) == 0 then return false end   -- the common case builds no list
+    if NS.WindowPending.None() then return false end   -- the common case builds no list
     for _, item in ipairs(NS.Pending.All(feed)) do
         if item.kind ~= "ml" then return true end
     end
