@@ -851,10 +851,11 @@ test("sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a par
     m.advance(0)
     d = NS.RollsPanel.Drawn()
     assertTrue(d.raid, "40 rollers: raid mode")
-    assertEqual(d.panel.title:GetText(), "Rolls · " .. #d.blocks)
+    assertEqual(d.panel.title:GetText(), "Rolls", "no count in the title (RX-21)")
     local open = 0
     for _, h in ipairs(d.headers) do if h.open then open = open + 1 end end
-    assertEqual(open, 1, "one block open")
+    assertEqual(open, #d.blocks, "every block open (RX-21: the one-open rule is gone)")
+    assertTrue(d.panel.simStrip:IsShown(), "the sim strip under the title bar (RX-21)")
     NS.Sim:Stop()
     m.advance(0)
 end)

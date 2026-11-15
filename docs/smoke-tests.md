@@ -63,7 +63,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-47..49 | [Skins](#skins) | The owner's fifth smoke round: LibKa0s re-cut (SKIN-47, R5-RV): Ka0s Default's darker band, the skin list closing on an outside press, the library windows' band and centered header; every window's header on the band like Ka0s Loot History's, the Offer panel and Edit message box included (SKIN-48, R5-WIN); item icons edged in the window's gray outline, the toast's black, one pixel (SKIN-49, R5-ICON) |
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
-| ROLLS-1..18 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18) |
+| ROLLS-1..18 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -3928,54 +3928,62 @@ ROLLS-12 to ROLLS-18 are the Rolls panel (rolls panel design, RX-17 to RX-19). T
 where it names a layout, in both: the dungeon layout from `/dw sim start dungeon` then `/dw sim roll`
 (or a real party's roll), raid mode from `/dw sim raid` (SIM-24) or a real raid's roll.
 
-**ROLLS-12. The Rolls panel in a dungeon (RX-17; design §3.1, §3.2).** Client: both. With the window
-open on Drops, `/dw sim start dungeon`, then `/dw sim roll` → a panel titled `Rolls` docks right of
-the window, 3 px off it, top edges level, in the window's skin (its panel, edge, title band and close
-button). One block: the item's icon, its name in its quality color (a long one cut with `…`), the time
-left counting down each second with a thin bar under the header shrinking with it. A row per player:
-Need first, then Greed, Pass and still to roll (the hourglass), highest roll first in each, each mark
-the same art as Rolling now's count line, names in class color, `[YOU]` in gold on yours; your verdict
-at the foot (a lockbox or bag its kind word, neutral). Over the next seconds the rows move as the
-choices land; at the close the numbers show, the winner's row turns gold and `Won by <name> (<choice>
-<roll>)` appears under the rows, or `Everyone passed`, and the time reads `done`. `/dw sim roll` again
-while one is open → a second block under the first, both open. No button in the panel does anything
-but close it. Result:
+**ROLLS-12. The Rolls panel in a dungeon (RX-17, RX-21; design §3.1, §3.2).** Client: both. With the
+window open on Drops, `/dw sim start dungeon`, then `/dw sim roll` → a panel titled `Rolls` (no count)
+docks right of the window, its left edge touching the window's right edge, top edges level, in the
+window's skin (its panel, edge, title band, Expand all, Collapse all and close buttons), the cyan sim
+strip directly under its title band. One block: an item header in the look of the window's `Rolling
+now (1)` header (the faint band, a gold chevron pointing down), the item's icon, its name in its
+quality color (a long one cut with `…`), the time left counting down each second with a thin bar
+under the header shrinking with it. A row per player, alternately shaded: Need first, then Greed,
+Pass and still to roll (the hourglass), highest roll first in each, each mark the same art as Rolling
+now's count line, names in class color, `[YOU]` in gold on yours, and each Need, Greed (and on Retail
+Disenchant) row's number right-aligned as it lands; Pass and Waiting show none. No verdict line
+(`^ Upgrade +9`) anywhere in the panel. At the close the winner's row turns gold and `Won by <name>
+(<choice> <roll>)` appears under the rows, or `Everyone passed`, and the time reads `done`. `/dw sim
+roll` again while one is open → a second block under the first, both open. Hover the header → the
+item's own tooltip with every roll under it and the click hint; hover a row → the player, choice, roll
+and class; hover the strip, the buttons and the close → each has a tooltip. Result:
 
 **ROLLS-13. The panel's side and its flip (RX-17; design §3.1; Review Focus 1).** Client: both. With a
 roll in the panel (ROLLS-12), drag the window toward the screen's right edge until the panel would
-leave the screen → it moves to the window's left, its top-right on the window's top-left; drag back →
-it returns right. Resize the window and change its Scale (Window › Layout) → the panel follows, as tall
-as its blocks, never taller than the window. Settings › Drops › Rolls › Panel › Side: Left → it docks
-left; near the left edge it flips right; the Side tooltip says it flips when there is no room. With
-the panel on the right and room on both sides, open the Offer panel on one of your drops (or `/dw test`
-and Offer on a sample drop of yours) → the Rolls panel moves to the window's left, the Offer panel on
-the right, no overlap; close the Offer panel → the Rolls panel returns right. Drag the window to the
-screen's left edge and open the Offer panel again → the Rolls panel hides while it is up and comes
-back when it closes (RX-20). With a roll popup's side card up too, note which frames touch. Result:
+leave the screen → it moves to the window's left, its top-right flush on the window's top-left; drag
+back → it returns right. Resize the window and change its Scale (Window › Layout) → the panel
+follows, as tall as its blocks, never taller than the window. Settings › Drops › Rolls › Panel ›
+Side: Left → it docks left; near the left edge it flips right; the Side tooltip says it flips when
+there is no room. With the panel on the right and room on both sides, open the Offer panel on one of
+your drops (or `/dw test` and Offer on a sample drop of yours) → the Rolls panel moves to the window's
+left, the Offer panel on the right, no overlap; close the Offer panel → the Rolls panel returns right.
+Drag the window to the screen's left edge and open the Offer panel again → the Rolls panel hides
+while it is up and comes back when it closes (RX-20). With a roll popup's side card up too, note
+which frames touch. Result:
 
-**ROLLS-14. The linger and the hover (RX-17; design §3.4).** Client: both. Let a roll in the panel end
-→ it stays about 10 seconds with its result, then leaves; the last one leaving hides the panel. Rest
-the pointer on the panel as a roll ends and keep it there past 10 seconds → nothing leaves; move the
-pointer off (from the body, the scroll bar or the close button too) → the count starts over, about 10
-seconds from then. Keep a finished roll for: 0 → a finished roll leaves at once; 60 → about a minute.
-An auto-opened window (STATE-9, STATE-10) does not close while the panel holds a roll, and closes its
-own count later. Result:
+**ROLLS-14. The linger and the hover (RX-17, RX-21; design part A ruling 9).** Client: both. `/dw sim
+roll` twice, and let the first end before the second → the first stays with its result while the
+second runs; when the second ends both stay about 10 seconds, then the panel closes with them. Start
+another roll during those 10 seconds → the count stops and both finished rolls stay with the new one.
+Rest the pointer on the panel as the last roll ends and keep it there past 10 seconds → nothing
+closes; move the pointer off (from the body, the scroll bar, a button or the strip too) → the count
+starts over, about 10 seconds from then. Keep the panel open after the last roll: 0 → the panel
+closes as the last roll ends; 60 → about a minute. An auto-opened window (STATE-9, STATE-10) does not
+close while the panel holds a roll, and closes its own count later. Result:
 
-**ROLLS-15. Raid mode (RX-18; design §3.3).** Client: both. `/dw sim start dungeon`, then `/dw sim
-raid` → the title reads `Rolls · 6`; one block is open (the one you still have to roll on, else the
-one ending soonest) and the other five are one header each with the count line under the name. Need
-and Greed list every player; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
+**ROLLS-15. Raid mode, the collapsers (RX-18, RX-21; design §3.3).** Client: both. `/dw sim start
+dungeon`, then `/dw sim raid` → the title reads `Rolls`; every item is open. Need and Greed list every
+player with their numbers; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
 → a tooltip lists every name in class color, bulleted; click it → that block lists every player in the
-group. Click a closed header → it opens and stays open until its roll ends, then the rule picks again.
-A resolved block is a dimmed header reading its winner and roll, `done`. The body scrolls when the
-blocks pass the window's height, its bar shown only then; the frame rate holds while 40 players
-choose. Untick Fold Pass and Waiting in a raid → every player is a row. In a real raid (more than five
-members) a roll reads the same. Result:
+group. Click an item's header → it collapses to its header with the count line under it and the
+chevron pointing right; it stays collapsed as the roll changes; click again → it opens. Collapse all
+→ every item is a header; Expand all → every item is open; a roll that starts after Collapse all is
+open. A resolved collapsed block is a dimmed header reading its winner and roll, `done`. The body
+scrolls when the blocks pass the window's height, its bar shown only then; the frame rate holds while
+40 players choose. Untick Fold Pass and Waiting in a raid → every player is a row. In a real raid
+(more than five members) a roll reads the same. Result:
 
-**ROLLS-16. The compact layout (RX-18; design §3.1).** Client: both. With a roll in the panel in each
-layout (ROLLS-12, ROLLS-15), `/dw compact` → the panel narrows (220 against the full layout's 250),
-stays docked to the compact window's side and flips the same way; names and the roll number never
-overlap, a long name cut with `…`; `/dw full` → it widens again. Result:
+**ROLLS-16. The compact layout (RX-18, RX-21; design §3.1).** Client: both. With a roll in the panel in
+each layout (ROLLS-12, ROLLS-15), `/dw compact` → the panel narrows (250 against the full layout's
+290), stays docked flush to the compact window's side and flips the same way; names and the roll
+number never overlap, a long name cut with `…`; `/dw full` → it widens again. Result:
 
 **ROLLS-17. Minimized or closed, the close button and `/dw rolls` (RX-17; design §3.1, §3.4).**
 Client: both. With a roll in the panel, minimize the window → the panel hides; expand it → the panel
@@ -3988,13 +3996,14 @@ next roll starts) → it hides; a change to the same roll keeps it hidden; the n
 first.*; with Show the Rolls panel beside the window unticked → the line naming it, and no roll shows
 the panel. Result:
 
-**ROLLS-18. Test mode's sample in the panel (RX-19; design §3.6).** Client: both. With no roll on,
-`/dw test` → the window opens (or stays) with the sample roll in Rolling now, and the Rolls panel
-docks beside it with that roll: nine players, so raid mode (`Rolls · 1`, Pass and Waiting folded),
-its title band reading TEST MODE in the title bar's red beside `Rolls · 1` (preview-mode, RX-20).
-`/dw test` off → the panel's sample leaves at once and the panel hides; `/dw test` on again → it is
-back. `/dw test` off, then `/dw rolls` → the empty panel reads no TEST MODE. Hover the folded lines
-and the header: every tooltip is bulleted rows, no glyph boxes.
+**ROLLS-18. Test mode's sample in the panel (RX-19, RX-21; design §3.6, part A ruling 1).** Client:
+both. With no roll on, `/dw test` → the window opens (or stays) with the sample roll in Rolling now,
+and the Rolls panel docks beside it with that roll: nine players, so raid mode (Pass and Waiting
+folded), every Need and Greed row showing its number, and the amber test strip directly under the
+panel's title band reading *TEST: sample rolls. Nothing is sent; combat ends it.*; the band itself
+carries no TEST MODE word. `/dw test` off → the panel's sample leaves at once and the panel hides;
+`/dw test` on again → it is back. `/dw test` off, then `/dw rolls` → the empty panel shows no strip.
+Hover the folded lines, a row and the header: every tooltip is bulleted rows, no glyph boxes.
 Result:
 
 ## WoW Forever

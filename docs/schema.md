@@ -141,7 +141,7 @@ button and profiles reach them as any row.
 | `rolls.popupMark` | `true` | Rolls › Window and popup | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
 | `rolls.panel.enabled` | `true` (both clients) | Rolls › Panel | the Rolls panel docked beside the window (rolls panel design §3.5, RX-17, `modules/RollsPanel.lua`): every watched roll and every player's roll on it, while rolled and `rolls.panel.linger` seconds after; off shows nothing and tracks nothing; needs `rolls.show` (its row dims while that is off, RX-20) |
 | `rolls.panel.side` | `"right"` | Rolls › Panel | `right` or `left`: the window side the panel docks on; it flips to the other when the screen has no room |
-| `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds a finished roll stays in the panel (0: removed at once); nothing leaves while the pointer is over it |
+| `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds the panel stays open once every roll in it is over (0: it closes at once), then it closes with every finished roll; finished rolls stay while any roll still runs, a new roll cancels the count, and nothing closes while the pointer is over it (RX-21: a panel-level linger, no longer per roll; the branch is unmerged, so no migration) |
 | `rolls.panel.foldInRaid` | `true` | Rolls › Panel | raid mode's (a group of more than 5, or a watched roll of more than 5 players; RX-19) Pass and Waiting folded to one line each, `Pass 27 · P1, P2, P3…`, every name in its tooltip, a click listing every player for that block (RX-18) |
 
 ### Comparison

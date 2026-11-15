@@ -142,7 +142,8 @@ NS.C = {
         -- roll popup (DW-FP20). New keys with defaults: AceDB merges them, no migration. `panel` is
         -- the Rolls panel docked beside the window (rolls panel design §3.5, RX-17), on both clients:
         -- `enabled`, the `side` it docks on (`right` or `left`; it flips when the screen has no
-        -- room), how many seconds a finished roll `linger`s (0 to 60), and `foldInRaid`, Pass and
+        -- room), how many seconds the panel `linger`s open once every roll in it is over (0 to 60;
+        -- round 2, RX-21: a panel-level linger, no longer per roll), and `foldInRaid`, Pass and
         -- Waiting folded to one line each in raid mode (RX-18).
         rolls = {
             show      = true,

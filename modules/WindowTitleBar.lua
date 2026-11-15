@@ -195,6 +195,16 @@ local function iconButton(parent, icon, glyph, onClick)
     return b
 end
 
+--- A title-bar icon button: the catalog's `icon` mark in the skin's bright icon tint, or `glyph`
+--- when the mark does not resolve; K.ICON square, unanchored. The Rolls panel's Expand all and
+--- Collapse all are built with it (modules/RollsPanel.lua, RX-21).
+--- @param parent table
+--- @param icon string a declared LibKa0s icon
+--- @param glyph string the fallback text
+--- @param onClick function
+--- @return table the button
+TB.IconButton = iconButton
+
 -- The flat button's box is the skin's Button (FS-DW-FIX, cause A1), so `btn.borderStyle` and
 -- `btn.borderSize` reach it, with the fill and edge remapped to the owner tokens `dw.btnBg` /
 -- `dw.btnBorder` (Ka0s Default: today's 0.12 fill and the shared window edge's inner line). The

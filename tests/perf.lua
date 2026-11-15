@@ -46,9 +46,12 @@
 -- it notes nothing.
 local INSIGHTS_CEILING = 5200000
 -- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18) is RollsPanel.Refresh over six
--- watched rolls of 40 players in a group of 40: the reconcile, raid mode's pick, the open block's
--- rows and folded lines and the five headers' count lines, every frame from the pools. Its ceiling is
--- that work: first measured 2026-11-15 at 89376 bytes, the ceiling that plus a small margin.
+-- watched rolls of 40 players in a group of 40: the reconcile, each block's header and its rows and
+-- folded lines, every frame from the pools. Its ceiling is that work: first measured 2026-11-15 at
+-- 89376 bytes with one block open, the ceiling that plus a small margin. Round 2 (RX-21) opens all
+-- six blocks (the one-open rule is gone), which measured 427136 bytes until the panel kept each
+-- block's rows while its roll reads the same (RollsPanel's rowsOf) and left a pooled frame already
+-- in place where it is: 79328 bytes, under the same ceiling, which is not raised.
 local ROLLS_PANEL_RAID_CEILING = 95000
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
@@ -221,9 +224,9 @@ measure("insightsCompute", 20, insightsOnce)
 
 -- The Rolls panel's raid refresh (rolls panel design §3.3, RX-18): a group of 40 in a raid, six
 -- watched rolls of 40 players each (20 Need, 10 Greed, 5 Pass, 4 still to roll, and you), the panel
--- docked beside the shown window: one block open with its rows and its two folded lines, five
--- headers with their count lines. Its bytes are the pass's own tables and strings (the rows, the
--- count lines, the fold lines); the frames all come from the pools. No bracket, so it notes nothing.
+-- docked beside the shown window: all six blocks open (RX-21), each with its rows and its two folded
+-- lines. Its bytes are the pass's own tables and strings (the blocks, the time left); the rows are
+-- kept from the first paint and the frames all come from the pools. No bracket, so it notes nothing.
 do
     local others = {}
     for i = 1, 39 do

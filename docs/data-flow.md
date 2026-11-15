@@ -840,18 +840,23 @@ PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() les
   a new id (not seen, not left) ─> a block, in start order; the close button's dismissal clears
   a block's item not open (allPassed, expired) ─> done; closed by the store (a won roll: Get nil,
     the block keeps the item table, its final roll) ─> done; still held but not listed ─> dropped
-  done ─> rolls.panel.linger s (0: at once) ─> leaves, unless the pointer is over the panel (held:
-    the panel's OnLeave counts every finished block again) ─> the last one ─> WindowAutoClose.Bump
+  done ─> stays (winner washed, result line) while any block still runs (RX-21)
+  every block done ─> one rolls.panel.linger s countdown (0: at once); a new roll cancels it ─> every
+    block leaves and the panel closes, unless the pointer is over the panel (held: the panel's
+    OnLeave starts the count again) ─> WindowAutoClose.Bump
 paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
+  ─> test mode ─> the test strip under the title band; a simulation ─> the sim strip; the body moves
+    down by the strip (RX-21)
   ─> raid mode? (RollsPanelRows.IsRaid on the larger of Compat.GroupSize and the most players on one
-    block's roll: more than 5) ─> the open block
-    (RollsPanelRows.PickOpen: a clicked header while its roll runs, else your pending roll, else the
-    soonest ending); the rest headers with the count line, a resolved one dimmed with its result;
-    rolls.panel.foldInRaid ─> Pass and Waiting one line each (RollsPanelRows.Fold), a click unfolds
-  ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, result,
-    verdict foot; title Rolls or Rolls · N; 250 wide, 220 compact; the bar past the window's height)
-  ─> docked right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s ticker
-    while open
+    block's roll: more than 5) ─> rolls.panel.foldInRaid ─> Pass and Waiting one line each
+    (RollsPanelRows.Fold), a click unfolds
+  ─> every block open unless the player collapsed it (its header's click, Collapse all; a collapsed
+    header reads the count line, or its result once over, dimmed)
+  ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, kept while the
+    roll reads the same, alternately shaded, a number on Need / Greed / Disenchant; the result; no
+    verdict line; title Rolls; 290 wide, 250 compact; the bar past the window's height)
+  ─> docked flush right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s
+    ticker while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
 WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
 test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)

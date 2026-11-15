@@ -277,14 +277,14 @@ local function rollsPanel(D)
         onChange = function() if NS.RollsPanel then NS.RollsPanel.Refresh() end end }
     local rollsOff = unless("rolls.show", true)
     bool("rolls.panel.enabled", D.enabled, L["Show the Rolls panel beside the window"],
-        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep a finished roll there for the time set below. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."],
+        L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep it open for the time set below after the last roll. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."],
         with(at, { disabledIf = rollsOff }))
     local sub = with(at, { disabledIf = function() return rollsOff() or NS.Setting("rolls.panel.enabled") ~= true end })
     pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
         L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
         sub)
-    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep a finished roll for (seconds)"],
-        L["How long a roll stays in the Rolls panel after it is won or everyone passed; 0 removes it at once. Nothing leaves while the pointer is over the panel. Needs Show the Rolls panel beside the window."],
+    slider("rolls.panel.linger", D.linger, 0, 60, 1, L["Keep the panel open after the last roll"],
+        L["Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."],
         with(sub, { validate = wholeIn(0, 60) }))
     bool("rolls.panel.foldInRaid", D.foldInRaid, L["Fold Pass and Waiting in a raid"],
         L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."],

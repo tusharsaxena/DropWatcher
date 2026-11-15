@@ -1,36 +1,38 @@
 local _, NS = ...
 -- modules/RollsPanelRows.lua — what the Rolls panel says (rolls panel design §3.1 and §3.2, plan
--- RX-17): one block per watched roll, its header, its rows per player and its foot, and the side
--- of the window it docks on. modules/RollsPanel.lua is the frame edge that draws it.
+-- RX-17): one block per watched roll, its header, its rows per player and its result line, and
+-- the side of the window it docks on. modules/RollsPanel.lua is the frame edge that draws it.
 --
 -- PURE. Every composer takes a NS.Pending roll item (its `roll`, NS.Compat.LootHistoryRolls' plain
--- table; `me`, your verdict; `state`) and the loot history's clock, and answers plain tables.
--- NS.RollCells, NS.RollPopup, NS.TipMarks, NS.GroupRoster and NS.Skin are read at call time.
+-- table; `state`) and the loot history's clock, and answers plain tables. NS.RollCells,
+-- NS.TipMarks, NS.GroupRoster, NS.Compat and NS.Skin are read at call time.
 --
--- A BLOCK (design §3.2): the header (the item's name from its link, its quality, the time left by
--- RollCells' rules, RX-02, or `done` once the roll is over), the rows, a result line once resolved
--- (`Won by <name> (<choice> <roll>)`, `Everyone passed`, `Roll ended`) and the foot (your verdict:
--- RollPopup.Verdict, the side card's words, so a non-gear item reads its kind word in the neutral
--- tone). `open` says whether its rows show: every block in a dungeon; raid mode closes all but one.
+-- A BLOCK (design §3.2; round 2, plan RX-21): the header (the item's name from its link, its quality,
+-- the time left by RollCells' rules, RX-02, or `done` once the roll is over), the rows and a result
+-- line once resolved (`Won by <name> (<choice> <roll>)`, `Everyone passed`, `Roll ended`). No verdict
+-- line (ruling A4: the side card and Rolling now say it). `open` says whether its rows show: every
+-- block starts open, in any group size, and only the player collapses one (ruling A2); a collapsed
+-- block is its header with the count line (RollCells.CountLine) under it, or its result once over
+-- (`dim`).
 --
 -- RAID MODE (design §3.3, plan RX-18) is a group of more than RPR.RAID_OVER members (RPR.IsRaid, on
--- NS.Compat.GroupSize, or on the most players on one watched roll: RX-19, modules/RollsPanel.lua). One block is open (RPR.PickOpen: a header the player clicked while its roll
--- runs, else the roll you still have to roll on, else the one ending soonest); the rest are headers
--- with the count line (RollCells.CountLine) under the name, a resolved one dimmed with its result
--- (the winner and the roll) in the count line's place. With `rolls.panel.foldInRaid` on, Pass and
--- Waiting fold to one line each (RPR.FOLDS: `Pass 27 · P1, P2, P3…`, the first RPR.FOLD_NAMES names),
--- whose tooltip lists every name; a group the player unfolded lists a row per player again.
+-- NS.Compat.GroupSize, or on the most players on one watched roll: RX-19, modules/RollsPanel.lua).
+-- Round 2 removed its one-open rule; what stays is the fold: with `rolls.panel.foldInRaid` on, Pass
+-- and Waiting fold to one line each (RPR.FOLDS: `Pass 27 · P1, P2, P3…`, the first RPR.FOLD_NAMES
+-- names), whose tooltip lists every name; a group the player unfolded lists a row per player again.
 --
 -- THE ROWS come from NS.RollCells.Grouped, so the panel orders a roll as the all-rolls tooltip does:
 -- Need, Greed (a Transmog counts as Greed), Disenchant (Retail only, clients-§4), Pass, still to roll
 -- (the hourglass, RX-13), highest roll first within each. A row is the choice's mark (the game's own
 -- roll art for the player's state, the group's mark for a state with none), the name in its class
 -- color (a name the reader could not read plainly is `?`, RollCells' rule, never keyed), `[YOU]` in
--- the skin's accent on yours, and the roll's number. `winner` marks the row the panel washes gold.
+-- the skin's accent on yours, and the roll's number on every row that rolled (RPR.NUMBERED: Need,
+-- Greed, Disenchant; ruling A6), none on Pass or Waiting. `winner` marks the row the panel washes
+-- gold; `src` is the RollCells row its tooltip reads on hover (RPR.RowTip: name, choice, roll, class).
 --
 --   block = { id, link, name, quality, open, done, dim, time, left, counts,
---             rows = { { mark, text, roll, winner, isSelf, group, fold, tip } },
---             result = { text, tone } | nil, foot = { text, tone } }
+--             rows = { { mark, text, roll, winner, isSelf, group, fold, tip, src } },
+--             result = { text, tone } | nil }
 --   (a folded group's row carries `fold`, its group's key, and `tip`, its tooltip's lines)
 
 NS.RollsPanelRows = NS.RollsPanelRows or {}
@@ -42,6 +44,7 @@ RPR.RAID_OVER = 5                            -- a group past this many members i
 RPR.FOLDS = { pass = true, waiting = true }  -- the groups a raid folds to one line
 RPR.FOLD_NAMES = 3                           -- the names a folded line spells out
 RPR.TIP_NAMES = 5                            -- the names per line of a folded group's tooltip
+RPR.NUMBERED = { need = true, greed = true, disenchant = true }   -- the groups whose rows show a roll
 
 local function num(v) return type(v) == "number" and v or nil end
 
@@ -56,7 +59,33 @@ local function rowOf(r, g)
     local mark = r.glyph and RC.GlyphEscape(r.state, 0) or RC.Mark(g)
     local text = NS.TipMarks.ClassName(r.name, r.classFile)
     if r.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("accent")) end
-    return { mark = mark, text = text, roll = r.roll, winner = r.winner == true, isSelf = r.isSelf == true, group = g.key }
+    return { mark = mark, text = text, roll = RPR.NUMBERED[g.key] and r.roll or nil, winner = r.winner == true,
+        isSelf = r.isSelf == true, group = g.key, src = r }
+end
+
+--- One player's row tooltip (ruling A7): the name in class color, the choice, the roll (RollCells.RowTip)
+--- and the class. Built on hover, from the row's `src`.
+--- @param r table a RollCells.Rows row
+--- @return table tip
+function RPR.RowTip(r)
+    local tip = NS.RollCells.RowTip(r)
+    local class = type(r) == "table" and r.classFile and NS.Compat.ClassDisplayName(r.classFile) or nil
+    if class then tip[#tip + 1] = NS.TipMarks.Row(L["Class"], class) end
+    return tip
+end
+
+--- An item header's lines under the item's own tooltip (ruling A7): every roll (RollCells.Tooltip,
+--- under the `Rolls` heading in place of the item's name) with the time left, then the click's hint.
+--- @param item table a NS.Pending roll item
+--- @param now number|nil NS.Compat.LootHistoryNow()
+--- @param open boolean whether the block is expanded
+--- @return table lines
+function RPR.HeaderTip(item, now, open)
+    local roll = type(item) == "table" and type(item.roll) == "table" and item.roll or nil
+    local tip = NS.RollCells.Tooltip(roll, { now = now, rollID = item and item.rollID })
+    tip[1] = L["Rolls"]
+    tip[#tip + 1] = NS.TipMarks.Hint(open and L["Click to collapse this item."] or L["Click to expand this item."])
+    return tip
 end
 
 -- A folded group's tooltip: its word and count, then every name in class color, RPR.TIP_NAMES a
@@ -115,59 +144,6 @@ function RPR.IsRaid(size)
     return size ~= nil and size > RPR.RAID_OVER
 end
 
---- Whether you still have to roll on `roll`: its item holds your roll popup (`rollID`; a test
---- sample stands in for one) and your roll state is still to roll (the history's playerRollState,
---- else your own row's). The history reads still to roll on a drop you get no popup for (RX-20).
---- @param roll table|nil
---- @param item table|nil the pending item; nil reads the roll alone
---- @return boolean
-function RPR.YoursPending(roll, item)
-    if type(roll) ~= "table" then return false end
-    if type(item) == "table" and item.rollID == nil and not item.test then return false end
-    local RC = NS.RollCells
-    if num(roll.myState) then return roll.myState == RC.WAITING end
-    for _, r in ipairs(roll.rolls or {}) do
-        if r.isSelf then return num(r.state) == RC.WAITING end
-    end
-    return false
-end
-
--- Whether candidate `a` opens before `b`: a known time left before none, the sooner first.
-local function sooner(a, b)
-    if b == nil then return true end
-    local la, lb = num(a.left), num(b.left)
-    if la and lb then return la < lb end
-    return la ~= nil and lb == nil
-end
-
---- Which block raid mode opens (design §3.3): `sticky` (the header the player clicked) while its
---- roll runs, else the roll you still have to roll on, else the one ending soonest (a known time
---- before none, the earlier start on a tie); nil when every roll is over.
---- @param list table[] the blocks in start order: { id, done, pending, left }
---- @param sticky any the clicked block's id, or nil
---- @return any the id to open, or nil
-function RPR.PickOpen(list, sticky)
-    local mine, soon
-    for _, e in ipairs(list) do
-        if not e.done then
-            if e.id == sticky then return e.id end
-            if e.pending and sooner(e, mine) then mine = e end
-            if sooner(e, soon) then soon = e end
-        end
-    end
-    local pick = mine or soon
-    return pick and pick.id or nil
-end
-
---- The panel's title: `Rolls`, or `Rolls · N` in raid mode (N blocks).
---- @param raid boolean
---- @param n number
---- @return string
-function RPR.Title(raid, n)
-    if raid then return L["Rolls · %d"]:format(n) end
-    return L["Rolls"]
-end
-
 --- The result line of a roll that is over: `Won by <name> (<choice> <roll>)` (RollCells.Summary's
 --- words, in the good tone), `Everyone passed`, else `Roll ended`.
 --- @param roll table|nil
@@ -189,22 +165,21 @@ end
 
 --- One block of the panel (design §3.2) for pending item `item`.
 --- @param item table a NS.Pending roll item
---- A closed block (raid mode) reads no rows: `rows` is empty, and `counts` holds the count line,
---- or the result's text once the roll is over (`dim`).
+--- A collapsed block reads no rows: `rows` is empty, and `counts` holds the count line, or the
+--- result's text once the roll is over (`dim`).
 --- @param opts table|nil { now (NS.Compat.LootHistoryNow), gone (the store closed it), open (rows
----   shown; true by default), raid (raid mode), fold (fold Pass and Waiting), unfolded }
+---   shown; true by default), fold (fold Pass and Waiting), unfolded, rows (RPR.Rows' answer the
+---   caller kept for this roll table: read instead of composing them again) }
 --- @return table block
 function RPR.Block(item, opts)
     opts = opts or {}
     local roll = type(item.roll) == "table" and item.roll or nil
     local done = RPR.IsDone(item, opts.gone)
-    local verdict = NS.RollPopup.Verdict(item.me)
     local open = opts.open ~= false
     local block = {
         id = item.id, link = item.link, name = nameOf(item.link) or L["Item"],
         quality = type(item.facts) == "table" and item.facts.quality or nil,
-        open = open, done = done, rows = open and RPR.Rows(roll, opts.fold, opts.unfolded) or {},
-        foot = { text = verdict.text, tone = verdict.tone },
+        open = open, done = done, rows = open and (opts.rows or RPR.Rows(roll, opts.fold, opts.unfolded)) or {},
     }
     if done then
         block.time, block.result = L["done"], RPR.Result(roll)
@@ -212,7 +187,7 @@ function RPR.Block(item, opts)
         block.left = NS.RollCells.Left(roll, opts.now, item.rollID)
         block.time = NS.RollCells.Timer(roll, opts.now, item.rollID)
     end
-    if opts.raid and not open then
+    if not open then
         block.dim = done
         block.counts = done and block.result.text or NS.RollCells.CountLine(roll)
     end

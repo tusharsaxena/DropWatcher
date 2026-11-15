@@ -1961,30 +1961,34 @@ Total.
 - roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 
-### test_rolls_panel.lua (37)
+### test_rolls_panel.lua (45)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
 - rolls panel: every panel row dims while Show rolls is off, the switch naming the row it needs
-- rolls panel: a watched roll shows it docked right of the shown window, titled Rolls
+- rolls panel: a watched roll shows it docked flush right of the shown window, titled Rolls, 290 wide
 - rolls panel: near the screen's right edge it flips left, and the Left setting docks left
 - rolls panel: the side flips on a window move, from the geometry seam
 - rolls panel: a roll the feed's gates refuse shows nothing
 - rolls panel: with the window closed it stays hidden, and shows when the window opens
 - rolls panel: a minimized window hides it, and expanding brings it back
 - rolls panel: the setting off shows nothing, and turning it on shows the roll
-- rolls panel: rows grouped Need, Greed, Pass, still to roll, highest first, [YOU] on yours, verdict at the foot
+- rolls panel: rows grouped Need, Greed, Pass, still to roll, highest first, [YOU] on yours, no verdict line
+- rolls panel: a changed roll repaints its rows, and an unchanged one keeps them
 - rolls panel: a Disenchant counts as Disenchant on Retail, as Greed on WoW Forever
 - rolls panel: a won roll washes the winner gold and reads the result line, then leaves after the linger
 - rolls panel: everyone passing reads Everyone passed; a linger of 0 removes it at once
-- rolls panel: two rolls are two blocks in the order they started; the first leaving keeps the second
+- rolls panel: two rolls are two blocks in the order they started; a finished one stays until both are over
+- rolls panel: a new roll during the linger cancels the countdown
 - rolls panel: the pointer over the panel holds a finished roll; leaving restarts its count
 - rolls panel: with a linger of 0, leaving the panel lets every held roll go
 - rolls panel: turning Show rolls off takes the panel's rolls away at once, and a win brings nothing back
 - rolls panel: leaving the panel from its scroll body restarts a held roll's count
 - rolls panel: the close button hides it until the next roll starts
 - rolls panel: test mode's samples leave at once when it ends, and show again when it comes back
-- rolls panel: in test mode its title band reads TEST MODE beside the title, and not after
+- rolls panel: in test mode a test strip sits directly under its title bar, with no header word
+- rolls panel: during a simulation the sim strip sits under its title bar instead
+- rolls panel: test mode's sample roll shows a number on every Need and Greed row, none on Pass or Waiting
 - rolls panel: the Offer panel docked on its side moves it to the other one, and back when it closes
 - rolls panel: with no room on the other side it waits hidden while the Offer panel holds its side
 - rolls panel: an auto-opened window waits while the panel lingers, then a full count
@@ -1992,14 +1996,18 @@ Total.
 - rolls panel: /dw rolls with the window closed, or the panel off, says why and shows nothing
 - rolls panel: /dw rolls with Show rolls off says why and shows nothing
 - rolls panel: Side keeps the wanted side that fits, else the other, and unknown geometry answers it
-- rolls panel: a group of 6 is raid mode (one block open, titled Rolls · N); a group of 5 opens every block
-- rolls panel: raid mode opens your pending roll, else the soonest ending; a clicked header sticks until it resolves
+- rolls panel: a group of 6 is raid mode, every block still open, titled Rolls; a group of 5 too
+- rolls panel: an item header collapses and expands its block on a click, and the collapse sticks
+- rolls panel: Expand all and Collapse all on the title bar open and close every item
+- rolls panel: an item header is the section header's look: a band, a gold chevron, the icon and the name
+- rolls panel: the roller rows alternate their shading
+- rolls panel: a roll number on Need and Greed, none on Pass or Waiting
+- rolls panel: the item header shows the item and every roll, a row its player, choice, roll and class
 - rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
 - rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads
 - rolls panel: a dungeon group never folds
-- rolls panel: 40 players on 6 items fit, the body scrolls, and a repaint makes no frame
-- rolls panel: the compact layout is 220 wide, the full one 250
-- rolls panel: PickOpen keeps a live click, then your pending roll, then the soonest ending
+- rolls panel: 40 players on 6 items fit, all open, the body scrolls, and a repaint makes no frame
+- rolls panel: the compact layout is 250 wide, the full one 290
 
 ### test_feed_counts.lua (10)
 
@@ -3018,7 +3026,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 16 |
-| test_rolls_panel.lua | 37 |
+| test_rolls_panel.lua | 45 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3067,4 +3075,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2541** |
+| **Total** | **2549** |

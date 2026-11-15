@@ -174,14 +174,17 @@ the code reads every case the design leaves open, module by module, is in
 - **Auto-close's indent.** Rolls UX design §3.6 asks for Auto-close indented beneath Auto-open the
   window; the settings flow (LibKa0s-Options) has no indent, so it sits on the line beneath it, and
   its tooltip says it needs Auto-open the window (options-ui-§21).
-- **The Rolls panel's width and raid mode's group size.** The panel is 250 wide (220 in the compact
-  layout) in the window's units whatever the font size. Raid mode reads the group's size
+- **The Rolls panel's width and raid mode's group size.** The panel is 290 wide (250 in the compact
+  layout) in the window's units whatever the font size (RX-21). Raid mode reads the group's size
   (`GetNumGroupMembers`) and the most players on one watched roll on each repaint, so a group
   crossing five members between rolls switches layout on the next repaint (a roll change or the
   one-second ticker). A roll of more than five players is raid mode whatever the group's size reads:
   test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
-  party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. An unfolded Pass or Waiting
-  group stays unfolded for that block; there is no click to fold it again.
+  party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. Raid mode only
+  folds Pass and Waiting since RX-21: every item starts open in any group size, so a 40-player raid
+  rolling six items scrolls a long body until the player collapses some (Collapse all on the title
+  bar). An unfolded Pass or Waiting group stays unfolded for that block; there is no click to fold it
+  again.
 - **The Rolls panel and the Offer panel on one side.** Both dock beside the window. Since RX-20 the
   Rolls panel gives way: with the Offer panel docked on its side it takes the other side, and with no
   room on the screen there it waits hidden (its rolls still tracked and lingering) until the Offer
