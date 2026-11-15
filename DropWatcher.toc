@@ -375,6 +375,7 @@ modules\FeedRestore.lua
 # own NS.Bus target. Every engine module above, and NS.WindowTitleBar / NS.WindowFilterBar /
 # NS.WindowFooter / NS.OfferPanel (below), are read at call time: the frame is built on the first
 # show.
+modules\WindowTabs.lua
 modules\Window.lua
 # Conventional: publishes NS.WindowTitleBar (the title bar, the badge's words and the window's flat
 # and icon buttons); reads NS.Constants and NS.L at load, and NS.Window (above), NS.Asks and the

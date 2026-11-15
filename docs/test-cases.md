@@ -435,7 +435,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (70)
+### test_window_shell.lua (72)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -453,6 +453,7 @@ Total.
 - shell: the tab labels carry no count; their tooltips say what each holds
 - shell: the Insights tooltip names what it holds and the period the kept history covers
 - shell: a tab's body is built on its first show, and refreshed with the tab's view
+- shell: the tab strip is its own module, and the shell stays under its split point
 - shell: a tab with no body says what it will hold, never a blank pane
 - shell: the filter bar holds View, Quality, Content and the search box, and no checkbox
 - shell: the View is multi-select: its values combine, the label counts them, and All clears them
@@ -486,6 +487,7 @@ Total.
 - shell: a double-click on the title bar expands a minimized window
 - shell: the lock button sits in the right-hand cluster left of the layout toggle, dimmed while unlocked, apart from the badge
 - shell: a click on the lock button writes `locked` and hides the grip; a second click undoes both
+- shell: a repaint lays the footer out again only when its grip changes, and the panes only when they move
 - shell: the lock button's tooltip names Lock frame on its canonical location, in both states
 - shell: `/dw lock` and `/dw unlock` repaint the lock button and the grip
 - shell: the grip shows only while the window is expanded and unlocked
@@ -2981,7 +2983,7 @@ Total.
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
 | test_window.lua | 20 |
-| test_window_shell.lua | 70 |
+| test_window_shell.lua | 72 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 30 |
 | test_compact_cards.lua | 27 |
@@ -3089,4 +3091,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2563** |
+| **Total** | **2565** |

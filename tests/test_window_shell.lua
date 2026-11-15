@@ -296,6 +296,26 @@ test("shell: a tab's body is built on its first show, and refreshed with the tab
     assertTrue(seen.matches(drop()) and type(seen.compare) == "function")
 end)
 
+-- RX-27: the tab strip, its panes and the tabs' registry are modules/WindowTabs.lua's, so the shell
+-- (modules/Window.lua) stays under the 1100-line split point its automated-test disposition set.
+test("shell: the tab strip is its own module, and the shell stays under its split point", function()
+    local NS, f = shown()
+    local WT = NS.WindowTabs
+    assertTrue(type(WT) == "table", "NS.WindowTabs")
+    assertEqual(WT.Label("history"), "History")
+    assertEqual(WT.Label("nope"), "nope")
+    assertEqual(select(1, WT.Tip("group")), "Drops")
+    assertTrue(WT.Known("insights") and not WT.Known("mine"))
+    assertEqual(WT.Resolve("mine"), "group", "the retired key opens Drops")
+    assertEqual(WT.Resolve("nope"), nil)
+    assertTrue(f.tabStrip ~= nil and f.tabs.group ~= nil and f.panes.group ~= nil)
+    assertFalse(WT.OwnsBar("group"))
+    assertTrue(WT.OwnsBar("insights"), "Insights draws its own bar")
+    local lines = 0
+    for _ in io.lines("modules/Window.lua") do lines = lines + 1 end
+    assertTrue(lines < 1100, "modules/Window.lua is " .. lines .. " lines")
+end)
+
 test("shell: a tab with no body says what it will hold, never a blank pane", function()
     local _, f = shown()
     for _, key in ipairs({ "group", "history", "insights" }) do
@@ -882,6 +902,27 @@ test("shell: a click on the lock button writes `locked` and hides the grip; a se
     assertEqual(NS.addon.db.profile.locked, false)
     assertTrue(f.resizeGrip:IsShown())
     assertEqual(NS.Window.TooltipOf(f.lockButton)[1], "Lock the window")
+end)
+
+-- RX-27 (repaint headroom, bisected 2026-11-16): every pass handed the footer its grip again, and
+-- W.Footer's SetGrip lays out its marks and both lines anew each time; every pass anchored the panes
+-- again too. The footer is laid out again only when the grip turns on or off, and a pane only when
+-- its top moves. The mock records each SetPoint, so an untouched anchor list is the same table.
+test("shell: a repaint lays the footer out again only when its grip changes, and the panes only when they move", function()
+    local NS, f = shown()
+    local foot, pane = f.footerHost, f.panes.group
+    local markPts, leftPts, panePts = foot.marks[1].__points, foot.left.__points, pane.__points
+    NS.Window.Refresh(); NS.Window.Refresh()
+    assertTrue(foot.marks[1].__points == markPts and foot.left.__points == leftPts, "the footer is not laid out again")
+    assertTrue(pane.__points == panePts, "the pane is not anchored again")
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertTrue(foot.marks[1].__points ~= markPts, "locked: the footer gives the grip's corner back")
+    assertEqual(foot.marks[1].__points[1][4], -NS.FooterMetric("PAD"), "the corner mark at the padding")
+    f.lockButton:__fire("OnClick", "LeftButton")
+    assertEqual(foot.marks[1].__points[1][4], -NS.FooterMetric("GRIP"), "unlocked: clear of the grip again")
+    NS.Window.RegisterTab("group", { build = function() end, refresh = function() end, ownBar = true })
+    NS.Window.Refresh()
+    assertEqual(pane.__points[1][5], -(NS.Constants.WINDOW.TAB_H + 4), "a tab with its own bar moves its pane up")
 end)
 
 -- options-ui-§21 Location strings (RX-12 review fix): '<Page> > <Tab>' with ' > ', the control by
