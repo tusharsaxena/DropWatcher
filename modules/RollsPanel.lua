@@ -30,7 +30,7 @@ local _, NS = ...
 -- THE DOCK (design §3.1). A child of the window frame (so it hides, scales and fades with it), in
 -- the window's strata at its docked level (frame-layering-§3, as the Offer panel docked), in the
 -- window's skin (NS.ApplySkin's panel, edge and title band; the title and close on the band through
--- NS.Skin.Header). Its TOPLEFT on the window's TOPRIGHT, RP.GAP out (`right`), or its TOPRIGHT on
+-- NS.Skin.Header). In test mode the band reads TEST MODE beside the title (preview-mode, RX-20). Its TOPLEFT on the window's TOPRIGHT, RP.GAP out (`right`), or its TOPRIGHT on
 -- the window's TOPLEFT (`left`): `rolls.panel.side`, flipped when the screen has no room there
 -- (RollsPanelRows.Side, in pixels: the window's edges and the panel's width at the window's
 -- effective scale, the screen at UIParent's). Re-checked on every paint: the window's show, move,
@@ -305,6 +305,16 @@ local function buildTitle(p)
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Rolls"])
     NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
+    -- Test mode's marker (preview-mode): this panel is a window of its own, so it says it shows
+    -- sample rolls in its own band, in the title bar's TEST MODE words and tone (RX-20).
+    p.testText = faced(p, "GameFontNormal")
+    p.testText:SetPoint("LEFT", p.title, "RIGHT", 6, 0)
+    p.testText:SetText(L["TEST MODE"])
+    NS.SkinPaint(p.testText, function(fs)
+        local r, g, b = NS.Skin.Color(NS.WindowTitleBar.TEST_TOKEN)
+        if r ~= nil then fs:SetTextColor(r, g, b) end
+    end)
+    p.testText:Hide()
     p.closeButton = NS.MakeCloseButton(p, function() RP.Close() end)
     if p.closeButton then
         p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
@@ -554,6 +564,7 @@ paint = function()
     end
     panel.raid = view.raid
     panel.title:SetText(NS.RollsPanelRows.Title(view.raid, #blocks))
+    panel.testText:SetShown(NS.State.testMode == true)
     panel.empty:SetShown(#blocks == 0)
     if #blocks == 0 then y = y + RP.LINE_H + 4 end
     panel:SetSize(view.w, fit(panel, y, view.w, geom(win, "GetHeight")))

@@ -3987,9 +3987,11 @@ the panel. Result:
 
 **ROLLS-18. Test mode's sample in the panel (RX-19; design §3.6).** Client: both. With no roll on,
 `/dw test` → the window opens (or stays) with the sample roll in Rolling now, and the Rolls panel
-docks beside it with that roll: nine players, so raid mode (`Rolls · 1`, Pass and Waiting folded).
+docks beside it with that roll: nine players, so raid mode (`Rolls · 1`, Pass and Waiting folded),
+its title band reading TEST MODE in the title bar's red beside `Rolls · 1` (preview-mode, RX-20).
 `/dw test` off → the panel's sample leaves at once and the panel hides; `/dw test` on again → it is
-back. Hover the folded lines and the header: every tooltip is bulleted rows, no glyph boxes.
+back. `/dw test` off, then `/dw rolls` → the empty panel reads no TEST MODE. Hover the folded lines
+and the header: every tooltip is bulleted rows, no glyph boxes.
 Result:
 
 ## WoW Forever

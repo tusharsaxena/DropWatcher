@@ -422,6 +422,29 @@ test("rolls panel: test mode's samples leave at once when it ends, and show agai
     quietly(function() NS.SetTestMode(false) end)
 end)
 
+-- red under: the panel drawing test mode's sample roll with no marker of its own (preview-mode:
+-- a frame with a title band is a window, and every display of placeholder data says so)
+test("rolls panel: in test mode its title band reads TEST MODE beside the title, and not after", function()
+    local NS, m = shown()
+    m.seedGearJournal()
+    local p0 = m.print
+    m.print = function() end
+    NS.SetTestMode(true)
+    m.print = p0
+    local p = NS.RollsPanel.Drawn().panel
+    assertTrue(NS.RollsPanel.IsShown())
+    assertTrue(p.testText:IsShown(), "the marker shows with the samples")
+    assertEqual(p.testText:GetText(), "TEST MODE")
+    local pt = p.testText.__points[1]
+    assertEqual(pt[1], "LEFT"); assertTrue(pt[2] == p.title, "beside the title, in the band")
+    m.print = function() end
+    NS.SetTestMode(false)
+    m.print = p0
+    NS.addon:OnSlashCommand("rolls")   -- shown by hand, no samples
+    assertTrue(NS.RollsPanel.IsShown())
+    assertFalse(p.testText:IsShown(), "no marker outside test mode")
+end)
+
 -- ── auto-close ──────────────────────────────────────────────────────────────────────────────
 
 -- red under: WindowAutoClose's idle() not asking RollsPanel.HasBlocks
