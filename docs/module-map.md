@@ -168,3 +168,14 @@ appends a `NS.STAND_DOWN` / `NS.STAND_UP` step (walked in TOC order); `test_harn
 | `tests/prose_waivers.lua` | what the kit's US-English gate must not correct: the icon catalog's British-spelled minimize key, named in `modules/WindowTitleBar.lua` |
 | `tests/test_*.lua` | one suite per subject (see [`testing.md`](testing.md)) |
 | `tests/perf.lua` | the offline scenarios, outside the gate |
+
+## Tools
+
+Outside the TOC and the package (`.pkgmeta` ignores `tools/`), Python 3, standard library only.
+
+| File | What it is |
+|---|---|
+| `tools/seeds/seeds.py` | the seed-validation tool (`docs/validate-seeds.md`): `status`, `derive` (one pinned wago.tools build of the flavor's own product, `wow` or `wowf`, cached in the git-ignored `tools/seeds/.cache/`, frozen into `docs/seed-research/<date>-<flavor>/`), `rule`, `check`, `report`, `apply` (the WEAPONS sets only) |
+| `tools/seeds/retail_rulings.json`, `tools/seeds/forever_rulings.json` | the rulings, one per candidate or flag key, written only by `seeds.py rule` |
+| `tools/seeds/test_seeds.py` | its cases, on fixture tables with no network |
+| `tools/seeds/.gitignore` | keeps `.cache/` and `__pycache__/` out of git |

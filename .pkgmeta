@@ -12,7 +12,7 @@ ignore:
   # - .superpowers   # ONLY once the repo HAS a .superpowers/; it has none today
   - docs             # holds docs/audits/, docs/reviews/, docs/revendor/ and docs/superpowers/ too
   - tests
-  # - tools          # ONLY once the repo HAS a tools/ (layout-§1); it has none today
+  - tools            # the seed-validation tool (tools/seeds/, layout-§1): dev-only
   - CLAUDE.md        # contributor documentation; README.md and LICENSE ship
   - DEPENDENCIES.md
   - media/logos/*.png   # the editable logo source (layout-§4): committed, never loadable, never shipped

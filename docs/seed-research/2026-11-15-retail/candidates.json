@@ -1,0 +1,128 @@
+{
+ "build": "12.1.5.70783",
+ "candidates": [
+  {
+   "apply": "weapons",
+   "cls": "DEMONHUNTER",
+   "group": "weapon",
+   "key": "weapon:DEMONHUNTER:DAGGER",
+   "name": "DEMONHUNTER DAGGER",
+   "notes": [
+    "SkillRaceClassInfo 173 Daggers",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "DEMONHUNTER:DAGGER",
+   "token": "DAGGER"
+  },
+  {
+   "apply": "weapons",
+   "cls": "ROGUE",
+   "group": "weapon",
+   "key": "weapon:ROGUE:BOWS",
+   "name": "ROGUE BOWS",
+   "notes": [
+    "SkillRaceClassInfo 45 Bows",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "ROGUE:BOWS",
+   "token": "BOWS"
+  },
+  {
+   "apply": "weapons",
+   "cls": "ROGUE",
+   "group": "weapon",
+   "key": "weapon:ROGUE:CROSSBOW",
+   "name": "ROGUE CROSSBOW",
+   "notes": [
+    "SkillRaceClassInfo 226 Crossbows",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "ROGUE:CROSSBOW",
+   "token": "CROSSBOW"
+  },
+  {
+   "apply": "weapons",
+   "cls": "ROGUE",
+   "group": "weapon",
+   "key": "weapon:ROGUE:GUNS",
+   "name": "ROGUE GUNS",
+   "notes": [
+    "SkillRaceClassInfo 46 Guns",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "ROGUE:GUNS",
+   "token": "GUNS"
+  },
+  {
+   "apply": "weapons",
+   "cls": "WARRIOR",
+   "group": "weapon",
+   "key": "weapon:WARRIOR:BOWS",
+   "name": "WARRIOR BOWS",
+   "notes": [
+    "SkillRaceClassInfo 45 Bows",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "WARRIOR:BOWS",
+   "token": "BOWS"
+  },
+  {
+   "apply": "weapons",
+   "cls": "WARRIOR",
+   "group": "weapon",
+   "key": "weapon:WARRIOR:CROSSBOW",
+   "name": "WARRIOR CROSSBOW",
+   "notes": [
+    "SkillRaceClassInfo 226 Crossbows",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "WARRIOR:CROSSBOW",
+   "token": "CROSSBOW"
+  },
+  {
+   "apply": "weapons",
+   "cls": "WARRIOR",
+   "group": "weapon",
+   "key": "weapon:WARRIOR:GUNS",
+   "name": "WARRIOR GUNS",
+   "notes": [
+    "SkillRaceClassInfo 46 Guns",
+    "SkillLineAbility agrees"
+   ],
+   "subject": "WARRIOR:GUNS",
+   "token": "GUNS"
+  }
+ ],
+ "checked": {
+  "ARMOR": 13,
+  "ARMOR_EARLY": 0,
+  "CLASS_ID": 13,
+  "RELIC": 0,
+  "SPECS": 40,
+  "SPEC_INDEX": 40,
+  "WEAPONS": 84,
+  "enum literals": 56,
+  "skill lines": 20
+ },
+ "date": "2026-11-15",
+ "flags": [],
+ "flavor": "retail",
+ "product": "wow",
+ "seedFiles": [
+  "core/ClassData.lua",
+  "core/Constants.lua",
+  "modules/CollectCells.lua",
+  "core/ItemRead.lua"
+ ],
+ "served": {
+  "ChrClasses": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "ChrSpecialization": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "ItemClass": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "ItemSubClass": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "SkillLine": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "SkillLineAbility": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "SkillRaceClassInfo": "Sun, 15 Nov 2026 16:41:50 GMT",
+  "SpecializationSpells": "Sun, 15 Nov 2026 16:41:51 GMT"
+ },
+ "tool": "tools/seeds/seeds.py derive"
+}

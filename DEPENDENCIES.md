@@ -49,6 +49,8 @@ marked as such rather than listed as a requirement.
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh`, which runs it over a sanitized shadow and checks function-count parity, because `lizard` alone is blind in Lua (automated-tests-§3); also the headless suite's one end-to-end lizard case, which SKIPs when lizard is not on PATH | `tests/_kit/run-automated-tests.sh`, `tests/_kit/test_lizard_sighted.lua`, the case "lizard sighted: lizard lists every function of a hazard fixture once it is sanitized" |
 | `git` | any recent | vendoring, the vendored-payload gate (`tests/test_vendor_sync.lua` reads the index and compares against the sibling `../LibKa0s` checkout) and the line-ending gate (`git check-attr`) | `tests/_kit/vendor_sync.lua`, `tests/_kit/test_eol.lua` |
 | POSIX shell (`bash`) | any | `tests/_kit/run-automated-tests.sh` and the commands in this file | the runner's shebang |
+| `python3` | **3.8+**, standard library only | the seed-validation tool `tools/seeds/seeds.py` and its cases (`docs/validate-seeds.md`); not needed to build, run or test the addon itself | `tools/seeds/seeds.py`'s imports; `pytest` is optional (`python3 -m unittest discover -s tools/seeds` runs the same cases) |
+| network access to `wago.tools` | - | a new seed-validation run (`seeds.py status`, and `derive` without `--replay`), which reads `https://wago.tools/api/builds` and the build's DB2 tables as CSV; a `--replay` and the tests run offline | `seeds.py`'s `BUILDS_URL` and `CSV_URL` |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2 — "5.2 will probably work" is false and costs an hour to

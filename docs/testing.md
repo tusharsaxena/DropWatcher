@@ -20,6 +20,11 @@ clients share is split, so the shared half runs on Forever too (DW-FP21: the glo
 class color on the main glow, the situation edge's inputs). The TOC's Forever number arms the kit's missing-globals gate
 (`test_client_globals`) for the `forever` name set as well as `live`.
 
+A change under `tools/seeds/` (the seed-validation tool, `docs/validate-seeds.md`) also runs its
+own cases, `python3 -m pytest -q tools/seeds` (or `python3 -m unittest discover -s tools/seeds`):
+fixture tables only, no network. They sit outside the Lua gate (layout, *A non-Lua generator sits
+outside the green gate*), and a seed-validation run lists them in its `## Gate`.
+
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
 census in [`ARCHITECTURE.md`](ARCHITECTURE.md). Toolchain: [`DEPENDENCIES.md`](../DEPENDENCIES.md).
 The suite needs a sibling `../LibKa0s` checkout for the vendor gate's two payload cases (they SKIP

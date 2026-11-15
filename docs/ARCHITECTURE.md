@@ -124,6 +124,14 @@ seed list; `C.FEATURE_CLIENTS` (`core/Constants.lua`) names the Retail-only feat
 DW-FP11 gate, and `C.FEATURE` holds each one's `ForClient` answer, read once. A default only a
 Retail-only feature reads is added on Retail alone (`defaults/Profile.lua`, DW-FP21).
 
+The two class lists are seed data, and each is re-validated against its own client's DB2 on
+wago.tools (clients-§10): `tools/seeds/seeds.py` checks `core/ClassData.lua` against product `wow`
+and `core/ClassDataForever.lua` against `wowf` (class ids, armor and the level-40 switch, weapon
+proficiencies, specs or talent trees, relics, the Titan's Grip, shield and dual-wield flags), plus
+`core/Constants.lua`'s enum fallback literals and the recipe skill lines. Every candidate and flag is
+ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bundle under
+`docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md).
+
 | Feature | Client | Gated in |
 |---|---|---|
 | The default skin: Ka0s Default (`NS.DEFAULT_SKIN = Skin:DefaultSkin()`, skinning-§2, DW-FP03) | `retail` | `core/SkinSetup.lua`, `defaults/Profile.lua` (`skin.skin`) |
@@ -602,8 +610,9 @@ with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
 
 Every `.md` under `docs/` appears in exactly one table below. Out of scope and named once each as
 directories, never row by row: `docs/audits/`, `docs/reviews/`, `docs/automated-tests/<run>/`,
-`docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/`, `docs/superpowers/` (the research
-bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
+`docs/perf-analysis/<run>/`, `docs/revendor/<date>-v<tag>/`, `docs/seed-research/<date>-<flavor>/`
+(the seed-validation bundles), `docs/superpowers/` (the research bundle, the design spec and the
+checkpointed plan) and `docs/investigations/`.
 
 ### Required (documentation-§3, Tier 1)
 
@@ -646,6 +655,7 @@ bundle, the design spec and the checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `design-readings.md` | How the code reads every case the design spec leaves open, module by module (linked from `known-limitations.md`) |
+| `validate-seeds.md` | The seed-validation contract `/dev-copilot:validate-seeds` runs: the class lists' flavors (`retail` on `wow`, `forever` on `wowf`), `tools/seeds/seeds.py`'s steps, the precedent a ruling follows and the gate |
 | `forever-probes.md` | The WoW Forever port's in-game probe sheet: each open read of the port's design and research, a line to type and what to read (linked from `smoke-tests.md` and `known-limitations.md`) |
 
 ## Documented deviations
