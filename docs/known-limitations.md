@@ -182,8 +182,12 @@ the code reads every case the design leaves open, module by module, is in
   test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
   party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. An unfolded Pass or Waiting
   group stays unfolded for that block; there is no click to fold it again.
-- **The Rolls panel and the Offer panel on one side.** Both dock beside the window; with the Offer
-  panel open on the side the Rolls panel takes, the two overlap until one closes.
+- **The Rolls panel and the Offer panel on one side.** Both dock beside the window. Since RX-20 the
+  Rolls panel gives way: with the Offer panel docked on its side it takes the other side, and with no
+  room on the screen there it waits hidden (its rolls still tracked and lingering) until the Offer
+  panel closes or moves. The two never stack, so on a window with room on one side only the Rolls
+  panel is out of sight while the Offer panel is open (Claude's call, RX-20: the owner has not ruled
+  on it; the Offer panel is the one the player opened to act).
 
 ## The simulator
 

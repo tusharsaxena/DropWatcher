@@ -3946,9 +3946,12 @@ roll in the panel (ROLLS-12), drag the window toward the screen's right edge unt
 leave the screen → it moves to the window's left, its top-right on the window's top-left; drag back →
 it returns right. Resize the window and change its Scale (Window › Layout) → the panel follows, as tall
 as its blocks, never taller than the window. Settings › Drops › Rolls › Panel › Side: Left → it docks
-left; near the left edge it flips right; the Side tooltip says it flips when there is no room. With a
-roll popup's side card and the Offer panel up (known limitation: the Offer panel on the panel's side
-overlaps it), note which frames touch. Result:
+left; near the left edge it flips right; the Side tooltip says it flips when there is no room. With
+the panel on the right and room on both sides, open the Offer panel on one of your drops (or `/dw test`
+and Offer on a sample drop of yours) → the Rolls panel moves to the window's left, the Offer panel on
+the right, no overlap; close the Offer panel → the Rolls panel returns right. Drag the window to the
+screen's left edge and open the Offer panel again → the Rolls panel hides while it is up and comes
+back when it closes (RX-20). With a roll popup's side card up too, note which frames touch. Result:
 
 **ROLLS-14. The linger and the hover (RX-17; design §3.4).** Client: both. Let a roll in the panel end
 → it stays about 10 seconds with its result, then leaves; the last one leaving hides the panel. Rest

@@ -262,6 +262,12 @@ local function dockCompact(p, win, side)
     p:SetHeight(OP.CompactHeight(edge(win, "GetHeight")))
 end
 
+-- The Rolls panel docks on the side this panel leaves free (RX-20): it repaints when this one
+-- opens, closes or changes side (modules/RollsPanel.lua, read at call time: it loads later).
+local function besideMoved()
+    if NS.RollsPanel then NS.RollsPanel.Refresh() end
+end
+
 local function dock(p)
     local win = NS.Window.Frame()
     local side = MC.DockSide(edge(win, "GetLeft"), edge(win, "GetRight"), K.OFFER_W, screenWidth(), K.DOCK_GAP)
@@ -283,7 +289,9 @@ local function dock(p)
     local LV = C.LAYERS.LEVEL
     p:SetFrameLevel(win:GetFrameLevel() + (side == "float" and LV.POPOVER_OFFER or LV.DOCKED))
     p:SetWidth(K.OFFER_W)
+    local moved = p.dock ~= side
     p.dock = side
+    if moved then besideMoved() end
 end
 
 -- ── painting ────────────────────────────────────────────────────────────────────────────────
@@ -409,6 +417,7 @@ function OP.Open(dropID)
     NS.Debug("UI", "offer panel: drop %s", tostring(dropID))
     panel:Show()
     if NS.Window.IsShown() then NS.Window.Refresh() else OP.Refresh() end
+    besideMoved()
     return panel
 end
 
@@ -416,6 +425,7 @@ end
 function OP.Close()
     State.offerPanel = nil
     if panel then panel:Hide() end
+    besideMoved()
 end
 
 --- A drop's Offer button (feedback-21 H4): it closes the panel when the panel already shows that
@@ -429,6 +439,11 @@ end
 
 --- @return boolean
 function OP.IsShown() return panel ~= nil and panel:IsShown() == true end
+
+--- The side the shown panel is docked on (`right`, `left`, or `float` over the window), or nil
+--- while it is closed: the Rolls panel takes the other side (RX-20).
+--- @return string|nil
+function OP.DockSide() return OP.IsShown() and panel.dock or nil end
 
 --- The drop the panel shows, or nil.
 --- @return number|nil

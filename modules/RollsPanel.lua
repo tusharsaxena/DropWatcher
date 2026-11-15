@@ -33,7 +33,9 @@ local _, NS = ...
 -- NS.Skin.Header). In test mode the band reads TEST MODE beside the title (preview-mode, RX-20). Its TOPLEFT on the window's TOPRIGHT, RP.GAP out (`right`), or its TOPRIGHT on
 -- the window's TOPLEFT (`left`): `rolls.panel.side`, flipped when the screen has no room there
 -- (RollsPanelRows.Side, in pixels: the window's edges and the panel's width at the window's
--- effective scale, the screen at UIParent's). Re-checked on every paint: the window's show, move,
+-- effective scale, the screen at UIParent's). The Offer panel docked on that side (the one the
+-- player opened to act) sends it to the other side when that fits, else it waits hidden until the
+-- Offer panel closes or moves (RollsPanelRows.Beside, RX-20; the Offer panel repaints it). Re-checked on every paint: the window's show, move,
 -- resize, layout and minimize (Window.AddVisibilityListener, Window.AddGeometryListener).
 -- RP.WIDTH wide (RP.WIDTH_COMPACT in the compact layout); as tall as its blocks, never taller than
 -- the window: beyond that its body scrolls (a scroll frame under the title band, its bar shown only
@@ -383,12 +385,17 @@ local function screenPx()
     return w and w * (geom(UIParent, "GetEffectiveScale") or 1) or nil
 end
 
--- Beside the window, on the side the setting asks for, or the other with no room there.
+-- Beside the window, on the side the setting asks for, or the other with no room there; the other
+-- one too while the Offer panel is docked there (RollsPanelRows.Beside). Answers false when no side
+-- is free: the panel waits hidden.
 local function dock(p, win, w)
     local s = geom(win, "GetEffectiveScale") or 1
     local l, r = geom(win, "GetLeft"), geom(win, "GetRight")
-    local side = NS.RollsPanelRows.Side(NS.Setting("rolls.panel.side"), l and l * s, r and r * s, w * s,
-        screenPx(), RP.GAP * s)
+    l, r = l and l * s, r and r * s
+    local RPR, screen = NS.RollsPanelRows, screenPx()
+    local side = RPR.Side(NS.Setting("rolls.panel.side"), l, r, w * s, screen, RP.GAP * s)
+    side = RPR.Beside(side, NS.OfferPanel.DockSide(), l, r, w * s, screen, RP.GAP * s)
+    if not side then return false end
     p:ClearAllPoints()
     if side == "right" then
         p:SetPoint("TOPLEFT", win, "TOPRIGHT", RP.GAP, 0)
@@ -397,6 +404,7 @@ local function dock(p, win, w)
     end
     p:SetFrameLevel((geom(win, "GetFrameLevel") or 0) + C.LAYERS.LEVEL.DOCKED)
     p.dock = side
+    return true
 end
 
 -- A pooled frame at `y` in the body, as wide as the body (both top corners anchored).
@@ -568,7 +576,10 @@ paint = function()
     panel.empty:SetShown(#blocks == 0)
     if #blocks == 0 then y = y + RP.LINE_H + 4 end
     panel:SetSize(view.w, fit(panel, y, view.w, geom(win, "GetHeight")))
-    dock(panel, win, view.w)
+    if not dock(panel, win, view.w) then
+        panel:Hide()   -- the Offer panel holds the one side with room: back when it closes or moves
+        return syncTicker()
+    end
     panel:Show()
     syncTicker()
 end

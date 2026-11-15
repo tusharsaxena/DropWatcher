@@ -249,3 +249,25 @@ function RPR.Side(want, left, right, width, screen, gap)
     if want == "right" then return (fitsRight or not fitsLeft) and "right" or "left" end
     return (fitsLeft or not fitsRight) and "left" or "right"
 end
+
+--- The side the panel docks on beside the Offer panel (RX-20): `side` (RPR.Side's answer) while the
+--- Offer panel is not docked there (`taken`: its side, `float` over the window, or nil when it is
+--- closed), else the other side when that fits on the screen (or the geometry is unknown), else nil:
+--- no side is free, and the panel waits hidden until the Offer panel closes or moves. The Offer
+--- panel is the one the player just opened to act, so the read-only panel gives way.
+--- @param side string `right` or `left`
+--- @param taken string|nil
+--- @param left number|nil the window's left edge
+--- @param right number|nil its right edge
+--- @param width number the panel's width
+--- @param screen number|nil the screen's width
+--- @param gap number between the window and the panel
+--- @return string|nil
+function RPR.Beside(side, taken, left, right, width, screen, gap)
+    if taken ~= side then return side end
+    left, right, screen = num(left), num(right), num(screen)
+    local other = side == "right" and "left" or "right"
+    if not (left and right and screen and screen > 0) then return other end
+    if other == "left" then return left - gap - width >= 0 and other or nil end
+    return right + gap + width <= screen and other or nil
+end

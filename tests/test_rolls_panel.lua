@@ -445,6 +445,44 @@ test("rolls panel: in test mode its title band reads TEST MODE beside the title,
     assertFalse(p.testText:IsShown(), "no marker outside test mode")
 end)
 
+-- red under: the Rolls panel and the Offer panel docking on the same side at the same level, so
+-- the two overlapped with an arbitrary draw order (RX-20)
+local function offerOpen(NS, m)
+    m.seedGearJournal()
+    T.withPlayer(m)   -- someone to offer to (DW-07)
+    local p0 = m.print
+    m.print = function() end
+    NS.SetTestMode(true)   -- the sample roll fills the Rolls panel; the sample drops include yours
+    m.print = p0
+    for _, d in ipairs(NS.LootFeed.Drops("test")) do
+        if d.isMine and NS.OfferPanel.Open(d.id) then return d end
+    end
+end
+
+test("rolls panel: the Offer panel docked on its side moves it to the other one, and back when it closes", function()
+    local NS, m, w = shown(nil, 400, 1000)
+    assertTrue(offerOpen(NS, m) ~= nil, "an Offer panel opened on a sample drop of yours")
+    assertEqual(NS.OfferPanel.Drawn().panel.dock, "right", "Offer docks right")
+    local p = NS.RollsPanel.Drawn().panel
+    assertTrue(NS.RollsPanel.IsShown())
+    assertEqual(p.dock, "left", "the Rolls panel takes the other side")
+    local point, rel, relPoint = p:GetPoint(1)
+    assertEqual(point .. ">" .. relPoint, "TOPRIGHT>TOPLEFT"); assertTrue(rel == w)
+    NS.OfferPanel.Close()
+    assertEqual(p.dock, "right", "the Offer panel closed: back on its own side")
+end)
+
+test("rolls panel: with no room on the other side it waits hidden while the Offer panel holds its side", function()
+    local NS, m = shown(nil, 100, 700)   -- 100 - 3 - 250 is off the screen's left
+    offerOpen(NS, m)
+    assertEqual(NS.OfferPanel.Drawn().panel.dock, "right")
+    assertFalse(NS.RollsPanel.IsShown(), "no side free: hidden, not over the Offer panel")
+    assertTrue(NS.RollsPanel.HasBlocks(), "its roll is still tracked")
+    NS.OfferPanel.Close()
+    assertTrue(NS.RollsPanel.IsShown(), "back once the Offer panel closes")
+    assertEqual(NS.RollsPanel.Drawn().panel.dock, "right")
+end)
+
 -- ── auto-close ──────────────────────────────────────────────────────────────────────────────
 
 -- red under: WindowAutoClose's idle() not asking RollsPanel.HasBlocks
@@ -519,6 +557,14 @@ test("rolls panel: Side keeps the wanted side that fits, else the other, and unk
     assertEqual(RPR.Side(nil, 200, 800, 250, 1920, 3), "right")
     assertEqual(RPR.Side("right", 10, 1910, 250, 1920, 3), "right", "neither fits: the wanted side")
     assertEqual(RPR.Fraction(30, 60), 0.5); assertEqual(RPR.Fraction(nil, 60), nil); assertEqual(RPR.Fraction(70, 60), 1)
+    -- beside the Offer panel (RX-20): its side taken, the other one if it fits, else none
+    assertEqual(RPR.Beside("right", nil, 400, 1000, 250, 1920, 3), "right", "no Offer panel")
+    assertEqual(RPR.Beside("right", "float", 400, 1000, 250, 1920, 3), "right", "a floating Offer panel takes no side")
+    assertEqual(RPR.Beside("right", "right", 400, 1000, 250, 1920, 3), "left")
+    assertEqual(RPR.Beside("left", "left", 400, 1000, 250, 1920, 3), "right")
+    assertEqual(RPR.Beside("right", "right", 100, 700, 250, 1920, 3), nil, "no room on the left")
+    assertEqual(RPR.Beside("left", "left", 1500, 1800, 250, 1920, 3), nil, "no room on the right")
+    assertEqual(RPR.Beside("right", "right", nil, nil, 250, 1920, 3), "left", "unknown geometry: the other side")
 end)
 
 -- ── raid mode (rolls panel design §3.3, plan RX-18) ─────────────────────────────────────────

@@ -1961,7 +1961,7 @@ Total.
 - roll popup: the sim draws it beside a stand-in of the popup's size, stacked per roll
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 
-### test_rolls_panel.lua (35)
+### test_rolls_panel.lua (37)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -1985,6 +1985,8 @@ Total.
 - rolls panel: the close button hides it until the next roll starts
 - rolls panel: test mode's samples leave at once when it ends, and show again when it comes back
 - rolls panel: in test mode its title band reads TEST MODE beside the title, and not after
+- rolls panel: the Offer panel docked on its side moves it to the other one, and back when it closes
+- rolls panel: with no room on the other side it waits hidden while the Offer panel holds its side
 - rolls panel: an auto-opened window waits while the panel lingers, then a full count
 - rolls panel: /dw rolls shows an empty panel by hand, which stays, and hides it again
 - rolls panel: /dw rolls with the window closed, or the panel off, says why and shows nothing
@@ -3016,7 +3018,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 16 |
-| test_rolls_panel.lua | 35 |
+| test_rolls_panel.lua | 37 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3065,4 +3067,4 @@ Total.
 | test_skin_switch.lua | 49 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2539** |
+| **Total** | **2541** |
