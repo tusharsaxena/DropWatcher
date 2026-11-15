@@ -221,3 +221,32 @@ Spec part B. Worktrees cut from each repo's default branch; never touch another 
   "Expand all"); its icon and tooltip follow the state.
 - Tests: with any item open the button collapses all and turns into Expand all; with all collapsed it expands all;
   a manual header toggle updates the button.
+
+## M12 — Loose ends (2026-11-16, owner: "fix these now")
+
+Branch `feat/2026-11-16-loose-ends`. The rolls UX round is merged (`2cddac5`); these close what it left.
+
+### RX-27: Window.lua split and repaint headroom
+- Move the tab strip (and what belongs with it) out of `modules/Window.lua` (1151 lines, split trigger 1100) into its
+  own module; behavior unchanged. Find and remove the per-pass allocations behind the refresh pair's +928 bytes over
+  the last rounds (now 13552 of 14500) without raising the ceiling.
+
+### RX-28: Rolls panel minors
+- Fold toggle's tooltip refreshes after a click; a hover hold is released when the panel hides (window closed or
+  minimized under the pointer, Alt-Z: IsVisible not IsShown); a dismissed panel does not hold auto-close; the countdown
+  bar uses the roll's own duration; folded lines color names and mark [YOU]; an unfolded group can fold again; raid
+  fold follows GROUP_ROSTER_UPDATE at once; the panel's width scales with the window's font; strips wrap like the
+  compact window's; the main window's row tooltips treat the Rolls panel as a docked companion (open outside the group).
+
+### RX-29: Auto-close and Pending minors
+- Pending's rebuild flag is protected (pcall/finally); a roll first seen during a loading screen is restored only on a
+  real /reload, not a zone change; Escape or a parent hide cancels the auto-close timer at once; the armed refresh walk
+  hooks only new frames; an everyone-passed or expired roll lingering in Pending does not hold auto-close; the test-mode
+  auto-close edge case.
+
+### RX-30: Window, footer and settings minors
+- The footer's left line does not reserve room for hidden marks; a bare-footer fallback keeps the controls; the compact
+  Rolls box header cuts with "…"; the "Window and popup" heading names all its rows; Compat.RollPopupRight secret and
+  scale cases; sim stand-ins stay on screen and can show the flip; Compat.ItemOpens doc; settings-panel layout line;
+  unrolled quiver test; the hourglass ship check derives its path; RIGHT-aligned title reserve and compact badge with a
+  LEFT title; doc line wraps.
