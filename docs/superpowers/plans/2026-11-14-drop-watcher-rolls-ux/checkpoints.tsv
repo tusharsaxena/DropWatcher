@@ -9,3 +9,4 @@ date	milestone	evidence
 2026-11-15	M8	RX-21 (cc2fcf6 f41633b), RX-22 (b9647ec) reviewed
 2026-11-15	M9	WowAddonStandards v2.110.0 (5b4b8a2, pushed) and LibKa0s v1.103.0 (e37c353d, tag on 48a166d5, pushed), both reviewed; issues LibKa0s #88 #89 #90
 2026-11-15	M10	UC-DW (b12996a bee9b9f 40b6958) reviewed; RX-23 review fixes edb917c..31873cb; green bundle 20261115-161114 (dbf3c90); gate at dbf3c90: Retail 2559/0/1, Forever 2451/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift
+2026-11-15	M11	RX-24 (c5d9613, reviewed), RX-25 (fa8cf5a, reviewed; committed by the orchestrator after refused agent commits); green bundle 20261115-183637; gate at fa8cf5a: Retail 2559/0/1, Forever 2451/0/108, luacheck 0/0, kit complexity 0 warnings, perf 0 failures, no inventory drift
