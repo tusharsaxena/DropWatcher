@@ -63,6 +63,12 @@ the code reads every case the design leaves open, module by module, is in
   their bags for that spec is not counted and an off-spec can read better for them than it is. Every
   other spec of the class counts, with no setting to leave one out. FEED-80, FEED-81, ASK-11 and
   TOAST-5 are the in-game checks.
+- **The footer's controls without LibKa0s-Widgets** (RX-24). The window's and the Offer panel's
+  controls are the library footer's marks (Expand all / Collapse all, Scan group, Post my
+  tradeables, Reset filters, Announce to group), so an install missing LibKa0s-Widgets-1.0 draws a
+  bare footer of the same height with the words and no controls. Scan group stays in reach through
+  `/dw scan` and the headers fold one at a time; Post my tradeables and Announce to group have no
+  other way in.
 - **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
   missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
   close mark. The shell is shared: when another addon registered an earlier copy of the same minor
@@ -74,7 +80,7 @@ the code reads every case the design leaves open, module by module, is in
 - **No Offer without another player** (DW-07, Addendum 08). Your own drop is offered only while
   another player is in your group: solo, in a delve with only a companion (Brann) and in a follower
   dungeon (its party all followers) its Actions reads No action, the Offer panel will not open, the
-  Drops strip hides Post my tradeables, and Offer, Announce, Post my tradeables and `/dw offer`
+  Drops footer hides its Post my tradeables mark, and Offer, Announce, Post my tradeables and `/dw offer`
   refuse; an announce queued under a restriction is canceled once the last other player leaves. A player is a unit the client answers
   `UnitIsPlayer` for; where that answer is secret, the GUID's kind decides (`Player-` is a player). A
   player in your group who is offline still counts, so the Offer stays while they are away. A test

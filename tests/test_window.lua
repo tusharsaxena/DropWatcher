@@ -315,5 +315,6 @@ test("window: the least width is the sum of Drops' columns, their gaps, the row 
     assertEqual(byKey.tradeWindow and byKey.tradeWindow.width, not T.forever and 76 or nil)
     assertEqual(byKey.actions.width, 84)
     assertEqual(byKey.me.width, 127); assertEqual(byKey.them.width, 127)
-    assertEqual(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH), 374, "the search box keeps its room")
+    -- RX-24: Sort on the bar's right edge (150 and its gap) takes 158 of the search box's 374.
+    assertEqual(NS.WindowFilterBar.SearchWidth(K.MIN_WIDTH), 216, "the search box keeps its room")
 end)

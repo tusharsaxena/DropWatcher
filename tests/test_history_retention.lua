@@ -263,6 +263,6 @@ test("retention: in test mode a shorter window prunes test mode's older sample, 
     assertEqual(#H.Groups(), week)
     assertEqual(#H.Store().groups, 1, "the account's three-day-old group stays")
     NS.Window.SelectTab("history")
-    assertEqual(NS.WindowHistory.Drawn().strip.info:GetText(), ("%d groups, %d drops · kept for 7 days"):format(week, drops))
+    assertEqual(NS.WindowHistory.Drawn().foot.info, ("%d groups, %d drops · kept for 7 days"):format(week, drops))
     NS.SetTestMode(false)
 end)

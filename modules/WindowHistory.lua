@@ -42,11 +42,11 @@ local _, NS = ...
 --
 -- THE COMPACT LAYOUT draws the same entries as cards: modules/CompactHistory.lua (DW-C3).
 --
--- THE STRIP (feedback-15 spec §2, NS.FooterRow): the kept-history line on the left, one line, cut
--- with an ellipsis where the row starts; right to left, the tab's Sort (full layout only) and Expand
--- all / Collapse all (WH.FoldAll), each button the one footer width with the same label in both
--- layouts. Clear history left the strip for Settings › Window › Layout (feedback-15 spec §3, DW-Q3;
--- its confirmation is NS.History.AskClear).
+-- ON THE FOOTER (RX-24, NS.WindowFooter and NS.FooterRow): the kept-history line starts the window
+-- footer's own left line, the status after it, and Expand all / Collapse all (WH.FoldAll) is its one
+-- mark, the same in both layouts; the tab's Sort is on the filter bar. Clear history left the strip
+-- for Settings › Window › Layout (feedback-15 spec §3, DW-Q3; its confirmation is
+-- NS.History.AskClear).
 --
 -- THE UI LISTENS. HistoryChanged repaints the shown window on the next frame, the Drops rows
 -- included (their Ask button reads `Traded` once a trade settles the drop). Collapsed groups are
@@ -540,26 +540,15 @@ local function buildHeads(pane)
     pane.colHead = head
 end
 
-local function buildStrip(pane)
-    local strip = CreateFrame("Frame", nil, pane)
-    strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
-    strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(NS.FooterMetric("HEIGHT"))
-    -- No rule of its own: the window's footer (LibKa0s Widgets' Footer) draws the hairline over it.
-    strip.info = strip:CreateFontString(nil, "OVERLAY", "GameFontDisableSmall")
-    NS.Skin.Text(strip.info, "text.muted")   -- the footer's muted token (standalone-windows' *The footer*)
-    strip.info:SetJustifyH("LEFT")
-    strip.info:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
-    local FR = NS.FooterRow
-    strip.fold = FR.BuildFold(strip, function(collapse) WH.FoldAll(pane.entries, collapse) end)
-    pane.strip = strip
-    pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
-    pane.statusHost = strip   -- the status line after the kept-history line, both layouts (RX-09)
+-- The tab's footer model (RX-24): the kept-history line and the toggle, its one control.
+local function buildFoot(pane)
+    local fold = NS.FooterRow.FoldControl(function(collapse) WH.FoldAll(pane.entries, collapse) end)
+    pane.foot = { info = "", tip = nil, fold = fold, controls = { fold } }
 end
 
 local function build(pane)
     buildHeads(pane)
-    buildStrip(pane)
+    buildFoot(pane)
     local scroll = CreateFrame("ScrollFrame", nil, pane, "UIPanelScrollFrameTemplate")
     scroll:SetPoint("TOPLEFT", pane.colHead, "BOTTOMLEFT", 0, -2)
     scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, NS.FooterMetric("HEIGHT"))
@@ -632,30 +621,13 @@ local function drawEntries(pane, entries, layout, width, now)
     pane.content:SetSize(width, max(y, 1))
 end
 
--- The strip's row, right to left (feedback-15 spec §2, §3): full `Sort · Expand/Collapse`, compact
--- `Expand/Collapse` as its mark alone (feedback-16); the tab's Sort is anchored in its slot by
--- NS.WindowFooter.AnchorSort. Placed again only when the layout changes, so a repaint builds no
--- table and re-anchors nothing.
-local function placeStrip(strip, compact)
-    if strip.dwPlacedCompact == compact then return end
-    strip.dwPlacedCompact = compact
-    local FR, WF = NS.FooterRow, NS.WindowFooter
-    local w = FR.Width(compact)
-    FR.SetCompact(strip.fold, compact)
-    local row = { { key = "fold", w = w } }
-    if not compact then table.insert(row, 1, { key = "sort", w = WF.SORT_W }) end
-    local slots = FR.Slots(row, FR.GAP, FR.START)
-    FR.Place(strip, strip.fold, slots.fold)
-    FR.PlaceInfo(strip, strip.info, slots.left)
-end
-
-local function paintStrip(pane, groups, entries, compact)
+-- The kept-history line and the toggle, handed to the window's footer (RX-24), in both layouts.
+local function paintFoot(pane, groups, entries)
     local st = NS.History.Stats()
-    local strip = pane.strip
-    strip.info:SetText(NS.HistoryRetention.FooterText(#groups, st.drops, st.days))
-    placeStrip(strip, compact)
-    NS.FooterRow.FitInfo(strip)   -- the status line after these words (RX-09)
-    NS.FooterRow.PaintFold(strip.fold, entries)
+    local foot = pane.foot
+    foot.info = NS.HistoryRetention.FooterText(#groups, st.drops, st.days)
+    NS.FooterRow.PaintFold(foot.fold, entries)
+    NS.WindowFooter.PaintTab(pane)
 end
 
 local function paintEmpty(pane, entries, groups, compact)
@@ -686,12 +658,12 @@ local function refresh(pane, tc)
     pane.scroll:SetShown(not compact)
     if not compact then drawTable(pane, entries) end
     pane.entries = entries
-    paintStrip(pane, groups, entries, compact)
+    paintFoot(pane, groups, entries)
     NS.CompactHistory.Refresh(pane, entries, compact)
     paintEmpty(pane, entries, groups, compact)
 end
 
---- The drawn pane, for the suites: { rows, headers, entries, columns, pane, strip, card, cardEntry }
+--- The drawn pane, for the suites: { rows, headers, entries, columns, pane, foot, card, cardEntry }
 --- or nil (`cardEntry` nil while no card is open on screen).
 --- @return table|nil
 function WH.Drawn()
@@ -700,7 +672,7 @@ function WH.Drawn()
     if not (pane and pane.rowPool) then return nil end
     if NS.WindowGroup.IsCompact() then return NS.CompactHistory.Drawn(pane) end
     return { rows = pane.rowPool.active, headers = pane.headPool.active, entries = pane.entries,
-        columns = pane.columns, pane = pane, strip = pane.strip, card = pane.card, cardEntry = pane.cardEntry }
+        columns = pane.columns, pane = pane, foot = pane.foot, card = pane.card, cardEntry = pane.cardEntry }
 end
 
 NS.Window.RegisterTab("history", { build = build, refresh = refresh })

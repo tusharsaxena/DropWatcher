@@ -3,6 +3,12 @@ local _, NS = ...
 -- Quality, Content, Character and the search box, each tab's own filter state, and the pure
 -- predicates the tabs' bodies filter and order their rows with.
 --
+-- THE TAB'S SORT is on the bar's right edge (RX-24: it left the footer, whose controls are the
+-- library's marks, WowAddonStandards v2.110.0 standalone-windows' *The footer*), the search box
+-- between Character and it; like every control here it holds the active tab's own value and is
+-- grayed on a tab that does not honor it. In compact it is hidden with Quality, Content and
+-- Character, and the Filters menu lists its rows (modules/CompactChrome.lua).
+--
 -- ONE BAR, ONE STATE PER TAB. The bar is a single set of controls under the tab strip; each tab
 -- keeps its own state (NS.State.windowFilters[tab], session-only), and selecting a tab puts its
 -- state on the bar (Sync). A control a tab does not honor is grayed rather than hidden, so the bar
@@ -149,6 +155,7 @@ local TIPS = {
         { L["History"], L["kept for every character on the account"] },
         { L["Drops"], L["this session's drops, only ever yours"] },
         { L["Not recorded"], L["a History drop kept before who saw it was recorded shows only under All"] } },
+    sort = { L["Sort"], { L["Sets"], L["the order of the rows on this tab"] } },
 }
 local GRAYED = { L["On this tab"], L["not used"] }
 
@@ -704,9 +711,11 @@ local function buildSearch(host)
     return eb
 end
 
--- Left to right: View, Quality, Content, Character; the search box on the right.
-local WIDTH = { view = 132, quality = 190, content = 172, char = 168 }
+-- Left to right: View, Quality, Content, Character; the search box after them, and the tab's Sort at
+-- the bar's right edge (RX-24), as wide as `Sort: Biggest upgrade` needs.
+local WIDTH = { view = 132, quality = 190, content = 172, char = 168, sort = 150 }
 local GAP = 8   -- Loot History's gap between filter-bar controls
+FB.SORT_W = WIDTH.sort
 
 -- The order the controls sit in, left to right.
 local ROW = { "view", "quality", "content", "char" }
@@ -719,17 +728,30 @@ function FB.Build(host)
     controls.quality = qualityDropdown(host, WIDTH.quality)
     controls.content = pickDropdown(host, "content", WIDTH.content)
     controls.char = charDropdown(host, WIDTH.char)
+    controls.sort = pickDropdown(host, "sort", WIDTH.sort)
     controls.search = buildSearch(host)
     FB.Anchor()
 end
 
---- Put every control at its place on the bar, left to right, then the search box from the bar's gap
---- after the last of them to the bar's right edge, with its full hint (the build, and the switch back
---- to the full layout, modules/CompactChrome.lua). Both its edges
---- are anchored, so it widens and narrows with the window, live while sizing (feedback-4 spec §4).
+-- The tab's Sort at the bar's right edge (RX-24); the control the search box ends at, or the bar.
+local function anchorSort(host)
+    local dd = controls.sort
+    if not dd then return host, "RIGHT", 0 end
+    dd:SetParent(host)
+    dd:ClearAllPoints()
+    dd:SetWidth(WIDTH.sort)
+    dd:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+    return dd, "LEFT", -GAP
+end
+
+--- Put every control at its place on the bar, left to right, the tab's Sort at its right edge, then
+--- the search box from the bar's gap after the last of the others to the gap before Sort, with its
+--- full hint (the build, and the switch back to the full layout, modules/CompactChrome.lua). Both its
+--- edges are anchored, so it widens and narrows with the window, live while sizing (feedback-4 spec §4).
 function FB.Anchor()
     local host = controls.host
     if not host then return end
+    local endAt, endPoint, endX = anchorSort(host)
     local prev
     for _, key in ipairs(ROW) do
         local w = controls[key]
@@ -745,13 +767,13 @@ function FB.Anchor()
     if not eb then return end
     eb:ClearAllPoints()
     if prev then eb:SetPoint("LEFT", prev, "RIGHT", GAP, 0) else eb:SetPoint("LEFT", host, "LEFT", 0, 0) end
-    eb:SetPoint("RIGHT", host, "RIGHT", 0, 0)
+    eb:SetPoint("RIGHT", endAt, endPoint, endX, 0)
     eb.hint:SetText(L["Filter looter or item…"])
 end
 
 --- The search box's width in a full window `width` pixels wide: what the bar's controls and their
---- gaps leave between the last of them and the bar's right edge (FB.Anchor's two anchors give it
---- that width on screen; pure, for the suites).
+--- gaps leave between the last of them and Sort at the bar's right edge (FB.Anchor's two anchors give
+--- it that width on screen; pure, for the suites).
 --- @param width number|nil the window's width
 --- @return number
 function FB.SearchWidth(width)
@@ -759,6 +781,7 @@ function FB.SearchWidth(width)
     for _, key in ipairs(ROW) do
         if controls[key] or not controls.host then used = used + WIDTH[key] + GAP end
     end
+    if controls.sort or not controls.host then used = used + WIDTH.sort + GAP end
     return math.max((tonumber(width) or K.WIDTH) - used, 0)
 end
 
@@ -829,6 +852,7 @@ local function putState(tab, st)
         putOptions(controls.content, contentOptions(tab))
         controls.content:SelectValue(st.content)
     end
+    if controls.sort then controls.sort:SelectValue(st.sort) end
     if controls.quality then
         local mode, _, label = FB.QualityReadout()
         controls.quality:SetValue(mode, label)
@@ -848,9 +872,10 @@ function FB.Sync(tab)
     if not controls.host or next(honors or {}) == nil then return end   -- a tab with its own bar
     putState(tab, FB.State(tab))
     for _, key in ipairs(ROW) do setHonored(controls[key], honors[key] == true) end
+    setHonored(controls.sort, honors.sort == true)
     setHonored(controls.search, honors.search == true)
 end
 
---- The built controls, for the suites: { view, quality, content, char, search, host }.
+--- The built controls, for the suites: { view, quality, content, char, sort, search, host }.
 --- @return table
 function FB.Controls() return controls end

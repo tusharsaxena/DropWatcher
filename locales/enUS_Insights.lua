@@ -57,6 +57,7 @@ L["No history yet. Drops your group receives are kept until you clear them."] = 
 L["Offers and announcements you sent for your own drops."] = "Offers and announcements you sent for your own drops."
 L["Offers sent"] = "Offers sent"
 L["Reset filters"] = "Reset filters"
+L["every filter on this tab back to All"] = "every filter on this tab back to All"
 L["The charts need LibKa0s-Charts-1.0, which did not load."] = "The charts need LibKa0s-Charts-1.0, which did not load."
 L["Today (%s)"] = "Today (%s)"
 L["Upgrades for me"] = "Upgrades for me"

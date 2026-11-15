@@ -97,27 +97,28 @@ DropUpdated ───────────────> shown: the same repai
 GearChanged ───────────────> shown: the same repaint (the Me cells' gear, My eq until DW-F1; DW-83)
 InspectDone ───────────────> shown: the footer's inspect freshness
 TradeTimerTick ────────────> shown and expanded: the Drops tab's countdowns while it is active
-                             (WindowGroup.TickCountdowns: the Trade window cells and the strip's
-                             next expiry; the compact cards show none, feedback-10 §2), the Offer
+                             (WindowGroup.TickCountdowns: the Trade window cells and the footer
+                             summary's next expiry; the compact cards show none, feedback-10 §2), the Offer
                              panel while it
                              is open; nothing else
 countdown ticker (1s) ─────> shown, expanded and Drops showing a live countdown
                              (WindowGroup.LiveCountdown, K.COUNTDOWN_TICK; feedback-5 §1): the same
                              countdowns alone; it stops when none is left
 TradeTimerExpiring ────────> shown: the whole repaint
-footer ticker (5s) ────────> shown and expanded: the status line on the active strip ("Last loot 12s ago"), then what
+footer ticker (5s) ────────> shown and expanded: the status after the tab's words on the footer's left line
+                             ("Last loot 12s ago"; WindowFooter.Refresh, RX-24), then what
                              TradeTimerTick repaints
 filter bar / Sort ─────────> NS.WindowFilterBar.Set(tab, key, v) ─> the active tab's body
-                             (Sort on the active tab's strip in the full layout, re-anchored by
-                             WindowFooter.AnchorSort on every full pass; feedback-10 §3)
+                             (Sort at the filter bar's right edge in the full layout, the
+                             compact Filters menu's last row; RX-24)
 Scan group ────────────────> NS.ScanGroup ─> NS.Inspect.Scan       (the host handler, not the engine;
-                             the Drops strip's button, its icon alone in compact (the title
-                             bar's removed by feedback-16); feedback-7 §4)
+                             the Drops footer's mark, in both layouts (the title bar's removed by
+                             feedback-16; RX-24); feedback-7 §4)
 Quality ───────────────────> NS.SetQualityMode ─> feed.quality.mode (the next drops)
 resize (grip released) ────> the whole repaint (the table's columns take the new width); never
                              under the layout's least width, its default (full 1080, compact 400;
-                             feedback-4 §4, recomputed by feedback-5 §4, feedback-6 §0-§1 and feedback-23); the search box, anchored 8px after Character and to
-                             the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
+                             feedback-4 §4, recomputed by feedback-5 §4, feedback-6 §0-§1 and feedback-23); the search box, anchored 8px after Character and
+                             8px before Sort at the bar's right edge, tracks it live (WindowFilterBar.SearchWidth)
 minimize ──────────────────> the Offer panel and the Edit message box close; the anchor moves to
                              the top-left corner first, so the title bar stays where it is
 a skin switch ─────────────> NS.Skin.OnLooksChanged, after the library repainted the frames it
@@ -194,14 +195,13 @@ Window.Refresh ─> the group body's refresh(pane, TabContext("group"))
                   client: Compat.ItemIcon, Compat.ClassColor, ITEM_QUALITY_COLORS
   └─> DropsStrip.Paint(pane, ctx, compact) (feedback-5 §3): DropsStrip.Own(feed drops, ctx.matches)
         ─> MineCells.Summary(yours, now) ─> `2 tradeable · next expiry 0:08:41` (a collectible not
-        counted, as Post leaves it out) and Post my tradeables while one is tradeable; always shown, in both layouts (feedback-15 §2), the row
-        right-aligned, full `[Post my tradeables] [Scan group] [Expand all] [Sort]` (the tab's Sort
-        at the strip's right edge: the pane's sortHost, WindowFooter.AnchorSort), each button
-        K.FOOTER_BUTTON_W, 8px apart, FooterRow.Slots(DropsStrip.Row(tradeable, compact), GAP,
-        FooterRow.START, clear of the grip); Post, the leftmost, hidden with nothing tradeable; the
-        summary as wide as its words, the status line after it to where the row starts
-        (FooterRow.PlaceInfo / FitInfo, one line, RX-09); FooterRow.PaintFold(fold, pane.entries); the
-        scroll frame's bottom moved up over it
+        counted, as Post leaves it out) into the pane's `foot` model (info, tip, controls) ─>
+        WindowFooter.PaintTab(pane) ─> foot:SetLeft(LineText(info, status)) (the window footer's
+        own left line, the status after the words, one line the library cuts; RX-24) and
+        FooterRow.Bind(controls): the footer's marks, right to left from the grip's corner, the
+        toggle, Scan group and Post my tradeables (only while one is tradeable and someone can read
+        it), the same in both layouts; FooterRow.PaintFold(fold, pane.entries); the scroll frame's
+        bottom kept over the footer
 
 header click ──> WindowGroup.ToggleGroup ─> State.windowGroup.collapsed ─> repaint
 Expand all / Collapse all ─> WindowGroup.FoldAll(pane.entries, collapse) ─> FooterRow.FoldAll:
@@ -264,8 +264,8 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   │     hand alone for a one-hander it alone can take, SideCells.JudgedItem); the labels gold, Them
   │     CompactGroup.PlaceThem's fixed gap after You (Them wrapped to line 4 before Trade from
   │     feedback-23 until feedback-25); feedback-6 §1, feedback-7 §2)
-  └─> DropsStrip.Paint(pane, ctx, true): always shown, the summary shortened (DropsStrip.SummaryText),
-        `[Post] [Scan group] [Expand all]` as icons alone, FOOTER_ICON_W wide (feedback-16)
+  └─> DropsStrip.Paint(pane, ctx, true): the summary shortened (DropsStrip.SummaryText) on the
+        footer's left line, the same marks as the full layout (RX-24)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
 piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
@@ -486,11 +486,10 @@ Window.Refresh ─> OfferPanel.Refresh() (open: its drop, else nothing)
                       no upgrade or equal for, or a drop that cannot be traded: WindowCells.NoAction
                       (reason) through WindowOwn.SetButtonLook, the gray `No action` on the same
                       80px button (K.PANEL_BTN_W; feedback-11 §1);
-      Announce to group: MineCells.AnnounceButton, WindowOwn.SetButtonLook, toned by
-                      WindowOwn.ToneStates(drop): NS.Asks.FurthestStateOf("offer", id)
-                      (Messaging.FurthestState: sent, else queued, else failed, else ready) and the
-                      announce's state, each through MineCells.ToneState (tradedAway wins)
-                      ─> WindowGroup.ToneButton (feedback-4 §1)
+      Announce to group: MineCells.AnnounceButton(NS.Asks.StateOf("announce", nil, id)) ─> the
+                      footer's one mark (RX-24): its catalog art and tooltip by state, off once
+                      sent or when the drop cannot be traded, and the state's word on the footer's
+                      left line once it is not ready; the order note on its right line
 
 panel Offer ───────> NS.PressOffer(id, member) ─> NS.Asks.Press("offer", member, id) ─> AskStateChanged
 Announce to group ─> NS.PressAnnounce(id) ─> NS.Asks.Press("announce", nil, id) ─> AskStateChanged

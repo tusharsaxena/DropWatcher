@@ -42,8 +42,8 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
 - **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
   row's Me and Them showing the worn gear beside the verdict (a mark per worn item on a two-item slot), with a detail card that expands inline and a trade countdown on every row; on your own drops the
   upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with an
-  Offer per member (its Trade button retired by feedback-7), and a strip with Post my tradeables, Expand all / Collapse all and,
-  in the full layout, Scan group and the tab's Sort; a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
+  Offer per member (its Trade button retired by feedback-7), and on the footer the tradeable count with Post my tradeables, Expand all /
+  Collapse all and Scan group as its icon marks (RX-24; the tab's Sort on the filter bar); a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
   on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
   restriction badge, Scan group, minimize, test mode and auto-open.
 - **Insights** (issue #12, [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
@@ -53,7 +53,7 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   and by boss, top instances per visit, the most generous members, the item level items received
   gained you, asks and drops per day, and drops by looter class, quality, slot and item kind). Its
   own bar of seven filters (Character, Instance, Difficulty, Situation, Date, Quality, Category),
-  each listing only the values present with their counts; the strip names the period the kept history
+  each listing only the values present with their counts; the footer names the period the kept history
   covers. `/dw insights` opens it.
 - **The upgrade glow** (feedback-21). A drop that is an upgrade for you, and whose trade estimate
   is Yes or Likely (feedback-22), glows on its icon in the Drops table, the compact card and the

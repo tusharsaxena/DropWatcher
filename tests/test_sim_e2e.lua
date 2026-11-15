@@ -295,7 +295,7 @@ end
 local function assertRetention(NS, m, label)
     NS.Window.SelectTab("history")
     NS.Window.Refresh()
-    local text = NS.WindowHistory.Drawn().strip.info:GetText()
+    local text = NS.WindowHistory.Drawn().foot.info
     assertTrue(text:find("^%d+ groups, %d+ drops · kept for 30 days$") ~= nil, label .. ": " .. text)
     local groups, asked = #NS.History.Log().groups, #m.popupsShown
     assertTrue(NS.SchemaRuntime.Set("global.history.retentionDays", 7), label)

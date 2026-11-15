@@ -125,6 +125,36 @@ end
 -- window lays its rows out the same (it draws no hairline and no grip).
 local FOOTER_FALLBACK = { HEIGHT = 24, PAD = 8, GRIP = 22 }
 
+--- A footer with no library (a degraded install only; with the library every footer is W.Footer,
+--- anti-pattern #118): a bare frame of the same height across `parent`'s bottom edge with W.Footer's
+--- two lines and setters, and no hairline, no marks and no grip corner, so a host's paint runs
+--- unchanged and its controls are simply absent.
+--- @param parent table
+--- @return table { left, right, marks = {}, SetLeft, SetRight, SetGrip }
+function NS.BareFooter(parent)
+    local foot = CreateFrame("Frame", nil, parent)
+    foot:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
+    foot:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
+    foot:SetHeight(FOOTER_FALLBACK.HEIGHT)
+    local pad = FOOTER_FALLBACK.PAD
+    foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    foot.right:SetPoint("RIGHT", foot, "RIGHT", -pad, 0)
+    foot.left = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    foot.left:SetPoint("LEFT", foot, "LEFT", pad, 0)
+    foot.left:SetPoint("RIGHT", foot.right, "LEFT", -pad, 0)
+    for _, fs in ipairs({ foot.left, foot.right }) do
+        fs:SetWordWrap(false)
+        NS.Skin.Text(fs, "text.muted")
+    end
+    foot.left:SetJustifyH("LEFT")
+    foot.right:SetJustifyH("RIGHT")
+    foot.marks = {}
+    foot.SetLeft = function(self, text) self.left:SetText(type(text) == "string" and text or "") end
+    foot.SetRight = function(self, text) self.right:SetText(type(text) == "string" and text or "") end
+    foot.SetGrip = function() end
+    return foot
+end
+
 --- A footer figure (`HEIGHT`, `PAD`, `GRIP`), read from W.FOOTER, the library's published geometry.
 --- @param key string
 --- @return number

@@ -2,7 +2,7 @@ local _, NS = ...
 -- modules/MineCells.lua — what your own drops and the Offer panel say (design spec §11.4, board
 -- 04; feedback-5 spec §1-§3): the Trade window cell every drop shows on Drops, the candidates
 -- ranked for the Offer panel (feedback-7 spec §0: their Their eq cell is NS.SideCells.Candidate's),
--- the Offer panel's buttons, header and dock, the Drops strip's
+-- the Offer panel's buttons, header and dock, the Drops footer's
 -- summary line and Post my tradeables' lines; and what your own drop says on Drops (feedback-5
 -- spec §2): Trade's word, Them as `Upgrade for N` (feedback-7 spec §2; `(Details)` before, and
 -- `(Multiple)` before that) with every member it upgrades in the tooltip, and the Offer button.
@@ -516,7 +516,7 @@ end
 
 -- ── the summary and Post my tradeables ──────────────────────────────────────────────────────
 
---- The Drops strip's summary line (board 04's footer; feedback-5 spec §3): how many of your drops
+--- The Drops footer's summary line (board 04's footer; feedback-5 spec §3): how many of your drops
 --- may be traded and the next countdown to run out. A collectible (feed-only, issue #13) is left
 --- out, as Post my tradeables leaves it out, so the count is what the Post press would post.
 --- @param drops table your own drops the tab lists

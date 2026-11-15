@@ -1096,7 +1096,7 @@ test("window: a sample's Them shows its own worn item, and its detail card its o
     assertEqual(NS.WindowGroup.Drawn().cardDropId, crown.dropId)
 end)
 
-test("window: Drops lists your samples with the others, and its strip counts the tradeable ones", function()
+test("window: Drops lists your samples with the others, and its footer counts the tradeable ones", function()
     local NS = shownTest()
     NS.WindowFilterBar.Set("group", "view", {})
     local drawn = NS.WindowGroup.Drawn()
@@ -1108,7 +1108,7 @@ test("window: Drops lists your samples with the others, and its strip counts the
     assertTrue(mine <= 9)
     -- your BoE recipe (issue #13) is feed-only: left out, as Post my tradeables leaves it out
     assertEqual(drawn.summary.count, 5, "the tradeable ones")
-    assertTrue(drawn.pane.summary:IsShown())
+    assertTrue(drawn.pane.foot.info:find("^5 tradeable") ~= nil, drawn.pane.foot.info)
     assertEqual(textOf(NS.Window.Frame().tabs.group.label), "Drops")
 end)
 
@@ -1158,7 +1158,9 @@ test("labels: no button the addon builds is labeled with a trailing ellipsis", f
             assertFalse(call:find('…"%]') ~= nil, path .. ": " .. call)
         end
     end
-    assertTrue(buttons >= 10)
+    -- RX-24: the footers' controls are the library's marks, no TextButton (Post, Scan group, the
+    -- toggle, Reset filters and Announce to group left this count)
+    assertTrue(buttons >= 8, "the scan reads the files' buttons: " .. buttons)
 end)
 
 -- ── nothing is sent ─────────────────────────────────────────────────────────────────────────

@@ -23,14 +23,14 @@ local addonName, NS = ...
 -- THREE TABS: Drops, History (feedback-5 spec §3) and Insights (issue #12). The Drops tab's key stays
 -- `group`, so its filter state and the suites keep their key; the retired tab's key, `mine`, opens
 -- Drops (Window.SelectTab), and your own drops are on Drops now. A tab with `ownBar` (Insights) draws
--- its own bar: the shared one, its Sync and the footer's Sort stand aside (Window.TabOwnsBar).
+-- its own bar: the shared one, its Sort and its Sync stand aside (Window.TabOwnsBar).
 --
 -- THE UI LISTENS. It repaints on the bus (RestrictionChanged, AskStateChanged, SituationChanged,
 -- DropAdded, DropUpdated, TradeTimerExpiring), batched into one pass on the next frame however
 -- many messages arrive; InspectDone repaints the footer alone; TradeTimerTick, its own footer
 -- ticker and (while Drops shows a countdown still running: WindowGroup.LiveCountdown) a countdown
 -- ticker every K.COUNTDOWN_TICK second repaint only what shows a countdown: the Drops tab's Trade
--- window cells and its strip's next expiry (WindowGroup.TickCountdowns, feedback-5 spec §1 and §3)
+-- window cells and its footer summary's next expiry (WindowGroup.TickCountdowns, feedback-5 spec §1 and §3)
 -- and the Offer panel. It reads records
 -- through the engine's read-only accessors and never calls an engine action. A button's action goes
 -- through the host handler its slash verb shares (NS.ScanGroup, NS.SetQualityMode,
@@ -301,7 +301,7 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's strip says
+--- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's footer says
 --- how many of your drops you can still trade (feedback-5 spec §3).
 --- @param key string
 --- @return string
@@ -520,16 +520,12 @@ end
 -- The window's footer (standalone-windows' *The footer*, LibKa0s Widgets' Footer, minor 27): no fill,
 -- the hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` tall across the body's bottom
 -- edge (inset 0: the body is already 1 px inside the window's edge), the resize grip's corner cleared
--- (`grip`, the grip itself built on it by makeResizable). Its words and controls are the active tab's
--- strip, laid over it (NS.WindowFooter, NS.FooterRow). No library: a bare frame of the same height.
+-- (`grip`, the grip itself built on it by makeResizable). Its words are its own left line and its
+-- controls its marks (RX-24: NS.WindowFooter, NS.FooterRow), the active tab's. No library: a bare
+-- frame of the same height with the two lines and no marks (NS.BareFooter).
 local function buildFooter(body)
-    local foot = NS.MakeFooter(body, { grip = true, inset = 0 })
-    if foot then return foot end
-    foot = CreateFrame("Frame", nil, body)
-    foot:SetPoint("BOTTOMLEFT", body, "BOTTOMLEFT", 0, 0)
-    foot:SetPoint("BOTTOMRIGHT", body, "BOTTOMRIGHT", 0, 0)
-    foot:SetHeight(NS.FooterMetric("HEIGHT"))
-    return foot
+    return NS.MakeFooter(body, { grip = true, inset = 0, marks = NS.FooterRow.MarkSpecs() })
+        or NS.BareFooter(body)
 end
 
 local function buildBody(f)
@@ -545,14 +541,15 @@ local function buildBody(f)
 
     buildBanner(f, body)
 
-    -- The footer under the active tab's strip, the one footer line (RX-09, rolls-UX spec §3.7): the
-    -- strip is the footer's height, so the panes reach the body's foot and the strip sits on the
-    -- footer; the resize grip is built in its bottom-right corner (makeResizable). No status bar of
-    -- its own: the status line rides the active strip (NS.WindowFooter.AnchorStatus).
+    -- The footer, the one footer line (RX-09, rolls-UX spec §3.7; RX-24): the panes reach the body's
+    -- foot and their scroll frames end over it; the resize grip is built in its bottom-right corner
+    -- (makeResizable). No status bar and no strip of its own: the active tab's words and the status
+    -- are its left line, the tab's controls its marks.
     f.footerHost = buildFooter(body)
 
     buildPanes(f, body)
     NS.WindowFilterBar.Build(f.filterHost)
+    NS.FooterRow.Attach(f.footerHost)
     NS.WindowFooter.Build(f.footerHost)
 end
 
@@ -772,7 +769,7 @@ end
 Window.ScheduleRepaint = scheduleRepaint
 
 -- A countdown moved (TradeTimerTick, the footer ticker, the countdown ticker): only what shows one
--- repaints, Drops' Trade window cells and its strip while it is the active tab and the Offer panel
+-- repaints, Drops' Trade window cells and its footer summary while it is the active tab and the Offer panel
 -- while it is open; the rest of the table, the filter bar and the footer are left alone.
 -- The countdown ticker runs while the shown, expanded window's Drops tab has a countdown
 -- still running (WindowGroup.LiveCountdown), and stops with the last one.

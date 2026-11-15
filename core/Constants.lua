@@ -109,26 +109,13 @@ C.WINDOW = {
     -- The Drops table's empty state (board 06 D): its title and line (its two buttons gone, feedback-16).
     EMPTY_W     = 360,
     EMPTY_H     = 50,
-    -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops strip
+    -- A Drops row with its Trade window column (feedback-5 spec §1), the Drops summary
     -- (modules/DropsStrip.lua, feedback-5 spec §3) and the Offer panel (modules/OfferPanel.lua),
     -- design spec §11.4, board 04.
     COUNTDOWN_EXTRA = 14, -- such a row's height over the row height (its countdown sits over its bar)
     COUNTDOWN_FONT = 10,  -- the small template's own text size, for such a row at Default
     COUNTDOWN_PAD = 12,   -- such a row's room around its two lines (the countdown and its bar)
     BAR_H       = 3,      -- the trade window's bar
-    -- One footer button kind (feedback-15 spec §2, modules/FooterRow.lua): every button on a tab's
-    -- strip (Post my tradeables, Scan group, Expand all / Collapse all) is this wide in the full
-    -- layout, sized so `Post my tradeables` fits beside its icon; the tab's Sort takes it too
-    -- (NS.WindowFooter.SORT_W). The compact layout draws them icon only, FOOTER_ICON_W wide, their
-    -- tooltips naming them (feedback-16).
-    FOOTER_BUTTON_W = 150,
-    FOOTER_ICON_W = 24,
-    -- The footer row's first control's inset from the strip's right edge (RX-09, rolls-UX spec §3.7):
-    -- the resize grip (LibKa0s's, 16 px, 1 px inside its corner) sits in the footer's bottom-right
-    -- corner (LibKa0s Widgets' Footer, whose height, FOOTER.HEIGHT, is every tab strip's: read through
-    -- NS.FooterMetric, never copied here); the strip ends INSET short of that corner, so the row's
-    -- first control is INSET + GRIP_ROOM in from it, clear of the footer's own GRIP figure.
-    GRIP_ROOM   = 20,
     OFFER_W     = 440,    -- the Offer panel
     OFFER_HEAD_H = 92,    -- its title, item header and column labels
     OFFER_ROW_H = 26,     -- one candidate

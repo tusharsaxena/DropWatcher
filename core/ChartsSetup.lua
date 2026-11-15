@@ -11,7 +11,7 @@ local addonName, NS = ...
 -- when the row is bound. The default GameTooltip hover is kept, and NS.Pool is the pool.
 --
 -- DEGRADED (the library absent): NS.Charts is nil and there is no drawing stub (anti-pattern #73,
--- as in Ka0s DPS Race). The Insights tab keeps its filters and its strip, says the charts are
+-- as in Ka0s DPS Race). The Insights tab keeps its filters and its footer words, says the charts are
 -- unavailable, and logs that once when its pane is built (NS.Debug is not up yet at this load).
 
 --- The major, or nil without the library.

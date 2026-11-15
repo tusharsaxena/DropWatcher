@@ -18,7 +18,7 @@ mode's switch (`modules/WindowCompact.lua`) `SITUATION_CHANGED` on its own (DW-C
 accessors and never calls an engine action; a button's action goes through the host handler its
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.ToggleWindowMode`, and the
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the Offer
-panel's `NS.PressOffer` and `NS.PressAnnounce`, and the Drops strip's `NS.PostTradeables`). Drops leaving a
+panel's `NS.PressOffer` and `NS.PressAnnounce`, and the Drops footer's `NS.PostTradeables`). Drops leaving a
 feed are not a message: `LF.Clear` and the cap's trim call the feed's removal sinks
 (`NS.LootFeed.AddRemovalSink`, the loot parser's `AddSink` shape), and the toast's sink lets each
 toast on screen or waiting go with its drop. The payloads and consumers below are the code's.

@@ -43,7 +43,7 @@ local _, NS = ...
 --           every member it upgrades in the tooltip)
 --
 -- NO TRADE WINDOW on the card (feedback-10 spec §2): the full table's Trade window column, the
--- strip's next expiry and the detail card say it; the card has nothing to tick each second.
+-- footer summary's next expiry and the detail card say it; the card has nothing to tick each second.
 --
 -- Every piece is a font string with a hit frame over it that carries its tooltip, placed by the
 -- row-tooltip helper (NS.RowTooltip, DW-B2) at the card's top right, just outside the window: the
@@ -709,8 +709,8 @@ end
 --- A pane's compact view: its own scroll frame over the pane (above a strip `bottom` pixels tall),
 --- hidden until the first compact repaint, and the card and header pools.
 --- @param pane table
---- @param bottom number|nil the strip under the cards (History's kept-history line; the Drops strip
----   moves the view's bottom edge itself, modules/DropsStrip.lua)
+--- @param bottom number|nil the room under the cards (the window's footer, History's; the Drops
+---   summary moves the view's bottom edge itself, modules/DropsStrip.lua)
 --- @return table cv { scroll, content, cardPool, headPool }
 function CG.BuildView(pane, bottom)
     local cv = {}

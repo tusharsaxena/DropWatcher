@@ -1,24 +1,23 @@
 local _, NS = ...
--- modules/DropsStrip.lua — the Drops tab's summary strip (feedback-5 spec §3, DW-E3): how many of
--- your drops the tab lists you can still trade, the next of their trade windows to run out, Post my
--- tradeables, Expand all / Collapse all and Scan group, under the table (or the compact cards) and
--- above the footer.
+-- modules/DropsStrip.lua — the Drops tab's summary on the window's footer (feedback-5 spec §3,
+-- DW-E3; RX-24): how many of your drops the tab lists you can still trade, the next of their trade
+-- windows to run out, and the footer's Drops controls, Post my tradeables, Scan group and Expand all /
+-- Collapse all.
 --
--- WHEN IT SHOWS. Always, in both layouts (feedback-7 spec §4 for the full one; feedback-15 spec §2
--- for compact, where the toggle lives there now): with nothing tradeable its summary is empty and
--- Post hidden. It counts your drops the tab lists (DS.Own: yours and passing the tab's filters, through
+-- WHEN IT SAYS WHAT. In both layouts: with nothing tradeable its summary is empty and Post hidden.
+-- It counts your drops the tab lists (DS.Own: yours and passing the tab's filters, through
 -- Window.TabContext's `matches`), collapsed under their header or not. What it says is
 -- NS.MineCells.Summary's (pure): `2 tradeable · next expiry 0:08:41`.
 --
--- THE ROW (feedback-15 spec §2, NS.FooterRow), right-aligned. Full, every button the one footer
--- width (K.FOOTER_BUTTON_W) with its label: `[Post my tradeables] [Scan group] [Expand all] [Sort]`,
--- the tab's Sort (NS.WindowFooter's control, anchored here through `pane.sortHost`) at the strip's
--- right edge (NS.WindowFooter.SORT_INSET). Compact, the same buttons as their marks alone
--- (K.FOOTER_ICON_W, FooterRow.SetCompact; feedback-16), their tooltips naming them: `[Post] [Scan
--- group] [Expand all]` (Sort is in the Filters menu; Scan group is the title bar's icon too). Post,
--- the leftmost, shows only while one of your drops the tab lists can be traded and another player is
--- in your group to read it (DS.Postable, DW-07; test mode always); the summary ends
--- where the row starts, one line, cut with an ellipsis when the row is narrow.
+-- ON THE FOOTER (RX-24; WowAddonStandards v2.110.0 standalone-windows' *The footer*). No strip and no
+-- frame of its own: the summary is the start of the footer's own left line, the status after it
+-- (NS.WindowFooter.PaintTab, LineText), and the controls are the footer's marks (NS.FooterRow),
+-- right to left from the grip's corner: `Expand all`, `Scan group`, `Post my tradeables`, each a
+-- catalog mark with a tooltip naming it, the same in both layouts. Post, the leftmost, shows only
+-- while one of your drops the tab lists can be traded and another player is in your group to read it
+-- (DS.Postable, DW-07; test mode always). Until RX-24 this was a strip of 150 px labeled buttons laid
+-- over the footer (feedback-15 spec §2), with the tab's Sort at its right edge (now on the filter
+-- bar).
 --
 -- THE COMPACT LAYOUT shortens the summary: `2 tradeable · next 0:08:41` (DS.SummaryText).
 --
@@ -27,17 +26,16 @@ local _, NS = ...
 -- `2 tradeable · next expiry 0:08:41 · 1 new`, or `1 new` alone (DS.Text). It is no trade count, so
 -- it never shows Post my tradeables.
 --
--- THE FRAME EDGE. modules/WindowGroup.lua builds it with the pane (DS.Build) and repaints it on every
--- refresh (DS.Paint, after the table or the cards are drawn: it moves the scroll frames' bottom edge
--- up over it, or back down) and on each countdown tick (DS.Tick: the text alone). Post my tradeables
--- goes through the host handler NS.PostTradeables (core/DropWatcher.lua), which posts every drop of
--- yours you can still trade; Scan group through NS.ScanGroup, as the title bar's and the empty
--- state's do.
+-- THE FRAME EDGE. modules/WindowGroup.lua builds the pane's model with it (DS.Build) and repaints it
+-- on every refresh (DS.Paint, after the table or the cards are drawn: it keeps the scroll frames'
+-- bottom edge over the footer) and on each countdown tick (DS.Tick: the words alone). Post my
+-- tradeables goes through the host handler NS.PostTradeables (core/DropWatcher.lua), which posts
+-- every drop of yours you can still trade; Scan group through NS.ScanGroup, as the empty state's did.
 --
 -- THE EMPTY STATE (board 06 D) is built here too (DS.BuildEmpty, peeled out of
 -- modules/WindowGroup.lua, which shows it while the feed holds no drop at all): `No drops yet` and a
 -- line on what the table will hold. Its Preview with test data and Scan group buttons (feedback-7
--- spec §4) left it in feedback-16: Scan group is on the strip and the title bar, test mode `/dw test`.
+-- spec §4) left it in feedback-16: Scan group is on the footer and the title bar, test mode `/dw test`.
 
 NS.DropsStrip = NS.DropsStrip or {}
 local DS = NS.DropsStrip
@@ -102,22 +100,6 @@ function DS.SummaryText(s)
     return text
 end
 
---- The strip's row, right to left, for NS.FooterRow.Slots (pure): full `Sort · Expand/Collapse ·
---- Scan group · Post my tradeables`, compact `Expand/Collapse · Scan group · Post` as icons, Post
---- shown only while something of yours is tradeable (feedback-15 spec §2, feedback-16).
---- @param tradeable boolean
---- @param compact boolean
---- @return table
-function DS.Row(tradeable, compact)
-    local w = NS.FooterRow.Width(compact)
-    local row = {}
-    if not compact then row[#row + 1] = { key = "sort", w = NS.WindowFooter.SORT_W } end
-    row[#row + 1] = { key = "fold", w = w }
-    row[#row + 1] = { key = "scan", w = w }
-    row[#row + 1] = { key = "post", w = w, shown = tradeable }
-    return row
-end
-
 --- Post my tradeables has someone to reach (DW-07, Addendum 08): another player is in your group
 --- (NS.WindowOwn.Alone), or test mode is on, where NS.PostTradeables prints instead of sending. Solo,
 --- with only followers or a delve companion, the strip leaves Post hidden.
@@ -128,7 +110,7 @@ function DS.Postable()
     return not (WO and WO.Alone and WO.Alone())
 end
 
--- ── the frame ───────────────────────────────────────────────────────────────────────────────
+-- ── the model ───────────────────────────────────────────────────────────────────────────────
 
 local function postTip()
     local TM = NS.TipMarks
@@ -136,37 +118,19 @@ local function postTip()
         TM.Row(L["Lists"], L["every drop you can still trade"]), TM.Row(L["Too long"], L["cut into several lines"])
 end
 
-local function tipOf(f) return unpack(f.tipLines or {}) end
+local function scanTip() return NS.WindowTitleBar.ScanTip() end
 
---- Build the strip at the bottom of the Drops pane, hidden until it has something to say.
+--- Build the Drops pane's footer model (RX-24): its words and its controls, right to left, with Post
+--- my tradeables and without it, both built once so a repaint builds no table.
 --- @param pane table the Drops pane
 function DS.Build(pane)
-    local W = NS.Window
-    local strip = CreateFrame("Frame", nil, pane)
-    strip:SetPoint("BOTTOMLEFT", pane, "BOTTOMLEFT", 0, 0)
-    strip:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", 0, 0)
-    strip:SetHeight(NS.FooterMetric("HEIGHT"))
-    -- No rule of its own: the window's footer (LibKa0s Widgets' Footer) draws the hairline over it.
-    local info = CreateFrame("Frame", nil, strip)
-    info.text = info:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    info.text:SetPoint("LEFT", info, "LEFT", 0, 0)
-    info.text:SetPoint("RIGHT", info, "RIGHT", 0, 0)
-    info.text:SetJustifyH("LEFT")
-    NS.Skin.Text(info.text, "text.muted")   -- the footer's muted token (standalone-windows' *The footer*)
-    info.text:SetWordWrap(false)   -- one line: the game cuts it with an ellipsis when narrow
-    info:SetHeight(NS.FooterMetric("HEIGHT"))
-    W.AttachTooltip(info, function() return tipOf(info) end, "row")
-    strip.info = info
     local FR = NS.FooterRow
-    strip.post = FR.Button(strip, "speech-bubble", L["Post my tradeables"], function() NS.PostTradeables() end)
-    W.AttachTooltip(strip.post, postTip)
-    strip.scan = FR.Button(strip, "people", L["Scan group"], function() NS.ScanGroup() end)
-    W.AttachTooltip(strip.scan, NS.WindowTitleBar.ScanTip)
-    strip.fold = FR.BuildFold(strip, function(collapse) NS.WindowGroup.FoldAll(pane.entries, collapse) end)
-    strip:Hide()
-    pane.summary = strip
-    pane.sortHost = strip   -- the full layout's Sort sits at its right edge (feedback-10 spec §3)
-    pane.statusHost = strip   -- the status line after the summary, both layouts (RX-09)
+    local fold = FR.FoldControl(function(collapse) NS.WindowGroup.FoldAll(pane.entries, collapse) end)
+    local scan = FR.Control("scan", "people", scanTip, function() NS.ScanGroup() end)
+    local post = FR.Control("post", "speech-bubble", postTip, function() NS.PostTradeables() end)
+    pane.foot = { info = "", tip = nil, fold = fold,
+        withPost = { fold, scan, post }, withoutPost = { fold, scan } }
+    pane.foot.controls = pane.foot.withoutPost
 end
 
 -- ── the empty state (board 06 D) ────────────────────────────────────────────────────────────
@@ -192,7 +156,7 @@ function DS.BuildEmpty(pane)
     return e
 end
 
--- A scroll frame's bottom edge: `bottom` pixels over the pane's (the strip's room, or none).
+-- A scroll frame's bottom edge: `bottom` pixels over the pane's (the footer's room, or none).
 local function setBottom(scroll, pane, top, topY, bottom)
     if not scroll or scroll.dwBottom == bottom then return end
     scroll.dwBottom = bottom
@@ -201,66 +165,45 @@ local function setBottom(scroll, pane, top, topY, bottom)
     scroll:SetPoint("BOTTOMRIGHT", pane, "BOTTOMRIGHT", -K.SCROLL_W, bottom)
 end
 
--- The row in the layout in force (DS.Row through NS.FooterRow.Slots; the tab's Sort is anchored
--- by NS.WindowFooter.AnchorSort in its slot), and the summary ending where it starts. The placement
--- depends on the layout and on whether Post shows, nothing else, so a repaint that changes neither
--- builds no table and re-anchors nothing (the refresh's allocation ceiling, docs/performance.md).
-local function placeButtons(strip, tradeable, compact)
-    if strip.dwPlacedCompact == compact and strip.dwPlacedPost == tradeable then return end
-    strip.dwPlacedCompact, strip.dwPlacedPost = compact, tradeable
-    local FR = NS.FooterRow
-    local slots = FR.Slots(DS.Row(tradeable, compact), FR.GAP, FR.START)
-    FR.SetCompact(strip.fold, compact)
-    FR.SetCompact(strip.scan, compact)
-    FR.SetCompact(strip.post, compact)
-    FR.Place(strip, strip.fold, slots.fold)
-    FR.Place(strip, strip.scan, slots.scan)
-    FR.Place(strip, strip.post, slots.post)
-    FR.PlaceInfo(strip, strip.info, slots.left)
-end
-
--- The summary's text in the layout in force (DS.Text); nothing to say (nothing tradeable, nothing
--- new) leaves it empty, with no tooltip.
+-- The summary's words in the layout in force (DS.Text), handed to the footer; nothing to say
+-- (nothing tradeable, nothing new) leaves them empty, with no tooltip.
 local function paintText(pane, s, compact)
-    local info = pane.summary.info
-    local text, tip = DS.Text(s, pane.newCount, compact)
-    info.text:SetText(text)
-    info.tipLines = tip
-    NS.FooterRow.FitInfo(pane.summary)   -- the status line after these words (RX-09)
+    local foot = pane.foot
+    foot.info, foot.tip = DS.Text(s, pane.newCount, compact)
+    NS.WindowFooter.PaintTab(pane)
 end
 
---- Repaint the strip for the tab's view (every refresh, after the table or the cards are drawn):
---- shown always, in both layouts (Post my tradeables only while one of your drops the tab lists can
---- be traded), the toggle painted from the tab's entries, the scroll frames above it.
+--- Repaint the summary for the tab's view (every refresh, after the table or the cards are drawn):
+--- its words and, in both layouts, its controls on the footer (Post my tradeables only while one of
+--- your drops the tab lists can be traded), the toggle painted from the tab's entries, the scroll
+--- frames over the footer.
 --- @param pane table the Drops pane
 --- @param ctx table Window.TabContext's
 --- @param compact boolean the compact layout is in force
 function DS.Paint(pane, ctx, compact)
-    local strip = pane.summary
-    if not strip then return end
+    local foot = pane.foot
+    if not foot then return end
     local drops = NS.LootFeed.Drops(ctx.feed)
     pane.ownDrops = DS.Own(drops, ctx.matches)
     pane.newCount = DS.NewCount(drops, ctx.matches)
     local s = NS.MineCells.Summary(pane.ownDrops, GetTime())
     local tradeable = s.count > 0
-    strip:Show()
     pane.summaryData = tradeable and s or nil
+    foot.controls = (tradeable and DS.Postable()) and foot.withPost or foot.withoutPost
+    NS.FooterRow.PaintFold(foot.fold, pane.entries)
     paintText(pane, s, compact)
-    placeButtons(strip, tradeable and DS.Postable(), compact)
-    NS.FooterRow.PaintFold(strip.fold, pane.entries)
     local bottom = NS.FooterMetric("HEIGHT")
     setBottom(pane.scroll, pane, pane.colHead, -2, bottom)
     local cv = pane.compactView
     setBottom(cv and cv.scroll, pane, pane, 0, bottom)
 end
 
---- Move the strip's next expiry on to the clock (WindowGroup.TickCountdowns): the text alone, over
+--- Move the summary's next expiry on to the clock (WindowGroup.TickCountdowns): the words alone, over
 --- the drops the last repaint counted, while it shows a summary.
 --- @param pane table the Drops pane
 --- @param compact boolean
 function DS.Tick(pane, compact)
-    local strip = pane.summary
-    if not (strip and strip:IsShown() and pane.summaryData and pane.ownDrops) then return end
+    if not (pane.foot and pane.summaryData and pane.ownDrops) then return end
     local s = NS.MineCells.Summary(pane.ownDrops, GetTime())
     pane.summaryData = s.count > 0 and s or nil
     paintText(pane, s, compact)

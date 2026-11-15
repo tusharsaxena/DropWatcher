@@ -21,8 +21,12 @@ Run 2026-11-15 by UC-DW of the rolls UX round (plan M10). Nothing was pushed.
   footer stay the host's own (the strip's info and status font strings, its labeled buttons and the
   Sort dropdown), laid over the library's footer, rather than the footer's `left` / `right` lines and
   `marks` slot; standalone-windows' *The footer* and anti-pattern #118 read that as a host-drawn footer.
+  **Resolved 2026-11-15 (RX-24):** the owner ruled a rework, not a deviation row and not a standard
+  change. The footer's words are its own left line (`foot:SetLeft`), its controls its `marks` (catalog
+  icon buttons with tooltips), the labeled buttons are gone and Sort is on the filter bar; the Offer
+  panel's Announce to group is its footer's mark.
 - **Unreached, listed for the owner (no issue filed, by the ruling):** `dock = "hud"` for the loot
-  toast and the simulated roll popup's stand-in and side card; footer marks; strips on the Offer panel
+  toast and the simulated roll popup's stand-in and side card; footer marks (adopted by RX-24); strips on the Offer panel
   and the Edit message box; the settled `O.SideTabs`, Callout, WaypointArrow and IconBrowser
   (`02_CANDIDATES.md`).
 - **Gates:** re-vendor commit (b12996a): Retail 2553 passed / 0 failed / 1 skipped, Forever 2445 / 0 /

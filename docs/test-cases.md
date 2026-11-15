@@ -435,7 +435,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (69)
+### test_window_shell.lua (70)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -459,8 +459,9 @@ Total.
 - shell: each tab grays the View values it does not use, and a grayed value does not toggle
 - shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
 - filter bar tooltip: AboveSide is right when the screen has room past the control, else left
-- filter bar tooltip: every bar control and the footer's Sort open above the control, top right
+- filter bar tooltip: every bar control, Sort included, opens above the control, top right
 - filter bar tooltip: with no room on the right it opens above the control, top left
+- filter bar: Sort at the bar's right edge, the search box between, room for it at the least width (RX-24)
 - filter bar tooltip: the room is measured in screen pixels, at each frame's scale
 - filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
 - shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)
@@ -479,7 +480,7 @@ Total.
 - shell: Comparator orders newest, oldest, by item level and by your gain
 - shell: the footer composer says inspect freshness, last loot, the situation and Pawn
 - shell: the not-tracking situation tooltip points at Settings > Drops > Situations
-- shell: the live footer reads the client, and its Sort follows the active tab
+- shell: the live footer reads the client; the filter bar's Sort follows the active tab
 - shell: the footer's ticker runs only while the whole window is on screen
 - shell: minimize collapses to the title bar, keeps the size, and counts every drop added
 - shell: a double-click on the title bar expands a minimized window
@@ -637,7 +638,7 @@ Total.
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
 - compact history: every tooltip opens at the card's top right, just outside the window
-- compact history: the strip is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
+- compact history: the footer is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
 - history: your own entry's looter reads Name [YOU] in both layouts, the mark in gold (feedback-7 spec §2)
@@ -679,7 +680,7 @@ Total.
 - chrome: the badge collapses to its lock and the queued count at the bar's left, its tooltip unchanged
 - chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks
 - chrome: at the minimum width the cluster's buttons do not overlap and the centered title clears them
-- chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon
+- chrome: the title bar has no Scan group in either layout; compact's is the footer's mark
 - chrome: the three tabs keep a reduced width, their names in their tooltips
 - chrome: the bar is one row: View, the search box (Filter…) and Filters on the right
 - chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own
@@ -687,7 +688,7 @@ Total.
 - chrome: a control the tab does not honor is a disabled row, as its dropdown is grayed
 - chrome: a second click on Filters closes the menu, and so do hiding, minimizing and going back to full
 - chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filters button and no menu
-- chrome: the full layout takes every control back to its place on the bar and the tab's strip
+- chrome: the full layout takes every control back to its place on the bar, Sort at its right edge
 - chrome: the test-mode strip keeps its tooltip with shorter words that may wrap
 - chrome: the compact strip takes a second line exactly when its words wrap at the window's width
 - chrome: the compact sim strip takes a second line when its words wrap at 380 px
@@ -779,7 +780,7 @@ Total.
 
 - layout: at the least width no tab sheds a column, and one pixel less would shed on Drops
 - layout: the Trade window column is its widest answer plus its bar's padding (feedback-6 spec §0)
-- layout: the search box spans from the bar's gap after Character to the bar's right edge
+- layout: the search box spans from the bar's gap after Character to Sort at the bar's right edge
 - layout: the column labels are gold on both full tables
 - layout: Actions is 84 pixels, the Ask button's width, so every state's icon and word fits
 - layout: every action button's icon and word fit its width (feedback-7 spec §1)
@@ -937,47 +938,44 @@ Total.
 - tip marks: Chars counts what a text draws: an escape two, a color code none, a UTF-8 character one
 - audit: no text in the default face carries a glyph: Drops, the detail card, the Offer panel, History
 
-### test_drops_strip.lua (15)
+### test_drops_strip.lua (12)
 
 - drops tab: the tabs are Drops, History and Insights, and the retired `mine` opens Drops
-- drops strip: under the table, it counts your tradeable drops and the next expiry, Post beside it
-- drops strip: one row, right-aligned: [Post my tradeables] [Scan group] [Expand all] [Sort] (feedback-15 spec §2)
-- drops strip: Sort follows the active tab to History's strip, right of the toggle, and back
+- drops strip: the footer counts your tradeable drops and the next expiry, Post beside it (RX-24)
 - drops strip: Scan group goes through the shared handler
-- drops strip: the row, pure: full Sort, the toggle, Scan group, Post; compact the same without Sort, icon wide
-- drops strip: full layout, nothing tradeable: shown with Scan group beside Sort, no summary
-- drops strip: a repaint that changes neither the layout nor Post re-anchors nothing; either change places it again
-- drops strip: compact, shown while none of your listed drops can be traded: no summary, no Post (feedback-15 spec §2)
+- drops strip: full layout, nothing tradeable: Scan group and the toggle, no count, no Post
+- drops strip: a repaint that changes nothing re-binds no mark; Post coming or going does
+- drops strip: compact, none of your listed drops can be traded: no count, no Post (feedback-15 spec §2)
 - drops strip: it counts the drops the tab lists, its filters applied, collapsed or not
-- drops strip: its next expiry moves each second with the countdowns
+- drops strip: its next expiry moves each second with the countdowns, on the footer's line
 - drops strip: its next expiry keeps the each-second ticker running with no row's countdown drawn
 - drops strip: Post my tradeables goes through the shared handler
-- drops strip: under the compact cards, the summary shortened, Post my tradeables its icon
+- drops strip: under the compact cards, the summary shortened, the same marks
 - drops strip: the compact countdown tick moves its next expiry too
 
 ### test_footer_row.lua (15)
 
-- footer row: the slots, pure: right to left, a gap between, a hidden control takes no room
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
-- footer row: full Drops, right to left: Sort, the toggle, Scan group, Post my tradeables, one width
-- footer row: compact Drops is always shown: the toggle at the right, Post my tradeables left of it
-- footer row: History, full Sort then the toggle, compact the toggle; no Clear history
+- footer row: the line, pure: the tab's info, then the status; the status alone with no info (RX-24)
+- footer row: the line's tooltip, pure: the info's lines, then every status row and hint (RX-24)
+- footer row: the footer is W.Footer; nothing of the host's is laid over it but the line's tooltip host (RX-24)
+- footer row: the footer's words, both layouts: the tab's info then the status, through foot:SetLeft (RX-24)
+- footer row: nothing tradeable, the status starts the line; it follows the active tab (RX-24)
+- footer row: the line keeps its tooltip: the info's rows, then every segment's words and reasons (RX-24)
+- footer row: Drops' marks, right to left: the toggle, Scan group, Post my tradeables, each a tooltip (RX-24)
+- footer row: Post my tradeables shows only while something of yours is tradeable; compact the same marks (RX-24)
+- footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)
+- footer row: History's mark is the toggle; Insights' is Reset filters, which resets them (RX-24)
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
-- footer row: the count's width and the status's room, pure (RX-09)
-- footer row: the status is one line on Drops' strip, after the count, ending where the buttons start (RX-09)
-- footer row: the count keeps its words' width and the status the rest; narrow, the count is cut (RX-09)
-- footer row: nothing tradeable, the status starts the line; compact, it is the short line (RX-09)
-- footer row: the status follows the active tab, and the strip it leaves takes its row back (RX-09)
-- footer row: the status keeps its tooltip, every segment's words and reasons, rows then hints (RX-09)
-- footer row: no status bar: the panes reach the footer band, whose corner holds the grip (RX-09)
+- footer row: the panes reach the footer, whose corner holds the grip; locked still hides it (RX-24)
 
 ### test_offer_panel.lua (23)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
-- offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged
+- offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group the footer's mark
 - offer panel: every part has a reason tooltip; Their eq's holds the old pill's explanation
 - offer panel: Offer whispers through the shared handler
 - offer panel: Their eq shows both worn items from the member's inspect read
@@ -997,7 +995,7 @@ Total.
 - offer panel: Offer on a compact card opens it docked beside the compact window, its width unchanged
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 - offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip
-- offer panel: its foot is the library's Footer, the order note on its right line
+- offer panel: its foot is the library's Footer, the order note on its right line, Announce its mark
 
 ### test_offer_alone.lua (16)
 
@@ -1014,7 +1012,7 @@ Total.
 - offer alone: the detail card's first action and the compact card read No action too
 - offer alone: the Offer panel does not open, and closes when the last player leaves
 - offer alone: Offer, Announce and Post my tradeables refuse and say why
-- offer alone: the Drops strip hides Post my tradeables until a player joins; test mode keeps it
+- offer alone: the Drops footer hides Post my tradeables until a player joins; test mode keeps it
 - offer alone: /dw offer says why and opens nothing
 - offer alone: the No action hint names followers and companions on Retail alone (clients-§4)
 
@@ -1095,7 +1093,7 @@ Total.
 - window: test mode's looter who left keeps their spec on the detail card, and says they are gone
 - window: a sample's You is its own worn gear in both layouts, the item its card replaces, never yours (fb18)
 - window: a sample's Them shows its own worn item, and its detail card its own inspect
-- window: Drops lists your samples with the others, and its strip counts the tradeable ones
+- window: Drops lists your samples with the others, and its footer counts the tradeable ones
 - window: the empty state comes back once test mode ends with nothing in the live feed
 - labels: your own rows on Drops say Offer, and no cell of theirs ends in an ellipsis
 - labels: no button the addon builds is labeled with a trailing ellipsis
@@ -2227,7 +2225,7 @@ Total.
 - history tab: a header click opens a collapsed group; the filter's Content cuts earlier sessions
 - history tab: a right-click opens the library's skinned menu at the pointer, one flat row that marks the row declined
 - history tab: without LibKa0s-Widgets the row menu is the client's, and without that it acts at once
-- history tab: with nothing kept it says what it will hold, and the strip has no Clear history
+- history tab: with nothing kept it says what it will hold, and the footer has no Clear history
 - history tab: HistoryChanged repaints the shown window on the next frame
 - history tab: a DropUpdated that changes the history still repaints the window once
 - history tab: the pure Ago reads seconds, hours, then days
@@ -2355,7 +2353,7 @@ Total.
 - insights tab: built once on its first show, with its chart context and eight cards
 - insights tab: the shared bar hides and the pane starts under the tabs, then both come back on History
 - insights tab: the test-mode strip sits under the title bar on Insights and on History
-- insights tab: the footer's Sort is hidden on Insights and back on History
+- insights tab: no Sort on Insights (the filter bar stands aside), back on History
 - insights tab: switching in closes the compact Filters menu
 - insights tab: seven dropdowns, their heads closed with the number of values, rows with counts
 - insights tab: a pick redraws the cards and the strip; Reset puts every filter back
@@ -2977,7 +2975,7 @@ Total.
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
 | test_window.lua | 20 |
-| test_window_shell.lua | 69 |
+| test_window_shell.lua | 70 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 30 |
 | test_compact_cards.lua | 27 |
@@ -2995,7 +2993,7 @@ Total.
 | test_detail_card.lua | 34 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
-| test_drops_strip.lua | 15 |
+| test_drops_strip.lua | 12 |
 | test_footer_row.lua | 15 |
 | test_offer_panel.lua | 23 |
 | test_offer_alone.lua | 16 |
@@ -3085,4 +3083,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2559** |
+| **Total** | **2557** |

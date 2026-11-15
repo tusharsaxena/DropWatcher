@@ -8,7 +8,7 @@ local _, NS = ...
 --               beside it in their red and cyan only while minimized or with no strip; the
 --               restriction badge its lock and the queued count at the left; the lock button
 --               (RX-08; RX-14 moved it to the right-hand cluster), the layout toggle, minimize and
---               close at the right (Scan group is the Drops strip's icon, feedback-16)
+--               close at the right (Scan group is the footer's mark on Drops, feedback-16, RX-24)
 --   tabs        `Drops`, `History` at a reduced width (their tooltips say what each holds)
 --   filter bar  View, the search box (`Filter…`) and Filters ▾ on the right. The Filters menu lists
 --               the full bar's Quality, Content and Character dropdowns and the tab's Sort, one child
@@ -19,8 +19,8 @@ local _, NS = ...
 --   strip       the strip in force (test mode's or the simulation's) in shorter words, wrapping to
 --               two lines when the width needs it
 --   footer      the status line's short words, `Inspect 4/4 · Mythic+` (CC.FooterLine), after the
---               active strip's own on the one footer line (NS.WindowFooter, RX-09); its tooltip is
---               the full layout's
+--               active tab's own on the footer's one line (NS.WindowFooter, RX-09, RX-24); its
+--               tooltip is the full layout's, and its marks are the full layout's
 --
 -- A CASCADE OF THE DROPDOWNS THEMSELVES. Filters ▾ opens LibKa0s-Widgets' shared menu on its button
 -- (W.ContextMenu through NS.ContextMenu) with one `submenu` row per dropdown (Widgets minor 23), in
@@ -225,8 +225,7 @@ local parts = {}   -- filters (the button), menu (the shared menu while this ope
 
 local function controlsByKey()
     local c = NS.WindowFilterBar.Controls()
-    local _, sort = NS.WindowFooter.Parts()
-    return { quality = c.quality, content = c.content, char = c.char, sort = sort }
+    return { quality = c.quality, content = c.content, char = c.char, sort = c.sort }
 end
 
 local function labelsInForce()
@@ -420,17 +419,12 @@ local function layoutStrip(f, compact)
     end
 end
 
--- The full bar back: the dropdowns on the bar and Sort on the tab's strip (feedback-10 spec §3).
--- WindowFooter.Refresh shows Sort again on its next pass.
+-- The full bar back: the dropdowns on the bar, the tab's Sort at its right edge (RX-24).
 local function restoreBar(f)
     CC.CloseFilters()
     if parts.filters then parts.filters:Hide() end
-    local c = NS.WindowFilterBar.Controls()
-    for _, key in ipairs(CC.COUNTED) do
-        if c[key] then c[key]:Show() end
-    end
+    for _, dd in pairs(controlsByKey()) do dd:Show() end
     NS.WindowFilterBar.Anchor()
-    NS.WindowFooter.AnchorSort()
     NS.WindowFilterBar.Layout(f:GetWidth())
 end
 

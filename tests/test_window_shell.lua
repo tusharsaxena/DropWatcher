@@ -200,7 +200,7 @@ test("shell: Scan group asks the inspect broker through the shared handler, and 
     local NS, _, m = shown()
     local causes = {}
     NS.Inspect.Scan = function(cause) causes[#causes + 1] = cause; return 3 end
-    local scan = NS.WindowGroup.Drawn().pane.summary.scan
+    local scan = NS.FooterRow.Mark("scan")
     scan:__fire("OnClick")
     assertEqual(table.concat(causes, ","), "scan")
     assertTrue(m.prints[#m.prints]:find("Inspecting 3 group members") ~= nil)
@@ -410,12 +410,11 @@ local function hoverAbove(m, w, right, tipWidth)
     return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
 end
 
-test("filter bar tooltip: every bar control and the footer's Sort open above the control, top right", function()
+test("filter bar tooltip: every bar control, Sort included, opens above the control, top right", function()
     local NS, _, m = shown()
     local c = NS.WindowFilterBar.Controls()
-    local _, sort = NS.WindowFooter.Parts()
     for _, key in ipairs({ "view", "quality", "content", "char", "search", "sort" }) do
-        local w = key == "sort" and sort or c[key]
+        local w = c[key]
         assertTrue(w ~= nil, key .. " is built")
         local pts, rel, x, y = hoverAbove(m, w, 900, 300)
         assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", key)
@@ -428,12 +427,37 @@ end)
 
 test("filter bar tooltip: with no room on the right it opens above the control, top left", function()
     local NS, _, m = shown()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = NS.WindowFilterBar.Controls().sort
     local pts, rel = hoverAbove(m, sort, 1800, 300)
     assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
     assertTrue(rel == sort)
     pts = hoverAbove(m, NS.WindowFilterBar.Controls().view, 1800, 300)
     assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
+end)
+
+-- RX-24: Sort left the footer (WowAddonStandards v2.110.0, *The footer*: its controls are marks).
+test("filter bar: Sort at the bar's right edge, the search box between, room for it at the least width (RX-24)", function()
+    local NS, f = shown()
+    local FB = NS.WindowFilterBar
+    local c = FB.Controls()
+    -- red under: Sort on the tab's strip over the footer (WindowFooter.Parts' second value)
+    assertTrue(c.sort ~= nil, "Sort is a filter bar control")
+    assertTrue(c.sort:GetParent() == f.filterHost, "on the bar")
+    local p, rel, rp, x = c.sort:GetPoint(1)
+    assertEqual(p, "RIGHT"); assertTrue(rel == f.filterHost); assertEqual(rp, "RIGHT"); assertEqual(x, 0)
+    assertEqual(c.sort:GetWidth(), FB.SORT_W)
+    local right
+    for _, pt in ipairs(c.search.__points) do if pt[1] == "RIGHT" then right = pt end end
+    assertTrue(right[2] == c.sort and right[3] == "LEFT", "the search box ends at Sort")
+    local K = NS.Constants.WINDOW
+    assertTrue(FB.SearchWidth(K.MIN_WIDTH) >= 80, "the least width still leaves the search box room to type")
+    c.sort.onSelect("ilvl")
+    assertEqual(FB.State("group").sort, "ilvl", "it sets the tab's order")
+    NS.Window.SelectTab("history")
+    assertEqual(textOf(c.sort.text), "Sort: Newest", "History keeps its own")
+    assertTrue(c.sort:IsShown() and c.sort:IsEnabled())
+    NS.Window.SelectTab("insights")
+    assertFalse(f.filterHost:IsShown(), "Insights draws its own bar: no Sort")
 end)
 
 test("filter bar tooltip: the room is measured in screen pixels, at each frame's scale", function()
@@ -764,11 +788,12 @@ test("shell: the not-tracking situation tooltip points at Settings > Drops > Sit
     assertFalse(stale, "no route to the retired Situations page")
 end)
 
-test("shell: the live footer reads the client, and its Sort follows the active tab", function()
+test("shell: the live footer reads the client; the filter bar's Sort follows the active tab", function()
     local NS = T.enableAddon()
     NS.db.profile.situations.solo.track = false   -- Solo is tracked by default (DW-06); this reads an untracked one
     NS.ShowWindow()
-    local status, sort = NS.WindowFooter.Parts()
+    local status = NS.WindowFooter.Parts()
+    local sort = NS.WindowFilterBar.Controls().sort
     assertEqual(textOf(status.text),
         "Inspect: no group · No loot seen yet · Not tracking in Solo · change in settings · Pawn: off")
     assertEqual(textOf(sort.text), "Sort: Newest")
@@ -1083,9 +1108,9 @@ end)
 test("shell: every control on the chrome has a tooltip with a reason", function()
     local NS, f = shown()
     local W, c = NS.Window, NS.WindowFilterBar.Controls()
-    local status, sort = NS.WindowFooter.Parts()
+    local status, sort = NS.WindowFooter.Parts(), c.sort
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "combat", true)
-    local widgets = { NS.WindowGroup.Drawn().pane.summary.scan, f.minimizeButton, f.badge, f.newChip, f.tabs.group,
+    local widgets = { NS.FooterRow.Mark("scan"), NS.FooterRow.Mark("fold"), f.minimizeButton, f.badge, f.newChip, f.tabs.group,
         f.tabs.history, c.view, c.quality, c.content, c.search, sort,
         status }
     for i, w in ipairs(widgets) do
@@ -1109,8 +1134,11 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     local c = NS.WindowFilterBar.Controls()
     assertTrue(c.view == nil and c.quality == nil and c.content == nil)
     assertTrue(c.search == nil, "no search box either: the bar degrades as the dropdowns do (LibKa0s#52)")
-    local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort == nil)
+    assertTrue(c.sort == nil, "no Sort either")
+    local line, foot = NS.WindowFooter.Parts()
+    assertTrue(foot ~= nil and line ~= nil, "a footer of the same height, with its line")
+    assertEqual(foot:GetHeight(), NS.FooterMetric("HEIGHT"))
+    assertTrue(line.text:GetText():find("Inspect", 1, true) ~= nil, "the status still reads")
     NS.CloseMenu()
 end)
 

@@ -168,7 +168,7 @@ test("offer panel: no class bar; every second row striped as the main window's; 
     assertEqual(table.concat({ p.rows[1].member.text:GetTextColor() }, ",", 1, 3), table.concat({ r, g, b }, ","))
 end)
 
-test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group unchanged", function()
+test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Announce to group the footer's mark", function()
     local NS, p = openPanel()
     local TONE = NS.Constants.TONE
     local b = p.rows[1].offer
@@ -176,9 +176,11 @@ test("offer panel: each member's Offer is cyan, Offered yellow, Retry red; Annou
     assertTrue(b.art:IsShown() and b.art:GetTexture() == NS.Icon("external-link"), "Offer wears external-link (feedback-10 spec §1)")
     assertEqual(b:GetWidth(), NS.Constants.WINDOW.PANEL_BTN_W)
     local ann = p.panel.announce
-    assertTrue(ann.art:IsShown() and ann.art:GetTexture() == NS.Icon("speech-bubble"), "Announce to group keeps its mark")
+    -- red under: a 130 px labeled button laid over the footer (RX-24, anti-pattern #118)
+    assertTrue(ann == p.panel.foot.marks[1], "Announce to group is the footer's mark")
+    assertEqual(ann.icon:GetTexture(), NS.Icon("speech-bubble"), "Announce to group keeps its mark")
+    assertEqual(NS.Window.TooltipOf(ann)[1], "Announce", "its tooltip names it")
     assertEqual(select(3, b.label:GetTextColor()), TONE.cyan.b)
-    assertEqual(p.panel.announce.tone, "red", "Announce keeps its red (feedback-6 spec §2)")
     NS.Asks.StateOf = function(kind) return kind == "offer" and "sent" or "ready" end
     NS.Window.Refresh()
     b = NS.OfferPanel.Drawn().rows[1].offer
@@ -356,7 +358,7 @@ test("handlers: Post my tradeables announces every tradeable drop of yours, line
     local NS, _, m = shownMine()
     local sent = {}
     NS.Asks.Request = function(kind, target, id, opts) sent[#sent + 1] = { kind = kind, target = target, id = id, text = opts.text }; return "sent" end
-    NS.WindowGroup.Drawn().pane.summary.post:__fire("OnClick")
+    NS.FooterRow.Mark("post"):__fire("OnClick", "LeftButton")
     assertEqual(#sent, 1)
     assertEqual(sent[1].kind, "announce"); assertTrue(sent[1].target == nil)
     assertEqual(sent[1].text, "Up for trade, whisper me: " .. BRACERS .. " " .. RING .. " " .. TRINKET)
@@ -481,7 +483,7 @@ end)
 
 -- red under: the hand-built 32 px foot strip (RX-23: spec B.2, a window's footer MUST be LibKa0s
 -- Widgets' Footer, FOOTER.HEIGHT 24, a hairline, text.muted; standalone-windows' *The footer*)
-test("offer panel: its foot is the library's Footer, the order note on its right line", function()
+test("offer panel: its foot is the library's Footer, the order note on its right line, Announce its mark", function()
     local NS, p = openPanel()
     local panel, H = p.panel, NS.FooterMetric("HEIGHT")
     local foot = panel.foot
@@ -492,8 +494,14 @@ test("offer panel: its foot is the library's Footer, the order note on its right
     assertTrue(panel.note.text == foot.right, "the note is the footer's right line")
     assertEqual(panel.note.text:GetText(), "5 members · sorted by gain")
     assertEqual(NS.Window.TooltipOf(panel.note)[1], NS.L["Order"], "the note keeps its tooltip")
-    local _, rel = panel.announce:GetPoint(1)
-    assertTrue(rel == foot, "Announce to group on the footer")
+    assertEqual(#foot.marks, 1, "one mark: Announce to group")
+    assertTrue(panel.announce == foot.marks[1] and panel.announce:GetParent() == foot)
+    assertEqual(textOf(foot.left), "", "ready: no state word")
+    NS.Asks.StateOf = function(kind) return kind == "announce" and "sent" or "ready" end
+    NS.Window.Refresh()
+    assertEqual(textOf(foot.left), "Announced", "the state word on the left line")
+    assertEqual(panel.announce.icon:GetTexture(), NS.Icon("confirm"))
+    assertFalse(panel.announce:IsEnabled(), "sent: one per item")
     local sb = panel.scroll.__points[2]
     assertEqual(sb[1], "BOTTOMRIGHT"); assertEqual(sb[5], H + 4, "the list ends above the footer")
 end)

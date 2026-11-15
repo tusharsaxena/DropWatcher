@@ -117,10 +117,11 @@ preview, token chips and Reset templates, Drops › Retention's Clear history be
 (asking first, clearing on Yes, test mode's samples only while it is on; feedback-15 spec §3), each
 page's Defaults, and the editors' pure halves),
 `test_slash`, `test_window`, `test_window_shell` (the window's
-chrome built headless: the title bar (no Scan group since feedback-16: the Drops strip's, in both
-layouts, feedback-7 spec §4), the restriction badge, the tabs and their lazy
+chrome built headless: the title bar (no Scan group since feedback-16: the Drops footer's mark, in
+both layouts, feedback-7 spec §4, RX-24), the restriction badge, the tabs and their lazy
 panes, the filter bar's per-tab state and its Loot History flat skin, the multi-select View (its values,
-label, grayed values and bullet tooltip), the footer's composer, minimize, auto-open on every drop, the
+label, grayed values and bullet tooltip), Sort at the filter bar's right edge with the search box
+ending at it and room to type at the least width (RX-24), the footer's composer, minimize, auto-open on every drop, the
 default size, 1080 x 600, as the least width, a tooltip on
 every control, the build without the Widgets library, and the pure row predicates),
 `test_window_compact` (compact mode's switch, DW-C0: the pure layout, run, size, bounds and corner
@@ -257,19 +258,19 @@ library's shared menu at FULLSCREEN_DIALOG with no dropdown moved, the Edit mess
 toplevel (LibKa0s-Toast-1.0's T5 tier, `LAYERS.STRATA.ALERT`), an item
 button's border explicit at +1 under the glow at +2, and a static scan for strata literals and absolute
 levels in `core/`, `modules/` and `settings/`), `test_drops_strip` (the tab strip, Drops and History, the retired `mine` opening Drops;
-the strip under the table or the cards counting your listed tradeable drops, its filters applied,
-collapsed or not, its next expiry moving each second and keeping
-the ticker running, Post my tradeables through its handler, and the compact strip's summary
-shortened, shown there with nothing tradeable too; feedback-5 spec §3, DW-E3; feedback-7 spec §4,
-feedback-10 spec §3 and feedback-15 spec §2: one right-aligned row, `[Post my tradeables] [Scan group]
-[Expand all] [Sort]`, Post at Sort's size, Scan group through its handler, Sort following the active
-tab to History's strip right of the toggle and back, the pure `Row`, and the full
-layout's strip shown with nothing tradeable, Scan group in its place),
-`test_footer_row` (one footer button kind and Expand all / Collapse all, feedback-15 spec §2: the pure
-`Slots`, `FoldState` and `FoldAll`; every footer button `FOOTER_BUTTON_W` wide with the same label in
-both layouts, each tab's row right to left in both layouts, the info ending where the row starts, the
-compact Drops strip always shown, no Clear history on History's strip; the toggle's words, both directions, on both tabs in both layouts,
-off with no header, each tab's collapsed state its own), `test_offer_panel` (the Offer panel opened from your own drop's
+the Drops summary on the window footer's left line counting your listed tradeable drops, its filters
+applied, collapsed or not, its next expiry moving each second and keeping the ticker running, Post my
+tradeables and Scan group marks through their handlers, a repaint that changes nothing re-binding no
+mark, and compact's summary shortened with the same marks; feedback-5 spec §3, DW-E3; feedback-7
+spec §4; RX-24),
+`test_footer_row` (the window footer on the library's lines and marks, RX-24, WowAddonStandards
+v2.110.0 *The footer*, anti-pattern #118: the footer is W.Footer and nothing of the host's is laid
+over it but the line's tooltip host; the pure `LineText` and `LineTip`; the words through
+`foot:SetLeft`, the tab's info then the status, in both layouts and following the tab; each tab's
+marks right to left with a tooltip, Post only while something is tradeable, each doing what its
+button did; the pure `FoldState` and `FoldAll`, the toggle's words and mark, both directions, on both
+tabs in both layouts, off with no header, each tab's collapsed state its own; the grip in the
+footer's corner, the marks clearing it, locked hiding it), `test_offer_panel` (the Offer panel opened from your own drop's
 Offer, built headless: docked beside the full or compact window on the side with room, the
 candidates ranked with Their eq in the Them look (both worn items from the read), no class bar and
 every second row striped, every part's reason tooltip (Their eq's holding the old pill's

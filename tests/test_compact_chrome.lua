@@ -262,16 +262,16 @@ test("chrome: at the minimum width the cluster's buttons do not overlap and the 
     end
 end)
 
-test("chrome: the title bar has no Scan group in either layout; compact's is the Drops strip's icon", function()
+test("chrome: the title bar has no Scan group in either layout; compact's is the footer's mark", function()
     local NS, f = shown("compact")
     -- red under: compact's title bar carrying a second Scan group beside the strip's (feedback-16)
     assertTrue(f.scanButton == nil, "no Scan group in the title bar")
-    local b = NS.WindowGroup.Drawn().pane.summary.scan
-    assertTrue(b:IsShown(), "the strip's, as its icon")
+    local b = NS.FooterRow.Mark("scan")
+    assertTrue(b:IsShown(), "the footer's mark (RX-24)")
     assertEqual(NS.Window.TooltipOf(b)[1], "Scan group")
     local scanned = 0
     NS.ScanGroup = function() scanned = scanned + 1 end
-    b:__fire("OnClick")
+    b:__fire("OnClick", "LeftButton")
     assertEqual(scanned, 1)
     NS.SetWindowMode("full")
     assertTrue(f.scanButton == nil)
@@ -343,14 +343,14 @@ test("chrome: the bar is one row: View, the search box (Filter…) and Filters o
         assertTrue(c[key]:GetParent() == f.filterHost, key .. " stays on the full bar")
         assertFalse(c[key]:IsShown(), key .. " hidden in compact: the cascade lists it")
     end
-    local _, sort = NS.WindowFooter.Parts()
-    assertFalse(sort:IsShown(), "Sort hidden in compact too")
+    assertTrue(c.sort:GetParent() == f.filterHost, "Sort stays on the full bar (RX-24)")
+    assertFalse(c.sort:IsShown(), "Sort hidden in compact too")
 end)
 
 test("chrome: Filters opens the library's cascade on its button, one submenu per dropdown, its rows the dropdown's own", function()
     local NS = shown("compact")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = c.sort
     local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
     assertEqual(#seen, 1, "one W.ContextMenu call")
@@ -386,7 +386,7 @@ end)
 test("chrome: each child's tick reads its own dropdown, and a pick goes through it, count and tooltip in step", function()
     local NS, f = shown("compact")
     local FB, c, p = NS.WindowFilterBar, NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
-    local _, sort = NS.WindowFooter.Parts()
+    local sort = c.sort
     local seen = captureMenu(NS)
     p.filters:__fire("OnClick")
     local rows, menu = seen[1].rows, seen[1].menu
@@ -470,7 +470,7 @@ test("chrome: without LibKa0s-Widgets there is no dropdown to list, so no Filter
     NS.CompactChrome.ToggleFilters()   -- no error, nothing opened
 end)
 
-test("chrome: the full layout takes every control back to its place on the bar and the tab's strip", function()
+test("chrome: the full layout takes every control back to its place on the bar, Sort at its right edge", function()
     local NS, f = shown("compact")
     NS.SetWindowMode("full")
     local c, p = NS.WindowFilterBar.Controls(), NS.CompactChrome.Parts()
@@ -483,11 +483,12 @@ test("chrome: the full layout takes every control back to its place on the bar a
     assertEqual(#c.search.__points, 2, "both edges anchored (feedback-4 spec §4)")
     assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
     assertEqual(c.search.__points[1][4], 8, "the gap between the dropdowns")
-    assertEqual(c.search.__points[2][1], "RIGHT")
+    assertEqual(c.search.__points[2][1], "RIGHT"); assertTrue(c.search.__points[2][2] == c.sort)
     assertEqual(textOf(c.search.hint), "Filter looter or item…")
     assertTrue(c.search:GetWidth() > 0)
-    local _, sort = NS.WindowFooter.Parts()
-    assertTrue(sort:GetParent() == f.panes.group.summary, "Sort on Drops' strip (feedback-10 spec §3)")
+    local sort = c.sort
+    -- red under: Sort on Drops' strip over the footer (feedback-10 spec §3; RX-24 moved it)
+    assertTrue(sort:GetParent() == f.filterHost and sort:IsShown(), "Sort back on the bar")
     assertEqual(sort.__points[1][1], "RIGHT"); assertEqual(sort:GetWidth(), 150)
 end)
 

@@ -125,13 +125,14 @@ test("layout: the Trade window column is its widest answer plus its bar's paddin
     end
 end)
 
-test("layout: the search box spans from the bar's gap after Character to the bar's right edge", function()
+test("layout: the search box spans from the bar's gap after Character to Sort at the bar's right edge", function()
     local NS = shownTable()
     local FB, K = NS.WindowFilterBar, NS.Constants.WINDOW
     local c = FB.Controls()
     assertEqual(c.search.__points[1][1], "LEFT"); assertEqual(c.search.__points[1][2], c.char)
     assertEqual(c.search.__points[1][4], 8)
-    assertEqual(c.search.__points[2][1], "RIGHT"); assertEqual(c.search.__points[2][2], c.host)
+    assertEqual(c.search.__points[2][1], "RIGHT"); assertEqual(c.search.__points[2][2], c.sort)
+    assertEqual(c.search.__points[2][4], -8, "the bar's gap before Sort (RX-24)")
     assertEqual(FB.SearchWidth(K.MIN_WIDTH + 300) - FB.SearchWidth(K.MIN_WIDTH), 300, "it takes all the width gained")
     assertTrue(c.search:IsShown())
 end)

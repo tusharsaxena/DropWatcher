@@ -403,7 +403,7 @@ test("history tab: kept groups newest first, the first open, each row's outcome 
     end
     assertEqual(NS.WindowFilterBar.State("history").content, "all", "the tab opens on Content: All")
     assertEqual(next(NS.WindowFilterBar.State("history").view), nil, "and View: All")
-    assertEqual(textOf(drawn.strip.info), "2 groups, 3 drops · kept for 30 days")
+    assertEqual(drawn.foot.info, "2 groups, 3 drops · kept for 30 days")
     for _, r in ipairs(drawn.rows) do
         for key, c in pairs(r.cells) do
             local itemTip = c.showItem and c.itemButton.link ~= nil   -- the real item tooltip (DW-80)
@@ -513,13 +513,13 @@ test("history tab: without LibKa0s-Widgets the row menu is the client's, and wit
     assertTrue(e.outcome ~= "declined")
 end)
 
-test("history tab: with nothing kept it says what it will hold, and the strip has no Clear history", function()
-    local _, drawn = shownTab(function(_, hist) hist.groups = {} end)
+test("history tab: with nothing kept it says what it will hold, and the footer has no Clear history", function()
+    local NS, drawn = shownTab(function(_, hist) hist.groups = {} end)
     assertEqual(#drawn.entries, 0)
     assertTrue(drawn.pane.placeholder:IsShown())
     assertEqual(textOf(drawn.pane.placeholder), "Drops from earlier encounters appear here.")
     -- red under: Clear history still on the strip (feedback-15 spec §3 moves it to Settings)
-    assertTrue(drawn.strip.clear == nil)
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold", "the toggle alone (RX-24)")
 end)
 
 test("history tab: HistoryChanged repaints the shown window on the next frame", function()

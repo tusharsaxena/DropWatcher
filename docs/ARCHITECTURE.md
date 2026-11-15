@@ -41,8 +41,9 @@ Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at al
 (`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
 (`NS.MakeTestStrip` answers nil, the body moves nothing and the `TEST MODE` / `SIM` title word
 marks the mode; with the library, a word shows only while the window is minimized, DW-10; the Rolls panel then draws no strip either and its body stays under the band, RX-21). Each setup file holds a
-descriptor and a degradation stub (no library, `NS.MakeFooter` answers nil and the window lays a bare
-frame of the footer's height, with no hairline), and `tests/test_surface_parity.lua` holds every stub to the live
+descriptor and a degradation stub (no library, `NS.MakeFooter` answers nil and the window and the
+Offer panel lay `NS.BareFooter`, a frame of the footer's height with its two lines, no hairline and
+no marks, so the footer's controls are absent), and `tests/test_surface_parity.lua` holds every stub to the live
 surface.
 
 The main window (`modules/Window.lua`) is a non-secure standalone frame with the shared Ka0s edge,
@@ -83,8 +84,8 @@ one-line responsibility and why its position is load-bearing or conventional is 
   (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
   machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, three tabs (Drops, History and
   Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
-  `InsightsSections.lua`, `WindowInsights.lua`), their strips' one
-  footer button kind and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
+  `InsightsSections.lua`, `WindowInsights.lua`), the footer's controls as the library footer's
+  marks and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
   off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them), the two
   detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
   tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
@@ -168,7 +169,7 @@ The filter bar is shared by the tabs and never reflows between them: a control a
 is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
 exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
 whose seven filters none of the shared controls apply to. While it is active the window hides the
-shared bar and the footer's Sort, starts the pane under the tabs, and never syncs the shared bar. This is a DropWatcher convention, not a rule
+shared bar, its Sort included, starts the pane under the tabs, and never syncs the shared bar. This is a DropWatcher convention, not a rule
 of the standard (Insights design spec §4.1), so it owes no deviation row.
 
 The mode strips (test mode's amber, the simulation's cyan) sit directly under the title bar, full
@@ -180,23 +181,31 @@ layout pass, since the compact layout's two-line strip changes height with no sh
 panel docks its two strips the same way under `p.titleBar`, a bare frame `NS.Skin.Header` lays on
 its title band's rect (`bars`), and its body starts `RP.TOP + BodyOffset()` down.
 
-The window has one footer line (RX-09, rolls-UX design §3.7): the active tab's strip, laid over the
-window's footer (`f.footerHost`, LibKa0s Widgets' `Footer`, Widgets minor 27, UC-DW: no fill, a
-hairline in the skin's `divider` along its top, `FOOTER.HEIGHT` 24 px tall across the body's foot;
-every tab strip is that height, read through `NS.FooterMetric`, and draws no rule of its own; its
-words are in `text.muted`). There is no status bar under it: the status
-line (inspect freshness, the last loot, the situation or the simulation, Pawn; `NS.WindowFooter`)
-rides the active strip after its own words (the tradeable count, the kept-history line, the period),
-ending where the strip's buttons start, one line cut with an ellipsis, its tooltip every segment's
-reasons; it follows a tab switch (`WindowFooter.AnchorStatus`, the pane's `statusHost`), and the
-strip it leaves spans its row with its words again (`FooterRow.FitInfo`). The resize grip is built in
-the footer's bottom-right corner (`MakeResizable` `gripParent`, the footer built with `grip = true`
-and told `SetGrip` as the grip shows and hides), each strip's row starting `K.GRIP_ROOM` in from the
-strip's edge (`K.INSET` short of the corner), and hidden while the window is locked or minimized (RX-08).
-The tab's words and controls on the footer are the host's own (the strip's info and status font
-strings, its labeled buttons and the Sort dropdown), not the footer's `left` / `right` lines and
-`marks` slot: flagged to the owner at UC-DW as an open question against standalone-windows'
-*The footer* (anti-pattern #118), not ratified here.
+The window has one footer line (RX-09, rolls-UX design §3.7), on the library's lines and marks
+(RX-24; standalone-windows' *The footer*, anti-pattern #118). The footer is `f.footerHost`, LibKa0s
+Widgets' `Footer` (Widgets minor 27, UC-DW: no fill, a hairline in the skin's `divider` along its
+top, `FOOTER.HEIGHT` 24 px tall across the body's foot, read through `NS.FooterMetric`). Its words
+are its own left line, set through `foot:SetLeft` in `text.muted`: the active tab's info (the
+tradeable count, next expiry and new count on Drops, the kept-history line on History, the period on
+Insights) and then the status line (inspect freshness, the last loot, the situation or the
+simulation, Pawn; `NS.WindowFooter`), ` · ` between (`WindowFooter.LineText`), one line the library
+cuts with an ellipsis where the marks start. One tooltip covers the line (`WindowFooter.LineTip`:
+the tab info's lines, then every status segment's words and reasons), on a mouse frame that draws
+nothing; the right line is unused. The tab's controls are the footer's `marks` slot, catalog icon
+buttons with tooltips, right to left from the corner (`NS.FooterRow`): Drops `Expand all` /
+`Collapse all`, `Scan group` and `Post my tradeables` (only while one of your listed drops can be
+traded), History the toggle, Insights `Reset filters`, the same in both layouts. The window builds
+`FooterRow.SLOTS` (3) marks and each tab binds its controls to them on its paint (its pane's `foot`
+model, `WindowFooter.PaintTab`); a mark no control takes is hidden. Nothing of the host's is laid
+over the footer. The resize grip is built in the footer's bottom-right corner (`MakeResizable`
+`gripParent`, the footer built with `grip = true` and told `SetGrip` as the grip shows and hides, so
+the marks clear the grip only while it shows), hidden while the window is locked or minimized
+(RX-08). The tab's Sort is on the filter bar's right edge (`modules/WindowFilterBar.lua`), in the
+compact Filters menu, and never on the footer. Until RX-24 the footer carried each tab's strip, laid
+over it, with 150 px labeled buttons (feedback-15 spec §2) and the Sort dropdown: the owner ruled on
+2026-11-15 to rework it rather than record a deviation or change the standard. The Offer panel's
+footer follows the same rule: the order note on its right line, Announce to group its one mark, and
+the announce state's word on its left line once it is not ready.
 
 ## Settings Schema
 

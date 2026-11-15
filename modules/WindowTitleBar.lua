@@ -7,8 +7,8 @@ local _, NS = ...
 -- restriction badge, then the right-hand cluster: the lock button (RX-08, at the top right since
 -- RX-14), the layout toggle (compact spec §1), minimize and the close mark, plus the
 -- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
--- through NS.Window.SetButtonMark). Scan group is the Drops strip's in both layouts
--- (modules/DropsStrip.lua, feedback-7 spec §4; compact's title-bar icon removed by feedback-16), and
+-- through NS.Window.SetButtonMark). Scan group is the Drops footer's mark in both layouts
+-- (modules/DropsStrip.lua, feedback-7 spec §4, RX-24; compact's title-bar icon removed by feedback-16), and
 -- the badge anchors to the lock button, the cluster's first.
 --
 -- Peeled out of modules/Window.lua (layout-§1's 1000-line notice band). The shell keeps everything
@@ -121,7 +121,7 @@ local function modeTip()
     return unpack(lines)
 end
 
---- Scan group's tooltip, on the Drops strip's button.
+--- Scan group's tooltip, on the Drops footer's mark.
 function TB.ScanTip()
     local TM = NS.TipMarks
     return L["Scan group"], TM.Row(L["Inspects"], L["every other member of your group"]),

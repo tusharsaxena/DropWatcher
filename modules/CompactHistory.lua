@@ -149,7 +149,7 @@ end
 local SPEC = { newCard = newCard, paint = paintCard, header = historyHeader, toggle = toggle, after = drawDetail,
     indent = K.ROW_INDENT }
 
--- The pane's own scroll view, above its strip, with its stacked detail card.
+-- The pane's own scroll view, above the window's footer, with its stacked detail card.
 local function buildView(pane)
     local cv = NS.CompactGroup.BuildView(pane, NS.FooterMetric("HEIGHT"))
     cv.card = NS.HistoryCard.Build(cv.content, true)
@@ -180,5 +180,5 @@ function CH.Drawn(pane)
     local cv = pane.compactView
     if not cv then return nil end
     return { compact = true, rows = cv.cardPool.active, headers = cv.headPool.active, entries = pane.entries,
-        pane = pane, strip = pane.strip, scroll = cv.scroll, card = cv.card, cardEntry = cv.cardEntry }
+        pane = pane, foot = pane.foot, scroll = cv.scroll, card = cv.card, cardEntry = cv.cardEntry }
 end

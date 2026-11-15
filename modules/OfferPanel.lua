@@ -14,8 +14,11 @@ local _, NS = ...
 -- `Can't use`, `…`, `Unavailable`; NS.SideCells.Candidate, painted by WindowGroup.PaintSide) and,
 -- for an upgrade or an equal (an off-spec one too), the Offer button (the Trade button went with feedback-7 spec §0); the
 -- list scrolls in a raid. The footer (LibKa0s Widgets' Footer, RX-23, spec B.2: no fill, a hairline in
--- the skin's `divider`, FOOTER.HEIGHT tall) holds Announce to group at its left and the note on the
--- order on its right line, in `text.muted`, with the order's tooltip. What each
+-- the skin's `divider`, FOOTER.HEIGHT tall) holds the note on the order on its right line, in
+-- `text.muted`, with the order's tooltip, and Announce to group as its one mark in the corner (RX-24,
+-- WowAddonStandards v2.110.0 *The footer*: a footer's controls are catalog marks), its art and
+-- tooltip following its ask state (MineCells.AnnounceButton) and the state's word, once it is not
+-- ready (`Announced`, `Queued`, `Retry`), on the footer's left line. What each
 -- part says is modules/MineCells.lua's and modules/SideCells.lua's (pure); this file is the frame
 -- edge. Nothing is ever blank: a member with no Offer shows the gray No action with the reason
 -- (feedback-11 spec §1).
@@ -199,27 +202,22 @@ local function announceTip(p)
     return unpack(p.announce.tipLines or { L["Announce to group"] })
 end
 
--- The footer with no library: the same height and the right line, with no hairline.
-local function bareFoot(p)
-    local foot = CreateFrame("Frame", nil, p)
-    foot:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 0, 0)
-    foot:SetPoint("BOTTOMRIGHT", p, "BOTTOMRIGHT", 0, 0)
-    foot:SetHeight(NS.FooterMetric("HEIGHT"))
-    foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    foot.right:SetPoint("RIGHT", foot, "RIGHT", -NS.FooterMetric("PAD"), 0)
-    foot.right:SetJustifyH("RIGHT")
-    foot.right:SetWordWrap(false)
-    setTone(foot.right, "muted")
-    return foot
+-- A mark that stands in for Announce to group with no library (no marks: NS.BareFooter), so the
+-- paint runs unchanged; never shown.
+local function noMark(foot)
+    local b = CreateFrame("Button", nil, foot)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b:Hide()
+    return b
 end
 
 local function buildFoot(p)
     local W = NS.Window
-    local foot = NS.MakeFooter(p) or bareFoot(p)
+    local foot = NS.MakeFooter(p, { marks = { { icon = NS.Icon("speech-bubble"),
+        onClick = function() NS.PressAnnounce(p.dropId) end } } }) or NS.BareFooter(p)
     p.foot = foot
-    p.announce = W.TextButton(foot, 130, "speech-bubble", L["Announce to group"], function() NS.PressAnnounce(p.dropId) end)
-    p.announce:SetPoint("LEFT", foot, "LEFT", NS.FooterMetric("PAD"), 0)
-    W.AttachTooltip(p.announce, function() return announceTip(p) end)
+    p.announce = foot.marks[1] or noMark(foot)
+    W.AttachTooltip(p.announce, function() return announceTip(p) end, "above")
     -- The note is the footer's right line (the library paints it `text.muted`); a frame over it
     -- carries the order's tooltip.
     p.note = CreateFrame("Frame", nil, foot)
@@ -442,16 +440,18 @@ end
 local function paintFoot(p, drop, n)
     local state, reason = NS.Asks.StateOf("announce", nil, drop.id)
     local look = MC.AnnounceButton(state, reason)
-    look.toneState = MC.ToneState(NS.History.OutcomeOf(drop.id), look.state)
     local tradeable = drop.trade and drop.trade.state ~= "no"
-    NS.WindowOwn.SetButtonLook(p.announce, look)
-    p.announce.label:SetText(look.state == "ready" and L["Announce to group"] or look.text)
+    local b = p.announce
+    b.icon:SetTexture(NS.Icon(look.icon))
+    b.tipLines, b.state = look.tip, look.state
+    local on = look.enabled and tradeable
+    b:SetEnabled(on)
+    b:SetAlpha(on and 1 or 0.4)
     if not tradeable then
-        p.announce:SetEnabled(false)
-        p.announce:SetAlpha(0.5)
-        p.announce.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
+        b.tipLines = { L["Announce to group"], TM.Row(L["Tradeable"], L["no"]), TM.Row(L["To announce"], L["nothing"]) }
     end
-    p.note.text:SetText(L["%d members · sorted by gain"]:format(n))
+    p.foot:SetLeft(look.state ~= "ready" and look.text or "")
+    p.note.text:SetText(L["%d members · sorted by gain"]:format(n))   -- the footer's right line
     p.note.tipLines = OP.ORDER_TIP
 end
 
