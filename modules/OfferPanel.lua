@@ -286,7 +286,8 @@ local function build()
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
     p:SetFrameStrata(C.LAYERS.STRATA.WINDOW)   -- the window's, docked or floating: never switched
     p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (modules/RowTooltip.lua)
-    win.tipDocked = p  -- and a window row's tooltip goes beside the docked panel, not over it
+    win.tipDocks = win.tipDocks or {}
+    win.tipDocks.offer = p   -- and a window row's tooltip goes beside the docked panel, not over it
     p:EnableMouse(true)
     NS.ApplySkin(p)
     buildTitle(p)

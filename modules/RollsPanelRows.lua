@@ -19,7 +19,8 @@ local _, NS = ...
 -- NS.Compat.GroupSize, or on the most players on one watched roll: RX-19, modules/RollsPanel.lua).
 -- Round 2 removed its one-open rule; what stays is the fold: with `rolls.panel.foldInRaid` on, Pass
 -- and Waiting fold to one line each (RPR.FOLDS: `Pass 27 · P1, P2, P3…`, the first RPR.FOLD_NAMES
--- names), whose tooltip lists every name; a group the player unfolded lists a row per player again.
+-- names, in class color with `[YOU]` after yours), whose tooltip lists every name; a group the
+-- player unfolded lists a row per player again, and a click on one of them folds it back (RX-28).
 --
 -- THE ROWS come from NS.RollCells.Grouped, so the panel orders a roll as the all-rolls tooltip does:
 -- Need, Greed (a Transmog counts as Greed), Disenchant (Retail only, clients-§4), Pass, still to roll
@@ -30,8 +31,8 @@ local _, NS = ...
 -- Greed, Disenchant; ruling A6), none on Pass or Waiting. `winner` marks the row the panel washes
 -- gold; `src` is the RollCells row its tooltip reads on hover (RPR.RowTip: name, choice, roll, class).
 --
---   block = { id, link, name, quality, open, done, dim, time, left, counts,
---             rows = { { mark, text, roll, winner, isSelf, group, fold, tip, src } },
+--   block = { id, link, name, quality, open, done, dim, time, left, total, counts,
+--             rows = { { mark, text, roll, winner, isSelf, group, fold, tip, src, refold } },
 --             result = { text, tone } | nil }
 --   (a folded group's row carries `fold`, its group's key, and `tip`, its tooltip's lines)
 
@@ -53,14 +54,21 @@ local function nameOf(link)
     return type(link) == "string" and link:match("|h%[(.-)%]|h") or nil
 end
 
--- One player's row (a RollCells.Rows row in group `g`).
-local function rowOf(r, g)
-    local RC = NS.RollCells
-    local mark = r.glyph and RC.GlyphEscape(r.state, 0) or RC.Mark(g)
+-- A player's name in class color, `[YOU]` in the skin's accent after yours: a row's, and each name a
+-- folded line or its tooltip spells out (RX-28).
+local function playerName(r)
     local text = NS.TipMarks.ClassName(r.name, r.classFile)
     if r.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("accent")) end
-    return { mark = mark, text = text, roll = RPR.NUMBERED[g.key] and r.roll or nil, winner = r.winner == true,
-        isSelf = r.isSelf == true, group = g.key, src = r }
+    return text
+end
+
+-- One player's row (a RollCells.Rows row in group `g`); `refold` is the group's key on a row of a
+-- group the player unfolded, whose click folds it again (RX-28).
+local function rowOf(r, g, refold)
+    local RC = NS.RollCells
+    local mark = r.glyph and RC.GlyphEscape(r.state, 0) or RC.Mark(g)
+    return { mark = mark, text = playerName(r), roll = RPR.NUMBERED[g.key] and r.roll or nil, winner = r.winner == true,
+        isSelf = r.isSelf == true, group = g.key, src = r, refold = refold }
 end
 
 --- One player's row tooltip (ruling A7): the name in class color, the choice, the roll (RollCells.RowTip)
@@ -93,7 +101,7 @@ end
 local function foldTip(g, rows)
     local tip, line = { ("%s (%d)"):format(g.word, #rows) }, {}
     for i, r in ipairs(rows) do
-        line[#line + 1] = NS.TipMarks.ClassName(r.name, r.classFile)
+        line[#line + 1] = playerName(r)
         if #line == RPR.TIP_NAMES or i == #rows then
             tip[#tip + 1] = NS.TipMarks.Row(nil, table.concat(line, ", "))
             line = {}
@@ -104,13 +112,13 @@ local function foldTip(g, rows)
 end
 
 --- A group folded to one line (design §3.3): `<mark> Pass 27 · P1, P2, P3…`, the first
---- RPR.FOLD_NAMES names plain, its tooltip's lines in `tip`.
+--- RPR.FOLD_NAMES names in class color, `[YOU]` after yours (RX-28), its tooltip's lines in `tip`.
 --- @param g table a RollCells.GROUPS entry
 --- @param rows table[] the group's RollCells.Rows rows
 --- @return table { mark, text, fold, tip, group }
 function RPR.Fold(g, rows)
     local names = {}
-    for i = 1, math.min(#rows, RPR.FOLD_NAMES) do names[i] = rows[i].name end
+    for i = 1, math.min(#rows, RPR.FOLD_NAMES) do names[i] = playerName(rows[i]) end
     local more = #rows > RPR.FOLD_NAMES and "…" or ""
     return { mark = NS.RollCells.Mark(g), group = g.key, fold = g.key, tip = foldTip(g, rows),
         text = L["%s %d · %s"]:format(g.word, #rows, table.concat(names, ", ") .. more) }
@@ -118,19 +126,22 @@ end
 
 --- Every row of a roll, grouped and ordered (NS.RollCells.Grouped), as the panel draws them; with
 --- `fold` (raid mode, `rolls.panel.foldInRaid` on) Pass and Waiting are one RPR.Fold line each,
---- unless `unfolded[key]` (the player clicked that line).
+--- unless `unfolded[key]` (the player clicked that line): that group's rows then carry `refold`, its
+--- key, so a click on one folds it again (RX-28).
 --- @param roll table|nil the plain roll table
 --- @param fold boolean|nil
 --- @param unfolded table|nil { [group key] = true }
---- @return table[] { mark, text, roll, winner, isSelf, group, fold, tip }
+--- @return table[] { mark, text, roll, winner, isSelf, group, fold, tip, refold }
 function RPR.Rows(roll, fold, unfolded)
     local out = {}
     for _, e in ipairs(NS.RollCells.Grouped(roll)) do
         local key = e.group.key
-        if fold and RPR.FOLDS[key] and not (unfolded and unfolded[key]) then
+        local folds = fold and RPR.FOLDS[key]
+        if folds and not (unfolded and unfolded[key]) then
             out[#out + 1] = RPR.Fold(e.group, e.rows)
         else
-            for _, r in ipairs(e.rows) do out[#out + 1] = rowOf(r, e.group) end
+            local refold = folds and key or nil
+            for _, r in ipairs(e.rows) do out[#out + 1] = rowOf(r, e.group, refold) end
         end
     end
     return out
@@ -186,6 +197,7 @@ function RPR.Block(item, opts)
     elseif roll then
         block.left = NS.RollCells.Left(roll, opts.now, item.rollID)
         block.time = NS.RollCells.Timer(roll, opts.now, item.rollID)
+        block.total = NS.RollCells.Duration(roll)
     end
     if not open then
         block.dim = done
@@ -194,8 +206,9 @@ function RPR.Block(item, opts)
     return block
 end
 
---- How full the countdown bar is: `left` over the longest time left this block has read (`total`),
---- 0 to 1; nil with no time read.
+--- How full the countdown bar is: `left` over `total`, the roll's own duration (RollCells.Duration,
+--- RX-28; the longest time left the block has read when the roll names none), 0 to 1; nil with no
+--- time read.
 --- @param left number|nil
 --- @param total number|nil
 --- @return number|nil

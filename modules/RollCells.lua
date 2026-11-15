@@ -192,6 +192,17 @@ function RC.Left(roll, now, rollID)
     return math.max(0, left)
 end
 
+--- The roll's own length in seconds (its `duration`), the whole of a countdown bar (the Rolls panel,
+--- RX-28), or nil with none or an implausible one (over RC.MAX_LEFT: a duration in milliseconds, the
+--- rule RC.Left reads the time left by).
+--- @param roll table|nil
+--- @return number|nil
+function RC.Duration(roll)
+    local dur = type(roll) == "table" and num(roll.duration) or nil
+    if not dur or dur <= 0 or dur > RC.MAX_LEFT then return nil end
+    return dur
+end
+
 --- The time left while the roll is open, `0:42`, or nil once it has a winner, everyone passed, or
 --- the times are not known.
 --- @param roll table|nil

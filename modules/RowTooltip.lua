@@ -14,10 +14,12 @@ local _, NS = ...
 -- item icon inside a row all open at the same corner.
 --
 -- THE FRAME BESIDE. The nearest ancestor marked `tipHost` (the Offer panel, docked beside the
--- window), else the outermost one under UIParent (the window, the toast). With the Offer panel
--- docked beside the window (its `dock` right or left, shown), the two count as one span (M10
--- review, FB2-10): the tooltip goes beside the pair, never over the panel from a window row nor
--- over the window from a panel row. The window names its panel as `tipDocked`.
+-- window), else the outermost one under UIParent (the window, the toast). The window and every
+-- frame docked beside it (its `dock` right or left, shown) are one span, the window group
+-- (WowAddonStandards v2.112.0 *Tooltip placement*; M10 review, FB2-10; RX-28): the tooltip goes
+-- beside the whole group, never over a docked panel from a window row nor over the window, or the
+-- panel on its other side, from a panel row. The window names its docked frames in `tipDocks`, by
+-- name: the Offer panel (`offer`) and the Rolls panel (`rolls`).
 --
 -- Placed by hand after Show, so the room is measured on the tooltip's real width, at each frame's
 -- effective scale. No client call: the frames' own geometry and UIParent's width.
@@ -77,27 +79,32 @@ local function dockedBeside(panel)
     return panel.dock == "right" or panel.dock == "left"
 end
 
--- The frame docked beside `host` that the tooltip must not cover: the window's shown, docked panel,
--- or, for a docked panel, the window it hangs off.
-local function companionOf(host)
-    local panel = host.tipDocked
-    if panel then
-        local shown = panel.IsShown and panel:IsShown()
-        return (shown and dockedBeside(panel)) and panel or nil
-    end
-    if host.tipHost and dockedBeside(host) then return parentOf(host) end
-    return nil
+-- The window `host` belongs to: the one a docked panel hangs off, else `host` itself.
+local function windowOf(host)
+    if host.tipHost and dockedBeside(host) then return parentOf(host) or host end
+    return host
 end
 
--- The span the tooltip goes beside, in screen pixels, and the frame at each end of it.
+-- `f` widens the span `l`..`r` (screen pixels) when it reaches past either end.
+local function widen(f, l, r, outL, outR)
+    local fl, fr = edgesPx(f)
+    if fl and fl < l then l, outL = fl, f end
+    if fr and fr > r then r, outR = fr, f end
+    return l, r, outL, outR
+end
+
+-- The span the tooltip goes beside, in screen pixels, and the frame at each end of it: `host`, the
+-- window it belongs to and every frame shown docked beside that window (the window group).
 local function spanOf(host)
     local l, r = edgesPx(host)
     local outL, outR = host, host
-    local c = companionOf(host)
-    local cl, cr
-    if c then cl, cr = edgesPx(c) end
-    if cl and cl < l then l, outL = cl, c end
-    if cr and cr > r then r, outR = cr, c end
+    local win = windowOf(host)
+    if win ~= host then l, r, outL, outR = widen(win, l, r, outL, outR) end
+    for _, panel in pairs(win.tipDocks or {}) do
+        if panel ~= host and panel.IsShown and panel:IsShown() and dockedBeside(panel) then
+            l, r, outL, outR = widen(panel, l, r, outL, outR)
+        end
+    end
     return l, r, outL, outR
 end
 

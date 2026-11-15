@@ -495,14 +495,15 @@ test("roll open: a press on the Rolls panel, or its close button, keeps the coun
     p.closeButton:__fire("OnMouseDown", "LeftButton")
     p.closeButton:__fire("OnClick", "LeftButton")
     assertTrue(NS.WindowAutoClose.Armed(), "a press on its close button")
+    NS.SchemaRuntime.Set("rolls.panel.linger", 30)   -- the finished roll lingers past the window's count
     d.winner = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false, roll = 87 }
     d.rollInfos[1].isWinner = true
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
-    m.advance(10.1)                      -- the finished roll's linger in the (closed) panel
-    assertFalse(NS.RollsPanel.HasBlocks())
     m.advance(9.8)
-    assertTrue(NS.IsWindowShown(), "a full count from the block leaving")
+    assertTrue(NS.IsWindowShown(), "the count from the roll's end")
+    assertTrue(NS.RollsPanel.HasBlocks(), "the finished roll lingers in the put-away panel")
     m.advance(0.3)
+    -- RX-28: a panel its close button put away holds nothing, so the window does not wait for it
     assertFalse(NS.IsWindowShown(), "then the window closes by itself")
 end)
 

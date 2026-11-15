@@ -761,6 +761,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `A.IsFlushing` (`modules/Asks.lua`) | reads the private flush timer |
 | `CC.Plain` (`modules/CompactCards.lua`) | reads a card's four lines as text |
 | `DCard.Editor` (`modules/DetailCard.lua`) | reaches the private Edit message box |
+| `RP.HasBlocks` (`modules/RollsPanel.lua`) | reads whether the panel still tracks a block, a hidden or dismissed panel's too (its shipped reader became `HoldsWindow`, RX-28) |
 | `Host.IsSimGUID` (`modules/Sim.lua`) | reads the running simulation's private GUID set |
 | `E.Configure` (`modules/SimEvents.lua`) | shortens a simulated trade window |
 | `W.SetMember`, `W.BagItems` (`modules/SimWorld.lua`) | marks a simulated member, reads the simulated bag |

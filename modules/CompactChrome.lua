@@ -523,12 +523,23 @@ function CC.BannerH()
     local f = NS.Window.Frame()
     local strip = f and CC.ModeStrip(f)
     if f and not strip then return 0 end
+    if not (f and f.chromeCompact) then return NS.TestStripHeight() end
+    return CC.StripHeight(strip, (f:GetWidth() or 0) - 2 * K.INSET - 30)
+end
+
+--- A wrapping strip's height (the compact window's, and the Rolls panel's, RX-28): one line (the
+--- library's TEST_STRIP.HEIGHT) when its words' unwrapped width fits the room their anchors give
+--- them, else two (CC.WRAP_H more), two as well when the words cannot be measured. `room` stands in
+--- for the anchors' width before the strip is laid out.
+--- @param strip table a NS.MakeTestStrip strip, its `text` wrapping
+--- @param room number the words' room when the anchors give none yet
+--- @return number
+function CC.StripHeight(strip, room)
     local one = NS.TestStripHeight()
-    if not (f and f.chromeCompact) then return one end
     local fs = strip.text
     local w = unwrappedWidth(fs)
-    local room = fs.GetWidth and fs:GetWidth()
-    if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
+    local given = fs.GetWidth and fs:GetWidth()
+    if type(given) == "number" and given > 0 then room = given end
     if w and room > 0 and w <= room then return one end
     return one + CC.WRAP_H
 end

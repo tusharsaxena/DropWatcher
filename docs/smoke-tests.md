@@ -4028,14 +4028,22 @@ Rest the pointer on the panel as the last roll ends and keep it there past 10 se
 closes; move the pointer off (from the body, the scroll bar, a button or the strip too) → the count
 starts over, about 10 seconds from then. Keep the panel open after the last roll (seconds, 0 = at once): 0 → the panel
 closes as the last roll ends; 60 → about a minute. An auto-opened window (STATE-9, STATE-10) does not
-close while the panel holds a roll, and closes its own count later. Result:
+close while the panel holds a roll, and closes its own count later; put the panel away with its
+close button while a finished roll lingers → the window's own count closes it (RX-28). Rest the
+pointer on the panel as the last roll ends, then close the window (or minimize it, or press Alt-Z)
+without moving the pointer → reopen it with the pointer elsewhere: the count runs and the panel
+closes about 10 seconds later, nothing held (RX-28). Each roll's countdown bar starts full at the
+roll's own length and drains to empty (half full half way through the roll, RX-28). Result:
 
 **ROLLS-15. Raid mode, the collapsers (RX-18, RX-21; design §3.3).** Client: both. `/dw sim start
 dungeon`, then `/dw sim raid` → the title reads `Rolls`; every item is open. Need and Greed list every
 player with their numbers; Pass and Waiting are one line each, `Pass 12 · <three names>…`: hover it
 → a tooltip lists every name in class color, bulleted, beside the panel away from the window (RX-26);
 click it → that block lists every player in the
-group. Click an item's header → it collapses to its header with the count line under it and the
+group; the folded line's names are in class color, yours followed by `[YOU]` (RX-28); hover one of the
+listed players → its tooltip ends with the click's hint; click it → the group folds to one line again
+(RX-28). In a dungeon group with a roll of five, have the group grow past five members (an invite, or
+`/dw sim` joining a raid) → the panel folds at once, with no roll changing (RX-28). Click an item's header → it collapses to its header with the count line under it and the
 chevron pointing right; it stays collapsed as the roll changes; click again → it opens. The title
 bar holds one toggle (RX-25): while any item is open it is chevron-up, `Collapse all` → every item is
 a header and it turns chevron-down, `Expand all` → every item is open. Collapse one item by hand → it
@@ -4048,7 +4056,9 @@ scrolls when the blocks pass the window's height, its bar shown only then; the f
 **ROLLS-16. The compact layout (RX-18, RX-21; design §3.1).** Client: both. With a roll in the panel in
 each layout (ROLLS-12, ROLLS-15), `/dw compact` → the panel narrows (250 against the full layout's
 290), stays docked flush to the compact window's side and flips the same way; names and the roll
-number never overlap, a long name cut with `…`; `/dw full` → it widens again. Result:
+number never overlap, a long name cut with `…`; `/dw full` → it widens again. Window › Layout ›
+Font size 15 → the panel widens with the text (435 full, 375 compact); Default → back to 290 and 250
+(RX-28). Result:
 
 **ROLLS-17. Minimized or closed, the close button and `/dw rolls` (RX-17; design §3.1, §3.4).**
 Client: both. With a roll in the panel, minimize the window → the panel hides; expand it → the panel
@@ -4059,14 +4069,18 @@ next roll starts) → it hides; a change to the same roll keeps it hidden; the n
 `/dw rolls` with no roll → an empty panel reading `No rolls right now`, which stays until closed or
 `/dw rolls` again; with the window closed → *The Rolls panel shows beside the window: open the window
 first.*; with Show the Rolls panel beside the window unticked → the line naming it, and no roll shows
-the panel. Result:
+the panel. Hover the title bar's Expand / Collapse toggle and click it without moving the pointer →
+the tooltip changes with the mark (`Collapse all` to `Expand all` and back); the same on the window
+footer's Expand all / Collapse all mark (RX-28). With the panel docked right, hover a Drops row's item
+→ its tooltip opens beyond the Rolls panel's right edge, never over the panel (RX-28). Result:
 
 **ROLLS-18. Test mode's sample in the panel (RX-19, RX-21; design §3.6, part A ruling 1).** Client:
 both. With no roll on, `/dw test` → the window opens (or stays) with the sample roll in Rolling now,
 and the Rolls panel docks beside it with that roll: nine players, so raid mode (Pass and Waiting
 folded), every Need and Greed row showing its number, and the amber test strip directly under the
 panel's title band reading *TEST: sample rolls. Nothing is sent; combat ends it.*; the band itself
-carries no TEST MODE word. `/dw test` off → the panel's sample leaves at once and the panel hides;
+carries no TEST MODE word; its words wrap to a second line rather than end in `…` (the body sits
+under both lines, RX-28). `/dw test` off → the panel's sample leaves at once and the panel hides;
 `/dw test` on again → it is back. `/dw test` off, then `/dw rolls` → the empty panel shows no strip.
 Hover the folded lines, a row and the header: every tooltip is bulleted rows, no glyph boxes.
 Result:

@@ -847,25 +847,28 @@ PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() les
     the block keeps the item table, its final roll) ─> done; still held but not listed ─> dropped
   done ─> stays (winner washed, result line) while any block still runs (RX-21)
   every block done ─> one rolls.panel.linger s countdown (0: at once); a new roll cancels it ─> every
-    block leaves and the panel closes, unless the pointer is over the panel (held: the panel's
-    OnLeave starts the count again) ─> WindowAutoClose.Bump
+    block leaves and the panel closes, unless the pointer is over the visible panel (held: the
+    panel's OnLeave, or its OnHide, starts the count again, RX-28) ─> WindowAutoClose.Bump
 paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
   ─> test mode ─> the test strip under the title band; a simulation ─> the sim strip; the body moves
     down by the strip (RX-21)
   ─> raid mode? (RollsPanelRows.IsRaid on the larger of Compat.GroupSize and the most players on one
     block's roll: more than 5) ─> rolls.panel.foldInRaid ─> Pass and Waiting one line each
-    (RollsPanelRows.Fold), a click unfolds
+    (RollsPanelRows.Fold: the names in class color, [YOU] after yours), a click unfolds, a click on
+    an unfolded group's row folds it again (RX-28)
   ─> every block open unless the player collapsed it (its header's click, Collapse all; a collapsed
     header reads the count line, or its result once over, dimmed)
   ─> the title bar's one toggle (RX-25): chevron-up, Collapse all, while any block is open; else
     chevron-down, Expand all ─> a click sets every block's collapsed and repaints
   ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, kept while the
     roll reads the same, alternately shaded, a number on Need / Greed / Disenchant; the result; no
-    verdict line; title Rolls; 290 wide, 250 compact; the bar past the window's height)
+    verdict line; title Rolls; 290 wide, 250 compact, scaled with window.fontSize; the bar past the
+    window's height; the countdown bar the time left over the roll's own duration, RX-28)
   ─> docked flush right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s
     ticker while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
-WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
+GROUP_ROSTER_UPDATE ─> OnRollsPanelRosterEvent ─> a shown panel repaints (raid mode at once, RX-28)
+WindowAutoClose idle() ─> false while RollsPanel.HoldsWindow() (a block, not dismissed, RX-28)
 test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
 /dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
 Sim:OnStop (and any reconcile with no simulation running) ─> every block that joined during the

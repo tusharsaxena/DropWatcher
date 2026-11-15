@@ -611,7 +611,8 @@ modules\RollsPanelRows.lua
 # LOAD-BEARING: adds a visibility listener and a geometry listener to NS.Window (modules\Window.lua,
 # above) at load; its NS.STAND_DOWN / NS.STAND_UP steps run in TOC order, after those of the modules
 # above. Publishes NS.RollsPanel, the Rolls panel docked beside the window (rolls panel design,
-# RX-17); registers its PendingChanged receiver on a NS.Bus target at load; takes NS.Constants and
+# RX-17); registers its PendingChanged receiver on a NS.Bus target and appends its
+# GROUP_ROSTER_UPDATE row to NS.FEATURE_EVENTS (RX-28) at load; takes NS.Constants and
 # NS.L at load. NS.WindowPending, NS.Pending, NS.RollsPanelRows, NS.WindowAutoClose, NS.WindowRows,
 # NS.Compat, NS.Pool, NS.WindowCompact and NS.Setting are read at call time: the frame is built on
 # its first show.

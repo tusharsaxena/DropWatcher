@@ -14,7 +14,8 @@ local _, NS = ...
 -- and OnLeave hooks), so the window closes a full count after the pointer left it.
 -- When it runs out it closes the window only while nothing in Rolling now is a roll (a master-loot
 -- item awaiting the master looter does not count), the Rolls panel holds no block (RX-17: the panel
--- starts the count over when its last block leaves, AC.Bump) and the pointer is not over it;
+-- starts the count over when its last block leaves, AC.Bump; one its close button put away holds
+-- nothing, RX-28) and the pointer is not over it;
 -- otherwise it starts over, so the window closes a full count after the last roll closed, the
 -- panel's last block left or the pointer left. `window.autoClose.enabled` off, or the master `autoOpen` off, and
 -- the count lets go when it runs out. Combat does not matter: the close is a Hide of an owned frame
@@ -75,7 +76,7 @@ end
 local function idle(f)
     if not (f and f:IsShown()) then return false end
     if rolling() then return false end
-    if NS.RollsPanel and NS.RollsPanel.HasBlocks() then return false end
+    if NS.RollsPanel and NS.RollsPanel.HoldsWindow() then return false end
     return not (f and f:IsMouseOver())
 end
 

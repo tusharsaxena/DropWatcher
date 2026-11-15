@@ -956,7 +956,7 @@ Total.
 - drops strip: under the compact cards, the summary shortened, the same marks
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_footer_row.lua (15)
+### test_footer_row.lua (16)
 
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
 - footer row: the line, pure: the tab's info, then the status; the status alone with no info (RX-24)
@@ -970,6 +970,7 @@ Total.
 - footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)
 - footer row: History's mark is the toggle; Insights' is Reset filters, which resets them (RX-24)
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
+- footer row: a press on the toggle under the pointer turns its open tooltip to the new state
 - footer row: the toggle is off when the tab shows no header
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 - footer row: the panes reach the footer, whose corner holds the grip; locked still hides it (RX-24)
@@ -1038,13 +1039,14 @@ Total.
 - drops strip: the compact layout's summary is shortened
 - mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
-### test_row_tooltip.lua (13)
+### test_row_tooltip.lua (14)
 
 - row tooltip: it rises from the row's top right, just outside the window
 - row tooltip: with no room on the right it rises from the row's top left, outside the window
 - row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
 - row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
 - row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
+- row tooltip: the docked Rolls panel is part of the window group, beside the Offer panel or alone
 - row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
 - row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
 - row tooltip: unknown geometry falls back to the hovered frame's top right
@@ -1969,7 +1971,7 @@ Total.
 - roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
 - roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
 
-### test_rolls_panel.lua (53)
+### test_rolls_panel.lua (64)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -2024,6 +2026,17 @@ Total.
 - rolls panel: a dungeon group never folds
 - rolls panel: 40 players on 6 items fit, all open, the body scrolls, and a repaint makes no frame
 - rolls panel: the compact layout is 250 wide, the full one 290
+- rolls panel: a click on the toggle under the pointer turns its open tooltip to the new state
+- rolls panel: a hold under the pointer is released when the window closes under it
+- rolls panel: a panel the UI hides (Alt-Z) holds nothing though the pointer is over it
+- rolls panel: a panel closed by its button does not hold the auto-opened window
+- rolls panel: the countdown bar is the time left over the roll's own duration
+- rolls panel: a folded line's names are in class color and yours reads [YOU]
+- rolls panel: a click on an unfolded group's row folds it back to one line
+- rolls panel: a group growing into a raid folds the panel at once (GROUP_ROSTER_UPDATE)
+- rolls panel: its width scales with the window's text size, as the window's layout unit
+- rolls panel: the mode strip wraps to two lines when its words do not fit, as the compact window's
+- rolls panel: the window names the panel among its docked frames, for its row tooltips
 
 ### test_feed_counts.lua (10)
 
@@ -3003,11 +3016,11 @@ Total.
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
-| test_footer_row.lua | 15 |
+| test_footer_row.lua | 16 |
 | test_offer_panel.lua | 23 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
-| test_row_tooltip.lua | 13 |
+| test_row_tooltip.lua | 14 |
 | test_test_mode.lua | 50 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
@@ -3043,7 +3056,7 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
 | test_roll_popup.lua | 20 |
-| test_rolls_panel.lua | 53 |
+| test_rolls_panel.lua | 64 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
@@ -3092,4 +3105,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2566** |
+| **Total** | **2579** |

@@ -1050,3 +1050,4 @@ L["Class"] = "Class"
 -- raid mode (RX-18)
 L["%s %d · %s"] = "%s %d · %s"
 L["Click to list every player"] = "Click to list every player"
+L["Click to fold them into one line again"] = "Click to fold them into one line again"

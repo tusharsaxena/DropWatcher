@@ -232,9 +232,12 @@ local function addTipLine(line)
     end
 end
 
+local tipFor   -- the widget whose tooltip showTooltip last raised, until its leave
+
 local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
+    tipFor = self
     local placer = PLACERS[self.tipPlace]
     NS.TipGrid.Begin()
     GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
@@ -247,6 +250,7 @@ local function showTooltip(self)
 end
 
 local function hideTooltip()
+    tipFor = nil
     if GameTooltip then GameTooltip:Hide() end
 end
 
@@ -271,6 +275,15 @@ function Window.AttachTooltip(widget, fn, place)
     widget:HookScript("OnLeave", hideTooltip)
     widget:HookScript("OnEnter", function(self) NS.WindowRows.WashRowOf(self, true) end)
     widget:HookScript("OnLeave", function(self) NS.WindowRows.WashRowOf(self, false) end)
+end
+
+--- Read `widget`'s tooltip again while it is the one shown (RX-28): a control whose state its own
+--- click changes (an Expand all / Collapse all toggle) calls it after the click, so the tooltip under
+--- the pointer names what the next click does. Nothing while another tooltip, or none, shows.
+--- @param widget table|nil
+function Window.RefreshTooltip(widget)
+    if widget == nil or tipFor ~= widget or not (GameTooltip and GameTooltip:IsShown()) then return end
+    showTooltip(widget)
 end
 
 --- What a hover over `widget` shows, as a list (title first), or an empty list.
