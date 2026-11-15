@@ -424,3 +424,67 @@ test("roll popup: a popup shown before its history drop gets its count line when
     assertEqual(RP.Overlay(1).line2:GetText(), countLine(NS, 11))
     assertEqual(needs(NS, 11), 1)
 end)
+
+-- Rolls panel round 2, ruling A11 (plan RX-22): test mode shows the simulated roll popup and its
+-- side card for each sample roll, as `/dw sim roll` does, and takes them down when it ends (by
+-- hand or on combat). The stand-in reads the sample's own pending item: no Blizzard rollID.
+local function testMode()
+    local NS, _, m = T.enableAddon({ mock = function(m) m.__decorateUIParent = true end })
+    m.seedGearJournal()
+    return NS, m, NS.RollPopup
+end
+
+local function quietTest(NS, m, on)
+    local p0 = m.print
+    m.print = function() end
+    NS.SetTestMode(on)
+    m.print = p0
+end
+
+-- red under: test mode drawing no stand-in (RX-22, ruling A11)
+test("roll popup: test mode shows a stand-in popup with its side card per sample roll, and off hides them", function()
+    local NS, m, RP = testMode()
+    quietTest(NS, m, true)
+    local samples = NS.Pending.All("test")
+    assertTrue(#samples > 0, "test mode holds a sample roll")
+    for n, item in ipairs(samples) do
+        local s = RP.StandIn(n)
+        assertTrue(s ~= nil and s:IsShown(), "a stand-in per sample roll")
+        assertEqual(s.title:GetText(), NS.L["Roll popup (test)"], "titled as test mode's")
+        assertEqual(s.item:GetText(), item.link)
+        local o = RP.Overlay(RP.StandInKey(n))
+        assertTrue(o:IsShown(), "its side card")
+        local _, rel = o:GetPoint()
+        assertTrue(rel == s, "beside its stand-in")
+        assertTrue(o.line1:GetText():find(NS.L["Upgrade"], 1, true) ~= nil, "the sample's verdict")
+        assertEqual(o.line2:GetText(), NS.RollCells.CountLine(item.roll), "the sample's count line")
+        assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(o)):find(NS.L["Need"], 1, true) ~= nil, "every roll on hover")
+    end
+    assertTrue(RP.StandIn(#samples + 1) == nil or not RP.StandIn(#samples + 1):IsShown(), "no more than the samples")
+    quietTest(NS, m, false)
+    for n = 1, #samples do
+        assertFalse(RP.StandIn(n):IsShown(), "test mode off takes the stand-in down")
+        assertFalse(RP.Overlay(RP.StandInKey(n)):IsShown(), "and its side card")
+    end
+    quietTest(NS, m, true)
+    assertTrue(RP.StandIn(1):IsShown(), "test mode on again shows it again")
+    quietTest(NS, m, false)
+end)
+
+-- red under: the stand-in left up when combat ends test mode
+test("roll popup: combat ends test mode and takes its stand-in down; the popup mark off draws none", function()
+    local NS, m, RP = testMode()
+    quietTest(NS, m, true)
+    assertTrue(RP.StandIn(1):IsShown())
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.State.testMode)
+    assertFalse(RP.StandIn(1):IsShown(), "combat takes it down")
+    assertFalse(RP.Overlay(RP.StandInKey(1)):IsShown())
+    m.inCombat = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    NS.SchemaRuntime.Set("rolls.popupMark", false)
+    quietTest(NS, m, true)
+    assertFalse(RP.StandIn(1):IsShown(), "the popup mark off: no stand-in")
+    quietTest(NS, m, false)
+end)

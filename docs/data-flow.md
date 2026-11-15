@@ -831,6 +831,9 @@ PendingChanged, GearChanged, the rolls.popupMark row, the stand-up ─> the show
 CANCEL_LOOT_ROLL / popup OnHide ─> the card down, the cache entry dropped
 a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the popup's size, the
   first free of four (RP.StandIn(n)), each next one stacked above the last
+every repaint in test mode ─> a stand-in (`Roll popup (test)`) and its card per sample roll
+  (Pending.All("test"), keyed by its `test:<n>` id, read off the item, never the client); test mode
+  off or ended by combat (Pending.ClearTest's PendingChanged) ─> they go (RX-22, part A ruling 11)
 ```
 
 ## The Rolls panel (rolls panel design, RX-17 to RX-19)

@@ -50,6 +50,13 @@ local _, NS = ...
 -- to RP.STAND_INS, the first centered above the middle of the screen and each next one stacked
 -- above it, as the game stacks its own, each with its own side card; a stand-in goes with its
 -- roll's CANCEL_LOOT_ROLL. `/dw sim roll` twice shows two, to show the placement.
+--
+-- TEST MODE (rolls panel round 2, ruling A11, RX-22) shows the same stand-in and side card for each
+-- of its sample rolls (NS.Pending.All("test"), titled `Roll popup (test)`), keyed by the sample's
+-- own pending id (`test:<n>`, a string, so it never meets a client rollID) and read off that item,
+-- never the client. Every repaint matches the stand-ins to the samples, so test mode's turning on
+-- (Pending.AddTest), off (Pending.ClearTest) and its end on combat (the same clear) all arrive as
+-- PendingChanged and put them up or take them down.
 
 NS.RollPopup = NS.RollPopup or {}
 local RP = NS.RollPopup
@@ -98,6 +105,15 @@ local function stoodDown()
 end
 
 local function num(v) return type(v) == "number" and v or nil end
+
+-- A test mode sample's key (its pending id, `test:<n>`): a string, where a client rollID is a number.
+local function isSample(rollID) return type(rollID) == "string" end
+
+-- The pending item a card's roll is: a sample's own, else the one that claimed popup `rollID`.
+local function itemOf(rollID)
+    if isSample(rollID) then return NS.Pending.Get(rollID) end
+    return NS.Pending.ForRoll(rollID)
+end
 
 -- ── the lines (pure) ────────────────────────────────────────────────────────────────────────
 
@@ -181,6 +197,13 @@ local refresh
 
 -- Your popup `rollID`'s item, read and judged (once its facts load), cached; nil with no plain link.
 local function learn(rollID)
+    if isSample(rollID) then
+        local item = NS.Pending.Get(rollID)
+        if not item then return nil end
+        cache[rollID] = { rollID = rollID, link = item.link, itemID = item.itemID, bop = false, facts = item.facts,
+            me = item.me }
+        return cache[rollID]
+    end
     local info = NS.Compat.LootRollInfo(rollID)
     if not info then return nil end
     local e = { rollID = rollID, link = info.link, itemID = NS.Item.ItemIDFromLink(info.link), bop = info.bop }
@@ -267,9 +290,10 @@ tipOf = function(o)
     local rollID = o.rollID
     local e = rollID and cache[rollID]
     if not e then return {} end
-    local item = NS.Pending.ForRoll(rollID)
+    local item = itemOf(rollID)
     local roll = item and type(item.roll) == "table" and item.roll or { link = e.link }
-    return NS.RollCells.Tooltip(roll, { verdict = o.verdict, now = NS.Compat.LootHistoryNow(), rollID = rollID })
+    local popupID = not isSample(rollID) and rollID or nil
+    return NS.RollCells.Tooltip(roll, { verdict = o.verdict, now = NS.Compat.LootHistoryNow(), rollID = popupID })
 end
 
 local function hideKey(key)
@@ -302,7 +326,7 @@ local function paint(key, rollID)
     local o = overlays[key]
     local e = cache[rollID] or learn(rollID)
     if not (o and e) then return hideKey(key) end
-    local item = NS.Pending.ForRoll(rollID)
+    local item = itemOf(rollID)
     local model = RP.Lines((item and item.me) or e.me, e.bop, item)
     o.line1:SetText(model.text)
     setTone(o.line1, model.tone)
@@ -315,8 +339,11 @@ local function paint(key, rollID)
     drawn[key] = rollID
 end
 
+local syncSamples
+
 -- Every card drawn again from the current state: a shown popup, and each stand-in's roll.
 refresh = function()
+    syncSamples()
     for i = 1, NS.Compat.ROLL_POPUPS do
         local rollID = overlays[i] and NS.Compat.RollPopupOpen(i)
         if rollID and allowed(i) then paint(i, rollID) else hideKey(i) end
@@ -398,7 +425,46 @@ local function showStandIn(rollID)
     standIns[n] = standIns[n] or buildStandIn(n)
     standInRolls[n] = rollID
     local e = cache[rollID]
+    standIns[n].title:SetText(isSample(rollID) and L["Roll popup (test)"] or L["Roll popup (simulated)"])
     standIns[n].item:SetText(e and e.link or "")
+end
+
+-- Every sample stand-in let go (test mode is off), with no table made: the repaint runs on every
+-- PendingChanged.
+local function releaseSamples()
+    for n = 1, RP.STAND_INS do
+        local id = standInRolls[n]
+        if isSample(id) then standInRolls[n], cache[id] = nil, nil end
+    end
+end
+
+-- Test mode's sample rolls, oldest first.
+local function samples()
+    local out = {}
+    for _, item in ipairs(NS.Pending.All("test")) do
+        if item.kind == "roll" then out[#out + 1] = item end
+    end
+    return out
+end
+
+-- The stand-ins matched to test mode's samples (RX-22): a sample with none gets one, a stand-in
+-- whose sample is gone lets it go (refresh then hides it).
+syncSamples = function()
+    if NS.State.testMode ~= true then return releaseSamples() end
+    local want, wanted = samples(), {}
+    for _, item in ipairs(want) do wanted[item.id] = true end
+    local held = {}
+    for n = 1, RP.STAND_INS do
+        local id = standInRolls[n]
+        if isSample(id) and not wanted[id] then
+            standInRolls[n], cache[id] = nil, nil
+        elseif isSample(id) then
+            held[id] = true
+        end
+    end
+    for _, item in ipairs(want) do
+        if not held[item.id] and learn(item.id) then showStandIn(item.id) end
+    end
 end
 
 -- ── the events ──────────────────────────────────────────────────────────────────────────────

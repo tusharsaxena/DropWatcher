@@ -991,6 +991,7 @@ L["Need: upgrade"] = "Need: upgrade"
 L["Greed / Pass: you can't use it"] = "Greed / Pass: you can't use it"
 L["score %s"] = "score %s"
 L["Roll popup (simulated)"] = "Roll popup (simulated)"
+L["Roll popup (test)"] = "Roll popup (test)"
 -- modules/DetailCells.lua: the scale a score used (DW-FP07) and a score-led verdict (DW-FP08)
 L["your own spec's"] = "your own spec's"
 L["your own (shown in Pawn, or your weights)"] = "your own (shown in Pawn, or your weights)"

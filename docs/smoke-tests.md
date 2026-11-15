@@ -4006,6 +4006,13 @@ carries no TEST MODE word. `/dw test` off → the panel's sample leaves at once 
 Hover the folded lines, a row and the header: every tooltip is bulleted rows, no glyph boxes.
 Result:
 
+**ROLLS-19. Test mode's roll popup (RX-22; part A ruling 11).** Client: both. With Mark Blizzard's roll
+popup ticked, `/dw test` → a stand-in titled `Roll popup (test)` shows above the middle of the screen
+with the sample roll's item, and its side card beside it reads the sample's verdict (`Upgrade +9`)
+and its count line; hover the card → every roll, by choice, with each number. `/dw test` off → the
+stand-in and its card go at once. `/dw test` on, then enter combat → test mode ends and both go.
+With the popup mark unticked, `/dw test` → no stand-in. Result:
+
 ## WoW Forever
 
 The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client. The probes each check leans on are in
