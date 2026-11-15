@@ -259,7 +259,7 @@ L["No one by that name is in the simulated group."] = "No one by that name is in
 L["No simulated boss is engaged: /dw sim pull first."] = "No simulated boss is engaged: /dw sim pull first."
 L["No simulated member can take part in that trade."] = "No simulated member can take part in that trade."
 L["No simulation is running: start one with /dw sim start <scenario>."] = "No simulation is running: start one with /dw sim start <scenario>."
--- The simulation's mode strip under the filter bar, full and compact (modules/Window.lua,
+-- The simulation's mode strip under the title bar, full and compact (modules/Window.lua,
 -- modules/CompactChrome.lua; the cyan strip replaces the title word while expanded)
 L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."] = "SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."
 L["SIM: a made-up session. Nothing is sent. /dw sim stop ends it."] = "SIM: a made-up session. Nothing is sent. /dw sim stop ends it."

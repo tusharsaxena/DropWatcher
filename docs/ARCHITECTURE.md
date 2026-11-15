@@ -11,7 +11,7 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.102.0 payload (twenty-three majors; media/icons pruned to the declared subset, media/sounds to none), twenty wired with one setup file each and three deliberately unwired: `LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and `LibKa0s-Callout-1.0` and `LibKa0s-WaypointArrow-1.0` (new in the payload at v1.96.0 and v1.99.0), since it draws no callout and no waypoint arrow; each loads and creates nothing until a host calls it (`DEPENDENCIES.md`
+LibKa0s v1.103.0 payload (twenty-three majors; media/icons pruned to the declared subset, media/sounds to none), twenty wired with one setup file each and three deliberately unwired: `LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and `LibKa0s-Callout-1.0` and `LibKa0s-WaypointArrow-1.0` (new in the payload at v1.96.0 and v1.99.0), since it draws no callout and no waypoint arrow; each loads and creates nothing until a host calls it (`DEPENDENCIES.md`
 lists the toolchain):
 
 | Major | Setup file | Gives |
@@ -357,7 +357,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
 | H6 | `Stop("standDown")` is the first stand-down step | `modules/Sim.lua` puts `NS.Sim:Stop("standDown")` first in `NS.STAND_DOWN` (it loads before every other module that adds one); the automatic stops say `group` and `instance` with their own lines |
 | H7 | One Slash-1.0 feature-verb row, slash-only | the `sim` row in `settings/Slash.lua` calling `NS.Sim:RunVerb`; no key binding. Not slash-only any more: since LibKa0s v1.85.0 the launcher menu's Sim mode entry (`isSimMode` / `toggleSim`, `core/LauncherSetup.lua`; SG-RV) and Master controls' Sim mode box (R6-SIM) run that same verb through `NS.ToggleSim` (`core/DropWatcher.lua`), so a click prints what `/dw sim` or `/dw sim stop` prints; since R7-SIM the pair reads "panel shown or running" and an untick also closes the panel |
-| H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip under the filter bar (`f.simBanner`, `modules/Window.lua`; DW-10), the Rolls panel's own sim strip under its title band (`simStrip`, `modules/RollsPanel.lua`; RX-21), the `SIM` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
+| H8 | A marker while a session runs, a diagnostics section and a debug tag | the cyan simulation strip docked under the title bar (`f.simBanner`, `modules/Window.lua`; DW-10), the Rolls panel's own sim strip under its title band (`simStrip`, `modules/RollsPanel.lua`; RX-21), the `SIM` title text while minimized or with no strip (`modules/WindowTitleBar.lua`, `SIM` in compact), the footer's `Simulating: <situation> · n members` line (`modules/WindowFooter.lua`), the `sim` diagnostics section (`modules/Diagnostics.lua`) and the `SIM` debug tag (the descriptor's `debug` sink) |
 | H9 | The degradation stub, with surface parity | the seam stub in `core/SimSetup.lua` and the session stub in `modules/Sim.lua`; `test_surface_parity` holds both to the live surface |
 | H10 | The panel position is session-only | the descriptor's `panel` (`modules/SimPanel.lua`) carries no `store`; migration 9 (`core/Database.lua`) retired the old `profile.simPanel` point, and `schema.md` names the position session-only |
 
@@ -430,7 +430,7 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
   in `btn.text`, `btn.hover` and `btn.icon`. The detail boxes are `S.Card`, the tabs `S.Tab` (decision
   D11 reversed: they gain the skin's backing, and an idle label reads `tab.text`), the column heads
-  `S.SortHeaderBar`, the footer `S.Footer`, the title bar `S.TitleBar` with `place` (the one `title.bg`
+  `S.SortHeaderBar`, the title bar `S.TitleBar` with `place` (the one `title.bg`
   layer: the window's `S.Shell` takes `noTopBar`), and a row takes `list.hover` through `S.ListRow`,
   from a cell or an item button inside it too (`NS.WindowRows.WashRowOf`). Without the
   library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
