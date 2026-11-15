@@ -1943,7 +1943,7 @@ Total.
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (18)
+### test_roll_popup.lua (20)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
 - roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
@@ -1963,6 +1963,8 @@ Total.
 - roll popup: a popup shown before its history drop gets its count line when the drop lands
 - roll popup: test mode shows a stand-in popup with its side card per sample roll, and off hides them
 - roll popup: combat ends test mode and takes its stand-in down; the popup mark off draws none
+- roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
+- roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
 
 ### test_rolls_panel.lua (47)
 
@@ -3030,7 +3032,7 @@ Total.
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 12 |
-| test_roll_popup.lua | 18 |
+| test_roll_popup.lua | 20 |
 | test_rolls_panel.lua | 47 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -3080,4 +3082,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2554** |
+| **Total** | **2556** |

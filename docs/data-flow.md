@@ -834,6 +834,9 @@ a simulated START_LOOT_ROLL ─> the same card beside an owned stand-in of the p
 every repaint in test mode ─> a stand-in (`Roll popup (test)`) and its card per sample roll
   (Pending.All("test"), keyed by its `test:<n>` id, read off the item, never the client); test mode
   off or ended by combat (Pending.ClearTest's PendingChanged) ─> they go (RX-22, part A ruling 11)
+every repaint ─> each shown stand-in and its card carry the mode strip on their top edge, outside
+  them (NS.MakeTestStrip's `target`, dock = "hud"): the test strip for a sample, the sim strip for a
+  simulated roll; the next stand-in stacks the strip's height higher (RX-23, preview-mode)
 ```
 
 ## The Rolls panel (rolls panel design, RX-17 to RX-19)

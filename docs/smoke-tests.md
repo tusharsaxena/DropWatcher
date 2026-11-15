@@ -3303,7 +3303,8 @@ is whispered and saved history is untouched (SIM-1). Result: Passed (owner, 2026
 simulated group-loot roll, chosen and won over the next seconds.` among the host verbs. `/dw sim roll`
 without a running simulation → refused, nothing opens. `/dw sim start dungeon`, then `/dw sim roll` →
 *Simulated roll opened: [item], N players.*; a stand-in titled `Roll popup (simulated)` shows
-above the middle of the screen with your verdict on its side card (ROLLS-4, ROLLS-9), and Drops'
+above the middle of the screen with your verdict on its side card (ROLLS-4, ROLLS-9), a cyan SIM
+strip on the top edge of each (RX-23), and Drops'
 `Rolling now` header gains the roll. `/dw sim roll` again while it is open → a second stand-in
 stacked just above the first, its own card beside it (up to four). Over about six seconds the count
 line counts the choices as they land, Need before
@@ -4030,7 +4031,8 @@ Result:
 **ROLLS-19. Test mode's roll popup (RX-22; part A ruling 11).** Client: both. With Mark Blizzard's roll
 popup ticked, `/dw test` → a stand-in titled `Roll popup (test)` shows above the middle of the screen
 with the sample roll's item, and its side card beside it reads the sample's verdict (`Upgrade +9`)
-and its count line; hover the card → every roll, by choice, with each number. `/dw test` off → the
+and its count line; an amber TEST strip sits on the top edge of each, outside it, and takes no
+click (RX-23); hover the card → every roll, by choice, with each number. `/dw test` off → the
 stand-in and its card go at once. `/dw test` on, then enter combat → test mode ends and both go.
 With the popup mark unticked, `/dw test` → no stand-in. Result:
 

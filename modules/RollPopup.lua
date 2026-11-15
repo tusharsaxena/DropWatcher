@@ -51,6 +51,13 @@ local _, NS = ...
 -- above it, as the game stacks its own, each with its own side card; a stand-in goes with its
 -- roll's CANCEL_LOOT_ROLL. `/dw sim roll` twice shows two, to show the placement.
 --
+-- THE MODE STRIPS (RX-23; preview-mode, *Where the strip sits*: a HUD display of test or simulated
+-- data carries the strip on its top edge, outside it). Each stand-in and its side card carry
+-- LibKa0s Widgets' TestStrip docked there (NS.MakeTestStrip's `target`, dock = "hud"): the amber one
+-- for a test sample, the cyan one for a simulated roll. They take no mouse and flip under the frame
+-- when the top would leave the screen; the next stand-in stacks the strip's height higher, so it
+-- never covers the strip under it. A card on a real Blizzard popup is live data and carries none.
+--
 -- TEST MODE (rolls panel round 2, ruling A11, RX-22) shows the same stand-in and side card for each
 -- of its sample rolls (NS.Pending.All("test"), titled `Roll popup (test)`), keyed by the sample's
 -- own pending id (`test:<n>`, a string, so it never meets a client rollID) and read off that item,
@@ -339,6 +346,27 @@ local function paint(key, rollID)
     drawn[key] = rollID
 end
 
+-- The mode strips on `f`'s top edge, outside it (THE MODE STRIPS): test mode's and the
+-- simulation's, born hidden. Nil with no library.
+local function addStrips(f, testText, simText)
+    f.testStrip = NS.MakeTestStrip(f, testText, nil, { target = f })
+    f.simStrip = NS.MakeTestStrip(f, simText, "sim", { target = f })
+end
+
+local function showStrip(strip, on)
+    if not strip then return end
+    strip:SetShown(on)
+    if on then strip:Place() end
+end
+
+-- The strip `f` shows for `rollID`: a sample's test strip, a simulated roll's sim strip, none for nil.
+local function showStrips(f, rollID)
+    if not f then return end
+    local sample = rollID ~= nil and isSample(rollID)
+    showStrip(f.testStrip, sample)
+    showStrip(f.simStrip, rollID ~= nil and not sample)
+end
+
 local syncSamples
 
 -- Every card drawn again from the current state: a shown popup, and each stand-in's roll.
@@ -356,7 +384,10 @@ refresh = function()
         else
             hideKey(key)
             if standIns[n] then standIns[n]:Hide() end
+            rollID = nil
         end
+        showStrips(standIns[n], rollID)
+        showStrips(overlays[key], rollID)
     end
 end
 
@@ -395,11 +426,12 @@ function RP.Overlay(key) return overlays[key] end
 --- @param n number|nil
 function RP.StandIn(n) return standIns[n or 1] end
 
--- Stand-in `n`: an owned frame of the popup's size, titled, stacked above stand-in n - 1, built
--- when a simulated roll first needs it, with its side card.
+-- Stand-in `n`: an owned frame of the popup's size, titled, stacked above stand-in n - 1 and its
+-- strip, built when a simulated roll first needs it, with its side card; both carry the strips.
 local function buildStandIn(n)
     local f = skinned(RP.STAND_IN_W, RP.STAND_IN_H)
-    f:SetPoint("CENTER", UIParent, "CENTER", 0, RP.STAND_IN_Y + (n - 1) * (RP.STAND_IN_H + RP.STAND_IN_GAP))
+    local pitch = RP.STAND_IN_H + RP.STAND_IN_GAP + NS.TestStripHeight()
+    f:SetPoint("CENTER", UIParent, "CENTER", 0, RP.STAND_IN_Y + (n - 1) * pitch)
     f.title = faced(f, "CENTER")
     f.title:SetPoint("TOP", f, "TOP", 0, -RP.PAD)
     NS.Skin.Text(f.title, "dw.idle")
@@ -407,7 +439,10 @@ local function buildStandIn(n)
     f.item = faced(f, "CENTER")
     f.item:SetPoint("CENTER", f, "CENTER", 0, 0)
     f:Hide()
-    overlays[RP.StandInKey(n)] = newOverlay(f)
+    addStrips(f, L["TEST: a sample roll. Nothing is rolled."], L["SIM: a simulated roll. Nothing is rolled."])
+    local card = newOverlay(f)
+    addStrips(card, L["TEST: a sample verdict."], L["SIM: a simulated verdict."])
+    overlays[RP.StandInKey(n)] = card
     return f
 end
 

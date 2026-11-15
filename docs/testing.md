@@ -458,7 +458,8 @@ lockbox's kind in the neutral tone, the hover's every-roll tooltip (RX-07), a po
 `rolls.popupMark` off drawing nothing through the same one-way hooks, no key added to or changed on
 Blizzard's frame table and no second hook after a stand-up, gamepad mode skipped, the Forever BoP
 wording (`Greed / Pass: you can't use it`, `Need: upgrade`) beside Retail's, the simulator's
-stand-ins stacked one per roll, and a popup shown before its drop reaches the loot history gaining its
+stand-ins stacked one per roll, each stand-in and its card carrying the test or sim strip on its top
+edge (RX-23), and a popup shown before its drop reaches the loot history gaining its
 count line when the drop lands (DW-FP20 review); it sets the mock's `__decorateUIParent`, so the owned cards' text regions answer), `test_feed_counts` (feedback-2 spec §0: the owner's two-Yoke chat lines through the
 real parser and feed, the accented cross-realm looter, both Yokes kept apart, the reagent and the
 altar hidden as in no watched item kind and both Yokes by the kind rule with Equipment off, the currency

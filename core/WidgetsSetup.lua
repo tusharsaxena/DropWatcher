@@ -75,12 +75,15 @@ end
 --- (Widgets minor 27, preview-mode's *Where the strip sits*): `{ titleBar, window, onOffset }` puts
 --- it directly under that title bar, full width, and the library places it again on every show,
 --- hide and resize; the host moves its body by `strip:BodyOffset()` and never anchors the strip.
+--- `{ target, gap }` instead docks it on a HUD display's top edge, outside it (`dock = "hud"`): it
+--- takes no mouse, so it has no tooltip and no menu, and it flips under the display's bottom edge
+--- while the top would leave the screen.
 --- The caller tips it and shows it. Its art is host-passed: the catalog's info mark, resolved here.
 --- The title bar's mode word stands in for it only where it is nil, or while minimized.
 --- @param parent table the frame to parent it to
 --- @param text string the localized line it says
 --- @param kind string|nil "sim" for the simulation flavor; anything else is the test flavor
---- @param dock table|nil { titleBar, window, onOffset } (dock = "title" is set here)
+--- @param dock table|nil { titleBar, window, onOffset } (dock = "title") or { target, gap } (dock = "hud")
 --- @return table|nil
 function NS.MakeTestStrip(parent, text, kind, dock)
     if not W then return nil end
@@ -89,7 +92,9 @@ function NS.MakeTestStrip(parent, text, kind, dock)
     local opts = { text = text, icon = NS.Icon("info"), kind = kind, owner = addonName,
         sim = isSim and NS.Sim or nil,
         onEnd = (not isSim) and function() NS.SetTestMode(false) end or nil }
-    if type(dock) == "table" then
+    if type(dock) == "table" and dock.target then
+        opts.dock, opts.target, opts.gap = "hud", dock.target, dock.gap
+    elseif type(dock) == "table" then
         opts.dock, opts.titleBar, opts.window, opts.onOffset = "title", dock.titleBar, dock.window, dock.onOffset
     end
     return W.TestStrip(parent, opts)

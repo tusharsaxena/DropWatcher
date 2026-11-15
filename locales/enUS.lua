@@ -992,6 +992,11 @@ L["Greed / Pass: you can't use it"] = "Greed / Pass: you can't use it"
 L["score %s"] = "score %s"
 L["Roll popup (simulated)"] = "Roll popup (simulated)"
 L["Roll popup (test)"] = "Roll popup (test)"
+-- the stand-ins' and their side cards' HUD strips (RX-23, preview-mode's *Where the strip sits*)
+L["TEST: a sample roll. Nothing is rolled."] = "TEST: a sample roll. Nothing is rolled."
+L["SIM: a simulated roll. Nothing is rolled."] = "SIM: a simulated roll. Nothing is rolled."
+L["TEST: a sample verdict."] = "TEST: a sample verdict."
+L["SIM: a simulated verdict."] = "SIM: a simulated verdict."
 -- modules/DetailCells.lua: the scale a score used (DW-FP07) and a score-led verdict (DW-FP08)
 L["your own spec's"] = "your own spec's"
 L["your own (shown in Pawn, or your weights)"] = "your own (shown in Pawn, or your weights)"

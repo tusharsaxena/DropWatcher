@@ -393,7 +393,7 @@ test("roll popup: the sim draws it beside a stand-in of the popup's size, stacke
     assertEqual(s1:GetWidth(), RP.STAND_IN_W); assertEqual(s1:GetHeight(), RP.STAND_IN_H)
     local _, _, _, _, y1 = s1:GetPoint()
     local _, _, _, _, y2 = s2:GetPoint()
-    assertEqual(y2 - y1, RP.STAND_IN_H + RP.STAND_IN_GAP, "stacked upward, as the game's own")
+    assertEqual(y2 - y1, RP.STAND_IN_H + RP.STAND_IN_GAP + NS.TestStripHeight(), "stacked upward, as the game's own, clear of the strip")
     for n, s in ipairs({ s1, s2 }) do
         local o = RP.Overlay(RP.StandInKey(n))
         assertTrue(o:IsShown())
@@ -487,4 +487,51 @@ test("roll popup: combat ends test mode and takes its stand-in down; the popup m
     quietTest(NS, m, true)
     assertFalse(RP.StandIn(1):IsShown(), "the popup mark off: no stand-in")
     quietTest(NS, m, false)
+end)
+
+-- A HUD strip docked on frame `f`'s top edge, outside it (preview-mode, *Where the strip sits*).
+local function onTop(strip, f)
+    local pt = strip and strip.__points and strip.__points[1]
+    return pt ~= nil and pt[1] == "BOTTOMLEFT" and pt[2] == f and pt[3] == "TOPLEFT"
+end
+
+-- red under: the stand-in and its side card drawing test mode's samples with no strip (RX-23:
+-- preview-mode's *Where the strip sits*, a HUD display of test data carries the strip on its top
+-- edge, outside it; anti-pattern #97)
+test("roll popup: in test mode each stand-in and its side card carry the test strip on their top edge", function()
+    local NS, m, RP = testMode()
+    quietTest(NS, m, true)
+    local s, o = RP.StandIn(1), RP.Overlay(RP.StandInKey(1))
+    assertTrue(s.testStrip ~= nil and s.testStrip:IsShown(), "the stand-in's test strip")
+    assertTrue(onTop(s.testStrip, s), "docked on the stand-in's top edge, outside it")
+    assertFalse(s.simStrip:IsShown(), "not the sim flavor")
+    assertEqual(s.testStrip.text:GetText(), NS.L["TEST: a sample roll. Nothing is rolled."])
+    assertTrue(o.testStrip ~= nil and o.testStrip:IsShown(), "the side card's test strip")
+    assertTrue(onTop(o.testStrip, o), "docked on the card's top edge")
+    assertFalse(o.simStrip:IsShown())
+    quietTest(NS, m, false)
+    assertFalse(s:IsShown())
+end)
+
+-- red under: the simulation's stand-in with no sim strip, or stacked with no room for it
+test("roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it", function()
+    local NS, m, RP = party()
+    myRoll(m, 11, 300); myRoll(m, 12, 300)
+    NS.Sim.IsDelivering = function() return true end
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    m.__fire("START_LOOT_ROLL", 12, 60000)
+    NS.Sim.IsDelivering = function() return false end
+    local s1, s2 = RP.StandIn(1), RP.StandIn(2)
+    for n, s in ipairs({ s1, s2 }) do
+        local o = RP.Overlay(RP.StandInKey(n))
+        assertTrue(s.simStrip ~= nil and s.simStrip:IsShown(), "the stand-in's sim strip")
+        assertTrue(onTop(s.simStrip, s))
+        assertFalse(s.testStrip:IsShown())
+        assertEqual(s.simStrip.text:GetText(), NS.L["SIM: a simulated roll. Nothing is rolled."])
+        assertTrue(o.simStrip ~= nil and o.simStrip:IsShown() and onTop(o.simStrip, o), "the card's sim strip")
+    end
+    local _, _, _, _, y1 = s1:GetPoint()
+    local _, _, _, _, y2 = s2:GetPoint()
+    assertEqual(y2 - y1, RP.STAND_IN_H + RP.STAND_IN_GAP + NS.TestStripHeight(), "the next stand-in clears the strip")
+    m.__fire("CANCEL_LOOT_ROLL", 11); m.__fire("CANCEL_LOOT_ROLL", 12)
 end)
