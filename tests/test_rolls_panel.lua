@@ -338,6 +338,20 @@ test("rolls panel: with a linger of 0, leaving the panel lets every held roll go
     assertFalse(NS.RollsPanel.IsShown())
 end)
 
+-- red under: the Show rolls row repainting the window alone (the panel kept the roll Rolling now
+-- no longer lists, then lingered it with its winner when the roll was won)
+test("rolls panel: turning Show rolls off takes the panel's rolls away at once, and a win brings nothing back", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    assertTrue(NS.RollsPanel.IsShown())
+    NS.SchemaRuntime.Set("rolls.show", false)
+    assertFalse(NS.RollsPanel.HasBlocks(), "Rolling now lists nothing: the block leaves with no linger")
+    assertFalse(NS.RollsPanel.IsShown())
+    win(m, d)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the hidden roll's win adds nothing")
+    assertFalse(NS.RollsPanel.IsShown())
+end)
+
 -- red under: the scroll body (which takes the pointer) leaving the panel without restarting the count
 test("rolls panel: leaving the panel from its scroll body restarts a held roll's count", function()
     local NS, m = shown()

@@ -412,8 +412,13 @@ local function feed()
     -- (`Panel`: a subsection never restates its tab's name, so not `Rolls panel`).
     local R = P.rolls
     local rolls = { page = "feed", group = L["Rolls"], subgroup = L["Window and popup"], onChange = repaintWindow }
+    -- Rolling now is the Rolls panel's list too: turned off, the panel lets its rolls go at once.
     bool("rolls.show", R.show, L["Show rolls"],
-        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."], rolls)
+        L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."],
+        with(rolls, { onChange = function()
+            repaintWindow()
+            if NS.RollsPanel then NS.RollsPanel.Refresh() end
+        end }))
     bool("rolls.keep", R.keep, L["Keep rolls in history"],
         L["Keep each rolled drop's rolls in the History tab."], rolls)
     bool("rolls.popupMark", R.popupMark, L["Mark the roll popup"],
