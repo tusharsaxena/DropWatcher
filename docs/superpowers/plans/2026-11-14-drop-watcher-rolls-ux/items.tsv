@@ -28,3 +28,4 @@ UC-DW	M10	DropWatcher	Re-vendor LibKa0s v1.103.0; strip under the title bar; Wid
 RX-23	M10	DropWatcher	Whole-branch review of RX-21..UC-DW and bundle	UC-DW
 RX-24	M11	DropWatcher	Window footer on the library lines and marks	RX-23
 RX-25	M11	DropWatcher	One Expand/Collapse toggle on the Rolls panel	RX-23
+RX-26	M11	DropWatcher	Rolls panel tooltips outside the panel, away from the window	RX-25
