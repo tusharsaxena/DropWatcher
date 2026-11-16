@@ -40,12 +40,15 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   one-ask registry, queued while chat is restricted and sent when the restriction lifts; an
   edit-first box when wanted; never SAY or YELL.
 - **The window.** Drops (every drop, your own included, in rows under collapsible boss headers, each
-  row's Me and Them showing the worn gear beside the verdict (a mark per worn item on a two-item slot), with a detail card that expands inline and a trade countdown on every row; on your own drops the
-  upgrade count, who it would help and Offer, which opens the "Who could use this?" panel with an
-  Offer per member (its Trade button retired by feedback-7), and on the footer the tradeable count with Post my tradeables, Expand all /
-  Collapse all and Scan group as its icon marks (RX-24; the tab's Sort on the filter bar); a `/reload` brings this session's drops back) and History (every drop the feed showed, kept across sessions
-  on every character, with its outcome and a detail card that expands inline), plus the filter bar, the footer's health line, the
-  restriction badge, Scan group, minimize, test mode and auto-open.
+  row's Me and Them showing the worn gear beside the verdict (a mark per worn item on a two-item
+  slot), with a detail card that expands inline and a trade countdown on every row; on your own
+  drops the upgrade count, who it would help and Offer, which opens the "Who could use this?" panel
+  with an Offer per member (its Trade button retired by feedback-7), and on the footer the tradeable
+  count with Post my tradeables, Expand all / Collapse all and Scan group as its icon marks (RX-24;
+  the tab's Sort on the filter bar); a `/reload` brings this session's drops back) and History
+  (every drop the feed showed, kept across sessions on every character, with its outcome and a
+  detail card that expands inline), plus the filter bar, the footer's health line, the restriction
+  badge, Scan group, minimize, test mode and auto-open.
 - **Insights** (issue #12, [`superpowers/specs/2026-11-05-drop-watcher-insights-design.md`](superpowers/specs/2026-11-05-drop-watcher-insights-design.md)).
   A third tab of charts over the kept history, drawn through LibKa0s-Charts-1.0: eight cards (drops
   seen, upgrades for you, asks sent, items received, ask success, active days, offers sent, traded
@@ -127,13 +130,14 @@ sixth boss's samples) produce every kind. Enum values are resolved by name (the 
 | Containers | on | Container [1] (a bag), or Quiver [11] (WoW Forever's quivers and ammo pouches; RX-15) | n/a: not gear | Container |
 | Everything else that is rolled on | off | no kind above, and a group rolls on it (a roll table, or Rolling now): the catch-all | n/a: not gear | Item |
 
-A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, and an item the
-catch-all lets in are feed-only: no Ask, toast, AutoAsk, Offer, Announce, Post my tradeables or
-glow, and no Me/Them gain (the kind word stands where gear shows a verdict, never Unknown; your roll
-popup reads the same word for any roll). Not watched unless rolled on with the catch-all on: quest
-starters, reagents (high quality included), Junk that does not open, keystones, currencies (never `|Hitem:` loot lines), profession tools and accessories,
-gems, trade goods, item enhancements, consumables and housing decor. A caged battle pet arrives as
-a `|Hbattlepet:` link and is never watched; only companion items are.
+A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, and an item the catch-all
+lets in are feed-only: no Ask, toast, AutoAsk, Offer, Announce, Post my tradeables or glow, and no
+Me/Them gain (the kind word stands where gear shows a verdict, never Unknown; your roll popup reads
+the same word for any roll). Not watched unless rolled on with the catch-all on: quest starters,
+reagents (high quality included), Junk that does not open, keystones, currencies (never `|Hitem:`
+loot lines), profession tools and accessories, gems, trade goods, item enhancements, consumables and
+housing decor. A caged battle pet arrives as a `|Hbattlepet:` link and is never watched; only
+companion items are.
 
 ## What it deliberately does not do (v1)
 

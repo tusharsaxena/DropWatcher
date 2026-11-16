@@ -111,7 +111,7 @@ local function markTip(b)
 end
 
 --- Take the window's footer (once per window): each mark's tooltip reads the control bound to it.
---- @param f table the footer (W.Footer's, or NS.BareFooter's with no marks)
+--- @param f table the footer (W.Footer's, or NS.BareFooter's with the same marks)
 function FR.Attach(f)
     foot = f
     for _, b in ipairs(f.marks or {}) do

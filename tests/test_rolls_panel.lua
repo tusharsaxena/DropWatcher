@@ -128,7 +128,7 @@ test("rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the s
         S.Set("rolls.panel.enabled", true)
         assertFalse(row.disabledIf(), path)
     end
-    assertEqual(S.FindRow("rolls.show").subgroup, "Window and popup", "the tab's first subject has its heading")
+    assertEqual(S.FindRow("rolls.show").subgroup, "Window, history and popup", "the tab's first subject has its heading")
 end)
 
 -- red under: the panel's rows not naming Show rolls, whose Rolling now is the panel's list
@@ -666,7 +666,7 @@ test("rolls panel: /dw rolls with Show rolls off says why and shows nothing", fu
     NS.addon:OnSlashCommand("rolls")
     assertFalse(NS.RollsPanel.IsShown())
     local all = table.concat(m.prints, "\n")
-    assertTrue(all:find("Show rolls on Drops > Rolls > Window and popup", 1, true) ~= nil, all)
+    assertTrue(all:find("Show rolls on Drops > Rolls > Window, history and popup", 1, true) ~= nil, all)
 end)
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────

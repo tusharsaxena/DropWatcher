@@ -136,9 +136,9 @@ button and profiles reach them as any row.
 | `feed.blacklist` | `{}` | Item lists › Never watch (`map`) | `{ [itemID] = true }`: never watched, gear included, hidden as `blacklist` before every other filter; wins over `feed.whitelist` on an overlap |
 | `feed.minIlvlMode` | `"off"` | Items | `off`, `absolute` (`feed.minIlvl`, 0 to 1000, default 0) or `relative` (`feed.relativeIlvl` under your average, 0 to 100, default 10) |
 | `feed.clearOnBossKill` | `false` | Retention | empty the live feed at each boss kill (LootFeed, at the kill's `ENCOUNTER_END`) |
-| `rolls.show` | `true` | Rolls › Window and popup | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
-| `rolls.keep` | `true` | Rolls › Window and popup | keep a rolled drop's roll table in History (the entry's `rolls`) |
-| `rolls.popupMark` | `true` | Rolls › Window and popup | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
+| `rolls.show` | `true` | Rolls › Window, history and popup | the Drops tab's Rolling now section and a rolled drop's Rolls box (Forever port design §5.3, DW-FP15; both clients); off hides them, the pending store still tracks every roll (design §11.1) |
+| `rolls.keep` | `true` | Rolls › Window, history and popup | keep a rolled drop's roll table in History (the entry's `rolls`) |
+| `rolls.popupMark` | `true` | Rolls › Window, history and popup | a side card beside each of the game's roll popups (`modules/RollPopup.lua`, since DW-FP20; beside it since RX-07): your verdict, the roll's icon count line, and every roll on hover; a change repaints the marks on the shown popups |
 | `rolls.panel.enabled` | `true` (both clients) | Rolls › Panel | the Rolls panel docked beside the window (rolls panel design §3.5, RX-17, `modules/RollsPanel.lua`): every watched roll and every player's roll on it, while rolled and `rolls.panel.linger` seconds after; off shows nothing and tracks nothing; needs `rolls.show` (its row dims while that is off, RX-20) |
 | `rolls.panel.side` | `"right"` | Rolls › Panel | `right` or `left`: the window side the panel docks on; it flips to the other when the screen has no room |
 | `rolls.panel.linger` | `10` | Rolls › Panel | 0 to 60 whole seconds the panel stays open once every roll in it is over (0: it closes at once), then it closes with every finished roll; finished rolls stay while any roll still runs, a new roll cancels the count, and nothing closes while the pointer is over it (RX-21: a panel-level linger, no longer per roll; the branch is unmerged, so no migration) |
@@ -322,16 +322,17 @@ history = { retentionDays = 30, v = 1, groups = {
   estimate as last judged while the drop was in the feed, plain fields only. A `cantUse` that another
   spec of the class can use keeps `offSpec = { specID, mainSpecID, verdict, ilvlDelta }` (feedback-19
   spec §1): no baseline and no reasons. No migration step: the field is optional.
-- `category` is the drop's item kind and `tokenSlot` a tier token's made slot (issue #13,
-  categories design spec §3.3); `tokenUsers` (TT-1) is who may use a token naming no classes:
-  `every` for an omni Curio, `yours` for a token whose Use text alone names your class, absent
-  otherwise (its Type then reads a dash, an `any` slot never taken for a Curio); an Always watch item that fits no kind is kept as `watched`
-  (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key); a lockbox is
-  kept as `lockbox`, a bag, quiver or ammo pouch as `container` (RX-15), and a drop the rolled-on catch-all let in as `other` (RX-04). A collectible's `me`
-  keeps its collection verdict: `collect` true, its `category`, a pet's `count` and `limit`, and
-  `reasonKey` `notYourProfession` for a recipe of a profession you lack. The fields are additive:
-  no migration, and `v` stays 1. An entry without `category` (one recorded before issue #13) reads
-  as equipment in Insights (`InsightsFilters.CategoryOf`), or as a tier token when its `equipLoc` is
+- `category` is the drop's item kind and `tokenSlot` a tier token's made slot (issue #13, categories
+  design spec §3.3); `tokenUsers` (TT-1) is who may use a token naming no classes: `every` for an
+  omni Curio, `yours` for a token whose Use text alone names your class, absent otherwise (its Type
+  then reads a dash, an `any` slot never taken for a Curio); an Always watch item that fits no kind
+  is kept as `watched` (`C.CATEGORY_WATCHED`, a History-only kind, never a `C.CATEGORIES` key); a
+  lockbox is kept as `lockbox`, a bag, quiver or ammo pouch as `container` (RX-15), and a drop the
+  rolled-on catch-all let in as `other` (RX-04). A collectible's `me` keeps its collection verdict:
+  `collect` true, its `category`, a pet's `count` and `limit`, and `reasonKey` `notYourProfession`
+  for a recipe of a profession you lack. The fields are additive: no migration, and `v` stays 1. An
+  entry without `category` (one recorded before issue #13) reads as equipment in Insights
+  (`InsightsFilters.CategoryOf`), or as a tier token when its `equipLoc` is
   `INVTYPE_NON_EQUIP_IGNORE`.
 - `roster` is who was in the group (feedback-2 spec §3, `modules/GroupRoster.lua`): each a short
   `name`, the normalized `realm` only when it is not the recorder's, the `class` (classFile) and
@@ -367,13 +368,13 @@ history = { retentionDays = 30, v = 1, groups = {
   received) or offered (your drop traded away). No migration step: the fields are optional and
   additive, and `v` stays 1.
 - `rolls` (Forever port design §5.4, DW-FP16) is a group-loot drop's final roll table, kept while
-  `rolls.keep` is on: `r` one row per player in the roll cells' order (the winner first), at most
-  40 (`NS.History.ROLL_ROWS`), each its name, classFile (`class`), state number (`s`, 0 Need to
-  5 Pass; the loot history has no Disenchant state, so none is kept, RX-06) and roll number (`n`, none for a pass); `w` the winner's place in `r`; `n` every player
-  who rolled, the rows cut or not; `at` the `time()` it was kept. No GUIDs. It lands with the drop
-  or on the later merge that attaches it (that change sends `HistoryChanged`);
-  `NS.History.RollTable` reads it back for the History card's Rolls box and the drop a reload
-  restores. Additive, `v` stays 1.
+  `rolls.keep` is on: `r` one row per player in the roll cells' order (the winner first), at most 40
+  (`NS.History.ROLL_ROWS`), each its name, classFile (`class`), state number (`s`, 0 Need to 5 Pass;
+  the loot history has no Disenchant state, so none is kept, RX-06) and roll number (`n`, none for a
+  pass); `w` the winner's place in `r`; `n` every player who rolled, the rows cut or not; `at` the
+  `time()` it was kept. No GUIDs. It lands with the drop or on the later merge that attaches it
+  (that change sends `HistoryChanged`); `NS.History.RollTable` reads it back for the History card's
+  Rolls box and the drop a reload restores. Additive, `v` stays 1.
 - How long it is kept: a group goes whole once its newest entry's `at` is older than
   `history.retentionDays` days (never under `0`), at the session's prune or a confirmed shorter
   window. Beside that, 50 drops per group and a safety ceiling of 5,000 drops in all

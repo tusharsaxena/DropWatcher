@@ -123,22 +123,49 @@ end
 
 -- What a footer measures with no library: the published figures at Widgets minor 27, so a degraded
 -- window lays its rows out the same (it draws no hairline and no grip).
-local FOOTER_FALLBACK = { HEIGHT = 24, PAD = 8, GRIP = 22 }
+local FOOTER_FALLBACK = { HEIGHT = 24, PAD = 8, GRIP = 22, MARK = 16, MARK_ART = 12, MARK_GAP = 4 }
+
+-- One bare mark: a Button FOOTER.MARK square with its art centered, pressing `spec.onClick`.
+local function bareMark(foot, spec)
+    local F = FOOTER_FALLBACK
+    local b = CreateFrame("Button", nil, foot)
+    b:SetSize(F.MARK, F.MARK)
+    b.icon = b:CreateTexture(nil, "ARTWORK")
+    b.icon:SetSize(F.MARK_ART, F.MARK_ART)
+    b.icon:SetPoint("CENTER", b, "CENTER", 0, 0)
+    if spec.icon ~= nil then b.icon:SetTexture(spec.icon) end
+    local onClick = spec.onClick
+    b:SetScript("OnClick", function(self, button)
+        if type(onClick) == "function" then onClick(self, button) end
+    end)
+    return b
+end
 
 --- A footer with no library (a degraded install only; with the library every footer is W.Footer,
 --- anti-pattern #118): a bare frame of the same height across `parent`'s bottom edge with W.Footer's
---- two lines and setters, and no hairline, no marks and no grip corner, so a host's paint runs
---- unchanged and its controls are simply absent.
+--- two lines and setters and its marks (`opts.marks`, the same specs, laid right to left from the
+--- corner at the published size and pitch, the right line left of them; RX-30), and no hairline and
+--- no grip corner, so a host's paint runs unchanged and its controls stay in reach.
 --- @param parent table
---- @return table { left, right, marks = {}, SetLeft, SetRight, SetGrip }
-function NS.BareFooter(parent)
+--- @param opts table|nil { marks = { { icon, onClick(btn, button) }, ... } }
+--- @return table { left, right, marks, SetLeft, SetRight, SetGrip }
+function NS.BareFooter(parent, opts)
     local foot = CreateFrame("Frame", nil, parent)
     foot:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     foot:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     foot:SetHeight(FOOTER_FALLBACK.HEIGHT)
     local pad = FOOTER_FALLBACK.PAD
+    foot.marks = {}
+    local anchor, point, x = foot, "RIGHT", -pad
+    for _, spec in ipairs(type(opts) == "table" and type(opts.marks) == "table" and opts.marks or {}) do
+        local b = bareMark(foot, spec)
+        b:SetPoint("RIGHT", anchor, point, x, 0)
+        foot.marks[#foot.marks + 1] = b
+        anchor, point, x = b, "LEFT", -FOOTER_FALLBACK.MARK_GAP
+    end
+    if anchor ~= foot then x = -pad end
     foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    foot.right:SetPoint("RIGHT", foot, "RIGHT", -pad, 0)
+    foot.right:SetPoint("RIGHT", anchor, point, x, 0)
     foot.left = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     foot.left:SetPoint("LEFT", foot, "LEFT", pad, 0)
     foot.left:SetPoint("RIGHT", foot.right, "LEFT", -pad, 0)
@@ -148,7 +175,6 @@ function NS.BareFooter(parent)
     end
     foot.left:SetJustifyH("LEFT")
     foot.right:SetJustifyH("RIGHT")
-    foot.marks = {}
     foot.SetLeft = function(self, text) self.left:SetText(type(text) == "string" and text or "") end
     foot.SetRight = function(self, text) self.right:SetText(type(text) == "string" and text or "") end
     foot.SetGrip = function() end

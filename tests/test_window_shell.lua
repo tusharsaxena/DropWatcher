@@ -1183,6 +1183,47 @@ test("shell: without the Widgets library the window builds with no dead dropdown
     NS.CloseMenu()
 end)
 
+-- red under: NS.BareFooter with no marks (RX-24), so a degraded install lost Scan group, Post my
+-- tradeables and Announce to group (RX-30: the bare footer keeps the controls)
+test("rx30: without the Widgets library the bare footer keeps the tab's controls as marks", function()
+    local skip = {}
+    for _, rel in ipairs(T.loadAddon.libFiles) do
+        if rel:find("/Widgets") then skip[#skip + 1] = rel end
+    end
+    local NS = shown({ skip = skip })
+    assertFalse(NS.HasWidgets())
+    local _, foot = NS.WindowFooter.Parts()
+    assertEqual(#foot.marks, NS.FooterRow.SLOTS, "every slot a tab can bind")
+    assertEqual(table.concat(NS.FooterRow.Shown(), ","), "fold,scan", "Drops' controls, the toggle in the corner")
+    local scan = NS.FooterRow.Mark("scan")
+    assertTrue(scan:GetParent() == foot, "on the bare footer")
+    assertEqual(scan:GetWidth(), NS.FooterMetric("MARK"), "the library's mark size")
+    local asked = 0
+    NS.ScanGroup = function() asked = asked + 1 end
+    scan:__fire("OnClick")
+    assertEqual(asked, 1, "the mark presses its control")
+    assertEqual(NS.Window.TooltipOf(scan)[1], (NS.WindowTitleBar.ScanTip()), "and names it")
+end)
+
+test("rx30: the bare footer lays its marks right to left from the corner, the right line left of them", function()
+    local NS, w = shown()
+    local parent = w.body
+    local pressed
+    local foot = NS.BareFooter(parent, { marks = { { icon = "a", onClick = function() pressed = 1 end },
+        { icon = "b" } } })
+    assertEqual(#foot.marks, 2)
+    local p1 = { foot.marks[1]:GetPoint(1) }
+    assertEqual(p1[1] .. " " .. p1[3], "RIGHT RIGHT")
+    assertTrue(p1[2] == foot, "the first mark in the corner")
+    local p2 = { foot.marks[2]:GetPoint(1) }
+    assertTrue(p2[2] == foot.marks[1] and p2[3] == "LEFT", "the next left of it")
+    assertTrue(foot.right.__points[1][2] == foot.marks[2], "the right line left of the last mark")
+    foot.marks[1]:__fire("OnClick")
+    assertEqual(pressed, 1)
+    assertEqual(foot.marks[1].icon:GetTexture(), "a", "its art")
+    assertEqual(#NS.BareFooter(parent).marks, 0, "no marks asked: none")
+end)
+
 -- M11 review leftover (feedback-3 spec §5, DW-B5): near the top of the screen the tooltip goes below.
 test("filter bar tooltip: AboveFits is true when the screen has room over the control, else false", function()
     local fits = T.newAddon().Window.AboveFits

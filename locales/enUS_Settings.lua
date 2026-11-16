@@ -464,7 +464,7 @@ L["The player's name: the looter for an ask, the candidate for an offer, the mas
     "The player's name: the looter for an ask, the candidate for an offer, the master looter for a master-loot ask."
 
 -- Drops > Rolls (settings/SchemaRows.lua): the subsections, and the Rolls panel rows (RX-17)
-L["Window and popup"] = "Window and popup"
+L["Window, history and popup"] = "Window, history and popup"
 L["Panel"] = "Panel"
 L["Right"] = "Right"
 L["Show the Rolls panel beside the window"] = "Show the Rolls panel beside the window"

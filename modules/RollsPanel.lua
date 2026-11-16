@@ -898,7 +898,7 @@ function RP.Toggle()
         return false
     end
     if not NS.WindowPending.Shown() then   -- `rolls.show` off: Rolling now, its list, is empty
-        NS.Print(L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window and popup."])
+        NS.Print(L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window, history and popup."])
         return false
     end
     if not NS.Window.IsShown() or NS.Window.IsMinimized() then

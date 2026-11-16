@@ -87,6 +87,24 @@ RP.STAND_IN = "standIn"   -- the stand-in cards' key prefix (RP.StandInKey)
 --- @return string
 function RP.StandInKey(n) return RP.STAND_IN .. n end
 
+--- Stand-in `n`'s offset above the screen's center (pure, RX-30): the first at STAND_IN_Y and each
+--- next one a pitch higher (its height, the gap and its strip's height), the whole stack lowered as
+--- one when the last stand-in and its strip would leave the top of a `screenH`-high screen. With no
+--- screen read, the first at STAND_IN_Y.
+--- @param n number
+--- @param screenH number|nil UIParent's height
+--- @param stripH number the mode strip's height
+--- @return number
+function RP.StandInY(n, screenH, stripH)
+    local pitch = RP.STAND_IN_H + RP.STAND_IN_GAP + stripH
+    local base = RP.STAND_IN_Y
+    if type(screenH) == "number" and screenH > 0 then
+        local highest = screenH / 2 - RP.STAND_IN_H / 2 - stripH - (RP.STAND_INS - 1) * pitch
+        if highest < base then base = highest end
+    end
+    return base + (n - 1) * pitch
+end
+
 -- The client, read once at load (clients-§5): the BoP wording is WoW Forever's.
 local CLIENT = NS.Compat.ClientKey()
 
@@ -427,11 +445,21 @@ function RP.Overlay(key) return overlays[key] end
 function RP.StandIn(n) return standIns[n or 1] end
 
 -- Stand-in `n`: an owned frame of the popup's size, titled, stacked above stand-in n - 1 and its
--- strip, built when a simulated roll first needs it, with its side card; both carry the strips.
+-- strip with the whole stack on the screen (RP.StandInY), built when a simulated roll first needs
+-- it, with its side card; both carry the strips. It is clamped to the screen and drags (RX-30), so
+-- a player can take it to a screen edge and watch its card flip on the drop.
 local function buildStandIn(n)
     local f = skinned(RP.STAND_IN_W, RP.STAND_IN_H)
-    local pitch = RP.STAND_IN_H + RP.STAND_IN_GAP + NS.TestStripHeight()
-    f:SetPoint("CENTER", UIParent, "CENTER", 0, RP.STAND_IN_Y + (n - 1) * pitch)
+    f:SetPoint("CENTER", UIParent, "CENTER", 0, RP.StandInY(n, geom(UIParent, "GetHeight"), NS.TestStripHeight()))
+    f:SetClampedToScreen(true)
+    f:SetMovable(true)
+    f:EnableMouse(true)
+    f:RegisterForDrag("LeftButton")
+    f:SetScript("OnDragStart", function(self) self:StartMoving() end)
+    f:SetScript("OnDragStop", function(self)
+        self:StopMovingOrSizing()
+        RP.Refresh()
+    end)
     f.title = faced(f, "CENTER")
     f.title:SetPoint("TOP", f, "TOP", 0, -RP.PAD)
     NS.Skin.Text(f.title, "dw.idle")

@@ -437,3 +437,43 @@ test("compat loot: a secret winner counts as closed", function()
     d.winner = { playerName = "Brakk", playerGUID = BRAKK }
     assertTrue(Compat.LootHistoryRolls(1, 2).won)
 end)
+
+-- ---------------------------------------------------------------------------------------------
+-- RollPopupRight (rolls UX design §3.3, RX-07; its secret and scale cases, RX-30)
+-- ---------------------------------------------------------------------------------------------
+
+-- A stand-in roll popup: its right edge and effective scale, each a plain number or a secret.
+local function popupAt(m, right, scale, uiScale)
+    m.GroupLootFrame1 = { GetRight = function() return right end,
+        GetEffectiveScale = function() return scale end }
+    m.UIParent.GetEffectiveScale = function() return uiScale end
+end
+
+-- red under: a secret right edge read as a number (an arithmetic on a secret raises in the client)
+test("rx30: RollPopupRight is nil for a secret, absent or unplaced right edge", function()
+    local Compat, m = fresh()
+    m.GroupLootFrame1 = nil
+    assertNil(Compat.RollPopupRight(1), "no such frame")
+    popupAt(m, nil, 1, 1)
+    assertNil(Compat.RollPopupRight(1), "unplaced")
+    popupAt(m, T.secret(800), 1, 1)
+    assertNil(Compat.RollPopupRight(1), "a secret edge")
+    popupAt(m, "800", 1, 1)
+    assertNil(Compat.RollPopupRight(1), "a non-number edge")
+    assertNil(Compat.RollPopupRight("1"), "a non-number index")
+end)
+
+-- red under: GetRight answered as is, in the popup's own units, whatever its scale and UIParent's
+test("rx30: RollPopupRight scales the edge into UIParent's units, and a secret scale counts as 1", function()
+    local Compat, m = fresh()
+    popupAt(m, 400, 1, 1)
+    assertEqual(Compat.RollPopupRight(1), 400, "both at 1: as is")
+    popupAt(m, 400, 1.5, 0.75)
+    assertEqual(Compat.RollPopupRight(1), 800, "the popup's scale over UIParent's")
+    popupAt(m, 400, T.secret(2), 1)
+    assertEqual(Compat.RollPopupRight(1), 400, "a secret popup scale: 1")
+    popupAt(m, 400, 2, T.secret(1))
+    assertEqual(Compat.RollPopupRight(1), 800, "a secret UIParent scale: 1")
+    popupAt(m, 400, 0, 1)
+    assertEqual(Compat.RollPopupRight(1), 400, "a zero scale: the edge as read")
+end)

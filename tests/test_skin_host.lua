@@ -268,6 +268,88 @@ test("skin host: the title bar is placed by the skin's height and alignment", fu
     assertEqual(p[1], "LEFT", "title.align moves the title's anchor")
 end)
 
+-- A skin of Ka0s Default's tokens with its title aligned `align`, chosen.
+local function alignedSkin(m, align)
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local key = "dw-align-" .. align
+    if not Skin:GetSkin(key) then
+        local tokens = {}
+        for name, v in pairs(Skin:ResolveSkin(Skin.DEFAULT)) do tokens[name] = v end
+        tokens["title.align"] = align
+        Skin:RegisterSkin({ key = key, label = key, tokens = tokens })
+    end
+    Skin:SetChoice(OWNER, "ka0s", key)
+end
+
+local function titlePoint(f)
+    local p = f.title.__points[#f.title.__points]
+    return p[1], p[4]
+end
+
+-- The right-hand cluster's width: close, minimize, the layout toggle and the lock, 4 apart, 6 in.
+local function cluster(f)
+    return 6 + f.closeButton:GetWidth() + 4 + f.minimizeButton:GetWidth() + 4 + f.modeButton:GetWidth()
+        + 4 + f.lockButton:GetWidth()
+end
+
+-- red under: a RIGHT title 8 px in from the bar's edge, under the close, minimize, layout and lock
+-- marks (RX-30)
+test("rx30: a RIGHT-aligned title stays clear of the right-hand cluster, and of the badge beside it", function()
+    local NS, f, m = shown()
+    alignedSkin(m, "RIGHT")
+    NS.Window.Refresh()
+    local point, x = titlePoint(f)
+    local TB = NS.WindowTitleBar
+    assertEqual(point, "RIGHT")
+    assertEqual(x, -(cluster(f) + TB.TITLE_RESERVE), "clear of the cluster: " .. tostring(x))
+    -- The full layout's restriction badge stands left of the lock: the title clears it too.
+    NS.Window.RestrictionReason = function() return "combat" end
+    NS.Window.Refresh()
+    assertTrue(f.badge:IsShown(), "the badge up")
+    x = select(2, titlePoint(f))
+    assertEqual(x, -(cluster(f) + 8 + f.badge:GetWidth() + TB.TITLE_RESERVE), "and the badge")
+end)
+
+-- red under: the title placed (CompactChrome.Paint) before the minimized paint shows the `n new`
+-- counter, so in the pass that shows it a RIGHT title is laid over it (RX-30 review)
+test("rx30: minimized with new drops, a RIGHT title clears the n new counter in the same pass", function()
+    local NS, f, m = shown()
+    alignedSkin(m, "RIGHT")
+    NS.Window.SetMinimized(true)
+    NS.Window.Refresh()
+    local _, before = titlePoint(f)
+    local rec = { id = 1, at = 100, link = "|cffa335ee|Hitem:1::|h[Crown]|h|r", looter = { name = "Seta-Realm" },
+        me = { verdict = "upgrade", ilvlDelta = 19 }, trade = { state = "likely" }, facts = { ilvl = 311 } }
+    NS.LootFeed.Get = function() return rec end
+    NS.addon:SendMessage(NS.MSG.DROP_ADDED, rec.id)
+    NS.Window.Refresh()
+    assertTrue(NS.Window.NewCount() > 0 and f.newChip:IsShown(), "the counter shows")
+    local _, x = titlePoint(f)
+    assertEqual(x, before - (8 + f.newChip:GetWidth()), "the title moved clear of it in that pass")
+end)
+
+-- red under: a LEFT title 8 px in, over the compact layout's badge at the bar's left; or the compact
+-- pass putting every title back on the center whatever the skin aligns (RX-30)
+test("rx30: in compact a LEFT-aligned title starts past the restriction badge at the bar's left", function()
+    local NS, f, m = shown()
+    alignedSkin(m, "LEFT")
+    NS.SetWindowMode("compact")
+    NS.Window.Refresh()
+    local TB, CC = NS.WindowTitleBar, NS.CompactChrome
+    local point, x = titlePoint(f)
+    assertEqual(point, "LEFT", "the skin's alignment holds in compact")
+    assertEqual(x, TB.TITLE_RESERVE, "no badge: the plain reserve")
+    NS.Window.RestrictionReason = function() return "combat" end
+    NS.Window.Refresh()
+    assertTrue(f.badge:IsShown(), "the badge up")
+    x = select(2, titlePoint(f))
+    assertEqual(x, CC.BADGE_X + CC.BADGE_W + TB.TITLE_RESERVE, "past the badge")
+    -- A CENTER skin is centered as before.
+    alignedSkin(m, "CENTER")
+    NS.Window.Refresh()
+    assertEqual((titlePoint(f)), "CENTER")
+end)
+
 -- ── the Situations table's faces (L4) ────────────────────────────────────────────────────────
 
 test("skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored", function()

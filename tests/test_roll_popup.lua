@@ -535,3 +535,48 @@ test("roll popup: a simulated roll's stand-in and side card carry the sim strip,
     assertEqual(y2 - y1, RP.STAND_IN_H + RP.STAND_IN_GAP + NS.TestStripHeight(), "the next stand-in clears the strip")
     m.__fire("CANCEL_LOOT_ROLL", 11); m.__fire("CANCEL_LOOT_ROLL", 12)
 end)
+
+-- red under: the stack's base fixed at STAND_IN_Y, so on a 768-high screen the third and fourth
+-- stand-ins ran off its top (RX-30: the sim stand-ins stay on screen)
+test("rx30: StandInY keeps the whole stack of stand-ins on the screen, the first at STAND_IN_Y while it fits", function()
+    local RP = T.newAddon().RollPopup
+    local pitch = RP.STAND_IN_H + RP.STAND_IN_GAP + 18
+    assertEqual(RP.StandInY(1, 1440, 18), RP.STAND_IN_Y, "a tall screen: the first where it always was")
+    assertEqual(RP.StandInY(2, 1440, 18) - RP.StandInY(1, 1440, 18), pitch, "each next a pitch higher")
+    for n = 1, RP.STAND_INS do
+        local top = 768 / 2 + RP.StandInY(n, 768, 18) + RP.STAND_IN_H / 2 + 18
+        assertTrue(top <= 768, "stand-in " .. n .. " and its strip inside a 768-high screen: " .. top)
+    end
+    assertEqual(RP.StandInY(1, nil, 18), RP.STAND_IN_Y, "no screen read: as before")
+end)
+
+-- red under: a stand-in fixed where it was built, and never clamped (RX-30: it can show the flip)
+test("rx30: a stand-in is clamped to the screen and drags, its card taking the side the screen leaves", function()
+    local NS, m, RP = party()
+    local base = m.CreateFrame
+    m.CreateFrame = function(...)
+        local f = base(...)
+        f.SetClampedToScreen = function(self, on) self.__clamped = on end
+        f.SetMovable = function(self, on) self.__movable = on end
+        return f
+    end
+    myRoll(m, 11, 300)
+    NS.Sim.IsDelivering = function() return true end
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    NS.Sim.IsDelivering = function() return false end
+    m.CreateFrame = base
+    local s, o = RP.StandIn(1), RP.Overlay(RP.StandInKey(1))
+    assertTrue(s.__clamped == true, "clamped to the screen")
+    assertTrue(s.__movable == true, "movable")
+    o.GetWidth = function() return RP.WIDTH end
+    m.UIParent.GetWidth = function() return 1920 end
+    s.GetRight = function() return 1100 end
+    NS.RollPopup.Refresh()
+    assertEqual((o:GetPoint()), "TOPLEFT", "centered: the card on the right")
+    -- Dragged to the screen's right edge: on the drop the card flips to the left.
+    s.GetRight = function() return 1916 end
+    s:__fire("OnDragStart")
+    s:__fire("OnDragStop")
+    assertEqual((o:GetPoint()), "TOPRIGHT", "flipped: the card on the left")
+    m.__fire("CANCEL_LOOT_ROLL", 11)
+end)

@@ -1038,7 +1038,7 @@ L["Show the Rolls panel beside the window on Drops > Rolls > Panel"] = "Show the
 L["No rolls right now"] = "No rolls right now"
 L["The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."] = "The Rolls panel is off: turn on Show the Rolls panel beside the window on Drops > Rolls > Panel."
 L["The Rolls panel shows beside the window: open the window first."] = "The Rolls panel shows beside the window: open the window first."
-L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window and popup."] = "The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window and popup."
+L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window, history and popup."] = "The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window, history and popup."
 -- round 2 (RX-21): the mode strips, the item headers, the title buttons, a row's tooltip
 L["TEST: sample rolls. Nothing is sent; combat ends it."] = "TEST: sample rolls. Nothing is sent; combat ends it."
 L["SIM: simulated rolls. Nothing is sent. /dw sim stop ends it."] = "SIM: simulated rolls. Nothing is sent. /dw sim stop ends it."

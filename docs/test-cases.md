@@ -146,7 +146,7 @@ Total.
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 - rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
-### test_settings_pages.lua (56)
+### test_settings_pages.lua (57)
 
 - pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -184,6 +184,7 @@ Total.
 - messages: an empty template is refused by the seam and the box shows the stored one again
 - messages: a token chip goes into the template last edited and is stored at once
 - messages: Reset templates puts the three back and repaints the boxes
+- rx30: Drops › Rolls lays Show rolls | Keep rolls, Mark the roll popup; the panel switch alone, its knobs paired
 - feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes
 - feed: with test mode on, Clear history clears the samples and leaves the account's log
 - pages: a switch is alone on its line and its knobs pair under it (Toast, Auto-ask)
@@ -306,7 +307,7 @@ Total.
 - skin flip: companion off draws the stored shadow; Ignore fonts leaves it standing
 - skin flip: with the library absent S.BarBorder answers the stored three and S.HoverArt draws nothing
 
-### test_skin_host.lua (16)
+### test_skin_host.lua (19)
 
 - skin host: an untoned button's label and mark read btn.text and btn.icon, live
 - skin host: hover draws btn.hover on an untoned label and leaves a state's tone alone
@@ -323,6 +324,9 @@ Total.
 - skin host: an Offer panel row washes, from its Their eq icon too
 - skin host: title.bg is one layer, the bar's, and stays one through a skin switch
 - skin host: the title bar is placed by the skin's height and alignment
+- rx30: a RIGHT-aligned title stays clear of the right-hand cluster, and of the badge beside it
+- rx30: minimized with new drops, a RIGHT title clears the n new counter in the same pass
+- rx30: in compact a LEFT-aligned title starts past the restriction badge at the bar's left
 - skin host: the Situations table's heads and labels take the panel's Text, kept off while ignored
 
 ### test_header_band.lua (6)
@@ -436,7 +440,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (72)
+### test_window_shell.lua (74)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -508,6 +512,8 @@ Total.
 - shell: no auto-open for a test drop outside test mode, outside an auto-open situation, or with the master off
 - shell: every control on the chrome has a tooltip with a reason
 - shell: without the Widgets library the window builds with no dead dropdown
+- rx30: without the Widgets library the bare footer keeps the tab's controls as marks
+- rx30: the bare footer lays its marks right to left from the corner, the right line left of them
 - filter bar tooltip: AboveFits is true when the screen has room over the control, else false
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
@@ -1239,7 +1245,7 @@ Total.
 - compat collect: the simulator's seam wraps every collection member (the TOC order)
 - compat collect: no other shipped file names a collection API in code
 
-### test_compat_loot.lua (19)
+### test_compat_loot.lua (21)
 
 - compat loot: rolls answer every row with its state and number
 - compat loot: a secret playerName drops the name, keeps the row
@@ -1260,6 +1266,8 @@ Total.
 - compat loot: the simulator's seam wraps every loot member (the TOC order)
 - compat loot: no other shipped file names a loot roll API in code
 - compat loot: a secret winner counts as closed
+- rx30: RollPopupRight is nil for a secret, absent or unplaced right edge
+- rx30: RollPopupRight scales the edge into UIParent's units, and a secret scale counts as 1
 
 ### test_text_parse.lua (12)
 
@@ -1940,7 +1948,7 @@ Total.
 - roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
 
-### test_window_pending.lua (12)
+### test_window_pending.lua (13)
 
 - window pending: the section shows only while an item exists and hides with rolls.show off
 - window pending: a repaint with nothing pending never builds the item list
@@ -1949,13 +1957,14 @@ Total.
 - window pending: a master-loot item names its master looter, never a roll that ended
 - window pending: a master-loot item has the Ask master looter button, in its ask's state
 - compact: a pending item is a card
+- rx30: the Rolls box's header line is cut with … at the box's edge, the count line first
 - window pending: Rolling now's count line has every roll in its tooltip, in both layouts
 - detail card: a resolved drop with rec.roll has a Rolls box
 - row tooltip: a rolled drop's item tooltip has the roll summary line
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (20)
+### test_roll_popup.lua (22)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
 - roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
@@ -1977,6 +1986,8 @@ Total.
 - roll popup: combat ends test mode and takes its stand-in down; the popup mark off draws none
 - roll popup: in test mode each stand-in and its side card carry the test strip on their top edge
 - roll popup: a simulated roll's stand-in and side card carry the sim strip, stacked clear of it
+- rx30: StandInY keeps the whole stack of stand-ins on the screen, the first at STAND_IN_Y while it fits
+- rx30: a stand-in is clamped to the screen and drags, its card taking the side the screen leaves
 
 ### test_rolls_panel.lua (65)
 
@@ -2990,7 +3001,7 @@ Total.
 | test_database.lua | 15 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
-| test_settings_pages.lua | 56 |
+| test_settings_pages.lua | 57 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 19 |
 | test_launcher_skin_entry.lua | 2 |
@@ -2998,14 +3009,14 @@ Total.
 | test_skin_chrome.lua | 12 |
 | test_skin_hud.lua | 10 |
 | test_skin_flip.lua | 21 |
-| test_skin_host.lua | 16 |
+| test_skin_host.lua | 19 |
 | test_header_band.lua | 6 |
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
 | test_window.lua | 20 |
-| test_window_shell.lua | 72 |
+| test_window_shell.lua | 74 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 37 |
 | test_compact_cards.lua | 27 |
@@ -3034,7 +3045,7 @@ Total.
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
-| test_compat_loot.lua | 19 |
+| test_compat_loot.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
 | test_class_data.lua | 17 |
@@ -3062,8 +3073,8 @@ Total.
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 10 |
-| test_window_pending.lua | 12 |
-| test_roll_popup.lua | 20 |
+| test_window_pending.lua | 13 |
+| test_roll_popup.lua | 22 |
 | test_rolls_panel.lua | 65 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -3113,4 +3124,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2587** |
+| **Total** | **2598** |

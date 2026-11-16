@@ -278,7 +278,7 @@ local function rollsPanel(D)
     local rollsOff = unless("rolls.show", true)
     bool("rolls.panel.enabled", D.enabled, L["Show the Rolls panel beside the window"],
         L["While loot is rolled, show every watched roll and every player's roll on it in a panel docked beside the window, and keep it open for the time set below after the last roll. Read-only: you roll on the game's own popup. /dw rolls shows or hides it by hand. Needs Show rolls."],
-        with(at, { disabledIf = rollsOff }))
+        with(at, { disabledIf = rollsOff, solo = true }))   -- alone on its line, its knobs under it (RX-30)
     local sub = with(at, { disabledIf = function() return rollsOff() or NS.Setting("rolls.panel.enabled") ~= true end })
     pick("rolls.panel.side", D.side, PANEL_SIDES, L["Side"],
         L["Which side of the window the Rolls panel docks on. It flips to the other side when the screen has no room. Needs Show the Rolls panel beside the window."],
@@ -412,7 +412,7 @@ local function feed()
     -- subjects since RX-17 (options-ui-§7): the window and popup switches, then the Rolls panel
     -- (`Panel`: a subsection never restates its tab's name, so not `Rolls panel`).
     local R = P.rolls
-    local rolls = { page = "feed", group = L["Rolls"], subgroup = L["Window and popup"], onChange = repaintWindow }
+    local rolls = { page = "feed", group = L["Rolls"], subgroup = L["Window, history and popup"], onChange = repaintWindow }
     -- Rolling now is the Rolls panel's list too: turned off, the panel lets its rolls go at once.
     bool("rolls.show", R.show, L["Show rolls"],
         L["Show the drops still being rolled for above the boss groups, and each rolled drop's rolls on its detail card."],

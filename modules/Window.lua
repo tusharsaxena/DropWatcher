@@ -469,10 +469,11 @@ end
 -- edge (inset 0: the body is already 1 px inside the window's edge), the resize grip's corner cleared
 -- (`grip`, the grip itself built on it by makeResizable). Its words are its own left line and its
 -- controls its marks (RX-24: NS.WindowFooter, NS.FooterRow), the active tab's. No library: a bare
--- frame of the same height with the two lines and no marks (NS.BareFooter).
+-- frame of the same height with the two lines and the same marks (NS.BareFooter, RX-30).
 local function buildFooter(body)
-    return NS.MakeFooter(body, { grip = true, inset = 0, marks = NS.FooterRow.MarkSpecs() })
-        or NS.BareFooter(body)
+    local marks = NS.FooterRow.MarkSpecs()
+    return NS.MakeFooter(body, { grip = true, inset = 0, marks = marks })
+        or NS.BareFooter(body, { marks = marks })
 end
 
 local function buildBody(f)
@@ -639,6 +640,7 @@ function Window.Refresh()
     TB.PaintModeText(frame)
     NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
+    NS.CompactChrome.PlaceTitle(frame)   -- after the counter it may have to clear (RX-30)
     if not isMinimized() then
         local sim = NS.State.testMode ~= true and NS.Sim:IsActive()
         if frame.banner then frame.banner:SetShown(NS.State.testMode == true) end

@@ -76,15 +76,16 @@ writes the row's default, which stops a running sim and never starts one. The si
 already refuse each other (`core/DropWatcher.lua`, `modules/Sim.lua`), so the boxes need no rule of
 their own.
 
-The launcher's right-click menu mirrors five of these: Enabled, Locked, Test mode, Sim mode and Show window
-(launcher-§2). Lock frame has a third surface in the window itself: the title bar's lock button
-(RX-08; at its top right, left of the layout toggle, since RX-14), which toggles `locked` through the same seam. Show window also has a key binding (launcher-§6): Options → Keybindings → Ka0s Drop
-Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no default key,
-on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
+The launcher's right-click menu mirrors five of these: Enabled, Locked, Test mode, Sim mode and Show
+window (launcher-§2). Lock frame has a third surface in the window itself: the title bar's lock
+button (RX-08; at its top right, left of the layout toggle, since RX-14), which toggles `locked`
+through the same seam. Show window also has a key binding (launcher-§6): Options → Keybindings →
+Ka0s Drop Watcher → Toggle drop feed, or General → Keybindings in this addon's settings, with no
+default key, on the same handler as the menu entry and `/dw toggle` (`NS.ToggleWindow`, through the
 `DropWatcherToggleWindow` button in `core/LauncherSetup.lua`). The header's Defaults is the global
 reset, so its tooltip is the very text Reset all settings carries, read from the library
-(`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting" lead),
-then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
+(`O.ResetAllTooltip`, options-ui-§12; item 020 retired the addon's own "Reset every … setting"
+lead), then `Key bindings are not changed.` (`O.KEYBINDS_UNCHANGED`): no reset reaches a key.
 
 ## General → Role (WoW Forever alone)
 
@@ -166,13 +167,13 @@ never in the profile: Defaults, Reset all settings and `/dw set` never touch the
 ## Drops → Situations
 
 Everything set per situation, on the Drops page's first tab (General › When to show and Trade ›
-Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen` row (Auto-open the window); on the line
-beneath it (`startsLine`), Auto-close the window (`window.autoClose.enabled`) and Close after (seconds)
-(`window.autoClose.seconds`, a 5 to 120 slider), both dimmed while Auto-open the window is off and the
-seconds while Auto-close is off too, each tooltip ending "Needs <row>." (options-ui-§21, rolls UX design
-§3.6, RX-10); then the per-situation
-settings as one table (feedback-8 spec §0, DW-H0), a line per situation in `K.SITUATIONS` order
-(design spec §6.1):
+Rules until feedback-24; a page of its own from feedback-24 until item 020). The master `autoOpen`
+row (Auto-open the window); on the line beneath it (`startsLine`), Auto-close the window
+(`window.autoClose.enabled`) and Close after (seconds) (`window.autoClose.seconds`, a 5 to 120
+slider), both dimmed while Auto-open the window is off and the seconds while Auto-close is off too,
+each tooltip ending "Needs <row>." (options-ui-§21, rolls UX design §3.6, RX-10); then the
+per-situation settings as one table (feedback-8 spec §0, DW-H0), a line per situation in
+`K.SITUATIONS` order (design spec §6.1):
 
 | Situation | Track | Auto-open | Quality | Loot rule |
 |---|---|---|---|---|
@@ -182,14 +183,14 @@ It takes the look of Ka0s Loot History's Price sources table, without its drag h
 and status column: gold, left-aligned column headers (`GameFontNormalSmall`) in a band above
 fixed-height lines, every second line faintly striped, the cells' text in `GameFontHighlightSmall`,
 the panel's own CheckBox and Dropdown widgets. The columns sit at fixed offsets, 8, 128, 188, 262
-and 424, with both dropdowns 150 wide, so the table ends at 574, clear of the panel's scroll gutter in
-every skin (DW-02, owner ruling D-18; it ended at 610 before, cutting Loot rule off). An untracked situation's `Auto-open`, `Quality` and
-`Loot rule` are dimmed and its name grays; every situation's `Auto-open` is dimmed while the master row is off. On WoW Forever the Open world group
+and 424, with both dropdowns 150 wide, so the table ends at 574, clear of the panel's scroll gutter
+in every skin (DW-02, owner ruling D-18; it ended at 610 before, cutting Loot rule off). An
+untracked situation's `Auto-open`, `Quality` and `Loot rule` are dimmed and its name grays; every
+situation's `Auto-open` is dimmed while the master row is off. On WoW Forever the Open world group
 line starts with Track and Auto-open both checked (RX-01, rolls UX ruling 7); on Retail both start
-unchecked.
-Each cell dims exactly when its schema row's `disabledIf` says so (`Editors.SituationRows`), so the
-rule has one home. Hovering a cell shows its row's label and tooltip; hovering a name shows the
-situation.
+unchecked. Each cell dims exactly when its schema row's `disabledIf` says so
+(`Editors.SituationRows`), so the rule has one home. Hovering a cell shows its row's label and
+tooltip; hovering a name shows the situation.
 
 The four per-situation rows stay schema rows (paths, defaults, checks, tooltips), marked
 `skipRender` with no subsection, so `/dw get|set`, the Drops page's Defaults, profiles and their announce
@@ -213,22 +214,23 @@ lists it keeps (plan #13, Q9).
 
 **Quality:** `Minimum quality` (`feed.quality.mode`) beside `Always show upgrades for me`, then the
 value each picked mode uses: `Fixed minimum` while the feed's mode or any situation's own Quality is
-the fixed mode, `Quality floor` (`Floor` until feedback-24) while either is a matching mode. Both are
-drawn when the two differ, and a value nothing picks is hidden (LibKa0s#67, options-ui-§22). A
-situation's selector is a `skipRender` row the library does not watch: the Situations tab's change shows
-on coming back here, and a `/dw set` on one with this tab open shows on the next render. Then the closing
-line `In force now: Quality: Rare+` (`Uncommon+` at WoW Forever's default, RX-01): the filter bar's label for where you stand, naming the situation
-when its own setting overrides the feed's mode. It repaints with every write. Under it, a line points
-at the Situations tab's Quality column, where a situation sets its own.
+the fixed mode, `Quality floor` (`Floor` until feedback-24) while either is a matching mode. Both
+are drawn when the two differ, and a value nothing picks is hidden (LibKa0s#67, options-ui-§22). A
+situation's selector is a `skipRender` row the library does not watch: the Situations tab's change
+shows on coming back here, and a `/dw set` on one with this tab open shows on the next render. Then
+the closing line `In force now: Quality: Rare+` (`Uncommon+` at WoW Forever's default, RX-01): the
+filter bar's label for where you stand, naming the situation when its own setting overrides the
+feed's mode. It repaints with every write. Under it, a line points at the Situations tab's Quality
+column, where a situation sets its own.
 
 **Items:** two subsections. **Item kinds:** one switch per watched kind, two to a line in
 `C.CATEGORIES`' order: Equipment | Tier tokens, Mounts | Battle pets, Toys | Recipes and patterns,
 Cosmetics (off by default) | Lockboxes (on), Containers (on: bags, and on WoW Forever quivers and
 ammo pouches; RX-15) | Everything else that is rolled on (off by default, the catch-all for an item
-of no kind a group rolls on, RX-04) (DW-CAT2,
-issue #13; they replaced Gear only | Include tier tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item
-level alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels
-under my average in the relative mode, and neither under Off (LibKa0s#67).
+of no kind a group rolls on, RX-04) (DW-CAT2, issue #13; they replaced Gear only | Include tier
+tokens, schema step 13). A change applies to drops from then on. **Item level:** Minimum item level
+alone on its line, then the mode's own value: Absolute minimum in the absolute mode, Levels under my
+average in the relative mode, and neither under Off (LibKa0s#67).
 
 **Item lists** (DW-CAT5, issue #13): a host tab (`settings/ListEditors.lua`,
 `Settings.ListEditors.ItemListsTab`) keyed by the `feed.whitelist` and `feed.blacklist` rows' group,
@@ -257,32 +259,38 @@ simulation's session-only log while one is on). Window › Layout's until feedba
 Clear this session's drops on boss kill (`Clear on boss kill` until item 020). (Show my own loot in Group drops is retired: Drops always lists your own drops,
 feedback-5 spec §2; schema step 6 removes the stored value.)
 
-**Rolls** (Forever port design §5.3, DW-FP15; both clients), two subsections since RX-17 (options-ui-§7: two subjects on one tab). **Window and popup:** **Show rolls** (`rolls.show`: the Drops
-tab's Rolling now section above the boss groups and a rolled drop's Rolls box on its detail card;
-off hides both while the store still tracks every roll), **Keep rolls in history** (`rolls.keep`:
-a rolled drop's History entry keeps its roll table, which the History card shows) and **Mark the roll popup** (`rolls.popupMark`: your verdict, and
-the roll's count line while it is open, every roll on hover, on a small side card beside the game's own roll popup,
+**Rolls** (Forever port design §5.3, DW-FP15; both clients), two subsections since RX-17
+(options-ui-§7: two subjects on one tab). **Window, history and popup:** **Show rolls**
+(`rolls.show`: the Drops tab's Rolling now section above the boss groups and a rolled drop's Rolls
+box on its detail card; off hides both while the store still tracks every roll), **Keep rolls in
+history** (`rolls.keep`: a rolled drop's History entry keeps its roll table, which the History card
+shows) and **Mark the roll popup** (`rolls.popupMark`: your verdict, and the roll's count line while
+it is open, every roll on hover, on a small side card beside the game's own roll popup,
 `modules/RollPopup.lua`, DW-FP20), all on by default. A change to the first two repaints the shown
 window; a change to the third repaints the marks on the popups shown now. The design (§7) placed
 Mark the roll popup under Alerts › Roll popup; it stays here beside Show rolls and Keep rolls, the
-plan's placement, as Claude's call (2026-11-13), because it is one of the three roll switches and the
-Alerts page holds the toast's rows. The owner can move it at the merge gate.
+plan's placement, as Claude's call (2026-11-13), because it is one of the three roll switches and
+the Alerts page holds the toast's rows. The owner can move it at the merge gate. The lines (RX-30):
+Show rolls | Keep rolls in history, then Mark the roll popup.
 
 **Panel** (rolls panel design §3.5, RX-17; both clients): **Show the Rolls panel beside the window**
-(`rolls.panel.enabled`, on), **Side** (`rolls.panel.side`, a Right / Left dropdown; its tooltip says it
-flips when the screen has no room), **Keep the panel open after the last roll (seconds, 0 = at once)** (`rolls.panel.linger`,
-a 0 to 60 slider, whole seconds, default 10; RX-21's panel-level linger: finished rolls stay until
-every roll is over, then the panel stays that long and closes, a new roll canceling the count) and **Fold Pass and Waiting in a raid**
-(`rolls.panel.foldInRaid`, on; raid mode, a group of more than 5 or a roll of more than 5 players,
-RX-18, RX-19: each folded line lists every name on hover and every player on a click). The three sub-rows dim while the panel is off,
-each tooltip ending "Needs Show the Rolls panel beside the window." (options-ui-§21). The panel lists
-Rolling now's rolls, so all four dim while **Show rolls** is off, the switch's tooltip ending "Needs Show
-rolls." (RX-20); turning **Show rolls** off empties the panel at once. A change
-repaints the panel. The design named the subsection `Rolls panel`; it is `Panel`, because a
-subsection never restates its tab's name (options-ui-§7), and the location strings read
-`Drops > Rolls > Panel`. To see the rows act without a group (RX-19): `/dw test` fills the panel
-with test mode's sample roll (nine players, so raid mode), `/dw sim start dungeon` then `/dw sim roll`
-shows the dungeon layout, and `/dw sim raid` a 40-player roll on six items in raid mode.
+(`rolls.panel.enabled`, on), **Side** (`rolls.panel.side`, a Right / Left dropdown; its tooltip says
+it flips when the screen has no room), **Keep the panel open after the last roll (seconds, 0 = at
+once)** (`rolls.panel.linger`, a 0 to 60 slider, whole seconds, default 10; RX-21's panel-level
+linger: finished rolls stay until every roll is over, then the panel stays that long and closes, a
+new roll canceling the count) and **Fold Pass and Waiting in a raid** (`rolls.panel.foldInRaid`, on;
+raid mode, a group of more than 5 or a roll of more than 5 players, RX-18, RX-19: each folded line
+lists every name on hover and every player on a click). The three sub-rows dim while the panel is
+off, each tooltip ending "Needs Show the Rolls panel beside the window." (options-ui-§21). The panel
+lists Rolling now's rolls, so all four dim while **Show rolls** is off, the switch's tooltip ending
+"Needs Show rolls." (RX-20); turning **Show rolls** off empties the panel at once. A change repaints
+the panel. The design named the subsection `Rolls panel`; it is `Panel`, because a subsection never
+restates its tab's name (options-ui-§7), and the location strings read `Drops > Rolls > Panel`. To
+see the rows act without a group (RX-19): `/dw test` fills the panel with test mode's sample roll
+(nine players, so raid mode), `/dw sim start dungeon` then `/dw sim roll` shows the dungeon layout,
+and `/dw sim raid` a 40-player roll on six items in raid mode. The lines (RX-30): Show the Rolls
+panel beside the window alone on its line (`solo`), then Side | Keep the panel open, then Fold Pass
+and Waiting in a raid.
 
 ## Comparison
 
