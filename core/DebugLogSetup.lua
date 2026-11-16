@@ -71,6 +71,24 @@ if not lib then
             return 0
         end,
         DebugVerb       = function() return false end,
+        -- The report seam and its serializer (DebugLog minor 23, DebugLogDiagnostics minor 11, LibKa0s
+        -- v1.105.0, LibKa0s#79). Both are methods. With no console the report streams to chat with no
+        -- pointer line, the library-absent arm of the 2026-11-08 ruling, and answers the line count; a
+        -- serialize answers one line. Shape from the DebugLog version-23.11.1.5 API document's "What a
+        -- host owes at its re-vendor".
+        Report          = function(_, _, _, fn)
+            local n = 0
+            if type(fn) == "function" then
+                fn(function(line)
+                    n = n + 1
+                    if NS.Print then NS.Print(NS.SafeToString(line)) end
+                end)
+            end
+            return n
+        end,
+        Serialize       = function(_, v)
+            return { NS.SafeToString(type(v) == "table" and "<table>" or v) }
+        end,
     }
     NS.Debug         = NS.DebugLog.Debug
     NS.DebugOnce     = NS.DebugLog.DebugOnce
