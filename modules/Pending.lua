@@ -44,8 +44,10 @@ local _, NS = ...
 --
 -- RELOAD (Review Focus 3). Nothing is saved: PLAYER_ENTERING_WORLD and the stand-up rebuild the
 -- store from the client (every encounter's open drops, and your ActiveLootRolls), and the key
--- index keeps a second walk from opening a drop twice. The stand-down drops the store, stops the
--- ticker and cancels every linger timer.
+-- index keeps a second walk from opening a drop twice. A roll the rebuild of a login, a /reload
+-- (PLAYER_ENTERING_WORLD's isInitialLogin or isReloadingUi) or the stand-up opens was open before
+-- it, so its item is `restored`; one a zone change's loading screen hid is new, and is not (RX-29).
+-- The stand-down drops the store, stops the ticker and cancels every linger timer.
 
 NS.Pending = NS.Pending or {}
 local P = NS.Pending
@@ -59,8 +61,9 @@ P.TICK = 1      -- the fallback ticker's period
 local ticker, scoreTimer
 local lingers = {}
 local generation = 0   -- bumped at every stand-down: an item load answering after it is ignored
--- True while P.Rebuild reads the client: a roll it opens was open before the reload or stand-up,
--- so its item is `restored` and opens no window (RX-16; a drop's rec.source "restore" alike).
+-- True while P.Rebuild(true) reads the client: a roll it opens was open before the reload or
+-- stand-up, so its item is `restored` and opens no window (RX-16; a drop's rec.source "restore"
+-- alike). Set back false even when the walk raises (RX-29).
 local rebuilding = false
 -- The last id the live store handed out, kept across a stand-down so a new store never reuses an
 -- id: the Asks book keeps a sent askML filed under its pending item's id (modules/Asks.lua).
@@ -433,14 +436,28 @@ function P.ClearTest()
     for _, item in ipairs(s and s.items or {}) do send(item.id, "closed") end
 end
 
---- Rebuild from the client (a reload, the stand-up): every encounter's open drops, then your open
---- roll popups. Idempotent: a drop already held is not opened again. A roll it opens is `restored`.
-function P.Rebuild()
-    if stoodDown() then return end
-    rebuilding = true
+local function walkEncounters()
     for _, encounterID in ipairs(NS.Compat.LootHistoryEncounters()) do P.OnEncounter(encounterID) end
+end
+
+--- Rebuild from the client (a login, a reload, a zone change, the stand-up): every encounter's open
+--- drops, then your open roll popups. Idempotent: a drop already held is not opened again. With
+--- `restore`, a roll it opens is `restored` (it was open before the reload or the stand-up). A walk
+--- that raises still clears the flag, and its error goes on to the caller (the event dispatcher).
+--- @param restore boolean|nil
+function P.Rebuild(restore)
+    if stoodDown() then return end
+    rebuilding = restore == true
+    local ok, err = pcall(walkEncounters)
     rebuilding = false
+    if not ok then error(err, 0) end
     for _, rollID in ipairs(NS.Compat.ActiveLootRolls()) do P.OnStartRoll(rollID) end
+end
+
+--- PLAYER_ENTERING_WORLD(isInitialLogin, isReloadingUi): a login or a /reload rebuilds what was open
+--- before it (restored); a zone change's loading screen reads what opened under it as new.
+function P.OnEnteringWorld(isInitialLogin, isReloadingUi)
+    P.Rebuild(isInitialLogin == true or isReloadingUi == true)
 end
 
 tick = function()
@@ -533,7 +550,7 @@ local EVENTS = {
     { "LOOT_HISTORY_CLEAR_HISTORY", "OnPendingClear", P.OnClearHistory },
     { "START_LOOT_ROLL", "OnPendingStartRoll", P.OnStartRoll },
     { "CANCEL_LOOT_ROLL", "OnPendingCancelRoll", P.OnCancelRoll },
-    { "PLAYER_ENTERING_WORLD", "OnPendingWorldEvent", P.Rebuild },
+    { "PLAYER_ENTERING_WORLD", "OnPendingWorldEvent", P.OnEnteringWorld },
 }
 for _, row in ipairs(EVENTS) do
     local fn = row[3]
@@ -564,5 +581,5 @@ NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     if not NS.Bus.tracked then listen() end
-    P.Rebuild()
+    P.Rebuild(true)
 end

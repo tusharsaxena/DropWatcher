@@ -526,9 +526,16 @@ end
 
 -- A parent's hide (Alt-Z, a cinematic, the full-screen map) also runs OnHide, but leaves the frame's
 -- own shown flag set, and the window returns with UIParent: only a hide of the frame itself (Escape,
--- the close mark, the ladder) is the player closing it.
+-- the close mark, the ladder) is the player closing it. Escape or the close mark disarms an
+-- auto-close at once (RX-29); the ladder's hide (`ladderHiding`) keeps the player's choice and the
+-- auto-open's count, which only stops while the window is off screen (the visibility listener).
+local ladderHiding = false
+
 local function onHide(self)
-    if not self:IsShown() then NS.State.windowOpen = false end
+    if not self:IsShown() then
+        NS.State.windowOpen = false
+        if not ladderHiding then NS.WindowAutoClose.Disarm() end
+    end
     stopTicker()
     -- The dropdowns' popup is a process-wide singleton: hiding the window does not reach it.
     NS.CloseMenu()
@@ -818,7 +825,9 @@ function Window.UpdateVisibility(inCombat)
     elseif frame and frame:IsShown() then
         -- Hidden by the ladder, not by the player: keep the player's choice for the next show.
         local open = NS.State.windowOpen
+        ladderHiding = true
         frame:Hide()
+        ladderHiding = false
         stopTicker()
         NS.State.windowOpen = open
     end
@@ -946,7 +955,9 @@ local function maybeAutoOpen(rec, what)
     Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
-    NS.WindowAutoClose.Arm()   -- auto-close (rolls UX design §3.6): only an auto-open's show counts down
+    -- Auto-close (rolls UX design §3.6): only an auto-open's show counts down, and never test mode's
+    -- (AC.Arm refuses while test mode is on, RX-29: turning test mode off closes it instead).
+    NS.WindowAutoClose.Arm()
 end
 
 local function onDropAdded(id)

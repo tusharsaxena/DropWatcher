@@ -57,13 +57,19 @@ auto-open made: the auto-open arms it after its `Window.Open`, and every `Window
 entering or leaving the frame or any frame under it start it over (so it closes a full count after
 the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a
 roll (`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
-does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none, RX-20) and the pointer elsewhere, it calls `Window.Close`; otherwise it
+does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none, RX-20,
+nor a roll everyone passed or whose time ran out, lingering `P.LINGER` seconds, RX-29) and the pointer elsewhere, it calls `Window.Close`; otherwise it
 starts over. A window the visibility ladder hides (General visibility in or out of combat) keeps the
-player's open and is not closed: the count waits, and starts over when the window shows (a
-visibility listener), so the auto-open is not lost to a long fight (RX-12). A
+player's open and is not closed: the count stops while it is off screen (the ladder's hide, or a
+parent's, Alt-Z), and starts over when the window shows (a visibility listener), so the auto-open is
+not lost to a long fight (RX-12, RX-29). Escape or the close mark, a hide of the frame itself, disarms
+it at once (Window's onHide, RX-29). A test drop's auto-open (test mode on) arms nothing: test mode's
+window stays until test mode goes off (RX-29); test mode turned on over a live auto-open lets the count
+go when it runs out, and the window stays open after. A
 drag, or a press on the frame or any frame under it (a tab, a title bar button, a row: one-way
 `OnMouseDown` hooks, laid at the arm and after each repaint while armed, and only on a frame that
-already takes the mouse, so a mouse-transparent cell, border or glow stays transparent, RX-12), disarms it for that show,
+already takes the mouse, so a mouse-transparent cell, border or glow stays transparent, RX-12; the
+walk keeps each frame's children and reads them again only when its child count moved, RX-29), disarms it for that show,
 but a press on the read-only Rolls panel docked beside it (its child: its close button, a raid header,
 a fold line) does not: under it the walk hooks only the pointer, `AC.PointerOnly` (RX-20); with `window.autoClose.enabled` or `autoOpen` off
 it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
@@ -89,7 +95,8 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
 PendingChanged(id, cause) ─> shown: the same repaint; `open` or `popup` of a roll item holding your
                              roll popup (its rollID, RX-20; NS.Pending.Get(id): not
                              kind `ml`, which has no roll popup, nor `restored`, which Pending.Rebuild
-                             opened after a reload or stand-up) of the feed shown, with `rolls.show`
+                             opened at a login, a reload or the stand-up, never a zone change, RX-29)
+                             of the feed shown, with `rolls.show`
                              on (off, Rolling now lists nothing and the roll opens nothing): the drop's
                              auto-open above, on Drops, arming auto-close, which then waits while the
                              roll runs (RX-16); a minimized window counts nothing until it is a drop
@@ -787,8 +794,10 @@ START_LOOT_ROLL(rollID) ─> your popup claims the oldest unclaimed item of the 
      claimed as its item enters, before its `open`
 GearChanged, the score retry ─> me judged again ─> PendingChanged(id, "verdict")
 LOOT_HISTORY_CLEAR_HISTORY ─> open items detached from their keys; PLAYER_ENTERING_WORLD and the
-  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item it
-  opens is `restored`, so it opens no window, RX-16)
+  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item a
+  login, a reload (PLAYER_ENTERING_WORLD's isInitialLogin or isReloadingUi) or the stand-up opens is
+  `restored`, so it opens no window, RX-16; one a zone change's loading screen hid is new and can,
+  RX-29; a walk that raises still clears the rebuild flag and its error goes on to the dispatcher)
 
 LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (Compat.LootMethod)
   ─> Compat.LootSlots ─> each slot at or above the threshold with a link and a source GUID

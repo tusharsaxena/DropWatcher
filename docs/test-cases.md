@@ -539,7 +539,7 @@ Total.
 - compact: a window the player opened is never switched by a drop
 - compact: the diagnostics report names the layout, the override and each layout's geometry
 
-### test_window_autoclose.lua (30)
+### test_window_autoclose.lua (37)
 
 - autoclose: on by default with 10 seconds, on this client
 - autoclose: the seconds row is a 5 to 120 slider, and refuses a value outside it
@@ -571,6 +571,13 @@ Total.
 - roll open: a press on the Rolls panel, or its close button, keeps the count, and the window closes by itself
 - roll open: a test-mode sample roll opens nothing while test mode is off
 - roll open: the Auto-open the window tooltip names a roll popup too
+- rx29: a rebuild that raises surfaces the error and leaves later live rolls unrestored
+- rx29: a roll first seen at a zone change opens the window; one rebuilt at a reload does not
+- rx29: Escape cancels the count at once; a parent hide pauses it until the window shows
+- rx29: the visibility ladder's hide keeps the auto-open armed
+- rx29: the armed repaint walk reads a frame's children again only when they changed
+- rx29: an everyone-passed or expired roll lingering in Rolling now does not hold the window
+- rx29: a window a test drop auto-opened never closes by itself while test mode is on
 
 ### test_compact_cards.lua (27)
 
@@ -3000,7 +3007,7 @@ Total.
 | test_window.lua | 20 |
 | test_window_shell.lua | 72 |
 | test_window_compact.lua | 25 |
-| test_window_autoclose.lua | 30 |
+| test_window_autoclose.lua | 37 |
 | test_compact_cards.lua | 27 |
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
@@ -3106,4 +3113,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2580** |
+| **Total** | **2587** |
