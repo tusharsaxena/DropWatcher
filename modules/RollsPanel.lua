@@ -371,9 +371,10 @@ local function headerLeave()
     onLeave()
 end
 
--- An item header (ruling A2), the window's section header's look (WindowGroup.NewHeader): the list
--- box band, the gold chevron, then the item's icon, its name and the time left; the count line under
--- the band while collapsed, the countdown bar under it while open. A click toggles the block.
+-- An item header (ruling A2), the window's section header's look (WindowGroup.NewHeader): the
+-- `list.header.bg` band, the gold chevron, then the item's icon, its name and the time left; the
+-- count line under the band while collapsed, the countdown bar under it while open. A click
+-- toggles the block.
 local function newHeader(p)
     local h = CreateFrame("Button", nil, p)
     h:SetHeight(RP.HEADER_H)
@@ -381,11 +382,12 @@ local function newHeader(p)
     h.fill:SetPoint("TOPLEFT", h, "TOPLEFT", 0, 0)
     h.fill:SetPoint("TOPRIGHT", h, "TOPRIGHT", 0, 0)
     h.fill:SetHeight(RP.HEADER_H)
-    NS.SkinPaint(h.fill, function(t) t:SetColorTexture(NS.SkinColor("list.box")) end)
+    -- The section header's band and chevron (SR-DW, smoke round 1's ruling 5): WindowGroup.NewHeader's.
+    NS.SkinPaint(h.fill, function(t) t:SetColorTexture(NS.SkinColor(NS.WindowGroup.HEADER_BG)) end)
     h.chevron = h:CreateTexture(nil, "ARTWORK")
     h.chevron:SetSize(10, 10)
     h.chevron:SetPoint("LEFT", h, "TOPLEFT", K.CHEVRON_X, -RP.HEADER_H / 2)
-    NS.SkinPaint(h.chevron, function(t) t:SetVertexColor(NS.SkinColor("text.heading")) end)
+    NS.SkinPaint(h.chevron, function(t) t:SetVertexColor(NS.SkinColor(NS.WindowGroup.HEADER_TEXT)) end)
     h.icon = h:CreateTexture(nil, "ARTWORK")
     h.icon:SetSize(RP.ICON, RP.ICON)
     h.icon:SetPoint("LEFT", h.chevron, "RIGHT", 4, 0)
@@ -464,7 +466,7 @@ local function buildFoldButton(p)
         setAll(anyExpanded())
         NS.Window.RefreshTooltip(p.foldButton)   -- the tooltip under the pointer names the next click (RX-28)
     end)
-    NS.Window.AttachTooltip(p.foldButton, foldTip)
+    NS.Window.AttachTooltip(p.foldButton, foldTip, "title")
     p.foldButton:HookScript("OnLeave", function() onLeave() end)
 end
 
@@ -498,7 +500,7 @@ local function buildTitle(p)
         NS.Window.AttachTooltip(p.closeButton, function()
             return L["Close the Rolls panel"], NS.TipMarks.Row(L["Until"], L["the next roll starts"]),
                 NS.TipMarks.Row(L["Turn off"], L["Show the Rolls panel beside the window on Drops > Rolls > Panel"])
-        end)
+        end, "title")
         table.insert(right, 1, p.closeButton)
         p.foldButton:SetPoint("RIGHT", p.closeButton, "LEFT", -4, 0)
     else

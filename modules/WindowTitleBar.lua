@@ -178,6 +178,23 @@ local function setMark(b, icon, glyph)
     b.mark = icon
 end
 
+--- A title-bar mark's rest and hover tokens (SR-DW, smoke round 1's ruling 4, LibKa0s SR-L3): every
+--- title-bar control rests in the skin's `icon.tint` and lights `text.link` under the pointer, as
+--- the library's own header marks do. The lock's state is its alpha and desaturation (PaintLock).
+TB.MARK_REST, TB.MARK_HOT = "icon.tint", "text.link"
+
+-- The mark's art and its glyph fallback in the rest or the hover token, read on every paint.
+local function paintMark(b)
+    local token = b.dwHot and TB.MARK_HOT or TB.MARK_REST
+    b.art:SetVertexColor(NS.SkinColor(token))
+    b.glyph:SetTextColor(NS.SkinColor(token))
+end
+
+local function markHot(b, on)
+    b.dwHot = on
+    paintMark(b)
+end
+
 local function iconButton(parent, icon, glyph, onClick)
     local b = CreateFrame("Button", nil, parent)
     b:SetSize(K.ICON, K.ICON)
@@ -186,17 +203,19 @@ local function iconButton(parent, icon, glyph, onClick)
     b.art:SetPoint("BOTTOMRIGHT", b, "BOTTOMRIGHT", -3, 3)
     b.glyph = b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
     b.glyph:SetPoint("CENTER", b, "CENTER", 0, 0)
-    -- The mark's art in the skin's bright icon tint (Ka0s Default white: the art untinted), the
-    -- glyph fallback in its highlight text.
-    NS.SkinPaint(b.art, function(t) t:SetVertexColor(NS.SkinColor("icon.hot")) end)
-    NS.Skin.Text(b.glyph, "text.highlight")
+    NS.Skin.Font(b.glyph)
+    -- The mark (or its glyph) in TB.MARK_REST, TB.MARK_HOT under the pointer, repainted on a switch.
+    NS.SkinPaint(b, paintMark)
+    b:HookScript("OnEnter", function(self) markHot(self, true) end)
+    b:HookScript("OnLeave", function(self) markHot(self, false) end)
     setMark(b, icon, glyph)
     b:SetScript("OnClick", onClick)
     return b
 end
 
---- A title-bar icon button: the catalog's `icon` mark in the skin's bright icon tint, or `glyph`
---- when the mark does not resolve; K.ICON square, unanchored. The Rolls panel's one Expand all /
+--- A title-bar icon button: the catalog's `icon` mark in TB.MARK_REST (TB.MARK_HOT under the
+--- pointer), or `glyph` when the mark does not resolve; K.ICON square, unanchored. Its tooltip goes
+--- through NS.Window.AttachTooltip with the `title` placement. The Rolls panel's one Expand all /
 --- Collapse all toggle is built with it (modules/RollsPanel.lua, RX-21, RX-25).
 --- @param parent table
 --- @param icon string a declared LibKa0s icon
@@ -333,7 +352,7 @@ local function buildBadge(bar)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b.art, "RIGHT", 4, 0)
     NS.Skin.Text(b.text, "dw.restricted")
-    NS.Window.AttachTooltip(b, badgeTooltip)
+    NS.Window.AttachTooltip(b, badgeTooltip, "title")
     b:Hide()
     return b
 end
@@ -360,7 +379,7 @@ local function buildModeText(bar, title, word, token, tip)
     local w = m.text.GetStringWidth and m.text:GetStringWidth()
     if type(w) ~= "number" or w <= 0 then w = #word * 11 end   -- before the font has loaded
     m:SetSize(w, K.CONTROL_H)
-    NS.Window.AttachTooltip(m, tip)
+    NS.Window.AttachTooltip(m, tip, "title")
     m:Hide()
     return m
 end
@@ -372,7 +391,7 @@ local function buildNewChip(f, bar)
     f.newChip.text = f.newChip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.newChip.text:SetPoint("LEFT", f.newChip, "LEFT", 0, 0)
     NS.Skin.Text(f.newChip.text, "text.highlight")
-    NS.Window.AttachTooltip(f.newChip, newTip)
+    NS.Window.AttachTooltip(f.newChip, newTip, "title")
     f.newChip:Hide()
 end
 
@@ -388,7 +407,7 @@ TB.UNLOCKED_ALPHA = 0.4
 local function buildLock(f, bar)
     f.lockButton = iconButton(bar, "lock", "L", function() NS.ToggleLock() end)
     f.lockButton:SetPoint("RIGHT", f.modeButton, "LEFT", -4, 0)
-    NS.Window.AttachTooltip(f.lockButton, lockTip)
+    NS.Window.AttachTooltip(f.lockButton, lockTip, "title")
 end
 
 -- The right-hand cluster, right to left: close, minimize, the layout toggle, the lock (RX-14).
@@ -403,11 +422,11 @@ local function buildControls(f, bar)
     -- The catalog's minimize mark; the key is the library's spelling (tests/prose_waivers.lua).
     f.minimizeButton = iconButton(bar, "minimise", "-", function() W.ToggleMinimized() end)
     f.minimizeButton:SetPoint("RIGHT", right, rightPoint, -4, 0)
-    W.AttachTooltip(f.minimizeButton, minimizeTip)
+    W.AttachTooltip(f.minimizeButton, minimizeTip, "title")
     -- The layout toggle (compact spec §1); its mark follows the layout in force (PaintMinimized).
     f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
     f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
-    W.AttachTooltip(f.modeButton, modeTip)
+    W.AttachTooltip(f.modeButton, modeTip, "title")
     buildLock(f, bar)
     f.badge = buildBadge(bar)
     f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)

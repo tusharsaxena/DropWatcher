@@ -262,6 +262,8 @@ Kit.run{
         "test_skin_flip",
         "test_skin_host",
         "test_header_band",
+        "test_title_bar_controls",
+        "test_section_header_bands",
         "test_skin_picker",
         "test_skin_verb",
         "test_skin_settings",

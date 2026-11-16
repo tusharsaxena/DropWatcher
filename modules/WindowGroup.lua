@@ -702,23 +702,29 @@ local function newRow(content)
     return row
 end
 
+--- A section header's band and its words (SR-DW, smoke round 1's ruling 5, LibKa0s SR-L4): the
+--- skin's `list.header.bg` across the whole row (Ka0s Default black 0.35, Skill Master's band), told
+--- apart from a plain row, a stripe and a hover in every skin; the chevron and the text in
+--- `list.header.text` (Ka0s Default gold). The Rolls panel's item headers read the same two.
+WG.HEADER_BG, WG.HEADER_TEXT = "list.header.bg", "list.header.text"
+
 local function newHeader(content)
     local h = CreateFrame("Button", nil, content)
     h:SetHeight(K.GROUP_H)
     h.tipRow = true
-    -- The fill is the skin's faint list box (Ka0s Default 1, 1, 1, 0.06); the chevron and the text
-    -- its heading color (gold), the chevron as its text (feedback-5 spec §0).
+    -- The band behind the whole row, then the chevron and the text in the header color, the chevron
+    -- as its text (feedback-5 spec §0).
     h.fill = h:CreateTexture(nil, "BACKGROUND")
     h.fill:SetAllPoints(h)
-    NS.SkinPaint(h.fill, function(t) t:SetColorTexture(NS.SkinColor("list.box")) end)
+    NS.SkinPaint(h.fill, function(t) t:SetColorTexture(NS.SkinColor(WG.HEADER_BG)) end)
     h.chevron = h:CreateTexture(nil, "ARTWORK")
     h.chevron:SetSize(10, 10)
     h.chevron:SetPoint("LEFT", h, "LEFT", K.CHEVRON_X, 0)
-    NS.SkinPaint(h.chevron, function(t) t:SetVertexColor(NS.SkinColor("text.heading")) end)
+    NS.SkinPaint(h.chevron, function(t) t:SetVertexColor(NS.SkinColor(WG.HEADER_TEXT)) end)
     h.text = h:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     h.text:SetPoint("LEFT", h.chevron, "RIGHT", 6, 0)
     h.text:SetJustifyH("LEFT")   -- the compact headers size the text to the line; it reads from the left
-    NS.Skin.Text(h.text, "text.heading")
+    NS.Skin.Text(h.text, WG.HEADER_TEXT)
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
     NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
     return h
