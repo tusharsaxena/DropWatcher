@@ -480,17 +480,28 @@ end
 
 -- The title where the skin aligns it (`title.align`, RX-30). Centered: with the word beside it
 -- centered together in compact, alone in full. LEFT or RIGHT: clear of the controls at that edge.
+-- The skin's title alignment: LEFT or RIGHT as it says, else CENTER.
+local function titleAlign()
+    local align = NS.Skin.Token and NS.Skin.Token("title.align")
+    if align == "LEFT" or align == "RIGHT" then return align end
+    return "CENTER"
+end
+
+-- The title's x for `align`: centered, shifted by half the word beside it in compact; LEFT or RIGHT,
+-- in by what that edge keeps clear of.
+local function titleX(f, compact, word, align)
+    if align == "CENTER" then
+        if compact and word then return -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
+        return 0
+    end
+    local place = reserve(f, compact, word, align)
+    return align == "LEFT" and place.left or -place.right
+end
+
 local function placeTitle(f, compact)
     local word = (f.testText:IsShown() and f.testText) or (f.simText:IsShown() and f.simText) or nil
-    local align = NS.Skin.Token and NS.Skin.Token("title.align")
-    if align ~= "LEFT" and align ~= "RIGHT" then align = "CENTER" end
-    local x = 0
-    if align == "CENTER" then
-        if compact and word then x = -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
-    else
-        local place = reserve(f, compact, word, align)
-        x = align == "LEFT" and place.left or -place.right
-    end
+    local align = titleAlign()
+    local x = titleX(f, compact, word, align)
     if f.titleX == x and f.titleAlign == align then return end
     f.titleX, f.titleAlign = x, align
     f.title:ClearAllPoints()
