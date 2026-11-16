@@ -22,9 +22,11 @@ local _, NS = ...
 -- passed, expired, or closed by the store) is `done` and stays, its winner washed and its result
 -- line read, while any other roll runs. Once every block is done the panel counts
 -- `rolls.panel.linger` seconds (0: at once) and then closes, every block with it; a new roll in
--- that time cancels the count. While the pointer is over the panel nothing closes, and the count
--- starts over when it leaves. When the blocks leave, WindowAutoClose's count starts over (AC.Bump):
--- it treats a panel with blocks as not idle (HasBlocks), so the window waits for it. The blocks are
+-- that time cancels the count. While the pointer is over the visible panel nothing closes, and the
+-- count starts over when it leaves, or when the panel hides under it (the window closed or
+-- minimized, Alt-Z: no leave comes then, RX-28). When the blocks leave, WindowAutoClose's count
+-- starts over (AC.Bump): it treats a panel with blocks as not idle (HoldsWindow), so the window
+-- waits for it, unless the close button put the panel away (RX-28). The blocks are
 -- tracked while the window is closed or minimized, and the panel shows with the window again while
 -- it holds any. It never opens the window itself (RX-16 does that).
 --
@@ -40,12 +42,14 @@ local _, NS = ...
 -- Flush with the window (RP.GAP 0) and top-aligned: its TOPLEFT on the window's TOPRIGHT (`right`),
 -- or its TOPRIGHT on the window's TOPLEFT (`left`): `rolls.panel.side`, flipped when the screen has
 -- no room there (RollsPanelRows.Side, in pixels: the window's edges and the panel's width at the
--- window's effective scale, the screen at UIParent's). The Offer panel docked on that side (the one
+-- window's effective scale, the screen at UIParent's). The window names it in `tipDocks` (RX-28), so
+-- the window's row tooltips go beside the whole group (modules/RowTooltip.lua), never over it. The Offer panel docked on that side (the one
 -- the player opened to act) sends it to the other side when that fits, else it waits hidden until
 -- the Offer panel closes or moves (RollsPanelRows.Beside, RX-20; the Offer panel repaints it).
 -- Re-checked on every paint: the window's show, move, resize, layout and minimize
 -- (Window.AddVisibilityListener, Window.AddGeometryListener). RP.WIDTH wide (RP.WIDTH_COMPACT in the
--- compact layout, ruling A3); as tall as its blocks, never taller than the window: beyond that its
+-- compact layout, ruling A3), in the window's layout unit: scaled with `window.fontSize` (RP.Width,
+-- RX-28); as tall as its blocks, never taller than the window: beyond that its
 -- body scrolls (a scroll frame under the title band, its bar shown only then).
 --
 -- THE MODE STRIP (ruling A1, preview-mode: a frame with a title band is a window, and every display
@@ -53,22 +57,24 @@ local _, NS = ...
 -- directly under the title band, full width, saying the panel's own words; during a simulation its
 -- sim flavor does. The library docks it (`dock = "title"`, Widgets minor 27) under `p.titleBar`, a
 -- bare frame NS.Skin.Header lays on the band's rect in every skin; the body moves down by the strip's
--- `BodyOffset` while one shows; the band carries no mode word.
+-- `BodyOffset` while one shows; the band carries no mode word. Its words wrap to a second line when
+-- they do not fit the panel's width, as the compact window's (RX-28, NS.CompactChrome.StripHeight).
 --
 -- RAID MODE (design §3.3, plan RX-18): a group of more than five (RollsPanelRows.IsRaid on
 -- NS.Compat.GroupSize, read on every paint), or a watched roll of more than five players (a roll
 -- lists the group's players, so that many is a raid's too; RX-19: the simulated raid roll's raiders
 -- are no group's members, and test mode's sample roll is nine players with no group at all). With
 -- `rolls.panel.foldInRaid` on, Pass and Waiting are one line each, hovering lists every name, and a
--- click lists that group's players for that block (the block's `unfolded`). Round 2 removed its
--- one-open rule: every block starts open in any group size.
+-- click lists that group's players for that block (the block's `unfolded`), and a click on one of
+-- those rows folds it again (RX-28). Round 2 removed its one-open rule: every block starts open in any
+-- group size. GROUP_ROSTER_UPDATE repaints a shown panel at once (RX-28).
 --
 -- THE LAYOUT (round 2). Each block is an item header in the window's section-header look (the list
 -- box band, the gold chevron, as Rolling now's): the item's icon, its name in its quality color,
 -- cut by the font string, the time left or `done`; a click collapses or expands it (ruling A2: a
 -- manual state that sticks while the roll is listed), and its tooltip is the item's own with every
--- roll under it. The countdown bar under an open roll's header (the time left over the longest time
--- left the block has read), a row per player (RollsPanelRows.Rows: the choice's mark, the name in
+-- roll under it. The countdown bar under an open roll's header (the time left over the roll's own
+-- duration, RollCells.Duration, RX-28; the longest time left read when it names none), a row per player (RollsPanelRows.Rows: the choice's mark, the name in
 -- class color, `[YOU]`, the roll on every row that rolled), alternately shaded (`list.stripe`,
 -- ruling A5), the winner's row washed in the skin's accent, each with its player's tooltip; the
 -- result line once it is over. No verdict line (ruling A4). A collapsed block is its header with the
@@ -95,6 +101,7 @@ RP.BAR_H = 3          -- the countdown bar
 RP.LINE_H = 16        -- a player's row, the result line, a collapsed header's count line
 RP.BLOCK_GAP = 6      -- between two blocks
 RP.TICK = 1           -- the time left's repaint
+RP.STRIP_ROOM = 32    -- the strip's width its words do not get: the title band's edges, its mark, insets
 RP.LINGER_MAX = 60
 
 local panel           -- built on its first show
@@ -121,9 +128,20 @@ end
 
 local function num(v) return type(v) == "number" and v or nil end
 
+--- The panel's width (pure, RX-28): RP.WIDTH, or RP.WIDTH_COMPACT in the compact layout, in the
+--- window's layout unit, scaled with its text as line 2's caps are (`window.fontSize` over the small
+--- template's own size; Default, nil, is 1).
+--- @param compact boolean
+--- @param fontSize number|nil NS.WindowRows.FontSize's answer
+--- @return number
+function RP.Width(compact, fontSize)
+    local base = compact and RP.WIDTH_COMPACT or RP.WIDTH
+    return base * (fontSize or K.COUNTDOWN_FONT) / K.COUNTDOWN_FONT
+end
+
 local function width()
     local WC = NS.WindowCompact
-    return (WC and WC.Mode() == "compact") and RP.WIDTH_COMPACT or RP.WIDTH
+    return RP.Width(WC ~= nil and WC.Mode() == "compact", NS.WindowRows.FontSize(NS.Setting("window.fontSize")))
 end
 
 -- A plain geometry read, a number or nil (an unplaced frame, a secret, the mock's catch-all).
@@ -146,7 +164,8 @@ local function watched()
     return out
 end
 
-local function hovered() return panel ~= nil and panel:IsShown() and panel:IsMouseOver() == true end
+-- IsVisible, not IsShown: a panel the UI hides (Alt-Z) is shown but under nothing (RX-28).
+local function hovered() return panel ~= nil and panel:IsVisible() and panel:IsMouseOver() == true end
 
 local function dropLinger()
     if linger then linger:Cancel() end
@@ -302,7 +321,7 @@ local function accentPaint(alpha)
     end
 end
 
-local onLeave, onHeaderClick, onFoldClick, setAll
+local onLeave, onHeaderClick, onFoldClick, setAll, onHide
 
 local function scaleOf(f) return geom(f, "GetEffectiveScale") or 1 end
 
@@ -388,15 +407,20 @@ local function newHeader(p)
     return h
 end
 
--- A line's tooltip: a folded group's every name, or a player's row (RollsPanelRows.RowTip).
+-- A line's tooltip: a folded group's every name, or a player's row (RollsPanelRows.RowTip), with the
+-- click's hint on a row of a group the player unfolded (RX-28).
 local function lineTip(f)
     if f.foldTip then return unpack(f.foldTip) end
-    if f.src then return unpack(NS.RollsPanelRows.RowTip(f.src)) end
+    if not f.src then return end
+    local tip = NS.RollsPanelRows.RowTip(f.src)
+    if f.refold then tip[#tip + 1] = NS.TipMarks.Hint(L["Click to fold them into one line again"]) end
+    return unpack(tip)
 end
 
 -- One line: a player's row, a folded group or the result line. `text` holds the mark and the name,
 -- `roll` the number at the right, `stripe` the alternate shade, `wash` the winner's gold. A row and a
--- folded group take the pointer for their tooltip; a click on a folded group unfolds it.
+-- folded group take the pointer for their tooltip; a click on a folded group unfolds it, and one on a
+-- row of a group the player unfolded folds it again (RX-28).
 local function newLine(p)
     local f = CreateFrame("Frame", nil, p)
     f:SetHeight(RP.LINE_H)
@@ -436,7 +460,10 @@ end
 -- Expand all and Collapse all, one toggle (RX-25 ruling: they are mutually exclusive): Collapse
 -- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down.
 local function buildFoldButton(p)
-    p.foldButton = NS.WindowTitleBar.IconButton(p, "chevron-up", "^", function() setAll(anyExpanded()) end)
+    p.foldButton = NS.WindowTitleBar.IconButton(p, "chevron-up", "^", function()
+        setAll(anyExpanded())
+        NS.Window.RefreshTooltip(p.foldButton)   -- the tooltip under the pointer names the next click (RX-28)
+    end)
     NS.Window.AttachTooltip(p.foldButton, foldTip)
     p.foldButton:HookScript("OnLeave", function() onLeave() end)
 end
@@ -483,13 +510,15 @@ end
 
 -- The mode strips (ruling A1): test mode's and the simulation's, born hidden, docked directly under
 -- the title band and full width (the library places them), each with the title bar's tooltip for its
--- mode. Nil with no library.
+-- mode. Their words may wrap to a second line, as the compact window's (RX-28; paintStrips sizes
+-- them). Nil with no library.
 local function buildStrips(p)
     local TB = NS.WindowTitleBar
     local dock = { titleBar = p.titleBar, window = p }
     local function strip(text, kind, tip)
         local s = NS.MakeTestStrip(p, text, kind, dock)
         if not s then return nil end
+        s.text:SetWordWrap(true)
         NS.Window.AttachTooltip(s, tip)
         s:HookScript("OnLeave", function() onLeave() end)
         return s
@@ -539,6 +568,10 @@ local function build()
     NS.Skin.Text(p.empty, "text.highlight")
     p.empty:SetText(L["No rolls right now"])
     p:SetScript("OnLeave", function() onLeave() end)
+    p:SetScript("OnHide", function() onHide() end)
+    -- The window's row tooltips go beside it too, never over it (RX-28, modules/RowTooltip.lua).
+    win.tipDocks = win.tipDocks or {}
+    win.tipDocks.rolls = p
     -- A child of the window, read-only: a press on it is no use of the window, so the auto-close
     -- walk hooks only the pointer under it (RX-20).
     NS.WindowAutoClose.PointerOnly(p)
@@ -585,7 +618,7 @@ local function place(f, p, y)
     f:SetPoint("TOPRIGHT", p.content, "TOPRIGHT", 0, -y)
 end
 
--- One line from row `r` ({ text, tone, roll, winner, fold, tip, src, group }) of block `id`, shaded
+-- One line from row `r` ({ text, tone, roll, winner, fold, tip, src, group, refold }) of block `id`, shaded
 -- when `stripe`.
 local function line(p, y, r, id, stripe)
     local f = NS.Pool.Acquire(p.linePool, function() return newLine(p.content) end)
@@ -597,7 +630,7 @@ local function line(p, y, r, id, stripe)
     f.wash:SetShown(r.winner == true)
     f.stripe:SetShown(stripe == true)
     f.winner = r.winner == true
-    f.fold, f.foldTip, f.src, f.group, f.blockId = r.fold, r.tip, r.src, r.group, id
+    f.fold, f.foldTip, f.src, f.group, f.blockId, f.refold = r.fold, r.tip, r.src, r.group, id, r.refold
     f:EnableMouse(r.fold ~= nil or r.src ~= nil)
     return y + RP.LINE_H
 end
@@ -626,7 +659,8 @@ local function paintHeader(p, y, b, m)
     place(h, p, y)
     paintTitleRow(h, m)
     paintCounts(h, m)
-    if m.left then b.total = math.max(b.total or 0, m.left) end
+    -- the bar's whole is the roll's own duration; with none named, the longest time left read
+    if m.left then b.total = m.total or math.max(b.total or 0, m.left) end
     h.frac = (m.open and not m.done) and NS.RollsPanelRows.Fraction(m.left, b.total) or nil
     h.bar:SetShown(h.frac ~= nil)
     h.blockId, h.open, h.done, h.dim = b.id, m.open, m.done, m.dim == true
@@ -685,9 +719,17 @@ local function viewOf()
         test = test, sim = not test and NS.Sim:IsActive() == true }
 end
 
--- The mode strip in force (ruling A1), and the top of the body under it.
+-- The mode strip in force (ruling A1), one line or two as its words fit the panel's width (RX-28,
+-- NS.CompactChrome.StripHeight, the compact window's rule), and the top of the body under it.
 local function paintStrips(p, view)
     local strip = view.test and p.testStrip or view.sim and p.simStrip or nil
+    if strip then
+        local h = NS.CompactChrome.StripHeight(strip, view.w - RP.STRIP_ROOM)
+        if strip.slotH ~= h then
+            strip.slotH = h
+            strip:SetHeight(h)
+        end
+    end
     if p.testStrip then p.testStrip:SetShown(strip == p.testStrip) end
     if p.simStrip then p.simStrip:SetShown(strip == p.simStrip) end
     return RP.TOP + (strip and strip:BodyOffset() or 0)
@@ -792,14 +834,25 @@ setAll = function(collapsed)
     paint()
 end
 
--- A folded group's line was clicked: that block lists the group's players.
+-- A folded group's line was clicked: that block lists the group's players; a row of a group the
+-- player unfolded was clicked: the group folds to its line again (RX-28).
 onFoldClick = function(f)
-    local b = f.fold and byId[f.blockId]
+    local key = f.fold or f.refold
+    local b = key and byId[f.blockId]
     if not b then return end
     b.unfolded = b.unfolded or {}
-    b.unfolded[f.fold] = true
+    b.unfolded[key] = f.fold ~= nil or nil
     b.rows = nil
     paint()
+end
+
+-- The panel hid (the window closed or minimized, the UI hidden, the close button): a hold under the
+-- pointer is released, since no leave comes while it is hidden, and the count starts over (RX-28).
+onHide = function()
+    if held then
+        held = false
+        armLinger()
+    end
 end
 
 -- ── the surface ─────────────────────────────────────────────────────────────────────────────
@@ -811,10 +864,15 @@ function RP.Refresh()
     paint()
 end
 
---- Whether the panel holds a block (a roll running, or finished and lingering): WindowAutoClose's
---- idle check (modules/WindowAutoClose.lua) waits while it does.
+--- Whether the panel holds a block (a roll running, or finished and lingering).
 --- @return boolean
 function RP.HasBlocks() return #blocks > 0 end
+
+--- Whether the panel holds the window open: it holds a block and its close button has not put it
+--- away (RX-28: a dismissed panel shows nothing to wait for). WindowAutoClose's idle check
+--- (modules/WindowAutoClose.lua) waits while it does.
+--- @return boolean
+function RP.HoldsWindow() return #blocks > 0 and not dismissed end
 
 --- @return boolean
 function RP.IsShown() return panel ~= nil and panel:IsShown() == true end
@@ -840,7 +898,7 @@ function RP.Toggle()
         return false
     end
     if not NS.WindowPending.Shown() then   -- `rolls.show` off: Rolling now, its list, is empty
-        NS.Print(L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window and popup."])
+        NS.Print(L["The Rolls panel lists Rolling now's rolls: turn on Show rolls on Drops > Rolls > Window, history and popup."])
         return false
     end
     if not NS.Window.IsShown() or NS.Window.IsMinimized() then
@@ -876,6 +934,13 @@ listen()
 NS.Sim:OnStop(function()
     if not stoodDown() then RP.Refresh() end
 end)
+
+-- GROUP_ROSTER_UPDATE (core/DropWatcher.lua's dispatcher): a group growing into a raid, or shrinking
+-- out of one, folds or unfolds the panel at once (RX-28), not on the next roll's change.
+NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "GROUP_ROSTER_UPDATE", "OnRollsPanelRosterEvent" }
+function NS.addon.OnRollsPanelRosterEvent()
+    if not stoodDown() and RP.IsShown() then paint() end
+end
 
 -- A skin switch recolors `[YOU]` and the marks the kept rows carry.
 if NS.Skin.OnLooksChanged then NS.Skin.OnLooksChanged(function() looks = looks + 1 end) end

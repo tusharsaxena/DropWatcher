@@ -291,6 +291,25 @@ end
 -- The px a LEFT or RIGHT title stays clear of the bar's controls.
 TB.TITLE_RESERVE = 8
 
+-- What a LEFT or RIGHT title keeps clear of at each edge (RX-30), the table S.TitleBar's `place` is
+-- given: the library re-reads it on every skin repaint, so NS.CompactChrome keeps it current (the
+-- right-hand cluster, the badge beside it or, in compact, at the bar's left) and both agree.
+TB.PLACE = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE }
+
+local function widthOf(b)
+    local w = b and b.GetWidth and b:GetWidth()
+    return type(w) == "number" and w > 0 and w or K.ICON
+end
+
+--- The right-hand cluster's width from the bar's right edge (RX-30): close (when the library drew
+--- one), minimize, the layout toggle and the lock, as buildControls lays them.
+--- @param f table the window frame
+--- @return number
+function TB.ClusterWidth(f)
+    local w = f.closeButton and (6 + widthOf(f.closeButton)) or 0
+    return w + 4 + widthOf(f.minimizeButton) + 4 + widthOf(f.modeButton) + 4 + widthOf(f.lockButton)
+end
+
 -- A double-click on the bar expands a minimized window (board 06 A).
 local function onTitleClick(_, button)
     if button ~= "LeftButton" then return end
@@ -417,7 +436,7 @@ function TB.Build(f, host)
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
     f.title:SetText(NS.BRAND)
     -- The bar's left is empty again (RX-14: the lock button joined the right-hand cluster).
-    NS.Skin.TitleBar(bar, { text = f.title, place = { left = TB.TITLE_RESERVE, right = TB.TITLE_RESERVE } })
+    NS.Skin.TitleBar(bar, { text = f.title, place = TB.PLACE })
 
     f.testText = buildModeText(bar, f.title, L["TEST MODE"], TB.TEST_TOKEN, TB.TestTip)
     f.simText = buildModeText(bar, f.title, L["SIM"], TB.SIM_TOKEN, TB.SimTip)

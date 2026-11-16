@@ -128,7 +128,7 @@ test("rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the s
         S.Set("rolls.panel.enabled", true)
         assertFalse(row.disabledIf(), path)
     end
-    assertEqual(S.FindRow("rolls.show").subgroup, "Window and popup", "the tab's first subject has its heading")
+    assertEqual(S.FindRow("rolls.show").subgroup, "Window, history and popup", "the tab's first subject has its heading")
 end)
 
 -- red under: the panel's rows not naming Show rolls, whose Rolling now is the panel's list
@@ -519,7 +519,7 @@ test("rolls panel: in test mode a test strip sits directly under its title bar, 
     assertEqual(pt[3], "BOTTOMLEFT"); assertEqual(pt[5], 0, "directly under it")
     local sp = p.scroll.__points[1]
     assertEqual(sp[5], -(NS.RollsPanel.TOP + strip:BodyOffset()), "the body moves down by the strip")
-    assertEqual(strip:BodyOffset(), NS.TestStripHeight())
+    assertEqual(strip:BodyOffset(), strip:GetHeight(), "the strip's own height, one line or two")
     assertTrue(T.tipPlainJoined(NS.Window.TooltipOf(strip)):find("Test mode", 1, true) ~= nil, "the strip has a tooltip")
     assertFalse(p.simStrip:IsShown())
     quietTest(NS, m, false)
@@ -666,7 +666,7 @@ test("rolls panel: /dw rolls with Show rolls off says why and shows nothing", fu
     NS.addon:OnSlashCommand("rolls")
     assertFalse(NS.RollsPanel.IsShown())
     local all = table.concat(m.prints, "\n")
-    assertTrue(all:find("Show rolls on Drops > Rolls > Window and popup", 1, true) ~= nil, all)
+    assertTrue(all:find("Show rolls on Drops > Rolls > Window, history and popup", 1, true) ~= nil, all)
 end)
 
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
@@ -1057,4 +1057,180 @@ test("rolls panel: the compact layout is 250 wide, the full one 290", function()
     NS.SetWindowMode("full")
     NS.RollsPanel.Refresh()
     assertEqual(p:GetWidth(), 290)
+end)
+
+-- ── RX-28: the panel's minors ───────────────────────────────────────────────────────────────
+
+-- red under: the toggle's tooltip read once on enter, so a click under the pointer left it stale
+test("rolls panel: a click on the toggle under the pointer turns its open tooltip to the new state", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local b = NS.RollsPanel.Drawn().panel.foldButton
+    b:__fire("OnEnter")
+    assertEqual(plain(m.GameTooltip.__lines[1].text), "Collapse all")
+    b:__fire("OnClick", "LeftButton")
+    assertEqual(plain(m.GameTooltip.__lines[1].text), "Expand all", "the shown tooltip follows the click")
+    b:__fire("OnClick", "LeftButton")
+    assertEqual(plain(m.GameTooltip.__lines[1].text), "Collapse all")
+    b:__fire("OnLeave")
+end)
+
+-- red under: the hold kept while the panel hid under the pointer (no leave ever comes)
+test("rolls panel: a hold under the pointer is released when the window closes under it", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    win(m, d)
+    local p = NS.RollsPanel.Drawn().panel
+    p.__mouseOver = true
+    m.advance(15)
+    assertTrue(NS.RollsPanel.HasBlocks(), "held while hovered")
+    NS.HideWindow()
+    p:__fire("OnHide")   -- the client hides the child with its window
+    p.__mouseOver = false   -- the pointer moves on while nothing shows: no leave comes
+    NS.ShowWindow()
+    assertTrue(NS.RollsPanel.IsShown(), "back with the window")
+    m.advance(10.1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "the hide released the hold: a full count, then gone")
+end)
+
+-- red under: hovered() reading IsShown, true while Alt-Z hides the whole UI
+test("rolls panel: a panel the UI hides (Alt-Z) holds nothing though the pointer is over it", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    local p = NS.RollsPanel.Drawn().panel
+    p.__mouseOver = true
+    p.IsVisible = function() return false end   -- shown, but UIParent is hidden
+    win(m, d)
+    m.advance(10.1)
+    assertFalse(NS.RollsPanel.HasBlocks(), "not hovered while not visible")
+end)
+
+-- red under: WindowAutoClose waiting on the blocks of a panel the close button put away
+test("rolls panel: a panel closed by its button does not hold the auto-opened window", function()
+    local NS, m = inDungeon()
+    local d = rollOpens(m)
+    popup(m, 11)
+    NS.Window.Frame():__fire("OnShow")
+    assertTrue(NS.WindowAutoClose.Armed(), "armed")
+    NS.SchemaRuntime.Set("rolls.panel.linger", 60)
+    win(m, d)
+    NS.RollsPanel.Close()
+    assertTrue(NS.RollsPanel.HasBlocks(), "the finished roll still tracked")
+    m.advance(10.1)
+    assertFalse(NS.IsWindowShown(), "a dismissed panel holds nothing: the count closed the window")
+end)
+
+-- red under: the bar's full length the longest time left the panel happened to read
+test("rolls panel: the countdown bar is the time left over the roll's own duration", function()
+    local NS, m = shown()
+    m.lootHistoryTime = 130   -- 30 of 60 seconds left at the first read
+    rollOpens(m)
+    local h = NS.RollsPanel.Drawn().headers[1]
+    assertEqual(h.frac, 0.5, "half the roll's 60 seconds left")
+    local RPR = NS.RollsPanelRows
+    assertEqual(NS.RollCells.Duration({ duration = 60 }), 60)
+    assertNil(NS.RollCells.Duration({ duration = 60000 }), "milliseconds: no duration, as RollCells.Left")
+    assertNil(NS.RollCells.Duration({}))
+    assertEqual(RPR.Fraction(30, 60), 0.5)
+end)
+
+-- red under: the folded line's names plain, and yours unmarked
+test("rolls panel: a folded line's names are in class color and yours reads [YOU]", function()
+    local NS, m = shown()
+    groupOf(m, 8)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 2, 1, 1, 2))   -- Pass: P4 and you
+    local pass = foldOf(NS, "pass")
+    local text = pass.text:GetText()
+    assertTrue(text:find(NS.TipMarks.ClassName("P4", "MAGE"), 1, true) ~= nil, "P4 in the mage color: " .. text)
+    assertTrue(text:find(NS.TipMarks.ClassName("Testchar", "PALADIN"), 1, true) ~= nil, "you in yours: " .. text)
+    assertEqual(plain(text), "Pass 2 · P4, Testchar [YOU]")
+end)
+
+-- red under: an unfolded group that no click could fold again
+test("rolls panel: a click on an unfolded group's row folds it back to one line", function()
+    local NS, m = shown()
+    groupOf(m, 8)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 2, 1, 3, 2))
+    foldOf(NS, "pass"):__fire("OnMouseUp", "LeftButton")
+    assertTrue(foldOf(NS, "pass") == nil, "unfolded")
+    local row
+    for _, f in ipairs(NS.RollsPanel.Drawn().lines) do
+        if f.group == "pass" then row = f break end
+    end
+    assertTrue(row ~= nil, "a Pass player's row")
+    local tip = T.tipPlainJoined(NS.Window.TooltipOf(row))
+    assertTrue(tip:find("Click to fold", 1, true) ~= nil, "its tooltip says how: " .. tip)
+    row:__fire("OnMouseUp", "LeftButton")
+    assertTrue(foldOf(NS, "pass") ~= nil, "folded again")
+    assertEqual(#lines(NS), 5)
+end)
+
+-- red under: raid mode read only on the panel's next roll event
+test("rolls panel: a group growing into a raid folds the panel at once (GROUP_ROSTER_UPDATE)", function()
+    local NS, m = shown()
+    groupOf(m, 5)
+    rollWith(m, "2900:1", LINK, bigRoll(LINK, 1, 1, 1, 1))   -- five on the roll, you among them
+    assertFalse(NS.RollsPanel.Drawn().raid)
+    groupOf(m, 8)
+    m.__fire("GROUP_ROSTER_UPDATE")
+    assertTrue(NS.RollsPanel.Drawn().raid, "a raid now")
+    assertTrue(foldOf(NS, "pass") ~= nil, "Pass folded at once")
+end)
+
+-- red under: a fixed width whatever the window's text size
+test("rolls panel: its width scales with the window's text size, as the window's layout unit", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local p = NS.RollsPanel.Drawn().panel
+    NS.SchemaRuntime.Set("window.fontSize", 15)
+    NS.RollsPanel.Refresh()
+    assertEqual(p:GetWidth(), 435, "290 at 15 / 10")
+    NS.SetWindowMode("compact")
+    NS.RollsPanel.Refresh()
+    assertEqual(p:GetWidth(), 375, "250 at 15 / 10")
+    NS.SchemaRuntime.Set("window.fontSize", 0)
+    NS.RollsPanel.Refresh()
+    assertEqual(p:GetWidth(), 250, "Default: the plain width")
+end)
+
+-- red under: the Font size row repainting the window alone, so the shown panel kept its old width
+-- until its next paint (none at all once every roll is done)
+test("rolls panel: a Font size change resizes the shown panel at once", function()
+    local NS, m = shown()
+    local d = rollOpens(m)
+    win(m, d)
+    NS.SchemaRuntime.Set("rolls.panel.linger", 60)
+    local p = NS.RollsPanel.Drawn().panel
+    assertEqual(p:GetWidth(), 290)
+    NS.SchemaRuntime.Set("window.fontSize", 15)
+    assertEqual(p:GetWidth(), 435, "the row's change reaches the panel")
+    NS.SchemaRuntime.Set("window.fontSize", 0)
+    assertEqual(p:GetWidth(), 290, "and back to Default")
+end)
+
+-- red under: the strip's words cut on one line with an ellipsis
+test("rolls panel: the mode strip wraps to two lines when its words do not fit, as the compact window's", function()
+    local NS, m = shown()
+    m.seedGearJournal()
+    local CC = NS.CompactChrome
+    local one = NS.TestStripHeight()
+    m.textCharWidth = 5   -- the panel's 52 characters: 260 wide on one line, past the strip's room
+    quietTest(NS, m, true)
+    local p = NS.RollsPanel.Drawn().panel
+    local strip = p.testStrip
+    assertEqual(strip.text.__wordWrap, true, "the words may wrap")
+    assertEqual(strip:GetHeight(), one + CC.WRAP_H, "two lines")
+    assertEqual(p.scroll.__points[1][5], -(NS.RollsPanel.TOP + one + CC.WRAP_H), "the body under both")
+    m.textCharWidth = 4   -- 208 wide: one line
+    NS.RollsPanel.Refresh()
+    assertEqual(strip:GetHeight(), one, "one line")
+    quietTest(NS, m, false)
+end)
+
+-- red under: the window naming only the Offer panel as its docked companion
+test("rolls panel: the window names the panel among its docked frames, for its row tooltips", function()
+    local NS, m = shown()
+    rollOpens(m)
+    local docks = NS.Window.Frame().tipDocks
+    assertTrue(docks ~= nil and docks.rolls == NS.RollsPanel.Drawn().panel, "the window's row tooltips go beside it")
 end)

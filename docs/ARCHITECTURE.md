@@ -11,8 +11,12 @@ A Retail addon that watches the loot a party or raid receives, judges each drop 
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.103.0 payload (twenty-three majors; media/icons pruned to the declared subset, media/sounds to none), twenty wired with one setup file each and three deliberately unwired: `LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and `LibKa0s-Callout-1.0` and `LibKa0s-WaypointArrow-1.0` (new in the payload at v1.96.0 and v1.99.0), since it draws no callout and no waypoint arrow; each loads and creates nothing until a host calls it (`DEPENDENCIES.md`
-lists the toolchain):
+LibKa0s v1.103.0 payload (twenty-three majors; media/icons pruned to the declared subset,
+media/sounds to none), twenty wired with one setup file each and three deliberately unwired:
+`LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and `LibKa0s-Callout-1.0` and
+`LibKa0s-WaypointArrow-1.0` (new in the payload at v1.96.0 and v1.99.0), since it draws no callout
+and no waypoint arrow; each loads and creates nothing until a host calls it (`DEPENDENCIES.md` lists
+the toolchain):
 
 | Major | Setup file | Gives |
 |---|---|---|
@@ -37,14 +41,17 @@ lists the toolchain):
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
 | Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-four `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
-Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all
-(`NS.MakeDropdown` and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a no-op, and test mode and a simulation draw no strip
-(`NS.MakeTestStrip` answers nil, the body moves nothing and the `TEST MODE` / `SIM` title word
-marks the mode; with the library, a word shows only while the window is minimized, DW-10; the Rolls panel then draws no strip either and its body stays under the band, RX-21). Each setup file holds a
-descriptor and a degradation stub (no library, `NS.MakeFooter` answers nil and the window and the
-Offer panel lay `NS.BareFooter`, a frame of the footer's height with its two lines, no hairline and
-no marks, so the footer's controls are absent), and `tests/test_surface_parity.lua` holds every stub to the live
-surface.
+Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all (`NS.MakeDropdown`
+and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no
+Filters ▾ in compact; the History row menu is the client's `MenuUtil` menu), `NS.CloseMenu` is a
+no-op, and test mode and a simulation draw no strip (`NS.MakeTestStrip` answers nil, the body moves
+nothing and the `TEST MODE` / `SIM` title word marks the mode; with the library, a word shows only
+while the window is minimized, DW-10; the Rolls panel then draws no strip either and its body stays
+under the band, RX-21). Each setup file holds a descriptor and a degradation stub (no library,
+`NS.MakeFooter` answers nil and the window and the Offer panel lay `NS.BareFooter`, a frame of the
+footer's height with its two lines and the same marks, plain buttons at the published size and
+pitch, and no hairline or grip corner, so the footer's controls stay in reach, RX-30), and
+`tests/test_surface_parity.lua` holds every stub to the live surface.
 
 The main window (`modules/Window.lua`) is a non-secure standalone frame with the shared Ka0s edge,
 built on its first show; one ladder decides when it is on screen ([`data-flow.md`](data-flow.md)).
@@ -62,46 +69,51 @@ one-line responsibility and why its position is load-bearing or conventional is 
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
-  world providers, event drivers, restriction model and eight verbs); the login session (`Session.lua`, the session start and This
-  instance kept per character across a reload); the pure engine kernels (the verdict kernel and its
-  off-spec pass, `OffSpec.lua`, which judges a drop your current spec can't use for the other specs
-  of your class), the item kinds and the collection verdict (`Collectibles.lua`, issue #13: a mount,
-  pet, toy, recipe or cosmetic is judged new or collected, feed-only, and read again on the
-  collection events; since RX-04 a lockbox (`lockbox`, its own kind since RX-15), a bag, quiver or
-  ammo pouch (`container`) and an item of no kind rolled on
-  under the catch-all (`other`) read their kind word, Lockbox, Container or Item, feed-only with no
-  gain, on the rows, the cards, Rolling now and the roll popup), the tier-token pass (`TierTokens.lua`: the slot a token makes, read from its
-  Use text, else its name (TT-1), and the best tier slot of a token whose slot it cannot read or an
-  omni Curio, so a token is judged as gear) and the scorers; the item lists' one writer
-  (`ItemLists.lua`: Always watch and Never watch, which the panel and the CLI share); the edges
-  that read the client; the feed that orchestrates them, with its counts, rosters, places and
-  recorders, and beside it the store of drops seen but not yet assigned (`Pending.lua`: open group-loot rolls, and `PendingML.lua`'s master-loot drops awaiting the master looter, drawn by the Drops tab's Rolling now section, `WindowPending.lua`, over the pure `RollCells.lua`, with your verdict marked on Blizzard's own roll popup, `RollPopup.lua`); the recorded and opt-in features (History, its retention and the feed rebuilt from it
-  after a reload, `FeedRestore.lua`; the Insights tab's pure filters and one stats pass over the kept
-  history, `InsightsFilters.lua` and `InsightsStats.lua`, issue #12; the toast, its content on LibKa0s-Toast-1.0's shell, and
-  auto-ask); the simulator's
-  host half: its world providers (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event
-  drivers (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report
-  (`SimReport.lua`) and the step panel's fields (`SimPanel.lua`; the panel, the session, the step
-  machine and the verb grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, three tabs (Drops, History and
-  Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0: `InsightsRows.lua`,
-  `InsightsSections.lua`, `WindowInsights.lua`), the footer's controls as the library footer's
-  marks and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
-  off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them), the two
-  detail cards (the Drops card, and the History card drawn from a kept snapshot, `HistoryCard.lua`),
-  tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`, LibCustomGlow-1.0), every item
-  icon's look (`IconStyle.lua`: Window › Icons' zoom and border), compact
-  mode's switch and bodies, auto-close (`WindowAutoClose.lua`, RX-10: a window an auto-open showed closes
-  once nothing is rolling and no drop has come for `window.autoClose.seconds`), the Rolls panel
-  (`RollsPanel.lua` and the pure `RollsPanelRows.lua`, RX-17: a read-only panel docked beside the
-  window listing every watched roll and every player's roll on it; finished rolls stay until every
-  roll is over, then the panel stays `rolls.panel.linger` seconds and closes (RX-21's panel-level
-  linger); auto-close waits while it holds a block; RX-18's raid mode past five members (or a roll
-  of more than five players) folds Pass and Waiting, the body scrolling; RX-19: test mode's sample
-  roll fills it and `/dw sim raid` shows raid mode; RX-21: flush with the window, 290 wide (250
-  compact), the test or sim strip under its title bar, item headers in the section-header look with
-  a collapser, one Expand all / Collapse all toggle (RX-25), every item open by default, no verdict line, alternate
-  row shading, every roll number, tooltips), test mode
-  and the diagnostics.
+  world providers, event drivers, restriction model and eight verbs); the login session
+  (`Session.lua`, the session start and This instance kept per character across a reload); the pure
+  engine kernels (the verdict kernel and its off-spec pass, `OffSpec.lua`, which judges a drop your
+  current spec can't use for the other specs of your class), the item kinds and the collection
+  verdict (`Collectibles.lua`, issue #13: a mount, pet, toy, recipe or cosmetic is judged new or
+  collected, feed-only, and read again on the collection events; since RX-04 a lockbox (`lockbox`,
+  its own kind since RX-15), a bag, quiver or ammo pouch (`container`) and an item of no kind rolled
+  on under the catch-all (`other`) read their kind word, Lockbox, Container or Item, feed-only with
+  no gain, on the rows, the cards, Rolling now and the roll popup), the tier-token pass
+  (`TierTokens.lua`: the slot a token makes, read from its Use text, else its name (TT-1), and the
+  best tier slot of a token whose slot it cannot read or an omni Curio, so a token is judged as
+  gear) and the scorers; the item lists' one writer (`ItemLists.lua`: Always watch and Never watch,
+  which the panel and the CLI share); the edges that read the client; the feed that orchestrates
+  them, with its counts, rosters, places and recorders, and beside it the store of drops seen but
+  not yet assigned (`Pending.lua`: open group-loot rolls, and `PendingML.lua`'s master-loot drops
+  awaiting the master looter, drawn by the Drops tab's Rolling now section, `WindowPending.lua`,
+  over the pure `RollCells.lua`, with your verdict marked on Blizzard's own roll popup,
+  `RollPopup.lua`); the recorded and opt-in features (History, its retention and the feed rebuilt
+  from it after a reload, `FeedRestore.lua`; the Insights tab's pure filters and one stats pass over
+  the kept history, `InsightsFilters.lua` and `InsightsStats.lua`, issue #12; the toast, its content
+  on LibKa0s-Toast-1.0's shell, and auto-ask); the simulator's host half: its world providers
+  (`SimWorld.lua`), item pool and group (`SimPool.lua`, `SimRoster.lua`), event drivers
+  (`SimEvents.lua`), scenarios and timeline steps (`SimScenario.lua`), loot report (`SimReport.lua`)
+  and the step panel's fields (`SimPanel.lua`; the panel, the session, the step machine and the verb
+  grammar are LibKa0s-Sim-1.0's); then the window: its shell, chrome, its tab strip
+  (`WindowTabs.lua`, RX-27: the tabs, their panes and the tabs' registry), three tabs (Drops,
+  History and Insights, whose cards and chart sections draw through LibKa0s-Charts-1.0:
+  `InsightsRows.lua`, `InsightsSections.lua`, `WindowInsights.lua`), the footer's controls as the
+  library footer's marks and Expand all / Collapse all (`FooterRow.lua`), pure cell composers (an
+  off-spec verdict's look, `OffSpecCells.lua`, and a collectible's, `CollectCells.lua`, among them),
+  the two detail cards (the Drops card, and the History card drawn from a kept snapshot,
+  `HistoryCard.lua`), tooltip placement, the upgrade glow on a drop's icon (`Glow.lua`,
+  LibCustomGlow-1.0), every item icon's look (`IconStyle.lua`: Window › Icons' zoom and border),
+  compact mode's switch and bodies, auto-close (`WindowAutoClose.lua`, RX-10: a window an auto-open
+  showed closes once nothing is rolling and no drop has come for `window.autoClose.seconds`), the
+  Rolls panel (`RollsPanel.lua` and the pure `RollsPanelRows.lua`, RX-17: a read-only panel docked
+  beside the window listing every watched roll and every player's roll on it; finished rolls stay
+  until every roll is over, then the panel stays `rolls.panel.linger` seconds and closes (RX-21's
+  panel-level linger); auto-close waits while it holds a block its close button has not put away
+  (RX-28); RX-18's raid mode past five members (or a roll of more than five players) folds Pass and
+  Waiting, the body scrolling; RX-19: test mode's sample roll fills it and `/dw sim raid` shows raid
+  mode; RX-21: flush with the window, 290 wide (250 compact), the test or sim strip under its title
+  bar, item headers in the section-header look with a collapser, one Expand all / Collapse all
+  toggle (RX-25), every item open by default, no verdict line, alternate row shading, every roll
+  number, tooltips), test mode and the diagnostics.
 - `settings/`: the schema seam and its rows (the hand-written ones, then the composed blocks the
   Options instance emits: Master controls in `Panel.lua`, Window › Icons' border in
   `ComposedRows.lua`), the options pages and their editors (Drops › Item lists' in
@@ -173,12 +185,13 @@ ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bun
 | The roll popup mark's wording on any verdict: the verdict word | `retail` | `modules/RollPopup.lua` (`RP.Verdict`, the client read once at load) |
 | The roll popup mark's wording on a bound-on-pickup drop: an upgrade reads `Need: upgrade` and one you can't use `Greed / Pass: you can't use it` (a BoP drop is soulbound once looted, design §4.6, §7); any other verdict, the verdict word | `forever` | `modules/RollPopup.lua` (`RP.Verdict`) |
 
-The filter bar is shared by the tabs and never reflows between them: a control a tab does not use
-is grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one
-exception is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights,
-whose seven filters none of the shared controls apply to. While it is active the window hides the
-shared bar, its Sort included, starts the pane under the tabs, and never syncs the shared bar. This is a DropWatcher convention, not a rule
-of the standard (Insights design spec §4.1), so it owes no deviation row.
+The filter bar is shared by the tabs and never reflows between them: a control a tab does not use is
+grayed, not removed (Ka0s Loot History's pattern, `modules/WindowFilterBar.lua`). The one exception
+is a tab registered with `ownBar` (`Window.RegisterTab`, `Window.TabOwnsBar`): Insights, whose seven
+filters none of the shared controls apply to. While it is active the window hides the shared bar,
+its Sort included, starts the pane under the tabs, and never syncs the shared bar. This is a
+DropWatcher convention, not a rule of the standard (Insights design spec §4.1), so it owes no
+deviation row.
 
 The mode strips (test mode's amber, the simulation's cyan) sit directly under the title bar, full
 width, above the tabs, the filter bar and the body, on every tab (preview-mode, *Where the strip
@@ -250,32 +263,37 @@ unregister and re-register its own receivers in its stand-down and stand-up step
 resolves the library itself.
 
 Eleven messages are sent today; the Forever port added the eleventh, `PENDING_CHANGED` (DW-FP14),
-which the Drops tab's Rolling now section and the roll popup mark receive (and the window's auto-open, when a roll item holding your popup opens or is claimed by it, RX-16, RX-20), and the master-loot ask
-rides `ASK_STATE_CHANGED` as kind `askML` (DW-FP19). The window only listens:
-it reads records through the engine's read-only accessors, and a button goes through the host
-handler its slash verb shares. Every message's sender, payload and consumers, and every receiver's
-list, are in [`message-bus.md`](message-bus.md).
+which the Drops tab's Rolling now section and the roll popup mark receive (and the window's
+auto-open, when a roll item holding your popup opens or is claimed by it, RX-16, RX-20), and the
+master-loot ask rides `ASK_STATE_CHANGED` as kind `askML` (DW-FP19). The window only listens: it
+reads records through the engine's read-only accessors, and a button goes through the host handler
+its slash verb shares. Every message's sender, payload and consumers, and every receiver's list, are
+in [`message-bus.md`](message-bus.md).
 
 ## Slash Commands
 
-`/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get set
-reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`,
-`test` and the feature verbs of design spec §12.3 (`scan clear history mine compact situation offer
-add`, plus compact spec §1's `full`, RX-17's `rolls` (shows or hides the Rolls panel beside the shown window, `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5 spec §3; and
-issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through the item
-lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the live-while-disabled set and the handlers are in
-[`slash-dispatch.md`](slash-dispatch.md). Every toggle verb calls the same handler as its Master
-controls row and its launcher entry (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the
-window's own handlers, and the slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is
-one feature-verb row that hands its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's
-grammar plus DropWatcher's nine verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while
-disabled like any other and has no key binding. The launcher menu's Sim mode entry and Master
-controls' Sim mode box are its one other door: both take the same `NS.IsSimMode` / `NS.ToggleSim`
-pair (`core/DropWatcher.lua`). `NS.IsSimMode` answers whether the step panel is shown or a sim runs
-(R7-SIM), and `NS.ToggleSim` runs the verb itself: from off the bare `sim` (the status and the step
-panel), from on `stop` while a sim runs and then the panel closed. A verb or
-button refused while stood down prints `NS.StoodDownRefusal()`, so a perf capture never tells the
-player to `/dw enable` an addon that is already enabled.
+`/dw`, alias `/dropwatcher`. The reserved verbs (`help config skin enable disable version list get
+set reset resetall profile debug diagnostics perf`; `skin`, LibKa0s v1.82.0's `O.SkinVerb`, is
+refused while disabled) plus `lock`, `unlock`, `show`, `hide`, `toggle`, `test` and the feature
+verbs of design spec §12.3 (`scan clear history mine compact situation offer add`, plus compact spec
+§1's `full`, RX-17's `rolls` (shows or hides the Rolls panel beside the shown window,
+`NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the
+Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5
+spec §3; and issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through
+the item lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the
+live-while-disabled set and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). Every
+toggle verb calls the same handler as its Master controls row and its launcher entry
+(`core/DropWatcher.lua`); `scan`, `compact` and `full` share the window's own handlers, and the
+slash-only verbs are answered by `settings/SlashVerbs.lua`. `sim` is one feature-verb row that hands
+its argument to LibKa0s-Sim-1.0's `NS.Sim:RunVerb` (the library's grammar plus DropWatcher's nine
+verbs, `settings/SimVerbs.lua`; DW-03), so it is refused while disabled like any other and has no
+key binding. The launcher menu's Sim mode entry and Master controls' Sim mode box are its one other
+door: both take the same `NS.IsSimMode` / `NS.ToggleSim` pair (`core/DropWatcher.lua`).
+`NS.IsSimMode` answers whether the step panel is shown or a sim runs (R7-SIM), and `NS.ToggleSim`
+runs the verb itself: from off the bare `sim` (the status and the step panel), from on `stop` while
+a sim runs and then the panel closed. A verb or button refused while stood down prints
+`NS.StoodDownRefusal()`, so a perf capture never tells the player to `/dw enable` an addon that is
+already enabled.
 
 The launcher's Show window entry has a key binding (launcher-§6, LibKa0s#58). The root
 `Bindings.xml`, which the client reads without a TOC line, declares one
@@ -321,7 +339,7 @@ how many handlers it called.
 | `ZONE_CHANGED_NEW_AREA` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnAutoAskWorldEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop and the situation, as above; then auto-ask's encounter hold, as above |
 | `CHALLENGE_MODE_START` | `DW.OnSituationEvent`, then `DW.OnFeedRunStart`, then `DW.OnCompactRunStart` (through `DW:OnSharedFeatureEvent`) | Retail only (`clients = { "retail" }`, DW-FP09: WoW Forever has no keystones): the same (a keystone started); then opens the run's drop group (`modules/LootFeed.lua`); then (since DW-C0) clears compact mode's completed-key latch and its grace timer (`modules/WindowCompact.lua`) |
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent`, then `DW.OnCompactRunEnd` (the same) | Retail only (`clients = { "retail" }`, DW-FP09): the same (a keystone ended); then keeps the run's group open while you stay in its instance, else 120 seconds, for the chest and a late bonus roll (feedback-20); then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`); then (since DW-C0) arms compact mode's grace timer: 120 seconds later the run override ends (a hidden window lets go at once, a shown one when next hidden) and the situation is latched, since a completed key still reads as mythicPlus until the player leaves (`modules/WindowCompact.lua`) |
-| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent`, then `DW.OnPendingRoster`, then `DW.OnAskRosterEvent`, then `DW.OnAutoAskRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-FP18), out of a group, expires every pending master-loot item (`modules/PendingML.lua`); then cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`) |
+| `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent`, then `DW.OnPendingRoster`, then `DW.OnAskRosterEvent`, then `DW.OnAutoAskRosterEvent`, then `DW.OnRollsPanelRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-FP18), out of a group, expires every pending master-loot item (`modules/PendingML.lua`); then cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`); then (RX-28) repaints a shown Rolls panel, so a group growing into a raid folds it at once (`modules/RollsPanel.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
 | `SPELL_TEXT_UPDATE` | `DW.OnSpellTextUpdate` | (since TT-1) a spell's text arrived: every cached item whose use spell it is and whose use text came back empty (`useSpellLoading`, not loaded yet) reads its use text, tier-token flag, made slot and category again (`modules/ItemFacts.lua`); a drop of such an item already waits for the spell through `ItemFacts.Request` |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | Retail only (`clients = C.FEATURE_CLIENTS.transmog`, DW-FP10: WoW Forever has no transmog): re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`), then (since DW-CAT3) arms the collection re-read, so a live cosmetic's verdict follows (`modules/Collectibles.lua`) |
@@ -391,16 +409,18 @@ Every strata and frame level the addon sets reads one table, `NS.Constants.LAYER
 (`core/Constants.lua`, frame-layering-§5), whose header comment states the whole stack with its
 levels; every level is relative to the frame's parent. The tiers, low to high: the main window
 (`MEDIUM`, toplevel, clamped) with its chrome, content and the Offer panel and the Rolls panel
-docked beside it (both children of the window at its `DOCKED` level); the
-library's resize grip; the window's popover in its own strata, by level (the floating Offer panel);
-the toast (`HIGH`, toplevel and clamped: LibKa0s-Toast-1.0 sets its
-frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names), with the roll popup mark's side cards and the simulator's stand-in popups on the same tier (`modules/RollPopup.lua`, parented to UIParent, never toplevel); the Edit message box (`DIALOG`, toplevel), beside
-the library's debug console, perf and sim panels; the library's Copy window (`FULLSCREEN`); the
-library's dropdown menu (`FULLSCREEN_DIALOG`, the compact Filters ▾ cascade included); tooltips. Inside an item button, the border frame sits
-under the upgrade glow. A row's or card's action button (Ask, Offer, No action, Ask ML) sits at
-`LAYERS.LEVEL.ROW_ACTION` over its row, above the row's text cells and their hit frames
-(`WindowRows.RaiseAction`, rolls UX spec §3.1), so a long line never covers it or takes its clicks.
-No frame changes strata at runtime. `tests/test_layers.lua` pins each class.
+docked beside it (both children of the window at its `DOCKED` level); the library's resize grip; the
+window's popover in its own strata, by level (the floating Offer panel); the toast (`HIGH`, toplevel
+and clamped: LibKa0s-Toast-1.0 sets its frame-layering T5 tier, which `LAYERS.STRATA.ALERT` names),
+with the roll popup mark's side cards and the simulator's stand-in popups on the same tier
+(`modules/RollPopup.lua`, parented to UIParent, never toplevel); the Edit message box (`DIALOG`,
+toplevel), beside the library's debug console, perf and sim panels; the library's Copy window
+(`FULLSCREEN`); the library's dropdown menu (`FULLSCREEN_DIALOG`, the compact Filters ▾ cascade
+included); tooltips. Inside an item button, the border frame sits under the upgrade glow. A row's or
+card's action button (Ask, Offer, No action, Ask ML) sits at `LAYERS.LEVEL.ROW_ACTION` over its row,
+above the row's text cells and their hit frames (`WindowRows.RaiseAction`, rolls UX spec §3.1), so a
+long line never covers it or takes its clicks. No frame changes strata at runtime.
+`tests/test_layers.lua` pins each class.
 
 ## Skins
 
@@ -451,15 +471,16 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   layer: the window's `S.Shell` takes `noTopBar`), and a row takes `list.hover` through `S.ListRow`,
   from a cell or an item button inside it too (`NS.WindowRows.WashRowOf`). Without the
   library the tabs keep their text roles and underline. `tests/test_skin_host.lua`.
-- **Headers on the band (R5-WIN, LibKa0s v1.85.0's `S.Band` and `S.Header`).** Every window's
-  header sits on the title band S.Shell lays, flush inside the edge at its inset (`win.borderSize`
-  in from a flat edge, else 1) and `title.height` high, as Ka0s Loot History's. The main window's
-  title bar takes the band's rect (`S.Header` `bars`), so its title, mode words, lock button (RX-08, in the right-hand cluster since RX-14), badge and
-  controls, anchored to the bar at y 0, sit on the band's middle; minimized, the window is the band
-  and its two edges. The Offer panel and the Edit message box keep the band S.Shell draws, put
-  their title (by `title.align`) and close on it through `S.Header`, and start their content
-  `POPOVER_TOP` (36) down. The detail card is an expanded row with no header, and the toast opts
-  out of the band. Without the library the builders' own anchors stand. `tests/test_header_band.lua`.
+- **Headers on the band (R5-WIN, LibKa0s v1.85.0's `S.Band` and `S.Header`).** Every window's header
+  sits on the title band S.Shell lays, flush inside the edge at its inset (`win.borderSize` in from
+  a flat edge, else 1) and `title.height` high, as Ka0s Loot History's. The main window's title bar
+  takes the band's rect (`S.Header` `bars`), so its title, mode words, lock button (RX-08, in the
+  right-hand cluster since RX-14), badge and controls, anchored to the bar at y 0, sit on the band's
+  middle; minimized, the window is the band and its two edges. The Offer panel and the Edit message
+  box keep the band S.Shell draws, put their title (by `title.align`) and close on it through
+  `S.Header`, and start their content `POPOVER_TOP` (36) down. The detail card is an expanded row
+  with no header, and the toast opts out of the band. Without the library the builders' own anchors
+  stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)
   while the profile's `skin.pickerSeen` is false: two seconds after login, at a stand-up, and after a
   profile event; never while stood down, and a start in combat waits for combat's end. Its preview
@@ -530,81 +551,93 @@ WoW Default.
 
 The window and the toast are plain `Frame`s, never secure, so showing, hiding and moving them are
 allowed in combat and nothing defers (the toast waits out combat by choice, `toast.inCombat`). The
-upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to the window's
-item buttons (never the toast's), none of them secure, so it starts and stops in combat too. Settings writes touch no protected frame. Opening the settings panel is refused
-in combat by the options library, which also locks a page shown in combat; the addon adds no lock of
-its own and never closes Blizzard's settings window (options-ui-§2). The trade action
-(`InitiateTrade`) and the chat sender are wrapped in
-`core/Compat.lua` and guard nothing themselves: the trade helper (`modules/TradeHelper.lua`) and the
-messaging edge (`modules/Asks.lua`) call them only from a click, or for a queued ask from the flush
-timer, and check combat, range and restriction state first (design spec §4, §9). The chat sender
-runs inside `pcall`, so a client refusal is a failed ask, never a Lua error; a whisper and a
-PARTY, RAID or INSTANCE_CHAT message need no hardware event, so the timer may send them, and SAY
-and YELL, which do, are never used. The trade helper reads `NS.Restrictions.CanTrade()` before the
-trade range, because `CheckInteractDistance` is not to be called in combat. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
+upgrade glow (`modules/Glow.lua`) is LibCustomGlow-1.0's plain frames parented to the window's item
+buttons (never the toast's), none of them secure, so it starts and stops in combat too. Settings
+writes touch no protected frame. Opening the settings panel is refused in combat by the options
+library, which also locks a page shown in combat; the addon adds no lock of its own and never closes
+Blizzard's settings window (options-ui-§2). The trade action (`InitiateTrade`) and the chat sender
+are wrapped in `core/Compat.lua` and guard nothing themselves: the trade helper
+(`modules/TradeHelper.lua`) and the messaging edge (`modules/Asks.lua`) call them only from a click,
+or for a queued ask from the flush timer, and check combat, range and restriction state first
+(design spec §4, §9). The chat sender runs inside `pcall`, so a client refusal is a failed ask,
+never a Lua error; a whisper and a PARTY, RAID or INSTANCE_CHAT message need no hardware event, so
+the timer may send them, and SAY and YELL, which do, are never used. The trade helper reads
+`NS.Restrictions.CanTrade()` before the trade range, because `CheckInteractDistance` is not to be
+called in combat. The inspect broker (`modules/Inspect.lua`) watches `NotifyInspect` through
 `hooksecurefunc` (in `core/Compat.lua`), never by replacing it; it never inspects in combat or while
-Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started
-and nobody took over, so another addon's or the player's inspect is never cleared under them.
-While a simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSetup.lua`,
-LibKa0s-Sim-1.0's `NewSeam`) keeps the chat sender, the inspect calls and the trade action from the client
-altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected
-or traded (simulator spec §5). The stop cancels every queued ask before it lifts its
-simulated restrictions (its `OnStopGuarded` step), so nothing it queued can reach the real sender.
+Blizzard's inspect window is open, and calls `ClearInspectPlayer` only for an inspect it started and
+nobody took over, so another addon's or the player's inspect is never cleared under them. While a
+simulation runs (`modules/Sim.lua`), the seam over `core/Compat.lua` (`core/SimSetup.lua`,
+LibKa0s-Sim-1.0's `NewSeam`) keeps the chat sender, the inspect calls and the trade action from the
+client altogether: a send is printed with `[sim]`, a trade is printed, and nothing is inspected or
+traded (simulator spec §5). The stop cancels every queued ask before it lifts its simulated
+restrictions (its `OnStopGuarded` step), so nothing it queued can reach the real sender.
 `NS.Sim:Fire` calls each handler under `pcall` (through `NS.DeliverEvent`), as the client's event
 dispatch and the live shared dispatcher (`DW:OnSharedFeatureEvent`) isolate it, and the library's
-stop runs each `OnStop` step under `pcall`, so one that raises never skips the rest nor the later stand-down steps; the
-failure is a `SIM` debug line. While its combat edge is up, the simulator answers
-`InCombatLockdown` and the player's combat flag `true` through the seam and never `false`, so a
-caller that must not act in combat is never told it may (DW-90).
-The roll popup mark (`modules/RollPopup.lua`, since DW-FP20) draws its own cards over Blizzard's
-roll popups, `GroupLootFrame1..4`, which are plain frames on both clients (no secure template, no
-protected attribute: R2 §10.1). Each card is parented to UIParent and, on every paint, anchored
-beside its popup (since RX-07: its TOPLEFT on the popup's TOPRIGHT, 4 px out, or its TOPRIGHT on
-the popup's TOPLEFT when the screen has no room on the right), so the card depends on the popup and
-never the other way round. The popup's right edge is read through `Compat.RollPopupRight`, a read
-only. The one call made on a Blizzard popup is `HookScript("OnShow")` and `HookScript("OnHide")`, installed once at enable
-through `core/CompatLoot.lua` (`Compat.HookRollPopup`); `hooksecurefunc("GroupLootFrame_OnShow")`
-is not used, because the XML binds that function at load. The hooks can't be removed, so their
-bodies gate on the disabled state; OnShow re-checks the popup is still shown with a plain rollID
-(`Compat.RollPopupOpen`), because Blizzard can close it inside its own OnShow. Nothing is written to
-a popup or its table: no field, no `SetScript`, `SetParent`, `SetPoint` or strata change, and the
-buttons (on the frame on Retail, in `LootButtonContainer` on Forever) are never touched, so the
-container's managed layout is not tainted. None of it is protected, so it draws in combat too.
-Auto-close (`modules/WindowAutoClose.lua`, RX-10) closes the window with a `Hide` of that owned
-frame, so it runs in combat as the auto-open's `Show` does. The one-way `OnMouseDown`, `OnEnter` and
-`OnLeave` `HookScript`s it lays (each once per frame; under the Rolls panel only the pointer's, RX-20) are on the window's own frames, none of them protected,
-and never on a Blizzard frame; only on a frame that already takes the mouse (`IsMouseEnabled`), so a
-frame the window leaves mouse-transparent is never mouse-enabled by a script (RX-12).
-The master-loot pending kind (`modules/PendingML.lua`, DW-FP18) only reads the loot window you
-opened, through `core/CompatLoot.lua` (`LootSlots`: each slot's link, quality, lock and source GUID,
-after LOOT_READY or LOOT_OPENED, and the group's loot threshold, `Compat.LootThreshold`, once per
-opening, RX-03); it never touches the loot frame or its buttons, never loots a slot
-and never calls a master-loot assignment.
-The addon's three confirmations, Clear history (`modules/History.lua`'s `AskClear`, since DW-Q3), a
-shorter Keep history for (`modules/HistoryRetention.lua`, since DW-A5) and Reset all settings
-(`settings/Schema.lua`), set `preferredIndex = 3`, so none shares a StaticPopup slot with
-Blizzard's own dialogs (DW-62).
+stop runs each `OnStop` step under `pcall`, so one that raises never skips the rest nor the later
+stand-down steps; the failure is a `SIM` debug line. While its combat edge is up, the simulator
+answers `InCombatLockdown` and the player's combat flag `true` through the seam and never `false`,
+so a caller that must not act in combat is never told it may (DW-90). The roll popup mark
+(`modules/RollPopup.lua`, since DW-FP20) draws its own cards over Blizzard's roll popups,
+`GroupLootFrame1..4`, which are plain frames on both clients (no secure template, no protected
+attribute: R2 §10.1). Each card is parented to UIParent and, on every paint, anchored beside its
+popup (since RX-07: its TOPLEFT on the popup's TOPRIGHT, 4 px out, or its TOPRIGHT on the popup's
+TOPLEFT when the screen has no room on the right), so the card depends on the popup and never the
+other way round. The popup's right edge is read through `Compat.RollPopupRight`, a read only. The
+one call made on a Blizzard popup is `HookScript("OnShow")` and `HookScript("OnHide")`, installed
+once at enable through `core/CompatLoot.lua` (`Compat.HookRollPopup`);
+`hooksecurefunc("GroupLootFrame_OnShow")` is not used, because the XML binds that function at load.
+The hooks can't be removed, so their bodies gate on the disabled state; OnShow re-checks the popup
+is still shown with a plain rollID (`Compat.RollPopupOpen`), because Blizzard can close it inside
+its own OnShow. Nothing is written to a popup or its table: no field, no `SetScript`, `SetParent`,
+`SetPoint` or strata change, and the buttons (on the frame on Retail, in `LootButtonContainer` on
+Forever) are never touched, so the container's managed layout is not tainted. None of it is
+protected, so it draws in combat too. Auto-close (`modules/WindowAutoClose.lua`, RX-10) closes the
+window with a `Hide` of that owned frame, so it runs in combat as the auto-open's `Show` does. The
+one-way `OnMouseDown`, `OnEnter` and `OnLeave` `HookScript`s it lays (each once per frame; under the
+Rolls panel only the pointer's, RX-20) are on the window's own frames, none of them protected, and
+never on a Blizzard frame; only on a frame that already takes the mouse (`IsMouseEnabled`), so a
+frame the window leaves mouse-transparent is never mouse-enabled by a script (RX-12). The
+master-loot pending kind (`modules/PendingML.lua`, DW-FP18) only reads the loot window you opened,
+through `core/CompatLoot.lua` (`LootSlots`: each slot's link, quality, lock and source GUID, after
+LOOT_READY or LOOT_OPENED, and the group's loot threshold, `Compat.LootThreshold`, once per opening,
+RX-03); it never touches the loot frame or its buttons, never loots a slot and never calls a
+master-loot assignment. The addon's three confirmations, Clear history (`modules/History.lua`'s
+`AskClear`, since DW-Q3), a shorter Keep history for (`modules/HistoryRetention.lua`, since DW-A5)
+and Reset all settings (`settings/Schema.lua`), set `preferredIndex = 3`, so none shares a
+StaticPopup slot with Blizzard's own dialogs (DW-62).
 
 ## Known Limitations
 
 What the addon does not do yet, or cannot know without the client. In short: no in-game check has a
 recorded client pass yet, so the encounter-time chat and loot readings and the raid trade rule are
 unconfirmed; a non-English client shows no upgrade-track change; a delve's tier is not read, and a
-tier token's slot is read from its English text (TT-1), and a token it misses is judged in any slot; a caged
-battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
+tier token's slot is read from its English text (TT-1), and a token it misses is judged in any slot;
+a caged battle pet (a `|Hbattlepet:` link) is never watched, a recipe's known state is read from its
 *Already known* tooltip line (`ITEM_SPELL_KNOWN`), a lockbox from its *Locked* or *<Right Click to
-Open>* line (RX-04, probe P-BOX), the rolled-on catch-all sees only rolls (never a master-loot hold), and the item kinds and item lists apply to new
-drops only; your gear is a per-slot best, not a loadout planner; your own drop is offered only while another player is in your group (never to followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the gear they wear; a reload brings the
-session's drops back (a cleared one stays cleared, an asked one reads Asked) but starts a new key
-header mid-key and forgets who your own drops were offered to, and a relog starts an empty Drops tab
-(the session is the login); the roll popup mark is not drawn in WoW Forever's gamepad mode, whose roll list (`GamepadGroupLootRollFrame`) is not the four popups; the roll clock's units, your popup's own timer and when a roll's numbers appear are unconfirmed (probes P-R1, P-R4 and P-R6), the loot history gives the count line no Disenchant choice (probe P-R7); under master loot two copies of one item on one corpse collapse to one awaiting item, and a raider may not see the master looter's slots at all (probe P-ML1), nor is the loot threshold a raider reads confirmed (probe P-ML3); the simulator and test mode have no master-loot timeline step or sample beyond `/dw sim ml`; the Forever port's features have no recorded client pass yet; the History card shows only what a kept entry holds; Insights reads only the kept history (the
-retention window, pruned a whole group at a time), infers asks and offers from trades settled before
-they were stamped (so the old success rate reads high, and an old gain is the verdict as last
-judged), has no per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before
-issue #13 as equipment; an install
-missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a simulation does not exercise every live
-path (a member's spec, cross-source de-duplication, a situation's tracking switch); auto-close's settings row sits on the line beneath Auto-open the window rather than indented (RX-10). Every limitation,
-with its smoke-check id, is in [`known-limitations.md`](known-limitations.md).
+Open>* line (RX-04, probe P-BOX), the rolled-on catch-all sees only rolls (never a master-loot
+hold), and the item kinds and item lists apply to new drops only; your gear is a per-slot best, not
+a loadout planner; your own drop is offered only while another player is in your group (never to
+followers or a delve companion); an off-spec is judged on item level alone, and a looter's on the
+gear they wear; a reload brings the session's drops back (a cleared one stays cleared, an asked one
+reads Asked) but starts a new key header mid-key and forgets who your own drops were offered to, and
+a relog starts an empty Drops tab (the session is the login); the roll popup mark is not drawn in
+WoW Forever's gamepad mode, whose roll list (`GamepadGroupLootRollFrame`) is not the four popups;
+the roll clock's units, your popup's own timer and when a roll's numbers appear are unconfirmed
+(probes P-R1, P-R4 and P-R6), the loot history gives the count line no Disenchant choice (probe
+P-R7); under master loot two copies of one item on one corpse collapse to one awaiting item, and a
+raider may not see the master looter's slots at all (probe P-ML1), nor is the loot threshold a
+raider reads confirmed (probe P-ML3); the simulator and test mode have no master-loot timeline step
+or sample beyond `/dw sim ml`; the Forever port's features have no recorded client pass yet; the
+History card shows only what a kept entry holds; Insights reads only the kept history (the retention
+window, pruned a whole group at a time), infers asks and offers from trades settled before they were
+stamped (so the old success rate reads high, and an old gain is the verdict as last judged), has no
+per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before issue #13 as
+equipment; an install missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a
+simulation does not exercise every live path (a member's spec, cross-source de-duplication, a
+situation's tracking switch); auto-close's settings row sits on the line beneath Auto-open the
+window rather than indented (RX-10). Every limitation, with its smoke-check id, is in
+[`known-limitations.md`](known-limitations.md).
 
 ## Documentation map
 

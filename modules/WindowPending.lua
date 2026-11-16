@@ -285,6 +285,41 @@ local function paintMore(f, n, rows, from)
     f.tipLines = tip
 end
 
+local COUNTS_MIN_W = 40   -- a count line cut narrower than this says nothing: it goes instead
+
+-- The header line inside `inner` (RX-30): the title, then the summary and the count line, each at its
+-- own width (0, unbound) while they fit; past the box's edge the count line is cut with … first, and
+-- goes once it would be narrower than COUNTS_MIN_W, then the summary is cut with … at the edge (at
+-- least 1 wide: a width of 0 is unbound). A line the font has not measured yet, or answers secret, is
+-- left unbound.
+local function measured(fs)
+    local fn = fs.GetUnboundedStringWidth
+    local w = fn and fn(fs)
+    if NS.Compat.IsSecret(w) or type(w) ~= "number" then return nil end
+    return w
+end
+
+local function fitHeader(box, inner, hasCounts)
+    local titleW, sw = measured(box.title), measured(box.summary)
+    local cw = hasCounts and measured(box.counts) or 0
+    if not (titleW and sw and cw) then
+        box.summary:SetWidth(0); box.counts:SetWidth(0)
+        return
+    end
+    local room = max(0, inner - 2 - titleW - 10)
+    box.summary:SetWidth(sw > room and max(1, room) or 0)
+    local countsW = 0
+    if hasCounts then
+        local left = room - min(sw, room) - 10
+        local fits = cw <= left
+        local keep = fits or left >= COUNTS_MIN_W
+        box.counts:SetShown(keep)
+        box.countsHit:SetShown(keep)
+        if keep and not fits then countsW = left end
+    end
+    box.counts:SetWidth(countsW)
+end
+
 --- Paint `roll` into the box at `width`: the summary, the count line beside a result (an open
 --- roll's summary is the count line, drawn once), and every player's line, flowed into columns; the
 --- summary and the count line hover every roll (RollCells.Tooltip, `verdict` at its foot).
@@ -309,8 +344,9 @@ function WP.PaintRollsBox(box, roll, width, now, state, rollID, verdict)
     box.counts:SetShown(counts ~= nil)
     box.countsHit:SetShown(counts ~= nil)
     box.countsHit.tipLines = s.tip
-    local rows = RC.Rows(roll)
     local inner = width - 2 * WP.PAD
+    fitHeader(box, inner, counts ~= nil)
+    local rows = RC.Rows(roll)
     local cols, lines, shown = RC.Grid(#rows, inner, WP.COL_W, WP.MAX_LINES)
     local colW = cols > 0 and math.floor(inner / cols) or inner
     local slots = shown < #rows and shown + 1 or shown

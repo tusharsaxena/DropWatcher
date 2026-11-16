@@ -61,10 +61,15 @@ test("roll cells: the count line is an icon and a count per choice", function()
     assertEqual(C.Summary({ rolls = {} }, 110).text, "no one has chosen yet")
     -- The still-to-roll icon is one this addon ships; with the media library absent it is the word.
     assertEqual(C.WAITING_ICON, "ph:hourglass", "the hourglass, not the clock (RX-13)")
-    local fh = io.open("libs/LibKa0s/media/icons/phosphor/hourglass.tga", "rb")
-    assertTrue(fh ~= nil, "the icon ships under libs/LibKa0s/media/icons/phosphor/")
-    if fh then fh:close() end
+    -- The file is derived from the path NS.Icon answers (RX-30), so a catalog move is caught here.
     local NS = T.newAddon()
+    local path = NS.Icon(C.WAITING_ICON)
+    assertTrue(type(path) == "string", "the catalog answers the hourglass")
+    local rel = path:gsub("^Interface\\AddOns\\DropWatcher\\", ""):gsub("\\", "/") .. ".tga"
+    assertTrue(rel ~= path and rel:sub(1, 5) == "libs/", "a path under the addon's libs/: " .. rel)
+    local fh = io.open(rel, "rb")
+    assertTrue(fh ~= nil, "the icon ships at " .. rel)
+    if fh then fh:close() end
     NS.Icon = function() return nil end
     assertEqual(plain(NS.RollCells.CountLine(fresh)), "Waiting 3")
     -- Everyone passed, and the time run out.

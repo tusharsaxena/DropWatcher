@@ -803,6 +803,30 @@ test("messages: Reset templates puts the three back and repaints the boxes", fun
     assertEqual(boxes.ask.text, D.ask)
 end)
 
+-- ── Drops › Rolls: the lines (RX-30) ─────────────────────────────────────────────────────────
+
+-- red under: Show the Rolls panel beside the window paired with Side, its own knob, on one line (a
+-- switch with dependent knobs sits alone on its line, `solo`, feedback-24)
+test("rx30: Drops › Rolls lays Show rolls | Keep rolls, Mark the roll popup; the panel switch alone, its knobs paired", function()
+    local NS, _, m = T.enableAddon()
+    NS.addon.Settings.Helpers.__panelFor("feed").panel.__dwTree = true
+    local drawn = tab(m, open(NS, m, "feed"), "Rolls")
+    local function w(wtype, label)
+        local f = find(drawn, wtype, label) or findPrefix(drawn, wtype, label)
+        assertTrue(f ~= nil, label .. " drawn")
+        return f
+    end
+    local show, keep = w("CheckBox", "Show rolls"), w("CheckBox", "Keep rolls in history")
+    local mark, panel = w("CheckBox", "Mark the roll popup"), w("CheckBox", "Show the Rolls panel beside the window")
+    local side, linger = w("Dropdown", "Side"), w("Slider", "Keep the panel open")
+    local fold = w("CheckBox", "Fold Pass and Waiting in a raid")
+    assertEqual(lineOf(drawn, show), lineOf(drawn, keep), "Show rolls | Keep rolls in history")
+    assertTrue(lineOf(drawn, mark) ~= lineOf(drawn, keep), "Mark the roll popup on the next line")
+    assertTrue(lineOf(drawn, panel) ~= lineOf(drawn, side), "the panel switch alone on its line")
+    assertEqual(lineOf(drawn, side), lineOf(drawn, linger), "Side | Keep the panel open")
+    assertTrue(lineOf(drawn, fold) ~= lineOf(drawn, linger), "Fold on the line under them")
+end)
+
 -- ── Drops › Retention: Clear history (feedback-15 spec §3, DW-Q3; Window › Layout's until feedback-24)
 
 test("feed: Retention draws Clear history beside Keep history for; it asks first and clears only on Yes", function()

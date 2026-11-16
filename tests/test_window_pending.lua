@@ -303,6 +303,36 @@ test("compact: a pending item is a card", function()
     assertEqual(#wp2.cards, 0); assertFalse(wp2.compactHeader:IsShown())
 end)
 
+-- red under: the box's summary and count line laid at their own width beside the title, so in the
+-- compact card's width a long line ran out past the box's right edge (RX-30)
+test("rx30: the Rolls box's header line is cut with … at the box's edge, the count line first", function()
+    local NS = shown({ drop() }, { item() }, true)
+    local WP = NS.WindowPending
+    local box = WP.BuildRollsBox(NS.Window.Frame().body)
+    -- Measure every glyph 7 wide: the title (5) and the count line overflow a 200-wide box.
+    local roll = wonRoll()
+    for _, fs in ipairs({ box.title, box.summary, box.counts }) do
+        fs.GetUnboundedStringWidth = function(s) return #(s:GetText() or "") * 7 end
+        fs.SetWidth = function(s, w) s.__width = w; return s end
+    end
+    WP.PaintRollsBox(box, roll, 200, 110, "won", 1, nil)
+    local inner = 200 - 2 * WP.PAD - 2
+    local titleW = #box.title:GetText() * 7 + 10
+    local sw = box.summary.__width or 0
+    assertTrue(sw > 0 and sw <= inner - titleW, "the summary bound to the room left: " .. tostring(sw))
+    assertFalse(box.counts:IsShown(), "no room left for the count line: it goes first")
+    -- No room at all past the title: the summary is cut to 1 (a width of 0 would unbind it), and a
+    -- count line with exactly no room left goes (RX-30 review).
+    WP.PaintRollsBox(box, roll, 2 * WP.PAD + 2 + #box.title:GetText() * 7 + 10, 110, "won", 1, nil)
+    assertEqual(box.summary.__width, 1, "cut, never unbound")
+    assertFalse(box.counts:IsShown())
+    -- A wide box: both at their own width (0, unbound) and the count line back.
+    WP.PaintRollsBox(box, roll, 2000, 110, "won", 1, nil)
+    assertEqual(box.summary.__width, 0, "unbound again")
+    assertTrue(box.counts:IsShown())
+    assertEqual(box.counts.__width, 0)
+end)
+
 test("window pending: Rolling now's count line has every roll in its tooltip, in both layouts", function()
     -- RX-06 (rolls UX design §3.2, ruling 2): the row's and the card's summary hover the all-rolls
     -- tooltip: the item's name, the players by choice, those still to roll, your verdict at the foot.

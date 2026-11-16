@@ -18,10 +18,10 @@
 
 Beside the feed, the pending store (`modules/Pending.lua`) holds the drops seen but not yet
 assigned: an open group-loot roll from the loot history, and on master loot an item at or above the
-group's loot threshold awaiting the master looter (`modules/PendingML.lua`). A pending item has no looter, so it never enters the feed;
-it hands over to it when the drop resolves (below, *Rolls and master-loot pending*). The pipeline is
-the same on Retail and WoW Forever; where a stage differs per client, its section says so, and
-`ARCHITECTURE.md` → Per-client features lists every difference.
+group's loot threshold awaiting the master looter (`modules/PendingML.lua`). A pending item has no
+looter, so it never enters the feed; it hands over to it when the drop resolves (below, *Rolls and
+master-loot pending*). The pipeline is the same on Retail and WoW Forever; where a stage differs per
+client, its section says so, and `ARCHITECTURE.md` → Per-client features lists every difference.
 
 Modules talk over the `NS.MSG` catalog in `core/Bus.lua`, one sender per message; the UI only
 listens. Each stage is drawn in its own section below. The README's `## How the loot watching works`
@@ -55,17 +55,24 @@ auto-open made: the auto-open arms it after its `Window.Open`, and every `Window
 `Window.Close` disarms it first, so a manual show never closes by itself. Armed, one
 `C_Timer.NewTimer` of `window.autoClose.seconds` runs; `DropAdded`, `PendingChanged` and the pointer
 entering or leaving the frame or any frame under it start it over (so it closes a full count after
-the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a
-roll (`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
-does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none, RX-20) and the pointer elsewhere, it calls `Window.Close`; otherwise it
-starts over. A window the visibility ladder hides (General visibility in or out of combat) keeps the
-player's open and is not closed: the count waits, and starts over when the window shows (a
-visibility listener), so the auto-open is not lost to a long fight (RX-12). A
-drag, or a press on the frame or any frame under it (a tab, a title bar button, a row: one-way
-`OnMouseDown` hooks, laid at the arm and after each repaint while armed, and only on a frame that
-already takes the mouse, so a mouse-transparent cell, border or glow stays transparent, RX-12), disarms it for that show,
-but a press on the read-only Rolls panel docked beside it (its child: its close button, a raid header,
-a fold line) does not: under it the walk hooks only the pointer, `AC.PointerOnly` (RX-20); with `window.autoClose.enabled` or `autoOpen` off
+the pointer left, RX-12). At its end, the frame on screen, nothing in Rolling now a roll
+(`Pending.All` of the shown feed; a master-loot item awaiting the master looter rolls nothing and
+does not count, RX-12, nor does any roll while `rolls.show` is off and Rolling now lists none,
+RX-20, nor a roll everyone passed or whose time ran out, lingering `P.LINGER` seconds, RX-29) and
+the pointer elsewhere, it calls `Window.Close`; otherwise it starts over. A window the visibility
+ladder hides (General visibility in or out of combat) keeps the player's open and is not closed: the
+count stops while it is off screen (the ladder's hide, or a parent's, Alt-Z), and starts over when
+the window shows (a visibility listener), so the auto-open is not lost to a long fight (RX-12,
+RX-29). Escape or the close mark, a hide of the frame itself, disarms it at once (Window's onHide,
+RX-29). A test drop's auto-open (test mode on) arms nothing: test mode's window stays until test
+mode goes off (RX-29); test mode turned on over a live auto-open lets the count go when it runs out,
+and the window stays open after. A drag, or a press on the frame or any frame under it (a tab, a
+title bar button, a row: one-way `OnMouseDown` hooks, laid at the arm and after each repaint while
+armed, and only on a frame that already takes the mouse, so a mouse-transparent cell, border or glow
+stays transparent, RX-12; the walk keeps each frame's children and reads them again only when its
+child count moved, RX-29), disarms it for that show, but a press on the read-only Rolls panel docked
+beside it (its child: its close button, a raid header, a fold line) does not: under it the walk
+hooks only the pointer, `AC.PointerOnly` (RX-20); with `window.autoClose.enabled` or `autoOpen` off
 it lets go at its end. Combat does not matter: the close is a Hide of an owned, non-protected frame.
 
 ## What the window repaints on
@@ -89,7 +96,8 @@ DropAdded(id) ─────────────> NS.LootFeed.Get(id) (read
 PendingChanged(id, cause) ─> shown: the same repaint; `open` or `popup` of a roll item holding your
                              roll popup (its rollID, RX-20; NS.Pending.Get(id): not
                              kind `ml`, which has no roll popup, nor `restored`, which Pending.Rebuild
-                             opened after a reload or stand-up) of the feed shown, with `rolls.show`
+                             opened at a login, a reload or the stand-up, never a zone change, RX-29)
+                             of the feed shown, with `rolls.show`
                              on (off, Rolling now lists nothing and the roll opens nothing): the drop's
                              auto-open above, on Drops, arming auto-close, which then waits while the
                              roll runs (RX-16); a minimized window counts nothing until it is a drop
@@ -787,8 +795,10 @@ START_LOOT_ROLL(rollID) ─> your popup claims the oldest unclaimed item of the 
      claimed as its item enters, before its `open`
 GearChanged, the score retry ─> me judged again ─> PendingChanged(id, "verdict")
 LOOT_HISTORY_CLEAR_HISTORY ─> open items detached from their keys; PLAYER_ENTERING_WORLD and the
-  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item it
-  opens is `restored`, so it opens no window, RX-16)
+  stand-up rebuild the store from the client (a /reload mid-roll: one item, not two; each item a
+  login, a reload (PLAYER_ENTERING_WORLD's isInitialLogin or isReloadingUi) or the stand-up opens is
+  `restored`, so it opens no window, RX-16; one a zone change's loading screen hid is new and can,
+  RX-29; a walk that raises still clears the rebuild flag and its error goes on to the dispatcher)
 
 LOOT_READY / LOOT_OPENED, the method master loot and you not the master looter (Compat.LootMethod)
   ─> Compat.LootSlots ─> each slot at or above the threshold with a link and a source GUID
@@ -807,12 +817,13 @@ PendingChanged ─> Window (the Drops tab's Rolling now section, WindowPending; 
 The Rolling now section (`modules/WindowPending.lua`) draws every item of the store the window's
 feed names (the live one, or test mode's), oldest first, above the boss groups in both layouts while
 `rolls.show` is on; a roll row's time left and summary repaint each second on the window's countdown
-ticker. An open roll's summary is `RollCells.CountLine`, an icon and a count per choice (Need, Greed,
-Disenchant on Retail only, Pass, still to roll), and it hovers `RollCells.Tooltip`, every roll by
-choice with your verdict at the foot; a ROLLS box draws the same count line beside a resolved
-result (rolls UX RX-06). A won drop's roll table rides into the feed record as `roll` and, while `rolls.keep` is
-on, into its History entry (`rolls`), which the detail card's and the History card's ROLLS box draw. On Retail
-master loot is Guild Master Loot alone (design §11.2); the store is the same on both clients.
+ticker. An open roll's summary is `RollCells.CountLine`, an icon and a count per choice (Need,
+Greed, Disenchant on Retail only, Pass, still to roll), and it hovers `RollCells.Tooltip`, every
+roll by choice with your verdict at the foot; a ROLLS box draws the same count line beside a
+resolved result (rolls UX RX-06). A won drop's roll table rides into the feed record as `roll` and,
+while `rolls.keep` is on, into its History entry (`rolls`), which the detail card's and the History
+card's ROLLS box draw. On Retail master loot is Guild Master Loot alone (design §11.2); the store is
+the same on both clients.
 
 ## The roll popup mark (Forever port design §7)
 
@@ -847,25 +858,29 @@ PendingChanged ─> RollsPanel.Refresh ─> reconcile: WindowPending.Items() les
     the block keeps the item table, its final roll) ─> done; still held but not listed ─> dropped
   done ─> stays (winner washed, result line) while any block still runs (RX-21)
   every block done ─> one rolls.panel.linger s countdown (0: at once); a new roll cancels it ─> every
-    block leaves and the panel closes, unless the pointer is over the panel (held: the panel's
-    OnLeave starts the count again) ─> WindowAutoClose.Bump
+    block leaves and the panel closes, unless the pointer is over the visible panel (held: the
+    panel's OnLeave, or its OnHide, starts the count again, RX-28) ─> WindowAutoClose.Bump
 paint: rolls.panel.enabled, the window shown and not minimized, not dismissed, a block or /dw rolls
   ─> test mode ─> the test strip under the title band; a simulation ─> the sim strip; the body moves
     down by the strip (RX-21)
   ─> raid mode? (RollsPanelRows.IsRaid on the larger of Compat.GroupSize and the most players on one
     block's roll: more than 5) ─> rolls.panel.foldInRaid ─> Pass and Waiting one line each
-    (RollsPanelRows.Fold), a click unfolds
+    (RollsPanelRows.Fold: the names in class color, [YOU] after yours), a click unfolds, a click on
+    an unfolded group's row folds it again (RX-28)
   ─> every block open unless the player collapsed it (its header's click, Collapse all; a collapsed
     header reads the count line, or its result once over, dimmed)
   ─> the title bar's one toggle (RX-25): chevron-up, Collapse all, while any block is open; else
     chevron-down, Expand all ─> a click sets every block's collapsed and repaints
   ─> pooled headers and lines in the scroll body (RollsPanelRows.Block: Grouped rows, kept while the
     roll reads the same, alternately shaded, a number on Need / Greed / Disenchant; the result; no
-    verdict line; title Rolls; 290 wide, 250 compact; the bar past the window's height)
+    verdict line; title Rolls; 290 wide, 250 compact, scaled with window.fontSize; the bar past the
+    window's height; the countdown bar the time left over the roll's own duration, RX-28)
   ─> docked flush right or left of the window (RollsPanelRows.Side, the screen's room) ─> a 1 s
     ticker while open
 Window show / hide / move / resize / layout / minimize (visibility and geometry listeners) ─> paint
-WindowAutoClose idle() ─> false while RollsPanel.HasBlocks()
+GROUP_ROSTER_UPDATE ─> OnRollsPanelRosterEvent ─> a shown panel repaints (raid mode at once, RX-28)
+Window › Layout › Font size (window.fontSize's onChange) ─> RollsPanel.Refresh (its width, RX-28)
+WindowAutoClose idle() ─> false while RollsPanel.HoldsWindow() (a block, not dismissed, RX-28)
 test mode on ─> Pending.AddTest (the sample roll, nine players) ─> PendingChanged ─> a block (raid mode)
 /dw sim raid ─> SimEvents.Raid ─> 6 simulated rolls of 40 players ─> PendingChanged ─> 6 blocks, raid mode
 Sim:OnStop (and any reconcile with no simulation running) ─> every block that joined during the

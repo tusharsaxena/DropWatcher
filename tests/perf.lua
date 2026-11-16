@@ -33,6 +33,11 @@
 -- The rolls UX round took it to 14736 (bisected 2026-11-14: RX-04's two item kinds grew the feed
 -- config's kinds map +320, RX-09's footer line +128); the filter bar's quality readout now reads its
 -- three settings instead of building that whole config each pass, which leaves 12624.
+-- It grew again to 13552 (bisected 2026-11-16 across 2118228..b19707c, RX-27: UC-DW's bee9b9f +480,
+-- RX-24's c5d9613 +448): every pass handed W.Footer its grip (foot:SetGrip), which lays the footer's
+-- marks and both lines out again, the more so once RX-24 gave it marks. The footer is now told only
+-- when the grip turns, and the panes are anchored only when their top moves, which leaves 11120
+-- (the compact pair 6768, from 9200).
 -- The compact refresh pair (DW-C5, compact spec §5) is the same pass in the compact layout: the
 -- same window, the cards' pane in place of the table, its chrome (the short title, the Filters
 -- button's count and tooltip, the one-line footer). Measured 2026-10-11 at 11065 bytes in both, under

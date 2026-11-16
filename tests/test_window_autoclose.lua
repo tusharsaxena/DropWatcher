@@ -495,14 +495,15 @@ test("roll open: a press on the Rolls panel, or its close button, keeps the coun
     p.closeButton:__fire("OnMouseDown", "LeftButton")
     p.closeButton:__fire("OnClick", "LeftButton")
     assertTrue(NS.WindowAutoClose.Armed(), "a press on its close button")
+    NS.SchemaRuntime.Set("rolls.panel.linger", 30)   -- the finished roll lingers past the window's count
     d.winner = { playerName = "Brakk", playerGUID = BRAKK, playerClass = "WARRIOR", isSelf = false, roll = 87 }
     d.rollInfos[1].isWinner = true
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 1)
-    m.advance(10.1)                      -- the finished roll's linger in the (closed) panel
-    assertFalse(NS.RollsPanel.HasBlocks())
     m.advance(9.8)
-    assertTrue(NS.IsWindowShown(), "a full count from the block leaving")
+    assertTrue(NS.IsWindowShown(), "the count from the roll's end")
+    assertTrue(NS.RollsPanel.HasBlocks(), "the finished roll lingers in the put-away panel")
     m.advance(0.3)
+    -- RX-28: a panel its close button put away holds nothing, so the window does not wait for it
     assertFalse(NS.IsWindowShown(), "then the window closes by itself")
 end)
 
@@ -517,4 +518,117 @@ test("roll open: the Auto-open the window tooltip names a roll popup too", funct
     local NS = inDungeon()
     local tip = NS.SchemaRuntime.FindRow("autoOpen").tooltip
     assertTrue(tip:find("loot-roll popup", 1, true) ~= nil, "it names the roll popup")
+end)
+
+-- ── RX-29: the auto-close and Pending minors ────────────────────────────────────────────────
+
+-- red under: P.Rebuild setting `rebuilding` true and back false with no protection (a walk that
+-- raised left it true, so every later live roll was taken as restored and opened nothing)
+test("rx29: a rebuild that raises surfaces the error and leaves later live rolls unrestored", function()
+    local NS, m = inDungeon()
+    NS.Compat.LootHistoryEncounters = function() return { 2800 } end
+    local real = NS.Pending.OnEncounter
+    NS.Pending.OnEncounter = function() error("walk failed") end
+    local ok, err = pcall(NS.Pending.Rebuild, true)
+    NS.Pending.OnEncounter = real
+    assertFalse(ok, "the error is raised to the caller")
+    assertTrue(tostring(err):find("walk failed", 1, true) ~= nil, "the walk's own error")
+    rollOpens(m)
+    assertEqual(NS.Pending.Count(), 1, "the live roll is in Rolling now")
+    assertTrue(NS.IsWindowShown(), "a live roll after the failed rebuild opens the window")
+end)
+
+-- red under: P.Rebuild marking every roll it reads restored (a roll first seen at a zone change's
+-- loading screen, a boss that died while it ran, opened nothing)
+test("rx29: a roll first seen at a zone change opens the window; one rebuilt at a reload does not", function()
+    local function across(isInitialLogin, isReloadingUi)
+        local NS, m = inDungeon()
+        m.addItem(ROLL_LINK, ring(620))
+        m.lootHistory["2900:1"] = openRoll()
+        m.lootEncounters = { { encounterID = 2900, encounterName = "Speaker Brokk", startTime = 90, duration = 0 } }
+        m.lootRolls[11] = { link = ROLL_LINK, quality = 4 }
+        m.activeLootRolls = { 11 }
+        m.__fire("PLAYER_ENTERING_WORLD", isInitialLogin, isReloadingUi)
+        assertEqual(NS.Pending.Count(), 1, "the roll is in Rolling now")
+        return NS
+    end
+    assertTrue(across(false, false).IsWindowShown(), "a zone change: a new roll opens the window")
+    assertFalse(across(false, true).IsWindowShown(), "a reload: the roll was seen before")
+    assertFalse(across(true, false).IsWindowShown(), "a login: the roll was open before it")
+end)
+
+-- red under: onHide only clearing NS.State.windowOpen (the count ran on after Escape, and closed
+-- nothing only because it found the window closed when it ran out)
+test("rx29: Escape cancels the count at once; a parent hide pauses it until the window shows", function()
+    local NS, m, f = autoOpened()
+    f:Hide()                 -- CloseSpecialWindows' Hide of a UISpecialFrames entry
+    f:__fire("OnHide")       -- the client runs OnHide on it; the mock frame does not
+    assertFalse(NS.WindowAutoClose.Armed(), "Escape disarms")
+    assertEqual(liveCountdowns(NS, m), 0, "no countdown left behind")
+    local NS2, m2, f2 = autoOpened()
+    f2:__fire("OnHide")      -- UIParent hid (Alt-Z): the frame's own flag stays set
+    assertTrue(NS2.WindowAutoClose.Armed(), "a parent hide keeps the auto-open's count")
+    assertEqual(liveCountdowns(NS2, m2), 0, "but no countdown runs while it is off screen")
+    m2.advance(60)
+    assertTrue(NS2.State.windowOpen, "not closed while hidden")
+    f2:__fire("OnShow")
+    m2.advance(9.9)
+    assertTrue(NS2.IsWindowShown(), "a full count after it showed")
+    m2.advance(0.2)
+    assertFalse(NS2.IsWindowShown())
+end)
+
+-- The ladder's own hide is not the player's: the count waits and starts over when it shows.
+test("rx29: the visibility ladder's hide keeps the auto-open armed", function()
+    local NS, m, f = autoOpened({ visibility = "outOfCombat" })
+    local hide = f.Hide
+    f.Hide = function(self) hide(self); self:__fire("OnHide") end
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    assertFalse(NS.IsWindowShown(), "the ladder hid it")
+    assertTrue(NS.WindowAutoClose.Armed(), "still armed")
+    assertEqual(NS.State.windowOpen, true, "still the player's open window")
+end)
+
+-- red under: AC.OnRefresh building a GetChildren table for every frame under the window on every
+-- repaint while armed
+test("rx29: the armed repaint walk reads a frame's children again only when they changed", function()
+    local NS, m, f = autoOpened()
+    local calls, real = 0, f.GetChildren
+    f.GetChildren = function(self) calls = calls + 1; return real(self) end
+    NS.Window.Refresh()
+    NS.Window.Refresh()
+    assertEqual(calls, 0, "no new child: the cached list is walked")
+    local late = m.CreateFrame("Button", nil, f)
+    NS.Window.Refresh()
+    assertEqual(calls, 1, "a new child: the list is read once")
+    late:__fire("OnMouseDown", "LeftButton")
+    assertFalse(NS.WindowAutoClose.Armed(), "and the new control is hooked")
+end)
+
+-- red under: rolling() counting every non-master-loot item (an everyone-passed roll lingering
+-- P.LINGER seconds held the auto-opened window that long)
+test("rx29: an everyone-passed or expired roll lingering in Rolling now does not hold the window", function()
+    for _, state in ipairs({ "allPassed", "expired" }) do
+        local NS, m = autoOpened()
+        local items = { { id = 9, kind = "roll", state = state } }
+        NS.Pending.Count = function() return #items end
+        NS.Pending.All = function() return items end
+        m.advance(10.1)
+        assertFalse(NS.IsWindowShown(), state .. ": nothing rolls, it closes")
+    end
+end)
+
+-- red under: maybeAutoOpen arming on a test drop (test mode's window closed under the player)
+test("rx29: a window a test drop auto-opened never closes by itself while test mode is on", function()
+    local NS, m = inDungeon()
+    assertTrue(NS.SetTestMode(true), "test mode on")
+    NS.HideWindow()
+    local rec = drop(50)
+    rec.test = true
+    announce(NS, rec)
+    assertTrue(NS.IsWindowShown(), "the test drop opened it")
+    assertFalse(NS.WindowAutoClose.Armed(), "test mode's window arms nothing")
+    m.advance(60)
+    assertTrue(NS.IsWindowShown(), "still open")
 end)

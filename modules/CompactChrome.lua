@@ -52,6 +52,7 @@ CC.TAB_W     = 84     -- one compact tab
 CC.VIEW_W    = 104    -- the View dropdown on the compact bar
 CC.FILTERS_W = 84     -- the Filters ▾ button
 CC.BADGE_W   = 44     -- the restriction badge: its lock and the queued count
+CC.BADGE_X   = 6      -- its inset from the bar's left edge
 CC.WRAP_H    = 12     -- the strip's second line
 local GAP = 8
 
@@ -378,7 +379,7 @@ local function layoutTitleBar(f, compact)
     f.badge:ClearAllPoints()
     if compact then
         f.badge:SetWidth(CC.BADGE_W)
-        f.badge:SetPoint("LEFT", f.titleBar, "LEFT", 6, 0)
+        f.badge:SetPoint("LEFT", f.titleBar, "LEFT", CC.BADGE_X, 0)
     else
         f.badge:SetWidth(170)
         f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
@@ -452,15 +453,66 @@ local function layout(f, compact)
     NS.Debug(TAG, "chrome -> %s", compact and "compact" or "full")
 end
 
--- The title and the word beside it centered together in compact, the title alone in full.
+local function widthOf(region, fallback)
+    local w = region and region.GetWidth and region:GetWidth()
+    return type(w) == "number" and w or fallback
+end
+
+-- What a LEFT or RIGHT title keeps clear of (RX-30), written into NS.WindowTitleBar.PLACE, which the
+-- skin's repaint reads too: at the left the reserve, past the compact badge while it shows; at the
+-- right the right-hand cluster and the reserve, the full layout's badge beside it while it shows,
+-- and for a RIGHT title the mode word and the new counter that follow it.
+local function reserve(f, compact, word, align)
+    local TB = NS.WindowTitleBar
+    local badge = f.badge:IsShown()
+    local place = TB.PLACE
+    place.left = TB.TITLE_RESERVE
+    if compact and badge then place.left = CC.BADGE_X + CC.BADGE_W + TB.TITLE_RESERVE end
+    local right = TB.ClusterWidth(f) + TB.TITLE_RESERVE
+    if badge and not compact then right = right + 8 + widthOf(f.badge, 0) end
+    if align == "RIGHT" then
+        if word then right = right + TB.MODE_GAP + widthOf(word, 0) end
+        if f.newChip:IsShown() then right = right + 8 + widthOf(f.newChip, 0) end
+    end
+    place.right = right
+    return place
+end
+
+-- The title where the skin aligns it (`title.align`, RX-30). Centered: with the word beside it
+-- centered together in compact, alone in full. LEFT or RIGHT: clear of the controls at that edge.
+-- The skin's title alignment: LEFT or RIGHT as it says, else CENTER.
+local function titleAlign()
+    local align = NS.Skin.Token and NS.Skin.Token("title.align")
+    if align == "LEFT" or align == "RIGHT" then return align end
+    return "CENTER"
+end
+
+-- The title's x for `align`: centered, shifted by half the word beside it in compact; LEFT or RIGHT,
+-- in by what that edge keeps clear of.
+local function titleX(f, compact, word, align)
+    if align == "CENTER" then
+        if compact and word then return -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
+        return 0
+    end
+    local place = reserve(f, compact, word, align)
+    return align == "LEFT" and place.left or -place.right
+end
+
 local function placeTitle(f, compact)
     local word = (f.testText:IsShown() and f.testText) or (f.simText:IsShown() and f.simText) or nil
-    local x = 0
-    if compact and word then x = -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
-    if f.titleX == x then return end
-    f.titleX = x
+    local align = titleAlign()
+    local x = titleX(f, compact, word, align)
+    if f.titleX == x and f.titleAlign == align then return end
+    f.titleX, f.titleAlign = x, align
     f.title:ClearAllPoints()
-    f.title:SetPoint("CENTER", f.titleBar, "CENTER", x, 0)
+    f.title:SetPoint(align, f.titleBar, align, x, 0)
+end
+
+--- The title's place for this pass (Window.Refresh, after the title bar's badge, mode word and the
+--- minimized `n new` counter are painted, so a LEFT or RIGHT title reads what they show now; RX-30).
+--- @param f table the window frame
+function CC.PlaceTitle(f)
+    placeTitle(f, isCompact())
 end
 
 local function paintFilters()
@@ -475,7 +527,7 @@ local function paintFilters()
 end
 
 --- One pass of the chrome (Window.Refresh, before the tabs and the bar): the whole layout when the
---- layout in force changed since the last pass, then the title's place, the strip's height and, in
+--- layout in force changed since the last pass, then the strip's height and, in
 --- compact, the Filters button's count. A minimized window closes the Filters menu.
 --- @param f table the window frame
 function CC.Paint(f)
@@ -484,7 +536,6 @@ function CC.Paint(f)
         f.chromeCompact = compact
         layout(f, compact)
     end
-    placeTitle(f, compact)
     local b = CC.ModeStrip(f)
     local h = CC.BannerH()
     if b and b.slotH ~= h then
@@ -523,12 +574,23 @@ function CC.BannerH()
     local f = NS.Window.Frame()
     local strip = f and CC.ModeStrip(f)
     if f and not strip then return 0 end
+    if not (f and f.chromeCompact) then return NS.TestStripHeight() end
+    return CC.StripHeight(strip, (f:GetWidth() or 0) - 2 * K.INSET - 30)
+end
+
+--- A wrapping strip's height (the compact window's, and the Rolls panel's, RX-28): one line (the
+--- library's TEST_STRIP.HEIGHT) when its words' unwrapped width fits the room their anchors give
+--- them, else two (CC.WRAP_H more), two as well when the words cannot be measured. `room` stands in
+--- for the anchors' width before the strip is laid out.
+--- @param strip table a NS.MakeTestStrip strip, its `text` wrapping
+--- @param room number the words' room when the anchors give none yet
+--- @return number
+function CC.StripHeight(strip, room)
     local one = NS.TestStripHeight()
-    if not (f and f.chromeCompact) then return one end
     local fs = strip.text
     local w = unwrappedWidth(fs)
-    local room = fs.GetWidth and fs:GetWidth()
-    if type(room) ~= "number" or room <= 0 then room = (f:GetWidth() or 0) - 2 * K.INSET - 30 end
+    local given = fs.GetWidth and fs:GetWidth()
+    if type(given) == "number" and given > 0 then room = given end
     if w and room > 0 and w <= room then return one end
     return one + CC.WRAP_H
 end

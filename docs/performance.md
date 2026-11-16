@@ -117,6 +117,19 @@ its feed name). The ceilings stay where they are: the repaint now asks `WindowPe
 (`Pending.Count`, `Window.FeedName`) before it builds anything, so with nothing pending the pairs are
 back to 14288.0 and 11056.0, the 2026-11-05 figures exactly.
 
+Re-run 2026-11-16 (RX-27): the refresh pairs had climbed from 12624.0 and 8272.0 (after 2118228's
+quality readout fix) to 13552.0 and 9200.0, with 948 bytes left under the 14500 ceiling. Bisected
+with `tests/perf.lua` over every commit of 2118228..b19707c, each exported to its own directory: two
+steps, UC-DW's bee9b9f (+480, the mode strips docked and the footer built with W.Footer) and RX-24's
+c5d9613 (+448, the footer's words and controls on W.Footer's lines and marks), every other commit
+flat. A per-function profile under the mock put both on one call: `paintMinimized` handed the footer
+its grip on every pass, and W.Footer's `SetGrip` lays its marks and both lines out again each time,
+which with RX-24's three marks cost more. The shell now calls `SetGrip` only when the grip turns, and
+`NS.WindowTabs.Layout` anchors a pane again only when its top moves (a further 1152 bytes: all three
+panes were re-anchored on every pass), both pinned by `test_window_shell`.
+After it: `refreshCaptureOff`/`On` 11120.0 and `refreshCompactCaptureOff`/`On` 6768.0, the ceilings
+unmoved.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

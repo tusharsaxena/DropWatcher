@@ -35,7 +35,8 @@ local _, NS = ...
 -- (`tableFontShadowFromSkin`, on by default, FS-DW-FLIP). modules/WindowRows.lua draws them on both tabs
 -- and in both layouts; the color is plain text's (a verdict, a quality or a class keeps its own) and
 -- reads as the skin's while it is the default. PLAYER-SCOPED like the icons. Without the library
--- there is no row and WindowRows reads defaults/Profile.lua's values: today's look.
+-- there is no row and WindowRows reads defaults/Profile.lua's values: today's look. Font size also
+-- repaints the Rolls panel, whose width scales with it (modules/RollsPanel.lua, RX-28).
 
 local DW       = NS.addon
 local Settings = DW.Settings
@@ -146,9 +147,16 @@ local FONT_DECORATE = {
         tooltip = L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] },
 }
 
+-- Font size: the window and the Rolls panel, whose width is in the window's layout unit (RX-28).
+local function repaintWithPanel()
+    Settings.RepaintWindow()
+    if NS.RollsPanel then NS.RollsPanel.Refresh() end
+end
+
 for _, row in ipairs(FONT) do
     for k, v in pairs(FONT_DECORATE[row.path] or {}) do row[k] = v end
     if row.path == "window.tableFontFlags" then row.validate = flagsCheck(row) end
     row.onChange = Settings.RepaintWindow
+    if row.path == "window.fontSize" then row.onChange = repaintWithPanel end
 end
 NS.SchemaRuntime.AddRows(FONT)

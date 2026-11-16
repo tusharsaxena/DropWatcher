@@ -302,6 +302,17 @@ test("footer row: the Drops toggle opens every shown header, then closes them, i
     end
 end)
 
+-- red under: the mark's tooltip read once on enter, so a press under the pointer left it stale (RX-28)
+test("footer row: a press on the toggle under the pointer turns its open tooltip to the new state", function()
+    local NS, _, m = shownDrops()
+    local fold = NS.FooterRow.Mark("fold")
+    fold:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__lines[1].text, "Expand all")
+    fold:__fire("OnClick", "LeftButton")
+    assertEqual(m.GameTooltip.__lines[1].text, "Collapse all", "the shown tooltip follows the press")
+    fold:__fire("OnLeave")
+end)
+
 test("footer row: the toggle is off when the tab shows no header", function()
     local NS = shownDrops()
     NS.WindowFilterBar.Set("group", "search", "nothing like it")

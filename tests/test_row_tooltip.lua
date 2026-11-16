@@ -9,7 +9,7 @@ local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
 -- A plain frame for RowTooltip.Place: its edges, width, scale and parent, and the points it is given.
 local function box(t)
-    local f = { pts = {}, tipHost = t.tipHost, dock = t.dock, tipDocked = t.tipDocked, tipRow = t.tipRow }
+    local f = { pts = {}, tipHost = t.tipHost, dock = t.dock, tipDocks = t.tipDocks, tipRow = t.tipRow }
     if t.shown ~= nil then function f.IsShown() return t.shown end end
     function f.GetLeft() return t.left end
     function f.GetRight() return t.right end
@@ -86,7 +86,7 @@ local function dockedPair(side, shown)
     local panel = side == "right"
         and box({ left = 1304, right = 1744, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
         or box({ left = 56, right = 496, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
-    win.tipDocked = panel
+    win.tipDocks = { offer = panel }
     return win, panel
 end
 
@@ -111,6 +111,27 @@ test("row tooltip: a window row's tooltip goes beside the docked Offer panel, no
     assertTrue(tip.pts[1][2] == win2)
     assertEqual(placed(NS, m, 1310, box({ top = 700, parent = win2 }), tip), "left")
     assertTrue(tip.pts[1][2] == left, "beyond the panel's left edge")
+end)
+
+-- RX-28: the Rolls panel docked beside the window is part of the group too (v2.112.0 *Tooltip
+-- placement*): a window row's tooltip goes beyond it, and so does an Offer panel row's on the other side.
+test("row tooltip: the docked Rolls panel is part of the window group, beside the Offer panel or alone", function()
+    local NS, _, m = T.newAddon()
+    local gap = NS.Constants.WINDOW.TIP_GAP
+    local win = box({ left = 700, right = 1300, top = 900 })
+    local rolls = box({ left = 1300, right = 1590, top = 900, parent = win, dock = "right", shown = true })
+    win.tipDocks = { rolls = rolls }
+    local tip = box({ width = 300 })
+    -- red under: the window's own right edge (1300), under the Rolls panel
+    assertEqual(placed(NS, m, 1920, box({ top = 700, parent = win }), tip), "right")
+    assertTrue(tip.pts[1][2] == rolls, "beyond the Rolls panel's right edge")
+    assertEqual(tip.pts[1][4], gap)
+    local offer = box({ left = 360, right = 696, top = 900, parent = win, tipHost = true, dock = "left", shown = true })
+    win.tipDocks.offer = offer
+    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = offer }), tip), "right")
+    assertTrue(tip.pts[1][2] == rolls, "an Offer panel row's tooltip goes past the window and the Rolls panel")
+    assertEqual(placed(NS, m, 1700, box({ top = 700, parent = win }), tip), "left")
+    assertTrue(tip.pts[1][2] == offer, "no room right: beyond the Offer panel's left edge")
 end)
 
 test("row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored", function()

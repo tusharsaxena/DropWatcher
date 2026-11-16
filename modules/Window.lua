@@ -1,7 +1,7 @@
 local addonName, NS = ...
 -- modules/Window.lua — the main window's shell (design spec §11.1, boards 01 and 06): frame, skin,
--- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the tab strip and
--- its lazily built panes, the filter bar's host, the footer's host, the mode strips (the library's
+-- title bar (centered gold title, restriction badge, compact's Scan group icon, minimize, close), the active tab
+-- and its lazily built panes, the filter bar's host, the footer's host, the mode strips (the library's
 -- strip in its test and simulation flavors, anchored and tipped here; the title bar's TEST MODE /
 -- SIM word stands in only while minimized or with no strip), minimize, resize, position, lock, scale, alpha
 -- and the show decision.
@@ -16,9 +16,11 @@ local addonName, NS = ...
 -- THE SPLIT. modules/WindowTitleBar.lua owns the title bar (its controls, the badge's words and
 -- the window's flat and icon buttons), modules/WindowFilterBar.lua the filter bar (its controls,
 -- each tab's filter state and the pure row predicates), modules/WindowFooter.lua the footer (its
--- pure composer and its reads), modules/CompactChrome.lua all of it in the compact layout. The tabs'
--- bodies (WindowGroup, WindowHistory, WindowInsights) each call Window.RegisterTab(key, { build,
--- refresh, ownBar }) and are built on the tab's first show; a tab with no body says what it will hold.
+-- pure composer and its reads), modules/WindowTabs.lua the tab strip (its tabs, their labels and
+-- tooltips, the panes, their layout and paint, and the tabs' registry; RX-27), modules/CompactChrome.lua
+-- all of it in the compact layout. The tabs' bodies (WindowGroup, WindowHistory, WindowInsights) each
+-- call Window.RegisterTab(key, { build, refresh, ownBar }) and are built on the tab's first show; a tab
+-- with no body says what it will hold. The shell keeps which tab is active (Window.SelectTab).
 --
 -- THREE TABS: Drops, History (feedback-5 spec §3) and Insights (issue #12). The Drops tab's key stays
 -- `group`, so its filter state and the suites keep their key; the retired tab's key, `mine`, opens
@@ -59,34 +61,12 @@ local TAG = "UI"
 -- The tabs, in strip order (design spec §11.1; feedback-5 spec §3 retired `mine`; issue #12 added
 -- Insights after History).
 Window.TABS = { "group", "history", "insights" }
-local TAB_SET = { group = true, history = true, insights = true }
--- A retired tab's key opens the tab that took its drops.
-local TAB_ALIAS = { mine = "group" }
-local TAB_LABEL = { group = L["Drops"], history = L["History"], insights = L["Insights"] }
--- Each tab's tooltip rows (feedback-21): { label, value } pairs, or a function answering them
--- (Insights names the period it covers, which the retention row moves).
-local TAB_TIP = {
-    group   = { { L["Holds"], L["every drop your group receives, yours included"] }, { L["Grouped by"], L["boss or key run"] } },
-    history = { { L["Holds"], L["drops from earlier encounters"] }, { L["Kept"], L["across sessions"] } },
-    insights = function()
-        local R = NS.HistoryRetention
-        local days = R.Days()
-        return { { L["Holds"], L["charts over the kept history"] },
-            { L["Covers"], days > 0 and L["the last %s kept"]:format(R.Label(days)) or L["every kept day"] } }
-    end,
-}
--- What a tab with no body yet says, so the window is never blank.
-local TAB_PLACEHOLDER = {
-    group   = L["No drops yet. Loot your group receives appears here."],
-    history = L["Drops from earlier encounters appear here."],
-    insights = L["Charts over the kept history appear here."],
-}
+local WT     = NS.WindowTabs   -- the tab strip, its panes and the tabs' registry (RX-27)
 
 local frame   -- built on the first show
 local openedByTestMode = false   -- test mode, not the player, opened the window
 local visibilityListeners = {}   -- fn(shown), told on every OnShow and OnHide of the frame
 local geometryListeners = {}     -- fn(cause), told when the frame moves, resizes, rescales or minimizes
-local tabSpecs = {}              -- [tab] = { build = fn(pane), refresh = fn(pane, ctx) }
 local activeTab = "group"
 local newCount = 0               -- drops added to the shown feed since the window was minimized
 local restrictionReason          -- RestrictionChanged's last `reason` (nil: nothing restricted)
@@ -252,9 +232,12 @@ local function addTipLine(line)
     end
 end
 
+local tipFor   -- the widget whose tooltip showTooltip last raised, until its leave
+
 local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
+    tipFor = self
     local placer = PLACERS[self.tipPlace]
     NS.TipGrid.Begin()
     GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
@@ -267,6 +250,7 @@ local function showTooltip(self)
 end
 
 local function hideTooltip()
+    tipFor = nil
     if GameTooltip then GameTooltip:Hide() end
 end
 
@@ -293,6 +277,15 @@ function Window.AttachTooltip(widget, fn, place)
     widget:HookScript("OnLeave", function(self) NS.WindowRows.WashRowOf(self, false) end)
 end
 
+--- Read `widget`'s tooltip again while it is the one shown (RX-28): a control whose state its own
+--- click changes (an Expand all / Collapse all toggle) calls it after the click, so the tooltip under
+--- the pointer names what the next click does. Nothing while another tooltip, or none, shows.
+--- @param widget table|nil
+function Window.RefreshTooltip(widget)
+    if widget == nil or tipFor ~= widget or not (GameTooltip and GameTooltip:IsShown()) then return end
+    showTooltip(widget)
+end
+
 --- What a hover over `widget` shows, as a list (title first), or an empty list.
 --- @param widget table|nil
 --- @return table
@@ -311,23 +304,12 @@ function Window.BadgeText(reason, queued)
     return NS.WindowTitleBar.BadgeText(reason, queued)
 end
 
---- A tab's label in the full layout: `Drops` or `History`. No count: the Drops tab's footer says
---- how many of your drops you can still trade (feedback-5 spec §3).
+--- A tab's label in the full layout (NS.WindowTabs.Label).
 --- @param key string
 --- @return string
-function Window.TabLabel(key)
-    return TAB_LABEL[key] or tostring(key)
-end
+function Window.TabLabel(key) return WT.Label(key) end
 
 -- ── reads ───────────────────────────────────────────────────────────────────────────────────
-
--- A tab's tooltip: its label and what it holds.
-local function tabTip(key)
-    local out, rows = { TAB_LABEL[key] }, TAB_TIP[key]
-    if type(rows) == "function" then rows = rows() end
-    for _, r in ipairs(rows or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
-    return unpack(out)
-end
 
 --- RestrictionChanged's last reason; before the first one, the tracker's own answer. Nil while
 --- nothing is restricted. The title bar's badge reads it.
@@ -443,52 +425,7 @@ end
 --- @param icon string|nil
 function Window.SetButtonMark(b, text, icon) NS.WindowTitleBar.SetButtonMark(b, text, icon) end
 
--- ── construction: the tabs and the body ─────────────────────────────────────────────────────
-
-local function buildTab(strip, key, i)
-    local tab = CreateFrame("Button", nil, strip)
-    tab:SetSize(K.TAB_W, K.TAB_H)
-    tab:SetPoint("LEFT", strip, "LEFT", (i - 1) * (K.TAB_W + K.TAB_GAP), 0)
-    tab.label = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
-    tab.label:SetPoint("CENTER", tab, "CENTER", 0, 0)
-    tab.label:SetText(TAB_LABEL[key])
-    if NS.Skin.IsEnabled() then
-        -- The skin's Tab (FS-DW-FIX, cause A1): its backing, edge, underline and label colors.
-        NS.Skin.Tab(tab, { text = tab.label, selected = false })
-    else
-        -- Without the library: the text roles (paintTabs) and this underline, as the window drew.
-        tab.underline = tab:CreateTexture(nil, "ARTWORK")
-        NS.SkinPaint(tab.underline, function(t) t:SetColorTexture(NS.SkinColor("tab.onLine")) end)
-        tab.underline:SetHeight(2)
-        tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
-        tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
-    end
-    tab:SetScript("OnClick", function() Window.SelectTab(key) end)
-    Window.AttachTooltip(tab, function() return tabTip(key) end)
-    return tab
-end
-
-local function buildTabs(f, body)
-    local strip = CreateFrame("Frame", nil, body)
-    strip:SetPoint("TOPLEFT", body, "TOPLEFT", K.INSET, -2)
-    strip:SetPoint("TOPRIGHT", body, "TOPRIGHT", -K.INSET, -2)
-    strip:SetHeight(K.TAB_H)
-    f.tabStrip, f.tabs = strip, {}
-    for i, key in ipairs(Window.TABS) do f.tabs[key] = buildTab(strip, key, i) end
-end
-
-local function buildPanes(f, body)
-    f.panes = {}
-    for _, key in ipairs(Window.TABS) do
-        local pane = CreateFrame("Frame", nil, body)
-        pane.placeholder = pane:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
-        pane.placeholder:SetPoint("CENTER", pane, "CENTER", 0, 0)
-        NS.Skin.Text(pane.placeholder, "text.highlight")
-        pane.placeholder:SetText(TAB_PLACEHOLDER[key])
-        pane:Hide()
-        f.panes[key] = pane
-    end
-end
+-- ── construction: the body (the tab strip is modules/WindowTabs.lua) ────────────────────────
 
 -- The mode strips (board 06 E; preview-mode's *Where the strip sits*): the library's strip
 -- (LibKa0s-Widgets' TestStrip, LibKa0s#48), one per mode, docked directly under the title bar, full
@@ -532,17 +469,18 @@ end
 -- edge (inset 0: the body is already 1 px inside the window's edge), the resize grip's corner cleared
 -- (`grip`, the grip itself built on it by makeResizable). Its words are its own left line and its
 -- controls its marks (RX-24: NS.WindowFooter, NS.FooterRow), the active tab's. No library: a bare
--- frame of the same height with the two lines and no marks (NS.BareFooter).
+-- frame of the same height with the two lines and the same marks (NS.BareFooter, RX-30).
 local function buildFooter(body)
-    return NS.MakeFooter(body, { grip = true, inset = 0, marks = NS.FooterRow.MarkSpecs() })
-        or NS.BareFooter(body)
+    local marks = NS.FooterRow.MarkSpecs()
+    return NS.MakeFooter(body, { grip = true, inset = 0, marks = marks })
+        or NS.BareFooter(body, { marks = marks })
 end
 
 local function buildBody(f)
     local body = CreateFrame("Frame", nil, f)
     f.body = body
     relayBody(f)
-    buildTabs(f, body)
+    WT.Build(f, body)
 
     f.filterHost = CreateFrame("Frame", nil, body)
     f.filterHost:SetPoint("TOPLEFT", body, "TOPLEFT", K.INSET, -(K.TAB_H + 4))
@@ -557,25 +495,10 @@ local function buildBody(f)
     -- are its left line, the tab's controls its marks.
     f.footerHost = buildFooter(body)
 
-    buildPanes(f, body)
+    WT.BuildPanes(f, body)
     NS.WindowFilterBar.Build(f.filterHost)
     NS.FooterRow.Attach(f.footerHost)
     NS.WindowFooter.Build(f.footerHost)
-end
-
--- The panes fill between the filter bar and the footer (the strip in force, in test mode or a
--- simulation, is over the tabs: the body moved down by it, relayBody); a pane with its own bar
--- (Window.TabOwnsBar) starts under the tabs, and while it is the active tab the shared bar is hidden.
-local function layoutPanes()
-    local own = Window.TabOwnsBar(activeTab)
-    frame.filterHost:SetShown(not own)
-    relayBody(frame)
-    for key, pane in pairs(frame.panes) do
-        local top = K.TAB_H + 4 + (Window.TabOwnsBar(key) and 0 or K.FILTER_H)
-        pane:ClearAllPoints()
-        pane:SetPoint("TOPLEFT", frame.body, "TOPLEFT", K.INSET, -top)
-        pane:SetPoint("BOTTOMRIGHT", frame.body, "BOTTOMRIGHT", -K.INSET, 0)
-    end
 end
 
 local function makeResizable(f)
@@ -604,9 +527,16 @@ end
 
 -- A parent's hide (Alt-Z, a cinematic, the full-screen map) also runs OnHide, but leaves the frame's
 -- own shown flag set, and the window returns with UIParent: only a hide of the frame itself (Escape,
--- the close mark, the ladder) is the player closing it.
+-- the close mark, the ladder) is the player closing it. Escape or the close mark disarms an
+-- auto-close at once (RX-29); the ladder's hide (`ladderHiding`) keeps the player's choice and the
+-- auto-open's count, which only stops while the window is off screen (the visibility listener).
+local ladderHiding = false
+
 local function onHide(self)
-    if not self:IsShown() then NS.State.windowOpen = false end
+    if not self:IsShown() then
+        NS.State.windowOpen = false
+        if not ladderHiding then NS.WindowAutoClose.Disarm() end
+    end
     stopTicker()
     -- The dropdowns' popup is a process-wide singleton: hiding the window does not reach it.
     NS.CloseMenu()
@@ -657,14 +587,6 @@ end
 
 -- ── repainting ──────────────────────────────────────────────────────────────────────────────
 
-local function buildPane(key)
-    local pane, spec = frame.panes[key], tabSpecs[key]
-    if spec and not pane.built then
-        pane.built = true
-        spec.build(pane)
-    end
-end
-
 --- The view a tab's body draws: its feed, its filter state, the controls it honors and the row
 --- predicate and order that apply them (modules/WindowFilterBar.lua).
 --- @param tab string|nil the active tab when nil
@@ -691,40 +613,19 @@ function Window.TabContext(tab)
     }
 end
 
-local function refreshActive()
-    -- A tab with no body shows its placeholder; a body shows it itself, as its empty state, from
-    -- its refresh below.
-    for key, p in pairs(frame.panes) do
-        p.placeholder:SetShown(tabSpecs[key] == nil)
-    end
-    local spec = tabSpecs[activeTab]
-    if spec and spec.refresh then spec.refresh(frame.panes[activeTab], Window.TabContext(activeTab)) end
-end
-
--- The skin's selection (S.SetTabSelection, which keeps it through a skin switch), once per change.
--- Without the library, the labels in text roles: the active one in the accent, an idle one in the
--- idle gray `dw.idle`, with the window's own underline.
-local function paintTabs()
-    for key, tab in pairs(frame.tabs) do
-        local active = key == activeTab
-        local role = active and "accent" or "dw.idle"
-        tab.label:SetText(NS.CompactChrome.TabText(key))
-        if tab.dwRole ~= role then
-            tab.dwRole = role
-            if tab.underline then NS.Skin.Text(tab.label, role) else NS.Skin.SetTabSelection(tab, active) end
-        end
-        if tab.underline then tab.underline:SetShown(active) end
-    end
-end
-
 local function paintMinimized()
     local m = isMinimized()
     frame.body:SetShown(not m)
     -- The grip shows only while the window can be resized: expanded and unlocked (RX-08); the
-    -- footer clears its corner only while it shows (foot:SetGrip).
+    -- footer clears its corner only while it shows (foot:SetGrip), told only when that turns, since
+    -- W.Footer lays its marks and both lines out again on every SetGrip (RX-27).
     local grip = not m and not isLocked()
     if frame.resizeGrip then frame.resizeGrip:SetShown(grip) end
-    if frame.footerHost.SetGrip then frame.footerHost:SetGrip(grip) end
+    local foot = frame.footerHost
+    if foot.SetGrip and foot.dwGrip ~= grip then
+        foot.dwGrip = grip
+        foot:SetGrip(grip)
+    end
     NS.WindowTitleBar.PaintMinimized(frame, m, newCount)
     NS.WindowTitleBar.PaintLock(frame, isLocked())
 end
@@ -739,15 +640,17 @@ function Window.Refresh()
     TB.PaintModeText(frame)
     NS.CompactChrome.Paint(frame)   -- the compact layout's chrome (compact spec §4)
     paintMinimized()
+    NS.CompactChrome.PlaceTitle(frame)   -- after the counter it may have to clear (RX-30)
     if not isMinimized() then
         local sim = NS.State.testMode ~= true and NS.Sim:IsActive()
         if frame.banner then frame.banner:SetShown(NS.State.testMode == true) end
         if frame.simBanner then frame.simBanner:SetShown(sim) end
-        layoutPanes()
-        paintTabs()
+        relayBody(frame)
+        WT.Layout(frame, activeTab)
+        WT.Paint(frame, activeTab)
         if not Window.TabOwnsBar(activeTab) then NS.WindowFilterBar.Sync(activeTab) end
         NS.WindowFooter.Refresh()
-        refreshActive()
+        WT.RefreshActive(frame, activeTab, Window.TabContext)
         -- The Offer panel docks beside the window and repaints with it (modules/OfferPanel.lua).
         if NS.OfferPanel then NS.OfferPanel.Refresh() end
     end
@@ -808,8 +711,8 @@ end
 --- @param key string `group`, `history` or `insights`
 --- @return boolean changed false for an unknown tab
 function Window.SelectTab(key)
-    key = TAB_ALIAS[key] or key
-    if not TAB_SET[key] then return false end
+    key = WT.Resolve(key)
+    if not key then return false end
     activeTab = key
     if not frame then return true end
     for k, pane in pairs(frame.panes) do pane:SetShown(k == key) end
@@ -817,7 +720,7 @@ function Window.SelectTab(key)
         NS.CloseMenu()   -- the shared bar's menu and the compact Filters menu go with the bar
         NS.CompactChrome.CloseFilters()
     end
-    buildPane(key)
+    WT.BuildPane(frame, key)
     NS.Debug(TAG, "tab -> %s", key)
     Window.Refresh()
     return true
@@ -829,10 +732,7 @@ function Window.ActiveTab() return activeTab end
 --- Whether a tab draws its own filter bar (its spec's `ownBar`: Insights).
 --- @param tab string|nil the active tab when nil
 --- @return boolean
-function Window.TabOwnsBar(tab)
-    local spec = tabSpecs[tab or activeTab]
-    return spec ~= nil and spec.ownBar == true
-end
+function Window.TabOwnsBar(tab) return WT.OwnsBar(tab or activeTab) end
 
 --- A feature item's body for one tab (WindowGroup, WindowHistory, WindowInsights): `spec.build(pane)`
 --- runs on the tab's first show, `spec.refresh(pane, Window.TabContext(tab))` on every repaint
@@ -840,12 +740,11 @@ end
 --- @param key string
 --- @param spec table { build = fn, refresh = fn, ownBar = boolean|nil }
 function Window.RegisterTab(key, spec)
-    assert(TAB_SET[key], "unknown tab " .. tostring(key))
-    tabSpecs[key] = spec
+    WT.Register(key, spec)
     if not frame then return end
     frame.panes[key].built = nil
     if key == activeTab then
-        buildPane(key)
+        WT.BuildPane(frame, key)
         repaint()
     end
 end
@@ -928,7 +827,9 @@ function Window.UpdateVisibility(inCombat)
     elseif frame and frame:IsShown() then
         -- Hidden by the ladder, not by the player: keep the player's choice for the next show.
         local open = NS.State.windowOpen
+        ladderHiding = true
         frame:Hide()
+        ladderHiding = false
         stopTicker()
         NS.State.windowOpen = open
     end
@@ -1056,7 +957,9 @@ local function maybeAutoOpen(rec, what)
     Window.SelectTab("group")
     Window.Open()
     openedByTestMode = rec.test == true
-    NS.WindowAutoClose.Arm()   -- auto-close (rolls UX design §3.6): only an auto-open's show counts down
+    -- Auto-close (rolls UX design §3.6): only an auto-open's show counts down, and never test mode's
+    -- (AC.Arm refuses while test mode is on, RX-29: turning test mode off closes it instead).
+    NS.WindowAutoClose.Arm()
 end
 
 local function onDropAdded(id)

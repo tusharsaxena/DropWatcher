@@ -207,8 +207,11 @@ end
 --- Whether an item opens (RX-04, rolls UX design §3.5): `locked` when its hyperlink tooltip carries
 --- a line whose left text EQUALS the localized LOCKED ("Locked", a lockbox), `opens` for one that
 --- equals ITEM_OPENABLE ("<Right Click to Open>"), false once the tooltip was read with neither; nil
---- for no API, no GlobalString, a secret link, a missing or malformed tooltip or a secret line.
---- modules/Collectibles.lua asks it of Miscellaneous Junk alone, the class a lockbox has.
+--- for no API, neither GlobalString (one alone is enough to read its line), a secret link, a missing
+--- or malformed tooltip or a secret line. It reads lines only: the item's class is the caller's.
+--- modules/Collectibles.lua asks it of Miscellaneous Junk alone, the class a lockbox has, after the
+--- toy probe (a toy is never asked), and takes either answer as a lockbox (its Kind); a bag, quiver
+--- or ammo pouch is a container by its class there, and never asks it (RX-30).
 --- @param link string
 --- @return string|false|nil
 function Compat.ItemOpens(link)

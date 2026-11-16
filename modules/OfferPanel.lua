@@ -202,21 +202,15 @@ local function announceTip(p)
     return unpack(p.announce.tipLines or { L["Announce to group"] })
 end
 
--- A mark that stands in for Announce to group with no library (no marks: NS.BareFooter), so the
--- paint runs unchanged; never shown.
-local function noMark(foot)
-    local b = CreateFrame("Button", nil, foot)
-    b.icon = b:CreateTexture(nil, "ARTWORK")
-    b:Hide()
-    return b
-end
-
+-- Announce to group is the footer's one mark, the library's or, with no library, NS.BareFooter's
+-- (RX-30), so it stays in reach on a degraded install.
 local function buildFoot(p)
     local W = NS.Window
-    local foot = NS.MakeFooter(p, { marks = { { icon = NS.Icon("speech-bubble"),
-        onClick = function() NS.PressAnnounce(p.dropId) end } } }) or NS.BareFooter(p)
+    local opts = { marks = { { icon = NS.Icon("speech-bubble"),
+        onClick = function() NS.PressAnnounce(p.dropId) end } } }
+    local foot = NS.MakeFooter(p, opts) or NS.BareFooter(p, opts)
     p.foot = foot
-    p.announce = foot.marks[1] or noMark(foot)
+    p.announce = foot.marks[1]
     W.AttachTooltip(p.announce, function() return announceTip(p) end, "above")
     -- The note is the footer's right line (the library paints it `text.muted`); a frame over it
     -- carries the order's tooltip.
@@ -286,7 +280,8 @@ local function build()
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
     p:SetFrameStrata(C.LAYERS.STRATA.WINDOW)   -- the window's, docked or floating: never switched
     p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (modules/RowTooltip.lua)
-    win.tipDocked = p  -- and a window row's tooltip goes beside the docked panel, not over it
+    win.tipDocks = win.tipDocks or {}
+    win.tipDocks.offer = p   -- and a window row's tooltip goes beside the docked panel, not over it
     p:EnableMouse(true)
     NS.ApplySkin(p)
     buildTitle(p)

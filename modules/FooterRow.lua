@@ -85,10 +85,14 @@ end
 
 -- ── the frame edge ──────────────────────────────────────────────────────────────────────────
 
--- A mark's press runs its control's action while it has one and is on.
+-- A mark's press runs its control's action while it has one and is on, then reads the tooltip under
+-- the pointer again (RX-28): the toggle's names what its next press does.
 local function press(b)
     local c = b.dwControl
-    if c and c.enabled ~= false then c.onClick(c) end
+    if c and c.enabled ~= false then
+        c.onClick(c)
+        NS.Window.RefreshTooltip(b)
+    end
 end
 
 --- W.Footer's `opts.marks` for the window: FR.SLOTS marks with no art yet, each pressing the control
@@ -107,7 +111,7 @@ local function markTip(b)
 end
 
 --- Take the window's footer (once per window): each mark's tooltip reads the control bound to it.
---- @param f table the footer (W.Footer's, or NS.BareFooter's with no marks)
+--- @param f table the footer (W.Footer's, or NS.BareFooter's with the same marks)
 function FR.Attach(f)
     foot = f
     for _, b in ipairs(f.marks or {}) do

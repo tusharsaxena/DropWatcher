@@ -63,12 +63,15 @@ the code reads every case the design leaves open, module by module, is in
   their bags for that spec is not counted and an off-spec can read better for them than it is. Every
   other spec of the class counts, with no setting to leave one out. FEED-80, FEED-81, ASK-11 and
   TOAST-5 are the in-game checks.
-- **The footer's controls without LibKa0s-Widgets** (RX-24). The window's and the Offer panel's
+- **The footer without LibKa0s-Widgets** (RX-24, RX-30). The window's and the Offer panel's
   controls are the library footer's marks (Expand all / Collapse all, Scan group, Post my
   tradeables, Reset filters, Announce to group), so an install missing LibKa0s-Widgets-1.0 draws a
-  bare footer of the same height with the words and no controls. Scan group stays in reach through
-  `/dw scan` and the headers fold one at a time; Post my tradeables and Announce to group have no
-  other way in.
+  bare footer of the same height with the words and the same marks as plain buttons: no hairline,
+  no resize-grip corner and no hover tint on a mark.
+- **The footer's line stops at its last slot** (RX-30, deferred). The library lays all three of the
+  window's mark slots whether a tab binds them or not, so on History and Insights, and on Drops with
+  nothing of yours to post, the left line is cut with "…" short of the empty slots. The fix belongs
+  to LibKa0s's Footer layout (LibKa0s #94).
 - **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
   missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
   close mark. The shell is shared: when another addon registered an earlier copy of the same minor
@@ -188,9 +191,9 @@ the code reads every case the design leaves open, module by module, is in
   test mode's sample roll (nine players, no group) and `/dw sim raid` (40 players past a simulated
   party) show raid mode, and `/dw sim roll` in a simulated party the dungeon layout. Raid mode only
   folds Pass and Waiting since RX-21: every item starts open in any group size, so a 40-player raid
-  rolling six items scrolls a long body until the player collapses some (the title bar's
-  toggle, Collapse all while any item is open). An unfolded Pass or Waiting group stays unfolded for that block; there is no click to fold it
-  again.
+  rolling six items scrolls a long body until the player collapses some (the title bar's toggle,
+  Collapse all while any item is open). An unfolded Pass or Waiting group stays unfolded for that
+  block; there is no click to fold it again.
 - **The Rolls panel and the Offer panel on one side.** Both dock beside the window. Since RX-20 the
   Rolls panel gives way: with the Offer panel docked on its side it takes the other side, and with no
   room on the screen there it waits hidden (its rolls still tracked and lingering) until the Offer
@@ -208,20 +211,21 @@ the code reads every case the design leaves open, module by module, is in
   and SIM and FOREVER smoke checks run it.
 
 - **The simulator** (milestone M7) runs end to end: `/dw sim start <scenario> [size]` builds the
-  pool and the group, `run` and `step` play the scenario's timeline, and the `SIM` title text, the footer's
-  `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73). Since
-  DW-02..DW-04 the session, the timeline's step machine, the `/dw sim` grammar and the step panel
-  are LibKa0s-Sim-1.0's (LibKa0s#54); this addon supplies the scenarios, the world, the event
-  drivers, the restrictions and eight verbs (`roll` and `ml` since DW-FP17 and DW-FP18), and the panel's position lasts the session only. The
-  timeline's steps are event drivers only; the engine computes every verdict, estimate and inspect.
-  A key's bosses drop nothing: its loot comes with the completion, as the end-of-run chest's does.
-  Since the owner's first run (DW-90, sim feedback §0) a run fills the window under the default
-  filters in every scenario: the group wears the content's items 1 to 12 levels above it (so its
-  drops are spare for their looters whatever you wear; the M7 band around your own level left a
-  group naked of content you outgear, and nothing read as Interesting), each random burst has a
-  line of yours and a member's plain loot line, a simulation tracks the situation it simulates
-  whatever its row says (PvP is untracked by default, and so is the open-world group on Retail), and every step
-  prints its line. So a simulation does not exercise a situation's tracking switch.
+  pool and the group, `run` and `step` play the scenario's timeline, and the `SIM` title text, the
+  footer's `Simulating` line, the `sim` diagnostics section and the `SIM` debug tag show it (DW-73).
+  Since DW-02..DW-04 the session, the timeline's step machine, the `/dw sim` grammar and the step
+  panel are LibKa0s-Sim-1.0's (LibKa0s#54); this addon supplies the scenarios, the world, the event
+  drivers, the restrictions and eight verbs (`roll` and `ml` since DW-FP17 and DW-FP18), and the
+  panel's position lasts the session only. The timeline's steps are event drivers only; the engine
+  computes every verdict, estimate and inspect. A key's bosses drop nothing: its loot comes with the
+  completion, as the end-of-run chest's does. Since the owner's first run (DW-90, sim feedback §0) a
+  run fills the window under the default filters in every scenario: the group wears the content's
+  items 1 to 12 levels above it (so its drops are spare for their looters whatever you wear; the M7
+  band around your own level left a group naked of content you outgear, and nothing read as
+  Interesting), each random burst has a line of yours and a member's plain loot line, a simulation
+  tracks the situation it simulates whatever its row says (PvP is untracked by default, and so is
+  the open-world group on Retail), and every step prints its line. So a simulation does not exercise
+  a situation's tracking switch.
 - **A simulated member's spec** stays unknown: the inspect broker reads the spec after it has
   cleared its own inspect (its flight ends first), and the simulator lets the inspect data go on
   `ClearInspectPlayer`, as the client does. Whether the live client still answers

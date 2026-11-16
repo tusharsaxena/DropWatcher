@@ -1063,6 +1063,9 @@ test("filter: a lockbox passes by default; an item of no kind only rolled on, wi
     end
     check(lockbox, defaults, {}, true, nil)
     check(bag, defaults, {}, true, nil); check(quiver, defaults, { rolled = true }, true, nil)
+    -- A quiver no one rolled on is a container too, not the catch-all's (RX-30; red under: the Quiver
+    -- class left to Everything else, which takes only a rolled item)
+    check(quiver, defaults, {}, true, nil)
     check(lockbox, { categories = { lockbox = false } }, {}, false, "category")
     check(bag, { categories = { lockbox = false } }, {}, true, nil)
     check(lockbox, { categories = { container = false } }, {}, true, nil)

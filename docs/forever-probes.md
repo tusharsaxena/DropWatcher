@@ -53,38 +53,44 @@ that fires only at the close. (design P-R2, R1 #7, R2 P2) Result:
 Read the encounterID and name each gets, and whether it equals any `ENCOUNTER_START` id. Do it on
 both clients. A pending item's key is `encounterID:dropKey`. (design P-R3, R1 #6, R2 P3) Result:
 
-**P-R4. rollID against the drop key, and the roll's clock.** On `START_LOOT_ROLL`:
-`/run local f=CreateFrame("Frame") f:RegisterEvent("START_LOOT_ROLL") f:SetScript("OnEvent",function(_,_,id,t,h) print("roll",id,t,h,GetLootRollItemLink(id)) end)`
-and compare with P-R1's `k`. Then, while the roll is open:
-`/run local e=C_LootHistory.GetAllEncounterInfos()[1] local d=e and C_LootHistory.GetSortedDropsForEncounter(e.encounterID) d=d and d[1] if d then local i=C_LootHistory.GetSortedInfoForDrop(e.encounterID, d.lootListID or d.lootListKey) print(i.startTime, i.duration, C_LootHistory.GetLootHistoryTime(), GetTime(), time()) end`.
-Read whether rollID and the key are equal or stably related, and **the units of `startTime` and
-`duration`**: is `startTime` on `GetLootHistoryTime()`'s clock, and are both seconds or milliseconds?
-The code assumes one clock and one unit: Rolling now's time left is `startTime + duration` minus
-`GetLootHistoryTime()`, and an open roll with no winner expires there. A roll of about two minutes
-should read about 120 left at the start. Also read `GetLootRollTimeLeft(id)` beside it (P-R6 types the line): the code
-(since rolls UX RX-02) assumes it answers **milliseconds** and divides by 1000. What the fix
-assumes, and what to confirm: a roll your own popup claimed reads `GetLootRollTimeLeft` (through
-`Compat.LootRollTimeLeft`) while it answers more than 0, so the client's timer needs neither the
-history's clock nor its units; every other roll derives `startTime + duration - GetLootHistoryTime()`
-and shows it only when it is at most 300 s (5 min), so a mismatch (the observed 2717:57 is a
-`duration` in milliseconds over a `startTime` in seconds) shows no time and never ends the roll.
-Record which of `startTime` and `duration` are seconds or milliseconds on each client, and whether
-`GetLootRollTimeLeft` still answers after you have chosen (if it answers 0, the history's time
-shows). Do it on both clients. (R2 P4; M4 carry; rolls UX design §3.4) Result:
+**P-R4. rollID against the drop key, and the roll's clock.** On `START_LOOT_ROLL`: `/run local
+f=CreateFrame("Frame") f:RegisterEvent("START_LOOT_ROLL") f:SetScript("OnEvent",function(_,_,id,t,h)
+print("roll",id,t,h,GetLootRollItemLink(id)) end)` and compare with P-R1's `k`. Then, while the roll
+is open: `/run local e=C_LootHistory.GetAllEncounterInfos()[1] local d=e and
+C_LootHistory.GetSortedDropsForEncounter(e.encounterID) d=d and d[1] if d then local
+i=C_LootHistory.GetSortedInfoForDrop(e.encounterID, d.lootListID or d.lootListKey)
+print(i.startTime, i.duration, C_LootHistory.GetLootHistoryTime(), GetTime(), time()) end`. Read
+whether rollID and the key are equal or stably related, and **the units of `startTime` and
+`duration`**: is `startTime` on `GetLootHistoryTime()`'s clock, and are both seconds or
+milliseconds? The code assumes one clock and one unit: Rolling now's time left is `startTime +
+duration` minus `GetLootHistoryTime()`, and an open roll with no winner expires there. A roll of
+about two minutes should read about 120 left at the start. Also read `GetLootRollTimeLeft(id)`
+beside it (P-R6 types the line): the code (since rolls UX RX-02) assumes it answers **milliseconds**
+and divides by 1000. What the fix assumes, and what to confirm: a roll your own popup claimed reads
+`GetLootRollTimeLeft` (through `Compat.LootRollTimeLeft`) while it answers more than 0, so the
+client's timer needs neither the history's clock nor its units; every other roll derives `startTime
++ duration - GetLootHistoryTime()` and shows it only when it is at most 300 s (5 min), so a mismatch
+(the observed 2717:57 is a `duration` in milliseconds over a `startTime` in seconds) shows no time
+and never ends the roll. Record which of `startTime` and `duration` are seconds or milliseconds on
+each client, and whether `GetLootRollTimeLeft` still answers after you have chosen (if it answers 0,
+the history's time shows). Do it on both clients. (R2 P4; M4 carry; rolls UX design §3.4) Result:
 
 **P-R5. The drop key's field name.** During a roll:
 `/dump C_LootHistory.GetSortedDropsForEncounter(<encounterID>)[1]`. Read `lootListID` (Retail) or
 `lootListKey` (Forever) at run time; the code reads either. (R2 P8) Result:
 
 **P-R6. Your popup's own timer, and after your choice.** On both clients, with a roll popup up:
-`/run local f=CreateFrame("Frame") f.t=0 f:SetScript("OnUpdate",function(s,e) s.t=s.t+e if s.t<1 then return end s.t=0 local ids=GetActiveLootRollIDs() if #ids==0 then print("no rolls") s:SetScript("OnUpdate",nil) return end for _,id in ipairs(ids) do print(GetTime(),id,GetLootRollTimeLeft(id)) end end)`.
-Read the units: a roll of about two minutes starts near 120000 in milliseconds or near 120 in
-seconds. Read whether it counts down once a second, and what it answers once you have chosen Need,
-Greed or Pass: the same count, 0, or nothing, and whether the rollID stays in
-`GetActiveLootRollIDs()`. The code (rolls UX RX-02, `Compat.LootRollTimeLeft`) assumes
-milliseconds and divides by 1000. It reads the timer only while it answers more than 0; after that
-Rolling now falls back to the history's derived time when that is plausible (P-R4). A seconds answer
-is a finding: the time would read a thousandth of the real one. (rolls UX design §3.4) Result:
+`/run local f=CreateFrame("Frame") f.t=0 f:SetScript("OnUpdate",function(s,e) s.t=s.t+e if s.t<1
+then return end s.t=0 local ids=GetActiveLootRollIDs() if #ids==0 then print("no rolls")
+s:SetScript("OnUpdate",nil) return end for _,id in ipairs(ids) do
+print(GetTime(),id,GetLootRollTimeLeft(id)) end end)`. Read the units: a roll of about two minutes
+starts near 120000 in milliseconds or near 120 in seconds. Read whether it counts down once a
+second, and what it answers once you have chosen Need, Greed or Pass: the same count, 0, or nothing,
+and whether the rollID stays in `GetActiveLootRollIDs()`. The code (rolls UX RX-02,
+`Compat.LootRollTimeLeft`) assumes milliseconds and divides by 1000. It reads the timer only while
+it answers more than 0; after that Rolling now falls back to the history's derived time when that is
+plausible (P-R4). A seconds answer is a finding: the time would read a thousandth of the real one.
+(rolls UX design §3.4) Result:
 
 **P-R7. The history's Disenchant state.** On Retail, and on Forever wherever P-ROLLINFO's
 canDisenchant is true, run P-R1's frame and have a player choose Disenchant. Read the `state` P-R1
@@ -188,7 +194,8 @@ Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5
 Ornate Bronze Lockbox), the same lockbox once picked, a bag and, on Forever, a quiver and an ammo pouch:
 `/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
 then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
-The code (rolls UX RX-04, RX-15, `Compat.ItemOpens`) takes any Container-class item (class 1) and
+The code (rolls UX RX-04, RX-15: `modules/Collectibles.lua` by class, `Compat.ItemOpens` for the
+lines alone) takes any Container-class item (class 1) and
 any Quiver-class item (class 11: quivers and ammo pouches) as a container, `Container`, and a
 Miscellaneous Junk item (class 15, subclass 0) as a lockbox, `Lockbox`, only when one of its lines
 is exactly `LOCKED` or `ITEM_OPENABLE` (`<Right Click to Open>`). Read the class a quiver and an ammo
