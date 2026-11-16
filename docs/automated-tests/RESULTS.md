@@ -32,6 +32,7 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 
 | Run | Commit | Tree | Version | Lint w/e | Files | Tests | Perf | NLOC | Funcs | Avg NLOC | Avg CCN | Max CCN | CCN warn | Verdict |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| [`20261116-102800`](20261116-102800/) | `c03cddd` | clean | 1.1.0 | 0/0 | 265 | 2598/1/2599 | pass | 76362 | 9196 | 7.6 | 2.5 | 15 | 0 | **green** |
 | [`20261116-102122`](20261116-102122/) | `add159d` | clean | 1.1.0 | 0/0 | 265 | 2598/1/2599 | pass | 76356 | 9194 | 7.6 | 2.5 | 16 | 1 | **green** |
 | [`20261115-200343`](20261115-200343/) | `ee7cadd` | clean | 1.1.0 | 0/0 | 264 | 2563/1/2564 | pass | 75596 | 9093 | 7.6 | 2.5 | 15 | 0 | **green** |
 | [`20261115-183637`](20261115-183637/) | `fa8cf5a` | clean | 1.1.0 | 0/0 | 264 | 2559/1/2560 | pass | 75518 | 9082 | 7.6 | 2.5 | 15 | 0 | **green** |
@@ -74,10 +75,10 @@ archaeology, for the same reason a skip is never a pass (`automated-tests-§4`).
 ## Test suite
 
 **2599 cases** — 2598 passed, 0 failed, 1 skipped. The generated inventory
-[`20261116-102122/test-cases.md`](20261116-102122/test-cases.md) is the authority on which cases existed at this run;
+[`20261116-102800/test-cases.md`](20261116-102800/test-cases.md) is the authority on which cases existed at this run;
 `docs/test-cases.md` is that same list at HEAD.
 
-Moved **2564 → 2599** since the previous run.
+Unchanged from the previous run at 2599 cases.
 
 **1 case(s) reported a `skip`.** A skip is counted in the total and never in `passed`, and at
 the release gate it is NOT EVALUATED rather than passed (`automated-tests-§3`).
@@ -94,27 +95,27 @@ to whoever thinks to open `.luacheckrc`.
 ## Perf
 
 **9 scenarios** from `tests/perf.lua`; the measurements are in
-[`20261116-102122/perf.json`](20261116-102122/perf.json).
+[`20261116-102800/perf.json`](20261116-102800/perf.json).
 
 | `scenario` | `iters` | `ms/iter` | `notes/iter` | `bytes/iter` |
 |---|---|---|---|---|
-| `refreshCaptureOff` | 1000 | 0.09229 | 0.00 | 11120.0 |
-| `refreshCaptureOn` | 1000 | 0.08436 | 1.00 | 11120.0 |
-| `refreshCompactCaptureOff` | 1000 | 0.08345 | 0.00 | 6768.0 |
-| `refreshCompactCaptureOn` | 1000 | 0.08247 | 1.00 | 6768.0 |
+| `refreshCaptureOff` | 1000 | 0.09071 | 0.00 | 11120.0 |
+| `refreshCaptureOn` | 1000 | 0.09198 | 1.00 | 11120.0 |
+| `refreshCompactCaptureOff` | 1000 | 0.08508 | 0.00 | 6768.0 |
+| `refreshCompactCaptureOn` | 1000 | 0.08242 | 1.00 | 6768.0 |
 | `showDecisionStoodDown` | 1000 | 0.00012 | 0.00 | 0.0 |
-| `parseCaptureOff` | 1000 | 0.01273 | 0.00 | 664.0 |
-| `parseCaptureOn` | 1000 | 0.01246 | 1.00 | 664.0 |
-| `insightsCompute` | 20 | 29.44395 | 0.00 | 4957904.0 |
-| `rollsPanelRaid` | 200 | 1.16334 | 0.00 | 79392.0 |
+| `parseCaptureOff` | 1000 | 0.01213 | 0.00 | 664.0 |
+| `parseCaptureOn` | 1000 | 0.01264 | 1.00 | 664.0 |
+| `insightsCompute` | 20 | 30.47355 | 0.00 | 4987024.0 |
+| `rollsPanelRaid` | 200 | 1.15776 | 0.00 | 79392.0 |
 
 `perf` never fails a run and never blocks a commit — it is recorded, read and compared, not
 thresholded (`performance-§9`). It does gate the **tag** (`automated-tests-§3`).
 
 ## Complexity watch list
 
-Current as of [`20261116-102122`](20261116-102122/) — **this run's measurement, not its diff.** Max CCN **16** across 9194
-functions, **1** of them warned on; 16 file(s) in the 1000–1500 band and 0 over the 1500 cap
+Current as of [`20261116-102800`](20261116-102800/) — **this run's measurement, not its diff.** Max CCN **15** across 9196
+functions, **0** of them warned on; 16 file(s) in the 1000–1500 band and 0 over the 1500 cap
 (`layout-§1`).
 
 Every row below is generated from this run's own `lizard` output. **The `Disposition` column is
@@ -126,7 +127,8 @@ cell is this file saying something crossed and nobody has ruled on it yet.
 
 | Function | CCN | Location | Disposition |
 |---|---|---|---|
-| `placeTitle` | 16 | `modules/CompactChrome.lua` | **Regression, fixed after this run**: RX-30's title alignment; the next commit splits the alignment and its x into `titleAlign` and `titleX` (max CCN 15, 0 warnings on `--suite complexity --no-bundle`). |
+
+None.
 
 ### Files by `layout-§1` band
 
