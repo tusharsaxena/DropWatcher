@@ -208,8 +208,20 @@ local function placeRolls(tip, w)
     tip:SetPoint("TOP", w, "BOTTOM", 0, 0)
 end
 
+-- `title` (a title-bar control, SR-DW of smoke round 1's rulings 2 and 3): LibKa0s-Tooltip-1.0's
+-- PlaceAttached, the library's own title-bar rule (centered above, flipped below only without room),
+-- else above it as AttachTitleTip falls back. Looked up per hover, so a suite's spy and a newer copy
+-- of the library both reach it.
+local function placeTitle(tip, w)
+    local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
+    if Tip and type(Tip.PlaceAttached) == "function" and Tip.PlaceAttached(tip, w) then return end
+    tip:ClearAllPoints()
+    tip:SetPoint("BOTTOM", w, "TOP", 0, 2)
+end
+
 local PLACERS = {
     above = function(tip, w) Window.PlaceAbove(tip, w) end,
+    title = placeTitle,
     row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
     rolls = placeRolls,
 }
@@ -260,8 +272,8 @@ end
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
 --- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
---- `place` is nil (below the widget, ANCHOR_BOTTOM), `above` (Window.PlaceAbove: a filter-bar
---- control, DW-B1), `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2) or `rolls`
+--- `place` is nil (below the widget, ANCHOR_BOTTOM), `title` (a title-bar control: LibKa0s-Tooltip's
+--- PlaceAttached, above it), `above` (Window.PlaceAbove: a filter-bar control, DW-B1), `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2) or `rolls`
 --- (NS.RollsPanel.PlaceTip: a Rolls panel line, beside the panel away from the window, RX-26).
 --- @param widget table
 --- @param fn function

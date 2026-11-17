@@ -338,6 +338,25 @@ Total.
 - header band: the Edit message box keeps S.Shell's band and centers its title and close on it
 - header band: without the library no band is asked for and the headers keep their builders' anchors
 
+### test_title_bar_controls.lua (9)
+
+- title bar: every control on the main window shows its tooltip above it, in gtip.title
+- title bar: the main window's marks rest in icon.tint and light text.link; its close close.rest and close.hot
+- title bar: every control on the Rolls panel shows its tooltip above it, in gtip.title
+- title bar: the Rolls panel's marks rest in icon.tint and light text.link; its close close.rest and close.hot
+- title bar: every control on the Offer panel shows its tooltip above it, in gtip.title
+- title bar: the Offer panel's marks rest in icon.tint and light text.link; its close close.rest and close.hot
+- title bar: every control on the Edit message box shows its tooltip above it, in gtip.title
+- title bar: the Edit message box's marks rest in icon.tint and light text.link; its close close.rest and close.hot
+- title bar: the two skins pinned give the marks different rest and hover colors
+
+### test_section_header_bands.lua (4)
+
+- section header bands: a group header paints list.header.bg and repaints on a skin switch
+- section header bands: the band is told apart from the stripe and the plain box in both skins
+- section header bands: a Rolls panel item header paints list.header.bg and repaints on a skin switch
+- section header bands: the compact layout's headers are WindowGroup.NewHeader's
+
 ### test_skin_picker.lua (24)
 
 - Skin picker: skin.pickerSeen defaults to false, a skip-render row of General's Skin tab
@@ -3011,6 +3030,8 @@ Total.
 | test_skin_flip.lua | 21 |
 | test_skin_host.lua | 19 |
 | test_header_band.lua | 6 |
+| test_title_bar_controls.lua | 9 |
+| test_section_header_bands.lua | 4 |
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
@@ -3124,4 +3145,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2598** |
+| **Total** | **2611** |
