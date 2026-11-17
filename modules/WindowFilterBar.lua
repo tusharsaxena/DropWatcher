@@ -615,7 +615,7 @@ local function viewDropdown(host, width)
     dd.onMultiSelect = function(set)
         if not syncing then FB.Set(activeTab(), "view", copySet(set)) end
     end
-    NS.Window.AttachTooltip(dd, function() return unpack(FB.ViewTip(activeTab())) end, "above")
+    NS.Window.AttachTooltip(dd, function() return unpack(FB.ViewTip(activeTab())) end, "chrome")
     return dd
 end
 
@@ -659,7 +659,7 @@ local function charDropdown(host, width)
     dd.onMultiSelect = function(set)
         if not syncing then FB.Set(activeTab(), "char", copySet(set)) end
     end
-    NS.Window.AttachTooltip(dd, grayedTip("char", TIPS.char), "above")
+    NS.Window.AttachTooltip(dd, grayedTip("char", TIPS.char), "chrome")
     return dd
 end
 
@@ -668,7 +668,7 @@ local function pickDropdown(host, key, width)
     if not dd then return nil end
     dd:SetOptions(key == "content" and contentOptions("group") or options(key))
     dd.onSelect = function(v) FB.Set(activeTab(), key, v) end
-    NS.Window.AttachTooltip(dd, grayedTip(key, TIPS[key]), "above")
+    NS.Window.AttachTooltip(dd, grayedTip(key, TIPS[key]), "chrome")
     return dd
 end
 
@@ -685,7 +685,7 @@ local function qualityDropdown(host, width)
     NS.Window.AttachTooltip(dd, function()
         if not FB.HONORS[activeTab()].quality then return L["Quality"], grayedRow() end
         return qualityTip()
-    end, "above")
+    end, "chrome")
     return dd
 end
 
@@ -707,7 +707,7 @@ local function buildSearch(host)
         NS.DebugChanged("filter.search." .. tostring(tab), "UI", "filter %s.search = \"%s\"", tab,
             shown("search", FB.State(tab).search))
     end)
-    NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search), "above")
+    NS.Window.AttachTooltip(eb, grayedTip("search", TIPS.search), "chrome")
     return eb
 end
 

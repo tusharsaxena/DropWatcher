@@ -448,7 +448,7 @@ local function buildBadge(bar)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b.art, "RIGHT", 4, 0)
     NS.Skin.Text(b.text, "dw.restricted")
-    NS.Window.AttachTooltip(b, badgeTooltip, "title")
+    NS.Window.AttachTooltip(b, badgeTooltip, "chrome")
     b:Hide()
     return b
 end
@@ -475,7 +475,7 @@ local function buildModeText(bar, title, word, token, tip)
     local w = m.text.GetStringWidth and m.text:GetStringWidth()
     if type(w) ~= "number" or w <= 0 then w = #word * 11 end   -- before the font has loaded
     m:SetSize(w, K.CONTROL_H)
-    NS.Window.AttachTooltip(m, tip, "title")
+    NS.Window.AttachTooltip(m, tip, "chrome")
     m:Hide()
     return m
 end
@@ -487,7 +487,7 @@ local function buildNewChip(f, bar)
     f.newChip.text = f.newChip:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
     f.newChip.text:SetPoint("LEFT", f.newChip, "LEFT", 0, 0)
     NS.Skin.Text(f.newChip.text, "text.highlight")
-    NS.Window.AttachTooltip(f.newChip, newTip, "title")
+    NS.Window.AttachTooltip(f.newChip, newTip, "chrome")
     f.newChip:Hide()
 end
 
@@ -513,9 +513,9 @@ local function buildControls(f, bar)
     } })
     f.closeButton = hb.close
     f.lockButton, f.modeButton, f.minimizeButton = hb.extras.lock, hb.extras.mode, hb.extras.minimize
-    W.AttachTooltip(f.lockButton, lockTip, "title")
-    W.AttachTooltip(f.modeButton, modeTip, "title")
-    W.AttachTooltip(f.minimizeButton, minimizeTip, "title")
+    W.AttachTooltip(f.lockButton, lockTip, "chrome")
+    W.AttachTooltip(f.modeButton, modeTip, "chrome")
+    W.AttachTooltip(f.minimizeButton, minimizeTip, "chrome")
     f.badge = buildBadge(bar)
     f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
 end

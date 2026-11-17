@@ -695,12 +695,12 @@ local function editorButtons(e)
         local out = { L["Send"] }
         for _, r in ipairs(SEND_TIP[e.kind] or {}) do out[#out + 1] = NS.TipMarks.Row(r[1], r[2]) end
         return unpack(out)
-    end)
+    end, "chrome")
     e.cancel = NS.Window.TextButton(e, 80, "cancel", L["Cancel"], function() e:Hide() end)
     e.cancel:SetPoint("RIGHT", e.send, "LEFT", -6, 0)
     NS.Window.AttachTooltip(e.cancel, function()
         return L["Cancel"], NS.TipMarks.Row(L["Closes"], L["the box, without sending"])
-    end)
+    end, "chrome")
 end
 
 local function editorBox(e)

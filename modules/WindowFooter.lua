@@ -282,7 +282,7 @@ function WF.Build(f)
     line:SetPoint("LEFT", f.left, "LEFT", 0, 0)
     line:SetPoint("RIGHT", f.left, "RIGHT", 0, 0)
     line:SetHeight(NS.FooterMetric("HEIGHT"))
-    NS.Window.AttachTooltip(line, lineTip, "above")
+    NS.Window.AttachTooltip(line, lineTip, "chrome")
     statusText, lastRead, shownTab = nil, nil, nil
 end
 

@@ -179,6 +179,56 @@ local function rosterName(name, realm)
     return name .. "-" .. (realm and (realm:gsub("[%s%-]", "")) or "Testrealm")
 end
 
+-- WHERE A TOOLTIP OPENS (AD-92-DW, LibKa0s#92; standalone-windows, *Tooltip placement*). The kit's
+-- fake screen (tests/_kit/mock_screen.lua, kit revision 57) on `m`'s UIParent, `opts` its width,
+-- height and scale (1920 x 1080 at 1 by default), with the game tooltip `opts.tipW` x `opts.tipH`
+-- (320 x 100) at `opts.tipScale` (1): LibKa0s-Tooltip-1.0's placers read a plain number from each,
+-- where the base mock answers a table and nothing is placed. Answers the screen.
+local function tipScreen(m, opts)
+    opts = opts or {}
+    local scr = dofile("tests/_kit/mock_screen.lua")(m, opts)
+    local tip = m.GameTooltip
+    tip.GetWidth = function() return opts.tipW or 320 end
+    tip.GetHeight = function() return opts.tipH or 100 end
+    tip.GetEffectiveScale = function() return opts.tipScale or 1 end
+    return scr
+end
+
+-- Give a built frame a rect in its own units: `left`, `bottom`, `right`, `top`, at `scale` (1).
+local function tipRect(f, left, bottom, right, top, scale)
+    f.GetLeft = function() return left end
+    f.GetBottom = function() return bottom end
+    f.GetRight = function() return right end
+    f.GetTop = function() return top end
+    f.GetEffectiveScale = function() return scale or 1 end
+    return f
+end
+
+-- Every call the addon makes to LibKa0s-Tooltip-1.0's two placers on `m`'s copy, the real placer
+-- still running: `spy.calls[i]` is `{ fn = "PlaceBeside" | "PlaceAttached", el, group }`, and
+-- `spy.first()` the first since the last `spy.reset()` (PlaceBeside's own fallback calls
+-- PlaceAttached after it, so the first call is the one the addon chose).
+local function tipSpy(m)
+    local spy = { calls = {} }
+    local Tip = m.LibStub("LibKa0s-Tooltip-1.0")
+    for _, fn in ipairs({ "PlaceBeside", "PlaceAttached" }) do
+        local real = Tip[fn]
+        Tip[fn] = function(tip, el, a, b)
+            spy.calls[#spy.calls + 1] = { fn = fn, el = el, group = fn == "PlaceBeside" and a or nil }
+            return real(tip, el, a, b)
+        end
+    end
+    function spy.reset() spy.calls = {} end
+    function spy.first() return spy.calls[1] end
+    return spy
+end
+
+-- The game tooltip's first point as `point>relPoint`, then the frame, x and y.
+local function tipPoint(m)
+    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
+    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+end
+
 -- The table every suite reaches as `local T = _G.DW_TEST`. Kit.expose merges `test` and the kit
 -- assertions in beside these keys.
 _G.DW_TEST = Kit.expose{
@@ -194,6 +244,10 @@ _G.DW_TEST = Kit.expose{
     tipPlain    = tipPlain,
     tipPlainJoined = tipPlainJoined,
     cardText    = cardText,
+    tipScreen   = tipScreen,
+    tipRect     = tipRect,
+    tipSpy      = tipSpy,
+    tipPoint    = tipPoint,
     forever     = FOREVER,
     retailList  = retailList,
     RETAIL_ONLY = RETAIL_ONLY,
@@ -294,6 +348,7 @@ Kit.run{
         "test_offer_alone",
         "test_mine_cells",
         "test_row_tooltip",
+        "test_tooltip_placement",
         "test_test_mode",
         "test_compat",
         "test_compat_client",

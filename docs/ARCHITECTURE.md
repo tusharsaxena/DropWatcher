@@ -435,6 +435,52 @@ kind the journal lists none of falls back to `NS.SimPool.COLLECTIBLE_SAMPLES`, c
 empty until each is checked in the client (issue #13, DW-CAT6, smoke check COLL-8). Test mode's sixth
 boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 
+## Tooltip placement
+
+Every tooltip the addon places itself goes through `LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-DW;
+WowAddonStandards standalone-windows, *Tooltip placement*), by where the hovered element sits and
+never by where the pointer is. `modules/RowTooltip.lua` is the one seam onto it; `Window.AttachTooltip`
+(`modules/Window.lua`) owns `GameTooltip` at `ANCHOR_NONE`, fills it, shows it, then places it by the
+widget's class:
+
+- **Body** (no `place`): a table row and every cell, button and item icon in it, a group header, a
+  column label, a compact card, the detail cards' lines and chips, the History card's actions, the
+  Pending box, the Offer panel's candidate rows, column labels and item header, the Rolls panel's
+  roller rows, folded lines and item headers, the toast and a roll popup's side card.
+  `RowTooltip.Place` calls `PlaceBeside` on the row the element sits in (its nearest ancestor marked
+  `tipRow`, else the element) with the **window group** `RowTooltip.GroupOf` builds: the outermost
+  frame under UIParent and every frame it names in `tipDocks` (the Offer panel `offer`, the Rolls
+  panel `rolls`) that is docked beside it. The tooltip opens outside the group's right edge, else its
+  left, top level with the row, 2 px off; a docked panel's own rows prefer its side away from the
+  window; with room on neither side it is attached above the row. The item tooltips (`WindowGroup`'s
+  item buttons and the Rolls panel's item headers) take the same path, so their comparison tooltips
+  open further out on the same side.
+- **Chrome** (`place = "chrome"`): the title bar's controls, mode word, badge and new-drops chip; the
+  TEST and SIM strips on the window, the Offer panel and the Rolls panel; the tabs; every filter-bar
+  control (the compact Filters button included); the footer's left line and its marks; the Offer
+  panel's footer note and Announce mark; the Edit message box's Send and Cancel (a modal's controls).
+  `RowTooltip.PlaceChrome` calls `PlaceAttached`: centered on the control, 2 px above it, below only
+  without room above.
+- **The Insights charts**: `NS.ChartsHost()` (`core/ChartsSetup.lua`) keeps the library's default
+  tooltip and names `host.group` (Charts minor 2) as `RowTooltip.WindowGroup`, so a mark's tooltip
+  opens beside the window and its docked panels through `ctx:PlaceTip`.
+
+When the library is absent or a geometry read is not a plain number, both paths attach the tooltip
+centered above the element (`BOTTOM` on its `TOP`, 2 px), never at the pointer and never at a corner.
+No addon file names `ANCHOR_CURSOR`, a corner anchor or `GetCursorPosition` for a tooltip
+(`tests/test_tooltip_placement.lua` holds the source to it).
+
+**Left out, and why** (standalone-windows, *What it does not bind*):
+
+| Tooltip | Who places it | Why it stays |
+|---|---|---|
+| Every tooltip on the Settings pages (`settings/*.lua`, the library's Options widgets through `h.AttachTooltip`) | LibKa0s-Options-1.0 | Settings canvas pages: options-ui governs them |
+| The minimap button's tooltip | LibKa0s-Launcher (`PlaceLauncher`, Launcher minor 11) on LibDBIcon-1.0's button | The library's launcher placer (launcher-§7); no host code |
+| A LibDataBroker display's bar tooltip (Titan Panel, ChocolateBar) | The display | The display draws the frame and places the tooltip |
+| The History row menu's entries (`NS.ContextMenu`, `{ cursor = true }`) and every other client `MenuUtil` menu | The client's menu system, or LibKa0s-Widgets' menu | A menu the client draws (its entries' tooltips are `MenuUtil`'s); the library's own menus are the library's to place. The menu opening at the pointer is a menu, not a tooltip |
+| The library's own windows (debug console, perf, sim and step panels, skin picker, icon browser, Copy window, dropdown menus, drag handles) | LibKa0s, since v1.105.0 | A window the library draws is the library's to move |
+| The game's own tooltips over Blizzard frames (the group-loot roll frame the popup's side card sits beside) | The client | Blizzard's frames; the addon writes no lines onto them |
+
 ## Frame layering
 
 Every strata and frame level the addon sets reads one table, `NS.Constants.LAYERS`

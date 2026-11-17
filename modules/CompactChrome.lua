@@ -341,7 +341,7 @@ local function buildButton(host)
     NS.SkinPaint(b.arrow, function(t) t:SetVertexColor(NS.SkinColor("icon.tint")) end)
     b:SetPoint("RIGHT", host, "RIGHT", 0, 0)
     b:SetScript("OnClick", function() CC.ToggleFilters() end)
-    NS.Window.AttachTooltip(b, filtersTip, "above")
+    NS.Window.AttachTooltip(b, filtersTip, "chrome")
     b:Hide()
     return b
 end

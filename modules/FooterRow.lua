@@ -117,7 +117,7 @@ function FR.Attach(f)
     for _, b in ipairs(f.marks or {}) do
         b.dwControl = nil
         b:Hide()
-        NS.Window.AttachTooltip(b, function() return markTip(b) end, "above")
+        NS.Window.AttachTooltip(b, function() return markTip(b) end, "chrome")
     end
 end
 

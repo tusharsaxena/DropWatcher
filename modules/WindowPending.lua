@@ -385,7 +385,7 @@ function WP.AskButton(parent)
     if b then return b end
     b = NS.Window.TextButton(parent, K.ASK_W, "chat", L["Ask"], function(self) NS.PressAskML(self.pendingId) end)
     NS.WindowRows.RaiseAction(b, parent)   -- over the row's or card's text (rolls UX spec §3.1)
-    NS.Window.AttachTooltip(b, function() return tipOf(b) end, "row")
+    NS.Window.AttachTooltip(b, function() return tipOf(b) end)
     parent.ask = b
     return b
 end
@@ -418,7 +418,7 @@ local function textPiece(row, key)
     f:SetScript("OnMouseUp", function(_, button)
         if button == "LeftButton" then rowClick(row) end
     end)
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
     row.cells[key] = f
     return f
 end

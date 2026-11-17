@@ -692,32 +692,36 @@ test("table: an item button shows the game's tooltip, shift-click links it and c
 end)
 
 -- The placement itself is tests/test_row_tooltip.lua's (feedback-3 spec §2, DW-B2).
-test("item tooltip: a row's item button opens the game's tooltip at the row's top right, else on its own", function()
+-- Re-pinned by AD-92-DW (LibKa0s#92; was: at the row's top-right corner, BOTTOMLEFT>TOPRIGHT, and
+-- with no geometry on the button's own top right): beside the window group, level with the row's
+-- top, its comparison tooltips on the same side; with no geometry, attached above the row.
+test("item tooltip: a row's item button opens the game's tooltip beside the window, level with the row", function()
     local NS, drawn, m = shownTable()
     local row = rowFor(drawn, 1)
     local b = row.cells.item.button
     b:__fire("OnEnter")
     assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE")
-    local point, rel, relPoint = m.GameTooltip:GetPoint(1)
-    assertEqual(point .. ">" .. relPoint, "BOTTOMLEFT>TOPRIGHT", "no geometry: on the button's right")
-    assertTrue(rel == b)
-    local win = NS.Window.Frame()
-    win.GetLeft = function() return 200 end
-    win.GetRight = function() return 1200 end
-    win.GetTop = function() return 800 end
-    row.GetTop = function() return 600 end   -- the row, not the button: its top right
-    m.UIParent.GetWidth = function() return 1920 end
-    m.GameTooltip.GetWidth = function() return 320 end
+    local pts, rel, x, y = T.tipPoint(m)
+    assertEqual(pts, "BOTTOM>TOP", "no geometry: attached above the row, never the cursor")
+    assertTrue(rel == row); assertEqual(x, 0); assertEqual(y, 2)
+    local scr = T.tipScreen(m)
+    T.tipRect(NS.Window.Frame(), 500, 100, 1200, 800)
+    T.tipRect(row, 500, 580, 1200, 600)   -- the row, not the button: its top
+    local anchorType
+    m.GameTooltip.SetAnchorType = function(_, a) anchorType = a end
     b:__fire("OnEnter")
-    point, rel, relPoint = m.GameTooltip:GetPoint(1)
-    assertEqual(point .. ">" .. relPoint, "BOTTOMLEFT>TOPRIGHT")
-    assertTrue(rel == win, "just outside the window, at the row's top")
-    assertEqual(select(5, m.GameTooltip:GetPoint(1)), -200)
-    m.UIParent.GetWidth = function() return 1400 end
+    pts, rel, x, y = T.tipPoint(m)
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT")
+    assertTrue(rel == m.UIParent, "one absolute point")
+    assertEqual(x, 1202, "a gap past the window's right edge"); assertEqual(y, 600, "level with the row's top")
+    assertEqual(anchorType, "ANCHOR_RIGHT", "comparisons further out on the right")
+    scr.resize(1400, 1080)
     b:__fire("OnEnter")
-    point, rel, relPoint = m.GameTooltip:GetPoint(1)
-    assertEqual(point .. ">" .. relPoint, "BOTTOMRIGHT>TOPLEFT", "no room on the right")
-    assertTrue(rel == win)
+    local _
+    pts, _, x = T.tipPoint(m)
+    assertEqual(pts, "TOPRIGHT>BOTTOMLEFT", "no room on the right")
+    assertEqual(x, 498)
+    assertEqual(anchorType, "ANCHOR_LEFT")
 end)
 
 test("table: Them shows the looter's worn item from their inspect read before their verdict", function()

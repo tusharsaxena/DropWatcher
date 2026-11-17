@@ -157,23 +157,25 @@ test("compact history: a header click opens a collapsed group", function()
     assertTrue(cardWith(drawn, "Received") ~= nil)
 end)
 
-test("compact history: every tooltip opens at the card's top right, just outside the window", function()
+-- Re-pinned by AD-92-DW (LibKa0s#92; was: at the card's top-right corner, BOTTOMLEFT>TOPRIGHT on
+-- the window): beside the window group, level with the card's top (the body rule).
+test("compact history: every tooltip opens beside the window, level with the card's top", function()
     local NS, drawn, m = shownCompact()
-    local win = NS.Window.Frame()
-    win.GetLeft = function() return 200 end
-    win.GetRight = function() return 580 end
-    win.GetTop = function() return 800 end
-    m.UIParent.GetWidth = function() return 1920 end
-    m.GameTooltip.GetWidth = function() return 320 end
+    T.tipScreen(m)
+    local win = T.tipRect(NS.Window.Frame(), 200, 100, 580, 800)
+    local spy = T.tipSpy(m)
     local card = cardWith(drawn, "Asked")
-    card.GetTop = function() return 600 end
+    T.tipRect(card, 200, 560, 580, 600)
     for i, f in ipairs({ card.cells.outcome.hit, card.cells.time.hit, card.cells.you.hit, card.cells.looter.hit }) do
         m.GameTooltip.__points = {}
+        spy.reset()
         f:__fire("OnEnter")
-        local point, rel, relPoint, _, y = m.GameTooltip:GetPoint(1)
-        assertEqual(tostring(point) .. ">" .. tostring(relPoint), "BOTTOMLEFT>TOPRIGHT", "piece " .. i)
-        assertTrue(rel == win, "piece " .. i)
-        assertEqual(y, -200, "piece " .. i)
+        local c = spy.first()
+        assertTrue(c and c.fn == "PlaceBeside" and c.el == card and c.group.main == win, "piece " .. i .. ": the body rule")
+        local pts, rel, x, y = T.tipPoint(m)
+        assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "piece " .. i)
+        assertTrue(rel == m.UIParent, "piece " .. i)
+        assertEqual(x, 582, "piece " .. i); assertEqual(y, 600, "piece " .. i)
     end
 end)
 

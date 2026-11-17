@@ -224,9 +224,10 @@ Post my tradeables ─> NS.PostTradeables() ─> MineCells.PostLines(your tradea
                  ─> NS.Asks.Request("announce", nil, "post:<n>:<i>", { text }) per line
 item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.InsertChatLink;
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
-row hover ─────> a cell, button or header: Window.AttachTooltip ("row") ─> GameTooltip:Show() ─>
-                 RowTooltip.Place: BOTTOMLEFT at the row's top, outside the window's right edge (else
-                 BOTTOMRIGHT outside its left edge); the item button the same (feedback-3 §2, DW-B2);
+row hover ─────> a cell, button or header: Window.AttachTooltip (body) ─> GameTooltip:Show() ─>
+                 RowTooltip.Place ─> LibKa0s-Tooltip PlaceBeside: TOPLEFT 2 px past the window group's
+                 right edge, level with the row's top (else TOPRIGHT 2 px past its left edge); the
+                 item button the same (AD-92-DW, LibKa0s#92);
                  a line given as `{ text, wrap = false }` is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
                  a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
@@ -275,7 +276,7 @@ WindowGroup refresh ─> CompactGroup.Refresh(pane, entries, compact)   (the tab
   └─> DropsStrip.Paint(pane, ctx, true): the summary shortened (DropsStrip.SummaryText) on the
         footer's left line, the same marks as the full layout (RX-24)
 card click ────> WindowGroup.ToggleExpand(id) (the same state) ─> DetailCard.Paint(stacked card)
-piece hover ───> Window.AttachTooltip ("row") ─> RowTooltip.Place at the card's top right
+piece hover ───> Window.AttachTooltip (body) ─> RowTooltip.Place beside the window, level with the card
 switch ────────> the scroll offset carried over (CompactGroup.CarryScroll)
 ```
 

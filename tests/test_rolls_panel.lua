@@ -913,29 +913,43 @@ end)
 
 -- RX-26: the panel's row tooltips open outside it, away from the window: beside its right edge
 -- docked right, its left edge docked left, the tooltip's top level with the hovered row's top.
--- The panel's top at 700, the hovered frame's at 650; answers where the tooltip went.
-local function tipAt(m, p, f)
-    p.GetTop = function() return 700 end
-    f.GetTop = function() return 650 end
+-- Re-pinned by AD-92-DW (LibKa0s#92): the panel is a companion in the window group, so this is
+-- LibKa0s-Tooltip-1.0's PlaceBeside, one absolute point on UIParent (was: RP.PlaceTip's point on
+-- the panel's edge). On the kit's fake screen the window at its `shown` place (bottom 300, top 700),
+-- the panel 290 wide flush beside it, the hovered frame's top at 650, a 100-wide tooltip; answers
+-- where the tooltip went.
+local function tipAt(m, p, f, window)
+    T.tipScreen(m, { tipW = 100 })
+    local wl, wr = window:GetLeft(), window:GetRight()
+    T.tipRect(window, wl, 300, wr, 700)
+    if p.dock == "left" then T.tipRect(p, wl - 290, 300, wl, 700) else T.tipRect(p, wr, 300, wr + 290, 700) end
+    T.tipRect(f, p:GetLeft(), 630, p:GetRight(), 650)
     m.GameTooltip.__points = {}
     f:__fire("OnEnter")
-    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
+    local pts, rel, x, y = T.tipPoint(m)
     f:__fire("OnLeave")
-    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+    return pts, rel, x, y
 end
 
 local function expectBeside(NS, m, p, f, side, label)
-    local pts, rel, x, y = tipAt(m, p, f)
+    local window = NS.Window.Frame()
+    local spy = T.tipSpy(m)
+    local pts, rel, x, y = tipAt(m, p, f, window)
     local gap = NS.Constants.WINDOW.TIP_GAP
+    local c = spy.first()
+    assertTrue(c and c.fn == "PlaceBeside" and c.group.main == window, label .. ": the body rule, the window group")
+    local inGroup = false
+    for _, panel in ipairs(c.group.panels) do inGroup = inGroup or panel == p end
+    assertTrue(inGroup, label .. ": the panel is in the group")
     if side == "right" then
-        assertEqual(pts, "TOPLEFT>TOPRIGHT", label .. ": beside the panel's right edge")
-        assertEqual(x, gap, label)
+        assertEqual(pts, "TOPLEFT>BOTTOMLEFT", label .. ": beside the panel's right edge")
+        assertEqual(x, p:GetRight() + gap, label)
     else
-        assertEqual(pts, "TOPRIGHT>TOPLEFT", label .. ": beside the panel's left edge")
-        assertEqual(x, -gap, label)
+        assertEqual(pts, "TOPRIGHT>BOTTOMLEFT", label .. ": beside the panel's left edge")
+        assertEqual(x, p:GetLeft() - gap, label)
     end
-    assertTrue(rel == p, label .. ": anchored on the panel, not the row")
-    assertEqual(y, -50, label .. ": its top level with the row's top")
+    assertTrue(rel == m.UIParent, label .. ": one absolute point")
+    assertEqual(y, 650, label .. ": its top level with the row's top")
 end
 
 -- red under: a roller row's tooltip below the row (ANCHOR_BOTTOM), the header's at the row-tooltip place
@@ -966,15 +980,19 @@ test("rolls panel: in a raid a folded Pass line's tooltip opens beside the panel
     expectBeside(NS, m, d.panel, foldOf(NS, "waiting"), "right", "folded Waiting")
 end)
 
-test("rolls panel: with the panel's geometry unknown a row's tooltip keeps its place below the row", function()
+-- Re-pinned by AD-92-DW (LibKa0s#92; was: below the row, ANCHOR_BOTTOM's place): with no geometry
+-- the body rule's fallback attaches the tooltip centered TIP_GAP above the row, never the cursor.
+test("rolls panel: with the panel's geometry unknown a row's tooltip is attached above the row", function()
     local NS, m = shown()
     rollOpens(m)
     local row = NS.RollsPanel.Drawn().lines[1]
     m.GameTooltip.__points = {}
     row:__fire("OnEnter")
-    local point, rel, relPoint = m.GameTooltip:GetPoint(1)
-    assertEqual(tostring(point) .. ">" .. tostring(relPoint), "TOP>BOTTOM")
-    assertTrue(rel == row, "below the row, as ANCHOR_BOTTOM")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE")
+    local pts, rel, x, y = T.tipPoint(m)
+    assertEqual(pts, "BOTTOM>TOP")
+    assertTrue(rel == row, "attached to the row")
+    assertEqual(x, 0); assertEqual(y, NS.Constants.WINDOW.TIP_GAP)
 end)
 
 -- red under: Pass and Waiting listed a row per player in a raid

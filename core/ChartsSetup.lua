@@ -8,7 +8,9 @@ local addonName, NS = ...
 -- textures and the `chart.series` palette all come from the skin in force, and the context reskins
 -- itself on the owner's OnLooksChanged. Its `onReskin` marks the tab for a fresh layout, because
 -- the colors a row was bound with (class, quality, verdict, trade tone) are the host's and are read
--- when the row is bound. The default GameTooltip hover is kept, and NS.Pool is the pool.
+-- when the row is bound. The default GameTooltip hover is kept, and NS.Pool is the pool. A mark's
+-- tooltip opens beside the window group (`host.group`, Charts minor 2: NS.RowTooltip.WindowGroup,
+-- the window and its docked panels; AD-92-DW, LibKa0s#92), never over the Rolls or Offer panel.
 --
 -- DEGRADED (the library absent): NS.Charts is nil and there is no drawing stub (anti-pattern #73,
 -- as in Ka0s DPS Race). The Insights tab keeps its filters and its footer words, says the charts are
@@ -23,6 +25,7 @@ function NS.ChartsHost()
     return {
         owner = addonName,
         pool = NS.Pool,
+        group = function() return NS.RowTooltip.WindowGroup() end,
         onReskin = function() if NS.WindowInsights then NS.WindowInsights.MarkLayout() end end,
     }
 end

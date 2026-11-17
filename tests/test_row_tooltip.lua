@@ -1,208 +1,248 @@
--- tests/test_row_tooltip.lua — the one placement of a table row's tooltips (feedback-3 spec §2,
--- DW-B2; modules/RowTooltip.lua): the tooltip's BOTTOMLEFT at the row's top, just outside the right
--- edge of the frame the row sits in (Ka0s Loot History's ANCHOR_RIGHT on a full-width row), else its
--- BOTTOMRIGHT outside the left edge; the docked Offer panel counts as part of the window (DW-A9).
--- Then every row tooltip on the two tabs and the Offer panel, built headless, placed by it.
+-- tests/test_row_tooltip.lua — where the addon's own tooltips open (modules/RowTooltip.lua, the seam
+-- onto LibKa0s-Tooltip-1.0; AD-92-DW, LibKa0s#92; WowAddonStandards standalone-windows, *Tooltip
+-- placement*), driven on the kit's fake screen (tests/_kit/mock_screen.lua).
+--
+-- RE-PINNED by AD-92-DW. These cases pinned the feedback-3 placement (DW-B2): the tooltip's
+-- BOTTOMLEFT at the row's top, on the right edge of the frame the row sat in (Loot History's
+-- ANCHOR_RIGHT corner). The standard rules that corner out. They now pin the body rule: the
+-- tooltip's TOPLEFT a TIP_GAP right of the WINDOW GROUP's right edge (else its TOPRIGHT a TIP_GAP
+-- left of its left edge), its top level with the row's, one absolute point on UIParent; a docked
+-- panel's own rows prefer its side away from the window; no room on either side attaches it
+-- centered above the row. The chrome rule (RT.PlaceChrome) is pinned here too.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
 
--- A plain frame for RowTooltip.Place: its edges, width, scale and parent, and the points it is given.
-local function box(t)
-    local f = { pts = {}, tipHost = t.tipHost, dock = t.dock, tipDocks = t.tipDocks, tipRow = t.tipRow }
-    if t.shown ~= nil then function f.IsShown() return t.shown end end
-    function f.GetLeft() return t.left end
-    function f.GetRight() return t.right end
-    function f.GetTop() return t.top end
-    function f.GetWidth() return t.width end
-    function f.GetEffectiveScale() return t.scale or 1 end
-    function f.GetParent() return t.parent end
-    function f.ClearAllPoints(self) self.pts = {} end
-    function f.SetPoint(self, ...) self.pts[#self.pts + 1] = { ... } end
+local GAP = 2   -- TIP_GAP, the standard's and the library's
+
+-- A frame on the fake screen from its screen rect: left, bottom, right, top.
+local function box(scr, l, b, r, t, extra)
+    extra = extra or {}
+    local f = scr.frame({ left = l, bottom = b, width = r - l, height = t - b, parent = extra.parent,
+        scale = extra.scale, shown = extra.shown })
+    f.tipRow, f.dock = extra.tipRow, extra.dock
     return f
 end
 
-local function placed(NS, m, screen, row, tip)
-    m.UIParent.GetWidth = function() return screen end
-    return NS.RowTooltip.Place(tip, row)
+-- The tooltip's point: `point>relPoint`, the frame, x and y.
+local function pt(tip)
+    local p = tip.__point
+    if not p then return nil end
+    return p.point .. ">" .. p.relPoint, p.rel, p.x, p.y
 end
 
-test("row tooltip: it rises from the row's top right, just outside the window", function()
+local function setup(screenW, tipW, tipScale)
     local NS, _, m = T.newAddon()
-    local gap = NS.Constants.WINDOW.TIP_GAP
-    local win = box({ left = 400, right = 1400, top = 900 })
-    local row = box({ top = 700, parent = box({ top = 720, parent = win }) })
-    local tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, row, tip), "right")
-    assertEqual(#tip.pts, 1)
-    local p = tip.pts[1]
-    assertEqual(p[1] .. ">" .. p[3], "BOTTOMLEFT>TOPRIGHT")
-    assertTrue(p[2] == win, "beside the window, not the row")
-    assertEqual(p[4], gap); assertEqual(p[5], -200)
+    local scr = T.tipScreen(m, { width = screenW or 1920, height = 1080 })
+    local tip = scr.tooltip({ width = tipW or 300, height = 100, scale = tipScale })
+    return NS, m, scr, tip
+end
+
+test("row tooltip: it opens beside the window, TOPLEFT a TIP_GAP right of its edge, level with the row", function()
+    local NS, m, scr, tip = setup()
+    assertEqual(NS.Constants.WINDOW.TIP_GAP, GAP, "the addon's gap is the standard's")
+    local win = box(scr, 400, 200, 1400, 900)
+    local row = box(scr, 400, 680, 1400, 700, { parent = box(scr, 400, 300, 1400, 720, { parent = win }) })
+    -- red under: the row's top-right corner (BOTTOMLEFT>TOPRIGHT on the window, ANCHOR_RIGHT's place)
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    local p, rel, x, y = pt(tip)
+    assertEqual(p, "TOPLEFT>BOTTOMLEFT"); assertTrue(rel == m.UIParent, "one absolute point")
+    assertEqual(x, 1400 + GAP); assertEqual(y, 700, "level with the row's top")
+    assertEqual(tip.__anchorType, "ANCHOR_RIGHT", "its comparison tooltips further out on the right")
 end)
 
-test("row tooltip: with no room on the right it rises from the row's top left, outside the window", function()
-    local NS, _, m = T.newAddon()
-    local gap = NS.Constants.WINDOW.TIP_GAP
-    local win = box({ left = 600, right = 1700, top = 900 })
-    local row = box({ top = 850, parent = win })
-    local tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, row, tip), "left")
-    local p = tip.pts[1]
-    assertEqual(p[1] .. ">" .. p[3], "BOTTOMRIGHT>TOPLEFT")
-    assertTrue(p[2] == win)
-    assertEqual(p[4], -gap); assertEqual(p[5], -50)
+test("row tooltip: with no room on the right it opens left of the window, TOPRIGHT a TIP_GAP left", function()
+    local NS, m, scr, tip = setup()
+    local win = box(scr, 600, 200, 1700, 900)
+    local row = box(scr, 600, 830, 1700, 850, { parent = win })
+    assertEqual(NS.RowTooltip.Place(tip, row), "left")
+    local p, rel, x, y = pt(tip)
+    assertEqual(p, "TOPRIGHT>BOTTOMLEFT"); assertTrue(rel == m.UIParent)
+    assertEqual(x, 600 - GAP); assertEqual(y, 850)
+    assertEqual(tip.__anchorType, "ANCHOR_LEFT")
 end)
 
-test("row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)", function()
-    local NS, _, m = T.newAddon()
-    -- 2000 window units at 0.64 is 1280 px: 300 px of tooltip fit in 1920.
-    local win = box({ left = 500, right = 2000, top = 1200, scale = 0.64 })
-    local row = box({ top = 1000, scale = 0.64, parent = win })
-    local tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, row, tip), "right")
-    assertEqual(tip.pts[1][5], -128, "the row's top in the tooltip's own units")
-    -- The tooltip at 2.2: 300 units are 660 px, and 1280 + 660 is past 1920.
-    local big = box({ width = 300, scale = 2.2 })
-    assertEqual(placed(NS, m, 1920, row, big), "left")
+test("row tooltip: the room is measured at each frame's effective scale", function()
+    local NS, _, scr, tip = setup()
+    -- the window's own 1100..2200 at 0.64 is 704..1408 screen units: 300 of tooltip fit right
+    local win = scr.frame({ left = 1100, bottom = 300, width = 1100, height = 900, scale = 0.64 })
+    local row = scr.frame({ left = 1100, bottom = 980, width = 1100, height = 20, scale = 0.64, parent = win })
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    local _, _, x, y = pt(tip)
+    assertTrue(math.abs(x - (1408 + GAP)) < 1e-6, "a gap past the window's scaled right edge: " .. tostring(x))
+    assertTrue(math.abs(y - 640) < 1e-6, "the row's top in screen units")
+    -- the tooltip at 2: 300 units are 600, and 1410 + 600 is past 1920; 702 - 600 is not: left
+    local big = scr.tooltip({ width = 300, height = 100, scale = 2 })
+    assertEqual(NS.RowTooltip.Place(big, row), "left")
+    local l, _, r = scr.rectOf(big)
+    assertTrue(math.abs(r - (704 - GAP)) < 1e-6, "its right edge a gap left of the window: " .. tostring(r))
+    assertTrue(l >= 0)
 end)
 
-test("row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside", function()
-    local NS, _, m = T.newAddon()
-    local tip = box({ width = 300 })
-    assertTrue(placed(NS, m, 1920, box({ top = 10 }), tip) == nil)
-    assertEqual(#tip.pts, 0, "left to the caller's fallback")
-    local win = box({ left = 100, right = 900, top = 900 })
-    local panel = box({ left = 904, right = 1344, top = 900, parent = win, tipHost = true })
-    local row = box({ top = 800, parent = panel })
-    assertEqual(placed(NS, m, 1920, row, tip), "right")
-    assertTrue(tip.pts[1][2] == panel, "the Offer panel's own edge, not the window's under it")
+test("row tooltip: unreadable geometry places nothing; the fallback attaches it above the row", function()
+    local NS, _, scr, tip = setup()
+    local loose = scr.frame({})   -- unplaced: every edge nil
+    assertTrue(NS.RowTooltip.Place(tip, loose) == nil)
+    assertEqual(#tip.__points, 0, "left to the caller's fallback")
+    -- red under: the hovered frame's top-right corner (BOTTOMLEFT>TOPRIGHT, ANCHOR_RIGHT's place)
+    assertEqual(NS.RowTooltip.PlaceOrFallback(tip, loose), "attached")
+    local p, rel, x, y = pt(tip)
+    assertEqual(p, "BOTTOM>TOP"); assertTrue(rel == loose, "attached to the element, never the cursor")
+    assertEqual(x, 0); assertEqual(y, GAP)
+    local row = scr.frame({ parent = scr.frame({}) })
+    row.tipRow = true
+    local cell = scr.frame({ parent = row })
+    NS.RowTooltip.PlaceOrFallback(tip, cell)
+    assertTrue(select(2, pt(tip)) == row, "the row the cell sits in")
 end)
 
--- M10 review (FB2-10): with the Offer panel docked beside the window, a tooltip opens beside the
--- pair, never over the panel (a window row) or over the window (a panel row).
-local function dockedPair(side, shown)
-    local win = box({ left = 500, right = 1300, top = 900 })
+-- With the Offer panel docked beside the window, a window row's tooltip opens beside the whole
+-- group, never over the panel (M10 review, FB2-10).
+local function dockedPair(scr, side, shown)
+    local win = box(scr, 500, 200, 1300, 900)
     local panel = side == "right"
-        and box({ left = 1304, right = 1744, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
-        or box({ left = 56, right = 496, top = 900, parent = win, tipHost = true, dock = side, shown = shown })
+        and box(scr, 1304, 200, 1744, 900, { parent = win, dock = side, shown = shown })
+        or box(scr, 340, 200, 496, 900, { parent = win, dock = side, shown = shown })
     win.tipDocks = { offer = panel }
     return win, panel
 end
 
 test("row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it", function()
-    local NS, _, m = T.newAddon()
-    local gap = NS.Constants.WINDOW.TIP_GAP
-    local win, panel = dockedPair("right", true)
-    local row = box({ top = 700, parent = win })
-    local tip = box({ width = 150 })
+    local NS, _, scr = setup()
+    local win = dockedPair(scr, "right", true)
+    local row = box(scr, 500, 680, 1300, 700, { parent = win })
+    local tip = scr.tooltip({ width = 150, height = 100 })
     -- red under: the window's own right edge (1300), under the panel
-    assertEqual(placed(NS, m, 1920, row, tip), "right")
-    assertTrue(tip.pts[1][2] == panel, "beyond the panel's right edge")
-    assertEqual(tip.pts[1][4], gap); assertEqual(tip.pts[1][5], -200)
-    -- no room right of the panel: the window's other side
-    tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, row, tip), "left")
-    assertTrue(tip.pts[1][2] == win)
-    -- a panel docked on the left: the tooltip's left side starts at the panel
-    local win2, left = dockedPair("left", true)
-    tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1700, box({ top = 700, parent = win2 }), tip), "right")
-    assertTrue(tip.pts[1][2] == win2)
-    assertEqual(placed(NS, m, 1310, box({ top = 700, parent = win2 }), tip), "left")
-    assertTrue(tip.pts[1][2] == left, "beyond the panel's left edge")
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    assertEqual(select(3, pt(tip)), 1744 + GAP, "beyond the panel's right edge")
+    tip = scr.tooltip({ width = 300, height = 100 })
+    assertEqual(NS.RowTooltip.Place(tip, row), "left", "no room right of the panel")
+    assertEqual(select(3, pt(tip)), 500 - GAP, "the window's other side")
+    local win2 = dockedPair(scr, "left", true)
+    local row2 = box(scr, 500, 680, 1300, 700, { parent = win2 })
+    assertEqual(NS.RowTooltip.Place(tip, row2), "right")
+    assertEqual(select(3, pt(tip)), 1300 + GAP)
+    scr.resize(1310, 1080)
+    assertEqual(NS.RowTooltip.Place(tip, row2), "left")
+    assertEqual(select(3, pt(tip)), 340 - GAP, "beyond the left panel's left edge")
 end)
 
--- RX-28: the Rolls panel docked beside the window is part of the group too (v2.112.0 *Tooltip
--- placement*): a window row's tooltip goes beyond it, and so does an Offer panel row's on the other side.
-test("row tooltip: the docked Rolls panel is part of the window group, beside the Offer panel or alone", function()
-    local NS, _, m = T.newAddon()
-    local gap = NS.Constants.WINDOW.TIP_GAP
-    local win = box({ left = 700, right = 1300, top = 900 })
-    local rolls = box({ left = 1300, right = 1590, top = 900, parent = win, dock = "right", shown = true })
+-- RX-28: the Rolls panel docked beside the window is part of the group too. A docked panel's own row
+-- prefers the panel's side away from the window (body rule 1, the library's companion side).
+test("row tooltip: the docked Rolls panel is part of the window group; an Offer row prefers its own side", function()
+    local NS, _, scr, tip = setup()
+    local win = box(scr, 700, 200, 1300, 900)
+    local rolls = box(scr, 1300, 200, 1590, 900, { parent = win, dock = "right", shown = true })
     win.tipDocks = { rolls = rolls }
-    local tip = box({ width = 300 })
-    -- red under: the window's own right edge (1300), under the Rolls panel
-    assertEqual(placed(NS, m, 1920, box({ top = 700, parent = win }), tip), "right")
-    assertTrue(tip.pts[1][2] == rolls, "beyond the Rolls panel's right edge")
-    assertEqual(tip.pts[1][4], gap)
-    local offer = box({ left = 360, right = 696, top = 900, parent = win, tipHost = true, dock = "left", shown = true })
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 700, 680, 1300, 700, { parent = win })), "right")
+    assertEqual(select(3, pt(tip)), 1590 + GAP, "beyond the Rolls panel's right edge")
+    local offer = box(scr, 360, 200, 696, 900, { parent = win, dock = "left", shown = true })
     win.tipDocks.offer = offer
-    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = offer }), tip), "right")
-    assertTrue(tip.pts[1][2] == rolls, "an Offer panel row's tooltip goes past the window and the Rolls panel")
-    assertEqual(placed(NS, m, 1700, box({ top = 700, parent = win }), tip), "left")
-    assertTrue(tip.pts[1][2] == offer, "no room right: beyond the Offer panel's left edge")
+    -- re-pinned (was: right, past the window and the Rolls panel): the panel's side away from the window
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 360, 780, 696, 800, { parent = offer })), "left")
+    assertEqual(select(3, pt(tip)), 360 - GAP)
+    scr.resize(1700, 1080)
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 700, 680, 1300, 700, { parent = win })), "left")
+    assertEqual(select(3, pt(tip)), 360 - GAP, "no room right: beyond the Offer panel's left edge")
 end)
 
 test("row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored", function()
-    local NS, _, m = T.newAddon()
-    local win, panel = dockedPair("right", true)
-    local tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = panel }), tip), "left")
-    assertTrue(tip.pts[1][2] == win, "beyond the window's left edge, not over it")
-    win = dockedPair("right", false)
-    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
-    assertTrue(tip.pts[1][2] == win, "a hidden panel takes no room")
-    win, panel = dockedPair("right", true)
+    local NS, _, scr, tip = setup()
+    local _, panel = dockedPair(scr, "right", true)
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 1304, 780, 1744, 800, { parent = panel })), "left")
+    assertEqual(select(3, pt(tip)), 500 - GAP, "beyond the window's left edge, not over it")
+    local win = dockedPair(scr, "right", false)
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 500, 780, 1300, 800, { parent = win })), "right")
+    assertEqual(select(3, pt(tip)), 1300 + GAP, "a hidden panel takes no room")
+    win, panel = dockedPair(scr, "right", true)
     panel.dock = "float"
-    assertEqual(placed(NS, m, 1920, box({ top = 800, parent = win }), tip), "right")
-    assertTrue(tip.pts[1][2] == win, "a floating panel sits inside the window")
+    assertEqual(NS.RowTooltip.Place(tip, box(scr, 500, 780, 1300, 800, { parent = win })), "right")
+    assertEqual(select(3, pt(tip)), 1300 + GAP, "a floating panel sits inside the window")
 end)
 
+test("row tooltip: GroupOf is the outermost frame and its docked panels, in name order", function()
+    local NS, _, scr = setup()
+    local win = box(scr, 700, 200, 1300, 900)
+    local rolls = box(scr, 1300, 200, 1590, 900, { parent = win, dock = "right" })
+    local offer = box(scr, 360, 200, 696, 900, { parent = win, dock = "left" })
+    local floating = box(scr, 800, 200, 1000, 900, { parent = win, dock = "float" })
+    win.tipDocks = { rolls = rolls, offer = offer, other = floating }
+    local g = NS.RowTooltip.GroupOf(box(scr, 360, 780, 696, 800, { parent = offer }))
+    assertTrue(g.main == win, "the window")
+    assertEqual(#g.panels, 2, "the floating one left out")
+    assertTrue(g.panels[1] == offer and g.panels[2] == rolls)
+end)
 
 test("row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own", function()
-    local NS, _, m = T.newAddon()
-    local win = box({ left = 400, right = 1400, top = 900 })
-    local row = box({ top = 700, parent = win, tipRow = true })
-    local cell = box({ top = 690, parent = row })
-    local icon = box({ top = 685, parent = cell })
+    local NS, _, scr, tip = setup()
+    local win = box(scr, 400, 200, 1400, 900)
+    local row = box(scr, 400, 680, 1400, 700, { parent = win, tipRow = true })
+    local cell = box(scr, 500, 682, 600, 690, { parent = row })
+    local icon = box(scr, 500, 683, 510, 685, { parent = cell })
     assertTrue(NS.RowTooltip.RowOf(icon) == row)
     assertTrue(NS.RowTooltip.RowOf(win) == win, "no marked row: the hovered frame itself")
-    local tip = box({ width = 300 })
-    assertEqual(placed(NS, m, 1920, icon, tip), "right")
-    assertEqual(tip.pts[1][5], -200, "the row's top, not the icon's")
-    assertTrue(tip.pts[1][2] == win)
+    assertEqual(NS.RowTooltip.Place(tip, icon), "right")
+    assertEqual(select(4, pt(tip)), 700, "the row's top, not the icon's")
 end)
 
-test("row tooltip: unknown geometry falls back to the hovered frame's top right", function()
-    local NS = T.newAddon()
-    local tip = box({ width = 300 })
-    local owner = box({ top = 10 })
-    assertEqual(NS.RowTooltip.PlaceOrFallback(tip, owner), "owner")
-    assertEqual(#tip.pts, 1)
-    assertEqual(tip.pts[1][1] .. ">" .. tip.pts[1][3], "BOTTOMLEFT>TOPRIGHT")
-    assertTrue(tip.pts[1][2] == owner)
+test("row tooltip: a group as wide as the screen falls back above the row, centered (body rule 4)", function()
+    local NS, _, scr, tip = setup()
+    local win = box(scr, 0, 200, 1920, 900)
+    local row = box(scr, 100, 680, 900, 700, { parent = win, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, row), "above")
+    local p, _, x, y = pt(tip)
+    assertEqual(p, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 500, "centered on the row"); assertEqual(y, 700 + GAP)
+end)
+
+test("chrome tooltip: centered TIP_GAP above the control, below only without room above", function()
+    local NS, _, scr, tip = setup()
+    local ctl = box(scr, 1000, 500, 1100, 520)
+    -- red under: the control's top-right corner (Window.PlaceAbove's BOTTOMLEFT>TOPRIGHT)
+    assertEqual(NS.RowTooltip.PlaceChrome(tip, ctl), "above")
+    local p, _, x, y = pt(tip)
+    assertEqual(p, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 1050); assertEqual(y, 520 + GAP)
+    local high = box(scr, 1000, 1000, 1100, 1020)
+    assertEqual(NS.RowTooltip.PlaceChrome(tip, high), "below")
+    p, _, x, y = pt(tip)
+    assertEqual(p, "TOP>BOTTOMLEFT"); assertEqual(x, 1050); assertEqual(y, 1000 - GAP)
+    local edge = box(scr, 1880, 500, 1920, 520)
+    NS.RowTooltip.PlaceChrome(tip, edge)
+    assertEqual(select(3, pt(tip)), 1920 - 150, "slid left only as far as the screen's edge")
+    local loose = scr.frame({})
+    assertEqual(NS.RowTooltip.PlaceChrome(tip, loose), "attached")
+    p = pt(tip)
+    assertEqual(p, "BOTTOM>TOP", "unreadable: attached above it, never the cursor")
 end)
 
 -- ── every row tooltip on the two tabs and the Offer panel ───────────────────────────────────
 
--- The window at 200..1200, its top at 800, on a 1920-wide screen; a 320-wide tooltip.
+-- The window at 200..1200 (bottom 100, top 800) on a 1920 x 1080 screen; a 320 x 100 tooltip.
 local function placeWindow(NS, m, screen)
-    local win = NS.Window.Frame()
-    win.GetLeft = function() return 200 end
-    win.GetRight = function() return 1200 end
-    win.GetTop = function() return 800 end
-    m.UIParent.GetWidth = function() return screen or 1920 end
-    m.GameTooltip.GetWidth = function() return 320 end
-    return win
+    local scr = T.tipScreen(m, { width = screen or 1920, height = 1080 })
+    local win = T.tipRect(NS.Window.Frame(), 200, 100, 1200, 800)
+    return win, scr
 end
 
 -- Hover `w` inside `row` (its top at 600) and answer where the tooltip went.
 local function hover(m, row, w)
-    row.GetTop = function() return 600 end
+    T.tipRect(row, 200, 580, 1200, 600)
     m.GameTooltip.__points = {}
     w:__fire("OnEnter")
-    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
-    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+    return T.tipPoint(m)
 end
 
-local function expectRowTop(NS, m, win, row, w, label)
+local function expectRowTop(m, spy, win, row, w, label)
+    spy.reset()
     local pts, rel, x, y = hover(m, row, w)
     assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", label)
-    assertEqual(pts, "BOTTOMLEFT>TOPRIGHT", label .. ": at the row's top right")
-    assertTrue(rel == win, label .. ": just outside the window")
-    assertEqual(x, NS.Constants.WINDOW.TIP_GAP, label)
-    assertEqual(y, -200, label .. ": level with the row's top")
+    local c = spy.first()
+    assertTrue(c and c.fn == "PlaceBeside", label .. ": the body rule")
+    assertTrue(c.el == row, label .. ": the row it sits in")
+    assertTrue(type(c.group) == "table" and c.group.main == win, label .. ": the window group")
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT", label .. ": beside the window")
+    assertTrue(rel == m.UIParent, label)
+    assertEqual(x, 1200 + GAP, label .. ": a gap past the window's right edge")
+    assertEqual(y, 600, label .. ": level with the row's top")
 end
 
 local function testWindow()
@@ -214,70 +254,84 @@ local function testWindow()
     return NS, m
 end
 
-test("row tooltip: Drops, every cell, Ask and the header open at the row's top right", function()
+test("row tooltip: Drops, every cell, Ask and the header open beside the window, level with the row", function()
     local NS, m = testWindow()
     local win = placeWindow(NS, m)
+    local spy = T.tipSpy(m)
     local drawn = NS.WindowGroup.Drawn()
     local row = drawn.rows[1]
     assertTrue(row ~= nil and row.tipRow == true, "a drop row, marked")
     for key, cell in pairs(row.cells) do
-        if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "group " .. key) end
+        if key ~= "actions" and cell.tooltip then expectRowTop(m, spy, win, row, cell, "group " .. key) end
     end
     local a = row.cells.actions
     a.ask.tipLines = { "Ask", "why" }
-    expectRowTop(NS, m, win, row, a.ask, "group ask")
+    expectRowTop(m, spy, win, row, a.ask, "group ask")
     local h = drawn.headers[1]
     assertTrue(h.tipRow == true)
-    expectRowTop(NS, m, win, h, h, "group header")
+    expectRowTop(m, spy, win, h, h, "group header")
 end)
 
-test("row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window", function()
+test("row tooltip: with no room on the right a row tooltip opens left of the window", function()
     local NS, m = testWindow()
-    local win = placeWindow(NS, m, 1400)
+    T.tipScreen(m, { width = 1400, height = 1080 })
+    T.tipRect(NS.Window.Frame(), 500, 100, 1200, 800)   -- 1202 + 320 is past 1400; 498 - 320 is not
     local row = NS.WindowGroup.Drawn().rows[1]
     local pts, rel, x, y = hover(m, row, row.cells.trade)
-    assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
-    assertTrue(rel == win)
-    assertEqual(x, -NS.Constants.WINDOW.TIP_GAP); assertEqual(y, -200)
+    assertEqual(pts, "TOPRIGHT>BOTTOMLEFT")
+    assertTrue(rel == m.UIParent)
+    assertEqual(x, 500 - GAP); assertEqual(y, 600)
 end)
 
-test("row tooltip: your own drops' rows on Drops and their Offer open at the row's top right", function()
+test("row tooltip: your own drops' rows on Drops and their Offer open beside the window", function()
     local NS, m = testWindow()
     NS.WindowFilterBar.Set("group", "view", {})
     local win = placeWindow(NS, m)
+    local spy = T.tipSpy(m)
     local row
     for _, r in ipairs(NS.WindowGroup.Drawn().rows) do
         if r.drop.isMine and r.cells.actions.ask:IsShown() then row = r; break end
     end
     assertTrue(row ~= nil and row.tipRow == true, "a row of yours, marked")
     for key, cell in pairs(row.cells) do
-        if key ~= "actions" and cell.tooltip then expectRowTop(NS, m, win, row, cell, "own " .. key) end
+        if key ~= "actions" and cell.tooltip then expectRowTop(m, spy, win, row, cell, "own " .. key) end
     end
     local b = row.cells.actions.ask
     assertTrue(b.offer, "its Offer")
-    expectRowTop(NS, m, win, row, b, "own offer")
+    expectRowTop(m, spy, win, row, b, "own offer")
 end)
 
-test("row tooltip: History rows and headers open at the row's top right", function()
+test("row tooltip: History rows and headers open beside the window", function()
     local NS, m = testWindow()
     NS.Window.SelectTab("history")
     local win = placeWindow(NS, m)
+    local spy = T.tipSpy(m)
     local drawn = NS.WindowHistory.Drawn()
     local row = drawn.rows[1]
     assertTrue(row ~= nil and row.tipRow == true, "a History row, marked")
     for key, cell in pairs(row.cells) do
-        if cell.tooltip then expectRowTop(NS, m, win, row, cell, "history " .. key) end
+        if cell.tooltip then expectRowTop(m, spy, win, row, cell, "history " .. key) end
     end
     local h = drawn.headers[1]
     assertTrue(h ~= nil and h.tipRow == true)
-    expectRowTop(NS, m, win, h, h, "history header")
+    expectRowTop(m, spy, win, h, h, "history header")
 end)
 
-test("row tooltip: the column labels and the tabs keep their own anchor (rows only)", function()
+-- Re-pinned by AD-92-DW (was: the column labels and the tabs kept ANCHOR_BOTTOM). A column label is
+-- a body element (the standard's *Terms*: a list's column-header row); a tab is chrome.
+test("row tooltip: a column label opens beside the window; a tab is attached above itself", function()
     local NS, m = testWindow()
-    placeWindow(NS, m)
-    NS.WindowGroup.Drawn().pane.colHead.labels.item:__fire("OnEnter")
-    assertEqual(m.GameTooltip.__anchor, "ANCHOR_BOTTOM", "a column label")
-    NS.Window.Frame().tabs.group:__fire("OnEnter")
-    assertEqual(m.GameTooltip.__anchor, "ANCHOR_BOTTOM", "a tab")
+    local win = placeWindow(NS, m)
+    local spy = T.tipSpy(m)
+    local label = NS.WindowGroup.Drawn().pane.colHead.labels.item
+    label:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", "a column label")
+    assertTrue(spy.first().fn == "PlaceBeside" and spy.first().group.main == win, "a column label: the body rule")
+    spy.reset()
+    local tab = T.tipRect(NS.Window.Frame().tabs.group, 210, 760, 290, 780)
+    tab:__fire("OnEnter")
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", "a tab")
+    assertTrue(spy.first().fn == "PlaceAttached" and spy.first().el == tab, "a tab: the chrome rule")
+    local pts, _, x, y = T.tipPoint(m)
+    assertEqual(pts, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 250); assertEqual(y, 780 + GAP)
 end)
