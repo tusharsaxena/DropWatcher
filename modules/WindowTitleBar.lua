@@ -5,9 +5,11 @@ local _, NS = ...
 -- simulator's `SIM` text in its own color (simulator spec §6), each drawn only while minimized
 -- or with no strip (the window's mode strips mark the mode otherwise), the `n new` counter, the
 -- restriction badge, then the right-hand cluster: the lock button (RX-08, at the top right since
--- RX-14), the layout toggle (compact spec §1), minimize and the close mark, plus the
--- window's flat and icon buttons, which other frames borrow through NS.Window.TextButton (and paint
--- through NS.Window.SetButtonMark). Scan group is the Drops footer's mark in both layouts
+-- RX-14), the layout toggle (compact spec §1), minimize, the settings mark and the close mark, one
+-- strip of LibKa0s-Widgets-1.0's HeaderButtons (TB.Marks, AD-86-DW, LibKa0s#86), which the Rolls
+-- panel, the Offer panel and the Edit message box build theirs with too, plus the window's flat
+-- button, which other frames borrow through NS.Window.TextButton (and paint through
+-- NS.Window.SetButtonMark). Scan group is the Drops footer's mark in both layouts
 -- (modules/DropsStrip.lua, feedback-7 spec §4, RX-24; compact's title-bar icon removed by feedback-16), and
 -- the badge anchors to the lock button, the cluster's first.
 --
@@ -213,20 +215,13 @@ local function iconButton(parent, icon, glyph, onClick)
     return b
 end
 
---- A title-bar icon button: the catalog's `icon` mark in TB.MARK_REST (TB.MARK_HOT under the
---- pointer), or `glyph` when the mark does not resolve; K.ICON square, unanchored. Its tooltip goes
---- through NS.Window.AttachTooltip with the `title` placement. The Rolls panel's one Expand all /
---- Collapse all toggle is built with it (modules/RollsPanel.lua, RX-21, RX-25).
---- @param parent table
---- @param icon string a declared LibKa0s icon
---- @param glyph string the fallback text
---- @param onClick function
---- @return table the button
-TB.IconButton = iconButton
+-- iconButton is the library-absent strip's mark (TB.Marks): the catalog's `icon` mark in
+-- TB.MARK_REST (TB.MARK_HOT under the pointer), or `glyph` when the mark does not resolve; K.ICON
+-- square. With the library, HeaderButtons builds the mark and TB.Marks gives it the same fields.
 
---- Change a TB.IconButton's mark: the catalog's `icon`, or `glyph` when it does not resolve (the
---- Rolls panel's toggle, RX-25).
---- @param b table a TB.IconButton
+--- Change a title-bar extra's mark (TB.Marks): the catalog's `icon`, or `glyph` when it does not
+--- resolve (the Rolls panel's toggle, RX-25; the minimize and layout marks).
+--- @param b table an extra of TB.Marks
 --- @param icon string a declared LibKa0s icon
 --- @param glyph string the fallback text
 TB.SetIconMark = setMark
@@ -320,13 +315,107 @@ local function widthOf(b)
     return type(w) == "number" and w > 0 and w or K.ICON
 end
 
---- The right-hand cluster's width from the bar's right edge (RX-30): close (when the library drew
---- one), minimize, the layout toggle and the lock, as buildControls lays them.
+-- ── the header marks (LibKa0s#86) ───────────────────────────────────────────────────────────
+
+--- The strip's corner inset and its gap between marks: W.HEADER's PAD and GAP (6 and 6), which the
+--- library-absent strip below keeps too.
+TB.HEADER_PAD, TB.HEADER_GAP = 6, 6
+
+-- The mark HeaderButtons built for an extra, given the fields a TB.IconButton carries (`art`,
+-- `glyph`, `mark`), so setMark, PaintLock and the TB.MARK_REST / TB.MARK_HOT paint keep working on
+-- it: its art is the library's `icon` (or a hidden texture where the art did not resolve and the
+-- library drew the glyph as its `label`), its glyph the library's `label` (or a hidden one).
+local function adoptMark(b, icon, glyph)
+    if not b.art then
+        b.art = b.icon or b:CreateTexture(nil, "ARTWORK")
+        if not b.icon then
+            b.art:SetPoint("CENTER", b, "CENTER", 0, 0)
+            b.art:SetSize(12, 12)
+        end
+    end
+    if not b.glyph then
+        b.glyph = b.label or b:CreateFontString(nil, "OVERLAY", "GameFontHighlight")
+        if not b.label then
+            b.glyph:SetPoint("CENTER", b, "CENTER", 0, 0)
+            NS.Skin.Font(b.glyph)
+        end
+    end
+    NS.SkinPaint(b, paintMark)
+    b:HookScript("OnEnter", function(self) markHot(self, true) end)
+    b:HookScript("OnLeave", function(self) markHot(self, false) end)
+    setMark(b, icon, glyph)
+    return b
+end
+
+local function markOf(hb, key)
+    if key == "close" then return hb.close end
+    if key == "settings" then return hb.settings end
+    return hb.extras[key]
+end
+
+-- The library-absent strip: the close (none without LibKa0s-Core) and the extras as TB.IconButtons,
+-- on HeaderButtons' pitch and in its answer's shape. No settings mark: the opener is the library's.
+local function hostMarks(bar, spec)
+    local hb = { extras = {}, order = {}, offsets = {}, right = {} }
+    local list = {}
+    hb.close = spec.close ~= false and NS.MakeCloseButton(bar, spec.close) or nil
+    if hb.close then list[1] = { key = "close", btn = hb.close } end
+    local extras = spec.extras or {}
+    for i = #extras, 1, -1 do
+        local x = extras[i]
+        hb.extras[x.key] = iconButton(bar, x.icon, x.glyph, x.onClick)
+        list[#list + 1] = { key = x.key, btn = hb.extras[x.key] }
+    end
+    local point, off = spec.point or "RIGHT", TB.HEADER_PAD
+    for _, e in ipairs(list) do
+        e.btn:SetPoint(point, bar, point, -off, spec.y or 0)
+        hb.offsets[e.key] = -off
+        hb.right[#hb.right + 1] = { frame = e.btn, x = off }
+        off = off + widthOf(e.btn) + TB.HEADER_GAP
+    end
+    for i = #list, 1, -1 do hb.order[#hb.order + 1] = list[i].key end
+    return hb
+end
+
+--- A window's title-bar marks (AD-86-DW, LibKa0s#86; standalone-windows, *Title-bar controls*):
+--- NS.HeaderButtons, right-aligned, left to right `spec.extras` · settings · close, each extra given
+--- a TB.IconButton's fields (`art`, `glyph`, `mark`; TB.SetIconMark changes its mark) and painted in
+--- TB.MARK_REST / TB.MARK_HOT. Without the library, the host's strip on the same pitch, with no
+--- settings mark. `spec.frame.headerButtons` (else the bar's) is set to the answer, and the window
+--- keeps the settings mark as `settingsButton`. The caller attaches each mark's tooltip.
+--- @param bar table the frame the marks are parented and anchored to
+--- @param spec table { frame, close, settings, settingsOptOut, extras = { { key, icon, glyph, onClick } }, point, y }
+--- @return table HeaderButtons' answer { close, settings, extras, order, offsets, right, optOut }
+function TB.Marks(bar, spec)
+    local extras = {}
+    for i, x in ipairs(spec.extras or {}) do
+        extras[i] = { key = x.key, icon = x.icon, glyph = x.glyph, onClick = x.onClick }
+    end
+    local s = {}
+    for k, v in pairs(spec) do s[k] = v end
+    s.extras = extras
+    local hb = NS.HeaderButtons(bar, s)
+    if hb then
+        for _, x in ipairs(spec.extras or {}) do
+            if hb.extras[x.key] then adoptMark(hb.extras[x.key], x.icon, x.glyph) end
+        end
+    else
+        hb = hostMarks(bar, s)
+    end
+    local host = spec.frame or bar
+    host.headerButtons, host.settingsButton = hb, hb.settings
+    return hb
+end
+
+--- The right-hand cluster's width from the bar's right edge (RX-30): the strip's leftmost mark's
+--- offset plus its width (the lock, then the layout toggle, minimize, settings and close).
 --- @param f table the window frame
 --- @return number
 function TB.ClusterWidth(f)
-    local w = f.closeButton and (6 + widthOf(f.closeButton)) or 0
-    return w + 4 + widthOf(f.minimizeButton) + 4 + widthOf(f.modeButton) + 4 + widthOf(f.lockButton)
+    local hb = f.headerButtons
+    local first = hb and hb.order[1]
+    if not first then return 0 end
+    return -hb.offsets[first] + widthOf(markOf(hb, first))
 end
 
 -- A double-click on the bar expands a minimized window (board 06 A).
@@ -399,35 +488,27 @@ end
 --- lock mark reads unlocked dimmed and desaturated, locked at full strength.
 TB.UNLOCKED_ALPHA = 0.4
 
--- The lock button (RX-08, rolls UX design §3.7), the same in both layouts: the right-hand cluster's
--- first, immediately left of the layout toggle (RX-14, the owner's smoke ruling; it sat at the bar's
--- left until then). A click toggles `locked` through the write seam (NS.ToggleLock, the launcher's
--- and the Lock frame checkbox's write). Not the restriction badge, which wears the same mark in the
--- restricted tone and stands left of the cluster.
-local function buildLock(f, bar)
-    f.lockButton = iconButton(bar, "lock", "L", function() NS.ToggleLock() end)
-    f.lockButton:SetPoint("RIGHT", f.modeButton, "LEFT", -4, 0)
-    NS.Window.AttachTooltip(f.lockButton, lockTip, "title")
-end
-
--- The right-hand cluster, right to left: close, minimize, the layout toggle, the lock (RX-14).
+-- The right-hand cluster, the strip TB.Marks builds (AD-86-DW): left to right the lock, the layout
+-- toggle, minimize, settings and close. The lock (RX-08, rolls UX design §3.7) is the cluster's
+-- first, the same in both layouts (RX-14, the owner's smoke ruling); a click toggles `locked`
+-- through the write seam (NS.ToggleLock, the launcher's and the Lock frame checkbox's write). Not the
+-- restriction badge, which wears the same mark in the restricted tone and stands left of the cluster.
+-- The layout toggle's mark follows the layout in force (compact spec §1, PaintMinimized). The
+-- catalog's minimize mark's key is the library's spelling (tests/prose_waivers.lua). Settings opens
+-- this addon's settings through the launcher's opener; the window is in the window tier, under the
+-- settings panel, so it is not hidden first.
 local function buildControls(f, bar)
     local W = NS.Window
-    f.closeButton = NS.MakeCloseButton(bar, function() W.Close() end)
-    local right, rightPoint = bar, "RIGHT"
-    if f.closeButton then
-        f.closeButton:SetPoint("RIGHT", bar, "RIGHT", -6, 0)
-        right, rightPoint = f.closeButton, "LEFT"
-    end
-    -- The catalog's minimize mark; the key is the library's spelling (tests/prose_waivers.lua).
-    f.minimizeButton = iconButton(bar, "minimise", "-", function() W.ToggleMinimized() end)
-    f.minimizeButton:SetPoint("RIGHT", right, rightPoint, -4, 0)
-    W.AttachTooltip(f.minimizeButton, minimizeTip, "title")
-    -- The layout toggle (compact spec §1); its mark follows the layout in force (PaintMinimized).
-    f.modeButton = iconButton(bar, "fullscreen-exit", "><", function() NS.ToggleWindowMode() end)
-    f.modeButton:SetPoint("RIGHT", f.minimizeButton, "LEFT", -4, 0)
+    local hb = TB.Marks(bar, { frame = f, close = function() W.Close() end, extras = {
+        { key = "lock", icon = "lock", glyph = "L", onClick = function() NS.ToggleLock() end },
+        { key = "mode", icon = "fullscreen-exit", glyph = "><", onClick = function() NS.ToggleWindowMode() end },
+        { key = "minimize", icon = "minimise", glyph = "-", onClick = function() W.ToggleMinimized() end },
+    } })
+    f.closeButton = hb.close
+    f.lockButton, f.modeButton, f.minimizeButton = hb.extras.lock, hb.extras.mode, hb.extras.minimize
+    W.AttachTooltip(f.lockButton, lockTip, "title")
     W.AttachTooltip(f.modeButton, modeTip, "title")
-    buildLock(f, bar)
+    W.AttachTooltip(f.minimizeButton, minimizeTip, "title")
     f.badge = buildBadge(bar)
     f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
 end

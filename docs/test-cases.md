@@ -350,6 +350,21 @@ Total.
 - title bar: the Edit message box's marks rest in icon.tint and light text.link; its close close.rest and close.hot
 - title bar: the two skins pinned give the marks different rest and hover colors
 
+### test_header_marks.lua (12)
+
+- header marks: the main window reads extras · settings · close through W.HeaderButtons
+- header marks: the main window's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the main window's settings mark opens Drop Watcher's settings
+- header marks: the Rolls panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Rolls panel's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the Rolls panel's settings mark opens Drop Watcher's settings
+- header marks: the Offer panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Offer panel's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the Offer panel's settings mark opens Drop Watcher's settings
+- header marks: the Edit message box opts out of the settings mark, with its reason
+- header marks: the main window keeps its strip through minimize and the layout switch
+- header marks: without LibKa0s-Widgets the window keeps its marks on the same pitch, with no settings mark
+
 ### test_section_header_bands.lua (4)
 
 - section header bands: a group header paints list.header.bg and repaints on a skin switch
@@ -3031,6 +3046,7 @@ Total.
 | test_skin_host.lua | 19 |
 | test_header_band.lua | 6 |
 | test_title_bar_controls.lua | 9 |
+| test_header_marks.lua | 12 |
 | test_section_header_bands.lua | 4 |
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
@@ -3145,4 +3161,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2611** |
+| **Total** | **2623** |

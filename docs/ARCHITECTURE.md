@@ -34,7 +34,7 @@ the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW), HeaderButtons (every window's title-bar marks, `NS.HeaderButtons`, WidgetsHeader minor 1, AD-86-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and eight verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
@@ -227,6 +227,33 @@ over it, with 150 px labeled buttons (feedback-15 spec §2) and the Sort dropdow
 2026-11-15 to rework it rather than record a deviation or change the standard. The Offer panel's
 footer follows the same rule: the order note on its right line, Announce to group its one mark, and
 the announce state's word on its left line once it is not ready.
+
+Every window's title-bar marks are one strip of LibKa0s Widgets' `HeaderButtons` (WidgetsHeader
+minor 1, LibKa0s#86, AD-86-DW; standalone-windows, *Title-bar controls*, WowAddonStandards
+v2.113.0), built through `NS.WindowTitleBar.Marks` over the seam `NS.HeaderButtons`
+(`core/WidgetsSetup.lua`, the owner this addon's folder, which is the launcher's `name`, and the
+close through `NS.MakeCloseButton`): right-aligned, left to right extras · settings · close, each
+18 px, 6 px in from the corner and 6 px apart, and the window keeps the answer as `headerButtons`
+and the settings mark as `settingsButton`. The main window's strip is the lock, the layout toggle,
+minimize, settings and close (the restriction badge stays left of the lock); the Rolls panel's
+Expand all / Collapse all, settings and close; the Offer panel's settings and close. The settings
+mark opens Drop Watcher's settings through the opener the launcher registered; each of these is in
+the window tier, under the settings panel, so none passes `hideOnSettings`. The Edit message box opts
+out (`settings = false`, `DetailCard.EDITOR_SETTINGS_OPT_OUT`): it is the one modal, in the DIALOG
+strata over the window, so the settings panel would open under it, and Send, Cancel or Escape close
+it first. Each extra keeps its behavior and tooltip (`Window.AttachTooltip`'s `title` placement), its
+state (the lock dimmed and desaturated while unlocked, the minimize and layout marks following the
+state through `SetIconMark`) and the title-bar colors, `icon.tint` at rest and `text.link` under the
+pointer, the close `close.rest` and `close.hot`. The popovers' strips are laid on the title band by
+`S.Header` at the strip's own offsets (`right`). Without LibKa0s Widgets the window builds the
+host's strip (its own icon marks and the close) on the same pitch, with no settings mark.
+The settings mark widened the main window's cluster by a mark and a gap, so a centered compact title
+with its `TEST` or `SIM` word moves left as far as it must to end `TITLE_RESERVE` short of the lock
+(`NS.CompactChrome`, `centerShift`). Not on the strip: the detail card (an expanded row with no title
+bar), the upgrade toast (a notification, whose close is the toast shell's) and the library's own
+windows (the debug console, the copy window, the perf panel, the sim panel and the skin picker, which
+carry the library's strip from the re-vendor). The addon builds no LibKa0s `DragHandle` (it draws no
+HUD strip), so the drag strip's settings mark (DragHandle minor 14) has nothing to turn on.
 
 ## Settings Schema
 
@@ -477,8 +504,8 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   takes the band's rect (`S.Header` `bars`), so its title, mode words, lock button (RX-08, in the
   right-hand cluster since RX-14), badge and controls, anchored to the bar at y 0, sit on the band's
   middle; minimized, the window is the band and its two edges. The Offer panel and the Edit message
-  box keep the band S.Shell draws, put their title (by `title.align`) and close on it through
-  `S.Header`, and start their content `POPOVER_TOP` (36) down. The detail card is an expanded row
+  box keep the band S.Shell draws, put their title (by `title.align`) and their title-bar marks
+  (settings and close, the Edit message box's close alone; AD-86-DW) on it through `S.Header`, and start their content `POPOVER_TOP` (36) down. The detail card is an expanded row
   with no header, and the toast opts out of the band. Without the library the builders' own anchors
   stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)

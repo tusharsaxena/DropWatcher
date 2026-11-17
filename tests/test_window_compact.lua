@@ -115,9 +115,13 @@ test("compact: the title-bar toggle sits left of minimize, with a catalog mark",
     local b = f.modeButton
     assertTrue(b ~= nil)
     local pt = b.__points[1]
-    assertEqual(pt[1], "RIGHT"); assertEqual(pt[2], f.minimizeButton); assertEqual(pt[3], "LEFT")
+    -- Re-pinned at AD-86-DW (LibKa0s#86): the marks are one W.HeaderButtons strip, each anchored
+    -- RIGHT on the bar at its own offset, 6 px apart, where each hung off its neighbor 4 px apart.
+    local hb = f.headerButtons
+    assertEqual(pt[1], "RIGHT"); assertEqual(pt[2], f.titleBar); assertEqual(pt[3], "RIGHT")
+    assertEqual(hb.offsets.mode, hb.offsets.minimize - f.minimizeButton:GetWidth() - 6, "immediately left of minimize")
     assertTrue(f.scanButton == nil, "Scan group is the Drops strip's, in both layouts")
-    assertEqual(f.lockButton.__points[1][2], b, "the lock button left of it (RX-14)")
+    assertEqual(hb.offsets.lock, hb.offsets.mode - b:GetWidth() - 6, "the lock button left of it (RX-14)")
     assertEqual(f.badge.__points[1][2], f.lockButton, "the badge anchors to the cluster's first, the lock")
     assertEqual(b.mark, "fullscreen-exit", "full: the shrink mark")
     assertTrue(b.art:IsShown() and not b.glyph:IsShown(), "the catalog mark, not the glyph")

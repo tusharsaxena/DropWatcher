@@ -209,9 +209,14 @@ end)
 test("chrome: the lock button sits left of the layout toggle in both layouts, the badge apart; a click locks", function()
     local NS, f, m = shown("compact")
     local b = f.lockButton
-    -- red under: the RX-08 anchor, LEFT on the title bar
-    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
-    assertEqual(b.__points[1][3], "LEFT")
+    -- red under: the RX-08 anchor, LEFT on the title bar. Re-pinned at AD-86-DW (LibKa0s#86): the
+    -- strip anchors each mark RIGHT on the bar at its offset, 6 px left of its neighbor.
+    local hb = f.headerButtons
+    local function leftOfToggle()
+        return b.__points[1][1] == "RIGHT" and b.__points[1][2] == f.titleBar
+            and hb.offsets.lock == hb.offsets.mode - f.modeButton:GetWidth() - 6
+    end
+    assertTrue(leftOfToggle(), "compact: immediately left of the layout toggle")
     NS.addon:SendMessage(NS.MSG.RESTRICTION_CHANGED, "encounter", false)
     m.advance(0)
     assertTrue(f.badge.__points[1][2] ~= b, "compact: the badge stays at the left, not on the lock")
@@ -219,7 +224,7 @@ test("chrome: the lock button sits left of the layout toggle in both layouts, th
     assertEqual(NS.addon.db.profile.locked, true)
     assertFalse(f.resizeGrip:IsShown())
     NS.SetWindowMode("full")
-    assertEqual(b.__points[1][2], f.modeButton, "full: the same place")
+    assertTrue(leftOfToggle(), "full: the same place")
     assertEqual(f.badge.__points[1][2], b)
     assertEqual(f.badge.__points[1][3], "LEFT", "full: the badge left of the lock, never under it")
 end)
@@ -255,10 +260,23 @@ test("chrome: at the minimum width the cluster's buttons do not overlap and the 
         local half = (minW - 2) / 2   -- the bar is inset 1 px on each side
         local title = f.title:GetUnboundedStringWidth()
         local word = 11 * #NS.CompactChrome.ModeWord("test", mode == "compact")
-        -- TEST beside the title, the two centered together in compact; the title alone centered in full
+        -- TEST beside the title, the two centered together in compact; the title alone centered in full.
+        -- Re-pinned at AD-86-DW (LibKa0s#86): the settings mark widened the cluster, so the title is
+        -- measured where it is placed (minimized in test mode, the word up at the same generous
+        -- width), no longer where centering alone would put it: it moves left as far as it must.
+        NS.SetTestMode(true)
+        NS.Window.SetMinimized(true)
+        f.testText:SetWidth(word)
+        f.titleX = nil
+        NS.CompactChrome.PlaceTitle(f)
+        assertTrue(f.testText:IsShown(), mode .. ": the word beside the title")
+        local p = f.title.__points[#f.title.__points]
+        assertEqual(p[1], "CENTER", mode .. ": centered")
         local gap = NS.WindowTitleBar.MODE_GAP
-        local reach = mode == "compact" and (title + gap + word) / 2 or title / 2 + gap + word
+        local reach = p[4] + title / 2 + gap + word
         assertTrue(reach < half - last, mode .. ": the title clears the lock button at " .. minW .. " px")
+        NS.Window.SetMinimized(false)
+        NS.SetTestMode(false)
     end
 end)
 

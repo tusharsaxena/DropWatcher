@@ -460,14 +460,13 @@ local function foldTip()
 end
 
 -- Expand all and Collapse all, one toggle (RX-25 ruling: they are mutually exclusive): Collapse
--- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down.
-local function buildFoldButton(p)
-    p.foldButton = NS.WindowTitleBar.IconButton(p, "chevron-up", "^", function()
+-- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down. The
+-- strip's one extra (AD-86-DW), left of settings and close.
+local function foldExtra(p)
+    return { key = "fold", icon = "chevron-up", glyph = "^", onClick = function()
         setAll(anyExpanded())
         NS.Window.RefreshTooltip(p.foldButton)   -- the tooltip under the pointer names the next click (RX-28)
-    end)
-    NS.Window.AttachTooltip(p.foldButton, foldTip, "title")
-    p.foldButton:HookScript("OnLeave", function() onLeave() end)
+    end }
 end
 
 -- The toggle's mark follows the items on every paint (a header's click, a new roll, Expand or
@@ -491,23 +490,25 @@ local function buildTitle(p)
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Rolls"])
     NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
-    p.closeButton = NS.MakeCloseButton(p, function() RP.Close() end)
-    buildFoldButton(p)
-    local right = { p.foldButton }
+    -- The strip (AD-86-DW, LibKa0s#86): Expand all / Collapse all, settings, close, from the corner
+    -- the old close sat at; S.Header then lays them on the band at the strip's offsets. The panel is
+    -- in the window tier, under the settings panel, so settings does not hide it first.
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+        close = function() RP.Close() end, extras = { foldExtra(p) } })
+    p.closeButton, p.foldButton = hb.close, hb.extras.fold
+    NS.Window.AttachTooltip(p.foldButton, foldTip, "title")
+    for _, key in ipairs(hb.order) do
+        local b = (key == "close" and hb.close) or (key == "settings" and hb.settings) or hb.extras[key]
+        b:HookScript("OnLeave", function() onLeave() end)
+    end
     if p.closeButton then
-        p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
-        p.closeButton:HookScript("OnLeave", function() onLeave() end)
         NS.Window.AttachTooltip(p.closeButton, function()
             return L["Close the Rolls panel"], NS.TipMarks.Row(L["Until"], L["the next roll starts"]),
                 NS.TipMarks.Row(L["Turn off"], L["Show the Rolls panel beside the window on Drops > Rolls > Panel"])
         end, "title")
-        table.insert(right, 1, p.closeButton)
-        p.foldButton:SetPoint("RIGHT", p.closeButton, "LEFT", -4, 0)
-    else
-        p.foldButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
     end
     -- The band ApplySkin draws carries the title and the buttons, as the Offer panel's (R5-WIN).
-    NS.Skin.Header(p, { title = p.title, right = right, bars = { p.titleBar } })
+    NS.Skin.Header(p, { title = p.title, right = hb.right, bars = { p.titleBar } })
 end
 
 -- The mode strips (ruling A1): test mode's and the simulation's, born hidden, docked directly under

@@ -880,9 +880,12 @@ test("shell: the lock button sits in the right-hand cluster left of the layout t
     local NS, f = shown()
     local b = f.lockButton
     assertTrue(b ~= nil and b ~= f.badge, "its own button, not the restriction badge")
-    -- red under: the RX-08 anchor, LEFT on the title bar
-    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
-    assertEqual(b.__points[1][3], "LEFT", "immediately left of the layout toggle")
+    -- red under: the RX-08 anchor, LEFT on the title bar. Re-pinned at AD-86-DW (LibKa0s#86): the
+    -- strip anchors each mark RIGHT on the bar at its offset, 6 px left of its neighbor.
+    local hb = f.headerButtons
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.titleBar)
+    assertEqual(hb.offsets.lock, hb.offsets.mode - f.modeButton:GetWidth() - 6, "immediately left of the layout toggle")
+    assertEqual(hb.order[1], "lock", "the cluster's first")
     assertEqual(b.mark, "lock")
     assertTrue(b.art:IsShown(), "the catalog's lock mark")
     assertTrue(b.art:GetAlpha() < 1 and b.art:IsDesaturated(), "unlocked: the same mark, dimmed")

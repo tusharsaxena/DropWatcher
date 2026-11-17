@@ -164,12 +164,15 @@ local function buildTitle(p)
     p.kind:SetPoint("LEFT", p.title, "RIGHT", 8, 0)
     NS.Skin.Text(p.kind, "disabled")
     p.kind:SetText(L["YOUR DROP"])
-    p.closeButton = NS.MakeCloseButton(p, function() OP.Close() end)
-    if p.closeButton then p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6) end
-    -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and close sit on the
+    -- The strip (AD-86-DW, LibKa0s#86): settings and close, from the corner the old close sat at. The
+    -- panel is in the window tier, under the settings panel, so settings does not hide it first.
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+        close = function() OP.Close() end })
+    p.closeButton = hb.close
+    -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and marks sit on the
     -- band's middle, the title by the skin's `title.align`, in every skin (R5-WIN, the lead's call 3).
-    -- With no library the anchors above stand.
-    NS.Skin.Header(p, { title = p.title, right = { p.closeButton }, bars = { p.titleBar } })
+    -- With no library the strip's anchors stand.
+    NS.Skin.Header(p, { title = p.title, right = hb.right, bars = { p.titleBar } })
 end
 
 local function buildHeader(p)

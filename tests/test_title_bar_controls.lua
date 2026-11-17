@@ -7,8 +7,9 @@
 --     X rests in `close.rest` (which follows `icon.tint`) and lights `close.hot`;
 --   * both pinned under Ka0s Default and Obsidian.
 --
--- The windows: the main window (close, minimize, the layout toggle, the lock), the Rolls panel
--- (close, Expand all / Collapse all), the Offer panel (close) and the Edit message box (close). The
+-- The windows: the main window (close, settings, minimize, the layout toggle, the lock), the Rolls
+-- panel (close, settings, Expand all / Collapse all), the Offer panel (close, settings) and the Edit
+-- message box (close; it opts out of the settings mark, AD-86-DW). The
 -- lock's state is its alpha and desaturation, not its color, so it follows the tint rule too.
 
 local T = _G.DW_TEST
@@ -60,6 +61,7 @@ end
 -- A mark's art (or its glyph when the art did not resolve): rest, hover, rest again.
 local function markColor(b)
     if b.art and b.art:IsShown() then return b.art.__vertex end
+    if b.icon then return b.icon.__vertex end   -- the library's own mark (the settings mark, AD-86-DW)
     return { b.glyph:GetTextColor() }
 end
 
@@ -93,8 +95,8 @@ local function mainWindow()
     local NS, _, m = T.enableAddon{ skin = "ka0s" }
     NS.ShowWindow()
     local f = NS.Window.Frame()
-    return NS, m, { marks = { minimize = f.minimizeButton, mode = f.modeButton, lock = f.lockButton },
-        close = f.closeButton }
+    return NS, m, { marks = { minimize = f.minimizeButton, mode = f.modeButton, lock = f.lockButton,
+        settings = f.settingsButton }, close = f.closeButton }
 end
 
 local function info(name, guid, class, state, roll, isSelf)
@@ -122,7 +124,7 @@ local function rollsPanel()
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
     local p = NS.RollsPanel.Drawn().panel
     assertTrue(p ~= nil and p:IsShown(), "the Rolls panel opens")
-    return NS, m, { marks = { fold = p.foldButton }, close = p.closeButton }
+    return NS, m, { marks = { fold = p.foldButton, settings = p.settingsButton }, close = p.closeButton }
 end
 
 local function ownDrop()
@@ -151,7 +153,8 @@ end
 local function offerPanel()
     local NS, m = withDrop()
     NS.OfferPanel.Open(1)
-    return NS, m, { marks = {}, close = NS.OfferPanel.Drawn().panel.closeButton }
+    local p = NS.OfferPanel.Drawn().panel
+    return NS, m, { marks = { settings = p.settingsButton }, close = p.closeButton }
 end
 
 local function editBox()

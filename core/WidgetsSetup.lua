@@ -64,6 +64,23 @@ function NS.MakeSearchBox(parent, width, opts)
     return W.SearchBox(parent, width, o)
 end
 
+--- A window's title-bar marks (the library's W.HeaderButtons, WidgetsHeader minor 1, LibKa0s#86;
+--- standalone-windows, *Title-bar controls*): right-aligned, left to right `spec.extras` · settings ·
+--- close, 18 px and 6 px apart. The `owner` is this addon's folder, which is the launcher's `name`
+--- (core/LauncherSetup.lua), so the settings mark opens the opener the launcher registered; the close
+--- goes through the one wrapper, NS.MakeCloseButton (standalone-windows' close-button rule). Nil when
+--- the library is absent: NS.WindowTitleBar.Marks then lays the host's marks on the same pitch.
+--- @param bar table the frame the marks are parented and anchored to
+--- @param spec table W.HeaderButtons' spec; `owner` and `makeClose` are always this addon's
+--- @return table|nil HeaderButtons' answer { close, settings, extras, order, offsets, right, optOut }
+function NS.HeaderButtons(bar, spec)
+    if not W or type(W.HeaderButtons) ~= "function" then return nil end
+    local s = {}
+    for k, v in pairs(spec or {}) do s[k] = v end
+    s.owner, s.makeClose = addonName, NS.MakeCloseButton
+    return W.HeaderButtons(bar, s)
+end
+
 --- Whether the dropdown seam can build anything at all.
 --- @return boolean
 function NS.HasWidgets()

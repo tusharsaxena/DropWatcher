@@ -487,12 +487,28 @@ local function titleAlign()
     return "CENTER"
 end
 
--- The title's x for `align`: centered, shifted by half the word beside it in compact; LEFT or RIGHT,
--- in by what that edge keeps clear of.
+-- How far left a centered title moves so it and the word beside it end TB.TITLE_RESERVE short of
+-- the right-hand cluster (AD-86-DW: the settings mark widened the cluster by a mark and a gap, so a
+-- compact window at its least width no longer clears it in every face); 0 while it fits centered.
+local function centerShift(f, x, word)
+    local TB = NS.WindowTitleBar
+    local barW = f.titleBar.GetWidth and f.titleBar:GetWidth()
+    if type(barW) ~= "number" or barW <= 0 then barW = (f:GetWidth() or 0) - 2 end
+    local title = widthOf(f.title, 0)
+    if f.title.GetUnboundedStringWidth then title = f.title:GetUnboundedStringWidth() or title end
+    local reach = x + title / 2 + (word and TB.MODE_GAP + widthOf(word, 0) or 0)
+    local room = barW / 2 - TB.ClusterWidth(f) - TB.TITLE_RESERVE
+    return reach > room and room - reach or 0
+end
+
+-- The title's x for `align`: centered, shifted by half the word beside it in compact, and left as
+-- far as the right-hand cluster needs (centerShift); LEFT or RIGHT, in by what that edge keeps clear
+-- of.
 local function titleX(f, compact, word, align)
     if align == "CENTER" then
-        if compact and word then return -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
-        return 0
+        local x = 0
+        if compact and word then x = -(NS.WindowTitleBar.MODE_GAP + (word:GetWidth() or 0)) / 2 end
+        return x + centerShift(f, x, word)
     end
     local place = reserve(f, compact, word, align)
     return align == "LEFT" and place.left or -place.right
