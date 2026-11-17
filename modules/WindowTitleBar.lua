@@ -321,10 +321,17 @@ end
 --- library-absent strip below keeps too.
 TB.HEADER_PAD, TB.HEADER_GAP = 6, 6
 
--- The mark HeaderButtons built for an extra, given the fields a TB.IconButton carries (`art`,
+-- The mark HeaderButtons built for an extra, given the fields iconButton's mark carries (`art`,
 -- `glyph`, `mark`), so setMark, PaintLock and the TB.MARK_REST / TB.MARK_HOT paint keep working on
 -- it: its art is the library's `icon` (or a hidden texture where the art did not resolve and the
 -- library drew the glyph as its `label`), its glyph the library's `label` (or a hidden one).
+--
+-- Two paint paths, on purpose: the library's own OnEnter/OnLeave (and its skin-switch replay) paint
+-- `icon` or `label` in `icon.tint` / `text.link`, and the host's paintMark below paints `art` and
+-- `glyph` in TB.MARK_REST / TB.MARK_HOT. The host's path cannot go: setMark may show the hidden
+-- texture or font string, which the library does not know. They agree because the host's tokens are
+-- the library's (test_header_marks pins it), and both set only the color, so PaintLock's alpha and
+-- desaturation survive either.
 local function adoptMark(b, icon, glyph)
     if not b.art then
         b.art = b.icon or b:CreateTexture(nil, "ARTWORK")
@@ -353,7 +360,7 @@ local function markOf(hb, key)
     return hb.extras[key]
 end
 
--- The library-absent strip: the close (none without LibKa0s-Core) and the extras as TB.IconButtons,
+-- The library-absent strip: the close (none without LibKa0s-Core) and the extras as iconButton marks,
 -- on HeaderButtons' pitch and in its answer's shape. No settings mark: the opener is the library's.
 local function hostMarks(bar, spec)
     local hb = { extras = {}, order = {}, offsets = {}, right = {} }
@@ -379,7 +386,7 @@ end
 
 --- A window's title-bar marks (AD-86-DW, LibKa0s#86; standalone-windows, *Title-bar controls*):
 --- NS.HeaderButtons, right-aligned, left to right `spec.extras` · settings · close, each extra given
---- a TB.IconButton's fields (`art`, `glyph`, `mark`; TB.SetIconMark changes its mark) and painted in
+--- iconButton's fields (`art`, `glyph`, `mark`; TB.SetIconMark changes its mark) and painted in
 --- TB.MARK_REST / TB.MARK_HOT. Without the library, the host's strip on the same pitch, with no
 --- settings mark. `spec.frame.headerButtons` (else the bar's) is set to the answer, and the window
 --- keeps the settings mark as `settingsButton`. The caller attaches each mark's tooltip.

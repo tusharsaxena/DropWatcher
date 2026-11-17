@@ -600,3 +600,5 @@ L["it be dragged and resized again"] = "it be dragged and resized again"
 L["/dw lock"] = "/dw lock"
 L["/dw unlock"] = "/dw unlock"
 L["Lock frame on General > Master controls"] = "Lock frame on General > Master controls"
+-- core/WidgetsSetup.lua NS.HeaderButtons: every window's settings mark (AD-86-DW, LibKa0s#86)
+L["Open settings"] = "Open settings"

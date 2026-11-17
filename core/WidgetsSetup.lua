@@ -78,6 +78,9 @@ function NS.HeaderButtons(bar, spec)
     local s = {}
     for k, v in pairs(spec or {}) do s[k] = v end
     s.owner, s.makeClose = addonName, NS.MakeCloseButton
+    -- The settings mark's tooltip is this addon's string (localization-§1), not HEADER_STRINGS'. Its
+    -- fallback glyph stays the library's: a symbol, not a word.
+    s.settingsTip = s.settingsTip or NS.L["Open settings"]
     return W.HeaderButtons(bar, s)
 end
 

@@ -135,6 +135,35 @@ for _, w in ipairs(WINDOWS) do
     end)
 end
 
+-- red under: the settings mark's tooltip read from the library's HEADER_STRINGS, not this addon's L
+test("header marks: the settings mark's tooltip is this addon's own string", function()
+    local NS = T.enableAddon{ skin = "ka0s" }
+    NS.L["Open settings"] = "Drop Watcher settings (localized)"
+    NS.ShowWindow()
+    local b = NS.Window.Frame().headerButtons.settings
+    assertEqual(b.__tip, "Drop Watcher settings (localized)", "the tooltip comes from NS.L")
+end)
+
+-- red under: the host's TB.MARK_REST / TB.MARK_HOT drifting off the library's icon.tint / text.link,
+-- which would leave an extra's two paint paths (the library's and the host's) disagreeing
+test("header marks: an extra's host paint and the library's paint agree, at rest and on hover", function()
+    local NS, _, f = mainWindow()
+    local TB = NS.WindowTitleBar
+    assertEqual(TB.MARK_REST, "icon.tint", "the host's rest token is the library's")
+    assertEqual(TB.MARK_HOT, "text.link", "the host's hover token is the library's")
+    local b = f.minimizeButton
+    local function same(token, what)
+        local r, g, bl = b.art:GetVertexColor()
+        local er, eg, eb = NS.SkinColor(token)
+        assertEqual(string.format("%.3f %.3f %.3f", r, g, bl), string.format("%.3f %.3f %.3f", er, eg, eb), what)
+    end
+    same("icon.tint", "at rest")
+    b:__fire("OnEnter")
+    same("text.link", "on hover")
+    b:__fire("OnLeave")
+    same("icon.tint", "after the pointer leaves")
+end)
+
 -- red under: a settings mark on the modal, or an opt-out with no reason
 test("header marks: the Edit message box opts out of the settings mark, with its reason", function()
     local _, _, e = editBox()

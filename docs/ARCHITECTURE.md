@@ -244,7 +244,12 @@ strata over the window, so the settings panel would open under it, and Send, Can
 it first. Each extra keeps its behavior and tooltip (`Window.AttachTooltip`'s `title` placement), its
 state (the lock dimmed and desaturated while unlocked, the minimize and layout marks following the
 state through `SetIconMark`) and the title-bar colors, `icon.tint` at rest and `text.link` under the
-pointer, the close `close.rest` and `close.hot`. The popovers' strips are laid on the title band by
+pointer, the close `close.rest` and `close.hot`. An extra has two paint paths, on purpose: the
+library's own hover and skin-switch paint of its `icon` or `label`, and the host's of `art` and
+`glyph` (`TB.MARK_REST` / `TB.MARK_HOT`), which must stay because `SetIconMark` may show a texture or
+word the library never made; the two agree because the host's tokens are the library's, which
+`test_header_marks` pins. The settings mark's tooltip, `Open settings`, is this addon's `NS.L`
+string (`NS.HeaderButtons` passes it as `settingsTip`); its fallback glyph is the library's. The popovers' strips are laid on the title band by
 `S.Header` at the strip's own offsets (`right`). Without LibKa0s Widgets the window builds the
 host's strip (its own icon marks and the close) on the same pitch, with no settings mark.
 The settings mark widened the main window's cluster by a mark and a gap, so a centered compact title
