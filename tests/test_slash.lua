@@ -155,8 +155,8 @@ end)
 test("slash: SplitLink takes a whole link, spaces and all, and leaves the rest", function()
     local V = T.newAddon().SlashVerbs
     local link = BAND
-    local got, tail = V.SplitLink("  " .. link .. "  Brakk-Silvermoon ")
-    assertEqual(got, link); assertEqual(tail, "Brakk-Silvermoon")
+    local got, tail = V.SplitLink("  " .. link .. "  Brakk-Samplerealm ")
+    assertEqual(got, link); assertEqual(tail, "Brakk-Samplerealm")
     got, tail = V.SplitLink(link)
     assertEqual(got, link); assertEqual(tail, "")
     local plain = "|Hitem:300::|h[Band of Many Words]|h"

@@ -77,9 +77,9 @@ end)
 test("compat: ChatSender prefers C_ChatInfo.SendChatMessage", function()
     local Compat, m = fresh()
     m.SendChatMessage = function() error("the deprecated global was called") end
-    Compat.ChatSender()("hi", "WHISPER", nil, "Seta-Silvermoon")
+    Compat.ChatSender()("hi", "WHISPER", nil, "Seta-Samplerealm")
     assertEqual(#m.chatSent, 1)
-    assertEqual(m.chatSent[1].target, "Seta-Silvermoon")
+    assertEqual(m.chatSent[1].target, "Seta-Samplerealm")
     assertEqual(m.chatSent[1].chatType, "WHISPER")
 end)
 
@@ -769,11 +769,11 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     local Compat, m = fresh()
     assertEqual(Compat.NormalizedRealm(), "Testrealm")
     m.normalizedRealm = nil
-    m.__context.realm = "Azjol-Nerub Area"
-    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "nil early in the login: the plain name, stripped")
+    m.__context.realm = "Mock-Sample Area"
+    assertEqual(Compat.NormalizedRealm(), "MockSampleArea", "nil early in the login: the plain name, stripped")
     installSecrets(m)
     m.normalizedRealm = T.secret("Secret")
-    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "a secret answer is skipped")
+    assertEqual(Compat.NormalizedRealm(), "MockSampleArea", "a secret answer is skipped")
     m.GetNormalizedRealmName, m.GetRealmName = nil, nil
     assertNil(Compat.NormalizedRealm())
 end)

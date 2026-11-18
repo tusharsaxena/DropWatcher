@@ -2126,7 +2126,7 @@ Total.
 - refused: every receipt the feed turns away is counted by reason and logged under FEED
 - refused: a C_LootHistory drop already taken is counted as seen
 - diagnostics: the drops section reports the hidden and the refused counts by reason
-- header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
+- header: View Interesting hides Sàmple's Yoke and the header reads `2 drops · 1 shown`
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 

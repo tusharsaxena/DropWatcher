@@ -80,7 +80,7 @@ end)
 test("group place: Who names the recorder alone, its short name class-colored; History falls back to an entry", function()
     local GP = T.newAddon().GroupPlace
     local function colorOf(c) if c == "MAGE" then return 1, 0, 0 end end
-    assertEqual(GP.Who({ seenBy = "Euthanàsia-Azralon", seenByClass = "MAGE" }, colorOf), "|cffff0000Euthanàsia|r")
+    assertEqual(GP.Who({ seenBy = "Sàmplemage-Samplerealm", seenByClass = "MAGE" }, colorOf), "|cffff0000Sàmplemage|r")
     assertEqual(GP.Who({ seenBy = "Alt-Other", seenByClass = "ROGUE" }, colorOf), "Alt", "an unknown color is plain")
     assertEqual(GP.Who({ drops = { { seenBy = nil }, { seenBy = "Old-Realm", seenByClass = "MAGE" } } }, colorOf),
         "|cffff0000Old|r", "a group kept before DW-B4: its first entry with a recorder")

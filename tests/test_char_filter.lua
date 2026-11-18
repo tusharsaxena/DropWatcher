@@ -24,8 +24,8 @@ end
 
 test("char filter: a recorder key is Name-Realm; a name that carries its realm is kept", function()
     local CF = cf()
-    assertEqual(CF.Key("Tiamât", "Frostmourne"), "Tiamât-Frostmourne")
-    assertEqual(CF.Key("Bùnian-Azralon", "Testrealm"), "Bùnian-Azralon")
+    assertEqual(CF.Key("Mockât", "Mockrealm"), "Mockât-Mockrealm")
+    assertEqual(CF.Key("Sàmple-Samplerealm", "Testrealm"), "Sàmple-Samplerealm")
     assertEqual(CF.Key("Solo", nil), "Solo")
     assertNil(CF.Key(nil, "Realm")); assertNil(CF.Key("", "Realm"))
 end)
@@ -108,7 +108,7 @@ end
 
 local function link(id) return ("|cffa335ee|Hitem:%d::::::::90:::::|h[Ring %d]|h|r"):format(id, id) end
 
-local KEGHUNT_ROW = { guid = "Player-11-0000000B", name = "Keghunt", realm = "Thrall", class = "WARRIOR",
+local MOCKHUNT_ROW = { guid = "Player-11-0000000B", name = "Mockhunt", realm = "Mockrealm", class = "WARRIOR",
     classFile = "WARRIOR" }
 
 local function party()
@@ -117,7 +117,7 @@ local function party()
         m.instance = { name = "Den of Nalorakk", difficultyID = 8 }
     end })
     m.addItem(link(501), ring(600))
-    m.setGroup({ KEGHUNT_ROW })
+    m.setGroup({ MOCKHUNT_ROW })
     NS.Roster.Refresh("test")
     return NS, m
 end
@@ -169,7 +169,7 @@ end)
 
 test("recorder: every drop record and its History entry say who saw it", function()
     local NS = party()
-    local id = NS.LootFeed.Add(link(501), "Keghunt-Thrall")
+    local id = NS.LootFeed.Add(link(501), "Mockhunt-Mockrealm")
     local rec = NS.LootFeed.Get(id)
     assertEqual(rec.seenBy, ME); assertEqual(rec.seenByClass, "MAGE")
     local e = NS.History.Log().groups[1].drops[1]

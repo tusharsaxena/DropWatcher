@@ -75,7 +75,7 @@ test("compact cards: Truncate cuts by characters, not bytes, and marks the cut w
     assertEqual(select(1, C.Truncate("Gate of the Setting Sun", 30)), "Gate of the Setting Sun")
     local s, cut = C.Truncate("Gate of the Setting Sun", 8)
     assertEqual(s, "Gate of…"); assertTrue(cut)
-    assertEqual(select(1, C.Truncate("Tiamât Tiamât", 7)), "Tiamât…", "a two-byte character counts once")
+    assertEqual(select(1, C.Truncate("Mockât Mockât", 7)), "Mockât…", "a two-byte character counts once")
     assertEqual(select(1, C.Truncate(nil, 5)), "")
     assertFalse(select(2, C.Truncate("abc", 3)))
 end)
@@ -128,11 +128,11 @@ test("compact cards: a cross-realm looter takes no mark, the realm in the toolti
     local same = C.Looter(groupDrop(), "Realm")
     assertEqual(same.text, "Lysandra"); assertFalse(same.crossRealm); assertTrue(same.mark == nil)
     assertEqual(same.classFile, "MAGE")
-    local other = C.Looter(groupDrop({ looter = { name = "Bùnian-Argent Dawn", classFile = "DRUID" } }), "Realm")
+    local other = C.Looter(groupDrop({ looter = { name = "Sàmple-Mock Haven", classFile = "DRUID" } }), "Realm")
     -- red under: the ⊕ after the name (feedback-20 retired it)
-    assertEqual(other.text, "Bùnian"); assertTrue(other.crossRealm); assertTrue(other.mark == nil)
-    assertTrue(has(other.tip, "• Realm: Argent Dawn"))
-    assertFalse(C.Looter(groupDrop({ looter = { name = "Bùnian-ArgentDawn" } }), "Argent Dawn").crossRealm,
+    assertEqual(other.text, "Sàmple"); assertTrue(other.crossRealm); assertTrue(other.mark == nil)
+    assertTrue(has(other.tip, "• Realm: Mock Haven"))
+    assertFalse(C.Looter(groupDrop({ looter = { name = "Sàmple-MockHaven" } }), "Mock Haven").crossRealm,
         "realms compare normalized")
     assertFalse(C.Looter(groupDrop(), nil).crossRealm, "your realm unknown: no mark")
     assertFalse(C.Looter(groupDrop({ looter = { name = "Bare" } }), "Realm").crossRealm, "no realm: no mark")
@@ -340,7 +340,7 @@ end
 
 local function historyDrop(NS, over)
     local e = with({
-        itemLink = YOKE, at = 1000000 - 120, looter = "Bùnian-Argent Dawn", class = "DRUID", isMine = false,
+        itemLink = YOKE, at = 1000000 - 120, looter = "Sàmple-Mock Haven", class = "DRUID", isMine = false,
         ilvl = 311, equipLoc = "INVTYPE_NECK", quality = 4, outcome = "seen",
         me = { verdict = "downgrade", ilvlDelta = -4, reasons = {} },
         them = { verdict = "sidegrade", ilvlDelta = 0, reasons = {} },
@@ -358,7 +358,7 @@ test("compact cards: the History card reads the spec's four lines", function()
     local lines = C.Plain(card)
     local clock = fakeDate("%H:%M", at)
     assertEqual(lines[1], "311 Yoke of the Charging Bear  Seen", "the item level before the name (feedback-10 spec §2)")
-    assertEqual(lines[2], "Bùnian · Neck · Jewelry  " .. clock)
+    assertEqual(lines[2], "Sàmple · Neck · Jewelry  " .. clock)
     assertEqual(lines[3], "Trade Yes Not their upgrade", "Trade above You and Them, as on Drops (feedback-25)")
     assertEqual(lines[4], "You ▼4  Them ≈0", "a kept entry holds no worn items: the verdict alone")
     assertEqual(card.outcome.tone, "bad", "Seen in gray (feedback-12 spec §0)"); assertEqual(card.time.tone, "muted")
@@ -404,7 +404,7 @@ end)
 
 local function encounter(over)
     return with({ key = "e1", label = "Commander Ri'mok", kind = "encounter", situation = "dungeon", at = NOW - 180,
-        instance = "Gate of the Setting Sun", difficulty = "Timewalking", seenBy = "Tiamât-Realm",
+        instance = "Gate of the Setting Sun", difficulty = "Timewalking", seenBy = "Mockât-Realm",
         seenByClass = "MAGE" }, over)
 end
 
@@ -414,14 +414,14 @@ test("compact cards: the header's short form drops `ago` and `drops`", function(
     local NS = T.newAddon()
     local C = NS.CompactCards
     local h = C.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
-    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 3m · 2 · Tiamât")
+    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 3m · 2 · Mockât")
     assertTrue(h.cut)
     local full = NS.WindowCells.Header(encounter(), 2, NOW, "Dungeon", false, nil, nil, 0)
     assertEqual(joined(h.tip), joined(full.tip), "the full view's tooltip (feedback-17)")
     local tip = stripColor(T.tipJoined(h.tip, "\n"))
     -- red under: the long form on one line, the place, time, count and recorder run together
     assertTrue(tip:find("Instance  Gate of the Setting Sun\nDifficulty  Timewalking\nWhen  3m ago\nDrops  2\n"
-        .. "Seen by  Tiamât", 1, true) ~= nil, tip)
+        .. "Seen by  Mockât", 1, true) ~= nil, tip)
     assertFalse(tip:find(" · 3m ago · ", 1, true) ~= nil, "no long form")
 end)
 
@@ -480,7 +480,7 @@ test("compact cards: the History header reads days once a day old, its tooltip t
     local C = NS.CompactCards
     local g = encounter({ at = 1000000 - 2 * 86400 - 60 })
     local h = C.HistoryHeader(g, 4, 1000000, "Dungeon", false)
-    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 2d · 4 · Tiamât")
+    assertEqual(stripColor(h.text), "Gate of the… · Commander R… · Timewalking · 2d · 4 · Mockât")
     assertTrue(has(h.tip, "2 days ago"))
     assertTrue(has(h.tip, "From  the history, kept across sessions"))
 end)
