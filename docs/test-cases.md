@@ -424,7 +424,7 @@ Total.
 - skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
 - skin tools: the live debug console is painted for this owner
 
-### test_slash.lua (27)
+### test_slash.lua (28)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -448,6 +448,7 @@ Total.
 - slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)
 - slash: a tab verb the Visibility setting keeps hidden says so
 - slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
+- slash: the help rows of the report verbs name the debug console
 - slash: `situation` reports the situation, its settings and the classifier's inputs
 - slash: `offer` opens the panel on your newest drop of that item
 - slash: `offer` of a bag item the feed never saw adds it as yours first
@@ -3078,7 +3079,7 @@ Total.
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
-| test_slash.lua | 27 |
+| test_slash.lua | 28 |
 | test_slash_report.lua | 6 |
 | test_window.lua | 20 |
 | test_window_shell.lua | 74 |
@@ -3190,4 +3191,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2644** |
+| **Total** | **2645** |

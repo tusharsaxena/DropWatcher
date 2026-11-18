@@ -34,7 +34,7 @@ local function dungeon(m)
 end
 
 -- An enabled instance in a party in a dungeon: the player wears two 600 rings; Brakk (party1, a
--- warrior on the player's realm) and Lyra (party2, a priest from Area 52) are in the group.
+-- warrior on the player's realm) and Lyra (party2, a priest from Mock 52) are in the group.
 local function party(seed)
     local NS, _, m = T.enableAddon({ mock = function(m)
         dungeon(m)
@@ -43,7 +43,7 @@ local function party(seed)
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     NS.Roster.Refresh("test")    -- read directly, so no inspect warm-up is armed
     return NS, m, NS.LootFeed
 end
@@ -155,7 +155,7 @@ test("feed: a looter who leaves the group keeps the read the drop was judged wit
     m.advance(0)
     local rec = only(LF)
     assertEqual(rec.them.verdict, "downgrade")
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     assertNil(NS.Inspect.Get(BRAKK), "the broker forgets a member who left")
     local insp, kept = NS.TestMode.InspectOf(rec)
@@ -174,7 +174,7 @@ test("feed: a re-judge after the looter left keeps the read and the verdict the 
     brakkWears(m, 630)
     m.advance(0)
     local rec = only(LF)
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     -- red under: a judgeLooter that replaces the read with the gear-less notInGroup state
     LF.Refresh(rec, "source")
@@ -191,7 +191,7 @@ test("feed: a looter who leaves before any read reads not in your group", functi
     m.addItem(link(300), ring(620))
     brakkLoots(m, 300)
     local rec = only(LF)
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     LF.Refresh(rec, "source")
     assertEqual(rec.inspect.status, "unavailable"); assertEqual(rec.inspect.reason, "notInGroup")
@@ -318,7 +318,7 @@ test("dedupe: two copies from one source are two drops; another looter's copy is
     m.addItem(link(300), ring(620))
     brakkLoots(m, 300)
     brakkLoots(m, 300)
-    chat(m, "Lyra-Area52 receives loot: " .. link(300) .. ".")
+    chat(m, "Lyra-Mock52 receives loot: " .. link(300) .. ".")
     assertEqual(#LF.Drops(), 3)
 end)
 
@@ -343,7 +343,7 @@ test("history: a drop is taken once it has a winner, and only once", function()
     m.lootHistory["2900:7"] = { itemHyperlink = link(300), winner = {} }
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
     assertEqual(#LF.Drops(), 0, "rolls still open: no winner named")
-    m.lootHistory["2900:7"].winner = { playerName = "Lyra-Area52", playerGUID = LYRA, playerClass = "PRIEST" }
+    m.lootHistory["2900:7"].winner = { playerName = "Lyra-Mock52", playerGUID = LYRA, playerClass = "PRIEST" }
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
     m.advance(LF.DEDUPE_WINDOW + 1)
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
@@ -783,7 +783,7 @@ test("update: a pending score is retried on one shared timer, five times at most
     NS.Scoring = { Scorer = function() return function() return answer end end }
     m.addItem(link(300), ring(620)); m.addItem(link(301), ring(620))
     brakkLoots(m, 300)
-    chat(m, "Lyra-Area52 receives loot: " .. link(301) .. ".")
+    chat(m, "Lyra-Mock52 receives loot: " .. link(301) .. ".")
     local a, b = LF.Drops()[1], LF.Drops()[2]
     assertEqual(a.scoreTries, 0)
     local r = LF.ScoreRetries()

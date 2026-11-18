@@ -993,12 +993,12 @@ test("compat: TradePartnerName names the trade window's partner, with a realm wh
     assertNil(Compat.TradePartnerName(), "no trade partner")
     m.units.NPC = { name = "Brakk" }
     assertEqual(Compat.TradePartnerName(), "Brakk")
-    m.units.NPC = { name = "Lyra", realm = "Area52" }
+    m.units.NPC = { name = "Lyra", realm = "Mock52" }
     if Compat.ClientKey() == "forever" then
-        -- UnitName's second value is the surname there: the whole name, never Lyra-Area52 (client-quirks-§5)
-        assertEqual(Compat.TradePartnerName(), "Lyra Area52")
+        -- UnitName's second value is the surname there: the whole name, never Lyra-Mock52 (client-quirks-§5)
+        assertEqual(Compat.TradePartnerName(), "Lyra Mock52")
     else
-        assertEqual(Compat.TradePartnerName(), "Lyra-Area52")
+        assertEqual(Compat.TradePartnerName(), "Lyra-Mock52")
     end
     m.units.NPC = { name = T.secret("Lyra") }
     assertNil(Compat.TradePartnerName(), "a secret name")

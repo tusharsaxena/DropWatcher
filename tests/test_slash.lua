@@ -280,6 +280,15 @@ test("slash: `compact` toggles the layout through the seam, `full` sets it back,
     assertEqual(NS.Setting("window.mode"), "full", "full only sets, never toggles")
 end)
 
+-- A report verb's help row says where its lines go (AD-79-DW review): the console, never "Print".
+test("slash: the help rows of the report verbs name the debug console", function()
+    local v = verbs(T.newAddon())
+    for _, name in ipairs({ "situation", "diagnostics" }) do
+        assertTrue(v[name][2]:find("debug console", 1, true) ~= nil, name .. ": " .. v[name][2])
+        assertTrue(v[name][2]:find("Print", 1, true) == nil, name .. ": " .. v[name][2])
+    end
+end)
+
 -- Re-pinned at AD-79-DW: the lines are a report now, read from the debug console under the report's
 -- header (debug-logging-§15); tests/test_slash_report.lua pins the routing itself.
 test("slash: `situation` reports the situation, its settings and the classifier's inputs", function()

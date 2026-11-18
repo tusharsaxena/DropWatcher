@@ -86,7 +86,7 @@ local COMMANDS = {
         function() NS.SlashVerbs.Full() end},
     {"rolls",    L["Show or hide the Rolls panel beside the window"],
         function() NS.RollsPanel.Toggle() end},
-    {"situation", L["Print the situation, its settings and the classifier's inputs"],
+    {"situation", L["Write the situation, its settings and the classifier's inputs to the debug console"],
         function() NS.SlashVerbs.Situation() end},
     {"offer",    L["Open the Offer panel for a bag item — `/dw offer <item link>`"],
         function(rest) NS.SlashVerbs.Offer(rest) end},

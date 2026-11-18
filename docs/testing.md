@@ -52,6 +52,16 @@ the loot surface `core/CompatLoot.lua` wraps (`C_LootHistory`, which serves a dr
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
+**Fixture names** (preview-mode, *Sample characters*; AD-87-DW). What the addon ships, test mode's
+people (`modules/TestData.lua`), follows the convention in full: `Sample`/`Mock` names, the five protagonists
+from `Sim.Sample`. A fixture under `tests/` is not shipped data, and the rule asks only that a fixture pairing
+a real-looking name with a real realm move, so the suites' realms are fictional (`Samplerealm`,
+`Mockrealm`, `Testrealm`, `Realm`; `Mock 52`, `Mock Haven` and `Mock-Sample` where a case needs a realm
+spelled with a space, a digit or a hyphen) and no fixture carries a real player's name. The suites' own
+invented people (`Brakk`, `Seta`, `Lyra`, `Doom Dock`, `Vex`) stay: they never reach the client, they pair
+with no real realm, several are pinned by length, accent or a Forever surname, and `Brakk` and `Seta` are
+also names the simulator's seeded crowd (`modules/SimRoster.lua`) keeps under rule 6.
+
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
 each taking an `opts` table (`skip`, `mock`, `inCombat`, `skin`) and returning `(NS, env, mock)`:
 
