@@ -280,22 +280,27 @@ test("slash: `compact` toggles the layout through the seam, `full` sets it back,
     assertEqual(NS.Setting("window.mode"), "full", "full only sets, never toggles")
 end)
 
-test("slash: `situation` prints the situation, its settings and the classifier's inputs", function()
+-- Re-pinned at AD-79-DW: the lines are a report now, read from the debug console under the report's
+-- header (debug-logging-§15); tests/test_slash_report.lua pins the routing itself.
+test("slash: `situation` reports the situation, its settings and the classifier's inputs", function()
     local NS, _, m = T.enableAddon{ mock = function(mk)
         mk.__context.inInstance, mk.__context.instanceType = true, "party"
         mk.instance = { name = "The Rookery", difficultyID = 2 }
     end }
     m.prints = {}
+    local from = #NS.DebugLog.buffer
     NS.addon:OnSlashCommand("situation")
-    assertEqual(#m.prints, 3)
-    assertTrue(m.prints[1]:find("(dungeon)", 1, true) ~= nil, m.prints[1])
-    assertTrue(m.prints[1]:find("Track yes", 1, true) ~= nil, m.prints[1])
-    assertTrue(m.prints[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, m.prints[2])
-    assertTrue(m.prints[3]:find("raid no", 1, true) ~= nil, m.prints[3])
+    local lines = {}
+    for i = from + 2, #NS.DebugLog.buffer do lines[#lines + 1] = NS.DebugLog.buffer[i] end
+    assertEqual(#lines, 3)
+    assertTrue(lines[1]:find("(dungeon)", 1, true) ~= nil, lines[1])
+    assertTrue(lines[1]:find("Track yes", 1, true) ~= nil, lines[1])
+    assertTrue(lines[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, lines[2])
+    assertTrue(lines[3]:find("raid no", 1, true) ~= nil, lines[3])
     assertEqual(#NS.SlashVerbs.SituationLines(), 3)
     -- Per client (Forever port design §4.4): WoW Forever names no keystone, delve or follower dungeon.
-    assertEqual(m.prints[2]:find("keystone", 1, true) == nil, T.forever, m.prints[2])
-    assertEqual(m.prints[3]:find("delve", 1, true) == nil, T.forever, m.prints[3])
+    assertEqual(lines[2]:find("keystone", 1, true) == nil, T.forever, lines[2])
+    assertEqual(lines[3]:find("delve", 1, true) == nil, T.forever, lines[3])
 end)
 
 test("slash: `offer` opens the panel on your newest drop of that item", function()

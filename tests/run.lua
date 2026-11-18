@@ -323,6 +323,7 @@ Kit.run{
         "test_skin_verb",
         "test_skin_settings",
         "test_slash",
+        "test_slash_report",
         "test_window",
         "test_window_shell",
         "test_window_compact",

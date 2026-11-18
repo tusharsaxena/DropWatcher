@@ -23,7 +23,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | ID range | Theme | What it covers |
 |---|---|---|
 | INSTALL-1..6 | Install | Load, reload, first run, the logo; the re-vendored LibKa0s (INSTALL-4, DW-P22); LibKa0s v1.75.0 and its icon subset (INSTALL-5, DW-RV); LibKa0s-Toast-1.0 vendored alone (INSTALL-6, AT-A1) |
-| SLASH-1..9 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09); `/dw whitelist` and `/dw blacklist` in help and refused while disabled (SLASH-9, DW-CAT5, issue #13) |
+| SLASH-1..10 | Slash | `/dw` and `/dropwatcher`, help, the window verbs (SLASH-1..3); the feature verbs of design spec §12.3 (SLASH-4..6, DW-42); each root reaching its own addon with the collection loaded (SLASH-7, review 2026-10-14); the Show window key binding and its refusal by hold (SLASH-8, DW-09); `/dw whitelist` and `/dw blacklist` in help and refused while disabled (SLASH-9, DW-CAT5, issue #13); the reports in the debug console with one chat pointer (SLASH-10, AD-79-DW) |
 | KEYBIND-1..3 | Keybindings | Item 015 (DW-KB): Options → Keybindings's own Ka0s Drop Watcher section with the new label (KEYBIND-1, SM-DW-KB1); General → Keybindings and Options → Keybindings in step, both binding sets (KEYBIND-2, SM-DW-KB2); the bound key, Escape during capture and the combat refusal (KEYBIND-3, SM-DW-KB3) |
 | LAYER-1..4 | Frame layering | Item 030 (DW-ZS): the main window raised on click (LAYER-1, SM-DW-ZS); the floating Offer panel over the window's rows and under the toast (LAYER-2); the compact Filters panel and a dropdown opened from it (LAYER-3; superseded by COMPACT-11); the Edit message box over the floating Offer panel (LAYER-4) |
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
@@ -145,8 +145,8 @@ stay. Result: passed in the client, 2026-10-23 (the owner).
 minimized; `/dw mine` → it opens on Drops (where your own drops are, since DW-E3 retired My drops),
 the same way. `/dw compact` → `Compact view.` and the window narrows to its compact layout
 (COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
-Window layout choice follows. `/dw situation` in a Heroic dungeon →
-three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
+Window layout choice follows. `/dw situation` in a Heroic dungeon → (in the debug console since
+AD-79-DW, SLASH-10) three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
 party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-6. Offer verb.** Client: both. `/dw offer <one of your drops>` → the window opens on Drops with the
@@ -171,10 +171,22 @@ Result: passed in the client, 2026-10-23 (the owner).
 
 **SLASH-9. The item-list verbs (DW-CAT5, issue #13).** Client: both. `/dw help` → it lists `whitelist` (*Always
 watch an item*) and `blacklist` (*Never watch an item*), each with its `add|remove <id or link>`, or
-`list` form. `/dw whitelist` alone and `/dw blacklist list` each print the list, one `12345 [Name]`
+`list` form. `/dw whitelist` alone and `/dw blacklist list` each print the list (in the debug console since AD-79-DW, SLASH-10), one `12345 [Name]`
 line per entry, or `(none)`. `/dw disable`, then `/dw whitelist list` → exactly the one disabled
 refusal line and no list; `/dw enable`. `/dw get feed.whitelist` prints the list as `{n}`, its entry
 count. Fail: a verb missing from help, a list printed while disabled, or a Lua error. Result: Passed (owner, 2026-11-05)
+
+**SLASH-10. Reports go to the debug console, with one chat line (AD-79-DW, LibKa0s#79, debug-logging-§15).**
+Client: both. With debug logging off (`/dw debug off`) and the debug window closed: `/dw situation` →
+the debug window opens and shows `[Report] /dw situation` and the three situation lines under it;
+chat shows exactly one line, `situation: 4 lines written to the debug console. Use Copy to share
+it.`, and nothing else. `/dw whitelist add <an item>`, then `/dw whitelist list` → the window shows
+`/dw whitelist list`, `Always watch (1)` and the item; chat shows the one pointer line. `/dw
+blacklist` alone → the same for Never watch, `(none)` when empty. Press Copy → the report lines paste
+as plain text. `/dw debug` still reads logging off. `/dw blacklist drop 1` → the usage line in chat,
+nothing written to the window. `/dw scan` and `/dw list` still answer in chat, with no pointer. Fail:
+a report printed to chat, more than one chat line, the window left closed, logging turned on, or a
+Lua error. Result:
 
 ## Keybindings
 

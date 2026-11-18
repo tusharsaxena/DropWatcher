@@ -134,22 +134,31 @@ end)
 -- The CLI
 -- ---------------------------------------------------------------------------------------------
 
+-- The console lines a slash line appended: an item list's `list` is a report (debug-logging-§15),
+-- re-pinned at AD-79-DW from chat to the console; tests/test_slash_report.lua pins the routing.
+local function reported(NS, line)
+    local from = #NS.DebugLog.buffer
+    NS.addon:OnSlashCommand(line)
+    local out = {}
+    for i = from + 1, #NS.DebugLog.buffer do out[#out + 1] = NS.DebugLog.buffer[i] end
+    return { prints = out }
+end
+
 test("item lists: `/dw whitelist add|remove|list` writes through the writer and says what it did", function()
     local NS, _, m = T.enableAddon()
     m.addItem("item:19019", { name = "Thunderfury", quality = 5, ilvl = 80, equipLoc = "INVTYPE_WEAPON",
         classID = 2, subClassID = 7, stats = {} })
-    NS.addon:OnSlashCommand("whitelist")
-    assertTrue(printed(m, "Always watch (0)")); assertTrue(printed(m, "(none)"))
-    assertNil(colonEnded(m), "the list's header ends in no colon")
+    local r = reported(NS, "whitelist")
+    assertTrue(printed(r, "Always watch (0)")); assertTrue(printed(r, "(none)"))
+    assertNil(colonEnded(r), "the list's header ends in no colon")
     m.prints = {}
     NS.addon:OnSlashCommand("whitelist add " .. link(19019))
     assertTrue(printed(m, "Added 19019 [Thunderfury] to Always watch."), tostring(m.prints[1]))
     NS.addon:OnSlashCommand("whitelist add 300")
     assertTrue(printed(m, "Added item 300 to Always watch."), tostring(m.prints[2]))
-    m.prints = {}
-    NS.addon:OnSlashCommand("whitelist list")
-    assertTrue(printed(m, "Always watch (2)")); assertNil(colonEnded(m))
-    assertTrue(printed(m, "  item 300")); assertTrue(printed(m, "  19019 [Thunderfury]"))
+    r = reported(NS, "whitelist list")
+    assertTrue(printed(r, "Always watch (2)")); assertNil(colonEnded(r))
+    assertTrue(printed(r, "  item 300")); assertTrue(printed(r, "  19019 [Thunderfury]"))
     m.prints = {}
     NS.addon:OnSlashCommand("blacklist add 300")
     -- red under: the CLI writing the list itself, past the writer's refusal

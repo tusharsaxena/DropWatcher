@@ -14,6 +14,24 @@ logging flag is `NS.State.debug`: session-only, default off, never saved, indepe
 
 No other name runs the report: there is no `diag`, `dump` or other alias.
 
+## Report verbs (debug-logging-§15)
+
+A report is a multi-line read-out asked for by name. Each one writes to the console, not chat,
+through the library's `NS.DebugLog:Report` (AD-79-DW, LibKa0s#79): a `/dw <title>` header, then the
+lines, under the `Report` tag, written whether or not logging is on (the flag is left as it was);
+the console opens if it is hidden; chat gets exactly one pointer line, `<title>: N lines written to
+the debug console. Use Copy to share it.` A usage or refusal line stays in chat and writes nothing.
+Without LibKa0s the lines print to chat with no pointer.
+
+| Command | Report title | What it writes |
+|---|---|---|
+| `/dw situation` | `situation` | the situation with its Track, Auto-open and Quality, then the classifier's inputs |
+| `/dw whitelist list` (or `/dw whitelist`) | `whitelist list` | `Always watch (n)`, then one line per entry or `(none)` |
+| `/dw blacklist list` (or `/dw blacklist`) | `blacklist list` | `Never watch (n)`, the same |
+
+The diagnostics report keeps its own pointer line. `/dw list` (every setting) stays in chat, by the
+owner's ruling, as do `scan` and every other one-line answer.
+
 ## The diagnostics report (debug-logging-§14)
 
 Both forms run the same report, also reachable from the console's orange **Diagnostics** link. It
@@ -50,7 +68,7 @@ timer and registers no event. It reads no chat, no inventory and no other addon'
 
 ## Tags
 
-`State` (test mode, combat edges), `Set` (one line per setting written at the seam, one per bulk
+`Report` (the report verbs above, written whatever the flag reads), `State` (test mode, combat edges), `Set` (one line per setting written at the seam, one per bulk
 reset), `Profile`, `Init` (the session summary and the optional integrations, held until logging is
 turned on), `Migrate`, `SIT` (one line per situation change, with the event that caused it), `RES` (one line per change
 of what the restrictions allow, with the event that caused it), `ROSTER` (one line per change of the

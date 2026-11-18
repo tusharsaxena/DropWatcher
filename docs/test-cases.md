@@ -447,11 +447,20 @@ Total.
 - slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)
 - slash: a tab verb the Visibility setting keeps hidden says so
 - slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
-- slash: `situation` prints the situation, its settings and the classifier's inputs
+- slash: `situation` reports the situation, its settings and the classifier's inputs
 - slash: `offer` opens the panel on your newest drop of that item
 - slash: `offer` of a bag item the feed never saw adds it as yours first
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
+
+### test_slash_report.lua (6)
+
+- slash report: every report verb writes to the console with logging off, one chat pointer
+- slash report: the reports carry the read-outs chat used to carry
+- slash report: a hidden console is revealed, a shown one stays shown
+- slash report: usage and refusals inside a report verb stay in chat and write nothing
+- slash report: `scan` is an action with a one-line answer, not a report
+- slash report: library-absent, the stub streams the report to chat with no pointer
 
 ### test_window.lua (20)
 
@@ -3065,6 +3074,7 @@ Total.
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
 | test_slash.lua | 27 |
+| test_slash_report.lua | 6 |
 | test_window.lua | 20 |
 | test_window_shell.lua | 74 |
 | test_window_compact.lua | 25 |
@@ -3175,4 +3185,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2633** |
+| **Total** | **2639** |

@@ -312,7 +312,9 @@ verbs of design spec §12.3 (`scan clear history mine compact situation offer ad
 `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the
 Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5
 spec §3; and issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through
-the item lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the
+the item lists' one writer, `NS.ItemLists`, which the settings panel shares). The two reports,
+`situation` and an item list's `list`, write to the debug console through `NS.DebugLog:Report` with
+one chat pointer line (debug-logging-§15, AD-79-DW; [`debug.md`](debug.md)); the full table, the
 live-while-disabled set and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). Every
 toggle verb calls the same handler as its Master controls row and its launcher entry
 (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the window's own handlers, and the

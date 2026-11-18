@@ -9,7 +9,8 @@ local _, NS = ...
 -- settings/Slash.lua lists every verb in NS.COMMANDS; this file only answers them.
 --
 -- SplitLink is PURE (test_slash drives it). The handlers read the feed, the situation edge and the
--- bags through their owners, and print through NS.Print. The dispatcher refuses every verb here
+-- bags through their owners, and print through NS.Print; the two reports (`situation`, an item list's
+-- `list`) write to the debug console through NS.DebugLog:Report (test_slash_report). The dispatcher refuses every verb here
 -- while disabled, so no handler checks the switch again.
 
 NS.SlashVerbs = NS.SlashVerbs or {}
@@ -121,8 +122,18 @@ function V.SituationLines()
     }
 end
 
+-- A report (debug-logging-§15, LibKa0s#79): the lines go to the debug console through the library's
+-- seam, ungated, the console revealed, and chat gets its one pointer line. Library-absent, the stub's
+-- Report streams the lines to chat with no pointer.
+local function report(title, lines)
+    return NS.DebugLog:Report("Report", title, function(out)
+        for _, line in ipairs(lines) do out(line) end
+    end)
+end
+
+--- `/dw situation`: the situation report, to the debug console.
 function V.Situation()
-    for _, line in ipairs(V.SituationLines()) do NS.Print(line) end
+    report("situation", V.SituationLines())
 end
 
 -- ── add ─────────────────────────────────────────────────────────────────────────────────────
@@ -272,6 +283,7 @@ local LIST_ACTS = {
 --- `/dw whitelist|blacklist add <id|link>`, `remove <id|link>` and `list` (a bare verb lists too):
 --- the Always watch and Never watch lists, written through their one writer (NS.ItemLists), which
 --- the settings panel's Item lists tab shares. A refusal says why; an open settings page redraws.
+--- `list` is a report (`<list> list` in the debug console); add, remove, refusals and usage stay in chat.
 --- @param list string `whitelist` or `blacklist`
 --- @param rest string
 --- @return boolean|nil ok nil when it only listed or printed the usage
@@ -279,7 +291,7 @@ function V.ItemList(list, rest)
     local sub, arg = trim(rest):match("^(%S*)%s*(.-)$")
     sub = (sub or ""):lower()
     if sub == "" or sub == "list" then
-        for _, line in ipairs(V.ItemListLines(list)) do NS.Print(line) end
+        report(list .. " list", V.ItemListLines(list))
         return nil
     end
     local act, IL = LIST_ACTS[sub], NS.ItemLists
