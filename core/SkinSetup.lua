@@ -133,8 +133,11 @@ NS.SKIN_TOKENS = {
     -- compact separator); G5b its tooltip half, a token of its own (D7).
     ["dw.idle"]       = { default = { 0.62, 0.62, 0.64, 1 }, follow = "text.muted" },     -- C.IDLE
     ["dw.tipHint"]    = { default = { 0.62, 0.62, 0.64, 1 }, follow = "gtip.muted" },     -- C.IDLE
-    -- DW-G6: an expanded (selected) row's or card's wash.
-    ["dw.rowOpen"]    = { default = { 1.00, 0.82, 0.00, 0.08 }, follow = "list.hover" },
+    -- DW-G6: an expanded (selected) row's or card's wash. Gold .16, Ka0s Default's list.hover since
+    -- LibKa0s v1.105.0 (AD-82-DW, LibKa0s#82/#84): the .08 it was cut at stood 7 L* off the window
+    -- once the stripe rose to .08, no further than a striped row, under the library's floors (12 off
+    -- the window, 3 off a striped row; tests/test_skin_setup.lua).
+    ["dw.rowOpen"]    = { default = { 1.00, 0.82, 0.00, 0.16 }, follow = "list.hover" },
     -- DW-G7: a drop row's chevron.
     ["dw.chevron"]    = { default = { 1.00, 1.00, 1.00, 0.55 }, follow = "icon.tint" },   -- C.CHEVRON_ROW
     -- DW-G9: the restriction badge (lock icon and text).

@@ -554,6 +554,14 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   once, leaving Ka0s Default; the shadow varies by skin. Migration step 11
   (`NS.ResetProfileToSkin`, `Skin.FollowOnce`) moves stored profiles once, recorded per profile in
   `skin.fullSkinReset`. `tests/test_skin_flip.lua`.
+- **The row washes clear the library's floors (AD-82-DW, LibKa0s#82 and #84).** LibKa0s v1.105.0 raised
+  Ka0s Default's rows (stripe white .08, hover gold .16, selection gold .26) and seven skins'
+  `icon.hot`. This addon defines no `*.hot` owner token, and its fallback copy's `icon.hot` and
+  `list.stripe` are the library's (held by `test_surface_parity`). Its one list alias, `dw.rowOpen`
+  (an expanded row's or card's wash, following `list.hover`), kept its own gold .08 under Ka0s
+  Default, which then stood 7 L* off the window and no further than a striped row; its default is
+  now gold .16, Ka0s Default's `list.hover`, which stands 12 or more off the window and 3 or more
+  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`.
 - **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
   its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
