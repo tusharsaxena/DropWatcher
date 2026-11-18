@@ -489,21 +489,23 @@ test("feed: Items draws Minimum item level alone, over the item kinds", function
     assertEqual(#lineOf(drawn, mode).children, 1, "the mode alone")
     -- DW-CAT2 (issue #13): the item kinds, two to a line in C.CATEGORIES' order; RX-04 adds the
     -- rolled-on catch-all and RX-15 splits Lockboxes from Containers: Lockboxes beside Cosmetics,
-    -- Containers beside the catch-all.
+    -- Containers beside the catch-all; DW-RG1 adds Crafting reagents beside Containers, so the
+    -- catch-all is alone on the last line.
     -- red under: Gear only and Include tier tokens still drawn, or a kind left out.
     assertTrue(find(drawn, "CheckBox", "Gear only") == nil and find(drawn, "CheckBox", "Include tier tokens") == nil)
     local labels = { "Equipment", "Tier tokens", "Mounts", "Battle pets", "Toys", "Recipes and patterns", "Cosmetics",
-        "Lockboxes", "Containers", "Everything else that is rolled on" }
+        "Lockboxes", "Containers", "Crafting reagents", "Everything else that is rolled on" }
     local boxes = {}
     for i, label in ipairs(labels) do
         boxes[i] = find(drawn, "CheckBox", label)
         assertTrue(boxes[i] ~= nil, label .. " is drawn")
     end
-    for i = 1, #labels, 2 do
+    for i = 1, #labels - 1, 2 do
         assertTrue(lineOf(drawn, boxes[i]) == lineOf(drawn, boxes[i + 1]), labels[i] .. " | " .. labels[i + 1])
     end
     assertTrue(lineOf(drawn, boxes[7]) ~= lineOf(drawn, boxes[6]), "Cosmetics starts a line")
     assertTrue(lineOf(drawn, boxes[9]) ~= lineOf(drawn, boxes[8]), "Containers starts a line")
+    assertEqual(#lineOf(drawn, boxes[11]).children, 1, "the catch-all alone")
     assertTrue(find(drawn, "CheckBox", "Lockboxes and containers") == nil, "the merged row is gone")
 end)
 

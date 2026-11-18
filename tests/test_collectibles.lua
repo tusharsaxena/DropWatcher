@@ -55,7 +55,7 @@ end)
 test("collectibles: the out-of-scope classes are not watched", function()
     local c = CO()
     for _, f in ipairs({
-        { classID = CONSUMABLE, subClassID = 0 }, { classID = REAGENT_CLASS, subClassID = 1 },
+        { classID = CONSUMABLE, subClassID = 0 },
         { classID = MISC, subClassID = JUNK_SUB }, { classID = MISC, subClassID = JUNK_SUB, quality = 0 },
         { classID = MISC, subClassID = 6 }, { classID = 13, subClassID = 0 }, {},
     }) do
@@ -77,11 +77,11 @@ end)
 
 -- RX-04, RX-15 (rolls UX design §3.5, ruling 3; plan M6): a lockbox (Junk whose tooltip says it
 -- opens) is the lockbox kind; a bag and a Forever quiver or ammo pouch (the Quiver class) are the
--- container kind; Junk that does not open, a reagent and a consumable are neither, and a token
--- stays one.
+-- container kind; Junk that does not open and a consumable are neither, and a token stays one.
+-- DW-RG1: a crafting reagent (the Trade Goods class, Jade) is the reagent kind, never a container.
 -- red under: CategoryOf without the lockbox or container rung, one that files a lockbox as a
 -- container, one that misses the Quiver class, or one that takes every Junk item in
-test("collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; a reagent neither", function()
+test("collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; Trade Goods a reagent", function()
     local c = CO()
     local junk = { classID = MISC, subClassID = JUNK_SUB, quality = 2 }
     assertEqual(c.CategoryOf(junk, { opens = "locked" }), "lockbox", "a lockbox")
@@ -92,12 +92,14 @@ test("collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are con
     assertNil(c.CategoryOf({ classID = MISC, subClassID = JUNK_SUB, quality = 4 }, { opens = false }), "an altar")
     assertNil(c.CategoryOf(junk), "not read")
     assertNil(c.CategoryOf({ classID = MISC, subClassID = 4 }, { opens = "opens" }), "Junk alone")
-    assertNil(c.CategoryOf({ classID = REAGENT_CLASS, subClassID = 1, quality = 2 }), "a reagent")
+    -- red under: no reagent rung, so Jade (Trade Goods, Other) is hidden as no watched kind (DW-RG1)
+    assertEqual(c.CategoryOf({ classID = REAGENT_CLASS, subClassID = 1, quality = 2 }), "reagent", "a reagent")
+    assertEqual(c.CategoryOf({ classID = REAGENT_CLASS, subClassID = 11, quality = 2 }), "reagent", "Jade")
     assertNil(c.CategoryOf({ classID = CONSUMABLE, subClassID = 0, quality = 2 }), "a potion")
     assertEqual(c.CategoryOf({ classID = MISC, subClassID = JUNK_SUB, isTierToken = true }, { opens = "opens" }),
         "tierToken")
     assertFalse(c.IsCollectible({ category = "container" })); assertFalse(c.IsCollectible({ category = "other" }))
-    assertFalse(c.IsCollectible({ category = "lockbox" }))
+    assertFalse(c.IsCollectible({ category = "lockbox" })); assertFalse(c.IsCollectible({ category = "reagent" }))
 end)
 
 -- RX-04: a non-gear item's verdict is its kind word, never Unknown and never a gain.
@@ -110,6 +112,9 @@ test("collectibles: a lockbox reads lockbox, a bag container, an item of no kind
     v = c.Verdict({ category = "container", classID = CONTAINER, quality = 2 })
     assertEqual(v.verdict, "container"); assertEqual(v.category, "container")
     assertEqual(c.Verdict({ category = "container", classID = QUIVER, subClassID = 2 }).verdict, "container")
+    -- DW-RG1: a reagent reads its kind word, with no gain
+    v = c.Verdict({ category = "reagent", classID = REAGENT_CLASS, subClassID = 11, quality = 2 })
+    assertEqual(v.verdict, "reagent"); assertEqual(v.category, "reagent"); assertNil(v.ilvlDelta)
     v = c.Verdict({ classID = REAGENT_CLASS, subClassID = 1, quality = 2 })
     assertEqual(v.verdict, "item"); assertEqual(v.category, "other"); assertTrue(v.collect)
     v = c.Verdict({ category = "lockbox", classID = MISC, subClassID = JUNK_SUB }, true)
@@ -278,8 +283,8 @@ test("collectibles: Read tells a lockbox and a box that opens from Junk that doe
     assertEqual(crate.category, "lockbox")
     assertEqual(NS.Collectibles.Verdict(crate).verdict, "lockbox")
     assertNil(IF.Get(ALTAR).category, "Junk that does not open has no kind")
-    assertNil(IF.Get(CLOTH).category, "a reagent's tooltip is never read for it")
-    assertEqual(NS.Collectibles.Verdict(IF.Get(CLOTH)).verdict, "item")
+    assertEqual(IF.Get(CLOTH).category, "reagent", "a reagent's tooltip is never read for it (DW-RG1)")
+    assertEqual(NS.Collectibles.Verdict(IF.Get(CLOTH)).verdict, "reagent")
     m.LOCKED, m.ITEM_OPENABLE = nil, nil
     assertNil(IF.Read(BOX).category, "no GlobalString: not read, no kind claimed")
 end)

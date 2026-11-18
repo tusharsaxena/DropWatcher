@@ -81,8 +81,11 @@ L["Containers"] = "Containers"
 L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] =
     "Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."
 L["Everything else that is rolled on"] = "Everything else that is rolled on"
-L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] =
-    "Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."
+L["Crafting reagents"] = "Crafting reagents"
+L["Trade goods such as gems, cloth, herbs and ore, shown as Reagent: no gain for anyone."] =
+    "Trade goods such as gems, cloth, herbs and ore, shown as Reagent: no gain for anyone."
+L["Any other item a group rolls on, such as a quest item, shown as Item: no gain for anyone."] =
+    "Any other item a group rolls on, such as a quest item, shown as Item: no gain for anyone."
 L["Minimum item level"] = "Minimum item level"
 L["Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."] =
     "Off, absolute (the level below), or relative (how far under your average equipped level a drop may be)."

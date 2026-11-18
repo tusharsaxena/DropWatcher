@@ -128,9 +128,10 @@ sixth boss's samples) produce every kind. Enum values are resolved by name (the 
 | Cosmetics | off | Armor › Cosmetic [5], or `C_Item.IsCosmeticItem` on armor or a weapon (cosmetic weapons are Weapon-class) | the appearance, as today | New look or Look known |
 | Lockboxes | on | Miscellaneous › Junk [0] whose tooltip carries the whole `LOCKED` ("Locked") or `ITEM_OPENABLE` ("<Right Click to Open>") line (RX-04, RX-15, rolls UX design §3.5) | n/a: not gear | Lockbox |
 | Containers | on | Container [1] (a bag), or Quiver [11] (WoW Forever's quivers and ammo pouches; RX-15) | n/a: not gear | Container |
+| Crafting reagents | on | Trade Goods [7] (Jade, cloth, herbs, ore, gems; DW-RG1, owner report 2026-11-19); the minimum quality still applies | n/a: not gear | Reagent |
 | Everything else that is rolled on | off | no kind above, and a group rolls on it (a roll table, or Rolling now): the catch-all | n/a: not gear | Item |
 
-A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, and an item the catch-all
+A collectible (mount, pet, toy, recipe, cosmetic), a lockbox, a container, a reagent, and an item the catch-all
 lets in are feed-only: no Ask, toast, AutoAsk, Offer, Announce, Post my tradeables or glow, and no
 Me/Them gain (the kind word stands where gear shows a verdict, never Unknown; your roll popup reads
 the same word for any roll). Not watched unless rolled on with the catch-all on: quest starters,

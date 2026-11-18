@@ -273,7 +273,7 @@ end
 -- Heirloom protection (`comparison.heirloomProtect`) is yours alone: a looter's heirloom slot is
 -- judged plainly, so a real upgrade for them never reads as one they would give away. A
 -- collectible's is its collection verdict (NS.Collectibles.Verdict), never the gear kernel's, and so
--- are a lockbox's, a container's and an item of no kind's (their kind word, RX-04), on Always watch or
+-- are a lockbox's, a container's, a reagent's and an item of no kind's (their kind word, RX-04), on Always watch or
 -- not. The list is read once, when the drop is admitted
 -- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
 -- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a

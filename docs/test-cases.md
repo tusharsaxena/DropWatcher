@@ -1742,7 +1742,7 @@ Total.
 - collectibles: CategoryOf's precedence
 - collectibles: the out-of-scope classes are not watched
 - collectibles: IsCollectible is true for the collectible categories alone
-- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; a reagent neither
+- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; Trade Goods a reagent
 - collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
 - collectibles: Verdict reads new, collected and no answer
 - collectibles: a pet carries its count, and a partial collection says n/limit
@@ -1887,7 +1887,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (55)
+### test_feed.lua (56)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1944,6 +1944,7 @@ Total.
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 - filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
+- filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold
 
 ### test_pending.lua (18)
 
@@ -1956,8 +1957,8 @@ Total.
 - pending: reload mid-roll rebuilds one item, and its winner makes exactly one drop
 - pending: all passed closes after 60 s with no feed record
 - pending: a drop below the quality gate is not pending
-- pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on
-- pending: a rolled reagent's chat line first is shown once its roll merges in
+- pending: a rolled lockbox and reagent are pending as their kinds; a quest item only with the catch-all on
+- pending: a rolled kindless item's chat line first is shown once its roll merges in
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
 - pending: a history clear during an item load never makes a second item
@@ -2029,7 +2030,7 @@ Total.
 ### test_roll_popup.lua (22)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
-- roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
+- roll popup: a lockbox reads Lockbox, a reagent Reagent and a quest item Item, never Unknown
 - roll popup: two identical items on two popups each show their own count line
 - roll popup: the side card flips to the popup's left near the screen's right edge
 - roll popup: four popups by the right edge each flip and no card overlaps a frame
@@ -2122,7 +2123,7 @@ Total.
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
-- two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost
+- two yokes: the white reagent is hidden by quality, the altar as no watched item kind; both counted
 - two yokes: with Equipment off, both Yokes are hidden by the item kind rule, the rest still unwatched
 - two yokes: each hidden drop is logged with its reason under the FEED tag
 - refused: every receipt the feed turns away is counted by reason and logged under FEED
@@ -3135,7 +3136,7 @@ Total.
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 55 |
+| test_feed.lua | 56 |
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
@@ -3191,4 +3192,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2645** |
+| **Total** | **2646** |

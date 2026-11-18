@@ -51,23 +51,24 @@ local TM = NS.TipMarks
 local DASH = "–"
 
 CC.TONE = { newCollect = "good", collected = "bad", collectUnknown = "muted", cantUse = "redMuted", unknown = "muted",
-    lockbox = "plain", container = "plain", item = "plain" }
+    lockbox = "plain", container = "plain", reagent = "plain", item = "plain" }
 
--- The cell's word per verdict, and the words a category says its own way. A lockbox, a bag and an
--- item of no kind (RX-04, rolls UX design §3.5) say their kind in the neutral tone: no gain.
+-- The cell's word per verdict, and the words a category says its own way. A lockbox, a bag, a
+-- reagent (DW-RG1) and an item of no kind (RX-04, rolls UX design §3.5) say their kind in the
+-- neutral tone: no gain.
 local WORD = { newCollect = L["New"], collected = L["Collected"], collectUnknown = "?", cantUse = L["Can't use"], unknown = "?",
-    lockbox = L["Lockbox"], container = L["Container"], item = L["Item"] }
+    lockbox = L["Lockbox"], container = L["Container"], reagent = L["Reagent"], item = L["Item"] }
 local CATEGORY_WORD = {
     recipe = { collected = L["Known"] },
     cosmetic = { newCollect = L["New look"], collected = L["Look known"] },
 }
 -- The verdicts that are a kind word, not a collection state.
-local KIND_VERDICT = { lockbox = true, container = true, item = true }
+local KIND_VERDICT = { lockbox = true, container = true, reagent = true, item = true }
 -- The tooltip's title after `For you: `.
 local TITLE = {
     newCollect = L["New to your collection"], collected = L["Already collected"],
     collectUnknown = L["Collection unknown"], cantUse = L["Can't use"], unknown = L["Unknown"],
-    lockbox = L["Lockbox"], container = L["Container"], item = L["Item"],
+    lockbox = L["Lockbox"], container = L["Container"], reagent = L["Reagent"], item = L["Item"],
 }
 -- The Means row under the title.
 local MEANS = {
@@ -75,7 +76,7 @@ local MEANS = {
     collectUnknown = L["the game gave no collection answer yet"],
     cantUse = L["a recipe for a profession you don't have"], unknown = L["watched for you, never judged"],
     lockbox = L["not gear: no gain for anyone"], container = L["not gear: no gain for anyone"],
-    item = L["not gear: no gain for anyone"],
+    reagent = L["not gear: no gain for anyone"], item = L["not gear: no gain for anyone"],
 }
 -- NS.Collectibles' reason keys, in words: each a Why row's value.
 local REASON = {
@@ -227,7 +228,7 @@ end
 local KIND = {
     equipment = L["Equipment"], tierToken = L["Tier token"], mount = L["Mount"], pet = L["Pet"], toy = L["Toy"],
     recipe = L["Recipe"], cosmetic = L["Cosmetic"], lockbox = L["Lockbox"], container = L["Container"],
-    other = L["Other loot"],
+    reagent = L["Reagent"], other = L["Other loot"],
     watched = L["Watched item"],
 }
 
@@ -248,7 +249,7 @@ local PROFESSION = {
 local CHIP = {
     newCollect = L["NEW TO COLLECTION"], collected = L["COLLECTED"], collectUnknown = L["COLLECTION UNKNOWN"],
     cantUse = L["CAN'T USE"], unknown = L["UNKNOWN"], lockbox = L["LOCKBOX"], container = L["CONTAINER"],
-    item = L["ITEM"],
+    reagent = L["REAGENT"], item = L["ITEM"],
 }
 
 -- A collectible's facts: its category is one with a collection verdict.

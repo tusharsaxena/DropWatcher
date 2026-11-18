@@ -75,8 +75,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   current spec can't use for the other specs of your class), the item kinds and the collection
   verdict (`Collectibles.lua`, issue #13: a mount, pet, toy, recipe or cosmetic is judged new or
   collected, feed-only, and read again on the collection events; since RX-04 a lockbox (`lockbox`,
-  its own kind since RX-15), a bag, quiver or ammo pouch (`container`) and an item of no kind rolled
-  on under the catch-all (`other`) read their kind word, Lockbox, Container or Item, feed-only with
+  its own kind since RX-15), a bag, quiver or ammo pouch (`container`), a crafting reagent
+  (`reagent`, the Trade Goods class, DW-RG1) and an item of no kind rolled on under the catch-all
+  (`other`) read their kind word, Lockbox, Container, Reagent or Item, feed-only with
   no gain, on the rows, the cards, Rolling now and the roll popup), the tier-token pass
   (`TierTokens.lua`: the slot a token makes, read from its Use text, else its name (TT-1), and the
   best tier slot of a token whose slot it cannot read or an omni Curio, so a token is judged as

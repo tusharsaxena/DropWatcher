@@ -720,14 +720,17 @@ L["Toy"] = "Toy"
 L["Recipe"] = "Recipe"
 L["Cosmetic"] = "Cosmetic"
 L["Watched item"] = "Watched item"
--- RX-04: a lockbox's, a bag's and an item of no kind's word, its Means and Why rows, its chip
+-- RX-04: a lockbox's, a bag's, a reagent's (DW-RG1) and an item of no kind's word, its Means and
+-- Why rows, its chip
 L["Lockbox"] = "Lockbox"
 L["Container"] = "Container"
+L["Reagent"] = "Reagent"
 L["Other loot"] = "Other loot"
 L["not gear: no gain for anyone"] = "not gear: no gain for anyone"
 L["shown as its kind, never judged against gear"] = "shown as its kind, never judged against gear"
 L["LOCKBOX"] = "LOCKBOX"
 L["CONTAINER"] = "CONTAINER"
+L["REAGENT"] = "REAGENT"
 L["ITEM"] = "ITEM"
 L["Alchemy"] = "Alchemy"
 L["Blacksmithing"] = "Blacksmithing"

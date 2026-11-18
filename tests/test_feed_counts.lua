@@ -8,8 +8,8 @@
 -- It names the party too (spec §3), class-colored: the color codes are stripped where text is read.
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse, assertNil =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
+local test, assertEqual, assertTrue, assertFalse =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse
 
 local SAMPLEPAL, MOCKHUNT = "Player-3209-0000000A", "Player-11-0000000B"
 
@@ -130,12 +130,13 @@ test("two yokes: both Yokes are separate drops with the right looters, the accen
     assertEqual(NS.LootParser.Stats().hits, 4, "four loot lines, no currency or money line")
 end)
 
-test("two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost", function()
+-- DW-RG1: the white reagent is a Reagent now, so the quality gate hides it, not the item kind rule.
+test("two yokes: the white reagent is hidden by quality, the altar as no watched item kind; both counted", function()
     local _, m, LF = run()
     playLines(m)
     local st = LF.Stats()
-    assertEqual(st.hidden.notWatched, 2, "Fading Voidwhisper x50 and Amani Ritual Altar")
-    assertNil(st.hidden.quality)
+    assertEqual(st.hidden.notWatched, 1, "Amani Ritual Altar")
+    assertEqual(st.hidden.quality, 1, "Fading Voidwhisper x50: a Common reagent under the threshold")
     assertEqual(next(st.refused), nil, "nothing refused")
 end)
 
@@ -146,8 +147,8 @@ test("two yokes: with Equipment off, both Yokes are hidden by the item kind rule
     local st = LF.Stats()
     assertEqual(#LF.Drops(), 0)
     assertEqual(st.hidden.category, 2, "both Yokes")
-    assertEqual(st.hidden.notWatched, 2, "every item kind but Equipment on: a reagent and an altar are none of them")
-    assertNil(st.hidden.quality)
+    assertEqual(st.hidden.notWatched, 1, "every item kind but Equipment on: the altar is none of them")
+    assertEqual(st.hidden.quality, 1, "the white reagent (DW-RG1)")
 end)
 
 test("two yokes: each hidden drop is logged with its reason under the FEED tag", function()
@@ -162,9 +163,11 @@ test("two yokes: each hidden drop is logged with its reason under the FEED tag",
     NS.Debug = debug
     local hits = 0
     for _, l in ipairs(lines) do
-        if l:find("hidden", 1, true) and l:find("notWatched", 1, true) then hits = hits + 1 end
+        if l:find("hidden", 1, true) and (l:find("notWatched", 1, true) or l:find("quality", 1, true)) then
+            hits = hits + 1
+        end
     end
-    assertEqual(hits, 2)
+    assertEqual(hits, 2, "the altar (notWatched) and the white reagent (quality, DW-RG1)")
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -209,7 +212,10 @@ test("diagnostics: the drops section reports the hidden and the refused counts b
     NS.DebugLog:Clear()
     NS.addon:OnSlashCommand("diagnostics")
     local text = table.concat(NS.DebugLog.buffer, "\n")
-    assertTrue(text:find("drops: hidden notWatched=2", 1, true) ~= nil, text)
+    local hidden = text:match("drops: hidden([^\n]*)")
+    assertTrue(hidden ~= nil, text)
+    -- DW-RG1: the altar is unwatched, the white reagent under the quality threshold
+    assertTrue(hidden:find("notWatched=1", 1, true) ~= nil and hidden:find("quality=1", 1, true) ~= nil, hidden)
     assertTrue(text:find("drops: refused pushed=1", 1, true) ~= nil, text)
 end)
 

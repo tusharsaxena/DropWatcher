@@ -366,7 +366,7 @@ local function inOrder(t, order)
 end
 
 IS.VERDICT_ORDER = { "upgrade", "sidegrade", "downgrade", "cantUse", "unknown", "newCollect", "collected",
-    "collectUnknown", "lockbox", "container", "item" }
+    "collectUnknown", "lockbox", "container", "reagent", "item" }
 IS.TRADE_ORDER = { "yes", "likely", "no", "unknown" }
 
 -- The categories in their order, History's Watched item last.

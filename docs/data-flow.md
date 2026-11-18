@@ -709,8 +709,9 @@ LootFeed.Receive   [Perf bucket `feed.add`]
     (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
     a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
       { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
-    a lockbox (`lockbox`), a bag, quiver or ammo pouch (`container`) or an item of no kind: its kind word (RX-04, RX-15)
-      { verdict = lockbox | container | item, collect = true, category }: feed-only, no gain
+    a lockbox (`lockbox`), a bag, quiver or ammo pouch (`container`), a crafting reagent (`reagent`, DW-RG1)
+    or an item of no kind: its kind word (RX-04, RX-15)
+      { verdict = lockbox | container | reagent | item, collect = true, category }: feed-only, no gain
   QualityGate.Passes(quality, mode, { gear, baseline slot, your verdict })   [`quality.gate`, within `feed.add`]
     (the upgrade override lets `upgrade` and `newCollect` through below the threshold; an Always
     watch drop (`ctx.forced`) passes as `whitelisted`; the situation gate above still holds)

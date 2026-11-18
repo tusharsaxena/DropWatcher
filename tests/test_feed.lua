@@ -1055,7 +1055,7 @@ test("filter: a lockbox passes by default; an item of no kind only rolled on, wi
     local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "lockbox" }
     local bag = { itemID = 4496, classID = 1, subClassID = 0, quality = 1, category = "container" }
     local quiver = { itemID = 2101, classID = 11, subClassID = 2, quality = 1, category = "container" }
-    local reagent = { itemID = 2589, classID = 7, subClassID = 5, quality = 2 }
+    local kindless = { itemID = 2589, classID = 12, subClassID = 0, quality = 2 }   -- a quest item
     local defaults = { categories = { lockbox = true, container = true, other = false } }
     local function check(facts, cfg, ctx, pass, why)
         local ok, reason = F(facts, cfg, ctx)
@@ -1072,7 +1072,39 @@ test("filter: a lockbox passes by default; an item of no kind only rolled on, wi
     check(bag, { categories = { container = false } }, {}, false, "category")
     check(quiver, { categories = { container = false } }, {}, false, "category")
     check(lockbox, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
-    check(reagent, defaults, { rolled = true }, false, "notWatched")
-    check(reagent, { categories = { other = true } }, { rolled = true }, true, nil)
-    check(reagent, { categories = { other = true } }, {}, false, "notWatched")
+    check(kindless, defaults, { rolled = true }, false, "notWatched")
+    check(kindless, { categories = { other = true } }, { rolled = true }, true, nil)
+    check(kindless, { categories = { other = true } }, {}, false, "notWatched")
+end)
+
+-- DW-RG1 (owner report: Jade, an Uncommon crafting reagent, never reached the feed): a crafting
+-- reagent (the Trade Goods class) is its own kind, on by default, rolled on or not; its switch hides
+-- it as `category`; the quality gate still applies, so a Common reagent under the threshold stays
+-- out while an Uncommon one at an Uncommon threshold shows.
+-- red under: the reagent rung missing (Jade hidden as notWatched), the kind off by default, or the
+-- kind skipping the quality gate
+test("filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold", function()
+    local NS = T.newAddon()
+    assertEqual(NS.Setting("feed.categories.reagent"), true)
+    local jade = { itemID = 1529, classID = 7, subClassID = 11, quality = 2, equipLoc = "" }
+    jade.category = NS.Collectibles.CategoryOf(jade)
+    assertEqual(jade.category, "reagent")
+    local F = NS.FeedFilter.Filter
+    local on = { categories = { reagent = true, other = false } }
+    local ok, why = F(jade, on, {}); assertTrue(ok); assertNil(why)
+    ok, why = F(jade, on, { rolled = true }); assertTrue(ok); assertNil(why)
+    ok, why = F(jade, { categories = { reagent = false } }, {}); assertFalse(ok); assertEqual(why, "category")
+    local me = NS.Collectibles.Verdict(jade)
+    assertEqual(me.verdict, "reagent")
+    local function gate(facts, fixed)
+        return NS.FeedFilter.PassesForMe(facts, { cfg = { categories = on.categories, fixed = fixed }, mode = "fixed",
+            judge = function() return NS.Collectibles.Verdict(facts) end })
+    end
+    local pass, reason = gate(jade, 2)
+    assertTrue(pass, "Uncommon Jade at an Uncommon threshold shows"); assertNil(reason)
+    pass, reason = gate(jade, 3)
+    assertFalse(pass); assertEqual(reason, "quality", "under a Rare threshold the gate holds")
+    local cloth = { itemID = 2589, classID = 7, subClassID = 5, quality = 1, equipLoc = "", category = "reagent" }
+    pass, reason = gate(cloth, 2)
+    assertFalse(pass); assertEqual(reason, "quality", "a Common reagent stays out")
 end)
