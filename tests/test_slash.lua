@@ -155,8 +155,8 @@ end)
 test("slash: SplitLink takes a whole link, spaces and all, and leaves the rest", function()
     local V = T.newAddon().SlashVerbs
     local link = BAND
-    local got, tail = V.SplitLink("  " .. link .. "  Brakk-Silvermoon ")
-    assertEqual(got, link); assertEqual(tail, "Brakk-Silvermoon")
+    local got, tail = V.SplitLink("  " .. link .. "  Brakk-Samplerealm ")
+    assertEqual(got, link); assertEqual(tail, "Brakk-Samplerealm")
     got, tail = V.SplitLink(link)
     assertEqual(got, link); assertEqual(tail, "")
     local plain = "|Hitem:300::|h[Band of Many Words]|h"
@@ -280,22 +280,36 @@ test("slash: `compact` toggles the layout through the seam, `full` sets it back,
     assertEqual(NS.Setting("window.mode"), "full", "full only sets, never toggles")
 end)
 
-test("slash: `situation` prints the situation, its settings and the classifier's inputs", function()
+-- A report verb's help row says where its lines go (AD-79-DW review): the console, never "Print".
+test("slash: the help rows of the report verbs name the debug console", function()
+    local v = verbs(T.newAddon())
+    for _, name in ipairs({ "situation", "diagnostics" }) do
+        assertTrue(v[name][2]:find("debug console", 1, true) ~= nil, name .. ": " .. v[name][2])
+        assertTrue(v[name][2]:find("Print", 1, true) == nil, name .. ": " .. v[name][2])
+    end
+end)
+
+-- Re-pinned at AD-79-DW: the lines are a report now, read from the debug console under the report's
+-- header (debug-logging-§15); tests/test_slash_report.lua pins the routing itself.
+test("slash: `situation` reports the situation, its settings and the classifier's inputs", function()
     local NS, _, m = T.enableAddon{ mock = function(mk)
         mk.__context.inInstance, mk.__context.instanceType = true, "party"
         mk.instance = { name = "The Rookery", difficultyID = 2 }
     end }
     m.prints = {}
+    local from = #NS.DebugLog.buffer
     NS.addon:OnSlashCommand("situation")
-    assertEqual(#m.prints, 3)
-    assertTrue(m.prints[1]:find("(dungeon)", 1, true) ~= nil, m.prints[1])
-    assertTrue(m.prints[1]:find("Track yes", 1, true) ~= nil, m.prints[1])
-    assertTrue(m.prints[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, m.prints[2])
-    assertTrue(m.prints[3]:find("raid no", 1, true) ~= nil, m.prints[3])
+    local lines = {}
+    for i = from + 2, #NS.DebugLog.buffer do lines[#lines + 1] = NS.DebugLog.buffer[i] end
+    assertEqual(#lines, 3)
+    assertTrue(lines[1]:find("(dungeon)", 1, true) ~= nil, lines[1])
+    assertTrue(lines[1]:find("Track yes", 1, true) ~= nil, lines[1])
+    assertTrue(lines[2]:find("in instance yes · type party · difficulty 2", 1, true) ~= nil, lines[2])
+    assertTrue(lines[3]:find("raid no", 1, true) ~= nil, lines[3])
     assertEqual(#NS.SlashVerbs.SituationLines(), 3)
     -- Per client (Forever port design §4.4): WoW Forever names no keystone, delve or follower dungeon.
-    assertEqual(m.prints[2]:find("keystone", 1, true) == nil, T.forever, m.prints[2])
-    assertEqual(m.prints[3]:find("delve", 1, true) == nil, T.forever, m.prints[3])
+    assertEqual(lines[2]:find("keystone", 1, true) == nil, T.forever, lines[2])
+    assertEqual(lines[3]:find("delve", 1, true) == nil, T.forever, lines[3])
 end)
 
 test("slash: `offer` opens the panel on your newest drop of that item", function()

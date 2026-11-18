@@ -20,8 +20,8 @@ local function party()
     local NS, _, m = T.enableAddon()
     m.setGroup({
         row("Player-1-0000000A", "Brakk", nil, "WARRIOR"),
-        row("Player-2-0000000B", "Lyra", "Area 52", "PRIEST"),
-        row("Player-3-0000000C", "Lyra", "Azjol-Nerub", "WARRIOR", false),
+        row("Player-2-0000000B", "Lyra", "Mock 52", "PRIEST"),
+        row("Player-3-0000000C", "Lyra", "Mock-Sample", "WARRIOR", false),
     })
     m.__fire(EVENT)
     return NS, m, NS.Roster
@@ -54,8 +54,8 @@ test("roster: a party, in unit order, keyed by GUID, with realm, class and onlin
     assertEqual(b.fullName, T.rosterName("Brakk"))
     assertEqual(b.classFile, "WARRIOR")
     assertFalse(b.isPlayer)
-    assertEqual(Ro.Get("Player-2-0000000B").fullName, T.rosterName("Lyra", "Area 52"), "the realm is normalized")
-    assertEqual(Ro.Get("Player-3-0000000C").realm, (not T.forever) and "AzjolNerub" or nil, "no realm on Forever")
+    assertEqual(Ro.Get("Player-2-0000000B").fullName, T.rosterName("Lyra", "Mock 52"), "the realm is normalized")
+    assertEqual(Ro.Get("Player-3-0000000C").realm, (not T.forever) and "MockSample" or nil, "no realm on Forever")
     assertFalse(Ro.Get("Player-3-0000000C").online)
     assertNil(Ro.Get("Player-9-00000009"))
 end)
@@ -77,19 +77,19 @@ test("roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, with
     assertEqual(Ro.Resolve("Brakk").guid, "Player-1-0000000A")
     if T.forever then
         -- no realms on Forever: a query is the whole name, never split on a hyphen (client-quirks-§5)
-        assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra Area 52")
-        assertEqual(Ro.Resolve("lyra area 52").guid, "Player-2-0000000B")
-        assertEqual(Ro.Resolve("Lyra Azjol-Nerub").guid, "Player-3-0000000C", "a hyphen is part of the name")
+        assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra Mock 52")
+        assertEqual(Ro.Resolve("lyra mock 52").guid, "Player-2-0000000B")
+        assertEqual(Ro.Resolve("Lyra Mock-Sample").guid, "Player-3-0000000C", "a hyphen is part of the name")
         assertNil(Ro.Resolve("brakk-testrealm"), "no realm to split off")
         assertNil(Ro.Resolve("Lyra"), "the first word names nobody")
         return
     end
     assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra")
     assertEqual(Ro.Resolve("brakk-testrealm").guid, "Player-1-0000000A")
-    assertEqual(Ro.Resolve("Lyra-Area52").guid, "Player-2-0000000B")
-    assertEqual(Ro.Resolve("Lyra-Area 52").guid, "Player-2-0000000B", "the query's realm is normalized too")
-    assertEqual(Ro.Resolve("Lyra-Azjol-Nerub").guid, "Player-3-0000000C", "a hyphenated realm")
-    assertNil(Ro.Resolve("Brakk-Area52"), "the right name on the wrong realm")
+    assertEqual(Ro.Resolve("Lyra-Mock52").guid, "Player-2-0000000B")
+    assertEqual(Ro.Resolve("Lyra-Mock 52").guid, "Player-2-0000000B", "the query's realm is normalized too")
+    assertEqual(Ro.Resolve("Lyra-Mock-Sample").guid, "Player-3-0000000C", "a hyphenated realm")
+    assertNil(Ro.Resolve("Brakk-Mock52"), "the right name on the wrong realm")
     assertNil(Ro.Resolve("Nobody"))
 end)
 
@@ -97,8 +97,8 @@ test("roster: a bare name two members share is settled by classFile, else unreso
     local _, _, Ro = party()
     if T.forever then
         -- two Lyras are two whole names on Forever, so neither is ever ambiguous
-        assertEqual(Ro.Resolve("Lyra Area 52", "MAGE").guid, "Player-2-0000000B", "a class neither has is ignored")
-        assertEqual(Ro.Resolve("Lyra Azjol-Nerub").guid, "Player-3-0000000C")
+        assertEqual(Ro.Resolve("Lyra Mock 52", "MAGE").guid, "Player-2-0000000B", "a class neither has is ignored")
+        assertEqual(Ro.Resolve("Lyra Mock-Sample").guid, "Player-3-0000000C")
         return
     end
     assertNil(Ro.Resolve("Lyra"), "two cross-realm Lyras and no class: ambiguous")
@@ -111,7 +111,7 @@ test("roster: a bare name prefers the member on the player's own realm", functio
     local NS, _, m = T.enableAddon()
     m.setGroup({
         row("Player-1-0000000A", "Lyra", nil, "PRIEST"),
-        row("Player-2-0000000B", "Lyra", "Area52", "PRIEST"),
+        row("Player-2-0000000B", "Lyra", "Mock52", "PRIEST"),
     })
     m.__fire(EVENT)
     assertEqual(NS.Roster.Resolve("Lyra").guid, "Player-1-0000000A", "chat names a same-realm player bare")
@@ -168,7 +168,7 @@ test("roster: secret answers never raise; a secret GUID drops the unit, a secret
     assertTrue(c.online, "a secret online flag reads as online")
     assertNil(Ro.Resolve(T.secret("Brakk")))
     assertNil(Ro.Get(T.secret("Player-1-0000000A")))
-    assertEqual(Ro.Resolve(T.forever and "Lyra Azjol-Nerub" or "Lyra", T.secret("PRIEST")).guid, "Player-3-0000000C",
+    assertEqual(Ro.Resolve(T.forever and "Lyra Mock-Sample" or "Lyra", T.secret("PRIEST")).guid, "Player-3-0000000C",
         "a secret class is ignored; the one Lyra left answers")
 end)
 
@@ -208,8 +208,8 @@ end)
 
 test("roster: NormalizeRealm drops spaces and hyphens", function()
     local NS = T.newAddon()
-    assertEqual(NS.Roster.NormalizeRealm("Azjol-Nerub"), "AzjolNerub")
-    assertEqual(NS.Roster.NormalizeRealm("Area 52"), "Area52")
+    assertEqual(NS.Roster.NormalizeRealm("Mock-Sample"), "MockSample")
+    assertEqual(NS.Roster.NormalizeRealm("Mock 52"), "Mock52")
     assertNil(NS.Roster.NormalizeRealm(""))
     assertNil(NS.Roster.NormalizeRealm(nil))
 end)

@@ -39,7 +39,7 @@ local function party()
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     NS.Roster.Refresh("test")
     m.addItem(link(300), ring(620))
     return NS, m, NS.RollPopup
@@ -94,10 +94,10 @@ test("roll popup: an upgrade roll shows the mark on GroupLootFrame1", function()
     assertFalse(o:IsShown(), "the popup's OnHide takes it down")
 end)
 
--- RX-04 (rolls UX design §3.5): a lockbox's popup reads Lockbox and an item of no kind Item,
--- never Unknown, and neither carries a gain.
+-- RX-04 (rolls UX design §3.5): a lockbox's popup reads Lockbox, a reagent's Reagent (DW-RG1) and
+-- an item of no kind Item, never Unknown, and none carries a gain.
 -- red under: the popup judging a lockbox through the gear kernel
-test("roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown", function()
+test("roll popup: a lockbox reads Lockbox, a reagent Reagent and a quest item Item, never Unknown", function()
     local NS, m, RP = party()
     m.addItem(link(400), { name = "Ornate Bronze Lockbox", quality = 2, ilvl = 20, equipLoc = "", classID = 15,
         subClassID = 0, bindType = 0, stats = {} })
@@ -111,7 +111,13 @@ test("roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown", fu
     myRoll(m, 13, 401)
     m.__fire("START_LOOT_ROLL", 13, 60000)
     show(m, 2, 13)
-    assertEqual(line1(RP, 2), NS.L["Item"])
+    assertEqual(line1(RP, 2), NS.L["Reagent"])
+    m.addItem(link(402), { name = "Sealed Missive", quality = 2, ilvl = 5, equipLoc = "", classID = 12, subClassID = 0,
+        bindType = 0, stats = {} })
+    myRoll(m, 14, 402)
+    m.__fire("START_LOOT_ROLL", 14, 60000)
+    show(m, 3, 14)
+    assertEqual(line1(RP, 3), NS.L["Item"])
 end)
 
 -- Review Focus 1: two copies of one item on one boss, each on its own popup, each with its own

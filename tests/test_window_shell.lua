@@ -410,49 +410,62 @@ test("shell: the View tooltip lists every value as a bullet, and grays the ones 
     assertTrue(tip[5]:find("not on this tab", 1, true) == nil)
 end)
 
--- Feedback-3 spec §1 (DW-B1): a filter-bar control's tooltip sits above it, never over it or its menu.
-test("filter bar tooltip: AboveSide is right when the screen has room past the control, else left", function()
-    local NS = T.newAddon()
-    local side = NS.Window.AboveSide
-    assertEqual(side(1000, 300, 1920), "right")
-    assertEqual(side(1620, 300, 1920), "right", "exactly fits")
-    assertEqual(side(1621, 300, 1920), "left")
-    assertEqual(side(nil, 300, 1920), "right", "unknown geometry: ANCHOR_RIGHT")
-    assertEqual(side(1000, 300, nil), "right")
-end)
+-- Feedback-3 spec §1 (DW-B1), RE-PINNED by AD-92-DW (LibKa0s#92): a filter-bar control is chrome
+-- (standalone-windows, *Tooltip placement*), so its tooltip is attached to it, centered, TIP_GAP
+-- above it (LibKa0s-Tooltip-1.0's PlaceAttached), where these cases pinned DW-B1's corner offset
+-- (its BOTTOMLEFT on the control's TOPRIGHT, else its BOTTOMRIGHT on the TOPLEFT), which the
+-- standard rules out. Window.AboveSide and Window.AboveFits are gone with it; the cases that pinned
+-- them now pin the library's centering and flip on the same controls.
 
-local function hoverAbove(m, w, right, tipWidth)
-    w.GetRight = function() return right end
-    m.UIParent.GetWidth = function() return 1920 end
-    m.GameTooltip.GetWidth = function() return tipWidth end
+-- Hover `w` at the rect `l, b, r, t` on a 1920 x 1080 screen with a `tipW` x `tipH` tooltip at
+-- `tipScale`; answer where the tooltip went.
+local function hoverAbove(m, w, rect, tipW, tipH, tipScale)
+    T.tipScreen(m, { tipW = tipW or 300, tipH = tipH or 100, tipScale = tipScale })
+    T.tipRect(w, rect[1], rect[2], rect[3], rect[4], rect[5])
+    m.GameTooltip.__points = {}
     w:__fire("OnEnter")
-    local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
-    return tostring(point) .. ">" .. tostring(relPoint), rel, x, y
+    return T.tipPoint(m)
 end
 
-test("filter bar tooltip: every bar control, Sort included, opens above the control, top right", function()
+test("filter bar tooltip: centered on the control, slid sideways only as far as the screen's edge", function()
     local NS, _, m = shown()
+    local view = NS.WindowFilterBar.Controls().view
+    -- red under: DW-B1's corner (Window.AboveSide's side, BOTTOMLEFT>TOPRIGHT on the control)
+    local pts, _, x = hoverAbove(m, view, { 800, 500, 900, 520 })
+    assertEqual(pts, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 850, "centered on the control")
+    _, _, x = hoverAbove(m, view, { 1800, 500, 1900, 520 })
+    assertEqual(x, 1920 - 150, "slid left: its right edge on the screen's")
+    _, _, x = hoverAbove(m, view, { 10, 500, 60, 520 })
+    assertEqual(x, 150, "slid right: its left edge on the screen's")
+end)
+
+test("filter bar tooltip: every bar control, Sort included, is attached centered above the control", function()
+    local NS, _, m = shown()
+    local spy = T.tipSpy(m)
     local c = NS.WindowFilterBar.Controls()
     for _, key in ipairs({ "view", "quality", "content", "char", "search", "sort" }) do
         local w = c[key]
         assertTrue(w ~= nil, key .. " is built")
-        local pts, rel, x, y = hoverAbove(m, w, 900, 300)
+        spy.reset()
+        local pts, rel, x, y = hoverAbove(m, w, { 800, 500, 900, 520 })
         assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", key)
-        assertEqual(pts, "BOTTOMLEFT>TOPRIGHT", key .. ": its bottom left on the control's top right")
-        assertTrue(rel == w, key .. ": anchored to the control")
-        assertEqual(x, 0); assertEqual(y, 0)
+        assertTrue(spy.first() and spy.first().fn == "PlaceAttached" and spy.first().el == w, key .. ": the chrome rule")
+        assertEqual(pts, "BOTTOM>BOTTOMLEFT", key .. ": its bottom center above the control")
+        assertTrue(rel == m.UIParent, key .. ": one absolute point")
+        assertEqual(x, 850, key); assertEqual(y, 522, key .. ": TIP_GAP above it")
         assertEqual(#m.GameTooltip.__points, 1, key .. ": one point")
     end
 end)
 
-test("filter bar tooltip: with no room on the right it opens above the control, top left", function()
+test("filter bar tooltip: near the screen's right edge it stays above the control, slid left", function()
     local NS, _, m = shown()
     local sort = NS.WindowFilterBar.Controls().sort
-    local pts, rel = hoverAbove(m, sort, 1800, 300)
-    assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
-    assertTrue(rel == sort)
-    pts = hoverAbove(m, NS.WindowFilterBar.Controls().view, 1800, 300)
-    assertEqual(pts, "BOTTOMRIGHT>TOPLEFT")
+    local pts, rel, x, y = hoverAbove(m, sort, { 1800, 500, 1900, 520 })
+    assertEqual(pts, "BOTTOM>BOTTOMLEFT", "still above")
+    assertTrue(rel == m.UIParent)
+    assertEqual(x, 1770); assertEqual(y, 522)
+    pts, _, x = hoverAbove(m, NS.WindowFilterBar.Controls().view, { 1800, 500, 1900, 520 })
+    assertEqual(pts, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 1770)
 end)
 
 -- RX-24: Sort left the footer (WowAddonStandards v2.110.0, *The footer*: its controls are marks).
@@ -483,16 +496,26 @@ end)
 test("filter bar tooltip: the room is measured in screen pixels, at each frame's scale", function()
     local NS, _, m = shown()
     local view = NS.WindowFilterBar.Controls().view
-    view.GetEffectiveScale = function() return 0.5 end
-    assertEqual((hoverAbove(m, view, 3000, 300)), "BOTTOMLEFT>TOPRIGHT", "3000 units at 0.5 is 1500 px")
-    m.GameTooltip.GetEffectiveScale = function() return 2 end
-    assertEqual((hoverAbove(m, view, 3000, 300)), "BOTTOMRIGHT>TOPLEFT", "a 600 px tooltip does not fit")
+    -- 3000..3200 units at 0.5 is 1500..1600 px: centered at 1550
+    local _, _, x, y = hoverAbove(m, view, { 3000, 1000, 3200, 1040, 0.5 })
+    assertEqual(x, 1550, "the control's center in screen pixels"); assertEqual(y, 522)
+    -- a 300-unit tooltip at 2 is 600 px: centered at 1550 it reaches 1850, on screen; its point is
+    -- written in its own units
+    _, _, x, y = hoverAbove(m, view, { 3000, 1000, 3200, 1040, 0.5 }, 300, 100, 2)
+    assertEqual(x * 2, 1550); assertEqual(y * 2, 522)
+    _, _, x = hoverAbove(m, view, { 3400, 1000, 3600, 1040, 0.5 }, 300, 100, 2)
+    assertEqual(x * 2, 1920 - 300, "a 600 px tooltip at 1750 is slid left to the screen's edge")
 end)
 
-test("filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)", function()
+-- Re-pinned by AD-92-DW (was: the tab strip kept ANCHOR_BOTTOM, only the bar moved): a tab is chrome.
+test("filter bar tooltip: the tab strip's tabs are chrome too, attached above each tab", function()
     local _, f, m = shown()
-    f.tabs.group:__fire("OnEnter")
-    assertEqual(m.GameTooltip.__anchor, "ANCHOR_BOTTOM")
+    local spy = T.tipSpy(m)
+    local pts, rel, x, y = hoverAbove(m, f.tabs.group, { 210, 760, 290, 780 })
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE")
+    assertTrue(spy.first().fn == "PlaceAttached" and spy.first().el == f.tabs.group)
+    assertEqual(pts, "BOTTOM>BOTTOMLEFT"); assertTrue(rel == m.UIParent)
+    assertEqual(x, 250); assertEqual(y, 782)
 end)
 
 -- Ka0s Loot History's filter bar look (ui spec §2, FB-5): ../LootHistory/modules/BrowserFilterBar.lua.
@@ -880,9 +903,12 @@ test("shell: the lock button sits in the right-hand cluster left of the layout t
     local NS, f = shown()
     local b = f.lockButton
     assertTrue(b ~= nil and b ~= f.badge, "its own button, not the restriction badge")
-    -- red under: the RX-08 anchor, LEFT on the title bar
-    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.modeButton)
-    assertEqual(b.__points[1][3], "LEFT", "immediately left of the layout toggle")
+    -- red under: the RX-08 anchor, LEFT on the title bar. Re-pinned at AD-86-DW (LibKa0s#86): the
+    -- strip anchors each mark RIGHT on the bar at its offset, 6 px left of its neighbor.
+    local hb = f.headerButtons
+    assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.titleBar)
+    assertEqual(hb.offsets.lock, hb.offsets.mode - f.modeButton:GetWidth() - 6, "immediately left of the layout toggle")
+    assertEqual(hb.order[1], "lock", "the cluster's first")
     assertEqual(b.mark, "lock")
     assertTrue(b.art:IsShown(), "the catalog's lock mark")
     assertTrue(b.art:GetAlpha() < 1 and b.art:IsDesaturated(), "unlocked: the same mark, dimmed")
@@ -1225,32 +1251,25 @@ test("rx30: the bare footer lays its marks right to left from the corner, the ri
 end)
 
 -- M11 review leftover (feedback-3 spec §5, DW-B5): near the top of the screen the tooltip goes below.
-test("filter bar tooltip: AboveFits is true when the screen has room over the control, else false", function()
-    local fits = T.newAddon().Window.AboveFits
-    assertTrue(fits(800, 200, 1080))
-    assertTrue(fits(880, 200, 1080), "exactly fits")
-    assertTrue(not fits(881, 200, 1080))
-    assertTrue(fits(nil, 200, 1080), "unknown geometry: above")
-    assertTrue(fits(1000, 200, nil))
+-- Re-pinned by AD-92-DW (was Window.AboveFits, gone with Window.PlaceAbove): the room above is
+-- measured on the tooltip's real height and the gap, by LibKa0s-Tooltip-1.0's PlaceAttached.
+test("filter bar tooltip: it flips below only when the tooltip's real height has no room above", function()
+    local NS, _, m = shown()
+    local view = NS.WindowFilterBar.Controls().view
+    -- the control's top at 878: 878 + 2 + 200 is 1080, exactly fits
+    assertEqual((hoverAbove(m, view, { 800, 858, 900, 878 }, 300, 200)), "BOTTOM>BOTTOMLEFT", "exactly fits")
+    assertEqual((hoverAbove(m, view, { 800, 859, 900, 879 }, 300, 200)), "TOP>BOTTOMLEFT", "one more: below")
+    assertEqual((hoverAbove(m, view, { 800, 600, 900, 620 }, 300, 200)), "BOTTOM>BOTTOMLEFT")
 end)
-
-local function hoverNearTop(m, w, right, top)
-    w.GetTop = function() return top end
-    m.UIParent.GetHeight = function() return 1080 end
-    m.GameTooltip.GetHeight = function() return 120 end
-    local pts, rel = hoverAbove(m, w, right, 300)
-    w.GetTop = nil
-    return pts, rel
-end
 
 test("filter bar tooltip: near the top of the screen it opens below the control, never over it", function()
     local NS, _, m = shown()
     local view = NS.WindowFilterBar.Controls().view
-    local pts, rel = hoverNearTop(m, view, 900, 1000)
-    assertEqual(pts, "TOPLEFT>BOTTOMRIGHT", "its top left on the control's bottom right")
-    assertTrue(rel == view)
-    assertEqual((hoverNearTop(m, view, 1800, 1000)), "TOPRIGHT>BOTTOMLEFT", "no room on the right either")
-    assertEqual((hoverNearTop(m, view, 900, 900)), "BOTTOMLEFT>TOPRIGHT", "room above: above")
-    local side, where = NS.Window.PlaceAbove(m.GameTooltip, view)
-    assertEqual(side, "right"); assertEqual(where, "above")
+    local pts, rel, x, y = hoverAbove(m, view, { 800, 1000, 900, 1020 }, 300, 120)
+    assertEqual(pts, "TOP>BOTTOMLEFT", "its top center TIP_GAP under the control")
+    assertTrue(rel == m.UIParent)
+    assertEqual(x, 850); assertEqual(y, 998)
+    pts, _, x = hoverAbove(m, view, { 1800, 1000, 1900, 1020 }, 300, 120)
+    assertEqual(pts, "TOP>BOTTOMLEFT", "near the right edge too, slid left"); assertEqual(x, 1770)
+    assertEqual((hoverAbove(m, view, { 800, 880, 900, 900 }, 300, 120)), "BOTTOM>BOTTOMLEFT", "room above: above")
 end)

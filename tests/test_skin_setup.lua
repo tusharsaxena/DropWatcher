@@ -126,7 +126,8 @@ test("Skin seam: the palette's Ka0s Default values are the owner tokens' default
         ["dw.statGain"] = { 0.42, 0.74, 0.46 }, ["dw.plain"] = { 0.92, 0.92, 0.92 },
         ["dw.idle"] = { 0.62, 0.62, 0.64 }, ["dw.tipHint"] = { 0.62, 0.62, 0.64 },
         ["dw.tipLabel"] = { 0.80, 0.68, 0.36 }, ["dw.chevron"] = { 1, 1, 1, 0.55 },
-        ["dw.restricted"] = { 1, 0.6, 0.2 }, ["dw.rowOpen"] = { 1, 0.82, 0, 0.08 },
+        -- dw.rowOpen re-pinned at AD-82-DW from .08 to Ka0s Default's list.hover .16 (the row floors).
+        ["dw.restricted"] = { 1, 0.6, 0.2 }, ["dw.rowOpen"] = { 1, 0.82, 0, 0.16 },
         ["dw.btnBg"] = { 0.12, 0.12, 0.14, 1 }, ["dw.btnBorder"] = { 0.24, 0.24, 0.27, 0.85 },
         ["dw.rule"] = { 1, 1, 1, 0.1 }, ["dw.cardBg"] = { 0.08, 0.08, 0.10, 0.9 },
         ["dw.cardBorder"] = { 0.24, 0.24, 0.27, 0.85 },
@@ -135,6 +136,34 @@ test("Skin seam: the palette's Ka0s Default values are the owner tokens' default
         assertTrue(NS.SKIN_TOKENS[name] ~= nil, name .. " is declared")
         sameColor(name, NS.SKIN_TOKENS[name].default, c)
     end
+end)
+
+-- CIE L* of an sRGB color (D65), and a wash `c` composited over an opaque `base`: the measure the
+-- library's row-contrast floors use (LibKa0s tests/test_skin_row_contrast.lua, LibKa0s#82/#84).
+local function lstar(r, g, b)
+    local function lin(v) return v <= 0.04045 and v / 12.92 or ((v + 0.055) / 1.055) ^ 2.4 end
+    local y = 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b)
+    return y > 216 / 24389 and 116 * y ^ (1 / 3) - 16 or y * 24389 / 27
+end
+local function over(base, c)
+    local a = c[4] or 1
+    return { base[1] * (1 - a) + c[1] * a, base[2] * (1 - a) + c[2] * a, base[3] * (1 - a) + c[3] * a }
+end
+
+test("Skin seam: an expanded row's wash clears the library's row floors under Ka0s Default", function()
+    -- AD-82-DW (LibKa0s#82, #84): Ka0s Default's stripe rose to white .08 and its hover to gold .16,
+    -- and dw.rowOpen, which follows list.hover, kept its own gold .08: an expanded row then stood
+    -- 7 L* off the window and no further off it than a striped row. The library's floors for a
+    -- hover wash: 12 L* off the window and 3 off a striped row. red under: the .08 default.
+    local NS = T.bootAddon{ skin = "ka0s" }
+    local win = { NS.Skin.Color("win.bg") }
+    win = over({ 0, 0, 0 }, win)
+    local open = over(win, NS.SKIN_TOKENS["dw.rowOpen"].default)
+    local striped = over(win, { NS.Skin.Color("list.stripe") })
+    local lWin, lOpen, lStripe = lstar(win[1], win[2], win[3]), lstar(open[1], open[2], open[3]),
+        lstar(striped[1], striped[2], striped[3])
+    assertTrue(lOpen - lWin >= 12, ("open row %.1f L* off the window"):format(lOpen - lWin))
+    assertTrue(lOpen - lStripe >= 3, ("open row %.1f L* off a striped row"):format(lOpen - lStripe))
 end)
 
 test("Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch", function()

@@ -125,105 +125,17 @@ function Window.FeedName() return feedName() end
 
 -- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
--- ABOVE THE CONTROL (feedback-3 spec §1, DW-B1). A filter-bar control's tooltip (the bar's
--- dropdowns, its search box and the tab's Sort) never covers the control or the menu it opens
--- below: its BOTTOMLEFT sits on the control's TOPRIGHT (ANCHOR_RIGHT's place), or, when the screen
--- has no room on the right, its BOTTOMRIGHT on the control's TOPLEFT (ANCHOR_LEFT's). Near the top
--- of the screen, with no room above, it goes below instead (its TOPLEFT on the control's BOTTOMRIGHT,
--- else its TOPRIGHT on the BOTTOMLEFT; feedback-3 spec §5, DW-B5), so the clamp never pushes it over
--- the dropdown. Placed by hand after Show, so the room is measured on the tooltip's real size, at
--- each frame's scale.
-
-local function num(v) return type(v) == "number" and v or nil end
-
-local function geom(f, method)
-    local fn = f and f[method]
-    return fn and num(fn(f)) or nil
-end
-
-local function scaleOf(f) return geom(f, "GetEffectiveScale") or 1 end
-
---- Which side above a control its tooltip goes, in screen pixels: `right` when the tooltip fits
---- between the control's right edge and the screen's, else `left`. Unknown geometry answers `right`.
---- @param controlRight number|nil
---- @param tipWidth number|nil
---- @param screenWidth number|nil
---- @return string
-function Window.AboveSide(controlRight, tipWidth, screenWidth)
-    controlRight, tipWidth, screenWidth = num(controlRight), num(tipWidth), num(screenWidth)
-    if not (controlRight and tipWidth and screenWidth) then return "right" end
-    return controlRight + tipWidth <= screenWidth and "right" or "left"
-end
-
---- Whether a tooltip fits above a control, in screen pixels: the control's top plus the tooltip's
---- height within the screen's height (feedback-3 spec §5, DW-B5). Unknown geometry answers true.
---- @param controlTop number|nil
---- @param tipHeight number|nil
---- @param screenHeight number|nil
---- @return boolean
-function Window.AboveFits(controlTop, tipHeight, screenHeight)
-    controlTop, tipHeight, screenHeight = num(controlTop), num(tipHeight), num(screenHeight)
-    if not (controlTop and tipHeight and screenHeight) then return true end
-    return controlTop + tipHeight <= screenHeight
-end
-
--- The tooltip's point and the control's, by side and by whether it fits above. Below (near the top
--- of the screen) its top corner sits on the control's bottom one, so the clamp never pushes it over
--- the dropdown.
-local ABOVE_POINTS = {
-    above = { right = { "BOTTOMLEFT", "TOPRIGHT" }, left = { "BOTTOMRIGHT", "TOPLEFT" } },
-    below = { right = { "TOPLEFT", "BOTTOMRIGHT" }, left = { "TOPRIGHT", "BOTTOMLEFT" } },
-}
-
--- A frame's measure in screen pixels, nil when unknown.
-local function screenPx(f, method)
-    local v = geom(f, method)
-    return v and v * scaleOf(f) or nil
-end
-
---- Place a shown tooltip above `widget`, at its top right, else its top left; below it (its bottom
---- right, else its bottom left) when the screen has no room above. Answers the side and `above` or
---- `below`.
---- @param tip table a GameTooltip, shown
---- @param widget table the hovered control
---- @return string side, string where
-function Window.PlaceAbove(tip, widget)
-    local side = Window.AboveSide(screenPx(widget, "GetRight"), (geom(tip, "GetWidth") or 0) * scaleOf(tip),
-        screenPx(UIParent, "GetWidth"))
-    local where = Window.AboveFits(screenPx(widget, "GetTop"), (geom(tip, "GetHeight") or 0) * scaleOf(tip),
-        screenPx(UIParent, "GetHeight")) and "above" or "below"
-    local pts = ABOVE_POINTS[where][side]
-    tip:ClearAllPoints()
-    tip:SetPoint(pts[1], widget, pts[2], 0, 0)
-    return side, where
-end
-
--- Each placement after Show: `above` (a filter-bar control, DW-B1) and `row` (a table row's cell,
--- button or header, DW-B2: modules/RowTooltip.lua, the row's top right like Loot History) and
--- `rolls` (a Rolls panel line, RX-26: beside the panel away from the window, NS.RollsPanel.PlaceTip,
--- else below the line as ANCHOR_BOTTOM would).
-local function placeRolls(tip, w)
-    if NS.RollsPanel.PlaceTip(tip, w) then return end
-    tip:ClearAllPoints()
-    tip:SetPoint("TOP", w, "BOTTOM", 0, 0)
-end
-
--- `title` (a title-bar control, SR-DW of smoke round 1's rulings 2 and 3): LibKa0s-Tooltip-1.0's
--- PlaceAttached, the library's own title-bar rule (centered above, flipped below only without room),
--- else above it as AttachTitleTip falls back. Looked up per hover, so a suite's spy and a newer copy
--- of the library both reach it.
-local function placeTitle(tip, w)
-    local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
-    if Tip and type(Tip.PlaceAttached) == "function" and Tip.PlaceAttached(tip, w) then return end
-    tip:ClearAllPoints()
-    tip:SetPoint("BOTTOM", w, "TOP", 0, 2)
-end
-
+-- WHERE A TOOLTIP OPENS (AD-92-DW, LibKa0s#92; standalone-windows, *Tooltip placement*): by where
+-- the hovered element sits, never by the pointer. A widget's `place` says which: `chrome` (a
+-- title-bar control, a mode strip, a tab, a filter-bar control, a footer line or mark, a modal's
+-- button) is attached centered above it (NS.RowTooltip.PlaceChrome, LibKa0s-Tooltip-1.0's
+-- PlaceAttached); anything else is a body element (a row, a cell, a card, a column label, a panel
+-- line, the toast), placed beside the window group with its top level with the row's
+-- (NS.RowTooltip.PlaceOrFallback, the library's PlaceBeside). Every tooltip is owned at ANCHOR_NONE
+-- and placed after Show, so the room is measured on its real size.
 local PLACERS = {
-    above = function(tip, w) Window.PlaceAbove(tip, w) end,
-    title = placeTitle,
-    row = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
-    rolls = placeRolls,
+    chrome = function(tip, w) NS.RowTooltip.PlaceChrome(tip, w) end,
+    body = function(tip, w) NS.RowTooltip.PlaceOrFallback(tip, w) end,
 }
 
 -- One line under the title: a string wraps at the tooltip's width; `{ text, wrap = false }`
@@ -250,15 +162,15 @@ local function showTooltip(self)
     local lines = { self.tooltip() }
     if #lines == 0 or not GameTooltip then return end
     tipFor = self
-    local placer = PLACERS[self.tipPlace]
+    local placer = PLACERS[self.tipPlace] or PLACERS.body
     NS.TipGrid.Begin()
-    GameTooltip:SetOwner(self, placer and "ANCHOR_NONE" or "ANCHOR_BOTTOM")
+    GameTooltip:SetOwner(self, "ANCHOR_NONE")
     local r, g, b = NS.Skin.Color("gtip.title")
     GameTooltip:SetText(lines[1], r, g, b)
     for i = 2, #lines do addTipLine(lines[i]) end
     GameTooltip:Show()
     NS.TipGrid.Paint(GameTooltip)   -- after Show: it measures, widens and shows again
-    if placer then placer(GameTooltip, self) end
+    placer(GameTooltip, self)
 end
 
 local function hideTooltip()
@@ -272,9 +184,8 @@ end
 --- never stale, and kept as `widget.tooltip` so a suite reads exactly what a hover would show.
 --- Hooked rather than set, so a library widget keeps its own hover tint. A button shows it while
 --- disabled too (SetMotionScriptsWhileDisabled): the gray No action's tooltip is why there is none.
---- `place` is nil (below the widget, ANCHOR_BOTTOM), `title` (a title-bar control: LibKa0s-Tooltip's
---- PlaceAttached, above it), `above` (Window.PlaceAbove: a filter-bar control, DW-B1), `row` (NS.RowTooltip: a table row's cell, button or header, DW-B2) or `rolls`
---- (NS.RollsPanel.PlaceTip: a Rolls panel line, beside the panel away from the window, RX-26).
+--- `place` is `chrome` (a chrome element: attached centered above it) or nil (a body element:
+--- beside the window group, level with its row; Window's *WHERE A TOOLTIP OPENS*).
 --- @param widget table
 --- @param fn function
 --- @param place string|nil
@@ -467,12 +378,12 @@ local function buildBanner(f, body)
     local b = NS.MakeTestStrip(body,
         L["TEST MODE: sample drops of real items in every state. Nothing is whispered. Combat ends it."], nil, dock)
     if not b then return end
-    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip)
+    Window.AttachTooltip(b, NS.WindowTitleBar.TestTip, "chrome")
     f.banner = b
     local s = NS.MakeTestStrip(body,
         L["SIM: a made-up group session through the real engine. Nothing is sent. /dw sim stop ends it."], "sim", dock)
     if not s then return end
-    Window.AttachTooltip(s, NS.WindowTitleBar.SimTip)
+    Window.AttachTooltip(s, NS.WindowTitleBar.SimTip, "chrome")
     f.simBanner = s
 end
 

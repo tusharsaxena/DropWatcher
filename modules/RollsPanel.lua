@@ -323,35 +323,9 @@ end
 
 local onLeave, onHeaderClick, onFoldClick, setAll, onHide
 
-local function scaleOf(f) return geom(f, "GetEffectiveScale") or 1 end
-
---- Place a shown tooltip outside the panel, on the side away from the window (RX-26): its top level
---- with the hovered frame's top, its near edge a TIP_GAP past the panel's right edge while the panel
---- is docked right, past its left edge while docked left. Measured at each frame's effective scale
---- (as NS.RowTooltip.Place). Answers `right` or `left`, or nil with no docked panel or unknown
---- geometry (nothing is placed; the caller keeps its own place).
---- @param tip table a GameTooltip, shown
---- @param owner table the hovered row, folded line or item header
---- @return string|nil
-function RP.PlaceTip(tip, owner)
-    local side = panel and panel.dock
-    if side ~= "right" and side ~= "left" then return nil end
-    local rowTop, top = geom(owner, "GetTop"), geom(panel, "GetTop")
-    if not (rowTop and top) then return nil end
-    local gap = K.TIP_GAP
-    local dy = (rowTop * scaleOf(owner) - top * scaleOf(panel)) / scaleOf(tip)
-    tip:ClearAllPoints()
-    if side == "right" then
-        tip:SetPoint("TOPLEFT", panel, "TOPRIGHT", gap, dy)
-    else
-        tip:SetPoint("TOPRIGHT", panel, "TOPLEFT", -gap, dy)
-    end
-    return side
-end
-
 -- An item header's tooltip: the item's own, then every roll and the click's hint
--- (RollsPanelRows.HeaderTip), beside the panel away from the window (RP.PlaceTip), else at the row
--- tooltips' place (modules/RowTooltip.lua).
+-- (RollsPanelRows.HeaderTip), a body tooltip: beside the window group, on the panel's side away from
+-- the window when it fits (NS.RowTooltip.PlaceOrFallback, LibKa0s-Tooltip-1.0's companion side).
 local function headerEnter(h)
     local b = byId[h.blockId]
     if not (b and GameTooltip) then return end
@@ -363,7 +337,7 @@ local function headerEnter(h)
     local r, g, bl = NS.Skin.Color("gtip.value")
     for i = 2, #lines do GameTooltip:AddLine(lines[i], r, g, bl, true) end
     GameTooltip:Show()
-    if not RP.PlaceTip(GameTooltip, h) then NS.RowTooltip.PlaceOrFallback(GameTooltip, h) end
+    NS.RowTooltip.PlaceOrFallback(GameTooltip, h)
 end
 
 local function headerLeave()
@@ -437,7 +411,7 @@ local function newLine(p)
     f.text = faced(f)
     f.text:SetPoint("LEFT", f, "LEFT", 4, 0)
     f.text:SetPoint("RIGHT", f.roll, "LEFT", -4, 0)
-    NS.Window.AttachTooltip(f, function() return lineTip(f) end, "rolls")
+    NS.Window.AttachTooltip(f, function() return lineTip(f) end)
     f:HookScript("OnLeave", function() onLeave() end)
     f:SetScript("OnMouseUp", function(self) onFoldClick(self) end)
     return f
@@ -460,14 +434,13 @@ local function foldTip()
 end
 
 -- Expand all and Collapse all, one toggle (RX-25 ruling: they are mutually exclusive): Collapse
--- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down.
-local function buildFoldButton(p)
-    p.foldButton = NS.WindowTitleBar.IconButton(p, "chevron-up", "^", function()
+-- all with the catalog's chevron-up while any item is open, else Expand all with chevron-down. The
+-- strip's one extra (AD-86-DW), left of settings and close.
+local function foldExtra(p)
+    return { key = "fold", icon = "chevron-up", glyph = "^", onClick = function()
         setAll(anyExpanded())
         NS.Window.RefreshTooltip(p.foldButton)   -- the tooltip under the pointer names the next click (RX-28)
-    end)
-    NS.Window.AttachTooltip(p.foldButton, foldTip, "title")
-    p.foldButton:HookScript("OnLeave", function() onLeave() end)
+    end }
 end
 
 -- The toggle's mark follows the items on every paint (a header's click, a new roll, Expand or
@@ -491,23 +464,25 @@ local function buildTitle(p)
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Rolls"])
     NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
-    p.closeButton = NS.MakeCloseButton(p, function() RP.Close() end)
-    buildFoldButton(p)
-    local right = { p.foldButton }
+    -- The strip (AD-86-DW, LibKa0s#86): Expand all / Collapse all, settings, close, from the corner
+    -- the old close sat at; S.Header then lays them on the band at the strip's offsets. The panel is
+    -- in the window tier, under the settings panel, so settings does not hide it first.
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+        close = function() RP.Close() end, extras = { foldExtra(p) } })
+    p.closeButton, p.foldButton = hb.close, hb.extras.fold
+    NS.Window.AttachTooltip(p.foldButton, foldTip, "chrome")
+    for _, key in ipairs(hb.order) do
+        local b = (key == "close" and hb.close) or (key == "settings" and hb.settings) or hb.extras[key]
+        b:HookScript("OnLeave", function() onLeave() end)
+    end
     if p.closeButton then
-        p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
-        p.closeButton:HookScript("OnLeave", function() onLeave() end)
         NS.Window.AttachTooltip(p.closeButton, function()
             return L["Close the Rolls panel"], NS.TipMarks.Row(L["Until"], L["the next roll starts"]),
                 NS.TipMarks.Row(L["Turn off"], L["Show the Rolls panel beside the window on Drops > Rolls > Panel"])
-        end, "title")
-        table.insert(right, 1, p.closeButton)
-        p.foldButton:SetPoint("RIGHT", p.closeButton, "LEFT", -4, 0)
-    else
-        p.foldButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6)
+        end, "chrome")
     end
     -- The band ApplySkin draws carries the title and the buttons, as the Offer panel's (R5-WIN).
-    NS.Skin.Header(p, { title = p.title, right = right, bars = { p.titleBar } })
+    NS.Skin.Header(p, { title = p.title, right = hb.right, bars = { p.titleBar } })
 end
 
 -- The mode strips (ruling A1): test mode's and the simulation's, born hidden, docked directly under
@@ -521,7 +496,7 @@ local function buildStrips(p)
         local s = NS.MakeTestStrip(p, text, kind, dock)
         if not s then return nil end
         s.text:SetWordWrap(true)
-        NS.Window.AttachTooltip(s, tip)
+        NS.Window.AttachTooltip(s, tip, "chrome")
         s:HookScript("OnLeave", function() onLeave() end)
         return s
     end

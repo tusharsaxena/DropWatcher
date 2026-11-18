@@ -332,7 +332,7 @@ local function textCell(row, key)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
     NS.Skin.Font(f.text)   -- the skin's face; the color is the cell's tone, set at paint time
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
     return f
 end
 
@@ -447,9 +447,10 @@ function WG.SetItemTooltip(tip, b)
     return "link"
 end
 
--- AT THE ROW'S TOP RIGHT (feedback-3 spec §2, DW-B2). An item tooltip never covers the table: it
--- rises from the hovered row's top-right corner, just outside the window (else its top left),
--- through the one row-tooltip placement every row cell shares (modules/RowTooltip.lua).
+-- BESIDE THE WINDOW GROUP (AD-92-DW, LibKa0s#92). An item tooltip never covers the table or a docked
+-- panel: its top level with the hovered row's, outside the group's right edge (else its left), its
+-- comparison tooltips further out on the same side, through the one body placement every row cell
+-- shares (modules/RowTooltip.lua, LibKa0s-Tooltip-1.0's PlaceBeside).
 
 -- `owner` is the hovered frame: the button, or a name beside it (WG.ItemHover).
 local function itemEnter(self, owner)
@@ -626,7 +627,7 @@ local function actionsCell(row)
     f.ask = NS.Window.TextButton(f, K.ASK_W, "chat", L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     f.ask:SetPoint("LEFT", f, "LEFT", 0, 0)
     NS.WindowRows.RaiseAction(f.ask, row)   -- over the row's text cells (rolls UX spec §3.1)
-    NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end, "row")
+    NS.Window.AttachTooltip(f.ask, function() return tipOf(f.ask) end)
     return f
 end
 
@@ -672,9 +673,9 @@ function WG.PaintChevron(t, open)
 end
 
 --- A row's or a card's two washes from the skin: the stripe (`list.stripe`, Ka0s Default
---- 1, 1, 1, 0.03) and the expanded wash (`dw.rowOpen`, gold at 0.08), each repainted on a skin
---- switch. The rows keep their own two textures (not the skin's ListRow, whose selected wash is
---- `list.sel`'s 0.18).
+--- 1, 1, 1, 0.08) and the expanded wash (`dw.rowOpen`, gold at 0.16, AD-82-DW), each repainted on a
+--- skin switch. The rows keep their own two textures (not the skin's ListRow, whose selected wash is
+--- `list.sel`'s 0.26).
 --- @param row table `row.stripe`, `row.selected`
 function WG.PaintRowWashes(row)
     NS.SkinPaint(row.stripe, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)
@@ -726,7 +727,7 @@ local function newHeader(content)
     h.text:SetJustifyH("LEFT")   -- the compact headers size the text to the line; it reads from the left
     NS.Skin.Text(h.text, WG.HEADER_TEXT)
     h:SetScript("OnClick", function(self) WG.ToggleGroup(self.groupKey, self.collapsed) end)
-    NS.Window.AttachTooltip(h, function() return tipOf(h) end, "row")
+    NS.Window.AttachTooltip(h, function() return tipOf(h) end)
     return h
 end
 WG.NewHeader = newHeader   -- the compact cards' headers are the same button (modules/CompactGroup.lua)

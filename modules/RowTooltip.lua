@@ -1,28 +1,33 @@
 local _, NS = ...
--- modules/RowTooltip.lua — the one placement for every tooltip raised from a table row
--- (feedback-3 spec §2, DW-B2), on both tabs and the Offer panel: the item tooltip (DW-A2's,
--- moved here from modules/WindowGroup.lua), every cell's reason tooltip, the Ask, Offer and Announce
--- buttons, the group headers and the History rows.
+-- modules/RowTooltip.lua — the addon's one seam onto LibKa0s-Tooltip-1.0 (LibKa0s#92, AD-92-DW;
+-- WowAddonStandards standalone-windows, *Tooltip placement*): where every tooltip the addon places
+-- itself opens. Each one is a BODY element's or a CHROME element's.
 --
--- AT THE ROW'S TOP RIGHT, LIKE KA0S LOOT HISTORY. Loot History anchors its row tooltip with
--- ANCHOR_RIGHT on a row as wide as its window (../LootHistory/modules/BrowserTable.lua, the row's
--- OnEnter), so the tooltip rises from the row's top-right corner, just outside the window. Here the
--- tooltip's BOTTOMLEFT sits at the row's top, on the right edge of the frame the row sits in, a
--- TIP_GAP outside it; when the screen has no room on the right, its BOTTOMRIGHT sits at the row's
--- top on that frame's left edge. The row is the nearest ancestor marked `tipRow` (a drop row, a
--- group header, an Offer panel candidate), else the hovered frame itself, so a cell, a button or an
--- item icon inside a row all open at the same corner.
+-- BODY (RT.Place, RT.PlaceOrFallback): a table row's item tooltip, every cell's reason tooltip, the
+-- Ask, Offer and Announce-row buttons, the group headers, the History rows and cards, the detail
+-- card's lines and chips, the column labels, the Offer and Rolls panels' rows, the toast and a roll
+-- card. The library's PlaceBeside puts the tooltip beside the WINDOW GROUP, outside its outer edge:
+-- its TOPLEFT a TIP_GAP right of the group's right edge, else its TOPRIGHT a TIP_GAP left of its
+-- left edge, its top level with the ROW's top (the nearest ancestor marked `tipRow`: a drop row, a
+-- group header, a compact card, an Offer panel candidate; else the hovered frame), clamped on
+-- screen. With room on neither side, it attaches above the row (the library's fallback).
 --
--- THE FRAME BESIDE. The nearest ancestor marked `tipHost` (the Offer panel, docked beside the
--- window), else the outermost one under UIParent (the window, the toast). The window and every
--- frame docked beside it (its `dock` right or left, shown) are one span, the window group
--- (WowAddonStandards v2.112.0 *Tooltip placement*; M10 review, FB2-10; RX-28): the tooltip goes
--- beside the whole group, never over a docked panel from a window row nor over the window, or the
--- panel on its other side, from a panel row. The window names its docked frames in `tipDocks`, by
--- name: the Offer panel (`offer`) and the Rolls panel (`rolls`).
+-- THE WINDOW GROUP (RT.GroupOf). The outermost frame under UIParent the row sits in (the window,
+-- the toast, a roll card), and every frame that frame names in `tipDocks` (the Offer panel `offer`
+-- and the Rolls panel `rolls`) while it is shown and docked beside it (`dock` right or left). A
+-- docked panel's own rows prefer its side away from the window (the library's companion side), and
+-- go past the window when that side has no room; a window row's tooltip goes past every docked
+-- panel. A panel floating over the window is inside the window's span, so it takes no room.
 --
--- Placed by hand after Show, so the room is measured on the tooltip's real width, at each frame's
--- effective scale. No client call: the frames' own geometry and UIParent's width.
+-- CHROME (RT.PlaceChrome): a title-bar control, a mode strip, a tab, a filter-bar control, a footer
+-- line or mark, and the Edit message box's Send and Cancel (a modal's controls). The library's
+-- PlaceAttached centers the tooltip on the control, TIP_GAP above it, below only when the screen
+-- has no room above.
+--
+-- NEVER THE CURSOR. Every placement is applied after Show (so the tooltip's real size is measured)
+-- and the tooltip is owned at ANCHOR_NONE. When the library is absent or a geometry read is not a
+-- plain number, the fallback attaches the tooltip centered above the element (BOTTOM on its TOP,
+-- TIP_GAP up), as the library's own sites do; never at the pointer, never at a corner.
 --
 -- THE KIND ROWS (issue #13, categories design spec §6.1). Under the game's own lines, an item
 -- tooltip names a token's or a collectible's kind and, for a collectible, its collection verdict
@@ -36,15 +41,14 @@ NS.RowTooltip = NS.RowTooltip or {}
 local RT = NS.RowTooltip
 local K  = NS.Constants.WINDOW
 
-local function num(v) return type(v) == "number" and v or nil end
-
--- A geometry read, a number or nil (an unplaced frame answers nil).
-local function geom(frame, method)
-    local fn = frame and frame[method]
-    return fn and num(fn(frame)) or nil
+-- The placement major, read at call time (a suite's spy and a newer copy both reach it), or nil.
+local function tipLib()
+    local Tip = LibStub and LibStub("LibKa0s-Tooltip-1.0", true)
+    if type(Tip) == "table" and type(Tip.PlaceBeside) == "function" and type(Tip.PlaceAttached) == "function" then
+        return Tip
+    end
+    return nil
 end
-
-local function scaleOf(frame) return geom(frame, "GetEffectiveScale") or 1 end
 
 local function parentOf(frame)
     local p = frame.GetParent and frame:GetParent()
@@ -52,103 +56,92 @@ local function parentOf(frame)
     return p
 end
 
--- The nearest ancestor (or `owner`) that answers `test`, else the outermost one under UIParent
--- when `outermost` is set, else nil.
-local function ancestor(owner, test, outermost)
-    local f = owner
-    for _ = 1, 32 do
-        if test(f) then return f end
-        local p = parentOf(f)
-        if not p then return outermost and f or nil end
-        f = p
-    end
-    return outermost and f or nil
-end
-
-local function isHost(f) return f.tipHost == true end
 local function isRow(f) return f.tipRow == true end
 
--- A frame's left and right edges in screen pixels, or nil when it is unplaced.
-local function edgesPx(f)
-    local l, r, s = geom(f, "GetLeft"), geom(f, "GetRight"), scaleOf(f)
-    if not (l and r and geom(f, "GetTop")) then return nil end
-    return l * s, r * s
+--- The row `owner` sits in: its nearest ancestor marked `tipRow`, else `owner` itself.
+--- @param owner table the hovered frame
+--- @return table
+function RT.RowOf(owner)
+    local f = owner
+    for _ = 1, 32 do
+        if isRow(f) then return f end
+        f = parentOf(f)
+        if not f then return owner end
+    end
+    return owner
+end
+
+-- The outermost frame under UIParent `f` sits in (`f` itself when it is one).
+local function outerOf(f)
+    for _ = 1, 32 do
+        local p = parentOf(f)
+        if not p then return f end
+        f = p
+    end
+    return f
 end
 
 local function dockedBeside(panel)
     return panel.dock == "right" or panel.dock == "left"
 end
 
--- The window `host` belongs to: the one a docked panel hangs off, else `host` itself.
-local function windowOf(host)
-    if host.tipHost and dockedBeside(host) then return parentOf(host) or host end
-    return host
-end
-
--- `f` widens the span `l`..`r` (screen pixels) when it reaches past either end.
-local function widen(f, l, r, outL, outR)
-    local fl, fr = edgesPx(f)
-    if fl and fl < l then l, outL = fl, f end
-    if fr and fr > r then r, outR = fr, f end
-    return l, r, outL, outR
-end
-
--- The span the tooltip goes beside, in screen pixels, and the frame at each end of it: `host`, the
--- window it belongs to and every frame shown docked beside that window (the window group).
-local function spanOf(host)
-    local l, r = edgesPx(host)
-    local outL, outR = host, host
-    local win = windowOf(host)
-    if win ~= host then l, r, outL, outR = widen(win, l, r, outL, outR) end
-    for _, panel in pairs(win.tipDocks or {}) do
-        if panel ~= host and panel.IsShown and panel:IsShown() and dockedBeside(panel) then
-            l, r, outL, outR = widen(panel, l, r, outL, outR)
-        end
-    end
-    return l, r, outL, outR
-end
-
--- Which side of the span the tooltip goes, in screen pixels: right when it fits, else left.
-local function sideOf(l, r, tip, gap)
-    local ts = scaleOf(tip)
-    local screen = geom(UIParent, "GetWidth")
-    local side = NS.MineCells.DockSide(l, r, (geom(tip, "GetWidth") or 0) * ts,
-        screen and screen * scaleOf(UIParent), gap * ts)
-    return side == "right" and "right" or "left"
-end
-
---- The row `owner` sits in: its nearest ancestor marked `tipRow`, else `owner` itself.
---- @param owner table the hovered frame
+--- The window group `element` sits in, as LibKa0s-Tooltip-1.0's PlaceBeside reads one:
+--- `{ main, panels }`, `main` the outermost frame under UIParent and `panels` every frame it names
+--- in `tipDocks` that is docked beside it (the library keeps the shown ones), in name order.
+--- @param element table
 --- @return table
-function RT.RowOf(owner)
-    return ancestor(owner, isRow, false) or owner
+function RT.GroupOf(element)
+    local main = outerOf(element)
+    local names, panels = {}, {}
+    for name, panel in pairs(main.tipDocks or {}) do
+        if type(panel) == "table" and panel ~= main and dockedBeside(panel) then names[#names + 1] = name end
+    end
+    table.sort(names)
+    for _, name in ipairs(names) do panels[#panels + 1] = main.tipDocks[name] end
+    return { main = main, panels = panels }
 end
 
---- Place a shown tooltip at the top right of the row `owner` sits in, just outside the frame the row
---- sits in (the window, a docked panel, and the one docked beside it), or at its top left when the
---- screen has no room on the right. Measured after Show (the tooltip's width), at each frame's
---- effective scale. Answers `right` or `left`, or nil when the geometry is unknown (nothing is
---- placed; the caller anchors it).
+--- The main window's group, for a host the library places for (the Insights charts' `host.group`,
+--- core/ChartsSetup.lua): RT.GroupOf the window, or nil before it is built (the library then reads
+--- the group the hovered mark sits in).
+--- @return table|nil
+function RT.WindowGroup()
+    local win = NS.Window and NS.Window.Frame and NS.Window.Frame()
+    return win and RT.GroupOf(win) or nil
+end
+
+--- The body rule on a shown tooltip: beside the window group the row `owner` sits in, its top level
+--- with the row's top (LibKa0s-Tooltip-1.0's PlaceBeside). Answers `right` or `left`, the library's
+--- fallback `above` or `below` (no room beside the group), or nil with nothing placed (no library,
+--- or geometry that cannot be read; the caller attaches it).
 --- @param tip table a GameTooltip, shown
 --- @param owner table the hovered frame
 --- @return string|nil
 function RT.Place(tip, owner)
-    local host = ancestor(owner, isHost, true)
+    local Tip = tipLib()
+    if not Tip then return nil end
     local row = RT.RowOf(owner)
-    local rowTop = geom(row, "GetTop")
-    if not (rowTop and edgesPx(host)) then return nil end
-    local gap = K.TIP_GAP
-    local l, r, outL, outR = spanOf(host)
-    local side = sideOf(l, r, tip, gap)
-    local anchor = side == "right" and outR or outL
-    local dy = (rowTop * scaleOf(row) - geom(anchor, "GetTop") * scaleOf(anchor)) / scaleOf(tip)
+    return Tip.PlaceBeside(tip, row, RT.GroupOf(row))
+end
+
+-- The fallback of both rules: centered above `element`, TIP_GAP up, by a relative point.
+local function attachAbove(tip, element)
     tip:ClearAllPoints()
-    if side == "right" then
-        tip:SetPoint("BOTTOMLEFT", anchor, "TOPRIGHT", gap, dy)
-    else
-        tip:SetPoint("BOTTOMRIGHT", anchor, "TOPLEFT", -gap, dy)
-    end
-    return side
+    tip:SetPoint("BOTTOM", element, "TOP", 0, K.TIP_GAP)
+    return "attached"
+end
+
+--- The chrome rule on a shown tooltip: centered on `owner`, above it, below only when the screen
+--- has no room above (LibKa0s-Tooltip-1.0's PlaceAttached); else (no library, unreadable
+--- geometry) attached above it. Answers `above`, `below` or `attached`.
+--- @param tip table a GameTooltip, shown
+--- @param owner table the hovered control
+--- @return string
+function RT.PlaceChrome(tip, owner)
+    local Tip = tipLib()
+    local side = Tip and Tip.PlaceAttached(tip, owner)
+    if side then return side end
+    return attachAbove(tip, owner)
 end
 
 --- Add the item's Kind row and its collection row under the game's lines (the item tooltip, before
@@ -184,15 +177,13 @@ function RT.AddRollRow(tip, button)
     return 1
 end
 
---- Place a shown tooltip for a row: RT.Place, else (unknown geometry) on the hovered frame's top
---- right, ANCHOR_RIGHT's place.
+--- Place a shown body tooltip: RT.Place, else (no library, unreadable geometry) attached above the
+--- row the hovered frame sits in. Answers what RT.Place did, or `attached`.
 --- @param tip table a GameTooltip, shown
 --- @param owner table the hovered frame
 --- @return string
 function RT.PlaceOrFallback(tip, owner)
     local side = RT.Place(tip, owner)
     if side then return side end
-    tip:ClearAllPoints()
-    tip:SetPoint("BOTTOMLEFT", owner, "TOPRIGHT", 0, 0)
-    return "owner"
+    return attachAbove(tip, RT.RowOf(owner))
 end

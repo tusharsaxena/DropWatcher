@@ -19,7 +19,7 @@ local LINK = "|cffa335ee|Hitem:12345::::::::80:::::|h[Signet of the Tides]|h|r"
 
 -- A full token context, with `over` merged in.
 local function tokens(over)
-    local t = { player = "Seta-Silvermoon", item = LINK, ilvl = 619, slot = "Finger", track = "Hero",
+    local t = { player = "Seta-Samplerealm", item = LINK, ilvl = 619, slot = "Finger", track = "Hero",
         gain = 4.26, mygain = 12 }
     for k, v in pairs(over or {}) do t[k] = v end
     return t
@@ -27,8 +27,8 @@ end
 
 -- An ask request for drop `dropID` from `target`, with `over` merged in.
 local function ask(dropID, target, over)
-    local r = { kind = "ask", target = target or "Seta-Silvermoon", dropID = dropID or "d1",
-        ctx = tokens({ player = target or "Seta-Silvermoon" }) }
+    local r = { kind = "ask", target = target or "Seta-Samplerealm", dropID = dropID or "d1",
+        ctx = tokens({ player = target or "Seta-Samplerealm" }) }
     for k, v in pairs(over or {}) do r[k] = v end
     return r
 end
@@ -68,7 +68,7 @@ test("messaging: Expand fills every token, and formats the gains as numbers", fu
     local M = load()
     local text = M.Expand("{player}|{item}|{ilvl}|{slot}|{track}|{gain}|{mygain}", tokens())
     -- On WoW Forever {track} is no token (Forever port design §4.4): it is left as it is.
-    assertEqual(text, "Seta-Silvermoon|" .. LINK .. "|619|Finger|" .. (T.forever and "{track}" or "Hero") .. "|4.3|12")
+    assertEqual(text, "Seta-Samplerealm|" .. LINK .. "|619|Finger|" .. (T.forever and "{track}" or "Hero") .. "|4.3|12")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 5.0 })), "+5")
     assertEqual(M.Expand("+{gain}", tokens({ gain = 0.04 })), "+0")
 end)
@@ -76,7 +76,7 @@ end)
 test("messaging: unknown tokens are left as they are, and reported once each in order", function()
     local M = load()
     local text, unknown = M.Expand("{player} {foo} {Player} {foo} {bar}", tokens())
-    assertEqual(text, "Seta-Silvermoon {foo} {Player} {foo} {bar}")
+    assertEqual(text, "Seta-Samplerealm {foo} {Player} {foo} {bar}")
     assertEqual(#unknown, 3)
     assertEqual(unknown[1], "foo")
     assertEqual(unknown[2], "Player")
@@ -129,10 +129,10 @@ test("messaging: a request that can send answers send, with the expanded text, s
     assertEqual(out.ask.state, "ready")
     assertEqual(out.ask.text, M.Expand(M.Template("ask"), ask("d1").ctx))
     assertEqual(out.ask.kind, "ask")
-    assertEqual(out.ask.target, "Seta-Silvermoon")
+    assertEqual(out.ask.target, "Seta-Samplerealm")
     assertEqual(out.ask.dropID, "d1")
     assertEqual(out.ask.at, 100)
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "ready")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "ready")
 end)
 
 test("messaging: the owner's template and an edited text override the default", function()
@@ -148,13 +148,13 @@ test("messaging: the one-ask guard refuses a repeat once sent, alreadyAsked", fu
     local book = M.NewBook()
     local first = M.Request(book, ask("d1"), SEND)
     assertTrue(M.MarkSent(book, first.ask.key, 110) ~= nil)
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "sent")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "sent")
     local again = M.Request(book, ask("d1"), SEND)
     assertEqual(again.action, "refuse")
     assertEqual(again.reason, "alreadyAsked")
     -- Another drop, another target or another kind is a different ask.
     assertEqual(M.Request(book, ask("d2"), SEND).action, "send")
-    assertEqual(M.Request(book, ask("d1", "Bob-Silvermoon"), SEND).action, "send")
+    assertEqual(M.Request(book, ask("d1", "Bob-Samplerealm"), SEND).action, "send")
     assertEqual(M.Request(book, ask("d1", nil, { kind = "offer" }), SEND).action, "send")
 end)
 
@@ -177,7 +177,7 @@ test("messaging: a message over 255 characters is refused tooLong, with its leng
     assertEqual(out.reason, "tooLong")
     assertEqual(out.length, 250 + #LINK)
     -- A refusal leaves no record: the button is still ready.
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "ready")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "ready")
     assertEqual(M.Counts(book).asks, 0)
 end)
 
@@ -205,7 +205,7 @@ test("messaging: under restriction a request is queued, state queued", function(
     local out = M.Request(book, ask("d1"), HOLD)
     assertEqual(out.action, "queue")
     assertEqual(out.ask.state, "queued")
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "queued")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "queued")
     assertEqual(M.Counts(book).queued, 1)
     local dup = M.Request(book, ask("d1"), HOLD)
     assertEqual(dup.reason, "alreadyAsked")
@@ -222,7 +222,7 @@ test("messaging: a failed send is failed with its reason, and a retry is allowed
     local out = M.Request(book, ask("d1"), SEND)
     local failed = M.MarkFailed(book, out.ask.key, "throttled")
     assertEqual(failed.state, "failed")
-    local state, reason = M.StateOf(book, "ask", "Seta-Silvermoon", "d1")
+    local state, reason = M.StateOf(book, "ask", "Seta-Samplerealm", "d1")
     assertEqual(state, "failed")
     assertEqual(reason, "throttled")
     local retry = M.Request(book, ask("d1"), SEND)
@@ -238,19 +238,19 @@ test("messaging: MarkSent and MarkFailed act only on an ask that is ready", func
     assertNil(M.MarkFailed(book, "nope", "x"))
     local queued = M.Request(book, ask("d1"), HOLD)
     assertNil(M.MarkSent(book, queued.ask.key))
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "queued")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "queued")
     local sent = M.Request(book, ask("d2"), SEND)
     M.MarkSent(book, sent.ask.key, 120)
     assertEqual(sent.ask.sentAt, 120)
     assertNil(M.MarkFailed(book, sent.ask.key, "late"))
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d2"), "sent")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d2"), "sent")
 end)
 
 test("messaging: the flush hands back queued asks first in, first out, each ready to send", function()
     local M = load()
     local book = M.NewBook()
     M.Request(book, ask("d1"), HOLD)
-    M.Request(book, ask("d2", "Bob-Silvermoon"), HOLD)
+    M.Request(book, ask("d2", "Bob-Samplerealm"), HOLD)
     M.Request(book, ask("d3"), HOLD)
     local a = M.Dequeue(book)
     assertEqual(a.dropID, "d1")
@@ -283,7 +283,7 @@ test("messaging: cancel drops a queued ask, which the flush then skips", functio
     M.Request(book, ask("d2"), HOLD)
     local canceled = M.Cancel(book, one.ask.key)
     assertEqual(canceled.state, "canceled")
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d1"), "ready")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d1"), "ready")
     assertEqual(M.Counts(book).queued, 1)
     assertEqual(M.Dequeue(book).dropID, "d2")
     assertNil(M.Dequeue(book))
@@ -292,7 +292,7 @@ test("messaging: cancel drops a queued ask, which the flush then skips", functio
     local sent = M.Request(book, ask("d3"), SEND)
     M.MarkSent(book, sent.ask.key)
     assertNil(M.Cancel(book, sent.ask.key))
-    assertEqual(M.StateOf(book, "ask", "Seta-Silvermoon", "d3"), "sent")
+    assertEqual(M.StateOf(book, "ask", "Seta-Samplerealm", "d3"), "sent")
 end)
 
 test("messaging: a canceled ask can be asked again", function()
@@ -306,16 +306,16 @@ test("messaging: a looter leaving drops every ask queued to them, and only their
     local M = load()
     local book = M.NewBook()
     M.Request(book, ask("d1"), HOLD)
-    M.Request(book, ask("d2", "Bob-Silvermoon"), HOLD)
+    M.Request(book, ask("d2", "Bob-Samplerealm"), HOLD)
     M.Request(book, ask("d3"), HOLD)
-    local gone = M.CancelTarget(book, "Seta-Silvermoon")
+    local gone = M.CancelTarget(book, "Seta-Samplerealm")
     assertEqual(#gone, 2)
     assertEqual(gone[1].dropID, "d1")
     assertEqual(gone[2].dropID, "d3")
-    assertEqual(M.Dequeue(book).target, "Bob-Silvermoon")
+    assertEqual(M.Dequeue(book).target, "Bob-Samplerealm")
     assertNil(M.Dequeue(book))
     assertEqual(#M.CancelTarget(book, "Nobody"), 0)
-    assertEqual(#M.CancelTarget(nil, "Seta-Silvermoon"), 0)
+    assertEqual(#M.CancelTarget(nil, "Seta-Samplerealm"), 0)
 end)
 
 test("messaging: Counts reports the registry for diagnostics", function()
@@ -349,12 +349,12 @@ test("messaging: FurthestState is the furthest state any ask of a kind reached f
     local M = load()
     local book = M.NewBook()
     assertEqual(M.FurthestState(book, "offer", "d1"), "ready", "nothing asked")
-    local a = M.Request(book, ask("d1", "Seta-Silvermoon", { kind = "offer" }), SEND)
+    local a = M.Request(book, ask("d1", "Seta-Samplerealm", { kind = "offer" }), SEND)
     M.MarkFailed(book, a.ask.key, "throttled")
     assertEqual(M.FurthestState(book, "offer", "d1"), "failed")
-    M.Request(book, ask("d1", "Ann-Silvermoon", { kind = "offer" }), HOLD)
+    M.Request(book, ask("d1", "Ann-Samplerealm", { kind = "offer" }), HOLD)
     assertEqual(M.FurthestState(book, "offer", "d1"), "queued", "a queued offer outranks a failed one")
-    local c = M.Request(book, ask("d1", "Bo-Silvermoon", { kind = "offer" }), SEND)
+    local c = M.Request(book, ask("d1", "Bo-Samplerealm", { kind = "offer" }), SEND)
     M.MarkSent(book, c.ask.key, 110)
     assertEqual(M.FurthestState(book, "offer", "d1"), "sent", "a sent offer outranks them all")
     assertEqual(M.FurthestState(book, "offer", "d2"), "ready", "another drop's offers do not count")

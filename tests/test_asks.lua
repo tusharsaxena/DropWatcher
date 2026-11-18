@@ -21,9 +21,9 @@ local function ring(ilvl)
         subClassID = 0, bindType = 1, stats = {} }
 end
 
--- Lyra's realm (Area 52) on Retail; on Forever no surname, so the mock row is the whole name "Lyra"
+-- Lyra's realm (Mock 52) on Retail; on Forever no surname, so the mock row is the whole name "Lyra"
 -- (a row's realm is the surname there, client-quirks-§5). Each whisper target in the client's shape.
-local LYRA_REALM = (not T.forever) and "Area 52" or nil
+local LYRA_REALM = (not T.forever) and "Mock 52" or nil
 local BRAKK_TO, LYRA_TO = T.rosterName("Brakk"), T.rosterName("Lyra", LYRA_REALM)
 
 local function row(guid, name, realm, classFile)
@@ -31,7 +31,7 @@ local function row(guid, name, realm, classFile)
 end
 
 -- An enabled instance in a party: the player wears two 600 rings; Brakk (party1, on the player's
--- realm) and Lyra (party2, from Area 52) are in the group.
+-- realm) and Lyra (party2, from Mock 52) are in the group.
 local function party()
     local NS, _, m = T.enableAddon()
     m.addItem(link(100), ring(600))
@@ -497,10 +497,10 @@ test("test mode: nothing is sent; the text is printed and the ask is marked sent
     local NS, m, A = party()
     local seen = listen(NS)
     m.addItem(link(300), ring(610))
-    local id = NS.LootFeed.Add(link(300), "Seta-Silvermoon", { test = true })
+    local id = NS.LootFeed.Add(link(300), "Seta-Samplerealm", { test = true })
     m.advance(0)
     restrict(m)
-    local state = A.Request("ask", "Seta-Silvermoon", id)
+    local state = A.Request("ask", "Seta-Samplerealm", id)
     assertEqual(state, "sent")
     assertEqual(#m.chatSent, 0, "never sent")
     assertEqual(printed(m, "Test mode, not sent: Hi Seta,"), 1)

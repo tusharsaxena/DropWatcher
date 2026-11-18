@@ -717,6 +717,8 @@ local PINNED_ROWS = {
     -- RX-04, RX-15 (rolls UX design §3.5; plan M6): Lockboxes, Containers, and the rolled-on catch-all.
     { "feed.categories.lockbox", "bool", "true" },
     { "feed.categories.container", "bool", "true" },
+    -- DW-RG1: crafting reagents, a new stored path (additive, defaulted by AceDB: no schema step).
+    { "feed.categories.reagent", "bool", "true" },
     { "feed.categories.other", "bool", "false" },
     -- DW-CAT5 (issue #13): the Always watch and Never watch item lists, new stored paths.
     { "feed.blacklist", "map", "{}" },

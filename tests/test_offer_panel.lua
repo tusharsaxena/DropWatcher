@@ -505,3 +505,57 @@ test("offer panel: its foot is the library's Footer, the order note on its right
     local sb = panel.scroll.__points[2]
     assertEqual(sb[1], "BOTTOMRIGHT"); assertEqual(sb[5], H + 4, "the list ends above the footer")
 end)
+
+-- AD-92-DW (LibKa0s#92; standalone-windows, *Tooltip placement*): the panel is a companion in the
+-- window group. Its rows, column labels and item header are body elements: beside the group, on the
+-- panel's side away from the window (docked right: right of the panel), level with the row's top.
+-- Its footer mark and note, and the Edit message box's Send and Cancel (a modal's controls), are
+-- chrome: attached centered above the control.
+-- red under: a candidate row's tooltip at the row's top-right corner (BOTTOMLEFT>TOPRIGHT, DW-B2),
+-- the note's and the Send/Cancel tooltips below the control (ANCHOR_BOTTOM)
+test("offer panel: its body tooltips open beside the window group, its footer and the Edit box's are chrome", function()
+    local NS, p, m = openPanel()
+    T.tipScreen(m, { tipW = 200 })
+    local win = T.tipRect(NS.Window.Frame(), 300, 200, 1100, 900)
+    local panel = p.panel
+    assertEqual(panel.dock, "right")
+    T.tipRect(panel, 1100, 200, 1500, 900)
+    local spy = T.tipSpy(m)
+    local row = p.rows[1]
+    T.tipRect(row, 1100, 780, 1500, 800)
+    for _, part in ipairs({ row.member, row.eq, row.offer }) do
+        spy.reset()
+        part:__fire("OnEnter")
+        local c = spy.first()
+        assertTrue(c and c.fn == "PlaceBeside" and c.el == row, "a candidate row's part: the body rule, on the row")
+        assertTrue(c.group.main == win, "the window group")
+        local pts, rel, x, y = T.tipPoint(m)
+        assertEqual(pts, "TOPLEFT>BOTTOMLEFT"); assertTrue(rel == m.UIParent)
+        assertEqual(x, 1502, "right of the panel, away from the window"); assertEqual(y, 800)
+        part:__fire("OnLeave")
+    end
+    for _, h in pairs(panel.heads) do
+        spy.reset()
+        h:__fire("OnEnter")
+        assertEqual(spy.first().fn, "PlaceBeside", "a column label is a body element")
+        h:__fire("OnLeave")
+    end
+    for _, w in ipairs({ panel.announce, panel.note }) do
+        spy.reset()
+        if #NS.Window.TooltipOf(w) > 0 then
+            w:__fire("OnEnter")
+            assertTrue(spy.first().fn == "PlaceAttached" and spy.first().el == w, "a footer line or mark: chrome")
+            w:__fire("OnLeave")
+        end
+    end
+    NS.SchemaRuntime.Set("messages.editFirst", true)
+    NS.Asks.Preview = function() return { text = "x", length = 1 } end
+    row.offer:__fire("OnClick")
+    local e = NS.DetailCard.Editor()
+    for _, b in ipairs({ e.send, e.cancel }) do
+        spy.reset()
+        b:__fire("OnEnter")
+        assertTrue(spy.first().fn == "PlaceAttached" and spy.first().el == b, "a modal's control: chrome")
+        b:__fire("OnLeave")
+    end
+end)

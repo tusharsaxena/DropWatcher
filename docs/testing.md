@@ -52,6 +52,16 @@ the loot surface `core/CompatLoot.lua` wraps (`C_LootHistory`, which serves a dr
 Suites that need a secret value use `T.secret(v)` and install the kit's `issecretvalue` on the
 mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
+**Fixture names** (preview-mode, *Sample characters*; AD-87-DW). What the addon ships, test mode's
+people (`modules/TestData.lua`), follows the convention in full: `Sample`/`Mock` names, the five protagonists
+from `Sim.Sample`. A fixture under `tests/` is not shipped data, and the rule asks only that a fixture pairing
+a real-looking name with a real realm move, so the suites' realms are fictional (`Samplerealm`,
+`Mockrealm`, `Testrealm`, `Realm`; `Mock 52`, `Mock Haven` and `Mock-Sample` where a case needs a realm
+spelled with a space, a digit or a hyphen) and no fixture carries a real player's name. The suites' own
+invented people (`Brakk`, `Seta`, `Lyra`, `Doom Dock`, `Vex`) stay: they never reach the client, they pair
+with no real realm, several are pinned by length, accent or a Forever surname, and `Brakk` and `Seta` are
+also names the simulator's seeded crowd (`modules/SimRoster.lua`) keeps under rule 6.
+
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
 each taking an `opts` table (`skip`, `mock`, `inCombat`, `skin`) and returning `(NS, env, mock)`:
 
@@ -151,8 +161,8 @@ checked against the full view's composer, the cross-realm mark, and the header's
 header cut piece by piece to fit the default width, feedback-15), `test_compact_group` (the Drops
 tab in the compact layout, DW-C2: the card's metrics and the scroll carry-over, the stacked detail
 card's action flow and height, pure; then the cards built headless: one pooled card per drop under a
-one-line header, each piece's text, color and full-view reason tooltip, every tooltip at the card's
-top right, the stacked detail card inline, Ask in its state's tone and no card dismissable, the ask
+one-line header, each piece's text, color and full-view reason tooltip, every tooltip beside the
+window, level with the card's top (AD-92-DW), the stacked detail card inline, Ask in its state's tone and no card dismissable, the ask
 states and the gray `No action` with its reason, never an empty slot (feedback-11 spec §1), the text
 size, the pool's reuse, the collapsing headers; each card indented under its header with the
 muted-white chevron, no card showing a trade window and a second's tick leaving the cards as they
@@ -163,7 +173,7 @@ and 3's) and is cut there, and line 4's two dual marks, under the button, still 
 feedback-21 H7, feedback-25, and at a wider character measure give way to the one mark each,
 feedback-21 R5), `test_compact_history` (the History tab in the compact layout, DW-C3: the kept
 entries as cards under one-line headers, the outcome in its tone, the time, the row menu on a
-right-click, declined repainting, the collapsing headers, every tooltip at the card's top right, the
+right-click, declined repainting, the collapsing headers, every tooltip beside the window (AD-92-DW), the
 strip without Clear history in both layouts, the text size and test mode's samples),
 `test_history_card` (the History tab's detail card, feedback-15 spec §4, DW-Q4: the pure `Model`
 over a kept entry, the header's chips, For you at the time, For the group and your own drop's, the
@@ -198,7 +208,7 @@ verdict, trade, inspect and ask state (one tone per verdict in Me and Them, the 
 `ActionTone`, Offer's cyan; the Type column's every value; feedback-4 spec §0, §1, §3, feedback-6
 spec §2), the merged Me and Them cells, the column sets and the entry order, then the table built
 headless: pooled rows, collapsing headers, the item button's tooltip, link and dressing room, the
-item tooltip at the row's top right, else its top left, the Ask button, its repaint and its tone by
+item tooltip beside the window group, level with the row, else left of it (AD-92-DW), the Ask button, its repaint and its tone by
 state, the gray `No action` (`ban`) with its reason where there is no ask (feedback-11 spec §1), no
 row dismissable, the Type column after Slot, the shed order (Trade window among it), the Trade
 window column on every drop (another player's an estimate, its bar, the row taller by the bar's
@@ -334,11 +344,18 @@ tooltip (Their eq's holding the old pill's explanation), Offer and Announce to g
 host handlers and toned by whose move it is (Offer cyan, Offered yellow, Retry and Announce red), a
 member it is no upgrade or equal for showing the gray `No action` with its reason (feedback-11 spec
 §1), the Edit message box, closing, the Offer button's toggle from a row, a compact card and the
-detail card (feedback-21 H4); then the host handlers Post my tradeables, Offer and Announce),
-`test_row_tooltip` (the one row-tooltip placement, DW-B2: the tooltip's bottom left at the row's top
-just outside the window, else its bottom right outside the left edge, at the UI scale, the row a
-cell sits in, the docked Offer panel as part of the window, the fallback on unknown geometry, then
-every cell, button and header of both tabs placed by it, the column labels and tabs not),
+detail card (feedback-21 H4), its body tooltips beside the window group and its footer's and the
+Edit box's attached above (AD-92-DW); then the host handlers Post my tradeables, Offer and Announce),
+`test_row_tooltip` (the seam onto LibKa0s-Tooltip-1.0, AD-92-DW, on the kit's fake screen,
+`tests/_kit/mock_screen.lua`: the body rule's TOPLEFT 2 px past the window group's right edge, else
+its TOPRIGHT past the left edge, level with the row's top, at each frame's scale, the row a cell
+sits in, the docked Offer and Rolls panels in the group and a panel's own rows on its side away from
+the window, the fallback above the row on unreadable geometry or no room; the chrome rule centered
+above a control, below without room; then every cell, button and header of both tabs, a column
+label and a tab), `test_tooltip_placement` (AD-92-DW: every widget `Window.AttachTooltip` hooks,
+classified body or chrome by the file that built it, each hover calling its class's placer owned at
+`ANCHOR_NONE`; the Insights charts' `host.group`; a source guard holding the addon's code to no
+cursor or corner anchor),
 `test_test_mode` (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask
 state, countdown and candidate status covered by the data, over pool items that keep their slot and
 level, the worn items the nearest of their slot, an empty pool giving none; feedback-17's realism:

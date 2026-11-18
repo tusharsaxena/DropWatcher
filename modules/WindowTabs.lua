@@ -145,7 +145,7 @@ local function buildTab(strip, key, i)
         tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
     end
     tab:SetScript("OnClick", function() NS.Window.SelectTab(key) end)
-    NS.Window.AttachTooltip(tab, function() return WT.Tip(key) end)
+    NS.Window.AttachTooltip(tab, function() return WT.Tip(key) end, "chrome")
     return tab
 end
 

@@ -18,7 +18,7 @@ local LYRA  = "Player-2-0000000B"
 local EVENT = "CHAT_MSG_LOOT"
 -- How chat names Lyra, the cross-realm priest: Name-Realm on Retail; on Forever the whole name, no
 -- realm (the mock row's realm is the surname there, client-quirks-§5).
-local LYRA_CHAT = T.forever and "Lyra Area 52" or "Lyra-Area52"
+local LYRA_CHAT = T.forever and "Lyra Mock 52" or "Lyra-Mock52"
 
 local function row(guid, name, realm, classFile)
     return { guid = guid, name = name, realm = realm, class = classFile, classFile = classFile }
@@ -27,7 +27,7 @@ end
 -- An enabled instance in a party: the player, a same-realm warrior and a cross-realm priest.
 local function party(seed)
     local NS, _, m = T.enableAddon({ mock = seed })
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     return NS, m, NS.LootParser
 end

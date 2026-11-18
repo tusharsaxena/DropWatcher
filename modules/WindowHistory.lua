@@ -380,7 +380,7 @@ local function textCell(row, key)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
     NS.Skin.Font(f.text)   -- the skin's face; the color is the cell's tone, set at paint time
-    NS.Window.AttachTooltip(f, function() return tipOf(f) end, "row")
+    NS.Window.AttachTooltip(f, function() return tipOf(f) end)
     return f
 end
 

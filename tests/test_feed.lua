@@ -34,7 +34,7 @@ local function dungeon(m)
 end
 
 -- An enabled instance in a party in a dungeon: the player wears two 600 rings; Brakk (party1, a
--- warrior on the player's realm) and Lyra (party2, a priest from Area 52) are in the group.
+-- warrior on the player's realm) and Lyra (party2, a priest from Mock 52) are in the group.
 local function party(seed)
     local NS, _, m = T.enableAddon({ mock = function(m)
         dungeon(m)
@@ -43,7 +43,7 @@ local function party(seed)
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     NS.Roster.Refresh("test")    -- read directly, so no inspect warm-up is armed
     return NS, m, NS.LootFeed
 end
@@ -155,7 +155,7 @@ test("feed: a looter who leaves the group keeps the read the drop was judged wit
     m.advance(0)
     local rec = only(LF)
     assertEqual(rec.them.verdict, "downgrade")
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     assertNil(NS.Inspect.Get(BRAKK), "the broker forgets a member who left")
     local insp, kept = NS.TestMode.InspectOf(rec)
@@ -174,7 +174,7 @@ test("feed: a re-judge after the looter left keeps the read and the verdict the 
     brakkWears(m, 630)
     m.advance(0)
     local rec = only(LF)
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     -- red under: a judgeLooter that replaces the read with the gear-less notInGroup state
     LF.Refresh(rec, "source")
@@ -191,7 +191,7 @@ test("feed: a looter who leaves before any read reads not in your group", functi
     m.addItem(link(300), ring(620))
     brakkLoots(m, 300)
     local rec = only(LF)
-    m.setGroup({ row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     m.__fire("GROUP_ROSTER_UPDATE")
     LF.Refresh(rec, "source")
     assertEqual(rec.inspect.status, "unavailable"); assertEqual(rec.inspect.reason, "notInGroup")
@@ -318,7 +318,7 @@ test("dedupe: two copies from one source are two drops; another looter's copy is
     m.addItem(link(300), ring(620))
     brakkLoots(m, 300)
     brakkLoots(m, 300)
-    chat(m, "Lyra-Area52 receives loot: " .. link(300) .. ".")
+    chat(m, "Lyra-Mock52 receives loot: " .. link(300) .. ".")
     assertEqual(#LF.Drops(), 3)
 end)
 
@@ -343,7 +343,7 @@ test("history: a drop is taken once it has a winner, and only once", function()
     m.lootHistory["2900:7"] = { itemHyperlink = link(300), winner = {} }
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
     assertEqual(#LF.Drops(), 0, "rolls still open: no winner named")
-    m.lootHistory["2900:7"].winner = { playerName = "Lyra-Area52", playerGUID = LYRA, playerClass = "PRIEST" }
+    m.lootHistory["2900:7"].winner = { playerName = "Lyra-Mock52", playerGUID = LYRA, playerClass = "PRIEST" }
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
     m.advance(LF.DEDUPE_WINDOW + 1)
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 7)
@@ -783,7 +783,7 @@ test("update: a pending score is retried on one shared timer, five times at most
     NS.Scoring = { Scorer = function() return function() return answer end end }
     m.addItem(link(300), ring(620)); m.addItem(link(301), ring(620))
     brakkLoots(m, 300)
-    chat(m, "Lyra-Area52 receives loot: " .. link(301) .. ".")
+    chat(m, "Lyra-Mock52 receives loot: " .. link(301) .. ".")
     local a, b = LF.Drops()[1], LF.Drops()[2]
     assertEqual(a.scoreTries, 0)
     local r = LF.ScoreRetries()
@@ -1055,7 +1055,7 @@ test("filter: a lockbox passes by default; an item of no kind only rolled on, wi
     local lockbox = { itemID = 4632, classID = 15, subClassID = 0, quality = 2, category = "lockbox" }
     local bag = { itemID = 4496, classID = 1, subClassID = 0, quality = 1, category = "container" }
     local quiver = { itemID = 2101, classID = 11, subClassID = 2, quality = 1, category = "container" }
-    local reagent = { itemID = 2589, classID = 7, subClassID = 5, quality = 2 }
+    local kindless = { itemID = 2589, classID = 12, subClassID = 0, quality = 2 }   -- a quest item
     local defaults = { categories = { lockbox = true, container = true, other = false } }
     local function check(facts, cfg, ctx, pass, why)
         local ok, reason = F(facts, cfg, ctx)
@@ -1072,7 +1072,39 @@ test("filter: a lockbox passes by default; an item of no kind only rolled on, wi
     check(bag, { categories = { container = false } }, {}, false, "category")
     check(quiver, { categories = { container = false } }, {}, false, "category")
     check(lockbox, { minIlvlMode = "absolute", minIlvl = 600 }, {}, true, nil)
-    check(reagent, defaults, { rolled = true }, false, "notWatched")
-    check(reagent, { categories = { other = true } }, { rolled = true }, true, nil)
-    check(reagent, { categories = { other = true } }, {}, false, "notWatched")
+    check(kindless, defaults, { rolled = true }, false, "notWatched")
+    check(kindless, { categories = { other = true } }, { rolled = true }, true, nil)
+    check(kindless, { categories = { other = true } }, {}, false, "notWatched")
+end)
+
+-- DW-RG1 (owner report: Jade, an Uncommon crafting reagent, never reached the feed): a crafting
+-- reagent (the Trade Goods class) is its own kind, on by default, rolled on or not; its switch hides
+-- it as `category`; the quality gate still applies, so a Common reagent under the threshold stays
+-- out while an Uncommon one at an Uncommon threshold shows.
+-- red under: the reagent rung missing (Jade hidden as notWatched), the kind off by default, or the
+-- kind skipping the quality gate
+test("filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold", function()
+    local NS = T.newAddon()
+    assertEqual(NS.Setting("feed.categories.reagent"), true)
+    local jade = { itemID = 1529, classID = 7, subClassID = 11, quality = 2, equipLoc = "" }
+    jade.category = NS.Collectibles.CategoryOf(jade)
+    assertEqual(jade.category, "reagent")
+    local F = NS.FeedFilter.Filter
+    local on = { categories = { reagent = true, other = false } }
+    local ok, why = F(jade, on, {}); assertTrue(ok); assertNil(why)
+    ok, why = F(jade, on, { rolled = true }); assertTrue(ok); assertNil(why)
+    ok, why = F(jade, { categories = { reagent = false } }, {}); assertFalse(ok); assertEqual(why, "category")
+    local me = NS.Collectibles.Verdict(jade)
+    assertEqual(me.verdict, "reagent")
+    local function gate(facts, fixed)
+        return NS.FeedFilter.PassesForMe(facts, { cfg = { categories = on.categories, fixed = fixed }, mode = "fixed",
+            judge = function() return NS.Collectibles.Verdict(facts) end })
+    end
+    local pass, reason = gate(jade, 2)
+    assertTrue(pass, "Uncommon Jade at an Uncommon threshold shows"); assertNil(reason)
+    pass, reason = gate(jade, 3)
+    assertFalse(pass); assertEqual(reason, "quality", "under a Rare threshold the gate holds")
+    local cloth = { itemID = 2589, classID = 7, subClassID = 5, quality = 1, equipLoc = "", category = "reagent" }
+    pass, reason = gate(cloth, 2)
+    assertFalse(pass); assertEqual(reason, "quality", "a Common reagent stays out")
 end)

@@ -191,7 +191,7 @@ local function hitOver(card, first, last)
     hit:SetPoint("TOPLEFT", first, "TOPLEFT", 0, 0)
     hit:SetPoint("BOTTOMRIGHT", last or first, "BOTTOMRIGHT", 0, 0)
     hit:SetScript("OnMouseUp", pieceClick)
-    NS.Window.AttachTooltip(hit, function() return tipOf(hit) end, "row")
+    NS.Window.AttachTooltip(hit, function() return tipOf(hit) end)
     return hit
 end
 
@@ -239,7 +239,7 @@ local function buildAsk(card)
     local W = NS.Window
     card.ask = W.TextButton(card, K.ASK_W, "chat", NS.L["Ask"], function(b) NS.WindowOwn.PressAction(b) end)
     NS.WindowRows.RaiseAction(card.ask, card)   -- over line 2's text and hit frames (rolls UX spec §3.1)
-    W.AttachTooltip(card.ask, function() return tipOf(card.ask) end, "row")
+    W.AttachTooltip(card.ask, function() return tipOf(card.ask) end)
 end
 
 --- Line 1's item level then the name (feedback-10 spec §2): the level at `x` on line 1, the name

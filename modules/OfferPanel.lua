@@ -90,10 +90,10 @@ end
 
 local function tipOf(frame) return unpack(frame.tipLines or {}) end
 
--- `place` is "row" for a candidate row's parts (the row's top right, modules/RowTooltip.lua), nil
--- for the panel's header.
-local function attach(frame, place)
-    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end, place)
+-- A body element's tooltip (a candidate row's parts, the panel's item header): beside the window
+-- group (modules/RowTooltip.lua). The footer's note is chrome, attached above it (buildFoot).
+local function attach(frame)
+    NS.Window.AttachTooltip(frame, function() return tipOf(frame) end)
 end
 
 local function sink()
@@ -107,14 +107,14 @@ end
 
 -- `template` is the text's size (GameFontHighlightSmall when nil); its face is the skin's and its
 -- color the tone set at paint time.
-local function tipFrame(parent, place, template)
+local function tipFrame(parent, template)
     local f = CreateFrame("Frame", nil, parent)
     f.text = f:CreateFontString(nil, "OVERLAY", template or "GameFontHighlightSmall")
     f.text:SetPoint("LEFT", f, "LEFT", 0, 0)
     f.text:SetJustifyH("LEFT")
     f.text:SetWordWrap(false)
     NS.Skin.Font(f.text)
-    attach(f, place)
+    attach(f)
     return f
 end
 
@@ -124,7 +124,7 @@ local function rowButtons(row)
     local W = NS.Window
     row.offer = W.TextButton(row, K.PANEL_BTN_W, "external-link", L["Offer"], function(b) NS.PressOffer(b.dropId, b.target) end)
     row.offer:SetPoint("LEFT", row, "LEFT", COLS[3].x, 0)
-    attach(row.offer, "row")
+    attach(row.offer)
 end
 
 local function newRow(content)
@@ -136,7 +136,7 @@ local function newRow(content)
     row.stripe = row:CreateTexture(nil, "BACKGROUND")
     row.stripe:SetAllPoints(row)
     NS.SkinPaint(row.stripe, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)
-    row.member = tipFrame(row, "row")
+    row.member = tipFrame(row)
     row.member:SetPoint("LEFT", row, "LEFT", COLS[1].x, 0)
     row.member:SetSize(COLS[2].x - COLS[1].x - 6, K.OFFER_ROW_H)
     row.member.text:SetPoint("RIGHT", row.member, "RIGHT", 0, 0)
@@ -164,17 +164,20 @@ local function buildTitle(p)
     p.kind:SetPoint("LEFT", p.title, "RIGHT", 8, 0)
     NS.Skin.Text(p.kind, "disabled")
     p.kind:SetText(L["YOUR DROP"])
-    p.closeButton = NS.MakeCloseButton(p, function() OP.Close() end)
-    if p.closeButton then p.closeButton:SetPoint("TOPRIGHT", p, "TOPRIGHT", -6, -6) end
-    -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and close sit on the
+    -- The strip (AD-86-DW, LibKa0s#86): settings and close, from the corner the old close sat at. The
+    -- panel is in the window tier, under the settings panel, so settings does not hide it first.
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+        close = function() OP.Close() end })
+    p.closeButton = hb.close
+    -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and marks sit on the
     -- band's middle, the title by the skin's `title.align`, in every skin (R5-WIN, the lead's call 3).
-    -- With no library the anchors above stand.
-    NS.Skin.Header(p, { title = p.title, right = { p.closeButton }, bars = { p.titleBar } })
+    -- With no library the strip's anchors stand.
+    NS.Skin.Header(p, { title = p.title, right = hb.right, bars = { p.titleBar } })
 end
 
 local function buildHeader(p)
     p.item = NS.WindowGroup.ItemButton(p, K.CARD_ICON)
-    p.name = tipFrame(p, nil, "GameFontNormal")
+    p.name = tipFrame(p, "GameFontNormal")
     NS.WindowGroup.ItemHover(p.name, p.item)
     p.name:SetPoint("TOPLEFT", p.item, "TOPRIGHT", 8, 0)
     p.name:SetSize(K.OFFER_W - K.CARD_ICON - 40, 16)
@@ -211,14 +214,14 @@ local function buildFoot(p)
     local foot = NS.MakeFooter(p, opts) or NS.BareFooter(p, opts)
     p.foot = foot
     p.announce = foot.marks[1]
-    W.AttachTooltip(p.announce, function() return announceTip(p) end, "above")
+    W.AttachTooltip(p.announce, function() return announceTip(p) end, "chrome")
     -- The note is the footer's right line (the library paints it `text.muted`); a frame over it
     -- carries the order's tooltip.
     p.note = CreateFrame("Frame", nil, foot)
     p.note.text = foot.right
     p.note:SetPoint("TOPLEFT", foot.right, "TOPLEFT", 0, 0)
     p.note:SetPoint("BOTTOMRIGHT", foot.right, "BOTTOMRIGHT", 0, 0)
-    W.AttachTooltip(p.note, function() return tipOf(p.note) end)
+    W.AttachTooltip(p.note, function() return tipOf(p.note) end, "chrome")
 end
 
 local function buildList(p)
@@ -260,7 +263,7 @@ local function buildStrips(p)
     local dock = { titleBar = p.titleBar, window = p, onOffset = function() relayBody(p) end }
     local function strip(text, kind, tip)
         local s = NS.MakeTestStrip(p, text, kind, dock)
-        if s then NS.Window.AttachTooltip(s, tip) end
+        if s then NS.Window.AttachTooltip(s, tip, "chrome") end
         return s
     end
     p.testStrip = strip(L["TEST: sample members. Nothing is whispered; combat ends it."], nil, TB.TestTip)
@@ -279,9 +282,8 @@ local function build()
     local p = CreateFrame("Frame", nil, win, "BackdropTemplate")
     p:SetSize(K.OFFER_W, win:GetHeight() > 0 and win:GetHeight() or K.HEIGHT)
     p:SetFrameStrata(C.LAYERS.STRATA.WINDOW)   -- the window's, docked or floating: never switched
-    p.tipHost = true   -- its item tooltip goes beside the panel, not the window under it (modules/RowTooltip.lua)
     win.tipDocks = win.tipDocks or {}
-    win.tipDocks.offer = p   -- and a window row's tooltip goes beside the docked panel, not over it
+    win.tipDocks.offer = p   -- part of the window group: no row tooltip opens over it (modules/RowTooltip.lua)
     p:EnableMouse(true)
     NS.ApplySkin(p)
     buildTitle(p)

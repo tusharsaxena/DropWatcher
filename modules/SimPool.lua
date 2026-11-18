@@ -142,7 +142,7 @@ end
 --- goes in only once `/dw add item:<id>` has shown it in the client as that kind (smoke check
 --- COLL-8): none is guessed, so each list stays empty until then.
 P.COLLECTIBLE_SAMPLES = { tierToken = {}, mount = {}, pet = {}, toy = {}, recipe = {}, cosmetic = {}, lockbox = {},
-    container = {}, other = {} }
+    container = {}, reagent = {}, other = {} }
 
 -- Plain gear, known from the cheap facts P.Facts fills (class, subclass, equip location) and the
 -- client's cosmetic flag: an armor or weapon item with a slot the comparisons know, not cosmetic

@@ -123,6 +123,7 @@ NS.C = {
                 cosmetic  = false,       -- a look to collect, never gear: off
                 lockbox   = true,        -- Junk that opens (RX-04, RX-15; rolls UX design §3.5)
                 container = true,        -- bags; on WoW Forever quivers and ammo pouches too (RX-15)
+                reagent   = true,        -- crafting reagents, the Trade Goods class (DW-RG1)
                 other     = false,       -- the catch-all: an item of no kind that is rolled on
             },
             -- The Always watch and Never watch item lists (issue #13, categories design spec §5.3):

@@ -182,8 +182,11 @@ local CATEGORY_ROWS = {
       tip = L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] },
     { key = "container", label = L["Containers"],
       tip = L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] },
+    -- DW-RG1: crafting reagents are their own kind, no longer only the catch-all's
+    { key = "reagent", label = L["Crafting reagents"],
+      tip = L["Trade goods such as gems, cloth, herbs and ore, shown as Reagent: no gain for anyone."] },
     { key = "other", label = L["Everything else that is rolled on"],
-      tip = L["Any other item a group rolls on, such as a reagent, shown as Item: no gain for anyone."] },
+      tip = L["Any other item a group rolls on, such as a quest item, shown as Item: no gain for anyone."] },
 }
 -- Drops' Content values (feedback-15 spec §1): History's All is no Drops value, so no seed.
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }

@@ -10,7 +10,7 @@ local T = _G.DW_TEST
 local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
-local BUNIAN, KEGHUNT, TIAMAT = "Player-3209-0000000A", "Player-11-0000000B", "Player-11-0000000C"
+local SAMPLEPAL, MOCKHUNT, TIAMAT = "Player-3209-0000000A", "Player-11-0000000B", "Player-11-0000000C"
 
 local function uncolored(s)
     return (s:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", ""))
@@ -28,29 +28,29 @@ local function gr() return T.newAddon().GroupRoster end
 
 test("roster entry: the short name, the realm only when it is not yours, the class, you marked", function()
     local GR = gr()
-    local e = GR.Entry({ name = "Bùnian", realm = "Azralon", classFile = "PALADIN" }, "Testrealm")
-    assertEqual(e.name, "Bùnian"); assertEqual(e.realm, "Azralon"); assertEqual(e.class, "PALADIN")
+    local e = GR.Entry({ name = "Sàmple", realm = "Samplerealm", classFile = "PALADIN" }, "Testrealm")
+    assertEqual(e.name, "Sàmple"); assertEqual(e.realm, "Samplerealm"); assertEqual(e.class, "PALADIN")
     assertNil(e.me)
-    local own = GR.Entry({ name = "Tiamât", realm = "testrealm", classFile = "MAGE", isPlayer = true }, "Testrealm")
+    local own = GR.Entry({ name = "Mockât", realm = "testrealm", classFile = "MAGE", isPlayer = true }, "Testrealm")
     assertNil(own.realm, "your realm, in any case, is left out"); assertTrue(own.me)
     assertTrue(GR.Entry({ name = "Seta", isSelf = true }).me, "a test looter's isSelf marks you too")
-    assertEqual(GR.Entry({ name = "Keghunt-Thrall" }).name, "Keghunt", "a full name is cut to the short name")
+    assertEqual(GR.Entry({ name = "Mockhunt-Mockrealm" }).name, "Mockhunt", "a full name is cut to the short name")
     assertNil(GR.Entry({ name = "" })); assertNil(GR.Entry({ classFile = "MAGE" })); assertNil(GR.Entry(nil))
 end)
 
 test("roster merge: the snapshot only grows, you first, the same character never twice", function()
     local GR = gr()
     local list = {}
-    assertTrue(GR.Merge(list, { { name = "Keghunt", realm = "Thrall", class = "WARRIOR" },
-        { name = "Tiamât", class = "MAGE", me = true } }))
-    assertEqual(names(list), "Tiamât,Keghunt-Thrall", "you first, whatever the order")
-    assertFalse(GR.Merge(list, { { name = "keghunt", realm = "THRALL", class = "WARRIOR" } }), "matched without case")
+    assertTrue(GR.Merge(list, { { name = "Mockhunt", realm = "Mockrealm", class = "WARRIOR" },
+        { name = "Mockât", class = "MAGE", me = true } }))
+    assertEqual(names(list), "Mockât,Mockhunt-Mockrealm", "you first, whatever the order")
+    assertFalse(GR.Merge(list, { { name = "mockhunt", realm = "MOCKREALM", class = "WARRIOR" } }), "matched without case")
     assertFalse(GR.Merge(list, {}), "a member leaving takes no one out")
-    assertTrue(GR.Merge(list, { { name = "Bùnian", realm = "Azralon" } }))
-    assertEqual(names(list), "Tiamât,Keghunt-Thrall,Bùnian-Azralon", "a newcomer goes last")
-    assertTrue(GR.Merge(list, { { name = "Bùnian", realm = "Azralon", class = "PALADIN" } }), "a missing class is filled")
+    assertTrue(GR.Merge(list, { { name = "Sàmple", realm = "Samplerealm" } }))
+    assertEqual(names(list), "Mockât,Mockhunt-Mockrealm,Sàmple-Samplerealm", "a newcomer goes last")
+    assertTrue(GR.Merge(list, { { name = "Sàmple", realm = "Samplerealm", class = "PALADIN" } }), "a missing class is filled")
     assertEqual(list[3].class, "PALADIN")
-    assertTrue(GR.Merge(list, { { name = "Keghunt" } }), "the same name on your realm is another character")
+    assertTrue(GR.Merge(list, { { name = "Mockhunt" } }), "the same name on your realm is another character")
     assertFalse(GR.Merge(list, { "junk", { realm = "X" } }), "malformed entries are skipped")
 end)
 
@@ -84,10 +84,10 @@ end)
 
 test("roster tooltip: Group (n) rows, five names a row, the realm when it is not yours, class-colored (fb17)", function()
     local GR = gr()
-    local rows = GR.TipRows({ { name = "Tiamât", class = "MAGE", me = true },
-        { name = "Bùnian", realm = "Azralon", class = "PALADIN" } }, function(c) if c == "MAGE" then return 1, 0, 0 end end)
+    local rows = GR.TipRows({ { name = "Mockât", class = "MAGE", me = true },
+        { name = "Sàmple", realm = "Samplerealm", class = "PALADIN" } }, function(c) if c == "MAGE" then return 1, 0, 0 end end)
     assertEqual(#rows, 1)
-    assertEqual(rows[1][1], "Group (2)"); assertEqual(rows[1][2], "|cffff0000Tiamât|r, Bùnian-Azralon")
+    assertEqual(rows[1][1], "Group (2)"); assertEqual(rows[1][2], "|cffff0000Mockât|r, Sàmple-Samplerealm")
     local list = {}
     for i = 1, 11 do list[i] = { name = "M" .. i } end
     rows = GR.TipRows(list)
@@ -108,10 +108,10 @@ local function link(id) return ("|cffa335ee|Hitem:%d::::::::90:::::|h[Ring %d]|h
 
 -- The two cross-realm members as the roster names them on the kit profile: Name-Realm on Retail, the
 -- whole name on Forever (the mock row's realm is the surname there, client-quirks-§5).
-local BUNIAN_TO, KEGHUNT_TO = T.rosterName("Bùnian", "Azralon"), T.rosterName("Keghunt", "Thrall")
-local BUNIAN_ROW = { guid = BUNIAN, name = "Bùnian", realm = "Azralon", class = "PALADIN", classFile = "PALADIN" }
-local KEGHUNT_ROW = { guid = KEGHUNT, name = "Keghunt", realm = "Thrall", class = "WARRIOR", classFile = "WARRIOR" }
-local TIAMAT_ROW = { guid = TIAMAT, name = "Tiamât", class = "MAGE", classFile = "MAGE" }
+local SAMPLEPAL_TO, MOCKHUNT_TO = T.rosterName("Sàmple", "Samplerealm"), T.rosterName("Mockhunt", "Mockrealm")
+local SAMPLEPAL_ROW = { guid = SAMPLEPAL, name = "Sàmple", realm = "Samplerealm", class = "PALADIN", classFile = "PALADIN" }
+local MOCKHUNT_ROW = { guid = MOCKHUNT, name = "Mockhunt", realm = "Mockrealm", class = "WARRIOR", classFile = "WARRIOR" }
+local TIAMAT_ROW = { guid = TIAMAT, name = "Mockât", class = "MAGE", classFile = "MAGE" }
 
 -- The owner's group in a Mythic+ dungeon, two rings known.
 local function party()
@@ -120,7 +120,7 @@ local function party()
         m.instance = { name = "Den of Nalorakk", difficultyID = 8 }
     end })
     m.addItem(link(501), ring(600)); m.addItem(link(502), ring(600))
-    m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW })
+    m.setGroup({ SAMPLEPAL_ROW, MOCKHUNT_ROW })
     NS.Roster.Refresh("test")
     return NS, m
 end
@@ -133,42 +133,42 @@ end
 
 test("feed roster: the group takes everyone in it when its first drop makes it, you first", function()
     local NS = party()
-    NS.LootFeed.Add(link(501), KEGHUNT_TO)
+    NS.LootFeed.Add(link(501), MOCKHUNT_TO)
     local g = onlyGroup(NS)
-    assertEqual(names(g.roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO)
+    assertEqual(names(g.roster), "Testchar," .. SAMPLEPAL_TO .. "," .. MOCKHUNT_TO)
     assertTrue(g.roster[1].me); assertEqual(g.roster[2].class, "PALADIN")
 end)
 
 test("feed roster: someone who joins mid-run is added on the roster event, and to the History group", function()
     local NS, m = party()
-    NS.LootFeed.Add(link(501), KEGHUNT_TO)
+    NS.LootFeed.Add(link(501), MOCKHUNT_TO)
     local kept = NS.History.Log().groups
-    assertEqual(#kept, 1); assertEqual(names(kept[1].roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO)
+    assertEqual(#kept, 1); assertEqual(names(kept[1].roster), "Testchar," .. SAMPLEPAL_TO .. "," .. MOCKHUNT_TO)
     local heard = 0
     NS.addon:RegisterMessage(NS.MSG.HISTORY_CHANGED, function() heard = heard + 1 end)
-    m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW, TIAMAT_ROW })
+    m.setGroup({ SAMPLEPAL_ROW, MOCKHUNT_ROW, TIAMAT_ROW })
     m.__fire("GROUP_ROSTER_UPDATE")
-    assertEqual(names(onlyGroup(NS).roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO .. ",Tiamât")
-    assertEqual(names(NS.History.Log().groups[1].roster), "Testchar," .. BUNIAN_TO .. "," .. KEGHUNT_TO .. ",Tiamât")
+    assertEqual(names(onlyGroup(NS).roster), "Testchar," .. SAMPLEPAL_TO .. "," .. MOCKHUNT_TO .. ",Mockât")
+    assertEqual(names(NS.History.Log().groups[1].roster), "Testchar," .. SAMPLEPAL_TO .. "," .. MOCKHUNT_TO .. ",Mockât")
     assertTrue(heard > 0, "the History tab hears it")
-    m.setGroup({ KEGHUNT_ROW })
+    m.setGroup({ MOCKHUNT_ROW })
     m.__fire("GROUP_ROSTER_UPDATE")
     assertEqual(#onlyGroup(NS).roster, 4, "someone leaving stays named")
 end)
 
 test("feed roster: a joiner is also taken by the next drop, with no roster event between", function()
     local NS, m = party()
-    NS.LootFeed.Add(link(501), KEGHUNT_TO)
-    m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW, TIAMAT_ROW })
+    NS.LootFeed.Add(link(501), MOCKHUNT_TO)
+    m.setGroup({ SAMPLEPAL_ROW, MOCKHUNT_ROW, TIAMAT_ROW })
     NS.Roster.Refresh("test")
-    NS.LootFeed.Add(link(502), "Bùnian-Azralon")
+    NS.LootFeed.Add(link(502), "Sàmple-Samplerealm")
     assertEqual(#onlyGroup(NS).roster, 4)
     assertEqual(#NS.History.Log().groups[1].roster, 4, "the History group merges it with the drop")
 end)
 
 test("feed roster: a roster event with no group open yet changes nothing and raises nothing", function()
     local NS, m = party()
-    m.setGroup({ BUNIAN_ROW, KEGHUNT_ROW, TIAMAT_ROW })
+    m.setGroup({ SAMPLEPAL_ROW, MOCKHUNT_ROW, TIAMAT_ROW })
     m.__fire("GROUP_ROSTER_UPDATE")
     assertEqual(#NS.LootFeed.Groups(), 0)
     assertFalse(NS.GroupRoster.Grow())

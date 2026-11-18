@@ -36,7 +36,7 @@ local function party(seed)
     m.addItem(link(100), ring(600))
     m.addItem(link(101), ring(600))
     m.inventory.player[11], m.inventory.player[12] = link(100), link(101)
-    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Area 52", "PRIEST") })
+    m.setGroup({ row(BRAKK, "Brakk", nil, "WARRIOR"), row(LYRA, "Lyra", "Mock 52", "PRIEST") })
     NS.Roster.Refresh("test")
     return NS, m, NS.Pending
 end
@@ -290,16 +290,20 @@ test("pending: a drop below the quality gate is not pending", function()
     assertEqual(#NS.LootFeed.Drops(), 0)
 end)
 
--- RX-04 (rolls UX design §3.5, Review Focus 3): Rolling now admits a rolled lockbox as a Lockbox;
--- a rolled reagent is pending only with Everything else that is rolled on turned on, and its won
--- drop reaches the feed as an Item, its chat line first or not.
+-- RX-04 (rolls UX design §3.5, Review Focus 3): Rolling now admits a rolled lockbox as a Lockbox
+-- and (DW-RG1) a rolled reagent as a Reagent; an item of no kind is pending only with Everything
+-- else that is rolled on turned on, and its won drop reaches the feed as an Item, its chat line
+-- first or not.
 -- red under: Pending's gate not telling the filter the item is rolled on
 local function lockbox() return { name = "Ornate Bronze Lockbox", quality = 2, ilvl = 20, equipLoc = "", classID = 15,
     subClassID = 0, bindType = 0, stats = {} } end
 local function reagent() return { name = "Linen Cloth", quality = 2, ilvl = 5, equipLoc = "", classID = 7,
     subClassID = 5, bindType = 0, stats = {} } end
+-- An item of no kind (DW-RG1 made a reagent its own kind): a quest item, the Quest class (12).
+local function questItem() return { name = "Sealed Missive", quality = 2, ilvl = 5, equipLoc = "", classID = 12,
+    subClassID = 0, bindType = 0, stats = {} } end
 
-test("pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on", function()
+test("pending: a rolled lockbox and reagent are pending as their kinds; a quest item only with the catch-all on", function()
     local NS, m, P = party()
     assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 2))
     m.addItem(link(400), lockbox())
@@ -308,27 +312,33 @@ test("pending: a rolled lockbox is pending as a Lockbox; a reagent only with the
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
     local item = only(P)
     assertEqual(item.me.verdict, "lockbox"); assertNil(item.me.ilvlDelta)
+    -- DW-RG1: a crafting reagent is its own kind, on by default
+    -- red under: a reagent still kindless (hidden as notWatched with the catch-all off)
     m.addItem(link(401), reagent())
     m.lootHistory["2900:2"] = openDrop(401)
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
-    assertEqual(#P.All(), 1, "a reagent: Everything else is off by default")
+    assertEqual(#P.All(), 2, "a reagent: Crafting reagents is on by default")
+    m.addItem(link(403), questItem())
+    m.lootHistory["2900:4"] = openDrop(403)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    assertEqual(#P.All(), 2, "a quest item: Everything else is off by default")
     assertTrue(NS.SchemaRuntime.Set("feed.categories.other", true))
-    m.addItem(link(402), reagent())
+    m.addItem(link(402), questItem())
     local drop = openDrop(402)
     m.lootHistory["2900:3"] = drop
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
-    assertEqual(#P.All(), 2, "the catch-all on: the reagent is pending")
+    assertEqual(#P.All(), 3, "the catch-all on: the quest item is pending")
     brakkWins(drop)
     m.__fire("LOOT_HISTORY_UPDATE_DROP", 2900, 3)
     local drops = NS.LootFeed.Drops()
-    assertEqual(#drops, 1, "the won reagent is a drop"); assertEqual(drops[1].me.verdict, "item")
+    assertEqual(#drops, 1, "the won quest item is a drop"); assertEqual(drops[1].me.verdict, "item")
 end)
 
-test("pending: a rolled reagent's chat line first is shown once its roll merges in", function()
+test("pending: a rolled kindless item's chat line first is shown once its roll merges in", function()
     local NS, m = party()
     assertTrue(NS.SchemaRuntime.Set("feed.quality.fixed", 2))
     assertTrue(NS.SchemaRuntime.Set("feed.categories.other", true))
-    m.addItem(link(402), reagent())
+    m.addItem(link(402), questItem())
     local drop = openDrop(402)
     m.lootHistory["2900:1"] = drop
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)

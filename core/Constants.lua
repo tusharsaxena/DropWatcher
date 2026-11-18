@@ -250,6 +250,7 @@ C.ITEM_CLASS = fromEnum(Enum.ItemClass, {
     RECIPE        = { "Recipe", 9 },
     MISCELLANEOUS = { "Miscellaneous", 15 },
     QUIVER        = { "Quiver", 11 },     -- WoW Forever's quivers and ammo pouches (RX-15)
+    TRADEGOODS    = { "Tradegoods", 7 },  -- crafting reagents: Trade Goods (DW-RG1)
 })
 
 -- Enum.ItemMiscellaneousSubclass: a mount or companion pet item's class rung (categories design
@@ -362,6 +363,7 @@ C.TRACK_TIER_BY_STRING_ID = {}
 -- not gear and not collected: their verdict is their kind word (Lockbox, Container, Item), and they
 -- are feed-only too. `lockbox` is Miscellaneous Junk that opens (RX-15: its own kind, not a
 -- container); `container` is a bag, or on WoW Forever a quiver or ammo pouch (the Quiver class);
+-- `reagent` is a crafting reagent, the Trade Goods class (DW-RG1: Jade, cloth, herbs, ore);
 -- `other` is no item's category: the feed's filter takes an item of no kind under it when it is
 -- rolled on (NS.FeedFilter), its catch-all.
 C.CATEGORIES = {
@@ -370,11 +372,11 @@ C.CATEGORIES = {
     { key = "toy", collectible = true }, { key = "recipe", collectible = true },
     { key = "cosmetic", collectible = true },
     { key = "lockbox", collectible = false, kind = true }, { key = "container", collectible = false, kind = true },
-    { key = "other", collectible = false, kind = true },
+    { key = "reagent", collectible = false, kind = true }, { key = "other", collectible = false, kind = true },
 }
 
--- The kind History records for a drop the Always watch list let in that fits no category (a reagent,
--- a quest item): History-only, never a CATEGORIES key or a feed filter's, so Insights files it as
+-- The kind History records for a drop the Always watch list let in that fits no category (a quest
+-- item): History-only, never a CATEGORIES key or a feed filter's, so Insights files it as
 -- its own Watched item, sorted after every category, not as equipment (the pre-#13 fallback).
 C.CATEGORY_WATCHED = "watched"
 

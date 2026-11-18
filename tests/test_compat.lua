@@ -77,9 +77,9 @@ end)
 test("compat: ChatSender prefers C_ChatInfo.SendChatMessage", function()
     local Compat, m = fresh()
     m.SendChatMessage = function() error("the deprecated global was called") end
-    Compat.ChatSender()("hi", "WHISPER", nil, "Seta-Silvermoon")
+    Compat.ChatSender()("hi", "WHISPER", nil, "Seta-Samplerealm")
     assertEqual(#m.chatSent, 1)
-    assertEqual(m.chatSent[1].target, "Seta-Silvermoon")
+    assertEqual(m.chatSent[1].target, "Seta-Samplerealm")
     assertEqual(m.chatSent[1].chatType, "WHISPER")
 end)
 
@@ -769,11 +769,11 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     local Compat, m = fresh()
     assertEqual(Compat.NormalizedRealm(), "Testrealm")
     m.normalizedRealm = nil
-    m.__context.realm = "Azjol-Nerub Area"
-    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "nil early in the login: the plain name, stripped")
+    m.__context.realm = "Mock-Sample Area"
+    assertEqual(Compat.NormalizedRealm(), "MockSampleArea", "nil early in the login: the plain name, stripped")
     installSecrets(m)
     m.normalizedRealm = T.secret("Secret")
-    assertEqual(Compat.NormalizedRealm(), "AzjolNerubArea", "a secret answer is skipped")
+    assertEqual(Compat.NormalizedRealm(), "MockSampleArea", "a secret answer is skipped")
     m.GetNormalizedRealmName, m.GetRealmName = nil, nil
     assertNil(Compat.NormalizedRealm())
 end)
@@ -993,12 +993,12 @@ test("compat: TradePartnerName names the trade window's partner, with a realm wh
     assertNil(Compat.TradePartnerName(), "no trade partner")
     m.units.NPC = { name = "Brakk" }
     assertEqual(Compat.TradePartnerName(), "Brakk")
-    m.units.NPC = { name = "Lyra", realm = "Area52" }
+    m.units.NPC = { name = "Lyra", realm = "Mock52" }
     if Compat.ClientKey() == "forever" then
-        -- UnitName's second value is the surname there: the whole name, never Lyra-Area52 (client-quirks-§5)
-        assertEqual(Compat.TradePartnerName(), "Lyra Area52")
+        -- UnitName's second value is the surname there: the whole name, never Lyra-Mock52 (client-quirks-§5)
+        assertEqual(Compat.TradePartnerName(), "Lyra Mock52")
     else
-        assertEqual(Compat.TradePartnerName(), "Lyra-Area52")
+        assertEqual(Compat.TradePartnerName(), "Lyra-Mock52")
     end
     m.units.NPC = { name = T.secret("Lyra") }
     assertNil(Compat.TradePartnerName(), "a secret name")

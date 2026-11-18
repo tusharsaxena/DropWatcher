@@ -34,7 +34,7 @@ the toolchain):
 | Schema | `settings/SchemaSetup.lua` | the write seam's runtime |
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
-| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
+| Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW), HeaderButtons (every window's title-bar marks, `NS.HeaderButtons`, WidgetsHeader minor 1, AD-86-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
 | Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and eight verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
@@ -75,8 +75,9 @@ one-line responsibility and why its position is load-bearing or conventional is 
   current spec can't use for the other specs of your class), the item kinds and the collection
   verdict (`Collectibles.lua`, issue #13: a mount, pet, toy, recipe or cosmetic is judged new or
   collected, feed-only, and read again on the collection events; since RX-04 a lockbox (`lockbox`,
-  its own kind since RX-15), a bag, quiver or ammo pouch (`container`) and an item of no kind rolled
-  on under the catch-all (`other`) read their kind word, Lockbox, Container or Item, feed-only with
+  its own kind since RX-15), a bag, quiver or ammo pouch (`container`), a crafting reagent
+  (`reagent`, the Trade Goods class, DW-RG1) and an item of no kind rolled on under the catch-all
+  (`other`) read their kind word, Lockbox, Container, Reagent or Item, feed-only with
   no gain, on the rows, the cards, Rolling now and the roll popup), the tier-token pass
   (`TierTokens.lua`: the slot a token makes, read from its Use text, else its name (TT-1), and the
   best tier slot of a token whose slot it cannot read or an omni Curio, so a token is judged as
@@ -228,6 +229,38 @@ over it, with 150 px labeled buttons (feedback-15 spec §2) and the Sort dropdow
 footer follows the same rule: the order note on its right line, Announce to group its one mark, and
 the announce state's word on its left line once it is not ready.
 
+Every window's title-bar marks are one strip of LibKa0s Widgets' `HeaderButtons` (WidgetsHeader
+minor 1, LibKa0s#86, AD-86-DW; standalone-windows, *Title-bar controls*, WowAddonStandards
+v2.113.0), built through `NS.WindowTitleBar.Marks` over the seam `NS.HeaderButtons`
+(`core/WidgetsSetup.lua`, the owner this addon's folder, which is the launcher's `name`, and the
+close through `NS.MakeCloseButton`): right-aligned, left to right extras · settings · close, each
+18 px, 6 px in from the corner and 6 px apart, and the window keeps the answer as `headerButtons`
+and the settings mark as `settingsButton`. The main window's strip is the lock, the layout toggle,
+minimize, settings and close (the restriction badge stays left of the lock); the Rolls panel's
+Expand all / Collapse all, settings and close; the Offer panel's settings and close. The settings
+mark opens Drop Watcher's settings through the opener the launcher registered; each of these is in
+the window tier, under the settings panel, so none passes `hideOnSettings`. The Edit message box opts
+out (`settings = false`, `DetailCard.EDITOR_SETTINGS_OPT_OUT`): it is the one modal, in the DIALOG
+strata over the window, so the settings panel would open under it, and Send, Cancel or Escape close
+it first. Each extra keeps its behavior and tooltip (`Window.AttachTooltip`'s `title` placement), its
+state (the lock dimmed and desaturated while unlocked, the minimize and layout marks following the
+state through `SetIconMark`) and the title-bar colors, `icon.tint` at rest and `text.link` under the
+pointer, the close `close.rest` and `close.hot`. An extra has two paint paths, on purpose: the
+library's own hover and skin-switch paint of its `icon` or `label`, and the host's of `art` and
+`glyph` (`TB.MARK_REST` / `TB.MARK_HOT`), which must stay because `SetIconMark` may show a texture or
+word the library never made; the two agree because the host's tokens are the library's, which
+`test_header_marks` pins. The settings mark's tooltip, `Open settings`, is this addon's `NS.L`
+string (`NS.HeaderButtons` passes it as `settingsTip`); its fallback glyph is the library's. The popovers' strips are laid on the title band by
+`S.Header` at the strip's own offsets (`right`). Without LibKa0s Widgets the window builds the
+host's strip (its own icon marks and the close) on the same pitch, with no settings mark.
+The settings mark widened the main window's cluster by a mark and a gap, so a centered compact title
+with its `TEST` or `SIM` word moves left as far as it must to end `TITLE_RESERVE` short of the lock
+(`NS.CompactChrome`, `centerShift`). Not on the strip: the detail card (an expanded row with no title
+bar), the upgrade toast (a notification, whose close is the toast shell's) and the library's own
+windows (the debug console, the copy window, the perf panel, the sim panel and the skin picker, which
+carry the library's strip from the re-vendor). The addon builds no LibKa0s `DragHandle` (it draws no
+HUD strip), so the drag strip's settings mark (DragHandle minor 14) has nothing to turn on.
+
 ## Settings Schema
 
 One write seam, `NS.SchemaRuntime.Set` (LibKa0s-Schema), reached by the panel, the CLI, the launcher
@@ -280,7 +313,9 @@ verbs of design spec §12.3 (`scan clear history mine compact situation offer ad
 `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the
 Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5
 spec §3; and issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through
-the item lists' one writer, `NS.ItemLists`, which the settings panel shares); the full table, the
+the item lists' one writer, `NS.ItemLists`, which the settings panel shares). The two reports,
+`situation` and an item list's `list`, write to the debug console through `NS.DebugLog:Report` with
+one chat pointer line (debug-logging-§15, AD-79-DW; [`debug.md`](debug.md)); the full table, the
 live-while-disabled set and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). Every
 toggle verb calls the same handler as its Master controls row and its launcher entry
 (`core/DropWatcher.lua`); `scan`, `compact` and `full` share the window's own handlers, and the
@@ -403,6 +438,64 @@ kind the journal lists none of falls back to `NS.SimPool.COLLECTIBLE_SAMPLES`, c
 empty until each is checked in the client (issue #13, DW-CAT6, smoke check COLL-8). Test mode's sixth
 boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 
+**Sample characters (preview-mode, *Sample characters*; LibKa0s#87, AD-87-DW).** Test mode's people
+follow the collection's convention: every name a capitalized `Sample` or `Mock` word, never a real
+player's or realm's, one word on Retail (on your realm) and `First Surname` on WoW Forever, never
+localized. Its five protagonists (`NS.TestData.SAMPLE_KEYS`: Samplehunter, Sampleblade, Mockflame,
+Samplemender and Mockshield) are LibKa0s-Sim-1.0's `Sim.Sample(client)`, with the library's class and
+spec (Retail's specID, Forever's talent tree); without the library they come from
+`NS.TestData.SAMPLE_COPY`, the library's rows copied, which `test_test_mode` holds to `Sim.SAMPLE`.
+The other nineteen members that fill the raids, and the alt (`Samplealt`), are this addon's own,
+named to the same rules. The simulator's seeded roster (`modules/SimRoster.lua`'s `NAMES`,
+`RAID_NAMES`, `REALMS` and `SURNAMES`) is a crowd kept for its seeded determinism, as the convention's
+rule 6 allows, and is unchanged.
+
+## Tooltip placement
+
+Every tooltip the addon places itself goes through `LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-DW;
+WowAddonStandards standalone-windows, *Tooltip placement*), by where the hovered element sits and
+never by where the pointer is. `modules/RowTooltip.lua` is the one seam onto it; `Window.AttachTooltip`
+(`modules/Window.lua`) owns `GameTooltip` at `ANCHOR_NONE`, fills it, shows it, then places it by the
+widget's class:
+
+- **Body** (no `place`): a table row and every cell, button and item icon in it, a group header, a
+  column label, a compact card, the detail cards' lines and chips, the History card's actions, the
+  Pending box, the Offer panel's candidate rows, column labels and item header, the Rolls panel's
+  roller rows, folded lines and item headers, the toast and a roll popup's side card.
+  `RowTooltip.Place` calls `PlaceBeside` on the row the element sits in (its nearest ancestor marked
+  `tipRow`, else the element) with the **window group** `RowTooltip.GroupOf` builds: the outermost
+  frame under UIParent and every frame it names in `tipDocks` (the Offer panel `offer`, the Rolls
+  panel `rolls`) that is docked beside it. The tooltip opens outside the group's right edge, else its
+  left, top level with the row, 2 px off; a docked panel's own rows prefer its side away from the
+  window; with room on neither side it is attached above the row. The item tooltips (`WindowGroup`'s
+  item buttons and the Rolls panel's item headers) take the same path, so their comparison tooltips
+  open further out on the same side.
+- **Chrome** (`place = "chrome"`): the title bar's controls, mode word, badge and new-drops chip; the
+  TEST and SIM strips on the window, the Offer panel and the Rolls panel; the tabs; every filter-bar
+  control (the compact Filters button included); the footer's left line and its marks; the Offer
+  panel's footer note and Announce mark; the Edit message box's Send and Cancel (a modal's controls).
+  `RowTooltip.PlaceChrome` calls `PlaceAttached`: centered on the control, 2 px above it, below only
+  without room above.
+- **The Insights charts**: `NS.ChartsHost()` (`core/ChartsSetup.lua`) keeps the library's default
+  tooltip and names `host.group` (Charts minor 2) as `RowTooltip.WindowGroup`, so a mark's tooltip
+  opens beside the window and its docked panels through `ctx:PlaceTip`.
+
+When the library is absent or a geometry read is not a plain number, both paths attach the tooltip
+centered above the element (`BOTTOM` on its `TOP`, 2 px), never at the pointer and never at a corner.
+No addon file names `ANCHOR_CURSOR`, a corner anchor or `GetCursorPosition` for a tooltip
+(`tests/test_tooltip_placement.lua` holds the source to it).
+
+**Left out, and why** (standalone-windows, *What it does not bind*):
+
+| Tooltip | Who places it | Why it stays |
+|---|---|---|
+| Every tooltip on the Settings pages (`settings/*.lua`, the library's Options widgets through `h.AttachTooltip`) | LibKa0s-Options-1.0 | Settings canvas pages: options-ui governs them |
+| The minimap button's tooltip | LibKa0s-Launcher (`PlaceLauncher`, Launcher minor 11) on LibDBIcon-1.0's button | The library's launcher placer (launcher-§7); no host code |
+| A LibDataBroker display's bar tooltip (Titan Panel, ChocolateBar) | The display | The display draws the frame and places the tooltip |
+| The History row menu's entries (`NS.ContextMenu`, `{ cursor = true }`) and every other client `MenuUtil` menu | The client's menu system, or LibKa0s-Widgets' menu | A menu the client draws (its entries' tooltips are `MenuUtil`'s); the library's own menus are the library's to place. The menu opening at the pointer is a menu, not a tooltip |
+| The library's own windows (debug console, perf, sim and step panels, skin picker, icon browser, Copy window, dropdown menus, drag handles) | LibKa0s, since v1.105.0 | A window the library draws is the library's to move |
+| The game's own tooltips over Blizzard frames (the group-loot roll frame the popup's side card sits beside) | The client | Blizzard's frames; the addon writes no lines onto them |
+
 ## Frame layering
 
 Every strata and frame level the addon sets reads one table, `NS.Constants.LAYERS`
@@ -462,6 +555,14 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   once, leaving Ka0s Default; the shadow varies by skin. Migration step 11
   (`NS.ResetProfileToSkin`, `Skin.FollowOnce`) moves stored profiles once, recorded per profile in
   `skin.fullSkinReset`. `tests/test_skin_flip.lua`.
+- **The row washes clear the library's floors (AD-82-DW, LibKa0s#82 and #84).** LibKa0s v1.105.0 raised
+  Ka0s Default's rows (stripe white .08, hover gold .16, selection gold .26) and seven skins'
+  `icon.hot`. This addon defines no `*.hot` owner token, and its fallback copy's `icon.hot` and
+  `list.stripe` are the library's (held by `test_surface_parity`). Its one list alias, `dw.rowOpen`
+  (an expanded row's or card's wash, following `list.hover`), kept its own gold .08 under Ka0s
+  Default, which then stood 7 L* off the window and no further than a striped row; its default is
+  now gold .16, Ka0s Default's `list.hover`, which stands 12 or more off the window and 3 or more
+  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`.
 - **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
   its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
@@ -477,8 +578,8 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   takes the band's rect (`S.Header` `bars`), so its title, mode words, lock button (RX-08, in the
   right-hand cluster since RX-14), badge and controls, anchored to the bar at y 0, sit on the band's
   middle; minimized, the window is the band and its two edges. The Offer panel and the Edit message
-  box keep the band S.Shell draws, put their title (by `title.align`) and close on it through
-  `S.Header`, and start their content `POPOVER_TOP` (36) down. The detail card is an expanded row
+  box keep the band S.Shell draws, put their title (by `title.align`) and their title-bar marks
+  (settings and close, the Edit message box's close alone; AD-86-DW) on it through `S.Header`, and start their content `POPOVER_TOP` (36) down. The detail card is an expanded row
   with no header, and the toast opts out of the band. Without the library the builders' own anchors
   stand. `tests/test_header_band.lua`.
 - **The first-run picker.** `NS.MaybeShowSkinPicker` shows the library's picker (`O.SkinPicker`)

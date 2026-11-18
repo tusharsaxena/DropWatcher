@@ -195,7 +195,7 @@ end)
 test("tip rows: the compact cards and chrome (CompactCards, CompactChrome) are rows", function()
     local NS = T.newAddon{ skin = "ka0s" }
     local CC, CH = NS.CompactCards, NS.CompactChrome
-    local d = rowDrop({ looter = { name = "Seta-Argent Dawn", classFile = "PRIEST" } })
+    local d = rowDrop({ looter = { name = "Seta-Mock Haven", classFile = "PRIEST" } })
     shapes({ CC.Freshness(d, 100).tip, CC.Freshness(rowDrop({ isMine = true }), 100).tip, CC.Looter(d, "Realm").tip,
         CC.When(100, 200, function() return "17:02" end).tip, CC.When(nil, 200).tip,
         CH.FiltersTip({ quality = "Quality: Rare+", content = "This session" }, { "quality" }),

@@ -214,7 +214,7 @@ Total.
 - item lists panel: a refused add is raised as its sentence, and nothing is written
 - item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
-### test_skin_setup.lua (19)
+### test_skin_setup.lua (20)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers the client's default before the profile store exists
@@ -222,6 +222,7 @@ Total.
 - Skin seam: every owner token is namespaced dw. and taken by the library
 - Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
 - Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
+- Skin seam: an expanded row's wash clears the library's row floors under Ka0s Default
 - Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
 - Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Skin tab
 - Skin seam: the skin row's values are every registered skin, in the library's order
@@ -350,6 +351,23 @@ Total.
 - title bar: the Edit message box's marks rest in icon.tint and light text.link; its close close.rest and close.hot
 - title bar: the two skins pinned give the marks different rest and hover colors
 
+### test_header_marks.lua (14)
+
+- header marks: the main window reads extras · settings · close through W.HeaderButtons
+- header marks: the main window's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the main window's settings mark opens Drop Watcher's settings
+- header marks: the Rolls panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Rolls panel's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the Rolls panel's settings mark opens Drop Watcher's settings
+- header marks: the Offer panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Offer panel's marks are 18 px, 6 px in from the corner and 6 px apart
+- header marks: the Offer panel's settings mark opens Drop Watcher's settings
+- header marks: the settings mark's tooltip is this addon's own string
+- header marks: an extra's host paint and the library's paint agree, at rest and on hover
+- header marks: the Edit message box opts out of the settings mark, with its reason
+- header marks: the main window keeps its strip through minimize and the layout switch
+- header marks: without LibKa0s-Widgets the window keeps its marks on the same pitch, with no settings mark
+
 ### test_section_header_bands.lua (4)
 
 - section header bands: a group header paints list.header.bg and repaints on a skin switch
@@ -406,7 +424,7 @@ Total.
 - skin tools: the debug console, perf panel, sim panel, test strip and toast are this owner's
 - skin tools: the live debug console is painted for this owner
 
-### test_slash.lua (27)
+### test_slash.lua (28)
 
 - slash: NS.COMMANDS is positional triples, every reserved verb present
 - slash: `diagnostics` has no alias of any kind (debug-logging-§14)
@@ -430,11 +448,21 @@ Total.
 - slash: `insights` opens the window on the Insights tab, expanded, as `history` does (issue #12)
 - slash: a tab verb the Visibility setting keeps hidden says so
 - slash: `compact` toggles the layout through the seam, `full` sets it back, each printing it
-- slash: `situation` prints the situation, its settings and the classifier's inputs
+- slash: the help rows of the report verbs name the debug console
+- slash: `situation` reports the situation, its settings and the classifier's inputs
 - slash: `offer` opens the panel on your newest drop of that item
 - slash: `offer` of a bag item the feed never saw adds it as yours first
 - slash: `offer` refuses an item not in your bags, and prints its usage without a link
 - slash: every feature verb is refused while disabled
+
+### test_slash_report.lua (6)
+
+- slash report: every report verb writes to the console with logging off, one chat pointer
+- slash report: the reports carry the read-outs chat used to carry
+- slash report: a hidden console is revealed, a shown one stays shown
+- slash report: usage and refusals inside a report verb stay in chat and write nothing
+- slash report: `scan` is an action with a one-line answer, not a report
+- slash report: library-absent, the stub streams the report to chat with no pointer
 
 ### test_window.lua (20)
 
@@ -483,12 +511,12 @@ Total.
 - shell: the View is multi-select: its values combine, the label counts them, and All clears them
 - shell: each tab grays the View values it does not use, and a grayed value does not toggle
 - shell: the View tooltip lists every value as a bullet, and grays the ones a tab does not use
-- filter bar tooltip: AboveSide is right when the screen has room past the control, else left
-- filter bar tooltip: every bar control, Sort included, opens above the control, top right
-- filter bar tooltip: with no room on the right it opens above the control, top left
+- filter bar tooltip: centered on the control, slid sideways only as far as the screen's edge
+- filter bar tooltip: every bar control, Sort included, is attached centered above the control
+- filter bar tooltip: near the screen's right edge it stays above the control, slid left
 - filter bar: Sort at the bar's right edge, the search box between, room for it at the least width (RX-24)
 - filter bar tooltip: the room is measured in screen pixels, at each frame's scale
-- filter bar tooltip: the tab strip keeps its own anchor (only the bar moved)
+- filter bar tooltip: the tab strip's tabs are chrome too, attached above each tab
 - shell: the search box is Loot History's flat, square box (LibKa0s-Widgets' SearchBox)
 - shell: the search box is LibKa0s-Widgets' SearchBox with DW's hint, and a focus loss still writes the filter's debug line
 - shell: with no Widgets the filter bar builds without a search box and filters nothing by text
@@ -533,7 +561,7 @@ Total.
 - shell: without the Widgets library the window builds with no dead dropdown
 - rx30: without the Widgets library the bare footer keeps the tab's controls as marks
 - rx30: the bare footer lays its marks right to left from the corner, the right line left of them
-- filter bar tooltip: AboveFits is true when the screen has room over the control, else false
+- filter bar tooltip: it flips below only when the tooltip's real height has no room above
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
 ### test_window_compact.lua (25)
@@ -642,7 +670,7 @@ Total.
 - compact group: one pooled card per drop under a one-line header, each line what CompactCards says
 - compact group: the pieces are colored by quality, class and tone, the worn levels dimmed
 - compact group: every piece keeps its full-view reason tooltip
-- compact group: every tooltip opens at the card's top right, just outside the window
+- compact group: every tooltip opens beside the window, level with the card's top
 - compact group: a card click opens the stacked detail card under it; the cards below move down
 - compact group: Ask presses the ask; no card can be dismissed
 - compact group: an ask in flight shows the full table's state; no ask offered shows No action and why
@@ -672,7 +700,7 @@ Total.
 - compact history: a right-click on a card, or on any piece of it, opens the row menu
 - compact history: marking an entry declined repaints its card
 - compact history: a header click opens a collapsed group
-- compact history: every tooltip opens at the card's top right, just outside the window
+- compact history: every tooltip opens beside the window, level with the card's top
 - compact history: the footer is the kept-history line and the toggle, no Clear history (feedback-15 spec §3)
 - compact history: cards are pooled and follow the Font size row
 - compact history: test mode's kept samples fill a card each, no piece blank
@@ -776,7 +804,7 @@ Total.
 - table: rows come from the pool: a repaint reuses them, fewer drops park the rest
 - table: a header click collapses its group, and a second expands it
 - table: an item button shows the game's tooltip, shift-click links it and ctrl-click tries it on
-- item tooltip: a row's item button opens the game's tooltip at the row's top right, else on its own
+- item tooltip: a row's item button opens the game's tooltip beside the window, level with the row
 - table: Them shows the looter's worn item from their inspect read before their verdict
 - table: Me shows your worn item from the gear snapshot, its icon showing your own slot
 - table: the Ask button asks through the shared handler, and AskStateChanged repaints it
@@ -1007,7 +1035,7 @@ Total.
 - footer row: the History toggle in both layouts, and each tab keeps its own collapsed state
 - footer row: the panes reach the footer, whose corner holds the grip; locked still hides it (RX-24)
 
-### test_offer_panel.lua (23)
+### test_offer_panel.lua (24)
 
 - offer panel: Offer opens it docked right, the candidates ranked with Their eq in the Them look
 - offer panel: no class bar; every second row striped as the main window's; the name in its class color
@@ -1032,6 +1060,7 @@ Total.
 - offer panel: beside the compact window it goes on the side with room, and floats centered when neither has
 - offer panel: a test drop's panel carries the test strip under its title band, a simulated one the sim strip
 - offer panel: its foot is the library's Footer, the order note on its right line, Announce its mark
+- offer panel: its body tooltips open beside the window group, its footer and the Edit box's are chrome
 
 ### test_offer_alone.lua (16)
 
@@ -1071,26 +1100,40 @@ Total.
 - drops strip: the compact layout's summary is shortened
 - mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
-### test_row_tooltip.lua (14)
+### test_row_tooltip.lua (16)
 
-- row tooltip: it rises from the row's top right, just outside the window
-- row tooltip: with no room on the right it rises from the row's top left, outside the window
-- row tooltip: the room is measured at the UI scale (a scaled-down window, a full-size tooltip)
-- row tooltip: unknown geometry places nothing; a marked panel is the frame it goes beside
+- row tooltip: it opens beside the window, TOPLEFT a TIP_GAP right of its edge, level with the row
+- row tooltip: with no room on the right it opens left of the window, TOPRIGHT a TIP_GAP left
+- row tooltip: the room is measured at each frame's effective scale
+- row tooltip: unreadable geometry places nothing; the fallback attaches it above the row
 - row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
-- row tooltip: the docked Rolls panel is part of the window group, beside the Offer panel or alone
+- row tooltip: the docked Rolls panel is part of the window group; an Offer row prefers its own side
 - row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
+- row tooltip: GroupOf is the outermost frame and its docked panels, in name order
 - row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
-- row tooltip: unknown geometry falls back to the hovered frame's top right
-- row tooltip: Drops, every cell, Ask and the header open at the row's top right
-- row tooltip: with no room on the right a row tooltip rises from the row's top left, outside the window
-- row tooltip: your own drops' rows on Drops and their Offer open at the row's top right
-- row tooltip: History rows and headers open at the row's top right
-- row tooltip: the column labels and the tabs keep their own anchor (rows only)
+- row tooltip: a group as wide as the screen falls back above the row, centered (body rule 4)
+- chrome tooltip: centered TIP_GAP above the control, below only without room above
+- row tooltip: Drops, every cell, Ask and the header open beside the window, level with the row
+- row tooltip: with no room on the right a row tooltip opens left of the window
+- row tooltip: your own drops' rows on Drops and their Offer open beside the window
+- row tooltip: History rows and headers open beside the window
+- row tooltip: a column label opens beside the window; a tab is attached above itself
 
-### test_test_mode.lua (50)
+### test_tooltip_placement.lua (5)
+
+- tooltip placement: every hooked widget is classified by the file that built it
+- tooltip placement: the mixed files' chrome is chrome and their content is body
+- tooltip placement: a hover of every hooked widget calls its class's placer, owned at ANCHOR_NONE
+- tooltip placement: the Insights charts' marks open beside the window group (host.group)
+- tooltip placement: the addon's own code names no cursor or corner anchor (anti-pattern #119)
+
+### test_test_mode.lua (54)
 
 - test mode: Forever samples use only the nine classes
+- test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client
+- test mode data: every sample name follows the convention, the alt's too
+- test mode data: the fallback copy of the sample characters is the library's, row for row
+- test mode data: without LibKa0s the protagonists come from the copy, the same people
 - test mode: Forever samples name Forever places, whatever pool they draw on
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -1699,7 +1742,7 @@ Total.
 - collectibles: CategoryOf's precedence
 - collectibles: the out-of-scope classes are not watched
 - collectibles: IsCollectible is true for the collectible categories alone
-- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; a reagent neither
+- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; Trade Goods a reagent
 - collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
 - collectibles: Verdict reads new, collected and no answer
 - collectibles: a pet carries its count, and a partial collection says n/limit
@@ -1844,7 +1887,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (55)
+### test_feed.lua (56)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -1901,6 +1944,7 @@ Total.
 - stand-down: timers and pending loads are dropped, the drops kept
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 - filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
+- filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold
 
 ### test_pending.lua (18)
 
@@ -1913,8 +1957,8 @@ Total.
 - pending: reload mid-roll rebuilds one item, and its winner makes exactly one drop
 - pending: all passed closes after 60 s with no feed record
 - pending: a drop below the quality gate is not pending
-- pending: a rolled lockbox is pending as a Lockbox; a reagent only with the catch-all on
-- pending: a rolled reagent's chat line first is shown once its roll merges in
+- pending: a rolled lockbox and reagent are pending as their kinds; a quest item only with the catch-all on
+- pending: a rolled kindless item's chat line first is shown once its roll merges in
 - pending: the ticker stops when no roll is open
 - pending: standing down unregisters every event and stops the ticker
 - pending: a history clear during an item load never makes a second item
@@ -1986,7 +2030,7 @@ Total.
 ### test_roll_popup.lua (22)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
-- roll popup: a lockbox reads Lockbox and a reagent Item, never Unknown
+- roll popup: a lockbox reads Lockbox, a reagent Reagent and a quest item Item, never Unknown
 - roll popup: two identical items on two popups each show their own count line
 - roll popup: the side card flips to the popup's left near the screen's right edge
 - roll popup: four popups by the right edge each flip and no card overlaps a frame
@@ -2057,7 +2101,7 @@ Total.
 - rolls panel: docked right, a roller row's and an item header's tooltips open right of the panel
 - rolls panel: docked left, a roller row's and an item header's tooltips open left of the panel
 - rolls panel: in a raid a folded Pass line's tooltip opens beside the panel too
-- rolls panel: with the panel's geometry unknown a row's tooltip keeps its place below the row
+- rolls panel: with the panel's geometry unknown a row's tooltip is attached above the row
 - rolls panel: in a raid Pass and Waiting fold to a line each, hovering lists every name, a click unfolds
 - rolls panel: a roll of more than five rollers is raid mode whatever the group's size reads
 - rolls panel: a dungeon group never folds
@@ -2079,13 +2123,13 @@ Total.
 ### test_feed_counts.lua (10)
 
 - two yokes: both Yokes are separate drops with the right looters, the accented name resolved
-- two yokes: the reagent and the altar are hidden as no watched item kind and counted, not lost
+- two yokes: the white reagent is hidden by quality, the altar as no watched item kind; both counted
 - two yokes: with Equipment off, both Yokes are hidden by the item kind rule, the rest still unwatched
 - two yokes: each hidden drop is logged with its reason under the FEED tag
 - refused: every receipt the feed turns away is counted by reason and logged under FEED
 - refused: a C_LootHistory drop already taken is counted as seen
 - diagnostics: the drops section reports the hidden and the refused counts by reason
-- header: View Interesting hides Bùnian's Yoke and the header reads `2 drops · 1 shown`
+- header: View Interesting hides Sàmple's Yoke and the header reads `2 drops · 1 shown`
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 
@@ -3022,7 +3066,7 @@ Total.
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
 | test_item_lists_panel.lua | 5 |
-| test_skin_setup.lua | 19 |
+| test_skin_setup.lua | 20 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
@@ -3031,11 +3075,13 @@ Total.
 | test_skin_host.lua | 19 |
 | test_header_band.lua | 6 |
 | test_title_bar_controls.lua | 9 |
+| test_header_marks.lua | 14 |
 | test_section_header_bands.lua | 4 |
 | test_skin_picker.lua | 24 |
 | test_skin_verb.lua | 6 |
 | test_skin_settings.lua | 10 |
-| test_slash.lua | 27 |
+| test_slash.lua | 28 |
+| test_slash_report.lua | 6 |
 | test_window.lua | 20 |
 | test_window_shell.lua | 74 |
 | test_window_compact.lua | 25 |
@@ -3057,11 +3103,12 @@ Total.
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
 | test_footer_row.lua | 16 |
-| test_offer_panel.lua | 23 |
+| test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
-| test_row_tooltip.lua | 14 |
-| test_test_mode.lua | 50 |
+| test_row_tooltip.lua | 16 |
+| test_tooltip_placement.lua | 5 |
+| test_test_mode.lua | 54 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
@@ -3089,7 +3136,7 @@ Total.
 | test_gear.lua | 29 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 55 |
+| test_feed.lua | 56 |
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
@@ -3145,4 +3192,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2611** |
+| **Total** | **2646** |

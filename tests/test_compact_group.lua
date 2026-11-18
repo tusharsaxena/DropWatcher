@@ -217,22 +217,22 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     assertTrue(cardFor(drawn, 1).dismiss == nil, "no dismiss mark (feedback-4 spec §2)")
 end)
 
--- The window at 200..580, its top at 800, on a 1920-wide screen; a 320-wide tooltip.
+-- The window at 200..580 (bottom 100, top 800) on the kit's 1920 x 1080 fake screen; a 320-wide
+-- tooltip.
 local function placeWindow(NS, m)
-    local win = NS.Window.Frame()
-    win.GetLeft = function() return 200 end
-    win.GetRight = function() return 580 end
-    win.GetTop = function() return 800 end
-    m.UIParent.GetWidth = function() return 1920 end
-    m.GameTooltip.GetWidth = function() return 320 end
-    return win
+    T.tipScreen(m)
+    return T.tipRect(NS.Window.Frame(), 200, 100, 580, 800)
 end
 
-test("compact group: every tooltip opens at the card's top right, just outside the window", function()
+-- Re-pinned by AD-92-DW (LibKa0s#92; was: at the card's top-right corner, BOTTOMLEFT>TOPRIGHT on
+-- the window): a card is a body element, so its tooltips open beside the window group, the
+-- tooltip's TOPLEFT a TIP_GAP past its right edge, level with the card's top.
+test("compact group: every tooltip opens beside the window, level with the card's top", function()
     local NS, drawn, m = shownCards()
     local win = placeWindow(NS, m)
+    local spy = T.tipSpy(m)
     local card = cardFor(drawn, 1)
-    card.GetTop = function() return 600 end
+    T.tipRect(card, 200, 560, 580, 600)
     local K = NS.Constants.WINDOW
     local frames = { card.cells.trade.hit, card.cells.you.hit, card.cells.slot.hit, card.cells.ilvl.hit, card.icon,
         card.cells.item.hit }
@@ -240,11 +240,17 @@ test("compact group: every tooltip opens at the card's top right, just outside t
     frames[#frames + 1] = card.ask
     for i, f in ipairs(frames) do
         m.GameTooltip.__points = {}
+        spy.reset()
         f:__fire("OnEnter")
-        local point, rel, relPoint, x, y = m.GameTooltip:GetPoint(1)
-        assertEqual(tostring(point) .. ">" .. tostring(relPoint), "BOTTOMLEFT>TOPRIGHT", "piece " .. i)
-        assertTrue(rel == win, "piece " .. i .. ": beside the window")
-        assertEqual(x, K.TIP_GAP); assertEqual(y, -200, "piece " .. i .. ": level with the card's top")
+        assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", "piece " .. i)
+        local c = spy.first()
+        assertTrue(c and c.fn == "PlaceBeside" and c.el == card, "piece " .. i .. ": the body rule, on the card")
+        assertTrue(c.group.main == win, "piece " .. i .. ": the window group")
+        local pts, rel, x, y = T.tipPoint(m)
+        assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "piece " .. i)
+        assertTrue(rel == m.UIParent, "piece " .. i .. ": one absolute point")
+        assertEqual(x, 580 + K.TIP_GAP, "piece " .. i .. ": beside the window")
+        assertEqual(y, 600, "piece " .. i .. ": level with the card's top")
     end
 end)
 
