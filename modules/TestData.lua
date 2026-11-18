@@ -29,10 +29,10 @@ local _, NS = ...
 -- with candidates in every status the Offer panel shows: upgrade, equal, off-spec upgrade, no
 -- upgrade, can't use, checking and unavailable).
 -- CAN'T USE (feedback-21). A drop you can use in no spec reads Can't use on Trade where the
--- estimate is Yes or Likely: Mistveil's shoulders (Likely), a wrong armor type; Ashveil's chest stays
--- No (an upgrade for its looter), and every off-spec sample keeps its Likely. Kaelith (second boss)
+-- estimate is Yes or Likely: Samplemist's shoulders (Likely), a wrong armor type; Mockflame's chest stays
+-- No (an upgrade for its looter), and every off-spec sample keeps its Likely. Sampleblade (second boss)
 -- was read before they left the group, so the detail card keeps their spec and says they are not
--- in your group; Dawnfeather left before any read, so it says that instead of spec unknown
+-- in your group; Mockwing left before any read, so it says that instead of spec unknown
 -- (feedback-21 H2).
 -- Each drop's age is its countdown's: four hours less what is left. One drop's look is collected
 -- and one's is not, for the look chips and the transmog ask.
@@ -50,10 +50,10 @@ local _, NS = ...
 -- off-spec they show is Holy: a Me of `{ "cantUse", reason = "primaryStat", off = { 65, verdict,
 -- change, bag = true? } }` carries eval.offSpec as NS.OffSpec.Attach shapes it, its baseline a worn
 -- item (with its slot) or a bag one (`bag`, none), or no baseline and no change for an empty slot.
--- Seta's legs are the owner's Crescent (an off-spec upgrade over a worn item); the last boss is the
+-- Samplemender's legs are the owner's Crescent (an off-spec upgrade over a worn item); the last boss is the
 -- showcase: an off-spec upgrade into an empty slot, one over a bag item, a sidegrade and a downgrade,
--- and your own drop with a candidate whose off-spec is an upgrade (Kaelith, Retribution, for Holy;
--- the trinket's too). Ashveil's chest is the rule's other side: a wrong armor type is a class-wide
+-- and your own drop with a candidate whose off-spec is an upgrade (Sampleblade, Retribution, for Holy;
+-- the trinket's too). Mockflame's chest is the rule's other side: a wrong armor type is a class-wide
 -- refusal, so it stays Can't use with no off-spec. Every off-spec sample is tradeable, so its Ask
 -- shows the off-spec rule (the downgrade's No action is "not an upgrade", not a trade refusal).
 -- History has an off-spec drop you asked for and one you received; the alt's group keeps none. An off-spec sample's Me cell reads its off-spec baseline (`testOffGear`,
@@ -85,7 +85,7 @@ local _, NS = ...
 -- you already have and a toy, and a raid boss's cosmetic, your recipe and a tier token (issue #13). For the
 -- Insights tab (issue #12) the entries carry the stamps a live one does (`askedAt`, `offeredAt`,
 -- `settledAt`, `got`), one ask expired unanswered, one received item is legacy (no stamps: its ask
--- inferred, its gain as last judged), Kragmar traded you twice, and the raid bosses' upgrades fill
+-- inferred, its gain as last judged), Mockstorm traded you twice, and the raid bosses' upgrades fill
 -- Upgrades for me by boss. The alt's group is ten days old, so a Keep history for of 7 days
 -- (feedback-2 spec §5) asks to delete it with the older ones. modules/TestMode.lua holds it while
 -- test mode is on; it is never written to the account's history.
@@ -318,77 +318,110 @@ end
 
 -- ── the people ──────────────────────────────────────────────────────────────────────────────
 
--- The members the samples name, all invented, one list per client: Retail's thirteen classes, and
--- WoW Forever's nine (no Death Knight, Monk, Demon Hunter or Evoker), each with a spec of that
--- client's list (core/ClassDataForever.lua's "<classFile>:<tree>" rows). The keys are the rows'.
-local MEMBER_LISTS = {}
-MEMBER_LISTS.retail = {
-    seta        = { name = "Seta", guid = "Player-0-0000T001", classFile = "PRIEST", specID = 257 },
-    littlewolf  = { name = "Littlewolf", guid = "Player-0-0000T002", classFile = "DRUID", specID = 105 },
-    uniquerogue = { name = "Uniquerogue", guid = "Player-0-0000T003", classFile = "ROGUE", specID = 260 },
-    butterz     = { name = "Butterz", guid = "Player-0-0000T004", classFile = "WARRIOR", specID = 71 },
-    kaelith     = { name = "Kaelith", guid = "Player-0-0000T005", classFile = "PALADIN", specID = 70 },
-    mistveil    = { name = "Mistveil", guid = "Player-0-0000T006", classFile = "MONK", specID = 270 },
-    dawnfeather = { name = "Dawnfeather", guid = "Player-0-0000T007", classFile = "EVOKER", specID = 1468 },
-    thornbrew   = { name = "Thornbrew", guid = "Player-0-0000T008", classFile = "MONK", specID = 268 },
-    ashveil     = { name = "Ashveil", guid = "Player-0-0000T009", classFile = "MAGE", specID = 63 },
-    grimhollow  = { name = "Grimhollow", guid = "Player-0-0000T010", classFile = "DEATHKNIGHT", specID = 250 },
-    solenne     = { name = "Solenne", guid = "Player-0-0000T011", classFile = "PRIEST", specID = 256 },
-    kragmar     = { name = "Kragmar", guid = "Player-0-0000T012", classFile = "SHAMAN", specID = 263 },
-    vexxa       = { name = "Vexxa", guid = "Player-0-0000T013", classFile = "DEMONHUNTER", specID = 577 },
-    brightmane  = { name = "Brightmane", guid = "Player-0-0000T014", classFile = "PALADIN", specID = 65 },
-    quillshot   = { name = "Quillshot", guid = "Player-0-0000T015", classFile = "HUNTER", specID = 254 },
-    nythera     = { name = "Nythera", guid = "Player-0-0000T016", classFile = "WARLOCK", specID = 265 },
-    ironpaw     = { name = "Ironpaw", guid = "Player-0-0000T017", classFile = "DRUID", specID = 104 },
-    starhollow  = { name = "Starhollow", guid = "Player-0-0000T018", classFile = "EVOKER", specID = 1467 },
-    rookfang    = { name = "Rookfang", guid = "Player-0-0000T019", classFile = "WARRIOR", specID = 73 },
-    mossvale    = { name = "Mossvale", guid = "Player-0-0000T020", classFile = "SHAMAN", specID = 264 },
-    frostlace   = { name = "Frostlace", guid = "Player-0-0000T021", classFile = "MAGE", specID = 64 },
-    emberclaw   = { name = "Emberclaw", guid = "Player-0-0000T022", classFile = "HUNTER", specID = 253 },
-    duskmire    = { name = "Duskmire", guid = "Player-0-0000T023", classFile = "ROGUE", specID = 261 },
-    palehorn    = { name = "Palehorn", guid = "Player-0-0000T024", classFile = "DEATHKNIGHT", specID = 251 },
+-- The members the samples name, all invented, by the collection's sample-character convention
+-- (WowAddonStandards preview-mode, "Sample characters"; LibKa0s#87, AD-87-DW): every name a
+-- capitalized Sample or Mock word, never a real player's or a real realm's, and in the client's
+-- identity shape, one word on Retail (your realm, so no realm is named) and "First Surname" on WoW
+-- Forever. Names are data and never pass through L.
+--
+-- THE PROTAGONISTS. The five first are the collection's own sample characters, LibKa0s-Sim-1.0's
+-- Sim.Sample(client), the same five people in every Ka0s addon: Samplehunter, Sampleblade,
+-- Mockflame, Samplemender and Mockshield, with the library's class and spec (Retail's specID; on
+-- Forever its talent tree as core/ClassDataForever.lua's "<classFile>:<tree>"). Without the library
+-- they come from SAMPLE_COPY, the library's rows copied (test_test_mode holds the copy to them).
+-- THE OTHERS. The nineteen past them make up the raids (Retail's thirteen classes; WoW Forever's
+-- nine, no Death Knight, Monk, Demon Hunter or Evoker), named to the same convention. The keys
+-- are the rows', and each member keeps the GUID it has had since the samples were first written.
+TD.SAMPLE_KEYS = { "samplehunter", "sampleblade", "mockflame", "samplemender", "mockshield" }
+local SAMPLE_GUIDS = { "Player-0-0000T022", "Player-0-0000T005", "Player-0-0000T009", "Player-0-0000T001",
+    "Player-0-0000T019" }
+
+-- LibKa0s-Sim-1.0's SAMPLE rows (Sim minor 3, LibKa0s v1.105.0), the fields read here.
+local SAMPLE_COPY = {
+    retail = {
+        { name = "Samplehunter", classFile = "HUNTER", specID = 253 },
+        { name = "Sampleblade", classFile = "PALADIN", specID = 70 },
+        { name = "Mockflame", classFile = "MAGE", specID = 63 },
+        { name = "Samplemender", classFile = "PRIEST", specID = 257 },
+        { name = "Mockshield", classFile = "WARRIOR", specID = 73 },
+    },
+    forever = {
+        { name = "Samplehunter", surname = "Mockstride", classFile = "HUNTER", tree = 1 },
+        { name = "Sampleblade", surname = "Mockvale", classFile = "PALADIN", tree = 3 },
+        { name = "Mockflame", surname = "Samplewick", classFile = "MAGE", tree = 2 },
+        { name = "Samplemender", surname = "Mockbrook", classFile = "PRIEST", tree = 2 },
+        { name = "Mockshield", surname = "Sampleforge", classFile = "WARRIOR", tree = 3 },
+    },
 }
-MEMBER_LISTS.forever = {
-    seta        = { name = "Seta", guid = "Player-0-0000T001", classFile = "PRIEST", specID = "PRIEST:3" },
-    littlewolf  = { name = "Littlewolf", guid = "Player-0-0000T002", classFile = "DRUID", specID = "DRUID:2" },
-    uniquerogue = { name = "Uniquerogue", guid = "Player-0-0000T003", classFile = "ROGUE", specID = "ROGUE:2" },
-    butterz     = { name = "Butterz", guid = "Player-0-0000T004", classFile = "WARRIOR", specID = "WARRIOR:2" },
-    kaelith     = { name = "Kaelith", guid = "Player-0-0000T005", classFile = "PALADIN", specID = "PALADIN:3" },
-    mistveil    = { name = "Mistveil", guid = "Player-0-0000T006", classFile = "HUNTER", specID = "HUNTER:1" },
-    dawnfeather = { name = "Dawnfeather", guid = "Player-0-0000T007", classFile = "MAGE", specID = "MAGE:2" },
-    thornbrew   = { name = "Thornbrew", guid = "Player-0-0000T008", classFile = "WARRIOR", specID = "WARRIOR:3" },
-    ashveil     = { name = "Ashveil", guid = "Player-0-0000T009", classFile = "MAGE", specID = "MAGE:3" },
-    grimhollow  = { name = "Grimhollow", guid = "Player-0-0000T010", classFile = "WARLOCK", specID = "WARLOCK:1" },
-    solenne     = { name = "Solenne", guid = "Player-0-0000T011", classFile = "PRIEST", specID = "PRIEST:2" },
-    kragmar     = { name = "Kragmar", guid = "Player-0-0000T012", classFile = "SHAMAN", specID = "SHAMAN:1" },
-    vexxa       = { name = "Vexxa", guid = "Player-0-0000T013", classFile = "ROGUE", specID = "ROGUE:1" },
-    brightmane  = { name = "Brightmane", guid = "Player-0-0000T014", classFile = "PALADIN", specID = "PALADIN:1" },
-    quillshot   = { name = "Quillshot", guid = "Player-0-0000T015", classFile = "HUNTER", specID = "HUNTER:2" },
-    nythera     = { name = "Nythera", guid = "Player-0-0000T016", classFile = "WARLOCK", specID = "WARLOCK:2" },
-    ironpaw     = { name = "Ironpaw", guid = "Player-0-0000T017", classFile = "DRUID", specID = "DRUID:3" },
-    starhollow  = { name = "Starhollow", guid = "Player-0-0000T018", classFile = "SHAMAN", specID = "SHAMAN:3" },
-    rookfang    = { name = "Rookfang", guid = "Player-0-0000T019", classFile = "WARRIOR", specID = "WARRIOR:1" },
-    mossvale    = { name = "Mossvale", guid = "Player-0-0000T020", classFile = "SHAMAN", specID = "SHAMAN:2" },
-    frostlace   = { name = "Frostlace", guid = "Player-0-0000T021", classFile = "MAGE", specID = "MAGE:1" },
-    emberclaw   = { name = "Emberclaw", guid = "Player-0-0000T022", classFile = "HUNTER", specID = "HUNTER:3" },
-    duskmire    = { name = "Duskmire", guid = "Player-0-0000T023", classFile = "ROGUE", specID = "ROGUE:3" },
-    palehorn    = { name = "Palehorn", guid = "Player-0-0000T024", classFile = "WARLOCK", specID = "WARLOCK:3" },
+TD.SAMPLE_COPY = SAMPLE_COPY
+
+-- The running client's five: the library's copy (Sim.Sample answers one the caller owns), else ours.
+local function sampleRows()
+    local Sim = LibStub and LibStub("LibKa0s-Sim-1.0", true)
+    if Sim and Sim.Sample then return Sim.Sample(CLIENT) end
+    return SAMPLE_COPY[CLIENT]
+end
+
+-- A member row in the client's shape.
+local function member(guid, name, surname, classFile, specID)
+    if CLIENT == "forever" then name = name .. " " .. surname end
+    return { name = name, guid = guid, classFile = classFile, specID = specID }
+end
+
+-- The others: { key, GUID, name, Forever surname, Retail class, specID, Forever class, tree }.
+local OTHERS = {
+    { "mockgrove", "T002", "Mockgrove", "Samplethorn", "DRUID", 105, "DRUID", 2 },
+    { "sampledagger", "T003", "Sampledagger", "Mockquill", "ROGUE", 260, "ROGUE", 2 },
+    { "mockaxe", "T004", "Mockaxe", "Samplehelm", "WARRIOR", 71, "WARRIOR", 2 },
+    { "samplemist", "T006", "Samplemist", "Mockwind", "MONK", 270, "HUNTER", 1 },
+    { "mockwing", "T007", "Mockwing", "Samplesky", "EVOKER", 1468, "MAGE", 2 },
+    { "samplebrew", "T008", "Samplebrew", "Mockkeg", "MONK", 268, "WARRIOR", 3 },
+    { "mockgrave", "T010", "Mockgrave", "Samplegloom", "DEATHKNIGHT", 250, "WARLOCK", 1 },
+    { "samplelight", "T011", "Samplelight", "Mockhalo", "PRIEST", 256, "PRIEST", 2 },
+    { "mockstorm", "T012", "Mockstorm", "Samplerock", "SHAMAN", 263, "SHAMAN", 1 },
+    { "mockveil", "T013", "Mockveil", "Samplemoon", "DEMONHUNTER", 577, "ROGUE", 1 },
+    { "mockdawn", "T014", "Mockdawn", "Samplemane", "PALADIN", 65, "PALADIN", 1 },
+    { "mockarrow", "T015", "Mockarrow", "Samplebow", "HUNTER", 254, "HUNTER", 2 },
+    { "samplehex", "T016", "Samplehex", "Mockshadow", "WARLOCK", 265, "WARLOCK", 2 },
+    { "samplebear", "T017", "Samplebear", "Mockpaw", "DRUID", 104, "DRUID", 3 },
+    { "mockember", "T018", "Mockember", "Samplestar", "EVOKER", 1467, "SHAMAN", 3 },
+    { "mocktide", "T020", "Mocktide", "Samplemoss", "SHAMAN", 264, "SHAMAN", 2 },
+    { "samplefrost", "T021", "Samplefrost", "Mocklace", "MAGE", 64, "MAGE", 1 },
+    { "mockshade", "T023", "Mockshade", "Sampledusk", "ROGUE", 261, "ROGUE", 3 },
+    { "samplehorn", "T024", "Samplehorn", "Mockpale", "DEATHKNIGHT", 251, "WARLOCK", 3 },
 }
-local MEMBERS = MEMBER_LISTS[CLIENT]
+
+local function buildMembers()
+    local out = {}
+    for i, row in ipairs(sampleRows()) do
+        local spec = CLIENT == "forever" and (row.classFile .. ":" .. row.tree) or row.specID
+        out[TD.SAMPLE_KEYS[i]] = member(SAMPLE_GUIDS[i], row.name, row.surname, row.classFile, spec)
+    end
+    for _, o in ipairs(OTHERS) do
+        local guid = "Player-0-0000" .. o[2]
+        if CLIENT == "forever" then
+            out[o[1]] = member(guid, o[3], o[4], o[7], o[7] .. ":" .. o[8])
+        else
+            out[o[1]] = member(guid, o[3], o[4], o[5], o[6])
+        end
+    end
+    return out
+end
+local MEMBERS = buildMembers()
 TD.MEMBERS = MEMBERS
 
 -- Who is in a group besides you: four for a key run, a dungeon or a world boss, nineteen for a
 -- Heroic or Mythic raid, twenty-four for Raid Finder.
 local PARTIES = {
-    { "butterz", "kaelith", "littlewolf", "seta" },
-    { "rookfang", "solenne", "quillshot", "vexxa" },
-    { "grimhollow", "mistveil", "nythera", "duskmire" },
-    { "brightmane", "starhollow", "emberclaw", "frostlace" },
+    { "mockaxe", "sampleblade", "mockgrove", "samplemender" },
+    { "mockshield", "samplelight", "mockarrow", "mockveil" },
+    { "mockgrave", "samplemist", "samplehex", "mockshade" },
+    { "mockdawn", "mockember", "samplehunter", "samplefrost" },
 }
-local RAID_20 = { "seta", "littlewolf", "uniquerogue", "butterz", "kaelith", "mistveil", "dawnfeather",
-    "thornbrew", "ashveil", "grimhollow", "solenne", "kragmar", "vexxa", "brightmane", "quillshot",
-    "nythera", "ironpaw", "starhollow", "rookfang" }
-local LFR_25 = { "mossvale", "frostlace", "emberclaw", "duskmire", "palehorn" }
+local RAID_20 = { "samplemender", "mockgrove", "sampledagger", "mockaxe", "sampleblade", "samplemist", "mockwing",
+    "samplebrew", "mockflame", "mockgrave", "samplelight", "mockstorm", "mockveil", "mockdawn", "mockarrow",
+    "samplehex", "samplebear", "mockember", "mockshield" }
+local LFR_25 = { "mocktide", "samplefrost", "samplehunter", "mockshade", "samplehorn" }
 for i, k in ipairs(RAID_20) do LFR_25[5 + i] = k end
 TD.PARTIES, TD.RAID_20, TD.LFR_25 = PARTIES, RAID_20, LFR_25
 
@@ -710,7 +743,7 @@ SESSION_LISTS.retail = {
         { slot = "INVTYPE_NECK", me = { "upgrade", 23 }, trade = { "bonusRoll" }, cands = {} },
       },
       theirs = {
-        { who = "vexxa", slot = "INVTYPE_FINGER", me = { "upgrade", 3, unique = true },
+        { who = "mockveil", slot = "INVTYPE_FINGER", me = { "upgrade", 3, unique = true },
           trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" }, left = true },
       } },
     { content = "key", n = 1, party = PARTIES[1], ago = 15000,
@@ -718,72 +751,72 @@ SESSION_LISTS.retail = {
         { slot = "INVTYPE_HEAD", me = { "downgrade", -26 }, trade = { "expired" }, cands = {} },
       },
       theirs = {
-        { who = "kaelith", slot = "INVTYPE_NECK", me = { "upgrade", 2 }, them = { "downgrade", -4 },
+        { who = "sampleblade", slot = "INVTYPE_NECK", me = { "upgrade", 2 }, them = { "downgrade", -4 },
           trade = { "no", "warbound", "bind" }, inspect = { "cached", 900 } },
       } },
     { content = "raidHeroic", n = 1, party = RAID_20, ago = 14000,
       yours = {
         { slot = "INVTYPE_FINGER", me = { "upgrade", 3 }, trade = { "timer", 400 },
-          cands = { { "seta", "upgrade", 8 }, { "mistveil", "sidegrade", 1 } } },
+          cands = { { "samplemender", "upgrade", 8 }, { "samplemist", "sidegrade", 1 } } },
         { slot = "INVTYPE_WAIST", me = { "downgrade", -5 }, trade = { "groupLoot" },
-          cands = { { "kaelith", "checking" }, { "seta", "cantUse" } } },
+          cands = { { "sampleblade", "checking" }, { "samplemender", "cantUse" } } },
       },
       theirs = {
-        { who = "butterz", slot = "INVTYPE_HAND", me = { "unknown", reason = "noBaseline" },
+        { who = "mockaxe", slot = "INVTYPE_HAND", me = { "unknown", reason = "noBaseline" },
           trade = { "no", "bonusRoll", "bind" }, inspect = { "failed", nil, "timeout" } },
-        { who = "littlewolf", slot = "INVTYPE_WEAPON", look = false, me = { "doesntWant", reason = "undesired" },
+        { who = "mockgrove", slot = "INVTYPE_WEAPON", look = false, me = { "doesntWant", reason = "undesired" },
           trade = { "unknown", "noInspect" }, inspect = { "combatParked" } },
-        { who = "ashveil", slot = "INVTYPE_CHEST", strict = true, me = { "cantUse", reason = "armorType" },
+        { who = "mockflame", slot = "INVTYPE_CHEST", strict = true, me = { "cantUse", reason = "armorType" },
           them = { "upgrade", 7 }, trade = { "no", "upgradeForLooter", "inspect", 120 }, inspect = { "fresh", 120 } },
       } },
     { content = "raidHeroic", n = 2, party = RAID_20, ago = 7800,
       yours = {
         { slot = "INVTYPE_TRINKET", me = { "downgrade", -6 }, trade = { "timer", 6600 }, cands = {
-            { "seta", "upgrade", 14 }, { "butterz", "upgrade", 6 }, { "littlewolf", "sidegrade", 0 },
-            { "kaelith", "cantUse", off = { 65, "upgrade", 9 } }, { "uniquerogue", "downgrade", -7 }, { "mistveil", "checking" },
-            { "dawnfeather", "unavailable" } } },
+            { "samplemender", "upgrade", 14 }, { "mockaxe", "upgrade", 6 }, { "mockgrove", "sidegrade", 0 },
+            { "sampleblade", "cantUse", off = { 65, "upgrade", 9 } }, { "sampledagger", "downgrade", -7 }, { "samplemist", "checking" },
+            { "mockwing", "unavailable" } } },
       },
       theirs = {
-        { who = "uniquerogue", slot = "INVTYPE_TRINKET", me = { "upgrade", 9 },
+        { who = "sampledagger", slot = "INVTYPE_TRINKET", me = { "upgrade", 9 },
           trade = { "unknown", "noInspect" }, inspect = { "outOfRange" }, ask = { state = "sent" } },
-        { who = "kaelith", slot = "INVTYPE_WRIST", me = { "downgrade", -8 }, them = { "upgrade", 12 },
+        { who = "sampleblade", slot = "INVTYPE_WRIST", me = { "downgrade", -8 }, them = { "upgrade", 12 },
           trade = { "no", "upgradeForLooter", "inspect", 75 }, inspect = { "fresh", 75 }, left = true },
-        { who = "seta", slot = "INVTYPE_LEGS", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 20 } },
+        { who = "samplemender", slot = "INVTYPE_LEGS", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 20 } },
           trade = { "unknown", "noInspect" }, inspect = { "pending" } },
-        { who = "dawnfeather", slot = "INVTYPE_FEET", me = { "sidegrade", -1 },
+        { who = "mockwing", slot = "INVTYPE_FEET", me = { "sidegrade", -1 },
           trade = { "unknown", "noInspect" }, inspect = { "unavailable", nil, "notInGroup" }, left = true },
       } },
     { content = "raidHeroic", n = 3, party = RAID_20, ago = 240,
       yours = {
         { slot = "INVTYPE_CLOAK", me = { "downgrade", -10 }, trade = { "boe" },
-          cands = { { "butterz", "upgrade", 11 }, { "kaelith", "unavailable" } } },
+          cands = { { "mockaxe", "upgrade", 11 }, { "sampleblade", "unavailable" } } },
       },
       theirs = {
-        { who = "seta", slot = "INVTYPE_HEAD", look = true, me = { "upgrade", 19 }, them = { "downgrade", -13 },
+        { who = "samplemender", slot = "INVTYPE_HEAD", look = true, me = { "upgrade", 19 }, them = { "downgrade", -13 },
           trade = { "likely", "notUpgrade", "inspect", 40 }, inspect = { "fresh", 40 }, ask = { state = "traded" } },
-        { who = "littlewolf", slot = "INVTYPE_FINGER", me = { "upgrade", 4 }, them = { "sidegrade", 1 },
+        { who = "mockgrove", slot = "INVTYPE_FINGER", me = { "upgrade", 4 }, them = { "sidegrade", 1 },
           trade = { "likely", "notUpgrade", "inspect", 360 }, inspect = { "cached", 360 }, ask = { state = "queued" } },
-        { who = "butterz", slot = "INVTYPE_CLOAK", me = { "sidegrade", 0.4, reason = "scoreDisagrees" },
+        { who = "mockaxe", slot = "INVTYPE_CLOAK", me = { "sidegrade", 0.4, reason = "scoreDisagrees" },
           them = { "upgrade", 6 }, trade = { "yes", "boe", "bind" }, inspect = { "fresh", 90 },
           ask = { state = "failed", reason = L["the chat throttle"] } },
-        { who = "mistveil", slot = "INVTYPE_SHOULDER", strict = true, me = { "cantUse", reason = "armorType" },
+        { who = "samplemist", slot = "INVTYPE_SHOULDER", strict = true, me = { "cantUse", reason = "armorType" },
           them = { "cantUse", reason = "armorType" }, trade = { "likely", "notUpgrade", "inspect", 20 },
           inspect = { "fresh", 20 } },
       } },
     { content = "raidHeroic", n = 4, party = RAID_20, ago = 60,
       yours = {
         { slot = "INVTYPE_WEAPON", me = { "downgrade", -9 }, trade = { "groupLoot" }, cands = {
-            { "seta", "upgrade", 6 }, { "kaelith", "cantUse", off = { 65, "upgrade", 14 } }, { "mistveil", "downgrade", -5 } } },
+            { "samplemender", "upgrade", 6 }, { "sampleblade", "cantUse", off = { 65, "upgrade", 14 } }, { "samplemist", "downgrade", -5 } } },
       },
       theirs = {
-        { who = "brightmane", slot = "INVTYPE_WEAPON", me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade" } },
+        { who = "mockdawn", slot = "INVTYPE_WEAPON", me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade" } },
           them = { "sidegrade", 1 }, trade = { "likely", "notUpgrade", "inspect", 30 }, inspect = { "fresh", 30 } },
-        { who = "solenne", slot = "INVTYPE_HAND", strict = true,
+        { who = "samplelight", slot = "INVTYPE_HAND", strict = true,
           me = { "cantUse", reason = "primaryStat", off = { 65, "upgrade", 13, bag = true } },
           them = { "downgrade", -6 }, trade = { "likely", "notUpgrade", "inspect", 45 }, inspect = { "fresh", 45 } },
-        { who = "kragmar", slot = "INVTYPE_WRIST", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "sidegrade", 1 } },
+        { who = "mockstorm", slot = "INVTYPE_WRIST", strict = true, me = { "cantUse", reason = "primaryStat", off = { 65, "sidegrade", 1 } },
           them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 50 }, inspect = { "cached", 50 } },
-        { who = "thornbrew", slot = "INVTYPE_FEET", strict = true,
+        { who = "samplebrew", slot = "INVTYPE_FEET", strict = true,
           me = { "cantUse", reason = "primaryStat", off = { 65, "downgrade", -11 } },
           them = { "downgrade", -4 }, trade = { "likely", "notUpgrade", "inspect", 55 }, inspect = { "fresh", 55 } },
       } },
@@ -792,13 +825,13 @@ SESSION_LISTS.retail = {
         { slot = "INVTYPE_FINGER", me = { "upgrade", 9 }, trade = { "upgradeForYou" }, cands = {} },
       },
       theirs = {
-        { who = "mistveil", slot = "INVTYPE_FINGER", me = { "upgrade", 5, unique = true }, them = { "sidegrade", 1 },
+        { who = "samplemist", slot = "INVTYPE_FINGER", me = { "upgrade", 5, unique = true }, them = { "sidegrade", 1 },
           trade = { "likely", "notUpgrade", "inspect", 25 }, inspect = { "fresh", 25 } },
-        { who = "grimhollow", slot = "INVTYPE_TRINKET", me = { "upgrade", 8 }, them = { "sidegrade", 2 },
+        { who = "mockgrave", slot = "INVTYPE_TRINKET", me = { "upgrade", 8 }, them = { "sidegrade", 2 },
           trade = { "likely", "groupLoot", "rule" }, inspect = { "fresh", 35 } },
-        { who = "vexxa", slot = "INVTYPE_WAIST", me = { "upgrade", 6 }, them = { "downgrade", -3 },
+        { who = "mockveil", slot = "INVTYPE_WAIST", me = { "upgrade", 6 }, them = { "downgrade", -3 },
           trade = { "no", "legacy", "rule" }, inspect = { "cached", 200 } },
-        { who = "quillshot", slot = "INVTYPE_CLOAK", me = { "upgrade", 11 }, them = { "upgrade", 4 },
+        { who = "mockarrow", slot = "INVTYPE_CLOAK", me = { "upgrade", 11 }, them = { "upgrade", 4 },
           trade = { "no", "upgradeForLooter", "inspect", 40 }, inspect = { "fresh", 40 } },
       } },
     -- issue #13: the item kinds (see ITEM KINDS). A collectible's row has no inspect and no candidates.
@@ -807,11 +840,11 @@ SESSION_LISTS.retail = {
         { me = { "cantUse", collect = "recipe" }, trade = { "boe" }, cands = {} },
       },
       theirs = {
-        { who = "seta", me = { "newCollect", collect = "mount" }, trade = { "unknown", "collectible" } },
-        { who = "littlewolf", me = { "collected", collect = "pet", count = 1, limit = 3 }, trade = { "yes", "boe", "bind" } },
-        { who = "butterz", me = { "collectUnknown", collect = "toy" }, trade = { "unknown", "collectible" } },
-        { who = "kaelith", armor = true, me = { "newCollect", collect = "cosmetic" }, trade = { "unknown", "collectible" } },
-        { who = "mistveil", kind = "tierToken", slot = "INVTYPE_HEAD", strict = true, me = { "upgrade", 7 },
+        { who = "samplemender", me = { "newCollect", collect = "mount" }, trade = { "unknown", "collectible" } },
+        { who = "mockgrove", me = { "collected", collect = "pet", count = 1, limit = 3 }, trade = { "yes", "boe", "bind" } },
+        { who = "mockaxe", me = { "collectUnknown", collect = "toy" }, trade = { "unknown", "collectible" } },
+        { who = "sampleblade", armor = true, me = { "newCollect", collect = "cosmetic" }, trade = { "unknown", "collectible" } },
+        { who = "samplemist", kind = "tierToken", slot = "INVTYPE_HEAD", strict = true, me = { "upgrade", 7 },
           them = { "downgrade", -3 }, trade = { "likely", "notUpgrade", "inspect", 30 }, inspect = { "fresh", 30 } },
       } },
 }
@@ -862,8 +895,8 @@ end
 -- Who is on the sample roll besides you, what each has chosen so far (Enum.EncounterLootDropRollState:
 -- 0 Need, 3 Greed, 4 still choosing, 5 Pass) and the number each Need and Greed rolled (rolls panel
 -- round 2, ruling A6: every actual roll shows, so test mode makes the numbers obvious).
-local ROLLERS = { { "seta", 0, 87 }, { "kaelith", 0, 64 }, { "brightmane", 0, 23 }, { "butterz", 3, 71 },
-    { "littlewolf", 3, 38 }, { "solenne", 4 }, { "kragmar", 4 }, { "ashveil", 5 } }
+local ROLLERS = { { "samplemender", 0, 87 }, { "sampleblade", 0, 64 }, { "mockdawn", 0, 23 }, { "mockaxe", 3, 71 },
+    { "mockgrove", 3, 38 }, { "samplelight", 4 }, { "mockstorm", 4 }, { "mockflame", 5 } }
 
 --- Test mode's pending samples (Forever port design §8), as NS.Pending.AddTest takes them: one open
 --- group-loot roll on a drop of the session's last boss, an upgrade for you, with you and eight
@@ -890,7 +923,7 @@ end
 -- ── the history (pure) ──────────────────────────────────────────────────────────────────────
 
 -- The alt that saw one sample group: an invented character on your realm.
-local ALT = { name = "Emberwick", classFile = "WARLOCK" }
+local ALT = { name = "Samplealt", classFile = "WARLOCK" }
 TD.ALT = ALT
 
 local MIN, HOUR, DAY = 60, 3600, 86400
@@ -938,17 +971,17 @@ local RAID_KINDS = {
       trade = { "likely", "notUpgrade" }, outcome = "asked" },
 }
 
--- Two old raid nights' boss drops Kragmar traded you (the Most generous section's member who gave
+-- Two old raid nights' boss drops Mockstorm traded you (the Most generous section's member who gave
 -- twice): the older one from before asks and trades were stamped (`legacy`: its ask inferred from
 -- the item received, its gain as last judged), the other stamped and frozen as a trade now is.
 local LEGACY_NIGHT = {
     { me = { "upgrade", 6 }, them = { "downgrade", -3 }, trade = { "likely", "notUpgrade" }, outcome = "received",
-      legacy = true, giver = "kragmar" },
+      legacy = true, giver = "mockstorm" },
     { me = { "downgrade", -4 }, them = { "upgrade", 6 }, trade = { "no", "upgradeForLooter" }, outcome = "seen" },
 }
 local SECOND_TRADE = {
     { me = { "upgrade", 10 }, them = { "sidegrade", 1 }, trade = { "likely", "notUpgrade" }, outcome = "received",
-      giver = "kragmar" },
+      giver = "mockstorm" },
 }
 
 -- Your own drops in turn.

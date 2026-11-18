@@ -117,6 +117,84 @@ test("test mode: Forever samples use only the nine classes", function()
     end
 end)
 
+-- ── the sample characters (preview-mode "Sample characters", LibKa0s#87, AD-87-DW) ────────────────
+
+-- A name the convention allows: one capitalized word of 2 to 12 letters starting Sample or Mock.
+local function conventional(word)
+    return type(word) == "string" and #word >= 2 and #word <= 12 and word:match("^%u%l+$") ~= nil
+        and (word:find("^Sample") ~= nil or word:find("^Mock") ~= nil)
+end
+
+-- A member's name in the client's identity shape: Retail one word (your realm, so no realm); WoW
+-- Forever "First Surname", each word conventional.
+local function assertSampleName(name, what)
+    if T.forever then
+        local first, surname = tostring(name):match("^(%S+) (%S+)$")
+        assertTrue(conventional(first) and conventional(surname), what .. ": First Surname, got " .. tostring(name))
+    else
+        assertTrue(conventional(name), what .. ": one Sample or Mock word, got " .. tostring(name))
+    end
+end
+
+-- The shared rows as a member reads them: the client's name shape and spec form.
+local function sharedMember(row)
+    if T.forever then return row.fullName, row.classFile .. ":" .. row.tree end
+    return row.name, row.specID
+end
+
+test("test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client", function()
+    local NS, _, m = T.newAddon()
+    local TD = NS.TestData
+    local rows = m.LibStub("LibKa0s-Sim-1.0").Sample(T.forever and "forever" or "retail")
+    assertEqual(#TD.SAMPLE_KEYS, 5)
+    for i, key in ipairs(TD.SAMPLE_KEYS) do
+        local who, name, specID = TD.MEMBERS[key], sharedMember(rows[i])
+        -- red under: the addon's own invented protagonists (Seta, Kaelith, Ashveil, ...)
+        assertEqual(who.name, name, key)
+        assertEqual(who.classFile, rows[i].classFile, key)
+        assertEqual(who.specID, specID, key)
+    end
+end)
+
+test("test mode data: every sample name follows the convention, the alt's too", function()
+    local NS = T.newAddon()
+    local TD = NS.TestData
+    local seen = {}
+    for key, m in pairs(TD.MEMBERS) do
+        assertSampleName(m.name, key)
+        assertFalse(seen[m.name], "named apart: " .. m.name); seen[m.name] = true
+        assertTrue(m.name:find("-", 1, true) == nil, key .. ": never a Name-Realm pair")
+    end
+    -- The alt is one of your own characters, keyed Name-Realm on your realm as you are, on both clients.
+    assertTrue(conventional(TD.ALT.name), "the alt: " .. tostring(TD.ALT.name))
+end)
+
+test("test mode data: the fallback copy of the sample characters is the library's, row for row", function()
+    local NS, _, m = T.newAddon()
+    local Sim = m.LibStub("LibKa0s-Sim-1.0")
+    for _, client in ipairs({ "retail", "forever" }) do
+        local copy = NS.TestData.SAMPLE_COPY[client]
+        assertEqual(#copy, #Sim.SAMPLE[client], client)
+        for i, row in ipairs(Sim.SAMPLE[client]) do
+            for _, k in ipairs({ "name", "surname", "classFile", "specID", "tree" }) do
+                -- red under: a copy left stale by a library that moved its rows
+                assertEqual(copy[i][k], row[k], client .. " row " .. i .. " " .. k)
+            end
+        end
+    end
+end)
+
+test("test mode data: without LibKa0s the protagonists come from the copy, the same people", function()
+    local NS = T.enableAddon{ skip = T.loadAddon.libFiles }
+    local TD = NS.TestData
+    local copy = TD.SAMPLE_COPY[T.forever and "forever" or "retail"]
+    for i, key in ipairs(TD.SAMPLE_KEYS) do
+        local row = copy[i]
+        local want = T.forever and (row.name .. " " .. row.surname) or row.name
+        assertEqual(TD.MEMBERS[key].name, want, key)
+    end
+end)
+
 test("test mode: Forever samples name Forever places, whatever pool they draw on", function()
     local NS, specs = placeholders()
     local TD = NS.TestData
@@ -529,7 +607,8 @@ test("test mode data: one received sample is legacy, and one member traded you t
     assertTrue(NS.History.WasAsked(e), "its ask inferred from the item received")
     local _, isLegacy = NS.InsightsStats.Gain(e)
     assertTrue(isLegacy, "its gain as last judged")
-    assertTrue((givers.Kragmar or 0) >= 2, "Kragmar traded you twice")
+    local giver = NS.TestData.MEMBERS.mockstorm.name   -- Kragmar until AD-87-DW
+    assertTrue((givers[giver] or 0) >= 2, giver .. " traded you twice")
 end)
 
 test("test mode data: History holds every item kind, and a boss kill with an upgrade for you", function()
@@ -582,7 +661,8 @@ test("test mode data: a key run and four bosses, every item a pool item that kee
     hasAll(groups, T.forever and { "encounter" } or { "encounter", "run" }, "group")
     hasAll(slots, { "INVTYPE_HEAD", "INVTYPE_FINGER", "INVTYPE_TRINKET", "INVTYPE_CLOAK", "INVTYPE_WEAPON" }, "slot")
     assertEqual(#specs, 35)
-    assertTrue(NS.TestData.MEMBERS.seta.name == "Seta", "the names are invented")
+    -- Re-pinned at AD-87-DW: Seta is Samplemender, the library's sample priest.
+    assertTrue(NS.TestData.MEMBERS.samplemender.name:find("^Samplemender") ~= nil, "the names are invented")
 end)
 
 test("test mode data: worn items are other pool items of the slot, nearest the level the change implies", function()
@@ -645,7 +725,7 @@ test("test mode data: the History sample has your groups, every outcome, and an 
     -- The Character dropdown (feedback-2 spec §4): one group is the alt's, on your realm.
     local alts = {}
     for _, g in ipairs(log.groups) do
-        if g.seenBy == "Emberwick-Testrealm" then alts[#alts + 1] = g
+        if g.seenBy == "Samplealt-Testrealm" then alts[#alts + 1] = g
         else
             for _, e in ipairs(g.drops) do assertEqual(e.seenBy, "Tester-Testrealm") end
         end
@@ -653,9 +733,9 @@ test("test mode data: the History sample has your groups, every outcome, and an 
     assertEqual(#alts, 1)
     local alt = alts[1]
     assertEqual(5000000 - alt.at, 10 * 86400, "ten days old")
-    assertEqual(alt.drops[1].seenBy, "Emberwick-Testrealm"); assertEqual(alt.drops[1].seenByClass, "WARLOCK")
-    assertEqual(alt.roster[1].name, "Emberwick", "the alt's roster names the alt first")
-    assertEqual(alt.drops[2].looter, "Emberwick", "the alt's own drop")
+    assertEqual(alt.drops[1].seenBy, "Samplealt-Testrealm"); assertEqual(alt.drops[1].seenByClass, "WARLOCK")
+    assertEqual(alt.roster[1].name, "Samplealt", "the alt's roster names the alt first")
+    assertEqual(alt.drops[2].looter, "Samplealt", "the alt's own drop")
     local outcomes, mine = {}, 0
     for _, g in ipairs(log.groups) do
         for _, e in ipairs(g.drops) do
@@ -841,7 +921,7 @@ test("history: test mode shows its sample groups, every outcome, and never write
     assertEqual(#NS.WindowHistory.Drawn().headers, n - 1, "Character: Current hides the alt's group (feedback-2 spec §4)")
     local listed = {}
     for _, o in ipairs(dd._options) do listed[#listed + 1] = o.value end
-    assertEqual(table.concat(listed, ","), "all,current," .. T.rosterName("Emberwick") .. "," .. T.ME)
+    assertEqual(table.concat(listed, ","), "all,current," .. T.rosterName("Samplealt") .. "," .. T.ME)
     dd:ToggleSelected("all"); dd.onMultiSelect(dd._selected)
     assertEqual(#NS.WindowHistory.Drawn().headers, n, "All shows it")
     H.Clear()
@@ -965,10 +1045,12 @@ test("window: the rows show every ask state, every Them gear state and every tra
 end)
 
 -- feedback-21: a drop you can use in no spec reads Can't use on Trade where the estimate is Yes or
--- Likely (Mistveil's shoulders); a No stays No (Ashveil's), and an off-spec use keeps its Likely.
+-- Likely (Samplemist's shoulders); a No stays No (Mockflame's), and an off-spec use keeps its Likely.
+-- Re-pinned at AD-87-DW (Mistveil and Ashveil until then), by the members' names in the client's shape.
 test("window: test mode's Can't use samples read Can't use on Trade, a No stays No, an off-spec keeps Yes", function()
     local NS, drawn = shownTest()
-    local want = { Mistveil = "Yes Can't use", Ashveil = "No" }
+    local M = NS.TestData.MEMBERS
+    local want = { [M.samplemist.name] = "Yes Can't use", [M.mockflame.name] = "No" }
     local seen, offSpec = {}, 0
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
@@ -986,19 +1068,19 @@ test("window: test mode's Can't use samples read Can't use on Trade, a No stays 
             offSpec = offSpec + 1
         end
     end
-    hasAll(seen, { "Mistveil", "Ashveil" }, "Can't use sample")
+    hasAll(seen, { M.samplemist.name, M.mockflame.name }, "Can't use sample")
     -- Off-spec is Retail's alone (Forever port design §4.4): WoW Forever's samples have none.
     assertTrue(T.forever and offSpec == 0 or offSpec >= 4, "the off-spec samples keep Yes: " .. offSpec)
 end)
 
--- feedback-21 H2: Kaelith's wrists were read before they left, so the card keeps their spec and
+-- feedback-21 H2: Sampleblade's (Kaelith's until AD-87-DW) wrists were read before they left, so the card keeps their spec and
 -- says they are not in your group, never spec unknown.
 test("window: test mode's looter who left keeps their spec on the detail card, and says they are gone", function()
     local NS, drawn = shownTest()
     local id
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        if d.looter.name == "Kaelith" and d.testLeft then id = r.dropId end
+        if d.looter.name == NS.TestData.MEMBERS.sampleblade.name and d.testLeft then id = r.dropId end
     end
     assertTrue(id ~= nil, "the sample is drawn")
     assertTrue(NS.LootFeed.Get(id).testLeft == true)
@@ -1087,7 +1169,7 @@ test("window: a sample's Them shows its own worn item, and its detail card its o
     local crown
     for _, r in ipairs(drawn.rows) do
         local d = NS.LootFeed.Get(r.dropId)
-        if d.looter.name == "Seta" and d.them and d.them.baseline then crown = r end
+        if d.looter.name == NS.TestData.MEMBERS.samplemender.name and d.them and d.them.baseline then crown = r end
     end
     assertTrue(crown.cells.them.icons[1]:IsShown(), "the worn item's button")
     NS.WindowGroup.ToggleExpand(crown.dropId)

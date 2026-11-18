@@ -437,6 +437,18 @@ kind the journal lists none of falls back to `NS.SimPool.COLLECTIBLE_SAMPLES`, c
 empty until each is checked in the client (issue #13, DW-CAT6, smoke check COLL-8). Test mode's sixth
 boss draws its item-kind samples the same way (`NS.TestMode.Source`).
 
+**Sample characters (preview-mode, *Sample characters*; LibKa0s#87, AD-87-DW).** Test mode's people
+follow the collection's convention: every name a capitalized `Sample` or `Mock` word, never a real
+player's or realm's, one word on Retail (on your realm) and `First Surname` on WoW Forever, never
+localized. Its five protagonists (`NS.TestData.SAMPLE_KEYS`: Samplehunter, Sampleblade, Mockflame,
+Samplemender and Mockshield) are LibKa0s-Sim-1.0's `Sim.Sample(client)`, with the library's class and
+spec (Retail's specID, Forever's talent tree); without the library they come from
+`NS.TestData.SAMPLE_COPY`, the library's rows copied, which `test_test_mode` holds to `Sim.SAMPLE`.
+The other nineteen members that fill the raids, and the alt (`Samplealt`), are this addon's own,
+named to the same rules. The simulator's seeded roster (`modules/SimRoster.lua`'s `NAMES`,
+`RAID_NAMES`, `REALMS` and `SURNAMES`) is a crowd kept for its seeded determinism, as the convention's
+rule 6 allows, and is unchanged.
+
 ## Tooltip placement
 
 Every tooltip the addon places itself goes through `LibKa0s-Tooltip-1.0` (LibKa0s#92, AD-92-DW;

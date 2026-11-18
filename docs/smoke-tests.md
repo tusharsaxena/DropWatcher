@@ -29,7 +29,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | LAYOUT-1..4 | [Settings layout](#settings-layout) | Item 020 (DW-LY): Drops opening on its Situations tab, the pointer and the Defaults that now reaches the situations, and the Items and Retention relabels (LAYOUT-1); General's Defaults tooltip and the Simulator row (LAYOUT-2); Window › Layout's Mode and Tables, the run label and the View tooltips (LAYOUT-3); Messages › Sending's order (LAYOUT-4); all SM-DW-LY, every setting kept across a `/reload` |
 | PANEL-1..11 | Settings panel | Landing page, General → Master controls, the Defaults button (PANEL-1..3); the pages of design spec §12.2 (regrouped by feedback-24): Situations and Drops (PANEL-4), Comparison (PANEL-5), Messages (PANEL-6), DW-41; the rows that act on the feed, the verdict, the sends and the table (PANEL-7); the situation table never riding a released frame (PANEL-8, DW-P21); a mode drawing its own value (PANEL-9); a font and a border row on the only media picker (PANEL-10); LibKa0s v1.85.0's sim checkbox re-cut, the panel unchanged (PANEL-11, R6-RV2) |
 | PROFILE-1..3 | Profiles | The Profiles page, the `profile` verb, and the settings rows kept per profile (PROFILE-3, DW-40) |
-| STATE-1..10 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button at the top right and the grip it hides (STATE-8, RX-08, RX-14); auto-close (STATE-9, RX-10); a roll popup for a watched item opening the window (STATE-10, RX-16) |
+| STATE-1..11 | State | Enable/disable, lock, test mode (STATE-3); test mode with real items, History test data and no trailing ellipses (STATE-4, DW-84); one refusal line while disabled, inert across combat and zones (STATE-5, DW-P16); test mode's data looks like real play (STATE-6, feedback-17); test mode's sample roll in Rolling now and its History roll table, Rolling now following the feed the window shows (STATE-7, DW-FP17); the title bar's lock button at the top right and the grip it hides (STATE-8, RX-08, RX-14); auto-close (STATE-9, RX-10); a roll popup for a watched item opening the window (STATE-10, RX-16); test mode's people named by the collection's sample-character convention (STATE-11, AD-87-DW) |
 | COMPAT-1..4 | Compat | The client facts `core/Compat.lua` relies on (DW-20); the optional-addon probe (COMPAT-4, DW-P20) |
 | COMBAT-1..4 | Combat | Loot reads mid-encounter, restrictions, test mode ended by combat; both combat edges announced under the Combat restriction (COMBAT-4, DW-I11) |
 | DIAG-1..4 | Diagnostics | The debug console, the report, perf and the perf-hold refusal (DIAG-1..2); the State and Scoring sections of design spec §13 (DIAG-3, DW-43); the perf nesting confirmed by a capture (DIAG-4, DW-P24) |
@@ -463,7 +463,7 @@ real items of the current season's dungeons (or your own gear, with the chat lin
 `The Encounter Journal gave no items, so test mode shows your own gear instead.`), each in its slot (the
 head row a helm, the ring rows rings), and the Ilvl column shows each item's real level: hover an item → the
 game's own tooltip agrees with it. Them shows a real worn item and its level for the inspected looters.
-The looter names stay invented (Seta, Butterz, …). Every state of STATE-3 is still there. Open History → two
+The looter names stay invented (Seta, Butterz, …; Samplemender, Mockaxe, … since AD-87-DW, STATE-11). Every state of STATE-3 is still there. Open History → two
 groups, `Placeholder key run` (a day ago) and `Placeholder boss` (two hours ago) (superseded by feedback-17,
 2026-10-16: twenty-two groups over four weeks; STATE-6), whose rows read Seen,
 Asked, Offered, Received, Traded away, Expired and Declined, over real items. `/dw test` off → the History
@@ -556,6 +556,24 @@ not the master looter) → its items wait in Rolling now with no popup and the w
 On Retail, in a raid, a boss drop you are not eligible for (no popup comes up for you) that the
 feed still lists → it waits in Rolling now and the window does not open (RX-20).
 No Lua error throughout. Result:
+
+**STATE-11. Test mode's people are the collection's sample characters (AD-87-DW, LibKa0s#87).** Client:
+both. The headless `test_test_mode` covers the data (its `sample` cases). `/dw test` → every looter on
+Drops and History, every name in a roster tooltip, the Offer panel's candidates, the Rolls box and the
+toast is a `Sample…` or `Mock…` name: on Retail one word (`Samplemender`, `Sampleblade`, `Mockflame`,
+`Samplehunter`, `Mockshield`, then the others such as `Mockaxe` or `Mockstorm`), on WoW Forever
+`First Surname` (`Samplemender Mockbrook`, `Sampleblade Mockvale`, …). No name from before
+(`Seta`, `Butterz`, `Kaelith`, `Littlewolf`, …) and no real realm appears. History's Character dropdown
+lists you and `Samplealt`. Each class color matches the class the name had before. The older checks
+above still name the samples by their old names; read them through this map: Seta → Samplemender,
+Kaelith → Sampleblade, Ashveil → Mockflame, Emberclaw → Samplehunter, Rookfang → Mockshield,
+Littlewolf → Mockgrove, Uniquerogue → Sampledagger, Butterz → Mockaxe, Mistveil → Samplemist,
+Dawnfeather → Mockwing, Thornbrew → Samplebrew, Solenne → Samplelight, Kragmar → Mockstorm, Vexxa →
+Mockveil, Brightmane → Mockdawn, Emberwick → Samplealt. On WoW Forever the five protagonists now take
+the library's talent trees: Samplemender Holy (Shadow before), Mockflame Fire (Frost before),
+Mockshield Protection (Arms before), Samplehunter Beast Mastery (Survival before); their Spec rows on
+the detail card say so. Fail: an old or real-looking name, a name with a realm on Forever, a Lua error.
+Result:
 
 ## Compat
 

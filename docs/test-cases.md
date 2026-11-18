@@ -1125,9 +1125,13 @@ Total.
 - tooltip placement: the Insights charts' marks open beside the window group (host.group)
 - tooltip placement: the addon's own code names no cursor or corner anchor (anti-pattern #119)
 
-### test_test_mode.lua (50)
+### test_test_mode.lua (54)
 
 - test mode: Forever samples use only the nine classes
+- test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client
+- test mode data: every sample name follows the convention, the alt's too
+- test mode data: the fallback copy of the sample characters is the library's, row for row
+- test mode data: without LibKa0s the protagonists come from the copy, the same people
 - test mode: Forever samples name Forever places, whatever pool they draw on
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -3101,7 +3105,7 @@ Total.
 | test_mine_cells.lua | 16 |
 | test_row_tooltip.lua | 16 |
 | test_tooltip_placement.lua | 5 |
-| test_test_mode.lua | 50 |
+| test_test_mode.lua | 54 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
@@ -3185,4 +3189,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2639** |
+| **Total** | **2643** |
