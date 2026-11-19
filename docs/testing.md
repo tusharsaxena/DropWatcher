@@ -350,7 +350,8 @@ Edit box's attached above (AD-92-DW); then the host handlers Post my tradeables,
 `tests/_kit/mock_screen.lua`: the body rule's TOPLEFT 2 px past the window group's right edge, else
 its TOPRIGHT past the left edge, level with the row's top, at each frame's scale, the row a cell
 sits in, the docked Offer and Rolls panels in the group and a panel's own rows on its side away from
-the window, the fallback above the row on unreadable geometry or no room; the chrome rule centered
+the window, a window row flush beside the window when that clears a short Rolls panel and beyond the
+panel only where it would overlap it, on either side (AF-DW-TIP), the fallback above the row on unreadable geometry or no room; the chrome rule centered
 above a control, below without room; then every cell, button and header of both tabs, a column
 label and a tab), `test_tooltip_placement` (AD-92-DW: every widget `Window.AttachTooltip` hooks,
 classified body or chrome by the file that built it, each hover calling its class's placer owned at

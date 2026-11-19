@@ -226,8 +226,9 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
 row hover ─────> a cell, button or header: Window.AttachTooltip (body) ─> GameTooltip:Show() ─>
                  RowTooltip.Place ─> LibKa0s-Tooltip PlaceBeside: TOPLEFT 2 px past the window group's
-                 right edge, level with the row's top (else TOPRIGHT 2 px past its left edge); the
-                 item button the same (AD-92-DW, LibKa0s#92);
+                 right edge, level with the row's top (else TOPRIGHT 2 px past its left edge); a
+                 window row flush to the window itself unless that would overlap a docked panel
+                 (RowTooltip.FlushOverlaps, AF-DW-TIP); the item button the same (AD-92-DW, LibKa0s#92);
                  a line given as `{ text, wrap = false }` is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
                  a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per

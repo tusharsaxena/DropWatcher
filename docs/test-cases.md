@@ -1100,7 +1100,7 @@ Total.
 - drops strip: the compact layout's summary is shortened
 - mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
-### test_row_tooltip.lua (16)
+### test_row_tooltip.lua (19)
 
 - row tooltip: it opens beside the window, TOPLEFT a TIP_GAP right of its edge, level with the row
 - row tooltip: with no room on the right it opens left of the window, TOPRIGHT a TIP_GAP left
@@ -1108,6 +1108,9 @@ Total.
 - row tooltip: unreadable geometry places nothing; the fallback attaches it above the row
 - row tooltip: a window row's tooltip goes beside the docked Offer panel, not over it
 - row tooltip: the docked Rolls panel is part of the window group; an Offer row prefers its own side
+- row tooltip: a window row below a short Rolls panel opens flush beside the window (AF-DW-TIP)
+- row tooltip: flush on the left too, beyond a left Rolls panel only where it overlaps (AF-DW-TIP)
+- row tooltip: a hidden panel or a panel's own row keeps today's rule; an unmeasured flush keeps the group
 - row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored
 - row tooltip: GroupOf is the outermost frame and its docked panels, in name order
 - row tooltip: a cell, a button or an icon in a marked row opens at the row's top, not its own
@@ -3106,7 +3109,7 @@ Total.
 | test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
-| test_row_tooltip.lua | 16 |
+| test_row_tooltip.lua | 19 |
 | test_tooltip_placement.lua | 5 |
 | test_test_mode.lua | 54 |
 | test_compat.lua | 75 |
@@ -3192,4 +3195,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2646** |
+| **Total** | **2649** |

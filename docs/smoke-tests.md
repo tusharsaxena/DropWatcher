@@ -64,7 +64,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
 | SKIN-52 | [Skins](#skins) | LibKa0s v1.105.0's row floors (AD-82-DW): an expanded row's gold wash stands apart from a striped row under Ka0s Default |
-| ROLLS-1..18 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18) |
+| ROLLS-1..20 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -4224,7 +4224,8 @@ first.*; with Show the Rolls panel beside the window unticked → the line namin
 the panel. Hover the title bar's Expand / Collapse toggle and click it without moving the pointer →
 the tooltip changes with the mark (`Collapse all` to `Expand all` and back); the same on the window
 footer's Expand all / Collapse all mark (RX-28). With the panel docked right, hover a Drops row's item
-→ its tooltip opens beyond the Rolls panel's right edge, never over the panel (RX-28). Result:
+→ its tooltip opens beyond the Rolls panel's right edge, never over the panel (RX-28; a row level
+with the panel; a row below it opens flush to the window, ROLLS-20). Result:
 
 **ROLLS-18. Test mode's sample in the panel (RX-19, RX-21; design §3.6, part A ruling 1).** Client:
 both. With no roll on, `/dw test` → the window opens (or stays) with the sample roll in Rolling now,
@@ -4244,6 +4245,18 @@ and its count line; an amber TEST strip sits on the top edge of each, outside it
 click (RX-23); hover the card → every roll, by choice, with each number. `/dw test` off → the
 stand-in and its card go at once. `/dw test` on, then enter combat → test mode ends and both go.
 With the popup mark unticked, `/dw test` → no stand-in. Result:
+
+**ROLLS-20. A Drops row's tooltip sits flush to the window unless it would cover the Rolls panel
+(AF-DW-TIP; the owner's img-15 and img-16).** Client: both. `/dw test` with the Rolls panel docked on
+the window's right (ROLLS-18). Hover a Drops row's Trade cell on a row **below** the Rolls panel's
+bottom edge → the tooltip opens against the window's right edge, 2 px off, level with the row, in
+the gap under the panel, not beyond the panel. Hover a row (or its Trade cell) **level with** the
+panel, so a flush tooltip would cover it → the tooltip opens beyond the panel's right edge, as
+before (img-16). Hover a row in the Rolls panel itself → its tooltip opens on the panel's side away
+from the window, unchanged. Close the Rolls panel and hover the high row again → flush to the window.
+Drag the window to the screen's right edge, so the right side has no room → the same two cases on
+the left, the panel docked left: flush to the window's left edge below the panel, beyond the panel
+level with it. Item tooltips with comparisons open further out on the same side. Result:
 
 ## WoW Forever
 
