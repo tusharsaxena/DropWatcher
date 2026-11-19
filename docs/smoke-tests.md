@@ -148,7 +148,7 @@ the same way. `/dw compact` → `Compact view.` and the window narrows to its co
 (COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
 Window layout choice follows. `/dw situation` in a Heroic dungeon → (in the debug console since
 AD-79-DW, SLASH-10) three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
-party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner).
+party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner). Again 2026-11-19 (the owner).
 
 **SLASH-6. Offer verb.** Client: both. `/dw offer <one of your drops>` → the window opens on Drops with the
 Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed never saw>` → it is added
@@ -187,7 +187,7 @@ blacklist` alone → the same for Never watch, `(none)` when empty. Press Copy �
 as plain text. `/dw debug` still reads logging off. `/dw blacklist drop 1` → the usage line in chat,
 nothing written to the window. `/dw scan` and `/dw list` still answer in chat, with no pointer. Fail:
 a report printed to chat, more than one chat line, the window left closed, logging turned on, or a
-Lua error. Result:
+Lua error. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Keybindings
 
@@ -574,7 +574,7 @@ Mockveil, Brightmane → Mockdawn, Emberwick → Samplealt. On WoW Forever the f
 the library's talent trees: Samplemender Holy (Shadow before), Mockflame Fire (Frost before),
 Mockshield Protection (Arms before), Samplehunter Beast Mastery (Survival before); their Spec rows on
 the detail card say so. Fail: an old or real-looking name, a name with a realm on Forever, a Lua error.
-Result:
+Result: passed in the client, 2026-11-19 (the owner).
 
 ## Compat
 
@@ -2020,7 +2020,7 @@ settings; the X's tooltip still reads `Close the Rolls panel` with its rows; mov
 the panel across the gear still starts its linger. Open the Offer panel from one of your own drops →
 a gear and the X; the gear opens the settings. Open Edit message (a drop's detail card, or with
 Edit before sending on) → the X alone, no gear (a modal over the window). Switch skins (Settings ›
-Skin) → every gear repaints in the new skin's tint with no reload. Result:
+Skin) → every gear repaints in the new skin's tint with no reload. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-109. Every content tooltip opens beside the window group, level with what you hover (AD-92-DW,
 LibKa0s#92; WowAddonStandards standalone-windows *Tooltip placement*, the body rule).** Client: both.
@@ -2042,7 +2042,7 @@ docked left (window near the screen's right edge) → left of the panel. Open th
 test` with a roll on, or ROLLS-18's sample) and hover a roller row, a folded Pass line and an item
 header → beside the panel, away from the window; a Drops row with the Rolls panel docked → past the
 panel. Hover the test toast → its tooltip opens beside the toast, level with it; hover a roll popup's
-side card (ROLLS-9) → beside the card. Result:
+side card (ROLLS-9) → beside the card. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-110. Every chrome tooltip is attached centered above its control (AD-92-DW, LibKa0s#92;
 standalone-windows *Tooltip placement*, the chrome rule).** Client: both. The headless
@@ -2057,13 +2057,13 @@ the window to the top of the screen and hover View and a tab → the tooltip ope
 instead; drag a control to the screen's right edge → the tooltip slides left only as far as the edge,
 still above. Open the Offer panel and hover its footer's note and the Announce mark, then open Edit
 message (with Edit before sending on) and hover Send and Cancel → each centered above its control. On
-the Rolls panel hover the Expand / Collapse chevron and the X → the same. Result:
+the Rolls panel hover the Expand / Collapse chevron and the X → the same. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-111. An Insights chart mark's tooltip opens beside the window (AD-92-DW, LibKa0s#92;
 LibKa0s-Charts-1.0's `host.group`).** Client: both. With some History (`/dw test` gives sample
 History), open Insights and hover a bar of each chart → the tooltip opens outside the window's right
 edge (else its left), level with the hovered bar's top, never at the pointer and never over the
-Offer or Rolls panel when one is docked. Result:
+Offer or Rolls panel when one is docked. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Roster
 
@@ -2266,7 +2266,7 @@ gate, not the kind rule: `/dw diagnostics` counts it under `drops: hidden qualit
 popup's card and Rolling now read `Reagent` too, with Everything else that is rolled on unticked.
 History lists it, and Insights' item kind counts it as Reagent, apart from Other loot. Untick Crafting
 reagents → the next Jade is not in the window (`hidden category=`); tick it again → it shows.
-`/dw diagnostics` → `collect: on` ends with `container reagent`. Result:
+`/dw diagnostics` → `collect: on` ends with `container reagent`. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Gear
 
@@ -4003,7 +4003,7 @@ on an odd line → each expanded row's gold wash reads clearly brighter than a p
 next to it, and a hovered row reads brighter again (the hover adds to it). The same in compact view
 on a card. Switch to Obsidian and back → the expanded wash follows the skin's own hover there and
 returns to the gold under Ka0s Default. Fail: an expanded row that reads like a striped one, or a
-Lua error. Result:
+Lua error. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Rolls
 
