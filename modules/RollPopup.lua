@@ -29,6 +29,17 @@ local _, NS = ...
 -- table: no field, no SetScript, SetParent, SetPoint or strata change; the one call made on it is
 -- HookScript, once (R2 §10.2, events-frames-taint-§6).
 --
+-- THE HEADER (AF-DW-ROLLHDR, the owner's img-17 and img-18 of 2026-11-19). Every card carries a small
+-- header band reading `Drop Watcher` across its top, inside its edge (in from it by the skin's
+-- `win.borderSize`, RP.Inset), RP.HEADER_H tall: the main window's 30 px title bar scaled down to a
+-- 150 px card. It is painted as the window's bar is (S.TitleBar: the skin's `title.bg` fill, the
+-- title font and `title.text`, the text placed by `title.align`) and carries NO window control: no
+-- close, settings or lock (the card lives and dies with Blizzard's popup), and it takes no mouse,
+-- so a hover anywhere on the card still shows every roll. The lines sit RP.PAD under it, and the
+-- card's height counts it (RP.CardHeight), which keeps two lines and the header shorter than the
+-- popup, so four stacked popups still keep four cards apart; the card's TOPLEFT stays on the popup's
+-- TOPRIGHT, the header inside the card.
+--
 -- THE HOOKS are one-way (HookScript can't be removed), so their bodies gate on the disabled state
 -- (slash-commands-§7). OnShow re-checks that the popup is still shown with a plain rollID
 -- (Compat.RollPopupOpen), because Blizzard's own OnShow can remove it again at once (R2, skeptic
@@ -76,6 +87,7 @@ RP.WIDTH = 150        -- the card's least width
 RP.PAD = 6            -- inside the card
 RP.LINE = 14          -- one line's height
 RP.GAP = 4            -- between the popup's edge and the card
+RP.HEADER_H = 20      -- the card's header band (AF-DW-ROLLHDR): the window's title bar, scaled down
 RP.STAND_IN_W, RP.STAND_IN_H = 280, 82   -- the size of Blizzard's popup, for the simulator's stand-ins
 RP.STAND_IN_Y = 140   -- the first stand-in's offset above the screen's center
 RP.STAND_IN_GAP = 4   -- between two stacked stand-ins
@@ -264,15 +276,61 @@ local function skinned(w, h)
     return f
 end
 
+--- The card's header inset: the skin's `win.borderSize` (in from a flat edge, as the window's title
+--- band stands), else 1.
+--- @return number
+function RP.Inset()
+    local v = NS.Skin.Token and NS.Skin.Token("win.borderSize")
+    if type(v) ~= "number" or NS.Compat.IsSecret(v) or v < 0 then return 1 end
+    return v
+end
+
+--- A card's height (pure): its header band, in `inset` from the edge, RP.PAD, `lines` lines
+--- RP.LINE tall and 2 apart, then RP.PAD.
+--- @param lines number 1 or 2
+--- @param inset number RP.Inset()
+--- @return number
+function RP.CardHeight(lines, inset)
+    return inset + RP.HEADER_H + RP.PAD + lines * RP.LINE + (lines - 1) * 2 + RP.PAD
+end
+
+-- The header band across the card's top, inside its edge (THE HEADER). Laid again on every paint,
+-- so a skin with another edge moves it.
+local function layHeader(f)
+    local h, inset = f.header, RP.Inset()
+    h:ClearAllPoints()
+    h:SetPoint("TOPLEFT", f, "TOPLEFT", inset, -inset)
+    h:SetPoint("TOPRIGHT", f, "TOPRIGHT", -inset, -inset)
+    h:SetHeight(RP.HEADER_H)
+    f.line1:ClearAllPoints()
+    f.line1:SetPoint("TOPLEFT", h, "BOTTOMLEFT", RP.PAD - inset, -RP.PAD)
+    return inset
+end
+
+-- The header: a band with the brand on it, painted as the window's title bar, with no control.
+local function newHeader(f)
+    local h = CreateFrame("Frame", nil, f)
+    h:EnableMouse(false)
+    h.title = h:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    h.title:SetPoint("LEFT", h, "LEFT", RP.PAD, 0)
+    h.title:SetPoint("RIGHT", h, "RIGHT", -RP.PAD, 0)
+    h.title:SetWordWrap(false)
+    h.title:SetText(L["Drop Watcher"])
+    f.header = h
+    NS.Skin.TitleBar(h, { text = h.title })
+    return h
+end
+
 local tipOf
 
 -- One owned card, hidden, its anchor `anchor` (placed beside it on every paint, never the other
--- way round), its tooltip every roll of the roll it shows.
+-- way round), its header (THE HEADER), its tooltip every roll of the roll it shows.
 local function newOverlay(anchor)
-    local f = skinned(RP.WIDTH, RP.LINE + 2 * RP.PAD)
+    local f = skinned(RP.WIDTH, RP.CardHeight(1, RP.Inset()))
     f.anchor = anchor
+    newHeader(f)
     f.line1 = faced(f)
-    f.line1:SetPoint("TOPLEFT", f, "TOPLEFT", RP.PAD, -RP.PAD)
+    layHeader(f)
     f.line2 = faced(f)
     f.line2:SetPoint("TOPLEFT", f.line1, "BOTTOMLEFT", 0, -2)
     f.line2:Hide()
@@ -357,8 +415,10 @@ local function paint(key, rollID)
     setTone(o.line1, model.tone)
     local lines = paintCounts(o, model.counts)
     o.rollID, o.verdict = rollID, { text = model.text, tone = model.tone }
-    local w = math.max(num(o.line1:GetStringWidth()) or 0, num(o.line2:GetStringWidth()) or 0)
-    o:SetSize(math.max(RP.WIDTH, w + 2 * RP.PAD), lines * RP.LINE + (lines - 1) * 2 + 2 * RP.PAD)
+    local inset = layHeader(o)
+    local w = math.max(num(o.line1:GetStringWidth()) or 0, num(o.line2:GetStringWidth()) or 0,
+        (num(o.header.title:GetStringWidth()) or 0) + 2 * inset)
+    o:SetSize(math.max(RP.WIDTH, w + 2 * RP.PAD), RP.CardHeight(lines, inset))
     place(key, o)
     o:Show()
     drawn[key] = rollID

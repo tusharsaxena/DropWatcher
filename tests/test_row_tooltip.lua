@@ -146,6 +146,66 @@ test("row tooltip: the docked Rolls panel is part of the window group; an Offer 
     assertEqual(select(3, pt(tip)), 360 - GAP, "no room right: beyond the Offer panel's left edge")
 end)
 
+-- AF-DW-TIP (the owner's img-15 and img-16, 2026-11-19): a window row's tooltip sits flush beside the
+-- window, and goes past a docked panel only when that flush spot would overlap it. The Rolls panel here
+-- is short (600..900), as the live one is: rows lower on the window clear it.
+local function shortRolls(scr, side)
+    local win = box(scr, 700, 200, 1300, 900)
+    local rolls = side == "left"
+        and box(scr, 410, 600, 698, 900, { parent = win, dock = "left", shown = true })
+        or box(scr, 1302, 600, 1590, 900, { parent = win, dock = "right", shown = true })
+    win.tipDocks = { rolls = rolls }
+    return win, rolls
+end
+
+test("row tooltip: a window row below a short Rolls panel opens flush beside the window (AF-DW-TIP)", function()
+    local NS, m, scr, tip = setup()
+    local win = shortRolls(scr)
+    local row = box(scr, 700, 380, 1300, 400, { parent = win, tipRow = true })
+    -- red under: beyond the Rolls panel (1590 + GAP), the whole group's edge
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    local p, rel, x, y = pt(tip)
+    assertEqual(p, "TOPLEFT>BOTTOMLEFT"); assertTrue(rel == m.UIParent, "one absolute point")
+    assertEqual(x, 1300 + GAP, "flush to the window, the panel above it not in the way")
+    assertEqual(y, 400, "level with the row")
+    assertTrue(NS.RowTooltip.FlushOverlaps(tip, row, NS.RowTooltip.GroupOf(row)) == false)
+    -- the flush spot 300..400 tall never meets the panel's 600..900; from a row at 700 (600..700) it does
+    row = box(scr, 700, 680, 1300, 700, { parent = win, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    assertEqual(select(3, pt(tip)), 1590 + GAP, "level with the panel: beyond it, as img-16")
+end)
+
+test("row tooltip: flush on the left too, beyond a left Rolls panel only where it overlaps (AF-DW-TIP)", function()
+    local NS, _, scr, tip = setup(1400)
+    local win = shortRolls(scr, "left")
+    -- 1302 + 300 is past 1400: the left side, 698 - 300 = 398 .. 698
+    local low = box(scr, 700, 380, 1300, 400, { parent = win, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, low), "left")
+    assertEqual(select(3, pt(tip)), 700 - GAP, "flush to the window's left edge")
+    local high = box(scr, 700, 780, 1300, 800, { parent = win, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, high), "left")
+    assertEqual(select(3, pt(tip)), 410 - GAP, "beyond the panel it would cover")
+end)
+
+test("row tooltip: a hidden panel or a panel's own row keeps today's rule; an unmeasured flush keeps the group", function()
+    local NS, _, scr, tip = setup()
+    local win, rolls = shortRolls(scr)
+    local inPanel = box(scr, 1302, 780, 1590, 800, { parent = rolls, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, inPanel), "right", "the panel's side away from the window")
+    assertEqual(select(3, pt(tip)), 1590 + GAP)
+    local lowInPanel = box(scr, 1302, 610, 1590, 630, { parent = rolls, tipRow = true })
+    assertEqual(NS.RowTooltip.Place(tip, lowInPanel), "right")
+    assertEqual(select(3, pt(tip)), 1590 + GAP, "a panel row is never flush to the window")
+    local row = box(scr, 700, 680, 1300, 700, { parent = win, tipRow = true })
+    rolls:Hide()
+    assertEqual(NS.RowTooltip.Place(tip, row), "right")
+    assertEqual(select(3, pt(tip)), 1300 + GAP, "a hidden panel takes no room")
+    rolls:Show()
+    local unsized = scr.tooltip({})
+    assertTrue(NS.RowTooltip.FlushOverlaps(unsized, row, NS.RowTooltip.GroupOf(row)) == true,
+        "no tooltip size: the flush spot cannot be predicted")
+end)
+
 test("row tooltip: a docked panel's row never opens over the window; a hidden or floating panel is ignored", function()
     local NS, _, scr, tip = setup()
     local _, panel = dockedPair(scr, "right", true)

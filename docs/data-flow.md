@@ -226,8 +226,9 @@ item button ───> hover: GameTooltip:SetHyperlink; shift-click: Compat.Inse
                  ctrl-click: Compat.DressUpItem; a plain click expands the row
 row hover ─────> a cell, button or header: Window.AttachTooltip (body) ─> GameTooltip:Show() ─>
                  RowTooltip.Place ─> LibKa0s-Tooltip PlaceBeside: TOPLEFT 2 px past the window group's
-                 right edge, level with the row's top (else TOPRIGHT 2 px past its left edge); the
-                 item button the same (AD-92-DW, LibKa0s#92);
+                 right edge, level with the row's top (else TOPRIGHT 2 px past its left edge); a
+                 window row flush to the window itself unless that would overlap a docked panel
+                 (RowTooltip.FlushOverlaps, AF-DW-TIP); the item button the same (AD-92-DW, LibKa0s#92);
                  a line given as `{ text, wrap = false }` is added unwrapped, so the
                  tooltip grows to fit it, and a verdict mark in a tooltip is a TipMarks texture, never
                  a font glyph (feedback-6 §3, DW-F3); every tooltip is its title, then one row per
@@ -831,7 +832,8 @@ the same on both clients.
 
 ```
 RP.Install (OnEnable) ─> one owned side card per GroupLootFrame1..4, parented to UIParent, in the
-  window's skin (NS.ApplySkin + S.Shell); Compat.HookRollPopup: HookScript OnShow / OnHide once
+  window's skin (NS.ApplySkin + S.Shell), headed `Drop Watcher` (S.TitleBar, HEADER_H 20, no
+  control: AF-DW-ROLLHDR); Compat.HookRollPopup: HookScript OnShow / OnHide once
 START_LOOT_ROLL(rollID) ─> Compat.LootRollInfo (link, bop) ─> LootFeed.JudgeMe ─> cache[rollID]
 popup OnShow ─> Compat.RollPopupOpen (still shown, a plain rollID) ─> not disabled, rolls.popupMark
   on, not the gamepad UI ─> line 1: the verdict's mark, word and gain (Forever BoP: Need: upgrade,

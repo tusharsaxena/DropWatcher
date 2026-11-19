@@ -64,7 +64,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-50 | [Skins](#skins) | The owner's sixth smoke round, LibKa0s re-cut (R6-RV): the skin selector at picker minor 11 opens, previews, applies and closes as before |
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
 | SKIN-52 | [Skins](#skins) | LibKa0s v1.105.0's row floors (AD-82-DW): an expanded row's gold wash stands apart from a striped row under Ka0s Default |
-| ROLLS-1..18 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18) |
+| ROLLS-1..21 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -148,7 +148,7 @@ the same way. `/dw compact` → `Compact view.` and the window narrows to its co
 (COMPACT-1); again → `Full view.`; `/dw full` → `Full view.` and stays full; the Window page's
 Window layout choice follows. `/dw situation` in a Heroic dungeon → (in the debug console since
 AD-79-DW, SLASH-10) three lines: `Situation: Dungeon (dungeon) · Track yes · …`, then the inputs (in instance yes, type
-party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner).
+party, difficulty 2); outdoors alone → `Solo (solo)`. Result: passed in the client, 2026-10-23 (the owner). Again 2026-11-19 (the owner).
 
 **SLASH-6. Offer verb.** Client: both. `/dw offer <one of your drops>` → the window opens on Drops with the
 Offer panel docked for that drop. `/dw offer <a tradeable bag item the feed never saw>` → it is added
@@ -187,7 +187,7 @@ blacklist` alone → the same for Never watch, `(none)` when empty. Press Copy �
 as plain text. `/dw debug` still reads logging off. `/dw blacklist drop 1` → the usage line in chat,
 nothing written to the window. `/dw scan` and `/dw list` still answer in chat, with no pointer. Fail:
 a report printed to chat, more than one chat line, the window left closed, logging turned on, or a
-Lua error. Result:
+Lua error. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Keybindings
 
@@ -574,7 +574,7 @@ Mockveil, Brightmane → Mockdawn, Emberwick → Samplealt. On WoW Forever the f
 the library's talent trees: Samplemender Holy (Shadow before), Mockflame Fire (Frost before),
 Mockshield Protection (Arms before), Samplehunter Beast Mastery (Survival before); their Spec rows on
 the detail card say so. Fail: an old or real-looking name, a name with a realm on Forever, a Lua error.
-Result:
+Result: passed in the client, 2026-11-19 (the owner).
 
 ## Compat
 
@@ -2020,7 +2020,7 @@ settings; the X's tooltip still reads `Close the Rolls panel` with its rows; mov
 the panel across the gear still starts its linger. Open the Offer panel from one of your own drops →
 a gear and the X; the gear opens the settings. Open Edit message (a drop's detail card, or with
 Edit before sending on) → the X alone, no gear (a modal over the window). Switch skins (Settings ›
-Skin) → every gear repaints in the new skin's tint with no reload. Result:
+Skin) → every gear repaints in the new skin's tint with no reload. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-109. Every content tooltip opens beside the window group, level with what you hover (AD-92-DW,
 LibKa0s#92; WowAddonStandards standalone-windows *Tooltip placement*, the body rule).** Client: both.
@@ -2042,7 +2042,7 @@ docked left (window near the screen's right edge) → left of the panel. Open th
 test` with a roll on, or ROLLS-18's sample) and hover a roller row, a folded Pass line and an item
 header → beside the panel, away from the window; a Drops row with the Rolls panel docked → past the
 panel. Hover the test toast → its tooltip opens beside the toast, level with it; hover a roll popup's
-side card (ROLLS-9) → beside the card. Result:
+side card (ROLLS-9) → beside the card. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-110. Every chrome tooltip is attached centered above its control (AD-92-DW, LibKa0s#92;
 standalone-windows *Tooltip placement*, the chrome rule).** Client: both. The headless
@@ -2057,13 +2057,13 @@ the window to the top of the screen and hover View and a tab → the tooltip ope
 instead; drag a control to the screen's right edge → the tooltip slides left only as far as the edge,
 still above. Open the Offer panel and hover its footer's note and the Announce mark, then open Edit
 message (with Edit before sending on) and hover Send and Cancel → each centered above its control. On
-the Rolls panel hover the Expand / Collapse chevron and the X → the same. Result:
+the Rolls panel hover the Expand / Collapse chevron and the X → the same. Result: passed in the client, 2026-11-19 (the owner).
 
 **FEED-111. An Insights chart mark's tooltip opens beside the window (AD-92-DW, LibKa0s#92;
 LibKa0s-Charts-1.0's `host.group`).** Client: both. With some History (`/dw test` gives sample
 History), open Insights and hover a bar of each chart → the tooltip opens outside the window's right
 edge (else its left), level with the hovered bar's top, never at the pointer and never over the
-Offer or Rolls panel when one is docked. Result:
+Offer or Rolls panel when one is docked. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Roster
 
@@ -2266,7 +2266,7 @@ gate, not the kind rule: `/dw diagnostics` counts it under `drops: hidden qualit
 popup's card and Rolling now read `Reagent` too, with Everything else that is rolled on unticked.
 History lists it, and Insights' item kind counts it as Reagent, apart from Other loot. Untick Crafting
 reagents → the next Jade is not in the window (`hidden category=`); tick it again → it shows.
-`/dw diagnostics` → `collect: on` ends with `container reagent`. Result:
+`/dw diagnostics` → `collect: on` ends with `container reagent`. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Gear
 
@@ -4003,7 +4003,7 @@ on an odd line → each expanded row's gold wash reads clearly brighter than a p
 next to it, and a hovered row reads brighter again (the hover adds to it). The same in compact view
 on a card. Switch to Obsidian and back → the expanded wash follows the skin's own hover there and
 returns to the gold under Ka0s Default. Fail: an expanded row that reads like a striped one, or a
-Lua error. Result:
+Lua error. Result: passed in the client, 2026-11-19 (the owner).
 
 ## Rolls
 
@@ -4224,7 +4224,8 @@ first.*; with Show the Rolls panel beside the window unticked → the line namin
 the panel. Hover the title bar's Expand / Collapse toggle and click it without moving the pointer →
 the tooltip changes with the mark (`Collapse all` to `Expand all` and back); the same on the window
 footer's Expand all / Collapse all mark (RX-28). With the panel docked right, hover a Drops row's item
-→ its tooltip opens beyond the Rolls panel's right edge, never over the panel (RX-28). Result:
+→ its tooltip opens beyond the Rolls panel's right edge, never over the panel (RX-28; a row level
+with the panel; a row below it opens flush to the window, ROLLS-20). Result:
 
 **ROLLS-18. Test mode's sample in the panel (RX-19, RX-21; design §3.6, part A ruling 1).** Client:
 both. With no roll on, `/dw test` → the window opens (or stays) with the sample roll in Rolling now,
@@ -4244,6 +4245,31 @@ and its count line; an amber TEST strip sits on the top edge of each, outside it
 click (RX-23); hover the card → every roll, by choice, with each number. `/dw test` off → the
 stand-in and its card go at once. `/dw test` on, then enter combat → test mode ends and both go.
 With the popup mark unticked, `/dw test` → no stand-in. Result:
+
+**ROLLS-20. A Drops row's tooltip sits flush to the window unless it would cover the Rolls panel
+(AF-DW-TIP; the owner's img-15 and img-16).** Client: both. `/dw test` with the Rolls panel docked on
+the window's right (ROLLS-18). Hover a Drops row's Trade cell on a row **below** the Rolls panel's
+bottom edge → the tooltip opens against the window's right edge, 2 px off, level with the row, in
+the gap under the panel, not beyond the panel. Hover a row (or its Trade cell) **level with** the
+panel, so a flush tooltip would cover it → the tooltip opens beyond the panel's right edge, as
+before (img-16). Hover a row in the Rolls panel itself → its tooltip opens on the panel's side away
+from the window, unchanged. Close the Rolls panel and hover the high row again → flush to the window.
+Drag the window to the screen's right edge, so the right side has no room → the same two cases on
+the left, the panel docked left: flush to the window's left edge below the panel, beyond the panel
+level with it. Item tooltips with comparisons open further out on the same side. Result:
+
+**ROLLS-21. The roll popup's side card carries a small Drop Watcher header (AF-DW-ROLLHDR; the
+owner's img-17 and img-18).** Client: both. With Mark the roll popup ticked, `/dw test` → the side
+card beside `Roll popup (test)` has a header band across its top reading `Drop Watcher`, in the same
+band color, title font and title color as the main window's title bar (compare the two side by
+side), shorter than the window's bar, with no close, gear, lock or any other control on it; the
+verdict and count lines sit under it, nothing clipped, and the card stays shorter than the stand-in.
+The card's top edge is still level with the stand-in's top, and its TEST strip still sits outside
+the card, above the header. Hover the header → the every-roll tooltip, as anywhere on the card; a
+click or drag on it does nothing. Drag the stand-in to the screen's right edge → the card flips to
+its left with the header. Switch the skin (`/dw skin`) to two others → the header follows each
+skin's title band, as the main window's does. On a real group-loot roll the card beside Blizzard's
+popup carries the same header, top-aligned with the popup. Result:
 
 ## WoW Forever
 

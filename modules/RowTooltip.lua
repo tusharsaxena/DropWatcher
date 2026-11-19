@@ -16,8 +16,16 @@ local _, NS = ...
 -- the toast, a roll card), and every frame that frame names in `tipDocks` (the Offer panel `offer`
 -- and the Rolls panel `rolls`) while it is shown and docked beside it (`dock` right or left). A
 -- docked panel's own rows prefer its side away from the window (the library's companion side), and
--- go past the window when that side has no room; a window row's tooltip goes past every docked
--- panel. A panel floating over the window is inside the window's span, so it takes no room.
+-- go past the window when that side has no room. A panel floating over the window is inside the
+-- window's span, so it takes no room.
+--
+-- FLUSH FIRST (AF-DW-TIP, the owner's img-15 and img-16 of 2026-11-19). A WINDOW row's tooltip sits
+-- flush beside the window itself, the body rule on the window alone (right when it fits, else left,
+-- TIP_GAP off), and goes past the docked panels only when that flush rectangle would overlap one of
+-- them (RT.FlushOverlaps). A Trade tooltip low on the window clears a short Rolls panel and stays
+-- beside the window; one level with the panel goes past it, as before. A panel that cannot be
+-- measured takes no room, as the library's span ignores it; a flush spot that cannot be predicted
+-- (no screen, no tooltip size) keeps the whole group.
 --
 -- CHROME (RT.PlaceChrome): a title-bar control, a mode strip, a tab, a filter-bar control, a footer
 -- line or mark, and the Edit message box's Send and Cancel (a modal's controls). The library's
@@ -101,6 +109,80 @@ function RT.GroupOf(element)
     return { main = main, panels = panels }
 end
 
+-- A plain, non-secret number, or nil (the library's guard: no arithmetic touches a secret).
+local function num(v)
+    if type(v) ~= "number" or NS.Compat.IsSecret(v) then return nil end
+    return v
+end
+
+local function read(frame, method)
+    local fn = type(frame) == "table" and frame[method]
+    if type(fn) ~= "function" then return nil end
+    return num(fn(frame))
+end
+
+-- A frame's left, bottom, right and top in screen units (its own times its effective scale), or nil.
+local function screenRect(frame)
+    local l, b, r, t = read(frame, "GetLeft"), read(frame, "GetBottom"), read(frame, "GetRight"), read(frame, "GetTop")
+    if not (l and b and r and t) then return nil end
+    local s = read(frame, "GetEffectiveScale") or 1
+    return l * s, b * s, r * s, t * s
+end
+
+-- The docked panel of `group` that `row` sits in, or nil (a window row).
+local function hostPanel(row, group)
+    local set = {}
+    for _, p in ipairs(group.panels) do set[p] = true end
+    local f = row
+    for _ = 1, 32 do
+        if set[f] then return f end
+        f = parentOf(f)
+        if not f then return nil end
+    end
+    return nil
+end
+
+local function isShown(frame)
+    local fn = frame.IsShown
+    return type(fn) ~= "function" or fn(frame) and true or false
+end
+
+--- Whether `tip` placed flush beside the window `group.main` (the body rule on the window alone:
+--- right when it fits, else left, TIP_GAP off, its top level with `row`'s, clamped on screen) would
+--- overlap a shown docked panel of `group`. True too when the flush spot cannot be predicted (no
+--- screen, no tooltip size, an unreadable window or row, no room beside the window), so the caller
+--- keeps the whole group; a panel that cannot be measured takes no room.
+--- @param tip table a GameTooltip, shown
+--- @param row table the row the hovered frame sits in
+--- @param group table RT.GroupOf(row)
+--- @return boolean
+function RT.FlushOverlaps(tip, row, group)
+    local ui = UIParent
+    local uiS = read(ui, "GetEffectiveScale") or 1
+    local sw, sh = read(ui, "GetWidth"), read(ui, "GetHeight")
+    local tw, th = read(tip, "GetWidth"), read(tip, "GetHeight")
+    local ml, _, mr = screenRect(group.main)
+    local _, _, _, rt = screenRect(row)
+    if not (sw and sh and tw and th and ml and rt) then return true end
+    sw, sh = sw * uiS, sh * uiS
+    local ts = read(tip, "GetEffectiveScale") or 1
+    tw, th = tw * ts, th * ts
+    local gap = K.TIP_GAP
+    local l
+    if mr + gap + tw <= sw then l = mr + gap elseif ml - gap - tw >= 0 then l = ml - gap - tw else return true end
+    local top = rt
+    if top - th < 0 then top = th end
+    if top > sh then top = sh end
+    local r, b = l + tw, top - th
+    for _, p in ipairs(group.panels) do
+        if isShown(p) then
+            local pl, pb, pr, pt = screenRect(p)
+            if pl and l < pr and pl < r and b < pt and pb < top then return true end
+        end
+    end
+    return false
+end
+
 --- The main window's group, for a host the library places for (the Insights charts' `host.group`,
 --- core/ChartsSetup.lua): RT.GroupOf the window, or nil before it is built (the library then reads
 --- the group the hovered mark sits in).
@@ -110,10 +192,11 @@ function RT.WindowGroup()
     return win and RT.GroupOf(win) or nil
 end
 
---- The body rule on a shown tooltip: beside the window group the row `owner` sits in, its top level
---- with the row's top (LibKa0s-Tooltip-1.0's PlaceBeside). Answers `right` or `left`, the library's
---- fallback `above` or `below` (no room beside the group), or nil with nothing placed (no library,
---- or geometry that cannot be read; the caller attaches it).
+--- The body rule on a shown tooltip, its top level with the row's top (LibKa0s-Tooltip-1.0's
+--- PlaceBeside): a window row's flush beside the window unless that would overlap a docked panel
+--- (RT.FlushOverlaps), else, and for a panel's own row, beside the whole window group. Answers
+--- `right` or `left`, the library's fallback `above` or `below` (no room beside the group), or nil
+--- with nothing placed (no library, or geometry that cannot be read; the caller attaches it).
 --- @param tip table a GameTooltip, shown
 --- @param owner table the hovered frame
 --- @return string|nil
@@ -121,7 +204,11 @@ function RT.Place(tip, owner)
     local Tip = tipLib()
     if not Tip then return nil end
     local row = RT.RowOf(owner)
-    return Tip.PlaceBeside(tip, row, RT.GroupOf(row))
+    local group = RT.GroupOf(row)
+    if #group.panels > 0 and not hostPanel(row, group) and not RT.FlushOverlaps(tip, row, group) then
+        return Tip.PlaceBeside(tip, row, { main = group.main, panels = {} })
+    end
+    return Tip.PlaceBeside(tip, row, group)
 end
 
 -- The fallback of both rules: centered above `element`, TIP_GAP up, by a relative point.

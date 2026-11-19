@@ -350,7 +350,8 @@ Edit box's attached above (AD-92-DW); then the host handlers Post my tradeables,
 `tests/_kit/mock_screen.lua`: the body rule's TOPLEFT 2 px past the window group's right edge, else
 its TOPRIGHT past the left edge, level with the row's top, at each frame's scale, the row a cell
 sits in, the docked Offer and Rolls panels in the group and a panel's own rows on its side away from
-the window, the fallback above the row on unreadable geometry or no room; the chrome rule centered
+the window, a window row flush beside the window when that clears a short Rolls panel and beyond the
+panel only where it would overlap it, on either side (AF-DW-TIP), the fallback above the row on unreadable geometry or no room; the chrome rule centered
 above a control, below without room; then every cell, button and header of both tabs, a column
 label and a tab), `test_tooltip_placement` (AD-92-DW: every widget `Window.AttachTooltip` hooks,
 classified body or chrome by the file that built it, each hover calling its class's placer owned at
@@ -547,7 +548,10 @@ profiles: an upgrade roll marking GroupLootFrame1 from a side card anchored besi
 (TOPLEFT on TOPRIGHT, 4 px, top-aligned) at the alert tier, two identical items on two popups each
 with its own RollCells count line (Review Focus 1), the card flipped to the popup's left near the
 screen's right edge (a popup's scale read too), four popups by the right edge with no card
-overlapping a popup or another card, the window's skin (S.Shell, not the detail box), a lockbox's
+overlapping a popup or another card, the window's skin (S.Shell, not the detail box), the card's
+small `Drop Watcher` header (S.TitleBar as the window's bar, `HEADER_H` tall, no control, no mouse,
+line 1 under it) and its height counting the header while staying shorter than the popup
+(AF-DW-ROLLHDR), a lockbox's
 kind in the neutral tone, the hover's every-roll tooltip (RX-07), a popup closed at once or with no
 rollID drawing nothing, the disabled state and `rolls.popupMark` off drawing nothing through the
 same one-way hooks, no key added to or changed on Blizzard's frame table and no second hook after a
