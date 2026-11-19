@@ -2030,7 +2030,7 @@ Total.
 - detail card: the score row names a best-of-class scale, and the looter's spec row names theirs
 - detail card: the shipped card asks ScoreFor for both scores
 
-### test_roll_popup.lua (22)
+### test_roll_popup.lua (24)
 
 - roll popup: an upgrade roll shows the mark on GroupLootFrame1
 - roll popup: a lockbox reads Lockbox, a reagent Reagent and a quest item Item, never Unknown
@@ -2038,6 +2038,8 @@ Total.
 - roll popup: the side card flips to the popup's left near the screen's right edge
 - roll popup: four popups by the right edge each flip and no card overlaps a frame
 - roll popup: the side card wears the window's skin (S.Shell, no detail box)
+- roll popup: the side card carries a small Drop Watcher header in the window header's skin, no controls
+- roll popup: the card's height counts the header and stays shorter than Blizzard's popup
 - roll popup: a lockbox's line 1 is its kind in the neutral tone
 - roll popup: a hover over the side card shows every roll
 - roll popup: a popup closed at once draws nothing
@@ -3145,7 +3147,7 @@ Total.
 | test_ask_ml.lua | 12 |
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 13 |
-| test_roll_popup.lua | 22 |
+| test_roll_popup.lua | 24 |
 | test_rolls_panel.lua | 65 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
@@ -3195,4 +3197,4 @@ Total.
 | test_skin_switch.lua | 47 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2649** |
+| **Total** | **2651** |

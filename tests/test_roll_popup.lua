@@ -238,6 +238,62 @@ test("roll popup: the side card wears the window's skin (S.Shell, no detail box)
     assertTrue(rec.calls.Card == nil, "not the detail card's dw.cardBg box")
 end)
 
+-- AF-DW-ROLLHDR (the owner's img-17 and img-18, 2026-11-19): the side card carries a small header
+-- reading Drop Watcher in the main window's header styling (S.TitleBar: the skin's title band fill,
+-- title font and title color), RP.HEADER_H tall, with no window control on it.
+-- red under: a card with no header (line 1 at the card's top, RP.PAD in)
+test("roll popup: the side card carries a small Drop Watcher header in the window header's skin, no controls", function()
+    local NS, m, RP = party()
+    myRoll(m, 11, 300)
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    show(m, 1, 11)
+    local o = RP.Overlay(1)
+    local h = o.header
+    assertTrue(h ~= nil, "a header")
+    assertEqual(h.title:GetText(), NS.L["Drop Watcher"], "it reads Drop Watcher")
+    assertEqual(h:GetHeight(), RP.HEADER_H, "a small band, shorter than the window's title bar")
+    assertTrue(RP.HEADER_H < NS.Constants.WINDOW.TITLE_H, "scaled down from the window's " .. NS.Constants.WINDOW.TITLE_H)
+    local point, rel, relPoint = h:GetPoint(1)
+    assertEqual(point, "TOPLEFT"); assertTrue(rel == o, "on the card's top"); assertEqual(relPoint, "TOPLEFT")
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local rec = Skin.painted[h]
+    assertTrue(rec ~= nil and rec.calls.TitleBar ~= nil, "S.TitleBar, as the window's title bar")
+    NS.ShowWindow()
+    local bar = Skin.painted[NS.Window.Frame().titleBar]
+    assertTrue(bar ~= nil and bar.calls.TitleBar ~= nil, "the window's bar is painted the same way")
+    assertTrue(rec.calls.TitleBar[1] and rec.calls.TitleBar[1].text == h.title, "its title is the bar's text")
+    for _, key in ipairs({ "closeButton", "settingsButton", "lockButton", "minimizeButton", "headerButtons" }) do
+        assertTrue(o[key] == nil and h[key] == nil, "no window control: " .. key)
+    end
+    assertFalse(h:IsMouseEnabled(), "the header takes no click and no drag")
+    local lp, lrel, lrelPoint, lx, ly = unpack(o.line1.__points[1])   -- a region records its points
+    assertEqual(lp, "TOPLEFT"); assertTrue(lrel == h, "line 1 under the header"); assertEqual(lrelPoint, "BOTTOMLEFT")
+    assertEqual(ly, -RP.PAD)
+    assertEqual(lx, RP.PAD - RP.Inset(), "line 1 RP.PAD in from the card's edge")
+end)
+
+-- red under: the card's height leaving the header out, so line 2 spills under its bottom edge
+test("roll popup: the card's height counts the header and stays shorter than Blizzard's popup", function()
+    local _, m, RP = party()
+    m.lootHistory["2900:1"] = openDrop(300, 2)
+    myRoll(m, 11, 300)
+    m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
+    m.__fire("START_LOOT_ROLL", 11, 60000)
+    show(m, 1, 11)
+    local o = RP.Overlay(1)
+    assertTrue(o.line2:IsShown(), "two lines")
+    assertEqual(o:GetHeight(), RP.CardHeight(2, RP.Inset()))
+    assertEqual(RP.CardHeight(1, 1), 1 + RP.HEADER_H + RP.PAD + RP.LINE + RP.PAD)
+    assertEqual(RP.CardHeight(2, 1), 1 + RP.HEADER_H + RP.PAD + 2 * RP.LINE + 2 + RP.PAD)
+    for inset = 0, 3 do
+        assertTrue(RP.CardHeight(2, inset) <= POPUP_H, "two lines and the header fit the popup's height at inset " .. inset)
+    end
+    assertTrue(o:GetWidth() >= RP.WIDTH, "at least the least width")
+    local point, _, relPoint, x, y = o:GetPoint()
+    assertEqual(point, "TOPLEFT"); assertEqual(relPoint, "TOPRIGHT"); assertEqual(x, RP.GAP); assertEqual(y, 0,
+        "still top-aligned on Blizzard's popup: the header is inside the card")
+end)
+
 -- A non-gear item: its kind word in the neutral tone, no gain (rolls UX design §3.3, §3.5).
 test("roll popup: a lockbox's line 1 is its kind in the neutral tone", function()
     local _, _, RP = party()

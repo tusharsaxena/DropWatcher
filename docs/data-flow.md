@@ -832,7 +832,8 @@ the same on both clients.
 
 ```
 RP.Install (OnEnable) ─> one owned side card per GroupLootFrame1..4, parented to UIParent, in the
-  window's skin (NS.ApplySkin + S.Shell); Compat.HookRollPopup: HookScript OnShow / OnHide once
+  window's skin (NS.ApplySkin + S.Shell), headed `Drop Watcher` (S.TitleBar, HEADER_H 20, no
+  control: AF-DW-ROLLHDR); Compat.HookRollPopup: HookScript OnShow / OnHide once
 START_LOOT_ROLL(rollID) ─> Compat.LootRollInfo (link, bop) ─> LootFeed.JudgeMe ─> cache[rollID]
 popup OnShow ─> Compat.RollPopupOpen (still shown, a plain rollID) ─> not disabled, rolls.popupMark
   on, not the gamepad UI ─> line 1: the verdict's mark, word and gain (Forever BoP: Need: upgrade,

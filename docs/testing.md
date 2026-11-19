@@ -548,7 +548,10 @@ profiles: an upgrade roll marking GroupLootFrame1 from a side card anchored besi
 (TOPLEFT on TOPRIGHT, 4 px, top-aligned) at the alert tier, two identical items on two popups each
 with its own RollCells count line (Review Focus 1), the card flipped to the popup's left near the
 screen's right edge (a popup's scale read too), four popups by the right edge with no card
-overlapping a popup or another card, the window's skin (S.Shell, not the detail box), a lockbox's
+overlapping a popup or another card, the window's skin (S.Shell, not the detail box), the card's
+small `Drop Watcher` header (S.TitleBar as the window's bar, `HEADER_H` tall, no control, no mouse,
+line 1 under it) and its height counting the header while staying shorter than the popup
+(AF-DW-ROLLHDR), a lockbox's
 kind in the neutral tone, the hover's every-roll tooltip (RX-07), a popup closed at once or with no
 rollID drawing nothing, the disabled state and `rolls.popupMark` off drawing nothing through the
 same one-way hooks, no key added to or changed on Blizzard's frame table and no second hook after a
