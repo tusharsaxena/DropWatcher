@@ -68,10 +68,6 @@ the code reads every case the design leaves open, module by module, is in
   tradeables, Reset filters, Announce to group), so an install missing LibKa0s-Widgets-1.0 draws a
   bare footer of the same height with the words and the same marks as plain buttons: no hairline,
   no resize-grip corner and no hover tint on a mark.
-- **The footer's line stops at its last slot** (RX-30, deferred). The library lays all three of the
-  window's mark slots whether a tab binds them or not, so on History and Insights, and on Drops with
-  nothing of yours to post, the left line is cut with "…" short of the empty slots. The fix belongs
-  to LibKa0s's Footer layout (LibKa0s #94).
 - **The toast without LibKa0s** (AT-A2). The toast's shell is LibKa0s-Toast-1.0; an install
   missing LibKa0s shows no toast at all (the seam's stub), where before it drew one without its
   close mark. The shell is shared: when another addon registered an earlier copy of the same minor

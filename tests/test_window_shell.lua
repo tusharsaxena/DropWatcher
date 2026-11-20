@@ -1250,6 +1250,29 @@ test("rx30: the bare footer lays its marks right to left from the corner, the ri
     assertEqual(#NS.BareFooter(parent).marks, 0, "no marks asked: none")
 end)
 
+-- SD-DW-94 (LibKa0s#94): the bare footer lays out only its shown marks, as W.Footer does from Widgets
+-- minor 30, so a degraded install's words reach the leftmost shown mark too. The mock fires no
+-- OnShow or OnHide, so each change fires the script the client would. red under: the bare footer of
+-- RX-30, which chained every mark whether it showed or not.
+test("sd-dw-94: the bare footer gives a hidden mark no slot, and lays again on each show and hide", function()
+    local NS, w = shown()
+    local foot = NS.BareFooter(w.body, { marks = { { icon = "a" }, { icon = "b" }, { icon = "c" } } })
+    local m1, m2, m3 = foot.marks[1], foot.marks[2], foot.marks[3]
+    assertTrue(foot.right.__points[1][2] == m3, "all shown: the right line left of the third")
+    m2:Hide(); m2:__fire("OnHide")
+    m3:Hide(); m3:__fire("OnHide")
+    assertTrue(foot.right.__points[1][2] == m1 and foot.right.__points[1][3] == "LEFT",
+        "one shown: the right line left of it, no slot for the hidden two")
+    assertTrue(foot.left.__points[2][2] == foot.right, "the words up to the right line")
+    m3:Show(); m3:__fire("OnShow")
+    local p3 = { m3:GetPoint(1) }
+    assertTrue(p3[2] == m1 and p3[3] == "LEFT", "the third shown takes the hidden second's slot")
+    assertTrue(foot.right.__points[1][2] == m3, "and the right line follows it")
+    m1:Hide(); m3:Hide(); m3:__fire("OnHide")
+    local pr = foot.right.__points[1]
+    assertTrue(pr[2] == foot and pr[3] == "RIGHT", "none shown: the right line in the corner")
+end)
+
 -- M11 review leftover (feedback-3 spec §5, DW-B5): near the top of the screen the tooltip goes below.
 -- Re-pinned by AD-92-DW (was Window.AboveFits, gone with Window.PlaceAbove): the room above is
 -- measured on the tooltip's real height and the gap, by LibKa0s-Tooltip-1.0's PlaceAttached.

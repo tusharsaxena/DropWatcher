@@ -488,7 +488,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (74)
+### test_window_shell.lua (75)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -562,6 +562,7 @@ Total.
 - shell: without the Widgets library the window builds with no dead dropdown
 - rx30: without the Widgets library the bare footer keeps the tab's controls as marks
 - rx30: the bare footer lays its marks right to left from the corner, the right line left of them
+- sd-dw-94: the bare footer gives a hidden mark no slot, and lays again on each show and hide
 - filter bar tooltip: it flips below only when the tooltip's real height has no room above
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
@@ -1018,7 +1019,7 @@ Total.
 - drops strip: under the compact cards, the summary shortened, the same marks
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_footer_row.lua (16)
+### test_footer_row.lua (17)
 
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
 - footer row: the line, pure: the tab's info, then the status; the status alone with no info (RX-24)
@@ -1029,6 +1030,7 @@ Total.
 - footer row: the line keeps its tooltip: the info's rows, then every segment's words and reasons (RX-24)
 - footer row: Drops' marks, right to left: the toggle, Scan group, Post my tradeables, each a tooltip (RX-24)
 - footer row: Post my tradeables shows only while something of yours is tradeable; compact the same marks (RX-24)
+- footer row: the words reach the leftmost shown mark, with no slot for a hidden one (SD-DW-94, LibKa0s#94)
 - footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)
 - footer row: History's mark is the toggle; Insights' is Reset filters, which resets them (RX-24)
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
@@ -3091,7 +3093,7 @@ Total.
 | test_slash.lua | 28 |
 | test_slash_report.lua | 6 |
 | test_window.lua | 20 |
-| test_window_shell.lua | 74 |
+| test_window_shell.lua | 75 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 37 |
 | test_compact_cards.lua | 27 |
@@ -3110,7 +3112,7 @@ Total.
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
-| test_footer_row.lua | 16 |
+| test_footer_row.lua | 17 |
 | test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
@@ -3200,4 +3202,4 @@ Total.
 | test_skin_switch.lua | 48 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2654** |
+| **Total** | **2656** |

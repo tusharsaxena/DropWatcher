@@ -218,8 +218,9 @@ buttons with tooltips, right to left from the corner (`NS.FooterRow`): Drops `Ex
 `Collapse all`, `Scan group` and `Post my tradeables` (only while one of your listed drops can be
 traded), History the toggle, Insights `Reset filters`, the same in both layouts. The window builds
 `FooterRow.SLOTS` (3) marks and each tab binds its controls to them on its paint (its pane's `foot`
-model, `WindowFooter.PaintTab`); a mark no control takes is hidden. Nothing of the host's is laid
-over the footer. The resize grip is built in the footer's bottom-right corner (`MakeResizable`
+model, `WindowFooter.PaintTab`); a mark no control takes is hidden and takes no slot (LibKa0s
+Widgets minor 30, LibKa0s#94, and `NS.BareFooter`'s own layout without the library; SD-DW-94), so the
+left line runs up to the leftmost shown mark. Nothing of the host's is laid over the footer. The resize grip is built in the footer's bottom-right corner (`MakeResizable`
 `gripParent`, the footer built with `grip = true` and told `SetGrip` as the grip shows and hides, so
 the marks clear the grip only while it shows), hidden while the window is locked or minimized
 (RX-08). The tab's Sort is on the filter bar's right edge (`modules/WindowFilterBar.lua`), in the
