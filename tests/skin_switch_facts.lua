@@ -13,7 +13,8 @@
 -- drawn in the skin's bar texture. SD-SK-DW.1 of the skin-defaults audit (LibKa0s#97) declared the
 -- surfaces the list left out (`addMissing`): the Rolls panel, a roll popup's side card, the History,
 -- Rolling now and compact rows, the compact Filters button, the Edit message box, the trade window's
--- countdown bar and track, and the Drops empty state. No surface holds a family: the flat countdown
+-- countdown bar and track, the Drops empty state, and the Drops and History scrollbars' corridor and
+-- knob (the template's bar stubbed by `installScrollBar`). No surface holds a family: the flat countdown
 -- bars (skinning-§9's Leave class "flat thin bars", A7) draw no bar texture, and the texture family is
 -- asked of a plain Texture only under `expect`.
 
@@ -53,6 +54,25 @@ local function installLsm(m)
     function LSM.RegisterCallback() end
 end
 
+-- THE TEMPLATE'S SCROLL BAR. The headless UIPanelScrollFrameTemplate makes no children, so the
+-- modules' `rawget(scroll, "ScrollBar")` finds none and S.ScrollBar never runs. Here a scroll frame
+-- from that template gets the bar the client gives it, a Slider whose GetThumbTexture answers a
+-- thumb region, so the skin lays its corridor (`scroll.track`) and knob (`scroll.thumb`) and the
+-- panes' scrollbars can be declared (SD-SK-DW.1). Built in a decorated tree, both are real regions.
+local function installScrollBar(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template)
+        local f = create(frameType, name, parent, template)
+        if frameType == "ScrollFrame" and template == "UIPanelScrollFrameTemplate" then
+            local bar = create("Slider", nil, f)
+            local thumb = bar:CreateTexture(nil, "ARTWORK")
+            bar.GetThumbTexture = function() return thumb end
+            rawset(f, "ScrollBar", bar)
+        end
+        return f
+    end
+end
+
 --- The facts, for `enableAddon`, the runner's factory.
 return function(enableAddon, withPlayer)
     local NS, m
@@ -64,6 +84,7 @@ return function(enableAddon, withPlayer)
         NS, env, m = enableAddon({ mock = function(mock)
             installLsm(mock)
             mock.__decorateUIParent = true
+            installScrollBar(mock)
         end })
         return env
     end
@@ -278,6 +299,21 @@ return function(enableAddon, withPlayer)
         end
         parts(list, emptyState, nil, { "the Drops empty state's title", "title" },
             { "the Drops empty state's text", "text" })
+        -- The panes' scrollbars through S.ScrollBar: its corridor and its knob, each its own surface
+        -- (two tokens). Drops' and History's; every other pane's bar is the same call.
+        local function scrollParts(open)
+            return function()
+                local bar = rawget(open().scroll, "ScrollBar")
+                local regions = m.LibStub("LibKa0s-Skin-1.0").painted[bar].regions
+                return { track = regions.track, knob = regions.knob }
+            end
+        end
+        parts(list, scrollParts(function() return window().panes.group end), nil,
+            { "the Drops scrollbar's corridor", "track" }, { "the Drops scrollbar's knob", "knob" })
+        parts(list, scrollParts(function()
+            NS.Window.SelectTab("history")
+            return window().panes.history
+        end), nil, { "the History scrollbar's corridor", "track" }, { "the History scrollbar's knob", "knob" })
     end
     local function glowSurface(offSpec)
         return function()

@@ -840,7 +840,7 @@ without one every skin's face resolves to the same fallback and a string's face 
 surface holds one painted part (SD-SK-DW.1 split the new ones so), and the Insights bar and strip
 column declare `expect = "texture"`; the Rolls panel, a roll popup's side card, the History, Rolling
 now and compact rows, the compact Filters button, the Edit message box, the countdown bar and track
-(Retail only) and the Drops empty state joined the list with the skin-defaults audit (LibKa0s#97). The Insights tab declares four
+(Retail only), the Drops empty state and the Drops and History scrollbars' corridor and knob joined the list with the skin-defaults audit (LibKa0s#97); for the scrollbars the facts give a UIPanelScrollFrameTemplate scroll frame the bar the headless template lacks (`installScrollBar`). The Insights tab declares four
 of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a
 host color and a strip column.
 
