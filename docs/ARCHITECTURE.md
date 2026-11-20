@@ -567,7 +567,13 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   (an expanded row's or card's wash, following `list.hover`), kept its own gold .08 under Ka0s
   Default, which then stood 7 L* off the window and no further than a striped row; its default is
   now gold .16, Ka0s Default's `list.hover`, which stands 12 or more off the window and 3 or more
-  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`.
+  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`. From SD-SK-DW (the
+  owner's U-18 of 2026-11-20) `dw.rowOpen` follows the skin's selection, `list.sel`, Ka0s Default's
+  gold .26, so an open row stands apart from a hovered one in every skin (ruling Q2, skinning-§4).
+- **The Edit message box's typed text follows the skin (SD-SK-DW, the owner's U-19 of 2026-11-20).**
+  Its EditBox takes the skin's body face through `S.Font` (Ignore fonts gives chat's `ChatFontNormal`
+  back) and the skin's `input.text` color, repainted on a switch. Until then it kept chat's face
+  (the rollout's call D6, a lead's call the owner overturned).
 - **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
   its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
@@ -647,7 +653,6 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
-| The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |
 | The icon border's `IS.SOLID_EDGE` (WHITE8X8) and `IS.BORDER_FALLBACK` (UI-Tooltip-Border) in `modules/IconStyle.lua` | LibSharedMedia key resolution for the border's edge file, not a color: what a style name draws when LSM has no path for it |
 
 The resize grips are not on this list: every one, the main window's and the four tool windows', is

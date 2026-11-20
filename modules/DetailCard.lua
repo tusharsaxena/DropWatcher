@@ -712,7 +712,11 @@ local function editorBox(e)
     e.box:SetPoint("BOTTOMRIGHT", frame, "BOTTOMRIGHT", -6, 6)
     e.box:SetMultiLine(true)
     e.box:SetAutoFocus(false)
+    -- The typed text in the skin's face and its input text color (the owner's U-19 of 2026-11-20,
+    -- SD-SK-DW): chat's face only as the stock font Ignore fonts or a face-less skin puts back.
     e.box:SetFontObject("ChatFontNormal")
+    NS.Skin.Font(e.box)
+    NS.SkinPaint(e.box, function(eb) eb:SetTextColor(NS.SkinColor("input.text")) end)
     e.box:SetScript("OnTextChanged", function() refreshEditor(e) end)
     e.box:SetScript("OnEscapePressed", function() e:Hide() end)
     e.box:SetScript("OnEnterPressed", function() sendEditor(e) end)

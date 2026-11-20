@@ -274,7 +274,7 @@ local SHADE = { [1] = L["off-spec"], [2] = L["Transmog"] }
 -- brackets an off-spec or Transmog choice, won it, protected: `Brakk 87 (won it)`.
 local function playerText(e)
     local text = colored(e.name, e.classFile)
-    if e.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("accent")) end
+    if e.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("text.accent")) end
     if e.roll then text = ("%s %d"):format(text, e.roll) end
     local extra = {}
     if SHADE[e.state] then extra[#extra + 1] = SHADE[e.state] end

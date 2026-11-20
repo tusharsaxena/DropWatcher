@@ -215,7 +215,7 @@ Total.
 - item lists panel: a refused add is raised as its sentence, and nothing is written
 - item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
-### test_skin_setup.lua (20)
+### test_skin_setup.lua (21)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers the client's default before the profile store exists
@@ -224,6 +224,7 @@ Total.
 - Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
 - Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
 - Skin seam: an expanded row's wash clears the library's row floors under Ka0s Default
+- Skin seam: an expanded row's wash follows the skin's selection, apart from its hover
 - Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
 - Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Skin tab
 - Skin seam: the skin row's values are every registered skin, in the library's order
@@ -918,7 +919,7 @@ Total.
 - collect surfaces: the View menu, its tooltip and History both carry New to my collection
 - collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
 
-### test_detail_card.lua (34)
+### test_detail_card.lua (35)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - tracks: no Track row or {track} token on Forever
@@ -951,6 +952,7 @@ Total.
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
 - card: Edit message opens the box with the ask filled in; Send asks with the edited text
 - card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
+- card: the Edit message box's text takes the skin's face and input text color, and follows a switch
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
@@ -3007,7 +3009,7 @@ Total.
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (48)
+### test_skin_switch.lua (102)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
 - skin switch: the check is falsifiable, a bar whose texture never moves is reported
@@ -3057,6 +3059,60 @@ Total.
 - skin switch: an Insights strip column changes with the Scope ignored
 - skin switch: the toast changes
 - skin switch: the toast changes with the Scope ignored
+- skin switch: the Rolls panel changes
+- skin switch: the Rolls panel changes with the Scope ignored
+- skin switch: a Rolls panel header's band changes
+- skin switch: a Rolls panel header's band changes with the Scope ignored
+- skin switch: a Rolls panel header's chevron changes
+- skin switch: a Rolls panel header's chevron changes with the Scope ignored
+- skin switch: a Rolls panel header's countdown bar changes
+- skin switch: a Rolls panel header's countdown bar changes with the Scope ignored
+- skin switch: a Rolls panel line's stripe changes
+- skin switch: a Rolls panel line's stripe changes with the Scope ignored
+- skin switch: a Rolls panel line's winner wash changes
+- skin switch: a Rolls panel line's winner wash changes with the Scope ignored
+- skin switch: a roll popup's side card changes
+- skin switch: a roll popup's side card changes with the Scope ignored
+- skin switch: a roll popup card's header title changes
+- skin switch: a roll popup card's header title changes with the Scope ignored
+- skin switch: a roll popup card's header band changes
+- skin switch: a roll popup card's header band changes with the Scope ignored
+- skin switch: a History row's stripe changes
+- skin switch: a History row's stripe changes with the Scope ignored
+- skin switch: a History row's expanded wash changes
+- skin switch: a History row's expanded wash changes with the Scope ignored
+- skin switch: a History row's chevron changes
+- skin switch: a History row's chevron changes with the Scope ignored
+- skin switch: a Rolling now row's stripe changes
+- skin switch: a Rolling now row's stripe changes with the Scope ignored
+- skin switch: a Rolling now row's expanded wash changes
+- skin switch: a Rolling now row's expanded wash changes with the Scope ignored
+- skin switch: a Rolling now row's chevron changes
+- skin switch: a Rolling now row's chevron changes with the Scope ignored
+- skin switch: a compact card's stripe changes
+- skin switch: a compact card's stripe changes with the Scope ignored
+- skin switch: a compact card's expanded wash changes
+- skin switch: a compact card's expanded wash changes with the Scope ignored
+- skin switch: the compact Filters button's box changes
+- skin switch: the compact Filters button's box changes with the Scope ignored
+- skin switch: the compact Filters button's label changes
+- skin switch: the compact Filters button's label changes with the Scope ignored
+- skin switch: the compact Filters button's arrow changes
+- skin switch: the compact Filters button's arrow changes with the Scope ignored
+- skin switch: the Edit message box changes
+- skin switch: the Edit message box changes with the Scope ignored
+- skin switch: the Edit message box's title changes
+- skin switch: the Edit message box's title changes with the Scope ignored
+- skin switch: the Edit message box's text changes
+- skin switch: the Edit message box's text changes with the Scope ignored
+- skin switch: the trade window's countdown bar changes
+- skin switch: the trade window's countdown bar changes with the Scope ignored
+- skin switch: the trade window's countdown track changes
+- skin switch: the trade window's countdown track changes with the Scope ignored
+- skin switch: the Drops empty state's title changes
+- skin switch: the Drops empty state's title changes with the Scope ignored
+- skin switch: the Drops empty state's text changes
+- skin switch: the Drops empty state's text changes with the Scope ignored
 
 ### test_client_globals.lua (3)
 
@@ -3076,7 +3132,7 @@ Total.
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
 | test_item_lists_panel.lua | 5 |
-| test_skin_setup.lua | 20 |
+| test_skin_setup.lua | 21 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
@@ -3108,7 +3164,7 @@ Total.
 | test_side_cells.lua | 27 |
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
-| test_detail_card.lua | 34 |
+| test_detail_card.lua | 35 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3199,7 +3255,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 48 |
+| test_skin_switch.lua | 102 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2656** |
+| **Total** | **2712** |

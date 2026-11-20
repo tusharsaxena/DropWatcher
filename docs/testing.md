@@ -836,7 +836,11 @@ cause A6; the four secondary-stat hues in `core/Constants.lua`, cause MC, the Me
 `tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same
 under it fails. From revision 58 each setter family (texture, color, font, shadow) has to move on its
 own, so the facts install a LibSharedMedia fake (every key its own path) on the suite's instances:
-without one every skin's face resolves to the same fallback and a string's face never moves. The Insights tab declares four
+without one every skin's face resolves to the same fallback and a string's face never moves. Each
+surface holds one painted part (SD-SK-DW.1 split the new ones so), and the Insights bar and strip
+column declare `expect = "texture"`; the Rolls panel, a roll popup's side card, the History, Rolling
+now and compact rows, the compact Filters button, the Edit message box, the countdown bar and track
+(Retail only) and the Drops empty state joined the list with the skin-defaults audit (LibKa0s#97). The Insights tab declares four
 of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a
 host color and a strip column.
 

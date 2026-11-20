@@ -65,7 +65,8 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-51 | [Skins](#skins) | The owner's sixth smoke round, the skin selector's preview (R6-PV): with the window closed the selector turns test mode on, the eye toggles it, every close puts it back |
 | SKIN-52 | [Skins](#skins) | LibKa0s v1.105.0's row floors (AD-82-DW): an expanded row's gold wash stands apart from a striped row under Ka0s Default |
 | SKIN-53 | [Skins](#skins) | LibKa0s v1.108.0's composer (SD-RV-DW): the tables' Font color gains Use the skin's color, on by default; a pick stored before keeps drawing (step 14) |
-| ROLLS-1..21 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR) |
+| SKIN-54..55 | [Skins](#skins) | The skin-defaults audit (SD-SK-DW, LibKa0s#97): an expanded row's wash is the skin's selection (SKIN-54, U-18); the Edit message box's text is skinned (SKIN-55, U-19) |
+| ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
 | FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
@@ -4019,6 +4020,9 @@ on a card. Switch to Obsidian and back → the expanded wash follows the skin's 
 returns to the gold under Ka0s Default. Fail: an expanded row that reads like a striped one, or a
 Lua error. Result: passed in the client, 2026-11-19 (the owner).
 
+Amended by SD-SK-DW, 2026-11-20: the expanded wash follows the skin's selection (`list.sel`, Ka0s
+Default's gold .26), no longer its hover (the owner's U-18); SKIN-54 checks it.
+
 **SKIN-53. The tables' Font color has its own Use the skin's color (SD-RV-DW, LibKa0s v1.108.0).**
 Client: both. On a fresh profile, Window › Layout › Tables → after Use the skin's font, a new **Use the
 skin's color** checkbox, ticked; hover it → it says the Font color row is not read while it is on.
@@ -4032,6 +4036,22 @@ had picked a Font color before this build (or one made by setting the color on t
 log in → the picked color still draws and Use the skin's color is unticked (migration step 14). Fail:
 the picked color drawn while the box is ticked, a profile's earlier pick lost after the update, two
 Use the skin's shadow rows, or a Lua error. Result:
+
+**SKIN-54. An expanded row is the skin's selection, apart from its hover (SD-SK-DW, the owner's
+U-18).** Client: both. Skin Ka0s Default (`/dw skin`). `/dw test`, Drops → expand a row and hover a
+different one → the expanded row's gold wash reads clearly stronger than the hovered row's, and both
+stand off a plain and a striped row. The same on History, on a Rolling now row and on a compact card
+(`/dw compact`). Switch to Obsidian and WoW Midnight → the expanded row takes each skin's selection
+color, still apart from its hover. Fail: an expanded row that looks like a hovered one, or a Lua
+error. Result:
+
+**SKIN-55. The Edit message box's text in the skin's face and input color (SD-SK-DW, the owner's
+U-19).** Client: both. `/dw test`, Drops → open a drop, Edit message → the typed text is in the
+skin's body face (Ka0s Default's Ka0s Prototype, not chat's face) and a light gray, not chat's white; type
+a few words → the same. Switch to WoW Forever and Obsidian with the box open (or reopen it) → the face
+and color follow each skin. Tick Ignore fonts on the Skin tab → the box's text goes back to chat's
+face. Fail: chat's face under a skin that sets one, a text color that never changes with the skin, or
+a Lua error. Result:
 
 ## Rolls
 
@@ -4298,6 +4318,16 @@ click or drag on it does nothing. Drag the stand-in to the screen's right edge �
 its left with the header. Switch the skin (`/dw skin`) to two others → the header follows each
 skin's title band, as the main window's does. On a real group-loot roll the card beside Blizzard's
 popup carries the same header, top-aligned with the popup. Result:
+
+**ROLLS-22. The Rolls panel's countdown bar, winner wash and `[YOU]` in the skin's accent (SD-SK-DW).**
+Client: both. Until this build they read a color name no skin defines, so they drew nothing (or no
+color). `/dw test` with the window open → the Rolls panel: under each open item's header band a thin
+countdown bar in gold (Ka0s Default's accent), shrinking as the roll runs; `[YOU]` after your name
+in gold, in the panel's rows and in the tooltip of a folded line and of the roll popup's side card.
+Let a roll finish (`/dw sim roll`, wait) → the winner's row has a faint gold wash and its roll number
+is gold. Switch to WoW Midnight and Obsidian → the bar, the wash, the number and `[YOU]` take each
+skin's accent with no reload. Fail: no countdown bar on an open roll, a winner row with no wash,
+`[YOU]` in plain white, or a Lua error. Result:
 
 ## WoW Forever
 

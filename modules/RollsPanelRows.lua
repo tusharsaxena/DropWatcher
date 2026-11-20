@@ -58,7 +58,7 @@ end
 -- folded line or its tooltip spells out (RX-28).
 local function playerName(r)
     local text = NS.TipMarks.ClassName(r.name, r.classFile)
-    if r.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("accent")) end
+    if r.isSelf then text = text .. " " .. NS.GroupRoster.Colored(L["[YOU]"], NS.Skin.Color("text.accent")) end
     return text
 end
 
