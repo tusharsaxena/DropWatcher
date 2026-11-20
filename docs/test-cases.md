@@ -81,7 +81,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
-### test_database.lua (15)
+### test_database.lua (16)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -98,6 +98,7 @@ Total.
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
+- database: step 14 keeps a picked table text color drawing, in every profile, and nothing else
 
 ### test_schema.lua (11)
 
@@ -214,7 +215,7 @@ Total.
 - item lists panel: a refused add is raised as its sentence, and nothing is written
 - item lists panel: the Drops page's Defaults keeps both lists and resets the rest
 
-### test_skin_setup.lua (20)
+### test_skin_setup.lua (21)
 
 - Skin seam: the owner is the folder name, and NS.Skin is its facade
 - Skin seam: the read answers the client's default before the profile store exists
@@ -223,6 +224,7 @@ Total.
 - Skin seam: under Ka0s Default each owner token is today's pixel; elsewhere its follow token's
 - Skin seam: the palette's Ka0s Default values are the owner tokens' defaults
 - Skin seam: an expanded row's wash clears the library's row floors under Ka0s Default
+- Skin seam: an expanded row's wash follows the skin's selection, apart from its hover
 - Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch
 - Skin seam: the skin keys default to the client's skin, as skip-render rows of General's Skin tab
 - Skin seam: the skin row's values are every registered skin, in the library's order
@@ -487,7 +489,7 @@ Total.
 - window: a resize saves the anchor with the size, so a settings repaint does not move it
 - window: the least width is the sum of Drops' columns, their gaps, the row lead and the chrome (feedback-5 §4, feedback-6 §1)
 
-### test_window_shell.lua (74)
+### test_window_shell.lua (75)
 
 - shell: the title bar holds the centered gold title, the badge, minimize and close, and no logo
 - shell: no line shows under the title bar, in any skin or without the library
@@ -561,6 +563,7 @@ Total.
 - shell: without the Widgets library the window builds with no dead dropdown
 - rx30: without the Widgets library the bare footer keeps the tab's controls as marks
 - rx30: the bare footer lays its marks right to left from the corner, the right line left of them
+- sd-dw-94: the bare footer gives a hidden mark no slot, and lays again on each show and hide
 - filter bar tooltip: it flips below only when the tooltip's real height has no room above
 - filter bar tooltip: near the top of the screen it opens below the control, never over it
 
@@ -826,7 +829,7 @@ Total.
 - table: the Type column sits after Slot and is painted on every row
 - table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text
 
-### test_table_font.lua (10)
+### test_table_font.lua (11)
 
 - table font: Window › Layout › Tables carries the whole font setting, after Row height
 - table font: Font size keeps its stored path, its range and `0 (Default)`
@@ -834,6 +837,7 @@ Total.
 - table font: From skin flags draw the window text's outline, and a picked flag wins
 - table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
+- table font: Use the skin's color is the swatch's companion, on by default and ahead of a pick
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
 - table font edge: with CreateFont, S.HudFont's named font object carries the shadow
 - table font: a read reuses its table, and a later read leaves nothing of the last look
@@ -915,7 +919,7 @@ Total.
 - collect surfaces: the View menu, its tooltip and History both carry New to my collection
 - collect surfaces: the feed.view.newCollect row seeds a fresh tab and defaults off
 
-### test_detail_card.lua (34)
+### test_detail_card.lua (35)
 
 - cells: the header's chips name slot, armor, bind, track and rank, primary stat, socket and tertiary
 - tracks: no Track row or {track} token on Forever
@@ -948,6 +952,7 @@ Total.
 - card: a filtered-out or collapsed row hides its card; it comes back with the row
 - card: Edit message opens the box with the ask filled in; Send asks with the edited text
 - card: with Edit before sending on, the row's Ask opens the box; its Send asks; a queued ask still cancels
+- card: the Edit message box's text takes the skin's face and input text color, and follows a switch
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
@@ -1016,7 +1021,7 @@ Total.
 - drops strip: under the compact cards, the summary shortened, the same marks
 - drops strip: the compact countdown tick moves its next expiry too
 
-### test_footer_row.lua (16)
+### test_footer_row.lua (17)
 
 - footer row: the toggle's state, pure: Expand all while a shown header is collapsed, none without one
 - footer row: the line, pure: the tab's info, then the status; the status alone with no info (RX-24)
@@ -1027,6 +1032,7 @@ Total.
 - footer row: the line keeps its tooltip: the info's rows, then every segment's words and reasons (RX-24)
 - footer row: Drops' marks, right to left: the toggle, Scan group, Post my tradeables, each a tooltip (RX-24)
 - footer row: Post my tradeables shows only while something of yours is tradeable; compact the same marks (RX-24)
+- footer row: the words reach the leftmost shown mark, with no slot for a hidden one (SD-DW-94, LibKa0s#94)
 - footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)
 - footer row: History's mark is the toggle; Insights' is Reset filters, which resets them (RX-24)
 - footer row: the Drops toggle opens every shown header, then closes them, in both layouts
@@ -2999,13 +3005,14 @@ Total.
 
 ### test_skin_values.lua (3)
 
-- skin values: every host row carries its file, substring, why and cause id
+- skin values: every host row carries its file, substring, why and a cause id or kit row category
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (47)
+### test_skin_switch.lua (110)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the check is falsifiable, a bar whose texture never moves is reported
 - skin switch: the window's title bar changes
 - skin switch: the window's title bar changes with the Scope ignored
 - skin switch: the active tab changes
@@ -3052,6 +3059,68 @@ Total.
 - skin switch: an Insights strip column changes with the Scope ignored
 - skin switch: the toast changes
 - skin switch: the toast changes with the Scope ignored
+- skin switch: the Rolls panel changes
+- skin switch: the Rolls panel changes with the Scope ignored
+- skin switch: a Rolls panel header's band changes
+- skin switch: a Rolls panel header's band changes with the Scope ignored
+- skin switch: a Rolls panel header's chevron changes
+- skin switch: a Rolls panel header's chevron changes with the Scope ignored
+- skin switch: a Rolls panel header's countdown bar changes
+- skin switch: a Rolls panel header's countdown bar changes with the Scope ignored
+- skin switch: a Rolls panel line's stripe changes
+- skin switch: a Rolls panel line's stripe changes with the Scope ignored
+- skin switch: a Rolls panel line's winner wash changes
+- skin switch: a Rolls panel line's winner wash changes with the Scope ignored
+- skin switch: a roll popup's side card changes
+- skin switch: a roll popup's side card changes with the Scope ignored
+- skin switch: a roll popup card's header title changes
+- skin switch: a roll popup card's header title changes with the Scope ignored
+- skin switch: a roll popup card's header band changes
+- skin switch: a roll popup card's header band changes with the Scope ignored
+- skin switch: a History row's stripe changes
+- skin switch: a History row's stripe changes with the Scope ignored
+- skin switch: a History row's expanded wash changes
+- skin switch: a History row's expanded wash changes with the Scope ignored
+- skin switch: a History row's chevron changes
+- skin switch: a History row's chevron changes with the Scope ignored
+- skin switch: a Rolling now row's stripe changes
+- skin switch: a Rolling now row's stripe changes with the Scope ignored
+- skin switch: a Rolling now row's expanded wash changes
+- skin switch: a Rolling now row's expanded wash changes with the Scope ignored
+- skin switch: a Rolling now row's chevron changes
+- skin switch: a Rolling now row's chevron changes with the Scope ignored
+- skin switch: a compact card's stripe changes
+- skin switch: a compact card's stripe changes with the Scope ignored
+- skin switch: a compact card's expanded wash changes
+- skin switch: a compact card's expanded wash changes with the Scope ignored
+- skin switch: the compact Filters button's box changes
+- skin switch: the compact Filters button's box changes with the Scope ignored
+- skin switch: the compact Filters button's label changes
+- skin switch: the compact Filters button's label changes with the Scope ignored
+- skin switch: the compact Filters button's arrow changes
+- skin switch: the compact Filters button's arrow changes with the Scope ignored
+- skin switch: the Edit message box changes
+- skin switch: the Edit message box changes with the Scope ignored
+- skin switch: the Edit message box's title changes
+- skin switch: the Edit message box's title changes with the Scope ignored
+- skin switch: the Edit message box's text changes
+- skin switch: the Edit message box's text changes with the Scope ignored
+- skin switch: the trade window's countdown bar changes
+- skin switch: the trade window's countdown bar changes with the Scope ignored
+- skin switch: the trade window's countdown track changes
+- skin switch: the trade window's countdown track changes with the Scope ignored
+- skin switch: the Drops empty state's title changes
+- skin switch: the Drops empty state's title changes with the Scope ignored
+- skin switch: the Drops empty state's text changes
+- skin switch: the Drops empty state's text changes with the Scope ignored
+- skin switch: the Drops scrollbar's corridor changes
+- skin switch: the Drops scrollbar's corridor changes with the Scope ignored
+- skin switch: the Drops scrollbar's knob changes
+- skin switch: the Drops scrollbar's knob changes with the Scope ignored
+- skin switch: the History scrollbar's corridor changes
+- skin switch: the History scrollbar's corridor changes with the Scope ignored
+- skin switch: the History scrollbar's knob changes
+- skin switch: the History scrollbar's knob changes with the Scope ignored
 
 ### test_client_globals.lua (3)
 
@@ -3066,12 +3135,12 @@ Total.
 | test_harness.lua | 15 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 25 |
-| test_database.lua | 15 |
+| test_database.lua | 16 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
 | test_item_lists_panel.lua | 5 |
-| test_skin_setup.lua | 20 |
+| test_skin_setup.lua | 21 |
 | test_launcher_skin_entry.lua | 2 |
 | test_skin_outline.lua | 11 |
 | test_skin_chrome.lua | 12 |
@@ -3088,7 +3157,7 @@ Total.
 | test_slash.lua | 28 |
 | test_slash_report.lua | 6 |
 | test_window.lua | 20 |
-| test_window_shell.lua | 74 |
+| test_window_shell.lua | 75 |
 | test_window_compact.lua | 25 |
 | test_window_autoclose.lua | 37 |
 | test_compact_cards.lua | 27 |
@@ -3098,16 +3167,16 @@ Total.
 | test_compact_chrome.lua | 30 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 53 |
-| test_table_font.lua | 10 |
+| test_table_font.lua | 11 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
-| test_detail_card.lua | 34 |
+| test_detail_card.lua | 35 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
-| test_footer_row.lua | 16 |
+| test_footer_row.lua | 17 |
 | test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
@@ -3194,7 +3263,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 47 |
+| test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2651** |
+| **Total** | **2720** |

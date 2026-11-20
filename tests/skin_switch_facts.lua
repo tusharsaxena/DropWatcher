@@ -6,8 +6,72 @@
 -- A surface with a `companion` is on that row's skin half and leaves the second pass. `scope` marks
 -- what Ignore settings panel or Ignore fonts keeps stock. `paint` is the redraw a mock has no
 -- listener for: a table text is restyled by the next repaint, and an item's glow by the next pass.
+--
+-- From kit revision 58 (LibKa0s v1.108.0) each setter family a surface draws has to move on its own,
+-- so a surface holds one part, or parts painted from one token: two parts from two tokens in one
+-- surface would let one stop following while the other moved. `expect = "texture"` marks a data fill
+-- drawn in the skin's bar texture. SD-SK-DW.1 of the skin-defaults audit (LibKa0s#97) declared the
+-- surfaces the list left out (`addMissing`): the Rolls panel, a roll popup's side card, the History,
+-- Rolling now and compact rows, the compact Filters button, the Edit message box, the trade window's
+-- countdown bar and track, the Drops empty state, and the Drops and History scrollbars' corridor and
+-- knob (the template's bar stubbed by `installScrollBar`). No surface holds a family: the flat countdown
+-- bars (skinning-§9's Leave class "flat thin bars", A7) draw no bar texture, and the texture family is
+-- asked of a plain Texture only under `expect`.
 
 local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
+
+-- THE LIBSHAREDMEDIA FAKE (kit revision 58, skinning-§9: "a host harness needs such a fake"). The
+-- headless client has no LibSharedMedia, so without one every skin's face and bar texture resolve to
+-- the same fallback and a string's SetFont never moves under the probe, which the per-family check
+-- now reports. The fake answers every key with a path of its own ("Interface\AddOns\DWSwitch\
+-- <kind>\<key>"), so each skin's `font.*`, `hud.font` and `bar.texture` draw a distinct path, the
+-- probe skin's too. A key registered at load (modules/IconStyle.lua's Solid edge, LibKa0s-Media's
+-- faces) answers its registered path, and only a registered key is valid, so registration and the
+-- settings lists behave as with the real library. Installed through the kit mock's library seam
+-- (`M.__libs`, by LibStub) before any source loads, on the switch suite's instances only.
+local function installLsm(m)
+    local LSM = m.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+    local registered = {}
+    LSM.MediaType = { BACKGROUND = "background", BORDER = "border", FONT = "font", STATUSBAR = "statusbar", SOUND = "sound" }
+    LSM.Register = function(_, kind, key, path)
+        registered[kind] = registered[kind] or {}
+        registered[kind][key] = path
+        return true
+    end
+    LSM.Fetch = function(_, kind, key)
+        if type(key) ~= "string" or key == "" then return nil end
+        local own = registered[kind] and registered[kind][key]
+        return own or ("Interface\\AddOns\\DWSwitch\\" .. tostring(kind) .. "\\" .. key)
+    end
+    LSM.IsValid = function(_, kind, key) return registered[kind] ~= nil and registered[kind][key] ~= nil end
+    LSM.HashTable = function(_, kind) return registered[kind] or {} end
+    LSM.List = function(_, kind)
+        local out = {}
+        for key in pairs(registered[kind] or {}) do out[#out + 1] = key end
+        table.sort(out)
+        return out
+    end
+    function LSM.RegisterCallback() end
+end
+
+-- THE TEMPLATE'S SCROLL BAR. The headless UIPanelScrollFrameTemplate makes no children, so the
+-- modules' `rawget(scroll, "ScrollBar")` finds none and S.ScrollBar never runs. Here a scroll frame
+-- from that template gets the bar the client gives it, a Slider whose GetThumbTexture answers a
+-- thumb region, so the skin lays its corridor (`scroll.track`) and knob (`scroll.thumb`) and the
+-- panes' scrollbars can be declared (SD-SK-DW.1). Built in a decorated tree, both are real regions.
+local function installScrollBar(m)
+    local create = m.CreateFrame
+    m.CreateFrame = function(frameType, name, parent, template)
+        local f = create(frameType, name, parent, template)
+        if frameType == "ScrollFrame" and template == "UIPanelScrollFrameTemplate" then
+            local bar = create("Slider", nil, f)
+            local thumb = bar:CreateTexture(nil, "ARTWORK")
+            bar.GetThumbTexture = function() return thumb end
+            rawset(f, "ScrollBar", bar)
+        end
+        return f
+    end
+end
 
 --- The facts, for `enableAddon`, the runner's factory.
 return function(enableAddon, withPlayer)
@@ -15,7 +79,13 @@ return function(enableAddon, withPlayer)
 
     local function fresh()
         local env
-        NS, env, m = enableAddon()
+        -- `__decorateUIParent`: a frame parented to UIParent (a roll popup's side card) answers real
+        -- regions, as tests/test_roll_popup.lua builds it, so its strings and band can be declared.
+        NS, env, m = enableAddon({ mock = function(mock)
+            installLsm(mock)
+            mock.__decorateUIParent = true
+            installScrollBar(mock)
+        end })
         return env
     end
     fresh()
@@ -112,6 +182,139 @@ return function(enableAddon, withPlayer)
     end
 
     local glowPaint, tipSpot
+
+    --- Test mode on over the window, shown mid-screen on a 1920-wide screen: its sample roll fills the
+    --- Rolls panel, Drops' Rolling now and a roll popup's side card (RX-19, RX-22), its History the
+    --- History tab. Prints are quietened.
+    local function testMode()
+        m.seedGearJournal()
+        NS.ShowWindow()
+        local win = NS.Window.Frame()
+        win.GetLeft = function() return 200 end
+        win.GetRight = function() return 800 end
+        win.GetHeight = function() return 400 end
+        m.UIParent.GetWidth = function() return 1920 end
+        local p0 = m.print
+        m.print = function() end
+        NS.SetTestMode(true)
+        m.print = p0
+        return win
+    end
+
+    --- One of yours on Drops with its trade window running and the Trade window column shown.
+    local function tradeWindowRow()
+        local d = drop()
+        d.isMine = true
+        d.looter = { name = "Me-Realm", guid = "Player-1-ME", classFile = "PALADIN", isSelf = true }
+        d.trade = { state = "yes", reasonKey = "timer", basis = "timer", expiresAt = 100 + 600 }
+        m.__now = 100
+        withPlayer(m)
+        NS.LootFeed.Groups = function()
+            return { { key = "enc:3", label = "Boss 3", kind = "encounter", situation = "dungeon", at = 90, drops = { 1 } } }
+        end
+        NS.LootFeed.Get = function(id) return id == 1 and d or nil end
+        NS.LootFeed.Drops = function() return { d } end
+        NS.WindowFilterBar.Set("group", "view", "all")
+        NS.ShowWindow()
+        return NS.WindowGroup.Drawn().rows[1].cells.tradeWindow
+    end
+
+    -- Each part its own surface: the family check is per surface, so two parts painted from two
+    -- tokens in one surface would let one of them stop following while the other moved.
+    local function parts(list, build, paint, ...)
+        for _, part in ipairs({ ... }) do
+            list[#list + 1] = { name = part[1], build = function() return build()[part[2]] end, paint = paint }
+        end
+    end
+
+    -- SD-SK-DW.1 (the skin-defaults audit, LibKa0s#97): the painted surfaces the declaration left out.
+    local function addMissing(list)
+        local function rollsPanel()
+            testMode()
+            local d = NS.RollsPanel.Drawn()
+            local h, line = d.headers[1], d.lines[1]
+            return { panel = d.panel, fill = h.fill, chevron = h.chevron, bar = h.bar, stripe = line.stripe, wash = line.wash }
+        end
+        parts(list, rollsPanel, function() NS.RollsPanel.Refresh() end,
+            { "the Rolls panel", "panel" }, { "a Rolls panel header's band", "fill" },
+            { "a Rolls panel header's chevron", "chevron" }, { "a Rolls panel header's countdown bar", "bar" },
+            { "a Rolls panel line's stripe", "stripe" }, { "a Rolls panel line's winner wash", "wash" })
+        local function sideCard()
+            testMode()
+            local o = NS.RollPopup.Overlay(NS.RollPopup.StandInKey(1))
+            return { card = o, title = o.header.title }
+        end
+        parts(list, sideCard, function() NS.RollPopup.Refresh() end,
+            { "a roll popup's side card", "card" }, { "a roll popup card's header title", "title" })
+        -- The header's band, as the window's title bar: the backdrop is clear under every skin that
+        -- sets a gradient, so the band is its gradient region (the AF-DW-ROLLHDR header).
+        list[#list + 1] = { name = "a roll popup card's header band", build = function()
+            local h = sideCard().card.header
+            return h, m.LibStub("LibKa0s-Skin-1.0").painted[h].regions.grad
+        end, paint = function() NS.RollPopup.Refresh() end }
+        local function historyRow()
+            insights()
+            NS.Window.SelectTab("history")
+            return NS.WindowHistory.Drawn().rows[1]
+        end
+        parts(list, historyRow, redraw, { "a History row's stripe", "stripe" },
+            { "a History row's expanded wash", "selected" }, { "a History row's chevron", "chevron" })
+        local function pendingRow()
+            local win = testMode()
+            NS.Window.SelectTab("group")
+            return NS.WindowPending.Drawn(win.panes.group).rows[1]
+        end
+        parts(list, pendingRow, redraw, { "a Rolling now row's stripe", "stripe" },
+            { "a Rolling now row's expanded wash", "selected" }, { "a Rolling now row's chevron", "chevron" })
+        local function compactCard()
+            local _, card = listed("compact")
+            return card
+        end
+        parts(list, compactCard, redraw, { "a compact card's stripe", "stripe" },
+            { "a compact card's expanded wash", "selected" })
+        local function filtersButton()
+            listed("compact")
+            local b = NS.CompactChrome.Parts().filters
+            return { box = b, label = b.label, arrow = b.arrow }
+        end
+        parts(list, filtersButton, nil, { "the compact Filters button's box", "box" },
+            { "the compact Filters button's label", "label" }, { "the compact Filters button's arrow", "arrow" })
+        -- The Edit message box: its shell, its title and its typed text (the owner's U-19 of 2026-11-20).
+        local function editBox()
+            listed()
+            NS.Asks.Preview = function() return { text = "Hi", length = 2 } end
+            local e = NS.DetailCard.OpenEditor(1, "ask")
+            return { shell = e, title = e.title, box = e.box }
+        end
+        parts(list, editBox, nil, { "the Edit message box", "shell" }, { "the Edit message box's title", "title" },
+            { "the Edit message box's text", "box" })
+        -- The countdown bar and its track are flat thin bars (skinning-§9's Leave class, A7, owner ruling
+        -- of 2026-11-01): their colors follow the skin, and no bar texture is drawn.
+        parts(list, tradeWindowRow, redraw, { "the trade window's countdown bar", "bar" },
+            { "the trade window's countdown track", "barBg" })
+        local function emptyState()
+            NS.LootFeed.Drops = function() return {} end
+            NS.LootFeed.Groups = function() return {} end
+            return window().panes.group.emptyState
+        end
+        parts(list, emptyState, nil, { "the Drops empty state's title", "title" },
+            { "the Drops empty state's text", "text" })
+        -- The panes' scrollbars through S.ScrollBar: its corridor and its knob, each its own surface
+        -- (two tokens). Drops' and History's; every other pane's bar is the same call.
+        local function scrollParts(open)
+            return function()
+                local bar = rawget(open().scroll, "ScrollBar")
+                local regions = m.LibStub("LibKa0s-Skin-1.0").painted[bar].regions
+                return { track = regions.track, knob = regions.knob }
+            end
+        end
+        parts(list, scrollParts(function() return window().panes.group end), nil,
+            { "the Drops scrollbar's corridor", "track" }, { "the Drops scrollbar's knob", "knob" })
+        parts(list, scrollParts(function()
+            NS.Window.SelectTab("history")
+            return window().panes.history
+        end), nil, { "the History scrollbar's corridor", "track" }, { "the History scrollbar's knob", "knob" })
+    end
     local function glowSurface(offSpec)
         return function()
             local out, paint = glowOf(glowDrop(offSpec))
@@ -151,8 +354,8 @@ return function(enableAddon, withPlayer)
                 local _, row = listed()
                 return row.stripe, row.cells.level and row.cells.level.text or row.cells.ilvl.text
             end, paint = redraw },
-            -- The tables' face is not a surface here: the harness has no LibSharedMedia, so every
-            -- skin's face resolves to the client's and a string's SetFont never moves.
+            -- The tables' face moves with the skin through the LibSharedMedia fake above, so the
+            -- Drops row's text asks it of every family; the shadow is its own surface for its companion.
             { name = "the tables' shadow", companion = setting("window.tableFontShadowFromSkin"),
               scope = "fonts", build = tableHalf("SetShadowColor", "SetShadowOffset"), paint = redraw },
             { name = "an item's icon border", companion = function(on)
@@ -213,11 +416,13 @@ return function(enableAddon, withPlayer)
                 local d = insights()
                 return d.headers.verdicts, d.dividers.loot.fs, d.dividers.loot.rules[1]
             end },
-            { name = "an Insights bar in a host color", build = function()
+            -- A data fill on a Texture, drawn in the skin's bar texture through S.BarTexture (kit
+            -- revision 58: `expect = "texture"`, so a fill that stops following fails on its own).
+            { name = "an Insights bar in a host color", expect = "texture", build = function()
                 local bar = insights().ctx:Pool("verdicts").active[1]
                 return bar.fill
             end, paint = redraw },
-            { name = "an Insights strip column", build = function()
+            { name = "an Insights strip column", expect = "texture", build = function()
                 local d = insights()
                 return d.ctx:Pool("drops").active[1].fill, d.strips.drops.axisLine
             end, paint = redraw },
@@ -231,10 +436,14 @@ return function(enableAddon, withPlayer)
             end },
         },
     }
-    -- The off-spec glow is Retail's alone (Forever port design §4.4): on WoW Forever it is no surface.
+    addMissing(facts.surfaces)
+    -- The off-spec glow and the Trade window column (its countdown bar and track) are Retail's alone
+    -- (Forever port design §4.4; C.FEATURE_CLIENTS.tradeTimer): on WoW Forever they are no surface.
     if _G.DW_TEST.forever then
-        for i, s in ipairs(facts.surfaces) do
-            if s.name == "the off-spec glow" then table.remove(facts.surfaces, i) break end
+        local retailOnly = { ["the off-spec glow"] = true, ["the trade window's countdown bar"] = true,
+                             ["the trade window's countdown track"] = true }
+        for i = #facts.surfaces, 1, -1 do
+            if retailOnly[facts.surfaces[i].name] then table.remove(facts.surfaces, i) end
         end
     end
     return facts

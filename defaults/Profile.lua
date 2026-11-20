@@ -221,7 +221,7 @@ NS.C = {
             -- shadow), Window › Layout › Tables' composed font block (settings/ComposedRows.lua). Each
             -- default keeps the look the tables had before it: the skin's face (`tableFontFromSkin`;
             -- `tableFont` waits for the player to turn it off), the swatch on Ka0s Default's plain text
-            -- color, which modules/WindowRows.lua reads as "the skin's" until another color is picked,
+            -- color, drawn only with its Use the skin's color companion off (`tableFontColorFromSkin`),
             -- and the skin's shadow. Only the flags moved: From skin ("@skin"), resolved through the
             -- Skin tab's Font outline as window text. Nothing stored before them, so no migration.
             -- `tableFont` is the Ka0s pick (FS-DW-FLIP), where a player who turns the face's companion
@@ -231,6 +231,10 @@ NS.C = {
             tableFont           = "Ka0s Prototype",
             tableFontFromSkin   = true,
             tableFontColor      = { r = 0.92, g = 0.92, b = 0.92, a = 1 },   -- = dw.plain's Ka0s Default
+            -- Use the skin's color (LibKa0s v1.108.0, OptionsCompose minor 20; skinning-§9, the owner's
+            -- R-2): on, plain text draws the skin's plain color and the swatch is not read; off, the
+            -- swatch. core/Database.lua's step 14 turned it off once where a profile stored a pick.
+            tableFontColorFromSkin = true,
             tableFontClassColor = false,
             tableFontFlags      = "@skin",
             tableFontShadow     = true,

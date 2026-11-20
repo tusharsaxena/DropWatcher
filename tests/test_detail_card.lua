@@ -686,6 +686,30 @@ test("card: with Edit before sending on, the row's Ask opens the box; its Send a
     assertTrue(pressed[3].opts == nil)
 end)
 
+-- SD-SK-DW (the owner's U-19 of 2026-11-20): the Edit message box's typed text is skinned, the skin's
+-- body face and its `input.text`, repainted on a switch; Ignore fonts gives chat's face back. red
+-- under: the box left on ChatFontNormal with no skin call (the rollout's D6).
+test("card: the Edit message box's text takes the skin's face and input text color, and follows a switch", function()
+    local NS, _, m = T.enableAddon()
+    m.__now = 100
+    seed(NS, { GROUP }, { drop() })
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    NS.Asks.Preview = function() return { text = "Hi", length = 2 } end
+    local e = NS.DetailCard.OpenEditor(1, "ask")
+    local Skin = m.LibStub("LibKa0s-Skin-1.0")
+    local rec = Skin.painted[e.box]
+    assertTrue(rec ~= nil and rec.calls.Font ~= nil, "the box's face through the skin's S.Font")
+    local seen
+    e.box.SetTextColor = function(_, r, g, b) seen = { r, g, b } end
+    NS.SkinRepaint()
+    local r, g, b = NS.Skin.Color("input.text")
+    assertTrue(seen ~= nil and seen[1] == r and seen[2] == g and seen[3] == b, "the skin's input text color")
+    Skin:SetChoice("DropWatcher", "ka0s", "obsidian")
+    r, g, b = NS.Skin.Color("input.text")
+    assertTrue(seen[1] == r and seen[2] == g and seen[3] == b, "and the next skin's after a switch")
+end)
+
 test("card: the Edit message box says why when the ask would be refused, and Cancel closes it", function()
     local NS = shownTable()
     NS.Asks.Preview = function() return nil, "offline" end

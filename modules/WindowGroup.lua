@@ -673,9 +673,9 @@ function WG.PaintChevron(t, open)
 end
 
 --- A row's or a card's two washes from the skin: the stripe (`list.stripe`, Ka0s Default
---- 1, 1, 1, 0.08) and the expanded wash (`dw.rowOpen`, gold at 0.16, AD-82-DW), each repainted on a
---- skin switch. The rows keep their own two textures (not the skin's ListRow, whose selected wash is
---- `list.sel`'s 0.26).
+--- 1, 1, 1, 0.08) and the expanded wash (`dw.rowOpen`, which follows the skin's selection `list.sel`,
+--- Ka0s Default's gold at 0.26: the owner's U-18), each repainted on a skin switch. The rows keep
+--- their own two textures, not the skin's ListRow.
 --- @param row table `row.stripe`, `row.selected`
 function WG.PaintRowWashes(row)
     NS.SkinPaint(row.stripe, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)

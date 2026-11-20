@@ -218,8 +218,9 @@ buttons with tooltips, right to left from the corner (`NS.FooterRow`): Drops `Ex
 `Collapse all`, `Scan group` and `Post my tradeables` (only while one of your listed drops can be
 traded), History the toggle, Insights `Reset filters`, the same in both layouts. The window builds
 `FooterRow.SLOTS` (3) marks and each tab binds its controls to them on its paint (its pane's `foot`
-model, `WindowFooter.PaintTab`); a mark no control takes is hidden. Nothing of the host's is laid
-over the footer. The resize grip is built in the footer's bottom-right corner (`MakeResizable`
+model, `WindowFooter.PaintTab`); a mark no control takes is hidden and takes no slot (LibKa0s
+Widgets minor 30, LibKa0s#94, and `NS.BareFooter`'s own layout without the library; SD-DW-94), so the
+left line runs up to the leftmost shown mark. Nothing of the host's is laid over the footer. The resize grip is built in the footer's bottom-right corner (`MakeResizable`
 `gripParent`, the footer built with `grip = true` and told `SetGrip` as the grip shows and hides, so
 the marks clear the grip only while it shows), hidden while the window is locked or minimized
 (RX-08). The tab's Sort is on the filter bar's right edge (`modules/WindowFilterBar.lua`), in the
@@ -566,7 +567,13 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   (an expanded row's or card's wash, following `list.hover`), kept its own gold .08 under Ka0s
   Default, which then stood 7 L* off the window and no further than a striped row; its default is
   now gold .16, Ka0s Default's `list.hover`, which stands 12 or more off the window and 3 or more
-  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`.
+  off a striped row, as the library's floors ask. `tests/test_skin_setup.lua`. From SD-SK-DW (the
+  owner's U-18 of 2026-11-20) `dw.rowOpen` follows the skin's selection, `list.sel`, Ka0s Default's
+  gold .26, so an open row stands apart from a hovered one in every skin (ruling Q2, skinning-§4).
+- **The Edit message box's typed text follows the skin (SD-SK-DW, the owner's U-19 of 2026-11-20).**
+  Its EditBox takes the skin's body face through `S.Font` (Ignore fonts gives chat's `ChatFontNormal`
+  back) and the skin's `input.text` color, repainted on a switch. Until then it kept chat's face
+  (the rollout's call D6, a lead's call the owner overturned).
 - **The window's own surfaces (FS-DW-FIX, causes A1, L4, L8, L9).** The flat button is `S.Button`,
   its box remapped to `dw.btnBg` and `dw.btnBorder`; the library does not reach `b.label` or `b.art`,
   which carry a state tone (decision D1), so `NS.WindowTitleBar.PaintButtonLook` draws an untoned one
@@ -617,14 +624,16 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   (`H.FontGroup` with `fromSkin` and `flagsFromSkin`, `settings/ComposedRows.lua`): Font
   (`window.tableFont`, read only while Use the skin's font, `window.tableFontFromSkin`, is off), Font
   size (`window.fontSize`, 0 Default as before), Font color and Use class color
-  (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
+  (`window.tableFontColor`, `window.tableFontClassColor`, with Use the skin's color,
+  `window.tableFontColorFromSkin`, the composer's from LibKa0s v1.108.0), Font flags (`window.tableFontFlags`, From
   skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
   and Font shadow (`window.tableFontShadow`, with Use the skin's shadow). `NS.WindowRows` draws it on
   both tabs and both layouts through `S.HudFont`: one named font object per string (a 12.0.7 client
   draws a font object's shadow, not a runtime one),
   the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
-  read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
-  tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
+  read as the skin's plain color while Use the skin's color is on, so the defaults keep the look the
+  tables had (`tests/test_table_font.lua`; migration step 14 turned the companion off once where a
+  profile stored a pick, so it still draws). The glyphs keep their face and flags and take the size. No
   flag was stored before the block, so none migrates; and the addon draws no HUD text, so
   `S.HudFontSize` (D-09) reaches nothing. Each skin's
   body and title sizes are the library's, measured so every skin's text is as wide as Ka0s Default's.
@@ -644,7 +653,6 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
-| The Edit message box's `ChatFontNormal` face (`modules/DetailCard.lua`) | it previews a whisper, so it wears chat's own face (the rollout's DropWatcher call D6) |
 | The icon border's `IS.SOLID_EDGE` (WHITE8X8) and `IS.BORDER_FALLBACK` (UI-Tooltip-Border) in `modules/IconStyle.lua` | LibSharedMedia key resolution for the border's edge file, not a color: what a style name draws when LSM has no path for it |
 
 The resize grips are not on this list: every one, the main window's and the four tool windows', is

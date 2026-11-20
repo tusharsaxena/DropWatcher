@@ -133,11 +133,13 @@ NS.SKIN_TOKENS = {
     -- compact separator); G5b its tooltip half, a token of its own (D7).
     ["dw.idle"]       = { default = { 0.62, 0.62, 0.64, 1 }, follow = "text.muted" },     -- C.IDLE
     ["dw.tipHint"]    = { default = { 0.62, 0.62, 0.64, 1 }, follow = "gtip.muted" },     -- C.IDLE
-    -- DW-G6: an expanded (selected) row's or card's wash. Gold .16, Ka0s Default's list.hover since
-    -- LibKa0s v1.105.0 (AD-82-DW, LibKa0s#82/#84): the .08 it was cut at stood 7 L* off the window
-    -- once the stripe rose to .08, no further than a striped row, under the library's floors (12 off
-    -- the window, 3 off a striped row; tests/test_skin_setup.lua).
-    ["dw.rowOpen"]    = { default = { 1.00, 0.82, 0.00, 0.16 }, follow = "list.hover" },
+    -- DW-G6: an expanded (selected) row's or card's wash: the skin's selection, `list.sel`, and Ka0s
+    -- Default's own gold .26 (the owner's U-18 of 2026-11-20, SD-SK-DW). Until then it followed
+    -- `list.hover`, so an open row drew the hover wash in every skin, where ruling Q2 (skinning-§4)
+    -- holds the selection apart from the hover; AD-82-DW (LibKa0s#82/#84) had raised it from .08 to
+    -- the hover's .16 for the library's row floors (12 L* off the window, 3 off a striped row;
+    -- tests/test_skin_setup.lua), which .26 clears further.
+    ["dw.rowOpen"]    = { default = { 1.00, 0.82, 0.00, 0.26 }, follow = "list.sel" },
     -- DW-G7: a drop row's chevron.
     ["dw.chevron"]    = { default = { 1.00, 1.00, 1.00, 0.55 }, follow = "icon.tint" },   -- C.CHEVRON_ROW
     -- DW-G9: the restriction badge (lock icon and text).
@@ -201,6 +203,10 @@ NS.SKIN_FALLBACK = {
     ["sem.modeTest"]     = { 1, 0.15, 0.15, 1 },
     ["sem.badAlt"]       = { 1, 0.25, 0.25, 1 },
     ["strip.sim"]        = { 0.35, 0.8, 1, 0.12 },
+    -- Insights' kept drops (modules/InsightsRows.lua), with the skin's own answering nil.
+    ["chart.other"]      = { 0.55, 0.62, 0.72, 1 },
+    -- The Edit message box's typed text (modules/DetailCard.lua; the owner's U-19, SD-SK-DW).
+    ["input.text"]       = { 0.9, 0.9, 0.9, 1 },
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,

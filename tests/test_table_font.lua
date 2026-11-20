@@ -15,7 +15,7 @@ local OLD1 = "|cffa335ee|Hitem:300::|h[Old Band]|h|r"
 
 local FONT_PATHS = {
     "window.tableFont", "window.fontSize", "window.tableFontColor", "window.tableFontClassColor",
-    "window.tableFontFlags", "window.tableFontShadow", "window.tableFontFromSkin",
+    "window.tableFontFlags", "window.tableFontShadow", "window.tableFontFromSkin", "window.tableFontColorFromSkin",
 }
 
 local function drop()
@@ -117,6 +117,7 @@ test("table font: the defaults keep today's look; only the flags are From skin",
     assertEqual(W.tableFontFlags, "@skin")
     assertEqual(W.tableFontShadow, true, "the skin's text shadow")
     assertEqual(W.tableFontClassColor, false)
+    assertEqual(W.tableFontColorFromSkin, true, "the skin's plain text color (R-2)")
     local plain = NS.SKIN_TOKENS["dw.plain"].default
     local c = W.tableFontColor
     assertTrue(near(c.r, plain[1]) and near(c.g, plain[2]) and near(c.b, plain[3]) and c.a == 1,
@@ -171,6 +172,7 @@ test("table font: the color is plain text's; a verdict, a class and a quality ke
     sameColor(row.cells.ilvl.text, P.r, P.g, P.b, "the default draws the skin's plain text color")
     local good = C.TONE.good
     local looterR, looterG, looterB = row.cells.looter.text:GetTextColor()
+    S.Set("window.tableFontColorFromSkin", false)
     S.Set("window.tableFontColor", { r = 1, g = 0.5, b = 0, a = 1 })
     row = redraw(NS)
     sameColor(row.cells.ilvl.text, 1, 0.5, 0, "a picked color draws plain text")
@@ -182,9 +184,36 @@ test("table font: the color is plain text's; a verdict, a class and a quality ke
     sameColor(redraw(NS).cells.ilvl.text, cr, cg, cb, "Use class color: the player's class color")
     assertFalse(near(cr, 1) and near(cg, 0.5) and near(cb, 0), "the mock's class color is not the swatch")
     S.Set("window.tableFontClassColor", false)
-    S.Set("window.tableFontColor", NS.C.PROFILE.window.tableFontColor)
-    sameColor(redraw(NS).cells.ilvl.text, P.r, P.g, P.b, "the default follows the skin again")
+    S.Set("window.tableFontColorFromSkin", true)
+    sameColor(redraw(NS).cells.ilvl.text, P.r, P.g, P.b, "Use the skin's color: the skin's again, the pick kept")
+    assertEqual(S.Get("window.tableFontColor").g, 0.5, "the stored pick stays for a player who turns it off")
     local _ = m
+end)
+
+-- SD-RV-DW (LibKa0s v1.108.0, OptionsCompose minor 20; skinning-§9, Every option default follows the
+-- skin, the owner's R-2): the swatch takes the composer's Use the skin's color companion, on by
+-- default, in place of the sentinel the swatch's default stood for. red under: `colorFromSkin = false`
+-- (no companion row), a companion defaulting false, or a reader still comparing the swatch to its
+-- default (a picked swatch drawn while the companion is on).
+test("table font: Use the skin's color is the swatch's companion, on by default and ahead of a pick", function()
+    local NS = shown()
+    local S = NS.SchemaRuntime
+    local comp = S.FindRow("window.tableFontColorFromSkin")
+    assertTrue(comp ~= nil, "the composer emits the companion")
+    assertEqual(comp.type, "bool"); assertEqual(comp.default, true)
+    assertEqual(comp.subgroup, "Tables")
+    assertTrue(comp.validate(true) and not comp.validate("yes"), "checked before it is stored")
+    local order = {}
+    for i, r in ipairs(NS.addon.Settings.Schema) do order[r.path or ""] = i end
+    assertTrue(order["window.tableFontColor"] < order["window.tableFontColorFromSkin"], "after the canonical rows")
+    local P = NS.Constants.TONE.plain
+    S.Set("window.tableFontColor", { r = 0.2, g = 0.4, b = 0.6, a = 1 })
+    sameColor(redraw(NS).cells.ilvl.text, P.r, P.g, P.b, "a picked swatch is not read while the companion is on")
+    S.Set("window.tableFontColorFromSkin", false)
+    sameColor(redraw(NS).cells.ilvl.text, 0.2, 0.4, 0.6, "off: the pick")
+    S.Set("window.tableFontColor", NS.C.PROFILE.window.tableFontColor)
+    local d = NS.C.PROFILE.window.tableFontColor
+    sameColor(redraw(NS).cells.ilvl.text, d.r, d.g, d.b, "off at the default: the swatch as stored")
 end)
 
 --- Give one headless font string the shadow and font-object calls the client has (tests/wow_mock.lua's
@@ -262,14 +291,15 @@ test("table font: a read reuses its table, and a later read leaves nothing of th
     local NS = shown()
     local S, WR = NS.SchemaRuntime, NS.WindowRows
     local first = WR.ReadFont()
-    assertEqual(first.plain, nil, "the swatch at its default draws the skin's plain color")
+    assertEqual(first.plain, nil, "Use the skin's color draws the skin's plain color")
+    S.Set("window.tableFontColorFromSkin", false)
     S.Set("window.tableFontColor", { r = 0.2, g = 0.4, b = 0.6, a = 0.5 })
     local picked = WR.ReadFont()
     assertTrue(picked == first, "one table, read after read")
     assertTrue(near(picked.plain[1], 0.2) and near(picked.plain[2], 0.4) and near(picked.plain[3], 0.6)
         and near(picked.plain[4], 0.5), "the picked color")
-    S.Set("window.tableFontColor", NS.C.PROFILE.window.tableFontColor)
-    assertEqual(WR.ReadFont().plain, nil, "back at the default: no color left behind")
+    S.Set("window.tableFontColorFromSkin", true)
+    assertEqual(WR.ReadFont().plain, nil, "back on the skin's: no color left behind")
     local fs = NS.WindowGroup.Drawn().rows[1].cells.slot.text
     WR.SetTone(fs, "plain")
     local P = NS.Constants.TONE.plain
@@ -280,6 +310,7 @@ test("table font: History and the compact cards draw the same setting", function
     local NS, _, m = shown()
     local S = NS.SchemaRuntime
     S.Set("window.tableFontFlags", "MONOCHROME")
+    S.Set("window.tableFontColorFromSkin", false)
     S.Set("window.tableFontColor", { r = 0.2, g = 0.4, b = 0.6, a = 1 })
     NS.SetWindowMode("compact")
     local card = NS.WindowGroup.Drawn().rows[1]

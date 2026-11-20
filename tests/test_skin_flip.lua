@@ -79,9 +79,18 @@ end)
 test("skin flip: no swatch carries disabledIf, and a class color has no companion", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
-    for _, path in ipairs(here({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontShadow" })) do
+    for _, path in ipairs(here({ "icons.borderColor", "glow.main.color", "glow.offSpec.color", "window.tableFontColor" })) do
         assertNil(S.FindRow(path).disabledIf, path)
     end
+    -- LibKa0s v1.108.0 (OptionsCompose minor 20; skinning-§9): Font shadow is a toggle, not a swatch,
+    -- and the composer disables it while its Use the skin's shadow companion is on. red under: the
+    -- composer's shadow companion emitted a second time beside the host's `extra` row.
+    assertEqual(S.FindRow("window.tableFontShadow").disabledIf, "window.tableFontShadowFromSkin")
+    local n = 0
+    for _, row in ipairs(NS.addon.Settings.Schema) do
+        if row.path == "window.tableFontShadowFromSkin" then n = n + 1 end
+    end
+    assertEqual(n, 1, "one Use the skin's shadow row")
     for _, path in ipairs({ "icons.useClassColorBorderFromSkin", "glow.main.useClassColorFromSkin",
         "icons.borderQualityFromSkin", "window.tableFontClassColorFromSkin" }) do
         assertNil(S.FindRow(path), path)

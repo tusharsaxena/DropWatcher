@@ -906,6 +906,9 @@ local PINNED_ROWS = {
     { "window.tableFontFlags", "string", "\"@skin\"" },
     { "window.tableFontFromSkin", "bool", "true" },
     { "window.tableFontShadow", "bool", "true" },
+    -- SD-RV-DW (LibKa0s v1.108.0, OptionsCompose minor 20; skinning-§9, the owner's R-2): the Font
+    -- color swatch's Use the skin's color companion, emitted by the composer, on by default.
+    { "window.tableFontColorFromSkin", "bool", "true" },
     -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
     { "char.role", "string", "\"auto\"" },
 }

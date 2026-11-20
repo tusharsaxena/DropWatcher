@@ -252,11 +252,10 @@ function IR.QualityColor(q)
     return rgb(NS.QualityColor(q))
 end
 
--- The library's `chart.other` (kept drops), else IR.OTHER_FALLBACK: a stacked segment needs a color,
--- and the degraded arm (no Skin library) has no `chart.other`.
-IR.OTHER_FALLBACK = { 0.55, 0.62, 0.72 }   -- LibKa0s' own `chart.other` under its default skin
+-- The skin's `chart.other` (kept drops), else the host copy of Ka0s Default's (NS.SKIN_FALLBACK,
+-- held to the library's value by tests/test_surface_parity.lua): a stacked segment needs a color.
 local function otherColor()
-    local c = rgb(NS.SkinColor("chart.other")) or IR.OTHER_FALLBACK
+    local c = rgb(NS.SkinColor("chart.other")) or NS.SKIN_FALLBACK["chart.other"]
     return { c[1], c[2], c[3] }
 end
 

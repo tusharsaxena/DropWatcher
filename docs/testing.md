@@ -32,7 +32,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 54, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 58, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -826,12 +826,21 @@ DropWatcher case to library case.
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
-The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50) reads
+The kit's two skin gates are declared in `tests/run.lua`: `test_skin_values` (kit revision 50; from
+revision 58 it also reads keyed and plain color tables, multi-assigned and `return` triples) reads
 every tracked file under `core/`, `modules/` and `settings/` for a typed color or texture no kit
-category takes, with this addon's color helpers named in `calls` and four host rows (DW-FP15's roll
+category takes, with this addon's color helpers named in `calls` and its host rows (DW-FP15's roll
 glyphs and RX-06's Disenchant one in `modules/RollCells.lua`, the game's group-loot roll-button art,
-cause A6), and `test_skin_switch` runs the surfaces `tests/skin_switch_facts.lua` declares through a
-probe skin, so a declared surface that draws the same under it fails. The Insights tab declares four
+cause A6; the four secondary-stat hues in `core/Constants.lua`, cause MC, the Meaning colors class;
+`RC.Grid`'s counts, category `not a color`), and `test_skin_switch` runs the surfaces
+`tests/skin_switch_facts.lua` declares through a probe skin, so a declared surface that draws the same
+under it fails. From revision 58 each setter family (texture, color, font, shadow) has to move on its
+own, so the facts install a LibSharedMedia fake (every key its own path) on the suite's instances:
+without one every skin's face resolves to the same fallback and a string's face never moves. Each
+surface holds one painted part (SD-SK-DW.1 split the new ones so), and the Insights bar and strip
+column declare `expect = "texture"`; the Rolls panel, a roll popup's side card, the History, Rolling
+now and compact rows, the compact Filters button, the Edit message box, the countdown bar and track
+(Retail only), the Drops empty state and the Drops and History scrollbars' corridor and knob joined the list with the skin-defaults audit (LibKa0s#97); for the scrollbars the facts give a UIPanelScrollFrameTemplate scroll frame the bar the headless template lacks (`installScrollBar`). The Insights tab declares four
 of those surfaces over a one-drop history: a card, a section heading with its divider, a bar in a
 host color and a strip column.
 

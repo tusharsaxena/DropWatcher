@@ -313,8 +313,10 @@ L["Font size"] = "Font size"
 L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."] =
     "The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."
 L["Default"] = "Default"
-L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] =
-    "The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."
+L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. Not read while Use the skin's color is on."] =
+    "The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. Not read while Use the skin's color is on."
+L["Draw the tables' plain text in the skin's own text color. The Font color row is not read while this is on. Use class color comes first."] =
+    "Draw the tables' plain text in the skin's own text color. The Font color row is not read while this is on. Use class color comes first."
 L["Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."] = "Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."
 L["Draw the tables' text in the skin's face. The Font row is not read while this is on."] =
     "Draw the tables' text in the skin's face. The Font row is not read while this is on."

@@ -161,11 +161,32 @@ local function bareMark(foot, spec)
     return b
 end
 
+--- Lay the bare footer's marks right to left from the corner, a hidden mark taking no slot, then its
+--- right line left of the last shown mark and its left line up to the right line: W.Footer's own
+--- layout from Widgets minor 30 (LibKa0s#94, SD-DW-94).
+local function layBare(foot)
+    local pad = FOOTER_FALLBACK.PAD
+    local anchor, point, x = foot, "RIGHT", -pad
+    for _, b in ipairs(foot.marks) do
+        b:ClearAllPoints()
+        b:SetPoint("RIGHT", anchor, point, x, 0)
+        if b:IsShown() then anchor, point, x = b, "LEFT", -FOOTER_FALLBACK.MARK_GAP end
+    end
+    if anchor ~= foot then x = -pad end
+    foot.right:ClearAllPoints()
+    foot.right:SetPoint("RIGHT", anchor, point, x, 0)
+    foot.left:ClearAllPoints()
+    foot.left:SetPoint("LEFT", foot, "LEFT", pad, 0)
+    foot.left:SetPoint("RIGHT", foot.right, "LEFT", -pad, 0)
+end
+
 --- A footer with no library (a degraded install only; with the library every footer is W.Footer,
 --- anti-pattern #118): a bare frame of the same height across `parent`'s bottom edge with W.Footer's
 --- two lines and setters and its marks (`opts.marks`, the same specs, laid right to left from the
 --- corner at the published size and pitch, the right line left of them; RX-30), and no hairline and
---- no grip corner, so a host's paint runs unchanged and its controls stay in reach.
+--- no grip corner, so a host's paint runs unchanged and its controls stay in reach. As W.Footer
+--- does from Widgets minor 30, a hidden mark takes no slot: each mark's show and hide, and the
+--- footer's own show, lay it again (`layBare`).
 --- @param parent table
 --- @param opts table|nil { marks = { { icon, onClick(btn, button) }, ... } }
 --- @return table { left, right, marks, SetLeft, SetRight, SetGrip }
@@ -174,21 +195,19 @@ function NS.BareFooter(parent, opts)
     foot:SetPoint("BOTTOMLEFT", parent, "BOTTOMLEFT", 0, 0)
     foot:SetPoint("BOTTOMRIGHT", parent, "BOTTOMRIGHT", 0, 0)
     foot:SetHeight(FOOTER_FALLBACK.HEIGHT)
-    local pad = FOOTER_FALLBACK.PAD
     foot.marks = {}
-    local anchor, point, x = foot, "RIGHT", -pad
     for _, spec in ipairs(type(opts) == "table" and type(opts.marks) == "table" and opts.marks or {}) do
-        local b = bareMark(foot, spec)
-        b:SetPoint("RIGHT", anchor, point, x, 0)
-        foot.marks[#foot.marks + 1] = b
-        anchor, point, x = b, "LEFT", -FOOTER_FALLBACK.MARK_GAP
+        foot.marks[#foot.marks + 1] = bareMark(foot, spec)
     end
-    if anchor ~= foot then x = -pad end
     foot.right = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    foot.right:SetPoint("RIGHT", anchor, point, x, 0)
     foot.left = foot:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
-    foot.left:SetPoint("LEFT", foot, "LEFT", pad, 0)
-    foot.left:SetPoint("RIGHT", foot.right, "LEFT", -pad, 0)
+    local function relay() layBare(foot) end
+    for _, b in ipairs(foot.marks) do
+        b:HookScript("OnShow", relay)
+        b:HookScript("OnHide", relay)
+    end
+    foot:HookScript("OnShow", relay)
+    layBare(foot)
     for _, fs in ipairs({ foot.left, foot.right }) do
         fs:SetWordWrap(false)
         NS.Skin.Text(fs, "text.muted")

@@ -248,6 +248,64 @@ test("footer row: Post my tradeables shows only while something of yours is trad
     assertEqual(markKeys(NS), "fold,scan,post")
 end)
 
+-- SD-DW-94 (LibKa0s#94, Widgets minor 30): the footer lays out only its shown marks, so the words
+-- reach the leftmost shown mark and a mark a tab leaves hidden takes no room. Through minor 29 the
+-- right line (and so the left line's right edge) hung off the third mark whether it showed or not,
+-- about 40 px short on Drops without Post and two marks short on History and Insights. red under:
+-- Widgets minor 29, or a host anchoring the words to a fixed mark.
+test("footer row: the words reach the leftmost shown mark, with no slot for a hidden one (SD-DW-94, LibKa0s#94)", function()
+    -- The client fires OnShow and OnHide when a shown mark's visibility changes, and the library
+    -- re-lays the footer on both; the mock's Show and Hide fire nothing, so each mark gets the
+    -- client's half here, and the tab is bound again through FR.Bind's own Show and Hide.
+    local function asClient(NS, tab)
+        for _, b in ipairs(NS.Window.Frame().footerHost.marks) do
+            local show, hide = b.Show, b.Hide
+            b.Show = function(self)
+                local was = self:IsShown()
+                show(self)
+                if not was then self:__fire("OnShow") end
+                return self
+            end
+            b.Hide = function(self)
+                local was = self:IsShown()
+                hide(self)
+                if was then self:__fire("OnHide") end
+                return self
+            end
+        end
+        NS.Window.SelectTab(tab == "group" and "history" or "group")
+        NS.Window.SelectTab(tab)
+        return NS
+    end
+    local function wordsEnd(NS)
+        local foot = NS.Window.Frame().footerHost
+        local r, l = foot.right.__points, foot.left.__points
+        assertEqual(#r, 1, "the right line has one point"); assertEqual(#l, 2, "the left line has two")
+        assertTrue(l[2][2] == foot.right and l[2][3] == "LEFT", "the words end at the right line")
+        return r[1][2], r[1][3], foot
+    end
+    local NS = asClient(shownDrops(nil, false), "group")
+    local FR = NS.FooterRow
+    assertEqual(markKeys(NS), "fold,scan")
+    local rel, point = wordsEnd(NS)
+    assertTrue(rel == FR.Mark("scan"), "Drops, nothing tradeable: up to Scan group, not the hidden third mark")
+    assertEqual(point, "LEFT")
+    NS = asClient(shownDrops(nil, true), "group")
+    assertEqual(markKeys(NS), "fold,scan,post")
+    assertTrue((wordsEnd(NS)) == NS.FooterRow.Mark("post"), "Post shown: up to it")
+    NS = asClient(shownHistory(), "history")
+    assertEqual(markKeys(NS), "fold")
+    local foot
+    rel, point, foot = wordsEnd(NS)
+    assertTrue(rel == NS.FooterRow.Mark("fold"), "History: up to its one mark")
+    assertEqual(point, "LEFT")
+    assertFalse(foot.marks[2]:IsShown() or foot.marks[3]:IsShown(), "the two spare marks hidden")
+    NS.Window.SelectTab("insights")
+    assertTrue((wordsEnd(NS)) == NS.FooterRow.Mark("reset"), "Insights: up to Reset filters")
+    NS.Window.SelectTab("group")
+    assertTrue((wordsEnd(NS)) == NS.FooterRow.Mark("scan"), "back on Drops: the chain follows the tab")
+end)
+
 test("footer row: each mark does what its button did: Scan group, Post my tradeables (RX-24)", function()
     local NS = shownDrops(nil, true)
     local FR = NS.FooterRow

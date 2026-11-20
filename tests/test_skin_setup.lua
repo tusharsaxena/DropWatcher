@@ -126,8 +126,9 @@ test("Skin seam: the palette's Ka0s Default values are the owner tokens' default
         ["dw.statGain"] = { 0.42, 0.74, 0.46 }, ["dw.plain"] = { 0.92, 0.92, 0.92 },
         ["dw.idle"] = { 0.62, 0.62, 0.64 }, ["dw.tipHint"] = { 0.62, 0.62, 0.64 },
         ["dw.tipLabel"] = { 0.80, 0.68, 0.36 }, ["dw.chevron"] = { 1, 1, 1, 0.55 },
-        -- dw.rowOpen re-pinned at AD-82-DW from .08 to Ka0s Default's list.hover .16 (the row floors).
-        ["dw.restricted"] = { 1, 0.6, 0.2 }, ["dw.rowOpen"] = { 1, 0.82, 0, 0.16 },
+        -- dw.rowOpen re-pinned at AD-82-DW from .08 to Ka0s Default's list.hover .16 (the row floors),
+        -- and at SD-SK-DW to its list.sel .26 (the owner's U-18).
+        ["dw.restricted"] = { 1, 0.6, 0.2 }, ["dw.rowOpen"] = { 1, 0.82, 0, 0.26 },
         ["dw.btnBg"] = { 0.12, 0.12, 0.14, 1 }, ["dw.btnBorder"] = { 0.24, 0.24, 0.27, 0.85 },
         ["dw.rule"] = { 1, 1, 1, 0.1 }, ["dw.cardBg"] = { 0.08, 0.08, 0.10, 0.9 },
         ["dw.cardBorder"] = { 0.24, 0.24, 0.27, 0.85 },
@@ -164,6 +165,20 @@ test("Skin seam: an expanded row's wash clears the library's row floors under Ka
         lstar(striped[1], striped[2], striped[3])
     assertTrue(lOpen - lWin >= 12, ("open row %.1f L* off the window"):format(lOpen - lWin))
     assertTrue(lOpen - lStripe >= 3, ("open row %.1f L* off a striped row"):format(lOpen - lStripe))
+end)
+
+-- SD-SK-DW (the owner's U-18 of 2026-11-20): an expanded row's wash is the skin's selection, not its
+-- hover, so it stands apart from a hovered row as ruling Q2 (skinning-§4) holds Ka0s Default's
+-- selection apart. red under: `follow = "list.hover"`, or a default at the hover's .16.
+test("Skin seam: an expanded row's wash follows the skin's selection, apart from its hover", function()
+    local NS, _, m = T.bootAddon{ skin = "ka0s" }
+    local tok = NS.SKIN_TOKENS["dw.rowOpen"]
+    assertEqual(tok.follow, "list.sel")
+    sameColor("Ka0s Default", { NS.Skin.Color("dw.rowOpen") }, { NS.Skin.Color("list.sel") })
+    local hover, sel = { NS.Skin.Color("list.hover") }, { NS.Skin.Color("dw.rowOpen") }
+    assertTrue(math.abs((sel[4] or 1) - (hover[4] or 1)) > 0.05, "Ka0s Default's open row is not its hover")
+    skinOf(m):SetChoice(OWNER, "ka0s", "obsidian")
+    sameColor("Obsidian", { NS.Skin.Color("dw.rowOpen") }, { NS.Skin.Color("list.sel") })
 end)
 
 test("Skin seam: C.TONE is filled from its tokens, and refilled in place by a skin switch", function()

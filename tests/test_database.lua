@@ -330,3 +330,47 @@ test("database: step 13 turns a stored gearOnly = false into every item kind, ca
         assertNil(NS.SchemaRuntime.FindRow("feed." .. key), key .. ": no settings row reads it")
     end
 end)
+
+-- SD-RV-DW (LibKa0s v1.108.0, OptionsCompose minor 20; skinning-§9, Every option default follows the
+-- skin, the owner's R-2): the tables' Font color gains Use the skin's color, on by default. A stored
+-- swatch other than the old default was a pick, which must keep drawing, so step 14 turns that
+-- profile's companion off once. red under: no step 14; one that reaches only the active profile; one
+-- that turns the companion off for a swatch at the default, a partial one AceDB left at the default,
+-- or a profile with no swatch; or one that skips the active profile because AceDB copied the
+-- companion's default into it.
+test("database: step 14 keeps a picked table text color drawing, in every profile, and nothing else", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 13 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { skin = { fullSkinReset = true }, window = { tableFontColor = { r = 1, g = 0.5, b = 0, a = 1 } } },
+            Alt = { skin = { fullSkinReset = true }, window = { tableFontColor = { r = 0.2 } } },
+            Alpha = { skin = { fullSkinReset = true }, window = { tableFontColor = { a = 0.5 } } },
+            AtDefault = { skin = { fullSkinReset = true }, window = { tableFontColor = { r = 0.92, g = 0.92, b = 0.92, a = 1 } } },
+            Partial = { skin = { fullSkinReset = true }, window = { tableFontColor = {} } },
+            Fresh = { skin = { fullSkinReset = true }, window = { mode = "compact" } },
+        },
+    }
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertEqual(p.Default.window.tableFontColorFromSkin, false, "the active profile's pick")
+    assertEqual(p.Alt.window.tableFontColorFromSkin, false, "another stored profile, one channel stored")
+    assertEqual(p.Alpha.window.tableFontColorFromSkin, false, "an opacity of its own is a pick")
+    assertNil(p.AtDefault.window.tableFontColorFromSkin, "a swatch at the default follows the skin")
+    assertNil(p.Partial.window.tableFontColorFromSkin, "a swatch AceDB stripped to the default follows it")
+    assertNil(p.Fresh.window.tableFontColorFromSkin, "a profile with no swatch is untouched")
+    assertEqual(p.Default.window.tableFontColor.g, 0.5, "the pick itself is not written")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.SCHEMA_VERSION >= 14)
+    assertEqual(NS.Setting("window.tableFontColorFromSkin"), false, "the active profile reads it")
+    local again = { window = { tableFontColor = { r = 1 } } }
+    NS.KeepTableFontColorPick(again); NS.KeepTableFontColorPick(again)
+    assertEqual(again.window.tableFontColorFromSkin, false, "idempotent")
+    NS.addon:RunMigrations()
+    NS.SchemaRuntime.Set("window.tableFontColorFromSkin", true)
+    NS.addon:RunMigrations()
+    assertEqual(NS.Setting("window.tableFontColorFromSkin"), true, "the stamp keeps a later on from being turned off")
+    NS.KeepTableFontColorPick(nil); NS.KeepTableFontColorPick({}); NS.KeepTableFontColorPick({ window = 3 })
+    NS.KeepTableFontColorPick({ window = { tableFontColor = "red" } })
+end)

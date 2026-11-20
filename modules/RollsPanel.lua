@@ -314,9 +314,12 @@ local function faced(parent, template, justify)
     return fs
 end
 
+-- The skin's accent, `text.accent` (Ka0s Default gold). SD-SK-DW: until then these read a bare
+-- "accent", which names no token, so the countdown bar and the winner's wash drew nothing in any skin
+-- (found by the kit's revision-58 skin-switch declaration of each).
 local function accentPaint(alpha)
     return function(t)
-        local r, g, b = NS.SkinColor("accent")
+        local r, g, b = NS.SkinColor("text.accent")
         if r then t:SetColorTexture(r, g, b, alpha) end
     end
 end
@@ -603,7 +606,11 @@ local function line(p, y, r, id, stripe)
     f.text:SetText(r.text)
     setTone(f.text, r.tone or "plain")
     f.roll:SetText(r.roll and tostring(r.roll) or "")
-    setTone(f.roll, r.winner and "accent" or "plain")
+    if r.winner then
+        f.roll:SetTextColor(NS.SkinColor("text.accent"))   -- the winner's number in the skin's accent
+    else
+        setTone(f.roll, "plain")
+    end
     f.wash:SetShown(r.winner == true)
     f.stripe:SetShown(stripe == true)
     f.winner = r.winner == true
