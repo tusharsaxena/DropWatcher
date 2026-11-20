@@ -617,14 +617,16 @@ and the window, the Offer panel and every toast on screen repaint on `NS.Skin.On
   (`H.FontGroup` with `fromSkin` and `flagsFromSkin`, `settings/ComposedRows.lua`): Font
   (`window.tableFont`, read only while Use the skin's font, `window.tableFontFromSkin`, is off), Font
   size (`window.fontSize`, 0 Default as before), Font color and Use class color
-  (`window.tableFontColor`, `window.tableFontClassColor`), Font flags (`window.tableFontFlags`, From
+  (`window.tableFontColor`, `window.tableFontClassColor`, with Use the skin's color,
+  `window.tableFontColorFromSkin`, the composer's from LibKa0s v1.108.0), Font flags (`window.tableFontFlags`, From
   skin by default, resolved by `S.FontFlags(v, "window")` through the Font outline; a picked flag wins)
   and Font shadow (`window.tableFontShadow`, with Use the skin's shadow). `NS.WindowRows` draws it on
   both tabs and both layouts through `S.HudFont`: one named font object per string (a 12.0.7 client
   draws a font object's shadow, not a runtime one),
   the color on the tables' plain text only (`WR.SetTone`; verdicts, qualities and classes keep theirs),
-  read as the skin's plain color while the swatch is at its default, so the defaults keep the look the
-  tables had (`tests/test_table_font.lua`). The glyphs keep their face and flags and take the size. No
+  read as the skin's plain color while Use the skin's color is on, so the defaults keep the look the
+  tables had (`tests/test_table_font.lua`; migration step 14 turned the companion off once where a
+  profile stored a pick, so it still draws). The glyphs keep their face and flags and take the size. No
   flag was stored before the block, so none migrates; and the addon draws no HUD text, so
   `S.HudFontSize` (D-09) reaches nothing. Each skin's
   body and title sizes are the library's, measured so every skin's text is as wide as Ka0s Default's.

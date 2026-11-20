@@ -235,7 +235,7 @@ test("insights rows: every A segment has a color with no chart.other and no tone
     end
     for _, chip in ipairs(legend) do assertEqual(type(chip.color), "table", chip.label) end
     local kept = rows[1].segments[#rows[1].segments]
-    assertEqual(kept.color[1], NS.InsightsRows.OTHER_FALLBACK[1], "kept in LibKa0s' default chart.other")
+    assertEqual(kept.color[1], NS.SKIN_FALLBACK["chart.other"][1], "kept in the host copy of Ka0s Default's chart.other")
 end)
 
 test("insights rows: B ranks the instances by upgrades, yours and others' stacked, top ten with the rest counted", function()

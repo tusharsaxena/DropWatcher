@@ -201,6 +201,8 @@ NS.SKIN_FALLBACK = {
     ["sem.modeTest"]     = { 1, 0.15, 0.15, 1 },
     ["sem.badAlt"]       = { 1, 0.25, 0.25, 1 },
     ["strip.sim"]        = { 0.35, 0.8, 1, 0.12 },
+    -- Insights' kept drops (modules/InsightsRows.lua), with the skin's own answering nil.
+    ["chart.other"]      = { 0.55, 0.62, 0.72, 1 },
 }
 
 --- A color token's components AS A CALL SITE WRITES THEM: r, g, b for an opaque color and r, g, b,

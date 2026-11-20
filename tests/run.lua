@@ -289,6 +289,21 @@ Kit.skinValues = {
           why = "the Disenchant roll button's art (Retail only), the game's group-loot art players know, the same under every skin", cause = "A6" },
         { file = "modules/RollCells.lua", substring = "local CROSS =",
           why = "the Pass roll button's cross, the game's group-loot art players know, the same under every skin", cause = "A6" },
+        -- Kit revision 58 reads keyed { r, g, b } tables, a fallback table and return triples
+        -- (LibKa0s v1.108.0). The four secondary stats' hues are a named meaning table (skinning-§9
+        -- Meaning colors: "the stat ... hues where the color is the information"; the full-skinning
+        -- run's MC, owner ruling of 2026-11-01); the audit's DropWatcher table marks them OVERRIDE.
+        { file = "core/Constants.lua", substring = "statCrit    = {",
+          why = "the Critical Strike name's hue on the detail card's Stats row, one stat told from another by color", cause = "MC" },
+        { file = "core/Constants.lua", substring = "statHaste   = {",
+          why = "the Haste name's hue on the detail card's Stats row, one stat told from another by color", cause = "MC" },
+        { file = "core/Constants.lua", substring = "statMastery = {",
+          why = "the Mastery name's hue on the detail card's Stats row, one stat told from another by color", cause = "MC" },
+        { file = "core/Constants.lua", substring = "statVers    = {",
+          why = "the Versatility name's hue on the detail card's Stats row, one stat told from another by color", cause = "MC" },
+        -- RC.Grid's answer for no rows: one column, no lines, none shown. Counts, not a color.
+        { file = "modules/RollCells.lua", substring = "if n == 0 then return 1, 0, 0 end",
+          why = "the roster box's columns, lines and shown count for no rows", category = "not a color" },
     },
 }
 

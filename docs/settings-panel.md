@@ -347,9 +347,10 @@ compact layout's cards size from their text), then the tables' font: the library
 block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font
 size (all the way left, 0, is Default: the template's own size, like Ka0s Loot History's table;
 DW-A8; the compact cards follow it too, compact spec §5), Font color | Use class color (the tables'
-plain text; the skin's own while the swatch is at its default), Font flags (From skin, the default,
-or a picked flag) | Font shadow, then Use the skin's font (on by default; Font is not read while it is)
-and Use the skin's shadow (on by default; Font shadow is not read while it is; FS-DW-FLIP).
+plain text), Font flags (From skin, the default, or a picked flag) | Font shadow, then Use the skin's
+font (on by default; Font is not read while it is), Use the skin's color (on by default; Font color is
+not read while it is; the composer's own from LibKa0s v1.108.0, skinning-§9, R-2) and Use the skin's
+shadow (on by default; Font shadow is dimmed and not read while it is; FS-DW-FLIP).
 
 **Columns:** the tab opens with a note, drawn by the page's `chrome` on this tab only
 (`PageEditors.ColumnsNote`): the checkboxes change the full layout's Drops table; History shows

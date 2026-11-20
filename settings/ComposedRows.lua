@@ -31,10 +31,13 @@ local _, NS = ...
 -- after SchemaRows' Row height: Font (`tableFont`) | Font size (`fontSize`, its path, range and
 -- `0 (Default)` unchanged), Font color (`tableFontColor`) | Use class color (`tableFontClassColor`),
 -- Font flags (`tableFontFlags`, From skin by default) | Font shadow (`tableFontShadow`), then Use the
--- skin's font (`tableFontFromSkin`, on by default) and Use the skin's shadow
--- (`tableFontShadowFromSkin`, on by default, FS-DW-FLIP). modules/WindowRows.lua draws them on both tabs
+-- skin's font (`tableFontFromSkin`, on by default), Use the skin's color (`tableFontColorFromSkin`, the
+-- swatch's companion the composer emits unasked from LibKa0s v1.108.0, OptionsCompose minor 20, on by
+-- default: skinning-§9, the owner's R-2) and Use the skin's shadow (`tableFontShadowFromSkin`, on by
+-- default, FS-DW-FLIP; the composer's own shadow companion, so it is emitted once, from `extra`, and
+-- the composer disables Font shadow while it is on). modules/WindowRows.lua draws them on both tabs
 -- and in both layouts; the color is plain text's (a verdict, a quality or a class keeps its own) and
--- reads as the skin's while it is the default. PLAYER-SCOPED like the icons. Without the library
+-- the skin's while its companion is on. PLAYER-SCOPED like the icons. Without the library
 -- there is no row and WindowRows reads defaults/Profile.lua's values: today's look. Font size also
 -- repaints the Rolls panel, whose width scales with it (modules/RollsPanel.lua, RX-28).
 
@@ -138,7 +141,9 @@ local FONT_DECORATE = {
         zeroText = L["Default"], label = L["Font size"],
         tooltip = L["The size of the drop tables' text, on both tabs. All the way left (0) is Default: the game's own small table font, as in Ka0s Loot History."] },
     ["window.tableFontColor"] = { validate = Check.isColor,
-        tooltip = L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. At its default the skin's own text color is drawn; any other color is drawn as picked."] },
+        tooltip = L["The color of the tables' plain text: item levels, slots, types and the like. A verdict, an item's quality and a looter's class keep their own colors. Not read while Use the skin's color is on."] },
+    ["window.tableFontColorFromSkin"] = { validate = Check.isBool,
+        tooltip = L["Draw the tables' plain text in the skin's own text color. The Font color row is not read while this is on. Use class color comes first."] },
     ["window.tableFontClassColor"] = { validate = Check.isBool },
     ["window.tableFontShadow"] = { validate = Check.isBool,
         tooltip = L["Draw a soft shadow behind the tables' text. Not read while Use the skin's shadow is on."] },

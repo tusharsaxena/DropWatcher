@@ -9,13 +9,47 @@
 
 local LINK = "|cffa335ee|Hitem:212::|h[Crown of Roaring Storms]|h|r"
 
+-- THE LIBSHAREDMEDIA FAKE (kit revision 58, skinning-§9: "a host harness needs such a fake"). The
+-- headless client has no LibSharedMedia, so without one every skin's face and bar texture resolve to
+-- the same fallback and a string's SetFont never moves under the probe, which the per-family check
+-- now reports. The fake answers every key with a path of its own ("Interface\AddOns\DWSwitch\
+-- <kind>\<key>"), so each skin's `font.*`, `hud.font` and `bar.texture` draw a distinct path, the
+-- probe skin's too. A key registered at load (modules/IconStyle.lua's Solid edge, LibKa0s-Media's
+-- faces) answers its registered path, and only a registered key is valid, so registration and the
+-- settings lists behave as with the real library. Installed through the kit mock's library seam
+-- (`M.__libs`, by LibStub) before any source loads, on the switch suite's instances only.
+local function installLsm(m)
+    local LSM = m.LibStub:NewLibrary("LibSharedMedia-3.0", 1)
+    local registered = {}
+    LSM.MediaType = { BACKGROUND = "background", BORDER = "border", FONT = "font", STATUSBAR = "statusbar", SOUND = "sound" }
+    LSM.Register = function(_, kind, key, path)
+        registered[kind] = registered[kind] or {}
+        registered[kind][key] = path
+        return true
+    end
+    LSM.Fetch = function(_, kind, key)
+        if type(key) ~= "string" or key == "" then return nil end
+        local own = registered[kind] and registered[kind][key]
+        return own or ("Interface\\AddOns\\DWSwitch\\" .. tostring(kind) .. "\\" .. key)
+    end
+    LSM.IsValid = function(_, kind, key) return registered[kind] ~= nil and registered[kind][key] ~= nil end
+    LSM.HashTable = function(_, kind) return registered[kind] or {} end
+    LSM.List = function(_, kind)
+        local out = {}
+        for key in pairs(registered[kind] or {}) do out[#out + 1] = key end
+        table.sort(out)
+        return out
+    end
+    function LSM.RegisterCallback() end
+end
+
 --- The facts, for `enableAddon`, the runner's factory.
 return function(enableAddon, withPlayer)
     local NS, m
 
     local function fresh()
         local env
-        NS, env, m = enableAddon()
+        NS, env, m = enableAddon({ mock = installLsm })
         return env
     end
     fresh()
@@ -151,8 +185,8 @@ return function(enableAddon, withPlayer)
                 local _, row = listed()
                 return row.stripe, row.cells.level and row.cells.level.text or row.cells.ilvl.text
             end, paint = redraw },
-            -- The tables' face is not a surface here: the harness has no LibSharedMedia, so every
-            -- skin's face resolves to the client's and a string's SetFont never moves.
+            -- The tables' face moves with the skin through the LibSharedMedia fake above, so the
+            -- Drops row's text asks it of every family; the shadow is its own surface for its companion.
             { name = "the tables' shadow", companion = setting("window.tableFontShadowFromSkin"),
               scope = "fonts", build = tableHalf("SetShadowColor", "SetShadowOffset"), paint = redraw },
             { name = "an item's icon border", companion = function(on)

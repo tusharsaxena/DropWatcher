@@ -83,29 +83,24 @@ end
 
 -- ── the font block (DW-01, D-07) ────────────────────────────────────────────────────────────
 
--- The swatch's default (defaults/Profile.lua): while the stored color is this one, plain text draws
--- the skin's own plain color (C.TONE.plain), so the block changes nothing on a fresh profile.
-local COLOR_DEFAULT = NS.C.PROFILE.window.tableFontColor
-
-local CHANNELS = { "r", "g", "b" }
-
-local function sameColor(a, b)
-    if type(a) ~= "table" or type(b) ~= "table" then return false end
-    for _, k in ipairs(CHANNELS) do
-        if math.abs((tonumber(a[k]) or -1) - b[k]) > 0.002 then return false end
-    end
-    return math.abs((tonumber(a.a) or 1) - (b.a or 1)) <= 0.002
-end
+-- The swatch's companion, `window.tableFontColorFromSkin` (the composer's Use the skin's color,
+-- LibKa0s v1.108.0 OptionsCompose minor 20; skinning-§9, Every option default follows the skin, the
+-- owner's R-2): while it is on, plain text draws the skin's own plain color (C.TONE.plain) and the
+-- swatch is not read; while it is off, the swatch draws as stored. Use class color comes first. Until
+-- v1.108.0 a swatch equal to its default stood for "the skin's"; core/Database.lua's step 14 turned
+-- the companion off once for a profile whose stored swatch was a pick, so that pick still draws.
 
 -- One table each, rewritten by every read: a repaint reads the block once, and nothing keeps its
 -- answer past the next read, so a pass allocates nothing here (performance-§9).
 local plainRead, fontRead = {}, {}
 
 --- The block's plain text color for one repaint: { r, g, b, a } picked or class-colored, or nil to
---- draw the skin's plain color (the swatch at its default).
+--- draw the skin's plain color (Use the skin's color on).
 local function plainColor()
     local stored, class = NS.Setting("window.tableFontColor"), NS.Setting("window.tableFontClassColor") == true
-    if not class and (type(stored) ~= "table" or sameColor(stored, COLOR_DEFAULT)) then return nil end
+    if not class and (type(stored) ~= "table" or NS.Setting("window.tableFontColorFromSkin") ~= false) then
+        return nil
+    end
     local r, g, b, a = NS.ResolveColor(stored, class, nil)
     if r == nil then return nil end
     plainRead[1], plainRead[2], plainRead[3], plainRead[4] = r, g, b, a or 1

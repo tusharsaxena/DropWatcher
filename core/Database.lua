@@ -330,6 +330,36 @@ function NS.MigrateItemKinds(profile)
     feed.gearOnly, feed.includeTokens = nil, nil
 end
 
+-- ── step 14: a picked table text color keeps drawing (SD-RV-DW, LibKa0s v1.108.0) ──────────
+
+-- The channels compared against the swatch's default, as modules/WindowRows.lua compared them before.
+local TABLE_COLOR_CHANNELS = { "r", "g", "b", "a" }
+
+--- Step 14's work on one stored profile. LibKa0s v1.108.0's composer gives Window › Layout ›
+--- Tables' Font color its Use the skin's color companion, `window.tableFontColorFromSkin`, on by
+--- default (OptionsCompose minor 20; skinning-§9, Every option default follows the skin, the owner's
+--- R-2). Until then the swatch at its default stood for the skin's color and any other value was a
+--- pick, so a profile that stored a pick gets the companion off, once, and its pick still draws; a
+--- profile at the default, or with no stored swatch, keeps the new default and follows the skin. A
+--- channel AceDB stripped as equal to its default reads as the default. Nothing else is written. No
+--- profile stored the companion before this step (it had no row), and AceDB has already copied its
+--- default into the active profile, so a stored companion is not read: the runner's stamp is what
+--- keeps a companion the player turns on later from being turned off again. Idempotent.
+--- @param profile table a raw stored profile
+function NS.KeepTableFontColorPick(profile)
+    local w = type(profile) == "table" and profile.window
+    local stored = type(w) == "table" and w.tableFontColor
+    if type(stored) ~= "table" then return end
+    local default = NS.C.PROFILE.window.tableFontColor
+    for _, k in ipairs(TABLE_COLOR_CHANNELS) do
+        local v = tonumber(stored[k])
+        if v ~= nil and math.abs(v - default[k]) > 0.002 then
+            w.tableFontColorFromSkin = false
+            return
+        end
+    end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -357,6 +387,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireFonts(profile) end },
     { to = 13, perProfile = true,        -- 12 -> 13: Gear only and Include tier tokens become the item kinds
       run = function(_, profile) NS.MigrateItemKinds(profile) end },
+    { to = 14, perProfile = true,        -- 13 -> 14: a picked table text color keeps drawing under its companion
+      run = function(_, profile) NS.KeepTableFontColorPick(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

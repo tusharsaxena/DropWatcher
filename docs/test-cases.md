@@ -81,7 +81,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
-### test_database.lua (15)
+### test_database.lua (16)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -98,6 +98,7 @@ Total.
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
+- database: step 14 keeps a picked table text color drawing, in every profile, and nothing else
 
 ### test_schema.lua (11)
 
@@ -826,7 +827,7 @@ Total.
 - table: the Type column sits after Slot and is painted on every row
 - table: a two-word name on your own drop is cut, [YOU] whole, and the button is above the text
 
-### test_table_font.lua (10)
+### test_table_font.lua (11)
 
 - table font: Window › Layout › Tables carries the whole font setting, after Row height
 - table font: Font size keeps its stored path, its range and `0 (Default)`
@@ -834,6 +835,7 @@ Total.
 - table font: From skin flags draw the window text's outline, and a picked flag wins
 - table font: a face of the player's own replaces the skin's, and the glyphs keep theirs
 - table font: the color is plain text's; a verdict, a class and a quality keep their own
+- table font: Use the skin's color is the swatch's companion, on by default and ahead of a pick
 - table font: the shadow is drawn and taken off (no CreateFont: on the string)
 - table font edge: with CreateFont, S.HudFont's named font object carries the shadow
 - table font: a read reuses its table, and a later read leaves nothing of the last look
@@ -2999,13 +3001,14 @@ Total.
 
 ### test_skin_values.lua (3)
 
-- skin values: every host row carries its file, substring, why and cause id
+- skin values: every host row carries its file, substring, why and a cause id or kit row category
 - skin values: no typed value outside the kit's categories and the host's rows
 - skin values: the check is falsifiable, a planted value of each shape is reported
 
-### test_skin_switch.lua (47)
+### test_skin_switch.lua (48)
 
 - skin switch: the check is falsifiable, a surface that redraws a literal is reported
+- skin switch: the check is falsifiable, a bar whose texture never moves is reported
 - skin switch: the window's title bar changes
 - skin switch: the window's title bar changes with the Scope ignored
 - skin switch: the active tab changes
@@ -3066,7 +3069,7 @@ Total.
 | test_harness.lua | 15 |
 | test_surface_parity.lua | 24 |
 | test_setup.lua | 25 |
-| test_database.lua | 15 |
+| test_database.lua | 16 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
@@ -3098,7 +3101,7 @@ Total.
 | test_compact_chrome.lua | 30 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 53 |
-| test_table_font.lua | 10 |
+| test_table_font.lua | 11 |
 | test_drops_layout.lua | 10 |
 | test_side_cells.lua | 27 |
 | test_collect_cells.lua | 12 |
@@ -3194,7 +3197,7 @@ Total.
 | test_diagnostics_contract.lua | 8 |
 | test_lizard_sighted.lua | 8 |
 | test_skin_values.lua | 3 |
-| test_skin_switch.lua | 47 |
+| test_skin_switch.lua | 48 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2651** |
+| **Total** | **2654** |
