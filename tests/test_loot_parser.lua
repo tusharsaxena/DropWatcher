@@ -17,7 +17,7 @@ local BRAKK = "Player-1-0000000A"
 local LYRA  = "Player-2-0000000B"
 local EVENT = "CHAT_MSG_LOOT"
 -- How chat names Lyra, the cross-realm priest: Name-Realm on Retail; on Forever the whole name, no
--- realm (the mock row's realm is the surname there, client-quirks-§5).
+-- realm (the mock row's realm is the surname there, forever-quirks-§4).
 local LYRA_CHAT = T.forever and "Lyra Mock 52" or "Lyra-Mock52"
 
 local function row(guid, name, realm, classFile)

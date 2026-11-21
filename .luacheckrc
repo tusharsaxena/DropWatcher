@@ -59,7 +59,7 @@ files["core/Compat.lua"] = {
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
     "C_ChallengeMode", "UnitName",
     "WOW_PROJECT_ID", "WOW_PROJECT_MAINLINE", "WOW_PROJECT_CAMELOT",  -- the client stub (clients-§3)
-    "RegionalUniqueNamesEnabled",  -- the regional-names stub (client-quirks-§5)
+    "RegionalUniqueNamesEnabled",  -- the regional-names stub (forever-quirks-§4)
   },
 }
 

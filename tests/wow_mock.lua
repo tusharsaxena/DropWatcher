@@ -530,7 +530,7 @@ local function installUnits(M)
         return r ~= nil and r.npc ~= true
     end
     M.GetNormalizedRealmName = function() return M.normalizedRealm end
-    -- Forever's regional names (client-quirks-§5), read at call time, after the kit stamped the profile.
+    -- Forever's regional names (forever-quirks-§4), read at call time, after the kit stamped the profile.
     M.RegionalUniqueNamesEnabled = function()
         return M.WOW_PROJECT_CAMELOT ~= nil and M.WOW_PROJECT_ID == M.WOW_PROJECT_CAMELOT
     end

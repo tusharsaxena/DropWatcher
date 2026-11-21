@@ -11,7 +11,7 @@ local test, assertEqual, assertTrue, assertFalse, assertNil =
     T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 -- the mock's player (tests/_kit/mock_base.lua __context, wow_mock's realm): Testchar-Testrealm on
--- Retail, the character key Testchar on Forever (no surname in the mock, no realm: client-quirks-§5)
+-- Retail, the character key Testchar on Forever (no surname in the mock, no realm: forever-quirks-§4)
 local ME = T.ME
 
 local function cf() return T.newAddon().CharFilter end

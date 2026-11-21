@@ -157,7 +157,7 @@ function P.NoteAskedML(id)
 end
 
 --- The master looter a master-loot ask for item `item` whispers: their GUID when it was read (the
---- roster resolves it to the whole name, client-quirks-§5), else their name as read; nil for an
+--- roster resolves it to the whole name, forever-quirks-§4), else their name as read; nil for an
 --- item with neither.
 --- @param item table|nil
 --- @return string|nil

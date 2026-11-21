@@ -469,7 +469,7 @@ function P.UnitGUID(live, unit)
     return live(liveUnit(unit))
 end
 
--- A member's whole name (UnitCharacterName's shape, client-quirks-§5): its realm only when it is
+-- A member's whole name (UnitCharacterName's shape, forever-quirks-§4): its realm only when it is
 -- not yours, and none on Forever, where a sim member is "First Surname" with no realm.
 function P.UnitCharacterName(live, unit)
     local m = W.MemberOfUnit(unit)

@@ -76,7 +76,7 @@ test("roster: Resolve by GUID, by Name-Realm and by a bare same-realm name, with
     local _, _, Ro = party()
     assertEqual(Ro.Resolve("Brakk").guid, "Player-1-0000000A")
     if T.forever then
-        -- no realms on Forever: a query is the whole name, never split on a hyphen (client-quirks-§5)
+        -- no realms on Forever: a query is the whole name, never split on a hyphen (forever-quirks-§4)
         assertEqual(Ro.Resolve("Player-2-0000000B").name, "Lyra Mock 52")
         assertEqual(Ro.Resolve("lyra mock 52").guid, "Player-2-0000000B")
         assertEqual(Ro.Resolve("Lyra Mock-Sample").guid, "Player-3-0000000C", "a hyphen is part of the name")
@@ -172,7 +172,7 @@ test("roster: secret answers never raise; a secret GUID drops the unit, a secret
         "a secret class is ignored; the one Lyra left answers")
 end)
 
--- client-quirks-§5: on Forever UnitName answers the first name and the surname ("Doom", "Dock"), and
+-- forever-quirks-§4: on Forever UnitName answers the first name and the surname ("Doom", "Dock"), and
 -- a chat sender is the whole name with no realm; on Retail the second value is the realm.
 test('roster: a Forever chat sender "Doom Dock" matches the member Doom Dock', function()
     local NS, _, m = T.enableAddon()

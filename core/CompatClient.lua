@@ -50,7 +50,7 @@ end
 
 --- The realm a same-realm `Name-Realm` carries (modules/Roster.lua's identity, the group roster's
 --- and the cards' own-realm test, the simulator's members): NormalizedRealm on Retail, and nil with
---- regional names (WoW Forever, client-quirks-§5), where a character is its whole name and there
+--- regional names (WoW Forever, forever-quirks-§4), where a character is its whole name and there
 --- is no cross-realm play to put a realm on anyone.
 --- @return string|nil
 function Compat.NameRealm()

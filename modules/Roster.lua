@@ -22,7 +22,7 @@ local _, NS = ...
 -- anyone besides you could take a drop: false solo and in a group of such units alone. Your own drop
 -- is offered only while it is true (modules/WindowOwn.lua's Alone).
 --
--- NAMES (client-quirks-§5). A member's name is UnitCharacterName's whole name: on WoW Forever the
+-- NAMES (forever-quirks-§4). A member's name is UnitCharacterName's whole name: on WoW Forever the
 -- first name and surname ("Doom Dock") with no realm, so its fullName is the name itself; on Retail
 -- the name, and fullName `Name-Realm`. A query is never split on whitespace, and with regional
 -- names never on a hyphen either: the whole query is the name.
