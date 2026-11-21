@@ -1,0 +1,1 @@
+FU-DX review (independent, 2026-11-21): every removed member confirmed dead by git grep over the branch tree incl. string keys and member-enumerating tests; kept members justified (DW SchemaSetup stubs required by test_surface_parity; RM NS.SkinPaintAce kept for sibling consistency, no test enforces it); gates green on every shipped client, luacheck 0/0. No findings.
