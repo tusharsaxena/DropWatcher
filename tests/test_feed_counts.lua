@@ -44,7 +44,7 @@ local function wears(m, unit, base, ilvl)
 end
 
 -- How chat names the two cross-realm members on the kit profile: Name-Realm on Retail, the whole
--- name on Forever (the mock row's realm is the surname there, client-quirks-§5).
+-- name on Forever (the mock row's realm is the surname there, forever-quirks-§4).
 local SAMPLEPAL_CHAT, MOCKHUNT_CHAT = T.rosterName("Sàmple", "Samplerealm"), T.rosterName("Mockhunt", "Mockrealm")
 
 -- The owner's group in a Mythic+ dungeon: you wear two 600 rings; Sàmple (Samplerealm, accented,

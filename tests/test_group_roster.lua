@@ -107,7 +107,7 @@ end
 local function link(id) return ("|cffa335ee|Hitem:%d::::::::90:::::|h[Ring %d]|h|r"):format(id, id) end
 
 -- The two cross-realm members as the roster names them on the kit profile: Name-Realm on Retail, the
--- whole name on Forever (the mock row's realm is the surname there, client-quirks-§5).
+-- whole name on Forever (the mock row's realm is the surname there, forever-quirks-§4).
 local SAMPLEPAL_TO, MOCKHUNT_TO = T.rosterName("Sàmple", "Samplerealm"), T.rosterName("Mockhunt", "Mockrealm")
 local SAMPLEPAL_ROW = { guid = SAMPLEPAL, name = "Sàmple", realm = "Samplerealm", class = "PALADIN", classFile = "PALADIN" }
 local MOCKHUNT_ROW = { guid = MOCKHUNT, name = "Mockhunt", realm = "Mockrealm", class = "WARRIOR", classFile = "WARRIOR" }

@@ -206,7 +206,7 @@ test("compact group: every piece keeps its full-view reason tooltip", function()
     assertEqual(W.TooltipOf(c.ilvl.hit)[1], "Item level 311")
     local looter = W.TooltipOf(c.looter.hit)
     if T.forever then
-        -- no realm on Forever: no looter is ever from another realm (client-quirks-§5)
+        -- no realm on Forever: no looter is ever from another realm (forever-quirks-§4)
         assertTrue(T.tipPlain(looter[#looter]) ~= "• Realm: Otherrealm", "no realm row on Forever")
     else
         assertEqual(T.tipPlain(looter[#looter]), "• Realm: Otherrealm")

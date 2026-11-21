@@ -188,7 +188,7 @@ end
 local cached   -- { key, class } once your key is known; a character's never changes
 
 --- You, as a recorder: { key, class = classFile }, or nil while the client does not know your name
---- or realm yet (early in the login). The key is NS.Compat.PlayerRecordKey (client-quirks-§5): the
+--- or realm yet (early in the login). The key is NS.Compat.PlayerRecordKey (forever-quirks-§4): the
 --- character key "First Surname" on WoW Forever, so two alts who share a first name never collide;
 --- `Name-Realm` on Retail, the shape History has always stored. Read live (the simulator never
 --- answers for "player"), and kept once known.

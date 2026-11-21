@@ -113,7 +113,7 @@ test("sim report: the owner's key run: the second drop is yours, on Drops, nothi
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: " .. shown)
     assertEqual(pair(row.tip[3]), run.mine .. " (you): Drops")
-    -- a seed replays per client: Forever's members draw a surname too (client-quirks-§5)
+    -- a seed replays per client: Forever's members draw a surname too (forever-quirks-§4)
     for i, line in ipairs(run.others) do assertEqual(pair(row.tip[3 + i]), line) end
     assertTrue(header ~= nil)
     NS.Window.SelectTab("group"); NS.Window.Refresh()

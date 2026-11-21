@@ -310,7 +310,7 @@ end
 
 -- ── Identity ────────────────────────────────────────────────────────────────────────────────
 
---- Whether character names are unique per region (LibKa0s Compat.RegionalNames, client-quirks-§5):
+--- Whether character names are unique per region (LibKa0s Compat.RegionalNames, forever-quirks-§4):
 --- true on WoW Forever, where a character is its first name and surname together and carries no
 --- realm. The stub reads RegionalUniqueNamesEnabled itself; false where it is absent. One boolean.
 --- @return boolean
@@ -318,7 +318,7 @@ Compat.RegionalNames = CompatLib and CompatLib.RegionalNames or function()
     return RegionalUniqueNamesEnabled ~= nil and RegionalUniqueNamesEnabled() == true
 end
 
---- A unit's whole character name and its realm (LibKa0s Compat.UnitCharacterName, client-quirks-§5):
+--- A unit's whole character name and its realm (LibKa0s Compat.UnitCharacterName, forever-quirks-§4):
 --- "Traxex Silentshot" and a nil realm with regional names (WoW Forever); UnitName's name and realm
 --- otherwise (the realm nil on the player's own). With the library absent, UnitName's first value,
 --- and its second as the realm only without regional names: never a surname read as a realm. The

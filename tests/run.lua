@@ -154,7 +154,7 @@ local function withPlayer(m)
 end
 
 -- The kit profile in use (clients-§6), and the name the roster gives a mock unit row on it
--- (client-quirks-§5): on Forever (regional names) a row's `realm` stands for UnitName's second
+-- (forever-quirks-§4): on Forever (regional names) a row's `realm` stands for UnitName's second
 -- value, the surname, so the member is "First Surname" with no realm; on Retail it is `Name-Realm`,
 -- the realm normalized, and the player's own (the mock's Testrealm) when the row names none.
 local FOREVER = (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever"

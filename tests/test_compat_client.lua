@@ -1,5 +1,5 @@
 -- tests/test_compat_client.lua — the client, Role and name reads of the compat family (Forever port
--- design §4.1, §4.2; clients-§3, clients-§4, client-quirks-§5): the client helpers routed from
+-- design §4.1, §4.2; clients-§3, clients-§4, forever-quirks-§4): the client helpers routed from
 -- LibKa0s-Compat-1.0 (core/Compat.lua) on each kit profile, the whole character name, the
 -- player's talent tree and role through LibKa0s-Role-1.0 (core/CompatClient.lua), the inspect spec
 -- ladder, and NS.FEATURE_EVENTS rows gated by their `clients`. Each case runs on both profiles
@@ -52,7 +52,7 @@ test("compat client: a client that is neither answers nil and serves undeclared 
     assertFalse(Compat.ForClient({ "retail" }))
 end)
 
--- ── names (client-quirks-§5) ────────────────────────────────────────────────────────────────
+-- ── names (forever-quirks-§4) ────────────────────────────────────────────────────────────────
 
 test("compat client: UnitCharacterName joins name and surname on Forever, keeps one name on Retail", function()
     local Compat, m = fresh()

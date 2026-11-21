@@ -11,7 +11,7 @@ A Retail and WoW Forever addon that watches the loot a party or raid receives, j
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.108.0 payload (twenty-five majors; media/icons pruned to the declared subset,
+LibKa0s v1.109.0 payload (twenty-five majors; media/icons pruned to the declared subset,
 media/sounds to none), twenty wired with one setup file each, two reached directly by the files
 that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`,
 `LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`) and three deliberately unwired:
@@ -153,7 +153,7 @@ ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bun
 | The default skin: WoW Forever (the same read) | `forever` | `core/SkinSetup.lua`, `defaults/Profile.lua` (`skin.skin`) |
 | The open-world group's defaults, untracked and not auto-opening, and the feed's Fixed minimum quality, Rare (`feed.quality.fixed = 3`) | `retail` | `defaults/Profile.lua` (`SITUATIONS`, `FIXED_QUALITY`, picked by the client once at load) |
 | The open-world group's defaults, tracked and auto-opening, and the Fixed minimum quality, Uncommon (`2`; rolls UX ruling 7, RX-01) | `forever` | `defaults/Profile.lua` (`SITUATIONS`, `FIXED_QUALITY`) |
-| Character names: `Name-Realm` (`Compat.UnitCharacterName`, `Compat.CharacterKey`, client-quirks-§5, DW-FP04) | `retail` | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` (sim names per client) |
+| Character names: `Name-Realm` (`Compat.UnitCharacterName`, `Compat.CharacterKey`, forever-quirks-§4, DW-FP04) | `retail` | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` (sim names per client) |
 | Character names: the whole name, first name and surname, no realm (the same reads) | `forever` | `core/CompatClient.lua`, `modules/Roster.lua`, `modules/SimRoster.lua` |
 | The class data: Retail's classes and specs (DW-FP05) | `retail` | `core/ClassData.lua` (the list picked at load), `modules/Evaluate.lua` |
 | The class data: Forever's nine classes keyed `"<classFile>:<tree>"` by talent tree, armor by level (`CD.ArmorFor`, plate or mail from 40, reason `armorLevel`) and the soft stat gate (`CD.STAT_GATE`, DW-FP05) | `forever` | `core/ClassDataForever.lua`, `modules/Evaluate.lua` (the stat and armor gates) |
@@ -781,7 +781,8 @@ checkpointed plan) and `docs/investigations/`.
 | `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
-| `midnight-quirks.md` | Present | Always (documentation-§3): the vendored catalog block (client-quirks-§1), then the addon's own client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
+| `midnight-quirks.md` | Present | Clients includes Retail (documentation-§3): the vendored Retail catalog block (client-quirks-§1), then the addon's own Retail client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
+| `forever-quirks.md` | Present | Clients includes Forever (`Retail · Forever`, forever-quirks-§1): the vendored Forever catalog block, then the addon's own Forever workarounds (the WoW Forever table: spec, Pawn, ranged slot, `lootListKey`) |
 | `compat-layer.md` | Present | The compat family publishes 132 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 16 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Present | 11 messages are defined, more than ten (`PENDING_CHANGED`, DW-FP14, was the eleventh) |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |

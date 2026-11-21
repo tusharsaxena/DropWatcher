@@ -76,7 +76,8 @@ A version-variant, deprecated or optional client API is called from `core/Compat
    absent among them (a collection read: its fake in `tests/wow_mock_collect.lua` and its cases, and its name in
    `COLLECT_APIS` rather than `SEAM_ONLY`, in `tests/test_compat_collect.lua`).
 4. Add the row to [`compat-layer.md`](compat-layer.md) (and its shim count), and a row to
-   [`midnight-quirks.md`](midnight-quirks.md) when the shim works around a client change.
+   [`midnight-quirks.md`](midnight-quirks.md) when the shim works around a Retail client change, or to
+   [`forever-quirks.md`](forever-quirks.md) when it works around a WoW Forever one.
 
 ## Add a season's tier tokens
 

@@ -22,7 +22,7 @@ local function ring(ilvl)
 end
 
 -- Lyra's realm (Mock 52) on Retail; on Forever no surname, so the mock row is the whole name "Lyra"
--- (a row's realm is the surname there, client-quirks-§5). Each whisper target in the client's shape.
+-- (a row's realm is the surname there, forever-quirks-§4). Each whisper target in the client's shape.
 local LYRA_REALM = (not T.forever) and "Mock 52" or nil
 local BRAKK_TO, LYRA_TO = T.rosterName("Brakk"), T.rosterName("Lyra", LYRA_REALM)
 

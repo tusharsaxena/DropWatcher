@@ -47,7 +47,7 @@ local RAID_NAMES = {
     "Aldric", "Bryony", "Corvane", "Delphine", "Eskar", "Faelan", "Grisha", "Halvard", "Ingrid", "Jorvik",
     "Kestra", "Lothar", "Mirelle", "Nalgor", "Odessa", "Perrin", "Ravena", "Sorin", "Talwyn", "Ulric",
 }
--- WoW Forever's surnames (client-quirks-§5): there a member is "First Surname", unique per region,
+-- WoW Forever's surnames (forever-quirks-§4): there a member is "First Surname", unique per region,
 -- with no realm. Forever's own list (clients-§5), picked once by ClientKey() in Create.
 local SURNAMES = {
     "Ironhide", "Silentshot", "Dock", "Ashwalker", "Brightmane", "Stormcall", "Duskwhisper",

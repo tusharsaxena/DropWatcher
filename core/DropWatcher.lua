@@ -384,7 +384,7 @@ local ASK_ML_REFUSAL = {
 
 --- Who a master-loot ask for pending item `item` is filed under and whispered (NS.Asks.Request's
 --- and StateOf's `target`): the roster's whole name for the master looter (`Name-Realm`, or a
---- Forever "First Surname", never split: client-quirks-§5), else what the item read
+--- Forever "First Surname", never split: forever-quirks-§4), else what the item read
 --- (NS.Pending.MLTargetOf); a master looter the roster no longer knows is named as the item read
 --- them (`Name-Realm`, or the whole Forever name), never by GUID; nil when it read no name
 --- (the refusal then reads that the master looter is not known).
