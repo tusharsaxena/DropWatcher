@@ -194,7 +194,7 @@ Each needs an in-game probe, recorded with the build, or a second repo, before i
 
 Client: **Forever**, measured on build 1.60.1 (70790), interface 16001 (the Forever port's research,
 `docs/superpowers/research/2026-11-13-forever-port/`, R2 and R4). None is assumed to hold on Retail,
-and none has met a second repo yet, so each stays here (client-quirks-§1). Each client read lives in
+and none has met a second repo yet, so each stays here (forever-quirks-§1). Each client read lives in
 `core/Compat*.lua` and is picked once by `NS.Compat.ClientKey()` (clients-§3).
 
 | Quirk | What the client does | What the addon does |
