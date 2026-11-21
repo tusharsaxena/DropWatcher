@@ -378,14 +378,6 @@ function W.AssignMasterLoot(loot)
     if type(loot) == "table" then loot.assigned = true end
 end
 
---- Whether a pending key is one of the session's master-loot items (its stop takes them away).
---- @param key any
---- @return boolean
-function W.IsMasterLootKey(key)
-    local w = world()
-    return w ~= nil and w.mlKeys ~= nil and w.mlKeys[key] == true
-end
-
 --- Every simulated roll, oldest first. Read them; only the drivers write them.
 --- @return table
 function W.Rolls()

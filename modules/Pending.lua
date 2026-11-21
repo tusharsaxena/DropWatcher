@@ -479,9 +479,6 @@ tick = function()
     retune()
 end
 
---- Whether the ticker is running (the diagnostics and the tests).
-function P.Ticking() return ticker ~= nil end
-
 -- ── your verdict, judged again ──────────────────────────────────────────────────────────────
 
 -- The live items still waiting on their drop (not yet closed).

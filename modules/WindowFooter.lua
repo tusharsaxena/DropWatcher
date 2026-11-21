@@ -132,16 +132,6 @@ end
 
 local SEGMENT = { inspect = INSPECT, loot = LOOT, situation = SITUATION, pawn = PAWN }
 
---- One segment's tooltip from plain inputs: its title, then its rows.
---- @param key string a WF.SEGMENTS key
---- @param i table WF.Read's inputs
---- @return table { title, lines... }, or an empty list for an unknown key
-function WF.SegmentTip(key, i)
-    local seg = SEGMENT[key]
-    if not seg then return {} end
-    return seg.tip(type(i) == "table" and i or {})
-end
-
 --- Each segment's text and tooltip from plain inputs.
 --- @param i table { members, good, outOfRange, pending, lastLootAgo, situation, tracking, pawn,
 ---   sim = { members } while a simulation runs }
