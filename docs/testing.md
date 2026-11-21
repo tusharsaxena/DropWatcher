@@ -32,7 +32,7 @@ without it).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 58, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 59, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -77,7 +77,7 @@ every degradation stub is tested: by a real load, never by a hand-written stub (
 on Forever (skinning-§2), so a case pinning Ka0s Default's pixels chooses it by name this way and
 reads the same on both kit profiles; `test_skin_setup` pins the per-client default itself.
 
-Names differ per kit profile (client-quirks-§5, DW-FP04): on Forever the mock's `RegionalUniqueNamesEnabled`
+Names differ per kit profile (forever-quirks-§4, DW-FP04): on Forever the mock's `RegionalUniqueNamesEnabled`
 answers true and a unit row's `realm` stands for UnitName's second value, the surname, so the roster
 names a member by the whole name with no realm. `T.forever` says which profile runs,
 `T.rosterName(name, realm)` is the name the roster gives a mock row on it (`Name-Realm` with the

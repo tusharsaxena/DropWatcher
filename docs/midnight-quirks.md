@@ -1,13 +1,15 @@
 # Midnight quirks — Ka0s Drop Watcher
 
-The first part of this file is the collection's client-quirks catalog, vendored whole from the Ka0s WoW Addon Standard (client-quirks-§1) and replaced wholesale by `/dev-copilot:wow-revendor-standards`; never edit inside its markers. A correction belongs in this addon's own section, which follows it.
+The first part of this file is the collection's client-quirks catalog, vendored whole from the Ka0s WoW Addon Standard (client-quirks-§1) and replaced wholesale by `/dev-copilot:wow-revendor-standards`; never edit inside its markers. A correction belongs in this addon's own section, which follows it. Its WoW Forever findings are in `docs/forever-quirks.md` (forever-quirks-§1).
 
-<!-- BEGIN VENDORED: quirks catalog v2.116.0 (source: WowAddonStandards) -->
-> Part of the **[Ka0s WoW Addon Standard](https://github.com/tusharsaxena/WowAddonStandards/blob/master/standards/STANDARDS.md)** — the split standard. This section is vendored whole into every addon's `docs/midnight-quirks.md` (§1), so its links are absolute. Cross-references use the `filename-§N` form (see the index's section map).
+<!-- BEGIN VENDORED: quirks catalog v2.117.0 (source: WowAddonStandards) -->
+> Part of the **[Ka0s WoW Addon Standard](https://github.com/tusharsaxena/WowAddonStandards/blob/master/standards/STANDARDS.md)** — the split standard. This section is vendored whole into the `docs/midnight-quirks.md` of every addon that ships on Retail (§1), so its links are absolute. Cross-references use the `filename-§N` form (see the index's section map).
 
 ## Client quirks
 
-The client behaviors the collection paid for more than once. Each entry here was discovered
+The **Retail** catalog: the client behaviors the collection paid for more than once on Retail. Its WoW
+Forever counterpart is forever-quirks, a separate catalog vendored into `docs/forever-quirks.md` (owner
+ruling of 2026-11-10); an addon carries the catalog of each client its roster **Clients** value names (§1). Each entry here was discovered
 **independently in two or more Ka0s repositories**, written up in each, and promoted by a harvest so the
 next addon reads it instead of rediscovering it. A behavior one repo found stays in that repo's
 `docs/midnight-quirks.md` until a second repo meets it.
@@ -29,7 +31,7 @@ Every entry **MUST** carry:
 - **Measured:** the client build or date it was observed on, where any write-up recorded one. An entry with
   no measurement says *not measured*; that is a weaker entry, not a missing field.
 - **Cost:** what happened to an addon that did not know it.
-- **Client:** the client it was measured on, `Retail` or `Forever` (clients-§1). An entry that names none is a Retail entry, which is every entry written before v2.103.0; a Forever behavior is written with `Forever` and its build, and it is not assumed to hold on Retail.
+- **Client:** the client it was measured on (clients-§1). Every entry here is a Retail entry, and an entry that names no client is Retail. A behavior measured on WoW Forever is written in forever-quirks, not here, and is not assumed to hold on Retail; forever-quirks-§2 states which of this catalog's entries have been measured on Forever.
 - **Do:** the workaround, as a rule an addon can follow.
 - **Source:** the deepest write-up — the repo and document that probed furthest — and the harvest that
   promoted it. Every version is quoted in that harvest's `03_EVIDENCE.md`.
@@ -39,10 +41,11 @@ newest *Measured* stamp in an entry and an addon observes otherwise, the entry i
 release — not worked around in the addon. An entry nobody can reproduce moves to §6 as an open probe rather
 than being deleted, because the behavior may only have moved.
 
-**What an addon does with this section (MUST): carry it as a vendored block.** This section is the one
-part of the standard an addon carries a **copy** of, because it is reference data about the game client
+**What an addon does with this section (MUST): carry it as a vendored block.** This section and its
+Forever counterpart, forever-quirks, are the parts of the standard an addon carries a **copy** of, because it is reference data about the game client
 that a working addon needs offline, next to the code that works around it — not a rule, which is only ever
-pointed at. Every addon's `docs/midnight-quirks.md` (documentation-§3) is two parts: the vendored block,
+pointed at. Every addon whose roster **Clients** value includes Retail (`Retail · Forever`, `Retail` or
+`Retail (port pending)`, clients-§2) carries `docs/midnight-quirks.md` (documentation-§3), and it is two parts: the vendored block,
 opened by a `BEGIN VENDORED` HTML comment naming the catalog's version and source and closed by an
 `END VENDORED` HTML comment, each spelled exactly as `/dev-copilot:wow-revendor-standards` writes it; then
 the addon's own section. The markers are described here rather than shown, because this text travels
@@ -68,6 +71,10 @@ re-vendor to cut at.
   entry, the revendor prunes the addon's copy: the upstream entry is the deeper write-up, and two live
   copies of one finding is the shape that drifted three times into contradiction.
 - An addon with no quirks of its own still carries the block, with an empty own section.
+- **One file per client.** A `Forever` addon carries no `docs/midnight-quirks.md`: it carries
+  forever-quirks in `docs/forever-quirks.md` instead, and a `docs/midnight-quirks.md` left in it is a
+  retired name (documentation-§3). A `Retail · Forever` addon carries both files and files each finding of
+  its own under the client it was measured on (forever-quirks-§1).
 
 **Contested behaviors are not rules.** Where two repos recorded opposite behavior and nobody has probed
 the difference, the entry goes in §6 with both sides and the probe that would settle it.
@@ -211,37 +218,8 @@ spelling. *Source:* DropWatcher `docs/midnight-quirks.md`, the research's enum v
 build a `Name-Realm` key before the realm is known; defer, or fall back to `GetRealmName` with its spaces
 and hyphens removed. *Source:* DropWatcher `docs/midnight-quirks.md`, realm names; four repos (Q25).
 
-**On Forever a character's name is two words, unique per region, and its realm is a long label.** *Client:*
-Forever (1.60.1, build 70790). *Measured:* the owner's in-game probe of 2026-11-08 (Ka0sAddonsCommonTasks
-`docs/2026-11-07-WOW_FOREVER_PORT_STEP5/W1_FOREVER_NAME_PROBE.md`). Every character has a first name and a
-surname, and only the pair is unique; `RegionalUniqueNamesEnabled()` answers true. The name APIs answer:
-
-| Call | Forever answers | Retail answers |
-|---|---|---|
-| `UnitName(unit)`, `UnitFullName(unit)` | `"Traxex"`, `"Silentshot"`: the **surname** second | the name, then the realm (nil on your own realm) |
-| `GetUnitName(unit, true)`, `Ambiguate(…, "short")` | `"Traxex Silentshot"` | `"Name"`, or `"Name-Realm"` across realms |
-| a chat event's sender (arg 2) | `"Doom Dock"`, no realm suffix | `"Name-Realm"` |
-| `GetRealmName()` / `GetNormalizedRealmName()` | `"CAMWOW AU1 Realm 2 PvP"` / `"CAMWOWAU1Realm2PvP"` | the realm, with and without its spaces |
-| AceDB-3.0 40's `db.keys` | `char` `"Traxex Silentshot"`, `realm` `"PvP"`, `factionrealm` `"Alliance - PvP"` | `"Name - Realm"`, the realm |
-
-Players know a realm by its ruleset (Normal, PvP, RP-PvP), not by its label, and there is no cross-realm play to
-put a realm on another player. *Cost:* `local name, realm = UnitName(unit)` reads the surname as a realm and
-builds `"Traxex-Silentshot"`; a one-value `UnitName(unit)` keeps only the first name, so two characters that
-share one ("Traxex Silentshot", "Traxex Ironhide") collide in a key, a filter or a roster; a surface sized for
-one Retail word truncates the pair; a `Name-Realm` key built from `GetNormalizedRealmName` is unique but is
-not the identity the player or AceDB uses. *Do:* read a character through `LibKa0s-Compat-1.0`'s identity readers (from `LibKa0s v1.94.0`):
-`UnitCharacterName(unit)` for any unit, `CharacterKey()` and `RealmKey()` for the player, and `RegionalNames()`
-for the question itself. They implement this rule. When `RegionalUniqueNamesEnabled` exists and answers true,
-a character's identity is its **whole name**: `GetUnitName(unit, true)` for any unit, or
-`UnitNameUnmodified("player")`'s two returns joined by a space for the player, and its realm is the
-**ruleset** AceDB 40 derives from `C_GameRules` (`Hardcore`, `RP-PvP`, `RP`, `PvP`, `PvE`). The ruleset is the realm key for stored realm data too, by the owner's
-ruling of 2026-11-08, so two PvP realms share one realm key. An addon whose
-profile store is AceDB reads those as `db.keys.char` and `db.keys.realm` and never derives them again. That
-test is feature detection inside the compat family (clients-§3, compat), never a client check in feature
-code. Never read `UnitName`'s second return as a realm, never split a name on whitespace or key on its first
-word, and size every surface that shows a name, a realm or a profile key for the long form, or truncate it
-with the whole value in a tooltip. *Source:* the owner's ruling and probe of 2026-11-08 during the WoW
-Forever port's step 5, recorded ahead of the two-repo bar by that ruling; AceDB-3.0 minor 40's key block.
+**On Forever a character's name is two words, and its realm is a long label.** Moved to forever-quirks-§4
+in v2.117.0, with the Forever catalog; it was here from v2.103.0 to v2.116.0.
 
 **A template-less `FontString` with no font raises on `SetText`.** "Font not set" from a `FontString`
 created without a template or `SetFontObject` takes the addon down at load; a mock that does not enforce it
@@ -253,7 +231,8 @@ mock enforces it. *Source:* MultiMeters `tests/mock_frame.lua`, the font-not-set
 
 Each needs an in-game probe, recorded with the build, before any section of this standard changes.
 
-- **WoW Forever behaviors (one recorded).** The catalog was written on Retail. The Forever client (build 70790) has a missing-API surface, `SetDesaturation` among it, that LibKa0s tracks in LibKa0s#44. One Forever entry is in §5, the two-word names and long realm labels, measured on build 70790. Record any other Forever behavior in the repo that meets it, with the build, and promote it by a harvest like any other.
+- **WoW Forever behaviors.** Moved to forever-quirks in v2.117.0: its §5 holds the Forever open probes,
+  the missing-API surface (LibKa0s#44) among them.
 - **`string.format` on a secret.** events-frames-taint-§8 says it raises, with three repos; two say it
   works, one with a mid-combat observation. The likely difference is the specifier (`%s` against `%d` and
   `%.1f`) or that the result is itself a secret string. Probe each specifier, in combat, on a damage-meter
@@ -299,17 +278,3 @@ What is still unconfirmed in game is owed as a `COMPAT-*` check in
 | The other loot sources | `ENCOUNTER_LOOT_RECEIVED` names the looter as a bare name or a Name-Realm with a classFile, and no GUID; `C_LootHistory` answers a drop before anyone has won it (rolls still open) and again on each roll. Mid-encounter any payload may arrive secret. The same drop also arrives as a chat line. | The feed guards every payload with `IsSecret` before it is compared or used as a key (a secret link or name drops the report; a secret encounter id groups by context instead), resolves the name through the roster, takes a loot history drop only once it has a winner and only once, and merges the reports of one drop. Whether the M+ chest's report names an encounter is FEED-6. |
 | The trade range read in combat | `CheckInteractDistance` is not to be called by addon code in combat, and its answer may be secret. | The trade helper checks combat (`NS.Restrictions.CanTrade()`) first and reads `InTradeRange` (index 2, the trade distance) only out of combat; a secret answer is out of range. TRADE-6 confirms it in game. |
 | Pawn's readiness | Pawn answers nil until it has initialized and until an item is cached. | Every Pawn call waits on Pawn's `PawnIsReady()`, runs under `pcall`, and a nil answer means "not ready yet". |
-
-### WoW Forever
-
-Client: **Forever**, measured on build 1.60.1 (70790), interface 16001 (the Forever port's research,
-`docs/superpowers/research/2026-11-13-forever-port/`, R2 and R4). None is assumed to hold on Retail,
-and none has met a second repo yet, so each stays here (client-quirks-§1). Each client read lives in
-`core/Compat*.lua` and is picked once by `NS.Compat.ClientKey()` (clients-§3).
-
-| Quirk | What the client does | What the addon does |
-|---|---|---|
-| The spec is the class | Every class has one class-wide spec, named for the class: a Hunter's spec reads `1485`, "Hunter", for you and for an inspected unit alike. The classic talent trees are what Retail's specs were, and a talent change fires `TRAIT_CONFIG_UPDATED` and `CHARACTER_POINTS_CHANGED`, not `PLAYER_SPECIALIZATION_CHANGED`. A lookup keyed by Retail's spec ids finds no row, so the class tables and Pawn's scale index answered nil. | Forever's class data is its own list (`core/ClassDataForever.lua`), keyed `"<classFile>:<tree>"`; your top talent tree comes from LibKa0s-Role-1.0's groups (`NS.Compat.PlayerTalentTree`, nil on a tie or no points), and the two talent events re-read it (DW-FP05). |
-| Pawn has no specs | Pawn 2.14.1 on Forever has no specs (`SpecsExist` false), so its Automatic mode is off, and one Classic scale per talent tree (`HUNTER1` to `HUNTER3`; the Druid's Feral 2 for damage and 3 for tanking, Restoration 4), every one of your class's shown at first login. Its upgrade test answers across all the shown scales, so it picks the tree that gains most, not the one you play. | You are scored with your visible custom scale, else your top tree's Classic scale, else the best of your class's; a looter with the best of their class's (`NS.Compat.PawnClassScales`, `modules/Scoring.lua`, DW-FP07). |
-| The ranged slot | Slot 18 (`INVSLOT_RANGED`) is a slot of its own: bows, guns, crossbows, wands, thrown weapons and relics equip there, and the paper doll shows it. Retail's plan, where a bow fills both hands and a relic is not gear, compared them against the wrong items. | Forever's slot plan sends `INVTYPE_RANGED`, `INVTYPE_RANGEDRIGHT`, `INVTYPE_THROWN` and `INVTYPE_RELIC` to `C.SLOT.RANGED`, and the gear snapshot and the inspect read slot 18 (`core/Constants.lua`, DW-FP06). |
-| `lootListKey` | `C_LootHistory`'s drop key is named `lootListKey` on Forever, as `GetSortedInfoForDrop`'s second parameter, `LOOT_HISTORY_UPDATE_DROP`'s second argument and the `EncounterLootDropInfo` field, where Retail names it `lootListID` (measured in the 1.60.1 interface files, not yet in game). A reader of the field by Retail's name gets nil. | The feed takes the key from the event's positional argument and never reads the field by name (`LootFeed.OnLootHistoryDrop`, `NS.Compat.LootHistoryDrop`). No shipped reader takes the field yet; the roll readers DW-FP13 adds read `lootListID or lootListKey`. |
