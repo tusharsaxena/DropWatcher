@@ -7,12 +7,14 @@ this page describes what exists.
 
 ## Overview
 
-A Retail addon that watches the loot a party or raid receives, judges each drop for you and for the
+A Retail and WoW Forever addon that watches the loot a party or raid receives, judges each drop for you and for the
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.103.0 payload (twenty-three majors; media/icons pruned to the declared subset,
-media/sounds to none), twenty wired with one setup file each and three deliberately unwired:
+LibKa0s v1.108.0 payload (twenty-five majors; media/icons pruned to the declared subset,
+media/sounds to none), twenty wired with one setup file each, two reached directly by the files
+that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`,
+`LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`) and three deliberately unwired:
 `LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and `LibKa0s-Callout-1.0` and
 `LibKa0s-WaypointArrow-1.0` (new in the payload at v1.96.0 and v1.99.0), since it draws no callout
 and no waypoint arrow; each loads and creates nothing until a host calls it (`DEPENDENCIES.md` lists
@@ -776,11 +778,11 @@ checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 34 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Always (documentation-§3): the vendored catalog block (client-quirks-§1), then the addon's own client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
-| `compat-layer.md` | Present | The compat family publishes 121 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatClient.lua` 11, `core/CompatLoot.lua` 8, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 15 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 132 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 16 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Present | 11 messages are defined, more than ten (`PENDING_CHANGED`, DW-FP14, was the eleventh) |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

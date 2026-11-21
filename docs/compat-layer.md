@@ -18,10 +18,10 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred and twenty-one shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `121`): the
-root `core/Compat.lua` publishes 59, `core/CompatClient.lua` 11, `core/CompatLoot.lua` 8, `core/CompatWorld.lua` 18,
-`core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 15. The three
+**One hundred and thirty-two shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `132`): the
+root `core/Compat.lua` publishes 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18,
+`core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 16. The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, and the four client helpers, `IsForever`,
 `IsRetail`, `ClientKey` and `ForClient` (clients-§3, DW-FP02), are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
@@ -76,6 +76,7 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `TalentTreeNames()` (`core/CompatClient.lua`) | the names of LibKa0s-Role-1.0's `Groups()` by index, `{ [index] = name }` (the Comparison page's strip on WoW Forever); empty on Retail | `{}` |
 | Role | `RoleStore()` (`core/CompatClient.lua`) | `db.char.role`, made on first use (the player's override and Role's last answer) | `nil` before the database |
 | | `PlayerRole()` (`core/CompatClient.lua`) | LibKa0s-Role-1.0's `Resolve(RoleStore())`: role, source, detail. Library absent: the override, then `UnitGroupRolesAssigned("player")` | `nil` |
+| | `AutomaticRole()` (`core/CompatClient.lua`) | what Automatic answers now, whatever the player picked: `PlayerRole`'s ladder over a copy of the store holding only its last answer, so the override stays set and the saved answer is not rewritten (General › Role's tooltip, `settings/SchemaRows.lua`) | `nil` |
 | | `SetRoleOverride(role)` (`core/CompatClient.lua`) | LibKa0s-Role-1.0's `SetOverride` on the store (`TANK`, `HEALER`, `DAMAGER`, or nil for Automatic); false with no store or another role | `false` |
 | Inventory | `InventoryItemLink(unit, slot)` | `GetInventoryItemLink`; a secret answer is nil | `nil` |
 | | `BagSlotCount(bag)` | `C_Container.GetContainerNumSlots`; a secret answer is 0 | `0` |
@@ -97,6 +98,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `ActiveLootRolls()` (`core/CompatLoot.lua`) | `GetActiveLootRollIDs`' plain ids: your open group-loot rolls | `{}` |
 | | `LootRollInfo(rollID)` (`core/CompatLoot.lua`) | `GetLootRollItemLink` and `GetLootRollItemInfo`: `{ link, quality, bop, canNeed, canGreed, canTransmog }`, `bop` from `bindOnPickUp`; a secret field dropped; nil with no plain link | `nil` |
 | | `LootThreshold()` (`core/CompatLoot.lua`, rolls UX RX-03) | `GetLootThreshold`, the group's loot threshold, which master-loot pending holds at (not `Constants.LootConsts.MasterLootQualityThreshold`, which only gates Blizzard's distribution-confirm popup) | `2` (Uncommon) |
+| | `LootMethod()` (`core/CompatLoot.lua`) | `C_PartyInfo.GetLootMethod`: `{ method, isML, mlUnit, mlName, mlRealm, mlGUID }`, `method` the plain name of `Enum.LootMethod`'s value; under master loot the master looter's unit (`raid<N>`, `party<N>` or `player`), its `UnitCharacterName`, its GUID (a safe key only) and whether that is you; nil for a secret or unknown method (read by `modules/PendingML.lua` and `modules/Asks.lua`) | `nil` |
+| | `LootSlots()` (`core/CompatLoot.lua`) | `GetNumLootItems`, `GetLootSlotLink`, `GetLootSlotInfo` and `GetLootSourceInfo`: `{ { slot, link, quality, locked, sourceGUID } }` of the open loot window in slot order, a secret field dropped and the source GUID kept only as a safe key (read by `modules/PendingML.lua`) | `{}` |
 | | `LootRollTimeLeft(rollID)` (`core/CompatLoot.lua`, rolls UX RX-02) | `GetLootRollTimeLeft` (milliseconds) as seconds: your popup's own timer, which `NS.RollCells.Left` prefers for a claimed roll; nil for a secret or negative answer or a non-plain id | `nil` |
 | | `RollPopupFrame(i)` (`core/CompatLoot.lua`) | `_G["GroupLootFrame" .. i]`, Blizzard's roll popup `i` (1 to `Compat.ROLL_POPUPS`, 4): a plain frame on both clients, handed out only as an anchor for an owned frame (DW-FP20) | `nil` |
 | | `HookRollPopup(i, onShow, onHide)` (`core/CompatLoot.lua`) | `HookScript("OnShow")` and `HookScript("OnHide")` on popup `i`, each calling its function with `i` after Blizzard's handler; the hooks can never be removed. `true` when installed | `false` |
@@ -178,7 +181,8 @@ the simulator's own safety checks read the real world. `test_sim_core` holds all
 `core/CompatWorld.lua` loads between this file and `core/SimSetup.lua` (simulator spec §2, DW-72). It
 adds the stable reads of the group, a unit and the instance to `NS.Compat`: `GroupSize`
 (`GetNumGroupMembers`), `InRaid`, `InGroup(category)`, `InstanceGroupCategory`
-(`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitClass`, `UnitIsConnected`,
+(`LE_PARTY_CATEGORY_INSTANCE`), `UnitGUID`, `UnitClass`, `UnitIsConnected`, `UnitLevel` (a plain positive level, else nil; read by `modules/Gear.lua` and
+`modules/Inspect.lua`),
 `UnitIsPlayer` (since DW-07: false for a follower or a delve companion; raw, so a secret answer
 reaches the roster, which reads the GUID's kind instead),
 `InstanceState` (`IsInInstance`), `InstanceInfo` (`GetInstanceInfo`; its fifth answer the instance map id, the
