@@ -124,7 +124,8 @@ local function rollsPanel()
     m.__fire("LOOT_HISTORY_UPDATE_ENCOUNTER", 2900)
     local p = NS.RollsPanel.Drawn().panel
     assertTrue(p ~= nil and p:IsShown(), "the Rolls panel opens")
-    return NS, m, { marks = { fold = p.foldButton, settings = p.settingsButton }, close = p.closeButton }
+    -- A companion (FB-DW-01): Expand all / Collapse all and the close, no settings mark.
+    return NS, m, { marks = { fold = p.foldButton }, close = p.closeButton }
 end
 
 local function ownDrop()
@@ -154,7 +155,8 @@ local function offerPanel()
     local NS, m = withDrop()
     NS.OfferPanel.Open(1)
     local p = NS.OfferPanel.Drawn().panel
-    return NS, m, { marks = { settings = p.settingsButton }, close = p.closeButton }
+    -- A companion (FB-DW-01): the close alone.
+    return NS, m, { marks = {}, close = p.closeButton }
 end
 
 local function editBox()

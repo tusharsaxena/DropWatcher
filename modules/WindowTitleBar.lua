@@ -391,7 +391,8 @@ end
 --- settings mark. `spec.frame.headerButtons` (else the bar's) is set to the answer, and the window
 --- keeps the settings mark as `settingsButton`. The caller attaches each mark's tooltip.
 --- @param bar table the frame the marks are parented and anchored to
---- @param spec table { frame, close, settings, settingsOptOut, extras = { { key, icon, glyph, onClick } }, point, y }
+--- `spec.companion` true marks a companion window (FB-DW-01): HeaderButtons builds no settings mark.
+--- @param spec table { frame, close, settings, settingsOptOut, companion, extras = { { key, icon, glyph, onClick } }, point, y }
 --- @return table HeaderButtons' answer { close, settings, extras, order, offsets, right, optOut }
 function TB.Marks(bar, spec)
     local extras = {}

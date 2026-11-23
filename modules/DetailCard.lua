@@ -722,11 +722,6 @@ local function editorBox(e)
     e.box:SetScript("OnEnterPressed", function() sendEditor(e) end)
 end
 
---- Why the Edit message box has no settings mark (AD-86-DW; standalone-windows, *Title-bar
---- controls*' opt-out): it is the one modal, in the DIALOG strata over the window, so the settings
---- panel would open under it; it closes by Send, Cancel or Escape before anything else is done.
-DCard.EDITOR_SETTINGS_OPT_OUT = "a modal compose box over the window: settings would open under it"
-
 local function buildEditor()
     local win = NS.Window.Frame()
     local e = CreateFrame("Frame", nil, win, "BackdropTemplate")
@@ -741,9 +736,12 @@ local function buildEditor()
     e.title = e:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     e.title:SetPoint("TOPLEFT", e, "TOPLEFT", 10, -9)
     NS.Skin.Text(e.title, "heading")   -- gold, in the skin's title face
-    -- Its close through the strip (AD-86-DW, LibKa0s#86), which it opts out of the settings mark on.
+    -- Its close through the strip (AD-86-DW, LibKa0s#86). The box is a companion of the feed window
+    -- (a modal compose box over it, opened from a drop's row, closed by Send, Cancel or Escape), so it
+    -- carries no settings mark and owes no waiver (FB-DW-01; standard v2.119.0, W.HeaderButtons'
+    -- companion = true, WidgetsHeader 2).
     local hb = NS.WindowTitleBar.Marks(e, { frame = e, point = "TOPRIGHT", y = -6, close = function() e:Hide() end,
-        settings = false, settingsOptOut = DCard.EDITOR_SETTINGS_OPT_OUT })
+        companion = true })
     e.closeButton = hb.close
     -- Its title and close on the band S.Shell draws (R5-WIN), as the Offer panel's.
     NS.Skin.Header(e, { title = e.title, right = hb.right })

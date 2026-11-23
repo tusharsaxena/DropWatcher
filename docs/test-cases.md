@@ -358,15 +358,15 @@ Total.
 - header marks: the main window reads extras · settings · close through W.HeaderButtons
 - header marks: the main window's marks are 18 px, 6 px in from the corner and 6 px apart
 - header marks: the main window's settings mark opens Drop Watcher's settings
-- header marks: the Rolls panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Rolls panel is a companion, its strip extras · close with no settings mark
 - header marks: the Rolls panel's marks are 18 px, 6 px in from the corner and 6 px apart
-- header marks: the Rolls panel's settings mark opens Drop Watcher's settings
-- header marks: the Offer panel reads extras · settings · close through W.HeaderButtons
+- header marks: the Offer panel is a companion, its strip extras · close with no settings mark
 - header marks: the Offer panel's marks are 18 px, 6 px in from the corner and 6 px apart
-- header marks: the Offer panel's settings mark opens Drop Watcher's settings
+- header marks: the Edit message box is a companion, its strip extras · close with no settings mark
+- header marks: the Edit message box's marks are 18 px, 6 px in from the corner and 6 px apart
 - header marks: the settings mark's tooltip is this addon's own string
 - header marks: an extra's host paint and the library's paint agree, at rest and on hover
-- header marks: the Edit message box opts out of the settings mark, with its reason
+- header marks: only the feed window carries the settings mark
 - header marks: the main window keeps its strip through minimize and the layout switch
 - header marks: without LibKa0s-Widgets the window keeps its marks on the same pitch, with no settings mark
 

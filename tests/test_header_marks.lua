@@ -1,13 +1,15 @@
 -- tests/test_header_marks.lua — every Drop Watcher window's title-bar marks are LibKa0s-Widgets-1.0's
 -- HeaderButtons (AD-86-DW of Ka0sAddonsCommonTasks docs/2026-11-17-LIBKA0S_V1_105_ADOPTION, LibKa0s#86;
 -- standalone-windows, *Title-bar controls*, v2.113.0): right-aligned, left to right extras · settings
--- · close, one 18 px size and one 6 px pitch, and a settings mark on every window that opens this
--- addon's settings through the opener its launcher registered.
+-- · close, one 18 px size and one 6 px pitch, and a settings mark on every window but a companion
+-- (standard v2.119.0, *Settings is on every window but a companion*) that opens this addon's settings
+-- through the opener its launcher registered.
 --
--- The windows: the main window (lock, layout, minimize, settings, close), the Rolls panel (Expand all
--- / Collapse all, settings, close), the Offer panel (settings, close) and the Edit message box, which
--- opts out of the settings mark with its reason (a modal over the window). The detail card is the
--- Drops table's expanded row and has no title bar; the toast is a notification, not a window.
+-- The windows: the main window (lock, layout, minimize, settings, close). Its companions carry no
+-- settings mark (FB-DW-01, W.HeaderButtons' companion = true): the Rolls panel (Expand all / Collapse
+-- all, close) and the Offer panel (close), both docked beside the window and showing only its drops,
+-- and the Edit message box (close), a modal over it. The detail card is the Drops table's expanded row
+-- and has no title bar; the toast is a notification, not a window.
 
 local T = _G.DW_TEST
 local test, assertEqual, assertTrue = T.test, T.assertEqual, T.assertTrue
@@ -83,8 +85,13 @@ end
 local WINDOWS = {
     { "the main window", mainWindow, { "lock", "mode", "minimize", "settings", "close" },
         { lock = "lockButton", mode = "modeButton", minimize = "minimizeButton" } },
-    { "the Rolls panel", rollsPanel, { "fold", "settings", "close" }, { fold = "foldButton" } },
-    { "the Offer panel", offerPanel, { "settings", "close" }, {} },
+}
+
+-- The companions (FB-DW-01): docked beside the feed window or over it, each showing only its content.
+local COMPANIONS = {
+    { "the Rolls panel", rollsPanel, { "fold", "close" }, { fold = "foldButton" } },
+    { "the Offer panel", offerPanel, { "close" }, {} },
+    { "the Edit message box", editBox, { "close" }, {} },
 }
 
 local function markOf(hb, key)
@@ -135,6 +142,38 @@ for _, w in ipairs(WINDOWS) do
     end)
 end
 
+for _, w in ipairs(COMPANIONS) do
+    local name, open, order, fields = w[1], w[2], w[3], w[4]
+
+    -- red under: a companion still building the gear, or opting out by the waiver instead
+    test("header marks: " .. name .. " is a companion, its strip extras · close with no settings mark", function()
+        local _, _, f = open()
+        local hb = f.headerButtons
+        assertTrue(type(hb) == "table", name .. ": built by HeaderButtons")
+        assertEqual(hb.companion, true, name .. ": built as a companion")
+        assertTrue(hb.settings == nil, name .. ": no settings mark")
+        assertTrue(hb.optOut == nil, name .. ": the companion path, not the waiver")
+        assertTrue(f.settingsButton == nil, name .. ": no settingsButton kept")
+        assertEqual(table.concat(hb.order, ","), table.concat(order, ","), name .. ": left to right")
+        assertEqual(f.closeButton, hb.close, name .. ": the close is the strip's")
+        for key, field in pairs(fields) do assertEqual(f[field], hb.extras[key], name .. ": " .. field) end
+    end)
+
+    -- red under: a companion's marks off the 18 px slot or the 6 px pitch
+    test("header marks: " .. name .. "'s marks are 18 px, 6 px in from the corner and 6 px apart", function()
+        local _, _, f = open()
+        local hb = f.headerButtons
+        local off = 6
+        for i = #order, 1, -1 do
+            local key = order[i]
+            local b = markOf(hb, key)
+            assertEqual(b:GetWidth(), 18, name .. ": " .. key .. " is the 18 px slot")
+            assertEqual(hb.offsets[key], -off, name .. ": " .. key .. "'s offset")
+            off = off + 18 + 6
+        end
+    end)
+end
+
 -- red under: the settings mark's tooltip read from the library's HEADER_STRINGS, not this addon's L
 test("header marks: the settings mark's tooltip is this addon's own string", function()
     local NS = T.enableAddon{ skin = "ka0s" }
@@ -164,15 +203,11 @@ test("header marks: an extra's host paint and the library's paint agree, at rest
     same("icon.tint", "after the pointer leaves")
 end)
 
--- red under: a settings mark on the modal, or an opt-out with no reason
-test("header marks: the Edit message box opts out of the settings mark, with its reason", function()
-    local _, _, e = editBox()
-    local hb = e.headerButtons
-    assertTrue(type(hb) == "table", "built by HeaderButtons")
-    assertTrue(hb.settings == nil, "no settings mark on the modal")
-    assertTrue(type(hb.optOut) == "string" and hb.optOut ~= "", "the reason is recorded")
-    assertEqual(table.concat(hb.order, ","), "close")
-    assertEqual(e.closeButton, hb.close)
+-- red under: the feed window losing its gear while its companions drop theirs
+test("header marks: only the feed window carries the settings mark", function()
+    local _, _, f = mainWindow()
+    assertTrue(f.headerButtons.settings ~= nil and f.headerButtons.companion ~= true,
+        "the feed window is no companion and keeps its gear")
 end)
 
 -- red under: a minimized window that loses its settings mark's reach, or a layout switch that moves it
