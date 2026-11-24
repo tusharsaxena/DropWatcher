@@ -7,7 +7,7 @@ local _, NS = ...
 -- sells it. The library is the one reader of it; this addon never touches the `ForeverDB` global or
 -- loads it itself. The library's first lookup is what loads it (some 12 MB), and nothing here makes
 -- one: modules/ItemSources.lua asks only when the player opens a detail card on WoW Forever with
--- Window > Layout > Detail card's Show where it drops on.
+-- Window > Layout > Detail card's Show where it comes from on.
 --
 -- The library-absent stand-in answers the all-absent values of the library's own *Degradation*
 -- section (docs/api/ForeverDB/version-1-docs.md), member for member, so the card simply shows no

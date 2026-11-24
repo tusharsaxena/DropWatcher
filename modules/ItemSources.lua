@@ -12,8 +12,9 @@ local _, NS = ...
 -- that failed, a reshaped database) the answer is nil and the card draws the header it always drew;
 -- the setting row's tooltip says the feature needs ForeverDB.
 --
--- THE MODEL (IS.Model, pure): `src` is ItemSources' answer, `names` a reader of a source's name.
---   { top = { { kind = "npc"|"object"|"item", id, name, chance }, ... },  -- at most TOP, most likely first
+-- THE MODEL (IS.Model, pure): `src` is ItemSources' answer, `names` a reader of a source's name
+-- (its second answer false when the name is only a stand-in such as `Object 12345`).
+--   { top = { { kind = "npc"|"object"|"item", id, name, named, chance }, ... },  -- at most TOP, most likely first
 --     more,                     -- drop sources past the top
 --     worldMinLevel,            -- nil when it is no world drop
 --     vendors = { name, ... },  -- at most TOP, in ForeverDB's order
@@ -23,7 +24,10 @@ local _, NS = ...
 -- container, then the id.
 --
 -- THE CHIP (IS.Chip, pure): the header's last chip, `Drops from <name> 25%`, else `Sold by <name>`,
--- else `World drop`, its tooltip every line of the model. One chip, so the card's height and its
+-- else `World drop`, its tooltip every line of the model. The headline names the likeliest source
+-- that has a real name: the library's version 1 reads no object's name, and objects (chests) are
+-- often listed at 100%, so an unnamed object would otherwise lead as `Object 12345`. When no top
+-- source has a name, an object reads `Drops from an object 100%`; the tooltip keeps its id. One chip, so the card's height and its
 -- layout are unchanged (modules/DetailCard.lua paints it after NS.DetailCells.Chips).
 --
 -- The answer is kept per item id for the session (ForeverDB is static data), so a repaint of an
@@ -97,7 +101,8 @@ function IS.Model(src, names)
     local m = { top = {}, more = 0, vendors = {}, vendorMore = 0, worldMinLevel = num(src.worldMinLevel) }
     for i, s in ipairs(all) do
         if i <= IS.TOP then
-            s.name = names(s.kind, s.id)
+            local name, known = names(s.kind, s.id)
+            s.name, s.named = name, known ~= false
             m.top[#m.top + 1] = s
         else
             m.more = m.more + 1
@@ -122,8 +127,18 @@ local function sourceText(s)
     return p and ("%s %s"):format(s.name, p) or s.name
 end
 
+-- The headline's source: the likeliest one with a real name, else the likeliest.
+local function headline(m)
+    for _, s in ipairs(m.top) do
+        if s.named then return sourceText(s) end
+    end
+    local s = m.top[1]
+    if s.kind == "object" then return sourceText({ name = L["an object"], chance = s.chance }) end
+    return sourceText(s)
+end
+
 local function chipText(m)
-    if m.top[1] then return L["Drops from %s"]:format(sourceText(m.top[1])) end
+    if m.top[1] then return L["Drops from %s"]:format(headline(m)) end
     if m.vendors[1] then return L["Sold by %s"]:format(m.vendors[1]) end
     return L["World drop"]
 end
@@ -153,18 +168,21 @@ end
 -- ── the reader ──────────────────────────────────────────────────────────────────────────────
 
 -- A source's name through the library: a creature's or a vendor's from its NPC row, a
--- container's from its item row; an object's is not read in the library's version 1.
+-- container's from its item row; an object's is not read in the library's version 1 (a LibKa0s
+-- follow-up owes an Object(id) member). The second answer is false for a stand-in name.
 local function nameOf(kind, id)
     local FDB = NS.ForeverDB
     if kind == "npc" then
         local n = FDB.NPC(id)
-        return n and n.name or L["Creature %d"]:format(id)
+        if n and n.name then return n.name, true end
+        return L["Creature %d"]:format(id), false
     end
     if kind == "item" then
         local it = FDB.Item(id)
-        return it and it.name or L["Item %d"]:format(id)
+        if it and it.name then return it.name, true end
+        return L["Item %d"]:format(id), false
     end
-    return L["Object %d"]:format(id)
+    return L["Object %d"]:format(id), false
 end
 
 local function itemIDOf(drop)

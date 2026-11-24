@@ -123,6 +123,23 @@ test("item sources: the chip reads the likeliest source, else the vendor, else W
     assertNil(S.Chip(nil))
 end)
 
+test("item sources: the headline names the likeliest named source; an unnamed object never leads by its id", function()
+    local S = IS()
+    -- objects have no name in the library's version 1: the reader says so with a false second answer
+    local function stand(kind, id)
+        if kind == "object" then return ("Object %d"):format(id), false end
+        return ("%s:%d"):format(kind, id)
+    end
+    local m = S.Model({ creatures = { { id = 5, chance = 0.25 } }, objects = { { id = 7, chance = 1 } } }, stand)
+    -- red under: the 100% object leading as `Drops from Object 7 100%`
+    assertEqual(S.Chip(m).text, "Drops from npc:5 25%")
+    assertEqual(T.tipPlainJoined(S.Chip(m).tip),
+        "Where it comes from | • Object 7: 100% | • npc:5: 25% | From the ForeverDB addon.", "the tooltip keeps the order and the id")
+    assertEqual(S.Chip(S.Model({ objects = { { id = 7, chance = 1 } } }, stand)).text, "Drops from an object 100%")
+    assertEqual(S.Chip(S.Model({ creatures = { { id = 5, chance = 0.5 } } }, function(_, id)
+        return ("Creature %d"):format(id), false end)).text, "Drops from Creature 5 50%", "an unnamed creature keeps its stand-in")
+end)
+
 -- ── the card, on WoW Forever, against the kit's ForeverDB fake ─────────────────────────────
 
 -- The card opened with the fake installed before the addon loads; answers NS, the card, the fake.
@@ -148,7 +165,8 @@ test("item sources: with ForeverDB, the card's last chip says where it comes fro
     NS, card, fake = withFake({ preset = "present" })
     assertEqual(fake.loads, 1, "the first card opened loads it, once")
     local chip = lastChip(card)
-    assertEqual(chip.text:GetText(), ("Drops from Object %d 100%%"):format(IDS.crate))
+    -- the crate (an object, no name in the library's version 1) leads the tooltip, not the headline
+    assertEqual(chip.text:GetText(), "Drops from Fixture Gnoll 25%")
     assertEqual(T.tipPlainJoined(NS.Window.TooltipOf(chip)), ("Where it comes from | • Object %d: 100%% | • Fixture Gnoll: 25%%"
         .. " | • Fixture Coffer: 5.0%% | • and 1 more | • World drop: from level 8 | • Sold by: Fixture Vendor, Fixture Trainer"
         .. " | From the ForeverDB addon."):format(IDS.crate))

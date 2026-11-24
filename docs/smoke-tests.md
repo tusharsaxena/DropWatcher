@@ -4545,12 +4545,16 @@ Watcher loads nothing at login. Settings › Window › Layout → a Detail card
 Tables, holding Show where it comes from, ticked; its tooltip says it needs the ForeverDB addon.
 `/dw test` (or real loot from a creature) → open a drop's detail card → the dump now answers `true`
 (the first card opened is the load, a short hitch at most), and the header's last chip reads
-`Drops from <name> <chance>` (or `Sold by <name>` or `World drop` for an item with no drop source).
+`Drops from <name> <chance>`, naming the likeliest source that has a name (a chest or other object has
+none yet, so it leads only as `Drops from an object <chance>` when nothing named drops it), or
+`Sold by <name>` or `World drop` for an item with no drop source.
 Hover it → `Where it comes from`, up to three sources with their chances (`rate unknown` where
 ForeverDB has none), `and N more` past three, `World drop: from level N` when it is one, `Sold by:`
 with up to three vendors, and `From the ForeverDB addon.`. Check one drop's figures against
-ForeverDB's own tooltip if you run one. Close and reopen cards → no further hitch. Untick Show where
-it comes from → the chip goes at once; tick it → it comes back. `/dw diagnostics` → the identity
+ForeverDB's own tooltip if you run one. Close and reopen cards → no further hitch. `/dw compact`
+(the stacked detail card) and narrow the window → the Sources chip is the first chip left out once
+the header runs out of width; the item's own chips stay, by design. Untick Show where it comes
+from → the chip goes at once; tick it → it comes back. `/dw diagnostics` → the identity
 section's ForeverDB line reads present and loaded, with its version, build and hash. Fail: ForeverDB
 loaded before a card opened, a chip on an item ForeverDB knows nothing about, a chip that pushes out
 the item's own chips, or a Lua error. Result:

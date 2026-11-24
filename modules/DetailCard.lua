@@ -439,7 +439,9 @@ local function paintHeader(card, drop, width)
     card.nameTip.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
     local chips = DC.Chips(drop)
     -- Where it comes from (WoW Forever with ForeverDB, modules/ItemSources.lua; SF-DW-01): the last
-    -- chip, kept when the strip is full. Opening the card is what first loads ForeverDB.
+    -- chip, kept when the strip already holds MAX_CHIPS. A stacked (compact) card's fitChips still
+    -- drops chips from the end by width, so on a narrow card the Sources chip is the first to go:
+    -- the item's own chips come first, by design (FOREVER-18). Opening the card first loads ForeverDB.
     local sources = NS.ItemSources.ChipFor(drop)
     if sources then chips[math.min(#chips + 1, MAX_CHIPS)] = sources end
     for i, c in ipairs(card.chips) do
