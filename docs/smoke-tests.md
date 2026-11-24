@@ -2093,7 +2093,7 @@ before this build; Insights → the same before Reset filters. Back on Drops wit
 yours (the speech bubble shown) → the words stop before the speech bubble. `/dw compact` → the same on
 each tab. Resize the window wider and narrower → the cut point follows the first shown icon. Fail: a
 blank gap the width of a hidden icon between the words and the icons, words drawn under an icon, or
-a Lua error. Result:
+a Lua error. Result: Passed (owner, 2026-11-24).
 
 **FEED-113. The Rolls panel, the Offer panel and the Edit message box carry no gear; the feed window
 keeps its own (FB-DW-01; standalone-windows, *Settings is on every window but a companion*, standard
@@ -4104,7 +4104,7 @@ dimmed while Use the skin's shadow is ticked, and live once it is unticked. Then
 had picked a Font color before this build (or one made by setting the color on the previous build),
 log in → the picked color still draws and Use the skin's color is unticked (migration step 14). Fail:
 the picked color drawn while the box is ticked, a profile's earlier pick lost after the update, two
-Use the skin's shadow rows, or a Lua error. Result:
+Use the skin's shadow rows, or a Lua error. Result: Passed (owner, 2026-11-24).
 
 **SKIN-54. An expanded row is the skin's selection, apart from its hover (SD-SK-DW, the owner's
 U-18).** Client: both. Skin Ka0s Default (`/dw skin`). `/dw test`, Drops → expand a row and hover a
@@ -4112,7 +4112,7 @@ different one → the expanded row's gold wash reads clearly stronger than the h
 stand off a plain and a striped row. The same on History, on a Rolling now row and on a compact card
 (`/dw compact`). Switch to Obsidian and WoW Midnight → the expanded row takes each skin's selection
 color, still apart from its hover. Fail: an expanded row that looks like a hovered one, or a Lua
-error. Result:
+error. Result: Passed (owner, 2026-11-24).
 
 **SKIN-55. The Edit message box's text in the skin's face and input color (SD-SK-DW, the owner's
 U-19).** Client: both. `/dw test`, Drops → open a drop, Edit message → the typed text is in the
@@ -4120,7 +4120,7 @@ skin's body face (Ka0s Default's Ka0s Prototype, not chat's face) and a light gr
 a few words → the same. Switch to WoW Forever and Obsidian with the box open (or reopen it) → the face
 and color follow each skin. Tick Ignore fonts on the Skin tab → the box's text goes back to chat's
 face. Fail: chat's face under a skin that sets one, a text color that never changes with the skin, or
-a Lua error. Result:
+a Lua error. Result: Passed (owner, 2026-11-24).
 
 ## Rolls
 
@@ -4400,7 +4400,7 @@ a bare `/dw sim`; on Retail the dungeon scenario plays no roll of its own, becau
 there; on WoW Forever its bosses roll too), and wait → while it runs the same bar shrinks under its
 header; then the winner's row has a faint gold wash and its roll number is gold. Switch to WoW Midnight and Obsidian → the bar, the wash, the number and `[YOU]` take each
 skin's accent with no reload. Fail: no countdown bar on an open roll, a winner row with no wash,
-`[YOU]` in plain white, or a Lua error. Result:
+`[YOU]` in plain white, or a Lua error. Result: Passed (owner, 2026-11-24).
 
 ## WoW Forever
 
@@ -4596,6 +4596,8 @@ Owed by TT-1 (2026-11-05: a tier token's slot read from its Use text and its nam
 Owed by the owner's 2026-11-24 feedback batch (FB-DW-01; Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/`): FEED-113 and FEED-114, new. FEED-108 keeps its 2026-11-19 pass for what it checked then; its Rolls and Offer panel gears are retired by FEED-113. An agent never marks one passed.
 
 Owed by round 2 of the owner's 2026-11-24 feedback batch (FB2-DW-01; Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md`, LibKa0s v1.113.0): STATE-12, SIM-25, SIM-26 and FEED-115, new. STATE-11 keeps its 2026-11-19 pass for the five protagonists; its names past them are retired by STATE-12. An agent never marks one passed.
+
+On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97, #99, #100 run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`, LibKa0s v1.108.0, SD-DW-94, SD-RV-DW and SD-SK-DW; run SKIN 11-20 of the owner's smoke sheet, a copy of `Ka0sPendingSmoke-2026-11-23.csv`) passed, recorded on the owner's word. Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-24)`: FEED-112, SKIN-53, SKIN-54, SKIN-55 and ROLLS-22.
 
 ### Review 2026-10-14 (M24) sign-off
 
