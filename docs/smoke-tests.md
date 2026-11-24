@@ -2122,11 +2122,14 @@ cover the colors. The owner: "make the current selected always be a different co
 texts - e.g. gold in ka0s default". `/dw test`, History, full layout → open Character, pick
 `Character: Current` and reopen it: `Character: Current` and your own row read in gold under Ka0s
 Default, not in your class color, while the alt keeps its class color and `Character: All` reads
-plain. Switch the skin (Settings › Skin) to Azeroth → the selected rows read Ka0s Default's gold (its
-own accent sat too near its text); to Obsidian → the skin's own accent, plainly apart from the plain
-rows. Open Sort, Content and View → their selected row reads the same way. Compact layout → Filters ▾
-→ Character → the ticked rows (Current and you) read in that color beside their ticks. Fail: a
-selected row in the same color as the plain rows or in its class color, or a Lua error. Result:
+plain. Switch the skin (Settings › Skin) to Azeroth, then Obsidian → the selected rows read
+the same Ka0s Default gold in every one, never the skin's own accent (the owner's ruling of 2026-11-24
+on round 2, FB2-LK-04: gold in every skin, a skin's own accent only where the gold sits too near its
+text). On WoW Forever, under its default WoW Forever skin → the selected rows read that gold too, not
+the skin's tan accent. Open Sort, Content and View → their selected row reads the same gold. Compact
+layout → Filters ▾ → Character → the ticked rows (Current and you) read in gold beside their ticks.
+Fail: a selected row in the same color as the plain rows, in its class color or in the skin's own
+accent (Forever's tan), or a Lua error. Result:
 
 ## Roster
 

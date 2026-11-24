@@ -2220,7 +2220,7 @@ Total.
 - test mode: the sample groups carry real instance names and realistic difficulties
 - sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
-### test_char_filter.lua (23)
+### test_char_filter.lua (24)
 
 - char filter: a recorder key is Name-Realm; a name that carries its realm is kept
 - char filter: the class icon is the classicon atlas as inline markup, nothing with no class
@@ -2245,6 +2245,7 @@ Total.
 - filter bar: the Character menu's selected rows stand off plain rows and their class color: ka0s
 - filter bar: the Character menu's selected rows stand off plain rows and their class color: obsidian
 - filter bar: the Character menu's selected rows stand off plain rows and their class color: azeroth
+- filter bar: the Character menu's selected rows stand off plain rows and their class color: forever
 
 ### test_trade_timer.lua (17)
 
@@ -3246,7 +3247,7 @@ Total.
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
-| test_char_filter.lua | 23 |
+| test_char_filter.lua | 24 |
 | test_trade_timer.lua | 17 |
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 29 |
@@ -3289,4 +3290,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2739** |
+| **Total** | **2740** |
