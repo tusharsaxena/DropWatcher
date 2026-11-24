@@ -39,7 +39,9 @@ Start here, then read the docs:
 Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lua tests/run.lua`
 (Retail and WoW Forever, both 0 failed; clients-§6) and
 `~/.claude/dev-copilot/bin/ka0s-bounded luacheck .` (0/0; the kit bounds the suite on load, and
-`luacheck` loads no kit, so it runs through the bounded runner, testing-§15). Never edit `libs/` or
+`luacheck` loads no kit, so it runs through the bounded runner, testing-§15) and
+`python3 -m pytest -q tools/seeds` (the seed contract's own tests, as `docs/validate-seeds.md` ->
+`## Gate` writes them; no network). Never edit `libs/` or
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
