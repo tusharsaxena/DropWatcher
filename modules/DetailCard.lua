@@ -30,7 +30,9 @@ local _, NS = ...
 -- THE UI LISTENS. The card is repainted with the table, on the bus. It reads the looter's inspect
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
--- Pawn's presence), all read-only. Its buttons go through the host handlers in core/DropWatcher.lua
+-- Pawn's presence), all read-only. On WoW Forever its last header chip is where the item comes
+-- from (NS.ItemSources, from the optional ForeverDB addon; SF-DW-01). Its buttons go through the
+-- host handlers in core/DropWatcher.lua
 -- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter); Link in chat is
 -- Compat.InsertChatLink, as an item button's shift-click is.
 --
@@ -436,6 +438,10 @@ local function paintHeader(card, drop, width)
     qualityTone(card.name, drop)
     card.nameTip.showItem = true   -- the real item tooltip (WindowGroup.ItemHover, DW-80)
     local chips = DC.Chips(drop)
+    -- Where it comes from (WoW Forever with ForeverDB, modules/ItemSources.lua; SF-DW-01): the last
+    -- chip, kept when the strip is full. Opening the card is what first loads ForeverDB.
+    local sources = NS.ItemSources.ChipFor(drop)
+    if sources then chips[math.min(#chips + 1, MAX_CHIPS)] = sources end
     for i, c in ipairs(card.chips) do
         local chip = chips[i]
         c:SetShown(chip ~= nil)

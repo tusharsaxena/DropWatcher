@@ -67,7 +67,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-53 | [Skins](#skins) | LibKa0s v1.108.0's composer (SD-RV-DW): the tables' Font color gains Use the skin's color, on by default; a pick stored before keeps drawing (step 14) |
 | SKIN-54..55 | [Skins](#skins) | The skin-defaults audit (SD-SK-DW, LibKa0s#97): an expanded row's wash is the skin's selection (SKIN-54, U-18); the Edit message box's text is skinned (SKIN-55, U-19) |
 | ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
-| FOREVER-1..17 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01) |
+| FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -4538,6 +4538,36 @@ could use → the window opens by itself with the drop, and closes as STATE-9 sa
 your old profile → its stored values are unchanged. On Retail a new profile keeps the open-world
 group untracked and Fixed at Rare (SIT-7, QUAL-1). Result:
 
+**FOREVER-18. Where a drop comes from, with ForeverDB (SF-DW-01, LibKa0s#105).** Client: WoW
+Forever, with the ForeverDB addon installed and enabled (CurseForge `forever-db`), and no other addon
+that loads it at login. `/reload`, then `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`: Drop
+Watcher loads nothing at login. Settings › Window › Layout → a Detail card heading between Mode and
+Tables, holding Show where it comes from, ticked; its tooltip says it needs the ForeverDB addon.
+`/dw test` (or real loot from a creature) → open a drop's detail card → the dump now answers `true`
+(the first card opened is the load, a short hitch at most), and the header's last chip reads
+`Drops from <name> <chance>` (or `Sold by <name>` or `World drop` for an item with no drop source).
+Hover it → `Where it comes from`, up to three sources with their chances (`rate unknown` where
+ForeverDB has none), `and N more` past three, `World drop: from level N` when it is one, `Sold by:`
+with up to three vendors, and `From the ForeverDB addon.`. Check one drop's figures against
+ForeverDB's own tooltip if you run one. Close and reopen cards → no further hitch. Untick Show where
+it comes from → the chip goes at once; tick it → it comes back. `/dw diagnostics` → the identity
+section's ForeverDB line reads present and loaded, with its version, build and hash. Fail: ForeverDB
+loaded before a card opened, a chip on an item ForeverDB knows nothing about, a chip that pushes out
+the item's own chips, or a Lua error. Result:
+
+**FOREVER-19. Without ForeverDB (SF-DW-01).** Client: WoW Forever. Disable ForeverDB in the addon
+list (or remove it) and `/reload`. Open any drop's detail card (`/dw test`) → the header is the one
+FOREVER-18 showed minus the Sources chip, and nothing else moved; no Lua error, no chat line. The
+Settings row is still there and its tooltip says it needs the ForeverDB addon. `/dw diagnostics` →
+the ForeverDB line reads not loaded (present, but disabled; or not present when it is removed).
+Fail: an empty chip, a chip saying anything, or an error. Result:
+
+**FOREVER-20. No Sources chip on Retail (SF-DW-01).** Client: Retail (ForeverDB installed or not).
+Settings › Window › Layout → Mode then Tables, with no Detail card heading and no Show where it comes
+from row. `/dw test` → open a detail card → the header is unchanged from before this run, and
+`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` answers `false`. Fail: the row, the chip, or ForeverDB
+loaded. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -4598,6 +4628,8 @@ Owed by the owner's 2026-11-24 feedback batch (FB-DW-01; Ka0sAddonsCommonTasks `
 Owed by round 2 of the owner's 2026-11-24 feedback batch (FB2-DW-01; Ka0sAddonsCommonTasks `docs/2026-11-24-FEEDBACK_BATCH/R2_SMOKE_FEEDBACK.md`, LibKa0s v1.113.0): STATE-12, SIM-25, SIM-26 and FEED-115, new. STATE-11 keeps its 2026-11-19 pass for the five protagonists; its names past them are retired by STATE-12. An agent never marks one passed.
 
 On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97, #99, #100 run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`, LibKa0s v1.108.0, SD-DW-94, SD-RV-DW and SD-SK-DW; run SKIN 11-20 of the owner's smoke sheet, a copy of `Ka0sPendingSmoke-2026-11-23.csv`) passed, recorded on the owner's word. Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-24)`: FEED-112, SKIN-53, SKIN-54, SKIN-55 and ROLLS-22.
+
+Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

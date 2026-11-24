@@ -405,6 +405,8 @@ local FOREVER = NS.Compat.ClientKey() == "forever"
 -- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
 -- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,
 -- `soulbound` (design §4.6). docs/ARCHITECTURE.md's per-client feature table names each one's gate.
+-- One is WoW Forever's alone: the detail card's Sources chip (modules/ItemSources.lua, its
+-- `window.itemSources` row), read from the optional ForeverDB addon (SF-DW-01, clients-§11).
 C.FEATURE_CLIENTS = {
     journalPool   = { "retail" },
     transmog      = { "retail" },
@@ -413,6 +415,7 @@ C.FEATURE_CLIENTS = {
     bonusRollSim  = { "retail" },
     tradeTimer    = { "retail" },
     tradeRuleRows = { "retail" },
+    itemSources   = { "forever" },
 }
 C.FEATURE = {}
 for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end

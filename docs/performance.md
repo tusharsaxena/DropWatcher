@@ -130,6 +130,19 @@ panes were re-anchored on every pass), both pinned by `test_window_shell`.
 After it: `refreshCaptureOff`/`On` 11120.0 and `refreshCompactCaptureOff`/`On` 6768.0, the ceilings
 unmoved.
 
+## ForeverDB (WoW Forever, optional)
+
+The detail card's Sources chip (`modules/ItemSources.lua`, SF-DW-01) reads the optional ForeverDB
+addon through LibKa0s-ForeverDB-1.0. ForeverDB is some **12 MB on disk** and LoadOnDemand: the
+library loads it on its first lookup, which this addon makes only when the player **opens a detail
+card** on WoW Forever with Window › Layout › Show where it comes from on, never at login
+(`tests/test_item_sources.lua` counts the loads through the kit's fake). From then on the client
+holds its tables for the session and the addon list charges that memory to ForeverDB, not to this
+addon; the ceilings above are this addon's own and do not include it. Each item's answer is kept for
+the session, so a repaint of an open card reads nothing again: the refresh scenarios run on the
+Retail profile, where the chip is inert, and on the Forever profile with no ForeverDB, and neither
+pair moved (11120.0 and 6768.0 on Retail, 10752.0 and 6768.0 on Forever, measured 2026-11-25).
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

@@ -69,6 +69,7 @@ Kit.setSurfaceSource{
     ["LibKa0s-Compat-1.0"]    = surfaceMock.LibStub("LibKa0s-Compat-1.0", true),
     ["LibKa0s-Sim-1.0"]       = surfaceNS.Sim,
     ["LibKa0s-Glow-1.0"]      = surfaceMock.LibStub("LibKa0s-Glow-1.0", true),
+    ["LibKa0s-ForeverDB-1.0"] = surfaceMock.LibStub("LibKa0s-ForeverDB-1.0", true),
 }
 
 -- A bare simulation session on LibKa0s-Sim-1.0: the scenario `test`, with no timeline and no

@@ -34,6 +34,16 @@ marked as such rather than listed as a requirement.
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is
   reported by `core/DropWatcher.lua` `logDependencies` and the diagnostics' `integrations` and
   Scoring sections (`modules/Diagnostics.lua`), the latter naming the scorer actually in use.
+- **Optional: ForeverDB (WoW Forever only).** The WoW Forever data addon
+  (<https://github.com/foreverfraddons/forever-db>, CurseForge `forever-db`). Named in
+  `## OptionalDeps:` and under `.pkgmeta`'s `optional-dependencies`, never as a required dependency
+  (clients-§11): no player needs it. It is read only through LibKa0s-ForeverDB-1.0
+  (`core/ForeverDBSetup.lua`), whose first lookup loads it (LoadOnDemand, some 12 MB); this addon
+  makes that lookup when the player opens a detail card with Settings → Window → Layout → Show where
+  it comes from on (`modules/ItemSources.lua`), never at login. With it, the card's last chip says
+  which creatures, objects or containers drop the item, with their chances, the world-drop level and
+  who sells it. Without it, or on Retail, the card draws as it always did. Its data is GPL-3.0 and is
+  never copied into this repo, tests included (the kit's `tests/_kit/mock_foreverdb.lua` is invented).
 - **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
   When it can skin this addon, Settings → General → Skin offers it as the skin source, through
   LibKa0s-Skin-1.0's own EllesmereUI provider; this addon calls no EllesmereUI API. Without it the

@@ -442,6 +442,10 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
+  ├─> ItemSources.ChipFor(drop)       (WoW Forever, `window.itemSources` on: the last chip, where it
+  │     comes from; ItemSources.For -> ForeverDB.Available() (the first card opened loads ForeverDB)
+  │     -> ForeverDB.ItemSources(itemID) + ForeverDB.NPC / Item for the names -> ItemSources.Model,
+  │     kept per item for the session; nil on Retail, with the switch off or without ForeverDB)
   ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, TestMode.InspectOf(drop), Compat.SpecName(specID), now,
   │     WindowOwn.IsRevealed(id), looterLeft(drop))                 (pure; left: the looter is no

@@ -517,6 +517,20 @@ L["your bag's trade timer"] = "your bag's trade timer"
 L["your weights score nothing for this spec"] = "your weights score nothing for this spec"
 L["already %s"] = "already %s"
 
+-- modules/ItemSources.lua: where a drop comes from, from the optional ForeverDB addon (SF-DW-01)
+L["%s and %d more"] = "%s and %d more"
+L["Creature %d"] = "Creature %d"
+L["Drops from %s"] = "Drops from %s"
+L["From the ForeverDB addon."] = "From the ForeverDB addon."
+L["from level %d"] = "from level %d"
+L["Item %d"] = "Item %d"
+L["Object %d"] = "Object %d"
+L["rate unknown"] = "rate unknown"
+L["Sold by"] = "Sold by"
+L["Sold by %s"] = "Sold by %s"
+L["Where it comes from"] = "Where it comes from"
+L["World drop"] = "World drop"
+
 -- modules/DetailCard.lua
 L["the box, without sending"] = "the box, without sending"
 L["the group's channel"] = "the group's channel"

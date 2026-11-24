@@ -85,9 +85,10 @@ test("settings: no Retail-only row on the Forever panel", function()
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do
         local path = row.path or ""
-        if path == "char.role" then
-            -- WoW Forever's alone (Forever port design §11.4): Retail never reads the role.
-            assertTrue(not retail, "the Role row on Retail")
+        if path == "char.role" or path == "window.itemSources" then
+            -- WoW Forever's alone (Forever port design §11.4): Retail never reads the role, nor
+            -- ForeverDB (SF-DW-01, the detail card's Sources chip).
+            assertTrue(not retail, "a Forever-only row on Retail: " .. path)
             assertEqual(table.concat(row.clients or {}, ","), "forever", path .. " declares its client")
         elseif retailOnlyRow(path) then
             seen = seen + 1
@@ -911,6 +912,8 @@ local PINNED_ROWS = {
     { "window.tableFontColorFromSkin", "bool", "true" },
     -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
     { "char.role", "string", "\"auto\"" },
+    -- SF-DW-01: Window › Layout › Detail card, WoW Forever's alone (the optional ForeverDB addon).
+    { "window.itemSources", "bool", "true" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
@@ -920,7 +923,9 @@ test("rows: the layout changes keep every stored path, its type and its default 
         -- On WoW Forever a Retail-only situation's paths, and the Retail-only rows, are absent
         -- (clients-§4), not moved.
         if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1])))
-            and not (not T.forever and p[1] == "char.role") then want[p[1]], pinned = p, pinned + 1 end
+            and not (not T.forever and (p[1] == "char.role" or p[1] == "window.itemSources")) then
+            want[p[1]], pinned = p, pinned + 1
+        end
     end
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do

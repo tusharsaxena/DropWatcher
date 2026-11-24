@@ -26,7 +26,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (24)
+### test_surface_parity.lua (25)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -44,6 +44,7 @@ Total.
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
 - parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
 - parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface
+- parity: the ForeverDB stub carries the whole LibKa0s-ForeverDB-1.0 surface (SF-DW-01)
 - parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
@@ -957,6 +958,22 @@ Total.
 - card: the Edit message box says why when the ask would be refused, and Cancel closes it
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
+
+### test_item_sources.lua (13)
+
+- item sources: characterization, the card's header draws exactly the cells' chips
+- item sources: a chance reads as a whole percent from 10%, one decimal below, <0.1% under that
+- item sources: the model merges creatures, objects and containers, most likely first, top three
+- item sources: nothing to say is no model; a vendor or a world level alone is one
+- item sources: the chip reads the likeliest source, else the vendor, else World drop
+- item sources: with ForeverDB, the card's last chip says where it comes from; opening it is the load (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: an item ForeverDB names no source for draws the header it always drew (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: without ForeverDB (missing) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: without ForeverDB (loadfails) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: without ForeverDB (reshaped) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: the switch off shows no chip and never loads ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: the row is Window > Layout > Detail card, on by default, and says it needs ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- item sources: on Retail the feature is inert: no row, no default, no chip, no load
 
 ### test_own_drops.lua (16)
 
@@ -3156,7 +3173,7 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 15 |
-| test_surface_parity.lua | 24 |
+| test_surface_parity.lua | 25 |
 | test_setup.lua | 25 |
 | test_database.lua | 16 |
 | test_schema.lua | 11 |
@@ -3196,6 +3213,7 @@ Total.
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
+| test_item_sources.lua | 6 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3289,5 +3307,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 1 |
-| **Total** | **2740** |
+| Skipped | 8 |
+| **Total** | **2747** |

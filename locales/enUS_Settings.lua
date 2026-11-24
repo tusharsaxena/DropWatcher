@@ -155,6 +155,10 @@ L["Row height"] = "Row height"
 L["The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."] =
     "The height of one row in the drop tables: Drops and History. While the Trade window column shows, a Drops row adds room for its countdown bar."
 L["The height of one row in the drop tables: Drops and History."] = "The height of one row in the drop tables: Drops and History."
+L["Show where it comes from"] = "Show where it comes from"
+L["The detail card's last chip names the likeliest creature, object or container that drops the item, with its chance; its tooltip lists the top three, the level a world drop starts at and who sells it. Needs the ForeverDB addon: without it the chip does not show. The first card you open loads ForeverDB."] =
+    "The detail card's last chip names the likeliest creature, object or container that drops the item, with its chance; its tooltip lists the top three, the level a world drop starts at and who sells it. Needs the ForeverDB addon: without it the chip does not show. The first card you open loads ForeverDB."
+L["Detail card"] = "Detail card"
 L["Toast"] = "Toast"
 L["Show a toast"] = "Show a toast"
 L["Pop up a toast for a likely tradeable upgrade for you."] = "Pop up a toast for a likely tradeable upgrade for you."
