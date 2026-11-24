@@ -360,3 +360,73 @@ test("filter bar: each sync reuses the Character and View rows; HistoryChanged r
     NS.Window.Refresh()
     assertEqual(values(c.char), "all,current,Alt-Testrealm,Bank-Testrealm," .. ME, "a new recorder is listed")
 end)
+
+-- ── the selected row's color (FB2-DW-01; LibKa0s v1.113.0, WidgetsDropdown 4; decision D3) ──
+-- The owner, 2026-11-24, on the Character dropdown: "make the current selected always be a
+-- different color than the other texts - e.g. gold in ka0s default". Drop Watcher's dropdowns are
+-- all the library's (NS.MakeDropdown, owner DropWatcher), so the shared menu paints the selection;
+-- these cases read the painted rows of the History tab's Character menu under four skins: Ka0s
+-- Default, Obsidian, Azeroth and WoW Forever (Forever's default). The owner's ruling of 2026-11-24 on
+-- round 2 (FB2-LK-04): the selection is Ka0s Default's gold in every skin, a skin's own menu.textSel
+-- standing in only where the gold sits under 20 CIEDE2000 off its menu.text; none of the four does.
+
+local function rgb(c) return ("%.3f,%.3f,%.3f"):format(c[1], c[2], c[3]) end
+
+-- Open `dd`'s menu: its rows' painted text colors, by label.
+local function openColors(m, dd)
+    local saved, menu = m.CreateFrame, nil
+    m.CreateFrame = function(...)
+        local f = saved(...)
+        menu = menu or f
+        return f
+    end
+    dd:__fire("OnClick")
+    m.CreateFrame = saved
+    menu = menu or m.LibStub("LibKa0s-Widgets-1.0").__menuFrame
+    local out = {}
+    for _, b in ipairs(menu and menu.buttons or {}) do
+        if b:IsShown() then
+            -- the class icon (|A) and the multi-select tick (|T) left out
+            local label = uncolored(b.fs:GetText() or ""):gsub("|A:[^|]*|a ", ""):gsub("|T[^|]*|t ", "")
+            out[label] = m.__paint(b.fs).textColor
+        end
+    end
+    m.LibStub("LibKa0s-Widgets-1.0").CloseMenu()
+    return out
+end
+
+local function historyChar()
+    local NS, _, m = T.enableAddon()
+    dofile("tests/_kit/mock_paint.lua")(m)
+    NS.ShowWindow()
+    seedHistory(NS)
+    NS.Window.SelectTab("history")
+    return NS, m, NS.WindowFilterBar.Controls().char
+end
+
+for _, key in ipairs({ "ka0s", "obsidian", "azeroth", "forever" }) do
+    test("filter bar: the Character menu's selected rows stand off plain rows and their class color: " .. key, function()
+        -- red under: LibKa0s v1.112.0 (WidgetsDropdown 3), where Azeroth's selection was its accent,
+        -- 16.3 CIEDE2000 off its plain text, and read like every other row; and under the first cut
+        -- of v1.113.0, where Obsidian and WoW Forever kept their own accent (Forever's tan #C9A07A)
+        local NS, m, dd = historyChar()
+        local Skin = m.LibStub("LibKa0s-Skin-1.0")
+        Skin:SetChoice("DropWatcher", "ka0s", key)
+        pick(dd, "current")
+        assertEqual(dd.text:GetText(), "Character: Current")
+        local c = openColors(m, dd)
+        local cur, mine, all = c["Character: Current"], c[ME], c["Character: All"]
+        assertTrue(cur ~= nil and mine ~= nil and all ~= nil, "the Current, your and All rows are drawn")
+        local r, g, b = m.LibStub("LibKa0s-Widgets-1.0").SelectedColor("DropWatcher")
+        local sel = { r, g, b }
+        assertEqual(rgb(cur), rgb(sel), "the Current preset lights in the selected color")
+        assertEqual(rgb(mine), rgb(sel), "your row, selected, wears the selected color")
+        assertEqual(rgb(all), rgb(Skin:ResolveSkin(key)["menu.text"]), "a plain row is menu.text")
+        assertTrue(rgb(sel) ~= rgb(all), "selected differs from plain")
+        local cr, cg, cb = NS.Compat.ClassColor("MAGE")
+        assertTrue(rgb(mine) ~= rgb({ cr, cg, cb }), "the selection replaces your class color")
+        local pr, pg, pb = NS.Compat.ClassColor("PRIEST")
+        assertEqual(rgb(c["Alt-Testrealm"]), rgb({ pr, pg, pb }), "an unselected character keeps its class color")
+        assertEqual(rgb(sel), rgb({ 1, 0.82, 0 }), key .. ": the selection is Ka0s Default's gold")
+    end)
+end

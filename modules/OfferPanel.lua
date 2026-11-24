@@ -164,9 +164,11 @@ local function buildTitle(p)
     p.kind:SetPoint("LEFT", p.title, "RIGHT", 8, 0)
     NS.Skin.Text(p.kind, "disabled")
     p.kind:SetText(L["YOUR DROP"])
-    -- The strip (AD-86-DW, LibKa0s#86): settings and close, from the corner the old close sat at. The
-    -- panel is in the window tier, under the settings panel, so settings does not hide it first.
-    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+    -- The strip (AD-86-DW, LibKa0s#86): the close, from the corner the old close sat at. The panel is
+    -- a companion of the feed window (docked beside it, showing one of its drops, closed through it),
+    -- so it carries no settings mark (FB-DW-01; standard v2.119.0, *Settings is on every window but a
+    -- companion*; W.HeaderButtons' companion = true, WidgetsHeader 2).
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6, companion = true,
         close = function() OP.Close() end })
     p.closeButton = hb.close
     -- The popover keeps the band S.Shell draws (NS.ApplySkin), and its title and marks sit on the

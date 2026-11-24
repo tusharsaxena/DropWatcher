@@ -686,7 +686,7 @@ local function raidRollers(s, rnd)
     if not s.raiders then
         local forever = NS.Compat.ClientKey() == "forever"
         s.raiders = NS.SimRoster.Raiders(E.RAID_PLAYERS - 1 - #members, members,
-            { ownRealm = NS.Compat.NameRealm(), surnames = forever and NS.SimRoster.SURNAMES or nil }, rnd)
+            { ownRealm = NS.Compat.NameRealm(), client = forever and "forever" or "retail", crowd = s.crowd }, rnd)
         for _, m in ipairs(s.raiders) do NS.SimHost.MarkGUID(m.guid) end
     end
     local out = {}

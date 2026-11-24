@@ -411,7 +411,7 @@ the armed run ─> a step, then one every stepDelay seconds (the descriptor's
                    (Stop("restart"), `Simulation stopped to restart.`, then Start with the same
                    scenario, size and start options and a fresh seed)
 the step panel (DW-04: LibKa0s-Sim-1.0's; `/dw sim` and `/dw sim panel` open it, NS.Sim:ShowPanel /
-                   TogglePanel) ─> its rows, states, run controls, picker and click-ahead are the
+                   TogglePanel, and since Sim 5, LibKa0s v1.113.0, every successful start shows it) ─> its rows, states, run controls, picker and click-ahead are the
                    library's, every action the typed verb (NS.Sim:RunVerb) ─> it repaints on every move
                    of the timeline; what DropWatcher gives it is the descriptor's `panel`
                    (NS.SimPanel.FIELDS, modules/SimPanel.lua): the title, each step's name

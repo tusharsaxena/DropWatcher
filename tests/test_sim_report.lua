@@ -89,8 +89,8 @@ local function pair(line) return type(line) == "table" and (line[1] .. ": " .. t
 -- burst is the dungeon's, three lines with yours first: the same path, the same nothing-lost proof.
 local OWNER_RUN = T.forever
     and { scenario = "dungeon", n = 3, mine = "Item 100",
-        others = { "Item 100 (Tavi Frostvale): Drops", "Item 101 (Kaelis Ironhide): Drops" } }
-    or { scenario = "key", n = 2, mine = "Item 101081", others = { "Item 101081 (Kaelis): Drops" } }
+        others = { "Item 100 (Mockcopper Samplecoin): Drops", "Item 101 (Samplelight Mockhalo): Drops" } }
+    or { scenario = "key", n = 2, mine = "Item 101081", others = { "Item 101081 (Samplefrost): Drops" } }
 
 test("sim report: the owner's key run: the second drop is yours, on Drops, nothing lost", function()
     local NS = addon(600)
@@ -113,7 +113,8 @@ test("sim report: the owner's key run: the second drop is yours, on Drops, nothi
     local row = panelRow(NS, step)
     assertEqual(row.label, "Loot: " .. shown)
     assertEqual(pair(row.tip[3]), run.mine .. " (you): Drops")
-    -- a seed replays per client: Forever's members draw a surname too (forever-quirks-§4)
+    -- a seed replays per client: Forever's members are "First Surname" (forever-quirks-§4), and every
+    -- name is the library's seeded crowd (LibKa0s#104, FB2-DW-01; Kaelis and Tavi Frostvale before)
     for i, line in ipairs(run.others) do assertEqual(pair(row.tip[3 + i]), line) end
     assertTrue(header ~= nil)
     NS.Window.SelectTab("group"); NS.Window.Refresh()

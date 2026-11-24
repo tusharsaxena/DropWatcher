@@ -366,6 +366,7 @@ Kit.run{
         "test_row_tooltip",
         "test_tooltip_placement",
         "test_test_mode",
+        "test_sample_names",
         "test_compat",
         "test_compat_client",
         "test_role_override",

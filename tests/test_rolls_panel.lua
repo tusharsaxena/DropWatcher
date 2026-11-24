@@ -569,6 +569,25 @@ test("rolls panel: test mode's sample roll shows a number on every Need and Gree
     quietTest(NS, m, false)
 end)
 
+-- red under: test mode's sample roll carrying no start time or duration, so no countdown bar and no
+-- time (the owner's smoke of ROLLS-22, 2026-11-24)
+test("rolls panel: test mode's sample roll shows a countdown bar and a time left under its header", function()
+    local NS, m = shown()
+    m.seedGearJournal()
+    quietTest(NS, m, true)
+    local h = NS.RollsPanel.Drawn().headers[1]
+    assertTrue(h ~= nil and h.open, "an open sample header")
+    assertTrue(h.frac ~= nil and h.frac > 0 and h.frac <= 1, "a fraction left: " .. tostring(h.frac))
+    assertTrue(h.bar:IsShown(), "the countdown bar")
+    assertTrue((h.time:GetText() or ""):match("^%d+:%d%d$") ~= nil, "a time left: " .. tostring(h.time:GetText()))
+    -- the sample never ends: past its 60 seconds the countdown starts again rather than sitting at 0
+    m.advance(NS.TestData.SAMPLE_ROLL_DURATION)
+    NS.RollsPanel.Refresh()
+    h = NS.RollsPanel.Drawn().headers[1]
+    assertTrue(h.frac ~= nil and h.frac > 0, "still counting after a full cycle: " .. tostring(h.frac))
+    quietTest(NS, m, false)
+end)
+
 -- red under: the Rolls panel and the Offer panel docking on the same side at the same level, so
 -- the two overlapped with an arbitrary draw order (RX-20)
 local function offerOpen(NS, m)

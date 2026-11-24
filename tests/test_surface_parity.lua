@@ -192,7 +192,11 @@ end)
 -- wired since DW-FP02; RegionalNames since DW-FP04 (core/CompatClient.lua's NameRealm and
 -- PlayerRecordKey ask it).
 local COMPAT_READERS_UNWIRED = { "GetSpellInfo", "GetSpellName", "GetSpellTexture", "GetSpellCooldown",
-    "GetSpecialization", "GetSpecializationInfo", "RealmKey", }
+    "GetSpecialization", "GetSpecializationInfo", "RealmKey",
+    -- LibKa0s v1.110.0 (Compat minor 6): the container groups and bank readers (LibKa0s#101). No
+    -- caller here: a drop feed reads no bag or bank.
+    "ContainerGroups", "CONTAINER_PATTERNS_BY_CLIENT", "CanViewCharacterBank", "NumPurchasedBankTabs",
+    "BankerKind", "UnreadyBankContainers", }
 
 test("parity: the Compat seam carries every library member it wires", function()
     T.assertSurfaceParity(degraded.Compat, "LibKa0s-Compat-1.0", COMPAT_READERS_UNWIRED)

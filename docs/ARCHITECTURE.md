@@ -239,13 +239,15 @@ v2.113.0), built through `NS.WindowTitleBar.Marks` over the seam `NS.HeaderButto
 close through `NS.MakeCloseButton`): right-aligned, left to right extras · settings · close, each
 18 px, 6 px in from the corner and 6 px apart, and the window keeps the answer as `headerButtons`
 and the settings mark as `settingsButton`. The main window's strip is the lock, the layout toggle,
-minimize, settings and close (the restriction badge stays left of the lock); the Rolls panel's
-Expand all / Collapse all, settings and close; the Offer panel's settings and close. The settings
-mark opens Drop Watcher's settings through the opener the launcher registered; each of these is in
-the window tier, under the settings panel, so none passes `hideOnSettings`. The Edit message box opts
-out (`settings = false`, `DetailCard.EDITOR_SETTINGS_OPT_OUT`): it is the one modal, in the DIALOG
-strata over the window, so the settings panel would open under it, and Send, Cancel or Escape close
-it first. Each extra keeps its behavior and tooltip (`Window.AttachTooltip`'s `title` placement), its
+minimize, settings and close (the restriction badge stays left of the lock). The settings mark opens
+Drop Watcher's settings through the opener the launcher registered; the window is in the window tier,
+under the settings panel, so it passes no `hideOnSettings`. Its three companions carry no settings
+mark (FB-DW-01; standard v2.119.0, standalone-windows' *Settings is on every window but a companion*),
+each passing `companion = true` through `NS.WindowTitleBar.Marks` and `NS.HeaderButtons`, which copy
+the spec whole, to `W.HeaderButtons` (WidgetsHeader 2, LibKa0s v1.112.0): the Rolls panel (Expand all
+/ Collapse all and close) and the Offer panel (close), both docked beside the window, showing only its
+drops and closed through it, and the Edit message box (close), the one modal, in the DIALOG strata
+over the window, closed by Send, Cancel or Escape. Each extra keeps its behavior and tooltip (`Window.AttachTooltip`'s `title` placement), its
 state (the lock dimmed and desaturated while unlocked, the minimize and layout marks following the
 state through `SetIconMark`) and the title-bar colors, `icon.tint` at rest and `text.link` under the
 pointer, the close `close.rest` and `close.hot`. An extra has two paint paths, on purpose: the
@@ -446,12 +448,15 @@ follow the collection's convention: every name a capitalized `Sample` or `Mock` 
 player's or realm's, one word on Retail (on your realm) and `First Surname` on WoW Forever, never
 localized. Its five protagonists (`NS.TestData.SAMPLE_KEYS`: Samplehunter, Sampleblade, Mockflame,
 Samplemender and Mockshield) are LibKa0s-Sim-1.0's `Sim.Sample(client)`, with the library's class and
-spec (Retail's specID, Forever's talent tree); without the library they come from
-`NS.TestData.SAMPLE_COPY`, the library's rows copied, which `test_test_mode` holds to `Sim.SAMPLE`.
-The other nineteen members that fill the raids, and the alt (`Samplealt`), are this addon's own,
-named to the same rules. The simulator's seeded roster (`modules/SimRoster.lua`'s `NAMES`,
-`RAID_NAMES`, `REALMS` and `SURNAMES`) is a crowd kept for its seeded determinism, as the convention's
-rule 6 allows, and is unchanged.
+spec (Retail's specID, Forever's talent tree). Since LibKa0s v1.113.0 (LibKa0s#104, FB2-DW-01; the
+convention's rule 6 retired) every other named person is the library's too: the nineteen members
+that fill the raids keep their slot's class and spec, and each is the first person of that class in
+`Sim.SampleCrowd(client, CROWD_MAX, NS.TestData.CROWD_SEED)` (seed 1), the alt (`NS.TestData.ALT`)
+the crowd's next Warlock. Members are keyed by their GUID's number (`m01` is `Player-0-0000T001`),
+never by a name. Without the library nobody is named: each member is the placeholder `Member<NN>`.
+The simulator's group and the raid's rollers (`modules/SimRoster.lua`, `R.Crowd`) are the session's
+seeded crowd: the group its first rows, the raiders the rows past it. `test_sample_names` holds the
+addon's own code (outside `tests/`, `libs/` and `docs/`) to no `Sample`/`Mock` name of its own.
 
 ## Tooltip placement
 

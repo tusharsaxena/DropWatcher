@@ -677,14 +677,15 @@ local function offerAction(o)
 end
 
 -- The Ask, its mark its state's (feedback-7 spec §1: `chat`, `ph:hourglass`, `confirm`, `reset`), as on the row.
-local function askAction(drop, ask)
-    local who = looterName(drop)
+-- Ready reads a bare "Ask", as on the row: the looter's name overflowed the button (the owner's
+-- feedback, 2026-11-24); the tooltip still names who is asked.
+local function askAction(ask)
     if not ask.offered then   -- No action, gray, its reason (feedback-11 spec §1)
         local a = act("ask", ask.text, ask.icon, false, unpack(ask.tip))
         a.state = ask.state
         return a
     end
-    local text = ask.state == "ready" and L["Ask %s"]:format(who) or ask.text
+    local text = ask.state == "ready" and L["Ask"] or ask.text
     local a = act("ask", text, ask.icon or "chat", ask.enabled, unpack(ask.tip))
     a.state = ask.state
     return a
@@ -775,7 +776,7 @@ end
 function DC.Actions(drop, ctx)
     ctx = type(ctx) == "table" and ctx or {}
     local ask = WC.Ask(drop, ctx.askState, ctx.askReason, ctx.transmogAsk)
-    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone, ctx.alone)) or askAction(drop, ask)
+    local first = drop.isMine and offerAction(MC.OwnOffer(drop, ctx.offerTone, ctx.alone)) or askAction(ask)
     return {
         first, editAction(ask), linkAction(drop),
         retryAction(drop, ctx.inspect, ctx.now), tradeAction(drop, ctx.trade),

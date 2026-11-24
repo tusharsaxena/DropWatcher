@@ -467,10 +467,12 @@ local function buildTitle(p)
     p.title:SetPoint("TOPLEFT", p, "TOPLEFT", 10, -9)
     p.title:SetText(L["Rolls"])
     NS.Skin.Text(p.title, "heading")   -- gold, in the skin's title face
-    -- The strip (AD-86-DW, LibKa0s#86): Expand all / Collapse all, settings, close, from the corner
-    -- the old close sat at; S.Header then lays them on the band at the strip's offsets. The panel is
-    -- in the window tier, under the settings panel, so settings does not hide it first.
-    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6,
+    -- The strip (AD-86-DW, LibKa0s#86): Expand all / Collapse all and close, from the corner the old
+    -- close sat at; S.Header then lays them on the band at the strip's offsets. The panel is a
+    -- companion of the feed window (docked beside it, showing only its rolls, closed through it), so
+    -- it carries no settings mark (FB-DW-01; standard v2.119.0, *Settings is on every window but a
+    -- companion*; W.HeaderButtons' companion = true, WidgetsHeader 2).
+    local hb = NS.WindowTitleBar.Marks(p, { frame = p, point = "TOPRIGHT", y = -6, companion = true,
         close = function() RP.Close() end, extras = { foldExtra(p) } })
     p.closeButton, p.foldButton = hb.close, hb.extras.fold
     NS.Window.AttachTooltip(p.foldButton, foldTip, "chrome")

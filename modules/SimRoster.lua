@@ -1,8 +1,9 @@
 local _, NS = ...
 -- modules/SimRoster.lua — the simulator's group and what it wears (simulator spec §2, §3): a
--- roster of invented members with names, realms, GUIDs, classes and specs, and each member's gear
--- drawn slot by slot from the item pool (modules/SimPool.lua) and worn inside an item-level band
--- around the content's level (the median of the pool's drops, ContentLevel; yours without one).
+-- roster of the library's sample people (THE PEOPLE) with names, realms, GUIDs, classes and specs,
+-- and each member's gear drawn slot by slot from the item pool (modules/SimPool.lua) and worn inside
+-- an item-level band around the content's level (the median of the pool's drops, ContentLevel;
+-- yours without one).
 --
 -- PURE. Random, Members and Gear take every input as an argument (the random source included)
 -- and touch no client and no state, so a seed replays the same group. Create is the edge: it reads
@@ -33,38 +34,26 @@ R.RAID_MIN, R.RAID_MAX = 9, 19
 --- (or a suite) passes its own band to draw a group behind the content instead.
 R.BAND = { low = 1, high = 12 }
 
--- Invented names and realms. About one member in three comes from another realm.
-local NAMES = {
-    "Brakk", "Seta", "Ilyra", "Thornek", "Vaela", "Morwen", "Kazrik", "Elunor", "Dravos", "Saphine",
-    "Gorrim", "Lysandra", "Tavi", "Orrin", "Zuleth", "Brinna", "Kaelis", "Mardok", "Nyssa", "Rokhan",
-    "Fenwick", "Isolde", "Quillon", "Haskar", "Merrow",
-}
-local REALMS = { "Stormhold", "Ashcrest", "Duskmere", "Silverkeep", "Emberfall" }
--- More names for a raid's rollers past the group (R.Raiders, `/dw sim raid`): with NAMES, enough for
--- 39 players besides you, each named apart. A group draws from NAMES alone, so a seed's group keeps
--- its names.
-local RAID_NAMES = {
-    "Aldric", "Bryony", "Corvane", "Delphine", "Eskar", "Faelan", "Grisha", "Halvard", "Ingrid", "Jorvik",
-    "Kestra", "Lothar", "Mirelle", "Nalgor", "Odessa", "Perrin", "Ravena", "Sorin", "Talwyn", "Ulric",
-}
--- WoW Forever's surnames (forever-quirks-§4): there a member is "First Surname", unique per region,
--- with no realm. Forever's own list (clients-§5), picked once by ClientKey() in Create.
-local SURNAMES = {
-    "Ironhide", "Silentshot", "Dock", "Ashwalker", "Brightmane", "Stormcall", "Duskwhisper",
-    "Hollowbrook", "Emberjaw", "Frostvale", "Thornmantle", "Graywind",
-}
-R.NAMES, R.REALMS, R.SURNAMES, R.RAID_NAMES = NAMES, REALMS, SURNAMES, RAID_NAMES
--- The raiders' names: the group's list, then the raid's own.
-local RAIDER_NAMES = {}
-for _, list in ipairs({ NAMES, RAID_NAMES }) do
-    for _, name in ipairs(list) do RAIDER_NAMES[#RAIDER_NAMES + 1] = name end
-end
+-- THE PEOPLE (LibKa0s#104, FB2-DW-01): every member and raider is a person of LibKa0s-Sim-1.0's
+-- sample crowd (Sim.SampleCrowd), never a name list of this addon's, so the same people appear in
+-- every Ka0s addon's sim. A crowd is seeded (R.Crowd: the session's seed), so a seed replays the
+-- same group; a smaller crowd is a larger one's head, and the group takes the crowd's first rows and
+-- the raiders the rows past it, so every name is apart. A person brings the class and spec (Retail's
+-- specID; on WoW Forever its classic tree, which no member carries as a specID, as before) and its
+-- name in the client's shape: "First Surname" with no realm on WoW Forever, one word on Retail, on
+-- your realm or, one in three, on the crowd's own invented realm.
 
--- Every classFile with specs in the client's list (core/ClassData.lua: nine on WoW Forever), sorted,
--- so a seed draws the same classes on every load.
-local CLASSES = {}
-for classFile in pairs(CD.CLASS_SPECS) do CLASSES[#CLASSES + 1] = classFile end
-table.sort(CLASSES)
+--- The library's whole seeded crowd for `client` ("retail" or "forever"), a copy the caller owns,
+--- or an empty list without LibKa0s-Sim-1.0 (no person can be named; no member is drawn).
+--- @param client string|nil
+--- @param seed number|nil
+--- @return table[]
+function R.Crowd(client, seed)
+    local Sim = LibStub and LibStub("LibKa0s-Sim-1.0", true)
+    if not (Sim and Sim.SampleCrowd) then return {} end
+    return Sim.SampleCrowd(client == "forever" and "forever" or "retail", Sim.CROWD_MAX,
+        math.floor(tonumber(seed) or 1))
+end
 
 -- The order the gear is drawn in: the main hand before the off hand, so a two-hander empties it.
 -- One list per client, picked once (clients-§5): WoW Forever's members wear the ranged slot too
@@ -114,38 +103,20 @@ function R.Size(kind, size, rnd)
     return math.max(R.RAID_MIN, math.min(R.RAID_MAX, math.floor(size)))
 end
 
--- A name from `names` not taken yet: the list in a random order, then numbered once it runs out.
-local function pickName(rnd, taken, names)
-    for _ = 1, #names do
-        local name = names[rnd(#names)]
-        if not taken[name] then return name end
-    end
-    for _, name in ipairs(names) do
-        if not taken[name] then return name end
-    end
-    local n = 2
-    while taken[names[1] .. n] do n = n + 1 end
-    return names[1] .. n
+-- The client a draw names people for: the caller's `opts.client`, else the running one (fixed
+-- for the session, clients-§5).
+local function clientOf(opts)
+    if opts.client == "forever" or opts.client == "retail" then return opts.client end
+    return NS.Compat.ClientKey() == "forever" and "forever" or "retail"
 end
 
--- A member's name, realm and fullName in the client's shape: "First Surname" with no realm when
--- `surnames` is given (WoW Forever), else a name on your realm or, one in three, on another.
-local function nameOf(name, ownRealm, surnames, rnd)
-    if surnames then
-        local whole = name .. " " .. surnames[rnd(#surnames)]
-        return whole, nil, whole
-    end
-    local realm = ownRealm
-    if not realm or rnd(3) == 1 then realm = REALMS[rnd(#REALMS)] end
-    return name, realm, name .. "-" .. realm
-end
-
--- A drawn spec key as a member's specID: Retail's key is the specID; WoW Forever's is a talent
--- tree ("HUNTER:2", core/ClassDataForever.lua), whose class-wide spec ID the client alone knows,
--- so a Forever member has none, as an inspect of one that answered nothing (Forever port design §4.2).
-local function specIDOf(key)
-    if type(key) == "number" then return key end
-    return nil
+-- A person's name, realm and fullName in the client's shape: the crowd's "First Surname" with no
+-- realm on WoW Forever; else the one word on your realm or, one in three, on the crowd's own realm.
+local function nameOf(row, opts, rnd)
+    if clientOf(opts) == "forever" then return row.fullName, nil, row.fullName end
+    local realm = opts.ownRealm
+    if not realm or rnd(3) == 1 then realm = row.realm end
+    return row.name, realm, row.name .. "-" .. realm
 end
 
 -- The unit token of member `i` in a group of `kind`; nil for a raider past the group (no kind).
@@ -154,33 +125,44 @@ local function unitOf(kind, i)
     return kind == "raid" and ("raid" .. (i + 1)) or ("party" .. i)
 end
 
-local function makeMember(i, kind, opts, rnd, taken, names)
-    local classFile = CLASSES[rnd(#CLASSES)]
-    local specs = CD.CLASS_SPECS[classFile]
-    local first = pickName(rnd, taken, names or NAMES)
-    taken[first] = true
-    local name, realm, fullName = nameOf(first, opts.ownRealm, opts.surnames, rnd)
+-- Member `i` from crowd person `row`. WoW Forever's spec is class-wide and the client's alone
+-- (core/ClassDataForever.lua), so a Forever member has no specID, as an inspect of one that
+-- answered nothing (Forever port design §4.2).
+local function makeMember(i, kind, row, opts, rnd)
+    local name, realm, fullName = nameOf(row, opts, rnd)
     return {
         sim = true, name = name, realm = realm, fullName = fullName,
         guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)),
         unit = unitOf(kind, i),
-        classFile = classFile, classID = CD.CLASS_ID[classFile], specID = specIDOf(specs[rnd(#specs)]),
+        classFile = row.classFile, classID = CD.CLASS_ID[row.classFile],
+        specID = clientOf(opts) ~= "forever" and row.specID or nil,
     }
 end
 
---- A group of invented members (spec §2). `opts` = { kind = `party`|`raid`, size, ownRealm,
---- surnames (WoW Forever's list: each member is then "First Surname" with no realm) }. In a
---- raid you are raid1 and the members raid2 onward; in a party they are party1 onward. Names are
---- distinct; GUIDs are distinct, shaped as the client's.
+-- The crowd a draw uses: the caller's (`opts.crowd`, the session's), else one seeded off `rnd`.
+local function crowdOf(opts, rnd)
+    if type(opts.crowd) == "table" then return opts.crowd end
+    return R.Crowd(clientOf(opts), rnd(1, 2147483646))
+end
+
+-- A person's first name, the part two people are told apart by.
+local function firstOf(name) return tostring(name):match("^(%S+)") or "" end
+
+--- A group of crowd people (spec §2). `opts` = { kind = `party`|`raid`, size, ownRealm, client
+--- (`forever`: each member is then "First Surname" with no realm; else the running client), crowd (R.Crowd's; else one seeded
+--- off `rnd`) }. In a raid you are raid1 and the members raid2 onward; in a party they are party1
+--- onward. They are the crowd's first rows, so names are distinct; GUIDs are distinct, shaped as
+--- the client's.
 --- @param opts table
 --- @param rnd function a random source (R.Random)
 --- @return table members
 function R.Members(opts, rnd)
     opts = type(opts) == "table" and opts or {}
     local kind = opts.kind == "raid" and "raid" or "party"
-    local out, taken, guids = {}, {}, {}
-    for i = 1, R.Size(kind, opts.size, rnd) do
-        local m = makeMember(i, kind, opts, rnd, taken)
+    local size = R.Size(kind, opts.size, rnd)
+    local crowd, out, guids = crowdOf(opts, rnd), {}, {}
+    for i = 1, math.min(size, #crowd) do
+        local m = makeMember(i, kind, crowd[i], opts, rnd)
         while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)) end
         guids[m.guid] = true
         out[i] = m
@@ -188,11 +170,12 @@ function R.Members(opts, rnd)
     return out
 end
 
---- `n` roll-only raiders past the group (`/dw sim raid`, rolls panel design §3.6): invented players
---- shaped as members (`raider = true`, a name, realm, fullName, GUID, class and spec), named apart
---- from `members` and each other from NAMES then RAID_NAMES, with distinct GUIDs. They are no group
---- member: no unit token, no gear, never in the roster; they only roll. `opts` = { ownRealm,
---- surnames } as R.Members takes them.
+--- `n` roll-only raiders past the group (`/dw sim raid`, rolls panel design §3.6): crowd people
+--- shaped as members (`raider = true`, a name, realm, fullName, GUID, class and spec), each one the
+--- crowd's next person whose name `members` and the raiders before it do not hold, with distinct
+--- GUIDs. They are no group member: no unit token, no gear, never in the roster; they only roll.
+--- `opts` = { ownRealm, client, crowd } as R.Members takes them. The crowd holds CROWD_MAX (64)
+--- people, past a 40-player raid's 39 besides you.
 --- @param n number
 --- @param members table|nil the group's members
 --- @param opts table|nil
@@ -201,15 +184,20 @@ end
 function R.Raiders(n, members, opts, rnd)
     opts = type(opts) == "table" and opts or {}
     local taken, guids, out = {}, {}, {}
-    for _, m in ipairs(members or {}) do
-        taken[tostring(m.name):match("^(%S+)") or ""], guids[m.guid or ""] = true, true
-    end
+    for _, m in ipairs(members or {}) do taken[firstOf(m.name)], guids[m.guid or ""] = true, true end
+    local want = math.max(0, math.floor(tonumber(n) or 0))
+    if want == 0 then return out end
     local base = #(members or {})
-    for i = 1, math.max(0, math.floor(tonumber(n) or 0)) do
-        local m = makeMember(base + i, nil, opts, rnd, taken, RAIDER_NAMES)
-        while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + base + i, rnd(0, 0x7FFFFFFF)) end
-        guids[m.guid], m.raider = true, true
-        out[i] = m
+    for _, row in ipairs(crowdOf(opts, rnd)) do
+        if #out >= want then break end
+        if not taken[row.name] then
+            taken[row.name] = true
+            local i = base + #out + 1
+            local m = makeMember(i, nil, row, opts, rnd)
+            while guids[m.guid] do m.guid = ("Player-%d-%08X"):format(3900 + i, rnd(0, 0x7FFFFFFF)) end
+            guids[m.guid], m.raider = true, true
+            out[#out + 1] = m
+        end
     end
     return out
 end
@@ -335,9 +323,12 @@ function R.Create(opts)
     local s = NS.Sim:Session()
     if not s then return nil end
     opts = type(opts) == "table" and opts or {}
-    local rnd = R.Random(opts.seed or math.floor(GetTime() * 1000))
+    local seed = opts.seed or math.floor(GetTime() * 1000)
+    local rnd = R.Random(seed)
+    -- The session's crowd, which the raid's rollers draw past the group from (SimEvents).
+    s.crowd = R.Crowd(NS.Compat.ClientKey(), seed)
     local members = R.Members({ kind = opts.kind, size = opts.size, ownRealm = NS.Compat.NameRealm(),
-        surnames = NS.Compat.ClientKey() == "forever" and SURNAMES or nil }, rnd)
+        client = NS.Compat.ClientKey(), crowd = s.crowd }, rnd)
     local entries = NS.SimPool.GearEntries(s.pool)
     local drops = {}
     for _, e in ipairs(NS.SimPool.Drops(s.pool)) do drops[#drops + 1] = NS.SimPool.Facts(e) end

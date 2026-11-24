@@ -177,17 +177,22 @@ end
 --- The seconds left while the roll is open, or nil. Your claimed popup's roll (`rollID`) reads the
 --- client's timer while it reads time left; otherwise startTime + duration on the history's clock,
 --- nil with no times, `now` not read, or an implausible answer (over RC.MAX_LEFT: mismatched units).
+--- A roll marked `loop` (test mode's sample only, which never ends) starts its countdown again each
+--- time it runs out, so the bar keeps shrinking (FB-DW-03, the owner's smoke of ROLLS-22). Its times
+--- are on GetTime()'s clock, which every client has, not the loot history's.
 --- @param roll table|nil
 --- @param now number|nil NS.Compat.LootHistoryNow()
 --- @param rollID number|nil the pending item's claimed popup id
 --- @return number|nil
 function RC.Left(roll, now, rollID)
     if type(roll) ~= "table" or roll.winner or roll.allPassed then return nil end
+    if roll.loop and type(GetTime) == "function" then now = GetTime() end
     local own = rollID ~= nil and NS.Compat.LootRollTimeLeft(rollID) or nil
     if own and own > 0 then return own end
     local start, dur = num(roll.startTime), num(roll.duration)
     if not (start and dur and num(now)) then return nil end
     local left = start + dur - now
+    if roll.loop and dur > 0 and left <= 0 then left = dur - ((now - start) % dur) end
     if left > RC.MAX_LEFT then return nil end
     return math.max(0, left)
 end

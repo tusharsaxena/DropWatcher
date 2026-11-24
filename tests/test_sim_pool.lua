@@ -513,11 +513,16 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
                 assertEqual(CD.Spec(mem.specID).class, mem.classFile, "the spec is the class's")
             end
             assertEqual(mem.classID, CD.CLASS_ID[mem.classFile])
-            assertEqual(mem.fullName, mem.name .. "-" .. mem.realm)
+            if T.forever then
+                assertNil(mem.realm, "Forever: no realm"); assertEqual(mem.fullName, mem.name)
+            else
+                assertEqual(mem.fullName, mem.name .. "-" .. mem.realm)
+            end
         end
     end
     assertEqual(#R.Members({ kind = "raid", size = 40 }, R.Random(1)), 19, "clamped")
     assertEqual(#R.Members({ kind = "raid", size = 2 }, R.Random(1)), 9, "clamped")
+    if T.forever then return end
     local own, other = 0, 0
     for _, mem in ipairs(R.Members({ kind = "raid", size = 19, ownRealm = "Testrealm" }, R.Random(3))) do
         if mem.realm == "Testrealm" then own = own + 1 else other = other + 1 end
@@ -530,9 +535,9 @@ end)
 test("sim roster: Raiders fills a 40-player raid past the group, every name and GUID apart, no unit", function()
     local NS = T.newAddon()
     local R = NS.SimRoster
-    local surnames = T.forever and R.SURNAMES or nil
-    local members = R.Members({ kind = "party", ownRealm = "Testrealm", surnames = surnames }, R.Random(7))
-    local raiders = R.Raiders(39 - #members, members, { ownRealm = "Testrealm", surnames = surnames }, R.Random(8))
+    local client = T.forever and "forever" or "retail"
+    local members = R.Members({ kind = "party", ownRealm = "Testrealm", client = client }, R.Random(7))
+    local raiders = R.Raiders(39 - #members, members, { ownRealm = "Testrealm", client = client }, R.Random(8))
     assertEqual(#raiders, 35, "39 besides you, the group's four first")
     local first, guids = {}, {}
     local function firstOf(mem) return (mem.name:match("^(%S+)")) end

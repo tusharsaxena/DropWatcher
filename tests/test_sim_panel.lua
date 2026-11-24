@@ -285,3 +285,61 @@ test("sim panel: standing down hides it, idle or running, and it does not open w
     NS.SchemaRuntime.Set("enabled", false)
     assertFalse(NS.Sim:IsActive()); assertFalse(NS.Sim:IsPanelShown())
 end)
+
+-- ---------------------------------------------------------------------------------------------
+-- Every start shows the panel (FB2-DW-01; LibKa0s v1.113.0, Sim 5; decision D2)
+-- ---------------------------------------------------------------------------------------------
+
+-- Each of Drop Watcher's start paths, the panel hidden first: every one ends with it shown.
+-- red under: LibKa0s v1.112.0 (Sim 4), where only the bare `/dw sim` showed it, never a start
+local STARTS = {
+    { "`/dw sim start <scenario>`", function(NS) slash(NS, "sim start dungeon") end },
+    { "`/dw sim start raid <size>`", function(NS) slash(NS, "sim start raid 9") end },
+    { "NS.SimScenario.Start, Drop Watcher's own starter", function(NS)
+        assertTrue(NS.SimScenario.Start("world", nil, { seed = 1 })) end },
+    { "the library's Start, as a host call", function(NS)
+        assertTrue(NS.Sim:Start({ scenario = "dungeon", seed = 1 })) end },
+    { "the panel's Start row", function(NS, m)
+        assertTrue(NS.Sim:ShowPanel()); NS.Sim:HidePanel()
+        m.simPanel.__rowButtons[1]:__fire("OnClick") end },
+    { "the panel's picker Start", function(NS, m)
+        assertTrue(NS.Sim:ShowPanel()); NS.Sim:HidePanel()
+        m.simPanel.picker.scenario.onSelect("world")
+        m.simPanel.picker.start:__fire("OnClick") end },
+    { "a Restart", function(NS)
+        slash(NS, "sim start dungeon"); NS.Sim:HidePanel()
+        assertFalse(NS.Sim:IsPanelShown())
+        assertTrue(NS.Sim:Restart()) end },
+}
+
+for _, row in ipairs(STARTS) do
+    test("sim panel: every start shows it: " .. row[1], function()
+        local NS, m = addon()
+        assertFalse(NS.Sim:IsPanelShown(), "hidden before the start")
+        row[2](NS, m)
+        assertTrue(NS.Sim:IsActive(), "the start started")
+        assertTrue(NS.Sim:IsPanelShown(), "the start shows the step panel")
+        slash(NS, "sim stop")
+        NS.Sim:HidePanel()
+    end)
+end
+
+test("sim panel: every start shows it: the bare `/dw sim` and the Master controls Sim box", function()
+    local NS = addon()
+    slash(NS, "sim")
+    assertTrue(NS.Sim:IsPanelShown(), "the bare verb")
+    NS.Sim:HidePanel()
+    NS.SchemaRuntime.Set("state.sim", true)
+    assertTrue(NS.Sim:IsPanelShown(), "the box runs the bare verb")
+    NS.SchemaRuntime.Set("state.sim", false)
+    assertFalse(NS.Sim:IsPanelShown())
+end)
+
+test("sim panel: a refused start shows nothing", function()
+    local NS = addon()
+    NS.State.testMode = true
+    slash(NS, "sim start dungeon")
+    assertFalse(NS.Sim:IsActive(), "test mode refuses a simulation")
+    assertFalse(NS.Sim:IsPanelShown(), "and its panel stays shut")
+    NS.State.testMode = false
+end)

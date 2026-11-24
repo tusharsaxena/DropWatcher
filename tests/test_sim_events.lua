@@ -860,6 +860,24 @@ test("sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a par
     m.advance(0)
 end)
 
+-- red under: no countdown bar on a simulated roll (the owner's smoke of ROLLS-22, 2026-11-24)
+test("sim: /dw sim roll's open roll shows its countdown bar under the item header", function()
+    local NS, m = sim()
+    NS.ShowWindow()
+    NS.addon:OnSlashCommand("sim roll")
+    m.advance(0)
+    local h = NS.RollsPanel.Drawn().headers[1]
+    assertTrue(h ~= nil and h.open, "an open header")
+    assertTrue(h.frac ~= nil and h.frac > 0 and h.frac <= 1, "a fraction of the roll left: " .. tostring(h.frac))
+    assertTrue(h.bar:IsShown(), "the countdown bar")
+    local f0 = h.frac
+    m.advance(2)
+    h = NS.RollsPanel.Drawn().headers[1]
+    assertTrue(h.frac < f0, "it shrinks as the roll runs")
+    NS.Sim:Stop()
+    m.advance(0)
+end)
+
 -- red under: the simulation's rolls lingering in the panel after the stop with no strip (preview-mode:
 -- every display of placeholder data says so; RX-21 review)
 test("sim: the stop takes an open simulated roll out of the Rolls panel at once", function()
