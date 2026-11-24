@@ -637,7 +637,7 @@ end)
 
 test("chrome: the Character level's ticked rows paint the selected color, not their class color", function()
     -- red under: LibKa0s v1.112.0 (WidgetsDropdown 3), where a ticked context-menu row kept its text
-    for _, key in ipairs({ "ka0s", "azeroth" }) do
+    for _, key in ipairs({ "ka0s", "azeroth", "forever" }) do
         local NS, _, m = shown("compact")
         dofile("tests/_kit/mock_paint.lua")(m)
         local W, Skin = m.LibStub("LibKa0s-Widgets-1.0"), m.LibStub("LibKa0s-Skin-1.0")
@@ -650,6 +650,7 @@ test("chrome: the Character level's ticked rows paint the selected color, not th
         assertTrue(sub ~= nil and sub:IsShown(), key .. ": the Character level is open")
         local r, g, b = W.SelectedColor("DropWatcher")
         local sel = ("%.3f,%.3f,%.3f"):format(r, g, b)
+        assertEqual(sel, "1.000,0.820,0.000", key .. ": the selection is Ka0s Default's gold (FB2-LK-04)")
         local function col(btn) local c = m.__paint(btn.fs).textColor; return ("%.3f,%.3f,%.3f"):format(c[1], c[2], c[3]) end
         local rows = seen[1].rows[3].submenu
         local plain = ("%.3f,%.3f,%.3f"):format(unpack(Skin:ResolveSkin(key)["menu.text"]))

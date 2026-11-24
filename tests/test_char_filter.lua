@@ -365,8 +365,10 @@ end)
 -- The owner, 2026-11-24, on the Character dropdown: "make the current selected always be a
 -- different color than the other texts - e.g. gold in ka0s default". Drop Watcher's dropdowns are
 -- all the library's (NS.MakeDropdown, owner DropWatcher), so the shared menu paints the selection;
--- these cases read the painted rows of the History tab's Character menu under three skins: Ka0s
--- Default, Obsidian and Azeroth (whose accent sits too near its text, so it takes the gold).
+-- these cases read the painted rows of the History tab's Character menu under four skins: Ka0s
+-- Default, Obsidian, Azeroth and WoW Forever (Forever's default). The owner's ruling of 2026-11-24 on
+-- round 2 (FB2-LK-04): the selection is Ka0s Default's gold in every skin, a skin's own menu.textSel
+-- standing in only where the gold sits under 20 CIEDE2000 off its menu.text; none of the four does.
 
 local function rgb(c) return ("%.3f,%.3f,%.3f"):format(c[1], c[2], c[3]) end
 
@@ -402,10 +404,11 @@ local function historyChar()
     return NS, m, NS.WindowFilterBar.Controls().char
 end
 
-for _, key in ipairs({ "ka0s", "obsidian", "azeroth" }) do
+for _, key in ipairs({ "ka0s", "obsidian", "azeroth", "forever" }) do
     test("filter bar: the Character menu's selected rows stand off plain rows and their class color: " .. key, function()
         -- red under: LibKa0s v1.112.0 (WidgetsDropdown 3), where Azeroth's selection was its accent,
-        -- 16.3 CIEDE2000 off its plain text, and read like every other row
+        -- 16.3 CIEDE2000 off its plain text, and read like every other row; and under the first cut
+        -- of v1.113.0, where Obsidian and WoW Forever kept their own accent (Forever's tan #C9A07A)
         local NS, m, dd = historyChar()
         local Skin = m.LibStub("LibKa0s-Skin-1.0")
         Skin:SetChoice("DropWatcher", "ka0s", key)
@@ -424,6 +427,6 @@ for _, key in ipairs({ "ka0s", "obsidian", "azeroth" }) do
         assertTrue(rgb(mine) ~= rgb({ cr, cg, cb }), "the selection replaces your class color")
         local pr, pg, pb = NS.Compat.ClassColor("PRIEST")
         assertEqual(rgb(c["Alt-Testrealm"]), rgb({ pr, pg, pb }), "an unselected character keeps its class color")
-        if key == "azeroth" then assertEqual(rgb(sel), rgb({ 1, 0.82, 0 }), "Azeroth takes Ka0s Default's gold") end
+        assertEqual(rgb(sel), rgb({ 1, 0.82, 0 }), key .. ": the selection is Ka0s Default's gold")
     end)
 end
