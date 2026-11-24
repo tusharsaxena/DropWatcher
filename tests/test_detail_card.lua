@@ -277,10 +277,11 @@ end)
 local OK_TRADE = { ok = true }
 local FAR = { ok = false, reason = "range", text = "That player is out of trade range." }
 
-test("cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read", function()
+test("cells: the actions, ready: Ask, Edit message, Link in chat, Trade; Retry waits on a fresh read", function()
     local D = DC()
     local acts = D.Actions(drop(), { askState = "ready", inspect = { status = "fresh", at = 60 }, now = 100, trade = OK_TRADE })
-    assertEqual(texts(acts), "Ask Seta,Edit message,Link in chat,Retry inspect,Trade")
+    -- the bare "Ask": the looter's name overflowed the button (the owner's feedback, 2026-11-24)
+    assertEqual(texts(acts), "Ask,Edit message,Link in chat,Retry inspect,Trade")
     local on = {}
     for _, a in ipairs(acts) do on[#on + 1] = a.key .. "=" .. tostring(a.enabled) end
     assertEqual(table.concat(on, ","), "ask=true,edit=true,link=true,retry=false,trade=true")
@@ -602,7 +603,7 @@ test("card: the actions go through their host handlers; Trade is off with its re
     NS.Asks.Press = function(kind, target, id, opts) asked[#asked + 1] = { kind, target, id, opts }; return "sent" end
     NS.Inspect.Request = function(guid, priority) inspected[#inspected + 1] = { guid, priority }; return "pending" end
     NS.TradeHelper.Open = function() opened = opened + 1; return true end
-    assertEqual(textOf(a.ask.label), "Ask Seta")
+    assertEqual(textOf(a.ask.label), "Ask")
     a.ask:__fire("OnClick")
     assertEqual(table.concat({ asked[1][1], asked[1][2], asked[1][3] }, ","), "ask,Seta-Realm,1")
     a.link:__fire("OnClick")
