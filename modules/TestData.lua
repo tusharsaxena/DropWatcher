@@ -895,17 +895,22 @@ end
 -- Who is on the sample roll besides you, what each has chosen so far (Enum.EncounterLootDropRollState:
 -- 0 Need, 3 Greed, 4 still choosing, 5 Pass) and the number each Need and Greed rolled (rolls panel
 -- round 2, ruling A6: every actual roll shows, so test mode makes the numbers obvious).
+TD.SAMPLE_ROLL_AGO = 10        -- seconds since the sample roll opened
+TD.SAMPLE_ROLL_DURATION = 60   -- its countdown, looping (FB-DW-03)
 local ROLLERS = { { "samplemender", 0, 87 }, { "sampleblade", 0, 64 }, { "mockdawn", 0, 23 }, { "mockaxe", 3, 71 },
     { "mockgrove", 3, 38 }, { "samplelight", 4 }, { "mockstorm", 4 }, { "mockflame", 5 } }
 
 --- Test mode's pending samples (Forever port design §8), as NS.Pending.AddTest takes them: one open
 --- group-loot roll on a drop of the session's last boss, an upgrade for you, with you and eight
 --- members on it: three Need, two Greed, two still choosing, one Pass, you not chosen yet, each
---- Need and Greed with its number (RX-21). Empty when `src` has no item. Pure.
+--- Need and Greed with its number (RX-21). With `now` (GetTime()) the roll runs a looping
+--- 60-second countdown that started `ago` seconds back, for the Rolls panel's bar and time (FB-DW-03).
+--- Empty when `src` has no item. Pure.
 --- @param you table your looter
 --- @param src table TD.Source's
+--- @param now number|nil GetTime()
 --- @return table specs
-function TD.PendingSamples(you, src)
+function TD.PendingSamples(you, src, now)
     local last = SESSION[#SESSION]
     local item = src:Drop({ me = { "upgrade", 9 } }, src:Place(last.content, last.n))
     if not item then return {} end
@@ -916,8 +921,12 @@ function TD.PendingSamples(you, src)
         rows[#rows + 1] = { name = m.name, guid = m.guid, classFile = m.classFile, isSelf = false, state = x[2],
             roll = x[3], isWinner = false }
     end
-    return { { kind = "roll", link = item.link, facts = item.facts, me = ev(src, item, { "upgrade", 9 }), ago = 10,
-        roll = { link = item.link, key = 1, allPassed = false, isTied = false, myState = 4, rolls = rows } } }
+    local roll = { link = item.link, key = 1, allPassed = false, isTied = false, myState = 4, rolls = rows }
+    if type(now) == "number" then
+        roll.startTime, roll.duration, roll.loop = now - TD.SAMPLE_ROLL_AGO, TD.SAMPLE_ROLL_DURATION, true
+    end
+    return { { kind = "roll", link = item.link, facts = item.facts, me = ev(src, item, { "upgrade", 9 }),
+        ago = TD.SAMPLE_ROLL_AGO, roll = roll } }
 end
 
 -- ── the history (pure) ──────────────────────────────────────────────────────────────────────

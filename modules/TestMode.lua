@@ -225,7 +225,7 @@ local function fill(pool)
     for _, spec in ipairs(TD.Placeholders(GetTime(), you(), TM.Source(pool))) do
         if LF.AddTest(spec) then n = n + 1 end
     end
-    for _, spec in ipairs(TD.PendingSamples(you(), TM.Source(pool))) do NS.Pending.AddTest(spec) end
+    for _, spec in ipairs(TD.PendingSamples(you(), TM.Source(pool), GetTime())) do NS.Pending.AddTest(spec) end
     TM.HistoryLog().groups = TD.History(time(), you(), TM.Source(pool)).groups
     changed()
     if n == 0 then NS.Print(L["Test mode found no items to show."]) end

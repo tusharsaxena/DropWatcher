@@ -4345,8 +4345,12 @@ Client: both. Until this build they read a color name no skin defines, so they d
 color). `/dw test` with the window open → the Rolls panel: under each open item's header band a thin
 countdown bar in gold (Ka0s Default's accent), shrinking as the roll runs; `[YOU]` after your name
 in gold, in the panel's rows and in the tooltip of a folded line and of the roll popup's side card.
-Let a roll finish (`/dw sim roll`, wait) → the winner's row has a faint gold wash and its roll number
-is gold. Switch to WoW Midnight and Obsidian → the bar, the wash, the number and `[YOU]` take each
+The countdown starts again each time it runs out, since test mode's sample never ends (FB-DW-03;
+until then the sample had no timer, so neither the bar nor the time showed). Let a roll finish:
+`/dw sim start dungeon`, then `/dw sim roll` (`roll` is one of Drop Watcher's own sim commands, listed by
+a bare `/dw sim`; on Retail the dungeon scenario plays no roll of its own, because loot is personal
+there; on WoW Forever its bosses roll too), and wait → while it runs the same bar shrinks under its
+header; then the winner's row has a faint gold wash and its roll number is gold. Switch to WoW Midnight and Obsidian → the bar, the wash, the number and `[YOU]` take each
 skin's accent with no reload. Fail: no countdown bar on an open roll, a winner row with no wash,
 `[YOU]` in plain white, or a Lua error. Result:
 
