@@ -629,3 +629,42 @@ test("chrome: a press on the Filters button keeps the menu open, and the button 
     p.filters:__fire("OnClick")
     assertFalse(menu:IsShown(), "and the click closes it")
 end)
+
+-- ── the selected row's color (FB2-DW-01; LibKa0s v1.113.0, WidgetsDropdown 4; decision D3) ──
+-- The Filters menu's Character level is a W.ContextMenu child whose rows carry a tick and the
+-- dropdown's class colors: a ticked row paints the selected color beside its tick, never its class
+-- color, and an unticked one keeps its own.
+
+test("chrome: the Character level's ticked rows paint the selected color, not their class color", function()
+    -- red under: LibKa0s v1.112.0 (WidgetsDropdown 3), where a ticked context-menu row kept its text
+    for _, key in ipairs({ "ka0s", "azeroth" }) do
+        local NS, _, m = shown("compact")
+        dofile("tests/_kit/mock_paint.lua")(m)
+        local W, Skin = m.LibStub("LibKa0s-Widgets-1.0"), m.LibStub("LibKa0s-Skin-1.0")
+        Skin:SetChoice("DropWatcher", "ka0s", key)
+        local seen = captureMenu(NS)
+        NS.CompactChrome.Parts().filters:__fire("OnClick")
+        local menu = seen[1].menu
+        menu.buttons[3]:__fire("OnClick")   -- Character opens its level
+        local sub = menu.__child
+        assertTrue(sub ~= nil and sub:IsShown(), key .. ": the Character level is open")
+        local r, g, b = W.SelectedColor("DropWatcher")
+        local sel = ("%.3f,%.3f,%.3f"):format(r, g, b)
+        local function col(btn) local c = m.__paint(btn.fs).textColor; return ("%.3f,%.3f,%.3f"):format(c[1], c[2], c[3]) end
+        local rows = seen[1].rows[3].submenu
+        local plain = ("%.3f,%.3f,%.3f"):format(unpack(Skin:ResolveSkin(key)["menu.text"]))
+        local cr, cg, cb = NS.Compat.ClassColor("MAGE")
+        local class = ("%.3f,%.3f,%.3f"):format(cr, cg, cb)
+        for i, row in ipairs(rows) do
+            local got = col(sub.buttons[i])
+            if row.selected(row) then
+                assertEqual(got, sel, key .. ": ticked " .. tostring(row.value) .. " paints selected")
+                assertTrue(got ~= plain and got ~= class, key .. ": selected differs from plain and class")
+            elseif row.value == "all" then
+                assertEqual(got, plain, key .. ": an unticked plain row is menu.text")
+            end
+        end
+        assertEqual(ticked(rows), "current," .. T.ME, key .. ": Current and you are the ticked rows")
+        W.CloseMenu()
+    end
+end)
