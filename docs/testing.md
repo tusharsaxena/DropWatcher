@@ -54,13 +54,15 @@ mock (`m.issecretvalue = function(v) return T.isSecret(v) end`).
 
 **Fixture names** (preview-mode, *Sample characters*; AD-87-DW). What the addon ships, test mode's
 people (`modules/TestData.lua`), follows the convention in full: `Sample`/`Mock` names, the five protagonists
-from `Sim.Sample`. A fixture under `tests/` is not shipped data, and the rule asks only that a fixture pairing
+from `Sim.Sample` and everyone else from `Sim.SampleCrowd` (LibKa0s#104), as is the simulator's
+roster (`modules/SimRoster.lua`). A fixture under `tests/` is not shipped data, and the rule asks only that a fixture pairing
 a real-looking name with a real realm move, so the suites' realms are fictional (`Samplerealm`,
 `Mockrealm`, `Testrealm`, `Realm`; `Mock 52`, `Mock Haven` and `Mock-Sample` where a case needs a realm
 spelled with a space, a digit or a hyphen) and no fixture carries a real player's name. The suites' own
 invented people (`Brakk`, `Seta`, `Lyra`, `Doom Dock`, `Vex`) stay: they never reach the client, they pair
-with no real realm, several are pinned by length, accent or a Forever surname, and `Brakk` and `Seta` are
-also names the simulator's seeded crowd (`modules/SimRoster.lua`) keeps under rule 6.
+with no real realm, and several are pinned by length, accent or a Forever surname. `test_sample_names`
+(FB2-DW-01) holds the addon's own code to no `Sample`/`Mock` name of its own and the simulator's people
+to the seed's crowd.
 
 Suites reach the harness as `local T = _G.DW_TEST` and build instances with the three factories,
 each taking an `opts` table (`skip`, `mock`, `inCombat`, `skin`) and returning `(NS, env, mock)`:
@@ -357,6 +359,8 @@ label and a tab), `test_tooltip_placement` (AD-92-DW: every widget `Window.Attac
 classified body or chrome by the file that built it, each hover calling its class's placer owned at
 `ANCHOR_NONE`; the Insights charts' `host.group`; a source guard holding the addon's code to no
 cursor or corner anchor),
+`test_sample_names` (FB2-DW-01, LibKa0s#104: no `Sample`/`Mock` name word in the addon's own
+code, a planted one caught, the simulator's group and raiders the seed's `SampleCrowd`),
 `test_test_mode` (test mode's samples: every Me and Them verdict, trade estimate, inspect state, ask
 state, countdown and candidate status covered by the data, over pool items that keep their slot and
 level, the worn items the nearest of their slot, an empty pool giving none; feedback-17's realism:

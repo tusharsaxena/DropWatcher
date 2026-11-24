@@ -448,12 +448,15 @@ follow the collection's convention: every name a capitalized `Sample` or `Mock` 
 player's or realm's, one word on Retail (on your realm) and `First Surname` on WoW Forever, never
 localized. Its five protagonists (`NS.TestData.SAMPLE_KEYS`: Samplehunter, Sampleblade, Mockflame,
 Samplemender and Mockshield) are LibKa0s-Sim-1.0's `Sim.Sample(client)`, with the library's class and
-spec (Retail's specID, Forever's talent tree); without the library they come from
-`NS.TestData.SAMPLE_COPY`, the library's rows copied, which `test_test_mode` holds to `Sim.SAMPLE`.
-The other nineteen members that fill the raids, and the alt (`Samplealt`), are this addon's own,
-named to the same rules. The simulator's seeded roster (`modules/SimRoster.lua`'s `NAMES`,
-`RAID_NAMES`, `REALMS` and `SURNAMES`) is a crowd kept for its seeded determinism, as the convention's
-rule 6 allows, and is unchanged.
+spec (Retail's specID, Forever's talent tree). Since LibKa0s v1.113.0 (LibKa0s#104, FB2-DW-01; the
+convention's rule 6 retired) every other named person is the library's too: the nineteen members
+that fill the raids keep their slot's class and spec, and each is the first person of that class in
+`Sim.SampleCrowd(client, CROWD_MAX, NS.TestData.CROWD_SEED)` (seed 1), the alt (`NS.TestData.ALT`)
+the crowd's next Warlock. Members are keyed by their GUID's number (`m01` is `Player-0-0000T001`),
+never by a name. Without the library nobody is named: each member is the placeholder `Member<NN>`.
+The simulator's group and the raid's rollers (`modules/SimRoster.lua`, `R.Crowd`) are the session's
+seeded crowd: the group its first rows, the raiders the rows past it. `test_sample_names` holds the
+addon's own code (outside `tests/`, `libs/` and `docs/`) to no `Sample`/`Mock` name of its own.
 
 ## Tooltip placement
 

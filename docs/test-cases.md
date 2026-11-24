@@ -730,7 +730,7 @@ Total.
 - history card: shows the rolls rows
 - history card: a repaint reads each kept roll table back once, reusing it until the roll moves
 
-### test_compact_chrome.lua (30)
+### test_compact_chrome.lua (31)
 
 - chrome: the tabs' labels are Drops, History and Insights in both layouts (feedback-5 spec §3)
 - chrome: TEST MODE and SIM shorten to TEST and SIM
@@ -762,6 +762,7 @@ Total.
 - chrome: switching the chrome keeps every tab's filter state and builds no second window
 - chrome: a press outside the Filters menu closes it
 - chrome: a press on the Filters button keeps the menu open, and the button still toggles
+- chrome: the Character level's ticked rows paint the selected color, not their class color
 
 ### test_compact_modes.lua (7)
 
@@ -933,7 +934,7 @@ Total.
 - cells: the trade box says the state, the reason, the rule in force and how fresh the data is
 - cells: the trade box names bind on pickup only on a soulbound drop, never on a BoE under the soulbound rule
 - cells: the trade box reads Can't use in dim red, as the row does, on a drop none of your specs can use
-- cells: the actions, ready: Ask Seta, Edit message, Link in chat, Trade; Retry waits on a fresh read
+- cells: the actions, ready: Ask, Edit message, Link in chat, Trade; Retry waits on a fresh read
 - cells: a collectible's Retry inspect is disabled: it is judged for you alone, so no inspect is asked for
 - cells: a disabled action says why: Trade out of range, Retry already queued, Edit once asked
 - cells: on your own drop Offer takes the Ask's place; Edit, Retry and Trade are off, each with its reason
@@ -1141,8 +1142,8 @@ Total.
 - test mode: Forever samples use only the nine classes
 - test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client
 - test mode data: every sample name follows the convention, the alt's too
-- test mode data: the fallback copy of the sample characters is the library's, row for row
-- test mode data: without LibKa0s the protagonists come from the copy, the same people
+- test mode data: the others and the alt are the library's seeded crowd, the same on every load
+- test mode data: without LibKa0s nobody is named: numbered placeholders, no Sample or Mock name
 - test mode: Forever samples name Forever places, whatever pool they draw on
 - test mode data: each sample group names who was in it, you first, as many as its content brings (fb17)
 - test mode data: the session drops what such groups see; History holds far more, every content (fb17)
@@ -1192,6 +1193,13 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 - test mode: shows one open roll and a History drop with rolls
+
+### test_sample_names.lua (4)
+
+- sample names: the scan sees the addon's code, and a planted name is caught
+- sample names: no Sample or Mock name lives in the addon's own code
+- sample names: the simulator's group and raiders are the session's seeded crowd, the same per seed
+- sample names: a running simulation's group is its seed's crowd, kept on the session
 
 ### test_compat.lua (75)
 
@@ -2063,7 +2071,7 @@ Total.
 - rx30: StandInY keeps the whole stack of stand-ins on the screen, the first at STAND_IN_Y while it fits
 - rx30: a stand-in is clamped to the screen and drags, its card taking the side the screen leaves
 
-### test_rolls_panel.lua (65)
+### test_rolls_panel.lua (66)
 
 - rolls panel: the defaults are on, docked right, 10 seconds, fold in a raid
 - rolls panel: four rows on Drops > Rolls > Panel, the sub-rows naming the switch they need
@@ -2093,6 +2101,7 @@ Total.
 - rolls panel: in test mode a test strip sits directly under its title bar, with no header word
 - rolls panel: during a simulation the sim strip sits under its title bar instead
 - rolls panel: test mode's sample roll shows a number on every Need and Greed row, none on Pass or Waiting
+- rolls panel: test mode's sample roll shows a countdown bar and a time left under its header
 - rolls panel: the Offer panel docked on its side moves it to the other one, and back when it closes
 - rolls panel: with no room on the other side it waits hidden while the Offer panel holds its side
 - rolls panel: an auto-opened window waits while the panel lingers, then a full count
@@ -2211,7 +2220,7 @@ Total.
 - test mode: the sample groups carry real instance names and realistic difficulties
 - sim: a dungeon boss and a key run name the pool's instance and the client's difficulty
 
-### test_char_filter.lua (20)
+### test_char_filter.lua (23)
 
 - char filter: a recorder key is Name-Realm; a name that carries its realm is kept
 - char filter: the class icon is the classicon atlas as inline markup, nothing with no class
@@ -2233,6 +2242,9 @@ Total.
 - filter bar: a Character selection is a set of keys; anything else is refused
 - filter bar: Drops keeps every drop under any Character choice it offers
 - filter bar: each sync reuses the Character and View rows; HistoryChanged rebuilds History's
+- filter bar: the Character menu's selected rows stand off plain rows and their class color: ka0s
+- filter bar: the Character menu's selected rows stand off plain rows and their class color: obsidian
+- filter bar: the Character menu's selected rows stand off plain rows and their class color: azeroth
 
 ### test_trade_timer.lua (17)
 
@@ -2710,7 +2722,7 @@ Total.
 - sim roster: the content's level is the median of the pool's drops
 - sim roster: Create draws the group from the session's pool and the stop forgets it
 
-### test_sim_events.lua (36)
+### test_sim_events.lua (37)
 
 - sim lines: every LOOT_ITEM* shape is written from its GlobalString and read back by the parser
 - sim lines: a locale that reorders its arguments is written in its own order
@@ -2746,6 +2758,7 @@ Total.
 - sim: /dw sim raid opens several 40-player rolls, the group and the raiders named apart, all resolving
 - sim raid: refused without a running simulation
 - sim: /dw sim raid shows the Rolls panel's raid mode; /dw sim roll in a party its dungeon layout
+- sim: /dw sim roll's open roll shows its countdown bar under the item header
 - sim: the stop takes an open simulated roll out of the Rolls panel at once
 - sim: the stop takes a finished simulated roll out of the Rolls panel, though none is open
 
@@ -2829,7 +2842,7 @@ Total.
 - sim report: the owner's step lists yours on Drops, and the tabs agree
 - sim report: counts rolls
 
-### test_sim_panel.lua (13)
+### test_sim_panel.lua (22)
 
 - sim panel: the descriptor carries DropWatcher's presentation fields and nothing else
 - sim panel: a key's preview names every step with its boss, and every command, before a run
@@ -2844,6 +2857,15 @@ Total.
 - sim panel: opened before the window, it docks beside the window once a slow pool opens it
 - sim panel: dragging writes nothing to the profile; Reset position redocks
 - sim panel: standing down hides it, idle or running, and it does not open while stood down
+- sim panel: every start shows it: `/dw sim start <scenario>`
+- sim panel: every start shows it: `/dw sim start raid <size>`
+- sim panel: every start shows it: NS.SimScenario.Start, Drop Watcher's own starter
+- sim panel: every start shows it: the library's Start, as a host call
+- sim panel: every start shows it: the panel's Start row
+- sim panel: every start shows it: the panel's picker Start
+- sim panel: every start shows it: a Restart
+- sim panel: every start shows it: the bare `/dw sim` and the Master controls Sim box
+- sim panel: a refused start shows nothing
 
 ### test_sim_checkbox.lua (11)
 
@@ -3164,7 +3186,7 @@ Total.
 | test_compact_group.lua | 27 |
 | test_compact_history.lua | 12 |
 | test_history_card.lua | 17 |
-| test_compact_chrome.lua | 30 |
+| test_compact_chrome.lua | 31 |
 | test_compact_modes.lua | 7 |
 | test_window_group.lua | 53 |
 | test_table_font.lua | 11 |
@@ -3183,6 +3205,7 @@ Total.
 | test_row_tooltip.lua | 19 |
 | test_tooltip_placement.lua | 5 |
 | test_test_mode.lua | 54 |
+| test_sample_names.lua | 4 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
 | test_role_override.lua | 4 |
@@ -3217,13 +3240,13 @@ Total.
 | test_roll_cells.lua | 10 |
 | test_window_pending.lua | 13 |
 | test_roll_popup.lua | 24 |
-| test_rolls_panel.lua | 65 |
+| test_rolls_panel.lua | 66 |
 | test_feed_counts.lua | 10 |
 | test_collect_feed.lua | 15 |
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
-| test_char_filter.lua | 20 |
+| test_char_filter.lua | 23 |
 | test_trade_timer.lua | 17 |
 | test_trade_helper.lua | 6 |
 | test_asks.lua | 29 |
@@ -3245,11 +3268,11 @@ Total.
 | test_auto_ask.lua | 24 |
 | test_sim_core.lua | 27 |
 | test_sim_pool.lua | 27 |
-| test_sim_events.lua | 36 |
+| test_sim_events.lua | 37 |
 | test_sim_scenario.lua | 32 |
 | test_sim_e2e.lua | 21 |
 | test_sim_report.lua | 18 |
-| test_sim_panel.lua | 13 |
+| test_sim_panel.lua | 22 |
 | test_sim_checkbox.lua | 11 |
 | test_bindings.lua | 14 |
 | test_disabled.lua | 13 |
@@ -3266,4 +3289,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 1 |
-| **Total** | **2720** |
+| **Total** | **2739** |
