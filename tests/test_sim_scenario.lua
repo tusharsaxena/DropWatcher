@@ -356,7 +356,17 @@ end, T.RETAIL_ONLY)
 
 test("sim run: Run while the panel's click-ahead plays answers playing (C.2)", function()
     local NS, m = addon()
+    -- The library's panel: its click on a row ahead is the click-ahead, which holds Run's slot.
+    -- The kit's CreateFrame sets no global, so the panel's frame is caught as it is built, which
+    -- since LibKa0s v1.113.0 (Sim 5, every start shows the panel) is at the start itself.
+    local create, panel = m.CreateFrame, nil
+    m.CreateFrame = function(kind, name, ...)
+        local f = create(kind, name, ...)
+        if name == "DropWatcherSimPanel" then panel = f end
+        return f
+    end
     assertTrue(NS.SimScenario.Start("world", nil, { seed = 1 }))
+    m.CreateFrame = create
     m.advance(1)
     assertTrue(NS.Sim:Status().ready)
     local answers, play = {}, NS.SimScenario.Play
@@ -365,16 +375,7 @@ test("sim run: Run while the panel's click-ahead plays answers playing (C.2)", f
         answers[#answers + 1] = tostring(code)
         return play(step, s)
     end
-    -- The library's panel: its click on a row ahead is the click-ahead, which holds Run's slot.
-    -- The kit's CreateFrame sets no global, so the panel's frame is caught as it is built.
-    local create, panel = m.CreateFrame, nil
-    m.CreateFrame = function(kind, name, ...)
-        local f = create(kind, name, ...)
-        if name == "DropWatcherSimPanel" then panel = f end
-        return f
-    end
     assertTrue(NS.Sim:ShowPanel())
-    m.CreateFrame = create
     panel.__rowButtons[4]:__fire("OnClick")   -- timeline step 3
     NS.SimScenario.Play = play
     assertEqual(NS.Sim:Status().pos, 3, "the click-ahead played up to the row")

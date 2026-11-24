@@ -45,6 +45,9 @@ test("sim checkbox: the launcher's pair is one NS pair the row reads", function(
     assertTrue(NS.IsSimMode())
     assertEqual(NS.SchemaRuntime.Get("state.sim"), true, "the box reads the live sim")
     Sim:Stop()
+    -- LibKa0s v1.113.0 (Sim 5): the start showed the window, and an open window keeps it ticked (R7)
+    assertEqual(NS.SchemaRuntime.Get("state.sim"), true, "the start's window is still open")
+    Sim:HidePanel()
     assertEqual(NS.SchemaRuntime.Get("state.sim"), false)
 end)
 
