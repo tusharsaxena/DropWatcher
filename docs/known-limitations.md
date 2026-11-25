@@ -297,6 +297,17 @@ the code reads every case the design leaves open, module by module, is in
     "Requires Herbalism N" node tooltips, not ForeverDB rows; `validate-seeds.md`): a node the
     table lacks shows "?", and fishing has no per-node skill on this client, so its Skill cell is a
     dim dash. ITEM-SEARCH-37 checks the values in game.
+  - **"Trainer" means no item teaches the recipe in the client's data** (ISR3-DW-08): the Crafting
+    tab's source for a recipe you don't know comes from the shipped table's teaching item (the item
+    whose `ItemEffect` teaches the recipe spell, `validate-seeds.md` -> Recipe reagents), and 500 of
+    the 2,466 recipes on 1.60.1.70938 have none. A recipe learned some other way (a quest's spell
+    reward, a book the client data does not tie to it) also says "Trainer". The Status names the
+    recipe item's best source by kind (a vendor, then a quest that rewards it, then a drop, then a
+    world drop), each kind's best by the tabs' own ranking; the row tooltip lists at most 6 of each,
+    and the recipe item's own page (a click on the row) has them all. A recipe of a profession you
+    lack keeps "No <profession>" and reads no source (its click still opens the first recipe item),
+    so a reagent like Rune Thread, with some 300 taught recipes, never reads them all. The tooltip
+    block's Crafting section names no source (ITEM-SEARCH-45).
   - **A pinned chat link does not count as hovering** for the Item Search key: with the mouse off
     every item, the key toggles the window even while a chat link's tooltip is open
     (ITEM-SEARCH-41).

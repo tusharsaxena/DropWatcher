@@ -21,6 +21,7 @@ local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the
 local RETAIL_ONLY = T.forever and "the Retail profile's absent case; the Forever cases cover WoW Forever" or nil
 
 local LINEN = 2589   -- Linen Cloth: a First Aid and Tailoring reagent in the shipped table
+local BOLT = 2996    -- Bolt of Linen Cloth: a Tailoring reagent of recipes taught by patterns (ISR3-DW-08)
 
 -- The client's map names and waypoint API, invented: `waypoints` records each user waypoint.
 local function installMap(mm, opts)
@@ -643,6 +644,35 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     assertTrue(#W.TableRows() > shown, "every profession's recipes")
     assertEqual(NS.Window.TooltipOf(f.section.chip)[1], "All professions")
     assertFalse(NS.addon.db.profile.itemSearch.myProfessionsOnly == false, "the chip is not saved")
+end, FOREVER_ONLY)
+
+test("item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08)", function()
+    local NS = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 40, skillID = 129 }, { name = "Tailoring", rank = 40, skillID = 197 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+    end })
+    local W = NS.ItemSearchWindow
+    W.ShowItem(LINEN)
+    local byName, taught = {}, nil
+    for _, row in ipairs(W.TableRows()) do byName[row.dwTip.title] = row end
+    -- red under: Linen Bandage (no recipe item in the shipped table) still reading "Not known"
+    local bandage = byName["Linen Bandage"]
+    assertTrue(bandage ~= nil, "Linen Bandage, a First Aid recipe of Linen")
+    local found = false
+    for _, c in ipairs(bandage.cells) do found = found or c.text:GetText() == "Trainer" end
+    assertTrue(found, "its Status: Trainer")
+    assertNil(bandage.dwItem, "a trainer's recipe opens nothing")
+    -- Bolt of Linen Cloth's Tailoring patterns: the kit's ForeverDB knows no source of their recipe
+    -- items, so such a row's Status is the item, and its click opens it.
+    W.ShowItem(BOLT)
+    for _, row in ipairs(W.TableRows()) do if row.dwItem and not taught then taught = row end end
+    assertTrue(taught ~= nil, "a Bolt of Linen Cloth recipe the shipped table gives a recipe item")
+    local text = table.concat(NS.Window.TooltipOf(taught), "\n")
+    assertTrue(text:find("Recipe item", 1, true) ~= nil and text:find("Click: search the recipe item", 1, true) ~= nil, text)
+    local item = taught.dwItem
+    taught:__fire("OnClick", "LeftButton")
+    -- red under: a row click that opens nothing (the owner's "where to get the recipe from")
+    assertEqual(W.ShownItem(), item, "the recipe item shown")
 end, FOREVER_ONLY)
 
 test("item search window: the Crafting tab's filter follows Only professions you know when the setting moves", function()

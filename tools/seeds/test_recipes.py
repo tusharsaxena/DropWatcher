@@ -35,7 +35,9 @@ LINES = {line: name for line, (name, required) in recipes.PROFESSIONS.items() if
 
 SLA_HEADER = ["ID", "SkillLine", "Spell", "MinSkillLineRank", "TrivialSkillLineRankHigh", "TrivialSkillLineRankLow"]
 REAGENT_HEADER = ["ID", "SpellID"] + ["Reagent_%d" % i for i in range(8)] + ["ReagentCount_%d" % i for i in range(8)]
-EFFECT_HEADER = ["ID", "DifficultyID", "EffectIndex", "Effect", "EffectItemType", "SpellID"]
+EFFECT_HEADER = ["ID", "DifficultyID", "EffectIndex", "Effect", "EffectItemType", "EffectTriggerSpell", "SpellID"]
+ITEM_EFFECT_HEADER = ["ID", "TriggerType", "SpellID"]
+ITEMX_HEADER = ["ID", "ItemEffectID", "ItemID"]
 
 
 def csv_of(header, rows) -> str:
@@ -56,7 +58,11 @@ def reagent_row(rid, spell, pairs):
 def fixture_tables(extra_sla=(), extra_reagents=(), skill_names=None, drop_lines=()):
     """Invented tables: one recipe per required profession (spell 990100 + i), a second Tailoring
     recipe shared with Leatherworking, a recipe with no reagent row, an Enchanting recipe making
-    nothing, and noise rows of a gathering line (186) that the extract must drop."""
+    nothing, and noise rows of a gathering line (186) that the extract must drop. The teaching items
+    (ISR3-DW-08): item 992000 teaches First Aid's recipe (TriggerType 6), items 992001 and 992002 both
+    teach Blacksmithing's, item 992003 teaches the shared suit through a learning spell (990600, Effect
+    36), item 992004 merely casts Leatherworking's recipe on use (trigger 0: not a teacher) and the rest are a
+    trainer's; item 992009 teaches the Mining smelt, which the extract drops."""
     names = dict(LINES)
     names.update(skill_names or {})
     skill = [["DisplayName_lang", "ID"]] + [[n, line] for line, n in names.items() if line not in drop_lines]
@@ -70,8 +76,8 @@ def fixture_tables(extra_sla=(), extra_reagents=(), skill_names=None, drop_lines
         sla.append([sid, line, spell, 1, 60 + i, 20 + i]); sid += 1
         reag.append(reagent_row(sid, spell, [(990900 + i, 2), (990999, 1)]))
         if line != 333:
-            eff.append([sid, 0, 0, 24, 991000 + i, spell])
-        eff.append([sid + 500, 0, 1, 6, 0, spell])  # an aura effect: not CREATE_ITEM
+            eff.append([sid, 0, 0, 24, 991000 + i, 0, spell])
+        eff.append([sid + 500, 0, 1, 6, 0, 0, spell])  # an aura effect: not CREATE_ITEM
         spellname.append([spell, "Fixture \"Recipe\" %d" % i])
     # Tailoring 197 and Leatherworking 165 share one recipe, same ranks.
     sla += [[sid, 197, 990200, 5, 50, 30], [sid + 1, 165, 990200, 5, 50, 30]]; sid += 2
@@ -83,12 +89,20 @@ def fixture_tables(extra_sla=(), extra_reagents=(), skill_names=None, drop_lines
     reag.append(reagent_row(sid, 990400, [(990998, 1)]))
     sla += list(extra_sla)
     reag += list(extra_reagents)
+    # The teaching items (see the docstring), and a learning spell's Effect 36.
+    eff.append([7000, 0, 0, 36, 0, 990200, 990600])
+    item_eff = [[8000, 6, 990100], [8001, 6, 990101], [8002, 6, 990101], [8003, 0, 990600], [8004, 0, 990102],
+                [8009, 6, 990400], [8010, 6, 777777]]
+    itemx = [[1, 8000, 992000], [2, 8001, 992002], [3, 8002, 992001], [4, 8003, 992003], [5, 8004, 992004],
+             [6, 8009, 992009], [7, 8010, 992010]]
     return {
         "SkillLine": csv_of(skill[0], skill[1:]),
         "SkillLineAbility": csv_of(SLA_HEADER, sla),
         "SpellReagents": csv_of(REAGENT_HEADER, reag),
         "SpellEffect": csv_of(EFFECT_HEADER, eff),
         "SpellName": csv_of(["ID", "Name_lang"], spellname),
+        "ItemEffect": csv_of(ITEM_EFFECT_HEADER, item_eff),
+        "ItemXItemEffect": csv_of(ITEMX_HEADER, itemx),
     }
 
 
@@ -131,8 +145,11 @@ class TestModel(Fixture):
         rows = recipes.parse_extract(texts)
         self.assertNotIn("186", {r["SkillLine"] for r in rows["SkillLineAbility"]})
         self.assertNotIn("990400", {r["SpellID"] for r in rows["SpellReagents"]}, "the smelt's reagents")
-        self.assertEqual({r["Effect"] for r in rows["SpellEffect"]}, {"24"})
+        self.assertEqual({r["Effect"] for r in rows["SpellEffect"]}, {"24", "36"})
         self.assertNotIn("Mining", texts["SkillLine"])
+        self.assertEqual({r["ItemID"] for r in rows["ItemXItemEffect"]},
+                         {"992000", "992001", "992002", "992003", "992004"}, "the smelt's and a stranger's dropped")
+        self.assertEqual(len(rows["ItemEffect"]), 5)
 
     def test_the_join(self):
         m = model_of(fixture_tables())
@@ -149,6 +166,16 @@ class TestModel(Fixture):
         self.assertNotIn(990400, r, "Mining is not a crafting line")
         s = m["stats"]
         self.assertEqual((s["recipes"], s["noReagents"], s["shared"], s["makesNoItem"]), (len(LINES) + 1, 1, 1, 2))
+
+    def test_the_teaching_items(self):
+        m = model_of(fixture_tables())
+        r = m["recipes"]
+        self.assertEqual(r[990100]["taught"], [992000], "TriggerType 6 teaches its SpellID")
+        self.assertEqual(r[990101]["taught"], [992001, 992002], "two items, ascending")
+        self.assertEqual(r[990200]["taught"], [992003], "a learning spell's Effect 36 teaches its trigger")
+        self.assertEqual(r[990102]["taught"], [], "a trigger-0 cast of the recipe itself teaches nothing")
+        s = m["stats"]
+        self.assertEqual((s["taught"], s["taughtByMore"]), (3, 1))
 
     def test_the_coverage_gate(self):
         with self.assertRaises(SystemExit):
@@ -192,8 +219,11 @@ class TestCli(Fixture):
         text = data.decode("utf-8")
         self.assertIn("-- Build:   %s" % BUILD, text)
         self.assertIn("-- Bundle:  docs/seed-research/%s-forever-recipes" % DATE, text)
-        self.assertIn('r(990100, 129, 1, 20, 60, 991000, "Fixture \\"Recipe\\" 0", 990900, 2, 990999, 1)', text)
+        self.assertIn('r(990100, 129, 1, 20, 60, 991000, "Fixture \\"Recipe\\" 0", 992000, 990900, 2, 990999, 1)', text)
+        self.assertIn('r(990102, 165, 1, 22, 62, 991002, "Fixture \\"Recipe\\" 2", nil, 990902, 2, 990999, 1)', text)
         self.assertIn("shared(990200, 197, 165)", text)
+        self.assertIn("teachers(990101, 992001, 992002)", text)
+        self.assertIn("3 recipes are taught by an item (1 by more than one); the other 6 are a trainer's.", text)
         self.assertEqual(self.cli("check"), 0)
         # A second apply changes nothing.
         self.assertEqual(self.cli("apply", "--bundle", str(self.bundle)), 0)

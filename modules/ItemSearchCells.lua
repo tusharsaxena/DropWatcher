@@ -20,8 +20,21 @@ local _, NS = ...
 -- `mine` (a profession you have), `known`.
 --
 -- `ctx`: { spots(kind, id), mapName(map), npc(id), object(id), quest(id), item(id) -> { name,
--- quality }, profession(skillLine), coin(copper) -> text, dateText(time) -> text }. Each is
--- optional; a missing one leaves its cell at the dim dash.
+-- quality }, profession(skillLine), coin(copper) -> text, dateText(time) -> text, facts(itemID) ->
+-- NS.ItemSearch.Get's answer (a recipe item's sources) }. Each is optional; a missing one leaves its
+-- cell at the dim dash.
+--
+-- A NOT-KNOWN RECIPE'S SOURCE (ISR3-DW-08, the window alone; the tooltip block is unchanged). A
+-- recipe the shipped table gives no teaching item is a trainer's: its Status says "Trainer". One with
+-- a teaching item (`taught`, the recipe item) says where to get that item, read through ctx.facts:
+-- the best vendor, else the best quest that rewards it, else the best drop (each by IS.Rank, the
+-- tabs' own "Best for you"), else the World drop, with its zone; with none known, the item's name.
+-- Where several items teach the recipe, the one whose best source comes first in that order is shown.
+-- The row's tooltip lists each kind's sources (ISC.SOURCE_ROWS of each, then "and N more"), and the
+-- row's click opens Item Search on the recipe item (its `itemID`; shift-click links it). "Learn at N"
+-- keeps its Status, its tooltip and click still naming the source. "No <profession>" keeps its Status
+-- and reads no source (a cold build of a reagent with hundreds of taught recipes would read every
+-- recipe item's facts): its tooltip names the first recipe item and its click opens it.
 --
 -- THE CLIENT GIVES NO DATA FOR (spec §5.4 lets such a column go): Sold by's Stock and Requires
 -- (LibKa0s-ForeverDB-1.0 reads vendx for prices only) and Quests' objective count. A vendor's price
@@ -609,19 +622,138 @@ function ISC.HasProfession(r, ranks)
 end
 
 --- A recipe's Status: Known; "No <profession>" for a profession you don't have; "Learn at N" only
---- when its minimum is above 1 and above your rank; else Not known.
+--- when its minimum is above 1 and above your rank; else where it is learned (`source`, ISC.RecipeSource's
+--- answer: "Trainer", or the recipe item's best source), or Not known without one.
+--- @param source table|nil `{ text, tone }`
 --- @return string text, string tone, number order
-function ISC.CraftStatus(r, ranks, professionName)
+function ISC.CraftStatus(r, ranks, professionName, source)
     if r.known then return L["Known"], "good", 1 end
     if not ISC.HasProfession(r, ranks) then
         return L["No %s"]:format(professionName or L["profession"]), "muted", 4
     end
     local min, rank = num(r.min), num(r.rank)
     if min and min > 1 and (not rank or min > rank) then return L["Learn at %d"]:format(min), "muted", 3 end
+    if source and source.text then return source.text, source.tone or "muted", 2 end
     return L["Not known"], "muted", 2
 end
 
-local function craftTip(r, profession, product, rank)
+-- ── a not-known recipe's source (ISR3-DW-08) ────────────────────────────────────────────────
+
+-- How many sources of each kind a recipe row's tooltip lists before "and N more" (the recipe item's
+-- own Item Search page, a click away, has them all).
+ISC.SOURCE_ROWS = 6
+
+-- The source kinds, best first, with their tooltip label and their Status wording.
+ISC.SOURCE_KINDS = {
+    { key = "vendor", label = L["Sold by"], status = L["Sold by %s"] },
+    { key = "quest", label = L["Quest reward"], status = L["Quest reward: %s"] },
+    { key = "drop", label = L["Drops from"], status = L["Drops from %s"] },
+}
+
+-- The quests that reward the item, titled (ForeverDB's quest row when the facts lack it), best first.
+local function rewardQuests(f, me, ctx)
+    local rows = {}
+    for _, q in ipairs(list(f.rewardFrom)) do
+        if num(q.id) then
+            local info = call(ctx.quest, q.id)
+            local title = q.title or (type(info) == "table" and info.title) or L["Quest %d"]:format(q.id)
+            rows[#rows + 1] = { id = q.id, title = title, name = title, level = num(q.level), role = "rewards" }
+        end
+    end
+    return IS.Rank.quests(rows, me)
+end
+
+-- A recipe item's sources by kind, each best first: `{ vendor = rows, quest = rows, drop = rows }`.
+-- The drops end with the World drop (a row of its own, `world`) when the item has one.
+local function sourcesOf(f, me, ctx)
+    local drops = IS.Rank.drops(list(f.drops), me)
+    if num(f.worldMinLevel) then drops[#drops + 1] = { world = true, name = L["World drop"] } end
+    return { vendor = IS.Rank.vendors(list(f.vendors), me), quest = rewardQuests(f, me, ctx), drop = drops }
+end
+
+-- The place of an item's best source kind in ISC.SOURCE_KINDS (1 a vendor ...), or 4 for none.
+local function bestKind(by)
+    for i, k in ipairs(ISC.SOURCE_KINDS) do
+        if #by[k.key] > 0 then return i end
+    end
+    return #ISC.SOURCE_KINDS + 1
+end
+
+-- "Name · Zone" for one source row (a vendor or a drop with a spot; a quest and the World drop alone).
+local function sourceLine(key, s, me, ctx)
+    if s.world or key == "quest" then return s.name end
+    local where = ISC.Where(spotsOf(key == "vendor" and "npc" or s.kind, s, ctx), me.mapID, ctx.mapName)
+    return where and where.zone and L["%s · %s"]:format(s.name, where.zone) or s.name
+end
+
+-- The recipe item, of `taughtBy`, whose best source kind comes first: `item, its facts, its sources, kind`.
+local function pickItem(taughtBy, me, ctx)
+    local best
+    for _, item in ipairs(taughtBy) do
+        local f = call(ctx.facts, item)
+        local by = sourcesOf(type(f) == "table" and f or {}, me, ctx)
+        local kind = bestKind(by)
+        if not best or kind < best.kind then best = { item = item, facts = f, by = by, kind = kind } end
+    end
+    return best
+end
+
+local function itemName(id, ctx)
+    local it = call(ctx.item, id)
+    return type(it) == "table" and it.name or L["Item %d"]:format(id)
+end
+
+-- The tooltip's source rows: each kind's first ISC.SOURCE_ROWS, then "and N more".
+local function sourceRows(rows, pick, me, ctx)
+    for _, k in ipairs(ISC.SOURCE_KINDS) do
+        local found = pick.by[k.key]
+        for i = 1, math.min(#found, ISC.SOURCE_ROWS) do
+            rows[#rows + 1] = { k.label, sourceLine(k.key, found[i], me, ctx) }
+        end
+        if #found > ISC.SOURCE_ROWS then
+            rows[#rows + 1] = { k.label, L["and %d more"]:format(#found - ISC.SOURCE_ROWS) }
+        end
+    end
+end
+
+--- Where a recipe is learned (see the header): nil for a known or learned recipe; else
+--- `{ text, tone, item, rows, hints }`: the Status words, the recipe item to open (nil for a trainer's
+--- recipe) and the tooltip's rows and hints.
+--- @param r table a live crafting row (`known`, `learned`, `taught`, `taughtBy`)
+--- @param me table
+--- @param ctx table
+--- @return table|nil
+function ISC.RecipeSource(r, me, ctx)
+    if r.known or r.learned then return nil end
+    local taughtBy = type(r.taughtBy) == "table" and r.taughtBy or { r.taught }
+    if #taughtBy == 0 then
+        return { text = L["Trainer"], tone = "muted", rows = { { L["Learn"], L["from a profession trainer"] } }, hints = {} }
+    end
+    local hints = { L["Click: search the recipe item"], L["Shift-click: link the recipe item"] }
+    -- A profession you lack keeps its Status and reads no source (a reagent like Rune Thread has some
+    -- 300 taught recipes): the row names its first recipe item and opens it.
+    if not ISC.HasProfession(r, me.ranks) then
+        return { item = taughtBy[1], rows = { { L["Recipe item"], itemName(taughtBy[1], ctx) } }, hints = hints }
+    end
+    local pick = pickItem(taughtBy, me, ctx)
+    local name = itemName(pick.item, ctx)
+    local rows = { { L["Recipe item"], name } }
+    if #taughtBy > 1 then rows[#rows + 1] = { L["Other recipe items"], tostring(#taughtBy - 1) } end
+    local out = { item = pick.item, rows = rows, hints = hints }
+    local kind = ISC.SOURCE_KINDS[pick.kind]
+    if not kind then
+        local fdb = type(pick.facts) == "table" and pick.facts.fdb or nil
+        rows[#rows + 1] = { L["Sources"], fdb == "loaded" and L["none known"] or L["ForeverDB is not loaded"] }
+        out.text, out.tone = name, "muted"
+        return out
+    end
+    local first = pick.by[kind.key][1]
+    out.text, out.tone = first.world and first.name or kind.status:format(sourceLine(kind.key, first, me, ctx)), "plain"
+    sourceRows(rows, pick, me, ctx)
+    return out
+end
+
+local function craftTip(r, profession, product, rank, source)
     local rows = { { L["Profession"], profession or DASH } }
     if rank then
         local words = COLOR_WORDS[r.color]
@@ -629,7 +761,8 @@ local function craftTip(r, profession, product, rank)
     end
     if num(r.count) then rows[#rows + 1] = { L["Uses"], L["%d of this item"]:format(r.count) } end
     if product then rows[#rows + 1] = { L["Makes"], product } end
-    return { title = r.name or L["Recipe %d"]:format(r.spell), rows = rows, hints = {} }
+    for _, row in ipairs(source and source.rows or {}) do rows[#rows + 1] = row end
+    return { title = r.name or L["Recipe %d"]:format(r.spell), rows = rows, hints = source and source.hints or {} }
 end
 
 local function productOf(r, ctx)
@@ -651,16 +784,17 @@ end
 
 local function craftRow(r, i, me, ctx)
     local profession = call(ctx.profession, r.skillLine)
-    local status, tone, order = ISC.CraftStatus(r, me.ranks, profession)
+    local source = ISC.RecipeSource(r, me, ctx)
+    local status, tone, order = ISC.CraftStatus(r, me.ranks, profession, source)
     local name = r.name or L["Recipe %d"]:format(r.spell)
     local cells, product = craftCells(r, name, profession, status, tone, ctx)
     return {
         best = i, spell = r.spell, known = r.known == true, mine = ISC.HasProfession(r, me.ranks),
-        makesID = num(r.made),
+        makesID = num(r.made), itemID = source and source.item or nil,
         cells = cells,
         sort = { glyph = i, recipe = lower(name), profession = lower(profession), uses = num(r.count),
             makes = lower(product), skill = num(r.yellow), status = order },
-        tip = craftTip(r, profession, product, num(r.rank)),
+        tip = craftTip(r, profession, product, num(r.rank), source),
     }
 end
 

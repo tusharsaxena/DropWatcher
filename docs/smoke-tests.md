@@ -4847,7 +4847,7 @@ the table follows smoothly, with no stutter; sort a column and switch tabs → i
 ### Item Search round 3
 
 The Item Search round 3 run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00
-to ISR3-DW-07, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
+to ISR3-DW-08, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
 also want the ForeverDB_Full addon installed. Where a check here contradicts an earlier ITEM-SEARCH
 row (the tooltip's title and rule, the quest marks, the recipe glyphs, a creature's red, the sort
 arrow, the vendor price, the key over the same item and over a chat link, the settings rows), this
@@ -4969,6 +4969,20 @@ item with more than three entries in a section (Linen Cloth's Drops from and Cra
 `and N more`. Set Rows per section to 8 → up to 8 show; `/reload` → still 8. Defaults → back to 3. A
 profile that stored another count before this build (say 10) keeps it. Result:
 
+**ITEM-SEARCH-45. Where a recipe you don't know is learned (ISR3-DW-08).** On a Cooking character
+that does not know Roast Raptor, open the Item Search window on Raptor Flesh (`/dw search 12184`), with
+ForeverDB loaded → the Crafting tab: each recipe you don't know says where it is learned in its Status
+instead of `Not known`: Roast Raptor names its recipe item's best source (`Sold by <vendor> · <zone>`,
+else `Quest reward: <quest>`, else `Drops from <source> · <zone>`, else `World drop`); a recipe no item
+teaches says `Trainer`. Known recipes still say `Known`, and one you need more skill for still says
+`Learn at N`. Hover the Roast Raptor row → its tooltip (to the right of the row) lists Recipe item:
+Recipe: Roast Raptor, then every Sold by, Quest reward and Drops from line (at most 6 of each, then
+`and N more`) and the two hints; hover a `Trainer` row → Learn: from a profession trainer. Click the
+Roast Raptor row → the window shows Recipe: Roast Raptor, with its own Sold by or Drops from tab;
+shift-click it → the recipe item's link in chat. The item tooltip's Crafting section is unchanged (no
+source). Without ForeverDB (disable it, `/reload`) the row's Status is the recipe item's name and its
+tooltip says ForeverDB is not loaded. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -5036,7 +5050,7 @@ Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-
 
 Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08 and ISF-REV, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-30, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 7 and 8's key and title, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-13's key, ITEM-SEARCH-14 and 15's rows), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-19 doubles as the probe of how GetBindingAction answers the stored dead chord, and ITEM-SEARCH-26 and 27 (the arrow's map position and facing on Forever) are owed before the run is finalized. An agent never marks one passed.
 
-Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-07 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-44, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
+Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-08 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-45, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

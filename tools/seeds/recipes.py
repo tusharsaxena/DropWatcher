@@ -17,8 +17,13 @@ WHAT THIS IS
         SpellEffect        Effect 24 (CREATE_ITEM): EffectItemType, the item the recipe makes
         SpellName          Name_lang, the recipe's name
         SkillLine          DisplayName_lang: the coverage gate's profession names
+        ItemEffect         an item's spell: TriggerType 6 (LEARN_SPELL_ID) with SpellID the recipe spell,
+                           or any trigger whose SpellID has a SpellEffect Effect 36 (LEARN_SPELL) whose
+                           EffectTriggerSpell is the recipe spell
+        ItemXItemEffect    ItemEffectID -> ItemID: the teaching item (the recipe item)
     A recipe the build gives no SpellReagents row is left out (it can use no reagent); Item Search's
-    profession-window fallback (spec §4.2 B) learns such a recipe in game.
+    profession-window fallback (spec §4.2 B) learns such a recipe in game. A recipe no item teaches
+    is a trainer's (ISR3-DW-08): the window's Crafting tab says "Trainer" for it.
 
 THE STEPS (driven through seeds.py, which hands its `recipes` subcommand to main() below)
     python3 tools/seeds/seeds.py recipes status
@@ -61,6 +66,8 @@ import seeds  # noqa: E402
 PRODUCT = "wowf"
 OUTPUT = "core/RecipeReagentsForever.lua"
 CREATE_ITEM = 24
+LEARN_SPELL = 36
+TRIGGER_LEARN = 6
 MAX_REAGENTS = 8
 
 # The tables read, in digest order, and why.
@@ -69,8 +76,11 @@ TABLES = (
     ("SkillLineAbility", "recipe spell x skill line: MinSkillLineRank, TrivialSkillLineRankLow (yellow), "
                          "TrivialSkillLineRankHigh (gray)"),
     ("SpellReagents", "a recipe's reagents and counts (Reagent_0..7, ReagentCount_0..7)"),
-    ("SpellEffect", "Effect 24 (CREATE_ITEM): EffectItemType, the item a recipe makes"),
+    ("SpellEffect", "Effect 24 (CREATE_ITEM): EffectItemType, the item a recipe makes; Effect 36 (LEARN_SPELL): "
+                    "EffectTriggerSpell, the recipe a learning spell teaches"),
     ("SpellName", "a recipe's name (Name_lang)"),
+    ("ItemEffect", "an item's spell and TriggerType: 6 (LEARN_SPELL_ID) teaches SpellID, or SpellID is a learning spell"),
+    ("ItemXItemEffect", "ItemEffectID -> ItemID: the item that teaches a recipe"),
 )
 
 # The crafting professions Item Search lists (spec §4.2) -> (the build's DisplayName_lang, required).
@@ -135,10 +145,18 @@ def extract(full: dict[str, tuple[list[str], list[dict]]]) -> dict[str, str]:
     header, rows = full["SpellReagents"]
     out["SpellReagents"] = csv_text(header, [r for r in rows if seeds.as_int(r["SpellID"]) in spells])
     header, rows = full["SpellEffect"]
-    out["SpellEffect"] = csv_text(header, [r for r in rows if seeds.as_int(r["SpellID"]) in spells
-                                           and seeds.as_int(r["Effect"]) == CREATE_ITEM])
+    effects = [r for r in rows if (seeds.as_int(r["Effect"]) == CREATE_ITEM and seeds.as_int(r["SpellID"]) in spells)
+               or (seeds.as_int(r["Effect"]) == LEARN_SPELL and seeds.as_int(r["EffectTriggerSpell"]) in spells)]
+    out["SpellEffect"] = csv_text(header, effects)
+    learners = {seeds.as_int(r["SpellID"]) for r in effects if seeds.as_int(r["Effect"]) == LEARN_SPELL}
     header, rows = full["SpellName"]
     out["SpellName"] = csv_text(header, [r for r in rows if seeds.as_int(r["ID"]) in spells])
+    header, rows = full["ItemEffect"]
+    item_effects = [r for r in rows if seeds.as_int(r["SpellID"]) in spells | learners]
+    out["ItemEffect"] = csv_text(header, item_effects)
+    ids = {seeds.as_int(r["ID"]) for r in item_effects}
+    header, rows = full["ItemXItemEffect"]
+    out["ItemXItemEffect"] = csv_text(header, [r for r in rows if seeds.as_int(r["ItemEffectID"]) in ids])
     return out
 
 
@@ -213,10 +231,34 @@ def reagents_of(row: dict, spell: int) -> dict[int, int]:
     return out
 
 
+def teachers(rows: dict[str, list[dict]]) -> dict[int, list[int]]:
+    """`{recipe spell: [item, ...]}`, ascending: the items that teach each spell. An item teaches a
+    spell when one of its ItemEffect rows has TriggerType 6 (LEARN_SPELL_ID) and SpellID the spell,
+    or (any trigger) a SpellID whose SpellEffect Effect 36 (LEARN_SPELL) has EffectTriggerSpell the
+    spell (an item teaching several recipes at once)."""
+    learns: dict[int, set] = {}
+    for r in rows["SpellEffect"]:
+        if seeds.as_int(r["Effect"]) == LEARN_SPELL:
+            learns.setdefault(seeds.as_int(r["SpellID"]), set()).add(seeds.as_int(r["EffectTriggerSpell"]))
+    items_of: dict[int, list[int]] = {}
+    for r in rows["ItemXItemEffect"]:
+        items_of.setdefault(seeds.as_int(r["ItemEffectID"]), []).append(seeds.as_int(r["ItemID"]))
+    out: dict[int, set] = {}
+    for r in rows["ItemEffect"]:
+        spell, items = seeds.as_int(r["SpellID"]), items_of.get(seeds.as_int(r["ID"]), [])
+        taught = set(learns.get(spell, ()))
+        if seeds.as_int(r["TriggerType"]) == TRIGGER_LEARN:
+            taught.add(spell)
+        for s in taught:
+            out.setdefault(s, set()).update(i for i in items if i > 0)
+    return {s: sorted(v) for s, v in out.items() if v}
+
+
 def build_model(rows: dict[str, list[dict]]) -> dict:
     """`{recipes: {spell: recipe}, stats: {...}}`. A recipe is `{skillLine, skillLines, min, yellow,
-    gray, made, name, reagents: {item: count}}`; `skillLines` lists every line in SkillLineAbility
-    order when the spell is in more than one (a recipe two professions share)."""
+    gray, made, name, taught, reagents: {item: count}}`; `skillLines` lists every line in SkillLineAbility
+    order when the spell is in more than one (a recipe two professions share); `taught` the items that
+    teach it, ascending (empty: a trainer's recipe)."""
     reagents = {}
     for r in rows["SpellReagents"]:
         spell = seeds.as_int(r["SpellID"])
@@ -229,6 +271,7 @@ def build_model(rows: dict[str, list[dict]]) -> dict:
         if seeds.as_int(r["Effect"]) == CREATE_ITEM and spell not in made and seeds.as_int(r["EffectItemType"]) > 0:
             made[spell] = seeds.as_int(r["EffectItemType"])
     names = {seeds.as_int(r["ID"]): r["Name_lang"] for r in rows["SpellName"]}
+    taught = teachers(rows)
     recipes: dict[int, dict] = {}
     spells, no_reagents = set(), set()
     for r in sorted(rows["SkillLineAbility"], key=lambda a: seeds.as_int(a["ID"])):
@@ -250,11 +293,13 @@ def build_model(rows: dict[str, list[dict]]) -> dict:
             continue
         recipes[spell] = {"skillLine": line, "skillLines": [line], "min": ranks[0], "yellow": ranks[1],
                           "gray": ranks[2], "made": made.get(spell), "name": names.get(spell),
-                          "reagents": reagents[spell]}
+                          "taught": taught.get(spell, []), "reagents": reagents[spell]}
     stats = {"spells": len(spells), "recipes": len(recipes), "noReagents": len(no_reagents),
              "unnamed": sum(1 for r in recipes.values() if r["name"] is None),
              "makesNoItem": sum(1 for r in recipes.values() if r["made"] is None),
              "shared": sum(1 for r in recipes.values() if len(r["skillLines"]) > 1),
+             "taught": sum(1 for r in recipes.values() if r["taught"]),
+             "taughtByMore": sum(1 for r in recipes.values() if len(r["taught"]) > 1),
              "perLine": {line: sum(1 for r in recipes.values() if r["skillLine"] == line)
                          for line in sorted(PROFESSIONS)}}
     return {"recipes": recipes, "stats": stats}
@@ -271,7 +316,8 @@ def lua_string(text: str) -> str:
 def lua_row(spell: int, r: dict) -> str:
     parts = [str(spell), str(r["skillLine"]), str(r["min"]), str(r["yellow"]), str(r["gray"]),
              "nil" if r["made"] is None else str(r["made"]),
-             "nil" if r["name"] is None else lua_string(r["name"])]
+             "nil" if r["name"] is None else lua_string(r["name"]),
+             str(r["taught"][0]) if r["taught"] else "nil"]
     for item in sorted(r["reagents"]):
         parts += [str(item), str(r["reagents"][item])]
     return "r(%s)" % ", ".join(parts)
@@ -309,20 +355,25 @@ def render(model: dict, manifest: dict, bundle_rel: str) -> str:
         "-- Bundle:  %s" % bundle_rel,
         "--",
         "-- Inputs is the sha256 of the bundle's frozen extract (SkillLine, SkillLineAbility, SpellReagents,",
-        "-- SpellEffect effect 24, SpellName).",
+        "-- SpellEffect effects 24 and 36, SpellName, ItemEffect, ItemXItemEffect).",
         "-- Skill lines: %s." % present,
         "-- Absent: %s." % absent,
         "-- %d recipes; %d of the lines' spells have no reagent row in the build and are left out (the" % (
             stats["recipes"], stats["noReagents"]),
         "-- profession-window fallback learns those in game, spec §4.2 B).",
+        "-- %d recipes are taught by an item (%d by more than one); the other %d are a trainer's." % (
+            stats["taught"], stats["taughtByMore"], stats["recipes"] - stats["taught"]),
         "--",
         "-- NS.RecipeReagents.Get() answers { build, recipes, byReagent } on WoW Forever, built the first",
         "-- time it is asked, and the builder is then let go. On Retail (read once at load, NS.Compat.ClientKey)",
         "-- the builder is never even made, so Get() answers nil and nothing below is built (clients-§4).",
-        "--   recipes[spell]  = { skillLine, skillLines?, min, yellow, gray, made?, name?, reagents = { [item] = count } }",
+        "--   recipes[spell]  = { skillLine, skillLines?, min, yellow, gray, made?, name?, taught?, taughtBy?,",
+        "--                       reagents = { [item] = count } }",
         "--   byReagent[item] = { spell, ... }, in this file's order (profession, then skill, then spell)",
         "-- skillLines is set only on a recipe two professions share. yellow and gray are",
         "-- TrivialSkillLineRankLow and TrivialSkillLineRankHigh; green is floor((yellow + gray) / 2).",
+        "-- taught is the item that teaches the recipe (the lowest id; ItemEffect -> ItemXItemEffect), nil for",
+        "-- a trainer's recipe; taughtBy lists every such item, set only when more than one teaches it.",
         "",
         "local RR = {}",
         "NS.RecipeReagents = RR",
@@ -333,7 +384,7 @@ def render(model: dict, manifest: dict, bundle_rel: str) -> str:
         "local rows",
         "if NS.Compat.ClientKey() == \"forever\" then rows = function()",
         "    local recipes, byReagent = {}, {}",
-        "    local function r(spell, skillLine, min, yellow, gray, made, name, ...)",
+        "    local function r(spell, skillLine, min, yellow, gray, made, name, taught, ...)",
         "        local reagents = {}",
         "        for i = 1, select(\"#\", ...), 2 do",
         "            local item, count = select(i, ...)",
@@ -343,10 +394,13 @@ def render(model: dict, manifest: dict, bundle_rel: str) -> str:
         "            list[#list + 1] = spell",
         "        end",
         "        recipes[spell] = { skillLine = skillLine, min = min, yellow = yellow, gray = gray, made = made,",
-        "            name = name, reagents = reagents }",
+        "            name = name, taught = taught, reagents = reagents }",
         "    end",
         "    local function shared(spell, ...)",
         "        recipes[spell].skillLines = { ... }",
+        "    end",
+        "    local function teachers(spell, ...)",
+        "        recipes[spell].taughtBy = { ... }",
         "    end",
     ]
     order = sorted(recipes, key=lambda s: (list(PROFESSIONS).index(recipes[s]["skillLine"]), recipes[s]["min"], s))
@@ -361,6 +415,11 @@ def render(model: dict, manifest: dict, bundle_rel: str) -> str:
     if sharedRows:
         out.append("    -- recipes more than one profession teaches")
         out += pack(sharedRows, "    ")
+    teachRows = ["teachers(%d, %s)" % (s, ", ".join(str(x) for x in recipes[s]["taught"]))
+                 for s in order if len(recipes[s]["taught"]) > 1]
+    if teachRows:
+        out.append("    -- recipes more than one item teaches")
+        out += pack(teachRows, "    ")
     out += [
         "    return recipes, byReagent",
         "end end",
@@ -408,6 +467,7 @@ hand-written `ANALYSIS.md`.
 | Recipes | %(recipes)d (%(noReagents)d of the lines' %(spells)d spells have no reagent row and are left out) |
 | Recipes making no item | %(makesNoItem)d (enchantments and the like) |
 | Recipes two professions share | %(shared)d |
+| Recipes an item teaches | %(taught)d (%(taughtByMore)d by more than one item); the other %(trainer)d are a trainer's |
 
 ## Tables
 
@@ -423,7 +483,8 @@ offline; `seeds.py recipes apply --bundle %(bundle)s` regenerates `%(output)s` f
 """ % {"date": manifest["date"], "output": OUTPUT, "product": PRODUCT, "build": manifest["build"],
        "sha": manifest["extractSha256"], "present": present, "absent": absent, "rows": rows, "bundle": bundle_rel,
        "recipes": s["recipes"], "noReagents": s["noReagents"], "spells": s["spells"],
-       "makesNoItem": s["makesNoItem"], "shared": s["shared"]}
+       "makesNoItem": s["makesNoItem"], "shared": s["shared"], "taught": s["taught"],
+       "taughtByMore": s["taughtByMore"], "trainer": s["recipes"] - s["taught"]}
 
 
 def rel(path: Path, repo: Path) -> str:

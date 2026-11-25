@@ -129,7 +129,7 @@ TABS.DEF = {
             col("uses", L["Uses"], 56, { tip = L["how many of this item one craft takes"] }),
             col("makes", L["Makes"], "flex", { tip = L["what it makes; hover it for the item"] }),
             col("skill", L["Skill"], 130, { kind = "parts", tip = L["its skill-up breakpoints: orange, yellow, green, gray"] }),
-            col("status", L["Status"], 120, { tip = L["known, not known, or the profession you lack"] }),
+            col("status", L["Status"], "flex", { tip = L["known; else where to learn it (a trainer, or the recipe item's best vendor, quest or drop); or the profession you lack"] }),
         },
         filters = {
             { key = "mine", label = L["Only my professions"], default = "mine", narrows = true, keep = function(r) return r.mine end },

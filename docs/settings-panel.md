@@ -479,7 +479,9 @@ the uncapped ForeverDB_Full companion loads, never in combat and never from a to
 vendor prices is never dimmed (the tooltip's Sold by reads the prices too); Load ForeverDB (Full) is
 dimmed while the window is off or ForeverDB_Full is not installed (its tooltip says so: the schema
 row carries no note of its own). The window remembers its
-size and the tab last picked with no setting. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
+size and the tab last picked with no setting, and the Crafting tab's Status of a recipe you don't
+know names where it is learned (a trainer, or its recipe item's best vendor, quest or drop;
+ISR3-DW-08) with no setting either. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
 in the skin's accent, the swatch not read), never dimmed (anti-pattern #74). Density, Font size, Zone
 and level columns and Remember recent searches went in ISF-DW-05 (Item Search feedback spec §5.1,
 §5.2, §5.4; schema step 17): the window draws in the main window's table font and row height (Window ›

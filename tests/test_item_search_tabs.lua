@@ -67,7 +67,8 @@ test("item search tabs: each tab draws exactly the spec's columns, less the two 
     for _, tab in ipairs({ "drops", "vendors", "quests", "crafting", "skinned" }) do
         local flex = 0
         for _, c in ipairs(D[tab].columns) do if c.flex then flex = flex + 1 end end
-        assertEqual(flex, 2, tab .. ": two flex columns")
+        -- Crafting's Status is the third (ISR3-DW-08: a not-known recipe's source, "Sold by <vendor> · <zone>")
+        assertEqual(flex, tab == "crafting" and 3 or 2, tab .. ": its flex columns")
     end
 end)
 
@@ -364,6 +365,112 @@ test("item search cells: CRAFTING's rows: the breakpoints, the uses, what it mak
     assertTrue(rows[2].mine); assertFalse(rows[3].mine)
     assertEqual(rows[1].cells.recipe.tone, "plain"); assertEqual(rows[2].cells.recipe.tone, "muted")
     assertEqual(tipRow(rows[1], "Your rank"), "155 · Yellow: likely to skill up")
+end)
+
+-- ISR3-DW-08: a not-known recipe's source. Invented recipe items: 501 sold by a vendor (and dropped),
+-- 502 a quest's reward, 503 dropped by eight creatures, 504 a world drop, 505 ForeverDB knows no
+-- source of, 506 the context has no facts for.
+local function recipeSourceFacts()
+    local mobs = {}
+    for i = 1, 8 do mobs[i] = { kind = "npc", id = 600 + i, name = ("Mob %d"):format(i), chance = 1 - i / 10 } end
+    return {
+        [501] = { fdb = "loaded", vendors = { { id = 1, name = "Quartermaster" } },
+            drops = { { kind = "npc", id = 2, name = "Raider", chance = 0.1 } } },
+        [502] = { fdb = "loaded", rewardFrom = { { id = 7, level = 10 } } },
+        [503] = { fdb = "loaded", drops = mobs },
+        [504] = { fdb = "loaded", worldMinLevel = 20 },
+        [505] = { fdb = "loaded" },
+    }
+end
+
+local function recipeSourceCtx()
+    local F = recipeSourceFacts()
+    return {
+        facts = function(id) return F[id] end,
+        quest = function(id) return id == 7 and { title = "Fixture Errand" } or nil end,
+        item = function(id) return id == 505 and { name = "Recipe: Fixture Stew" } or nil end,
+        spots = function(kind, id) return kind == "npc" and id == 1 and { [10] = { { x = 0.5, y = 0.5 } } } or nil end,
+        mapName = function(map) return map == 10 and "Fixture Vale" or nil end,
+        profession = function(line) return ({ [185] = "Cooking", [164] = "Blacksmithing" })[line] end,
+    }
+end
+
+-- A live crafting row; `taughtBy` as the model sets it: `taught` its first, the list only for several.
+local function craftRowOf(spell, taughtBy, extra)
+    local r = { spell = spell, name = "Recipe " .. spell, skillLine = 185, count = 1, min = 1, yellow = 50, green = 60,
+        gray = 70, known = false, rank = 100, taught = taughtBy and taughtBy[1],
+        taughtBy = taughtBy and #taughtBy > 1 and taughtBy or nil }
+    for k, v in pairs(extra or {}) do r[k] = v end
+    return r
+end
+
+test("item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = {
+        craftRowOf(1, nil), craftRowOf(2, { 501 }), craftRowOf(3, { 502 }), craftRowOf(4, { 503 }),
+        craftRowOf(5, { 504 }), craftRowOf(6, { 505 }), craftRowOf(7, { 506 }),
+    } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    -- red under: every not-known row still reading "Not known" (the owner's screenshot)
+    assertEqual(by[1].cells.status.text, "Trainer"); assertEqual(by[1].cells.status.tone, "muted")
+    assertNil(by[1].itemID, "a trainer's recipe has no recipe item to open")
+    assertEqual(tipRow(by[1], "Learn"), "from a profession trainer")
+    -- red under: a drop shown before the vendor that sells it (the kinds' order: vendor, quest, drop)
+    assertEqual(by[2].cells.status.text, "Sold by Quartermaster · Fixture Vale"); assertEqual(by[2].cells.status.tone, "plain")
+    assertEqual(by[2].itemID, 501, "the row's click opens the recipe item")
+    assertEqual(tipRow(by[2], "Recipe item"), "Item 501")
+    assertEqual(tipRow(by[2], "Sold by"), "Quartermaster · Fixture Vale")
+    assertEqual(tipRow(by[2], "Drops from"), "Raider", "the other kinds listed too")
+    assertTrue(hint(by[2], "Click: search the recipe item") and hint(by[2], "Shift-click: link the recipe item"))
+    assertEqual(by[3].cells.status.text, "Quest reward: Fixture Errand", "the quest titled from ForeverDB's row")
+    assertEqual(by[4].cells.status.text, "Drops from Mob 1", "the best drop: the highest chance")
+    assertEqual(by[5].cells.status.text, "World drop")
+    assertEqual(by[6].cells.status.text, "Recipe: Fixture Stew", "no source known: the recipe item's name")
+    assertEqual(by[6].cells.status.tone, "muted"); assertEqual(tipRow(by[6], "Sources"), "none known")
+    assertEqual(by[7].cells.status.text, "Item 506"); assertEqual(tipRow(by[7], "Sources"), "ForeverDB is not loaded")
+end)
+
+test("item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = { craftRowOf(4, { 503 }), craftRowOf(8, { 505, 502 }) } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    local drops = {}
+    for _, row in ipairs(by[4].tip.rows) do if row[1] == "Drops from" then drops[#drops + 1] = row[2] end end
+    -- red under: an uncapped list of every creature (a world-drop recipe has scores of them)
+    assertEqual(#drops, C.SOURCE_ROWS + 1)
+    assertEqual(drops[#drops], ("and %d more"):format(8 - C.SOURCE_ROWS))
+    -- red under: the first (lowest id) recipe item kept though it has no known source
+    assertEqual(by[8].itemID, 502); assertEqual(by[8].cells.status.text, "Quest reward: Fixture Errand")
+    assertEqual(tipRow(by[8], "Other recipe items"), "1")
+end)
+
+test("item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = {
+        craftRowOf(1, { 501 }, { known = true }),
+        craftRowOf(2, { 501 }, { min = 165 }),
+        craftRowOf(3, { 502 }, { skillLine = 164, rank = nil }),
+        craftRowOf(4, nil, { learned = true }),
+    } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    assertEqual(by[1].cells.status.text, "Known"); assertNil(by[1].itemID, "a known recipe opens nothing")
+    assertNil(tipRow(by[1], "Recipe item"))
+    -- red under: "Learn at 165" replaced by the source, or the source dropped from its tooltip
+    assertEqual(by[2].cells.status.text, "Learn at 165"); assertEqual(by[2].itemID, 501)
+    assertEqual(tipRow(by[2], "Sold by"), "Quartermaster · Fixture Vale")
+    assertEqual(by[3].cells.status.text, "No Blacksmithing"); assertEqual(by[3].itemID, 502)
+    -- red under: a profession you lack reading its recipe item's sources (a cold Rune Thread build reads ~300)
+    assertEqual(tipRow(by[3], "Recipe item"), "Item 502"); assertNil(tipRow(by[3], "Quest reward"))
+    assertEqual(by[4].cells.status.text, "Not known", "a recipe the profession window learned has no table source")
 end)
 
 test("item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank", function()

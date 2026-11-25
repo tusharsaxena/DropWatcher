@@ -60,9 +60,9 @@ local function recipes()
     return {
         recipes = {
             [800001] = { skillLine = 171, min = 1, yellow = 55, gray = 95, made = 900101, name = "Invented Draught",
-                reagents = { [900001] = 2, [900002] = 1 } },
+                taught = 900201, taughtBy = { 900201, 900202 }, reagents = { [900001] = 2, [900002] = 1 } },
             [800002] = { skillLine = 129, min = 1, yellow = 30, gray = 60, made = 900102, name = "Invented Wrap",
-                reagents = { [900001] = 1 } },
+                taught = 900203, reagents = { [900001] = 1 } },
         },
         byReagent = { [900001] = { 800001, 800002 }, [900002] = { 800001 } },
     }
@@ -83,6 +83,10 @@ test("item search: crafting rows are the table's recipes in its order, then the 
     assertEqual(rows[1].yellow .. "/" .. rows[1].green .. "/" .. rows[1].gray, "55/75/95")
     assertEqual(rows[1].made, 900101); assertFalse(rows[1].learned); assertTrue(rows[3].learned)
     assertNil(rows[3].yellow, "a learned recipe has no breakpoints")
+    -- ISR3-DW-08: the recipe items, every one when several teach it, else the table's one; none learned
+    assertEqual(rows[1].taught, 900201); assertEqual(table.concat(rows[1].taughtBy, ","), "900201,900202")
+    assertEqual(rows[2].taught, 900203); assertNil(rows[2].taughtBy, "one recipe item: no list")
+    assertNil(rows[3].taught, "a recipe the profession window learned has no recipe item")
     assertEqual(#S.CraftingRows(900001, nil, nil), 0, "no table (Retail) and nothing learned")
 end)
 

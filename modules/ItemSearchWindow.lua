@@ -142,6 +142,7 @@ local function cellsContext()
         spots = db and db.Spots or nil, mapName = Compat.MapName, npc = db and db.NPC or nil,
         object = db and db.Object or nil, quest = db and db.Quest or nil, item = itemOf,
         profession = NS.ItemSearchTip.ProfessionName, coin = Compat.CoinText, dateText = Compat.DateText,
+        facts = IS.Get,   -- a not-known recipe's recipe item, for where it is learned (ISR3-DW-08)
     }
 end
 

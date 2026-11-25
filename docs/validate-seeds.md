@@ -179,11 +179,12 @@ rows are keyed `"<classFile>:<tree>"`).
 python3 tools/seeds/seeds.py recipes derive --build <build> --bundle docs/seed-research/<date>-forever-recipes --date <date>
 ```
 
-It downloads five tables whole (about 5.5 MB, cached in `tools/seeds/.cache/`), runs the recipe
+It downloads seven tables whole (about 6 MB, cached in `tools/seeds/.cache/`), runs the recipe
 coverage gate (every crafting profession of `## Recipe reagents` in `SkillLine` under its name, with
 at least one `SkillLineAbility` row; Jewelcrafting may be absent), and freezes the extract into the
 bundle's `raw/`. **If the gate fails, stop** and fix `recipes.py`'s map. Report the recipe count, the
-spells left out for want of a reagent row, and the skill lines present and absent.
+spells left out for want of a reagent row, the recipes an item teaches (the rest are a trainer's),
+and the skill lines present and absent.
 
 ### Rule
 
@@ -255,6 +256,19 @@ client's own DB2. It is generated, so the precedent rules above have nothing to 
   eight reagents and counts), `SpellEffect` effect 24 `CREATE_ITEM` (`EffectItemType`, the item
   made, when there is one) and `SpellName` (the recipe's name). `SkillLine` names the professions for
   the coverage gate.
+- **The teaching item** (ISR3-DW-08: the window's Crafting tab says where a recipe you don't know is
+  learned). The build has no `ItemEffect.ParentItemID`: `ItemXItemEffect` maps an `ItemEffectID` to
+  its `ItemID`. An item teaches a recipe when one of its `ItemEffect` rows has `TriggerType` 6
+  (`LEARN_SPELL_ID`) and `SpellID` the recipe spell, or (any trigger) a `SpellID` whose `SpellEffect`
+  effect 36 `LEARN_SPELL` has `EffectTriggerSpell` the recipe spell: an item that teaches several
+  recipes at once. A `TriggerType` 0 row whose `SpellID` is the recipe itself (an item that casts it on
+  use, 180 on 1.60.1.70938) teaches nothing. On 1.60.1.70938, 1,966 of the 2,466 recipes (79.7%) have a
+  teaching item, 43 of them more than one; the 3 items that teach several recipes at once (effect 36)
+  add 2 recipes the direct rule misses. The other 500 are a trainer's. Every
+  `ItemEffect` row with a teaching `SpellID` has an `ItemXItemEffect` row.
+- **Coverage by profession** (teaching item / recipes, 1.60.1.70938): Alchemy 150/196,
+  Blacksmithing 416/506, Enchanting 195/262, Engineering 202/275, Leatherworking 498/592, Tailoring
+  369/470, Cooking 119/133, First Aid 17/32.
 - **The professions.** Alchemy 171, Blacksmithing 164, Enchanting 333, Engineering 202,
   Leatherworking 165, Tailoring 197, Cooking 185 and First Aid 129, plus Jewelcrafting 755 if the
   build has it. On 1.60.1.70938 the eight are present and Jewelcrafting is absent. Mining's smelting
@@ -264,16 +278,21 @@ client's own DB2. It is generated, so the precedent rules above have nothing to 
   not carry (they have no `SpellName` row either). Item Search's profession-window fallback learns
   such a recipe in game (spec §4.2 B).
 - **Shape.** `NS.RecipeReagents.Get()` answers `{ build, recipes, byReagent }`:
-  `recipes[spell] = { skillLine, min, yellow, gray, made, name, reagents = { [item] = count } }`
-  (`made` and `name` nil when the build has none), plus `skillLines` on the one recipe two professions
-  teach, and `byReagent[item] = { spell, ... }`, built from the rows in the file's order. The rows sit
+  `recipes[spell] = { skillLine, min, yellow, gray, made, name, taught, reagents = { [item] = count } }`
+  (`made` and `name` nil when the build has none, `taught` the teaching item of the lowest id, nil for
+  a trainer's recipe), plus `skillLines` on the one recipe two professions teach, `taughtBy` (every
+  teaching item, ascending) on a recipe more than one item teaches, and
+  `byReagent[item] = { spell, ... }`, built from the rows in the file's order. The rows sit
   in a builder made only on WoW Forever (`NS.Compat.ClientKey()`, read at load) and run on the first
   `Get()`, which then lets the builder go; on Retail `Get()` answers nil and nothing is built.
 - **The header** records the build, the date, the sha256 of the bundle's frozen extract (`Inputs:`)
   and the bundle. The whole tables' sha256s and row counts as served are in the bundle's
   `SOURCES.md` and `MANIFEST.json`.
-- **The bundle** keeps the extract only (about 100 KB gzipped): the five tables' headers and the
-  professions' rows. `recipes derive --replay` re-derives the manifest from it offline.
+- **The bundle** keeps the extract only (about 130 KB gzipped): the seven tables' headers and the
+  professions' rows (and the teaching items' `ItemEffect`, `ItemXItemEffect` and effect 36 rows).
+  The first bundle, `2026-11-25-forever-recipes`, holds five tables and is frozen as it was: the
+  generator now reads seven, so it no longer regenerates the file, and `2026-11-26-forever-recipes`
+  (the same build, the same reagent rows byte for byte) supersedes it. `recipes derive --replay` re-derives the manifest from it offline.
 - **The 1500-line cap binds the file** (layout-§1): it is TOC-loaded, so the generated-data
   carve-out does not exempt it. The generator packs its rows (`recipes.WRAP`) to stay under it.
 

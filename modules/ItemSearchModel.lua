@@ -62,11 +62,15 @@ local _, NS = ...
 --
 -- CRAFTING is the recipes that use the item as a reagent: the shipped table's (byReagent) in its
 -- order, then the profession window's learned ones the table lacks, by spell id. A row is
---   { spell, name, skillLine, count, made, min, yellow, green, gray, learned, known, rank, color }
+--   { spell, name, skillLine, count, made, min, yellow, green, gray, taught, taughtBy, learned, known, rank,
+--     color }
 -- where green is floor((yellow + gray) / 2) and color is "orange" below yellow, "yellow" from it,
 -- "green" from green and "gray" from gray (spec §4.2, the classic rule). A row with no breakpoints
 -- (a learned recipe, or a table row whose yellow and gray are both 0) and a player without the
--- profession have no color.
+-- profession have no color. `taught` (ISR3-DW-08) is the item that teaches the recipe (the table's lowest
+-- id), nil for a trainer's recipe and a learned one; `taughtBy` lists every such item, the table's own
+-- list (no copy: the cold hover builds these rows), set only when more than one teaches it. The
+-- window's Crafting tab says where a not-known recipe is learned from them (modules/ItemSearchCells.lua).
 
 NS.ItemSearch = NS.ItemSearch or {}
 local IS = NS.ItemSearch
@@ -339,7 +343,7 @@ local function tableRow(spell, r, itemID)
     return {
         spell = spell, name = r.name, skillLine = num(r.skillLine), count = num(list(r.reagents)[itemID]),
         made = num(r.made), min = num(r.min), yellow = yellow, green = IS.Green(yellow, gray), gray = gray,
-        learned = false,
+        taught = num(r.taught), taughtBy = type(r.taughtBy) == "table" and r.taughtBy or nil, learned = false,
     }
 end
 
