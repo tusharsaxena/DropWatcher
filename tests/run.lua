@@ -367,7 +367,6 @@ Kit.run{
         "test_collect_cells",
         "test_collect_surfaces",
         "test_detail_card",
-        "test_item_sources",
         "test_recipe_reagents",
         "test_item_search",
         "test_item_search_tip",

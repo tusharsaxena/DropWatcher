@@ -76,10 +76,10 @@ local function retailOnlyRow(path)
         or path == "trade.warnAt" or path == "window.columns.tradeWindow" or path:match("^trade%.rules%.") ~= nil
 end
 
--- WoW Forever's alone: the role (Forever port design §11.4), ForeverDB's Sources chip (SF-DW-01)
--- and every Item Search row (Item Search spec §1, §4.7; DropWatcher#17).
+-- WoW Forever's alone: the role (Forever port design §11.4) and every Item Search row (Item Search
+-- spec §1, §4.7; DropWatcher#17). SF-DW-01's `window.itemSources` is retired (schema step 15).
 local function foreverOnlyRow(path)
-    return path == "char.role" or path == "window.itemSources" or path:match("^itemSearch%.") ~= nil
+    return path == "char.role" or path:match("^itemSearch%.") ~= nil
 end
 
 -- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
@@ -917,8 +917,6 @@ local PINNED_ROWS = {
     { "window.tableFontColorFromSkin", "bool", "true" },
     -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
     { "char.role", "string", "\"auto\"" },
-    -- SF-DW-01: Window › Layout › Detail card, WoW Forever's alone (the optional ForeverDB addon).
-    { "window.itemSources", "bool", "true" },
     -- IS-DW-07: the Item Search page, WoW Forever's alone (Item Search spec §4.7, DropWatcher#17).
     { "itemSearch.tooltip.enabled", "bool", "true" },
     { "itemSearch.tooltip.shiftOnly", "bool", "false" },

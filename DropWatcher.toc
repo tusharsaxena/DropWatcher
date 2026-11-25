@@ -541,10 +541,6 @@ modules\ItemSearchWindow.lua
 # load and publishes NS.ItemSearchKey, the Item Search key's press and its one-time default. core\LauncherSetup.lua's button and
 # modules\ItemSearch.lua's event handlers call it at run time.
 modules\ItemSearchKey.lua
-# Conventional: publishes NS.ItemSources, where a drop comes from (WoW Forever, from the optional
-# ForeverDB addon); takes NS.Constants and NS.L at load. NS.ForeverDB, NS.Item, NS.TipMarks and
-# NS.Setting are read at call time, when modules\DetailCard.lua (below) paints its header.
-modules\ItemSources.lua
 # LOAD-BEARING: takes NS.DetailCells (modules\DetailCells.lua, above) at load. Publishes
 # NS.DetailCard, the detail card's frame edge and the Edit message box; takes NS.Constants and NS.L
 # at load. NS.WindowGroup builds it (above, at call time); NS.Window, NS.TipMarks (a chip's estimated

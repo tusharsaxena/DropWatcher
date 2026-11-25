@@ -6,8 +6,8 @@ local _, NS = ...
 -- knows what the client's own data cannot, which creature drops an item and how often, and who
 -- sells it. The library is the one reader of it; this addon never touches the `ForeverDB` global or
 -- loads it itself. The library's first lookup is what loads it (some 12 MB), and nothing here makes
--- one: modules/ItemSources.lua asks only when the player opens a detail card on WoW Forever with
--- Window > Layout > Detail card's Show where it comes from on.
+-- one: Item Search (modules/ItemSearch.lua) loads it once, a few seconds after login and out of
+-- combat, on WoW Forever with its tooltip block or its window switched on (Item Search spec §2).
 --
 -- The library-absent stand-in answers the all-absent values of the library's own *Degradation*
 -- section (docs/api/ForeverDB/version-1-docs.md), member for member (minor 2's list members answer

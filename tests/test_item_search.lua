@@ -39,11 +39,13 @@ test("item search: a race or class mask lets in its bits, and nil or 0 means any
     assertTrue(S.MaskAllows(2 ^ 10, 11), "a high bit")
 end)
 
-test("item search: SF-DW-01's percent and source merge moved here; the chip reads them", function()
+test("item search: SF-DW-01's percent and source merge moved here, and the retired chip's module is gone", function()
     local NS = T.newAddon()
     local S = NS.ItemSearch
     assertEqual(S.Percent(0.25), "25%"); assertEqual(S.Percent(0.05), "5.0%"); assertNil(S.Percent(0))
-    assertEqual(NS.ItemSources.Percent(0.0002), S.Percent(0.0002), "the chip's percent is Item Search's")
+    assertEqual(S.Percent(0.0002), "<0.1%")
+    -- red under: modules/ItemSources.lua still loaded (the Sources chip is retired, spec §4.8)
+    assertNil(NS.ItemSources, "no Sources chip module")
     local merged = S.MergeSources({ creatures = { { id = 5, chance = 0.25 }, { id = 6 } },
         objects = { { id = 7, chance = 1 } }, items = { { id = 9, chance = 0.25 } } })
     local ids = {}
@@ -563,3 +565,45 @@ test("item search: on Retail it is inert: no default, no read, no timer, no load
         if row[2]:find("^OnItemSearch") then assertEqual(table.concat(row.clients or {}, ","), "forever", row[2]) end
     end
 end, RETAIL_ONLY)
+
+-- ── SF-DW-01's Sources chip, retired (spec §4.8) ─────────────────────────────────────────────
+
+-- A judged drop as the feed records it: a one-hand sword, an upgrade for you, likely tradeable.
+local function chipDrop()
+    return {
+        id = 1, at = 100, link = "|cff1eff00|Hitem:990101::|h[Fixture Blade]|h|r", itemID = IDS.blade, isMine = false,
+        sources = { chat = 1 }, situation = "dungeon",
+        looter = { name = "Seta-Realm", guid = "Player-1-0000000A", classFile = "PRIEST" },
+        facts = { ilvl = 15, equipLoc = "INVTYPE_WEAPON", quality = 2, classID = 2, subClassID = 7, bindType = 2,
+            stats = { ITEM_MOD_STRENGTH_SHORT = 4 } },
+        me = { verdict = "upgrade", ilvlDelta = 5, reasons = {} },
+        trade = { state = "likely", reasonKey = "notUpgrade", args = { 15, 20 }, basis = "inspect", age = 40, rule = "group" },
+        inspect = { status = "fresh", at = 60 },
+    }
+end
+
+test("item search: the detail card draws exactly the cells' chips, ForeverDB installed, and opening it loads nothing", function()
+    local fake
+    local NS, _, m = T.enableAddon{ mock = function(mm) fake = FDB.install(mm, { preset = "present" }) end }
+    m.__now = 100
+    local d = chipDrop()
+    local group = { key = "run:1", label = "Fixture Hold", kind = "run", situation = "dungeon", at = 90, drops = { d.id } }
+    NS.LootFeed.Groups = function() return { group } end
+    NS.LootFeed.Get = function(id) if id == d.id then return d end end
+    NS.LootFeed.Drops = function() return { d } end
+    NS.Inspect.Get = function() return nil end
+    NS.TradeHelper.CanTradeWith = function() return false, "range" end
+    NS.WindowFilterBar.Set("group", "view", "all")
+    NS.ShowWindow()
+    NS.WindowGroup.ToggleExpand(d.id)
+    local card = NS.WindowGroup.Drawn().card
+    local shown, want = {}, {}
+    for _, c in ipairs(card.chips) do
+        if c:IsShown() then shown[#shown + 1] = c.text:GetText() end
+    end
+    for _, c in ipairs(NS.DetailCells.Chips(d)) do want[#want + 1] = c.text end
+    -- red under: SF-DW-01's chip painted after the cells' ("Drops from Fixture Gnoll 25%")
+    assertEqual(table.concat(shown, ","), table.concat(want, ","))
+    -- red under: the card asking ForeverDB (the first card opened was the 12 MB load)
+    assertEqual(fake.loads, 0, "no card loads ForeverDB; only Item Search's timer does")
+end)

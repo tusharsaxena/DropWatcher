@@ -953,8 +953,8 @@ test("pages: Window's Columns note shows on Columns only; its Trade window mark 
     assertEqual(NS.SchemaRuntime.FindRow("window.compactInRuns").subgroup, "Mode")
     assertEqual(NS.SchemaRuntime.FindRow("window.rowHeight").subgroup, "Tables")
     assertEqual(NS.SchemaRuntime.FindRow("window.fontSize").subgroup, "Tables")
-    -- WoW Forever's Detail card (SF-DW-01, the optional ForeverDB addon) sits between them.
-    assertEqual(headingsOf(drawn), T.forever and "Mode|Detail card|Tables" or "Mode|Tables", "the headings, in row order")
+    -- SF-DW-01's Detail card heading (WoW Forever) is gone with its row (IS-DW-07).
+    assertEqual(headingsOf(drawn), "Mode|Tables", "the headings, in row order")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") == nil, "no note on Layout")
     drawn = tab(m, ctx, "Columns")
     assertTrue(findPrefix(drawn, "Label", "The full layout's Drops table") ~= nil, "the note on Columns")

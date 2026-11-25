@@ -82,7 +82,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
-### test_database.lua (16)
+### test_database.lua (17)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -96,6 +96,7 @@ Total.
 - database: step 4 retires the History's group cap and prunes nothing
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
+- database: step 15 retires window.itemSources in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
@@ -959,23 +960,6 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_item_sources.lua (14)
-
-- item sources: characterization, the card's header draws exactly the cells' chips
-- item sources: a chance reads as a whole percent from 10%, one decimal below, <0.1% under that
-- item sources: the model merges creatures, objects and containers, most likely first, top three
-- item sources: nothing to say is no model; a vendor or a world level alone is one
-- item sources: the chip reads the likeliest source, else the vendor, else World drop
-- item sources: the headline names the likeliest named source; an unnamed object never leads by its id
-- item sources: with ForeverDB, the card's last chip says where it comes from; opening it is the load (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: an item ForeverDB names no source for draws the header it always drew (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (missing) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (loadfails) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (reshaped) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: the switch off shows no chip and never loads ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: the row is Window > Layout > Detail card, on by default, and says it needs ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: on Retail the feature is inert: no row, no default, no chip, no load
-
 ### test_recipe_reagents.lua (4)
 
 - recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
@@ -983,11 +967,11 @@ Total.
 - recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: on Retail nothing is built and the table answers nil
 
-### test_item_search.lua (28)
+### test_item_search.lua (29)
 
 - item search: the skill-up color is orange, yellow, green, gray at the classic breakpoints
 - item search: a race or class mask lets in its bits, and nil or 0 means any
-- item search: SF-DW-01's percent and source merge moved here; the chip reads them
+- item search: SF-DW-01's percent and source merge moved here, and the retired chip's module is gone
 - item search: crafting rows are the table's recipes in its order, then the learned ones it lacks
 - item search: the static facts read ForeverDB's drops, vendors, quests and also-rows when loaded
 - item search: before the load (or without ForeverDB) the reader is never asked; crafting still answers
@@ -1013,6 +997,7 @@ Total.
 - item search: a profession read in combat waits for its end; switched off, nothing is read (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: the first read of a session drops learned entries the shipped table covers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: on Retail it is inert: no default, no read, no timer, no load, no learner
+- item search: the detail card draws exactly the cells' chips, ForeverDB installed, and opening it loads nothing
 
 ### test_item_search_tip.lua (17)
 
@@ -3289,7 +3274,7 @@ Total.
 | test_harness.lua | 15 |
 | test_surface_parity.lua | 25 |
 | test_setup.lua | 25 |
-| test_database.lua | 16 |
+| test_database.lua | 17 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
@@ -3327,9 +3312,8 @@ Total.
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
-| test_item_sources.lua | 7 |
 | test_recipe_reagents.lua | 1 |
-| test_item_search.lua | 15 |
+| test_item_search.lua | 16 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 9 |
 | test_item_search_key.lua | 2 |
@@ -3427,5 +3411,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 73 |
-| **Total** | **2778** |
+| Skipped | 66 |
+| **Total** | **2773** |

@@ -193,7 +193,7 @@ test("item search settings: a render parks the list first; its host never rides 
     assertTrue(host:IsShown())
     ISP.Park(ctx)
     -- red under: a Park that leaves the controller (its handles stay on the rows) or the host
-    assertNil(ctx.dwSectionList, "the controller cancelled")
+    assertNil(ctx.dwSectionList, "the controller canceled")
     assertFalse(host:IsShown()); assertTrue(host:GetParent() == ctx.panel, "parked on the panel")
     NS.addon.Settings.Helpers.RefreshPanel(ctx, true)
     assertTrue(host:IsShown(), "re-hosted on the next render"); assertTrue(ctx.dwSectionList ~= nil)

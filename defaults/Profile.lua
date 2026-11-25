@@ -360,11 +360,6 @@ do
         P.messages.templates.askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!"
         P.glow.offSpec = glow(true, "proc", TONE.glowOffSpec)
     end
-    -- WoW Forever's alone (SF-DW-01): the detail card shows where a drop comes from, from the
-    -- optional ForeverDB addon (modules/ItemSources.lua). Inert without ForeverDB.
-    if F.itemSources then
-        P.window.itemSources = true
-    end
     -- WoW Forever's alone (DropWatcher#17): Item Search's two switches, the item tooltip's block and
     -- the window. With both off nothing loads ForeverDB (Item Search spec §2). Every key below is a
     -- row of Item Search's own settings page (settings/ItemSearchRows.lua, spec §4.7).

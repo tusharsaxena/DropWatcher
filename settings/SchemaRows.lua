@@ -525,13 +525,6 @@ local function window()
             and L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."]
             or L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
-    -- WoW Forever's alone (clients-§4, SF-DW-01): where a drop comes from, on its detail card, read
-    -- from the optional ForeverDB addon through LibKa0s-ForeverDB-1.0 (modules/ItemSources.lua). Its
-    -- Detail card heading sits between Mode and Tables, so the Tables rows and the composed font
-    -- block after them (settings/ComposedRows.lua) stay one section.
-    bool("window.itemSources", W.itemSources, L["Show where it comes from"],
-        L["The detail card's last chip names the likeliest creature, object or container that drops the item, with its chance; its tooltip lists the top three, the level a world drop starts at and who sells it. Needs the ForeverDB addon: without it the chip does not show. The first card you open loads ForeverDB."],
-        with(layout, { subgroup = L["Detail card"], clients = K.FEATURE_CLIENTS.itemSources }))
     layout = with(layout, { subgroup = L["Tables"] })
     -- The countdown bar's sentence is Retail's alone, like the Trade window column (clients-§4).
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],

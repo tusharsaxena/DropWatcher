@@ -27,10 +27,11 @@ local _, NS = ...
 --   ranks      { [skillLine] = rank } or nil
 --   dropsShown how many drop sources are shown before "and N more" (default IS.DROPS_SHOWN)
 --
--- DROPS AND VENDORS are SF-DW-01's model, moved here (modules/ItemSources.lua reads IS.Percent and
--- IS.MergeSources): the creatures, objects and containers merged into one list, a known chance
--- first, the higher first, an unknown rate last, then creature, object, container, then the id. A
--- creature carries its level range; an object its stand-in name (the library reads no object name).
+-- DROPS AND VENDORS are SF-DW-01's model, moved here when Item Search retired that feature's
+-- detail card chip (modules/ItemSources.lua, removed in IS-DW-07): the creatures, objects and
+-- containers merged into one list, a known chance first, the higher first, an unknown rate last,
+-- then creature, object, container, then the id. A creature carries its level range; an object its
+-- stand-in name (the library reads no object name).
 --
 -- CRAFTING is the recipes that use the item as a reagent: the shipped table's (byReagent) in its
 -- order, then the profession window's learned ones the table lacks, by spell id. A row is
