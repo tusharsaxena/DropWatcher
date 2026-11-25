@@ -21,8 +21,9 @@ local addonName, NS = ...
 -- FONTS MATCH DROP WATCHER (W3). Every row, cell and match is drawn in the main window's table font
 -- and row height (NS.WindowRows.Metrics: Window > Layout's Row height and the Tables font block,
 -- the skin's face and its scale); the headers' and the column labels' text is the main window's
--- (GameFontNormalSmall in `list.header.text`); the item header's name is the table font on the
--- GameFontHighlight template, its line the small template, never GameFontNormalLarge.
+-- (GameFontNormalSmall in `list.header.text`); the item header's name is the main window's own
+-- item title, the detail card's (modules/DetailCard.lua: GameFontNormal in the skin's face), its
+-- line the small template, never GameFontNormalLarge.
 --
 -- THE LEFT PANE (spec §5.2). The search box (the library's, NS.MakeSearchBox, or a plain edit box
 -- without it) and Clear (a flat button, its label centered: no mark beside it, W6); the matches,
@@ -370,7 +371,7 @@ local function buildHeader(f)
     f.icon.art = f.icon:CreateTexture(nil, "ARTWORK")
     f.icon.art:SetAllPoints(f.icon)
     linkable(f.icon)
-    f.name = smallText(f, "OVERLAY", "GameFontHighlight")
+    f.name = smallText(f, "OVERLAY", "GameFontNormal")
     f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 8, -1)
     f.name:SetWordWrap(false)
     f.nameButton = CreateFrame("Button", nil, f)
@@ -385,6 +386,11 @@ local function buildHeader(f)
     f.notice:SetPoint("TOPLEFT", f.icon, "BOTTOMLEFT", 0, -8)
     f.notice:SetPoint("RIGHT", f, "RIGHT", -K.INSET, 0)
     f.notice:SetWordWrap(true)
+    -- An item ForeverDB (loaded) knows nothing about: this line under the header and no tab strip.
+    f.noFacts = smallText(f, "OVERLAY", "GameFontHighlightSmall", "text.muted")
+    f.noFacts:SetPoint("TOPLEFT", f.icon, "BOTTOMLEFT", 0, -8)
+    f.noFacts:SetText(L["Nothing is known about this item: no drop, vendor, quest, recipe or skinning source."])
+    f.noFacts:Hide()
     f.empty = smallText(f, "OVERLAY", "GameFontHighlight", "text.muted")
     f.empty:SetPoint("TOP", f.titleBar, "BOTTOM", WIN.LEFT_W / 2, -120)
     f.empty:SetText(L["Type an item's name or id on the left."])
@@ -605,12 +611,11 @@ end
 
 -- ── painting: the right pane ────────────────────────────────────────────────────────────────
 
-local function itemHeader(facts, m)
+local function itemHeader(facts)
     local f = frame
     local item = facts and facts.item or { id = shownItem }
     f.icon.art:SetTexture(item.icon or Compat.ItemIcon(item.id) or NS.Icon("help"))
     f.name:SetText(item.name or L["Item %d"]:format(item.id))
-    NS.WindowRows.SetTableFont(f.name, m.fontSize, m.font)
     local qr, qg, qb = NS.QualityColor(item.quality)
     if qr == nil then qr, qg, qb = toneRGB("plain") end
     f.name:SetTextColor(qr, qg, qb)
@@ -700,6 +705,7 @@ local function paintTab(built, m)
     local key = TABS.Pick(tabs, ISW.PickedTab())
     shownTab = key
     showTabs(key ~= nil)
+    f.noFacts:SetShown(key == nil and fdbState() == "loaded")
     if not key then return end
     paintTabs(tabs, key)
     local st = stateOf(key)
@@ -720,10 +726,11 @@ local function paintDetail(m)
     if not has then
         shownTab = nil
         showTabs(false)
+        f.noFacts:Hide()
         return
     end
     local facts = IS.Get(shownItem)
-    itemHeader(facts, m)
+    itemHeader(facts)
     paintTab(ISC.Build(facts, IS.Me(facts and facts.ranks), cellsContext()), m)
 end
 

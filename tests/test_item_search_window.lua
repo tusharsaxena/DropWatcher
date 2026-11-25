@@ -340,8 +340,8 @@ test("item search window: every text takes the main window's table font and row 
     assertTrue(row.cells[1].text.dwTableText, "a cell is a table text (NS.WindowRows.ApplyRowFont)")
     assertEqual(W.MatchRows()[1]:GetHeight(), 24, "the matches too")
     assertTrue(W.MatchRows()[1].cells.name.text.dwTableText)
-    -- red under: GameFontNormalLarge on the header's name
-    assertTrue(f.name:GetFontObject() ~= "GameFontNormalLarge" and f.name:GetFontObject() ~= _G.GameFontNormalLarge)
+    -- red under: GameFontNormalLarge on the header's name (it is the detail card's item title)
+    assertEqual(f.name.__template, "GameFontNormal")
 end, FOREVER_ONLY)
 
 test("item search window: recent searches are gone, and step 17 deletes what was saved", function()
@@ -436,6 +436,8 @@ test("item search window: the header's icon and name show the item's tooltip and
     f.icon:__fire("OnClick", "LeftButton")
     assertEqual(#m.chatLinks, 2, "a plain click links nothing")
     W.ShowItem(IDS.pebble)
+    -- red under: an empty tab strip for an item ForeverDB knows nothing about (spec §5.3)
+    assertFalse(f.tabStrip:IsShown()); assertTrue(f.noFacts:IsShown())
     m.shift = true
     f.icon:__fire("OnClick", "LeftButton")
     assertTrue(m.prints[#m.prints]:find("That item is still loading", 1, true) ~= nil, "no client link yet")
