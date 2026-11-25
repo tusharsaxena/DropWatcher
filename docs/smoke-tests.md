@@ -4708,6 +4708,26 @@ character where Alt-Ctrl-D already runs something else → that binding stays. R
 the highest of them), and no `Object <number>` row is left in the tooltip or the window. With
 `/dw debug on`, the item's first look logs how many unnamed objects were left out. Result:
 
+**ITEM-SEARCH-21. The tooltip block's title, cap and order (T2, T3).** Hover an item with many
+sources (a common cloth or a low-level crafting reagent) → the block opens with the rule and `Drop
+Watcher · Item Search`, with no magnifier before it. Every section (Drops from, Sold by, Quests,
+Crafting, Skinned from) shows at most 5 rows, then `and N more`. Drop sources in your zone come first,
+then creatures near your level (from 5 below you to 3 above) with objects and containers, then the
+rest; vendors in your zone, then your continent, then elsewhere, the other faction's last; quests in
+your log, then the ones you can pick up now. Settings › Item Search › Rows per section to 2 → every
+section stops at 2; to 20 → more show. Result:
+
+**ITEM-SEARCH-22. Only the professions you know (T3).** On a character with, say, Tailoring and no
+First Aid, hover Linen Cloth → Crafting lists Tailoring recipes only, your known ones that still skill
+up first (orange, then yellow, then green), and ends with a dim `+N in professions you don't know`.
+Hover a reagent of a profession you don't have at all → the Crafting heading shows that one line
+alone. Untick Only professions you know → every recipe shows, the other professions last. Result:
+
+**ITEM-SEARCH-23. The recipe glyphs (T4).** In the tooltip and in the Item Search window's Crafting
+list, a recipe you know that gives a skill-up has an up arrow in its orange, yellow or green; one you
+know that is gray has a light gray dash; one you don't know has a dark gray padlock. No dots or rings
+are left anywhere, and the three shapes are told apart without their colors. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

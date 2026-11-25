@@ -215,6 +215,11 @@ local FIXED_TONE = {
     skillYellow = { r = 1.00, g = 1.00, b = 0.00 },
     skillGreen  = { r = 0.25, g = 0.75, b = 0.25 },
     skillGray   = { r = 0.50, g = 0.50, b = 0.50 },
+    -- The recipe glyphs past the skill-ups (Item Search feedback spec §5.7): a known recipe with no
+    -- skill-up, its flat dash light gray (#b0b0b0), and a recipe you don't know, its padlock dark
+    -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
+    glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
+    glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -436,14 +441,14 @@ for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.For
 -- (modules/ItemSearchLearn.lua).
 -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
 -- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
--- rule; Sold by lists at most TIP_VENDORS vendors before "and N more".
+-- rule; every section stops at itemSearch.tooltip.rows before "and N more" (Item Search feedback
+-- spec §7, NS.ItemSearch.Cap).
 C.ITEM_SEARCH = {
     LOAD_DELAY  = 5,
     DEBOUNCE    = 0.25,
     LEARN_DELAY = 1,
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
     RULE_WIDTH  = 160,
-    TIP_VENDORS = 3,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
     -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
     -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D

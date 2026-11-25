@@ -1003,7 +1003,7 @@ Total.
 - item search: the fake's strongboxes are one row at the higher chance; the husk and the scrap go (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (17)
+### test_item_search_tip.lua (20)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
@@ -1015,13 +1015,16 @@ Total.
 - item search tip: sections follow their switches and the stored order; Also lists the rewarding quest (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the drop count setting caps the rows, the rest is "and N more" (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: quest marks ! ? and the check mark; completed hidden by default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: crafting marks a known recipe with a dot in its skill-up color, an unknown one with a ring (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: crafting glyphs: an up arrow for a skill-up, a light gray dash for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: an item with nothing to show gets no block, title and hint included (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: never twice per show; the client's refresh, a hide and another item write it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: every item tooltip, comparison tooltips only with their setting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: Shift-only writes the block only while Shift is held (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the rows follow the player: the level band and the zone move a creature up (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
 ### test_item_search_window.lua (23)
 
@@ -3437,5 +3440,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 72 |
+| Skipped | 75 |
 | **Total** | **2789** |

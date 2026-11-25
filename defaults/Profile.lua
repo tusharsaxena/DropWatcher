@@ -376,8 +376,9 @@ do
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
                 rows = 5, hideCompleted = true,
-                sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
-                order = { "drops", "vendors", "quests", "crafting", "also" },
+                sections = { drops = true, vendors = true, quests = true, crafting = true, skinned = true,
+                    also = false },
+                order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
             -- skin's accent, or the custom one), row density, font size, the zone and level

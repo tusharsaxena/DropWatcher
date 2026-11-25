@@ -928,12 +928,14 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.sections.quests", "bool", "true" },
     { "itemSearch.tooltip.sections.crafting", "bool", "true" },
     { "itemSearch.tooltip.sections.also", "bool", "false" },
+    -- ISF-DW-04 (Item Search feedback spec §7): the tooltip's Skinned from section, on.
+    { "itemSearch.tooltip.sections.skinned", "bool", "true" },
     -- ISF-DW-03 (Item Search feedback spec §4, §7): the rows per section replace the drop count
     -- (schema step 16), and the profession filter covers the tooltip and the window.
     { "itemSearch.tooltip.rows", "number", "5" },
     { "itemSearch.myProfessionsOnly", "bool", "true" },
     { "itemSearch.tooltip.hideCompleted", "bool", "true" },
-    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"also\"}" },
+    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"skinned\",[6]=\"also\"}" },
     { "itemSearch.window.enabled", "bool", "true" },
     { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
     { "itemSearch.window.barFromSkin", "bool", "true" },

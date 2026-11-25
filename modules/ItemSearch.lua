@@ -191,24 +191,23 @@ local function questState(questID)
     return "todo"
 end
 
-local function liveContext(opts)
-    return {
-        questState = questState, knows = NS.Compat.SpellKnown, ranks = NS.Compat.SkillLineRanks(),
-        rows = opts and opts.rows,
-    }
+local function liveContext()
+    return { questState = questState, knows = NS.Compat.SpellKnown, ranks = NS.Compat.SkillLineRanks() }
 end
 
 --- The ranking's context for the player now (Item Search feedback spec §3, IS.Rank's `me`): level,
 --- zone and continent, side, ranks, the known-spell and quest-state reads, and ForeverDB's spots
---- once it is loaded (never a load).
+--- once it is loaded (never a load). `ranks`, when given (a facts table's, read by IS.Get this call),
+--- saves a second read of the skill list.
+--- @param ranks table|nil
 --- @return table
-function IS.Me()
+function IS.Me(ranks)
     local Compat = NS.Compat
     local zone, continent = Compat.PlayerZone()
     local db = IS.State() == "loaded" and NS.ForeverDB or nil
     return {
         level = Compat.UnitLevel("player"), mapID = zone, continentID = continent, continentOf = Compat.ContinentOf,
-        faction = Compat.PlayerFactionLetter(), ranks = Compat.SkillLineRanks(), known = Compat.SpellKnown,
+        faction = Compat.PlayerFactionLetter(), ranks = ranks or Compat.SkillLineRanks(), known = Compat.SpellKnown,
         questState = questState, spots = db and db.Spots or nil,
     }
 end
@@ -223,9 +222,8 @@ end
 --- Everything Item Search knows about `itemID` (IS.Facts' shape), or nil on Retail or for no item
 --- id. Reads ForeverDB only once it is loaded; never loads it.
 --- @param itemID number
---- @param opts table|nil { rows = n } (the tooltip's rows per section)
 --- @return table|nil
-function IS.Get(itemID, opts)
+function IS.Get(itemID)
     if not IS.Enabled() or type(itemID) ~= "number" then return nil end
     local state = IS.State()
     local static = cache[itemID]
@@ -237,7 +235,7 @@ function IS.Get(itemID, opts)
         end
         if static.item.name then cache[itemID] = static end
     end
-    return IS.Live(static, liveContext(opts))
+    return IS.Live(static, liveContext())
 end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────

@@ -5,13 +5,14 @@ local _, NS = ...
 -- invented values. modules/ItemSearch.lua builds the context, caches the answer and gates it.
 --
 -- IS.Facts(itemID, ctx) answers
---   { id, item, drops, dropMore, worldMinLevel, vendors, vendorPrice, quests, crafting,
---     rewardFrom, startsQuest, skinnedFrom, unnamedObjects, fdb }
+--   { id, item, drops, worldMinLevel, vendors, vendorPrice, quests, crafting, rewardFrom,
+--     startsQuest, skinnedFrom, unnamedObjects, ranks, fdb }
 -- in two halves. IS.Static(itemID, ctx) is the part that cannot change in a session (ForeverDB is
 -- static data, the recipe table is shipped, a quest's masks and the player's race and class are
 -- fixed), so modules/ItemSearch.lua keeps it per item. IS.Live(static, ctx) copies it and adds what
 -- is read live: each quest's state, each recipe's known mark, the player's rank and the skill-up
--- color, and how many drop sources are past the shown ones.
+-- color, and the ranks themselves (`ranks`, for the ranking's context). What is shown first and
+-- how many rows a section shows are the ranking's and the cap's, below (feedback spec §3, §7).
 --
 -- THE CONTEXT. Static half:
 --   fdb        "loaded" | "loading" | "missing" | "failed" | "off" | "client" (ForeverDB's state)
@@ -25,8 +26,6 @@ local _, NS = ...
 --   questState function(questID) -> "log" | "done" | "todo"
 --   knows      function(spell) -> boolean|nil
 --   ranks      { [skillLine] = rank } or nil
---   rows       the tooltip's rows per section before "and N more" (IS.TIP_ROWS by default; the
---              Drops count, `dropMore`, is IS.Live's)
 --
 -- DROPS AND VENDORS are SF-DW-01's model, moved here when Item Search retired that feature's
 -- detail card chip (modules/ItemSources.lua, removed in IS-DW-07): the creatures, objects and
@@ -393,8 +392,7 @@ function IS.Live(static, ctx)
     local out = copy(static)
     out.quests = liveQuests(static.quests, ctx)
     out.crafting = liveCrafting(static.crafting, ctx)
-    local shown = num(ctx.rows) or IS.TIP_ROWS
-    out.dropMore = math.max(0, #static.drops - shown)
+    out.ranks = type(ctx.ranks) == "table" and ctx.ranks or nil
     return out
 end
 

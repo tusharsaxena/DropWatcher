@@ -42,6 +42,8 @@ local SECTIONS = {
       tip = L["The quests that ask for the item: in your log, not picked up yet, or completed."] },
     { key = "crafting", label = L["Crafting"],
       tip = L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] },
+    { key = "skinned", label = L["Skinned from"],
+      tip = L["The creatures the item is skinned from, likeliest first, with their chance."] },
     { key = "also", label = L["Reward from / starts quest"],
       tip = L["The quests that reward the item, and the quest the item starts."] },
 }

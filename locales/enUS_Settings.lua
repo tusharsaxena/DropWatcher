@@ -490,6 +490,8 @@ L["The quests that ask for the item: in your log, not picked up yet, or complete
     "The quests that ask for the item: in your log, not picked up yet, or completed."
 L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] =
     "The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."
+L["The creatures the item is skinned from, likeliest first, with their chance."] =
+    "The creatures the item is skinned from, likeliest first, with their chance."
 L["Reward from / starts quest"] = "Reward from / starts quest"
 L["The quests that reward the item, and the quest the item starts."] =
     "The quests that reward the item, and the quest the item starts."

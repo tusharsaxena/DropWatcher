@@ -26,6 +26,7 @@ local ROWS = {
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.quests",   "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.crafting", "Item tooltip", "Sections" },
+    { "itemSearch.tooltip.sections.skinned",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.also",     "Item tooltip", "Sections" },
     { "itemSearch.tooltip.hideCompleted",     "Item tooltip", "Sections" },
     { "itemSearch.tooltip.order",             "Item tooltip", "Sections" },
@@ -121,7 +122,7 @@ test("item search settings: the seam refuses an out-of-range count, a fractional
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "loot" })), "an unknown section")
     assertFalse((Set("itemSearch.tooltip.order", {})), "no section")
     assertTrue((Set("itemSearch.tooltip.order", { "quests", "drops" })), "a partial order: the rest follow")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,vendors,crafting,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,vendors,crafting,skinned,also")
 end, FOREVER_ONLY)
 
 test("item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows", function()
@@ -166,14 +167,14 @@ test("item search settings: the section order is a drag list in the stored order
     local ctx = openPage(NS)
     assertEqual(ctx.activeTab, "Item tooltip")
     -- red under: no afterGroup (no list), or a list in a fixed order
-    assertEqual(labels(ctx), "Drops from,Sold by,Quests,Crafting,Reward from / starts quest")
+    assertEqual(labels(ctx), "Drops from,Sold by,Quests,Crafting,Skinned from,Reward from / starts quest")
     assertTrue(ctx.dwSectionList ~= nil, "a ReorderList controller for this render")
     assertTrue(ISP.Move(1, 3))
-    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "vendors,quests,drops,crafting,also")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "vendors,quests,drops,crafting,also",
+    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "vendors,quests,drops,crafting,skinned,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "vendors,quests,drops,crafting,skinned,also",
         "the tooltip writes the sections in the new order")
     NS.addon.Settings.Helpers.RefreshPanel(ctx, true)
-    assertEqual(labels(ctx), "Sold by,Quests,Drops from,Crafting,Reward from / starts quest", "repainted")
+    assertEqual(labels(ctx), "Sold by,Quests,Drops from,Crafting,Skinned from,Reward from / starts quest", "repainted")
     -- The page's Defaults puts the default order back.
     NS.addon.Settings.Helpers.RestoreDefaults("itemSearch", ctx)
     assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), table.concat(NS.ItemSearchTip.ORDER, ","))
