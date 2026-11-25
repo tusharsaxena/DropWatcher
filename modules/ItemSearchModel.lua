@@ -25,7 +25,8 @@ local _, NS = ...
 --   questState function(questID) -> "log" | "done" | "todo"
 --   knows      function(spell) -> boolean|nil
 --   ranks      { [skillLine] = rank } or nil
---   dropsShown how many drop sources are shown before "and N more" (default IS.DROPS_SHOWN)
+--   rows       the tooltip's rows per section before "and N more" (IS.TIP_ROWS by default; the
+--              Drops count, `dropMore`, is IS.Live's)
 --
 -- DROPS AND VENDORS are SF-DW-01's model, moved here when Item Search retired that feature's
 -- detail card chip (modules/ItemSources.lua, removed in IS-DW-07): the creatures, objects and
@@ -54,7 +55,9 @@ local L = NS.L
 
 local floor = math.floor
 
-IS.DROPS_SHOWN = 3   -- the tooltip's default count of drop sources (spec §4.7: 3, range 1 to 10)
+-- The tooltip's rows per section (Item Search feedback spec §7: itemSearch.tooltip.rows, 5 by
+-- default, a whole 1 to 20; it replaced the drops-only dropsShown, 3, through schema step 16).
+IS.TIP_ROWS, IS.TIP_ROWS_MIN, IS.TIP_ROWS_MAX = 5, 1, 20
 
 local KIND_ORDER = { npc = 1, object = 2, item = 3 }
 
@@ -279,10 +282,21 @@ local function itemFacts(itemID, ctx, db)
     return out
 end
 
+-- A creature's level range and side (`nfac`: "A", "H", "AH" or nil), for the ranking (spec §3).
+local function npcFacts(db, id)
+    local n = db.NPC(id)
+    if type(n) ~= "table" then return nil, nil, nil end
+    return num(n.minLevel), num(n.maxLevel), n.faction
+end
+
 local function vendorsOf(db, src)
     local out = {}
     for _, id in ipairs(list(type(src) == "table" and src.vendors)) do
-        if num(id) then out[#out + 1] = { id = id, name = npcName(db, id) } end
+        if num(id) then
+            local minLevel, maxLevel, faction = npcFacts(db, id)
+            out[#out + 1] = { id = id, name = npcName(db, id), minLevel = minLevel, maxLevel = maxLevel,
+                faction = faction }
+        end
     end
     return out
 end
@@ -291,7 +305,9 @@ local function skinRows(db, itemID)
     local out = {}
     for _, s in ipairs(list(db.SkinnedFrom(itemID))) do
         if type(s) == "table" and num(s.id) then
-            out[#out + 1] = { id = s.id, name = s.name or L["Creature %d"]:format(s.id), chance = num(s.chance) }
+            local minLevel, maxLevel = npcFacts(db, s.id)
+            out[#out + 1] = { id = s.id, name = s.name or L["Creature %d"]:format(s.id), chance = num(s.chance),
+                minLevel = minLevel, maxLevel = maxLevel }
         end
     end
     return out
@@ -377,7 +393,7 @@ function IS.Live(static, ctx)
     local out = copy(static)
     out.quests = liveQuests(static.quests, ctx)
     out.crafting = liveCrafting(static.crafting, ctx)
-    local shown = num(ctx.dropsShown) or IS.DROPS_SHOWN
+    local shown = num(ctx.rows) or IS.TIP_ROWS
     out.dropMore = math.max(0, #static.drops - shown)
     return out
 end
@@ -391,4 +407,290 @@ function IS.Facts(itemID, ctx)
     local static = IS.Static(itemID, ctx)
     if not static then return nil end
     return IS.Live(static, ctx)
+end
+
+-- ── what is shown first: the ranking (Item Search feedback spec §3) ────────────────────────
+--
+-- IS.Rank.<section>(rows, me) answers a NEW array of the same rows, best for the player first; the
+-- tooltip and the window's default sort ("Best for you") both use it. Each row gets a tier (best
+-- first), ties fall to the section's own rule, then to the name, then to the id. Pure: `me` is the
+-- context, every field optional (a missing one ranks as unknown, never as an error):
+--   level        the player's level
+--   mapID        the player's zone (the best map, walked up to its zone)
+--   continentID  that zone's continent; continentOf(map) -> a map's continent
+--   faction      "A" | "H" (UnitFactionGroup's first letter)
+--   ranks        { [skillLine] = rank }
+--   known(spell) -> boolean, for a row that carries no `known`
+--   questState(id) -> "log" | "done" | "todo", for a row that carries no `state`
+--   spots(kind, id) -> ForeverDB's Spots answer, `{ [uiMapID] = { { x, y }, ... } }`
+--
+-- THE LEVEL BAND. A creature is in your band when its level range overlaps
+-- [level - IS.LEVEL_BAND.below, level + IS.LEVEL_BAND.above]: a little below you is easy to farm,
+-- well above is not (the spec's call).
+
+IS.LEVEL_BAND = { below = 5, above = 3 }
+IS.Rank = IS.Rank or {}
+local Rank = IS.Rank
+
+local SKILL_UP = { orange = 1, yellow = 2, green = 3 }
+
+--- Whether a level range overlaps the band around `level`. A missing level on either side: false.
+--- @param minLevel number|nil
+--- @param maxLevel number|nil
+--- @param level number|nil
+--- @return boolean
+function IS.InBand(minLevel, maxLevel, level)
+    minLevel, level = num(minLevel), num(level)
+    if not (minLevel and level) then return false end
+    local maxL = num(maxLevel) or minLevel
+    return minLevel <= level + IS.LEVEL_BAND.above and maxL >= level - IS.LEVEL_BAND.below
+end
+
+-- The ids a row stands for: a merged object's every part, else its own.
+local function idsOf(row)
+    if type(row.ids) == "table" and #row.ids > 0 then return row.ids end
+    return { row.id }
+end
+
+-- Whether any of the row's ids has a spot on a map `test(map)` accepts.
+local function anySpot(me, kind, row, test)
+    if type(me.spots) ~= "function" then return false end
+    for _, id in ipairs(idsOf(row)) do
+        for map, points in pairs(list(me.spots(kind, id))) do
+            if #list(points) > 0 and test(map) then return true end
+        end
+    end
+    return false
+end
+
+local function inZone(me, kind, row)
+    local zone = num(me.mapID)
+    if not zone then return false end
+    return anySpot(me, kind, row, function(map) return map == zone end)
+end
+
+local function onContinent(me, kind, row)
+    local continent = num(me.continentID)
+    if not continent or type(me.continentOf) ~= "function" then return false end
+    return anySpot(me, kind, row, function(map) return me.continentOf(map) == continent end)
+end
+
+-- A higher chance first, an unknown one last (chance is 0..1).
+local function chanceKey(chance)
+    chance = num(chance)
+    return chance and -chance or 1
+end
+
+-- `a` before `b` by their keys (arrays of numbers, lower first), then name, then id.
+local function keyBefore(ka, kb, a, b)
+    for i = 1, math.max(#ka, #kb) do
+        local x, y = ka[i] or 0, kb[i] or 0
+        if x ~= y then return x < y end
+    end
+    local na, nb = type(a.name) == "string" and a.name or nil, type(b.name) == "string" and b.name or nil
+    if na ~= nb then
+        if na == nil then return false end
+        if nb == nil then return true end
+        return na < nb
+    end
+    return (num(a.id) or num(a.spell) or 0) < (num(b.id) or num(b.spell) or 0)
+end
+
+-- A new array of `rows` sorted by `keyOf(row)`.
+local function sortBy(rows, keyOf)
+    local out, keys = {}, {}
+    for i, row in ipairs(list(rows)) do
+        out[i] = row
+        keys[row] = keyOf(row)
+    end
+    table.sort(out, function(a, b) return keyBefore(keys[a], keys[b], a, b) end)
+    return out
+end
+
+local function dropTier(row, me)
+    local kind = row.kind or "npc"
+    if (kind == "npc" or kind == "object") and inZone(me, kind, row) then return 1 end
+    if kind ~= "npc" then return 2 end
+    return IS.InBand(row.minLevel, row.maxLevel, me.level) and 2 or 3
+end
+
+--- DROPS FROM: a spot in your zone; then a creature in your band, or an object or container (no
+--- level); then a creature outside the band. Within a tier, the higher chance first.
+--- @param rows table facts.drops
+--- @param me table
+--- @return table
+function Rank.drops(rows, me)
+    me = me or {}
+    return sortBy(rows, function(row) return { dropTier(row, me), chanceKey(row.chance) } end)
+end
+
+-- Whether a vendor's side (`nfac`) leaves the player out: it names the other side alone.
+local function otherSide(row, me)
+    local f, mine = row.faction, me.faction
+    if type(f) ~= "string" or (mine ~= "A" and mine ~= "H") then return false end
+    return f:find(mine, 1, true) == nil
+end
+
+local function vendorTier(row, me)
+    if otherSide(row, me) then return 4 end
+    if inZone(me, "npc", row) then return 1 end
+    if onContinent(me, "npc", row) then return 2 end
+    return 3
+end
+
+--- SOLD BY: in your zone, then on your continent, then elsewhere, last a vendor your side can't
+--- use. Within a tier, unlimited stock before limited (`limited`, when the reader gives it), then
+--- the name.
+--- @param rows table facts.vendors
+--- @param me table
+--- @return table
+function Rank.vendors(rows, me)
+    me = me or {}
+    return sortBy(rows, function(row) return { vendorTier(row, me), row.limited == true and 1 or 0 } end)
+end
+
+local function questStateOf(row, me)
+    if row.state then return row.state end
+    if type(me.questState) == "function" then return me.questState(row.id) end
+    return "todo"
+end
+
+local function questTier(row, me)
+    local state = questStateOf(row, me)
+    if state == "log" then return 1 end
+    if state == "done" then return 4 end
+    local level, minLevel = num(me.level), num(row.minLevel)
+    if not (level and minLevel) or level >= minLevel then return 2 end
+    return 3
+end
+
+--- QUESTS: in your log, then can pick up now (your level at least its minimum, not done), then too
+--- high for you now, last completed. Within a tier, the lower quest level first.
+--- @param rows table facts.quests (or the Reward from / Starts rows)
+--- @param me table
+--- @return table
+function Rank.quests(rows, me)
+    me = me or {}
+    return sortBy(rows, function(row) return { questTier(row, me), num(row.level) or math.huge } end)
+end
+
+local function knownOf(row, me)
+    if row.known ~= nil then return row.known == true end
+    return type(me.known) == "function" and me.known(row.spell) == true
+end
+
+local function rankOf(row, me)
+    local ranks = type(me.ranks) == "table" and me.ranks or nil
+    return num(row.rank) or (ranks and row.skillLine and num(ranks[row.skillLine])) or nil
+end
+
+-- A crafting row's tier and its within-tier key.
+local function craftKey(row, me)
+    local rank = rankOf(row, me)
+    if knownOf(row, me) then
+        local color = row.color or IS.SkillColor(rank, row.yellow, row.gray)
+        local up = SKILL_UP[color]
+        if up then return { 1, up } end
+        return { 2, 0 }
+    end
+    if rank then
+        local yellow = num(row.yellow)
+        return { 3, yellow and math.abs(yellow - rank) or math.huge }
+    end
+    return { 4, 0 }
+end
+
+--- CRAFTING: known and can skill up (orange, then yellow, then green), then known with no skill-up
+--- (gray, or no breakpoints), then not known in a profession you have (the yellow breakpoint
+--- nearest your rank first; the shipped `min` is 1 for nearly every recipe, so it cannot order
+--- them), last a profession you don't have.
+--- @param rows table facts.crafting (live: `known`, `rank`, `color`)
+--- @param me table
+--- @return table
+function Rank.crafting(rows, me)
+    me = me or {}
+    return sortBy(rows, function(row) return craftKey(row, me) end)
+end
+
+local function skinTier(row, me)
+    if inZone(me, "npc", row) then return 1 end
+    return IS.InBand(row.minLevel, row.maxLevel, me.level) and 2 or 3
+end
+
+--- SKINNED FROM: a spot in your zone, then in your level band, then the rest. Within a tier, the
+--- higher chance first.
+--- @param rows table facts.skinnedFrom
+--- @param me table
+--- @return table
+function Rank.skinned(rows, me)
+    me = me or {}
+    return sortBy(rows, function(row) return { skinTier(row, me), chanceKey(row.chance) } end)
+end
+
+-- ── the professions you know (spec §4) and the cap (spec §7) ───────────────────────────────
+
+--- Whether the player's skills have been read: a ranks table with at least one line. Before that,
+--- the profession filter lets everything through (spec §4).
+--- @param ranks table|nil
+--- @return boolean
+function IS.SkillsRead(ranks)
+    return type(ranks) == "table" and next(ranks) ~= nil
+end
+
+--- The crafting rows in professions the player has a rank in (spec §4), and how many were left
+--- out. With `on` false, or before the skills are read, every row passes (0 left out). A row with
+--- no skill line passes.
+--- @param rows table
+--- @param ranks table|nil
+--- @param on boolean
+--- @return table kept, number hidden
+function IS.FilterProfessions(rows, ranks, on)
+    local kept, hidden = {}, 0
+    local filter = on == true and IS.SkillsRead(ranks)
+    for _, row in ipairs(list(rows)) do
+        if filter and row.skillLine and not num(ranks[row.skillLine]) then
+            hidden = hidden + 1
+        else
+            kept[#kept + 1] = row
+        end
+    end
+    return kept, hidden
+end
+
+--- A rows-per-section value as the tooltip uses it: a whole IS.TIP_ROWS_MIN..IS.TIP_ROWS_MAX,
+--- IS.TIP_ROWS for anything not a number.
+--- @param v any
+--- @return number
+function IS.ClampRows(v)
+    v = num(tonumber(v))
+    if not v then return IS.TIP_ROWS end
+    return math.max(IS.TIP_ROWS_MIN, math.min(IS.TIP_ROWS_MAX, floor(v)))
+end
+
+--- The first `n` of `rows` (a new array) and how many are past them ("and N more", spec §7).
+--- @param rows table
+--- @param n number
+--- @return table shown, number more
+function IS.Cap(rows, n)
+    rows = list(rows)
+    n = IS.ClampRows(n)
+    local shown = {}
+    for i = 1, math.min(n, #rows) do shown[i] = rows[i] end
+    return shown, #rows - #shown
+end
+
+--- Every section ranked for `me` (spec §3), the crafting rows filtered first when `mine` (spec §4):
+--- `{ drops, vendors, quests, crafting, craftHidden, skinned }`, new arrays.
+--- @param facts table IS.Live's answer
+--- @param me table
+--- @param mine boolean only the professions you know
+--- @return table
+function IS.Ranked(facts, me, mine)
+    me = me or {}
+    local crafting, hidden = IS.FilterProfessions(facts.crafting, me.ranks, mine)
+    return {
+        drops = Rank.drops(facts.drops, me), vendors = Rank.vendors(facts.vendors, me),
+        quests = Rank.quests(facts.quests, me), crafting = Rank.crafting(crafting, me), craftHidden = hidden,
+        skinned = Rank.skinned(facts.skinnedFrom, me),
+    }
 end

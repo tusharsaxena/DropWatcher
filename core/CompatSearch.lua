@@ -62,6 +62,71 @@ function Compat.PlayerRaceClassIDs()
     return race, class
 end
 
+--- The player's side as ForeverDB's `nfac` writes it: "A" (Alliance) or "H" (Horde), from
+--- UnitFactionGroup; nil for any other answer (a neutral Pandaren, a secret, no API).
+--- @return string|nil
+function Compat.PlayerFactionLetter()
+    if type(UnitFactionGroup) ~= "function" then return nil end
+    local group = plainString((UnitFactionGroup("player")))
+    if group == "Alliance" then return "A" end
+    if group == "Horde" then return "H" end
+    return nil
+end
+
+-- ── where the player stands (Item Search feedback spec §3's ranking) ─────────────────────────
+
+-- The client's map types (Enum.UIMapType): Continent 2, Zone 3; a dungeon, micro or orphan map
+-- (4 and up) sits under a zone.
+local MAP_CONTINENT, MAP_ZONE, MAP_WALK = 2, 3, 8
+local continentCache = {}
+
+-- A map's `{ mapType, parentMapID }` (C_Map.GetMapInfo), or nil.
+local function mapInfo(mapID)
+    local map = C_Map
+    if not (plainId(mapID) and type(map) == "table" and type(map.GetMapInfo) == "function") then return nil end
+    local info = plainTable(map.GetMapInfo(mapID))
+    if not info then return nil end
+    return plainNumber(info.mapType), plainId(info.parentMapID)
+end
+
+-- Walk up from `mapID` to the first map of type `want` or less; nil when the walk finds none.
+local function walkUp(mapID, want)
+    for _ = 1, MAP_WALK do
+        local mapType, parent = mapInfo(mapID)
+        if not mapType then return nil end
+        if mapType <= want then return mapType == want and mapID or nil end
+        mapID = parent
+        if not mapID then return nil end
+    end
+    return nil
+end
+
+--- The continent a map lies on (its first Continent ancestor, or itself), cached per map: maps never
+--- move in a session. nil when the client names none.
+--- @param mapID number
+--- @return number|nil
+function Compat.ContinentOf(mapID)
+    if not plainId(mapID) then return nil end
+    local hit = continentCache[mapID]
+    if hit == nil then
+        hit = walkUp(mapID, MAP_CONTINENT) or false
+        continentCache[mapID] = hit
+    end
+    return hit or nil
+end
+
+--- The player's zone (C_Map.GetBestMapForUnit, a dungeon or micro map walked up to its zone) and
+--- that zone's continent; nil for what the client does not answer.
+--- @return number|nil zoneMapID, number|nil continentMapID
+function Compat.PlayerZone()
+    local map = C_Map
+    if not (type(map) == "table" and type(map.GetBestMapForUnit) == "function") then return nil, nil end
+    local best = plainId(map.GetBestMapForUnit("player"))
+    if not best then return nil, nil end
+    local zone = walkUp(best, MAP_ZONE) or best
+    return zone, Compat.ContinentOf(zone)
+end
+
 -- ── quests ──────────────────────────────────────────────────────────────────────────────────
 
 --- Whether a quest is in the player's log: C_QuestLog.GetLogIndexForQuestID answering an index,

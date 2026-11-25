@@ -446,10 +446,11 @@ this page. Paths, defaults and ranges: [`schema.md`](schema.md#item-search-page-
 on, alone on its line: the block under every item tooltip; it needs ForeverDB, and with the window's
 switch off too ForeverDB never loads), then Only while holding Shift (off) | Separator and title line
 (on), Keybind hint line (on, left out while the key is unbound) | Comparison tooltips too (off, the
-owner's call), each dimmed while the block is off. **Sections:** a switch per section, Drops from,
-Sold by, Quests, Crafting (all on) and Reward from / starts quest (off), then Drop sources shown (3,
-a 1 to 10 slider by 1, dimmed without Drops from) | Hide completed quests (on, dimmed without
-Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
+owner's call), then Rows per section (`itemSearch.tooltip.rows`, 5, a 1 to 20 slider by 1: every
+section's cap before "and N more"), each dimmed while the block is off, then Only professions you know
+(`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting default).
+**Sections:** a switch per section, Drops from, Sold by, Quests, Crafting (all on) and Reward from /
+starts quest (off), then Hide completed quests (on, dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
 (LibKa0s-Widgets-1.0 `ReorderList`, the collection's row boxes and handle, options-ui-§18) with a row
 per section in the order the tooltip writes them (Drops from, Sold by, Quests, Crafting, Reward from
 / starts quest by default). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row

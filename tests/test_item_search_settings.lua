@@ -20,12 +20,13 @@ local ROWS = {
     { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.comparison",        "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.rows",              "Item tooltip", "Tooltip block" },
+    { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.quests",   "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.crafting", "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.also",     "Item tooltip", "Sections" },
-    { "itemSearch.tooltip.dropsShown",        "Item tooltip", "Sections" },
     { "itemSearch.tooltip.hideCompleted",     "Item tooltip", "Sections" },
     { "itemSearch.tooltip.order",             "Item tooltip", "Sections" },
     { "itemSearch.window.enabled",            "Item Search window", "Window" },
@@ -89,7 +90,7 @@ test("item search settings: every spec §4.7 row is on the page, in order, with 
     end
 end, FOREVER_ONLY)
 
-test("item search settings: the defaults are the spec's (on, off, on, on, off; 3 sources; comfortable, 13)", function()
+test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; comfortable, 13)", function()
     local NS = enabled()
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
@@ -98,7 +99,8 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 3
     for key, on in pairs({ drops = true, vendors = true, quests = true, crafting = true, also = false }) do
         assertEqual(S("itemSearch.tooltip.sections." .. key), on, key)
     end
-    assertEqual(S("itemSearch.tooltip.dropsShown"), 3); assertTrue(S("itemSearch.tooltip.hideCompleted"))
+    assertEqual(S("itemSearch.tooltip.rows"), 5); assertTrue(S("itemSearch.tooltip.hideCompleted"))
+    assertTrue(S("itemSearch.myProfessionsOnly"), "only the professions you know (feedback spec §4)")
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
     assertTrue(S("itemSearch.window.barFromSkin")); assertEqual(S("itemSearch.window.density"), "comfortable")
     assertEqual(S("itemSearch.window.fontSize"), 13)
@@ -108,8 +110,10 @@ end, FOREVER_ONLY)
 test("item search settings: the seam refuses an out-of-range count, a fractional size and a bad order", function()
     local NS = enabled()
     local Set = NS.SchemaRuntime.Set
-    assertFalse((Set("itemSearch.tooltip.dropsShown", 11)), "past 10")
-    assertFalse((Set("itemSearch.tooltip.dropsShown", 2.5)), "a whole number")
+    assertFalse((Set("itemSearch.tooltip.rows", 21)), "past 20")
+    assertFalse((Set("itemSearch.tooltip.rows", 0)), "below 1")
+    assertFalse((Set("itemSearch.tooltip.rows", 2.5)), "a whole number")
+    assertTrue((Set("itemSearch.tooltip.rows", 20)), "20, the top")
     assertFalse((Set("itemSearch.window.fontSize", 17)), "past 16")
     assertFalse((Set("itemSearch.window.density", "airy")), "a density the window has not")
     -- red under: an order with an unknown section or one twice
@@ -125,13 +129,13 @@ test("item search settings: a dimmed knob names what it needs; the block's switc
     local R = NS.SchemaRuntime.FindRow
     assertFalse(R("itemSearch.tooltip.shiftOnly").disabledIf(), "on by default")
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", false)
-    for _, p in ipairs({ "shiftOnly", "header", "hint", "comparison", "sections.drops", "dropsShown", "hideCompleted" }) do
+    for _, p in ipairs({ "shiftOnly", "header", "hint", "comparison", "sections.drops", "rows", "hideCompleted" }) do
         assertTrue(R("itemSearch.tooltip." .. p).disabledIf(), p .. " dims with the block off")
     end
+    -- the profession filter also sets the window's default (feedback spec §4): never dimmed by the block
+    assertTrue(R("itemSearch.myProfessionsOnly").disabledIf == nil or not R("itemSearch.myProfessionsOnly").disabledIf())
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", true)
-    NS.SchemaRuntime.Set("itemSearch.tooltip.sections.drops", false)
-    assertTrue(R("itemSearch.tooltip.dropsShown").disabledIf(), "Drop sources shown needs Drops from")
-    assertTrue(R("itemSearch.tooltip.dropsShown").tooltip:find("Needs Drops from.", 1, true) ~= nil)
+    assertTrue(R("itemSearch.tooltip.rows").tooltip:find("Needs Add Item Search to item tooltips.", 1, true) ~= nil)
     -- anti-pattern #74: a color and its companion are never dimmed
     assertNil(R("itemSearch.window.barColor").disabledIf); assertNil(R("itemSearch.window.barFromSkin").disabledIf)
 end, FOREVER_ONLY)

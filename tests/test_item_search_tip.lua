@@ -110,8 +110,8 @@ test("item search tip: separator, title, Drops from and Sold by, in order; Also 
     assertEqual(b[4], "  Fixture Crate | 100%")
     assertEqual(b[5], "  Fixture Gnoll (10-12) | 25%")
     assertEqual(b[6], "  Fixture Coffer | 5.0%")
-    assertEqual(b[7], "  World drop | level 8+")
-    assertEqual(b[8], "  and 1 more")
+    assertEqual(b[7], "  Fixture Kobold (5-6) | rate unknown")
+    assertEqual(b[8], "  World drop | level 8+")
     assertEqual(b[9], "Sold by")
     -- the cheapest vendor (the trainer, 1200) carries the price
     assertEqual(b[10], "  Fixture Vendor"); assertEqual(b[11], "  Fixture Trainer | 1200c")
@@ -171,7 +171,7 @@ end, FOREVER_ONLY)
 
 test("item search tip: the drop count setting caps the rows, the rest is \"and N more\"", function()
     local NS, _, tdp = enabled()
-    tipSettings(NS).dropsShown = 1
+    tipSettings(NS).rows = 1
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)

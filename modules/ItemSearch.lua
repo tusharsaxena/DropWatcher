@@ -194,14 +194,36 @@ end
 local function liveContext(opts)
     return {
         questState = questState, knows = NS.Compat.SpellKnown, ranks = NS.Compat.SkillLineRanks(),
-        dropsShown = opts and opts.dropsShown,
+        rows = opts and opts.rows,
     }
+end
+
+--- The ranking's context for the player now (Item Search feedback spec §3, IS.Rank's `me`): level,
+--- zone and continent, side, ranks, the known-spell and quest-state reads, and ForeverDB's spots
+--- once it is loaded (never a load).
+--- @return table
+function IS.Me()
+    local Compat = NS.Compat
+    local zone, continent = Compat.PlayerZone()
+    local db = IS.State() == "loaded" and NS.ForeverDB or nil
+    return {
+        level = Compat.UnitLevel("player"), mapID = zone, continentID = continent, continentOf = Compat.ContinentOf,
+        faction = Compat.PlayerFactionLetter(), ranks = Compat.SkillLineRanks(), known = Compat.SpellKnown,
+        questState = questState, spots = db and db.Spots or nil,
+    }
+end
+
+--- Whether the views show only the professions the player knows (spec §4: one setting for the
+--- tooltip and the window's default, on by default).
+--- @return boolean
+function IS.MyProfessionsOnly()
+    return NS.Setting("itemSearch.myProfessionsOnly") ~= false
 end
 
 --- Everything Item Search knows about `itemID` (IS.Facts' shape), or nil on Retail or for no item
 --- id. Reads ForeverDB only once it is loaded; never loads it.
 --- @param itemID number
---- @param opts table|nil { dropsShown = n }
+--- @param opts table|nil { rows = n } (the tooltip's rows per section)
 --- @return table|nil
 function IS.Get(itemID, opts)
     if not IS.Enabled() or type(itemID) ~= "number" then return nil end

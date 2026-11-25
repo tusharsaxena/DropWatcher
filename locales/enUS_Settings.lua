@@ -513,9 +513,12 @@ L["Add the block to the comparison tooltips beside the item tooltip as well. Nee
     "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."
 L["Sections"] = "Sections"
 L["Needs Add Item Search to item tooltips."] = "Needs Add Item Search to item tooltips."
-L["Drop sources shown"] = "Drop sources shown"
-L["How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."] =
-    "How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."
+L["Rows per section"] = "Rows per section"
+L["How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."] =
+    "How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."
+L["Only professions you know"] = "Only professions you know"
+L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."] =
+    "Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."
 L["Hide completed quests"] = "Hide completed quests"
 L["Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."] =
     "Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."

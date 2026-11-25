@@ -163,7 +163,7 @@ test("item search: the live half adds quest states, known marks, ranks, colors a
         questState = function(id) return states[id] or "todo" end,
         knows = function(spell) return spell == 800002 end,
         ranks = { [171] = 80 },
-        dropsShown = 1,
+        rows = 1,
     })
     local q = {}
     for i, row in ipairs(f.quests) do q[i] = row.id .. "=" .. row.state end
@@ -173,7 +173,7 @@ test("item search: the live half adds quest states, known marks, ranks, colors a
     assertFalse(f.crafting[1].known); assertTrue(f.crafting[2].known)
     assertNil(f.crafting[2].color, "no First Aid rank"); assertNil(f.crafting[2].rank)
     assertEqual(f.dropMore, 3, "four sources, one shown")
-    assertEqual(S.Live(static, {}).dropMore, 1, "three shown by default")
+    assertEqual(S.Live(static, {}).dropMore, 0, "five shown by default (feedback spec §7)")
     -- red under: the live half writing into the cached static facts
     assertNil(static.quests[1].state); assertNil(static.crafting[1].color); assertNil(static.dropMore)
 end)
@@ -434,7 +434,7 @@ test("item search: the facts read the fake: drops, vendors, the lowest price, th
     for i, d in ipairs(f.drops) do drops[i] = d.name .. "=" .. tostring(d.chance) end
     assertEqual(table.concat(drops, ","), "Fixture Crate=1,Fixture Gnoll=0.25,Fixture Coffer=0.05,Fixture Kobold=nil")
     assertEqual(f.drops[2].minLevel .. "-" .. f.drops[2].maxLevel, "10-12")
-    assertEqual(f.dropMore, 1); assertEqual(f.worldMinLevel, 8)
+    assertEqual(f.dropMore, 0, "five rows by default"); assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Fixture Vendor,Fixture Trainer")
     assertEqual(f.vendorPrice.price, 1200); assertEqual(f.vendorPrice.npc, IDS.trainer)
     assertEqual(f.rewardFrom[1].title, "Fixture Errand"); assertEqual(f.item.name, "Fixture Blade")

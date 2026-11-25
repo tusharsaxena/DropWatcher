@@ -365,13 +365,17 @@ do
     -- row of Item Search's own settings page (settings/ItemSearchRows.lua, spec §4.7).
     if F.itemSearch then
         P.itemSearch = {
+            -- Only the professions you know, in the tooltip and as the window's default (Item Search
+            -- feedback spec §4).
+            myProfessionsOnly = true,
             -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
-            -- sections, how many drop sources, completed quests hidden, and the order the sections
-            -- are written in (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
+            -- sections, the rows per section (feedback spec §7: 5, replacing dropsShown through
+            -- schema step 16), completed quests hidden, and the order the sections are written in
+            -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                dropsShown = 3, hideCompleted = true,
+                rows = 5, hideCompleted = true,
                 sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
                 order = { "drops", "vendors", "quests", "crafting", "also" },
             },

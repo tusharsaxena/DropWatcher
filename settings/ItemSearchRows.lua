@@ -8,8 +8,9 @@ local _, NS = ...
 -- host tab (settings/ItemSearchPage.lua):
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
 --     window switch it decides whether ForeverDB loads at all, spec §2), Only while holding Shift,
---     Separator and title line, Keybind hint line and Comparison tooltips too; then the sections'
---     switches, Drop sources shown and Hide completed quests; then the section order, a drag list
+--     Separator and title line, Keybind hint line, Comparison tooltips too, Rows per section and
+--     Only professions you know (Item Search feedback spec §4, §7); then the sections' switches and
+--     Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
 --   * Item Search window: its switch, the bar color (Use the skin's color, else the swatch beside
@@ -96,16 +97,19 @@ local function tooltip()
         L["Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."], sub)
     M.bool("itemSearch.tooltip.comparison", T.comparison, L["Comparison tooltips too"],
         L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."], sub)
+    M.slider("itemSearch.tooltip.rows", T.rows, NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX, 1,
+        L["Rows per section"],
+        L["How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."],
+        M.with(sub, { validate = M.wholeIn(NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX) }))
+    M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
+        L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],
+        M.with(at, { onChange = repaintSearchWindow }))
 
     local sections = M.with(sub, { subgroup = L["Sections"] })
     for _, s in ipairs(SECTIONS) do
         M.bool("itemSearch.tooltip.sections." .. s.key, T.sections[s.key], s.label,
             s.tip .. " " .. L["Needs Add Item Search to item tooltips."], sections)
     end
-    M.slider("itemSearch.tooltip.dropsShown", T.dropsShown, 1, 10, 1, L["Drop sources shown"],
-        L["How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."],
-        M.with(sections, { validate = M.wholeIn(1, 10),
-            disabledIf = function() return off() or NS.Setting("itemSearch.tooltip.sections.drops") ~= true end }))
     M.bool("itemSearch.tooltip.hideCompleted", T.hideCompleted, L["Hide completed quests"],
         L["Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."],
         M.with(sections, {

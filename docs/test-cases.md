@@ -1071,7 +1071,7 @@ Total.
 ### test_item_search_settings.lua (11)
 
 - item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the defaults are the spec's (on, off, on, on, off; 3 sources; comfortable, 13) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; comfortable, 13) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the switches reach the load, and the window's switch closes an open window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
@@ -1081,6 +1081,22 @@ Total.
 - item search settings: the Keybindings tab shows and changes the Item Search key alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the Item Search window's gear opens this page (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: on Retail there is no page, no row and no default
+
+### test_item_search_rank.lua (13)
+
+- item search rank: the level band is [level - 5, level + 3], a range overlapping it is in
+- item search rank: drops: your zone first, then band creatures with objects and containers, then the rest
+- item search rank: drops: within a tier the higher chance first, an unknown chance last, then the name
+- item search rank: vendors: your zone, your continent, elsewhere, and last the other side's
+- item search rank: quests: in your log, can pick up, too high, completed; the lower level first
+- item search rank: crafting: known skill-ups orange, yellow, green, then gray, then not known, then other professions
+- item search rank: crafting: a row with no known mark asks the context, and its color comes from the rank
+- item search rank: skinned: your zone, then your band, then the rest; the higher chance first
+- item search rank: only the professions you know: the others counted; off, or skills unread, everything passes
+- item search rank: Ranked filters crafting before ranking it and ranks every section
+- item search rank: the cap shows the first n, counts the rest, and clamps n to a whole 1 to 20
+- item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
+- item search rank: the defaults: rows 5, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
 ### test_own_drops.lua (16)
 
@@ -3327,6 +3343,7 @@ Total.
 | test_item_search_window.lua | 9 |
 | test_item_search_key.lua | 3 |
 | test_item_search_settings.lua | 1 |
+| test_item_search_rank.lua | 12 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3420,5 +3437,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 71 |
-| **Total** | **2777** |
+| Skipped | 72 |
+| **Total** | **2789** |

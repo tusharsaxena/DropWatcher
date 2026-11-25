@@ -28,7 +28,7 @@ local _, NS = ...
 --     (the "Separator and title line" setting);
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
 --     the tooltip label's muted gold and its rows, an empty section left out:
---       Drops from  the first `dropsShown` sources (name, level range; chance on the right), a
+--       Drops from  the first `rows` sources (name, level range; chance on the right), a
 --                   World drop row with its minimum level, then "and N more";
 --       Sold by     the vendors (the cheapest one's price on the right), then "and N more";
 --       Quests      `!` in your log, `?` not picked up yet, a check mark completed (left out while
@@ -55,7 +55,6 @@ local Compat = NS.Compat
 --- The sections' default order, and which are on by default (spec §4.7).
 IST.ORDER = { "drops", "vendors", "quests", "crafting", "also" }
 IST.SECTIONS = { drops = true, vendors = true, quests = true, crafting = true, also = false }
-IST.DROPS_MAX = 10
 
 -- The separator's texture: the client's plain white square, tinted by the escape.
 IST.RULE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -162,7 +161,7 @@ end
 local function dropsLines(f, o, out)
     if #f.drops == 0 and not f.worldMinLevel then return end
     add(out, L["Drops from"], "mutedGold")
-    for i = 1, math.min(o.dropsShown, #f.drops) do
+    for i = 1, math.min(o.rows, #f.drops) do
         local s = f.drops[i]
         add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
             IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
@@ -276,15 +275,15 @@ local function sectionsOf(stored)
 end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
---- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, dropsShown, sections, order }`.
+--- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, rows, sections, order }`.
 --- @return table
 function IST.Options()
-    local shown = tonumber(setting("dropsShown", IS.DROPS_SHOWN)) or IS.DROPS_SHOWN
+    local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
     return {
         enabled = setting("enabled", true) == true, shiftOnly = setting("shiftOnly", false) == true,
         header = setting("header", true) == true, hint = setting("hint", true) == true,
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
-        dropsShown = math.max(1, math.min(IST.DROPS_MAX, math.floor(shown))),
+        rows = shown,
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end
