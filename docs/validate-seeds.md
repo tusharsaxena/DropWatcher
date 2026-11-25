@@ -27,6 +27,10 @@ drives, writes it whole from the `wowf` DB2, with no candidates and no rulings. 
 `## Recipe reagents` below, holds its facts; the `forever` flavor's steps run it beside the class
 seeds, into a bundle of its own, `docs/seed-research/<date>-forever-recipes/`.
 
+It also has one **hand-curated list with no tool**, the gathering nodes (`core/GatherNodes.lua`, Item
+Search round 3). No DB2 table or static client read holds a node's required skill, so the list is
+outside the seed loop: `## Gathering nodes` below says how it is kept.
+
 ## Flavors
 
 | Flavor | Source | Seed files | Tools |
@@ -301,6 +305,30 @@ source and ForeverDB the witness.
 | 2026-11-25 | 1.60.1.70938 | v2026.11.24.46 (6e0a34b) | 2,466 | 2,466 | 2,466 | 2,466 | 0 |
 
 The spec (§4.2) asks for a sample; the whole table was checked, since that costs the same.
+
+## Gathering nodes
+
+`core/GatherNodes.lua` (Item Search round 3 spec §4.3, ISR3-DW-03) is `NS.GatherNodes[name] =
+{ prof = "herbalism" | "mining", skill = n }`: the herb, vein and deposit nodes the Gathered from tab
+and tooltip section name a minimum skill for. It is **hand-curated**, with no tool, no candidates and
+no rulings file:
+
+- **Provenance.** Each value is the client's own "Requires Herbalism N" or "Requires Mining N" line on
+  the live node's tooltip, typed in from the classic values. It is a game fact, not a ForeverDB row:
+  ForeverDB's object rows carry a name and no skill (its `oskill` and `fish` tables are empty), and
+  its data is GPL-3.0 evidence that is never copied (clients-§10). **Verify in game**: smoke row
+  ITEM-SEARCH-37 checks the values on WoW Forever.
+- **What it holds** (2026-11-26): 28 herbs, 15 veins and deposits, and the 6 "Ooze Covered" variants
+  the build has, each at its base vein's value. Fishing has no per-node skill on this client, so no
+  fishing node is listed and the Skill cell is a dim dash.
+- **The build check.** Every name was checked against the objects ForeverDB v2026.11.25.48 has, by
+  counts only, with a scratch script in no repo: every listed name is an object that drops something;
+  9 Ooze Covered names the spec listed are no object in the build and were left out; 6 object names
+  the classification catches (four Thorium or Iron variants and two herbs this client adds) are not in
+  the list and show "?". Repeat the check when a ForeverDB build adds nodes, and add a node only with
+  its in-game value.
+- **The classification** is not data: `NS.ItemSearch.GatherKind` (`modules/ItemSearchModel.lua`) files
+  an object as fishing, mining or herbalism by its name, and only the herbs need this list.
 
 ## Gate
 

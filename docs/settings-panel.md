@@ -449,21 +449,37 @@ then Comparison tooltips too (off, the owner's call), Rows per section (`itemSea
 a 1 to 20 slider by 1: every section's cap before "and N more"), Show the key hint
 (`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
 is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
-hairline above the block) and Show recipe skill levels (`itemSearch.tooltip.craftSkill`, on: the
-Crafting rows' breakpoints), each dimmed while the block is off. **Tooltip and window:** Only professions you know (`itemSearch.myProfessionsOnly`, on;
-never dimmed, since it also sets the window's Crafting default).
-**Sections:** a switch per section, Drops from, Sold by, Quests, Crafting, Skinned from (all on) and
-Reward from / starts quest (off), then Hide completed quests (on, dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
+hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose
+title line is gone), Show the Keep / Hold / Sell / Toss badge (`itemSearch.tooltip.badge`, on: the
+verdict, its 0 to 100 score and its confidence at the right of the block's "Drop Watcher" line),
+Explain the badge (`itemSearch.tooltip.reasons`, on: up to two reason lines and, below High
+confidence, the hint; dimmed while the badge is off as well, the page's way of setting it under the
+badge, since the schema rows have no indent) and Show recipe skill levels
+(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues), each
+dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions
+you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
+default).
+**Sections:** a switch per section, Drops from, Gathered from (round 3 spec §4.3), Sold by, Quests,
+Crafting, Skinned from (all on) and Reward from / starts quest (off), then Hide completed quests (on,
+dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
 (LibKa0s-Widgets-1.0 `ReorderList`, the collection's row boxes and handle, options-ui-§18) with a row
-per section in the order the tooltip writes them (Drops from, Sold by, Quests, Crafting, Skinned from, Reward from
-/ starts quest by default). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row
+per section in the order the tooltip writes them (Drops from, Gathered from, Sold by, Quests, Crafting,
+Skinned from, Reward from / starts quest by default; schema step 18 inserts Gathered from after Drops
+from in an order a profile already stored). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row
 with `skipRender`); the switches stay checkboxes above it. The list's host is built once and parked
 before every render (the page's `beforeClear` and the placeholder's OnRelease, options-ui-§19), as
 Drops › Situations' table is.
 
 **Item Search window.** **Window:** Enable the Item Search window (`itemSearch.window.enabled`, on,
-alone on its line; off, the window closes and does not open). The window remembers its size and the
-tab last picked with no setting. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
+alone on its line; off, the window closes and does not open), then Record vendor prices
+(`itemSearch.recordPrices`, on: the merchant window's prices are written down for Sold by, into the
+account-wide `global.itemSearch.prices`; round 3 spec §4.4) and Load ForeverDB (Full)
+(`itemSearch.fullDB`, a dropdown of When the Item Search window opens, the default, and Never: when
+the uncapped ForeverDB_Full companion loads, never in combat and never from a tooltip; §4.6). Record
+vendor prices is never dimmed (the tooltip's Sold by reads the prices too); Load ForeverDB (Full) is
+dimmed while the window is off or ForeverDB_Full is not installed (its tooltip says so: the schema
+row carries no note of its own). The window remembers its
+size and the tab last picked with no setting. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
 in the skin's accent, the swatch not read), never dimmed (anti-pattern #74). Density, Font size, Zone
 and level columns and Remember recent searches went in ISF-DW-05 (Item Search feedback spec §5.1,
 §5.2, §5.4; schema step 17): the window draws in the main window's table font and row height (Window ›

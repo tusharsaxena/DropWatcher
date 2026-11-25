@@ -144,8 +144,8 @@ addon's own; they are not in the refresh ceilings above, which no Item Search pa
 | ForeverDB itself | not this addon's: some **12 MB on disk**, LoadOnDemand; the addon list charges its tables to ForeverDB | the kit fake counts the loads | `modules/ItemSearch.lua`: one load a session, `C.ITEM_SEARCH.LOAD_DELAY` (5 s) after the first `PLAYER_ENTERING_WORLD`, out of combat (else at `PLAYER_REGEN_ENABLED`), and none while both switches are off; never on a hover, a card or a login frame |
 | The adapter's name and quest indexes | built once a session, right after the load, one per frame, never on a hover (spec §4.4) | the library's (`docs/api/ForeverDB/version-1-docs.md`) | LibKa0s-ForeverDB-1.0 minor 2, warmed by `modules/ItemSearch.lua` |
 | The recipe-reagent table (`core/RecipeReagentsForever.lua`, 2466 recipes) | **under 2.5 MB** resident on WoW Forever, built once on Item Search's first ask, the builder then let go; **0** on Retail (the chunk's constants are let go after the load) | 1906 KB built (2041 KB kept with the file's strings), 2.9 ms, headless Lua 5.1 on 2026-11-25; the 234 KB file's constants are let go on Retail | `NS.RecipeReagents.Get()` |
-| One item hover, cold (the item's static facts read from ForeverDB, then kept for the session) | `itemSearchTipCold`, **17500 bytes** | 16656.0 (16080 at IS-DW-04; +576 since the page stores the section order, a fresh order list a hover) | `modules/ItemSearchTip.lua`, `tests/perf.lua` |
-| One item hover, warm (the cache serves the static half; quest state, known recipes and ranks read live) | `itemSearchTipWarm`, **6500 bytes** | 6240.0 (5664 at IS-DW-04; the same +576) | the same |
+| One item hover, cold (the item's static facts read from ForeverDB, then kept for the session) | `itemSearchTipCold`, **17500 bytes** | 17112.0 on WoW Forever at round 3's end (ISR3-DW-06; 16656.0 at the Item Search run, 16080 at IS-DW-04; below) | `modules/ItemSearchTip.lua`, `tests/perf.lua` |
+| One item hover, warm (the cache serves the static half; quest state, known recipes and ranks read live) | `itemSearchTipWarm`, **6500 bytes** | 6088.0 at round 3's end (6240.0 at the Item Search run, 5664 at IS-DW-04) | the same |
 | The per-item cache | grows with the items hovered, one entry each, for the session; emptied when ForeverDB's state moves or a recipe is learned | not measured headless | `NS.ItemSearch.Get` / `Invalidate` |
 | CPU | no budget in milliseconds (performance-§9: offline timings are orientation only); the hover is a cache read plus at most one ForeverDB lookup per source kind | about 0.07 ms cold, 0.04 ms warm per hover in the same run | `lua tests/perf.lua` |
 
@@ -180,6 +180,22 @@ prices) left `itemSearchTipCold` at 17112.0 (17127.8 before it) and moved `itemS
 6024.0 to 6088.0 (the Gathered from ranking's empty array, one a hover), both on WoW Forever, the
 ceilings unmoved. A vendor row is built in one constructor of eight fields, and the drops keep their
 array when no object is a gathering node, so a cold hover pays for neither.
+
+**The tooltip ceilings through round 3 (round 3 spec §6).** Round 3 put the recipe rows' skill
+parts, the hairline and the label line, the Gathered from section, the per-vendor prices and the
+verdict badge with its reasons on the hover, and moved neither ceiling. Measured with `tests/perf.lua`
+on WoW Forever after each item:
+
+| After | `itemSearchTipCold` | `itemSearchTipWarm` | What held it |
+|---|---|---|---|
+| ISR3-DW-01 (glyphs, inset, header hover) | 17247.8 | 6144.0 | nothing new on the hover |
+| ISR3-DW-02 (skill parts, hairline, label line, quest marks) | 17127.8 | 6024.0 | the colored parts kept per recipe, emptied on a skin change; the hairline one texture per tooltip frame; the old 160-wide rule escape gone |
+| ISR3-DW-03 (rank tones, test sources, Gathered from, prices) | 17112.0 | 6088.0 | a vendor row built in one constructor; the drops keep their array when no object is a node; +64 warm for the Gathered from ranking's empty array |
+| ISR3-DW-05 (the badge and its reasons) | 17112.0 | 6088.0 | the verdict kept per item under a generation, the same table kept when it is worked out again to the same answer, the badge strings and reason lines kept by content |
+| ISR3-DW-06 (docs; this table) | 17112.0 (17111.8 on one run) | 6088.0 | |
+
+The cold hover's margin is 388 bytes and the warm one's 412: the next rise is to be bisected before
+a ceiling moves. `itemSearchTipInert` (Retail) stays 0.
 
 ## In game
 

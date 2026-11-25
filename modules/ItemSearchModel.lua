@@ -766,7 +766,8 @@ local function otherSide(row, me)
 end
 
 --- Whether a vendor serves only the other side (`nfac` names the other side alone): the window's
---- "can't buy" and its "Only my faction" filter (feedback spec §5.4, §5.5). No known side: false.
+--- "<Side> only" in red (round 3 spec §4.4) and its "Only my faction" filter (feedback spec §5.4,
+--- §5.5). No known side: false.
 --- @param row table a vendor row (`faction`)
 --- @param me table IS.Rank's context (`faction`)
 --- @return boolean

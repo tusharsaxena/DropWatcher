@@ -265,8 +265,9 @@ the code reads every case the design leaves open, module by module, is in
 - **Item Search's Sold by tab has no Stock or Requires column, and Quests no per-quest count**
   (Item Search feedback spec §5.4 allows a column the client has no data for to go): the
   LibKa0s-ForeverDB-1.0 reader carries no vendor stock or requirements and no objective counts. A
-  reader addition brings them back. A vendor's price is the lowest seen, on that vendor's row alone;
-  the faction, profession and product icons are not drawn; and Sold by's ranking has no "unlimited
+  reader addition brings them back. Since round 3 every vendor row carries its own price (the one
+  recorded at that vendor, else ForeverDB's `vendx` or `vp`, else a dash), and the reader reads
+  `vendx` for prices alone (round 3 spec §9); the faction, profession and product icons are not drawn; and Sold by's ranking has no "unlimited
   stock before limited" tie-break (it keys on the name alone within a tier) until the reader gives
   the stock. A LibKa0s issue to expose ForeverDB's `vendx` (stock, requirements, per-vendor price)
   and the quest objective counts is owed, or the owner's acceptance of the reduced columns, before
@@ -276,3 +277,30 @@ the code reads every case the design leaves open, module by module, is in
   ITEM-SEARCH-27. The client's own user waypoint is never used, since it draws no arrow on Forever.
 - **Waypoints: TomTom is a choice of a dropdown, so it cannot be grayed out** while TomTom is not
   loaded; picked then, a pin uses Drop Watcher's arrow, and the row's and the pin's tooltips say so.
+- **Item Search round 3** (Item Search round 3 spec §7):
+  - **A spawn converted from world coordinates can land on the wrong map near a zone border.** A
+    creature or object ForeverDB stores only as world coordinates (`spw`) is placed by
+    LibKa0s-ForeverDB-1.0's `WorldToMap`: its zone polygons pick the map, then the smallest
+    containing rectangle. Measured over the 1517 sources with both forms, the pick agreed with
+    ForeverDB's own map position on 94.1%; the rest land on a neighbor's map or the continent's, and
+    the pin still stands at the right place in the world. ITEM-SEARCH-39 compares it with
+    `C_Map.GetMapPosFromWorldPos` in game.
+  - **A recorded price includes your reputation discount** at that vendor, and is account-wide: a
+    character with another standing may pay a little more or less. A later visit overwrites it.
+  - **The test-source filter can only catch names**: a creature or object named "test", "(DND)",
+    "UNUSED" or "[PH]" is left out of every list, and a dev-only source with an ordinary name is
+    still listed. It has no setting.
+  - **ForeverDB_Full costs some 80 MB of memory while loaded** (82.3 MB measured offline after a
+    collect; its files are 20.6 MB on disk, `performance.md`). It loads on the window's first open
+    of a session unless Load ForeverDB (Full) says Never, and stays loaded until the next reload.
+  - **The gathering skills are hand-curated** (`core/GatherNodes.lua`, from the client's own
+    "Requires Herbalism N" node tooltips, not ForeverDB rows; `validate-seeds.md`): a node the
+    table lacks shows "?", and fishing has no per-node skill on this client, so its Skill cell is a
+    dim dash. ITEM-SEARCH-37 checks the values in game.
+  - **A pinned chat link does not count as hovering** for the Item Search key: with the mouse off
+    every item, the key toggles the window even while a chat link's tooltip is open
+    (ITEM-SEARCH-41).
+  - **The Keep / Hold / Sell / Toss badge is advice, never an action**: Drop Watcher moves, sells and
+    deletes nothing. Its score reads only what the client and ForeverDB answer, so before your
+    profession window or the gear verdict is read its confidence is Medium or Low, and a Low
+    confidence never says Toss (ITEM-SEARCH-42).

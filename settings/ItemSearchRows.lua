@@ -9,8 +9,9 @@ local _, NS = ...
 -- feedback spec §9):
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
 --     window switch it decides whether ForeverDB loads at all, spec §2), Comparison tooltips too,
---     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show recipe
---     skill levels (round 3 spec §4.2, §5); then,
+--     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show the Keep /
+--     Hold / Sell / Toss badge, Explain the badge (dimmed with the badge off, the page's way of
+--     setting it under the badge), Show recipe skill levels (round 3 spec §4.2, §4.5, §5); then,
 --     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4);
 --     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
@@ -105,8 +106,8 @@ local function tooltip()
         M.with(at, { solo = true, onChange = refreshSearch }))
     local sub = M.with(at, { disabledIf = off })
     -- The block's rows in the Settings artboard's order (Item Search feedback spec §9): Comparison
-    -- tooltips, Rows per section and Show the key hint, then Shift-only, the separator line and the
-    -- recipe skill levels (round 3 spec §5).
+    -- tooltips, Rows per section and Show the key hint, then Shift-only, the separator line, the
+    -- badge and its reasons, and the recipe skill levels (round 3 spec §5).
     M.bool("itemSearch.tooltip.comparison", T.comparison, L["Comparison tooltips too"],
         L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."], sub)
     M.slider("itemSearch.tooltip.rows", T.rows, NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX, 1,
