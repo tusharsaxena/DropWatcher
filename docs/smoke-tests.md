@@ -4557,20 +4557,20 @@ the header runs out of width; the item's own chips stay, by design. Untick Show 
 from → the chip goes at once; tick it → it comes back. `/dw diagnostics` → the identity
 section's ForeverDB line reads present and loaded, with its version, build and hash. Fail: ForeverDB
 loaded before a card opened, a chip on an item ForeverDB knows nothing about, a chip that pushes out
-the item's own chips, or a Lua error. Result:
+the item's own chips, or a Lua error. Result: Passed (owner, 2026-11-25).
 
 **FOREVER-19. Without ForeverDB (SF-DW-01).** Client: WoW Forever. Disable ForeverDB in the addon
 list (or remove it) and `/reload`. Open any drop's detail card (`/dw test`) → the header is the one
 FOREVER-18 showed minus the Sources chip, and nothing else moved; no Lua error, no chat line. The
 Settings row is still there and its tooltip says it needs the ForeverDB addon. `/dw diagnostics` →
 the ForeverDB line reads not loaded (present, but disabled; or not present when it is removed).
-Fail: an empty chip, a chip saying anything, or an error. Result:
+Fail: an empty chip, a chip saying anything, or an error. Result: Passed (owner, 2026-11-25).
 
 **FOREVER-20. No Sources chip on Retail (SF-DW-01).** Client: Retail (ForeverDB installed or not).
 Settings › Window › Layout → Mode then Tables, with no Detail card heading and no Show where it comes
 from row. `/dw test` → open a detail card → the header is unchanged from before this run, and
 `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` answers `false`. Fail: the row, the chip, or ForeverDB
-loaded. Result:
+loaded. Result: Passed (owner, 2026-11-25).
 
 ## Pending sign-off
 
@@ -4633,7 +4633,7 @@ Owed by round 2 of the owner's 2026-11-24 feedback batch (FB2-DW-01; Ka0sAddonsC
 
 On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97, #99, #100 run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`, LibKa0s v1.108.0, SD-DW-94, SD-RV-DW and SD-SK-DW; run SKIN 11-20 of the owner's smoke sheet, a copy of `Ka0sPendingSmoke-2026-11-23.csv`) passed, recorded on the owner's word. Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-24)`: FEED-112, SKIN-53, SKIN-54, SKIN-55 and ROLLS-22.
 
-Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed.
+Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`.
 
 ### Review 2026-10-14 (M24) sign-off
 
