@@ -254,3 +254,11 @@ the code reads every case the design leaves open, module by module, is in
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
   (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
+- **Item Search is WoW Forever's alone** (DropWatcher#17, spec §1): Retail has no tooltip block, window,
+  key action or settings page; [DropWatcher#18](https://github.com/tusharsaxena/DropWatcher/issues/18)
+  looks for a Retail equivalent. ITEM-SEARCH-6 checks it is absent.
+- **Item Search needs the optional ForeverDB addon** for its drop sources, vendors, quests and name
+  search; without it, or before its load about 5 seconds after login, the tooltip shows nothing, and
+  the window searches by id and shows Crafting from the shipped table (ITEM-SEARCH-4, ITEM-SEARCH-5).
+- **Item Search's client hooks are assumed until probed**: the item tooltip post call and the
+  profession window's reads (`forever-quirks.md`, ITEM-SEARCH-1 to 4 and 18).
