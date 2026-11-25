@@ -20,6 +20,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
 | Alerts | `Toast`, `Upgrade glow` |
+| Item Search (key `itemSearch`, WoW Forever alone) | `Item tooltip`, `Item Search window`, `Keybindings` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 Until feedback-24 the pages were General (Master controls, When to show, Simulation), Feed (Quality,
@@ -35,7 +36,8 @@ fold, both the owner's call: Drops' Defaults now also resets the situations tabl
 window, and every situation's tracking, auto-open, quality and loot rule), and `/dw list`'s
 `situations` section is gone, its rows listed under `feed`.
 
-`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it,
+`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it (six on WoW
+Forever, Item Search last),
 `settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
 (`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, two
 closing lines, one opening note and one table have no row the flow engine can draw; they are host
@@ -341,10 +343,9 @@ layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or C
 spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`) |
 Compact view when it auto-opens in a run (`Open in compact view during a run` until item 020; on by
 default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
-title-bar toggle's tooltip names it while it holds). **Detail card** (WoW Forever alone, SF-DW-01):
-Show where it comes from (`window.itemSources`, on by default: the detail card's last chip names where
-the drop comes from, from the optional ForeverDB addon; its tooltip says it needs ForeverDB; Retail
-has no heading and no row). **Tables:** Row height (18 by default, both tabs of
+title-bar toggle's tooltip names it while it holds). WoW Forever's **Detail card** heading and its
+Show where it comes from row (`window.itemSources`, SF-DW-01) are retired (IS-DW-07, schema step 15):
+Item Search's tooltip block and window say where an item comes from. **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
 compact layout's cards size from their text), then the tables' font: the library's composed font
 block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font
@@ -431,3 +432,40 @@ style's subsection. Offset serves three styles and is always drawn. A glow's Sty
 is off; a drawn knob also while its glow is in a style the knob does not apply to (the other glow's
 column of a shown subsection). A hidden row is still a schema row, which `/dw set` and Defaults reach. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21). Under each glow's Use class color, **Use the skin's color** (on; `glow.<g>.colorFromSkin`, FS-DW-FLIP) draws it in the skin's color; the swatch is not read while it is on, and is never dimmed.
+
+## Item Search (WoW Forever alone)
+
+Item Search spec §4.7, mockup board 3 (DropWatcher#17). The page follows Alerts and is registered
+only where `C.FEATURE.itemSearch` is true: on Retail there is no page, no row and no default (spec
+§1, clients-§4; a Retail equivalent is DropWatcher#18). Its rows are `settings/ItemSearchRows.lua`'s,
+its section order list and its Keybindings tab `settings/ItemSearchPage.lua`'s. Its Defaults resets
+the page's rows, the section order included, and never the key. The Item Search window's gear opens
+this page. Paths, defaults and ranges: [`schema.md`](schema.md#item-search-page-key-itemsearch-wow-forever-alone).
+
+**Item tooltip.** **Tooltip block:** Add Item Search to item tooltips (`itemSearch.tooltip.enabled`,
+on, alone on its line: the block under every item tooltip; it needs ForeverDB, and with the window's
+switch off too ForeverDB never loads), then Only while holding Shift (off) | Separator and title line
+(on), Keybind hint line (on, left out while the key is unbound) | Comparison tooltips too (off, the
+owner's call), each dimmed while the block is off. **Sections:** a switch per section, Drops from,
+Sold by, Quests, Crafting (all on) and Reward from / starts quest (off), then Drop sources shown (3,
+a 1 to 10 slider by 1, dimmed without Drops from) | Hide completed quests (on, dimmed without
+Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
+(LibKa0s-Widgets-1.0 `ReorderList`, the collection's row boxes and handle, options-ui-§18) with a row
+per section in the order the tooltip writes them (Drops from, Sold by, Quests, Crafting, Reward from
+/ starts quest by default). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row
+with `skipRender`); the switches stay checkboxes above it. The list's host is built once and parked
+before every render (the page's `beforeClear` and the placeholder's OnRelease, options-ui-§19), as
+Drops › Situations' table is.
+
+**Item Search window.** **Window:** Enable the Item Search window (`itemSearch.window.enabled`, on,
+alone on its line; off, the window closes and does not open). **Bars:** Bar color | Use the skin's
+color (on: the drop chance bars in the skin's accent, the swatch not read), never dimmed
+(anti-pattern #74). **Rows:** Density (Comfortable, the default, or Compact) | Font size (13, 10 to
+16), Zone and level columns (on) | Waypoint pins (on: a map waypoint, or TomTom's), Remember recent
+searches (on: the last 10 items, account-wide; off, the list is hidden and nothing new is added).
+
+**Keybindings.** The library's key editor (`O.KeybindingsTab`, options-ui-§20) over the Item Search
+row of `NS.BINDINGS` alone, the same row General › Keybindings draws on WoW Forever, so the key is
+shown and changed the way the window toggle's is: one key button (click, then press a key; a
+right-click clears it) and Clear. Ctrl-Alt-D is set once per character at login, only on a free key
+(`modules/ItemSearchKey.lua`).

@@ -442,10 +442,6 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
-  ├─> ItemSources.ChipFor(drop)       (WoW Forever, `window.itemSources` on: the last chip, where it
-  │     comes from; ItemSources.For -> ForeverDB.Available() (the first card opened loads ForeverDB)
-  │     -> ForeverDB.ItemSources(itemID) + ForeverDB.NPC / Item for the names -> ItemSources.Model,
-  │     kept per item for the session; nil on Retail, with the switch off or without ForeverDB)
   ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, TestMode.InspectOf(drop), Compat.SpecName(specID), now,
   │     WindowOwn.IsRevealed(id), looterLeft(drop))                 (pure; left: the looter is no
@@ -1228,3 +1224,31 @@ cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter 
         the stand-down
 first turned on ─> one-time notice ─> global.notices.autoAsk = true
 ```
+
+## Item Search (WoW Forever alone, DropWatcher#17)
+
+```
+the session's first PLAYER_ENTERING_WORLD ─> ItemSearch.Arm: a 5 s timer (C.ITEM_SEARCH.LOAD_DELAY),
+    only while ItemSearch.Wanted() (a switch on, not stood down)
+timer fires ─> ItemSearch.TryLoad: in combat? wait for PLAYER_REGEN_ENABLED ─> ForeverDB.Available()
+    (the one load) ─> the adapter's name and quest indexes, one per frame
+a switch turned on after the timer (settings/ItemSearchRows.lua's onChange) ─> ItemSearch.Refresh ─> TryLoad
+
+an item tooltip shows ─> TooltipDataProcessor post call ─> ItemSearchTip.OnTooltip(tip, data)
+    ─> on, not forbidden, a comparison tooltip only with its switch, Shift if Shift-only, not marked
+    ─> ItemSearch.State() == "loaded"? (never loads) ─> ItemSearch.Get(data.id)
+         (the static half kept per item; quest state, known recipes and ranks read live)
+    ─> ItemSearchTip.Lines(facts, Options()) (pure: the rule and title, the sections in the stored
+         order, the key hint) ─> Paint ─> tip:Show()          OnHide / OnTooltipCleared ─> the mark goes
+
+the key (CLICK DropWatcherItemSearch) ─> ItemSearchKey.Press ─> the shown item tooltip's item?
+    ─> open on it | switch to it | close (the same item, or none while open)
+the magnifier, /dw search [name|id] ─> ItemSearchWindow.Open / SlashSearch
+the search box ─> 0.25 s ─> an id: ForeverDB's row, else the client's cache | a name: SearchItems
+    ─> ShowItem(id) ─> ItemSearch.Get ─> ItemSearchView's rows (pure) ─> the sections painted
+    ─> global.itemSearch.recent (while Remember recent searches is on)
+
+TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE ─> 1 s after the burst, out of combat, Item Search on
+    ─> each listed recipe the shipped table lacks ─> global.itemSearch.learnedRecipes ─> Invalidate
+```
+

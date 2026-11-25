@@ -67,7 +67,8 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-53 | [Skins](#skins) | LibKa0s v1.108.0's composer (SD-RV-DW): the tables' Font color gains Use the skin's color, on by default; a pick stored before keeps drawing (step 14) |
 | SKIN-54..55 | [Skins](#skins) | The skin-defaults audit (SD-SK-DW, LibKa0s#97): an expanded row's wash is the skin's selection (SKIN-54, U-18); the Edit message box's text is skinned (SKIN-55, U-19) |
 | ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
-| FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01) |
+| FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01; 18 and 19 superseded by ITEM-SEARCH) |
+| ITEM-SEARCH-1..18 | [Item Search (WoW Forever)](#item-search-wow-forever) | Item Search (DropWatcher#17, IS-DW-01 to IS-DW-07): the tooltip block on every source (1), its sections and marks (2), Shift-only, title, hint and comparison tooltips (3), before and after the load and a login in combat (4), without ForeverDB (5), absent on Retail (6), the window's ways in (7), the key with and without a hover (8), name and id search (9), the detail pane, bars and pins (10), recent searches (11), Link in chat (12), the default key never stealing (13), the settings page and the section order (14), the window's settings (15), the Keybindings tab (16), the old chip gone (17), the profession-window fallback (18) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -4538,7 +4539,8 @@ could use → the window opens by itself with the drop, and closes as STATE-9 sa
 your old profile → its stored values are unchanged. On Retail a new profile keeps the open-world
 group untracked and Fixed at Rare (SIT-7, QUAL-1). Result:
 
-**FOREVER-18. Where a drop comes from, with ForeverDB (SF-DW-01, LibKa0s#105).** Client: WoW
+**FOREVER-18. Where a drop comes from, with ForeverDB (SF-DW-01, LibKa0s#105).** Superseded by
+ITEM-SEARCH (IS-DW-07 retired the chip; ITEM-SEARCH-1 to ITEM-SEARCH-17). Kept as the record. Client: WoW
 Forever, with the ForeverDB addon installed and enabled (CurseForge `forever-db`), and no other addon
 that loads it at login. `/reload`, then `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`: Drop
 Watcher loads nothing at login. Settings › Window › Layout → a Detail card heading between Mode and
@@ -4559,7 +4561,8 @@ section's ForeverDB line reads present and loaded, with its version, build and h
 loaded before a card opened, a chip on an item ForeverDB knows nothing about, a chip that pushes out
 the item's own chips, or a Lua error. Result:
 
-**FOREVER-19. Without ForeverDB (SF-DW-01).** Client: WoW Forever. Disable ForeverDB in the addon
+**FOREVER-19. Without ForeverDB (SF-DW-01).** Superseded by ITEM-SEARCH (ITEM-SEARCH-5,
+ITEM-SEARCH-17). Kept as the record. Client: WoW Forever. Disable ForeverDB in the addon
 list (or remove it) and `/reload`. Open any drop's detail card (`/dw test`) → the header is the one
 FOREVER-18 showed minus the Sources chip, and nothing else moved; no Lua error, no chat line. The
 Settings row is still there and its tooltip says it needs the ForeverDB addon. `/dw diagnostics` →
@@ -4571,6 +4574,120 @@ Settings › Window › Layout → Mode then Tables, with no Detail card heading
 from row. `/dw test` → open a detail card → the header is unchanged from before this run, and
 `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` answers `false`. Fail: the row, the chip, or ForeverDB
 loaded. Result:
+
+## Item Search (WoW Forever)
+
+Item Search (DropWatcher#17; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, IS-DW-01 to
+IS-DW-07). Client: WoW Forever unless a check says Retail, with the ForeverDB addon installed and
+enabled unless it says otherwise. ForeverDB loads about 5 seconds after login, out of combat: wait
+for it before a check that needs it (the Item Search window's footer names its state). Every value below comes
+from your own client; none is written into this file. They supersede FOREVER-18 and FOREVER-19 (the
+retired detail card chip).
+
+**ITEM-SEARCH-1. The block on every item tooltip.** `/reload`, wait 5 seconds, then hover an item in
+your bags → under the client's own lines and other addons', a rule and `Drop Watcher · Item Search`
+with a magnifier, both in the skin's accent, then the sections, then `Ctrl-Alt-D: open in Item
+Search` (or whatever key is bound). Repeat on a chat link (click one: `ItemRefTooltip`), an item in
+the loot window, and another addon's item tooltip such as Loot History's History rows → the same
+block, once each. Hover the same item twice → never two blocks. Fail: a missing or doubled block, a
+block on a non-item tooltip, or a Lua error. Result:
+
+**ITEM-SEARCH-2. The sections and their marks.** Hover an item with drop sources, a vendor, a quest
+that asks for it and a recipe that uses it (Linen Cloth is a good start) → **Drops from** lists the
+top 3 sources with their chances, then `and N more`, and a world drop its level; **Sold by** the
+cheapest vendor with its price; **Quests** `!` for one in your log, `?` for one not picked up, a tick
+for one done (hidden while Hide completed quests is on, the default); **Crafting** a filled dot in
+the skill-up color (orange, yellow, green, gray against your rank) for a recipe you know, a dashed
+ring for one you do not, the profession on the right. Fail: a wrong mark, a section with no rows, or
+an empty block. Result:
+
+**ITEM-SEARCH-3. Shift-only, the title, the hint and comparison tooltips.** Settings › Item Search ›
+Item tooltip: tick Only while holding Shift → no block until you hold Shift as the tooltip opens.
+Untick Separator and title line → no rule and no title; untick Keybind hint line → no hint (also
+gone while the key is unbound). Comparison tooltips too off (the default): Shift-hover gear to
+compare → the comparison tooltips carry no block; on → they do. Result:
+
+**ITEM-SEARCH-4. Before and after the load, and a login in combat.** `/reload` and hover an item at
+once → no block for the first seconds (the Item Search window's footer reads `ForeverDB: loading…`); after about 5
+seconds → the block. Log in (or `/reload`) in combat → no load until combat ends, then the block
+appears within a few seconds. No hitch on a hover. Fail: a block before the load, a load in combat,
+or a hitch on hover. Result:
+
+**ITEM-SEARCH-5. Without ForeverDB.** Disable ForeverDB in the addon list and `/reload` → no block on
+any tooltip, not even Crafting. Open the window (Ctrl-Alt-D) → a search by id (`2589`) shows the item
+and its CRAFTING rows; the window says `ForeverDB not installed: drop sources, quests and name search
+are unavailable`, and a name search finds nothing. No Lua error. Result:
+
+**ITEM-SEARCH-6. Retail: absent.** Client: Retail. No block on any item tooltip, no magnifier in the
+window's title bar, no Item Search settings page, no Item Search row under General › Keybindings,
+`/dw search` is not a command (`/dw help` lists none), and a key bound to Item Search under the
+client's Key Bindings does nothing. Result:
+
+**ITEM-SEARCH-7. The ways in.** The magnifier, the first mark in the main window's title bar (its
+tooltip `Item Search`) → opens the Item Search window, and again closes it. `/dw search` → opens it
+empty, the box focused; `/dw search 2589` → shows Linen Cloth at once; `/dw search linen` → the
+matches for linen. The window wears the skin, drags by its title bar (not while locked), keeps its
+place over a `/reload`, closes on Escape, and its lock · settings · close marks work (the gear opens
+Settings › Item Search). Result:
+
+**ITEM-SEARCH-8. The key, with and without a hover.** With nothing under the pointer, Ctrl-Alt-D →
+the window opens empty with the search box focused; again → it closes. Hover an item in your bags,
+Ctrl-Alt-D → the window opens on that item; hover the same item, Ctrl-Alt-D → it closes; open it,
+hover a different item, Ctrl-Alt-D → it switches to that item. A chat link's tooltip and the
+comparison tooltips count as a hover. Result:
+
+**ITEM-SEARCH-9. Name and id search.** Type a name (`linen`) → after a short pause the matches list
+icons, names in their quality color and ids, prefix matches first; click one → it shows; Enter → the
+first match shows. Type digits → that id shows, even for an item the client has not cached yet
+(it fills in a moment later). Clear empties the box and the list. Result:
+
+**ITEM-SEARCH-10. The detail pane, bars and pins.** On an item with drop sources → DROPS FROM lists
+every source with its level range, zone, a bar scaled to the likeliest and its %, and a pin on rows
+with a known spot; click a pin → a map waypoint there (TomTom's arrow when TomTom is installed). A
+World drop row shows its minimum level. SOLD BY lists vendors with the lowest price; QUESTS marks,
+titles, zones and states; CRAFTING the breakpoints against your skill, or `learnable at N`; ALSO
+Reward from, Starts quest and Skinned from. The footer names ForeverDB's version and state and the
+key. Result:
+
+**ITEM-SEARCH-11. Recent searches.** Show three items → they head Recent searches, newest first, at
+most 10, each clickable, and still there after a `/reload` and on another character. Untick Remember
+recent searches → the list hides and nothing new is added. Result:
+
+**ITEM-SEARCH-12. Link in chat.** Show an item, click Link in chat → the item's link goes into the
+open chat box, or a new one opens with it. Result:
+
+**ITEM-SEARCH-13. The default key never steals.** On a new character with Ctrl-Alt-D unbound →
+after the first login Item Search is on Ctrl-Alt-D. On a character where Ctrl-Alt-D already runs
+something else → that binding stays and Item Search has no key (the hint line is gone). Clear the key
+by hand and `/reload` → it stays cleared. Result:
+
+**ITEM-SEARCH-14. The settings page.** Settings › Item Search (after Alerts) → tabs Item tooltip,
+Item Search window, Keybindings. Item tooltip: Add Item Search to item tooltips alone on its line,
+its knobs dimmed while it is off; the section switches, Drop sources shown (1 to 10; 5 → the tooltip
+names 5) and Hide completed quests; then Section order: drag Quests above Drops from by its handle →
+the tooltip writes Quests first, at once. Defaults → every row and the order back to the defaults,
+the key untouched. Result:
+
+**ITEM-SEARCH-15. The window's settings.** Item Search window: untick Use the skin's color → the
+bars draw Bar color; Density Compact → shorter rows; Font size 16 → larger text; untick Zone and
+level columns → those columns go; untick Waypoint pins → no pins. Untick Enable the Item Search
+window → an open window closes and Ctrl-Alt-D, the magnifier and `/dw search` do not open it. Untick
+both it and Add Item Search to item tooltips and `/reload` → ForeverDB never loads
+(`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`). Result:
+
+**ITEM-SEARCH-16. The Keybindings tab.** Settings › Item Search › Keybindings → one row, Item Search,
+showing the bound key; click it and press a key → bound and saved, and General › Keybindings and the
+client's Key Bindings show the same key; Clear unbinds it. Result:
+
+**ITEM-SEARCH-17. The old chip is gone.** Open a drop's detail card (`/dw test`) → the header has no
+`Drops from` / `Sold by` / `World drop` chip, and opening cards loads nothing. Settings › Window ›
+Layout → Mode then Tables, no Detail card heading. A profile that had Show where it comes from
+unticked loads without error. Result:
+
+**ITEM-SEARCH-18. The profession-window fallback.** Open a profession window (out of combat) →
+after a second, any recipe the shipped table lacks is learned: hover one of its reagents → the
+recipe now shows under Crafting. Nothing is read
+in combat or with Item Search off. Result:
 
 ## Pending sign-off
 
@@ -4633,7 +4750,9 @@ Owed by round 2 of the owner's 2026-11-24 feedback batch (FB2-DW-01; Ka0sAddonsC
 
 On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97, #99, #100 run (Ka0sAddonsCommonTasks `docs/2026-11-20-LIBKA0S_94_97_99_100/`, LibKa0s v1.108.0, SD-DW-94, SD-RV-DW and SD-SK-DW; run SKIN 11-20 of the owner's smoke sheet, a copy of `Ka0sPendingSmoke-2026-11-23.csv`) passed, recorded on the owner's word. Passed, recorded on each `Result:` line as `Passed (owner, 2026-11-24)`: FEED-112, SKIN-53, SKIN-54, SKIN-55 and ROLLS-22.
 
-Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed.
+Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed. FOREVER-18 and FOREVER-19 are superseded by ITEM-SEARCH (IS-DW-07 retired the chip); FOREVER-20 still holds.
+
+Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 
