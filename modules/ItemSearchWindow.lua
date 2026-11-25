@@ -232,14 +232,19 @@ local function layout(keys, width)
     return out
 end
 
-local function placeCell(row, i, col, h, value, r, g, b, justify)
+-- `color` is a C.TONE name, or an { r, g, b } triple (an item's quality color); a nil triple
+-- (an unknown quality) falls back to the plain tone.
+local function placeCell(row, i, col, h, value, color, justify)
     local fs = row.cells[i]
     fs:ClearAllPoints()
     fs:SetPoint("LEFT", row, "LEFT", col.x, 0)
     fs:SetSize(col.w, h)
     fs:SetJustifyH(justify or "LEFT")
     fs:SetText(value or "")
-    fs:SetTextColor(r or 1, g or 1, b or 1)
+    local r, g, b
+    if type(color) == "table" then r, g, b = color[1], color[2], color[3] end
+    if r == nil then r, g, b = tone(type(color) == "string" and color or nil) end
+    fs:SetTextColor(r, g, b)
     fs:Show()
 end
 
@@ -279,38 +284,38 @@ end
 -- columns) and the painter of one row onto the columns.
 local function dropCells(row, cols, h, r, o)
     local i = 1
-    local function cell(key, value, tr, tg, tb, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, tr, tg, tb, justify); i = i + 1 end
+    local function cell(key, value, color, justify)
+        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
     end
-    cell("name", r.name, tone((r.named or r.world) and "plain" or "muted"))
-    cell("level", r.level, tone("muted"))
-    cell("zone", r.zone, tone("muted"))
+    cell("name", r.name, (r.named or r.world) and "plain" or "muted")
+    cell("level", r.level, "muted")
+    cell("zone", r.zone, "muted")
     if cols.bar and not r.world then placeBar(row, cols.bar, h, r.fraction or 0, o) end
-    cell("pct", r.pct, tone(r.known and "plain" or "muted"), "RIGHT")
+    cell("pct", r.pct, r.known and "plain" or "muted", "RIGHT")
     if cols.pin then placePin(row, cols.pin, r.spot, r.name, r.zone, o) end
 end
 
 local function vendorCells(row, cols, h, r, o)
     local i = 1
-    local function cell(key, value, tr, tg, tb, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, tr, tg, tb, justify); i = i + 1 end
+    local function cell(key, value, color, justify)
+        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
     end
-    cell("name", r.name, tone("plain"))
-    cell("level", r.level, tone("muted"))
-    cell("zone", r.zone, tone("muted"))
-    cell("price", r.price and Compat.CoinText(r.price) or "", tone("plain"), "RIGHT")
+    cell("name", r.name, "plain")
+    cell("level", r.level, "muted")
+    cell("zone", r.zone, "muted")
+    cell("price", r.price and Compat.CoinText(r.price) or "", "plain", "RIGHT")
     if cols.pin then placePin(row, cols.pin, r.spot, r.name, r.zone, o) end
 end
 
 local function questCells(row, cols, h, r, o)
     local i = 1
-    local function cell(key, value, tr, tg, tb, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, tr, tg, tb, justify); i = i + 1 end
+    local function cell(key, value, color, justify)
+        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
     end
-    cell("name", NS.ItemSearchTip.QuestMark(r.state) .. " " .. r.title, tone("plain"))
-    cell("level", r.level and tostring(r.level) or "", tone("muted"))
-    cell("zone", r.zone, tone("muted"))
-    cell("state", r.stateText, tone(r.state == "done" and "good" or "muted"))
+    cell("name", NS.ItemSearchTip.QuestMark(r.state) .. " " .. r.title, "plain")
+    cell("level", r.level and tostring(r.level) or "", "muted")
+    cell("zone", r.zone, "muted")
+    cell("state", r.stateText, r.state == "done" and "good" or "muted")
     if cols.pin then placePin(row, cols.pin, r.spot, r.title, r.zone, o) end
 end
 
@@ -321,16 +326,16 @@ local function breaksText(parts)
 end
 
 local function craftCells(row, cols, h, r)
-    placeCell(row, 1, cols.name, h, NS.ItemSearchTip.CraftMark(r) .. " " .. r.name, tone(r.known and "plain" or "muted"))
-    placeCell(row, 2, cols.prof, h, r.profession, tone("muted"))
+    placeCell(row, 1, cols.name, h, NS.ItemSearchTip.CraftMark(r) .. " " .. r.name, r.known and "plain" or "muted")
+    placeCell(row, 2, cols.prof, h, r.profession, "muted")
     placeCell(row, 3, cols.breaks, h, breaksText(r.breakpoints))
-    placeCell(row, 4, cols.state, h, r.stateText, tone(r.known and "good" or "muted"), nil, nil, "RIGHT")
+    placeCell(row, 4, cols.state, h, r.stateText, r.known and "good" or "muted", "RIGHT")
 end
 
 local function alsoCells(row, cols, h, r)
-    placeCell(row, 1, cols.label, h, r.label, tone("muted"))
-    placeCell(row, 2, cols.name, h, r.text, tone("plain"))
-    placeCell(row, 3, cols.right, h, r.right, tone("muted"), nil, nil, "RIGHT")
+    placeCell(row, 1, cols.label, h, r.label, "muted")
+    placeCell(row, 2, cols.name, h, r.text, "plain")
+    placeCell(row, 3, cols.right, h, r.right, "muted", "RIGHT")
 end
 
 ISW.SECTIONS = {
@@ -563,8 +568,8 @@ local function paintItemRow(row, r, width, h)
     local qr, qg, qb = NS.QualityColor(r.quality)
     local icon = r.icon or Compat.ItemIcon(r.id)
     local label = (icon and ("|T%s:0|t "):format(tostring(icon)) or "") .. (r.name or L["Item %d"]:format(r.id))
-    placeCell(row, 1, { x = 0, w = width - COLUMN_W.id - 4 }, h, label, qr or 1, qg or 1, qb or 1)
-    placeCell(row, 2, { x = width - COLUMN_W.id, w = COLUMN_W.id }, h, tostring(r.id), tone("muted"), nil, nil, "RIGHT")
+    placeCell(row, 1, { x = 0, w = width - COLUMN_W.id - 4 }, h, label, { qr, qg, qb })
+    placeCell(row, 2, { x = width - COLUMN_W.id, w = COLUMN_W.id }, h, tostring(r.id), "muted", "RIGHT")
 end
 
 local function paintList(key, parent, rows, o)
@@ -634,7 +639,8 @@ local function itemHeader(facts)
     local qr, qg, qb = NS.QualityColor(item.quality)
     f.icon.art:SetTexture(item.icon or Compat.ItemIcon(item.id) or NS.Icon("help"))
     f.name:SetText(item.name or L["Item %d"]:format(item.id))
-    f.name:SetTextColor(qr or 1, qg or 1, qb or 1)
+    if qr == nil then qr, qg, qb = tone("plain") end
+    f.name:SetTextColor(qr, qg, qb)
     f.line:SetText(ISV.ItemLine(item, viewContext()))
     f.linkButton:SetEnabled(itemLink(item.id) ~= nil)
 end
