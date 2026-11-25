@@ -415,6 +415,17 @@ function Compat.CoinText(copper)
     return plainString(GetCoinTextureString(copper))
 end
 
+--- A day as the Sold by tab writes it (`2026-11-26`), from the client's date(); nil for no time or
+--- no API.
+--- @param t number|nil time()
+--- @return string|nil
+function Compat.DateText(t)
+    t = plainNumber(t)
+    if not t or type(date) ~= "function" then return nil end
+    local ok, text = pcall(date, "%Y-%m-%d", t)
+    return ok and plainString(text) or nil
+end
+
 -- ── the Item Search window and its key (spec §4.5, §4.6) ────────────────────────────────────
 
 --- A map's name (C_Map.GetMapInfo(mapID).name); nil for no API, no such map or a secret answer.
@@ -555,4 +566,59 @@ function Compat.BindKey(key, command)
     if not SetBinding(key, command) then return false end
     SaveBindings(GetCurrentBindingSet())
     return true
+end
+
+-- ── the merchant window (round 3 spec §4.4: the prices Drop Watcher records) ───────────────
+
+-- One call in pcall: its answers, or nothing on an error or without the function.
+local function tryCall(fn, ...)
+    if type(fn) ~= "function" then return false end
+    return pcall(fn, ...)
+end
+
+--- The npc id of the merchant the player has open: the creature id in Compat.UnitGUID("npc")
+--- ("Creature-0-<server>-<instance>-<zone>-<npcID>-<spawn>", and "Vehicle-" alike). Nil for no
+--- merchant, a GUID of another kind (a player, an object), a secret, an error or no API: such a visit
+--- is not recorded.
+--- @return number|nil
+function Compat.MerchantNpcID()
+    local ok, guid = pcall(Compat.UnitGUID, "npc")
+    if not ok or Compat.IsSecret(guid) or type(guid) ~= "string" then return nil end
+    local kind, id = guid:match("^(%a+)%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
+    if kind ~= "Creature" and kind ~= "Vehicle" then return nil end
+    return plainId(tonumber(id))
+end
+
+-- One merchant slot's price, quantity and whether it costs something else than copper: from
+-- C_MerchantFrame.GetItemInfo's table where the client has it, else GetMerchantItemInfo's answers.
+local function slotInfo(i)
+    local mf = C_MerchantFrame
+    if type(mf) == "table" and type(mf.GetItemInfo) == "function" then
+        local ok, info = pcall(mf.GetItemInfo, i)
+        info = ok and plainTable(info) or nil
+        if not info then return nil end
+        return plainNumber(info.price), plainNumber(info.stackCount), info.hasExtendedCost == true
+    end
+    local ok, _, _, price, quantity, _, _, _, extended = tryCall(GetMerchantItemInfo, i)
+    if not ok then return nil end
+    return plainNumber(price), plainNumber(quantity), extended == true
+end
+
+--- What the open merchant sells for copper: `{ { item, price, quantity } }`, price in copper for
+--- `quantity` (the stack the slot sells). A slot with an extended cost and no copper price (a token
+--- vendor's) is left out, as is one the client does not answer plainly. `{}` with no merchant open.
+--- @return table
+function Compat.MerchantItems()
+    local out = {}
+    local ok, n = tryCall(GetMerchantNumItems)
+    n = ok and plainNumber(n) or nil
+    for i = 1, n or 0 do
+        local okID, item = tryCall(GetMerchantItemID, i)
+        item = okID and plainId(item) or nil
+        local price, quantity, extended = slotInfo(i)
+        if item and price and price >= 0 and not (extended and price == 0) then
+            out[#out + 1] = { item = item, price = price, quantity = (quantity and quantity > 0) and quantity or 1 }
+        end
+    end
+    return out
 end

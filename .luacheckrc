@@ -111,7 +111,9 @@ files["core/CompatSearch.lua"] = {
     "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
     "GetCurrentBindingSet",
     -- Compat.QuestReady's third rung, read only where the client has them (round 3 spec §4.2)
-    "GetQuestLogIndexByID", "GetQuestLogTitle" },
+    "GetQuestLogIndexByID", "GetQuestLogTitle",
+    -- the merchant window's reads, for the prices Drop Watcher records (round 3 spec §4.4)
+    "C_MerchantFrame", "GetMerchantItemInfo", "GetMerchantNumItems", "GetMerchantItemID" },
 }
 
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):

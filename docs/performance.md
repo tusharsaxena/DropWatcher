@@ -156,6 +156,31 @@ default stores the section order, so `NS.ItemSearchTip.Options` now builds the o
 seen set (`orderOf`) on every hover where it used to answer the default list. It is the work, and the warm hover's margin is now small, so the next rise there is to be bisected
 before a ceiling moves.
 
+**ForeverDB_Full (round 3 spec §4.6, ISR3-DW-03).** The uncapped companion addon loads only through
+LibKa0s's `LoadFull()`, on the Item Search window's first open of a session (`itemSearch.fullDB`,
+"When the Item Search window opens", the default; "Never" loads nothing), never in combat and never
+from a tooltip. Measured offline at ForeverDB v2026.11.25.48 (Lua 5.1, the seven files read from the
+client folder read-only by a scratch script in no repo, after the base addon's four; numbers only):
+
+| Measure | Value |
+|---|---|
+| The files on disk | 7, 20.6 MB |
+| The base addon resident, for comparison | 62.8 MB |
+| ForeverDB_Full's tables kept after a full collect | **+82.3 MB** (+98.9 MB before the collect) |
+| The load's time, `os.clock` | 487 to 521 ms over three runs |
+
+The resident cost is about four times the files' size: the "some 20 MB" the planning spec quoted is
+the disk, not the memory. The in-game numbers, `collectgarbage("count")` and `debugprofilestop()`
+around the load, go to the debug log ("ForeverDB_Full loaded: N MB, N ms") and the diagnostics line
+(`itemSearch: ... fullMB= fullMs=`), and smoke row ITEM-SEARCH-40 records them. The load empties the
+per-item cache and the spot memo, so the next hover of each item is a cold one.
+
+The round 3 source work (ISR3-DW-03: the test-name filter, the Gathered from split, the per-vendor
+prices) left `itemSearchTipCold` at 17112.0 (17127.8 before it) and moved `itemSearchTipWarm` from
+6024.0 to 6088.0 (the Gathered from ranking's empty array, one a hover), both on WoW Forever, the
+ceilings unmoved. A vendor row is built in one constructor of eight fields, and the drops keep their
+array when no object is a gathering node, so a cold hover pays for neither.
+
 ## In game
 
 `/dw perf` opens the step panel; [`perf-analysis/README.md`](perf-analysis/README.md) is the

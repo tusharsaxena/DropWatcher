@@ -38,8 +38,14 @@ local _, NS = ...
 --     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at
 --     `itemSearch.tooltip.rows` (5 by default, 1 to 20; §7), the rest one "and N more" line:
 --       Drops from    the sources (name, level range; chance on the right), then a World drop row
---                     with its minimum level, then "and N more";
---       Sold by       the vendors (the cheapest one's price on the right);
+--                     with its minimum level, then "and N more"; a creature's name in its rank's
+--                     color (round 3 item 6: elite gold, rare silver, rare elite pale blue, boss
+--                     purple, a normal one plain);
+--       Gathered from the herbs, veins and fishing nodes (round 3 item 7): the node on the left,
+--                     "<Profession> <skill> · <chance>" on the right, the skill red above your rank;
+--       Sold by       the vendors, each with its own price on the right (round 3 item 8: the one
+--                     Drop Watcher saw there, else ForeverDB's), or "Horde only" / "Alliance only"
+--                     in red where only the other side can buy;
 --       Quests        the game's marks (IST.QuestMark, round 3 item 13): the yellow `!` not picked
 --                     up (dimmed while your level is too low), the gray `?` in your log, the green
 --                     `?` complete and waiting to be turned in, a green check turned in (left out
@@ -52,7 +58,7 @@ local _, NS = ...
 --                     you know" on (§4) the other professions' recipes are left out and counted on
 --                     one dim line, "+N in professions you don't know", after "and N more" (the
 --                     heading and that line alone when every recipe is filtered);
---       Skinned from  the creatures (name, level range; chance on the right);
+--       Skinned from  the creatures (name in its rank's color, level range; chance on the right);
 --       Also          the quests that reward the item and the quest it starts;
 --   * the hint "<key>: open in Item Search", naming the key bound to C.ITEM_SEARCH.BINDING as the
 --     client writes it (GetBindingKey through GetBindingText, so `ALT-CTRL-D` reads `Alt-Ctrl-D`),
@@ -76,8 +82,9 @@ local L   = NS.L
 local Compat = NS.Compat
 
 --- The sections' default order, and which are on by default (spec §4.7).
-IST.ORDER = { "drops", "vendors", "quests", "crafting", "skinned", "also" }
-IST.SECTIONS = { drops = true, vendors = true, quests = true, crafting = true, skinned = true, also = false }
+IST.ORDER = { "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" }
+IST.SECTIONS = { drops = true, gathered = true, vendors = true, quests = true, crafting = true, skinned = true,
+    also = false }
 
 -- The separator's texture: the client's plain white square, tinted `dw.tipRule`.
 IST.RULE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
@@ -288,7 +295,8 @@ local function dropsLines(f, r, o, out)
     local shown, rest = capped(r.drops, o.rows)
     for i = 1, shown do
         local s = r.drops[i]
-        add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
+        local tone = not s.named and "muted" or s.kind == "npc" and IS.RankTone(s.rank) or "plain"
+        add(out, INDENT .. s.name .. levelRange(s), tone,
             IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
     end
     if f.worldMinLevel then
@@ -297,15 +305,48 @@ local function dropsLines(f, r, o, out)
     more(out, rest)
 end
 
-local function vendorLines(f, r, o, out)
+-- A gathering row's right side: "<Profession> <skill> · <chance>", the skill in the Gathered from
+-- tab's tone (NS.ItemSearchCells.GatherSkillCell), no skill for fishing.
+local function gatherRight(g, ranks)
+    local cells = NS.ItemSearchCells
+    local right = cells.GATHER_NAME[g.gather] or ""
+    if g.gather ~= "fishing" then
+        local skill = cells.GatherSkillCell(g, ranks)
+        right = right .. " " .. colored(skill.text, skill.tone)
+    end
+    return right .. " " .. L["· %s"]:format(IS.Percent(g.chance) or L["rate unknown"])
+end
+
+local function gatheredLines(_, r, o, out, me)
+    local rows = r.gathered or {}
+    if #rows == 0 then return end
+    add(out, L["Gathered from"], "mutedGold")
+    local shown, rest = capped(rows, o.rows)
+    local ranks = me and me.ranks
+    for i = 1, shown do
+        local g = rows[i]
+        add(out, INDENT .. g.name, "plain", gatherRight(g, ranks), "plain")
+    end
+    more(out, rest)
+end
+
+-- A vendor row's right side (round 3 spec §4.4): "Horde only" or "Alliance only" in red when only
+-- the other side can buy there, else its own price (recorded, else ForeverDB's), else nothing.
+local function vendorRight(v, me)
+    local only = me and NS.ItemSearchCells.SideOnly(v, me)
+    if only then return only, "red" end
+    if type(v.price) == "number" then return Compat.CoinText(v.price), "plain" end
+    return nil, "plain"
+end
+
+local function vendorLines(_, r, o, out, me)
     if #r.vendors == 0 then return end
     add(out, L["Sold by"], "mutedGold")
-    local cheapest = f.vendorPrice and f.vendorPrice.npc
     local shown, rest = capped(r.vendors, o.rows)
     for i = 1, shown do
         local v = r.vendors[i]
-        local price = v.id == cheapest and Compat.CoinText(f.vendorPrice.price) or nil
-        add(out, INDENT .. v.name, "plain", price, "plain")
+        local right, rightTone = vendorRight(v, me)
+        add(out, INDENT .. v.name, "plain", right, rightTone)
     end
     more(out, rest)
 end
@@ -369,7 +410,7 @@ local function skinnedLines(_, r, o, out)
     local shown, rest = capped(r.skinned, o.rows)
     for i = 1, shown do
         local s = r.skinned[i]
-        add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or L["rate unknown"],
+        add(out, INDENT .. s.name .. levelRange(s), IS.RankTone(s.rank), IS.Percent(s.chance) or L["rate unknown"],
             s.chance and "plain" or "muted")
     end
     more(out, rest)
@@ -390,7 +431,7 @@ local function alsoLines(f, _, o, out)
     end
 end
 
-local SECTION = { drops = dropsLines, vendors = vendorLines, quests = questLines, crafting = craftingLines,
+local SECTION = { drops = dropsLines, gathered = gatheredLines, vendors = vendorLines, quests = questLines, crafting = craftingLines,
     skinned = skinnedLines, also = alsoLines }
 
 --- The block's lines for `facts` under the options `o` (IST.Options' shape), the bound key's text

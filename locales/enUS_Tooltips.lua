@@ -693,11 +693,8 @@ L["Outside your level band"] = "Outside your level band"
 L["anywhere, from level %d"] = "anywhere, from level %d"
 L["Alliance"] = "Alliance"
 L["Horde"] = "Horde"
-L["can't buy"] = "can't buy"
 L["Title"] = "Title"
 L["Price"] = "Price"
-L["%s (the lowest seen)"] = "%s (the lowest seen)"
-L["not seen here"] = "not seen here"
 L["Faction"] = "Faction"
 L["Needs it"] = "Needs it"
 L["Rewards it"] = "Rewards it"
@@ -735,8 +732,8 @@ L["vendors"] = "vendors"
 L["Vendor"] = "Vendor"
 L["who sells it; its title on the row's tooltip"] = "who sells it; its title on the row's tooltip"
 L["the vendor's level"] = "the vendor's level"
-L["who can buy from it"] = "who can buy from it"
-L["the lowest price seen, on the vendor it was seen at"] = "the lowest price seen, on the vendor it was seen at"
+L["Alliance, Horde or Both (either faction); red: only the other faction can buy here"] = "Alliance, Horde or Both (either faction); red: only the other faction can buy here"
+L["its price at this vendor: the one you saw there, else ForeverDB's"] = "its price at this vendor: the one you saw there, else ForeverDB's"
 L["Only my faction"] = "Only my faction"
 L["quest"] = "quest"
 L["quests"] = "quests"
@@ -797,6 +794,29 @@ L["Click: switch; for this view only, not saved"] = "Click: switch; for this vie
 L["sorted: %s"] = "sorted: %s"
 L["No rows match these filters."] = "No rows match these filters."
 L["Nothing is known about this item: no drop, vendor, quest, recipe or skinning source."] = "Nothing is known about this item: no drop, vendor, quest, recipe or skinning source."
+
+-- modules/ItemSearchCells.lua, ItemSearchTabs.lua and ItemSearchTip.lua: the Gathered from tab and
+-- section (Item Search round 3 spec §4.3, ISR3-DW-03)
+L["Gathered from"] = "Gathered from"
+L["Herbalism"] = "Herbalism"
+L["Mining"] = "Mining"
+L["node"] = "node"
+L["nodes"] = "nodes"
+L["Node"] = "Node"
+L["the herb, vein or fishing node it is gathered from"] = "the herb, vein or fishing node it is gathered from"
+L["the gathering profession it takes"] = "the gathering profession it takes"
+L["the skill the node needs, red when above yours; ? when unknown"] = "the skill the node needs, red when above yours; ? when unknown"
+
+-- modules/ItemSearchCells.lua, ItemSearchTip.lua and ItemSearchView.lua: Sold by's prices and sides,
+-- the sources with no spawn, ForeverDB_Full in the footer (Item Search round 3 spec §4.4, §4.6)
+L["No known spawn"] = "No known spawn"
+L["%s only"] = "%s only"
+L["Seen here %s"] = "Seen here %s"
+L["Seen here %s, for %d"] = "Seen here %s, for %d"
+L["Recorded by ForeverDB"] = "Recorded by ForeverDB"
+L["No price recorded yet: open this vendor and Drop Watcher remembers it"] = "No price recorded yet: open this vendor and Drop Watcher remembers it"
+L["Only %s characters can buy here: ForeverDB marks this vendor %s. Only my faction hides these rows."] = "Only %s characters can buy here: ForeverDB marks this vendor %s. Only my faction hides these rows."
+L["%s · Full"] = "%s · Full"
 
 -- modules/ItemSearchWaypoint.lua, ItemSearchWindow.lua and ItemSearchGrid.lua: who draws the way to
 -- a pin, Drop Watcher's arrow and its menu (Item Search feedback spec §6, ISF-DW-07)

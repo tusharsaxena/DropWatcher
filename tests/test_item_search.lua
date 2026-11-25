@@ -107,6 +107,7 @@ local function fakeDB()
     db.Item = count(function(id) return items[id] end)
     db.Object = count(function(id) return objects[id] end)
     db.VendorPrice = count(function() return 1200, 16 end)
+    db.VendorPriceAt = count(function(npc) if npc == 16 then return 1200, "vp" end return nil, nil end)
     return db
 end
 
@@ -127,7 +128,9 @@ test("item search: the static facts read ForeverDB's drops, vendors, quests and 
     assertTrue(f.drops[2].named); assertTrue(f.drops[1].named, "an object named through Object(id)")
     assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Invented Vendor,Creature 16")
-    assertEqual(f.vendorPrice.price .. "@" .. f.vendorPrice.npc, "1200@16")
+    -- round 3 spec §4.4: each vendor row carries its own price (VendorPriceAt), none for the first
+    assertNil(f.vendorPrice, "no item-wide price")
+    assertNil(f.vendors[1].price); assertEqual(f.vendors[2].price .. "/" .. f.vendors[2].priceOrigin, "1200/vp")
     local quests = {}
     for i, q in ipairs(f.quests) do quests[i] = q.title end
     -- red under: the race-2 quest kept for a race-1 player, or the class-1 quest dropped for class 2
@@ -480,7 +483,7 @@ local function loaded(setup)
     return NS, m, fake
 end
 
-test("item search: the facts read the fake: drops, vendors, the lowest price, the quest it rewards", function()
+test("item search: the facts read the fake: drops, vendors, each vendor's price, the quest it rewards", function()
     local NS = loaded()
     local f = NS.ItemSearch.Get(IDS.blade)
     local drops = {}
@@ -489,7 +492,9 @@ test("item search: the facts read the fake: drops, vendors, the lowest price, th
     assertEqual(f.drops[2].minLevel .. "-" .. f.drops[2].maxLevel, "10-12")
     assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Fixture Vendor,Fixture Trainer")
-    assertEqual(f.vendorPrice.price, 1200); assertEqual(f.vendorPrice.npc, IDS.trainer)
+    -- the kit's vendx price at the vendor, its vp price at the trainer (round 3 spec §4.4)
+    assertEqual(f.vendors[1].price .. "/" .. f.vendors[1].priceOrigin, "1400/vendx")
+    assertEqual(f.vendors[2].price .. "/" .. f.vendors[2].priceOrigin, "1200/vp")
     assertEqual(f.rewardFrom[1].title, "Fixture Errand"); assertEqual(f.item.name, "Fixture Blade")
     assertEqual(NS.ItemSearch.Get(IDS.letter).startsQuest.title, "Fixture Summons")
 end, FOREVER_ONLY)

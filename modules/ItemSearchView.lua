@@ -198,16 +198,21 @@ local STATE_WORDS = {
 }
 
 --- The footer's left line: "ForeverDB <version> · <state>", the version where the database (or
---- its TOC) gives one.
+--- its TOC) gives one, then " · Full" while ForeverDB_Full is loaded too (round 3 spec §4.6).
 --- @param state string NS.ItemSearch.State's answer
 --- @param version string|nil
+--- @param full boolean|nil ForeverDB_Full is loaded
 --- @return string
-function ISV.FooterText(state, version)
+function ISV.FooterText(state, version, full)
     local words = STATE_WORDS[state] or STATE_WORDS.missing
+    local text
     if type(version) == "string" and version ~= "" then
-        return L["ForeverDB %s · %s"]:format(version, words)
+        text = L["ForeverDB %s · %s"]:format(version, words)
+    else
+        text = L["ForeverDB · %s"]:format(words)
     end
-    return L["ForeverDB · %s"]:format(words)
+    if full == true then text = L["%s · Full"]:format(text) end
+    return text
 end
 
 --- The detail pane's notice about ForeverDB, or nil while it is loaded: the spec §1 line without

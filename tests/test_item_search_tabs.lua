@@ -30,6 +30,12 @@ local function tipRow(r, label)
     return nil
 end
 
+-- Whether a row's tooltip carries `text` as one of its hints.
+local function hint(r, text)
+    for _, h in ipairs(r.tip.hints or {}) do if h == text then return true end end
+    return false
+end
+
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
 test("item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all", function()
@@ -229,9 +235,15 @@ test("item search cells: DROPS FROM's rows: the type from its rank, the colored 
     -- red under: the zone with the most spots when one is in yours (spec §5.4: yours first)
     assertEqual(by.Raptor.cells.zone.text, "Vale +1 zone"); assertEqual(by.Raptor.spot.map, 10)
     assertTrue(by.Raptor.here); assertTrue(by.Raptor.band); assertFalse(by.Skarr.band)
-    assertEqual(by.Raptor.cells.source.tone, "red", "a creature in the hostile color")
+    -- round 3 spec §4.3 (item 6): the color is the creature's rank, never "a creature" in red
+    assertEqual(by.Raptor.cells.source.tone, "plain", "a normal creature in white")
+    assertEqual(by.Skarr.cells.source.tone, "rankRareElite", "a rare elite in its rank's color")
+    assertEqual(by.Skarr.cells.type.tone, "rankRareElite", "its Type in the same color")
     assertEqual(by.Chest.cells.source.tone, "plain", "an object in white")
+    assertEqual(by.Chest.cells.type.tone, "plain")
     assertEqual(by.Trunk.cells.source.quality, 2, "a container's name in its quality color")
+    assertEqual(by.Trunk.cells.type.quality, 2, "and its Type")
+    assertEqual(by["Creature 7"].cells.type.tone, "muted")
     assertEqual(by.Trunk.tip.item, 3, "a container's row shows its game tooltip")
     assertEqual(by["Creature 7"].cells.source.tone, "muted")
     assertEqual(by.Raptor.best, 1, "in your zone: first")
@@ -241,23 +253,30 @@ test("item search cells: DROPS FROM's rows: the type from its rank, the colored 
     assertEqual(tipRow(by.Raptor, "Chance"), "1.6%")
 end)
 
-test("item search cells: SOLD BY's rows: the faction (can't buy for the other side), the price where it was seen", function()
+test("item search cells: SOLD BY's rows: the faction (Horde only for the other side), each row's own price", function()
     local NS = T.newAddon()
     local C = NS.ItemSearchCells
-    local facts = { vendorPrice = { price = 1200, npc = 2 }, vendors = {
+    local facts = { vendors = {
         { id = 1, name = "Darahir", minLevel = 35, maxLevel = 35, faction = "A", subname = "Potions" },
-        { id = 2, name = "Glyx", minLevel = 45, maxLevel = 45, faction = "AH" },
+        { id = 2, name = "Glyx", minLevel = 45, maxLevel = 45, faction = "AH", price = 1200, priceOrigin = "vp" },
         { id = 3, name = "Bro'kin", minLevel = 49, faction = "H" },
     } }
     local rows = C.Vendors(facts, { faction = "A" }, { coin = function(c) return c .. "c" end })
     local by = {}
     for _, r in ipairs(rows) do by[r.cells.vendor.text] = r end
     assertEqual(by.Darahir.cells.faction.text, "Alliance"); assertEqual(by.Glyx.cells.faction.text, "Both")
-    -- red under: a vendor of the other side listed as one you can buy from
-    assertEqual(by["Bro'kin"].cells.faction.text, "can't buy"); assertEqual(by["Bro'kin"].cells.faction.tone, "red")
+    -- red under: a vendor of the other side listed as one you can buy from; round 3 spec §4.4: it
+    -- names the side that can (was "can't buy")
+    assertEqual(by["Bro'kin"].cells.faction.text, "Horde only"); assertEqual(by["Bro'kin"].cells.faction.tone, "red")
+    assertTrue(hint(by["Bro'kin"], "Only Horde characters can buy here: ForeverDB marks this vendor Horde. Only my faction hides these rows."))
     assertTrue(by["Bro'kin"].other); assertEqual(rows[#rows].cells.vendor.text, "Bro'kin", "the other side last")
     assertEqual(by.Glyx.cells.price.text, "1200c"); assertEqual(by.Darahir.cells.price.text, "–")
+    assertTrue(hint(by.Glyx, "Recorded by ForeverDB"))
+    assertTrue(hint(by.Darahir, "No price recorded yet: open this vendor and Drop Watcher remembers it"))
     assertEqual(tipRow(by.Darahir, "Title"), "Potions", "the subname on hover")
+    assertEqual(tipRow(by.Darahir, "Zone"), "No known spawn", "no spot anywhere (round 3 spec §4.4)")
+    local A = C.Vendors(facts, { faction = "H" }, {})
+    assertEqual(A[#A].cells.faction.text, "Alliance only", "the other way round")
 end)
 
 test("item search cells: QUESTS' rows join the objectives, the rewards and the one it starts, with a Role", function()

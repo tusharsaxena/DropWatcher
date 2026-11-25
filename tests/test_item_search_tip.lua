@@ -117,9 +117,9 @@ test("item search tip: separator, label line, Drops from and Sold by, in order; 
     assertEqual(b[7], "  Fixture Kobold (5-6) | rate unknown")
     assertEqual(b[8], "  World drop | level 8+")
     assertEqual(b[9], "Sold by")
-    -- neither vendor is in your zone or on your continent: by name; the cheapest (the trainer,
-    -- 1200) carries the price
-    assertEqual(b[10], "  Fixture Trainer | 1200c"); assertEqual(b[11], "  Fixture Vendor")
+    -- neither vendor is in your zone or on your continent: the cheaper first, each with its own
+    -- price (round 3 spec §4.4: the trainer's vp 1200, the vendor's vendx 1400)
+    assertEqual(b[10], "  Fixture Trainer | 1200c"); assertEqual(b[11], "  Fixture Vendor | 1400c")
     -- red under: the Also section on by default, or a hint with nothing bound
     assertEqual(#b, 11)
     assertTrue(find(b, "Reward from") == nil)

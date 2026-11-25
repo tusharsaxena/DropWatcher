@@ -20,12 +20,14 @@ local _, NS = ...
 -- `mine` (a profession you have), `known`.
 --
 -- `ctx`: { spots(kind, id), mapName(map), npc(id), object(id), quest(id), item(id) -> { name,
--- quality }, profession(skillLine), coin(copper) -> text }. Each is optional; a missing one leaves
--- its cell at the dim dash.
+-- quality }, profession(skillLine), coin(copper) -> text, dateText(time) -> text }. Each is
+-- optional; a missing one leaves its cell at the dim dash.
 --
 -- THE CLIENT GIVES NO DATA FOR (spec §5.4 lets such a column go): Sold by's Stock and Requires
--- (ForeverDB's vendx is not in LibKa0s-ForeverDB-1.0's surface) and Quests' objective count. The
--- price is the item's lowest price seen at any vendor (VendorPrice), on the vendor it was seen at.
+-- (LibKa0s-ForeverDB-1.0 reads vendx for prices only) and Quests' objective count. A vendor's price
+-- is its own row's (round 3 spec §4.4): what Drop Watcher saw at that vendor, else ForeverDB's, else
+-- the dim dash with a row tooltip that says how to fill it. A source with no spot anywhere says "No
+-- known spawn" on its row tooltip's Zone line.
 
 NS.ItemSearchCells = NS.ItemSearchCells or {}
 local ISC = NS.ItemSearchCells
@@ -168,9 +170,14 @@ local function spotsOf(kind, row, ctx)
     return call(ctx.spots, kind, row.id)
 end
 
--- The tooltip's zone rows: "Fixture Vale (2 spots)" per map.
+-- The tooltip's zone rows: "Fixture Vale (2 spots)" per map; "No known spawn" for a source with no
+-- spot anywhere (round 3 spec §4.4).
 local function zoneRows(rows, where)
-    for _, c in ipairs(where and where.counts or {}) do
+    if not (where and where.counts and #where.counts > 0) then
+        rows[#rows + 1] = { L["Zone"], L["No known spawn"] }
+        return
+    end
+    for _, c in ipairs(where.counts) do
         local spots = c.n == 1 and L["1 spot"] or L["%d spots"]:format(c.n)
         rows[#rows + 1] = { L["Zone"], ("%s (%s)"):format(c.zone, spots) }
     end
@@ -215,13 +222,20 @@ function ISC.TypeOf(s)
     return RANK_TYPE[rank] or L["Creature"], TYPE_ORDER[rank] or 1
 end
 
-local function sourceCell(s, ctx)
+--- A creature's color by its rank (NS.ItemSearch.RankTone, round 3 spec §4.3): the Source and Type
+--- cells, the Skinned from Creature cell and the tooltip's creature rows share it.
+ISC.RankTone = IS.RankTone
+
+-- The look a drop source's name and Type share (round 3 spec §4.3, item 6): a creature by its rank,
+-- an object plain, a container in its quality, an unnamed source muted.
+local function sourceLook(s, ctx)
     if s.kind == "item" then
         local it = call(ctx.item, s.id)
-        return { text = s.name, quality = type(it) == "table" and num(it.quality) or nil }
+        return nil, type(it) == "table" and num(it.quality) or nil
     end
-    if not s.named then return { text = s.name, tone = "muted" } end
-    return { text = s.name, tone = s.kind == "npc" and "red" or "plain" }
+    if not s.named then return "muted", nil end
+    if s.kind == "npc" then return IS.RankTone(s.rank), nil end
+    return "plain", nil
 end
 
 local function dropTip(s, typeText, where, me)
@@ -243,6 +257,7 @@ end
 local function dropRow(s, i, top, me, ctx)
     local where = ISC.Where(spotsOf(s.kind, s, ctx), me.mapID, ctx.mapName)
     local typeText, typeOrder = ISC.TypeOf(s)
+    local tone, quality = sourceLook(s, ctx)
     local chance = chanceCell(s.chance, top)
     local hasLevel = num(s.minLevel) ~= nil
     return {
@@ -250,7 +265,8 @@ local function dropRow(s, i, top, me, ctx)
         itemID = s.kind == "item" and s.id or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         band = (s.kind == "npc" and hasLevel) and IS.InBand(s.minLevel, s.maxLevel, me.level) or nil,
-        cells = { source = sourceCell(s, ctx), type = { text = typeText, tone = "muted" },
+        cells = { source = { text = s.name, tone = tone, quality = quality }, type = { text = typeText, tone = tone,
+            quality = quality },
             level = levelCell(s.minLevel, s.maxLevel, me.level), zone = ISC.ZoneCell(where), chance = chance },
         sort = { source = lower(s.name), type = typeOrder, level = num(s.minLevel), zone = lower(where and where.zone),
             chance = num(s.chance) },
@@ -286,45 +302,148 @@ function ISC.Drops(facts, me, ctx)
     return out
 end
 
+-- ── Gathered from (round 3 spec §4.3, item 7) ──────────────────────────────────────────────
+
+ISC.GATHER_NAME = { herbalism = L["Herbalism"], mining = L["Mining"], fishing = L["Fishing"] }
+
+-- The player's rank in a gathering row's profession, or nil.
+local function gatherRank(g, ranks)
+    if type(ranks) ~= "table" then return nil end
+    return num(ranks[IS.GATHER_LINE[g.gather] or 0])
+end
+
+--- A gathering node's Skill: its minimum in red while above your rank in that profession, plain
+--- otherwise; "?" (muted) when the curated table does not know the node; the dim dash for fishing,
+--- which has no per-node skill on this client. The tooltip's Gathered from rows color it the same.
+--- @param g table a gathered row (`gather`, `skill`)
+--- @param ranks table|nil the player's ranks
+--- @return table cell `{ text, tone }`
+function ISC.GatherSkillCell(g, ranks)
+    if g.gather == "fishing" then return { text = DASH, tone = "muted" } end
+    local need = num(g.skill)
+    if not need then return { text = "?", tone = "muted" } end
+    local rank = gatherRank(g, ranks)
+    if rank and need > rank then return { text = tostring(need), tone = "red" } end
+    return { text = tostring(need), tone = "plain" }
+end
+
+local function gatherTip(g, profession, where, rank)
+    local rows, hints = { { L["Profession"], profession or DASH } }, {}
+    local need = num(g.skill)
+    if need then rows[#rows + 1] = { L["Skill"], rank and L["%d (you %d)"]:format(need, rank) or tostring(need) } end
+    zoneRows(rows, where)
+    rows[#rows + 1] = { L["Chance"], IS.Percent(g.chance) or L["rate unknown"] }
+    local n = #list(g.ids)
+    if n > 1 then rows[#rows + 1] = { L["Merged"], L["%d kinds of %s"]:format(n, g.name) } end
+    pinHint(hints, where)
+    return { title = g.name, rows = rows, hints = hints }
+end
+
+local function gatherRow(g, i, top, me, ctx)
+    local where = ISC.Where(spotsOf("object", g, ctx), me.mapID, ctx.mapName)
+    local rank = gatherRank(g, me.ranks)
+    local profession = ISC.GATHER_NAME[g.gather]
+    return {
+        best = i, kind = "object", gather = g.gather, id = g.id, spot = where and where.spot or nil,
+        here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
+        mine = rank ~= nil or not IS.SkillsRead(me.ranks),
+        cells = { node = { text = g.name, tone = "plain" }, profession = textCell(profession),
+            skill = ISC.GatherSkillCell(g, me.ranks), zone = ISC.ZoneCell(where), chance = chanceCell(g.chance, top) },
+        sort = { node = lower(g.name), profession = lower(profession), skill = num(g.skill),
+            zone = lower(where and where.zone), chance = num(g.chance) },
+        tip = gatherTip(g, profession, where, rank),
+    }
+end
+
+--- GATHERED FROM's rows, best for you first (IS.Rank.gathered).
+--- @return table
+function ISC.Gathered(facts, me, ctx)
+    me, ctx = me or {}, ctx or {}
+    local ranked = IS.Rank.gathered(facts.gathered, me)
+    local top = topChance(ranked)
+    local out = {}
+    for i, g in ipairs(ranked) do out[i] = gatherRow(g, i, top, me, ctx) end
+    return out
+end
+
 -- ── Sold by ─────────────────────────────────────────────────────────────────────────────────
 
 local FACTION = { A = L["Alliance"], H = L["Horde"], AH = L["Both"] }
 
---- A vendor's Faction cell: Alliance, Horde or Both, "can't buy" in red for the other side alone,
---- the dim dash when ForeverDB names no side.
+--- The words for a vendor only the other side can buy from (round 3 spec §4.4, item 8): "Horde
+--- only" or "Alliance only", by the vendor's own side; nil for a vendor the player's side can use.
+--- The Faction cell and the tooltip's vendor row say it, in red.
+--- @param v table a vendor row (`faction`)
+--- @param me table
+--- @return string|nil
+function ISC.SideOnly(v, me)
+    if not IS.OtherSide(v, me) then return nil end
+    return L["%s only"]:format(FACTION[v.faction] or v.faction)
+end
+
+--- A vendor's Faction cell: Alliance, Horde or Both; "Horde only" or "Alliance only" in red when
+--- only the other side can buy there (ISC.SideOnly); the dim dash when ForeverDB names no side.
 --- @param v table a vendor row (`faction`)
 --- @param me table
 --- @return table cell
 function ISC.FactionCell(v, me)
-    if IS.OtherSide(v, me) then return { text = L["can't buy"], tone = "red" } end
+    local only = ISC.SideOnly(v, me)
+    if only then return { text = only, tone = "red" } end
     local text = FACTION[v.faction]
     if not text then return { text = DASH, tone = "muted" } end
     return { text = text, tone = "plain" }
 end
 
-local function vendorTip(v, where, priceText, faction)
+--- A vendor row's price line for its tooltip (round 3 spec §4.4): "Seen here <date>" (and "for N"
+--- when the slot sells a stack), "Recorded by ForeverDB", or how to fill it.
+--- @param v table a vendor row (`priceOrigin`, `seen`: the recorded entry `{ p, q, t }`)
+--- @param ctx table|nil the cells' context (`dateText`)
+--- @return string
+function ISC.PriceNote(v, ctx)
+    if v.priceOrigin == "seen" then
+        local seen = type(v.seen) == "table" and v.seen or {}
+        local day = call(ctx and ctx.dateText, seen.t) or DASH
+        local q = num(seen.q)
+        if q and q > 1 then return L["Seen here %s, for %d"]:format(day, q) end
+        return L["Seen here %s"]:format(day)
+    end
+    if num(v.price) then return L["Recorded by ForeverDB"] end
+    return L["No price recorded yet: open this vendor and Drop Watcher remembers it"]
+end
+
+local function vendorTip(v, other, where, priceText, faction, ctx)
     local rows, hints = {}, {}
     if v.subname then rows[#rows + 1] = { L["Title"], v.subname } end
-    if where and where.zone then rows[#rows + 1] = { L["Zone"], where.zone } end
-    rows[#rows + 1] = { L["Price"], priceText and L["%s (the lowest seen)"]:format(priceText) or L["not seen here"] }
+    if where and where.zone then
+        rows[#rows + 1] = { L["Zone"], where.zone }
+    elseif not where then
+        rows[#rows + 1] = { L["Zone"], L["No known spawn"] }
+    end
+    rows[#rows + 1] = { L["Price"], priceText or DASH }
+    hints[#hints + 1] = ISC.PriceNote(v, ctx)
     rows[#rows + 1] = { L["Faction"], faction.text }
+    if other then
+        local side = FACTION[v.faction] or v.faction
+        hints[#hints + 1] = L["Only %s characters can buy here: ForeverDB marks this vendor %s. Only my faction hides these rows."]:format(side, side)
+    end
     pinHint(hints, where)
     return { title = v.name, rows = rows, hints = hints }
 end
 
-local function vendorRow(v, i, price, me, ctx)
+local function vendorRow(v, i, me, ctx)
     local where = ISC.Where(call(ctx.spots, "npc", v.id), me.mapID, ctx.mapName)
-    local mine = price and price.npc == v.id and num(price.price) or nil
-    local priceText = mine and (call(ctx.coin, mine) or tostring(mine)) or nil
+    local price = num(v.price)
+    local priceText = price and (call(ctx.coin, price) or tostring(price)) or nil
     local faction = ISC.FactionCell(v, me)
     local level = ISV.LevelText(v.minLevel, v.maxLevel)
+    local other = IS.OtherSide(v, me)
     return {
-        best = i, id = v.id, spot = where and where.spot or nil, other = IS.OtherSide(v, me),
+        best = i, id = v.id, spot = where and where.spot or nil, other = other,
         cells = { vendor = textCell(v.name), level = textCell(level), zone = ISC.ZoneCell(where), faction = faction,
             price = textCell(priceText) },
         sort = { vendor = lower(v.name), level = num(v.minLevel), zone = lower(where and where.zone),
-            faction = lower(faction.text), price = mine },
-        tip = vendorTip(v, where, priceText, faction),
+            faction = lower(faction.text), price = IS.UnitPrice(v) },
+        tip = vendorTip(v, other, where, priceText, faction, ctx),
     }
 end
 
@@ -332,9 +451,8 @@ end
 --- @return table
 function ISC.Vendors(facts, me, ctx)
     me, ctx = me or {}, ctx or {}
-    local price = type(facts.vendorPrice) == "table" and facts.vendorPrice or nil
     local out = {}
-    for i, v in ipairs(IS.Rank.vendors(facts.vendors, me)) do out[i] = vendorRow(v, i, price, me, ctx) end
+    for i, v in ipairs(IS.Rank.vendors(facts.vendors, me)) do out[i] = vendorRow(v, i, me, ctx) end
     return out
 end
 
@@ -386,15 +504,25 @@ local function questInputs(facts)
     return out
 end
 
--- The quest's first giver: its name and where it stands.
-local function giverOf(info, me, ctx)
-    local g = type(info) == "table" and list(info.givers)[1] or nil
-    if type(g) ~= "table" or not num(g.id) then return nil, nil end
+-- A giver's name, or nil.
+local function giverName(g, ctx)
     local reader = g.kind == "object" and ctx.object or ctx.npc
     local row = call(reader, g.id)
-    local name = type(row) == "table" and row.name or nil
-    local where = ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
-    return name, where
+    return type(row) == "table" and row.name or nil
+end
+
+-- The quest's first giver whose name is not a test or dev one (round 3 spec §4.3): its name and
+-- where it stands.
+local function giverOf(info, me, ctx)
+    for _, g in ipairs(type(info) == "table" and list(info.givers) or {}) do
+        if type(g) == "table" and num(g.id) then
+            local name = giverName(g, ctx)
+            if not IS.IsTestSource(name) then
+                return name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
+            end
+        end
+    end
+    return nil, nil
 end
 
 local function giverText(name, where)
@@ -585,7 +713,7 @@ local function skinRow(c, i, top, me, ctx)
     local rank = num(ranks[ISC.SKINNING])
     return {
         best = i, id = c.id, spot = where and where.spot or nil, here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
-        cells = { creature = { text = c.name, tone = "plain" }, level = levelCell(c.minLevel, c.maxLevel, me.level),
+        cells = { creature = { text = c.name, tone = IS.RankTone(c.rank) }, level = levelCell(c.minLevel, c.maxLevel, me.level),
             skill = skinSkillCell(need, rank), zone = ISC.ZoneCell(where), chance = chanceCell(c.chance, top) },
         sort = { creature = lower(c.name), level = num(c.minLevel), skill = need, zone = lower(where and where.zone),
             chance = num(c.chance) },
@@ -606,10 +734,11 @@ end
 
 -- ── every tab's rows ────────────────────────────────────────────────────────────────────────
 
-ISC.BUILDERS = { drops = ISC.Drops, vendors = ISC.Vendors, quests = ISC.Quests, crafting = ISC.Crafting,
-    skinned = ISC.Skinned }
+ISC.BUILDERS = { drops = ISC.Drops, gathered = ISC.Gathered, vendors = ISC.Vendors, quests = ISC.Quests,
+    crafting = ISC.Crafting, skinned = ISC.Skinned }
 
---- Every tab's rows for `facts`: `{ drops, vendors, quests, crafting, skinned }`, each best first.
+--- Every tab's rows for `facts`: `{ drops, gathered, vendors, quests, crafting, skinned }`, each best
+--- first.
 --- @param facts table|nil
 --- @param me table|nil
 --- @param ctx table|nil

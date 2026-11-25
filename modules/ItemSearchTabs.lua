@@ -6,7 +6,8 @@ local _, NS = ...
 -- (modules/ItemSearchGrid.lua, modules/ItemSearchWindow.lua) keeps the state and draws the answer.
 -- No client call and no setting read here.
 --
--- THE TABS (spec §5.3): one per section that has rows, in the order Drops from, Sold by, Quests,
+-- THE TABS (spec §5.3): one per section that has rows, in the order Drops from, Gathered from (round
+-- 3 spec §4.3, item 7: the herbs, veins and fishing nodes, apart from the drops), Sold by, Quests,
 -- Crafting, Skinned from; each label carries its count, and Crafting's the filtered count with the
 -- whole count beside it ("Crafting 12 / 74", spec §4).
 --
@@ -18,7 +19,7 @@ local _, NS = ...
 -- Reset (TABS.DefaultState) is shown only while the state is not the default (TABS.IsDefault).
 --
 -- THE COLUMNS (spec §5.4) are exactly the spec's, less the two the client gives no data for (Sold
--- by's Stock and Requires: ForeverDB's vendx is not in LibKa0s-ForeverDB-1.0's surface; spec §5.4
+-- by's Stock and Requires: LibKa0s-ForeverDB-1.0 reads ForeverDB's vendx for prices only; spec §5.4
 -- lets such a column go). A few widths moved a little so Crafting's fixed columns fit the minimum
 -- window (Profession 120, Skill 130, Status 120). TABS.Layout gives every fixed column its width and
 -- shares the rest among the flex ones, so a wider window truncates less (W8); a narrow one scales the
@@ -34,7 +35,7 @@ local L    = NS.L
 
 local floor = math.floor
 
-TABS.ORDER = { "drops", "vendors", "quests", "crafting", "skinned" }
+TABS.ORDER = { "drops", "gathered", "vendors", "quests", "crafting", "skinned" }
 TABS.GAP = 6
 TABS.INSET = NS.Constants.WINDOW.INSET   -- 6: the columns' margin at each side of the table
 TABS.FLEX_MIN = 72
@@ -71,14 +72,32 @@ TABS.DEF = {
             { key = "band", label = L["Only my level band"], default = false, narrows = true, keep = function(r) return r.band ~= false end },
         },
     },
+    gathered = {
+        title = L["Gathered from"], one = L["node"], many = L["nodes"],
+        columns = {
+            col("node", L["Node"], "flex", { tip = L["the herb, vein or fishing node it is gathered from"] }),
+            col("profession", L["Profession"], 90, { tip = L["the gathering profession it takes"] }),
+            col("skill", L["Skill"], 64, { tip = L["the skill the node needs, red when above yours; ? when unknown"] }),
+            col("zone", L["Zone"], "flex", { tip = L["where it stands: your zone first, else where it mostly stands"] }),
+            col("chance", L["Chance"], 150, { kind = "bar", first = "desc", tip = L["the chance ForeverDB recorded"] }),
+            PIN,
+        },
+        filters = {
+            { key = "herbalism", label = L["Herbalism"], default = true, narrows = false, keep = function(r) return r.gather ~= "herbalism" end },
+            { key = "mining", label = L["Mining"], default = true, narrows = false, keep = function(r) return r.gather ~= "mining" end },
+            { key = "fishing", label = L["Fishing"], default = true, narrows = false, keep = function(r) return r.gather ~= "fishing" end },
+            { key = "mine", label = L["Only my professions"], default = false, narrows = true, keep = function(r) return r.mine end },
+            { key = "zone", label = L["Only my zone"], default = false, narrows = true, keep = function(r) return r.here == true end },
+        },
+    },
     vendors = {
         title = L["Sold by"], one = L["vendor"], many = L["vendors"],
         columns = {
             col("vendor", L["Vendor"], "flex", { tip = L["who sells it; its title on the row's tooltip"] }),
             col("level", L["Level"], 56, { tip = L["the vendor's level"] }),
             col("zone", L["Zone"], "flex", { tip = L["where it stands: your zone first, else where it mostly stands"] }),
-            col("faction", L["Faction"], 90, { tip = L["who can buy from it"] }),
-            col("price", L["Price"], 110, { tip = L["the lowest price seen, on the vendor it was seen at"] }),
+            col("faction", L["Faction"], 90, { tip = L["Alliance, Horde or Both (either faction); red: only the other faction can buy here"] }),
+            col("price", L["Price"], 110, { tip = L["its price at this vendor: the one you saw there, else ForeverDB's"] }),
             PIN,
         },
         filters = {

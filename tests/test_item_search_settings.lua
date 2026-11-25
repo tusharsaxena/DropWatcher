@@ -26,6 +26,7 @@ local ROWS = {
     { "itemSearch.tooltip.craftSkill",        "Item tooltip", "Tooltip block" },
     { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
+    { "itemSearch.tooltip.sections.gathered", "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.quests",   "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.crafting", "Item tooltip", "Sections" },
@@ -34,6 +35,8 @@ local ROWS = {
     { "itemSearch.tooltip.hideCompleted",     "Item tooltip", "Sections" },
     { "itemSearch.tooltip.order",             "Item tooltip", "Sections" },
     { "itemSearch.window.enabled",            "Item Search window", "Window" },
+    { "itemSearch.recordPrices",              "Item Search window", "Window" },
+    { "itemSearch.fullDB",                    "Item Search window", "Window" },
     { "itemSearch.window.barColor",           "Item Search window", "Bars" },
     { "itemSearch.window.barFromSkin",        "Item Search window", "Bars" },
     { "itemSearch.waypoints",                 "Waypoints", "Waypoints" },
@@ -118,14 +121,14 @@ end, FOREVER_ONLY)
 
 -- Item Search feedback spec §9, §10 (ISF-DW-08): a profile the first Item Search build saved runs
 -- every step this run added through the runner, in order, and lands on the code's target.
-test("item search settings: a first-build profile runs steps 16 and 17 through the runner, to the code's target", function()
+test("item search settings: a first-build profile runs steps 16 to 18 through the runner, to the code's target", function()
     local NS = T.newAddon()
     _G.DropWatcherDB = {
         global = { schemaVersion = 15, itemSearch = { recent = { 101, 102 } } },
         profileKeys = { ["Me - Realm"] = "Default" },
         profiles = {
             Default = { itemSearch = {
-                tooltip = { dropsShown = 7, hint = false },
+                tooltip = { dropsShown = 7, hint = false, order = { "quests", "drops", "vendors" } },
                 window = { recent = true, density = "compact", fontSize = 14, columns = false, pins = false },
             } },
         },
@@ -140,8 +143,12 @@ test("item search settings: a first-build profile runs steps 16 and 17 through t
     for _, k in ipairs({ "recent", "density", "fontSize", "columns" }) do assertNil(is.window[k], "step 17: " .. k) end
     assertFalse(is.window.pins, "a kept row keeps its value")
     assertNil(sv.global.itemSearch, "step 17: the recent searches")
+    -- step 18 (round 3 spec §5): a stored section order gains Gathered from right after Drops from
+    -- (the entries past the stored ones are AceDB's defaults, which the tooltip reads once each)
+    local order = is.tooltip.order
+    assertEqual(table.concat({ order[1], order[2], order[3], order[4] }, ","), "quests,drops,gathered,vendors")
     assertEqual(sv.global.schemaVersion, NS.SCHEMA_VERSION)
-    assertEqual(NS.SCHEMA_VERSION, 17, "this run adds no step past 17: its new keys are new rows")
+    assertEqual(NS.SCHEMA_VERSION, 18, "round 3 adds step 18 alone: its other new keys are new rows")
 end)
 
 test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's)", function()
@@ -189,7 +196,7 @@ test("item search settings: the seam refuses an out-of-range count, a fractional
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "loot" })), "an unknown section")
     assertFalse((Set("itemSearch.tooltip.order", {})), "no section")
     assertTrue((Set("itemSearch.tooltip.order", { "quests", "drops" })), "a partial order: the rest follow")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,vendors,crafting,skinned,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,gathered,vendors,crafting,skinned,also")
 end, FOREVER_ONLY)
 
 test("item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows", function()
@@ -234,14 +241,14 @@ test("item search settings: the section order is a drag list in the stored order
     local ctx = openPage(NS)
     assertEqual(ctx.activeTab, "Item tooltip")
     -- red under: no afterGroup (no list), or a list in a fixed order
-    assertEqual(labels(ctx), "Drops from,Sold by,Quests,Crafting,Skinned from,Reward from / starts quest")
+    assertEqual(labels(ctx), "Drops from,Gathered from,Sold by,Quests,Crafting,Skinned from,Reward from / starts quest")
     assertTrue(ctx.dwSectionList ~= nil, "a ReorderList controller for this render")
     assertTrue(ISP.Move(1, 3))
-    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "vendors,quests,drops,crafting,skinned,also")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "vendors,quests,drops,crafting,skinned,also",
+    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "gathered,vendors,drops,quests,crafting,skinned,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "gathered,vendors,drops,quests,crafting,skinned,also",
         "the tooltip writes the sections in the new order")
     NS.addon.Settings.Helpers.RefreshPanel(ctx, true)
-    assertEqual(labels(ctx), "Sold by,Quests,Drops from,Crafting,Skinned from,Reward from / starts quest", "repainted")
+    assertEqual(labels(ctx), "Gathered from,Sold by,Drops from,Quests,Crafting,Skinned from,Reward from / starts quest", "repainted")
     -- The page's Defaults puts the default order back.
     NS.addon.Settings.Helpers.RestoreDefaults("itemSearch", ctx)
     assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), table.concat(NS.ItemSearchTip.ORDER, ","))

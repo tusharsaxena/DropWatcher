@@ -422,6 +422,26 @@ function NS.RetireItemSearchRows(sv)
     end
 end
 
+-- ── step 18: the tooltip's Gathered from section (ISR3-DW-03, Item Search round 3 spec §5) ──
+
+--- Step 18's work on one stored profile: a stored tooltip section order (`itemSearch.tooltip.order`,
+--- written whole by the page's drag list) that lacks the new "gathered" section gets it right after
+--- "drops", or at the end when "drops" is not in it. A profile with no stored order reads the new
+--- default, which has it, and is not written. Nothing else changes. Idempotent.
+--- @param profile table a raw stored profile
+function NS.MigrateGatheredSection(profile)
+    local is = type(profile) == "table" and profile.itemSearch
+    local tip = type(is) == "table" and is.tooltip
+    local order = type(tip) == "table" and tip.order
+    if type(order) ~= "table" then return end
+    local at
+    for i, key in ipairs(order) do
+        if key == "gathered" then return end
+        if key == "drops" then at = i end
+    end
+    table.insert(order, (at or #order) + 1, "gathered")
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -456,6 +476,8 @@ NS.MIGRATIONS = {
     { to = 16, perProfile = true,        -- 15 -> 16: the tooltip's drop count becomes its rows per section
       run = function(_, profile) NS.MigrateTipRows(profile) end },
     { to = 17, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 16 -> 17: Item Search's retired rows
+    { to = 18, perProfile = true,        -- 17 -> 18: a stored tooltip section order gains Gathered from
+      run = function(_, profile) NS.MigrateGatheredSection(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

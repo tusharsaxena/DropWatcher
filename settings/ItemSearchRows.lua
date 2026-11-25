@@ -15,7 +15,8 @@ local _, NS = ...
 --     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
---   * Item Search window: its switch and the bar color (Use the skin's color, else the swatch
+--   * Item Search window: its switch, Record vendor prices and Load ForeverDB (Full) (round 3 spec
+--     §4.4, §4.6), and the bar color (Use the skin's color, else the swatch
 --     beside it). Density, Font size, Zone and level columns and Remember recent searches went in
 --     ISF-DW-05 (feedback spec §5.1, §5.2, §5.4; schema step 17): the window's rows take the main
 --     window's table font and row height, and every tab draws all its columns. The window has no
@@ -43,8 +44,10 @@ local PAGE = "itemSearch"
 local SECTIONS = {
     { key = "drops", label = L["Drops from"],
       tip = L["The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."] },
+    { key = "gathered", label = L["Gathered from"],
+      tip = L["The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."] },
     { key = "vendors", label = L["Sold by"],
-      tip = L["The vendors that sell the item, with the lowest price seen."] },
+      tip = L["The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."] },
     { key = "quests", label = L["Quests"],
       tip = L["The quests that ask for the item: in your log, not picked up yet, or completed."] },
     { key = "crafting", label = L["Crafting"],
@@ -147,6 +150,20 @@ local function window()
     M.bool("itemSearch.window.enabled", W.enabled, L["Enable the Item Search window"],
         L["The Item Search window: search an item by name or id and see every source, quest and recipe. Opened by the magnifier in the main window's title bar, the Item Search key or /dw search. Off, it does not open, and with the tooltip block off too ForeverDB is never loaded."],
         M.with(at, { solo = true, onChange = windowSwitch }))
+    -- Round 3 spec §4.4, §4.6: the prices the merchant window shows, recorded; and when
+    -- ForeverDB_Full (the uncapped companion addon, its map spots) loads, if ever.
+    local on = M.unless("itemSearch.window.enabled", true)
+    M.bool("itemSearch.recordPrices", D.recordPrices, L["Record vendor prices"],
+        L["When you open a vendor, write down the price of everything it sells, so the Sold by tab and the tooltip show it the next time you look the item up. Kept for every character on this account; a later visit updates it."],
+        at)
+    M.pick("itemSearch.fullDB", D.fullDB, M.choices({
+        "window", L["When the Item Search window opens"], "never", L["Never"],
+    }), L["Load ForeverDB (Full)"],
+        L["ForeverDB (Full) knows where far more creatures and vendors stand than ForeverDB alone, so more rows get a zone and a waypoint pin. It is large (some 80 MB while loaded), so it loads only on the Item Search window's first open of a session, never in combat and never from a tooltip, or never. Unavailable while ForeverDB_Full is not installed. Needs Enable the Item Search window."],
+        M.with(at, {
+            disabledIf = function() return on() or NS.ForeverDB.FullStatus() == "missing" end,
+            onChange = function() if NS.ItemSearch.TryFull then NS.ItemSearch.TryFull() end end,
+        }))
     local bars = M.with(at, { subgroup = L["Bars"] })
     -- The swatch and its Use the skin's color companion on one line (options-ui-§17). No
     -- `disabledIf` on either (anti-pattern #74).

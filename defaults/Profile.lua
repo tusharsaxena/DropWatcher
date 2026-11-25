@@ -377,9 +377,9 @@ do
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
                 rows = 5, hideCompleted = true, craftSkill = true,
-                sections = { drops = true, vendors = true, quests = true, crafting = true, skinned = true,
-                    also = false },
-                order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },
+                sections = { drops = true, gathered = true, vendors = true, quests = true, crafting = true,
+                    skinned = true, also = false },
+                order = { "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
             -- skin's accent, or the custom one) and the waypoint pins. Its rows take the main
@@ -391,6 +391,11 @@ do
             window  = {
                 enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
             },
+            -- Round 3 spec §4.4, §4.6: record the prices the merchant window shows (into
+            -- global.itemSearch.prices, modules/ItemSearchPrices.lua), and when ForeverDB_Full loads:
+            -- "window" (the window's first open of a session) or "never".
+            recordPrices = true,
+            fullDB = "window",
             -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
             -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
             waypoints = "auto",

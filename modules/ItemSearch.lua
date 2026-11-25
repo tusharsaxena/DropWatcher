@@ -23,6 +23,16 @@ local _, NS = ...
 -- ForeverDB's state moves and when the profession window learns a recipe; an item the client has
 -- not cached yet (no name) is not kept, so it is read again once it is.
 --
+-- FOREVERDB_FULL (round 3 spec §4.6). The uncapped companion addon holds the map spots the base
+-- slice leaves out. LibKa0s's LoadFull() is its one loader; WHEN is this file's policy, the
+-- `itemSearch.fullDB` setting: "window" (the default) loads it on the Item Search window's first
+-- open of a session (IS.WantFull, from modules/ItemSearchWindow.lua), "never" never does. It loads
+-- only once ForeverDB itself is loaded (LoadFull would otherwise load the base), and never in
+-- combat: an open in combat waits for one PLAYER_REGEN_ENABLED, then tries once. The tooltip never
+-- asks for it (its perf ceilings). After the load the per-item cache and the spot memo are emptied,
+-- the debug log names its cost, and the open window repaints. When another addon already loaded
+-- Full, the same reset runs once, with no load of ours.
+--
 -- THE LEARNED RECIPES (spec §4.2 B) live account-wide in `db.global.itemSearch.learnedRecipes`
 -- (modules/ItemSearchLearn.lua writes them). IS.Learned() answers that table, made on first use on
 -- WoW Forever alone, and drops, once a session, every entry the shipped table covers.
@@ -33,6 +43,7 @@ local C  = NS.Constants
 
 local cache = {}
 local load = { armed = false, timer = nil, waitCombat = false, done = false, ok = false, reason = nil }
+local full = { asked = false, waitCombat = false, done = false, ok = false, reason = nil }
 local lastState
 local pruned = false
 
@@ -111,8 +122,75 @@ function IS.TryLoad()
     load.done, load.ok, load.reason = true, ok == true, reason
     NS.Debug("SEARCH", "ForeverDB load: %s (%s)", tostring(ok == true), tostring(reason))
     IS.State()
-    if load.ok then warmIndexes() end
+    if load.ok then
+        warmIndexes()
+        -- A window opened before this load asked for ForeverDB_Full: the next frame, not this one.
+        if full.asked then C_Timer.After(0, IS.TryFull) end
+    end
     return load.ok
+end
+
+-- ── ForeverDB_Full (round 3 spec §4.6) ──────────────────────────────────────────────────────
+
+--- The `itemSearch.fullDB` setting: "window" (load ForeverDB_Full on the window's first open) or
+--- "never".
+--- @return string
+function IS.FullPolicy()
+    return NS.Setting("itemSearch.fullDB") == "never" and "never" or "window"
+end
+
+-- ForeverDB_Full is in: what was read without it is read again, and an open window repaints.
+local function onFull(measured)
+    full.done, full.ok = true, true
+    IS.Invalidate()
+    if IS.ForgetSpots then IS.ForgetSpots() end
+    local cost = measured and NS.ForeverDB.FullCost() or nil
+    if type(cost) == "table" and type(cost.kb) == "number" then
+        NS.Debug("SEARCH", "ForeverDB_Full loaded: %.1f MB, %s ms", cost.kb / 1024,
+            type(cost.ms) == "number" and ("%d"):format(math.floor(cost.ms + 0.5)) or "?")
+    else
+        NS.Debug("SEARCH", "ForeverDB_Full already loaded by another addon")
+    end
+    local W = NS.ItemSearchWindow
+    if W and W.Refresh then W.Refresh() end
+end
+
+--- Load ForeverDB_Full now if the window asked for it this session, the setting allows it,
+--- ForeverDB itself is loaded, Full is installed and loadable, and the player is out of combat (in
+--- combat it waits for the combat's end, once). Answers whether Full is in after this call.
+--- @return boolean
+function IS.TryFull()
+    if full.done then return full.ok end
+    if not full.asked or IS.FullPolicy() ~= "window" or IS.State() ~= "loaded" then return false end
+    local FDB = NS.ForeverDB
+    local status = FDB.FullStatus()
+    if status == "loaded" then onFull(false); return true end
+    if status ~= "available" then return false end
+    if NS.Compat.InCombatLockdown() then
+        full.waitCombat = true
+        return false
+    end
+    full.waitCombat = false
+    local ok, reason = FDB.LoadFull()
+    if ok then onFull(true); return true end
+    full.done, full.reason = reason ~= "combat", reason
+    NS.Debug("SEARCH", "ForeverDB_Full load refused: %s", tostring(reason))
+    return false
+end
+
+--- The Item Search window opened: the session's ForeverDB_Full load may happen now (IS.TryFull).
+--- @return boolean
+function IS.WantFull()
+    full.asked = true
+    return IS.TryFull()
+end
+
+--- Where ForeverDB_Full stands for Drop Watcher: `{ asked, waitingForCombat, done, ok, reason }`, a
+--- new table (the diagnostics and the tests).
+--- @return table
+function IS.FullState()
+    return { asked = full.asked, waitingForCombat = full.waitCombat, done = full.done, ok = full.ok,
+        reason = full.reason }
 end
 
 --- Arm the login timer, once a session (and again after a stand-down took it back).
@@ -183,6 +261,7 @@ local function staticContext(state)
     return {
         fdb = state, db = NS.ForeverDB, clientItem = NS.Compat.ItemInfoByID,
         recipes = shippedRecipes(), learned = IS.Learned(), race = race, class = class,
+        seenPrice = NS.ItemSearchPrices and NS.ItemSearchPrices.Seen or nil,
     }
 end
 
@@ -227,6 +306,20 @@ function IS.MyProfessionsOnly()
     return NS.Setting("itemSearch.myProfessionsOnly") ~= false
 end
 
+-- The static facts' counts, written to the debug log once per item: the nameless objects and the
+-- test-named sources left out (round 3 spec §4.3), and the fishing nodes that yield a herb.
+local function logStatic(itemID, static)
+    if (static.unnamedObjects or 0) > 0 then
+        NS.Debug("SEARCH", "item %d: %d unnamed object source(s) left out", itemID, static.unnamedObjects)
+    end
+    if (static.testSources or 0) > 0 then
+        NS.Debug("SEARCH", "item %d: %d test-named source(s) left out", itemID, static.testSources)
+    end
+    if (static.fishingHerbs or 0) > 0 then
+        NS.Debug("SEARCH", "item %d: %d fishing node(s) yield this herb (ForeverDB's data)", itemID, static.fishingHerbs)
+    end
+end
+
 --- Everything Item Search knows about `itemID` (IS.Facts' shape), or nil on Retail or for no item
 --- id. Reads ForeverDB only once it is loaded; never loads it.
 --- @param itemID number
@@ -242,9 +335,7 @@ function IS.Get(itemID)
         -- cache on every hover, and would log on every tooltip show until its name arrives.
         if static.item.name then
             cache[itemID] = static
-            if (static.unnamedObjects or 0) > 0 then
-                NS.Debug("SEARCH", "item %d: %d unnamed object source(s) left out", itemID, static.unnamedObjects)
-            end
+            logStatic(itemID, static)
         end
     end
     return IS.Live(static, liveContext())
@@ -264,6 +355,7 @@ end
 
 function NS.addon.OnItemSearchRegen()
     if load.waitCombat then IS.TryLoad() end
+    if full.waitCombat then IS.TryFull() end
     if NS.ItemSearchKey then NS.ItemSearchKey.OnRegen() end
 end
 
@@ -271,6 +363,7 @@ end
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if load.timer then load.timer:Cancel() end
     load.timer, load.armed, load.waitCombat = nil, false, false
+    full.waitCombat = false
 end
 NS.STAND_UP[#NS.STAND_UP + 1] = function()
     IS.Arm()

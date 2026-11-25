@@ -312,6 +312,16 @@ Kit.skinValues = {
           why = "a recipe's green (easy) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
         { file = "core/Constants.lua", substring = "skillGray   = {",
           why = "a recipe's gray (trivial) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
+        -- Item Search round 3 (spec §4.3, item 6): a creature's rank hue, a meaning table like the
+        -- skill-up hues' (skinning-§9 Meaning colors).
+        { file = "core/Constants.lua", substring = "rankElite     = {",
+          why = "an elite creature's name and Type on Item Search's rows, the game's elite gold", cause = "MC" },
+        { file = "core/Constants.lua", substring = "rankRare      = {",
+          why = "a rare creature's name and Type on Item Search's rows, the game's rare silver", cause = "MC" },
+        { file = "core/Constants.lua", substring = "rankRareElite = {",
+          why = "a rare elite creature's name and Type on Item Search's rows, apart from rare and elite", cause = "MC" },
+        { file = "core/Constants.lua", substring = "rankBoss      = {",
+          why = "a boss's name and Type on Item Search's rows, apart from the skill-up orange", cause = "MC" },
         -- Item Search round 3 (spec §4.2, item 13): the quest marks are the game's own gossip icons.
         { file = "modules/ItemSearchTip.lua", substring = "local QUEST_ICON =",
           why = "Item Search's quest marks, the game's own gossip ! and ? players know, the same under every skin", cause = "A6" },
@@ -378,6 +388,8 @@ Kit.run{
         "test_item_search_key",
         "test_item_search_settings",
         "test_item_search_rank",
+        "test_item_search_sources",
+        "test_item_search_prices",
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",

@@ -5,8 +5,8 @@ local _, NS = ...
 -- invented values. modules/ItemSearch.lua builds the context, caches the answer and gates it.
 --
 -- IS.Facts(itemID, ctx) answers
---   { id, item, drops, worldMinLevel, vendors, vendorPrice, quests, crafting, rewardFrom,
---     startsQuest, skinnedFrom, unnamedObjects, ranks, fdb }
+--   { id, item, drops, gathered, worldMinLevel, vendors, quests, crafting, rewardFrom,
+--     startsQuest, skinnedFrom, unnamedObjects, testSources, fishingHerbs, ranks, fdb }
 -- in two halves. IS.Static(itemID, ctx) is the part that cannot change in a session (ForeverDB is
 -- static data, the recipe table is shipped, a quest's masks and the player's race and class are
 -- fixed), so modules/ItemSearch.lua keeps it per item. IS.Live(static, ctx) copies it and adds what
@@ -22,6 +22,8 @@ local _, NS = ...
 --   recipes    NS.RecipeReagents.Get()'s table ({ recipes, byReagent }) or nil
 --   learned    the profession window's recipes, `{ [spell] = { skillLine, reagents, made, name } }`
 --   race, class the player's race and class ids (nil: no filter)
+--   seenPrice  function(npcID, itemID) -> the price Drop Watcher recorded at that vendor,
+--              `{ p = copper, q = quantity, t = time() }`, or nil (modules/ItemSearchPrices.lua)
 -- Live half:
 --   questState function(questID) -> "done" | "ready" | "log" | "todo" ("ready": in the log and
 --              complete, not turned in; round 3 spec §4.2)
@@ -41,6 +43,22 @@ local _, NS = ...
 -- of its parts (summing them would mislead) and `ids`, every object id it stands for (a lone object
 -- has none: its `id` is its one part), so the window unions their map spots and its row tooltip
 -- counts them (`#ids`, "6 kinds of Large Solid Chest").
+--
+-- TEST AND DEV SOURCES (round 3 spec §4.3, RECON test-rows option A): a creature, object, vendor or
+-- skinned creature whose name reads like the database's test data (IS.IsTestSource: the word "test",
+-- "(DND)", "UNUSED", "[PH]") is dropped from every list; how many went is `testSources`, written to
+-- the debug log once per item. The filter is presentation policy, so it lives here and not in the
+-- adapter, which answers what the database holds.
+--
+-- GATHERED FROM (round 3 spec §4.3, item 7): an object IS.GatherKind files as a herb, a vein or a
+-- fishing node leaves the drops for `gathered`, one row per name (merged as the drops are), carrying
+-- `gather` (the profession) and `skill` (the node's minimum, NS.GatherNodes; nil when unknown and
+-- always for fishing). A fishing node that yields a herb (ForeverDB's data quirk) is still fishing,
+-- counted in `fishingHerbs` for the debug log.
+--
+-- VENDOR PRICES (round 3 spec §4.4) are per vendor row: `price` (copper), with `priceOrigin` "seen"
+-- (recorded at that vendor: `seen` is its entry, `{ p, q = the stack's quantity, t = when }`), else
+-- "vendx" or "vp" (ForeverDB's, through the reader's VendorPriceAt, for one item), else none.
 --
 -- CRAFTING is the recipes that use the item as a reagent: the shipped table's (byReagent) in its
 -- order, then the profession window's learned ones the table lacks, by spell id. A row is
@@ -70,6 +88,77 @@ end
 local function list(v)
     if type(v) == "table" then return v end
     return {}
+end
+
+-- ── test sources and gathering nodes (round 3 spec §4.3) ───────────────────────────────────
+
+--- Whether a source's name reads like the database's test or dev data: the whole word "test" in any
+--- case ("Contest", "Testament" and "Attest" are not), "(DND)", "UNUSED" in capitals, or "[PH]".
+--- @param name string|nil
+--- @return boolean
+function IS.IsTestSource(name)
+    if type(name) ~= "string" then return false end
+    if name:find("%f[%a][Tt][Ee][Ss][Tt]%f[%A]") then return true end
+    return name:find("(DND)", 1, true) ~= nil or name:find("UNUSED", 1, true) ~= nil
+        or name:find("[PH]", 1, true) ~= nil
+end
+
+--- Each gathering profession's skill line, for the player's rank in it.
+IS.GATHER_LINE = { herbalism = 182, mining = 186, fishing = 356 }
+
+local FISHING_NAMES = { ["Floating Wreckage"] = true, ["Floating Debris"] = true, ["Oil Spill"] = true,
+    ["Patch of Elemental Water"] = true }
+local QUEST_CLASS, TRADE_CLASS, HERB_SUBCLASS = 12, 7, 9
+
+local function isHerbItem(item)
+    return type(item) == "table" and item.classID == TRADE_CLASS and item.subclassID == HERB_SUBCLASS
+end
+
+local function isFishing(name, item)
+    if name:find("School", 1, true) or FISHING_NAMES[name] then return true end
+    local classID = type(item) == "table" and item.classID or nil
+    return name:find("Pool", 1, true) ~= nil and classID ~= QUEST_CLASS
+end
+
+--- What gathering an object named `name` is, for the searched item `item` (`{ name, classID,
+--- subclassID }`): "fishing" (a School, a Floating Wreckage or Debris, an Oil Spill, a Patch of
+--- Elemental Water, or a Pool when the item is not a quest item), "mining" (a Vein, a Deposit or an
+--- Obsidian Chunk), "herbalism" (a herb in NS.GatherNodes, or the item's own name when it is a herb,
+--- class 7 subclass 9), else nil: a chest, a crate or any other object stays a drop. Pure.
+--- @param name string|nil
+--- @param item table|nil
+--- @return string|nil
+function IS.GatherKind(name, item)
+    if type(name) ~= "string" or name == "" then return nil end
+    if isFishing(name, item) then return "fishing" end
+    if name:find("Vein", 1, true) or name:find("Deposit", 1, true) or name:find("Obsidian Chunk", 1, true) then
+        return "mining"
+    end
+    local node = NS.GatherNodes and NS.GatherNodes[name]
+    if type(node) == "table" and node.prof == "herbalism" then return "herbalism" end
+    if isHerbItem(item) and item.name == name then return "herbalism" end
+    return nil
+end
+
+--- A gathering node's minimum skill (NS.GatherNodes), or nil: not in the table, or fishing.
+--- @param name string
+--- @param kind string IS.GatherKind's answer
+--- @return number|nil
+function IS.GatherSkill(name, kind)
+    if kind == "fishing" then return nil end
+    local node = NS.GatherNodes and NS.GatherNodes[name]
+    return type(node) == "table" and node.prof == kind and num(node.skill) or nil
+end
+
+-- A creature's rank (ForeverDB's npc `rank`) as its color (round 3 spec §4.3, item 6): a C.TONE key.
+local RANK_TONE = { [1] = "rankElite", [2] = "rankRareElite", [3] = "rankBoss", [4] = "rankRare" }
+
+--- A creature's color by its rank, as the game's unit frames tell them apart: 1 elite gold, 4 rare
+--- silver, 2 rare elite pale blue, 3 boss purple, a normal one (0, or no rank) `plain`.
+--- @param rank number|nil
+--- @return string a C.TONE key
+function IS.RankTone(rank)
+    return RANK_TONE[num(rank) or 0] or "plain"
 end
 
 -- ── sources (SF-DW-01's model) ──────────────────────────────────────────────────────────────
@@ -302,58 +391,121 @@ end
 
 -- A creature's level range and side (`nfac`: "A", "H", "AH" or nil), for the ranking (spec §3),
 -- and its subname (a vendor's "Invented Goods"), for the window's Sold by tooltip (spec §5.6); then
--- its name, "Creature <id>" when the reader names none. One NPC read: each builds a new table.
+-- its name, "Creature <id>" when the reader names none, and its rank (round 3 spec §4.3: the
+-- color). One NPC read: each builds a new table.
 local function npcFacts(db, id)
     local n = db.NPC(id)
-    if type(n) ~= "table" then return nil, nil, nil, nil, L["Creature %d"]:format(id) end
+    if type(n) ~= "table" then return nil, nil, nil, nil, L["Creature %d"]:format(id), nil end
     return num(n.minLevel), num(n.maxLevel), n.faction, type(n.subname) == "string" and n.subname or nil,
-        n.name or L["Creature %d"]:format(id)
+        n.name or L["Creature %d"]:format(id), num(n.rank)
 end
 
-local function vendorsOf(db, src)
-    local out = {}
+-- A vendor's price for the item (round 3 spec §4.4): what Drop Watcher saw there (and that entry,
+-- `{ p, q, t }`), else ForeverDB's (VendorPriceAt), else nothing.
+local function priceAt(db, id, itemID, ctx)
+    local seen = type(ctx.seenPrice) == "function" and ctx.seenPrice(id, itemID) or nil
+    if type(seen) == "table" and num(seen.p) then return seen.p, "seen", seen end
+    if type(db.VendorPriceAt) ~= "function" then return nil, nil, nil end
+    local price, origin = db.VendorPriceAt(id, itemID)
+    if num(price) then return price, origin, nil end
+    return nil, nil, nil
+end
+
+-- The vendors, a test-named one left out (counted on `out`). A row is built in one constructor (its
+-- eight fields fit one table size: the static facts are built on a cold hover); a recorded price's
+-- entry is added after, as `seen`.
+local function vendorsOf(db, src, itemID, ctx, out)
+    local rows = {}
     for _, id in ipairs(list(type(src) == "table" and src.vendors)) do
         if num(id) then
             local minLevel, maxLevel, faction, subname, name = npcFacts(db, id)
-            out[#out + 1] = { id = id, name = name, minLevel = minLevel, maxLevel = maxLevel,
-                faction = faction, subname = subname }
+            if IS.IsTestSource(name) then
+                out.testSources = out.testSources + 1
+            else
+                local price, origin, seen = priceAt(db, id, itemID, ctx)
+                local v = { id = id, name = name, minLevel = minLevel, maxLevel = maxLevel, faction = faction,
+                    subname = subname, price = price, priceOrigin = origin }
+                if seen then v.seen = seen end
+                rows[#rows + 1] = v
+            end
         end
     end
-    return out
+    return rows
 end
 
-local function skinRows(db, itemID)
-    local out = {}
+local function skinRows(db, itemID, out)
+    local rows = {}
     for _, s in ipairs(list(db.SkinnedFrom(itemID))) do
         if type(s) == "table" and num(s.id) then
-            local minLevel, maxLevel = npcFacts(db, s.id)
-            out[#out + 1] = { id = s.id, name = s.name or L["Creature %d"]:format(s.id), chance = num(s.chance),
-                minLevel = minLevel, maxLevel = maxLevel }
+            local minLevel, maxLevel, _, _, _, rank = npcFacts(db, s.id)
+            local name = s.name or L["Creature %d"]:format(s.id)
+            if IS.IsTestSource(name) then
+                out.testSources = out.testSources + 1
+            else
+                rows[#rows + 1] = { id = s.id, name = name, chance = num(s.chance), minLevel = minLevel,
+                    maxLevel = maxLevel, rank = rank }
+            end
         end
     end
-    return out
+    return rows
+end
+
+-- The drop rows IS.GatherKind files as gathering nodes move to `out.gathered` (round 3 spec §4.3),
+-- each carrying its profession and minimum skill; the rest stay the drops. The rows are the merged
+-- ones, so a node is one row per name either way. With no node among them the drops are kept as
+-- they are (no second array: a cold hover builds this).
+local function gatherOf(s, item)
+    return s.kind == "object" and IS.GatherKind(s.name, item) or nil
+end
+
+local function splitGathered(out, drops)
+    local any = false
+    for _, s in ipairs(drops) do any = any or gatherOf(s, out.item) ~= nil end
+    if not any then out.drops = drops; return end
+    local kept, gathered = {}, out.gathered
+    for _, s in ipairs(drops) do
+        local kind = gatherOf(s, out.item)
+        if kind then
+            s.gather, s.skill = kind, IS.GatherSkill(s.name, kind)
+            if kind == "fishing" and isHerbItem(out.item) then out.fishingHerbs = out.fishingHerbs + 1 end
+            gathered[#gathered + 1] = s
+        else
+            kept[#kept + 1] = s
+        end
+    end
+    out.drops = kept
+end
+
+-- The drop sources, described: a nameless object and a test-named source left out (counted).
+local function describedDrops(out, db, src)
+    local drops, objects = {}, 0
+    for _, s in ipairs(IS.MergeSources(src)) do
+        local d = describe(db, s)
+        if not d then
+            out.unnamedObjects = out.unnamedObjects + 1
+        elseif d.named and d.kind ~= "item" and IS.IsTestSource(d.name) then
+            out.testSources = out.testSources + 1
+        else
+            drops[#drops + 1] = d
+            if d.kind == "object" then objects = objects + 1 end
+        end
+    end
+    -- Fewer than two named objects: nothing to merge, and MergeSources' order already stands.
+    return objects > 1 and IS.MergeNamedObjects(drops) or drops
 end
 
 -- The ForeverDB half of the static facts, onto `out`.
 local function fromForeverDB(out, db, itemID, ctx)
     local src = db.ItemSources(itemID)
-    local drops, unnamed, objects = {}, 0, 0
-    for _, s in ipairs(IS.MergeSources(src)) do
-        local d = describe(db, s)
-        if d then drops[#drops + 1] = d else unnamed = unnamed + 1 end
-        if d and d.kind == "object" then objects = objects + 1 end
-    end
-    -- Fewer than two named objects: nothing to merge, and MergeSources' order already stands.
-    out.drops, out.unnamedObjects = objects > 1 and IS.MergeNamedObjects(drops) or drops, unnamed
+    out.unnamedObjects, out.testSources, out.fishingHerbs = 0, 0, 0
+    splitGathered(out, describedDrops(out, db, src))
     out.worldMinLevel = type(src) == "table" and num(src.worldMinLevel) or nil
-    out.vendors = vendorsOf(db, src)
-    local price, npc = db.VendorPrice(itemID)
-    if num(price) then out.vendorPrice = { price = price, npc = num(npc) } end
+    out.vendors = vendorsOf(db, src, itemID, ctx, out)
     out.quests = questRows(db, itemID, ctx)
     out.rewardFrom = list(db.RewardFrom(itemID))
     local starts = db.StartsQuest(itemID)
     out.startsQuest = type(starts) == "table" and starts or nil
-    out.skinnedFrom = skinRows(db, itemID)
+    out.skinnedFrom = skinRows(db, itemID, out)
 end
 
 --- The facts about `itemID` that cannot change in a session (see the header for `ctx`). ForeverDB's
@@ -368,7 +520,7 @@ function IS.Static(itemID, ctx)
     local db = ctx.fdb == "loaded" and type(ctx.db) == "table" and ctx.db or nil
     local out = {
         id = itemID, fdb = ctx.fdb or "missing", item = itemFacts(itemID, ctx, db),
-        drops = {}, vendors = {}, quests = {}, rewardFrom = {}, skinnedFrom = {},
+        drops = {}, gathered = {}, vendors = {}, quests = {}, rewardFrom = {}, skinnedFrom = {},
         crafting = IS.CraftingRows(itemID, ctx.recipes, ctx.learned),
     }
     if db then fromForeverDB(out, db, itemID, ctx) end
@@ -629,13 +781,25 @@ local function vendorTier(row, me)
     return 3
 end
 
+--- A vendor row's price for one of the item (round 3 spec §4.4: a recorded stack's price over its
+--- quantity), or nil without a price.
+--- @param row table a vendor row
+--- @return number|nil
+function IS.UnitPrice(row)
+    local price = num(row.price)
+    if not price then return nil end
+    local q = type(row.seen) == "table" and num(row.seen.q) or nil
+    return (q and q > 1) and price / q or price
+end
+
 local function vendorKey(row, me)
-    return vendorTier(row, me), 0
+    return vendorTier(row, me), IS.UnitPrice(row) or math.huge
 end
 
 --- SOLD BY: in your zone, then on your continent, then elsewhere, last a vendor your side can't
---- use. Within a tier, the name. (The spec's "unlimited stock before limited" waits on LibKa0s
---- exposing ForeverDB's vendor stock, docs/known-limitations.md: the adapter gives no stock today.)
+--- use. Within a tier, the cheaper for one of the item (IS.UnitPrice), an unknown price last, then
+--- the name. (The spec's "unlimited stock before limited" waits on LibKa0s exposing ForeverDB's
+--- vendor stock, docs/known-limitations.md: the adapter gives no stock today.)
 --- @param rows table facts.vendors
 --- @param me table
 --- @return table
@@ -737,6 +901,34 @@ function Rank.skinned(rows, me)
     return sortBy(rows, skinKey, me)
 end
 
+-- A gathering row's tier (round 3 spec §4.3): a profession you have, at a skill you can gather;
+-- then one you have, the node above your rank; then one you don't have. Before your skills are
+-- read, every row is the first.
+local function gatherTier(row, me)
+    local ranks = type(me.ranks) == "table" and me.ranks or nil
+    if not IS.SkillsRead(ranks) then return 1 end
+    local rank = num(ranks[IS.GATHER_LINE[row.gather] or 0])
+    if not rank then return 3 end
+    local need = num(row.skill)
+    if need and need > rank then return 2 end
+    return 1
+end
+
+local function gatherKey(row, me)
+    return gatherTier(row, me), (inZone(me, "object", row) and 0 or 10) + chanceKey(row.chance)
+end
+
+--- GATHERED FROM: a node of a profession you have at a skill you can gather, then one above your
+--- rank, then a profession you don't have. Within a tier, a node in your zone first, then the higher
+--- chance, an unknown one last.
+--- @param rows table facts.gathered
+--- @param me table
+--- @return table
+function Rank.gathered(rows, me)
+    me = me or {}
+    return sortBy(rows, gatherKey, me)
+end
+
 -- ── the professions you know (spec §4) and the cap (spec §7) ───────────────────────────────
 
 --- Whether the player's skills have been read: a ranks table with at least one line. Before that,
@@ -790,7 +982,7 @@ function IS.Cap(rows, n)
 end
 
 --- Every section ranked for `me` (spec §3), the crafting rows filtered first when `mine` (spec §4):
---- `{ drops, vendors, quests, crafting, craftHidden, skinned }`, new arrays.
+--- `{ drops, gathered, vendors, quests, crafting, craftHidden, skinned }`, new arrays.
 --- @param facts table IS.Live's answer
 --- @param me table
 --- @param mine boolean only the professions you know
@@ -799,7 +991,8 @@ function IS.Ranked(facts, me, mine)
     me = me or {}
     local crafting, hidden = IS.FilterProfessions(facts.crafting, me.ranks, mine)
     return {
-        drops = Rank.drops(facts.drops, me), vendors = Rank.vendors(facts.vendors, me),
+        drops = Rank.drops(facts.drops, me), gathered = Rank.gathered(facts.gathered, me),
+        vendors = Rank.vendors(facts.vendors, me),
         quests = Rank.quests(facts.quests, me), crafting = Rank.crafting(crafting, me), craftHidden = hidden,
         skinned = Rank.skinned(facts.skinnedFrom, me),
     }

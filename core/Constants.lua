@@ -220,6 +220,16 @@ local FIXED_TONE = {
     -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
     glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
     glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
+    -- A creature's rank on Item Search's rows (round 3 spec §4.3, item 6): its name and Type in the
+    -- color of what kind of creature it is, as the game's unit frames tell an elite from a rare. A
+    -- normal creature stays `plain` (skinned); elite the game's gold (#FFD100), rare silver
+    -- (#C7CCDB), rare elite a pale silver-blue apart from both (#9ECCFF), boss a lightened epic
+    -- purple (#BF70FF, apart from the skill-up orange on the same window). A game meaning every
+    -- player reads the same under every skin, as the skill-up hues are, so fixed.
+    rankElite     = { r = 1.00, g = 0.82, b = 0.00 },
+    rankRare      = { r = 0.78, g = 0.80, b = 0.86 },
+    rankRareElite = { r = 0.62, g = 0.80, b = 1.00 },
+    rankBoss      = { r = 0.75, g = 0.44, b = 1.00 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -456,6 +466,11 @@ C.ITEM_SEARCH = {
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
+    -- The vendor prices Drop Watcher records (modules/ItemSearchPrices.lua, round 3 spec §4.4): at
+    -- most PRICE_CAP entries over every vendor (past it the oldest tenth goes), and MERCHANT_UPDATE
+    -- read PRICE_DEBOUNCE seconds after its last fire.
+    PRICE_CAP      = 5000,
+    PRICE_DEBOUNCE = 0.5,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
     -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
     -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D
