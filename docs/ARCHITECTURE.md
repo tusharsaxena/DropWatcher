@@ -11,7 +11,7 @@ A Retail and WoW Forever addon that watches the loot a party or raid receives, j
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.116.0 payload (twenty-six majors; media/icons pruned to the declared subset,
+LibKa0s v1.117.0 payload (twenty-six majors; media/icons pruned to the declared subset,
 media/sounds to none), twenty-one wired with one setup file each, three reached directly by the
 files that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`,
 `LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`, and `LibKa0s-WaypointArrow-1.0` from
