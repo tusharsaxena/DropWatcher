@@ -467,5 +467,6 @@ searches (on: the last 10 items, account-wide; off, the list is hidden and nothi
 **Keybindings.** The library's key editor (`O.KeybindingsTab`, options-ui-§20) over the Item Search
 row of `NS.BINDINGS` alone, the same row General › Keybindings draws on WoW Forever, so the key is
 shown and changed the way the window toggle's is: one key button (click, then press a key; a
-right-click clears it) and Clear. Ctrl-Alt-D is set once per character at login, only on a free key
-(`modules/ItemSearchKey.lua`).
+right-click clears it) and Clear. Alt-Ctrl-D is set once per character at login, only on a free key
+(`modules/ItemSearchKey.lua`; written `ALT-CTRL-D`, the client's modifier order, and re-tried once where
+the first try stored the dead chord `CTRL-ALT-D`).

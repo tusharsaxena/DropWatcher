@@ -421,7 +421,8 @@ and no setting row: the session (feedback-15 spec §0, DW-Q0, `modules/Session.l
 |---|---|---|
 | `session.start` | absent until the first read or login | the session start, `time()`: an initial login's `PLAYER_ENTERING_WORLD` sets it to now, a reload keeps it, a zone change moves nothing; absent or not a number, it is now (stored). History's group keys (`@<start>`) and every tab's This session read it (`NS.History.SessionStart`) |
 | `session.instance` | absent until the first `SituationChanged` | `{ at, situation, instance }`: where This instance started, `at` the epoch, `situation` the situation key, `instance` the instance map id (nil outside one); a reload's first situation announcement that names the same situation and instance restores the window's This instance from it |
-| `itemSearch.keyDefaulted` | absent until the first login on WoW Forever | `true` once the Item Search key's one-time default was tried (`modules/ItemSearchKey.lua`, spec §4.6): Ctrl-Alt-D set only when free, and never again, so a key the player clears stays cleared |
+| `itemSearch.keyDefaultedV` | absent until the first login on WoW Forever | `2` once the Item Search key's one-time default was tried (`modules/ItemSearchKey.lua`, spec §4.6, Item Search feedback spec §1): Alt-Ctrl-D (`ALT-CTRL-D`) set only when free, and never again, so a key the player clears stays cleared. Before the try, a binding still holding the first try's dead chord `CTRL-ALT-D` is cleared |
+| `itemSearch.keyDefaulted` | absent, or `true` from the first try | the first try's marker (Item Search run): that try stored `CTRL-ALT-D`, a chord no key press matches, so the try runs again under `keyDefaultedV`. Nothing reads it any more; left in place |
 | `session.cleared` | absent until the first clear | `time()` of the last live `LootFeed.Clear` (`/dw clear`, Clear this session's drops on boss kill): a reload restores no entry dated before it; an initial login drops it (`NS.Session.Cleared`) |
 
 The kit's AceDB fake has no `char` section, so headless the record is session-only unless a suite
@@ -459,7 +460,7 @@ it is named.
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
 - `profile.itemSearch.window.point`, `global.itemSearch.recent`, `global.itemSearch.learnedRecipes`
-  and `char.itemSearch.keyDefaulted` are Item Search's (WoW Forever alone, DropWatcher#17). Owners
+  and `char.itemSearch.keyDefaultedV` are Item Search's (WoW Forever alone, DropWatcher#17). Owners
   and writers: `modules/ItemSearchWindow.lua` (`savePoint`, the title bar's drag stop; `ShowItem`,
   through `NS.ItemSearchView.PushRecent`), `modules/ItemSearch.lua` and `modules/ItemSearchLearn.lua`
   (`IS.Learned`, made on first use and pruned once a session; the learner's out-of-combat read of

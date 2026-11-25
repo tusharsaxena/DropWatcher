@@ -445,8 +445,13 @@ C.ITEM_SEARCH = {
     RULE_WIDTH  = 160,
     TIP_VENDORS = 3,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
-    -- while the key runs nothing (modules/ItemSearchKey.lua).
-    DEFAULT_KEY = "CTRL-ALT-D",
+    -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
+    -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D
+    -- arrives as ALT-CTRL-D, so a binding stored as CTRL-ALT-D never fires. DEAD_KEY is that
+    -- broken first default, cleared off the binding before the re-try (KEY_DEFAULT_V).
+    DEFAULT_KEY = "ALT-CTRL-D",
+    DEAD_KEY    = "CTRL-ALT-D",
+    KEY_DEFAULT_V = 2,
     -- The window (modules/ItemSearchWindow.lua, spec §4.5, mockup board 2): its global name (the
     -- UISpecialFrames entry), its fixed size, the left pane's width, the rows' heights by density,
     -- the matches a name search lists, the recent searches it keeps and the item header's icon.

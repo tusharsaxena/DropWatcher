@@ -4689,6 +4689,19 @@ after a second, any recipe the shipped table lacks is learned: hover one of its 
 recipe now shows under Crafting. Nothing is read
 in combat or with Item Search off. Result:
 
+### Item Search feedback
+
+The Item Search feedback run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-*).
+Same client and ForeverDB setup as above. Where a check here contradicts an earlier ITEM-SEARCH row
+(the key's name, the tooltip's title, the dots), this one is current.
+
+**ITEM-SEARCH-19. The key fires (T1).** On a character that ran the first Item Search build (the
+key was set then but did nothing) → `/reload`, then hover an item and press Ctrl+Alt+D → the Item
+Search window opens on it; Settings › Item Search › Keybindings shows the key as `ALT-CTRL-D` (or
+however the client writes it), and the tooltip's last line names it, `Alt-Ctrl-D: open in Item
+Search`. Clear the key → `/reload` → it stays cleared and the tooltip has no key line. On a
+character where Alt-Ctrl-D already runs something else → that binding stays. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

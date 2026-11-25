@@ -548,7 +548,7 @@ L["List the last 10 items you looked at under the search box, on every character
     "List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."
 -- settings/ItemSearchPage.lua and settings/Pages.lua (Item Search, DropWatcher#17)
 L["Drag to reorder"] = "Drag to reorder"
-L["The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."] =
-    "The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."
+L["The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."] =
+    "The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."
 L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."] =
     "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."

@@ -334,7 +334,7 @@ end, FOREVER_ONLY)
 
 test("item search window: the blade's pane: DROPS FROM, SOLD BY and ALSO, the header and the footer", function()
     local NS, m = enabled()
-    m.bindKey("CTRL-ALT-D", "CLICK DropWatcherItemSearch:LeftButton")
+    m.bindKey("ALT-CTRL-D", "CLICK DropWatcherItemSearch:LeftButton")
     local W = NS.ItemSearchWindow
     W.ShowItem(IDS.blade)
     local f = W.Frame()
@@ -344,7 +344,7 @@ test("item search window: the blade's pane: DROPS FROM, SOLD BY and ALSO, the he
     assertTrue(f.line:GetText():find(("id %d"):format(IDS.blade), 1, true) ~= nil)
     assertFalse(f.notice:IsShown(), "no notice once ForeverDB is loaded")
     assertEqual(f.foot.left:GetText(), "ForeverDB 2099.01.01.1 · loaded")
-    assertEqual(f.foot.right:GetText(), "CTRL-ALT-D: open in Item Search")
+    assertEqual(f.foot.right:GetText(), "ALT-CTRL-D: open in Item Search")
     local headings = {}
     for _, h in ipairs(f.headings) do if h:IsShown() then headings[#headings + 1] = h:GetText() end end
     assertEqual(table.concat(headings, ","), "DROPS FROM,SOLD BY,ALSO")

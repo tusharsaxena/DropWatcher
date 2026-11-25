@@ -278,7 +278,7 @@ function Compat.IsComparisonTooltip(tip)
 end
 
 --- The first key bound to a binding command, as the client names it for display (GetBindingText:
---- `CTRL-ALT-D` reads `Ctrl-Alt-D` on an English client); nil when nothing is bound.
+--- `ALT-CTRL-D` reads `Alt-Ctrl-D` on an English client); nil when nothing is bound.
 --- @param command string
 --- @return string|nil
 function Compat.BindingKeyText(command)

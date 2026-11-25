@@ -123,12 +123,12 @@ end, FOREVER_ONLY)
 
 test("item search tip: the hint names the bound key as the client writes it, and its switch hides it", function()
     local NS, m, tdp = enabled()
-    m.bindKey("CTRL-ALT-D", NS.Constants.ITEM_SEARCH.BINDING)
-    m.GetBindingText = function(key) return key == "CTRL-ALT-D" and "Ctrl-Alt-D" or key end
+    m.bindKey("ALT-CTRL-D", NS.Constants.ITEM_SEARCH.BINDING)
+    m.GetBindingText = function(key) return key == "ALT-CTRL-D" and "Alt-Ctrl-D" or key end
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
-    assertEqual(b[#b], "Ctrl-Alt-D: open in Item Search")
+    assertEqual(b[#b], "Alt-Ctrl-D: open in Item Search")
     tipSettings(NS).hint = false
     tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
@@ -243,7 +243,7 @@ end, FOREVER_ONLY)
 
 test("item search tip: an item with nothing to show gets no block, title and hint included", function()
     local NS, m, tdp = enabled()
-    m.bindKey("CTRL-ALT-D", NS.Constants.ITEM_SEARCH.BINDING)
+    m.bindKey("ALT-CTRL-D", NS.Constants.ITEM_SEARCH.BINDING)
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.pebble)
     assertEqual(#block(tdp, tip), 0)

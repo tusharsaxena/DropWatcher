@@ -197,5 +197,5 @@ function ISP.KeybindTab()
         if b.command == K.ITEM_SEARCH.BINDING then rows[#rows + 1] = b end
     end
     return H().KeybindingsTab({ bindings = rows,
-        intro = L["The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."] })
+        intro = L["The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."] })
 end

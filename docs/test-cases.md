@@ -1019,7 +1019,7 @@ Total.
 - item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_window.lua (22)
+### test_item_search_window.lua (23)
 
 - item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
 - item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
@@ -1034,6 +1034,7 @@ Total.
 - item search window: `/dw search <id>` shows the item, `/dw search <name>` lists the matches, bare opens it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: the search runs 0.25 s after the last key, and Enter shows the first match (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: without ForeverDB an id still shows the item, with Crafting and the spec §1 line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: ForeverDB installed but not loading: the matches note agrees with the notice (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: before the load a name search says loading and reads nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: each item shown joins the account-wide recent searches, newest first, while remembered (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: the blade's pane: DROPS FROM, SOLD BY and ALSO, the header and the footer (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
@@ -1044,7 +1045,7 @@ Total.
 - item search window: a drag saves its point per profile, the next open puts it back, and the lock holds it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 
-### test_item_search_key.lua (12)
+### test_item_search_key.lua (16)
 
 - item search key: the press's decision follows the owner's table
 - item search key: with no item tooltip a press opens the window empty, and the next press closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -1052,12 +1053,16 @@ Total.
 - item search key: a chat link's tooltip and a comparison tooltip count; a hidden one does not (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: stood down, a press refuses with the one line and opens nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: on Retail a press does nothing and no key is set
-- item search key: Ctrl-Alt-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: Alt-Ctrl-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: a key that runs something else is never taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: a binding that already has a key keeps it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: once per character: a key the player clears is not put back (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: in combat the default waits for the combat's end (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: the tooltip block's hint and the window's footer name the bound key (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: every key constant the addon binds is in the client's canonical modifier order
+- item search key: a character the first try marked is re-tried once: the dead chord cleared, Alt-Ctrl-D bound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: the re-try keeps the rules: a key the player bound stays, a taken Alt-Ctrl-D is not taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: the re-try waits out combat before it clears anything (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
 ### test_item_search_settings.lua (11)
 
@@ -3316,7 +3321,7 @@ Total.
 | test_item_search.lua | 16 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 9 |
-| test_item_search_key.lua | 2 |
+| test_item_search_key.lua | 3 |
 | test_item_search_settings.lua | 1 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -3411,5 +3416,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 66 |
-| **Total** | **2773** |
+| Skipped | 70 |
+| **Total** | **2774** |
