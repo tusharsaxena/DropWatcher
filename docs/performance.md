@@ -146,6 +146,8 @@ addon's own; they are not in the refresh ceilings above, which no Item Search pa
 | The recipe-reagent table (`core/RecipeReagentsForever.lua`, 2466 recipes) | **under 2.5 MB** resident on WoW Forever, built once on Item Search's first ask, the builder then let go; **0** on Retail (the chunk's constants are let go after the load) | 1906 KB built (2041 KB kept with the file's strings), 2.9 ms, headless Lua 5.1 on 2026-11-25; the 234 KB file's constants are let go on Retail | `NS.RecipeReagents.Get()` |
 | One item hover, cold (the item's static facts read from ForeverDB, then kept for the session) | `itemSearchTipCold`, **17500 bytes** | 17112.0 on WoW Forever at round 3's end (ISR3-DW-06; 16656.0 at the Item Search run, 16080 at IS-DW-04; below) | `modules/ItemSearchTip.lua`, `tests/perf.lua` |
 | One item hover, warm (the cache serves the static half; quest state, known recipes and ranks read live) | `itemSearchTipWarm`, **6500 bytes** | 6088.0 at round 3's end (6240.0 at the Item Search run, 5664 at IS-DW-04) | the same |
+| One rich item hover, cold (Linen Cloth: cached with a sell price, a quest objective, twelve recipe rows with one known, a drop with spw spots alone; ISR3-REV) | `itemSearchTipRichCold`, **35000 bytes** (new) | 33120.0 on WoW Forever, 2026-11-26; the badge's share 1152 (31968 with it off) | `tests/perf.lua` |
+| One rich item hover, warm | `itemSearchTipRichWarm`, **16500 bytes** (new) | 15352.0; the badge's share 0 (the verdict memo); `NS.ItemSearch.Get`'s live half alone 11224 | the same |
 | The per-item cache | grows with the items hovered, one entry each, for the session; emptied when ForeverDB's state moves or a recipe is learned | not measured headless | `NS.ItemSearch.Get` / `Invalidate` |
 | CPU | no budget in milliseconds (performance-§9: offline timings are orientation only); the hover is a cache read plus at most one ForeverDB lookup per source kind | about 0.07 ms cold, 0.04 ms warm per hover in the same run | `lua tests/perf.lua` |
 
@@ -196,6 +198,30 @@ on WoW Forever after each item:
 
 The cold hover's margin is 388 bytes and the warm one's 412: the next rise is to be bisected before
 a ceiling moves. `itemSearchTipInert` (Retail) stays 0.
+
+**The rich hover (ISR3-REV, the round 3 review).** The table above rests on the blade, and the blade
+reaches none of the badge's costly paths: the client never has it cached (the mock's `GetItemInfo` is
+keyed by link, `Compat.ItemInfoByID` asks by id), so there is no sell price, no Sell reason and no
+gear judge; it has no quest or recipe row, so no quest or tally reason is written; and every one of
+its sources has an spm row, so the spw conversion never runs. A second pair now hovers Linen Cloth
+(2589, the real id the shipped recipe table names) with invented ForeverDB rows written into the
+kit fake before its load (an item row, an objective of the fixture's errand, a drop from the
+wanderer, whose spots are spw alone) and the client's half installed after the blade is measured
+(an id-keyed `GetItemInfo` with a 13-copper sell price, Tailoring at 50, one recipe known), so the
+blade's figures do not move. Its verdict is Hold, High, 44, with two reasons (the quest, the other
+professions' recipes). Measured on WoW Forever:
+
+| Scenario | Bytes | Of which |
+|---|---|---|
+| `itemSearchTipRichCold` | 33120.0 | the badge 1152 (31968.0 with `itemSearch.tooltip.badge` off); `NS.ItemSearch.Get` cold 27840 |
+| `itemSearchTipRichWarm` | 15352.0 | the badge 0 (the memo answers); `NS.ItemSearch.Get` warm 11224 |
+
+These are **new ceilings**, 35000 and 16500, the measure plus a margin; the blade's 17500 and 6500
+are not raised. The badge is a small part of the rich hover. The bulk is `IS.Live`, which copies
+every quest and crafting row on each hover (`modules/ItemSearchModel.lua`); a reagent with twelve
+recipes pays twelve row copies warm. That design is older than round 3 and is the place to look if
+a reagent's hover is ever too dear. A Sell or Toss verdict's price reason (`CoinText`) and the gear
+judge stay unmeasured offline: the rich item is wanted, so it holds.
 
 ## In game
 
