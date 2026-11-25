@@ -392,6 +392,36 @@ function NS.MigrateTipRows(profile)
     tip.dropsShown = nil
 end
 
+-- ── step 17: the Item Search window's retired rows (ISF-DW-05, Item Search feedback spec §5) ──
+
+-- The window's rows that went with ISF-DW-05: the recent searches' switch (§5.2, W4), and the
+-- window's own density, font size and zone-and-level-columns switch, which the window no longer
+-- reads (§5.1: every text takes the main window's table font and row height; §5.4: every tab draws
+-- all its columns, so no switch sheds one).
+local STEP17_WINDOW_KEYS = { "recent", "density", "fontSize", "columns" }
+
+--- Step 17's work: every stored profile's retired Item Search window rows, and the account-wide
+--- recent searches (`global.itemSearch.recent`, the list W4 removed). The lock had no stored value
+--- of the window's own (it read the main window's shared `locked`, which stays), so nothing of it is
+--- deleted. A Retail account, which never stored any of it, passes through unchanged. Idempotent.
+--- @param sv table the raw SavedVariables table
+function NS.RetireItemSearchRows(sv)
+    if type(sv) ~= "table" then return end
+    local g = sv.global
+    local gi = type(g) == "table" and g.itemSearch
+    if type(gi) == "table" then
+        gi.recent = nil
+        if next(gi) == nil then g.itemSearch = nil end
+    end
+    for _, profile in pairs(type(sv.profiles) == "table" and sv.profiles or {}) do
+        local is = type(profile) == "table" and profile.itemSearch
+        local w = type(is) == "table" and is.window
+        if type(w) == "table" then
+            for _, k in ipairs(STEP17_WINDOW_KEYS) do w[k] = nil end
+        end
+    end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -425,6 +455,7 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireItemSources(profile) end },
     { to = 16, perProfile = true,        -- 15 -> 16: the tooltip's drop count becomes its rows per section
       run = function(_, profile) NS.MigrateTipRows(profile) end },
+    { to = 17, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 16 -> 17: Item Search's retired rows
 }
 
 -- The runner's target: the highest step's `to`.

@@ -658,14 +658,17 @@ end, FOREVER_ONLY)
 
 test("item search: a merged object's window row unions its parts' spots and counts its kinds", function()
     local NS = T.newAddon()
-    local ISV = NS.ItemSearchView
+    local ISC = NS.ItemSearchCells
     local spots = { [51] = { [7] = { { x = 0.1, y = 0.2 } } }, [52] = { [8] = { { x = 0.3, y = 0.4 }, { x = 0.5, y = 0.6 } } } }
-    local rows = ISV.DropRows({ drops = {
+    local rows = ISC.Drops({ drops = {
         { kind = "object", id = 51, ids = { 51, 52 }, name = "Invented Chest", named = true, chance = 0.5 },
-    } }, { spots = function(kind, id) return kind == "object" and spots[id] or nil end,
+    } }, {}, { spots = function(kind, id) return kind == "object" and spots[id] or nil end,
         mapName = function(map) return "Map " .. map end })
     -- red under: the first part's spots alone (map 7, one spot)
     assertEqual(rows[1].spot.map, 8, "the map with the most spots across both parts")
-    assertEqual(rows[1].zone, "Map 8")
-    assertEqual(rows[1].kinds, 2)
+    assertEqual(rows[1].cells.zone.text, "Map 8 +1 zone")
+    assertEqual(rows[1].cells.type.text, "Object ×2")
+    local merged
+    for _, r in ipairs(rows[1].tip.rows) do if r[1] == "Merged" then merged = r[2] end end
+    assertEqual(merged, "2 kinds of Invented Chest")
 end)

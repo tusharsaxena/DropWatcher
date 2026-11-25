@@ -939,11 +939,9 @@ local PINNED_ROWS = {
     { "itemSearch.window.enabled", "bool", "true" },
     { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
     { "itemSearch.window.barFromSkin", "bool", "true" },
-    { "itemSearch.window.density", "string", "\"comfortable\"" },
-    { "itemSearch.window.fontSize", "number", "13" },
-    { "itemSearch.window.columns", "bool", "true" },
     { "itemSearch.window.pins", "bool", "true" },
-    { "itemSearch.window.recent", "bool", "true" },
+    -- ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4): itemSearch.window.density, .fontSize,
+    -- .columns and .recent went on purpose, their stored values deleted by schema step 17.
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()

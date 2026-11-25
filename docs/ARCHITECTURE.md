@@ -295,7 +295,7 @@ is a whole-value `map` row written by the page's drag list (`settings/ItemSearch
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0), the per-character role store (`char.role`, LibKa0s-Role-1.0's, DW-FP02), Item Search's window position, recent searches, learned recipes and key-default record (WoW Forever) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
+(`char.session`, feedback-15 spec §0), the per-character role store (`char.role`, LibKa0s-Role-1.0's, DW-FP02), Item Search's window position, size and last tab, learned recipes and key-default record (WoW Forever) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 

@@ -461,9 +461,10 @@ Drops › Situations' table is.
 **Item Search window.** **Window:** Enable the Item Search window (`itemSearch.window.enabled`, on,
 alone on its line; off, the window closes and does not open). **Bars:** Bar color | Use the skin's
 color (on: the drop chance bars in the skin's accent, the swatch not read), never dimmed
-(anti-pattern #74). **Rows:** Density (Comfortable, the default, or Compact) | Font size (13, 10 to
-16), Zone and level columns (on) | Waypoint pins (on: a map waypoint, or TomTom's), Remember recent
-searches (on: the last 10 items, account-wide; off, the list is hidden and nothing new is added).
+(anti-pattern #74). **Rows:** Waypoint pins (on: a map waypoint, or TomTom's). Density, Font size,
+Zone and level columns and Remember recent searches went in ISF-DW-05 (Item Search feedback spec
+§5.1, §5.2, §5.4; schema step 17): the window draws in the main window's table font and row height
+(Window › Layout), every tab draws all its columns, and there are no recent searches.
 
 **Keybindings.** The library's key editor (`O.KeybindingsTab`, options-ui-§20) over the Item Search
 row of `NS.BINDINGS` alone, the same row General › Keybindings draws on WoW Forever, so the key is

@@ -33,12 +33,12 @@ local ROWS = {
     { "itemSearch.window.enabled",            "Item Search window", "Window" },
     { "itemSearch.window.barColor",           "Item Search window", "Bars" },
     { "itemSearch.window.barFromSkin",        "Item Search window", "Bars" },
-    { "itemSearch.window.density",            "Item Search window", "Rows" },
-    { "itemSearch.window.fontSize",           "Item Search window", "Rows" },
-    { "itemSearch.window.columns",            "Item Search window", "Rows" },
     { "itemSearch.window.pins",               "Item Search window", "Rows" },
-    { "itemSearch.window.recent",             "Item Search window", "Rows" },
 }
+-- Gone in ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4; schema step 17): the window takes
+-- the main window's font and row height, draws every column, and keeps no recent searches.
+local RETIRED = { "itemSearch.window.density", "itemSearch.window.fontSize", "itemSearch.window.columns",
+    "itemSearch.window.recent" }
 
 local function profileDefault(NS, path)
     local node = NS.C.PROFILE
@@ -91,7 +91,7 @@ test("item search settings: every spec §4.7 row is on the page, in order, with 
     end
 end, FOREVER_ONLY)
 
-test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; comfortable, 13)", function()
+test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's)", function()
     local NS = enabled()
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
@@ -103,9 +103,13 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 5
     assertEqual(S("itemSearch.tooltip.rows"), 5); assertTrue(S("itemSearch.tooltip.hideCompleted"))
     assertTrue(S("itemSearch.myProfessionsOnly"), "only the professions you know (feedback spec §4)")
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
-    assertTrue(S("itemSearch.window.barFromSkin")); assertEqual(S("itemSearch.window.density"), "comfortable")
-    assertEqual(S("itemSearch.window.fontSize"), 13)
-    for _, key in ipairs({ "columns", "pins", "recent", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
+    assertTrue(S("itemSearch.window.barFromSkin"))
+    for _, key in ipairs({ "pins", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
+    -- red under: a retired row still declared, or still defaulted (a dead setting)
+    for _, path in ipairs(RETIRED) do
+        assertNil(NS.SchemaRuntime.FindRow(path), path .. " has no row")
+        assertNil(profileDefault(NS, path), path .. " has no default")
+    end
 end, FOREVER_ONLY)
 
 test("item search settings: the seam refuses an out-of-range count, a fractional size and a bad order", function()
@@ -115,8 +119,6 @@ test("item search settings: the seam refuses an out-of-range count, a fractional
     assertFalse((Set("itemSearch.tooltip.rows", 0)), "below 1")
     assertFalse((Set("itemSearch.tooltip.rows", 2.5)), "a whole number")
     assertTrue((Set("itemSearch.tooltip.rows", 20)), "20, the top")
-    assertFalse((Set("itemSearch.window.fontSize", 17)), "past 16")
-    assertFalse((Set("itemSearch.window.density", "airy")), "a density the window has not")
     -- red under: an order with an unknown section or one twice
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "drops" })), "a section twice")
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "loot" })), "an unknown section")

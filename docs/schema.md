@@ -276,7 +276,9 @@ Item Search spec §4.7 (DropWatcher#17, IS-DW-07; `settings/ItemSearchRows.lua`)
 default exists on WoW Forever alone (`clients = { "forever" }`, defaults added where
 `C.FEATURE.itemSearch` is true): on Retail none is in the schema or the profile (spec §1,
 clients-§4). The tooltip's are read at each hover (`NS.ItemSearchTip.Options`), the window's at each
-repaint (`NS.ItemSearchWindow.Options`). No stored value moved, so no migration.
+repaint (`NS.ItemSearchWindow.Options`). Step 16 carried `itemSearch.tooltip.dropsShown` into
+`itemSearch.tooltip.rows`; step 17 (ISF-DW-05, `NS.RetireItemSearchRows`) deleted the window's
+`density`, `fontSize`, `columns` and `recent` rows' stored values and `global.itemSearch.recent`.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
@@ -292,11 +294,7 @@ repaint (`NS.ItemSearchWindow.Options`). No stored value moved, so no migration.
 | `itemSearch.tooltip.order` | `{ "drops", "vendors", "quests", "crafting", "skinned", "also" }` | Item tooltip › Sections (`map`, `skipRender`) | the order the sections are written in, set by the tab's drag list and written whole; its check takes known sections, each once, at least one. A partial or stale list reads as its known keys then the rest in the default order (`NS.ItemSearchTip.Options`). the CLI shows it as its entry count, as every `map` row |
 | `itemSearch.window.enabled` | `true` | Item Search window › Window | the Item Search window can open; off, an open one closes. Its reaction is `NS.ItemSearch.Refresh` |
 | `itemSearch.window.barColor`, `itemSearch.window.barFromSkin` | `{ r = 0.90, g = 0.75, b = 0.30 }`, `true` | Item Search window › Bars | DROPS FROM's chance bars: the skin's accent while Use the skin's color is on, else the swatch (no alpha) |
-| `itemSearch.window.density` | `"comfortable"` | Item Search window › Rows | the rows' height: `comfortable` (20) or `compact` (16) |
-| `itemSearch.window.fontSize` | `13` | Item Search window › Rows | the window's text size, a whole 10 to 16 |
-| `itemSearch.window.columns` | `true` | Item Search window › Rows | the level and zone columns of DROPS FROM, SOLD BY and QUESTS |
 | `itemSearch.window.pins` | `true` | Item Search window › Rows | the waypoint pin on each row with a spot (`C_Map.SetUserWaypoint`, or TomTom's when installed) |
-| `itemSearch.window.recent` | `true` | Item Search window › Rows | the recent searches list (`global.itemSearch.recent`); off, it is hidden and nothing new is added |
 
 ### Named state (no row)
 
@@ -304,7 +302,9 @@ repaint (`NS.ItemSearchWindow.Options`). No stored value moved, so no migration.
 |---|---|---|---|
 | `window.geometry.full`, `window.geometry.compact` | absent | a drag or a resize in that layout; Reset position clears both | `{ point, relativePoint, x, y }` as `point`, and `width`, `height`: one per layout (DW-C0; before step 5, `window.point`, `.width` and `.height`). Absent, full is 1080 x 600 and compact is 400 x 560 at the full window's top right. A stored width under the layout's least (its default: full 1080, compact 400; feedback-4 spec §4, DW-D4, recomputed by feedback-5 spec §4, DW-E4, feedback-6 spec §0-§1 and feedback-23) is raised to it on load |
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
-| `itemSearch.window.point` | absent (WoW Forever alone) | a drag of the Item Search window's title bar | `{ point, relativePoint, x, y }`; absent, the window opens centered (IS-DW-05) |
+| `itemSearch.window.point` | absent (WoW Forever alone) | a drag of the Item Search window's title bar, a resize | `{ point, relativePoint, x, y }`; absent, the window opens centered (IS-DW-05) |
+| `itemSearch.window.size` | absent (WoW Forever alone) | a resize from the Item Search window's corner grip | `{ width, height }`, at least 760 x 440; absent, 980 x 600 (Item Search feedback spec §5.1, ISF-DW-05) |
+| `itemSearch.window.tab` | absent (WoW Forever alone) | a click on one of the Item Search window's tabs | the tab picked last (`drops`, `vendors`, `quests`, `crafting`, `skinned`), shown for the next item that has it, else its first tab (feedback spec §5.3, ISF-DW-06) |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
 
 Each one's owner and every writer are named under
@@ -320,7 +320,6 @@ Each one's owner and every writer are named under
 | `history.retentionDays` | `30` | Keep history for (feedback-2 spec §5): 7, 14, 30, 60, 90 or 180 days, or `0`, Never delete; the `global.history.retentionDays` row (Drops › Retention; Window › Layout until feedback-24) stores here through its own closures. A change to a window that would delete anything asks first (`NS.HistoryRetention.OnChanged`); the groups older than it go once per session, five seconds after the first `PLAYER_ENTERING_WORLD`. Account-wide: a profile switch, copy or reset never changes it. It replaced `history.maxGroups` (the 20-group cap), which step 4 removes |
 | `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
 | `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
-| `itemSearch.recent` | absent until the first item shown (WoW Forever alone) | the Item Search window's recent searches, the last 10 item ids shown, newest first (`modules/ItemSearchWindow.lua`, written only while `itemSearch.window.recent` is on) |
 | `itemSearch.learnedRecipes` | absent until a profession window is read (WoW Forever alone) | `{ [spell] = { skillLine, reagents, made, name, build } }`: recipes the profession window listed that the shipped table lacks (Item Search spec §4.2 B, `modules/ItemSearchLearn.lua`); the session's first read drops each one the table now covers |
 | `notices.autoAsk` | absent until auto-ask is first turned on | `true` once auto-ask's one-time chat notice was said (design spec §9.4); written by `modules/AutoAsk.lua` alone, never through the seam |
 
@@ -460,10 +459,10 @@ it is named.
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
-- `profile.itemSearch.window.point`, `global.itemSearch.recent`, `global.itemSearch.learnedRecipes`
+- `profile.itemSearch.window.point`, `.size` and `.tab`, `global.itemSearch.learnedRecipes`
   and `char.itemSearch.keyDefaultedV` are Item Search's (WoW Forever alone, DropWatcher#17). Owners
-  and writers: `modules/ItemSearchWindow.lua` (`savePoint`, the title bar's drag stop; `ShowItem`,
-  through `NS.ItemSearchView.PushRecent`), `modules/ItemSearch.lua` and `modules/ItemSearchLearn.lua`
+  and writers: `modules/ItemSearchWindow.lua` (`savePoint`, the title bar's drag stop and the resize's
+  stop; the size, the resize's stop; `SelectTab`, a tab's click), `modules/ItemSearch.lua` and `modules/ItemSearchLearn.lua`
   (`IS.Learned`, made on first use and pruned once a session; the learner's out-of-combat read of
   the profession window) and `modules/ItemSearchKey.lua` (`TryDefaultKey`, once per character).
 - `char.session.start`, `char.session.instance` and `char.session.cleared` are the session

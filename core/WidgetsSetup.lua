@@ -251,3 +251,15 @@ end
 function NS.CloseMenu()
     if W then W.CloseMenu() end
 end
+
+--- The color a selected row reads in (W.SelectedColor, WidgetsDropdown minor 4; the owner's ruling
+--- of 2026-11-24: Ka0s Default's gold in every skin, a skin's own selection color only where the gold
+--- sits too near its text). Item Search's selected match draws in it (Item Search feedback spec §5.2,
+--- W5). Without the library, the skin's selection wash (`dw.rowOpen`, which follows `list.sel`).
+--- Answers r, g, b.
+--- @return number, number, number
+function NS.SelectedColor()
+    if W and type(W.SelectedColor) == "function" then return W.SelectedColor(addonName) end
+    local r, g, b = NS.SkinColor("dw.rowOpen")
+    return r, g, b
+end

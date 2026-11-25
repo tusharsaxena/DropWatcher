@@ -77,7 +77,6 @@ L["Cosmetic armor and weapons: a look to collect, never gear."] = "Cosmetic armo
 L["Lockboxes"] = "Lockboxes"
 L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] =
     "Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."
-L["Containers"] = "Containers"
 L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] =
     "Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."
 L["Everything else that is rolled on"] = "Everything else that is rolled on"
@@ -438,7 +437,6 @@ L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
     "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
 L["Simulator"] = "Simulator"
 -- settings/SchemaRows.lua: General › Role (Forever port design §11.4)
-L["Role"] = "Role"
 L["Tank"] = "Tank"
 L["Healer"] = "Healer"
 L["Damage"] = "Damage"
@@ -495,7 +493,6 @@ L["The creatures the item is skinned from, likeliest first, with their chance."]
 L["Reward from / starts quest"] = "Reward from / starts quest"
 L["The quests that reward the item, and the quest the item starts."] =
     "The quests that reward the item, and the quest the item starts."
-L["Comfortable"] = "Comfortable"
 L["Item tooltip"] = "Item tooltip"
 L["Tooltip block"] = "Tooltip block"
 L["Add Item Search to item tooltips"] = "Add Item Search to item tooltips"
@@ -537,20 +534,9 @@ L["The color of the drop chance bars in DROPS FROM. Not read while Use the skin'
     "The color of the drop chance bars in DROPS FROM. Not read while Use the skin's color is on."
 L["Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."] =
     "Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."
-L["Rows"] = "Rows"
-L["Density"] = "Density"
-L["How tall the window's rows are: Comfortable or Compact."] =
-    "How tall the window's rows are: Comfortable or Compact."
-L["The size of the window's text, 10 to 16."] = "The size of the window's text, 10 to 16."
-L["Zone and level columns"] = "Zone and level columns"
-L["Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."] =
-    "Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."
 L["Waypoint pins"] = "Waypoint pins"
 L["Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."] =
     "Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."
-L["Remember recent searches"] = "Remember recent searches"
-L["List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."] =
-    "List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."
 -- settings/ItemSearchPage.lua and settings/Pages.lua (Item Search, DropWatcher#17)
 L["Drag to reorder"] = "Drag to reorder"
 L["The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."] =

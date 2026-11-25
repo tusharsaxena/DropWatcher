@@ -457,14 +457,14 @@ C.ITEM_SEARCH = {
     DEFAULT_KEY = "ALT-CTRL-D",
     DEAD_KEY    = "CTRL-ALT-D",
     KEY_DEFAULT_V = 2,
-    -- The window (modules/ItemSearchWindow.lua, spec §4.5, mockup board 2): its global name (the
-    -- UISpecialFrames entry), its fixed size, the left pane's width, the rows' heights by density,
-    -- the matches a name search lists, the recent searches it keeps and the item header's icon.
+    -- The window (modules/ItemSearchWindow.lua, spec §4.5; Item Search feedback spec §5.1): its
+    -- global name (the UISpecialFrames entry), its default size and its least one (resizable from
+    -- the corner up to the screen, W14), the left pane's width, the matches a name search lists,
+    -- the item header's icon and a row pin's size. Its rows' height and font are the main window's
+    -- (NS.WindowRows.Metrics), so it keeps none of its own.
     WINDOW = {
-        NAME = "DropWatcherItemSearchFrame", WIDTH = 760, HEIGHT = 520, LEFT_W = 240,
-        ROW_H = { comfortable = 20, compact = 16 }, MATCHES = 50, RECENT = 10, ICON = 32,
-        ROW_ICON = 16, BAR_W = 90, PIN = 14, FONT = 13, FONT_MIN = 10, FONT_MAX = 16,
-        LOAD_RETRY = 0.5,
+        NAME = "DropWatcherItemSearchFrame", WIDTH = 980, HEIGHT = 600, MIN_W = 760, MIN_H = 440,
+        LEFT_W = 250, MATCHES = 50, ICON = 32, PIN = 14, LOAD_RETRY = 0.5,
     },
 }
 

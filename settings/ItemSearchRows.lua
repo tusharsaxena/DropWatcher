@@ -14,8 +14,10 @@ local _, NS = ...
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
 --   * Item Search window: its switch, the bar color (Use the skin's color, else the swatch beside
---     it), density, font size, the zone and level columns, the waypoint pins and the recent
---     searches.
+--     it) and the waypoint pins. Density, Font size, Zone and level columns and Remember recent
+--     searches went in ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4; schema step 17): the
+--     window's rows take the main window's table font and row height, and every tab draws all its
+--     columns.
 -- Every `default` references defaults/Profile.lua (savedvariables-§2). The makers and checks are
 -- settings/SchemaRows.lua's (Settings.RowMakers), so a row here is shaped like every other row.
 
@@ -79,8 +81,6 @@ local function repaintSearchWindow()
     if W and W.ApplySettings then W.ApplySettings() end
 end
 
-local DENSITIES = M.choices{ "comfortable", L["Comfortable"], "compact", L["Compact"] }
-
 -- ── Item tooltip ────────────────────────────────────────────────────────────────────────────
 
 local function tooltip()
@@ -140,16 +140,8 @@ local function window()
     M.bool("itemSearch.window.barFromSkin", W.barFromSkin, L["Use the skin's color"],
         L["Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."], bars)
     local rows = M.with(at, { subgroup = L["Rows"] })
-    M.pick("itemSearch.window.density", W.density, DENSITIES, L["Density"],
-        L["How tall the window's rows are: Comfortable or Compact."], rows)
-    M.slider("itemSearch.window.fontSize", W.fontSize, 10, 16, 1, L["Font size"],
-        L["The size of the window's text, 10 to 16."], M.with(rows, { validate = M.wholeIn(10, 16) }))
-    M.bool("itemSearch.window.columns", W.columns, L["Zone and level columns"],
-        L["Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."], rows)
     M.bool("itemSearch.window.pins", W.pins, L["Waypoint pins"],
         L["Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."], rows)
-    M.bool("itemSearch.window.recent", W.recent, L["Remember recent searches"],
-        L["List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."], rows)
 end
 
 NS.SchemaRuntime.AddRows(M.Collect(function()

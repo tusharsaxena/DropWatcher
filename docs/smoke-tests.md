@@ -4728,6 +4728,42 @@ list, a recipe you know that gives a skill-up has an up arrow in its orange, yel
 know that is gray has a light gray dash; one you don't know has a dark gray padlock. No dots or rings
 are left anywhere, and the three shapes are told apart without their colors. Result:
 
+**ITEM-SEARCH-24. The window's frame (W1 to W7, W13, W14).** Open Item Search (the magnifier, the
+key or `/dw search`) → the title reads `Drop Watcher · Item Search` in the main window's title font;
+there is no lock mark (settings and close only), and the window moves by its title bar even with
+General › Master controls › Lock frame on. The footer says only ForeverDB's version and state, with
+no key text. Every text (the matches, the item header, the tabs, the tables) is in the main window's
+face and size: change Window › Layout › Row height and the Tables font → Item Search's rows follow,
+and the item's name is the size of a list row's title, not a large heading. There is no Recent
+searches list or setting. Clear's label sits in the middle of its button. Drag the bottom-right grip
+→ the window resizes, never under about 760 x 440; the table's Source and Zone columns widen with it
+while Type, Level and Chance keep their width; `/reload` → it comes back at the same size and place.
+Search `heavy` → the left pane's header reads `Matches · n` with a Sort mark (Best match, Name, Item
+id, each reorders the list); the rows alternate, light up under the pointer, show the item's game
+tooltip, and the one shown on the right is marked gold (in every skin: try Azeroth and Obsidian).
+Shift-click a match, the header's icon and the header's name → each links the item in the chat box;
+there is no Link in chat button. Result:
+
+**ITEM-SEARCH-25. The tabs and their tables (W8 to W10, W15).** Show Heavy Leather (or any item with
+drops, vendors, quests and recipes) → a tab strip under the header in the main window's tab look,
+one tab per section that has rows, in the order Drops from, Sold by, Quests, Crafting, Skinned from,
+each with its count; Crafting reads `Crafting 12 / 74` while only your professions show. Each tab is
+a table with its own columns (Drops: Source, Type, Level, Zone, Chance, pin; Sold by: Vendor, Level,
+Zone, Faction, Price, pin; Quests: mark, Quest, Role, Level, Min, Status, Giver, pin; Crafting:
+glyph, Recipe, Profession, Uses, Makes, Skill, Status; Skinned from: Creature, Level, Skill, Zone,
+Chance, pin). Levels are colored by how hard they are for you; a creature's name is red, an object's
+white, a container's in its quality color. Above each table a section header (dark band, gold title,
+dim count, `sorted: Best for you`) with Filter, Sort and Reset marks, each with a tooltip: Filter
+toggles the tab's own filters (Drops: Creatures, Objects, Containers, Only my zone, Only my level
+band; Sold by: Only my faction; Quests: Hide completed; Crafting: Only my professions, Only known;
+Skinned from: Only my zone) and its funnel fills while one narrows the rows; Reset shows only then,
+or while a sort is picked, and puts Best for you back. Crafting's header has a My professions / All
+professions chip, not saved. Click a column's title → the table sorts by it with an arrow; click
+again → it flips. Every row alternates, lights up under the pointer and has a tooltip (a title, label
+and value rows, dim hints last); a container's row and a recipe's Makes show the item's own tooltip,
+and shift-click links it. Pick Quests, then show another item with quests → Quests stays picked.
+Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

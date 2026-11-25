@@ -1053,3 +1053,8 @@ L["Class"] = "Class"
 L["%s %d · %s"] = "%s %d · %s"
 L["Click to list every player"] = "Click to list every player"
 L["Click to fold them into one line again"] = "Click to fold them into one line again"
+
+-- Read by settings/ and by modules/ItemSearch*.lua alike (the Item Search window, ISF-DW-05/06)
+L["Containers"] = "Containers"
+L["Role"] = "Role"
+L["Rows"] = "Rows"

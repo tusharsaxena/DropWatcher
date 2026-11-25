@@ -381,12 +381,14 @@ do
                 order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
-            -- skin's accent, or the custom one), row density, font size, the zone and level
-            -- columns, the waypoint pins and the recent searches. Its saved point is written by a
-            -- drag (`point`), with no default: it opens centered.
+            -- skin's accent, or the custom one) and the waypoint pins. Its rows take the main
+            -- window's table font and row height (feedback spec §5.1), so it has no density or font
+            -- size of its own; the recent searches and the zone-and-level-columns switch went too
+            -- (schema step 17). Its saved point and size are written by a drag and a resize
+            -- (`point`, `size`) and its last tab by a pick (`tab`), with no default: it opens
+            -- centered at C.ITEM_SEARCH.WINDOW's size on the first tab.
             window  = {
-                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 },
-                density = "comfortable", fontSize = 13, columns = true, pins = true, recent = true,
+                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
             },
         }
     end

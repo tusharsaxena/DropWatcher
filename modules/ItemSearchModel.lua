@@ -127,6 +127,7 @@ local function describe(db, s)
         local n = db.NPC(s.id)
         if type(n) == "table" and n.name then
             s.name, s.named, s.minLevel, s.maxLevel = n.name, true, num(n.minLevel), num(n.maxLevel)
+            s.rank = num(n.rank)
             return s
         end
         s.name, s.named = L["Creature %d"]:format(s.id), false
@@ -281,20 +282,21 @@ local function itemFacts(itemID, ctx, db)
     return out
 end
 
--- A creature's level range and side (`nfac`: "A", "H", "AH" or nil), for the ranking (spec §3).
+-- A creature's level range and side (`nfac`: "A", "H", "AH" or nil), for the ranking (spec §3),
+-- and its subname (a vendor's "Invented Goods"), for the window's Sold by tooltip (spec §5.6).
 local function npcFacts(db, id)
     local n = db.NPC(id)
-    if type(n) ~= "table" then return nil, nil, nil end
-    return num(n.minLevel), num(n.maxLevel), n.faction
+    if type(n) ~= "table" then return nil, nil, nil, nil end
+    return num(n.minLevel), num(n.maxLevel), n.faction, type(n.subname) == "string" and n.subname or nil
 end
 
 local function vendorsOf(db, src)
     local out = {}
     for _, id in ipairs(list(type(src) == "table" and src.vendors)) do
         if num(id) then
-            local minLevel, maxLevel, faction = npcFacts(db, id)
+            local minLevel, maxLevel, faction, subname = npcFacts(db, id)
             out[#out + 1] = { id = id, name = npcName(db, id), minLevel = minLevel, maxLevel = maxLevel,
-                faction = faction }
+                faction = faction, subname = subname }
         end
     end
     return out
@@ -539,6 +541,15 @@ local function otherSide(row, me)
     local f, mine = row.faction, me.faction
     if type(f) ~= "string" or (mine ~= "A" and mine ~= "H") then return false end
     return f:find(mine, 1, true) == nil
+end
+
+--- Whether a vendor serves only the other side (`nfac` names the other side alone): the window's
+--- "can't buy" and its "Only my faction" filter (feedback spec §5.4, §5.5). No known side: false.
+--- @param row table a vendor row (`faction`)
+--- @param me table IS.Rank's context (`faction`)
+--- @return boolean
+function IS.OtherSide(row, me)
+    return otherSide(row, me or {})
 end
 
 local function vendorTier(row, me)
