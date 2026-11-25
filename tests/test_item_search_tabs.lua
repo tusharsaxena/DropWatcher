@@ -81,6 +81,28 @@ test("item search tabs: fixed columns keep their width, the flex ones share the 
     assertTrue(narrow.skill.w < 130, "the fixed columns gave up room")
 end)
 
+test("item search tabs: the columns start TABS.INSET in and end TABS.INSET short; glyphs and marks are centered", function()
+    local NS = T.newAddon()
+    local TABS = NS.ItemSearchTabs
+    -- round 3 spec §4.1, item 12: the window's own body margin
+    assertEqual(TABS.INSET, 6); assertEqual(TABS.INSET, NS.Constants.WINDOW.INSET)
+    for _, tab in ipairs(TABS.ORDER) do
+        local cols = TABS.DEF[tab].columns
+        local lay = TABS.Layout(cols, 900)
+        -- red under: the first column flush with the table's edge (x = 0)
+        assertEqual(lay[cols[1].key].x, TABS.INSET, tab .. ": the first column inset")
+        local last = lay[cols[#cols].key]
+        assertTrue(last.x + last.w <= 900 - TABS.INSET, tab .. ": the last column ends INSET short")
+        local used = 0
+        for _, c in ipairs(cols) do used = used + lay[c.key].w end
+        used = used + TABS.GAP * (#cols - 1)
+        assertTrue(used <= 900 - 2 * TABS.INSET and used > 900 - 2 * TABS.INSET - #cols, tab .. ": laid across width - 2 * INSET")
+    end
+    assertEqual(TABS.Column("crafting", "glyph").justify, "CENTER", "the glyph column centered")
+    assertEqual(TABS.Column("quests", "mark").justify, "CENTER", "the mark column centered")
+    assertEqual(TABS.Column("drops", "source").justify, nil, "a text column stays left")
+end)
+
 test("item search tabs: a column's click sorts by it, a second flips it; Best for you is the default", function()
     local NS = T.newAddon()
     local TABS = NS.ItemSearchTabs

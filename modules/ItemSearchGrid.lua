@@ -18,7 +18,11 @@ local _, NS = ...
 --
 -- THE TABLE (spec §5.4): the column labels on the skin's sort-header band (NS.Skin.SortHeaderBar,
 -- as the main window's), each a button that sorts (a second click flips; the arrow shows which),
--- then a scroll frame of pooled rows. Every row is Drop Watcher's table row: the stripe on every
+-- then a scroll frame of pooled rows. A sortable label lights `text.link` under the pointer (the
+-- marks' ISG.MARK_HOT), and while it is not the sort in force shows, faint (ISG.ARROW_HINT_ALPHA),
+-- the triangle its click would give (round 3 spec §4.1, item 5). The triangles are LibKa0s's
+-- open-iconic `sort-up` (ascending) and `sort-down`, LootHistory's, at the label's line height and
+-- tinted `list.header.arrow` (item 11). A label with no sort gets no hover. Every row is Drop Watcher's table row: the stripe on every
 -- other row (`list.stripe`), the skin's hover wash (NS.WindowRows' `tipRow` rows), the main
 -- window's table font and row height (NS.WindowRows.Metrics: Window > Layout's rows, the skin's face
 -- and its scale), and a tooltip under the Ka0s rules (spec §5.6: the title, label and value rows,
@@ -48,6 +52,8 @@ ISG.SEL_ALPHA = 0.26   -- the selected row's wash over the selection color (Ka0s
 ISG.SEL_EDGE = 2       -- the selected row's left edge, in pixels
 ISG.MARK_REST, ISG.MARK_HOT = "icon.tint", "text.link"
 ISG.HEADER_BG, ISG.HEADER_TEXT = "list.header.bg", "list.header.text"
+ISG.ARROW_HINT_ALPHA = 0.5   -- the next-sort triangle's alpha on a hovered label that is not the sort
+ISG.ARROW_SIZE = 10          -- the triangle's size when the label's line height is not measured yet
 
 local function TM() return NS.TipMarks end
 
@@ -446,20 +452,55 @@ ISG.ScrollArea = scrollArea
 local function columnTip(t, key)
     local c = TABS.Column(t.tab, key)
     if not c then return end
-    local hint = t.sort and t.sort.col == key and L["Click again: reverse the order"] or L["Click: sort by this column"]
+    local hint = t.sort and t.sort.col == key and L["Click again: reverse the order"]
+        or L["Click: sort by %s; click again to reverse"]:format(c.title)
     return c.title, TM().Row(L["Shows"], c.tip or c.title), TM().Hint(hint)
 end
 
+--- The triangle for a sort direction: `sort-down` for high to low, `sort-up` for low to high.
+--- @param desc boolean
+--- @return string
+function ISG.ArrowIcon(desc) return desc and "sort-down" or "sort-up" end
+
+-- The label's line height, rounded (the triangle's size); ISG.ARROW_SIZE before the client measures.
+local function arrowSize(b)
+    local h = b.text.GetStringHeight and b.text:GetStringHeight() or 0
+    h = type(h) == "number" and math.floor(h + 0.5) or 0
+    return h > 0 and h or ISG.ARROW_SIZE
+end
+
+-- One column label's look: its tone (hot under the pointer while it sorts) and its triangle (the sort
+-- in force, else the next sort faint while hovered, else none).
+local function paintLabel(b)
+    local hot = b.dwHot == true and b.key ~= nil
+    b.text:SetTextColor(NS.SkinColor(hot and ISG.MARK_HOT or ISG.HEADER_TEXT))
+    b.arrow:SetVertexColor(NS.SkinColor("list.header.arrow"))
+    local t, sort = b.dwTable, b.dwTable and b.dwTable.sort
+    local on = b.key ~= nil and sort ~= nil and sort.col == b.key
+    local desc = sort and sort.desc
+    if not on and hot and sort then desc = TABS.NextSort(t.tab, sort, b.key).desc end
+    local size = arrowSize(b)
+    b.arrow:SetSize(size, size)
+    b.arrow:SetTexture(NS.Icon(ISG.ArrowIcon(desc == true)))
+    b.arrow:SetAlpha(on and 1 or ISG.ARROW_HINT_ALPHA)
+    b.arrow:SetShown(on or hot)
+end
+ISG.PaintLabel = paintLabel
+
 local function newColumnLabel(t)
     local b = CreateFrame("Button", nil, t.head)
+    b.dwTable = t
     b:SetHeight(K.COLHEAD_H)
     b.text = b:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
     b.text:SetPoint("LEFT", b, "LEFT", 0, 0)
     NS.Skin.Text(b.text, ISG.HEADER_TEXT)
     b.arrow = b:CreateTexture(nil, "OVERLAY")
-    b.arrow:SetSize(10, 10)
+    b.arrow:SetSize(ISG.ARROW_SIZE, ISG.ARROW_SIZE)
     b.arrow:SetPoint("LEFT", b.text, "RIGHT", 3, 0)
-    NS.SkinPaint(b.arrow, function(a) a:SetVertexColor(NS.SkinColor("list.header.arrow")) end)
+    b.arrow:Hide()
+    NS.SkinPaint(b, paintLabel)
+    b:HookScript("OnEnter", function(self) self.dwHot = true; paintLabel(self) end)
+    b:HookScript("OnLeave", function(self) self.dwHot = false; paintLabel(self) end)
     b:SetScript("OnClick", function(self) if t.onSort and self.key then t.onSort(self.key) end end)
     NS.Window.AttachTooltip(b, function() return columnTip(t, b.key) end)
     return b
@@ -486,7 +527,7 @@ function ISG.Table(parent)
     return t
 end
 
-local function paintLabels(t, cols, layout, sort)
+local function paintLabels(t, cols, layout)
     for _, b in ipairs(t.labels) do b:Hide() end
     local i = 0
     for _, c in ipairs(cols) do
@@ -499,9 +540,8 @@ local function paintLabels(t, cols, layout, sort)
             b:SetPoint("LEFT", t.head, "LEFT", at.x, 0)
             b:SetWidth(math.max(1, at.w))
             b.text:SetText(c.title)
-            local on = sort.col == c.key
-            b.arrow:SetTexture(NS.Icon(sort.desc and "arrow-down" or "arrow-up"))
-            b.arrow:SetShown(on)
+            if b.EnableMouse then b:EnableMouse(b.key ~= nil) end
+            paintLabel(b)
             b:Show()
         end
     end
@@ -513,7 +553,7 @@ function ISG.PaintTable(t, tab, rows, width, opts)
     local cols = TABS.DEF[tab].columns
     local layout = TABS.Layout(cols, width)
     t.tab, t.sort, t.onSort = tab, opts.sort, opts.onSort
-    paintLabels(t, cols, layout, opts.sort)
+    paintLabels(t, cols, layout)
     NS.Pool.ReleaseAll(t.pool)
     local m = opts.metrics
     local h = m.height

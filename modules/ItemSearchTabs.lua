@@ -22,7 +22,11 @@ local _, NS = ...
 -- lets such a column go). A few widths moved a little so Crafting's fixed columns fit the minimum
 -- window (Profession 120, Skill 130, Status 120). TABS.Layout gives every fixed column its width and
 -- shares the rest among the flex ones, so a wider window truncates less (W8); a narrow one scales the
--- fixed columns down before a flex column falls under FLEX_MIN.
+-- fixed columns down before a flex column falls under FLEX_MIN. The columns start TABS.INSET in from
+-- the table's left edge and end TABS.INSET short of its right (round 3 spec §4.1, item 12: the
+-- window's body margin, C.WINDOW.INSET), so the first column's text sits off the edge; the row's
+-- stripe, hover wash and selection edge still span the whole row. The glyph and mark columns are
+-- centered (`justify`).
 
 NS.ItemSearchTabs = NS.ItemSearchTabs or {}
 local TABS = NS.ItemSearchTabs
@@ -32,6 +36,7 @@ local floor = math.floor
 
 TABS.ORDER = { "drops", "vendors", "quests", "crafting", "skinned" }
 TABS.GAP = 6
+TABS.INSET = NS.Constants.WINDOW.INSET   -- 6: the columns' margin at each side of the table
 TABS.FLEX_MIN = 72
 
 local function col(key, title, w, opts)
@@ -83,7 +88,7 @@ TABS.DEF = {
     quests = {
         title = L["Quests"], one = L["quest"], many = L["quests"],
         columns = {
-            col("mark", nil, 24, { kind = "mark", sort = false }),
+            col("mark", nil, 24, { kind = "mark", sort = false, justify = "CENTER" }),
             col("quest", L["Quest"], "flex", { tip = L["its title, in the color of how hard it is for you"] }),
             col("role", L["Role"], 110, { tip = L["whether it needs the item, rewards it or the item starts it"] }),
             col("level", L["Level"], 56, { tip = L["the quest's level"] }),
@@ -99,7 +104,7 @@ TABS.DEF = {
     crafting = {
         title = L["Crafting"], one = L["recipe"], many = L["recipes"], chip = "mine",
         columns = {
-            col("glyph", nil, 24, { kind = "glyph", sort = false }),
+            col("glyph", nil, 24, { kind = "glyph", sort = false, justify = "CENTER" }),
             col("recipe", L["Recipe"], "flex", { tip = L["the recipe; white if you know it"] }),
             col("profession", L["Profession"], 120, { tip = L["the profession it belongs to"] }),
             col("uses", L["Uses"], 56, { tip = L["how many of this item one craft takes"] }),
@@ -334,13 +339,15 @@ local function measure(cols)
     return fixed, flex
 end
 
---- Lay `cols` across `width`: `{ [key] = { x, w } }`. Fixed columns keep their width and the flex
---- ones share the rest, TABS.GAP apart; when that leaves a flex column under TABS.FLEX_MIN, the fixed
---- columns are scaled down until it does not.
+--- Lay `cols` across `width`: `{ [key] = { x, w } }`, from x = TABS.INSET across
+--- `width - 2 * TABS.INSET`. Fixed columns keep their width and the flex ones share the rest,
+--- TABS.GAP apart; when that leaves a flex column under TABS.FLEX_MIN, the fixed columns are scaled
+--- down until it does not.
 --- @param cols table a tab's columns
---- @param width number
+--- @param width number the table's whole width
 --- @return table
 function TABS.Layout(cols, width)
+    width = width - 2 * TABS.INSET
     local fixed, flex = measure(cols)
     local gaps = TABS.GAP * math.max(0, #cols - 1)
     local room = width - gaps - fixed
@@ -350,7 +357,7 @@ function TABS.Layout(cols, width)
         room = width - gaps - fixed * scale
     end
     local share = flex > 0 and math.max(TABS.FLEX_MIN, floor(room / flex)) or 0
-    local out, x = {}, 0
+    local out, x = {}, TABS.INSET
     for _, c in ipairs(cols) do
         local w = c.flex and share or floor(c.w * scale)
         out[c.key] = { x = x, w = w }

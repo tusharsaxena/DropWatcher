@@ -536,8 +536,9 @@ modules\ItemSearchView.lua
 # LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above), NS.ItemSearchView (the line
 # above) and NS.L at load and publishes NS.ItemSearchCells, the window's pure table rows per tab.
 modules\ItemSearchCells.lua
-# LOAD-BEARING: takes NS.L at load and publishes NS.ItemSearchTabs, the window's pure tabs, columns,
-# filters and sorts; modules\ItemSearchGrid.lua and modules\ItemSearchWindow.lua (below) take it.
+# LOAD-BEARING: takes NS.L and NS.Constants (its WINDOW.INSET) at load and publishes
+# NS.ItemSearchTabs, the window's pure tabs, columns, filters and sorts; modules\ItemSearchGrid.lua
+# and modules\ItemSearchWindow.lua (below) take it.
 modules\ItemSearchTabs.lua
 # LOAD-BEARING: takes NS.ItemSearchTabs (the line above), NS.Constants, NS.L and NS.Compat at load and
 # publishes NS.ItemSearchGrid, the window's section headers, tables and match rows. NS.Window,

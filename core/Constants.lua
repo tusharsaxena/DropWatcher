@@ -449,6 +449,9 @@ C.ITEM_SEARCH = {
     LEARN_DELAY = 1,
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
     RULE_WIDTH  = 160,
+    -- The recipe glyphs' size in pixels, the tooltip's and the window's alike (round 3 spec §4.1):
+    -- an explicit escape size, so both faces draw them the same.
+    GLYPH_SIZE  = 14,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
     -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
     -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D

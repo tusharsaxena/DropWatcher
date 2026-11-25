@@ -517,6 +517,46 @@ test("item search window: a column's title sorts the table, and a second click f
     assertEqual(W.TableRows()[1].cells[1].text:GetText(), "Fixture Gnoll", "level 10 first")
     assertTrue(level.arrow:IsShown(), "the arrow shows the sort")
     assertEqual(W.Frame().section.note:GetText(), "sorted: Level, high to low")
+    -- round 3 spec §4.1, item 11: LootHistory's solid triangles, sort-down high to low, sort-up low to high
+    assertTrue(level.arrow:GetTexture():find("sort-down", 1, true) ~= nil, "high to low: sort-down")
+    assertEqual(level.arrow:GetAlpha(), 1, "the sort in force: full alpha")
+    level:__fire("OnClick", "LeftButton")
+    assertTrue(level.arrow:GetTexture():find("sort-up", 1, true) ~= nil, "low to high: sort-up")
+end, FOREVER_ONLY)
+
+test("item search window: a column title lights under the pointer and shows the triangle its click would give", function()
+    local NS = enabled()
+    local W = NS.ItemSearchWindow
+    W.ShowItem(IDS.blade)
+    local g = W.Frame().grid
+    local by = {}
+    for _, b in ipairs(g.labels) do if b:IsShown() and b.key then by[b.key] = b end end
+    local level, chance = by.level, by.chance
+    assertTrue(level ~= nil and chance ~= nil, "the Level and Chance labels")
+    local function same(fs, token)
+        local r, gg, b = fs:GetTextColor()
+        local er, eg, eb = NS.SkinColor(token)
+        return math.abs(r - er) < 1e-6 and math.abs(gg - eg) < 1e-6 and math.abs(b - eb) < 1e-6
+    end
+    assertTrue(same(level.text, "list.header.text"), "at rest: the header's text")
+    assertFalse(level.arrow:IsShown(), "at rest and not the sort: no triangle")
+    level:__fire("OnEnter")
+    -- red under: a header that does not look clickable (round 3 item 5)
+    assertTrue(same(level.text, "text.link"), "hovered: the marks' hot tone")
+    assertTrue(level.arrow:IsShown(), "hovered: the next sort's triangle")
+    assertEqual(level.arrow:GetAlpha(), NS.ItemSearchGrid.ARROW_HINT_ALPHA, "faint")
+    assertTrue(level.arrow:GetTexture():find("sort-up", 1, true) ~= nil, "Level's first click sorts low to high")
+    local tip = NS.Window.TooltipOf(level)
+    assertEqual(tip[#tip]:find("Click: sort by Level; click again to reverse", 1, true) ~= nil, true, "the hint names the column")
+    level:__fire("OnLeave")
+    assertTrue(same(level.text, "list.header.text")); assertFalse(level.arrow:IsShown(), "left: no triangle")
+    chance:__fire("OnEnter")
+    assertTrue(chance.arrow:GetTexture():find("sort-down", 1, true) ~= nil, "Chance's first click sorts high to low")
+    chance:__fire("OnLeave")
+    -- the untitled columns (the pin) get no label at all, and so no hover
+    for _, b in ipairs(g.labels) do
+        if b:IsShown() then assertTrue(b.key ~= nil, "every shown label sorts") end
+    end
 end, FOREVER_ONLY)
 
 test("item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash", function()
@@ -565,7 +605,11 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     for _, row in ipairs(W.TableRows()) do
         assertTrue(row.cells[3].text:GetText() == "First Aid", "only First Aid's recipes")
         assertTrue(row.cells[1].text:GetText() ~= "", "a glyph")
+        -- round 3 spec §4.1: the tooltip's glyph at its explicit size, centered in its column
+        assertTrue(row.cells[1].text:GetText():find(":14:14:", 1, true) ~= nil, "the glyph at GLYPH_SIZE, as in the tooltip")
+        assertEqual(row.cells[1].text:GetJustifyH(), "CENTER", "the glyph column centered")
     end
+    assertEqual(f.grid.layout.glyph.x, NS.ItemSearchTabs.INSET, "the first column inset off the table's edge")
     local shown = #W.TableRows()
     f.section.chip:__fire("OnClick", "LeftButton")
     assertEqual(f.section.chip.label:GetText(), "All professions")

@@ -217,7 +217,7 @@ test("item search tip: quest marks ! ? and the check mark; completed hidden by d
         "completed: the check mark")
 end, FOREVER_ONLY)
 
-test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray dash for none, a dark gray lock for not known", function()
+test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray left-right arrow for none, a dark gray lock for not known", function()
     local known
     local NS, _, tdp = enabled({ setup = function(mm)
         mm.IsPlayerSpell = function(spell) return spell == known end
@@ -230,8 +230,8 @@ test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray
     local c = find(b, "Crafting")
     assertTrue(c ~= nil, "a Crafting section")
     -- red under: the old dots (feedback spec §5.7, T4), the known mark on an unknown recipe, or a
-    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the dash.
-    assertTrue(b[c + 1]:find("phosphor\\minus:", 1, true) ~= nil, "known, no skill-up: the dash")
+    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the left-right arrow.
+    assertTrue(b[c + 1]:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil, "known, no skill-up: the left-right arrow, 14 px")
     assertTrue(b[c + 1]:find(rows[1].name, 1, true) ~= nil, "a known recipe ranks first")
     assertTrue(b[c + 2]:find("phosphor\\lock:", 1, true) ~= nil, "not known: the padlock")
     assertTrue(find(b, "circle") == nil, "no dot or ring is left")
@@ -249,12 +249,24 @@ test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray
     end
     for color, tone in pairs({ orange = "skillOrange", yellow = "skillYellow", green = "skillGreen" }) do
         local mark = IST.CraftMark({ known = true, color = color })
-        assertTrue(mark:find("phosphor\\arrow-up:", 1, true) ~= nil and tinted(mark, tone), color .. ": the up arrow in its hue")
+        -- red under: the thin ph:arrow-up (round 3 item 1), or no explicit size (item 2)
+        assertTrue(mark:find("phosphor\\arrow-fat-up:14:14:", 1, true) ~= nil and tinted(mark, tone), color .. ": the fat up arrow in its hue")
     end
     local gray = IST.CraftMark({ known = true, color = "gray" })
-    assertTrue(gray:find("phosphor\\minus:", 1, true) ~= nil and tinted(gray, "glyphKnown"), "gray: the light gray dash")
+    assertTrue(gray:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil and tinted(gray, "glyphKnown"),
+        "gray: the light gray left-right arrow")
     local locked = IST.CraftMark({ known = false, color = "orange" })
-    assertTrue(locked:find("phosphor\\lock:", 1, true) ~= nil and tinted(locked, "glyphLocked"), "not known: the dark gray lock")
+    assertTrue(locked:find("phosphor\\lock:14:14:", 1, true) ~= nil and tinted(locked, "glyphLocked"), "not known: the dark gray lock")
+    assertEqual(C.ITEM_SEARCH.GLYPH_SIZE, 14, "one size for every glyph")
+    assertTrue(not IST.CraftMark({ known = true, color = "gray" }):find("phosphor\\minus", 1, true), "the dash is gone")
+    -- the media library absent: the characters every face has (`=` for no skill-up, was `-`)
+    local icon = NS.Icon
+    NS.Icon = function() return nil end
+    local up, flat, lock = IST.CraftMark({ known = true, color = "orange" }), IST.CraftMark({ known = true, color = "gray" }),
+        IST.CraftMark({ known = false })
+    NS.Icon = icon
+    assertTrue(up:find("^", 1, true) ~= nil and flat:find("=", 1, true) ~= nil and lock:find("x", 1, true) ~= nil,
+        "the fallbacks: ^ = x")
     assertEqual(C.TONE.glyphKnown.r, 176 / 255, "#b0b0b0"); assertEqual(C.TONE.glyphLocked.r, 90 / 255, "#5a5a5a")
     assertEqual(IST.CraftGlyph({ known = true }), "flat", "no breakpoints: no skill-up to show")
 end, FOREVER_ONLY)

@@ -47,9 +47,10 @@ local _, NS = ...
 -- An item with no row in any switched-on section gets no block at all, title and hint included.
 --
 -- THE MARKS are texture escapes of LibKa0s media icons (`confirm`, and the recipe glyphs
--- `ph:arrow-up`, `ph:minus` and `ph:lock`), tinted through the escape: the tooltip's face draws no
--- check mark, arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict marks. `!` and
--- `?` are text.
+-- `ph:arrow-fat-up`, `ph:arrows-horizontal` and `ph:lock`), tinted through the escape: the tooltip's
+-- face draws no check mark, arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict
+-- marks. The recipe glyphs carry an explicit C.ITEM_SEARCH.GLYPH_SIZE (14:14), so the tooltip and the
+-- window's glyph column draw them at one size (round 3 spec §4.1). `!` and `?` are text.
 
 NS.ItemSearchTip = NS.ItemSearchTip or {}
 local IST = NS.ItemSearchTip
@@ -68,11 +69,11 @@ IST.RULE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 
 local SKILL_TONE = { orange = "skillOrange", yellow = "skillYellow", green = "skillGreen", gray = "skillGray" }
 
--- The recipe glyphs (feedback spec §5.7): each glyph's icon, its tone (the skill-up's own for an
--- up arrow), and the character it falls back to.
+-- The recipe glyphs (round 3 spec §4.1, after feedback spec §5.7): each glyph's icon, its tone (the
+-- skill-up's own for an up arrow), and the character it falls back to.
 local GLYPH = {
-    up     = { icon = "ph:arrow-up", fallback = "^" },
-    flat   = { icon = "ph:minus", tone = "glyphKnown", fallback = "-" },
+    up     = { icon = "ph:arrow-fat-up", fallback = "^" },
+    flat   = { icon = "ph:arrows-horizontal", tone = "glyphKnown", fallback = "=" },
     locked = { icon = "ph:lock", tone = "glyphLocked", fallback = "x" },
 }
 local SKILL_UP = { orange = true, yellow = true, green = true }
@@ -102,11 +103,13 @@ local function colored(text, tone)
     return NS.GroupRoster.Colored(text, rgb(tone))
 end
 
--- A media icon as a tinted escape, or `fallback` without the library.
-local function icon(name, tone, fallback)
+-- A media icon as a tinted escape, or `fallback` without the library. `size` (pixels) fixes the
+-- escape's size; nil draws it at the text's height (0:0).
+local function icon(name, tone, fallback, size)
     local path = NS.Icon(name)
     if not path then return colored(fallback, tone) end
-    return NS.TipMarks.Escape(path, rgb(tone))
+    local r, g, b = rgb(tone)
+    return NS.TipMarks.Escape(path, r, g, b, size)
 end
 
 --- A quest row's mark: `!` (in your log), `?` (not picked up), the check mark (completed).
@@ -129,16 +132,17 @@ function IST.CraftGlyph(row)
     return "flat"
 end
 
---- A crafting row's mark, in the tooltip and the window alike: an up arrow in the skill-up color, a
---- light gray dash, or a dark gray padlock (IST.CraftGlyph). The shapes differ as well as the
---- colors, so a color-blind player reads them too.
+--- A crafting row's mark, in the tooltip and the window alike: a fat up arrow in the skill-up color,
+--- a light gray left-right arrow, or a dark gray padlock (IST.CraftGlyph), each at
+--- C.ITEM_SEARCH.GLYPH_SIZE. The shapes differ as well as the colors, so a color-blind player reads
+--- them too.
 --- @param row table a crafting row (IS.Live's)
 --- @return string
 function IST.CraftMark(row)
     local glyph = IST.CraftGlyph(row)
     local g = GLYPH[glyph]
     local tone = glyph == "up" and SKILL_TONE[row.color] or g.tone
-    return icon(g.icon, tone, g.fallback)
+    return icon(g.icon, tone, g.fallback, C.ITEM_SEARCH.GLYPH_SIZE)
 end
 
 --- The separator: a RULE_WIDTH x 1 rule in the accent.
