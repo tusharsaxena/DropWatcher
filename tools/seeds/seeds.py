@@ -52,6 +52,7 @@ THE STEPS
     python3 tools/seeds/seeds.py rule   --tsv <scratch>/rulings.tsv --bundle B
     python3 tools/seeds/seeds.py report --bundle B --date <date>
     python3 tools/seeds/seeds.py apply  --bundle B --date <date>
+    python3 tools/seeds/seeds.py recipes status|derive|apply|check ...   (tools/seeds/recipes.py)
 
     `derive` pins one build (the live one of the flavor's product, or --build), downloads each table
     once into tools/seeds/.cache/ (git-ignored), freezes the gzipped tables it read into the
@@ -1005,11 +1006,16 @@ def parse_args(argv):
         cmd.add_argument("--bundle", type=Path, required=True)
         if name != "check":
             cmd.add_argument("--date", type=_date, required=True)
+    import recipes  # the recipe-reagent table's generator, a sibling this tool drives
+    recipes.add_parser(sub)
     return parser.parse_args(argv)
 
 
 def main(argv=None) -> int:
     args = parse_args(argv)
+    if args.command == "recipes":
+        import recipes
+        return recipes.main(args)
     return {"status": cmd_status, "derive": cmd_derive, "rule": cmd_rule, "check": cmd_check,
             "report": cmd_report, "apply": cmd_apply}[args.command](args)
 

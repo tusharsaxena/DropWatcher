@@ -959,13 +959,14 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_item_sources.lua (13)
+### test_item_sources.lua (14)
 
 - item sources: characterization, the card's header draws exactly the cells' chips
 - item sources: a chance reads as a whole percent from 10%, one decimal below, <0.1% under that
 - item sources: the model merges creatures, objects and containers, most likely first, top three
 - item sources: nothing to say is no model; a vendor or a world level alone is one
 - item sources: the chip reads the likeliest source, else the vendor, else World drop
+- item sources: the headline names the likeliest named source; an unnamed object never leads by its id
 - item sources: with ForeverDB, the card's last chip says where it comes from; opening it is the load (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - item sources: an item ForeverDB names no source for draws the header it always drew (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - item sources: without ForeverDB (missing) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
@@ -974,6 +975,13 @@ Total.
 - item sources: the switch off shows no chip and never loads ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - item sources: the row is Window > Layout > Detail card, on by default, and says it needs ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - item sources: on Retail the feature is inert: no row, no default, no chip, no load
+
+### test_recipe_reagents.lua (4)
+
+- recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: every recipe has its ranks and reagents, and byReagent indexes each one exactly (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: on Retail nothing is built and the table answers nil
 
 ### test_own_drops.lua (16)
 
@@ -3213,7 +3221,8 @@ Total.
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
-| test_item_sources.lua | 6 |
+| test_item_sources.lua | 7 |
+| test_recipe_reagents.lua | 1 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3307,5 +3316,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 8 |
-| **Total** | **2747** |
+| Skipped | 11 |
+| **Total** | **2749** |

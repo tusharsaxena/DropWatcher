@@ -146,7 +146,11 @@ and `core/ClassDataForever.lua` against `wowf` (class ids, armor and the level-4
 proficiencies, specs or talent trees, relics, the Titan's Grip, shield and dual-wield flags), plus
 `core/Constants.lua`'s enum fallback literals and the recipe skill lines. Every candidate and flag is
 ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bundle under
-`docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md).
+`docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md). One seed is
+generated rather than curated: `core/RecipeReagentsForever.lua`, WoW Forever's recipe-reagent table
+for Item Search, which `tools/seeds/recipes.py` (`seeds.py recipes`) writes from the `wowf` DB2 of a
+pinned build. It has no rulings; a pytest gate requires it to equal the generator's output for the
+bundle its header names, and its builder is made on WoW Forever alone (clients-§4).
 
 | Feature | Client | Gated in |
 |---|---|---|
@@ -835,7 +839,10 @@ deviation not in this table is not ratified.
 ### Files over the 1500-line cap
 
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
-`tests/_kit/`) is out of scope, and the repository has no generated data.
+`tests/_kit/`) is out of scope. The one generated file, `core/RecipeReagentsForever.lua` (written by
+`tools/seeds/recipes.py`), is loaded by the TOC, so the generated-data carve-out does not exempt it
+and the cap binds it like authored source: the generator packs its rows to stay under it (913 lines
+on build 1.60.1.70938).
 
 Nothing is over the cap today. `locales/enUS.lua` came back under it when the settings panel's
 strings moved to the topic file `locales/enUS_Settings.lua` (feedback-21), and it left the

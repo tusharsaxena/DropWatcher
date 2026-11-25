@@ -21,12 +21,18 @@ Each run ends in a frozen bundle under `docs/seed-research/<date>-<flavor>/`. Th
 `tools/seeds/seeds.py`, and its docstring is the reference for every candidate and flag kind. The
 first runs are `docs/seed-research/2026-11-15-retail/` and `docs/seed-research/2026-11-15-forever/`.
 
+WoW Forever has one more seed, **recipe reagents** (`core/RecipeReagentsForever.lua`, Item Search,
+DropWatcher#17). It is generated, not curated: `tools/seeds/recipes.py`, which `seeds.py recipes`
+drives, writes it whole from the `wowf` DB2, with no candidates and no rulings. Its own section,
+`## Recipe reagents` below, holds its facts; the `forever` flavor's steps run it beside the class
+seeds, into a bundle of its own, `docs/seed-research/<date>-forever-recipes/`.
+
 ## Flavors
 
 | Flavor | Source | Seed files | Tools |
 | --- | --- | --- | --- |
 | `retail` | wago.tools product `wow` (Retail live) | `core/ClassData.lua` (hand-curated, tool-checked; `apply` writes `RETAIL.WEAPONS` only), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor retail` |
-| `forever` | wago.tools product `wowf` (WoW Forever) | `core/ClassDataForever.lua` (hand-curated, tool-checked; `apply` writes `FOREVER.WEAPONS` only), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor forever` |
+| `forever` | wago.tools product `wowf` (WoW Forever) | `core/ClassDataForever.lua` (hand-curated, tool-checked; `apply` writes `FOREVER.WEAPONS` only), plus the shared literals above (checked only), and `core/RecipeReagentsForever.lua` (generated whole, recipe reagents) | `tools/seeds/seeds.py --flavor forever`, `tools/seeds/seeds.py recipes` (`tools/seeds/recipes.py`) |
 
 ## Rules
 
@@ -147,6 +153,14 @@ python3 tools/seeds/seeds.py status --flavor forever
 Prints `CURRENT <build> (<bundle>)` or `NEW <build> (...)`, comparing the live `wowf` build with the
 newest `*-forever` bundle.
 
+```sh
+python3 tools/seeds/seeds.py recipes status
+```
+
+Prints `CURRENT <build> (...)` or `NEW <build> (generated from <build>)`, comparing the live `wowf`
+build with the `Build:` line of `core/RecipeReagentsForever.lua`. The recipe reagents follow the
+class seeds' build: a run on a new build regenerates both.
+
 ### Freeze and derive
 
 ```sh
@@ -156,6 +170,16 @@ python3 tools/seeds/seeds.py derive --flavor forever --build <build> --bundle do
 The same gate as Retail. Forever's own tables are `TalentTab` in place of `SpecializationSpells`;
 `ChrSpecialization` holds one class-wide spec row per class there, which the list does not seed (its
 rows are keyed `"<classFile>:<tree>"`).
+
+```sh
+python3 tools/seeds/seeds.py recipes derive --build <build> --bundle docs/seed-research/<date>-forever-recipes --date <date>
+```
+
+It downloads five tables whole (about 5.5 MB, cached in `tools/seeds/.cache/`), runs the recipe
+coverage gate (every crafting profession of `## Recipe reagents` in `SkillLine` under its name, with
+at least one `SkillLineAbility` row; Jewelcrafting may be absent), and freezes the extract into the
+bundle's `raw/`. **If the gate fails, stop** and fix `recipes.py`'s map. Report the recipe count, the
+spells left out for want of a reagent row, and the skill lines present and absent.
 
 ### Rule
 
@@ -177,6 +201,8 @@ Nuances:
 - **The shared literals are Retail's.** `core/Constants.lua` and `C.RECIPE_SKILL_LINE` are one table
   for both clients. A Retail-only subclass or skill line (Jewelcrafting, Inscription, Mount
   Equipment) is absent on Forever and is kept, because no Forever item ever carries it.
+- **The recipe reagents take no rulings.** Nothing in them is proposed: the generator writes every
+  recipe of the crafting lines that has a reagent row.
 
 ### Apply
 
@@ -187,18 +213,94 @@ python3 tools/seeds/seeds.py apply  --bundle docs/seed-research/<date>-forever -
 
 As for Retail: `report` first, then `apply`, which refuses on anything unruled or owed by hand.
 
+```sh
+python3 tools/seeds/seeds.py recipes apply --bundle docs/seed-research/<date>-forever-recipes
+python3 tools/seeds/seeds.py recipes check
+```
+
+`apply` rewrites `core/RecipeReagentsForever.lua` whole from the bundle (CRLF), and a second `apply`
+changes nothing. `check` prints `OK` when the file equals the generator's output for the bundle its
+header names, and exits 1 otherwise.
+
 ### After
 
 - Roll any `tests/test_class_data.lua` assertion that pins a changed row, under both kit profiles.
 - Write the bundle's `ANALYSIS.md` by hand, in the 2026-11-15 bundles' shape.
 - Add a FOREVER smoke check (or a `docs/forever-probes.md` probe) for every list that changed, with
   its *Pending sign-off* note.
+- Recipe reagents: cross-check the skill-up ranks against ForeverDB at dev time (`## Recipe
+  reagents` -> *The ForeverDB cross-check*) and write the counts into the recipes bundle's
+  hand-written `ANALYSIS.md`. Roll the generated file's line count in `docs/ARCHITECTURE.md`'s
+  census note if it moved, and the README badge and `docs/test-cases.md` if a suite changed.
 
 ### Stage
 
 `core/ClassDataForever.lua`, `tools/seeds/forever_rulings.json`, `docs/seed-research/<date>-forever`,
-plus any test, smoke or citation edits. Commit message:
+`core/RecipeReagentsForever.lua` and `docs/seed-research/<date>-forever-recipes`, plus any test,
+smoke or citation edits. Commit message:
 `Seeds (forever): re-validated against <build> (<date>)`.
+
+## Recipe reagents
+
+WoW Forever's recipe-reagent table, the lookup Item Search makes from a reagent to the recipes that
+use it (the 2026-11-25 Item Search spec §4.2). ForeverDB has no reagent lists, so the table is the
+client's own DB2. It is generated, so the precedent rules above have nothing to rule here.
+
+- **The join.** `SkillLineAbility` (`Spell`, `SkillLine`, `MinSkillLineRank`,
+  `TrivialSkillLineRankLow` as yellow, `TrivialSkillLineRankHigh` as gray), `SpellReagents` (up to
+  eight reagents and counts), `SpellEffect` effect 24 `CREATE_ITEM` (`EffectItemType`, the item
+  made, when there is one) and `SpellName` (the recipe's name). `SkillLine` names the professions for
+  the coverage gate.
+- **The professions.** Alchemy 171, Blacksmithing 164, Enchanting 333, Engineering 202,
+  Leatherworking 165, Tailoring 197, Cooking 185 and First Aid 129, plus Jewelcrafting 755 if the
+  build has it. On 1.60.1.70938 the eight are present and Jewelcrafting is absent. Mining's smelting
+  (186), the gathering lines and Fishing are not kept.
+- **What is left out.** A spell of those lines with no `SpellReagents` row: on 1.60.1.70938, 122 of
+  2,588, the profession ranks and specializations among them, and some recipes the client's DB2 does
+  not carry (they have no `SpellName` row either). Item Search's profession-window fallback learns
+  such a recipe in game (spec §4.2 B).
+- **Shape.** `NS.RecipeReagents.Get()` answers `{ build, recipes, byReagent }`:
+  `recipes[spell] = { skillLine, min, yellow, gray, made, name, reagents = { [item] = count } }`
+  (`made` and `name` nil when the build has none), plus `skillLines` on the one recipe two professions
+  teach, and `byReagent[item] = { spell, ... }`, built from the rows in the file's order. The rows sit
+  in a builder made only on WoW Forever (`NS.Compat.ClientKey()`, read at load) and run on the first
+  `Get()`, which then lets the builder go; on Retail `Get()` answers nil and nothing is built.
+- **The header** records the build, the date, the sha256 of the bundle's frozen extract (`Inputs:`)
+  and the bundle. The whole tables' sha256s and row counts as served are in the bundle's
+  `SOURCES.md` and `MANIFEST.json`.
+- **The bundle** keeps the extract only (about 100 KB gzipped): the five tables' headers and the
+  professions' rows. `recipes derive --replay` re-derives the manifest from it offline.
+- **The 1500-line cap binds the file** (layout-§1): it is TOC-loaded, so the generated-data
+  carve-out does not exempt it. The generator packs its rows (`recipes.WRAP`) to stay under it.
+
+### The gate test
+
+`tools/seeds/test_recipes.py`'s `TestGate` regenerates the file from the bundle its header names and
+requires the shipped bytes to equal the output, and the header's build, date and `Inputs:` digest to
+equal the bundle's. A hand edit of the file or of the bundle's `raw/` turns `python3 -m pytest -q
+tools/seeds` red (mutation-checked 2026-11-25). The headless suite's `tests/test_recipe_reagents.lua`
+pins the load on each kit profile: built once on WoW Forever, with every reagent indexed; nil on
+Retail.
+
+### The ForeverDB cross-check
+
+Yellow and gray are expected to match ForeverDB's `sla[spell]` positions 3 and 4 (position 1 the
+skill line, 2 the minimum rank). ForeverDB is GPL-3.0 evidence, so the check runs at dev time only
+and records counts, never a value (clients-§10):
+
+```sh
+python3 tools/seeds/seeds.py recipes crosscheck --bundle docs/seed-research/<date>-forever-recipes --foreverdb <cache>/foreverdb.json
+```
+
+`<cache>` is the folder dev-copilot's `scripts/foreverdb.py fetch` prints. A disagreement is
+reported by spell id and goes to the owner; the DB2 value ships either way, because DB2 is the
+source and ForeverDB the witness.
+
+| Date | Build | ForeverDB | Recipes | In `sla` | Yellow and gray agree | Minimum agrees | Disagree |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2026-11-25 | 1.60.1.70938 | v2026.11.24.46 (6e0a34b) | 2,466 | 2,466 | 2,466 | 2,466 | 0 |
+
+The spec (§4.2) asks for a sample; the whole table was checked, since that costs the same.
 
 ## Gate
 
@@ -210,7 +312,9 @@ python3 -m pytest -q tools/seeds
 ```
 
 luacheck must report 0 warnings and 0 errors, and every suite 0 failed. Without pytest,
-`python3 -m unittest discover -s tools/seeds` runs the same cases.
+`python3 -m unittest discover -s tools/seeds` runs the same cases. The pytest run includes the recipe
+reagents' gate test (`## Recipe reagents` -> *The gate test*), which needs no network: it reads the
+bundle's frozen extract.
 
 ## Notes
 
