@@ -574,6 +574,44 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     assertFalse(NS.addon.db.profile.itemSearch.myProfessionsOnly == false, "the chip is not saved")
 end, FOREVER_ONLY)
 
+test("item search window: the Crafting tab's filter follows Only professions you know when the setting moves", function()
+    local NS = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 40, skillID = 129 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+    end })
+    local W, TABS = NS.ItemSearchWindow, NS.ItemSearchTabs
+    W.ShowItem(LINEN)
+    local f = W.Frame()
+    assertEqual(f.section.chip.label:GetText(), "My professions")
+    NS.SchemaRuntime.Set("itemSearch.myProfessionsOnly", false)
+    -- red under: the tab keeping the filter it was made with, and Reset shown though nothing in the
+    -- window was clicked (spec §4: the tab starts filtered by the setting)
+    assertEqual(f.section.chip.label:GetText(), "All professions")
+    assertTrue(TABS.IsDefault("crafting", W.ViewState("crafting"), { mine = false }), "still the default: no Reset")
+    NS.SchemaRuntime.Set("itemSearch.myProfessionsOnly", true)
+    assertEqual(f.section.chip.label:GetText(), "My professions")
+end, FOREVER_ONLY)
+
+test("item search window: a corner drag, a sort click or a tab pick re-lays the table without building it again", function()
+    local NS = enabled()
+    local W, ISC = NS.ItemSearchWindow, NS.ItemSearchCells
+    W.ShowItem(IDS.blade)
+    local f = W.Frame()
+    local builds, real = 0, ISC.Build
+    ISC.Build = function(...) builds = builds + 1; return real(...) end
+    f.resizeGrip:__fire("OnMouseDown", "LeftButton")
+    for i = 1, 5 do f:SetSize(1000 + i * 20, 620) end
+    f.resizeGrip:__fire("OnMouseUp", "LeftButton")
+    W.SortBy("drops", "level")
+    W.SelectTab(W.ShownTab())
+    -- red under: every resize tick (and every click) reading the facts and ranking every section again
+    assertEqual(builds, 0, "the last build reused")
+    assertTrue(#W.TableRows() > 0, "the rows still drawn")
+    W.ShowItem(IDS.leather)
+    assertEqual(builds, 1, "another item builds")
+    ISC.Build = real
+end, FOREVER_ONLY)
+
 -- ── the window: pins ────────────────────────────────────────────────────────────────────────
 
 -- Item Search feedback spec §6 (ISF-DW-07): TomTom or Drop Watcher's arrow, never the client's own

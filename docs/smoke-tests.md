@@ -69,7 +69,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
 | FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01; 18 and 19 superseded by ITEM-SEARCH) |
 | ITEM-SEARCH-1..18 | [Item Search (WoW Forever)](#item-search-wow-forever) | Item Search (DropWatcher#17, IS-DW-01 to IS-DW-07): the tooltip block on every source (1), its sections and marks (2), Shift-only, title, hint and comparison tooltips (3), before and after the load and a login in combat (4), without ForeverDB (5), absent on Retail (6), the window's ways in (7), the key with and without a hover (8), name and id search (9), the detail pane, bars and pins (10), recent searches (11), Link in chat (12), the default key never stealing (13), the settings page and the section order (14), the window's settings (15), the Keybindings tab (16), the old chip gone (17), the profession-window fallback (18) |
-| ITEM-SEARCH-19..28 | [Item Search feedback](#item-search-feedback) | The Item Search feedback run (ISF-DW-01 to ISF-DW-08): the key fires (19), objects named (20), the tooltip's title, ranking and cap (21), only your professions (22), the recipe glyphs (23), the window's frame and matches (24), the tabs, tables, headers and tooltips (25), waypoints with TomTom and the map pin (26), Drop Watcher's arrow (27), the settings page (28) |
+| ITEM-SEARCH-19..30 | [Item Search feedback](#item-search-feedback) | The Item Search feedback run (ISF-DW-01 to ISF-DW-08, ISF-REV): the key fires (19), objects named (20), the tooltip's title, ranking and cap (21), only your professions (22), the recipe glyphs (23), the window's frame and matches (24), the tabs, tables, headers and tooltips (25), waypoints with TomTom and the map pin (26), Drop Watcher's arrow (27), the settings page (28), a key cleared after the first build stays cleared (29), the Crafting filter following its setting and a smooth resize (30) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -4587,19 +4587,24 @@ retired detail card chip).
 
 **ITEM-SEARCH-1. The block on every item tooltip.** `/reload`, wait 5 seconds, then hover an item in
 your bags → under the client's own lines and other addons', a rule and `Drop Watcher · Item Search`
-with a magnifier, both in the skin's accent, then the sections, then `Ctrl-Alt-D: open in Item
-Search` (or whatever key is bound). Repeat on a chat link (click one: `ItemRefTooltip`), an item in
+with a magnifier (superseded by ITEM-SEARCH-21, 2026-11-25: no magnifier before the title), both in
+the skin's accent, then the sections, then `Ctrl-Alt-D: open in Item Search` (superseded by
+ITEM-SEARCH-19, 2026-11-25: the key is `Alt-Ctrl-D`, as the client writes it) (or whatever key is
+bound). Repeat on a chat link (click one: `ItemRefTooltip`), an item in
 the loot window, and another addon's item tooltip such as Loot History's History rows → the same
 block, once each. Hover the same item twice → never two blocks. Fail: a missing or doubled block, a
 block on a non-item tooltip, or a Lua error. Result:
 
 **ITEM-SEARCH-2. The sections and their marks.** Hover an item with drop sources, a vendor, a quest
 that asks for it and a recipe that uses it (Linen Cloth is a good start) → **Drops from** lists the
-top 3 sources with their chances, then `and N more`, and a world drop its level; **Sold by** the
+top 3 sources (superseded by ITEM-SEARCH-21, 2026-11-25: every section ranked for you and capped at
+Rows per section, 5 by default) with their chances, then `and N more`, and a world drop its level; **Sold by** the
 cheapest vendor with its price; **Quests** `!` for one in your log, `?` for one not picked up, a tick
 for one done (hidden while Hide completed quests is on, the default); **Crafting** a filled dot in
 the skill-up color (orange, yellow, green, gray against your rank) for a recipe you know, a dashed
-ring for one you do not, the profession on the right. Fail: a wrong mark, a section with no rows, or
+ring for one you do not (superseded by ITEM-SEARCH-22 and 23, 2026-11-25: only your professions by
+default, and the glyphs are an up arrow in the skill-up color, a light gray dash and a dark gray
+padlock), the profession on the right. Fail: a wrong mark, a section with no rows, or
 an empty block. Result:
 
 **ITEM-SEARCH-3. Shift-only, the title, the hint and comparison tooltips.** Settings › Item Search ›
@@ -4629,9 +4634,12 @@ tooltip `Item Search`) → opens the Item Search window, and again closes it. `/
 empty, the box focused; `/dw search 2589` → shows Linen Cloth at once; `/dw search linen` → the
 matches for linen. The window wears the skin, drags by its title bar (not while locked), keeps its
 place over a `/reload`, closes on Escape, and its lock · settings · close marks work (the gear opens
-Settings › Item Search). Result:
+Settings › Item Search) (superseded by ITEM-SEARCH-24, 2026-11-25: the window has no lock and is
+resizable). Result:
 
-**ITEM-SEARCH-8. The key, with and without a hover.** With nothing under the pointer, Ctrl-Alt-D →
+**ITEM-SEARCH-8. The key, with and without a hover.** (Superseded in its key by ITEM-SEARCH-19,
+2026-11-25: press Alt-Ctrl-D, the chord the client matches; the press rules below stand.) With
+nothing under the pointer, Ctrl-Alt-D →
 the window opens empty with the search box focused; again → it closes. Hover an item in your bags,
 Ctrl-Alt-D → the window opens on that item; hover the same item, Ctrl-Alt-D → it closes; open it,
 hover a different item, Ctrl-Alt-D → it switches to that item. A chat link's tooltip and the
@@ -4644,28 +4652,34 @@ first match shows. Type digits → that id shows, even for an item the client ha
 
 **ITEM-SEARCH-10. The detail pane, bars and pins.** On an item with drop sources → DROPS FROM lists
 every source with its level range, zone, a bar scaled to the likeliest and its %, and a pin on rows
-with a known spot; click a pin → a map waypoint there (TomTom's arrow when TomTom is installed). A
+with a known spot; click a pin → a map waypoint there (TomTom's arrow when TomTom is installed)
+(superseded by ITEM-SEARCH-25 to 27, 2026-11-25: a tab of columns per section, and a pin sets
+TomTom's waypoint or Drop Watcher's arrow, never the client's map waypoint). A
 World drop row shows its minimum level. SOLD BY lists vendors with the lowest price; QUESTS marks,
 titles, zones and states; CRAFTING the breakpoints against your skill, or `learnable at N`; ALSO
 Reward from, Starts quest and Skinned from. The footer names ForeverDB's version and state and the
-key. Result:
+key (superseded by ITEM-SEARCH-24, 2026-11-25: the footer no longer names the key). Result:
 
-**ITEM-SEARCH-11. Recent searches.** Show three items → they head Recent searches, newest first, at
+**ITEM-SEARCH-11. Recent searches.** (Superseded by ITEM-SEARCH-24, 2026-11-25: Recent searches are
+gone, and what was saved is deleted; skip this row.) Show three items → they head Recent searches, newest first, at
 most 10, each clickable, and still there after a `/reload` and on another character. Untick Remember
 recent searches → the list hides and nothing new is added. Result:
 
-**ITEM-SEARCH-12. Link in chat.** Show an item, click Link in chat → the item's link goes into the
+**ITEM-SEARCH-12. Link in chat.** (Superseded by ITEM-SEARCH-24, 2026-11-25: the Link in chat
+button is gone; shift-click the item's icon or name, or a match, instead.) Show an item, click Link in chat → the item's link goes into the
 open chat box, or a new one opens with it. Result:
 
-**ITEM-SEARCH-13. The default key never steals.** On a new character with Ctrl-Alt-D unbound →
-after the first login Item Search is on Ctrl-Alt-D. On a character where Ctrl-Alt-D already runs
+**ITEM-SEARCH-13. The default key never steals.** (Superseded in its key by ITEM-SEARCH-19 and 29,
+2026-11-25: the default is Alt-Ctrl-D; the never-steal rules stand.) On a new character with
+Ctrl-Alt-D unbound → after the first login Item Search is on Ctrl-Alt-D. On a character where Ctrl-Alt-D already runs
 something else → that binding stays and Item Search has no key (the hint line is gone). Clear the key
 by hand and `/reload` → it stays cleared. Result:
 
 **ITEM-SEARCH-14. The settings page.** Settings › Item Search (after Alerts) → tabs Item tooltip,
 Item Search window, Keybindings. Item tooltip: Add Item Search to item tooltips alone on its line,
 its knobs dimmed while it is off; the section switches, Drop sources shown (1 to 10; 5 → the tooltip
-names 5) and Hide completed quests; then Section order: drag Quests above Drops from by its handle →
+names 5) (superseded by ITEM-SEARCH-28, 2026-11-25: Rows per section, 1 to 20, for every section)
+and Hide completed quests; then Section order: drag Quests above Drops from by its handle →
 the tooltip writes Quests first, at once. Defaults → every row and the order back to the defaults,
 the key untouched. Result:
 
@@ -4802,6 +4816,20 @@ window's rows have no pins. Defaults → every row back, Waypoints Automatic, th
 profile saved by the first Item Search build with Drop sources shown at 7 opens with Rows per section
 at 7. Result:
 
+**ITEM-SEARCH-29. A key cleared after the first build stays cleared (ISF-REV).** On a character that
+ran the first Item Search build and then cleared its (dead) Ctrl-Alt-D by hand in the client's Key
+Bindings → `/reload` on this build → Item Search still has no key, Alt-Ctrl-D runs whatever it ran
+before, and the tooltip has no key line. With `/dw debug on`, the login logs `default key not
+re-tried`. On a character that ran the first build and left the dead key alone → it gets Alt-Ctrl-D
+(ITEM-SEARCH-19). Result:
+
+**ITEM-SEARCH-30. The Crafting filter follows its setting; a smooth resize (ISF-REV).** Open the
+Item Search window on Linen Cloth, Crafting tab: the chip reads My professions. Settings › Item
+Search › Item tooltip: untick Only professions you know → the open window's chip reads All
+professions at once, and the section header shows no Reset; tick it again → My professions. Then
+on an item with many drop sources (Linen Cloth), drag the window's corner around for a few seconds →
+the table follows smoothly, with no stutter; sort a column and switch tabs → instant. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -4867,7 +4895,7 @@ Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/202
 
 Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed.
 
-Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-28, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-8's key, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-14 and 15's rows), the newer row is current. An agent never marks one passed.
+Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08 and ISF-REV, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-30, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 7 and 8's key and title, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-13's key, ITEM-SEARCH-14 and 15's rows), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-19 doubles as the probe of how GetBindingAction answers the stored dead chord, and ITEM-SEARCH-26 and 27 (the arrow's map position and facing on Forever) are owed before the run is finalized. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

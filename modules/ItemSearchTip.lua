@@ -83,6 +83,7 @@ local FALLBACK = { done = "+" }
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
 local installed = false
+local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each post call (never kept)
 
 -- ── colors and marks ────────────────────────────────────────────────────────────────────────
 
@@ -189,12 +190,19 @@ local function more(out, n)
 end
 
 -- Each section writes from `f` (the facts) and `r` (IS.Ranked's answer for them), capped at o.rows.
+-- How many of `rows` show under the cap `n` (IS.Cap's count, without its new array: the block is
+-- written on every hover), and how many are past them.
+local function capped(rows, n)
+    local k = math.min(IS.ClampRows(n), #rows)
+    return k, #rows - k
+end
 
 local function dropsLines(f, r, o, out)
     if #r.drops == 0 and not f.worldMinLevel then return end
     add(out, L["Drops from"], "mutedGold")
-    local shown, rest = IS.Cap(r.drops, o.rows)
-    for _, s in ipairs(shown) do
+    local shown, rest = capped(r.drops, o.rows)
+    for i = 1, shown do
+        local s = r.drops[i]
         add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
             IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
     end
@@ -208,8 +216,9 @@ local function vendorLines(f, r, o, out)
     if #r.vendors == 0 then return end
     add(out, L["Sold by"], "mutedGold")
     local cheapest = f.vendorPrice and f.vendorPrice.npc
-    local shown, rest = IS.Cap(r.vendors, o.rows)
-    for _, v in ipairs(shown) do
+    local shown, rest = capped(r.vendors, o.rows)
+    for i = 1, shown do
+        local v = r.vendors[i]
         local price = v.id == cheapest and Compat.CoinText(f.vendorPrice.price) or nil
         add(out, INDENT .. v.name, "plain", price, "plain")
     end
@@ -223,8 +232,9 @@ local function questLines(_, r, o, out)
     end
     if #rows == 0 then return end
     add(out, L["Quests"], "mutedGold")
-    local shown, rest = IS.Cap(rows, o.rows)
-    for _, q in ipairs(shown) do
+    local shown, rest = capped(rows, o.rows)
+    for i = 1, shown do
+        local q = rows[i]
         add(out, INDENT .. IST.QuestMark(q.state) .. " " .. (q.title or L["Quest %d"]:format(q.id)), "plain",
             q.level and L["level %d"]:format(q.level) or nil, "muted")
     end
@@ -235,8 +245,9 @@ local function craftingLines(_, r, o, out)
     local hidden = r.craftHidden or 0
     if #r.crafting == 0 and hidden == 0 then return end
     add(out, L["Crafting"], "mutedGold")
-    local shown, rest = IS.Cap(r.crafting, o.rows)
-    for _, c in ipairs(shown) do
+    local shown, rest = capped(r.crafting, o.rows)
+    for i = 1, shown do
+        local c = r.crafting[i]
         add(out, INDENT .. IST.CraftMark(c) .. " " .. (c.name or L["Recipe %d"]:format(c.spell)),
             c.known and "plain" or "muted", professionName(c.skillLine), "muted")
     end
@@ -247,8 +258,9 @@ end
 local function skinnedLines(_, r, o, out)
     if #r.skinned == 0 then return end
     add(out, L["Skinned from"], "mutedGold")
-    local shown, rest = IS.Cap(r.skinned, o.rows)
-    for _, s in ipairs(shown) do
+    local shown, rest = capped(r.skinned, o.rows)
+    for i = 1, shown do
+        local s = r.skinned[i]
         add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or L["rate unknown"],
             s.chance and "plain" or "muted")
     end
@@ -259,8 +271,9 @@ local function alsoLines(f, _, o, out)
     local starts = f.startsQuest
     if #f.rewardFrom == 0 and not starts then return end
     add(out, L["Also"], "mutedGold")
-    local shown, rest = IS.Cap(f.rewardFrom, o.rows)
-    for _, q in ipairs(shown) do
+    local shown, rest = capped(f.rewardFrom, o.rows)
+    for i = 1, shown do
+        local q = f.rewardFrom[i]
         add(out, INDENT .. L["Reward from"], "muted", q.title or L["Quest %d"]:format(q.id), "plain")
     end
     more(out, rest)
@@ -305,9 +318,24 @@ local function setting(key, default)
     return v
 end
 
+-- The last stored order (a copy) and sections (the values read) with their answers: Options runs
+-- on every hover, so an unchanged setting answers the same table again rather than a new one.
+local lastOrder = { stored = nil, out = nil }
+local lastSections = { seen = {}, out = nil }
+
+local function sameOrder(stored)
+    local copy = lastOrder.stored
+    if not copy or #copy ~= #stored then return false end
+    for i = 1, #stored do
+        if copy[i] ~= stored[i] then return false end
+    end
+    return true
+end
+
 -- The order as stored, known keys once each, then any missing key in the default order.
 local function orderOf(stored)
     if type(stored) ~= "table" then return IST.ORDER end
+    if sameOrder(stored) then return lastOrder.out end
     local out, seen = {}, {}
     for _, key in ipairs(stored) do
         if SECTION[key] and not seen[key] then seen[key] = true; out[#out + 1] = key end
@@ -315,15 +343,29 @@ local function orderOf(stored)
     for _, key in ipairs(IST.ORDER) do
         if not seen[key] then out[#out + 1] = key end
     end
+    local copy = {}
+    for i, key in ipairs(stored) do copy[i] = key end
+    lastOrder.stored, lastOrder.out = copy, out
     return out
+end
+
+local function sameSections(stored)
+    if not lastSections.out then return false end
+    for key in pairs(IST.SECTIONS) do
+        if lastSections.seen[key] ~= stored[key] then return false end
+    end
+    return true
 end
 
 local function sectionsOf(stored)
     if type(stored) ~= "table" then return IST.SECTIONS end
-    local out = {}
+    if sameSections(stored) then return lastSections.out end
+    local out, seen = {}, {}
     for key, on in pairs(IST.SECTIONS) do
+        seen[key] = stored[key]
         if stored[key] == nil then out[key] = on else out[key] = stored[key] == true end
     end
+    lastSections.seen, lastSections.out = seen, out
     return out
 end
 
@@ -398,7 +440,7 @@ function IST.OnTooltip(tip, data)
     local facts = IS.Get(itemID)
     if not facts then return false end
     local lines = IST.Lines(facts, o, o.hint and Compat.BindingKeyText(C.ITEM_SEARCH.BINDING) or nil,
-        IS.Me(facts.ranks))
+        IS.Me(facts.ranks, tipMe))
     if #lines == 0 then return false end
     watch(tip)
     shownOn[tip] = itemID

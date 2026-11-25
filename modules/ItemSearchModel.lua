@@ -37,8 +37,9 @@ local _, NS = ...
 -- alike: never an "Object <id>" row; how many went is the static facts' `unnamedObjects`, which
 -- modules/ItemSearch.lua writes to the debug log. Objects with the SAME NAME become one row
 -- (IS.MergeNamedObjects): the same chest under several spawn ids. The row keeps the highest chance
--- of its parts (summing them would mislead) and `ids`, every object id it stands for, so the window
--- unions their map spots and its row tooltip counts them (`#ids`, "6 kinds of Large Solid Chest").
+-- of its parts (summing them would mislead) and `ids`, every object id it stands for (a lone object
+-- has none: its `id` is its one part), so the window unions their map spots and its row tooltip
+-- counts them (`#ids`, "6 kinds of Large Solid Chest").
 --
 -- CRAFTING is the recipes that use the item as a reagent: the shipped table's (byReagent) in its
 -- order, then the profession window's learned ones the table lacks, by spell id. A row is
@@ -138,15 +139,17 @@ local function describe(db, s)
     else
         local name = objectName(db, s.id)
         if not name then return nil end
-        s.name, s.named, s.ids = name, true, { s.id }
+        s.name, s.named = name, true
     end
     return s
 end
 
 --- Same-named objects of a described drop list merged into one row (spec §2): the first one in the
 --- list's order stands for them, with the highest chance of its parts (an unknown rate only when
---- every part's is) and `ids`, every object id in list order. Creatures and containers pass
---- untouched. A new list, sorted as IS.MergeSources sorts.
+--- every part's is) and `ids`, every object id in list order. An object no other shares a name
+--- with carries no `ids` (its own `id` stands for it; the static facts are built once per item, and
+--- a table per object would be spent for nothing). Creatures and containers pass untouched. A new
+--- list, sorted as IS.MergeSources sorts.
 --- @param drops table rows `{ kind, id, chance, name, ids }`
 --- @return table
 function IS.MergeNamedObjects(drops)
@@ -154,24 +157,20 @@ function IS.MergeNamedObjects(drops)
     for _, s in ipairs(list(drops)) do
         local first = s.kind == "object" and s.name and byName[s.name] or nil
         if first then
-            for _, id in ipairs(list(s.ids)) do first.ids[#first.ids + 1] = id end
+            first.ids = first.ids or { first.id }
+            if type(s.ids) == "table" then
+                for _, id in ipairs(s.ids) do first.ids[#first.ids + 1] = id end
+            else
+                first.ids[#first.ids + 1] = s.id
+            end
             if s.chance and (not first.chance or s.chance > first.chance) then first.chance = s.chance end
         else
-            if s.kind == "object" and s.name then
-                s.ids = s.ids or { s.id }
-                byName[s.name] = s
-            end
+            if s.kind == "object" and s.name then byName[s.name] = s end
             out[#out + 1] = s
         end
     end
     table.sort(out, before)
     return out
-end
-
-local function npcName(db, id)
-    local n = db.NPC(id)
-    if type(n) == "table" and n.name then return n.name end
-    return L["Creature %d"]:format(id)
 end
 
 -- ── the skill-up color ─────────────────────────────────────────────────────────────────────
@@ -283,19 +282,21 @@ local function itemFacts(itemID, ctx, db)
 end
 
 -- A creature's level range and side (`nfac`: "A", "H", "AH" or nil), for the ranking (spec §3),
--- and its subname (a vendor's "Invented Goods"), for the window's Sold by tooltip (spec §5.6).
+-- and its subname (a vendor's "Invented Goods"), for the window's Sold by tooltip (spec §5.6); then
+-- its name, "Creature <id>" when the reader names none. One NPC read: each builds a new table.
 local function npcFacts(db, id)
     local n = db.NPC(id)
-    if type(n) ~= "table" then return nil, nil, nil, nil end
-    return num(n.minLevel), num(n.maxLevel), n.faction, type(n.subname) == "string" and n.subname or nil
+    if type(n) ~= "table" then return nil, nil, nil, nil, L["Creature %d"]:format(id) end
+    return num(n.minLevel), num(n.maxLevel), n.faction, type(n.subname) == "string" and n.subname or nil,
+        n.name or L["Creature %d"]:format(id)
 end
 
 local function vendorsOf(db, src)
     local out = {}
     for _, id in ipairs(list(type(src) == "table" and src.vendors)) do
         if num(id) then
-            local minLevel, maxLevel, faction, subname = npcFacts(db, id)
-            out[#out + 1] = { id = id, name = npcName(db, id), minLevel = minLevel, maxLevel = maxLevel,
+            local minLevel, maxLevel, faction, subname, name = npcFacts(db, id)
+            out[#out + 1] = { id = id, name = name, minLevel = minLevel, maxLevel = maxLevel,
                 faction = faction, subname = subname }
         end
     end
@@ -317,12 +318,14 @@ end
 -- The ForeverDB half of the static facts, onto `out`.
 local function fromForeverDB(out, db, itemID, ctx)
     local src = db.ItemSources(itemID)
-    local drops, unnamed = {}, 0
+    local drops, unnamed, objects = {}, 0, 0
     for _, s in ipairs(IS.MergeSources(src)) do
         local d = describe(db, s)
         if d then drops[#drops + 1] = d else unnamed = unnamed + 1 end
+        if d and d.kind == "object" then objects = objects + 1 end
     end
-    out.drops, out.unnamedObjects = IS.MergeNamedObjects(drops), unnamed
+    -- Fewer than two named objects: nothing to merge, and MergeSources' order already stands.
+    out.drops, out.unnamedObjects = objects > 1 and IS.MergeNamedObjects(drops) or drops, unnamed
     out.worldMinLevel = type(src) == "table" and num(src.worldMinLevel) or nil
     out.vendors = vendorsOf(db, src)
     local price, npc = db.VendorPrice(itemID)
@@ -446,33 +449,74 @@ function IS.InBand(minLevel, maxLevel, level)
     return minLevel <= level + IS.LEVEL_BAND.above and maxL >= level - IS.LEVEL_BAND.below
 end
 
--- The ids a row stands for: a merged object's every part, else its own.
-local function idsOf(row)
-    if type(row.ids) == "table" and #row.ids > 0 then return row.ids end
-    return { row.id }
+-- THE SPOT MEMO (the feedback review's perf finding). ForeverDB's Spots builds new point tables on
+-- every call, and the ranking asks it for every npc and object row on every hover. A source's spots
+-- never move in a session, so the set of maps it has a spot on is read once per spots reader (a weak
+-- key: ForeverDB's Spots in the client, a test's fake in the suite) and kept:
+-- `{ [spots] = { [kind] = { [id] = { [map] = true } | false } } }`. IS.ForgetSpots empties it when
+-- ForeverDB's state moves (modules/ItemSearch.lua's IS.State).
+local spotMaps = setmetatable({}, { __mode = "k" })
+
+--- Empty the spot memo (ForeverDB's state moved, or a test swapped the fake's rows).
+function IS.ForgetSpots()
+    spotMaps = setmetatable({}, { __mode = "k" })
 end
 
--- Whether any of the row's ids has a spot on a map `test(map)` accepts.
-local function anySpot(me, kind, row, test)
-    if type(me.spots) ~= "function" then return false end
-    for _, id in ipairs(idsOf(row)) do
-        for map, points in pairs(list(me.spots(kind, id))) do
-            if #list(points) > 0 and test(map) then return true end
+-- The maps `id` (of `kind`) has a spot on, `{ [map] = true }`, or nil; read once per reader.
+local function mapsOf(spots, kind, id)
+    if id == nil then return nil end
+    local byKind = spotMaps[spots]
+    if not byKind then byKind = {}; spotMaps[spots] = byKind end
+    local byId = byKind[kind]
+    if not byId then byId = {}; byKind[kind] = byId end
+    local maps = byId[id]
+    if maps == nil then
+        maps = false
+        for map, points in pairs(list(spots(kind, id))) do
+            if #list(points) > 0 then
+                maps = maps or {}
+                maps[map] = true
+            end
         end
+        byId[id] = maps
+    end
+    return maps or nil
+end
+
+-- Whether one source has a spot on `zone` (a map id), or, with `continent`, on a map of it.
+local function spotHit(me, kind, id, zone, continent)
+    local maps = mapsOf(me.spots, kind, id)
+    if not maps then return false end
+    if zone then return maps[zone] == true end
+    for map in pairs(maps) do
+        if me.continentOf(map) == continent then return true end
     end
     return false
+end
+
+-- Whether any of the row's ids (a merged object's every part, else its own) has a spot there.
+local function anySpot(me, kind, row, zone, continent)
+    if type(me.spots) ~= "function" then return false end
+    local ids = row.ids
+    if type(ids) == "table" and #ids > 0 then
+        for _, id in ipairs(ids) do
+            if spotHit(me, kind, id, zone, continent) then return true end
+        end
+        return false
+    end
+    return spotHit(me, kind, row.id, zone, continent)
 end
 
 local function inZone(me, kind, row)
     local zone = num(me.mapID)
     if not zone then return false end
-    return anySpot(me, kind, row, function(map) return map == zone end)
+    return anySpot(me, kind, row, zone, nil)
 end
 
 local function onContinent(me, kind, row)
     local continent = num(me.continentID)
     if not continent or type(me.continentOf) ~= "function" then return false end
-    return anySpot(me, kind, row, function(map) return me.continentOf(map) == continent end)
+    return anySpot(me, kind, row, nil, continent)
 end
 
 -- A higher chance first, an unknown one last (chance is 0..1).
@@ -499,23 +543,26 @@ local function nameBefore(a, b)
     return nil
 end
 
--- `a` before `b` by their keys (arrays of numbers, lower first), then name, then id.
-local function keyBefore(ka, kb, a, b)
-    for i = 1, math.max(#ka, #kb) do
-        local x, y = ka[i] or 0, kb[i] or 0
-        if x ~= y then return x < y end
-    end
+-- The sort's keys: two scratch tables, row -> tier and row -> within-tier key, emptied after each
+-- sort (they keep their size, so a hover's ranking allocates no key table and no comparator: the
+-- feedback review's perf finding). Nothing in a keyOf sorts, so one pair serves every call.
+local tierOf, subOf = setmetatable({}, { __mode = "k" }), setmetatable({}, { __mode = "k" })
+
+local function keyOrder(a, b)
+    if tierOf[a] ~= tierOf[b] then return tierOf[a] < tierOf[b] end
+    if subOf[a] ~= subOf[b] then return subOf[a] < subOf[b] end
     return nameBefore(a, b) == true
 end
 
--- A new array of `rows` sorted by `keyOf(row)`.
-local function sortBy(rows, keyOf)
-    local out, keys = {}, {}
-    for i, row in ipairs(list(rows)) do
-        out[i] = row
-        keys[row] = keyOf(row)
-    end
-    table.sort(out, function(a, b) return keyBefore(keys[a], keys[b], a, b) end)
+-- A new array of `rows` sorted by `keyOf(row, me)`: two numbers, a tier and a within-tier key, the
+-- lower first, then the name, then the id. A run of one row or none is not sorted at all.
+local function sortBy(rows, keyOf, me)
+    local out = {}
+    for i, row in ipairs(list(rows)) do out[i] = row end
+    if #out < 2 then return out end
+    for _, row in ipairs(out) do tierOf[row], subOf[row] = keyOf(row, me) end
+    table.sort(out, keyOrder)
+    for _, row in ipairs(out) do tierOf[row], subOf[row] = nil, nil end
     return out
 end
 
@@ -526,6 +573,10 @@ local function dropTier(row, me)
     return IS.InBand(row.minLevel, row.maxLevel, me.level) and 2 or 3
 end
 
+local function dropKey(row, me)
+    return dropTier(row, me), chanceKey(row.chance)
+end
+
 --- DROPS FROM: a spot in your zone; then a creature in your band, or an object or container (no
 --- level); then a creature outside the band. Within a tier, the higher chance first.
 --- @param rows table facts.drops
@@ -533,7 +584,7 @@ end
 --- @return table
 function Rank.drops(rows, me)
     me = me or {}
-    return sortBy(rows, function(row) return { dropTier(row, me), chanceKey(row.chance) } end)
+    return sortBy(rows, dropKey, me)
 end
 
 -- Whether a vendor's side (`nfac`) leaves the player out: it names the other side alone.
@@ -559,15 +610,19 @@ local function vendorTier(row, me)
     return 3
 end
 
+local function vendorKey(row, me)
+    return vendorTier(row, me), 0
+end
+
 --- SOLD BY: in your zone, then on your continent, then elsewhere, last a vendor your side can't
---- use. Within a tier, unlimited stock before limited (`limited`, when the reader gives it), then
---- the name.
+--- use. Within a tier, the name. (The spec's "unlimited stock before limited" waits on LibKa0s
+--- exposing ForeverDB's vendor stock, docs/known-limitations.md: the adapter gives no stock today.)
 --- @param rows table facts.vendors
 --- @param me table
 --- @return table
 function Rank.vendors(rows, me)
     me = me or {}
-    return sortBy(rows, function(row) return { vendorTier(row, me), row.limited == true and 1 or 0 } end)
+    return sortBy(rows, vendorKey, me)
 end
 
 local function questStateOf(row, me)
@@ -585,6 +640,10 @@ local function questTier(row, me)
     return 3
 end
 
+local function questKey(row, me)
+    return questTier(row, me), num(row.level) or math.huge
+end
+
 --- QUESTS: in your log, then can pick up now (your level at least its minimum, not done), then too
 --- high for you now, last completed. Within a tier, the lower quest level first.
 --- @param rows table facts.quests (or the Reward from / Starts rows)
@@ -592,7 +651,7 @@ end
 --- @return table
 function Rank.quests(rows, me)
     me = me or {}
-    return sortBy(rows, function(row) return { questTier(row, me), num(row.level) or math.huge } end)
+    return sortBy(rows, questKey, me)
 end
 
 local function knownOf(row, me)
@@ -611,14 +670,14 @@ local function craftKey(row, me)
     if knownOf(row, me) then
         local color = row.color or IS.SkillColor(rank, row.yellow, row.gray)
         local up = SKILL_UP[color]
-        if up then return { 1, up } end
-        return { 2, 0 }
+        if up then return 1, up end
+        return 2, 0
     end
     if rank then
         local yellow = num(row.yellow)
-        return { 3, yellow and math.abs(yellow - rank) or math.huge }
+        return 3, yellow and math.abs(yellow - rank) or math.huge
     end
-    return { 4, 0 }
+    return 4, 0
 end
 
 --- CRAFTING: known and can skill up (orange, then yellow, then green), then known with no skill-up
@@ -630,12 +689,16 @@ end
 --- @return table
 function Rank.crafting(rows, me)
     me = me or {}
-    return sortBy(rows, function(row) return craftKey(row, me) end)
+    return sortBy(rows, craftKey, me)
 end
 
 local function skinTier(row, me)
     if inZone(me, "npc", row) then return 1 end
     return IS.InBand(row.minLevel, row.maxLevel, me.level) and 2 or 3
+end
+
+local function skinKey(row, me)
+    return skinTier(row, me), chanceKey(row.chance)
 end
 
 --- SKINNED FROM: a spot in your zone, then in your level band, then the rest. Within a tier, the
@@ -645,7 +708,7 @@ end
 --- @return table
 function Rank.skinned(rows, me)
     me = me or {}
-    return sortBy(rows, function(row) return { skinTier(row, me), chanceKey(row.chance) } end)
+    return sortBy(rows, skinKey, me)
 end
 
 -- ── the professions you know (spec §4) and the cap (spec §7) ───────────────────────────────

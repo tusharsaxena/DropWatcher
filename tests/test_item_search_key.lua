@@ -256,6 +256,18 @@ test("item search key: the re-try keeps the rules: a key the player bound stays,
     assertEqual(NS2.addon.db.char.itemSearch.keyDefaultedV, 2)
 end, FOREVER_ONLY)
 
+test("item search key: a marked character whose dead chord is gone is not re-tried: a key the player cleared stays cleared", function()
+    local NS, m = enabled()
+    NS.addon.db.char.itemSearch = { keyDefaulted = true }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    -- red under: the re-try binding Alt-Ctrl-D for a player who cleared the dead CTRL-ALT-D
+    -- themselves after the first build (the key module's promise, docs/schema.md)
+    assertEqual(m.GetBindingKey(COMMAND), nil, "no key put back")
+    assertEqual(m.GetBindingAction(KEY), "")
+    assertEqual(NS.addon.db.char.itemSearch.keyDefaultedV, 2, "tried, once")
+    assertEqual(NS.ItemSearchKey.TryDefaultKey(), "done")
+end, FOREVER_ONLY)
+
 test("item search key: the re-try waits out combat before it clears anything", function()
     local NS, m = enabled({ setup = function(mm) mm.bindKey(DEAD, COMMAND) end })
     NS.addon.db.char.itemSearch = { keyDefaulted = true }

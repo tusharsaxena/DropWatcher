@@ -656,6 +656,19 @@ test("item search: the fake's strongboxes are one row at the higher chance; the 
     assertEqual(f.unnamedObjects, 2)
 end, FOREVER_ONLY)
 
+test("item search: an item's unnamed objects are logged once, when its facts are kept", function()
+    local NS = loaded()
+    local logged, real = 0, NS.Debug
+    NS.Debug = function(cat, fmt, ...)
+        if cat == "SEARCH" and tostring(fmt):find("unnamed object", 1, true) then logged = logged + 1 end
+        return real(cat, fmt, ...)
+    end
+    for _ = 1, 3 do NS.ItemSearch.Get(IDS.relic) end
+    NS.Debug = real
+    -- red under: a log line per hover (the facts re-read while the item is not kept)
+    assertEqual(logged, 1)
+end, FOREVER_ONLY)
+
 test("item search: a merged object's window row unions its parts' spots and counts its kinds", function()
     local NS = T.newAddon()
     local ISC = NS.ItemSearchCells

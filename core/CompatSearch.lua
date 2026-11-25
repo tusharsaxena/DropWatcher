@@ -166,14 +166,19 @@ end
 
 -- ── spells and professions ──────────────────────────────────────────────────────────────────
 
--- One C_SkillInfo line into `ranks`: its skill line and its parent's, the higher rank kept.
+-- Keep the higher of `rank` and what `ranks` already has for `line` (nil: no line).
+local function keepRank(ranks, line, rank)
+    if line and (not ranks[line] or ranks[line] < rank) then ranks[line] = rank end
+end
+
+-- One C_SkillInfo line into `ranks`: its skill line and its parent's, the higher rank kept (no
+-- table per line: Item Search reads the ranks on every tooltip hover).
 local function addSkillLine(ranks, info)
     if not plainTable(info) or info.isHeader == true then return end
     local rank = plainNumber(info.rank or info.skillRank)
     if not rank then return end
-    for _, line in ipairs({ plainId(info.skillID or info.skillLineID), plainId(info.parentSkillLineID) }) do
-        if not ranks[line] or ranks[line] < rank then ranks[line] = rank end
-    end
+    keepRank(ranks, plainId(info.skillID or info.skillLineID), rank)
+    keepRank(ranks, plainId(info.parentSkillLineID), rank)
 end
 
 local function ranksFromSkillInfo(ns)

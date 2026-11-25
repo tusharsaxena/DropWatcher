@@ -71,6 +71,12 @@ local matches = {}
 local matchSort = "best"    -- the matches' Sort (spec §5.2), for the session
 local views = {}            -- [tab] = TABS' view state, for the session (spec §5.5: never saved)
 local shownTab              -- the tab on screen now
+-- The last ISC.Build (the item, its facts and its rows), kept for a VIEW-ONLY repaint: a corner drag,
+-- a sort or filter click, Reset or a tab pick changes only how the rows are shown, so it re-lays
+-- the table from these rows instead of reading the facts and ranking every section again (the
+-- feedback review's resize finding). Every other repaint builds afresh and replaces them.
+local lastBuild = { item = nil, facts = nil, rows = nil }
+local viewOnly = false      -- the next ISW.Refresh may reuse lastBuild (repaintView sets it)
 
 local function TM() return NS.TipMarks end
 local function WP() return NS.ItemSearchWaypoint end
@@ -175,6 +181,12 @@ local function stateOf(tab)
     return views[tab]
 end
 
+-- Repaint how the rows are shown, from the last build (see lastBuild).
+local function repaintView()
+    viewOnly = true
+    ISW.Refresh()
+end
+
 --- A tab's view state now (its sort and filters; the default until a click moves it).
 --- @param tab string
 --- @return table
@@ -186,7 +198,7 @@ function ISW.ViewState(tab) return stateOf(tab) end
 function ISW.SortBy(tab, key)
     local st = stateOf(tab)
     st.sort = TABS.NextSort(tab, st.sort, key)
-    ISW.Refresh()
+    repaintView()
 end
 
 --- Turn one of tab `tab`'s filters (spec §5.5) on or off (`on` nil flips it). View only, not saved.
@@ -197,14 +209,21 @@ function ISW.SetFilter(tab, key, on)
     local st = stateOf(tab)
     if on == nil then on = st.filters[key] ~= true end
     st.filters[key] = on == true
-    ISW.Refresh()
+    repaintView()
 end
 
 --- Reset tab `tab`: Best for you, every filter at its default.
 --- @param tab string
 function ISW.ResetView(tab)
     views[tab] = nil
-    ISW.Refresh()
+    repaintView()
+end
+
+--- The "Only professions you know" setting moved (spec §4: the Crafting tab starts filtered by it):
+--- the tab's filter follows the setting again, then the window repaints as for any setting.
+function ISW.FollowProfessionsSetting()
+    if views.crafting then views.crafting.filters.mine = IS.MyProfessionsOnly() end
+    ISW.ApplySettings()
 end
 
 --- The tab picked last (kept per profile), or nil.
@@ -215,7 +234,7 @@ function ISW.PickedTab() return geometry().tab end
 --- @param key string
 function ISW.SelectTab(key)
     geometry().tab = key
-    ISW.Refresh()
+    repaintView()
 end
 
 --- The tab on screen now, or nil.
@@ -484,7 +503,7 @@ local function onResizeStop(f, w, h)
         f.dwW, f.dwH = w, h
     end
     savePoint()
-    ISW.Refresh()
+    repaintView()
 end
 
 local function makeResizable(f)
@@ -495,7 +514,7 @@ local function makeResizable(f)
         onResize = function(w, h)
             if type(w) == "number" and w > 0 then f.dwW = w end
             if type(h) == "number" and h > 0 then f.dwH = h end
-            ISW.Refresh()
+            repaintView()
         end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor.
         onResizeStop = function(w, h) onResizeStop(f, w, h) end,
@@ -716,7 +735,7 @@ local function paintTab(built, m)
     ISG.PaintTable(f.grid, key, rows, math.max(1, w), tableOpts(key, st, m, ISW.Options()))
 end
 
-local function paintDetail(m)
+local function paintDetail(m, reuse)
     local f = frame
     local has = shownItem ~= nil
     for _, w in ipairs({ f.icon, f.name, f.nameButton, f.line, f.linkHint }) do w:SetShown(has) end
@@ -730,9 +749,13 @@ local function paintDetail(m)
         f.noFacts:Hide()
         return
     end
-    local facts = IS.Get(shownItem)
-    itemHeader(facts)
-    paintTab(ISC.Build(facts, IS.Me(facts and facts.ranks), cellsContext()), m)
+    if not (reuse and lastBuild.item == shownItem and lastBuild.rows) then
+        local facts = IS.Get(shownItem)
+        lastBuild.item, lastBuild.facts = shownItem, facts
+        lastBuild.rows = ISC.Build(facts, IS.Me(facts and facts.ranks), cellsContext())
+    end
+    itemHeader(lastBuild.facts)
+    paintTab(lastBuild.rows, m)
 end
 
 local function paintFooter()
@@ -746,10 +769,12 @@ end
 
 --- Repaint the whole window from the current state (a no-op while it is closed).
 function ISW.Refresh()
+    local reuse = viewOnly
+    viewOnly = false
     if not (frame and frame:IsShown()) then return end
     local m = NS.WindowRows.Metrics()
     paintLeft(m)
-    paintDetail(m)
+    paintDetail(m, reuse)
     paintFooter()
 end
 

@@ -75,6 +75,7 @@ function IS.State()
     if state ~= lastState then
         lastState = state
         IS.Invalidate()
+        if IS.ForgetSpots then IS.ForgetSpots() end
     end
     return state
 end
@@ -198,18 +199,20 @@ end
 --- The ranking's context for the player now (Item Search feedback spec §3, IS.Rank's `me`): level,
 --- zone and continent, side, ranks, the known-spell and quest-state reads, and ForeverDB's spots
 --- once it is loaded (never a load). `ranks`, when given (a facts table's, read by IS.Get this call),
---- saves a second read of the skill list.
+--- saves a second read of the skill list. `into`, when given, is filled and answered in place of a
+--- new table (the tooltip's hover reuses one: it runs on every post call and never keeps it).
 --- @param ranks table|nil
+--- @param into table|nil
 --- @return table
-function IS.Me(ranks)
+function IS.Me(ranks, into)
     local Compat = NS.Compat
     local zone, continent = Compat.PlayerZone()
     local db = IS.State() == "loaded" and NS.ForeverDB or nil
-    return {
-        level = Compat.UnitLevel("player"), mapID = zone, continentID = continent, continentOf = Compat.ContinentOf,
-        faction = Compat.PlayerFactionLetter(), ranks = ranks or Compat.SkillLineRanks(), known = Compat.SpellKnown,
-        questState = questState, spots = db and db.Spots or nil,
-    }
+    local me = into or {}
+    me.level, me.mapID, me.continentID, me.continentOf = Compat.UnitLevel("player"), zone, continent, Compat.ContinentOf
+    me.faction, me.ranks, me.known = Compat.PlayerFactionLetter(), ranks or Compat.SkillLineRanks(), Compat.SpellKnown
+    me.questState, me.spots = questState, db and db.Spots or nil
+    return me
 end
 
 --- Whether the views show only the professions the player knows (spec §4: one setting for the
@@ -230,10 +233,14 @@ function IS.Get(itemID)
     if not static then
         static = IS.Static(itemID, staticContext(state))
         if not static then return nil end
-        if (static.unnamedObjects or 0) > 0 then
-            NS.Debug("SEARCH", "item %d: %d unnamed object source(s) left out", itemID, static.unnamedObjects)
+        -- Logged once, when the facts are kept: an item the client has not named yet misses the
+        -- cache on every hover, and would log on every tooltip show until its name arrives.
+        if static.item.name then
+            cache[itemID] = static
+            if (static.unnamedObjects or 0) > 0 then
+                NS.Debug("SEARCH", "item %d: %d unnamed object source(s) left out", itemID, static.unnamedObjects)
+            end
         end
-        if static.item.name then cache[itemID] = static end
     end
     return IS.Live(static, liveContext())
 end

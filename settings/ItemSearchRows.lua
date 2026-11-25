@@ -84,6 +84,11 @@ local function repaintSearchWindow()
     local W = NS.ItemSearchWindow
     if W and W.ApplySettings then W.ApplySettings() end
 end
+-- "Only professions you know": the window's Crafting filter follows the setting again (spec §4).
+local function followProfessions()
+    local W = NS.ItemSearchWindow
+    if W and W.FollowProfessionsSetting then W.FollowProfessionsSetting() else repaintSearchWindow() end
+end
 
 -- ── Item tooltip ────────────────────────────────────────────────────────────────────────────
 
@@ -112,7 +117,7 @@ local function tooltip()
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],
-        M.with(at, { subgroup = L["Tooltip and window"], onChange = repaintSearchWindow }))
+        M.with(at, { subgroup = L["Tooltip and window"], onChange = followProfessions }))
 
     local sections = M.with(sub, { subgroup = L["Sections"] })
     for _, s in ipairs(SECTIONS) do

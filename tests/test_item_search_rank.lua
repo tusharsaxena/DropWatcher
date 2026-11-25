@@ -78,6 +78,24 @@ test("item search rank: drops: within a tier the higher chance first, an unknown
     assertEqual(#S.Rank.drops(nil, nil), 0, "no rows, no context")
 end)
 
+test("item search rank: a source's spots are read once, whatever the zone, until ForgetSpots", function()
+    local S = IS()
+    local reads = 0
+    local ctx = me({ spotTable = { ["npc:1"] = at(ZONE), ["npc:2"] = at(FAR_ZONE) } })
+    local inner = ctx.spots
+    ctx.spots = function(kind, id) reads = reads + 1; return inner(kind, id) end
+    local rows = { { kind = "npc", id = 1, name = "Near" }, { kind = "npc", id = 2, name = "Far" },
+        { kind = "npc", id = 3, name = "Nowhere" } }
+    for _ = 1, 4 do S.Rank.drops(rows, ctx) end
+    ctx.mapID = FAR_ZONE
+    -- red under: lib.Spots called for every row on every hover (it builds new point tables)
+    assertEqual(names(S.Rank.drops(rows, ctx)), "Far,Near,Nowhere", "the memo still answers per zone")
+    assertEqual(reads, 3, "one read per source")
+    S.ForgetSpots()
+    S.Rank.drops(rows, ctx)
+    assertEqual(reads, 6, "read again once forgotten")
+end)
+
 -- ── vendors ─────────────────────────────────────────────────────────────────────────────────
 
 test("item search rank: vendors: your zone, your continent, elsewhere, and last the other side's", function()
@@ -87,12 +105,13 @@ test("item search rank: vendors: your zone, your continent, elsewhere, and last 
         { id = 2, name = "Horde Local", faction = "H" },
         { id = 3, name = "Continent", faction = "A" },
         { id = 4, name = "Local" },
-        { id = 5, name = "Limited Local", limited = true },
+        { id = 5, name = "Nearby", limited = true },
     }, me({ spotTable = { ["npc:1"] = at(FAR_ZONE), ["npc:2"] = at(ZONE), ["npc:3"] = at(OTHER_ZONE),
         ["npc:4"] = at(ZONE), ["npc:5"] = at(ZONE) } }))
-    -- red under: a Horde-only vendor in your zone first for an Alliance player, or limited stock
-    -- ranked with unlimited
-    assertEqual(names(ranked), "Local,Limited Local,Continent,Elsewhere,Horde Local")
+    -- red under: a Horde-only vendor in your zone first for an Alliance player. Within a tier the
+    -- name alone: the adapter reads no stock, so a `limited` key is not a tie-break (ISF-REV; the
+    -- spec's "unlimited before limited" waits on LibKa0s exposing ForeverDB's vendor stock)
+    assertEqual(names(ranked), "Local,Nearby,Continent,Elsewhere,Horde Local")
     local neutral = S.Rank.vendors({ { id = 2, name = "Horde Local", faction = "H" }, { id = 1, name = "Elsewhere" } },
         me({ faction = "", spotTable = { ["npc:2"] = at(ZONE) } }))
     assertEqual(names(neutral), "Horde Local,Elsewhere", "no side known: nobody is the other side")

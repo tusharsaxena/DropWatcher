@@ -423,9 +423,7 @@ local function questCells(q, status, title, giver, where, me)
         giver = giver and textCell(giverText(giver, where)) or textCell(nil) }
 end
 
-local function questRow(q, i, me, ctx)
-    local info = call(ctx.quest, q.id)
-    fillQuest(q, info)
+local function questRow(q, i, me, ctx, info)
     q.state = q.state or call(me.questState, q.id) or "todo"
     local status = ISC.QuestStatus(q.state, q.minLevel, me.level)
     local title = q.title or L["Quest %d"]:format(q.id)
@@ -444,14 +442,17 @@ end
 --- @return table
 function ISC.Quests(facts, me, ctx)
     me, ctx = me or {}, ctx or {}
-    local inputs = questInputs(facts)
+    local inputs, infos = questInputs(facts), {}
+    -- Each row's title and levels are filled BEFORE the ranking (the Reward from and Starts rows
+    -- carry only what the facts give): Rank.quests orders a tier by the level, then the title.
     for _, q in ipairs(inputs) do
         local info = call(ctx.quest, q.id)
-        if type(info) == "table" then q.minLevel = q.minLevel or num(info.minLevel) end
+        infos[q] = info
+        fillQuest(q, info)
         q.state = q.state or call(me.questState, q.id)
     end
     local out = {}
-    for i, q in ipairs(IS.Rank.quests(inputs, me)) do out[i] = questRow(q, i, me, ctx) end
+    for i, q in ipairs(IS.Rank.quests(inputs, me)) do out[i] = questRow(q, i, me, ctx, infos[q]) end
     return out
 end
 

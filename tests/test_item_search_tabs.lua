@@ -258,6 +258,20 @@ test("item search cells: QUESTS' rows join the objectives, the rewards and the o
     assertEqual(rows[2].cells.quest.tone, "red", "a level-44 quest is red")
 end)
 
+test("item search cells: a Rewards it row with no level in the facts ranks by its quest row's level", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local quest = { [21] = { title = "Zeta", level = 30, minLevel = 1 }, [22] = { title = "Alpha", level = 60, minLevel = 1 },
+        [23] = { title = "Mid", level = 45, minLevel = 1 } }
+    local facts = { quests = {}, rewardFrom = { { id = 22 }, { id = 21 }, { id = 23 } } }
+    local rows = C.Quests(facts, { level = 70, questState = function() return "todo" end },
+        { quest = function(id) return quest[id] end })
+    -- red under: the level and title filled after the ranking (every row level-less then: a tie on a
+    -- nil name, the facts' order kept)
+    assertEqual(texts(rows, "quest"), "Zeta,Mid,Alpha")
+    assertEqual(texts(rows, "level"), "30,45,60")
+end)
+
 test("item search cells: the leather's quests from the fake carry their giver and their zone", function()
     local fake
     local NS, _, m = T.enableAddon{ mock = function(mm) fake = FDB.install(mm, { preset = "present" }) end }
