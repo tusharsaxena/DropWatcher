@@ -69,6 +69,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
 | FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01; 18 and 19 superseded by ITEM-SEARCH) |
 | ITEM-SEARCH-1..18 | [Item Search (WoW Forever)](#item-search-wow-forever) | Item Search (DropWatcher#17, IS-DW-01 to IS-DW-07): the tooltip block on every source (1), its sections and marks (2), Shift-only, title, hint and comparison tooltips (3), before and after the load and a login in combat (4), without ForeverDB (5), absent on Retail (6), the window's ways in (7), the key with and without a hover (8), name and id search (9), the detail pane, bars and pins (10), recent searches (11), Link in chat (12), the default key never stealing (13), the settings page and the section order (14), the window's settings (15), the Keybindings tab (16), the old chip gone (17), the profession-window fallback (18) |
+| ITEM-SEARCH-19..28 | [Item Search feedback](#item-search-feedback) | The Item Search feedback run (ISF-DW-01 to ISF-DW-08): the key fires (19), objects named (20), the tooltip's title, ranking and cap (21), only your professions (22), the recipe glyphs (23), the window's frame and matches (24), the tabs, tables, headers and tooltips (25), waypoints with TomTom and the map pin (26), Drop Watcher's arrow (27), the settings page (28) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -4764,6 +4765,43 @@ and value rows, dim hints last); a container's row and a recipe's Makes show the
 and shift-click links it. Pick Quests, then show another item with quests → Quests stays picked.
 Result:
 
+**ITEM-SEARCH-26. Waypoints with TomTom (W11, W12).** With TomTom installed and loaded, show an item
+with drop sources in the Item Search window → each row with a known spot has a small dim map pin at
+its right end (no white arrow), which brightens while the pointer is on its row. Hover the pin → a
+tooltip: Set a waypoint, the zone and coordinates, `Arrow  TomTom`, and the dim hint `Click: set a
+waypoint`. Click it → TomTom's arrow points there, chat prints one line `Waypoint set: <source>
+(<zone>, x, y), shown by TomTom.`, and the game's own map pin is not set (no pin of the client's on
+the world map). Settings › Item Search › Waypoints → Waypoints reads Automatic, and the Waypoint
+arrow, Arrow text and Arrow position rows below it are grayed out. Pick Drop Watcher's arrow → they
+come alive, and the next pin click points Drop Watcher's arrow instead (TomTom is not called).
+Result:
+
+**ITEM-SEARCH-27. Drop Watcher's arrow (W12).** With TomTom disabled in the addon list and
+`/reload`, Waypoints on Automatic → click a pin → a movable arrow appears near the screen's center,
+pointing toward the spot with the distance under it, the same arrow Skill Master draws; chat says
+`..., shown by Drop Watcher's arrow.` Walk → it turns and the distance counts down; its color fades
+from the skin's accent to green as you get near; within a few yards it disappears and chat says `You
+have arrived: <source>`. Drag it somewhere else, `/reload` and click a pin → it shows where you left
+it. Right-click it →
+the menu: Clear waypoint, Share in chat, Show on map, Lock the arrow, Reset position, Arrow
+settings... (opens Settings › Item Search). Pick TomTom in Waypoints with TomTom still disabled → a
+pin still uses Drop Watcher's arrow. Change Arrow style to Flat, Arrow scale to 1.5 and Text position
+to Above → the shown arrow changes at once. Click another pin → the arrow points at the new spot.
+`/dw disable` → the arrow goes. Result:
+
+**ITEM-SEARCH-28. The settings page (spec §9).** Settings › Item Search → tabs Item tooltip, Item
+Search window, Waypoints, Keybindings. Item tooltip's Tooltip block, top to bottom: Add Item Search to
+item tooltips, Comparison tooltips too, Rows per section (1 to 20, 5), Show the key hint, Only while
+holding Shift, Separator and title line; then a Tooltip and window heading with Only professions you
+know; then Sections and Section order as before. There is no Drop sources shown row. Untick Show the
+key hint → the tooltip's last line (the key) goes. Item Search window: Enable the Item Search window
+and the bar color rows only (no Density, Font size, columns, recent searches, lock or pins rows).
+Waypoints: Waypoints (Automatic, TomTom, Drop Watcher's arrow) and Waypoint pins, then the arrow's
+blocks (Waypoint arrow, Arrow text, Arrow position with Reset position). Untick Waypoint pins → the
+window's rows have no pins. Defaults → every row back, Waypoints Automatic, the key untouched. A
+profile saved by the first Item Search build with Drop sources shown at 7 opens with Rows per section
+at 7. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -4828,6 +4866,8 @@ On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97,
 Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`.
 
 Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed.
+
+Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-28, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-8's key, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-14 and 15's rows), the newer row is current. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

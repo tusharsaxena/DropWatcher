@@ -115,8 +115,36 @@ test("item search settings: every spec §4.7 row is on the page, in order, with 
     end
 end, FOREVER_ONLY)
 
+-- Item Search feedback spec §9, §10 (ISF-DW-08): a profile the first Item Search build saved runs
+-- every step this run added through the runner, in order, and lands on the code's target.
+test("item search settings: a first-build profile runs steps 16 and 17 through the runner, to the code's target", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 15, itemSearch = { recent = { 101, 102 } } },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { itemSearch = {
+                tooltip = { dropsShown = 7, hint = false },
+                window = { recent = true, density = "compact", fontSize = 14, columns = false, pins = false },
+            } },
+        },
+    }
+    -- red under: either step missing from the runner, or run out of order
+    NS.addon:OnInitialize()
+    local sv = _G.DropWatcherDB
+    local is = sv.profiles.Default.itemSearch
+    assertEqual(is.tooltip.rows, 7, "step 16: Drop sources shown carried into Rows per section")
+    assertNil(is.tooltip.dropsShown)
+    assertFalse(is.tooltip.hint, "Show the key hint keeps the stored choice")
+    for _, k in ipairs({ "recent", "density", "fontSize", "columns" }) do assertNil(is.window[k], "step 17: " .. k) end
+    assertFalse(is.window.pins, "a kept row keeps its value")
+    assertNil(sv.global.itemSearch, "step 17: the recent searches")
+    assertEqual(sv.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertEqual(NS.SCHEMA_VERSION, 17, "this run adds no step past 17: its new keys are new rows")
+end)
+
 test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's)", function()
-    local NS = enabled()
+    local NS, m = enabled()
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
     assertTrue(S("itemSearch.tooltip.header")); assertTrue(S("itemSearch.tooltip.hint"))
@@ -129,6 +157,17 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 5
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
     assertTrue(S("itemSearch.window.barFromSkin"))
     for _, key in ipairs({ "pins", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
+    -- Item Search feedback spec §6, §9 (ISF-DW-07): Automatic, and the arrow at the library's DEFAULTS
+    assertEqual(S("itemSearch.waypoints"), "auto")
+    local Arrow = m.LibStub("LibKa0s-WaypointArrow-1.0")
+    for key, v in pairs(Arrow.DEFAULTS) do
+        local got = S("itemSearch.arrow." .. key)
+        if type(v) == "table" then
+            assertEqual(table.concat({ got.r, got.g, got.b, got.a }, ","), table.concat(v, ","), key)
+        else
+            assertEqual(got, v, key)
+        end
+    end
     -- red under: a retired row still declared, or still defaulted (a dead setting)
     for _, path in ipairs(RETIRED) do
         assertNil(NS.SchemaRuntime.FindRow(path), path .. " has no row")

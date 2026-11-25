@@ -63,7 +63,7 @@ local PAGES = {
 }
 if ISP then
     PAGES[#PAGES + 1] = { key = "itemSearch", title = L["Item Search"],
-      tip = L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."],
+      tip = L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."],
       afterGroup = { [L["Item tooltip"]] = function(ctx) ISP.SectionOrder(ctx) end },
       beforeClear = function(ctx) ISP.Park(ctx) end,
       -- The Waypoints tab's arrow Position block's Reset position (settings/ItemSearchArrowRows.lua).

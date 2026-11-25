@@ -596,5 +596,5 @@ L["Put the arrow back at its default position."] = "Put the arrow back at its de
 L["Drag to reorder"] = "Drag to reorder"
 L["The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."] =
     "The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."
-L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."] =
-    "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."
+L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."] =
+    "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."

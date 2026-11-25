@@ -1097,9 +1097,10 @@ Total.
 - item search key: the re-try keeps the rules: a key the player bound stays, a taken Alt-Ctrl-D is not taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: the re-try waits out combat before it clears anything (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_settings.lua (11)
+### test_item_search_settings.lua (12)
 
 - item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: a first-build profile runs steps 16 and 17 through the runner, to the code's target
 - item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
@@ -3372,7 +3373,7 @@ Total.
 | test_item_search_window.lua | 8 |
 | test_item_search_tabs.lua | 12 |
 | test_item_search_key.lua | 3 |
-| test_item_search_settings.lua | 1 |
+| test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 12 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -3468,4 +3469,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 87 |
-| **Total** | **2800** |
+| **Total** | **2801** |

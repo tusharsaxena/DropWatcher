@@ -262,3 +262,12 @@ the code reads every case the design leaves open, module by module, is in
   the window searches by id and shows Crafting from the shipped table (ITEM-SEARCH-4, ITEM-SEARCH-5).
 - **Item Search's client hooks are assumed until probed**: the item tooltip post call and the
   profession window's reads (`forever-quirks.md`, ITEM-SEARCH-1 to 4 and 18).
+- **Item Search's Sold by tab has no Stock or Requires column, and Quests no per-quest count**
+  (Item Search feedback spec §5.4 allows a column the client has no data for to go): the
+  LibKa0s-ForeverDB-1.0 reader carries no vendor stock or requirements and no objective counts. A
+  reader addition brings them back. A vendor's price is the lowest seen, on that vendor's row alone.
+- **Drop Watcher's arrow assumes the map reads answer on WoW Forever** (`C_Map.GetWorldPosFromMapPos`,
+  the player's map position and facing, as Skill Master's arrow uses them there): `forever-quirks.md`,
+  ITEM-SEARCH-27. The client's own user waypoint is never used, since it draws no arrow on Forever.
+- **Waypoints: TomTom is a choice of a dropdown, so it cannot be grayed out** while TomTom is not
+  loaded; picked then, a pin uses Drop Watcher's arrow, and the row's and the pin's tooltips say so.
