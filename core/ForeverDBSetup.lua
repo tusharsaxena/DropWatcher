@@ -10,7 +10,8 @@ local _, NS = ...
 -- Window > Layout > Detail card's Show where it comes from on.
 --
 -- The library-absent stand-in answers the all-absent values of the library's own *Degradation*
--- section (docs/api/ForeverDB/version-1-docs.md), member for member, so the card simply shows no
+-- section (docs/api/ForeverDB/version-1-docs.md), member for member (minor 2's list members answer
+-- `{}`, as the live ones do when ForeverDB is unavailable), so the card simply shows no
 -- sources: tests/test_surface_parity.lua holds it to the live surface.
 
 local FDB = LibStub and LibStub("LibKa0s-ForeverDB-1.0", true)
@@ -29,4 +30,11 @@ NS.ForeverDB = FDB or {
     VendorPrice   = function() return nil, nil end,
     Spots         = none,
     TrainerSpells = none,
+    -- minor 2 (LibKa0s v1.115.0, Item Search): the live members' answers when ForeverDB is
+    -- unavailable, `{}` for a list and nil for StartsQuest.
+    SearchItems   = function() return {} end,
+    QuestsForItem = function() return {} end,
+    RewardFrom    = function() return {} end,
+    StartsQuest   = none,
+    SkinnedFrom   = function() return {} end,
 }

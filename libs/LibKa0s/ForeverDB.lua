@@ -8,10 +8,11 @@
 -- gives and ends a quest, what a trainer teaches. On WoW Forever, ForeverDB carries exactly those
 -- facts (github.com/foreverfraddons/forever-db: QuestieDB, VMaNGOS, cMaNGOS and pfQuest, merged and
 -- cross-checked). It is a LoadOnDemand addon of some 12 MB, positional rows behind short table
--- names, and its layout is its own. Five Ka0s addons want it (Drop Watcher, Loot History, Bank
--- Ledger, Skill Master, Outfitter Reborn), so the reading lives here once: one place knows the row
--- positions, one place decides when the 12 MB load happens, and one place answers plainly when the
--- addon is absent, disabled, old or reshaped (LibKa0s#105).
+-- names, and its layout is its own. Three Ka0s addons read it (Drop Watcher, Skill Master,
+-- Outfitter Reborn), so the reading lives here once: one place knows the row positions, one place
+-- decides when the 12 MB load happens, and one place answers plainly when the addon is absent,
+-- disabled, old or reshaped (LibKa0s#105). Minor 2 adds the lookups Drop Watcher's Item Search
+-- makes: SearchItems (by name), QuestsForItem, RewardFrom, StartsQuest and SkinnedFrom.
 --
 -- ForeverDB is an OPTIONAL runtime dependency. A host lists it in `## OptionalDeps` (and MAY list it
 -- under `.pkgmeta`'s `optional-dependencies`), never in `## Dependencies`: no player needs it
@@ -45,7 +46,7 @@ local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local NEEDS_CORE = 1
 if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary; module absent
 
-local MAJOR, MINOR = "LibKa0s-ForeverDB-1.0", 1
+local MAJOR, MINOR = "LibKa0s-ForeverDB-1.0", 2
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -115,6 +116,10 @@ end
 -- -- Available ----------------------------------------------------------------------------------
 
 local cached   -- { ok, reason } once Available() has answered; cleared only by __reset
+-- The session indexes (minor 2), each built on its first use from the table it names and kept with
+-- that table, so a database the client swapped in is indexed afresh: `nameIndex` for SearchItems
+-- ({ src = item, ids, names, lens }), `questIndex` for QuestsForItem ({ src = qx, byItem }).
+local nameIndex, questIndex
 
 local function evaluate()
   if not isForever() then return false, "client" end
@@ -178,9 +183,10 @@ function lib.Status()
   return out
 end
 
---- Forget the cached answer, so the next Available() asks again. For tests; a host never calls it.
+--- Forget the cached answer and the session indexes, so the next Available() asks again. For
+--- tests; a host never calls it.
 function lib.__reset()
-  cached = nil
+  cached, nameIndex, questIndex = nil, nil, nil
 end
 
 -- -- the database ---------------------------------------------------------------------------------
@@ -444,5 +450,218 @@ function lib.TrainerSpells(npcID)
     end
   end
   if not any then return nil end
+  return out
+end
+
+-- -- minor 2: Item Search's lookups -------------------------------------------------------------
+
+local SEARCH_LIMIT = 50   -- SearchItems' default row count
+local SEARCH_MIN   = 2    -- the shortest query SearchItems answers
+local OBJECTIVES   = 10   -- qx's item-objectives position
+local PRE_A, PRE_B = 3, 4 -- qx's two prequest positions
+
+--- `{ id, title, level }` for a quest, a new table; title and level nil when `quest` has no row.
+local function questBrief(questID)
+  local r = row("quest", questID)
+  return { id = questID, title = r and str(r[1]) or nil, level = r and num(r[2]) or nil }
+end
+
+--- The name index over `item`, built once per item table: parallel arrays of ids, lower-cased
+--- names and name lengths, in id order. Nil when ForeverDB is unavailable.
+local function nameIndexFor()
+  local items = tbl("item")
+  if not items then return nil end
+  if nameIndex and nameIndex.src == items then return nameIndex end
+  local order = {}
+  for itemID, r in pairs(items) do
+    if id(itemID) and type(r) == "table" and str(r[1]) then order[#order + 1] = itemID end
+  end
+  table.sort(order)
+  local names, lens = {}, {}
+  for i, itemID in ipairs(order) do
+    local name = items[itemID][1]
+    names[i], lens[i] = name:lower(), #name
+  end
+  nameIndex = { src = items, ids = order, names = names, lens = lens }
+  return nameIndex
+end
+
+--- One search row, a new table read off `item` at answer time, or nil when the row is gone.
+local function searchRow(itemID)
+  local r = row("item", itemID)
+  if not (r and str(r[1])) then return nil end
+  return { id = itemID, name = r[1], quality = num(r[2]), icon = num(r[8]), requiredLevel = num(r[3]) }
+end
+
+local function searchLimit(limit)
+  limit = num(limit)
+  if limit and limit >= 1 then return math.floor(limit) end
+  return SEARCH_LIMIT
+end
+
+--- The index positions whose name holds `needle` (plain find), prefix matches first, then
+--- shorter names, then id (the index is in id order, so the position breaks the tie).
+local function matches(index, needle)
+  local hits, prefix = {}, {}
+  for i = 1, #index.ids do
+    local at = index.names[i]:find(needle, 1, true)
+    if at then hits[#hits + 1] = i; prefix[i] = at == 1 end
+  end
+  table.sort(hits, function(a, b)
+    if prefix[a] ~= prefix[b] then return prefix[a] end
+    if index.lens[a] ~= index.lens[b] then return index.lens[a] < index.lens[b] end
+    return a < b
+  end)
+  return hits
+end
+
+--- Items whose name contains `query`: a new array of at most `limit` (default 50) new rows
+--- `{ id, name, quality, icon, requiredLevel }`, `{}` when nothing matches or ForeverDB is
+--- unavailable.
+---
+--- Case-insensitive and plain (no patterns); `query` is trimmed, and under two characters answers
+--- `{}`. Prefix matches come first, then shorter names, then id. A `query` of digits alone also
+--- matches the item with that id, first. The first call builds a lower-cased name index over
+--- `item`, kept for the session; later calls only scan it.
+---
+--- @param query string
+--- @param limit number|nil
+--- @return table
+function lib.SearchItems(query, limit)
+  local out = {}
+  if type(query) ~= "string" then return out end
+  query = query:match("^%s*(.-)%s*$")
+  if #query < SEARCH_MIN then return out end
+  local index = nameIndexFor()
+  if not index then return out end
+  limit = searchLimit(limit)
+  local exact = query:find("^%d+$") and id(tonumber(query)) or nil
+  local first = exact and searchRow(exact)
+  if first then out[1] = first end
+  for _, i in ipairs(matches(index, query:lower())) do
+    if #out >= limit then break end
+    local itemID = index.ids[i]
+    if itemID ~= exact then out[#out + 1] = searchRow(itemID) end
+  end
+  return out
+end
+
+--- The item -> quests index over `qx`'s item objectives, built once per qx table: each item's
+--- quest ids, ascending and without repeats. Nil when ForeverDB is unavailable.
+local function questIndexFor()
+  local qx = tbl("qx")
+  if not qx then return nil end
+  if questIndex and questIndex.src == qx then return questIndex end
+  local byItem = {}
+  for questID, r in pairs(qx) do
+    local list = id(questID) and type(r) == "table" and r[OBJECTIVES]
+    for _, itemID in ipairs(type(list) == "table" and list or {}) do
+      itemID = id(itemID)
+      if itemID then
+        local quests = byItem[itemID] or {}
+        byItem[itemID] = quests
+        if quests[#quests] ~= questID then quests[#quests + 1] = questID end
+      end
+    end
+  end
+  for _, quests in pairs(byItem) do table.sort(quests) end
+  questIndex = { src = qx, byItem = byItem }
+  return questIndex
+end
+
+--- A race or class mask, or nil when it is absent, not a number, or 0 (any).
+local function mask(v)
+  v = num(v)
+  if v and v > 0 then return v end
+  return nil
+end
+
+--- qx fields 3 and 4 merged into one new array of quest ids, in order, without repeats.
+local function preQuests(r)
+  local out, seen = {}, {}
+  for _, field in ipairs({ r[PRE_A], r[PRE_B] }) do
+    for _, q in ipairs(type(field) == "table" and field or {}) do
+      q = id(q)
+      if q and not seen[q] then seen[q], out[#out + 1] = true, q end
+    end
+  end
+  return out
+end
+
+--- Quests with the item among their objectives: a new array, by quest id, of new rows
+--- `{ id, title, level, minLevel, races, classes, preQuests }`; `{}` when none or ForeverDB is
+--- unavailable.
+---
+--- From `qx[quest]`: field 10 the item objectives, fields 1 and 2 the race and class masks (nil
+--- means any; a 0 reads as nil), fields 3 and 4 the prequests (merged into `preQuests`, possibly
+--- empty). `title`, `level` and `minLevel` are `quest[id]`'s, nil when it has no row. The first call
+--- builds the item -> quests index over `qx`, kept for the session.
+---
+--- @param itemID number
+--- @return table
+function lib.QuestsForItem(itemID)
+  local out = {}
+  itemID = id(itemID)
+  local index = itemID and questIndexFor()
+  if not index then return out end
+  for _, questID in ipairs(index.byItem[itemID] or {}) do
+    local r, q = row("qx", questID), row("quest", questID)
+    if r then
+      out[#out + 1] = {
+        id = questID, title = q and str(q[1]) or nil, level = q and num(q[2]) or nil,
+        minLevel = q and num(q[3]) or nil, races = mask(r[1]), classes = mask(r[2]),
+        preQuests = preQuests(r),
+      }
+    end
+  end
+  return out
+end
+
+--- Quests that reward the item: a new array of new `{ id, title, level }`, in `rew`'s order
+--- without repeats; `{}` when none or ForeverDB is unavailable.
+---
+--- @param itemID number
+--- @return table
+function lib.RewardFrom(itemID)
+  local out, seen = {}, {}
+  itemID = id(itemID)
+  if not itemID then return out end
+  for _, q in ipairs(row("rew", itemID) or {}) do
+    q = id(q)
+    if q and not seen[q] then seen[q], out[#out + 1] = true, questBrief(q) end
+  end
+  return out
+end
+
+--- The quest the item starts: a new `{ id, title, level }`, or nil (from `start[item]`).
+---
+--- @param itemID number
+--- @return table|nil
+function lib.StartsQuest(itemID)
+  itemID = id(itemID)
+  if not itemID then return nil end
+  local starts = tbl("start")
+  local questID = starts and id(starts[itemID])
+  if not questID then return nil end
+  return questBrief(questID)
+end
+
+--- The creatures the item is skinned from: a new array of new `{ id, name, chance }`, the most
+--- likely first as ItemSources sorts (an unknown rate last, then id); `{}` when none or ForeverDB
+--- is unavailable.
+---
+--- From the flat `skin[item] = { npcId, chancePer10000, ... }`; `chance` is 0..1, nil where the
+--- database says 0 (the rate unknown) or anything outside 0..10000; `name` is `npc[id]`'s, or nil.
+---
+--- @param itemID number
+--- @return table
+function lib.SkinnedFrom(itemID)
+  itemID = id(itemID)
+  if not itemID then return {} end
+  local out = sources("skin", itemID)
+  for _, src in ipairs(out) do
+    local r = row("npc", src.id)
+    src.name = r and str(r[1]) or nil
+  end
   return out
 end
