@@ -1,0 +1,6 @@
+Independent review, Ka0sAddonsCommonTasks docs/2026-11-25-SEEDS_AND_FOREVERDB (workflows wf_df07c1ab-8d1, wf_219c4c4a-92a)
+SF-DW-01: 3 findings (minor, minor, minor); fix pass: 3598144 SF-DW-01: review fixes (named headline source, compact-card chip note, setting name); fix gate green=True
+  - [minor] modules/ItemSources.lua:438 An object (chest or crate) source never gets a name, because LibKa0s-ForeverDB-1.0 v1 has no object-name member. Object drops are often listed at 100%, and the merge sorts by chance, so on real data t
+  - [minor] modules/DetailCard.lua:444 The Sources chip is always appended last. In the stacked (compact) card, fitChips (modules/DetailCard.lua:419-430, called at :450) hides chips from the end once they pass the card's width. So in compa
+  - [minor] core/ForeverDBSetup.lua:10 The header comment names the setting 'Window > Layout > Detail card's Show where it drops on', but the row's label is 'Show where it comes from' (settings/SchemaRows.lua:481, locales/enUS_Settings.lua
+Lead gate re-run 2026-11-25 at this head: green (see EXECUTION_RECORD.md).
