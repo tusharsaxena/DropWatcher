@@ -361,6 +361,7 @@ function NS.addon.OnItemSearchRegen()
     if load.waitCombat then IS.TryLoad() end
     if full.waitCombat then IS.TryFull() end
     if NS.ItemSearchKey then NS.ItemSearchKey.OnRegen() end
+    if NS.ItemSearchPrices then NS.ItemSearchPrices.OnRegen() end
 end
 
 -- A stand-down takes the timer back; the stand-up arms it again unless ForeverDB is loaded.

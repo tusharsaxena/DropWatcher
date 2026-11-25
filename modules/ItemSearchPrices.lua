@@ -21,6 +21,11 @@ local _, NS = ...
 -- (docs/known-limitations.md). A later visit overwrites the entry. Past C.ITEM_SEARCH.PRICE_CAP
 -- entries the oldest tenth by `t` goes (IP.Prune). A visit that wrote anything empties Item Search's
 -- per-item cache, so the next read shows the new price; nothing is read per hover from here.
+--
+-- NOT IN COMBAT. A visit counts every stored entry and, past the cap, sorts them (IP.Prune): work
+-- that has no place in a fight. A merchant opened in combat (or a debounced update that comes due
+-- in it) records nothing then; the visit waits for PLAYER_REGEN_ENABLED (modules/ItemSearch.lua's
+-- shared handler calls IP.OnRegen) and runs once, if the merchant is still open.
 
 NS.ItemSearchPrices = NS.ItemSearchPrices or {}
 local IP = NS.ItemSearchPrices
@@ -29,6 +34,7 @@ local C  = NS.Constants
 
 local open = false        -- a merchant window is open
 local pending = nil       -- the debounce timer while MERCHANT_UPDATE waits
+local waitCombat = false  -- a visit came in combat and waits for its end
 
 local function num(v)
     if type(v) == "number" and v == v then return v end
@@ -138,6 +144,11 @@ end
 function IP.Visit()
     pending = nil
     if not open or not IP.Recording() then return 0 end
+    if NS.Compat.InCombatLockdown() then
+        waitCombat = true
+        return 0
+    end
+    waitCombat = false
     local npc = NS.Compat.MerchantNpcID()
     local store = npc and IP.Store()
     if not store then return 0 end
@@ -149,6 +160,14 @@ function IP.Visit()
     end
     if pruned > 0 then NS.Debug("SEARCH", "prices: %d oldest entr(ies) pruned past the cap", pruned) end
     return changed
+end
+
+--- PLAYER_REGEN_ENABLED (modules/ItemSearch.lua's shared handler): a visit combat held runs now,
+--- if the merchant is still open.
+function IP.OnRegen()
+    if not waitCombat then return end
+    waitCombat = false
+    if open then IP.Visit() end
 end
 
 -- ── events ──────────────────────────────────────────────────────────────────────────────────
@@ -169,11 +188,12 @@ function NS.addon.OnItemSearchMerchantUpdate()
 end
 
 function NS.addon.OnItemSearchMerchantClosed()
-    open = false
+    open, waitCombat = false, false
     if pending then pending:Cancel(); pending = nil end
 end
 
--- A stand-down drops a waiting update.
+-- A stand-down drops a waiting update, and a visit combat held.
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if pending then pending:Cancel(); pending = nil end
+    waitCombat = false
 end

@@ -1164,12 +1164,13 @@ Total.
 - item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
 - item search sources: step 18 puts Gathered from after Drops from in a stored order, once
 
-### test_item_search_prices.lua (13)
+### test_item_search_prices.lua (14)
 
 - item search prices: the merchant's npc id is the creature id in UnitGUID("npc"); anything else is none (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the merchant's slots, a token slot left out, the legacy API as the second rung (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: MERCHANT_SHOW records each slot's price, quantity and time, account-wide (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: MERCHANT_UPDATE is debounced while open; a nil GUID, the setting off or a close records nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search prices: a merchant opened in combat records at combat's end, if still open (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: on Retail a merchant records nothing
 - item search prices: past the cap the oldest tenth goes, and an emptied vendor with it
 - item search prices: a row's price: seen, else vendx, else vp, else the dash, each with its note
@@ -3542,5 +3543,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 112 |
+| Skipped | 113 |
 | **Total** | **2838** |

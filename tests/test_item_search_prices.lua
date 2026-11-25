@@ -120,6 +120,28 @@ test("item search prices: MERCHANT_UPDATE is debounced while open; a nil GUID, t
     assertEqual(prices(NS)[IDS.vendor][IDS.blade].p, 950, "a later visit overwrites")
 end, FOREVER_ONLY)
 
+test("item search prices: a merchant opened in combat records at combat's end, if still open", function()
+    local NS, m = enabled()
+    m.InCombatLockdown = function() return true end
+    m.fireEvent("MERCHANT_SHOW")
+    -- red under: a visit (a count of every entry, a sort past the cap) run mid-fight
+    assertTrue(prices(NS) == nil or prices(NS)[IDS.vendor] == nil, "in combat: nothing recorded")
+    m.fireEvent("MERCHANT_UPDATE"); m.advance(0.5)
+    assertTrue(prices(NS) == nil or prices(NS)[IDS.vendor] == nil, "the debounced update in combat: nothing")
+    m.InCombatLockdown = function() return false end
+    m.fireEvent("PLAYER_REGEN_ENABLED")
+    assertEqual(prices(NS)[IDS.vendor][IDS.blade].p, 900, "combat over, still open: recorded")
+    m.merchantSlots[1].price = 950
+    m.fireEvent("PLAYER_REGEN_ENABLED")
+    assertEqual(prices(NS)[IDS.vendor][IDS.blade].p, 900, "nothing waited: a later combat end reads nothing")
+    m.InCombatLockdown = function() return true end
+    m.fireEvent("MERCHANT_SHOW")
+    m.fireEvent("MERCHANT_CLOSED")
+    m.InCombatLockdown = function() return false end
+    m.fireEvent("PLAYER_REGEN_ENABLED")
+    assertEqual(prices(NS)[IDS.vendor][IDS.blade].p, 900, "closed before combat ended: nothing read")
+end, FOREVER_ONLY)
+
 test("item search prices: on Retail a merchant records nothing", function()
     local NS, m = enabled()
     m.fireEvent("MERCHANT_SHOW")
