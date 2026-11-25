@@ -360,6 +360,18 @@ function NS.KeepTableFontColorPick(profile)
     end
 end
 
+-- ── step 15: the detail card's Sources chip is retired (IS-DW-07, Item Search spec §4.8) ─────
+
+--- Step 15's work on one stored profile: SF-DW-01's Show where it comes from switch
+--- (`window.itemSources`, WoW Forever's alone) goes with the chip, which Item Search replaced
+--- (DropWatcher#17). Nothing else is written; a Retail profile, which never stored it, passes
+--- through unchanged. Idempotent.
+--- @param profile table a raw stored profile
+function NS.RetireItemSources(profile)
+    local w = type(profile) == "table" and profile.window
+    if type(w) == "table" then w.itemSources = nil end
+end
+
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
 
 NS.MIGRATIONS = {
@@ -389,6 +401,8 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.MigrateItemKinds(profile) end },
     { to = 14, perProfile = true,        -- 13 -> 14: a picked table text color keeps drawing under its companion
       run = function(_, profile) NS.KeepTableFontColorPick(profile) end },
+    { to = 15, perProfile = true,        -- 14 -> 15: the detail card's Sources chip goes; its switch too
+      run = function(_, profile) NS.RetireItemSources(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

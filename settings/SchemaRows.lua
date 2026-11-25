@@ -229,9 +229,13 @@ end
 -- A row declaring `clients` (clients-§4) is registered only where NS.Compat.ForClient(clients) is
 -- true: on the other client it is not in the schema at all, so the panel, `/dw list|get|set|reset`
 -- and the defaults reset never see it (Forever port design §4.4's Retail-only rows).
+-- `into` is the list a maker adds to: this file's Rows, or another file's while it runs its makers
+-- through Settings.RowMakers.Collect (settings/ItemSearchRows.lua).
+local into = Rows
+
 local function add(row)
     if not NS.Compat.ForClient(row.clients) then return row end
-    Rows[#Rows + 1] = row
+    into[#into + 1] = row
     return row
 end
 
@@ -521,13 +525,6 @@ local function window()
             and L["When the window opens by itself inside a dungeon or raid, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."]
             or L["When the window opens by itself inside a dungeon, raid, Mythic+ key or delve, it opens in compact view, whatever the Layout. After the run ends it opens in the Layout again."],
         layout)
-    -- WoW Forever's alone (clients-§4, SF-DW-01): where a drop comes from, on its detail card, read
-    -- from the optional ForeverDB addon through LibKa0s-ForeverDB-1.0 (modules/ItemSources.lua). Its
-    -- Detail card heading sits between Mode and Tables, so the Tables rows and the composed font
-    -- block after them (settings/ComposedRows.lua) stay one section.
-    bool("window.itemSources", W.itemSources, L["Show where it comes from"],
-        L["The detail card's last chip names the likeliest creature, object or container that drops the item, with its chance; its tooltip lists the top three, the level a world drop starts at and who sells it. Needs the ForeverDB addon: without it the chip does not show. The first card you open loads ForeverDB."],
-        with(layout, { subgroup = L["Detail card"], clients = K.FEATURE_CLIENTS.itemSources }))
     layout = with(layout, { subgroup = L["Tables"] })
     -- The countdown bar's sentence is Retail's alone, like the Trade window column (clients-§4).
     slider("window.rowHeight", W.rowHeight, K.WINDOW.ROW_H_MIN, K.WINDOW.ROW_H_MAX, 1, L["Row height"],
@@ -868,6 +865,23 @@ local function skin()
     bool("skin.pickerSeen", P.skin.pickerSeen, L["Skin picker seen"],
         L["Whether the first-run skin picker was closed on this profile."], at)
 end
+
+-- The makers, the checks and the dimming predicate for a page's rows declared in another file
+-- (settings/ItemSearchRows.lua, Item Search spec §4.7), so its rows are shaped like these.
+-- Collect(fn) runs fn with every maker adding to a fresh list and answers that list, for the
+-- caller's own NS.SchemaRuntime.AddRows.
+Settings.RowMakers = {
+    add = function(row) return add(row) end, bool = bool, pick = pick, slider = slider, map = map,
+    with = with, unless = unless, choices = choices, wholeIn = wholeIn, isColor = isColor,
+    Collect = function(fn)
+        local out, saved = {}, into
+        into = out
+        local ok, err = pcall(fn)
+        into = saved
+        if not ok then error(err, 2) end
+        return out
+    end,
+}
 
 role()
 simulation()

@@ -829,6 +829,8 @@ end
 function Window.ApplySettings()
     Window.ApplyLayout()
     Window.UpdateVisibility()
+    -- The Item Search window shares the lock (and repaints for a profile switch).
+    if NS.ItemSearchWindow then NS.ItemSearchWindow.ApplySettings() end
 end
 
 --- Reset position: forget both layouts' stored point and size, and put the window back where it

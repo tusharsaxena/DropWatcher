@@ -208,6 +208,13 @@ local FIXED_TONE = {
     -- glows part from the verdicts' `good` and `offspec`, each channel the hex byte over 255.
     glowMain    = { r = 25 / 255,  g = 255 / 255, b = 25 / 255 },
     glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
+    -- A recipe's skill-up color on Item Search's Crafting rows (Item Search spec §4.2): the client's
+    -- own trade-skill difficulty hues (orange optimal, yellow medium, green easy, gray trivial), a
+    -- meaning every player reads the same under every skin, as an item quality's is.
+    skillOrange = { r = 1.00, g = 0.50, b = 0.25 },
+    skillYellow = { r = 1.00, g = 1.00, b = 0.00 },
+    skillGreen  = { r = 0.25, g = 0.75, b = 0.25 },
+    skillGray   = { r = 0.50, g = 0.50, b = 0.50 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -405,8 +412,10 @@ local FOREVER = NS.Compat.ClientKey() == "forever"
 -- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
 -- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,
 -- `soulbound` (design §4.6). docs/ARCHITECTURE.md's per-client feature table names each one's gate.
--- One is WoW Forever's alone: the detail card's Sources chip (modules/ItemSources.lua, its
--- `window.itemSources` row), read from the optional ForeverDB addon (SF-DW-01, clients-§11).
+-- One is WoW Forever's alone: Item Search (modules/ItemSearch*.lua, DropWatcher#17), read from the
+-- optional ForeverDB addon (clients-§11); on Retail no row, no default, no read (Item Search spec
+-- §1; a Retail equivalent is DropWatcher#18). It replaced SF-DW-01's detail card Sources chip
+-- (`window.itemSources`, retired by schema step 15).
 C.FEATURE_CLIENTS = {
     journalPool   = { "retail" },
     transmog      = { "retail" },
@@ -415,10 +424,39 @@ C.FEATURE_CLIENTS = {
     bonusRollSim  = { "retail" },
     tradeTimer    = { "retail" },
     tradeRuleRows = { "retail" },
-    itemSources   = { "forever" },
+    itemSearch    = { "forever" },
 }
 C.FEATURE = {}
 for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end
+
+-- Item Search's timings (Item Search spec §2, §4.5, §4.2 B). ForeverDB (some 12 MB) loads
+-- LOAD_DELAY seconds after the session's first PLAYER_ENTERING_WORLD, out of combat
+-- (modules/ItemSearch.lua); the window's search box waits DEBOUNCE seconds after the last key; the
+-- profession window's reagents are read LEARN_DELAY seconds after its last list update
+-- (modules/ItemSearchLearn.lua).
+-- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
+-- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
+-- rule; Sold by lists at most TIP_VENDORS vendors before "and N more".
+C.ITEM_SEARCH = {
+    LOAD_DELAY  = 5,
+    DEBOUNCE    = 0.25,
+    LEARN_DELAY = 1,
+    BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
+    RULE_WIDTH  = 160,
+    TIP_VENDORS = 3,
+    -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
+    -- while the key runs nothing (modules/ItemSearchKey.lua).
+    DEFAULT_KEY = "CTRL-ALT-D",
+    -- The window (modules/ItemSearchWindow.lua, spec §4.5, mockup board 2): its global name (the
+    -- UISpecialFrames entry), its fixed size, the left pane's width, the rows' heights by density,
+    -- the matches a name search lists, the recent searches it keeps and the item header's icon.
+    WINDOW = {
+        NAME = "DropWatcherItemSearchFrame", WIDTH = 760, HEIGHT = 520, LEFT_W = 240,
+        ROW_H = { comfortable = 20, compact = 16 }, MATCHES = 50, RECENT = 10, ICON = 32,
+        ROW_ICON = 16, BAR_W = 90, PIN = 14, FONT = 13, FONT_MIN = 10, FONT_MAX = 16,
+        LOAD_RETRY = 0.5,
+    },
+}
 
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
 -- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items. WoW Forever keeps

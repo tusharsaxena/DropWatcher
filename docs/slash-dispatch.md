@@ -31,6 +31,7 @@ The bare command opens the settings panel.
 | `whitelist add\|remove <id\|link>` / `whitelist [list]` | feature | no | `SlashVerbs.ItemList("whitelist", rest)`: `NS.ItemLists.Add` / `Remove` (the Always watch list's one writer, which the panel's Item lists tab shares); prints `Added 19019 [Name] to Always watch.`, `Removed …`, or the refusal (`That item is on Never watch: remove it there first.`); a bare verb or `list` is a **report** (debug-logging-§15, AD-79-DW): `/dw whitelist list`, then `Always watch (n)` (no trailing colon, slash-commands-§4) and one line per entry, `12345 [Name]` once cached, else `item 12345`, or `(none)`, in the debug console, with the one chat pointer; another word prints the usage, in chat; a write repaints open settings pages |
 | `blacklist add\|remove <id\|link>` / `blacklist [list]` | feature | no | `SlashVerbs.ItemList("blacklist", rest)`: the same, on the Never watch list |
 | `sim [verb]` | feature | no | `NS.Sim:RunVerb` (simulator spec §4; DW-03): LibKa0s-Sim-1.0's grammar, `sim` alone (the status, the usage and the library's step panel), `status` (the library's status line, then `SimVerbs.StatusLine`), `start <key\|dungeon\|raid\|lfr\|delve\|world> [size]` (`NS.Sim:Start`, refused per the simulator's safety rules; WoW Forever's scenarios are `dungeon`, `raid` and `world` alone, `SimScenario.NAMES` per client), `run` / `step` / `pause` / `resume` / `restart` / `stop`, `panel` (the library's panel); plus DropWatcher's nine verbs from `NS.SimVerbs.VERBS`: `pull` / `kill` (`NS.SimEvents.Pull` / `Kill`), `loot [n] [player\|me]` (`NS.SimReport.Loot`), `drop <equipment\|token\|mount\|pet\|toy\|recipe\|cosmetic> [player\|me]` (`NS.SimReport.Drop`: one item of that kind, the pool's or a curated sample's, issue #13), `lockdown on\|off` (`NS.SimHost.SetLockdown`), `trade <dropID>` (`NS.SimEvents.Trade`), `roll` (`NS.SimEvents.Roll`: a group-loot roll chosen and won over the next seconds, DW-FP17), `raid` (`NS.SimEvents.Raid`: a 40-player roll on six items, the group and raiders past it, each chosen and won over the next seconds, for the Rolls panel's raid mode; RX-19), `ml` (`NS.SimEvents.MasterLoot`: an Epic awaiting a simulated master looter, handed out after `E.ML_ASSIGN` seconds, DW-FP18); anything else prints the usage (no `help` verb) |
+| `search [name\|id]` | feature, **WoW Forever only** (no row on Retail, clients-§4) | no | `NS.ItemSearchWindow.SlashSearch` (`modules/ItemSearchWindow.lua`, Item Search spec §4.5): bare, opens the Item Search window empty with its search box focused; an id (all digits) shows that item at once, ForeverDB or not; a name opens the window and runs the search now (no 0.25 s debounce), listing ForeverDB's matches once it is loaded, `ForeverDB: loading…` before the load and `ForeverDB not installed: drop sources, quests and name search are unavailable` without it; with the window switched off it prints `Item Search's window is switched off.` |
 
 **Reports go to the console (debug-logging-§15, slash-commands-§4, LibKa0s#79, AD-79-DW).** The
 multi-line read-outs, `situation` and an item list's `list` (a bare `whitelist` or `blacklist`
@@ -57,6 +58,15 @@ The Show window key binding (launcher-§6, `Bindings.xml`) refuses as `/dw toggl
 never passes through the dispatcher, so its button (`DropWatcherToggleWindow`,
 `core/LauncherSetup.lua`) asks `NS.StoodDownRefusal()` itself and prints that one line, chosen by
 hold, before it would call `NS.ToggleWindow`; standing up, it calls the toggle verb's handler.
+
+The Item Search key binding (Item Search spec §4.6, `Bindings.xml`'s second row,
+`CLICK DropWatcherItemSearch:LeftButton`, WoW Forever only) never passes through the dispatcher
+either: its button (`DropWatcherItemSearch`, `core/LauncherSetup.lua`) calls
+`NS.ItemSearchKey.Press` (`modules/ItemSearchKey.lua`), which asks `NS.StoodDownRefusal()` first and
+prints that line while stood down. Standing up, over an item tooltip (GameTooltip, ItemRefTooltip or
+a comparison tooltip) it opens the window on that item, with none it opens it empty; while the
+window is open it closes over the item shown or with no tooltip, and switches over another. On
+Retail a press does nothing.
 
 The feature verbs are spec §12.3's (and compact spec §1's `full`, issue #12's `insights` and issue #13's
 `whitelist` and `blacklist`). `scan`, `compact` and `full` call the host handlers their window

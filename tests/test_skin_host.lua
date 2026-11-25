@@ -289,8 +289,11 @@ end
 -- The right-hand cluster's width: close, settings, minimize, the layout toggle and the lock, 6 apart,
 -- 6 in (re-pinned at AD-86-DW: W.HeaderButtons' pitch and its settings mark; 4 apart before).
 local function cluster(f)
-    return 6 + f.closeButton:GetWidth() + 6 + f.settingsButton:GetWidth() + 6 + f.minimizeButton:GetWidth()
+    local w = 6 + f.closeButton:GetWidth() + 6 + f.settingsButton:GetWidth() + 6 + f.minimizeButton:GetWidth()
         + 6 + f.modeButton:GetWidth() + 6 + f.lockButton:GetWidth()
+    -- WoW Forever's Item Search magnifier, the cluster's first (Item Search spec §4.5).
+    if f.searchButton then w = w + 6 + f.searchButton:GetWidth() end
+    return w
 end
 
 -- red under: a RIGHT title 8 px in from the bar's edge, under the close, minimize, layout and lock

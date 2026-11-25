@@ -166,6 +166,53 @@ function Compat.ProfessionSkillLines()
     return out
 end
 
+--- The player's rank in each profession, `{ [skillLine] = rank }` (GetProfessions' indices,
+--- GetProfessionInfo's third and seventh returns; a slot whose rank or line is secret or
+--- unreadable left out): Item Search's fallback when the client has no C_SkillInfo skill list
+--- (core/CompatSearch.lua's SkillLineRanks). Nil for no API.
+--- @return table|nil
+function Compat.ProfessionRanks()
+    if not (GetProfessions and GetProfessionInfo) then return nil end
+    local indices, out = { GetProfessions() }, {}
+    for i = 1, 5 do
+        local index = plainId(indices[i])
+        if index then
+            local _, _, rank, _, _, _, line = GetProfessionInfo(index)
+            rank, line = plainNumber(rank), plainId(line)
+            if rank and line then out[line] = rank end
+        end
+    end
+    return out
+end
+
+-- The known-spell readers, first that exists wins: each answers a boolean-ish for a spell id.
+local function knownReaders()
+    local out = {}
+    if type(IsPlayerSpell) == "function" then out[#out + 1] = IsPlayerSpell end
+    local sb = C_SpellBook
+    if type(sb) == "table" and type(sb.IsSpellKnown) == "function" then out[#out + 1] = sb.IsSpellKnown end
+    if type(IsSpellKnown) == "function" then out[#out + 1] = IsSpellKnown end
+    return out
+end
+
+--- Whether the player knows a spell (Item Search's recipe mark, core/CompatSearch.lua's callers):
+--- IsPlayerSpell, falling back to C_SpellBook.IsSpellKnown and IsSpellKnown (neither bare name is
+--- in the kit's API sets; each is read only where the client has it). True when any says so; false when every reader there
+--- is said no; nil for no reader, or a secret answer before any true one.
+--- @param spellID number
+--- @return boolean|nil
+function Compat.SpellKnown(spellID)
+    if not plainId(spellID) then return nil end
+    local readers = knownReaders()
+    if #readers == 0 then return nil end
+    for _, fn in ipairs(readers) do
+        local known = fn(spellID)
+        if Compat.IsSecret(known) then return nil end
+        if known then return true end
+    end
+    return false
+end
+
 -- ── Tier tokens (DW-CAT4) ───────────────────────────────────────────────────────────────────
 
 -- An item's hyperlink tooltip data (C_TooltipInfo.GetHyperlink), or nil: no API, a secret link or

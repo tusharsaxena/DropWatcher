@@ -1,5 +1,7 @@
 -- testkit/mock_foreverdb.lua -- the kit's opt-in fake of ForeverDB, the WoW Forever data addon that
--- LibKa0s-ForeverDB-1.0 reads (revision 61, LibKa0s#105).
+-- LibKa0s-ForeverDB-1.0 reads (revision 61, LibKa0s#105). Revision 63 adds the rows Item Search's
+-- lookups read (ForeverDB minor 2): `qx`, `rew`, `start` and `skin`, three more quests and five more
+-- items, all invented like the rest.
 --
 -- Returns a MODULE. Its installer is called on a finished mock and returns a HANDLE:
 --
@@ -67,10 +69,17 @@ FDB.IDS = {
   kobold     = 990002,   -- a creature: drops the blade at an unknown rate, no subname
   vendor     = 990003,   -- a creature: sells the blade (the dearer price), both factions
   trainer    = 990004,   -- a creature: trains two spells, sells the blade (the cheaper price)
-  blade      = 990101,   -- an item with every kind of source
+  blade      = 990101,   -- an item with every kind of source; rewarded by the errand
   pebble     = 990102,   -- an item with no source at all
   coffer     = 990103,   -- a container item the blade comes out of
+  leather    = 990104,   -- an item skinned from two creatures, an objective of two quests
+  hide       = 990105,   -- an item skinned at an unknown rate, an objective of the errand
+  shard      = 990106,   -- "Bladed Fixture Shard": a name that STARTS with "blade"
+  cloak      = 990107,   -- "Fixture Bladeweave Cloak": a longer name holding "blade"
+  letter     = 990108,   -- an item that starts the summons
   errand     = 990201,   -- a quest
+  hunt       = 990202,   -- a quest: needs the leather, after the errand and the summons
+  summons    = 990203,   -- a quest the letter starts; no qx row
   crate      = 990301,   -- an object: drops the blade, gives the errand, has spots
   mapA       = 9901,
   mapB       = 9902,
@@ -86,7 +95,7 @@ function FDB.fixture()
   D.meta = {
     build = "2099-01-01",
     hash = "0123456789abcdef",
-    counts = { npc = 4, item = 3, quest = 1, obj = 1 },
+    counts = { npc = 4, item = 8, quest = 3, obj = 1 },
     sourceList = { { name = "fixture", title = "Invented kit fixture" } },
   }
   -- npc[id] = { name, subname, minLevel, maxLevel, rank }
@@ -103,9 +112,27 @@ function FDB.fixture()
     [I.blade]  = { "Fixture Blade", 2, 10, 15, 2, 7, 13, 9990001, 1535, 0, 0, -1 },
     [I.pebble] = { "Fixture Pebble", 0, 0, nil, 15, 0, 0, 9990002 },
     [I.coffer] = { "Fixture Coffer", 1, 0, 5, 15, 0, 0, 9990003 },
+    [I.leather] = { "Fixture Leather", 1, 0, 10, 7, 6, 0, 9990004 },
+    [I.hide]    = { "Fixture Hide", 1, 0, 20, 7, 6, 0, 9990005 },
+    [I.shard]   = { "Bladed Fixture Shard", 3, 20, 25, 15, 0, 0, 9990006 },
+    [I.cloak]   = { "Fixture Bladeweave Cloak", 4, 30, 35, 4, 1, 16, 9990007 },
+    [I.letter]  = { "Fixture Letter", 1, 0, 1, 12, 0, 0, 9990008 },
   }
   -- quest[id] = { title, level, minLevel }; qg / qe[quest] = { "c<id>" | "o<id>", ... }
-  D.quest = { [I.errand] = { "Fixture Errand", 12, 8 } }
+  D.quest = {
+    [I.errand]  = { "Fixture Errand", 12, 8 },
+    [I.hunt]    = { "Fixture Hunt", 14, 10 },
+    [I.summons] = { "Fixture Summons", 15, 12 },
+  }
+  -- qx[quest] = { raceMask, classMask, preQuestsA, preQuestsB, ..., [10] = { itemId, ... }, ... }
+  -- (a mask of 0 or nil means any; the positions between 4 and 10 are not read)
+  D.qx = {
+    [I.errand] = { 5, nil, nil, nil, nil, nil, nil, nil, nil, { I.leather, I.hide }, 12, 8 },
+    [I.hunt]   = { 0, 9, { I.errand }, { I.summons, I.errand }, nil, nil, nil, nil, nil, { I.leather } },
+  }
+  -- rew[item] = { questId, ... }; start[item] = questId
+  D.rew = { [I.blade] = { I.errand }, [I.cloak] = { I.hunt, I.errand } }
+  D.start = { [I.letter] = I.summons }
   D.qg = { [I.errand] = { "c" .. I.gnoll, "o" .. I.crate } }
   D.qe = { [I.errand] = { "c" .. I.vendor } }
   -- drop / odrop / idrop[item] = { sourceId, chancePer10000, ... } (flat pairs; 0 = rate unknown)
@@ -127,6 +154,8 @@ function FDB.fixture()
     ["c" .. I.gnoll] = { [I.mapA] = { 500, 250, 123, 877 } },
     ["o" .. I.crate] = { [I.mapB] = { 1000, 0 } },
   }
+  -- skin[item] = { npcId, chancePer10000, ... } (flat pairs; 0 = rate unknown)
+  D.skin = { [I.leather] = { I.gnoll, 2500, I.kobold, 7500 }, [I.hide] = { I.gnoll, 0 } }
   -- trn[npc] = { [spellName] = { cost, level, ?, ? } }
   D.trn = {
     [I.trainer] = {

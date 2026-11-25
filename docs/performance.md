@@ -130,18 +130,31 @@ panes were re-anchored on every pass), both pinned by `test_window_shell`.
 After it: `refreshCaptureOff`/`On` 11120.0 and `refreshCompactCaptureOff`/`On` 6768.0, the ceilings
 unmoved.
 
-## ForeverDB (WoW Forever, optional)
+## Item Search (WoW Forever alone)
 
-The detail card's Sources chip (`modules/ItemSources.lua`, SF-DW-01) reads the optional ForeverDB
-addon through LibKa0s-ForeverDB-1.0. ForeverDB is some **12 MB on disk** and LoadOnDemand: the
-library loads it on its first lookup, which this addon makes only when the player **opens a detail
-card** on WoW Forever with Window › Layout › Show where it comes from on, never at login
-(`tests/test_item_sources.lua` counts the loads through the kit's fake). From then on the client
-holds its tables for the session and the addon list charges that memory to ForeverDB, not to this
-addon; the ceilings above are this addon's own and do not include it. Each item's answer is kept for
-the session, so a repaint of an open card reads nothing again: the refresh scenarios run on the
-Retail profile, where the chip is inert, and on the Forever profile with no ForeverDB, and neither
-pair moved (11120.0 and 6768.0 on Retail, 10752.0 and 6768.0 on Forever, measured 2026-11-25).
+Item Search (DropWatcher#17, Item Search spec §2, §4.2, §4.4) is the one reader of the optional
+ForeverDB addon, through LibKa0s-ForeverDB-1.0. On Retail all of it is absent: the hook is never
+installed, the reagent table's builder is never made, and nothing loads (`itemSearchTipInert`, 0
+bytes). SF-DW-01's detail card Sources chip, which used to load ForeverDB on the first card opened,
+is retired (IS-DW-07), so a detail card reads nothing of ForeverDB. The budgets below are this
+addon's own; they are not in the refresh ceilings above, which no Item Search path touches.
+
+| Cost | Budget | Measured | Where |
+|---|---|---|---|
+| ForeverDB itself | not this addon's: some **12 MB on disk**, LoadOnDemand; the addon list charges its tables to ForeverDB | the kit fake counts the loads | `modules/ItemSearch.lua`: one load a session, `C.ITEM_SEARCH.LOAD_DELAY` (5 s) after the first `PLAYER_ENTERING_WORLD`, out of combat (else at `PLAYER_REGEN_ENABLED`), and none while both switches are off; never on a hover, a card or a login frame |
+| The adapter's name and quest indexes | built once a session, right after the load, one per frame, never on a hover (spec §4.4) | the library's (`docs/api/ForeverDB/version-1-docs.md`) | LibKa0s-ForeverDB-1.0 minor 2, warmed by `modules/ItemSearch.lua` |
+| The recipe-reagent table (`core/RecipeReagentsForever.lua`, 2466 recipes) | **under 2.5 MB** resident on WoW Forever, built once on Item Search's first ask, the builder then let go; **0** on Retail (the chunk's constants are let go after the load) | 1906 KB built (2041 KB kept with the file's strings), 2.9 ms, headless Lua 5.1 on 2026-11-25; the 234 KB file's constants are let go on Retail | `NS.RecipeReagents.Get()` |
+| One item hover, cold (the item's static facts read from ForeverDB, then kept for the session) | `itemSearchTipCold`, **17500 bytes** | 16656.0 (16080 at IS-DW-04; +576 since the page stores the section order, a fresh order list a hover) | `modules/ItemSearchTip.lua`, `tests/perf.lua` |
+| One item hover, warm (the cache serves the static half; quest state, known recipes and ranks read live) | `itemSearchTipWarm`, **6500 bytes** | 6240.0 (5664 at IS-DW-04; the same +576) | the same |
+| The per-item cache | grows with the items hovered, one entry each, for the session; emptied when ForeverDB's state moves or a recipe is learned | not measured headless | `NS.ItemSearch.Get` / `Invalidate` |
+| CPU | no budget in milliseconds (performance-§9: offline timings are orientation only); the hover is a cache read plus at most one ForeverDB lookup per source kind | about 0.07 ms cold, 0.04 ms warm per hover in the same run | `lua tests/perf.lua` |
+
+The ceilings were not moved by IS-DW-07: both hovers stay under them, with 844 and 260 bytes left.
+The 576-byte rise was measured commit by commit (`tests/perf.lua` over each exported commit): 16080
+and 5664 at bec0d6e, 8415639 and 9242fb1, 16656 and 6240 from 8786d8f, the settings page, whose
+default stores the section order, so `NS.ItemSearchTip.Options` now builds the order list and its
+seen set (`orderOf`) on every hover where it used to answer the default list. It is the work, and the warm hover's margin is now small, so the next rise there is to be bisected
+before a ceiling moves.
 
 ## In game
 

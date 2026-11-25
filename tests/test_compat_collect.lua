@@ -319,7 +319,7 @@ end)
 
 local MEMBERS = { "MountFromItem", "MountCollected", "PetSpeciesFromItem", "PetCollected", "IsToy",
     "ToyCollected", "IsCosmeticItem", "RecipeKnown", "ProfessionSkillLines", "TierTokenSlot", "ItemUseText",
-    "ClassDisplayName", "ItemLinkByID", "CanRequestSpellLoad", "RequestSpellLoad" }
+    "ClassDisplayName", "ItemLinkByID", "CanRequestSpellLoad", "RequestSpellLoad", "ProfessionRanks", "SpellKnown" }
 
 test("compat collect: no member raises with every API gone", function()
     local Compat, m = fresh()

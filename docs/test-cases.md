@@ -82,7 +82,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
-### test_database.lua (16)
+### test_database.lua (17)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -96,6 +96,7 @@ Total.
 - database: step 4 retires the History's group cap and prunes nothing
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
+- database: step 15 retires window.itemSources in every stored profile and keeps the rest
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
@@ -150,7 +151,7 @@ Total.
 
 ### test_settings_pages.lua (57)
 
-- pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
+- pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
@@ -959,21 +960,118 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_item_sources.lua (13)
+### test_recipe_reagents.lua (4)
 
-- item sources: characterization, the card's header draws exactly the cells' chips
-- item sources: a chance reads as a whole percent from 10%, one decimal below, <0.1% under that
-- item sources: the model merges creatures, objects and containers, most likely first, top three
-- item sources: nothing to say is no model; a vendor or a world level alone is one
-- item sources: the chip reads the likeliest source, else the vendor, else World drop
-- item sources: with ForeverDB, the card's last chip says where it comes from; opening it is the load (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: an item ForeverDB names no source for draws the header it always drew (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (missing) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (loadfails) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: without ForeverDB (reshaped) the card draws its header unchanged (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: the switch off shows no chip and never loads ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: the row is Window > Layout > Detail card, on by default, and says it needs ForeverDB (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- item sources: on Retail the feature is inert: no row, no default, no chip, no load
+- recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: every recipe has its ranks and reagents, and byReagent indexes each one exactly (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: on Retail nothing is built and the table answers nil
+
+### test_item_search.lua (29)
+
+- item search: the skill-up color is orange, yellow, green, gray at the classic breakpoints
+- item search: a race or class mask lets in its bits, and nil or 0 means any
+- item search: SF-DW-01's percent and source merge moved here, and the retired chip's module is gone
+- item search: crafting rows are the table's recipes in its order, then the learned ones it lacks
+- item search: the static facts read ForeverDB's drops, vendors, quests and also-rows when loaded
+- item search: before the load (or without ForeverDB) the reader is never asked; crafting still answers
+- item search: the live half adds quest states, known marks, ranks, colors and the drops past the shown
+- item search: the learner keeps only recipes the table lacks, and counts what it changed
+- item search: an entry the shipped table now covers is dropped from the learned store
+- compat search: a quest's log and completion reads, nil for no API or a secret
+- compat search: the skill-line ranks answer a child line under its parent, else the professions
+- compat search: a known spell reads IsPlayerSpell, then C_SpellBook, then IsSpellKnown
+- compat search: a cached item by id, the build, and the player's race and class ids
+- compat search: the profession window's recipes and their basic reagents
+- item search: ForeverDB loads 5 s after the first PLAYER_ENTERING_WORLD, once, and never at login (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a load due in combat waits for PLAYER_REGEN_ENABLED (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a read before the load never loads, and shows no ForeverDB facts (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: switched off entirely, nothing loads; switched back on, it loads (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: without ForeverDB the state says so, nothing loads, and crafting still answers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a stand-down takes the timer back and the stand-up arms it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the facts read the fake: drops, vendors, the lowest price, the quest it rewards (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the quests are filtered by the player's race and class, each with its live state (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: an item's facts are kept for the session; a repeat read asks ForeverDB nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: crafting from the shipped table, known through IsPlayerSpell, colored by the rank (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the profession window teaches a recipe the table lacks, out of combat, after the burst (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a profession read in combat waits for its end; switched off, nothing is read (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the first read of a session drops learned entries the shipped table covers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: on Retail it is inert: no default, no read, no timer, no load, no learner
+- item search: the detail card draws exactly the cells' chips, ForeverDB installed, and opening it loads nothing
+
+### test_item_search_tip.lua (17)
+
+- item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: on Retail nothing is registered and nothing is written
+- item search tip: before ForeverDB's load there is no block at all, and a hover never loads it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: without ForeverDB (or a failed load) no block, not even Crafting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: separator, title, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the separator and title follow their switch; the accent is read at call time (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: sections follow their switches and the stored order; Also lists the rewarding quest (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the drop count setting caps the rows, the rest is "and N more" (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: quest marks ! ? and the check mark; completed hidden by default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: crafting marks a known recipe with a dot in its skill-up color, an unknown one with a ring (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: an item with nothing to show gets no block, title and hint included (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: never twice per show; the client's refresh, a hide and another item write it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: every item tooltip, comparison tooltips only with their setting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: Shift-only writes the block only while Shift is held (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+
+### test_item_search_window.lua (22)
+
+- item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
+- item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
+- item search view: a name searches ForeverDB only once it is loaded; before it says loading, without it the spec line
+- item search view: the recent list puts the newest first, keeps each item once, and keeps ten
+- item search view: a source's map is the one with the most spots (the lower id on a tie), its first spot the pin
+- item search view: DROPS FROM lists every source with a bar scaled to the top chance, then the World drop row
+- item search view: a known recipe's breakpoints against your rank; an unknown one learnable at its minimum
+- item search view: the item line names quality, class, subclass, level and id; the footer names ForeverDB's state
+- item search window: on Retail there is no window, no magnifier and no `search` verb
+- item search window: the main window's magnifier opens it, with the search box focused, and closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: `/dw search <id>` shows the item, `/dw search <name>` lists the matches, bare opens it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the search runs 0.25 s after the last key, and Enter shows the first match (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: without ForeverDB an id still shows the item, with Crafting and the spec §1 line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: before the load a name search says loading and reads nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: each item shown joins the account-wide recent searches, newest first, while remembered (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the blade's pane: DROPS FROM, SOLD BY and ALSO, the header and the footer (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the leather's QUESTS rows carry the mark, title, zone and state (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a pin sets the client's user waypoint at the source's spot, else TomTom's; no spot, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: without the client's waypoint, TomTom when installed; neither, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: Link in chat puts the item's link in the chat box, or says it is still loading (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a drag saves its point per profile, the next open puts it back, and the lock holds it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+
+### test_item_search_key.lua (12)
+
+- item search key: the press's decision follows the owner's table
+- item search key: with no item tooltip a press opens the window empty, and the next press closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: over an item tooltip it opens that item; over the same one it closes, over another it switches (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a chat link's tooltip and a comparison tooltip count; a hidden one does not (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: stood down, a press refuses with the one line and opens nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: on Retail a press does nothing and no key is set
+- item search key: Ctrl-Alt-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a key that runs something else is never taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a binding that already has a key keeps it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: once per character: a key the player clears is not put back (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: in combat the default waits for the combat's end (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: the tooltip block's hint and the window's footer name the bound key (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+
+### test_item_search_settings.lua (11)
+
+- item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the defaults are the spec's (on, off, on, on, off; 3 sources; comfortable, 13) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the switches reach the load, and the window's switch closes an open window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the section order is a drag list in the stored order; a move writes it whole (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: Moved is a pure splice, and an index outside the list changes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: a render parks the list first; its host never rides a released placeholder (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the Keybindings tab shows and changes the Item Search key alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the Item Search window's gear opens this page (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: on Retail there is no page, no row and no default
 
 ### test_own_drops.lua (16)
 
@@ -2899,10 +2997,11 @@ Total.
 - sim checkbox R7: unticking with the window open and idle closes it, and ticking reopens it
 - sim checkbox R7: the window's show and hide refresh the open page
 
-### test_bindings.lua (14)
+### test_bindings.lua (15)
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
 - bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
+- bindings: the Item Search button is a plain hidden Button registered for AnyDown, labeled Item Search
 - bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
 - bindings: one press is one NS.Window.Toggle
 - bindings: the category label is the brand and the binding label is localized, with no brand in it
@@ -3175,7 +3274,7 @@ Total.
 | test_harness.lua | 15 |
 | test_surface_parity.lua | 25 |
 | test_setup.lua | 25 |
-| test_database.lua | 16 |
+| test_database.lua | 17 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 30 |
 | test_settings_pages.lua | 57 |
@@ -3213,7 +3312,12 @@ Total.
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
-| test_item_sources.lua | 6 |
+| test_recipe_reagents.lua | 1 |
+| test_item_search.lua | 16 |
+| test_item_search_tip.lua | 1 |
+| test_item_search_window.lua | 9 |
+| test_item_search_key.lua | 2 |
+| test_item_search_settings.lua | 1 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3293,7 +3397,7 @@ Total.
 | test_sim_report.lua | 18 |
 | test_sim_panel.lua | 22 |
 | test_sim_checkbox.lua | 11 |
-| test_bindings.lua | 14 |
+| test_bindings.lua | 15 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
@@ -3307,5 +3411,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 8 |
-| **Total** | **2747** |
+| Skipped | 66 |
+| **Total** | **2773** |

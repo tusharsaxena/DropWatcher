@@ -1,9 +1,11 @@
 -- tests/test_bindings.lua — the key bindings (launcher-§6, LibKa0s#58) and General > Keybindings
 -- (options-ui-§20, item 015).
 --
--- A root Bindings.xml declares one CLICK binding on a plain, named, hidden, non-secure Button
--- (DropWatcherToggleWindow, core/LauncherSetup.lua), registered for AnyDown, whose OnClick runs the
--- same handler as the launcher's Show window entry and `/dw toggle`: NS.ToggleWindow. Every
+-- A root Bindings.xml declares the Show window CLICK binding on a plain, named, hidden, non-secure
+-- Button (DropWatcherToggleWindow, core/LauncherSetup.lua), registered for AnyDown, whose OnClick
+-- runs the same handler as the launcher's Show window entry and `/dw toggle`: NS.ToggleWindow; and
+-- the Item Search one (DropWatcherItemSearch, Item Search spec §4.6), whose press is
+-- tests/test_item_search_key.lua's, its row WoW Forever's alone on the Keybindings tab. Every
 -- <Binding> names the addon's own category, BINDING_HEADER_DROPWATCHER (the brand), and carries no
 -- header= and no default key; NS.BINDINGS lists the commands in file order, and the kit's
 -- Kit.assertBindingsXml holds the file to it. The General page's last tab, Keybindings, is
@@ -18,6 +20,8 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 local BUTTON = "DropWatcherToggleWindow"
 local BINDING = "CLICK " .. BUTTON .. ":LeftButton"
 local CATEGORY = "BINDING_HEADER_DROPWATCHER"
+local SEARCH_BUTTON = "DropWatcherItemSearch"
+local SEARCH_BINDING = "CLICK " .. SEARCH_BUTTON .. ":LeftButton"
 
 local function readFile(path)
     local f = io.open(path, "r")
@@ -43,7 +47,7 @@ test("bindings: Bindings.xml puts every binding in the addon's own category, no 
     -- red under: header="DROPWATCHER" category="ADDONS" (the pre-v2.88.0 shape)
     T.assertBindingsXml("Bindings.xml", {
         category = CATEGORY, commands = NS.BINDINGS, brand = NS.BRAND, globals = globalsOf(m),
-        labels   = { [BINDING] = "Toggle drop feed" },
+        labels   = { [BINDING] = "Toggle drop feed", [SEARCH_BINDING] = "Item Search" },
     })
     local xml = assert(readFile("Bindings.xml"))
     assertTrue(xml:find("header=", 1, true) == nil, "no header attribute: the category is the heading")
@@ -57,10 +61,30 @@ test("bindings: NS.BINDINGS is the one table, Show window first, with a localize
         local NS = T.newAddon(opts)
         -- red under: drop NS.BINDINGS from core/LauncherSetup.lua
         assertEqual(type(NS.BINDINGS), "table")
-        assertEqual(#NS.BINDINGS, 1, "one binding")
+        assertEqual(#NS.BINDINGS, 2, "Show window and Item Search")
         assertEqual(NS.BINDINGS[1].command, BINDING, "Show window first")
         assertEqual(NS.BINDINGS[1].tooltip, NS.L["Shows or hides the drop feed."])
         assertEqual(NS.BINDINGS[1].tooltip, "Shows or hides the drop feed.")
+        assertEqual(NS.BINDINGS[1].clients, nil, "the Show window row is both clients'")
+        -- red under: an Item Search row with no `clients` (a Keybindings row on Retail, clients-§4)
+        assertEqual(NS.BINDINGS[2].command, SEARCH_BINDING, "Item Search second")
+        assertEqual(table.concat(NS.BINDINGS[2].clients or {}, ","), "forever", "WoW Forever's alone")
+        assertEqual(NS.BINDINGS[2].tooltip, "Opens Item Search on the item under the pointer, or closes it.")
+    end
+end)
+
+test("bindings: the Item Search button is a plain hidden Button registered for AnyDown, labeled Item Search", function()
+    for _, opts in ipairs({ {}, { skip = T.loadAddon.libFiles } }) do
+        local NS, _, m = T.newAddon(opts)
+        local b = m[SEARCH_BUTTON]
+        -- red under: drop the Item Search CreateFrame in core/LauncherSetup.lua
+        assertTrue(b ~= nil, "filed in _G under its permanent name")
+        assertEqual(b.__frameType, "Button")
+        assertEqual(b.__template, nil, "no template: plain, not secure")
+        assertFalse(b:IsShown() == true, "hidden")
+        assertEqual(table.concat(b.__clicks or {}, ","), "AnyDown")
+        assertEqual(rawget(m, "BINDING_NAME_" .. SEARCH_BINDING), NS.L["Item Search"])
+        assertEqual(NS.Constants.ITEM_SEARCH.BINDING, SEARCH_BINDING, "the tooltip hint names the same command")
     end
 end)
 
@@ -174,12 +198,15 @@ test("keybindings: the tab's rows are NS.BINDINGS, in order, labeled with the BI
     local NS, _, m = T.enableAddon()
     local rows = keybindRows(m, openGeneral(NS))
     -- red under: an empty `bindings` list in settings/Panel.lua
-    assertEqual(#rows, #NS.BINDINGS)
-    for i, b in ipairs(NS.BINDINGS) do
-        assertEqual(rows[i].command, b.command, "row " .. i)
-        assertEqual(rows[i].label.text, rawget(m, "BINDING_NAME_" .. b.command), "row " .. i .. "'s label")
+    -- The Item Search row is WoW Forever's alone (`clients`, OptionsKeybinds minor 8).
+    -- red under: an Item Search row drawn on Retail
+    assertEqual(#rows, T.forever and 2 or 1)
+    for i, row in ipairs(rows) do
+        assertEqual(row.command, NS.BINDINGS[i].command, "row " .. i)
+        assertEqual(row.label.text, rawget(m, "BINDING_NAME_" .. row.command), "row " .. i .. "'s label")
     end
     assertEqual(rows[1].label.text, "Toggle drop feed")
+    if T.forever then assertEqual(rows[2].label.text, "Item Search") end
 end)
 
 test("keybindings: a key bound through the tab is the binding's key, saved to the set in force", function()

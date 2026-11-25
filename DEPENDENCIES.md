@@ -39,10 +39,12 @@ marked as such rather than listed as a requirement.
   `## OptionalDeps:` and under `.pkgmeta`'s `optional-dependencies`, never as a required dependency
   (clients-§11): no player needs it. It is read only through LibKa0s-ForeverDB-1.0
   (`core/ForeverDBSetup.lua`), whose first lookup loads it (LoadOnDemand, some 12 MB); this addon
-  makes that lookup when the player opens a detail card with Settings → Window → Layout → Show where
-  it comes from on (`modules/ItemSources.lua`), never at login. With it, the card's last chip says
-  which creatures, objects or containers drop the item, with their chances, the world-drop level and
-  who sells it. Without it, or on Retail, the card draws as it always did. Its data is GPL-3.0 and is
+  makes that lookup once a session for Item Search (`modules/ItemSearch.lua`, DropWatcher#17), about
+  5 seconds after login and out of combat, and never while Item Search's tooltip block and window
+  are both switched off. With it, every item tooltip and the Item Search window say which creatures,
+  objects or containers drop an item, with their chances, who sells it, its quests and its name
+  search. Without it, the tooltip shows nothing of Item Search, and the window searches by id and
+  shows the recipes from the shipped table alone; on Retail there is no Item Search. Its data is GPL-3.0 and is
   never copied into this repo, tests included (the kit's `tests/_kit/mock_foreverdb.lua` is invented).
 - **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
   When it can skin this addon, Settings → General → Skin offers it as the skin source, through

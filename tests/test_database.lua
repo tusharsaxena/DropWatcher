@@ -231,6 +231,32 @@ test("database: step 7 retires window.columns.myEq and theirEq in every stored p
     end
 end)
 
+-- IS-DW-07 (Item Search spec §4.8): the detail card's Sources chip is retired, and its switch's
+-- stored key with it, in every profile.
+test("database: step 15 retires window.itemSources in every stored profile and keeps the rest", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 14 },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { window = { itemSources = false, mode = "compact" } },
+            Alt = { window = { itemSources = true } },
+            Bare = { feed = { sort = "oldest" } },
+        },
+    }
+    -- red under: no step 15 (the stored switch stays)
+    NS.addon:OnInitialize()
+    local p = _G.DropWatcherDB.profiles
+    assertNil(p.Default.window.itemSources); assertNil(p.Alt.window.itemSources)
+    assertEqual(p.Default.window.mode, "compact", "the rest of the window settings stay")
+    assertEqual(p.Bare.feed.sort, "oldest")
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertTrue(NS.SCHEMA_VERSION >= 15)
+    assertNil(NS.addon.db.profile.window.itemSources, "no default brings it back")
+    assertNil(NS.SchemaRuntime.FindRow("window.itemSources"), "no settings row")
+    NS.RetireItemSources(nil); NS.RetireItemSources({}); NS.RetireItemSources({ window = 3 })
+end)
+
 -- DW-04 (LibKa0s#54, OWNER_SCOPE C.11): the simulation panel's position is session-only, so the
 -- window-state key the retired DropWatcher panel wrote (`profile.simPanel`) goes.
 test("migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes", function()

@@ -129,7 +129,6 @@ test("parity: the ForeverDB stub carries the whole LibKa0s-ForeverDB-1.0 surface
     -- The all-absent answers (the library's Degradation section): the card then shows no sources.
     local ok, why = degraded.ForeverDB.Available()
     T.assertEqual(tostring(ok) .. "," .. tostring(why), "false,missing")
-    T.assertNil(degraded.ItemSources.For(990101))
 end)
 
 test("parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface", function()
