@@ -983,6 +983,37 @@ Total.
 - recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: on Retail nothing is built and the table answers nil
 
+### test_item_search.lua (28)
+
+- item search: the skill-up color is orange, yellow, green, gray at the classic breakpoints
+- item search: a race or class mask lets in its bits, and nil or 0 means any
+- item search: SF-DW-01's percent and source merge moved here; the chip reads them
+- item search: crafting rows are the table's recipes in its order, then the learned ones it lacks
+- item search: the static facts read ForeverDB's drops, vendors, quests and also-rows when loaded
+- item search: before the load (or without ForeverDB) the reader is never asked; crafting still answers
+- item search: the live half adds quest states, known marks, ranks, colors and the drops past the shown
+- item search: the learner keeps only recipes the table lacks, and counts what it changed
+- item search: an entry the shipped table now covers is dropped from the learned store
+- compat search: a quest's log and completion reads, nil for no API or a secret
+- compat search: the skill-line ranks answer a child line under its parent, else the professions
+- compat search: a known spell reads IsPlayerSpell, then C_SpellBook, then IsSpellKnown
+- compat search: a cached item by id, the build, and the player's race and class ids
+- compat search: the profession window's recipes and their basic reagents
+- item search: ForeverDB loads 5 s after the first PLAYER_ENTERING_WORLD, once, and never at login (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a load due in combat waits for PLAYER_REGEN_ENABLED (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a read before the load never loads, and shows no ForeverDB facts (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: switched off entirely, nothing loads; switched back on, it loads (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: without ForeverDB the state says so, nothing loads, and crafting still answers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a stand-down takes the timer back and the stand-up arms it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the facts read the fake: drops, vendors, the lowest price, the quest it rewards (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the quests are filtered by the player's race and class, each with its live state (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: an item's facts are kept for the session; a repeat read asks ForeverDB nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: crafting from the shipped table, known through IsPlayerSpell, colored by the rank (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the profession window teaches a recipe the table lacks, out of combat, after the burst (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a profession read in combat waits for its end; switched off, nothing is read (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: the first read of a session drops learned entries the shipped table covers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: on Retail it is inert: no default, no read, no timer, no load, no learner
+
 ### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
@@ -3223,6 +3254,7 @@ Total.
 | test_detail_card.lua | 35 |
 | test_item_sources.lua | 7 |
 | test_recipe_reagents.lua | 1 |
+| test_item_search.lua | 15 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3316,5 +3348,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 11 |
-| **Total** | **2749** |
+| Skipped | 24 |
+| **Total** | **2764** |

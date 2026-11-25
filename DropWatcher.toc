@@ -78,11 +78,16 @@ core\CompatItem.lua
 # core\SimSetup.lua (below), which wraps every member at load. Read inside functions only.
 core\CompatJournal.lua
 # LOAD-BEARING: adds the collection reads (mounts, battle pets, toys, the cosmetic flag, a recipe's
-# known line, the player's professions) to NS.Compat; it loads before core\SimSetup.lua (below),
+# known line, the player's professions and their ranks, a known spell) to NS.Compat; it loads before core\SimSetup.lua (below),
 # which wraps every member at load. Read inside functions only.
 core\CompatCollect.lua
+# LOAD-BEARING: adds Item Search's reads (the player's race and class ids, a quest's state, the
+# skill-line ranks, a cached item by id, the client build, the profession window's
+# recipes) to NS.Compat; it loads before core\SimSetup.lua (below), which wraps every member at
+# load. Read inside functions only.
+core\CompatSearch.lua
 # LOAD-BEARING: Sim:NewSeam wraps every NS.Compat member at load, straight after core\Compat.lua,
-# CompatClient.lua, CompatLoot.lua, CompatWorld.lua, CompatItem.lua, CompatJournal.lua and CompatCollect.lua; never cache a Compat member in a local before it. Publishes
+# CompatClient.lua, CompatLoot.lua, CompatWorld.lua, CompatItem.lua, CompatJournal.lua, CompatCollect.lua and CompatSearch.lua; never cache a Compat member in a local before it. Publishes
 # NS.SimSeam (LibKa0s-Sim-1.0's answer seam, or an inert stub without the library); needs NS.Compat
 # and NS.L (above) at load. NS.Print and NS.SimHost are read at call time.
 core\SimSetup.lua
@@ -509,6 +514,18 @@ modules\DropsStrip.lua
 # the actions); takes NS.Constants and NS.L at load. NS.SideCells (the Item level row's dual mark)
 # is read at call time.
 modules\DetailCells.lua
+# Conventional: publishes NS.ItemSearch, Item Search's pure model (IS.Facts, IS.Static, IS.Live and
+# the source merge SF-DW-01's chip reads); takes NS.L at load. Every other input arrives as an argument.
+modules\ItemSearchModel.lua
+# LOAD-BEARING: extends NS.ItemSearch (modules\ItemSearchModel.lua, the line above) with the gate, the
+# delayed ForeverDB load and the per-item cache; its rows on PLAYER_ENTERING_WORLD and
+# PLAYER_REGEN_ENABLED share those events, and it appends NS.STAND_DOWN and NS.STAND_UP steps. Takes
+# NS.Constants at load; NS.ForeverDB, NS.RecipeReagents, NS.Compat and NS.Setting are read at call time.
+modules\ItemSearch.lua
+# LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above) at load and publishes its Learn
+# table, the profession window's reagent learner; its row on PLAYER_REGEN_ENABLED shares that event,
+# and it appends a NS.STAND_DOWN step. NS.Compat and NS.RecipeReagents are read at call time.
+modules\ItemSearchLearn.lua
 # Conventional: publishes NS.ItemSources, where a drop comes from (WoW Forever, from the optional
 # ForeverDB addon); takes NS.Constants and NS.L at load. NS.ForeverDB, NS.Item, NS.TipMarks and
 # NS.Setting are read at call time, when modules\DetailCard.lua (below) paints its header.

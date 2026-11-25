@@ -21,7 +21,9 @@ local _, NS = ...
 --     vendorMore }              -- vendors past those
 -- The three source lists are merged and sorted again (the library sorts each list on its own): a
 -- known chance first, the higher first, an unknown rate (nil) last, then creature, object,
--- container, then the id.
+-- container, then the id. That merge and the percent now live in Item Search's model
+-- (modules/ItemSearchModel.lua, IS.MergeSources and IS.Percent, read at call time), which
+-- replaces this chip (DropWatcher#17).
 --
 -- THE CHIP (IS.Chip, pure): the header's last chip, `Drops from <name> 25%`, else `Sold by <name>`,
 -- else `World drop`, its tooltip every line of the model. The headline names the likeliest source
@@ -38,11 +40,7 @@ local IS = NS.ItemSources
 local C  = NS.Constants
 local L  = NS.L
 
-local floor = math.floor
-
 IS.TOP = 3   -- the sources and the vendors the chip's tooltip names (spec §9: up to three)
-
-local KIND_ORDER = { npc = 1, object = 2, item = 3 }
 
 local cache = {}
 
@@ -54,41 +52,11 @@ end
 -- ── pure ────────────────────────────────────────────────────────────────────────────────────
 
 --- A chance (0..1) as the tooltip writes it: `25%`, `2.5%`, `<0.1%`; nil for an unknown rate.
+--- Item Search's (modules/ItemSearchModel.lua), where the source model moved.
 --- @param chance number|nil
 --- @return string|nil
 function IS.Percent(chance)
-    chance = num(chance)
-    if not chance or chance <= 0 then return nil end
-    local p = chance * 100
-    if p >= 10 then return ("%d%%"):format(floor(p + 0.5)) end
-    if p >= 0.1 then return ("%.1f%%"):format(p) end
-    return "<0.1%"
-end
-
-local function before(a, b)
-    if a.chance ~= b.chance then
-        if a.chance == nil then return false end
-        if b.chance == nil then return true end
-        return a.chance > b.chance
-    end
-    if a.kind ~= b.kind then return KIND_ORDER[a.kind] < KIND_ORDER[b.kind] end
-    return a.id < b.id
-end
-
--- Every drop source of `src`, merged over its three lists, most likely first.
-local function merged(src)
-    local out = {}
-    for kind, list in pairs({ npc = src.creatures, object = src.objects, item = src.items }) do
-        if type(list) == "table" then
-            for _, s in ipairs(list) do
-                if type(s) == "table" and num(s.id) then
-                    out[#out + 1] = { kind = kind, id = s.id, chance = num(s.chance) }
-                end
-            end
-        end
-    end
-    table.sort(out, before)
-    return out
+    return NS.ItemSearch.Percent(chance)
 end
 
 --- The card's model of where an item comes from, or nil when ForeverDB names nothing.
@@ -97,7 +65,7 @@ end
 --- @return table|nil
 function IS.Model(src, names)
     if type(src) ~= "table" then return nil end
-    local all = merged(src)
+    local all = NS.ItemSearch.MergeSources(src)
     local m = { top = {}, more = 0, vendors = {}, vendorMore = 0, worldMinLevel = num(src.worldMinLevel) }
     for i, s in ipairs(all) do
         if i <= IS.TOP then

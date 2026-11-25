@@ -365,4 +365,13 @@ do
     if F.itemSources then
         P.window.itemSources = true
     end
+    -- WoW Forever's alone (DropWatcher#17): Item Search's two switches, the item tooltip's block and
+    -- the window. With both off nothing loads ForeverDB (Item Search spec §2). Their settings page
+    -- is Item Search's own (spec §4.7); the rest of its rows join this table with it.
+    if F.itemSearch then
+        P.itemSearch = {
+            tooltip = { enabled = true },
+            window  = { enabled = true },
+        }
+    end
 end

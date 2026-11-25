@@ -359,6 +359,7 @@ Kit.run{
         "test_detail_card",
         "test_item_sources",
         "test_recipe_reagents",
+        "test_item_search",
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",

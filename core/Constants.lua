@@ -405,8 +405,10 @@ local FOREVER = NS.Compat.ClientKey() == "forever"
 -- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
 -- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,
 -- `soulbound` (design §4.6). docs/ARCHITECTURE.md's per-client feature table names each one's gate.
--- One is WoW Forever's alone: the detail card's Sources chip (modules/ItemSources.lua, its
--- `window.itemSources` row), read from the optional ForeverDB addon (SF-DW-01, clients-§11).
+-- Two are WoW Forever's alone: the detail card's Sources chip (modules/ItemSources.lua, its
+-- `window.itemSources` row), read from the optional ForeverDB addon (SF-DW-01, clients-§11), and
+-- Item Search (modules/ItemSearch*.lua, DropWatcher#17; on Retail no row, no default, no read,
+-- Item Search spec §1; a Retail equivalent is DropWatcher#18).
 C.FEATURE_CLIENTS = {
     journalPool   = { "retail" },
     transmog      = { "retail" },
@@ -416,9 +418,21 @@ C.FEATURE_CLIENTS = {
     tradeTimer    = { "retail" },
     tradeRuleRows = { "retail" },
     itemSources   = { "forever" },
+    itemSearch    = { "forever" },
 }
 C.FEATURE = {}
 for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.ForClient(clients) end
+
+-- Item Search's timings (Item Search spec §2, §4.5, §4.2 B). ForeverDB (some 12 MB) loads
+-- LOAD_DELAY seconds after the session's first PLAYER_ENTERING_WORLD, out of combat
+-- (modules/ItemSearch.lua); the window's search box waits DEBOUNCE seconds after the last key; the
+-- profession window's reagents are read LEARN_DELAY seconds after its last list update
+-- (modules/ItemSearchLearn.lua).
+C.ITEM_SEARCH = {
+    LOAD_DELAY  = 5,
+    DEBOUNCE    = 0.25,
+    LEARN_DELAY = 1,
+}
 
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
 -- slot, is unused on Retail: bows, guns, crossbows and wands are main-hand items. WoW Forever keeps
