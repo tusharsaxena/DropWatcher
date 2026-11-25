@@ -63,10 +63,10 @@ The Item Search key binding (Item Search spec §4.6, `Bindings.xml`'s second row
 `CLICK DropWatcherItemSearch:LeftButton`, WoW Forever only) never passes through the dispatcher
 either: its button (`DropWatcherItemSearch`, `core/LauncherSetup.lua`) calls
 `NS.ItemSearchKey.Press` (`modules/ItemSearchKey.lua`), which asks `NS.StoodDownRefusal()` first and
-prints that line while stood down. Standing up, over an item tooltip (GameTooltip, ItemRefTooltip or
-a comparison tooltip) it opens the window on that item, with none it opens it empty; while the
-window is open it closes over the item shown or with no tooltip, and switches over another. On
-Retail a press does nothing.
+prints that line while stood down. Standing up, over a hovered item (GameTooltip or a comparison
+tooltip; a chat link's pinned ItemRefTooltip does not count) it shows that item, opening the window
+if needed and staying open over the item already shown; with no hover it toggles the window (Item
+Search round 3 spec §4.7). On Retail a press does nothing.
 
 The feature verbs are spec §12.3's (and compact spec §1's `full`, issue #12's `insights` and issue #13's
 `whitelist` and `blacklist`). `scan`, `compact` and `full` call the host handlers their window
