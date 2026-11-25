@@ -12,7 +12,11 @@ local addonName, NS = ...
 -- (feedback-15 spec §3), and Window › Columns opens with a note through the page's `chrome`. Each
 -- page's Defaults button resets that page's rows only (options-ui-§13), so Drops' Defaults resets the
 -- situations table too, though not Drops › Item lists, whose two lists it keeps (plan #13, Q9). Registered here, in the order the settings list shows them: General
--- (settings/Panel.lua) before, Profiles (settings/Profiles.lua) after. The Drops page's key stays
+-- (settings/Panel.lua) before, Profiles (settings/Profiles.lua) after. On WoW Forever alone Item
+-- Search's page follows Alerts (Item Search spec §4.7, DropWatcher#17): its rows are
+-- settings/ItemSearchRows.lua's, its Item tooltip tab closes with the section order's drag list
+-- (afterGroup, parked before each render) and its last tab is the library's Keybindings editor over
+-- the Item Search key alone (settings/ItemSearchPage.lua). On Retail the page is not registered. The Drops page's key stays
 -- `feed`: a page key is no stored path, but it names the page's section in `/dw list`, which since
 -- item 020 holds the situation rows as well.
 
@@ -22,6 +26,7 @@ local Helpers  = Settings.Helpers
 local L        = NS.L
 local PE       = Settings.PageEditors
 local LE       = Settings.ListEditors
+local ISP      = Settings.ItemSearchPage   -- nil on Retail
 
 --- The pages after General, in list order: key, title, the Defaults tooltip, and the render's
 --- host tabs, afterGroup hooks, pairWith partners, `chrome` (drawn under the strip, before the
@@ -56,6 +61,13 @@ local PAGES = {
     { key = "alerts", title = L["Alerts"],
       tip = L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."] },
 }
+if ISP then
+    PAGES[#PAGES + 1] = { key = "itemSearch", title = L["Item Search"],
+      tip = L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."],
+      afterGroup = { [L["Item tooltip"]] = function(ctx) ISP.SectionOrder(ctx) end },
+      beforeClear = function(ctx) ISP.Park(ctx) end,
+      keybinds = function() return ISP.KeybindTab() end }
+end
 
 local function builder(page)
     return function(parentCategory)
@@ -67,6 +79,14 @@ local function builder(page)
         local function render(c)
             if page.beforeClear then page.beforeClear(c) end
             Helpers.ClearScroll(c)
+            -- A page with a key editor (Item Search) takes its Keybindings tab fresh each render,
+            -- after its own tabs; the stub's KeybindingsTab answers nil, so no tab.
+            if page.keybinds then
+                local tabs = {}
+                for i, t in ipairs(page.tabs or {}) do tabs[i] = t end
+                tabs[#tabs + 1] = page.keybinds()
+                opts.tabs = tabs
+            end
             Helpers.RenderTabbedSchema(c, page.key, page.afterGroup, page.pairWith, opts)
         end
         -- A tab click renders the same way, its park included (`rerender`).

@@ -76,6 +76,12 @@ local function retailOnlyRow(path)
         or path == "trade.warnAt" or path == "window.columns.tradeWindow" or path:match("^trade%.rules%.") ~= nil
 end
 
+-- WoW Forever's alone: the role (Forever port design §11.4), ForeverDB's Sources chip (SF-DW-01)
+-- and every Item Search row (Item Search spec §1, §4.7; DropWatcher#17).
+local function foreverOnlyRow(path)
+    return path == "char.role" or path == "window.itemSources" or path:match("^itemSearch%.") ~= nil
+end
+
 -- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
 -- `/dw list` and the defaults reset have none); on Retail every one is a row declaring Retail, and
 -- no other row declares a client.
@@ -85,9 +91,8 @@ test("settings: no Retail-only row on the Forever panel", function()
     local seen = 0
     for _, row in ipairs(NS.addon.Settings.Schema) do
         local path = row.path or ""
-        if path == "char.role" or path == "window.itemSources" then
-            -- WoW Forever's alone (Forever port design §11.4): Retail never reads the role, nor
-            -- ForeverDB (SF-DW-01, the detail card's Sources chip).
+        if foreverOnlyRow(path) then
+            -- WoW Forever's alone: Retail never reads the role, nor ForeverDB, nor Item Search.
             assertTrue(not retail, "a Forever-only row on Retail: " .. path)
             assertEqual(table.concat(row.clients or {}, ","), "forever", path .. " declares its client")
         elseif retailOnlyRow(path) then
@@ -914,6 +919,28 @@ local PINNED_ROWS = {
     { "char.role", "string", "\"auto\"" },
     -- SF-DW-01: Window › Layout › Detail card, WoW Forever's alone (the optional ForeverDB addon).
     { "window.itemSources", "bool", "true" },
+    -- IS-DW-07: the Item Search page, WoW Forever's alone (Item Search spec §4.7, DropWatcher#17).
+    { "itemSearch.tooltip.enabled", "bool", "true" },
+    { "itemSearch.tooltip.shiftOnly", "bool", "false" },
+    { "itemSearch.tooltip.header", "bool", "true" },
+    { "itemSearch.tooltip.hint", "bool", "true" },
+    { "itemSearch.tooltip.comparison", "bool", "false" },
+    { "itemSearch.tooltip.sections.drops", "bool", "true" },
+    { "itemSearch.tooltip.sections.vendors", "bool", "true" },
+    { "itemSearch.tooltip.sections.quests", "bool", "true" },
+    { "itemSearch.tooltip.sections.crafting", "bool", "true" },
+    { "itemSearch.tooltip.sections.also", "bool", "false" },
+    { "itemSearch.tooltip.dropsShown", "number", "3" },
+    { "itemSearch.tooltip.hideCompleted", "bool", "true" },
+    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"also\"}" },
+    { "itemSearch.window.enabled", "bool", "true" },
+    { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
+    { "itemSearch.window.barFromSkin", "bool", "true" },
+    { "itemSearch.window.density", "string", "\"comfortable\"" },
+    { "itemSearch.window.fontSize", "number", "13" },
+    { "itemSearch.window.columns", "bool", "true" },
+    { "itemSearch.window.pins", "bool", "true" },
+    { "itemSearch.window.recent", "bool", "true" },
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
@@ -923,7 +950,7 @@ test("rows: the layout changes keep every stored path, its type and its default 
         -- On WoW Forever a Retail-only situation's paths, and the Retail-only rows, are absent
         -- (clients-§4), not moved.
         if not (T.forever and (retailOnlyPath(p[1]) or retailOnlyRow(p[1])))
-            and not (not T.forever and (p[1] == "char.role" or p[1] == "window.itemSources")) then
+            and not (not T.forever and foreverOnlyRow(p[1])) then
             want[p[1]], pinned = p, pinned + 1
         end
     end

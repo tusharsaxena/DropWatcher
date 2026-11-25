@@ -213,12 +213,14 @@ else
     NS.SlashCommands = Sl
 end
 
---- Open the settings panel (registering the category first if OnEnable has not run yet).
-function DW:OpenSettings()
+--- Open the settings panel (registering the category first if OnEnable has not run yet), on the
+--- page `pageKey` when given (the Item Search window's gear opens Item Search's page).
+--- @param pageKey string|nil
+function DW:OpenSettings(pageKey)
     if self.Settings and self.Settings.Register then self.Settings.Register() end
     local H = helpers()
     if not (H and H.OpenOptionsPanel) then return NS.Print(L["Settings panel is not available."]) end
-    H.OpenOptionsPanel()
+    H.OpenOptionsPanel(pageKey)
 end
 
 function runConfig() DW:OpenSettings() end

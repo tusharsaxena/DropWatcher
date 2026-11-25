@@ -150,7 +150,7 @@ Total.
 
 ### test_settings_pages.lua (57)
 
-- pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order
+- pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
@@ -1073,6 +1073,20 @@ Total.
 - item search key: once per character: a key the player clears is not put back (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: in combat the default waits for the combat's end (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search key: the tooltip block's hint and the window's footer name the bound key (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+
+### test_item_search_settings.lua (11)
+
+- item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the defaults are the spec's (on, off, on, on, off; 3 sources; comfortable, 13) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the switches reach the load, and the window's switch closes an open window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the section order is a drag list in the stored order; a move writes it whole (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: Moved is a pure splice, and an index outside the list changes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: a render parks the list first; its host never rides a released placeholder (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the Keybindings tab shows and changes the Item Search key alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the Item Search window's gear opens this page (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: on Retail there is no page, no row and no default
 
 ### test_own_drops.lua (16)
 
@@ -3319,6 +3333,7 @@ Total.
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 9 |
 | test_item_search_key.lua | 2 |
+| test_item_search_settings.lua | 1 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3412,5 +3427,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 63 |
-| **Total** | **2777** |
+| Skipped | 73 |
+| **Total** | **2778** |

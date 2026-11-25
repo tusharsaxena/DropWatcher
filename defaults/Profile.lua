@@ -366,18 +366,19 @@ do
         P.window.itemSources = true
     end
     -- WoW Forever's alone (DropWatcher#17): Item Search's two switches, the item tooltip's block and
-    -- the window. With both off nothing loads ForeverDB (Item Search spec §2). Their settings page
-    -- is Item Search's own (spec §4.7); the rest of its rows join this table with it.
+    -- the window. With both off nothing loads ForeverDB (Item Search spec §2). Every key below is a
+    -- row of Item Search's own settings page (settings/ItemSearchRows.lua, spec §4.7).
     if F.itemSearch then
         P.itemSearch = {
             -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
-            -- sections, how many drop sources, and completed quests hidden. The section order is
-            -- the block's own default (NS.ItemSearchTip.ORDER) until its page stores one.
+            -- sections, how many drop sources, completed quests hidden, and the order the sections
+            -- are written in (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
                 dropsShown = 3, hideCompleted = true,
                 sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
+                order = { "drops", "vendors", "quests", "crafting", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
             -- skin's accent, or the custom one), row density, font size, the zone and level

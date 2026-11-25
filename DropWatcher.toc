@@ -708,6 +708,10 @@ settings\Schema.lua
 # NS.Constants, Settings.StampClosureRows and NS.QualityGate, NS.WindowFooter, NS.WindowGroup,
 # NS.Glow (modules\, above) at load.
 settings\SchemaRows.lua
+# LOAD-BEARING: takes Settings.RowMakers (settings\SchemaRows.lua, the line above) at load and
+# appends the Item Search page's rows to NS.SchemaRuntime at file scope (WoW Forever alone); reads
+# NS.C and NS.Constants at load.
+settings\ItemSearchRows.lua
 # LOAD-BEARING: publishes the LibKa0s-Options instance as Settings.Helpers; settings\Panel.lua calls
 # Helpers.MasterControls at file scope.
 settings\OptionsSetup.lua
@@ -729,7 +733,12 @@ settings\PageEditors.lua
 # (below) takes at load; reads NS.L at load, and NS.ItemLists, NS.LootFeed and Settings.Helpers at
 # call time.
 settings\ListEditors.lua
-# LOAD-BEARING: registers the Feed, Comparison, Trade, Messages and Window pages after General's
+# LOAD-BEARING: publishes Settings.ItemSearchPage (the Item Search page's section order list and its
+# Keybindings tab; WoW Forever alone), which settings\Pages.lua (below) takes at load; reads
+# Settings.ITEM_SEARCH_SECTIONS (settings\ItemSearchRows.lua, above) at call time.
+settings\ItemSearchPage.lua
+# LOAD-BEARING: registers the Drops, Comparison, Messages, Window, Alerts and (WoW Forever alone)
+# Item Search pages after General's
 # (settings\Panel.lua, above) and before Profiles' (below), the order the settings list shows.
 settings\Pages.lua
 # Conventional: publishes NS.SlashVerbs, the slash-only feature verbs' handlers, which

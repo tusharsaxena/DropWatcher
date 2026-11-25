@@ -484,3 +484,75 @@ L["Keep the panel open after the last roll (seconds, 0 = at once)"] = "Keep the 
 L["Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."] = "Finished rolls stay in the Rolls panel until every roll is over; then the panel stays open this many seconds (0 to 60) and closes. A new roll cancels the count, and nothing closes while the pointer is over the panel. Needs Show the Rolls panel beside the window."
 L["Fold Pass and Waiting in a raid"] = "Fold Pass and Waiting in a raid"
 L["In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."] = "In a group of more than 5, show the players who passed, and those still to roll, as one line each; hover the line for every name. Needs Show the Rolls panel beside the window."
+
+-- settings/ItemSearchRows.lua: the Item Search page's rows (WoW Forever alone, Item Search spec §4.7)
+L["The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."] =
+    "The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."
+L["The vendors that sell the item, with the lowest price seen."] =
+    "The vendors that sell the item, with the lowest price seen."
+L["The quests that ask for the item: in your log, not picked up yet, or completed."] =
+    "The quests that ask for the item: in your log, not picked up yet, or completed."
+L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] =
+    "The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."
+L["Reward from / starts quest"] = "Reward from / starts quest"
+L["The quests that reward the item, and the quest the item starts."] =
+    "The quests that reward the item, and the quest the item starts."
+L["Comfortable"] = "Comfortable"
+L["Item tooltip"] = "Item tooltip"
+L["Tooltip block"] = "Tooltip block"
+L["Add Item Search to item tooltips"] = "Add Item Search to item tooltips"
+L["Under every item tooltip (your bags, chat links, the loot window, other addons' tooltips), say where the item drops, who sells it, its quests and its recipes. Needs the ForeverDB addon: without it the tooltip shows nothing of Item Search. ForeverDB loads a few seconds after login, out of combat, unless this and the Item Search window are both off."] =
+    "Under every item tooltip (your bags, chat links, the loot window, other addons' tooltips), say where the item drops, who sells it, its quests and its recipes. Needs the ForeverDB addon: without it the tooltip shows nothing of Item Search. ForeverDB loads a few seconds after login, out of combat, unless this and the Item Search window are both off."
+L["Only while holding Shift"] = "Only while holding Shift"
+L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."] =
+    "Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."
+L["Separator and title line"] = "Separator and title line"
+L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."] =
+    "Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."
+L["Keybind hint line"] = "Keybind hint line"
+L["Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."] =
+    "Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."
+L["Comparison tooltips too"] = "Comparison tooltips too"
+L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."] =
+    "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."
+L["Sections"] = "Sections"
+L["Needs Add Item Search to item tooltips."] = "Needs Add Item Search to item tooltips."
+L["Drop sources shown"] = "Drop sources shown"
+L["How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."] =
+    "How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."
+L["Hide completed quests"] = "Hide completed quests"
+L["Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."] =
+    "Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."
+L["Section order"] = "Section order"
+L["The order the tooltip writes its sections in. Drag a section by its handle to move it."] =
+    "The order the tooltip writes its sections in. Drag a section by its handle to move it."
+L["Item Search window"] = "Item Search window"
+L["Enable the Item Search window"] = "Enable the Item Search window"
+L["The Item Search window: search an item by name or id and see every source, quest and recipe. Opened by the magnifier in the main window's title bar, the Item Search key or /dw search. Off, it does not open, and with the tooltip block off too ForeverDB is never loaded."] =
+    "The Item Search window: search an item by name or id and see every source, quest and recipe. Opened by the magnifier in the main window's title bar, the Item Search key or /dw search. Off, it does not open, and with the tooltip block off too ForeverDB is never loaded."
+L["Bars"] = "Bars"
+L["Bar color"] = "Bar color"
+L["The color of the drop chance bars in DROPS FROM. Not read while Use the skin's color is on."] =
+    "The color of the drop chance bars in DROPS FROM. Not read while Use the skin's color is on."
+L["Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."] =
+    "Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."
+L["Rows"] = "Rows"
+L["Density"] = "Density"
+L["How tall the window's rows are: Comfortable or Compact."] =
+    "How tall the window's rows are: Comfortable or Compact."
+L["The size of the window's text, 10 to 16."] = "The size of the window's text, 10 to 16."
+L["Zone and level columns"] = "Zone and level columns"
+L["Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."] =
+    "Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."
+L["Waypoint pins"] = "Waypoint pins"
+L["Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."] =
+    "Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."
+L["Remember recent searches"] = "Remember recent searches"
+L["List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."] =
+    "List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."
+-- settings/ItemSearchPage.lua and settings/Pages.lua (Item Search, DropWatcher#17)
+L["Drag to reorder"] = "Drag to reorder"
+L["The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."] =
+    "The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."
+L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."] =
+    "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."

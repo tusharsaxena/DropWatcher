@@ -410,7 +410,9 @@ local function buildTitle(f)
     f.title:SetText(L["Item Search"])
     NS.Skin.TitleBar(bar, { text = f.title, place = NS.WindowTitleBar.PLACE })
     -- Not a companion (see the header): lock · settings · close.
-    local hb = NS.WindowTitleBar.Marks(bar, { frame = f, close = function() ISW.Close() end, extras = {
+    -- The gear opens Drop Watcher's settings on Item Search's own page (settings/ItemSearchPage.lua).
+    local hb = NS.WindowTitleBar.Marks(bar, { frame = f, close = function() ISW.Close() end,
+        settings = function() NS.addon:OpenSettings("itemSearch") end, extras = {
         { key = "lock", icon = "lock", glyph = "L", onClick = function() NS.ToggleLock(); ISW.PaintLock() end },
     } })
     f.closeButton, f.lockButton = hb.close, hb.extras.lock

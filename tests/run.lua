@@ -373,6 +373,7 @@ Kit.run{
         "test_item_search_tip",
         "test_item_search_window",
         "test_item_search_key",
+        "test_item_search_settings",
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",
