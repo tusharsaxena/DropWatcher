@@ -163,10 +163,15 @@ test("item search view: a known recipe's breakpoints against your rank; an unkno
         for i, p in ipairs(parts) do out[i] = p.tone .. "=" .. p.text end
         return table.concat(out, " ")
     end
-    assertEqual(texts(V.Breakpoints({ known = true, min = 1, yellow = 55, green = 75, gray = 95, rank = 60 })),
-        "skillOrange=1 skillYellow=55 skillGreen=75 skillGray=95 plain=you 60")
+    assertEqual(texts(V.Breakpoints({ known = true, min = 30, yellow = 55, green = 75, gray = 95, rank = 60 })),
+        "skillOrange=30 skillYellow=55 skillGreen=75 skillGray=95 plain=you 60")
     -- red under: breakpoints shown for a recipe you don't know
     assertEqual(texts(V.Breakpoints({ known = false, min = 40, yellow = 55, gray = 95 })), "muted=learnable at 40")
+    -- a minimum of 1 is the client's placeholder, not a rank: no "learnable at 1", no orange 1
+    -- red under: every unknown recipe "learnable at 1"
+    assertEqual(texts(V.Breakpoints({ known = false, min = 1, yellow = 55, gray = 95 })), "")
+    assertEqual(texts(V.Breakpoints({ known = true, min = 1, yellow = 55, green = 75, gray = 95, rank = 60 })),
+        "skillYellow=55 skillGreen=75 skillGray=95 plain=you 60")
     assertEqual(texts(V.Breakpoints({ known = true })), "", "a learned recipe has no breakpoints")
 end)
 
@@ -278,6 +283,22 @@ test("item search window: without ForeverDB an id still shows the item, with Cra
     assertEqual(f.notice:GetText(), "ForeverDB not installed: drop sources, quests and name search are unavailable")
     assertEqual(sectionKeys(NS, LINEN), "crafting")
     assertEqual(f.foot.left:GetText(), "ForeverDB · not installed")
+end, FOREVER_ONLY)
+
+test("item search window: ForeverDB installed but not loading: the matches note agrees with the notice", function()
+    for _, preset in ipairs({ "loadfails", "reshaped" }) do
+        local NS, m = enabled({ preset = preset })
+        local W = NS.ItemSearchWindow
+        W.Open()
+        W.SetQuery("linen")
+        m.advance(0.25)
+        -- red under: an installed ForeverDB called "not installed" by the matches list
+        assertEqual(W.Matches().note, "failed", preset)
+        assertEqual(NS.ItemSearchView.NoteText(W.Matches().note),
+            "ForeverDB did not load: drop sources, quests and name search are unavailable", preset)
+        assertTrue(W.ShowItem(LINEN))
+        assertEqual(W.Frame().notice:GetText(), NS.ItemSearchView.NoteText(W.Matches().note), preset)
+    end
 end, FOREVER_ONLY)
 
 test("item search window: before the load a name search says loading and reads nothing", function()

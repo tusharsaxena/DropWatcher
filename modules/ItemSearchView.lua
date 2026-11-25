@@ -68,8 +68,8 @@ end
 
 --- The matches for the box's text. `ctx`: `{ state, db, clientItem, limit }` (state is
 --- NS.ItemSearch.State's answer; `db` is read only in "loaded"). Answers the rows
---- `{ { id, name, quality, icon, requiredLevel } }` and a note: nil, "loading", "missing",
---- "short" or "none" (no match).
+--- `{ { id, name, quality, icon, requiredLevel } }` and a note: nil, "loading", "failed" (installed
+--- but did not load), "missing", "short" or "none" (no match).
 --- @param text string|nil
 --- @param ctx table
 --- @return table rows, string|nil note
@@ -84,7 +84,9 @@ function ISV.Matches(text, ctx)
     end
     if q.kind == "short" then return {}, "short" end
     if q.kind ~= "name" then return {}, nil end
-    if not loaded then return {}, ctx.state == "loading" and "loading" or "missing" end
+    if not loaded then
+        return {}, (ctx.state == "loading" or ctx.state == "failed") and ctx.state or "missing"
+    end
     local out = {}
     for _, r in ipairs(list(ctx.db.SearchItems(q.query, ctx.limit))) do
         if type(r) == "table" and num(r.id) then out[#out + 1] = matchRow(r.id, r) end
@@ -98,6 +100,7 @@ end
 --- @return string|nil
 function ISV.NoteText(note)
     if note == "loading" then return L["ForeverDB: loading…"] end
+    if note == "failed" then return L["ForeverDB did not load: drop sources, quests and name search are unavailable"] end
     if note == "missing" then return L["ForeverDB not installed: drop sources, quests and name search are unavailable"] end
     if note == "short" then return L["Type two letters or more, or an item id."] end
     if note == "none" then return L["No item by that name."] end
@@ -235,21 +238,24 @@ function ISV.QuestRows(facts, ctx)
     return out
 end
 
---- A crafting row's breakpoints: `{ { tone, text } ... }`, the four skill-up colors and your rank
---- for a recipe you know, "learnable at N" for one you don't (N its minimum rank), `{}` without
---- breakpoints.
+--- A crafting row's breakpoints: `{ { tone, text } ... }`, the skill-up colors and your rank for a
+--- recipe you know, "learnable at N" for one you don't (N its minimum rank), `{}` without
+--- breakpoints. A minimum of 1 or less is unknown, not a rank: the client's MinSkillLineRank is 1
+--- for nearly every recipe, so it neither says "learnable at 1" nor opens the colors with an
+--- orange 1 (own call, IS-REV).
 --- @param row table a crafting row (IS.Live's)
 --- @return table
 function ISV.Breakpoints(row)
+    local min = num(row.min)
+    if min and min <= 1 then min = nil end
     if not row.known then
-        local at = num(row.min)
-        if at and at > 0 then return { { tone = "muted", text = L["learnable at %d"]:format(at) } } end
+        if min then return { { tone = "muted", text = L["learnable at %d"]:format(min) } } end
         return {}
     end
     local out = {}
     local function add(tone, v) if num(v) then out[#out + 1] = { tone = tone, text = tostring(v) } end end
     if num(row.yellow) and num(row.gray) and (row.yellow > 0 or row.gray > 0) then
-        add("skillOrange", num(row.min) or 1)
+        add("skillOrange", min)
         add("skillYellow", row.yellow)
         add("skillGreen", row.green)
         add("skillGray", row.gray)
