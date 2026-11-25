@@ -74,9 +74,10 @@ local L = NS.L
 
 local floor = math.floor
 
--- The tooltip's rows per section (Item Search feedback spec §7: itemSearch.tooltip.rows, 5 by
--- default, a whole 1 to 20; it replaced the drops-only dropsShown, 3, through schema step 16).
-IS.TIP_ROWS, IS.TIP_ROWS_MIN, IS.TIP_ROWS_MAX = 5, 1, 20
+-- The tooltip's rows per section (Item Search feedback spec §7: itemSearch.tooltip.rows, a whole
+-- 1 to 20; it replaced the drops-only dropsShown, 3, through schema step 16). 3 by default since
+-- ISR3-DW-07 (the owner's round 3 addendum), 5 before; a value the player stored stays.
+IS.TIP_ROWS, IS.TIP_ROWS_MIN, IS.TIP_ROWS_MAX = 3, 1, 20
 
 local KIND_ORDER = { npc = 1, object = 2, item = 3 }
 

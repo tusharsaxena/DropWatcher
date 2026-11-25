@@ -940,7 +940,7 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.sections.skinned", "bool", "true" },
     -- ISF-DW-03 (Item Search feedback spec §4, §7): the rows per section replace the drop count
     -- (schema step 16), and the profession filter covers the tooltip and the window.
-    { "itemSearch.tooltip.rows", "number", "5" },
+    { "itemSearch.tooltip.rows", "number", "3" },  -- 3 since ISR3-DW-07
     { "itemSearch.myProfessionsOnly", "bool", "true" },
     { "itemSearch.tooltip.hideCompleted", "bool", "true" },
     { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"gathered\",[3]=\"vendors\",[4]=\"quests\",[5]=\"crafting\",[6]=\"skinned\",[7]=\"also\"}" },

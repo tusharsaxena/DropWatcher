@@ -41,7 +41,8 @@ local _, NS = ...
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
 --     the tooltip label's muted gold and its rows, an empty section left out. Every section's rows
 --     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at
---     `itemSearch.tooltip.rows` (5 by default, 1 to 20; §7), the rest one "and N more" line:
+--     `itemSearch.tooltip.rows` (3 by default since ISR3-DW-07, 1 to 20; §7), the rest one
+--     "and N more" line:
 --       Drops from    the sources (name, level range; chance on the right), then a World drop row
 --                     with its minimum level, then "and N more"; a creature's name in its rank's
 --                     color (round 3 item 6: elite gold, rare silver, rare elite pale blue, boss

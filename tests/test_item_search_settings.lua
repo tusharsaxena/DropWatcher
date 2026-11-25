@@ -153,7 +153,7 @@ test("item search settings: a first-build profile runs steps 16 to 18 through th
     assertEqual(NS.SCHEMA_VERSION, 18, "round 3 adds step 18 alone: its other new keys are new rows")
 end)
 
-test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's)", function()
+test("item search settings: the defaults are the spec's (on, off, on, on, off; 3 rows, my professions; the window's)", function()
     local NS, m = enabled()
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
@@ -163,7 +163,7 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 5
     for key, on in pairs({ drops = true, vendors = true, quests = true, crafting = true, also = false }) do
         assertEqual(S("itemSearch.tooltip.sections." .. key), on, key)
     end
-    assertEqual(S("itemSearch.tooltip.rows"), 5); assertTrue(S("itemSearch.tooltip.hideCompleted"))
+    assertEqual(S("itemSearch.tooltip.rows"), 3, "3 rows (ISR3-DW-07)"); assertTrue(S("itemSearch.tooltip.hideCompleted"))
     assertTrue(S("itemSearch.myProfessionsOnly"), "only the professions you know (feedback spec §4)")
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
     assertTrue(S("itemSearch.window.barFromSkin"))

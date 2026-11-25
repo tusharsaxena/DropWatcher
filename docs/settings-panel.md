@@ -445,8 +445,8 @@ this page. Paths, defaults and ranges: [`schema.md`](schema.md#item-search-page-
 **Item tooltip.** **Tooltip block,** in the Settings artboard's order (Item Search feedback spec §9):
 Add Item Search to item tooltips (`itemSearch.tooltip.enabled`, on, alone on its line: the block under
 every item tooltip; it needs ForeverDB, and with the window's switch off too ForeverDB never loads),
-then Comparison tooltips too (off, the owner's call), Rows per section (`itemSearch.tooltip.rows`, 5,
-a 1 to 20 slider by 1: every section's cap before "and N more"), Show the key hint
+then Comparison tooltips too (off, the owner's call), Rows per section (`itemSearch.tooltip.rows`, 3,
+a 1 to 20 slider by 1: every section's cap before "and N more"; 5 until ISR3-DW-07), Show the key hint
 (`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
 is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
 hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose

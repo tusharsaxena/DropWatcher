@@ -380,15 +380,18 @@ local STEP16_ROWS = 5
 --- becomes `itemSearch.tooltip.rows` (every section's cap, 1 to 20). A stored count is carried
 --- across, whole and in range, unless the profile already stores a `rows` of its own (one off the
 --- default); the old key goes either way. A profile that never stored it (the default, 3) takes the
---- new default, 5. Idempotent. STEP16_ROWS is the default as of this step (frozen): a `rows` equal
---- to it may be AceDB's default read through, never the player's choice beside a stored dropsShown.
+--- `rows` default (5 then, 3 since ISR3-DW-07, which took no step). Idempotent. A `rows` equal to
+--- a default may be AceDB's default copied into the active profile, never the player's choice
+--- beside a stored dropsShown: STEP16_ROWS, the default as of this step (frozen), or the running
+--- build's (`NS.ItemSearch.TIP_ROWS`), the one AceDB copies in as the step runs (ISR3-DW-07).
 --- @param profile table a raw stored profile
 function NS.MigrateTipRows(profile)
     local is = type(profile) == "table" and profile.itemSearch
     local tip = type(is) == "table" and is.tooltip
     if type(tip) ~= "table" or tip.dropsShown == nil then return end
     local v = tonumber(tip.dropsShown)
-    if (tip.rows == nil or tip.rows == STEP16_ROWS) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
+    local r = tip.rows
+    if (r == nil or r == STEP16_ROWS or r == (NS.ItemSearch and NS.ItemSearch.TIP_ROWS)) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
     tip.dropsShown = nil
 end
 

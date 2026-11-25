@@ -118,8 +118,9 @@ test("item search tip: separator, label line, Drops from and Sold by, in order; 
     assertEqual(b[4], "  Fixture Crate | 100%")
     assertEqual(b[5], "  Fixture Coffer | 5.0%")
     assertEqual(b[6], "  Fixture Gnoll (10-12) | 25%")
-    assertEqual(b[7], "  Fixture Kobold (5-6) | rate unknown")
-    assertEqual(b[8], "  World drop | level 8+")
+    -- red under: the old default of 5 rows per section (ISR3-DW-07: 3), which listed the Kobold too
+    assertEqual(b[7], "  World drop | level 8+")
+    assertEqual(b[8], "  and 1 more")
     assertEqual(b[9], "Sold by")
     -- neither vendor is in your zone or on your continent: the cheaper first, each with its own
     -- price (round 3 spec §4.4: the trainer's vp 1200, the vendor's vendx 1400)

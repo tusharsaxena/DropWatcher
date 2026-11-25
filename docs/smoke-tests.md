@@ -4599,7 +4599,7 @@ block on a non-item tooltip, or a Lua error. Result: Passed (owner, 2026-11-25).
 **ITEM-SEARCH-2. The sections and their marks.** Hover an item with drop sources, a vendor, a quest
 that asks for it and a recipe that uses it (Linen Cloth is a good start) → **Drops from** lists the
 top 3 sources (superseded by ITEM-SEARCH-21, 2026-11-25: every section ranked for you and capped at
-Rows per section, 5 by default) with their chances, then `and N more`, and a world drop its level; **Sold by** the
+Rows per section, 5 by default; superseded by ITEM-SEARCH-44, 2026-11-26: 3 by default) with their chances, then `and N more`, and a world drop its level; **Sold by** the
 cheapest vendor with its price (superseded by ITEM-SEARCH-38, 2026-11-26: each vendor with its own
 price); **Quests** `!` for one in your log, `?` for one not picked up, a tick
 for one done (hidden while Hide completed quests is on, the default) (superseded by ITEM-SEARCH-35,
@@ -4735,7 +4735,7 @@ the highest of them), and no `Object <number>` row is left in the tooltip or the
 sources (a common cloth or a low-level crafting reagent) → the block opens with the rule and `Drop
 Watcher · Item Search`, with no magnifier before it (superseded by ITEM-SEARCH-34, 2026-11-26: a thin line
 and the `Drop Watcher` label line, no title). Every section (Drops from, Sold by, Quests,
-Crafting, Skinned from; and Gathered from after Drops from since ITEM-SEARCH-37, 2026-11-26) shows at most 5 rows, then `and N more`. Drop sources in your zone come first,
+Crafting, Skinned from; and Gathered from after Drops from since ITEM-SEARCH-37, 2026-11-26) shows at most 5 rows (superseded by ITEM-SEARCH-44, 2026-11-26: 3 by default), then `and N more`. Drop sources in your zone come first,
 then creatures near your level (from 5 below you to 3 above) with objects and containers, then the
 rest; vendors in your zone, then your continent, then elsewhere, the other faction's last; quests in
 your log, then the ones you can pick up now. Settings › Item Search › Rows per section to 2 → every
@@ -4817,7 +4817,7 @@ to Above → the shown arrow changes at once. Click another pin → the arrow po
 
 **ITEM-SEARCH-28. The settings page (spec §9).** Settings › Item Search → tabs Item tooltip, Item
 Search window, Waypoints, Keybindings. Item tooltip's Tooltip block, top to bottom: Add Item Search to
-item tooltips, Comparison tooltips too, Rows per section (1 to 20, 5), Show the key hint, Only while
+item tooltips, Comparison tooltips too, Rows per section (1 to 20, 5; superseded by ITEM-SEARCH-44, 2026-11-26: 3), Show the key hint, Only while
 holding Shift, Separator and title line (superseded by ITEM-SEARCH-43, 2026-11-26: Separator line, then the
 badge's two rows and Show recipe skill levels); then a Tooltip and window heading with Only professions you
 know; then Sections and Section order as before. There is no Drop sources shown row. Untick Show the
@@ -4847,7 +4847,7 @@ the table follows smoothly, with no stutter; sort a column and switch tabs → i
 ### Item Search round 3
 
 The Item Search round 3 run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00
-to ISR3-DW-06, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
+to ISR3-DW-07, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
 also want the ForeverDB_Full addon installed. Where a check here contradicts an earlier ITEM-SEARCH
 row (the tooltip's title and rule, the quest marks, the recipe glyphs, a creature's red, the sort
 arrow, the vendor price, the key over the same item and over a chat link, the settings rows), this
@@ -4962,6 +4962,13 @@ Drops from (also on a profile that stored an order before this build). Item Sear
 the Item Search window, Record vendor prices, Load ForeverDB (Full), then the bars. Every row is
 grayed out where its prerequisite is off. Defaults puts them all back. Result:
 
+**ITEM-SEARCH-44. Three rows per section by default (ISR3-DW-07).** On a profile that never moved
+Rows per section, Settings › Item Search › Item tooltip → Rows per section reads 3 (1 to 20). Hover an
+item with more than three entries in a section (Linen Cloth's Drops from and Crafting) → every section
+(Drops from, Gathered from, Sold by, Quests, Crafting, Skinned from) shows at most 3 rows, then
+`and N more`. Set Rows per section to 8 → up to 8 show; `/reload` → still 8. Defaults → back to 3. A
+profile that stored another count before this build (say 10) keeps it. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -5029,7 +5036,7 @@ Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-
 
 Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08 and ISF-REV, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-30, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 7 and 8's key and title, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-13's key, ITEM-SEARCH-14 and 15's rows), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-19 doubles as the probe of how GetBindingAction answers the stored dead chord, and ITEM-SEARCH-26 and 27 (the arrow's map position and facing on Forever) are owed before the run is finalized. An agent never marks one passed.
 
-Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-06 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-43, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
+Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-07 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-44, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

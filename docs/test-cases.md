@@ -1117,7 +1117,7 @@ Total.
 
 - item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: a first-build profile runs steps 16 to 18 through the runner, to the code's target
-- item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the defaults are the spec's (on, off, on, on, off; 3 rows, my professions; the window's) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the switches reach the load, and the window's switch closes an open window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
@@ -1144,7 +1144,7 @@ Total.
 - item search rank: Ranked filters crafting before ranking it and ranks every section
 - item search rank: the cap shows the first n, counts the rest, and clamps n to a whole 1 to 20
 - item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
-- item search rank: the defaults: rows 5, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
+- item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
 ### test_item_search_sources.lua (15)
 
