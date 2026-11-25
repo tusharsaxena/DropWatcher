@@ -816,6 +816,25 @@ test("item search window: a stand-down takes Drop Watcher's arrow down", functio
     assertFalse(inst:IsShown())
 end, FOREVER_ONLY)
 
+-- Audit row 14 (docs/item-search-tooltips.md): the arrow is a HUD display of one icon, a body
+-- element whose window group is itself.
+test("item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE", function()
+    local NS, m = enabled()
+    NS.ItemSearchWindow.SetPin({ map = IDS.mapA, x = 0.5, y = 0.25 }, "Fixture Gnoll")
+    local f = NS.ItemSearchWaypoint.Instance():Frame()
+    assertTrue(f ~= nil, "the arrow has a frame")
+    local spy = T.tipSpy(m)
+    m.GameTooltip.__anchor = nil
+    f:__fire("OnEnter")
+    local c = spy.first()
+    -- red under: the client's default spot (ANCHOR_CURSOR or a corner anchor), or a chrome attach
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", "owned at ANCHOR_NONE")
+    assertTrue(c ~= nil and c.fn == "PlaceBeside", "the body rule")
+    assertTrue(c.el == f, "level with the arrow itself")
+    assertTrue(c.group.main == f, "the arrow is its own window group")
+    f:__fire("OnLeave")
+end, FOREVER_ONLY)
+
 test("item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way", function()
     local NS, m = enabled()
     local R = NS.SchemaRuntime.FindRow
