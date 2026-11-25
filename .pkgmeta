@@ -1,5 +1,10 @@
 package-as: DropWatcher
 
+# ForeverDB (WoW Forever's data addon) is OPTIONAL: the detail card reads it when it is there and
+# draws without it (clients-§11). Never required-dependencies.
+optional-dependencies:
+  - forever-db
+
 # Every library is vendored under libs/ and committed to git: NO externals: block (packaging,
 # library-stack-§3). The packager ships the repo as-is, minus the dev-only entries below.
 

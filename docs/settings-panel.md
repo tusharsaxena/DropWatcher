@@ -341,7 +341,10 @@ layout (`window.mode`, `Layout` until feedback-24, the tab's own name; Full or C
 spec §1: the window's layout, also switched by the title-bar toggle, `/dw compact` and `/dw full`) |
 Compact view when it auto-opens in a run (`Open in compact view during a run` until item 020; on by
 default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
-title-bar toggle's tooltip names it while it holds). **Tables:** Row height (18 by default, both tabs of
+title-bar toggle's tooltip names it while it holds). **Detail card** (WoW Forever alone, SF-DW-01):
+Show where it comes from (`window.itemSources`, on by default: the detail card's last chip names where
+the drop comes from, from the optional ForeverDB addon; its tooltip says it needs ForeverDB; Retail
+has no heading and no row). **Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
 compact layout's cards size from their text), then the tables' font: the library's composed font
 block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font

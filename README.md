@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2740%2F2740_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2747%2F2747_passing-green)
 
 Supports Retail and WoW Forever. When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -96,6 +96,7 @@ The look is yours to pick: Settings → General → Skin offers nine skins (or E
 | Does it work in raids? | Yes. Dungeons, raids and solo play are watched out of the box, and on Retail keys, follower dungeons, delves and scenarios too. PvP is off until you turn it on under Settings › Drops › Situations, and so are open-world groups on Retail; on WoW Forever open-world groups are watched out of the box too. |
 | Can I change or turn off the glow on upgrades? | Yes, under Settings › Alerts › Upgrade glow. The main-spec and off-spec glows each have their own switch, style (rotating rays, a proc flash, a pixel border or sparkles), color (or your class color) and animation settings. |
 | Can the item icons have a border? | Yes, they have a thin one-pixel edge by default, in the skin's color: a gray outline in the window, black on the toast. Under Settings › Window › Icons you can turn Show border off, or pick its texture, thickness and color (or your class color), or tick Color by item quality to draw each border in its item's quality color. Icon zoom on the same tab crops the dark edge most item icons have. Both apply to every item icon, from the table to the toast. |
+| Does it say where a drop comes from? | On WoW Forever, yes, when the ForeverDB addon is installed. The detail card's last chip names the creature, chest or container most likely to drop it, with the chance, and its tooltip lists the top three, the level a world drop starts at and who sells it. ForeverDB is optional: without it the card looks as it always did. Turn the chip off under Settings › Window › Layout. |
 | Can it tell me whether I have the look? | On Retail, yes, the detail card says `New look` or `Look known`. CanIMogIt is used when it is installed. WoW Forever has no transmog. |
 | Does it show other people's rolls? | Yes, on both clients: everyone's Need, Greed and Pass while the roll is open, counted on a line of icons with every roll in its tooltip, then the numbers and the winner, kept in History. Settings › Drops › Rolls has the switches. |
 | Why does it show green items on WoW Forever? | The minimum quality starts at Uncommon there, because a green is still often worth a look. On Retail it starts at Rare. Change it under Settings › Drops › Quality. |
