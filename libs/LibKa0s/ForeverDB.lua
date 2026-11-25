@@ -8,11 +8,13 @@
 -- gives and ends a quest, what a trainer teaches. On WoW Forever, ForeverDB carries exactly those
 -- facts (github.com/foreverfraddons/forever-db: QuestieDB, VMaNGOS, cMaNGOS and pfQuest, merged and
 -- cross-checked). It is a LoadOnDemand addon of some 12 MB, positional rows behind short table
--- names, and its layout is its own. Three Ka0s addons read it (Drop Watcher, Skill Master,
--- Outfitter Reborn), so the reading lives here once: one place knows the row positions, one place
--- decides when the 12 MB load happens, and one place answers plainly when the addon is absent,
--- disabled, old or reshaped (LibKa0s#105). Minor 2 adds the lookups Drop Watcher's Item Search
--- makes: SearchItems (by name), QuestsForItem, RewardFrom, StartsQuest and SkinnedFrom.
+-- names, and its layout is its own. The reading lives here once (LibKa0s#105): one place knows the
+-- row positions, one place decides when the 12 MB load happens, and one place answers plainly when
+-- the addon is absent, disabled, old or reshaped. Three Ka0s addons read it at first; from v1.116.0
+-- Drop Watcher is the only one (Skill Master and Outfitter Reborn stopped in that run). Minor 2 adds
+-- the lookups Drop Watcher's Item Search makes: SearchItems (by name), QuestsForItem, RewardFrom,
+-- StartsQuest and SkinnedFrom. Minor 3 adds Object, an object's name, so a host names an object
+-- source rather than drawing its id.
 --
 -- ForeverDB is an OPTIONAL runtime dependency. A host lists it in `## OptionalDeps` (and MAY list it
 -- under `.pkgmeta`'s `optional-dependencies`), never in `## Dependencies`: no player needs it
@@ -46,7 +48,7 @@ local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local NEEDS_CORE = 1
 if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary; module absent
 
-local MAJOR, MINOR = "LibKa0s-ForeverDB-1.0", 2
+local MAJOR, MINOR = "LibKa0s-ForeverDB-1.0", 3
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -274,6 +276,24 @@ function lib.Item(itemID)
     itemLevel = num(r[4]), classID = num(r[5]), subclassID = num(r[6]), inventoryType = num(r[7]),
     icon = num(r[8]),
   }
+end
+
+--- An object (a chest, a herb, a vein, a crate): a new table `{ id, name }`, or nil (minor 3).
+---
+--- From `obj[id] = { name, ... }`; the positions past the name are not read in this version. A row
+--- that is not a table, or whose name is not a string, is no answer: an object's one fact here is
+--- its name, so a host that would draw "Object <id>" leaves the source out instead.
+---
+--- @param objectID number
+--- @return table|nil
+function lib.Object(objectID)
+  objectID = id(objectID)
+  if not objectID then return nil end
+  local r = row("obj", objectID)
+  if not r then return nil end
+  local name = str(r[1])
+  if not name then return nil end
+  return { id = objectID, name = name }
 end
 
 local KINDS = { c = "npc", o = "object" }

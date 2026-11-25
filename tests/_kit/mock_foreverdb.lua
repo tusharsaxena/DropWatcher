@@ -1,7 +1,10 @@
 -- testkit/mock_foreverdb.lua -- the kit's opt-in fake of ForeverDB, the WoW Forever data addon that
 -- LibKa0s-ForeverDB-1.0 reads (revision 61, LibKa0s#105). Revision 63 adds the rows Item Search's
 -- lookups read (ForeverDB minor 2): `qx`, `rew`, `start` and `skin`, three more quests and five more
--- items, all invented like the rest.
+-- items, all invented like the rest. Revision 64 adds the `obj` rows ForeverDB minor 3's Object reads:
+-- two objects that share a name, one with no name and one whose row is not a table, and one more
+-- item (the relic) that drops from all four, so a host can prove it merges by name and drops the
+-- nameless.
 --
 -- Returns a MODULE. Its installer is called on a finished mock and returns a HANDLE:
 --
@@ -77,10 +80,15 @@ FDB.IDS = {
   shard      = 990106,   -- "Bladed Fixture Shard": a name that STARTS with "blade"
   cloak      = 990107,   -- "Fixture Bladeweave Cloak": a longer name holding "blade"
   letter     = 990108,   -- an item that starts the summons
+  relic      = 990109,   -- "Strongbox Relic": drops from the two strongboxes, the husk and the scrap
   errand     = 990201,   -- a quest
   hunt       = 990202,   -- a quest: needs the leather, after the errand and the summons
   summons    = 990203,   -- a quest the letter starts; no qx row
   crate      = 990301,   -- an object: drops the blade, gives the errand, has spots
+  boxA       = 990302,   -- an object, "Fixture Strongbox": drops the relic, has spots on mapA
+  boxB       = 990303,   -- an object, "Fixture Strongbox" too: drops the relic, has spots on mapB
+  husk       = 990304,   -- an object whose row has no name: drops the relic
+  scrap      = 990305,   -- an object whose row is not a table: drops the relic
   mapA       = 9901,
   mapB       = 9902,
 }
@@ -95,7 +103,7 @@ function FDB.fixture()
   D.meta = {
     build = "2099-01-01",
     hash = "0123456789abcdef",
-    counts = { npc = 4, item = 8, quest = 3, obj = 1 },
+    counts = { npc = 4, item = 9, quest = 3, obj = 5 },
     sourceList = { { name = "fixture", title = "Invented kit fixture" } },
   }
   -- npc[id] = { name, subname, minLevel, maxLevel, rank }
@@ -117,6 +125,7 @@ function FDB.fixture()
     [I.shard]   = { "Bladed Fixture Shard", 3, 20, 25, 15, 0, 0, 9990006 },
     [I.cloak]   = { "Fixture Bladeweave Cloak", 4, 30, 35, 4, 1, 16, 9990007 },
     [I.letter]  = { "Fixture Letter", 1, 0, 1, 12, 0, 0, 9990008 },
+    [I.relic]   = { "Strongbox Relic", 2, 0, 12, 15, 0, 0, 9990009 },
   }
   -- quest[id] = { title, level, minLevel }; qg / qe[quest] = { "c<id>" | "o<id>", ... }
   D.quest = {
@@ -137,7 +146,10 @@ function FDB.fixture()
   D.qe = { [I.errand] = { "c" .. I.vendor } }
   -- drop / odrop / idrop[item] = { sourceId, chancePer10000, ... } (flat pairs; 0 = rate unknown)
   D.drop  = { [I.blade] = { I.gnoll, 2500, I.kobold, 0 } }
-  D.odrop = { [I.blade] = { I.crate, 10000 } }
+  D.odrop = {
+    [I.blade] = { I.crate, 10000 },
+    [I.relic] = { I.boxA, 4000, I.boxB, 6000, I.husk, 9000, I.scrap, 8000 },
+  }
   D.idrop = { [I.blade] = { I.coffer, 500 } }
   -- vend[item] = { npcId, ... }; vp[npc] = { [item] = { price, seen } }
   D.vend = { [I.blade] = { I.vendor, I.trainer } }
@@ -147,12 +159,20 @@ function FDB.fixture()
   }
   -- world[item] = the minimum level of a world drop
   D.world = { [I.blade] = 8 }
-  -- obj[id] = { name }
-  D.obj = { [I.crate] = { "Fixture Crate" } }
+  -- obj[id] = { name, ... } (the husk's row carries no name; the scrap's is not a table)
+  D.obj = {
+    [I.crate] = { "Fixture Crate" },
+    [I.boxA]  = { "Fixture Strongbox" },
+    [I.boxB]  = { "Fixture Strongbox" },
+    [I.husk]  = { nil, 1 },
+    [I.scrap] = "Fixture Scrap",
+  }
   -- spm["c<id>" | "o<id>"] = { [uiMap] = { x, y, x, y, ... } } on 0..1000
   D.spm = {
     ["c" .. I.gnoll] = { [I.mapA] = { 500, 250, 123, 877 } },
     ["o" .. I.crate] = { [I.mapB] = { 1000, 0 } },
+    ["o" .. I.boxA]  = { [I.mapA] = { 100, 200 } },
+    ["o" .. I.boxB]  = { [I.mapB] = { 300, 400 } },
   }
   -- skin[item] = { npcId, chancePer10000, ... } (flat pairs; 0 = rate unknown)
   D.skin = { [I.leather] = { I.gnoll, 2500, I.kobold, 7500 }, [I.hide] = { I.gnoll, 0 } }

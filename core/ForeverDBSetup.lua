@@ -37,4 +37,6 @@ NS.ForeverDB = FDB or {
     RewardFrom    = function() return {} end,
     StartsQuest   = none,
     SkinnedFrom   = function() return {} end,
+    -- minor 3 (LibKa0s v1.116.0, Item Search feedback): an object's name, nil when unavailable.
+    Object        = none,
 }
