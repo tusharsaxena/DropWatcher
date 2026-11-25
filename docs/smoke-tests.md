@@ -4590,7 +4590,7 @@ with a magnifier, both in the skin's accent, then the sections, then `Ctrl-Alt-D
 Search` (or whatever key is bound). Repeat on a chat link (click one: `ItemRefTooltip`), an item in
 the loot window, and another addon's item tooltip such as Loot History's History rows → the same
 block, once each. Hover the same item twice → never two blocks. Fail: a missing or doubled block, a
-block on a non-item tooltip, or a Lua error. Result:
+block on a non-item tooltip, or a Lua error. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-2. The sections and their marks.** Hover an item with drop sources, a vendor, a quest
 that asks for it and a recipe that uses it (Linen Cloth is a good start) → **Drops from** lists the
@@ -4599,47 +4599,47 @@ cheapest vendor with its price; **Quests** `!` for one in your log, `?` for one 
 for one done (hidden while Hide completed quests is on, the default); **Crafting** a filled dot in
 the skill-up color (orange, yellow, green, gray against your rank) for a recipe you know, a dashed
 ring for one you do not, the profession on the right. Fail: a wrong mark, a section with no rows, or
-an empty block. Result:
+an empty block. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-3. Shift-only, the title, the hint and comparison tooltips.** Settings › Item Search ›
 Item tooltip: tick Only while holding Shift → no block until you hold Shift as the tooltip opens.
 Untick Separator and title line → no rule and no title; untick Keybind hint line → no hint (also
 gone while the key is unbound). Comparison tooltips too off (the default): Shift-hover gear to
-compare → the comparison tooltips carry no block; on → they do. Result:
+compare → the comparison tooltips carry no block; on → they do. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-4. Before and after the load, and a login in combat.** `/reload` and hover an item at
 once → no block for the first seconds (the Item Search window's footer reads `ForeverDB: loading…`); after about 5
 seconds → the block. Log in (or `/reload`) in combat → no load until combat ends, then the block
 appears within a few seconds. No hitch on a hover. Fail: a block before the load, a load in combat,
-or a hitch on hover. Result:
+or a hitch on hover. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-5. Without ForeverDB.** Disable ForeverDB in the addon list and `/reload` → no block on
 any tooltip, not even Crafting. Open the window (Ctrl-Alt-D) → a search by id (`2589`) shows the item
 and its CRAFTING rows; the window says `ForeverDB not installed: drop sources, quests and name search
-are unavailable`, and a name search finds nothing. No Lua error. Result:
+are unavailable`, and a name search finds nothing. No Lua error. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-6. Retail: absent.** Client: Retail. No block on any item tooltip, no magnifier in the
 window's title bar, no Item Search settings page, no Item Search row under General › Keybindings,
 `/dw search` is not a command (`/dw help` lists none), and a key bound to Item Search under the
-client's Key Bindings does nothing. Result:
+client's Key Bindings does nothing. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-7. The ways in.** The magnifier, the first mark in the main window's title bar (its
 tooltip `Item Search`) → opens the Item Search window, and again closes it. `/dw search` → opens it
 empty, the box focused; `/dw search 2589` → shows Linen Cloth at once; `/dw search linen` → the
 matches for linen. The window wears the skin, drags by its title bar (not while locked), keeps its
 place over a `/reload`, closes on Escape, and its lock · settings · close marks work (the gear opens
-Settings › Item Search). Result:
+Settings › Item Search). Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-8. The key, with and without a hover.** With nothing under the pointer, Ctrl-Alt-D →
 the window opens empty with the search box focused; again → it closes. Hover an item in your bags,
 Ctrl-Alt-D → the window opens on that item; hover the same item, Ctrl-Alt-D → it closes; open it,
 hover a different item, Ctrl-Alt-D → it switches to that item. A chat link's tooltip and the
-comparison tooltips count as a hover. Result:
+comparison tooltips count as a hover. Result: Passed (owner, 2026-11-25). The wrong default chord (Ctrl-Alt-D bound as `CTRL-ALT-D`, which no key press matches), reported in the owner's feedback the same day, is fixed by ISF-DW-01 (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`).
 
 **ITEM-SEARCH-9. Name and id search.** Type a name (`linen`) → after a short pause the matches list
 icons, names in their quality color and ids, prefix matches first; click one → it shows; Enter → the
 first match shows. Type digits → that id shows, even for an item the client has not cached yet
-(it fills in a moment later). Clear empties the box and the list. Result:
+(it fills in a moment later). Clear empties the box and the list. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-10. The detail pane, bars and pins.** On an item with drop sources → DROPS FROM lists
 every source with its level range, zone, a bar scaled to the likeliest and its %, and a pin on rows
@@ -4647,47 +4647,47 @@ with a known spot; click a pin → a map waypoint there (TomTom's arrow when Tom
 World drop row shows its minimum level. SOLD BY lists vendors with the lowest price; QUESTS marks,
 titles, zones and states; CRAFTING the breakpoints against your skill, or `learnable at N`; ALSO
 Reward from, Starts quest and Skinned from. The footer names ForeverDB's version and state and the
-key. Result:
+key. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-11. Recent searches.** Show three items → they head Recent searches, newest first, at
 most 10, each clickable, and still there after a `/reload` and on another character. Untick Remember
-recent searches → the list hides and nothing new is added. Result:
+recent searches → the list hides and nothing new is added. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-12. Link in chat.** Show an item, click Link in chat → the item's link goes into the
-open chat box, or a new one opens with it. Result:
+open chat box, or a new one opens with it. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-13. The default key never steals.** On a new character with Ctrl-Alt-D unbound →
 after the first login Item Search is on Ctrl-Alt-D. On a character where Ctrl-Alt-D already runs
 something else → that binding stays and Item Search has no key (the hint line is gone). Clear the key
-by hand and `/reload` → it stays cleared. Result:
+by hand and `/reload` → it stays cleared. Result: Passed (owner, 2026-11-25). The wrong default chord (Ctrl-Alt-D bound as `CTRL-ALT-D`, which no key press matches), reported in the owner's feedback the same day, is fixed by ISF-DW-01 (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`).
 
 **ITEM-SEARCH-14. The settings page.** Settings › Item Search (after Alerts) → tabs Item tooltip,
 Item Search window, Keybindings. Item tooltip: Add Item Search to item tooltips alone on its line,
 its knobs dimmed while it is off; the section switches, Drop sources shown (1 to 10; 5 → the tooltip
 names 5) and Hide completed quests; then Section order: drag Quests above Drops from by its handle →
 the tooltip writes Quests first, at once. Defaults → every row and the order back to the defaults,
-the key untouched. Result:
+the key untouched. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-15. The window's settings.** Item Search window: untick Use the skin's color → the
 bars draw Bar color; Density Compact → shorter rows; Font size 16 → larger text; untick Zone and
 level columns → those columns go; untick Waypoint pins → no pins. Untick Enable the Item Search
 window → an open window closes and Ctrl-Alt-D, the magnifier and `/dw search` do not open it. Untick
 both it and Add Item Search to item tooltips and `/reload` → ForeverDB never loads
-(`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`). Result:
+(`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`). Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-16. The Keybindings tab.** Settings › Item Search › Keybindings → one row, Item Search,
 showing the bound key; click it and press a key → bound and saved, and General › Keybindings and the
-client's Key Bindings show the same key; Clear unbinds it. Result:
+client's Key Bindings show the same key; Clear unbinds it. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-17. The old chip is gone.** Open a drop's detail card (`/dw test`) → the header has no
 `Drops from` / `Sold by` / `World drop` chip, and opening cards loads nothing. Settings › Window ›
 Layout → Mode then Tables, no Detail card heading. A profile that had Show where it comes from
-unticked loads without error. Result:
+unticked loads without error. Result: Passed (owner, 2026-11-25).
 
 **ITEM-SEARCH-18. The profession-window fallback.** Open a profession window (out of combat) →
 after a second, any recipe the shipped table lacks is learned: hover one of its reagents → the
 recipe now shows under Crafting. Nothing is read
-in combat or with Item Search off. Result:
+in combat or with Item Search off. Result: Passed (owner, 2026-11-25).
 
 ## Pending sign-off
 
@@ -4752,7 +4752,7 @@ On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97,
 
 Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`.
 
-Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed.
+Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`. ITEM-SEARCH-8 and ITEM-SEARCH-13 also note the default key's wrong chord, which the owner's feedback the same day reported and ISF-DW-01 fixes.
 
 ### Review 2026-10-14 (M24) sign-off
 
