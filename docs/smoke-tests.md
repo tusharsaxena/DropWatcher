@@ -4967,7 +4967,8 @@ Rows per section, Settings › Item Search › Item tooltip → Rows per section
 item with more than three entries in a section (Linen Cloth's Drops from and Crafting) → every section
 (Drops from, Gathered from, Sold by, Quests, Crafting, Skinned from) shows at most 3 rows, then
 `and N more`. Set Rows per section to 8 → up to 8 show; `/reload` → still 8. Defaults → back to 3. A
-profile that stored another count before this build (say 10) keeps it. Result:
+profile that stored another count before this build (say 10) keeps it. One that chose exactly 5, the
+old default, stored nothing (AceDB keeps no value equal to the default), so it now reads 3. Result:
 
 **ITEM-SEARCH-45. Where a recipe you don't know is learned (ISR3-DW-08).** On a Cooking character
 that does not know Roast Raptor, open the Item Search window on Raptor Flesh (`/dw search 12184`), with
