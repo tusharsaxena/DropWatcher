@@ -150,6 +150,31 @@ local function whereOf(kind, id, ctx)
     return spot, zone
 end
 
+-- A drop source's spots: a merged object's (spec §2: `ids`, same-named objects) are the union of
+-- every part's, map by map; any other source's are ctx.spots' answer for its own id.
+local function dropSpots(s, ctx)
+    if type(ctx.spots) ~= "function" then return nil end
+    local ids = s.kind == "object" and list(s.ids) or {}
+    if #ids < 2 then return ctx.spots(s.kind, s.id) end
+    local out, any = {}, false
+    for _, id in ipairs(ids) do
+        for map, points in pairs(list(ctx.spots("object", id))) do
+            local into = out[map] or {}
+            out[map] = into
+            for _, p in ipairs(list(points)) do into[#into + 1] = p; any = true end
+        end
+    end
+    return any and out or nil
+end
+
+-- `{ spot, zone }` for a drop source, its spots through dropSpots.
+local function dropWhere(s, ctx)
+    if s.kind ~= "npc" and s.kind ~= "object" then return nil, nil end
+    local spot = ISV.SpotOf(dropSpots(s, ctx))
+    local zone = spot and type(ctx.mapName) == "function" and ctx.mapName(spot.map) or nil
+    return spot, zone
+end
+
 --- A level range as the window writes it: `10-12`, `10`, or nil.
 --- @return string|nil
 function ISV.LevelText(minLevel, maxLevel)
@@ -161,7 +186,8 @@ end
 
 -- ── the detail pane's rows ──────────────────────────────────────────────────────────────────
 
---- DROPS FROM: every source, most likely first, `{ name, named, level, zone, pct, fraction, spot }`
+--- DROPS FROM: every source, most likely first, `{ name, named, level, zone, pct, fraction, spot,
+--- known, kind, kinds }` (kinds: how many object ids a merged object row stands for, spec §2)
 --- (fraction = chance / the top chance, 0 for an unknown rate), then the World drop row
 --- `{ world = true, name, level }`. `ctx`: `{ spots(kind, id), mapName(map) }`.
 --- @param facts table NS.ItemSearch.Get's answer
@@ -175,12 +201,12 @@ function ISV.DropRows(facts, ctx)
     end
     local out = {}
     for _, s in ipairs(list(facts.drops)) do
-        local spot, zone = whereOf(s.kind, s.id, ctx)
+        local spot, zone = dropWhere(s, ctx)
         local chance = num(s.chance)
         out[#out + 1] = {
             name = s.name, named = s.named == true, level = ISV.LevelText(s.minLevel, s.maxLevel), zone = zone,
             pct = IS.Percent(chance) or L["rate unknown"], fraction = (chance and top > 0) and chance / top or 0,
-            spot = spot, known = chance ~= nil,
+            spot = spot, known = chance ~= nil, kind = s.kind, kinds = s.ids and #s.ids or nil,
         }
     end
     if num(facts.worldMinLevel) then

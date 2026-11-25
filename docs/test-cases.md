@@ -967,7 +967,7 @@ Total.
 - recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: on Retail nothing is built and the table answers nil
 
-### test_item_search.lua (29)
+### test_item_search.lua (33)
 
 - item search: the skill-up color is orange, yellow, green, gray at the classic breakpoints
 - item search: a race or class mask lets in its bits, and nil or 0 means any
@@ -998,6 +998,10 @@ Total.
 - item search: the first read of a session drops learned entries the shipped table covers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: on Retail it is inert: no default, no read, no timer, no load, no learner
 - item search: the detail card draws exactly the cells' chips, ForeverDB installed, and opening it loads nothing
+- item search: same-named objects merge into one row: the highest chance, every id, creatures untouched
+- item search: an object with no name is dropped and counted, never an Object <id> row
+- item search: the fake's strongboxes are one row at the higher chance; the husk and the scrap go (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search: a merged object's window row unions its parts' spots and counts its kinds
 
 ### test_item_search_tip.lua (17)
 
@@ -3318,7 +3322,7 @@ Total.
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
 | test_recipe_reagents.lua | 1 |
-| test_item_search.lua | 16 |
+| test_item_search.lua | 19 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 9 |
 | test_item_search_key.lua | 3 |
@@ -3416,5 +3420,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 70 |
-| **Total** | **2774** |
+| Skipped | 71 |
+| **Total** | **2777** |

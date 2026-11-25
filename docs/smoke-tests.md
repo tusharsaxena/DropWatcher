@@ -4702,6 +4702,12 @@ however the client writes it), and the tooltip's last line names it, `Alt-Ctrl-D
 Search`. Clear the key → `/reload` → it stays cleared and the tooltip has no key line. On a
 character where Alt-Ctrl-D already runs something else → that binding stays. Result:
 
+**ITEM-SEARCH-20. Objects have names (W15).** Search for an item that drops from chests (for example
+`/dw search Large Solid Chest`'s contents, or any item whose Drops from used to list `Object 153462`)
+→ every object row has a real name, a chest that comes under several spawn ids is one row (its chance
+the highest of them), and no `Object <number>` row is left in the tooltip or the window. With
+`/dw debug on`, the item's first look logs how many unnamed objects were left out. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

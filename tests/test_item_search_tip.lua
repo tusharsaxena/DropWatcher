@@ -107,7 +107,7 @@ test("item search tip: separator, title, Drops from and Sold by, in order; Also 
     assertTrue(b[2]:find("Drop Watcher · Item Search", 1, true) ~= nil and b[2]:find("icons\\search:", 1, true) ~= nil,
         "the title with the magnifier")
     assertEqual(b[3], "Drops from")
-    assertEqual(b[4], ("  Object %d | 100%%"):format(IDS.crate))
+    assertEqual(b[4], "  Fixture Crate | 100%")
     assertEqual(b[5], "  Fixture Gnoll (10-12) | 25%")
     assertEqual(b[6], "  Fixture Coffer | 5.0%")
     assertEqual(b[7], "  World drop | level 8+")
@@ -175,7 +175,7 @@ test("item search tip: the drop count setting caps the rows, the rest is \"and N
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
-    assertEqual(b[4], ("  Object %d | 100%%"):format(IDS.crate)); assertEqual(b[5], "  World drop | level 8+")
+    assertEqual(b[4], "  Fixture Crate | 100%"); assertEqual(b[5], "  World drop | level 8+")
     assertEqual(b[6], "  and 3 more")
 end, FOREVER_ONLY)
 

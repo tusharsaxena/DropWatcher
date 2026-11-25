@@ -210,6 +210,9 @@ function IS.Get(itemID, opts)
     if not static then
         static = IS.Static(itemID, staticContext(state))
         if not static then return nil end
+        if (static.unnamedObjects or 0) > 0 then
+            NS.Debug("SEARCH", "item %d: %d unnamed object source(s) left out", itemID, static.unnamedObjects)
+        end
         if static.item.name then cache[itemID] = static end
     end
     return IS.Live(static, liveContext(opts))

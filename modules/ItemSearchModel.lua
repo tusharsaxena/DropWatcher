@@ -6,7 +6,7 @@ local _, NS = ...
 --
 -- IS.Facts(itemID, ctx) answers
 --   { id, item, drops, dropMore, worldMinLevel, vendors, vendorPrice, quests, crafting,
---     rewardFrom, startsQuest, skinnedFrom, fdb }
+--     rewardFrom, startsQuest, skinnedFrom, unnamedObjects, fdb }
 -- in two halves. IS.Static(itemID, ctx) is the part that cannot change in a session (ForeverDB is
 -- static data, the recipe table is shipped, a quest's masks and the player's race and class are
 -- fixed), so modules/ItemSearch.lua keeps it per item. IS.Live(static, ctx) copies it and adds what
@@ -30,8 +30,15 @@ local _, NS = ...
 -- DROPS AND VENDORS are SF-DW-01's model, moved here when Item Search retired that feature's
 -- detail card chip (modules/ItemSources.lua, removed in IS-DW-07): the creatures, objects and
 -- containers merged into one list, a known chance first, the higher first, an unknown rate last,
--- then creature, object, container, then the id. A creature carries its level range; an object its
--- stand-in name (the library reads no object name).
+-- then creature, object, container, then the id. A creature carries its level range.
+--
+-- OBJECTS (Item Search feedback spec §2, W15) are named through the reader's Object(id) (LibKa0s
+-- v1.116.0, ForeverDB minor 3). An object with no name is DROPPED, from the tooltip and the window
+-- alike: never an "Object <id>" row; how many went is the static facts' `unnamedObjects`, which
+-- modules/ItemSearch.lua writes to the debug log. Objects with the SAME NAME become one row
+-- (IS.MergeNamedObjects): the same chest under several spawn ids. The row keeps the highest chance
+-- of its parts (summing them would mislead) and `ids`, every object id it stands for, so the window
+-- unions their map spots and its row tooltip counts them (`#ids`, "6 kinds of Large Solid Chest").
 --
 -- CRAFTING is the recipes that use the item as a reagent: the shipped table's (byReagent) in its
 -- order, then the profession window's learned ones the table lacks, by spell id. A row is
@@ -103,7 +110,16 @@ function IS.MergeSources(src)
     return out
 end
 
--- A source's name, level range and whether the name is real, from the reader.
+-- An object's name from the reader's Object(id) (minor 3), or nil: no row, no string, or an empty one.
+local function objectName(db, id)
+    local o = type(db.Object) == "function" and db.Object(id) or nil
+    local name = type(o) == "table" and o.name or nil
+    if type(name) ~= "string" or name == "" then return nil end
+    return name
+end
+
+-- A source's name, level range and whether the name is real, from the reader; nil for an object
+-- with no name (dropped, spec §2).
 local function describe(db, s)
     if s.kind == "npc" then
         local n = db.NPC(s.id)
@@ -117,9 +133,36 @@ local function describe(db, s)
         if type(it) == "table" and it.name then s.name, s.named = it.name, true; return s end
         s.name, s.named = L["Item %d"]:format(s.id), false
     else
-        s.name, s.named = L["Object %d"]:format(s.id), false
+        local name = objectName(db, s.id)
+        if not name then return nil end
+        s.name, s.named, s.ids = name, true, { s.id }
     end
     return s
+end
+
+--- Same-named objects of a described drop list merged into one row (spec §2): the first one in the
+--- list's order stands for them, with the highest chance of its parts (an unknown rate only when
+--- every part's is) and `ids`, every object id in list order. Creatures and containers pass
+--- untouched. A new list, sorted as IS.MergeSources sorts.
+--- @param drops table rows `{ kind, id, chance, name, ids }`
+--- @return table
+function IS.MergeNamedObjects(drops)
+    local out, byName = {}, {}
+    for _, s in ipairs(list(drops)) do
+        local first = s.kind == "object" and s.name and byName[s.name] or nil
+        if first then
+            for _, id in ipairs(list(s.ids)) do first.ids[#first.ids + 1] = id end
+            if s.chance and (not first.chance or s.chance > first.chance) then first.chance = s.chance end
+        else
+            if s.kind == "object" and s.name then
+                s.ids = s.ids or { s.id }
+                byName[s.name] = s
+            end
+            out[#out + 1] = s
+        end
+    end
+    table.sort(out, before)
+    return out
 end
 
 local function npcName(db, id)
@@ -257,7 +300,12 @@ end
 -- The ForeverDB half of the static facts, onto `out`.
 local function fromForeverDB(out, db, itemID, ctx)
     local src = db.ItemSources(itemID)
-    for _, s in ipairs(IS.MergeSources(src)) do out.drops[#out.drops + 1] = describe(db, s) end
+    local drops, unnamed = {}, 0
+    for _, s in ipairs(IS.MergeSources(src)) do
+        local d = describe(db, s)
+        if d then drops[#drops + 1] = d else unnamed = unnamed + 1 end
+    end
+    out.drops, out.unnamedObjects = IS.MergeNamedObjects(drops), unnamed
     out.worldMinLevel = type(src) == "table" and num(src.worldMinLevel) or nil
     out.vendors = vendorsOf(db, src)
     local price, npc = db.VendorPrice(itemID)

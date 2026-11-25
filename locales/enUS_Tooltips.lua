@@ -521,7 +521,6 @@ L["already %s"] = "already %s"
 -- modules/ItemSearchView.lua; SF-DW-01's detail card chip held them until IS-DW-07 retired it)
 L["Creature %d"] = "Creature %d"
 L["Item %d"] = "Item %d"
-L["Object %d"] = "Object %d"
 L["rate unknown"] = "rate unknown"
 L["Sold by"] = "Sold by"
 L["World drop"] = "World drop"
