@@ -4847,7 +4847,7 @@ the table follows smoothly, with no stutter; sort a column and switch tabs → i
 ### Item Search round 3
 
 The Item Search round 3 run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00
-to ISR3-DW-08, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
+to ISR3-DW-09, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
 also want the ForeverDB_Full addon installed. Where a check here contradicts an earlier ITEM-SEARCH
 row (the tooltip's title and rule, the quest marks, the recipe glyphs, a creature's red, the sort
 arrow, the vendor price, the key over the same item and over a chat link, the settings rows), this
@@ -4983,6 +4983,20 @@ shift-click it → the recipe item's link in chat. The item tooltip's Crafting s
 source). Without ForeverDB (disable it, `/reload`) the row's Status is the recipe item's name and its
 tooltip says ForeverDB is not loaded. Result:
 
+**ITEM-SEARCH-46. Every Item Search tooltip opens where the Ka0s rule puts it (ISR3-DW-09).** With
+ForeverDB loaded, open the Item Search window on Raptor Flesh (`/dw search 12184`), Crafting tab, the
+window in the screen's left half. Hover a Makes cell for an item the client has not loaded yet (its
+tooltip first reads Retrieving item information, as Roast Raptor's did in the owner's Image #115) →
+the item's tooltip opens to the right of the window, its top level with the row, and stays there once
+the item loads and the tooltip grows; it never jumps to the screen's top right or over the window. Move the window to the screen's right
+edge and hover it again → it opens left of the window instead. The same for a match on the left, the
+header's icon and name, a row on every tab, a pin and a column title: each beside the window, level
+with its row. Hover a tab, Clear, the section header's Filter, Sort and Reset, the My professions
+chip, the matches' Sort, and the title bar's settings and close → each tooltip sits centered just
+above its control. Hold Shift over a Makes cell that makes gear → the comparison tooltips open
+further out on the same side, never back over the window. Hover Drop Watcher's waypoint arrow → its
+tooltip opens beside the arrow. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
@@ -5050,7 +5064,7 @@ Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-
 
 Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08 and ISF-REV, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-30, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 7 and 8's key and title, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-13's key, ITEM-SEARCH-14 and 15's rows), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-19 doubles as the probe of how GetBindingAction answers the stored dead chord, and ITEM-SEARCH-26 and 27 (the arrow's map position and facing on Forever) are owed before the run is finalized. An agent never marks one passed.
 
-Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-08 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-45, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
+Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-09 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-46, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

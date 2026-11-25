@@ -845,3 +845,175 @@ test("item search window: a stand-down closes it", function()
     -- red under: a window left open while the addon is off
     assertFalse(NS.ItemSearchWindow.IsShown())
 end, FOREVER_ONLY)
+
+-- ── the window: where every tooltip opens (ISR3-DW-09) ──────────────────────────────────────
+
+-- The tooltip anchor audit (docs/item-search-tooltips.md): every tooltip the Item Search window
+-- shows, by where its element sits (standalone-windows, *Tooltip placement*). The CHROME are the
+-- tabs, the Clear button, the section headers' marks and chips, and the title bar's marks:
+-- PlaceAttached on the control itself. Every other one is a BODY element (a row, a pin, a column
+-- label, the Makes cell, a match, the item header's icon and name): PlaceBeside on the row it sits
+-- in, beside its window group. All of them owned at ANCHOR_NONE.
+
+local GAP = 2   -- TIP_GAP, the standard's and the library's
+
+-- Record every widget AttachTooltip hooks from here on: { w, place, file }.
+local function tipRecorder(NS)
+    local list, real = {}, NS.Window.AttachTooltip
+    NS.Window.AttachTooltip = function(w, fn, place)
+        list[#list + 1] = { w = w, place = place,
+            file = tostring(debug.getinfo(2, "S").source):match("modules/([%w_]+)%.lua") or "?" }
+        return real(w, fn, place)
+    end
+    return list
+end
+
+local function outermost(f, UIParent)
+    for _ = 1, 32 do
+        local p = f.GetParent and f:GetParent()
+        if type(p) ~= "table" or p == f or p == UIParent then return f end
+        f = p
+    end
+    return f
+end
+
+-- The addon with First Aid known, its window built on Linen (the Crafting tab: Makes cells).
+local function craftingWindow(record)
+    local list
+    local NS, m = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 40, skillID = 129 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+    end })
+    if record then list = tipRecorder(NS) end
+    NS.ItemSearchWindow.ShowItem(LINEN)
+    return NS, m, list
+end
+
+-- A Crafting row whose Makes cell stands for an item, and that cell's overlay.
+local function makesCell(NS)
+    for _, row in ipairs(NS.ItemSearchWindow.TableRows()) do
+        if row.link and row.link:IsShown() and row.link.itemID then return row, row.link end
+    end
+end
+
+test("item search tooltips: the chrome opens attached to its control, every body tooltip beside the window", function()
+    local NS, m, list = craftingWindow(true)
+    local W = NS.ItemSearchWindow
+    W.SlashSearch("blade")
+    W.ShowItem(LINEN)
+    for _, key in ipairs({ "drops", "vendors", "quests", "skinned", "crafting" }) do W.SelectTab(key) end
+    local f = W.Frame()
+    local chrome = { [f.clearButton] = "Clear", [f.section.chip] = "the My professions chip",
+        [f.matchHead.chip] = "the matches' chip" }
+    for key, tab in pairs(f.tabs) do chrome[tab] = "the " .. key .. " tab" end
+    for key, b in pairs(f.section.marks) do chrome[b] = "the section's " .. key .. " mark" end
+    for key, b in pairs(f.matchHead.marks) do chrome[b] = "the matches' " .. key .. " mark" end
+    local spy = T.tipSpy(m)
+    local seen = { chrome = 0, body = 0 }
+    for i, r in ipairs(list) do
+        local what = r.file .. " #" .. i .. (chrome[r.w] and (" (" .. chrome[r.w] .. ")") or "")
+        local want = (chrome[r.w] or r.file == "WindowTitleBar") and "chrome" or "body"
+        -- red under: the Clear button, a tab or a header mark placed as a body element, or a row,
+        -- a pin or a column label attached to itself
+        assertEqual(r.place or "body", want, what)
+        local lines = r.w.tooltip and { r.w.tooltip() } or {}
+        if #lines > 0 then
+            spy.reset()
+            m.GameTooltip.__anchor = nil
+            r.w:__fire("OnEnter")
+            local c = spy.first()
+            assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", what)
+            assertTrue(c ~= nil, what .. ": a placer was called")
+            if want == "chrome" then
+                assertEqual(c.fn, "PlaceAttached", what)
+                assertTrue(c.el == r.w, what .. ": attached to the control itself")
+            else
+                assertEqual(c.fn, "PlaceBeside", what)
+                assertTrue(c.el == NS.RowTooltip.RowOf(r.w), what .. ": level with the row it sits in")
+                assertTrue(c.group.main == outermost(r.w, m.UIParent), what .. ": beside its window group")
+            end
+            r.w:__fire("OnLeave")
+            seen[want] = seen[want] + 1
+        end
+    end
+    assertTrue(seen.chrome >= 8, "the sweep hovered " .. seen.chrome .. " chrome controls")
+    assertTrue(seen.body >= 10, "the sweep hovered " .. seen.body .. " body elements")
+    -- The item tooltips: the Makes cell, a match row, the header's icon and name.
+    local row, link = makesCell(NS)
+    assertTrue(link ~= nil, "a Crafting row's Makes cell stands for an item")
+    local items = { { link, row, "the Makes cell" }, { f.icon, f.icon, "the header's icon" },
+        { f.nameButton, f.nameButton, "the header's name" } }
+    local match = W.MatchRows()[1]
+    if match then items[#items + 1] = { match, match, "a match row" } end
+    assertTrue(#items == 4, "a match row to hover")
+    for _, it in ipairs(items) do
+        spy.reset()
+        m.GameTooltip.__anchor = nil
+        it[1]:__fire("OnEnter")
+        local c = spy.first()
+        assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", it[3])
+        assertTrue(c ~= nil and c.fn == "PlaceBeside", it[3] .. ": the body rule")
+        assertTrue(c.el == it[2], it[3] .. ": level with its row")
+        assertTrue(c.group.main == f, it[3] .. ": beside the window")
+        it[1]:__fire("OnLeave")
+    end
+end, FOREVER_ONLY)
+
+-- The window at 600..1500 (bottom 100, top 800) on a 1920 x 1080 screen, a 320 x 100 tooltip; the
+-- Makes row's top at 600.
+local function makesOnScreen()
+    local NS, m = craftingWindow(false)
+    local scr = T.tipScreen(m, { width = 1920, height = 1080 })
+    local f = NS.ItemSearchWindow.Frame()
+    T.tipRect(f, 600, 100, 1500, 800)
+    local row, link = makesCell(NS)
+    T.tipRect(row, 600, 580, 1500, 600)
+    local tip = m.GameTooltip
+    tip.IsOwned = function(self, owner) return self.__owner == owner end
+    return NS, m, scr, f, row, link, tip
+end
+
+test("item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row", function()
+    local _, m, _, _, _, link = makesOnScreen()
+    link:__fire("OnEnter")
+    local pts, rel, x, y = T.tipPoint(m)
+    -- red under: the client's default spot, or the cell's ANCHOR_RIGHT corner (the owner's Image #115)
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "its TOPLEFT on the screen")
+    assertTrue(rel == m.UIParent, "one absolute point")
+    assertEqual(x, 1500 + GAP, "a gap past the window's right edge")
+    assertEqual(y, 600, "level with the row's top")
+end, FOREVER_ONLY)
+
+test("item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again", function()
+    local _, m, _, _, _, link, tip = makesOnScreen()
+    link:__fire("OnEnter")
+    -- the client re-anchors it on the cell's corner as the item's data arrives (the comparison
+    -- anchor type): the next frame puts it back
+    tip:ClearAllPoints()
+    tip:SetPoint("BOTTOMLEFT", link, "TOPRIGHT", 0, 0)
+    m.advance(0.01)
+    local pts, rel, x, y = T.tipPoint(m)
+    -- red under: an item tooltip placed once, at Show, and left where the client moved it
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "back beside the window")
+    assertTrue(rel == m.UIParent); assertEqual(x, 1500 + GAP); assertEqual(y, 600)
+    -- the item arrives and the tooltip grows past the screen's right edge: left of the window now
+    tip.GetWidth = function() return 500 end
+    tip:__fire("OnSizeChanged", 500, 100)
+    pts, rel, x, y = T.tipPoint(m)
+    -- red under: the first size's spot, which the screen clamp slides back over the window
+    assertEqual(pts, "TOPRIGHT>BOTTOMLEFT", "its TOPRIGHT, left of the window")
+    assertTrue(rel == m.UIParent); assertEqual(x, 600 - GAP); assertEqual(y, 600)
+    -- another owner takes the tooltip: a size change no longer moves it for the cell
+    tip:SetOwner(m.UIParent, "ANCHOR_NONE")
+    tip:SetPoint("CENTER", m.UIParent, "CENTER", 0, 0)
+    tip:__fire("OnSizeChanged", 500, 120)
+    assertEqual((T.tipPoint(m)), "CENTER>CENTER", "left where its new owner put it")
+    -- hidden: it stops following too, though the cell owns it still
+    link:__fire("OnEnter")
+    tip:__fire("OnHide")
+    tip:ClearAllPoints()
+    tip:SetPoint("CENTER", m.UIParent, "CENTER", 0, 0)
+    tip:__fire("OnSizeChanged", 500, 140)
+    m.advance(0.01)
+    assertEqual((T.tipPoint(m)), "CENTER>CENTER", "OnHide ends it")
+end, FOREVER_ONLY)

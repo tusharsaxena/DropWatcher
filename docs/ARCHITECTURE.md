@@ -522,6 +522,52 @@ No addon file names `ANCHOR_CURSOR`, a corner anchor or `GetCursorPosition` for 
 | The library's own windows (debug console, perf, sim and step panels, skin picker, icon browser, Copy window, dropdown menus, drag handles) | LibKa0s, since v1.105.0 | A window the library draws is the library's to move |
 | The game's own tooltips over Blizzard frames (the group-loot roll frame the popup's side card sits beside) | The client | Blizzard's frames; the addon writes no lines onto them |
 
+### The Item Search window's tooltips (the ISR3-DW-09 audit, 2026-11-26)
+
+The owner, on the round 3 smoke (Image #115): "The makes tooltip is not in the right position as per
+ka0s standard (should be to the right). Audit all tooltips for this Drop Watcher Item Search". Every
+tooltip the Item Search window (WoW Forever only), its settings page and its waypoint arrow show is
+listed here with the call that places it. Each one was already owned at `ANCHOR_NONE` and placed
+after `Show()` by its class, so the audit found no tooltip on the cursor, at a corner, or over the
+window by its first placement. What it did find: an **item** tooltip is placed once, for the size it
+has at `Show()`. An item the client has not loaded yet (a recipe's product the player never saw, as
+the Makes cell's Roast Raptor) first shows a short "Retrieving item information" tooltip. The client
+refills it when the item arrives, and it grows past the spot it was given. The screen clamp then slides
+it back over the window, and the comparison anchor type the placer set (`ANCHOR_RIGHT`) re-anchors it
+on the cell's corner. The fix is `RowTooltip.PlaceItemTip`: the body placement, then the same placement
+again on the tooltip's `OnSizeChanged` and once on the next frame, for as long as the same owner owns
+it (an `OnHide` or another owner ends it). It is `LibKa0s-Tooltip-1.0`'s own advice for late growth
+(`Replace`, "item data arriving after Show").
+
+| # | Tooltip | Where | Class | Placed by, before | Now |
+|---|---|---|---|---|---|
+| 1 | A Crafting row's **Makes** cell (the product's item tooltip) | `modules/ItemSearchGrid.lua:306` (`newLink`) → `ISG.ItemTip` `:71` | body | `PlaceOrFallback` once, at `Show()`; it moved when a not-yet-loaded item grew | **Fixed**: `PlaceItemTip`, beside the window and level with its row after the item loads too |
+| 2 | A **match** row (left pane) | `modules/ItemSearchGrid.lua:615` → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
+| 3 | The item header's **icon** and **name** | `modules/ItemSearchWindow.lua:372` (`linkable`, on `f.icon` `:391` and `f.nameButton` `:397`) → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
+| 4 | A **container** row (Drops from, a row whose tip is an item) | `modules/ItemSearchGrid.lua:257` (`onRowEnter`) → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
+| 5 | Every other **table row** (Drops from, Gathered from, Sold by, Quests, Crafting with ISR3-DW-08's source lines, Skinned from) | `modules/ItemSearchGrid.lua:332` → `Window.AttachTooltip` (`modules/Window.lua:192`) | body | `PlaceBeside` on the row, beside the window group (text only, so it does not grow) | compliant, unchanged |
+| 6 | A row's waypoint **pin** | `modules/ItemSearchGrid.lua:294` | body | `PlaceBeside` on its row | compliant, unchanged |
+| 7 | A **column title** | `modules/ItemSearchGrid.lua:506` | body (a list's column-header row) | `PlaceBeside` on the header row | compliant, unchanged |
+| 8 | The section headers' **Filter**, **Sort** and **Reset** marks, and the matches' **Sort** | `modules/ItemSearchGrid.lua:156` (`ISG.Mark`, built for `f.section` and `f.matchHead`) | chrome (the tab's filter bar) | `PlaceAttached`, centered above the mark | compliant, unchanged |
+| 9 | The **My professions** chip (and the matches' header chip slot) | `modules/ItemSearchGrid.lua:207` | chrome (a filter-bar control) | `PlaceAttached` | compliant, unchanged |
+| 10 | The **tabs** | `modules/ItemSearchWindow.lua:434` | chrome | `PlaceAttached` | compliant, unchanged |
+| 11 | **Clear**, beside the search box | `modules/ItemSearchWindow.lua:326` | chrome (a filter-bar control) | `PlaceAttached` | compliant, unchanged |
+| 12 | The title bar's **settings** and **close** marks | `modules/ItemSearchWindow.lua:299` → `NS.WindowTitleBar.Marks` (LibKa0s-Widgets' `HeaderButtons`) | chrome | the library's `PlaceAttached`, above the mark | compliant, unchanged |
+| 13 | The **footer** (ForeverDB's state) and its resize grip | `modules/ItemSearchWindow.lua:495` (`NS.MakeFooter`) | chrome | no tooltip of Drop Watcher's; the library's footer and grip | compliant, unchanged |
+| 14 | The **waypoint arrow** (a HUD display of one icon) | `modules/ItemSearchWaypoint.lua:129` (`onEnter`) | body (its group is itself) | `PlaceOrFallback`, beside the arrow (text only) | compliant, unchanged |
+| 15 | The arrow's right-click menu and the Filter, Sort and matches' Sort menus' entries | `libs/LibKa0s/WaypointArrow.lua:1022`; `modules/ItemSearchWindow.lua:344`, `:468`, `:470` (`NS.ContextMenu`) | the library's menu | LibKa0s-Widgets' menu (library-placed since v1.105.0) | out of scope: a window the library draws |
+| 16 | Item Search's block on every item tooltip (bags, chat links, the loot window, other addons') | `modules/ItemSearchTip.lua` (`Compat.HookItemTooltips`, `core/CompatSearch.lua:351`) | lines on a tooltip the client anchors | the client | out of scope (*What it does not bind*): the addon only adds lines |
+| 17 | The Item Search settings page (`settings/ItemSearchPage.lua`, `settings/ItemSearchRows.lua`, `settings/ItemSearchArrowRows.lua`) | LibKa0s-Options-1.0's rows and the section-order drag list | Settings canvas | LibKa0s-Options-1.0 | out of scope: options-ui governs the Settings canvas |
+
+`tests/test_item_search_window.lua` pins it: a sweep hovers every widget the window hooks (rows 5 to
+11) and every item tooltip (rows 1 to 4) and asserts the placer, the element and the window group; on
+the kit's fake screen the Makes cell's tooltip lands a TIP_GAP right of the window, level with its
+row, and is placed again when the client moves it (the next frame) or it grows past the screen's
+right edge (`OnSizeChanged`, now left of the window), and never once another owner holds it or it
+has hidden. The in-game check is `docs/smoke-tests.md` ITEM-SEARCH-46. The main window's own item
+tooltips (`WindowGroup`'s item buttons, the Rolls panel's item headers) keep `PlaceOrFallback`: their
+items are ones the group looted, so the client already holds them.
+
 ## Frame layering
 
 Every strata and frame level the addon sets reads one table, `NS.Constants.LAYERS`

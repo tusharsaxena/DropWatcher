@@ -64,7 +64,8 @@ local function itemLink(id)
     return it and it.link or nil
 end
 
---- The item's own game tooltip on `owner`, placed beside the window (a body element).
+--- The item's own game tooltip on `owner`, placed beside the window (a body element), and placed
+--- again when the client fills it late, an item it had not cached (NS.RowTooltip.PlaceItemTip).
 --- @param owner table
 --- @param id number|nil
 function ISG.ItemTip(owner, id)
@@ -72,7 +73,7 @@ function ISG.ItemTip(owner, id)
     GameTooltip:SetOwner(owner, "ANCHOR_NONE")
     Compat.TooltipHyperlink(GameTooltip, itemLink(id) or ("item:" .. id))
     GameTooltip:Show()
-    NS.RowTooltip.PlaceOrFallback(GameTooltip, owner)
+    NS.RowTooltip.PlaceItemTip(GameTooltip, owner)
 end
 
 function ISG.HideTip()
