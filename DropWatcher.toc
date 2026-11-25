@@ -530,12 +530,28 @@ modules\ItemSearchLearn.lua
 # at load and publishes NS.ItemSearchTip, the item tooltip block; core\DropWatcher.lua's OnEnable installs
 # its post call. NS.Setting, NS.SkinColor, NS.Icon, NS.TipMarks and NS.GroupRoster are read at call time.
 modules\ItemSearchTip.lua
-# LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above) and NS.L at load and publishes
-# NS.ItemSearchView, the Item Search window's pure rows; modules\ItemSearchWindow.lua (below) takes it.
+# LOAD-BEARING: takes NS.L at load and publishes NS.ItemSearchView, the Item Search window's pure
+# search and header; modules\ItemSearchCells.lua and modules\ItemSearchWindow.lua (below) take it.
 modules\ItemSearchView.lua
-# LOAD-BEARING: takes NS.ItemSearch, NS.ItemSearchView (above), NS.Constants, NS.L and NS.Compat at
-# load, publishes NS.ItemSearchWindow and appends a NS.STAND_DOWN step. NS.Window, NS.WindowTitleBar,
-# NS.ItemSearchTip, NS.ForeverDB, NS.Skin and NS.Setting are read at call time.
+# LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above), NS.ItemSearchView (the line
+# above) and NS.L at load and publishes NS.ItemSearchCells, the window's pure table rows per tab.
+modules\ItemSearchCells.lua
+# LOAD-BEARING: takes NS.L at load and publishes NS.ItemSearchTabs, the window's pure tabs, columns,
+# filters and sorts; modules\ItemSearchGrid.lua and modules\ItemSearchWindow.lua (below) take it.
+modules\ItemSearchTabs.lua
+# LOAD-BEARING: takes NS.ItemSearchTabs (the line above), NS.Constants, NS.L and NS.Compat at load and
+# publishes NS.ItemSearchGrid, the window's section headers, tables and match rows. NS.Window,
+# NS.WindowRows, NS.ItemSearchTip, NS.Skin, NS.Pool and NS.TipMarks are read at call time.
+modules\ItemSearchGrid.lua
+# LOAD-BEARING: takes NS.L, NS.Compat and NS.Skin at load, publishes NS.ItemSearchWaypoint (who
+# draws the way to a pin: TomTom or LibKa0s-WaypointArrow-1.0), registers a skin listener and
+# appends a NS.STAND_DOWN step; settings\ItemSearchRows.lua and settings\ItemSearchArrowRows.lua
+# (below) take it at load, modules\ItemSearchWindow.lua and modules\ItemSearchGrid.lua at call time.
+modules\ItemSearchWaypoint.lua
+# LOAD-BEARING: takes NS.ItemSearch, NS.ItemSearchView, NS.ItemSearchCells, NS.ItemSearchTabs,
+# NS.ItemSearchGrid (above), NS.Constants, NS.L and NS.Compat at load, publishes NS.ItemSearchWindow
+# and appends a NS.STAND_DOWN step. NS.Window, NS.WindowTitleBar, NS.WindowRows, NS.ItemSearchTip,
+# NS.ForeverDB, NS.Skin and NS.Setting are read at call time.
 modules\ItemSearchWindow.lua
 # LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above), NS.Constants and NS.Compat at
 # load and publishes NS.ItemSearchKey, the Item Search key's press and its one-time default. core\LauncherSetup.lua's button and
@@ -717,6 +733,12 @@ settings\Panel.lua
 # NS.SchemaRuntime.AddRows at file scope, appending Window › Icons' composed border block after
 # settings\SchemaRows.lua's rows; reads NS.C, NS.L and Settings.Checks at load.
 settings\ComposedRows.lua
+# LOAD-BEARING: calls NS.ItemSearchWaypoint.SettingsRows (modules\ItemSearchWaypoint.lua) with
+# Settings.Helpers (settings\OptionsSetup.lua, above) at file scope and appends Drop Watcher's arrow rows
+# to NS.SchemaRuntime (WoW Forever alone); reads Settings.ITEM_SEARCH_WAYPOINTS and Settings.Checks
+# (settings\ItemSearchRows.lua, settings\SchemaRows.lua, above) and publishes
+# Settings.ITEM_SEARCH_ARROW_HOOKS, which settings\Pages.lua (below) takes at load.
+settings\ItemSearchArrowRows.lua
 # LOAD-BEARING: publishes Settings.Editors (the pure halves of the pages' own editors), which
 # settings\PageEditors.lua takes at load; reads NS.L, NS.Constants and NS.ClassData at load, and
 # NS.Evaluate and NS.Messaging (modules\, above) at call time.

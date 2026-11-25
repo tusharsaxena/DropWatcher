@@ -13,30 +13,56 @@ local FDB = dofile("tests/_kit/mock_foreverdb.lua")
 local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the Retail case asserts it is absent" or nil
 local RETAIL_ONLY = T.forever and "the Retail profile's absent case; the Forever cases cover WoW Forever" or nil
 
--- The page's rows in declaration order: path, tab, subsection (spec §4.7's table, every row).
+-- The page's rows in declaration order: path, tab, subsection (spec §4.7's table, every row; the
+-- Item Search feedback spec §9's order and its Waypoints tab, ISF-DW-07 and ISF-DW-08). The arrow's
+-- rows are LibKa0s-WaypointArrow-1.0's WaypointArrowSettings, in the library's order.
 local ROWS = {
     { "itemSearch.tooltip.enabled",           "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.comparison",        "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.rows",              "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.shiftOnly",         "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
-    { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
-    { "itemSearch.tooltip.comparison",        "Item tooltip", "Tooltip block" },
+    { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.quests",   "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.crafting", "Item tooltip", "Sections" },
+    { "itemSearch.tooltip.sections.skinned",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.also",     "Item tooltip", "Sections" },
-    { "itemSearch.tooltip.dropsShown",        "Item tooltip", "Sections" },
     { "itemSearch.tooltip.hideCompleted",     "Item tooltip", "Sections" },
     { "itemSearch.tooltip.order",             "Item tooltip", "Sections" },
     { "itemSearch.window.enabled",            "Item Search window", "Window" },
     { "itemSearch.window.barColor",           "Item Search window", "Bars" },
     { "itemSearch.window.barFromSkin",        "Item Search window", "Bars" },
-    { "itemSearch.window.density",            "Item Search window", "Rows" },
-    { "itemSearch.window.fontSize",           "Item Search window", "Rows" },
-    { "itemSearch.window.columns",            "Item Search window", "Rows" },
-    { "itemSearch.window.pins",               "Item Search window", "Rows" },
-    { "itemSearch.window.recent",             "Item Search window", "Rows" },
+    { "itemSearch.waypoints",                 "Waypoints", "Waypoints" },
+    { "itemSearch.window.pins",               "Waypoints", "Waypoints" },
+    { "itemSearch.arrow.style",               "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.useSkinColors",       "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.farColor",            "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.nearColor",           "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.scale",               "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.font",                "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontSize",            "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontColor",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.useClassColorFont",   "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontFlags",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontShadow",          "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontFromSkin",        "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontColorFromSkin",   "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontShadowFromSkin",  "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.textPosition",        "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.showLabel",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.distanceUnits",       "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.x",                   "Waypoints", "Arrow position" },
+    { "itemSearch.arrow.y",                   "Waypoints", "Arrow position" },
+    { "itemSearch.arrow.lock",                "Waypoints", "Arrow position" },
 }
+-- Gone in ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4; schema step 17): the window takes
+-- the main window's font and row height, draws every column, and keeps no recent searches.
+-- Gone in ISF-DW-03 (feedback spec §7, schema step 16): dropsShown, replaced by Rows per section.
+local RETIRED = { "itemSearch.window.density", "itemSearch.window.fontSize", "itemSearch.window.columns",
+    "itemSearch.window.recent", "itemSearch.tooltip.dropsShown", "itemSearch.window.locked" }
 
 local function profileDefault(NS, path)
     local node = NS.C.PROFILE
@@ -89,8 +115,36 @@ test("item search settings: every spec §4.7 row is on the page, in order, with 
     end
 end, FOREVER_ONLY)
 
-test("item search settings: the defaults are the spec's (on, off, on, on, off; 3 sources; comfortable, 13)", function()
-    local NS = enabled()
+-- Item Search feedback spec §9, §10 (ISF-DW-08): a profile the first Item Search build saved runs
+-- every step this run added through the runner, in order, and lands on the code's target.
+test("item search settings: a first-build profile runs steps 16 and 17 through the runner, to the code's target", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 15, itemSearch = { recent = { 101, 102 } } },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = {
+            Default = { itemSearch = {
+                tooltip = { dropsShown = 7, hint = false },
+                window = { recent = true, density = "compact", fontSize = 14, columns = false, pins = false },
+            } },
+        },
+    }
+    -- red under: either step missing from the runner, or run out of order
+    NS.addon:OnInitialize()
+    local sv = _G.DropWatcherDB
+    local is = sv.profiles.Default.itemSearch
+    assertEqual(is.tooltip.rows, 7, "step 16: Drop sources shown carried into Rows per section")
+    assertNil(is.tooltip.dropsShown)
+    assertFalse(is.tooltip.hint, "Show the key hint keeps the stored choice")
+    for _, k in ipairs({ "recent", "density", "fontSize", "columns" }) do assertNil(is.window[k], "step 17: " .. k) end
+    assertFalse(is.window.pins, "a kept row keeps its value")
+    assertNil(sv.global.itemSearch, "step 17: the recent searches")
+    assertEqual(sv.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertEqual(NS.SCHEMA_VERSION, 17, "this run adds no step past 17: its new keys are new rows")
+end)
+
+test("item search settings: the defaults are the spec's (on, off, on, on, off; 5 rows, my professions; the window's)", function()
+    local NS, m = enabled()
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
     assertTrue(S("itemSearch.tooltip.header")); assertTrue(S("itemSearch.tooltip.hint"))
@@ -98,26 +152,42 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 3
     for key, on in pairs({ drops = true, vendors = true, quests = true, crafting = true, also = false }) do
         assertEqual(S("itemSearch.tooltip.sections." .. key), on, key)
     end
-    assertEqual(S("itemSearch.tooltip.dropsShown"), 3); assertTrue(S("itemSearch.tooltip.hideCompleted"))
+    assertEqual(S("itemSearch.tooltip.rows"), 5); assertTrue(S("itemSearch.tooltip.hideCompleted"))
+    assertTrue(S("itemSearch.myProfessionsOnly"), "only the professions you know (feedback spec §4)")
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
-    assertTrue(S("itemSearch.window.barFromSkin")); assertEqual(S("itemSearch.window.density"), "comfortable")
-    assertEqual(S("itemSearch.window.fontSize"), 13)
-    for _, key in ipairs({ "columns", "pins", "recent", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
+    assertTrue(S("itemSearch.window.barFromSkin"))
+    for _, key in ipairs({ "pins", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
+    -- Item Search feedback spec §6, §9 (ISF-DW-07): Automatic, and the arrow at the library's DEFAULTS
+    assertEqual(S("itemSearch.waypoints"), "auto")
+    local Arrow = m.LibStub("LibKa0s-WaypointArrow-1.0")
+    for key, v in pairs(Arrow.DEFAULTS) do
+        local got = S("itemSearch.arrow." .. key)
+        if type(v) == "table" then
+            assertEqual(table.concat({ got.r, got.g, got.b, got.a }, ","), table.concat(v, ","), key)
+        else
+            assertEqual(got, v, key)
+        end
+    end
+    -- red under: a retired row still declared, or still defaulted (a dead setting)
+    for _, path in ipairs(RETIRED) do
+        assertNil(NS.SchemaRuntime.FindRow(path), path .. " has no row")
+        assertNil(profileDefault(NS, path), path .. " has no default")
+    end
 end, FOREVER_ONLY)
 
 test("item search settings: the seam refuses an out-of-range count, a fractional size and a bad order", function()
     local NS = enabled()
     local Set = NS.SchemaRuntime.Set
-    assertFalse((Set("itemSearch.tooltip.dropsShown", 11)), "past 10")
-    assertFalse((Set("itemSearch.tooltip.dropsShown", 2.5)), "a whole number")
-    assertFalse((Set("itemSearch.window.fontSize", 17)), "past 16")
-    assertFalse((Set("itemSearch.window.density", "airy")), "a density the window has not")
+    assertFalse((Set("itemSearch.tooltip.rows", 21)), "past 20")
+    assertFalse((Set("itemSearch.tooltip.rows", 0)), "below 1")
+    assertFalse((Set("itemSearch.tooltip.rows", 2.5)), "a whole number")
+    assertTrue((Set("itemSearch.tooltip.rows", 20)), "20, the top")
     -- red under: an order with an unknown section or one twice
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "drops" })), "a section twice")
     assertFalse((Set("itemSearch.tooltip.order", { "drops", "loot" })), "an unknown section")
     assertFalse((Set("itemSearch.tooltip.order", {})), "no section")
     assertTrue((Set("itemSearch.tooltip.order", { "quests", "drops" })), "a partial order: the rest follow")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,vendors,crafting,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "quests,drops,vendors,crafting,skinned,also")
 end, FOREVER_ONLY)
 
 test("item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows", function()
@@ -125,13 +195,13 @@ test("item search settings: a dimmed knob names what it needs; the block's switc
     local R = NS.SchemaRuntime.FindRow
     assertFalse(R("itemSearch.tooltip.shiftOnly").disabledIf(), "on by default")
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", false)
-    for _, p in ipairs({ "shiftOnly", "header", "hint", "comparison", "sections.drops", "dropsShown", "hideCompleted" }) do
+    for _, p in ipairs({ "shiftOnly", "header", "hint", "comparison", "sections.drops", "rows", "hideCompleted" }) do
         assertTrue(R("itemSearch.tooltip." .. p).disabledIf(), p .. " dims with the block off")
     end
+    -- the profession filter also sets the window's default (feedback spec §4): never dimmed by the block
+    assertTrue(R("itemSearch.myProfessionsOnly").disabledIf == nil or not R("itemSearch.myProfessionsOnly").disabledIf())
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", true)
-    NS.SchemaRuntime.Set("itemSearch.tooltip.sections.drops", false)
-    assertTrue(R("itemSearch.tooltip.dropsShown").disabledIf(), "Drop sources shown needs Drops from")
-    assertTrue(R("itemSearch.tooltip.dropsShown").tooltip:find("Needs Drops from.", 1, true) ~= nil)
+    assertTrue(R("itemSearch.tooltip.rows").tooltip:find("Needs Add Item Search to item tooltips.", 1, true) ~= nil)
     -- anti-pattern #74: a color and its companion are never dimmed
     assertNil(R("itemSearch.window.barColor").disabledIf); assertNil(R("itemSearch.window.barFromSkin").disabledIf)
 end, FOREVER_ONLY)
@@ -162,14 +232,14 @@ test("item search settings: the section order is a drag list in the stored order
     local ctx = openPage(NS)
     assertEqual(ctx.activeTab, "Item tooltip")
     -- red under: no afterGroup (no list), or a list in a fixed order
-    assertEqual(labels(ctx), "Drops from,Sold by,Quests,Crafting,Reward from / starts quest")
+    assertEqual(labels(ctx), "Drops from,Sold by,Quests,Crafting,Skinned from,Reward from / starts quest")
     assertTrue(ctx.dwSectionList ~= nil, "a ReorderList controller for this render")
     assertTrue(ISP.Move(1, 3))
-    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "vendors,quests,drops,crafting,also")
-    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "vendors,quests,drops,crafting,also",
+    assertEqual(table.concat(NS.Setting("itemSearch.tooltip.order"), ","), "vendors,quests,drops,crafting,skinned,also")
+    assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), "vendors,quests,drops,crafting,skinned,also",
         "the tooltip writes the sections in the new order")
     NS.addon.Settings.Helpers.RefreshPanel(ctx, true)
-    assertEqual(labels(ctx), "Sold by,Quests,Drops from,Crafting,Reward from / starts quest", "repainted")
+    assertEqual(labels(ctx), "Sold by,Quests,Drops from,Crafting,Skinned from,Reward from / starts quest", "repainted")
     -- The page's Defaults puts the default order back.
     NS.addon.Settings.Helpers.RestoreDefaults("itemSearch", ctx)
     assertEqual(table.concat(NS.ItemSearchTip.Options().order, ","), table.concat(NS.ItemSearchTip.ORDER, ","))

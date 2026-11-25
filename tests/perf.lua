@@ -63,8 +63,15 @@ local ROLLS_PANEL_RAID_CEILING = 95000
 -- call over the kit's ForeverDB fake, the item with every kind of source. COLD reads the database
 -- again (the item's static facts emptied first); WARM is the hover the cache serves: the live reads
 -- (quest states, known recipes, the skill ranks), the options and the lines. Their ceilings are that
--- work: measured 2026-11-25 (IS-DW-04) at 16080 and 5664 bytes, each ceiling that plus a margin. On
--- Retail the call is the inert early return, pinned at 0.
+-- work: measured 2026-11-25 (IS-DW-04) at 16080 and 5664 bytes, each ceiling that plus a margin.
+-- The feedback run's ranking (every section sorted for the player, IS.Me per hover) took them to
+-- 22336 and 10152 (ISF-DW-08); ISF-REV brought them back under the same ceilings, which are not
+-- raised: a flat two-number sort key in scratch tables (no table per row, no comparator per call),
+-- the spot memo (a source's maps read once, not lib.Spots' new tables per row per hover), the
+-- hover's IS.Me filling one reused table, no capped copy per section, the options' order and
+-- sections answered again while unchanged, one NPC read per vendor, and no merge pass under two
+-- named objects: 17248 and 6144 bytes, measured 2026-11-25. On Retail the call is the inert early
+-- return, pinned at 0.
 local ITEM_SEARCH_TIP_COLD = 17500
 local ITEM_SEARCH_TIP_WARM = 6500
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,

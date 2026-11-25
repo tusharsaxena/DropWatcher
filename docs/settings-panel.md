@@ -20,7 +20,7 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
 | Alerts | `Toast`, `Upgrade glow` |
-| Item Search (key `itemSearch`, WoW Forever alone) | `Item tooltip`, `Item Search window`, `Keybindings` |
+| Item Search (key `itemSearch`, WoW Forever alone) | `Item tooltip`, `Item Search window`, `Waypoints`, `Keybindings` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 Until feedback-24 the pages were General (Master controls, When to show, Simulation), Feed (Quality,
@@ -442,30 +442,52 @@ its section order list and its Keybindings tab `settings/ItemSearchPage.lua`'s. 
 the page's rows, the section order included, and never the key. The Item Search window's gear opens
 this page. Paths, defaults and ranges: [`schema.md`](schema.md#item-search-page-key-itemsearch-wow-forever-alone).
 
-**Item tooltip.** **Tooltip block:** Add Item Search to item tooltips (`itemSearch.tooltip.enabled`,
-on, alone on its line: the block under every item tooltip; it needs ForeverDB, and with the window's
-switch off too ForeverDB never loads), then Only while holding Shift (off) | Separator and title line
-(on), Keybind hint line (on, left out while the key is unbound) | Comparison tooltips too (off, the
-owner's call), each dimmed while the block is off. **Sections:** a switch per section, Drops from,
-Sold by, Quests, Crafting (all on) and Reward from / starts quest (off), then Drop sources shown (3,
-a 1 to 10 slider by 1, dimmed without Drops from) | Hide completed quests (on, dimmed without
-Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
+**Item tooltip.** **Tooltip block,** in the Settings artboard's order (Item Search feedback spec §9):
+Add Item Search to item tooltips (`itemSearch.tooltip.enabled`, on, alone on its line: the block under
+every item tooltip; it needs ForeverDB, and with the window's switch off too ForeverDB never loads),
+then Comparison tooltips too (off, the owner's call), Rows per section (`itemSearch.tooltip.rows`, 5,
+a 1 to 20 slider by 1: every section's cap before "and N more"), Show the key hint
+(`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
+is bound), Only while holding Shift (off) and Separator and title line (on), each dimmed while the
+block is off. **Tooltip and window:** Only professions you know (`itemSearch.myProfessionsOnly`, on;
+never dimmed, since it also sets the window's Crafting default).
+**Sections:** a switch per section, Drops from, Sold by, Quests, Crafting, Skinned from (all on) and
+Reward from / starts quest (off), then Hide completed quests (on, dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
 (LibKa0s-Widgets-1.0 `ReorderList`, the collection's row boxes and handle, options-ui-§18) with a row
-per section in the order the tooltip writes them (Drops from, Sold by, Quests, Crafting, Reward from
+per section in the order the tooltip writes them (Drops from, Sold by, Quests, Crafting, Skinned from, Reward from
 / starts quest by default). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row
 with `skipRender`); the switches stay checkboxes above it. The list's host is built once and parked
 before every render (the page's `beforeClear` and the placeholder's OnRelease, options-ui-§19), as
 Drops › Situations' table is.
 
 **Item Search window.** **Window:** Enable the Item Search window (`itemSearch.window.enabled`, on,
-alone on its line; off, the window closes and does not open). **Bars:** Bar color | Use the skin's
-color (on: the drop chance bars in the skin's accent, the swatch not read), never dimmed
-(anti-pattern #74). **Rows:** Density (Comfortable, the default, or Compact) | Font size (13, 10 to
-16), Zone and level columns (on) | Waypoint pins (on: a map waypoint, or TomTom's), Remember recent
-searches (on: the last 10 items, account-wide; off, the list is hidden and nothing new is added).
+alone on its line; off, the window closes and does not open). The window remembers its size and the
+tab last picked with no setting. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
+in the skin's accent, the swatch not read), never dimmed (anti-pattern #74). Density, Font size, Zone
+and level columns and Remember recent searches went in ISF-DW-05 (Item Search feedback spec §5.1,
+§5.2, §5.4; schema step 17): the window draws in the main window's table font and row height (Window ›
+Layout), every tab draws all its columns, and there are no recent searches. Nothing served a window
+lock (W13): the window has none.
+
+**Waypoints** (ISF-DW-07, feedback spec §6). **Waypoints:** Waypoints (`itemSearch.waypoints`,
+Automatic, a dropdown of Automatic, TomTom and Drop Watcher's arrow: Automatic uses TomTom when it is
+loaded and Drop Watcher's arrow otherwise; TomTom while TomTom is not loaded uses Drop Watcher's
+arrow, which the row's tooltip says, since a dropdown cannot disable one choice), then Waypoint pins
+(`itemSearch.window.pins`, on). Then Drop Watcher's arrow's own rows, LibKa0s-WaypointArrow-1.0's
+`WaypointArrowSettings` (the same blocks Skill Master's Trainers and Waypoints page shows), composed by
+the Options instance in `settings/ItemSearchArrowRows.lua`: **Waypoint arrow:** Arrow style (Raised),
+Use the skin's colors (on), Far color and Near color (dimmed while the skin's are drawn), Arrow scale
+(0.5 to 2). **Arrow text:** the canonical Font block (Font, Font size, Font color | Use class color,
+Font flags, Font shadow) with Use the skin's font, Use the skin's color and Use the skin's shadow, then
+Text position, Show the target's name and Distance units. **Arrow position:** X offset | Y offset,
+Lock the arrow, and the Reset position button (the block's `afterSubgroup` hook, handed through
+`settings/Pages.lua`). Every arrow row is dimmed while Waypoints resolves to TomTom (Automatic with
+TomTom loaded, or TomTom), so the block is live exactly when Drop Watcher's arrow can be the one used.
+Without the library there is no arrow and no arrow row.
 
 **Keybindings.** The library's key editor (`O.KeybindingsTab`, options-ui-§20) over the Item Search
 row of `NS.BINDINGS` alone, the same row General › Keybindings draws on WoW Forever, so the key is
 shown and changed the way the window toggle's is: one key button (click, then press a key; a
-right-click clears it) and Clear. Ctrl-Alt-D is set once per character at login, only on a free key
-(`modules/ItemSearchKey.lua`).
+right-click clears it) and Clear. Alt-Ctrl-D is set once per character at login, only on a free key
+(`modules/ItemSearchKey.lua`; written `ALT-CTRL-D`, the client's modifier order, and re-tried once where
+the first try stored the dead chord `CTRL-ALT-D`).

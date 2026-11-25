@@ -99,11 +99,13 @@ local function fakeDB()
         SkinnedFrom = { { id = 11, name = "Invented Beast", chance = 0.5 }, { id = 17 } },
     }
     local npcs = { [11] = { name = "Invented Beast", minLevel = 10, maxLevel = 12 }, [15] = { name = "Invented Vendor" } }
+    local objects = { [13] = { id = 13, name = "Invented Chest" } }
     local items = { [900001] = { id = 900001, name = "Invented Herb", quality = 1, icon = 7 }, [14] = { name = "Invented Box" } }
     local function count(fn) return function(...) db.calls = db.calls + 1; return fn(...) end end
     for name, answer in pairs(answers) do db[name] = count(function() return answer end) end
     db.NPC = count(function(id) return npcs[id] end)
     db.Item = count(function(id) return items[id] end)
+    db.Object = count(function(id) return objects[id] end)
     db.VendorPrice = count(function() return 1200, 16 end)
     return db
 end
@@ -120,9 +122,9 @@ test("item search: the static facts read ForeverDB's drops, vendors, quests and 
     local f = S.Static(900001, staticCtx(fakeDB()))
     local drops = {}
     for i, d in ipairs(f.drops) do drops[i] = ("%s=%s"):format(d.name, tostring(d.chance)) end
-    assertEqual(table.concat(drops, ","), "Object 13=1,Invented Beast=0.25,Invented Box=0.05,Creature 12=nil")
+    assertEqual(table.concat(drops, ","), "Invented Chest=1,Invented Beast=0.25,Invented Box=0.05,Creature 12=nil")
     assertEqual(f.drops[2].minLevel .. "-" .. f.drops[2].maxLevel, "10-12", "a creature's level range")
-    assertTrue(f.drops[2].named); assertFalse(f.drops[1].named, "an object's stand-in name")
+    assertTrue(f.drops[2].named); assertTrue(f.drops[1].named, "an object named through Object(id)")
     assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Invented Vendor,Creature 16")
     assertEqual(f.vendorPrice.price .. "@" .. f.vendorPrice.npc, "1200@16")
@@ -161,7 +163,6 @@ test("item search: the live half adds quest states, known marks, ranks, colors a
         questState = function(id) return states[id] or "todo" end,
         knows = function(spell) return spell == 800002 end,
         ranks = { [171] = 80 },
-        dropsShown = 1,
     })
     local q = {}
     for i, row in ipairs(f.quests) do q[i] = row.id .. "=" .. row.state end
@@ -170,10 +171,10 @@ test("item search: the live half adds quest states, known marks, ranks, colors a
     assertEqual(f.crafting[1].color, "green", "Alchemy 80 against 55/75/95"); assertEqual(f.crafting[1].rank, 80)
     assertFalse(f.crafting[1].known); assertTrue(f.crafting[2].known)
     assertNil(f.crafting[2].color, "no First Aid rank"); assertNil(f.crafting[2].rank)
-    assertEqual(f.dropMore, 3, "four sources, one shown")
-    assertEqual(S.Live(static, {}).dropMore, 1, "three shown by default")
+    assertEqual(f.ranks[171], 80, "the ranks ride along for the ranking's context")
+    assertNil(f.dropMore, "the cap is the tooltip's (IS.Cap, feedback spec §7)")
     -- red under: the live half writing into the cached static facts
-    assertNil(static.quests[1].state); assertNil(static.crafting[1].color); assertNil(static.dropMore)
+    assertNil(static.quests[1].state); assertNil(static.crafting[1].color); assertNil(static.ranks)
 end)
 
 -- ── the profession window's learner (pure) ──────────────────────────────────────────────────
@@ -430,9 +431,9 @@ test("item search: the facts read the fake: drops, vendors, the lowest price, th
     local f = NS.ItemSearch.Get(IDS.blade)
     local drops = {}
     for i, d in ipairs(f.drops) do drops[i] = d.name .. "=" .. tostring(d.chance) end
-    assertEqual(table.concat(drops, ","), ("Object %d=1,Fixture Gnoll=0.25,Fixture Coffer=0.05,Fixture Kobold=nil"):format(IDS.crate))
+    assertEqual(table.concat(drops, ","), "Fixture Crate=1,Fixture Gnoll=0.25,Fixture Coffer=0.05,Fixture Kobold=nil")
     assertEqual(f.drops[2].minLevel .. "-" .. f.drops[2].maxLevel, "10-12")
-    assertEqual(f.dropMore, 1); assertEqual(f.worldMinLevel, 8)
+    assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Fixture Vendor,Fixture Trainer")
     assertEqual(f.vendorPrice.price, 1200); assertEqual(f.vendorPrice.npc, IDS.trainer)
     assertEqual(f.rewardFrom[1].title, "Fixture Errand"); assertEqual(f.item.name, "Fixture Blade")
@@ -606,4 +607,81 @@ test("item search: the detail card draws exactly the cells' chips, ForeverDB ins
     assertEqual(table.concat(shown, ","), table.concat(want, ","))
     -- red under: the card asking ForeverDB (the first card opened was the 12 MB load)
     assertEqual(fake.loads, 0, "no card loads ForeverDB; only Item Search's timer does")
+end)
+
+-- ── objects with names (Item Search feedback spec §2, W15) ──────────────────────────────────
+
+test("item search: same-named objects merge into one row: the highest chance, every id, creatures untouched", function()
+    local S = IS()
+    local merged = S.MergeNamedObjects({
+        { kind = "object", id = 31, chance = 0.4, name = "Invented Chest", ids = { 31 } },
+        { kind = "npc", id = 32, chance = 0.5, name = "Invented Chest" },
+        { kind = "object", id = 33, chance = 0.6, name = "Invented Chest", ids = { 33 } },
+        { kind = "object", id = 34, name = "Invented Chest", ids = { 34 } },
+        { kind = "object", id = 35, chance = 0.1, name = "Invented Urn", ids = { 35 } },
+    })
+    local got = {}
+    for i, r in ipairs(merged) do got[i] = ("%s:%d=%s"):format(r.kind, r.id, tostring(r.chance)) end
+    -- red under: chances summed (1.0), the lowest kept (0.4), a creature of the same name folded in,
+    -- or each spawn id its own row (the owner's six Large Solid Chests)
+    assertEqual(table.concat(got, ","), "object:31=0.6,npc:32=0.5,object:35=0.1")
+    assertEqual(table.concat(merged[1].ids, ","), "31,33,34", "every part's id, in list order")
+    assertNil(merged[2].ids, "a creature carries no ids")
+    assertEqual(#S.MergeNamedObjects(nil), 0)
+end)
+
+test("item search: an object with no name is dropped and counted, never an Object <id> row", function()
+    local S = IS()
+    local db = fakeDB()
+    db.ItemSources = function()
+        return { creatures = {}, objects = { { id = 13, chance = 1 }, { id = 41, chance = 0.9 }, { id = 42 } }, items = {} }
+    end
+    local f = S.Static(900001, staticCtx(db))
+    local names = {}
+    for i, d in ipairs(f.drops) do names[i] = d.name end
+    -- red under: the stand-in "Object 41" (the owner's W15)
+    assertEqual(table.concat(names, ","), "Invented Chest")
+    assertEqual(f.unnamedObjects, 2)
+    db.Object = nil
+    assertEqual(#S.Static(900001, staticCtx(db)).drops, 0, "a reader without Object (minor 2) names none")
+end)
+
+test("item search: the fake's strongboxes are one row at the higher chance; the husk and the scrap go", function()
+    local NS = loaded()
+    local f = NS.ItemSearch.Get(IDS.relic)
+    -- red under: the nameless husk (0.9) or scrap (0.8) shown, or two Fixture Strongbox rows
+    assertEqual(#f.drops, 1)
+    assertEqual(f.drops[1].name, "Fixture Strongbox"); assertEqual(f.drops[1].chance, 0.6)
+    assertEqual(table.concat(f.drops[1].ids, ","), IDS.boxB .. "," .. IDS.boxA, "likeliest part first")
+    assertEqual(f.unnamedObjects, 2)
+end, FOREVER_ONLY)
+
+test("item search: an item's unnamed objects are logged once, when its facts are kept", function()
+    local NS = loaded()
+    local logged, real = 0, NS.Debug
+    NS.Debug = function(cat, fmt, ...)
+        if cat == "SEARCH" and tostring(fmt):find("unnamed object", 1, true) then logged = logged + 1 end
+        return real(cat, fmt, ...)
+    end
+    for _ = 1, 3 do NS.ItemSearch.Get(IDS.relic) end
+    NS.Debug = real
+    -- red under: a log line per hover (the facts re-read while the item is not kept)
+    assertEqual(logged, 1)
+end, FOREVER_ONLY)
+
+test("item search: a merged object's window row unions its parts' spots and counts its kinds", function()
+    local NS = T.newAddon()
+    local ISC = NS.ItemSearchCells
+    local spots = { [51] = { [7] = { { x = 0.1, y = 0.2 } } }, [52] = { [8] = { { x = 0.3, y = 0.4 }, { x = 0.5, y = 0.6 } } } }
+    local rows = ISC.Drops({ drops = {
+        { kind = "object", id = 51, ids = { 51, 52 }, name = "Invented Chest", named = true, chance = 0.5 },
+    } }, {}, { spots = function(kind, id) return kind == "object" and spots[id] or nil end,
+        mapName = function(map) return "Map " .. map end })
+    -- red under: the first part's spots alone (map 7, one spot)
+    assertEqual(rows[1].spot.map, 8, "the map with the most spots across both parts")
+    assertEqual(rows[1].cells.zone.text, "Map 8 +1 zone")
+    assertEqual(rows[1].cells.type.text, "Object ×2")
+    local merged
+    for _, r in ipairs(rows[1].tip.rows) do if r[1] == "Merged" then merged = r[2] end end
+    assertEqual(merged, "2 kinds of Invented Chest")
 end)

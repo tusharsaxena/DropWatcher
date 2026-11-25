@@ -1,30 +1,27 @@
 local _, NS = ...
 -- modules/ItemSearchView.lua — the Item Search window's pure half (DropWatcher#17, Item Search spec
--- §4.5, mockup board 2): what the search box's text asks for, the matches it lists, the recent
--- searches, and every row of the detail pane, each a plain table the frame edge
--- (modules/ItemSearchWindow.lua) draws. No client call and no setting read here: every input
--- arrives in `ctx`, so a case drives it with invented values.
+-- §4.5; Item Search feedback spec §5.2, §5.3): what the search box's text asks for, the matches it
+-- lists and their sorts, where a source stands, the item header's line, the footer's line and the
+-- ForeverDB notice, each a plain value the frame edge (modules/ItemSearchWindow.lua) draws. The
+-- tabs' rows are modules/ItemSearchCells.lua's and their columns modules/ItemSearchTabs.lua's. No
+-- client call and no setting read here: every input arrives in `ctx`, so a case drives it with
+-- invented values.
 --
 -- THE SEARCH (spec §4.5). All digits look the id up directly, which works without ForeverDB: the
 -- database's row once it is loaded, else the client's cached item, else a bare "Item <id>" row the
 -- player can still open (Crafting is the shipped table's and needs no name). Any other text of two
 -- characters or more is ForeverDB's SearchItems, read only while it is loaded (a read never loads
 -- it, spec §2); before the load the list says "ForeverDB: loading…", without it the spec §1 line.
+-- The matches' Sort (feedback spec §5.2): Best match (SearchItems' own order), Name, Item id.
 --
--- THE DETAIL PANE. DROPS FROM lists every source (not the tooltip's top 3): its name, the creature's
--- level range, the zone (the source's first map, named through the client), a bar scaled to the
--- highest chance, the percent and a pin target, plus the World drop row with its minimum level.
--- SOLD BY lists the vendors, the cheapest one with its price. QUESTS carries each quest's mark,
--- title, zone (its first giver's) and state. CRAFTING carries the breakpoints against your rank,
--- or "learnable at N" for a recipe you do not know. ALSO is Reward from, Starts quest and Skinned
--- from.
+-- RECENT SEARCHES ARE GONE (feedback spec §5.2, W4): the list, its store and its setting went in
+-- ISF-DW-05 (schema step 17 deletes what was saved).
 --
 -- THE FIRST MAP (own call): a source's map is the one with the most spots, the lower id on a tie, so
 -- the zone and the pin name where it mostly stands; the pin is that map's first spot.
 
 NS.ItemSearchView = NS.ItemSearchView or {}
 local ISV = NS.ItemSearchView
-local IS  = NS.ItemSearch
 local L   = NS.L
 
 local function num(v)
@@ -66,6 +63,13 @@ local function matchRow(id, it)
         requiredLevel = num(it.requiredLevel) }
 end
 
+-- An id search: ForeverDB's row once loaded, else the client's cached item, else a bare row.
+local function idMatch(id, ctx, loaded)
+    local it = loaded and ctx.db.Item(id) or nil
+    if type(it) ~= "table" and type(ctx.clientItem) == "function" then it = ctx.clientItem(id) end
+    return { matchRow(id, it) }, nil
+end
+
 --- The matches for the box's text. `ctx`: `{ state, db, clientItem, limit }` (state is
 --- NS.ItemSearch.State's answer; `db` is read only in "loaded"). Answers the rows
 --- `{ { id, name, quality, icon, requiredLevel } }` and a note: nil, "loading", "failed" (installed
@@ -77,11 +81,7 @@ function ISV.Matches(text, ctx)
     ctx = ctx or {}
     local q = ISV.Classify(text)
     local loaded = ctx.state == "loaded" and type(ctx.db) == "table"
-    if q.kind == "id" then
-        local it = loaded and ctx.db.Item(q.id) or nil
-        if type(it) ~= "table" and type(ctx.clientItem) == "function" then it = ctx.clientItem(q.id) end
-        return { matchRow(q.id, it) }, nil
-    end
+    if q.kind == "id" then return idMatch(q.id, ctx, loaded) end
     if q.kind == "short" then return {}, "short" end
     if q.kind ~= "name" then return {}, nil end
     if not loaded then
@@ -107,17 +107,35 @@ function ISV.NoteText(note)
     return nil
 end
 
---- `ids` with `id` moved to the front, each id once, at most `max` (a new list).
---- @param ids table|nil
---- @param id number
---- @param max number
+-- The matches' sorts (feedback spec §5.2), in the Sort menu's order.
+ISV.MATCH_SORTS = { "best", "name", "id" }
+ISV.MATCH_SORT_LABEL = { best = L["Best match"], name = L["Name"], id = L["Item id"] }
+
+-- A name for the sort: the row's, lower-cased; nil sorts last.
+local function sortName(r)
+    return type(r.name) == "string" and r.name:lower() or nil
+end
+
+--- The matches in `mode`'s order, a new array: "best" keeps SearchItems' order, "name" sorts by
+--- name (an unnamed row last, then by id), "id" by item id. An unknown mode is "best".
+--- @param rows table ISV.Matches' rows
+--- @param mode string|nil
 --- @return table
-function ISV.PushRecent(ids, id, max)
+function ISV.SortMatches(rows, mode)
     local out = {}
-    if num(id) then out[1] = id end
-    for _, v in ipairs(list(ids)) do
-        if #out >= max then break end
-        if num(v) and v ~= id then out[#out + 1] = v end
+    for i, r in ipairs(list(rows)) do out[i] = r end
+    if mode == "id" then
+        table.sort(out, function(a, b) return a.id < b.id end)
+    elseif mode == "name" then
+        table.sort(out, function(a, b)
+            local na, nb = sortName(a), sortName(b)
+            if na ~= nb then
+                if na == nil then return false end
+                if nb == nil then return true end
+                return na < nb
+            end
+            return a.id < b.id
+        end)
     end
     return out
 end
@@ -142,163 +160,13 @@ function ISV.SpotOf(spots)
     return { map = best, x = p.x, y = p.y }
 end
 
--- `{ spot, zone }` for a creature or object id, through ctx.spots and ctx.mapName.
-local function whereOf(kind, id, ctx)
-    if kind ~= "npc" and kind ~= "object" then return nil, nil end
-    local spot = type(ctx.spots) == "function" and ISV.SpotOf(ctx.spots(kind, id)) or nil
-    local zone = spot and type(ctx.mapName) == "function" and ctx.mapName(spot.map) or nil
-    return spot, zone
-end
-
---- A level range as the window writes it: `10-12`, `10`, or nil.
+--- A level range as the window writes it: `10–12` (an en dash, feedback spec §5.4), `10`, or nil.
 --- @return string|nil
 function ISV.LevelText(minLevel, maxLevel)
     minLevel, maxLevel = num(minLevel), num(maxLevel)
     if not minLevel or minLevel <= 0 then return nil end
-    if maxLevel and maxLevel ~= minLevel then return ("%d-%d"):format(minLevel, maxLevel) end
+    if maxLevel and maxLevel ~= minLevel then return ("%d–%d"):format(minLevel, maxLevel) end
     return tostring(minLevel)
-end
-
--- ── the detail pane's rows ──────────────────────────────────────────────────────────────────
-
---- DROPS FROM: every source, most likely first, `{ name, named, level, zone, pct, fraction, spot }`
---- (fraction = chance / the top chance, 0 for an unknown rate), then the World drop row
---- `{ world = true, name, level }`. `ctx`: `{ spots(kind, id), mapName(map) }`.
---- @param facts table NS.ItemSearch.Get's answer
---- @param ctx table|nil
---- @return table
-function ISV.DropRows(facts, ctx)
-    ctx = ctx or {}
-    local top = 0
-    for _, s in ipairs(list(facts.drops)) do
-        if num(s.chance) and s.chance > top then top = s.chance end
-    end
-    local out = {}
-    for _, s in ipairs(list(facts.drops)) do
-        local spot, zone = whereOf(s.kind, s.id, ctx)
-        local chance = num(s.chance)
-        out[#out + 1] = {
-            name = s.name, named = s.named == true, level = ISV.LevelText(s.minLevel, s.maxLevel), zone = zone,
-            pct = IS.Percent(chance) or L["rate unknown"], fraction = (chance and top > 0) and chance / top or 0,
-            spot = spot, known = chance ~= nil,
-        }
-    end
-    if num(facts.worldMinLevel) then
-        out[#out + 1] = { world = true, name = L["World drop"], level = L["level %d+"]:format(facts.worldMinLevel) }
-    end
-    return out
-end
-
---- SOLD BY: `{ name, level, zone, price, spot }` per vendor; `price` (copper) on the cheapest one.
---- `ctx`: `{ npc(id), spots(kind, id), mapName(map) }`.
---- @return table
-function ISV.VendorRows(facts, ctx)
-    ctx = ctx or {}
-    local cheapest = type(facts.vendorPrice) == "table" and facts.vendorPrice or nil
-    local out = {}
-    for _, v in ipairs(list(facts.vendors)) do
-        local n = type(ctx.npc) == "function" and ctx.npc(v.id) or nil
-        local spot, zone = whereOf("npc", v.id, ctx)
-        out[#out + 1] = {
-            name = v.name, level = type(n) == "table" and ISV.LevelText(n.minLevel, n.maxLevel) or nil,
-            zone = zone, spot = spot, price = cheapest and cheapest.npc == v.id and num(cheapest.price) or nil,
-        }
-    end
-    return out
-end
-
-local QUEST_STATE = { log = L["In your log"], done = L["Completed"], todo = L["Not picked up"] }
-
---- A quest state's words: "In your log", "Completed" or "Not picked up".
---- @param state string
---- @return string
-function ISV.QuestStateText(state)
-    return QUEST_STATE[state] or QUEST_STATE.todo
-end
-
---- QUESTS: `{ id, state, title, level, zone, spot, stateText }` per quest, completed ones left out
---- while `hideCompleted`. The zone is the quest's first giver's. `ctx`: `{ quest(id), spots,
---- mapName, hideCompleted }`.
---- @return table
-function ISV.QuestRows(facts, ctx)
-    ctx = ctx or {}
-    local out = {}
-    for _, q in ipairs(list(facts.quests)) do
-        if not (ctx.hideCompleted and q.state == "done") then
-            local info = type(ctx.quest) == "function" and ctx.quest(q.id) or nil
-            local giver = type(info) == "table" and list(info.givers)[1] or nil
-            local spot, zone
-            if type(giver) == "table" then spot, zone = whereOf(giver.kind, giver.id, ctx) end
-            out[#out + 1] = {
-                id = q.id, state = q.state, title = q.title or L["Quest %d"]:format(q.id), level = num(q.level),
-                zone = zone, spot = spot, stateText = ISV.QuestStateText(q.state),
-            }
-        end
-    end
-    return out
-end
-
---- A crafting row's breakpoints: `{ { tone, text } ... }`, the skill-up colors and your rank for a
---- recipe you know, "learnable at N" for one you don't (N its minimum rank), `{}` without
---- breakpoints. A minimum of 1 or less is unknown, not a rank: the client's MinSkillLineRank is 1
---- for nearly every recipe, so it neither says "learnable at 1" nor opens the colors with an
---- orange 1 (own call, IS-REV).
---- @param row table a crafting row (IS.Live's)
---- @return table
-function ISV.Breakpoints(row)
-    local min = num(row.min)
-    if min and min <= 1 then min = nil end
-    if not row.known then
-        if min then return { { tone = "muted", text = L["learnable at %d"]:format(min) } } end
-        return {}
-    end
-    local out = {}
-    local function add(tone, v) if num(v) then out[#out + 1] = { tone = tone, text = tostring(v) } end end
-    if num(row.yellow) and num(row.gray) and (row.yellow > 0 or row.gray > 0) then
-        add("skillOrange", min)
-        add("skillYellow", row.yellow)
-        add("skillGreen", row.green)
-        add("skillGray", row.gray)
-    end
-    if num(row.rank) then out[#out + 1] = { tone = "plain", text = L["you %d"]:format(row.rank) } end
-    return out
-end
-
---- CRAFTING: `{ spell, known, color, name, profession, breakpoints, stateText }` per recipe.
---- `ctx.profession(skillLine)` names the profession.
---- @return table
-function ISV.CraftRows(facts, ctx)
-    ctx = ctx or {}
-    local out = {}
-    for _, r in ipairs(list(facts.crafting)) do
-        out[#out + 1] = {
-            spell = r.spell, known = r.known == true, color = r.color,
-            name = r.name or L["Recipe %d"]:format(r.spell),
-            profession = type(ctx.profession) == "function" and ctx.profession(r.skillLine) or nil,
-            breakpoints = ISV.Breakpoints(r), stateText = r.known and L["Known"] or L["Not known"],
-        }
-    end
-    return out
-end
-
---- ALSO: `{ label, text, right }` rows: each quest that rewards the item, the quest it starts and
---- each creature it is skinned from (with its chance).
---- @return table
-function ISV.AlsoRows(facts)
-    local out = {}
-    for _, q in ipairs(list(facts.rewardFrom)) do
-        out[#out + 1] = { label = L["Reward from"], text = q.title or L["Quest %d"]:format(q.id),
-            right = num(q.level) and L["level %d"]:format(q.level) or nil }
-    end
-    local s = facts.startsQuest
-    if type(s) == "table" then
-        out[#out + 1] = { label = L["Starts quest"], text = s.title or L["Quest %d"]:format(s.id),
-            right = num(s.level) and L["level %d"]:format(s.level) or nil }
-    end
-    for _, c in ipairs(list(facts.skinnedFrom)) do
-        out[#out + 1] = { label = L["Skinned from"], text = c.name, right = IS.Percent(c.chance) or L["rate unknown"] }
-    end
-    return out
 end
 
 -- ── the item header and the footer ──────────────────────────────────────────────────────────

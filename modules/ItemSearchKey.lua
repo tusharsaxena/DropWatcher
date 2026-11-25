@@ -19,12 +19,24 @@ local _, NS = ...
 --     showing, it closes; pressed over another item, it switches to that one.
 -- Stood down, a press refuses as the Show window key does (NS.StoodDownRefusal's one line).
 --
--- THE DEFAULT KEY (spec §4.6): Ctrl-Alt-D (C.ITEM_SEARCH.DEFAULT_KEY), set ONCE per character and
--- only while that key runs nothing and the binding has no key of its own, so it never steals a key
--- the player bound (ItemTree's rule). The try runs at the session's first PLAYER_ENTERING_WORLD,
--- out of combat (in combat it waits for PLAYER_REGEN_ENABLED; SetBinding is #nocombat), and is
--- recorded in db.char.itemSearch.keyDefaulted whatever it found, so a key the player clears later
--- is never put back. Bindings.xml itself carries no `default` attribute (launcher-§6's MUST NOT).
+-- THE DEFAULT KEY (spec §4.6): Alt-Ctrl-D (C.ITEM_SEARCH.DEFAULT_KEY, `ALT-CTRL-D`, the client's
+-- canonical modifier order), set ONCE per character and only while that key runs nothing and the
+-- binding has no key of its own, so it never steals a key the player bound (ItemTree's rule). The
+-- try runs at the session's first PLAYER_ENTERING_WORLD, out of combat (in combat it waits for
+-- PLAYER_REGEN_ENABLED; SetBinding is #nocombat), and is recorded in
+-- db.char.itemSearch.keyDefaultedV (= C.ITEM_SEARCH.KEY_DEFAULT_V) whatever it found, so a key the
+-- player clears later is never put back. Bindings.xml itself carries no `default` attribute
+-- (launcher-§6's MUST NOT).
+--
+-- THE RE-TRY (Item Search feedback spec §1). The first default was stored as `CTRL-ALT-D`, a chord
+-- no key press ever matches (the client writes a press ALT-CTRL-...), and every character that ran
+-- it has the old marker `keyDefaulted = true`. The version marker makes the try run once more where
+-- it is missing; before it, a binding that holds the dead chord (C.ITEM_SEARCH.DEAD_KEY) is cleared,
+-- so the binding counts as keyless. A character with the old marker whose binding no longer holds
+-- the dead chord is NOT re-tried (answered "moved"): the player cleared or rebound the key after the
+-- first try, and a key the player clears is never put back. Whether GetBindingAction answers the
+-- stored dead chord as written (not normalized to ALT-CTRL-D) is smoke ITEM-SEARCH-19's probe. The
+-- old marker is otherwise left alone.
 
 NS.ItemSearchKey = NS.ItemSearchKey or {}
 local IK = NS.ItemSearchKey
@@ -99,34 +111,53 @@ local function charStore()
 end
 
 --- Set the default key once per character (see the header). Answers what happened: "bound",
---- "taken" (the key runs something else), "has" (the binding already has a key), "done" (tried
+--- "taken" (the key runs something else), "has" (the binding already has a key), "moved" (the first
+--- try ran here and its dead chord is gone: the player cleared or rebound it), "done" (tried
 --- before), "combat" (waits for the combat's end), "off" (Retail) or "unavailable".
 --- @return string
 function IK.TryDefaultKey()
     if not IS.Enabled() then return "off" end
     local store = charStore()
     if not store then return "unavailable" end
-    if store.keyDefaulted then return "done" end
+    local V = C.ITEM_SEARCH.KEY_DEFAULT_V
+    if store.keyDefaultedV == V then return "done" end
     if Compat.InCombatLockdown() then
         waitCombat = true
         return "combat"
     end
     waitCombat = false
     local command, key = C.ITEM_SEARCH.BINDING, C.ITEM_SEARCH.DEFAULT_KEY
+    local cleared = IK.ClearDeadKey(command)
     local has, action = Compat.HasBinding(command), Compat.BindingAction(key)
     if has == nil or action == nil then return "unavailable" end
-    store.keyDefaulted = true
+    store.keyDefaultedV = V
     if has then return "has" end
+    if store.keyDefaulted == true and not cleared then
+        NS.Debug("SEARCH", "default key not re-tried: the first try's %s is gone", C.ITEM_SEARCH.DEAD_KEY)
+        return "moved"
+    end
     if action ~= "" then
         NS.Debug("SEARCH", "default key %s left alone: it runs %s", key, action)
         return "taken"
     end
     if not Compat.BindKey(key, command) then
-        store.keyDefaulted = nil
+        store.keyDefaultedV = nil
         return "unavailable"
     end
     NS.Debug("SEARCH", "default key %s bound to Item Search", key)
     return "bound"
+end
+
+--- Clear the first default's dead chord (C.ITEM_SEARCH.DEAD_KEY) off `command`, when that chord
+--- still runs it (spec §1's re-try). Out of combat only (the caller asks). Answers whether it cleared.
+--- @param command string
+--- @return boolean
+function IK.ClearDeadKey(command)
+    local dead = C.ITEM_SEARCH.DEAD_KEY
+    if Compat.BindingAction(dead) ~= command then return false end
+    if not Compat.BindKey(dead, nil) then return false end
+    NS.Debug("SEARCH", "dead chord %s cleared off Item Search", dead)
+    return true
 end
 
 -- PLAYER_ENTERING_WORLD and PLAYER_REGEN_ENABLED are shared (core/DropWatcher.lua's dispatcher);

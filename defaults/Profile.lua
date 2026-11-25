@@ -365,23 +365,49 @@ do
     -- row of Item Search's own settings page (settings/ItemSearchRows.lua, spec §4.7).
     if F.itemSearch then
         P.itemSearch = {
+            -- Only the professions you know, in the tooltip and as the window's default (Item Search
+            -- feedback spec §4).
+            myProfessionsOnly = true,
             -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
-            -- sections, how many drop sources, completed quests hidden, and the order the sections
-            -- are written in (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
+            -- sections, the rows per section (feedback spec §7: 5, replacing dropsShown through
+            -- schema step 16), completed quests hidden, and the order the sections are written in
+            -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                dropsShown = 3, hideCompleted = true,
-                sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
-                order = { "drops", "vendors", "quests", "crafting", "also" },
+                rows = 5, hideCompleted = true,
+                sections = { drops = true, vendors = true, quests = true, crafting = true, skinned = true,
+                    also = false },
+                order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
-            -- skin's accent, or the custom one), row density, font size, the zone and level
-            -- columns, the waypoint pins and the recent searches. Its saved point is written by a
-            -- drag (`point`), with no default: it opens centered.
+            -- skin's accent, or the custom one) and the waypoint pins. Its rows take the main
+            -- window's table font and row height (feedback spec §5.1), so it has no density or font
+            -- size of its own; the recent searches and the zone-and-level-columns switch went too
+            -- (schema step 17). Its saved point and size are written by a drag and a resize
+            -- (`point`, `size`) and its last tab by a pick (`tab`), with no default: it opens
+            -- centered at C.ITEM_SEARCH.WINDOW's size on the first tab.
             window  = {
-                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 },
-                density = "comfortable", fontSize = 13, columns = true, pins = true, recent = true,
+                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
+            },
+            -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
+            -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
+            waypoints = "auto",
+            -- Drop Watcher's arrow (LibKa0s-WaypointArrow-1.0): its settings at the library's own key
+            -- names, seeded from its DEFAULTS (docs/api/WaypointArrow/version-3.3-docs.md): the look
+            -- (Raised, the skin's colors, else the far and near swatches, scale 1), the Text block (the
+            -- canonical Font block with its three "Use the skin's ..." companions, then Text position,
+            -- Show the target's name, Distance units) and the Position block (offsets from the screen's
+            -- center, written by a drag, and the arrow's own lock).
+            arrow = {
+                style = "raised", useSkinColors = true,
+                farColor = { r = 1, g = 0.82, b = 0, a = 1 }, nearColor = { r = 0.35, g = 0.80, b = 0.45, a = 1 },
+                scale = 1,
+                font = "Ka0s Prototype", fontFromSkin = true, fontSize = 12,
+                fontColor = { r = 1, g = 1, b = 1, a = 1 }, fontColorFromSkin = true, useClassColorFont = false,
+                fontFlags = "@skin", fontShadow = true, fontShadowFromSkin = true,
+                textPosition = "BELOW", showLabel = false, distanceUnits = "yards",
+                x = 0, y = 200, lock = false,
             },
         }
     end

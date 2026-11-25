@@ -928,17 +928,43 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.sections.quests", "bool", "true" },
     { "itemSearch.tooltip.sections.crafting", "bool", "true" },
     { "itemSearch.tooltip.sections.also", "bool", "false" },
-    { "itemSearch.tooltip.dropsShown", "number", "3" },
+    -- ISF-DW-04 (Item Search feedback spec §7): the tooltip's Skinned from section, on.
+    { "itemSearch.tooltip.sections.skinned", "bool", "true" },
+    -- ISF-DW-03 (Item Search feedback spec §4, §7): the rows per section replace the drop count
+    -- (schema step 16), and the profession filter covers the tooltip and the window.
+    { "itemSearch.tooltip.rows", "number", "5" },
+    { "itemSearch.myProfessionsOnly", "bool", "true" },
     { "itemSearch.tooltip.hideCompleted", "bool", "true" },
-    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"also\"}" },
+    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"skinned\",[6]=\"also\"}" },
     { "itemSearch.window.enabled", "bool", "true" },
     { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
     { "itemSearch.window.barFromSkin", "bool", "true" },
-    { "itemSearch.window.density", "string", "\"comfortable\"" },
-    { "itemSearch.window.fontSize", "number", "13" },
-    { "itemSearch.window.columns", "bool", "true" },
     { "itemSearch.window.pins", "bool", "true" },
-    { "itemSearch.window.recent", "bool", "true" },
+    -- ISF-DW-07 (Item Search feedback spec §6): who draws the way, and Drop Watcher's arrow's
+    -- rows (LibKa0s-WaypointArrow-1.0's WaypointArrowSettings, the library's DEFAULTS).
+    { "itemSearch.waypoints", "string", "\"auto\"" },
+    { "itemSearch.arrow.style", "string", "\"raised\"" },
+    { "itemSearch.arrow.useSkinColors", "bool", "true" },
+    { "itemSearch.arrow.farColor", "color", "{[\"a\"]=1,[\"b\"]=0,[\"g\"]=0.82,[\"r\"]=1}" },
+    { "itemSearch.arrow.nearColor", "color", "{[\"a\"]=1,[\"b\"]=0.45,[\"g\"]=0.8,[\"r\"]=0.35}" },
+    { "itemSearch.arrow.scale", "number", "1" },
+    { "itemSearch.arrow.font", "string", "\"Ka0s Prototype\"" },
+    { "itemSearch.arrow.fontSize", "number", "12" },
+    { "itemSearch.arrow.fontColor", "color", "{[\"a\"]=1,[\"b\"]=1,[\"g\"]=1,[\"r\"]=1}" },
+    { "itemSearch.arrow.useClassColorFont", "bool", "false" },
+    { "itemSearch.arrow.fontFlags", "string", "\"@skin\"" },
+    { "itemSearch.arrow.fontShadow", "bool", "true" },
+    { "itemSearch.arrow.fontFromSkin", "bool", "true" },
+    { "itemSearch.arrow.fontColorFromSkin", "bool", "true" },
+    { "itemSearch.arrow.fontShadowFromSkin", "bool", "true" },
+    { "itemSearch.arrow.textPosition", "string", "\"BELOW\"" },
+    { "itemSearch.arrow.showLabel", "bool", "false" },
+    { "itemSearch.arrow.distanceUnits", "string", "\"yards\"" },
+    { "itemSearch.arrow.x", "number", "0" },
+    { "itemSearch.arrow.y", "number", "200" },
+    { "itemSearch.arrow.lock", "bool", "false" },
+    -- ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4): itemSearch.window.density, .fontSize,
+    -- .columns and .recent went on purpose, their stored values deleted by schema step 17.
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()

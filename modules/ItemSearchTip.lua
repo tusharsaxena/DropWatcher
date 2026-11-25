@@ -24,25 +24,32 @@ local _, NS = ...
 --
 -- WHAT IT WRITES (IST.Lines, pure; IST.Paint writes it):
 --   * the separator, a 1 px rule in the skin's accent (`text.accent`, read at call time), and the
---     title line, the `search` magnifier and "Drop Watcher · Item Search" in the same accent
---     (the "Separator and title line" setting);
+--     title line "Drop Watcher · Item Search" in the same accent, with no icon before it (Item
+--     Search feedback spec §7, T2; the "Separator and title line" setting);
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
---     the tooltip label's muted gold and its rows, an empty section left out:
---       Drops from  the first `dropsShown` sources (name, level range; chance on the right), a
---                   World drop row with its minimum level, then "and N more";
---       Sold by     the vendors (the cheapest one's price on the right), then "and N more";
---       Quests      `!` in your log, `?` not picked up yet, a check mark completed (left out while
---                   "Hide completed quests" is on); the quest's level on the right;
---       Crafting    a filled dot for a recipe you know, in its skill-up color, a dashed ring for one
---                   you don't; the profession on the right;
---       Also        the quests that reward the item and the quest it starts;
+--     the tooltip label's muted gold and its rows, an empty section left out. Every section's rows
+--     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at
+--     `itemSearch.tooltip.rows` (5 by default, 1 to 20; §7), the rest one "and N more" line:
+--       Drops from    the sources (name, level range; chance on the right), then a World drop row
+--                     with its minimum level, then "and N more";
+--       Sold by       the vendors (the cheapest one's price on the right);
+--       Quests        `!` in your log, `?` not picked up yet, a check mark completed (left out while
+--                     "Hide completed quests" is on); the quest's level on the right;
+--       Crafting      the recipe glyph (IST.CraftMark, §5.7) and the profession on the right; with
+--                     "Only professions you know" on (§4) the other professions' recipes are left
+--                     out and counted on one dim line, "+N in professions you don't know", after
+--                     "and N more" (the heading and that line alone when every recipe is filtered);
+--       Skinned from  the creatures (name, level range; chance on the right);
+--       Also          the quests that reward the item and the quest it starts;
 --   * the hint "<key>: open in Item Search", naming the key bound to C.ITEM_SEARCH.BINDING as the
---     client writes it, left out when nothing is bound (the "Keybind hint line" setting).
+--     client writes it (GetBindingKey through GetBindingText, so `ALT-CTRL-D` reads `Alt-Ctrl-D`),
+--     left out when nothing is bound (the "Show the key hint" setting, feedback spec §1).
 -- An item with no row in any switched-on section gets no block at all, title and hint included.
 --
--- THE MARKS are texture escapes of LibKa0s media icons (`confirm`, `ph:circle`, `ph:circle-dashed`,
--- `search`), tinted through the escape: the tooltip's face draws no check mark or circles (the
--- glyph guard's safe set), as NS.TipMarks' verdict marks. `!` and `?` are text.
+-- THE MARKS are texture escapes of LibKa0s media icons (`confirm`, and the recipe glyphs
+-- `ph:arrow-up`, `ph:minus` and `ph:lock`), tinted through the escape: the tooltip's face draws no
+-- check mark, arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict marks. `!` and
+-- `?` are text.
 
 NS.ItemSearchTip = NS.ItemSearchTip or {}
 local IST = NS.ItemSearchTip
@@ -53,21 +60,30 @@ local L   = NS.L
 local Compat = NS.Compat
 
 --- The sections' default order, and which are on by default (spec §4.7).
-IST.ORDER = { "drops", "vendors", "quests", "crafting", "also" }
-IST.SECTIONS = { drops = true, vendors = true, quests = true, crafting = true, also = false }
-IST.DROPS_MAX = 10
+IST.ORDER = { "drops", "vendors", "quests", "crafting", "skinned", "also" }
+IST.SECTIONS = { drops = true, vendors = true, quests = true, crafting = true, skinned = true, also = false }
 
 -- The separator's texture: the client's plain white square, tinted by the escape.
 IST.RULE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 
 local SKILL_TONE = { orange = "skillOrange", yellow = "skillYellow", green = "skillGreen", gray = "skillGray" }
 
+-- The recipe glyphs (feedback spec §5.7): each glyph's icon, its tone (the skill-up's own for an
+-- up arrow), and the character it falls back to.
+local GLYPH = {
+    up     = { icon = "ph:arrow-up", fallback = "^" },
+    flat   = { icon = "ph:minus", tone = "glyphKnown", fallback = "-" },
+    locked = { icon = "ph:lock", tone = "glyphLocked", fallback = "x" },
+}
+local SKILL_UP = { orange = true, yellow = true, green = true }
+
 -- With the media library absent (NS.Icon answers nil) a mark falls back to a character every face has.
-local FALLBACK = { done = "+", known = "*", unknown = "o" }
+local FALLBACK = { done = "+" }
 
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
 local installed = false
+local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each post call (never kept)
 
 -- ── colors and marks ────────────────────────────────────────────────────────────────────────
 
@@ -102,13 +118,27 @@ function IST.QuestMark(state)
     return colored("?", "muted")
 end
 
---- A crafting row's mark: a filled dot in the skill-up color for a known recipe (plain without
---- one), a muted dashed ring for one you don't know.
+--- A crafting row's glyph (feedback spec §5.7): "up" for a known recipe that can skill up (orange,
+--- yellow or green), "flat" for a known one that cannot (gray, or no breakpoints to tell), "locked"
+--- for one you don't know.
+--- @param row table a crafting row (IS.Live's)
+--- @return string
+function IST.CraftGlyph(row)
+    if not row.known then return "locked" end
+    if SKILL_UP[row.color] then return "up" end
+    return "flat"
+end
+
+--- A crafting row's mark, in the tooltip and the window alike: an up arrow in the skill-up color, a
+--- light gray dash, or a dark gray padlock (IST.CraftGlyph). The shapes differ as well as the
+--- colors, so a color-blind player reads them too.
 --- @param row table a crafting row (IS.Live's)
 --- @return string
 function IST.CraftMark(row)
-    if row.known then return icon("ph:circle", SKILL_TONE[row.color] or "plain", FALLBACK.known) end
-    return icon("ph:circle-dashed", "muted", FALLBACK.unknown)
+    local glyph = IST.CraftGlyph(row)
+    local g = GLYPH[glyph]
+    local tone = glyph == "up" and SKILL_TONE[row.color] or g.tone
+    return icon(g.icon, tone, g.fallback)
 end
 
 --- The separator: a RULE_WIDTH x 1 rule in the accent.
@@ -159,86 +189,121 @@ local function more(out, n)
     if n > 0 then add(out, INDENT .. L["and %d more"]:format(n), "muted") end
 end
 
-local function dropsLines(f, o, out)
-    if #f.drops == 0 and not f.worldMinLevel then return end
+-- Each section writes from `f` (the facts) and `r` (IS.Ranked's answer for them), capped at o.rows.
+-- How many of `rows` show under the cap `n` (IS.Cap's count, without its new array: the block is
+-- written on every hover), and how many are past them.
+local function capped(rows, n)
+    local k = math.min(IS.ClampRows(n), #rows)
+    return k, #rows - k
+end
+
+local function dropsLines(f, r, o, out)
+    if #r.drops == 0 and not f.worldMinLevel then return end
     add(out, L["Drops from"], "mutedGold")
-    for i = 1, math.min(o.dropsShown, #f.drops) do
-        local s = f.drops[i]
+    local shown, rest = capped(r.drops, o.rows)
+    for i = 1, shown do
+        local s = r.drops[i]
         add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
             IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
     end
     if f.worldMinLevel then
         add(out, INDENT .. L["World drop"], "plain", L["level %d+"]:format(f.worldMinLevel), "muted")
     end
-    more(out, f.dropMore or 0)
+    more(out, rest)
 end
 
-local function vendorLines(f, _, out)
-    if #f.vendors == 0 then return end
+local function vendorLines(f, r, o, out)
+    if #r.vendors == 0 then return end
     add(out, L["Sold by"], "mutedGold")
     local cheapest = f.vendorPrice and f.vendorPrice.npc
-    local shown = math.min(C.ITEM_SEARCH.TIP_VENDORS, #f.vendors)
+    local shown, rest = capped(r.vendors, o.rows)
     for i = 1, shown do
-        local v = f.vendors[i]
+        local v = r.vendors[i]
         local price = v.id == cheapest and Compat.CoinText(f.vendorPrice.price) or nil
         add(out, INDENT .. v.name, "plain", price, "plain")
     end
-    more(out, #f.vendors - shown)
+    more(out, rest)
 end
 
-local function questLines(f, o, out)
+local function questLines(_, r, o, out)
     local rows = {}
-    for _, q in ipairs(f.quests) do
+    for _, q in ipairs(r.quests) do
         if not (o.hideCompleted and q.state == "done") then rows[#rows + 1] = q end
     end
     if #rows == 0 then return end
     add(out, L["Quests"], "mutedGold")
-    for _, q in ipairs(rows) do
+    local shown, rest = capped(rows, o.rows)
+    for i = 1, shown do
+        local q = rows[i]
         add(out, INDENT .. IST.QuestMark(q.state) .. " " .. (q.title or L["Quest %d"]:format(q.id)), "plain",
             q.level and L["level %d"]:format(q.level) or nil, "muted")
     end
+    more(out, rest)
 end
 
-local function craftingLines(f, _, out)
-    if #f.crafting == 0 then return end
+local function craftingLines(_, r, o, out)
+    local hidden = r.craftHidden or 0
+    if #r.crafting == 0 and hidden == 0 then return end
     add(out, L["Crafting"], "mutedGold")
-    for _, r in ipairs(f.crafting) do
-        add(out, INDENT .. IST.CraftMark(r) .. " " .. (r.name or L["Recipe %d"]:format(r.spell)),
-            r.known and "plain" or "muted", professionName(r.skillLine), "muted")
+    local shown, rest = capped(r.crafting, o.rows)
+    for i = 1, shown do
+        local c = r.crafting[i]
+        add(out, INDENT .. IST.CraftMark(c) .. " " .. (c.name or L["Recipe %d"]:format(c.spell)),
+            c.known and "plain" or "muted", professionName(c.skillLine), "muted")
     end
+    more(out, rest)
+    if hidden > 0 then add(out, INDENT .. L["+%d in professions you don't know"]:format(hidden), "muted") end
 end
 
-local function alsoLines(f, _, out)
+local function skinnedLines(_, r, o, out)
+    if #r.skinned == 0 then return end
+    add(out, L["Skinned from"], "mutedGold")
+    local shown, rest = capped(r.skinned, o.rows)
+    for i = 1, shown do
+        local s = r.skinned[i]
+        add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or L["rate unknown"],
+            s.chance and "plain" or "muted")
+    end
+    more(out, rest)
+end
+
+local function alsoLines(f, _, o, out)
     local starts = f.startsQuest
     if #f.rewardFrom == 0 and not starts then return end
     add(out, L["Also"], "mutedGold")
-    for _, q in ipairs(f.rewardFrom) do
+    local shown, rest = capped(f.rewardFrom, o.rows)
+    for i = 1, shown do
+        local q = f.rewardFrom[i]
         add(out, INDENT .. L["Reward from"], "muted", q.title or L["Quest %d"]:format(q.id), "plain")
     end
+    more(out, rest)
     if starts then
         add(out, INDENT .. L["Starts quest"], "muted", starts.title or L["Quest %d"]:format(starts.id), "plain")
     end
 end
 
 local SECTION = { drops = dropsLines, vendors = vendorLines, quests = questLines, crafting = craftingLines,
-    also = alsoLines }
+    skinned = skinnedLines, also = alsoLines }
 
---- The block's lines for `facts` under the options `o` (IST.Options' shape) and the bound key's
---- text (nil: unbound). `{}` when no switched-on section has a row: no block at all.
+--- The block's lines for `facts` under the options `o` (IST.Options' shape), the bound key's text
+--- (nil: unbound) and the ranking's context `me` (NS.ItemSearch.Me's shape; nil ranks with no
+--- context). `{}` when no switched-on section has a row: no block at all.
 --- @param facts table NS.ItemSearch.Get's answer
 --- @param o table
 --- @param keyText string|nil
+--- @param me table|nil
 --- @return table lines `{ { text, tone, right, rightTone } ... }`
-function IST.Lines(facts, o, keyText)
+function IST.Lines(facts, o, keyText, me)
+    local ranked = IS.Ranked(facts, me or {}, o.mine)
     local body = {}
     for _, key in ipairs(o.order) do
-        if o.sections[key] and SECTION[key] then SECTION[key](facts, o, body) end
+        if o.sections[key] and SECTION[key] then SECTION[key](facts, ranked, o, body) end
     end
     if #body == 0 then return body end
     local out = {}
     if o.header then
         add(out, IST.Rule(), "accent")
-        add(out, icon("search", "accent", "") .. " " .. L["Drop Watcher · Item Search"], "accent")
+        add(out, L["Drop Watcher · Item Search"], "accent")
     end
     for _, line in ipairs(body) do out[#out + 1] = line end
     if o.hint and keyText then add(out, L["%s: open in Item Search"]:format(keyText), "muted") end
@@ -253,9 +318,24 @@ local function setting(key, default)
     return v
 end
 
+-- The last stored order (a copy) and sections (the values read) with their answers: Options runs
+-- on every hover, so an unchanged setting answers the same table again rather than a new one.
+local lastOrder = { stored = nil, out = nil }
+local lastSections = { seen = {}, out = nil }
+
+local function sameOrder(stored)
+    local copy = lastOrder.stored
+    if not copy or #copy ~= #stored then return false end
+    for i = 1, #stored do
+        if copy[i] ~= stored[i] then return false end
+    end
+    return true
+end
+
 -- The order as stored, known keys once each, then any missing key in the default order.
 local function orderOf(stored)
     if type(stored) ~= "table" then return IST.ORDER end
+    if sameOrder(stored) then return lastOrder.out end
     local out, seen = {}, {}
     for _, key in ipairs(stored) do
         if SECTION[key] and not seen[key] then seen[key] = true; out[#out + 1] = key end
@@ -263,28 +343,43 @@ local function orderOf(stored)
     for _, key in ipairs(IST.ORDER) do
         if not seen[key] then out[#out + 1] = key end
     end
+    local copy = {}
+    for i, key in ipairs(stored) do copy[i] = key end
+    lastOrder.stored, lastOrder.out = copy, out
     return out
+end
+
+local function sameSections(stored)
+    if not lastSections.out then return false end
+    for key in pairs(IST.SECTIONS) do
+        if lastSections.seen[key] ~= stored[key] then return false end
+    end
+    return true
 end
 
 local function sectionsOf(stored)
     if type(stored) ~= "table" then return IST.SECTIONS end
-    local out = {}
+    if sameSections(stored) then return lastSections.out end
+    local out, seen = {}, {}
     for key, on in pairs(IST.SECTIONS) do
+        seen[key] = stored[key]
         if stored[key] == nil then out[key] = on else out[key] = stored[key] == true end
     end
+    lastSections.seen, lastSections.out = seen, out
     return out
 end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
---- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, dropsShown, sections, order }`.
+--- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, rows, mine, sections, order }`
+--- (`mine`: itemSearch.myProfessionsOnly, feedback spec §4).
 --- @return table
 function IST.Options()
-    local shown = tonumber(setting("dropsShown", IS.DROPS_SHOWN)) or IS.DROPS_SHOWN
+    local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
     return {
         enabled = setting("enabled", true) == true, shiftOnly = setting("shiftOnly", false) == true,
         header = setting("header", true) == true, hint = setting("hint", true) == true,
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
-        dropsShown = math.max(1, math.min(IST.DROPS_MAX, math.floor(shown))),
+        rows = shown, mine = IS.MyProfessionsOnly(),
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end
@@ -342,9 +437,10 @@ function IST.OnTooltip(tip, data)
     local o = IST.Options()
     if not o.comparison and Compat.IsComparisonTooltip(tip) then return false end
     if o.shiftOnly and not Compat.ShiftDown() then return false end
-    local facts = IS.Get(itemID, o)
+    local facts = IS.Get(itemID)
     if not facts then return false end
-    local lines = IST.Lines(facts, o, o.hint and Compat.BindingKeyText(C.ITEM_SEARCH.BINDING) or nil)
+    local lines = IST.Lines(facts, o, o.hint and Compat.BindingKeyText(C.ITEM_SEARCH.BINDING) or nil,
+        IS.Me(facts.ranks, tipMe))
     if #lines == 0 then return false end
     watch(tip)
     shownOn[tip] = itemID

@@ -62,6 +62,71 @@ function Compat.PlayerRaceClassIDs()
     return race, class
 end
 
+--- The player's side as ForeverDB's `nfac` writes it: "A" (Alliance) or "H" (Horde), from
+--- UnitFactionGroup; nil for any other answer (a neutral Pandaren, a secret, no API).
+--- @return string|nil
+function Compat.PlayerFactionLetter()
+    if type(UnitFactionGroup) ~= "function" then return nil end
+    local group = plainString((UnitFactionGroup("player")))
+    if group == "Alliance" then return "A" end
+    if group == "Horde" then return "H" end
+    return nil
+end
+
+-- ── where the player stands (Item Search feedback spec §3's ranking) ─────────────────────────
+
+-- The client's map types (Enum.UIMapType): Continent 2, Zone 3; a dungeon, micro or orphan map
+-- (4 and up) sits under a zone.
+local MAP_CONTINENT, MAP_ZONE, MAP_WALK = 2, 3, 8
+local continentCache = {}
+
+-- A map's `{ mapType, parentMapID }` (C_Map.GetMapInfo), or nil.
+local function mapInfo(mapID)
+    local map = C_Map
+    if not (plainId(mapID) and type(map) == "table" and type(map.GetMapInfo) == "function") then return nil end
+    local info = plainTable(map.GetMapInfo(mapID))
+    if not info then return nil end
+    return plainNumber(info.mapType), plainId(info.parentMapID)
+end
+
+-- Walk up from `mapID` to the first map of type `want` or less; nil when the walk finds none.
+local function walkUp(mapID, want)
+    for _ = 1, MAP_WALK do
+        local mapType, parent = mapInfo(mapID)
+        if not mapType then return nil end
+        if mapType <= want then return mapType == want and mapID or nil end
+        mapID = parent
+        if not mapID then return nil end
+    end
+    return nil
+end
+
+--- The continent a map lies on (its first Continent ancestor, or itself), cached per map: maps never
+--- move in a session. nil when the client names none.
+--- @param mapID number
+--- @return number|nil
+function Compat.ContinentOf(mapID)
+    if not plainId(mapID) then return nil end
+    local hit = continentCache[mapID]
+    if hit == nil then
+        hit = walkUp(mapID, MAP_CONTINENT) or false
+        continentCache[mapID] = hit
+    end
+    return hit or nil
+end
+
+--- The player's zone (C_Map.GetBestMapForUnit, a dungeon or micro map walked up to its zone) and
+--- that zone's continent; nil for what the client does not answer.
+--- @return number|nil zoneMapID, number|nil continentMapID
+function Compat.PlayerZone()
+    local map = C_Map
+    if not (type(map) == "table" and type(map.GetBestMapForUnit) == "function") then return nil, nil end
+    local best = plainId(map.GetBestMapForUnit("player"))
+    if not best then return nil, nil end
+    local zone = walkUp(best, MAP_ZONE) or best
+    return zone, Compat.ContinentOf(zone)
+end
+
 -- ── quests ──────────────────────────────────────────────────────────────────────────────────
 
 --- Whether a quest is in the player's log: C_QuestLog.GetLogIndexForQuestID answering an index,
@@ -101,14 +166,19 @@ end
 
 -- ── spells and professions ──────────────────────────────────────────────────────────────────
 
--- One C_SkillInfo line into `ranks`: its skill line and its parent's, the higher rank kept.
+-- Keep the higher of `rank` and what `ranks` already has for `line` (nil: no line).
+local function keepRank(ranks, line, rank)
+    if line and (not ranks[line] or ranks[line] < rank) then ranks[line] = rank end
+end
+
+-- One C_SkillInfo line into `ranks`: its skill line and its parent's, the higher rank kept (no
+-- table per line: Item Search reads the ranks on every tooltip hover).
 local function addSkillLine(ranks, info)
     if not plainTable(info) or info.isHeader == true then return end
     local rank = plainNumber(info.rank or info.skillRank)
     if not rank then return end
-    for _, line in ipairs({ plainId(info.skillID or info.skillLineID), plainId(info.parentSkillLineID) }) do
-        if not ranks[line] or ranks[line] < rank then ranks[line] = rank end
-    end
+    keepRank(ranks, plainId(info.skillID or info.skillLineID), rank)
+    keepRank(ranks, plainId(info.parentSkillLineID), rank)
 end
 
 local function ranksFromSkillInfo(ns)
@@ -278,7 +348,7 @@ function Compat.IsComparisonTooltip(tip)
 end
 
 --- The first key bound to a binding command, as the client names it for display (GetBindingText:
---- `CTRL-ALT-D` reads `Ctrl-Alt-D` on an English client); nil when nothing is bound.
+--- `ALT-CTRL-D` reads `Alt-Ctrl-D` on an English client); nil when nothing is bound.
 --- @param command string
 --- @return string|nil
 function Compat.BindingKeyText(command)
@@ -316,19 +386,6 @@ function Compat.MapName(mapID)
     return info and plainString(info.name) or nil
 end
 
--- The client's own user waypoint, where the client has it and the map takes one.
-local function clientWaypoint(mapID)
-    local map, point = C_Map, UiMapPoint
-    if not (type(map) == "table" and type(map.SetUserWaypoint) == "function" and type(point) == "table"
-        and type(point.CreateFromCoordinates) == "function") then
-        return false
-    end
-    if type(map.CanSetUserWaypointOnMap) == "function" and map.CanSetUserWaypointOnMap(mapID) ~= true then
-        return false
-    end
-    return true
-end
-
 -- TomTom's AddWaypoint, when TomTom is installed and loaded.
 local function tomTom()
     local tt = TomTom
@@ -336,39 +393,27 @@ local function tomTom()
     return nil
 end
 
---- How a waypoint on `mapID` would be set: "client" (C_Map.SetUserWaypoint, the map takes one),
---- else "tomtom" (TomTom installed), else nil (the window hides the pin).
---- @param mapID number
---- @return string|nil
-function Compat.WaypointMethod(mapID)
-    if not plainId(mapID) then return nil end
-    if clientWaypoint(mapID) then return "client" end
-    if tomTom() then return "tomtom" end
-    return nil
+--- Whether TomTom is loaded (its AddWaypoint answers). The client's own user waypoint
+--- (C_Map.SetUserWaypoint) is no longer used (Item Search feedback spec §6): it draws no arrow on
+--- WoW Forever, so a pin is TomTom's or Drop Watcher's arrow (modules/ItemSearchWaypoint.lua).
+--- @return boolean
+function Compat.TomTomLoaded()
+    return tomTom() ~= nil
 end
 
---- Set a waypoint at `x`, `y` (0..1) on `mapID`, named `title`: the client's user waypoint, super
---- tracked where the client can, else TomTom's. Answers the method used ("client" | "tomtom"), or
---- nil when neither can.
+--- Add a TomTom waypoint at `x`, `y` (0..1) on `mapID`, named `title`. Answers true when TomTom
+--- took it; false with no TomTom, no plain map or point, or an AddWaypoint that raised.
 --- @param mapID number
 --- @param x number
 --- @param y number
 --- @param title string|nil
---- @return string|nil
-function Compat.SetWaypoint(mapID, x, y, title)
+--- @return boolean
+function Compat.AddTomTomWaypoint(mapID, x, y, title)
+    local tt = tomTom()
     x, y = plainNumber(x), plainNumber(y)
-    local how = Compat.WaypointMethod(mapID)
-    if not (how and x and y) then return nil end
-    if how == "client" then
-        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
-        local track = C_SuperTrack
-        if type(track) == "table" and type(track.SetSuperTrackedUserWaypoint) == "function" then
-            track.SetSuperTrackedUserWaypoint(true)
-        end
-        return how
-    end
-    tomTom():AddWaypoint(mapID, x, y, { title = title, from = NS.BRAND })
-    return how
+    if not (tt and plainId(mapID) and x and y) then return false end
+    local ok = pcall(tt.AddWaypoint, tt, mapID, x, y, { title = title, from = NS.BRAND })
+    return ok == true
 end
 
 --- The item a shown tooltip holds now (its GetItem: name, link, id), else nil: hidden, forbidden,

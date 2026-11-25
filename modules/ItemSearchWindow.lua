@@ -1,46 +1,66 @@
-local _, NS = ...
--- modules/ItemSearchWindow.lua — the Item Search window (DropWatcher#17, Item Search spec §4.5,
--- mockup board 2): the frame edge over the pure rows of modules/ItemSearchView.lua. WoW Forever's
--- alone (C.FEATURE.itemSearch, clients-§4): on Retail nothing here is built or opens.
+local addonName, NS = ...
+-- modules/ItemSearchWindow.lua — the Item Search window (DropWatcher#17, Item Search spec §4.5; Item
+-- Search feedback spec §5; mockups V2Window and V2Tabs): the frame edge over the pure halves,
+-- modules/ItemSearchView.lua (the search and the header), modules/ItemSearchCells.lua (each tab's
+-- rows) and modules/ItemSearchTabs.lua (the tabs, columns, filters and sorts), drawn through
+-- modules/ItemSearchGrid.lua's headers, tables and match rows. WoW Forever's alone
+-- (C.FEATURE.itemSearch, clients-§4): on Retail nothing here is built or opens.
 --
--- THE WINDOW. A non-secure standalone window (standalone-windows) in Drop Watcher's chrome: the
--- skin's shell and title band (NS.ApplySkin, NS.Skin.Shell, NS.Skin.Header), the title bar's
--- strip of marks (NS.WindowTitleBar.Marks: lock · settings · close), the library's footer, Escape
--- (UISpecialFrames), raised on a click (SetToplevel), clamped to the screen, moved by its title
--- bar unless Drop Watcher is locked (the one `locked` setting the main window and the launcher
--- share), and its position saved per profile (itemSearch.window.point) on every drag's stop. It is
--- NOT a companion (standalone-windows, *A companion window carries no settings mark*): its key
--- binding opens it on its own and it keeps a saved position, so it fails the "owned" test and
--- carries the gear, as the mockup draws. Its size is fixed, so there is no resize grip.
+-- THE WINDOW (feedback spec §5.1). A non-secure standalone window (standalone-windows) in Drop
+-- Watcher's chrome: the skin's shell and title band (NS.ApplySkin, NS.Skin.Shell, NS.Skin.Header),
+-- the title "Drop Watcher · Item Search" in the main window's title font (GameFontNormal through
+-- NS.Skin.TitleBar), the title bar's settings and close marks (NS.WindowTitleBar.Marks; the lock and
+-- its code are gone, W13: it is always movable by its title bar), the library's footer with
+-- ForeverDB's state alone (no key hint, W2), Escape (UISpecialFrames), raised on a click
+-- (SetToplevel), clamped to the screen. It is resizable from the footer's corner grip
+-- (NS.MakeResizable, W14): C.ITEM_SEARCH.WINDOW's MIN_W x MIN_H at least, the screen at most,
+-- WIDTH x HEIGHT by default; the size is saved with the position (itemSearch.window.size, .point)
+-- and the panes reflow to it, the tables' flex columns taking the room (spec §5.4). It is NOT a
+-- companion (its key opens it on its own and it keeps a saved position), so it carries the gear.
 --
--- THE LEFT PANE. The "Item name or id" box (the library's search box, NS.MakeSearchBox, or a plain
--- edit box without it) and Clear; the matches, run C.ITEM_SEARCH.DEBOUNCE seconds after the last
--- key (Enter shows the first match at once); then the recent searches, the last
--- C.ITEM_SEARCH.WINDOW.RECENT items shown, account-wide (db.global.itemSearch.recent, the lead's
--- `global`), while "remember recent searches" is on.
+-- FONTS MATCH DROP WATCHER (W3). Every row, cell and match is drawn in the main window's table font
+-- and row height (NS.WindowRows.Metrics: Window > Layout's Row height and the Tables font block,
+-- the skin's face and its scale); the headers' and the column labels' text is the main window's
+-- (GameFontNormalSmall in `list.header.text`); the item header's name is the main window's own
+-- item title, the detail card's (modules/DetailCard.lua: GameFontNormal in the skin's face), its
+-- line the small template, never GameFontNormalLarge.
 --
--- THE RIGHT PANE. The item header (icon, name in its quality color, the quality, class, subclass,
--- required level and id line) with Link in chat; the ForeverDB notice while it is not loaded (spec
--- §1); then DROPS FROM, SOLD BY, QUESTS, CRAFTING and ALSO, each left out when empty, in pooled
--- rows. A drop row's bar is scaled to the top chance, in the skin's accent or the custom color; a
--- pin, shown only for a source with a spot and a client that can set a waypoint there
--- (NS.Compat.WaypointMethod: the client's own user waypoint, else TomTom), sets it.
+-- THE LEFT PANE (spec §5.2). The search box (the library's, NS.MakeSearchBox, or a plain edit box
+-- without it) and Clear (a flat button, its label centered: no mark beside it, W6); the matches,
+-- run C.ITEM_SEARCH.DEBOUNCE seconds after the last key (Enter shows the first match at once),
+-- under a "Matches · n" section header with a Sort mark (Best match, Name, Item id). Each match row
+-- is ISG.MatchRow: striped, washed under the pointer, the selected look on the item the right pane
+-- shows (W5), its game tooltip on hover, a shift-click linking it (W7). Recent searches are gone
+-- (W4): no list, no store, no setting (schema step 17).
 --
--- THE FOOTER. "ForeverDB <version> · <state>" on the left, the key binding's hint on the right
--- ("<key>: open in Item Search", or nothing while unbound).
+-- THE RIGHT PANE (spec §5.3). The item header (icon, name in its quality color, the line, and a dim
+-- "Shift-click the name or icon to link it"): hovering the icon or the name shows the item's game
+-- tooltip, a shift-click on either links it in chat (W7; the Link in chat button and its code are
+-- gone). The ForeverDB notice while it is not loaded. Then the tab strip: the main window's tab
+-- look (NS.Skin.Tab, NS.Skin.SetTabSelection; modules/WindowTabs.lua's, without the library its
+-- own underline), a tab per section with rows in TABS.ORDER, each label with its count (Crafting's
+-- filtered count, the whole count dim beside it). The tab shown is the last one picked
+-- (itemSearch.window.tab) when the item has it, else the first. Under the strip the tab's section
+-- header (its title and count, the sort in force, Filter · Sort · Reset; Crafting's My professions
+-- chip) and its table. Each tab's view state (its sort and filters, TABS' state) lives for the
+-- session and is never saved (spec §5.5).
 --
--- READS NEVER LOAD (spec §2). Every ForeverDB read goes through NS.ItemSearch.Get or the adapter
--- only while NS.ItemSearch.State() is "loaded".
+-- READS NEVER LOAD (spec §2). Every ForeverDB read goes through NS.ItemSearch.Get or the reader only
+-- while NS.ItemSearch.State() is "loaded".
 
 NS.ItemSearchWindow = NS.ItemSearchWindow or {}
-local ISW = NS.ItemSearchWindow
-local IS  = NS.ItemSearch
-local ISV = NS.ItemSearchView
-local C   = NS.Constants
-local L   = NS.L
+local ISW  = NS.ItemSearchWindow
+local IS   = NS.ItemSearch
+local ISV  = NS.ItemSearchView
+local ISC  = NS.ItemSearchCells
+local TABS = NS.ItemSearchTabs
+local ISG  = NS.ItemSearchGrid
+local C    = NS.Constants
+local L    = NS.L
 
 local Compat = NS.Compat
 local WIN = C.ITEM_SEARCH.WINDOW
+local K   = C.WINDOW
 
 local frame                 -- built on the first open
 local shownItem             -- the item the detail pane shows
@@ -48,6 +68,18 @@ local query = ""            -- the search box's text as last typed
 local searchTimer           -- the debounce
 local retries = 0           -- repaints asked for an item the client is still loading
 local matches = {}
+local matchSort = "best"    -- the matches' Sort (spec §5.2), for the session
+local views = {}            -- [tab] = TABS' view state, for the session (spec §5.5: never saved)
+local shownTab              -- the tab on screen now
+-- The last ISC.Build (the item, its facts and its rows), kept for a VIEW-ONLY repaint: a corner drag,
+-- a sort or filter click, Reset or a tab pick changes only how the rows are shown, so it re-lays
+-- the table from these rows instead of reading the facts and ranking every section again (the
+-- feedback review's resize finding). Every other repaint builds afresh and replaces them.
+local lastBuild = { item = nil, facts = nil, rows = nil }
+local viewOnly = false      -- the next ISW.Refresh may reuse lastBuild (repaintView sets it)
+
+local function TM() return NS.TipMarks end
+local function WP() return NS.ItemSearchWaypoint end
 
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
 
@@ -57,17 +89,12 @@ local function setting(key, default)
     return v
 end
 
---- The window's settings, read now (spec §4.7; every key under itemSearch.window).
---- @return table { barFromSkin, barColor, density, fontSize, columns, pins, recent }
+--- The window's settings, read now (every key under itemSearch.window).
+--- @return table { barFromSkin, barColor, pins }
 function ISW.Options()
-    local size = tonumber(setting("fontSize", WIN.FONT)) or WIN.FONT
-    local density = setting("density", "comfortable")
     return {
         barFromSkin = setting("barFromSkin", true) ~= false, barColor = setting("barColor"),
-        density = WIN.ROW_H[density] and density or "comfortable",
-        fontSize = math.max(WIN.FONT_MIN, math.min(WIN.FONT_MAX, math.floor(size))),
-        columns = setting("columns", true) ~= false, pins = setting("pins", true) ~= false,
-        recent = setting("recent", true) ~= false,
+        pins = setting("pins", true) ~= false,
     }
 end
 
@@ -86,25 +113,6 @@ local function geometry()
     return p.itemSearch.window
 end
 
--- The account-wide recent list, made on first use (nil before the database exists).
-local function recentStore()
-    local db = NS.addon and NS.addon.db
-    local g = db and db.global
-    if type(g) ~= "table" then return nil end
-    if type(g.itemSearch) ~= "table" then g.itemSearch = {} end
-    if type(g.itemSearch.recent) ~= "table" then g.itemSearch.recent = {} end
-    return g.itemSearch
-end
-
---- The recent searches, newest first (a copy).
---- @return table
-function ISW.Recent()
-    local store = recentStore()
-    local out = {}
-    for i, id in ipairs(store and store.recent or {}) do out[i] = id end
-    return out
-end
-
 -- ── the view's context ──────────────────────────────────────────────────────────────────────
 
 local function loadedDB()
@@ -120,21 +128,28 @@ local function fdbState()
     return state
 end
 
-local function viewContext()
+local function itemOf(id)
+    local db = loadedDB()
+    local it = db and db.Item(id) or nil
+    if type(it) ~= "table" then it = Compat.ItemInfoByID(id) end
+    return it
+end
+
+-- The cells' context (modules/ItemSearchCells.lua's header): ForeverDB's reads only once loaded.
+local function cellsContext()
     local db = loadedDB()
     return {
         spots = db and db.Spots or nil, mapName = Compat.MapName, npc = db and db.NPC or nil,
-        quest = db and db.Quest or nil, profession = NS.ItemSearchTip.ProfessionName,
-        qualityName = Compat.QualityName, classNames = Compat.ItemClassNames,
+        object = db and db.Object or nil, quest = db and db.Quest or nil, item = itemOf,
+        profession = NS.ItemSearchTip.ProfessionName, coin = Compat.CoinText,
     }
 end
 
--- ── colors and fonts ────────────────────────────────────────────────────────────────────────
-
-local function tone(name)
-    local t = C.TONE[name or "plain"] or C.TONE.plain
-    return t.r, t.g, t.b
+local function headerContext()
+    return { qualityName = Compat.QualityName, classNames = Compat.ItemClassNames }
 end
+
+-- ── colors ──────────────────────────────────────────────────────────────────────────────────
 
 local function barColor(o)
     if o.barFromSkin then
@@ -145,227 +160,88 @@ local function barColor(o)
     return c.r or c[1] or 1, c.g or c[2] or 1, c.b or c[3] or 1
 end
 
-local BASE_SIZE = NS.FONT_SIZE.GameFontHighlight
-
-local function text(parent, size, justify)
-    local fs = NS.ScaledFontString(parent, "OVERLAY", "GameFontHighlight", (size or WIN.FONT) / BASE_SIZE)
-    NS.Skin.Font(fs)
-    fs:SetJustifyH(justify or "LEFT")
-    fs:SetWordWrap(false)
-    return fs
+local function toneRGB(tone)
+    local t = C.TONE[tone] or C.TONE.plain
+    return t.r, t.g, t.b
 end
 
--- ── item tooltips on the rows ───────────────────────────────────────────────────────────────
-
-local function itemLink(id)
-    local it = Compat.ItemInfoByID(id)
-    return it and it.link or nil
+-- A quest row's mark (spec §5.4): ! in your log, ? can pick up, the check done, a dim ? too high.
+local function questMark(status)
+    local IST = NS.ItemSearchTip
+    if status == "log" then return IST.QuestMark("log") end
+    if status == "done" then return IST.QuestMark("done") end
+    if status == "high" then return IST.QuestMark("todo") end
+    return NS.GroupRoster.Colored("?", toneRGB("plain"))
 end
 
-local function showItemTip(owner, id)
-    if not (GameTooltip and id) then return end
-    GameTooltip:SetOwner(owner, "ANCHOR_NONE")
-    Compat.TooltipHyperlink(GameTooltip, itemLink(id) or ("item:" .. id))
-    GameTooltip:Show()
-    NS.RowTooltip.PlaceOrFallback(GameTooltip, owner)
+-- ── the view states ─────────────────────────────────────────────────────────────────────────
+
+local function stateOf(tab)
+    if not views[tab] then views[tab] = TABS.DefaultState(tab, { mine = IS.MyProfessionsOnly() }) end
+    return views[tab]
 end
 
-local function hideTip()
-    if GameTooltip then GameTooltip:Hide() end
+-- Repaint how the rows are shown, from the last build (see lastBuild).
+local function repaintView()
+    viewOnly = true
+    ISW.Refresh()
 end
 
--- ── the pane rows ───────────────────────────────────────────────────────────────────────────
-
--- One pooled row: up to six text cells, a bar (its back and fill) and a pin, laid out per paint.
-local function newRow(parent, size)
-    local row = CreateFrame("Button", nil, parent)
-    row.tipRow = true
-    row.cells = {}
-    for i = 1, 6 do row.cells[i] = text(row, size) end
-    row.barBack = row:CreateTexture(nil, "ARTWORK")
-    row.barFill = row:CreateTexture(nil, "OVERLAY")
-    NS.SkinPaint(row.barBack, function(t) t:SetColorTexture(NS.SkinColor("list.stripe")) end)
-    row.pin = CreateFrame("Button", nil, row)
-    row.pin:SetSize(WIN.PIN, WIN.PIN)
-    row.pin.art = row.pin:CreateTexture(nil, "ARTWORK")
-    row.pin.art:SetAllPoints(row.pin)
-    row.pin.art:SetTexture(NS.Icon("arrow-right"))
-    row.pin:SetScript("OnClick", function(self) ISW.SetPin(self.spot, self.title) end)
-    NS.Window.AttachTooltip(row.pin, function()
-        return L["Set a waypoint"], NS.TipMarks.Row(L["At"], row.pin.where or "")
-    end, "chrome")
-    row:SetScript("OnEnter", function(self) if self.itemID then showItemTip(self, self.itemID) end end)
-    row:SetScript("OnLeave", hideTip)
-    row:SetScript("OnClick", function(self) if self.itemID then ISW.ShowItem(self.itemID) end end)
-    return row
-end
-
-local pools = {}   -- [parent key] = { pool, size }
-
-local function poolOf(key, parent, size)
-    local p = pools[key]
-    if p and p.size ~= size then
-        NS.Pool.ReleaseAll(p.pool)
-        p = nil
-    end
-    if not p then
-        p = { pool = NS.Pool.New(), size = size, parent = parent }
-        pools[key] = p
-    end
-    return p
-end
-
--- The column widths per row kind (`name` takes the rest of the row).
-local COLUMN_W = { level = 44, zone = 110, bar = WIN.BAR_W, pct = 44, pin = WIN.PIN + 4, price = 96,
-    state = 92, prof = 92, breaks = 150, label = 92, right = 96, id = 64 }
-
--- Lay `keys` across `width` and answer { key = { x, w } }; `name` is flexible.
-local function layout(keys, width)
-    local fixed = 0
-    for _, k in ipairs(keys) do if k ~= "name" then fixed = fixed + (COLUMN_W[k] or 60) + 4 end end
-    local out, x = {}, 0
-    for _, k in ipairs(keys) do
-        local w = k == "name" and math.max(40, width - fixed - 4) or COLUMN_W[k] or 60
-        out[k] = { x = x, w = w }
-        x = x + w + 4
-    end
-    return out
-end
-
--- `color` is a C.TONE name, or an { r, g, b } triple (an item's quality color); a nil triple
--- (an unknown quality) falls back to the plain tone.
-local function placeCell(row, i, col, h, value, color, justify)
-    local fs = row.cells[i]
-    fs:ClearAllPoints()
-    fs:SetPoint("LEFT", row, "LEFT", col.x, 0)
-    fs:SetSize(col.w, h)
-    fs:SetJustifyH(justify or "LEFT")
-    fs:SetText(value or "")
-    local r, g, b
-    if type(color) == "table" then r, g, b = color[1], color[2], color[3] end
-    if r == nil then r, g, b = tone(type(color) == "string" and color or nil) end
-    fs:SetTextColor(r, g, b)
-    fs:Show()
-end
-
-local function placeBar(row, col, h, fraction, o)
-    row.barBack:ClearAllPoints()
-    row.barBack:SetPoint("LEFT", row, "LEFT", col.x, 0)
-    row.barBack:SetSize(col.w, math.max(4, h - 10))
-    row.barBack:Show()
-    local w = fraction > 0 and math.max(1, math.floor(col.w * fraction + 0.5)) or 0
-    row.barFill:ClearAllPoints()
-    row.barFill:SetPoint("LEFT", row, "LEFT", col.x, 0)
-    row.barFill:SetSize(math.max(w, 1), math.max(4, h - 10))
-    row.barFill:SetColorTexture(barColor(o))
-    row.barFill:SetShown(w > 0)
-end
-
-local function placePin(row, col, spot, title, zone, o)
-    local how = o.pins and spot and Compat.WaypointMethod(spot.map) or nil
-    row.pin.spot, row.pin.title, row.pin.where = spot, title, zone
-    row.pin:ClearAllPoints()
-    row.pin:SetPoint("LEFT", row, "LEFT", col.x, 0)
-    row.pin:SetShown(how ~= nil)
-end
-
--- Reset a pooled row before it is drawn again.
-local function blank(row)
-    for _, fs in ipairs(row.cells) do fs:Hide() end
-    row.barBack:Hide()
-    row.barFill:Hide()
-    row.pin:Hide()
-    row.itemID = nil
-end
-
--- ── the detail pane's sections ──────────────────────────────────────────────────────────────
-
--- Each section: its heading, the row kind's columns (with and without the zone and level
--- columns) and the painter of one row onto the columns.
-local function dropCells(row, cols, h, r, o)
-    local i = 1
-    local function cell(key, value, color, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
-    end
-    cell("name", r.name, (r.named or r.world) and "plain" or "muted")
-    cell("level", r.level, "muted")
-    cell("zone", r.zone, "muted")
-    if cols.bar and not r.world then placeBar(row, cols.bar, h, r.fraction or 0, o) end
-    cell("pct", r.pct, r.known and "plain" or "muted", "RIGHT")
-    if cols.pin then placePin(row, cols.pin, r.spot, r.name, r.zone, o) end
-end
-
-local function vendorCells(row, cols, h, r, o)
-    local i = 1
-    local function cell(key, value, color, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
-    end
-    cell("name", r.name, "plain")
-    cell("level", r.level, "muted")
-    cell("zone", r.zone, "muted")
-    cell("price", r.price and Compat.CoinText(r.price) or "", "plain", "RIGHT")
-    if cols.pin then placePin(row, cols.pin, r.spot, r.name, r.zone, o) end
-end
-
-local function questCells(row, cols, h, r, o)
-    local i = 1
-    local function cell(key, value, color, justify)
-        if cols[key] then placeCell(row, i, cols[key], h, value, color, justify); i = i + 1 end
-    end
-    cell("name", NS.ItemSearchTip.QuestMark(r.state) .. " " .. r.title, "plain")
-    cell("level", r.level and tostring(r.level) or "", "muted")
-    cell("zone", r.zone, "muted")
-    cell("state", r.stateText, r.state == "done" and "good" or "muted")
-    if cols.pin then placePin(row, cols.pin, r.spot, r.title, r.zone, o) end
-end
-
-local function breaksText(parts)
-    local out = {}
-    for _, p in ipairs(parts) do out[#out + 1] = NS.GroupRoster.Colored(p.text, tone(p.tone)) end
-    return table.concat(out, " ")
-end
-
-local function craftCells(row, cols, h, r)
-    placeCell(row, 1, cols.name, h, NS.ItemSearchTip.CraftMark(r) .. " " .. r.name, r.known and "plain" or "muted")
-    placeCell(row, 2, cols.prof, h, r.profession, "muted")
-    placeCell(row, 3, cols.breaks, h, breaksText(r.breakpoints))
-    placeCell(row, 4, cols.state, h, r.stateText, r.known and "good" or "muted", "RIGHT")
-end
-
-local function alsoCells(row, cols, h, r)
-    placeCell(row, 1, cols.label, h, r.label, "muted")
-    placeCell(row, 2, cols.name, h, r.text, "plain")
-    placeCell(row, 3, cols.right, h, r.right, "muted", "RIGHT")
-end
-
-ISW.SECTIONS = {
-    { key = "drops", title = L["DROPS FROM"], rows = function(f, ctx) return ISV.DropRows(f, ctx) end,
-        cols = { "name", "level", "zone", "bar", "pct", "pin" }, bare = { "name", "bar", "pct", "pin" }, paint = dropCells },
-    { key = "vendors", title = L["SOLD BY"], rows = function(f, ctx) return ISV.VendorRows(f, ctx) end,
-        cols = { "name", "level", "zone", "price", "pin" }, bare = { "name", "price", "pin" }, paint = vendorCells },
-    { key = "quests", title = L["QUESTS"], rows = function(f, ctx) return ISV.QuestRows(f, ctx) end,
-        cols = { "name", "level", "zone", "state", "pin" }, bare = { "name", "state", "pin" }, paint = questCells },
-    { key = "crafting", title = L["CRAFTING"], rows = function(f, ctx) return ISV.CraftRows(f, ctx) end,
-        cols = { "name", "prof", "breaks", "state" }, paint = craftCells },
-    { key = "also", title = L["ALSO"], rows = function(f) return ISV.AlsoRows(f) end,
-        cols = { "label", "name", "right" }, paint = alsoCells },
-}
-
---- The detail pane's sections for `facts`: `{ { key, title, rows } }`, an empty section left out.
---- @param facts table|nil NS.ItemSearch.Get's answer
---- @param ctx table ISV's context
+--- A tab's view state now (its sort and filters; the default until a click moves it).
+--- @param tab string
 --- @return table
-function ISW.Sections(facts, ctx)
-    local out = {}
-    if not facts then return out end
-    for _, s in ipairs(ISW.SECTIONS) do
-        local rows = s.rows(facts, ctx)
-        if #rows > 0 then out[#out + 1] = { key = s.key, title = s.title, rows = rows, spec = s } end
-    end
-    return out
+function ISW.ViewState(tab) return stateOf(tab) end
+
+--- Sort tab `tab` by column `key` (a click on its label: the same column flips) or "best".
+--- @param tab string
+--- @param key string
+function ISW.SortBy(tab, key)
+    local st = stateOf(tab)
+    st.sort = TABS.NextSort(tab, st.sort, key)
+    repaintView()
 end
 
--- ── building ────────────────────────────────────────────────────────────────────────────────
+--- Turn one of tab `tab`'s filters (spec §5.5) on or off (`on` nil flips it). View only, not saved.
+--- @param tab string
+--- @param key string
+--- @param on boolean|nil
+function ISW.SetFilter(tab, key, on)
+    local st = stateOf(tab)
+    if on == nil then on = st.filters[key] ~= true end
+    st.filters[key] = on == true
+    repaintView()
+end
+
+--- Reset tab `tab`: Best for you, every filter at its default.
+--- @param tab string
+function ISW.ResetView(tab)
+    views[tab] = nil
+    repaintView()
+end
+
+--- The "Only professions you know" setting moved (spec §4: the Crafting tab starts filtered by it):
+--- the tab's filter follows the setting again, then the window repaints as for any setting.
+function ISW.FollowProfessionsSetting()
+    if views.crafting then views.crafting.filters.mine = IS.MyProfessionsOnly() end
+    ISW.ApplySettings()
+end
+
+--- The tab picked last (kept per profile), or nil.
+--- @return string|nil
+function ISW.PickedTab() return geometry().tab end
+
+--- Show tab `key` and remember it as the one picked last.
+--- @param key string
+function ISW.SelectTab(key)
+    geometry().tab = key
+    repaintView()
+end
+
+--- The tab on screen now, or nil.
+--- @return string|nil
+function ISW.ShownTab() return shownTab end
+
+-- ── building: the title bar ─────────────────────────────────────────────────────────────────
 
 local function savePoint()
     local point, _, relativePoint, x, y = frame:GetPoint(1)
@@ -382,24 +258,35 @@ local function applyPoint()
     end
 end
 
-local function lockTip()
-    local TM = NS.TipMarks
-    if NS.Window.IsLocked() then
-        return L["Unlock the window"], TM.Row(L["Lets"], L["it be dragged again"]),
-            TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
-    end
-    return L["Lock the window"], TM.Row(L["Keeps"], L["it from being dragged"]),
-        TM.Row(L["Stored as"], L["Lock frame on General > Master controls"])
+-- The saved size, at least the minimum (no saved size: the default).
+local function savedSize()
+    local s = geometry().size
+    local w = type(s) == "table" and tonumber(s[1]) or WIN.WIDTH
+    local h = type(s) == "table" and tonumber(s[2]) or WIN.HEIGHT
+    return math.max(WIN.MIN_W, w), math.max(WIN.MIN_H, h)
+end
+
+local function applySize()
+    local w, h = savedSize()
+    frame:SetSize(w, h)
+    frame.dwW, frame.dwH = w, h
+end
+
+-- The window's width now: the frame's, else the size it was given.
+local function width()
+    local w = frame and frame:GetWidth() or 0
+    if type(w) ~= "number" or w <= 0 then w = frame and frame.dwW or WIN.WIDTH end
+    return w
 end
 
 local function buildTitle(f)
     local bar = CreateFrame("Frame", nil, f)
     bar:SetPoint("TOPLEFT", f, "TOPLEFT", 1, -1)
     bar:SetPoint("TOPRIGHT", f, "TOPRIGHT", -1, -1)
-    bar:SetHeight(C.WINDOW.TITLE_H)
+    bar:SetHeight(K.TITLE_H)
     bar:EnableMouse(true)
     bar:RegisterForDrag("LeftButton")
-    bar:SetScript("OnDragStart", function() if not NS.Window.IsLocked() then f:StartMoving() end end)
+    bar:SetScript("OnDragStart", function() f:StartMoving() end)
     bar:SetScript("OnDragStop", function()
         f:StopMovingOrSizing()
         savePoint()
@@ -407,21 +294,20 @@ local function buildTitle(f)
     f.titleBar = bar
     f.title = bar:CreateFontString(nil, "OVERLAY", "GameFontNormal")
     f.title:SetPoint("CENTER", bar, "CENTER", 0, 0)
-    f.title:SetText(L["Item Search"])
+    f.title:SetText(L["Drop Watcher · Item Search"])
     NS.Skin.TitleBar(bar, { text = f.title, place = NS.WindowTitleBar.PLACE })
-    -- Not a companion (see the header): lock · settings · close.
-    -- The gear opens Drop Watcher's settings on Item Search's own page (settings/ItemSearchPage.lua).
+    -- Not a companion (see the header): settings · close. The gear opens Drop Watcher's settings on
+    -- Item Search's own page (settings/ItemSearchPage.lua).
     local hb = NS.WindowTitleBar.Marks(bar, { frame = f, close = function() ISW.Close() end,
-        settings = function() NS.addon:OpenSettings("itemSearch") end, extras = {
-        { key = "lock", icon = "lock", glyph = "L", onClick = function() NS.ToggleLock(); ISW.PaintLock() end },
-    } })
-    f.closeButton, f.lockButton = hb.close, hb.extras.lock
-    NS.Window.AttachTooltip(f.lockButton, lockTip, "chrome")
+        settings = function() NS.addon:OpenSettings("itemSearch") end, extras = {} })
+    f.closeButton = hb.close
 end
 
-local function fallbackBox(parent, width)
+-- ── building: the left pane ─────────────────────────────────────────────────────────────────
+
+local function fallbackBox(parent, w)
     local box = CreateFrame("EditBox", nil, parent, "InputBoxTemplate")
-    box:SetSize(width, C.WINDOW.CONTROL_H)
+    box:SetSize(w, K.CONTROL_H)
     box:SetAutoFocus(false)
     box:SetScript("OnTextChanged", function(self) ISW.SetQuery(self:GetText()) end)
     box:SetScript("OnEscapePressed", function(self) self:ClearFocus() end)
@@ -429,101 +315,215 @@ local function fallbackBox(parent, width)
 end
 
 local function buildSearch(f)
-    local width = WIN.LEFT_W - 64
-    local box = NS.MakeSearchBox(f, width, { hint = L["Item name or id"],
-        onChange = function(t) ISW.SetQuery(t) end })
-    box = box or fallbackBox(f, width)
+    local w = WIN.LEFT_W - 64
+    local box = NS.MakeSearchBox(f, w, { hint = L["Item name or id"], onChange = function(t) ISW.SetQuery(t) end })
+    box = box or fallbackBox(f, w)
     box:HookScript("OnEnterPressed", function() ISW.ShowFirst() end)
-    box:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", C.WINDOW.INSET, -8)
+    box:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", K.INSET, -8)
     f.searchBox = box
     f.clearButton = NS.Window.TextButton(f, 56, nil, L["Clear"], function() ISW.Clear() end)
+    -- No mark: the label sits in the button's center (W6), not nudged past an empty mark slot.
+    NS.Window.SetButtonMark(f.clearButton, L["Clear"], nil)
     f.clearButton:SetPoint("LEFT", box, "RIGHT", 6, 0)
+    NS.Window.AttachTooltip(f.clearButton, function()
+        return L["Clear"], TM().Row(L["Empties"], L["the search box and the matches"])
+    end, "chrome")
 end
 
-local function scrollArea(f)
-    local scroll = CreateFrame("ScrollFrame", nil, f, "UIPanelScrollFrameTemplate")
-    local content = CreateFrame("Frame", nil, scroll)
-    content:SetSize(1, 1)
-    scroll:SetScrollChild(content)
-    local bar = rawget(scroll, "ScrollBar")
-    if bar then NS.Skin.ScrollBar(bar) end
-    return scroll, content
-end
-
-local function heading(parent, words)
-    local fs = parent:CreateFontString(nil, "OVERLAY", "GameFontNormalSmall")
-    fs:SetText(words)
-    NS.Skin.Text(fs, "heading")
-    return fs
+local function matchSortRows()
+    local rows = {}
+    for _, key in ipairs(ISV.MATCH_SORTS) do
+        rows[#rows + 1] = { value = key, label = ISV.MATCH_SORT_LABEL[key], radio = true,
+            selected = function() return matchSort == key end,
+            onClick = function() ISW.SortMatches(key) end }
+    end
+    return rows
 end
 
 local function buildLeft(f)
-    local foot = NS.FooterMetric("HEIGHT")
-    local recentH = WIN.RECENT * WIN.ROW_H.compact + 24
-    f.matchesHead = heading(f, L["Matches"])
-    f.matchesHead:SetPoint("TOPLEFT", f.searchBox, "BOTTOMLEFT", 0, -8)
-    f.matchScroll, f.matchContent = scrollArea(f)
-    f.matchScroll:SetPoint("TOPLEFT", f.matchesHead, "BOTTOMLEFT", 0, -4)
-    f.matchScroll:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", C.WINDOW.INSET, foot + recentH)
-    f.matchScroll:SetWidth(WIN.LEFT_W - C.WINDOW.SCROLL_W)
-    f.matchNote = text(f, WIN.FONT)
-    f.matchNote:SetPoint("TOPLEFT", f.matchesHead, "BOTTOMLEFT", 0, -6)
+    f.matchHead = ISG.Header(f, {
+        { key = "sort", icon = "ph:arrows-down-up", glyph = "=",
+          onClick = function(self) NS.ContextMenu(self, matchSortRows()) end,
+          tip = function()
+              return L["Sort the matches"], TM().Row(L["Now"], ISV.MATCH_SORT_LABEL[matchSort]),
+                  TM().Hint(L["Click: pick an order"])
+          end },
+    })
+    f.matchHead:SetPoint("TOPLEFT", f.searchBox, "BOTTOMLEFT", 0, -8)
+    f.matchHead:SetWidth(WIN.LEFT_W)
+    f.matchScroll, f.matchContent = ISG.ScrollArea(f)
+    f.matchScroll:SetPoint("TOPLEFT", f.matchHead, "BOTTOMLEFT", 0, -2)
+    f.matchScroll:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", K.INSET, NS.FooterMetric("HEIGHT") + 4)
+    f.matchScroll:SetWidth(WIN.LEFT_W - K.SCROLL_W)
+    f.matchPool = NS.Pool.New()
+    f.matchNote = f:CreateFontString(nil, "OVERLAY", "GameFontHighlightSmall")
+    f.matchNote:SetPoint("TOPLEFT", f.matchHead, "BOTTOMLEFT", 4, -6)
     f.matchNote:SetWidth(WIN.LEFT_W - 8)
+    f.matchNote:SetJustifyH("LEFT")
     f.matchNote:SetWordWrap(true)
-    f.recentHead = heading(f, L["Recent searches"])
-    f.recentHead:SetPoint("BOTTOMLEFT", f, "BOTTOMLEFT", C.WINDOW.INSET, foot + recentH - 16)
-    f.recentHost = CreateFrame("Frame", nil, f)
-    f.recentHost:SetPoint("TOPLEFT", f.recentHead, "BOTTOMLEFT", 0, -4)
-    f.recentHost:SetSize(WIN.LEFT_W, recentH - 24)
+    NS.Skin.Font(f.matchNote)
+    NS.Skin.Text(f.matchNote, "text.muted")
+end
+
+-- ── building: the right pane ────────────────────────────────────────────────────────────────
+
+local function rightX() return WIN.LEFT_W + 2 * K.INSET end
+
+-- The header's icon and name: the item's game tooltip on hover, a shift-click links it (W7).
+local function linkable(b)
+    b:SetScript("OnEnter", function(self) ISG.ItemTip(self, shownItem) end)
+    b:SetScript("OnLeave", ISG.HideTip)
+    b:SetScript("OnClick", function() if Compat.ShiftDown() then ISG.LinkItem(shownItem) end end)
+end
+
+local function smallText(f, layer, template, token)
+    local fs = f:CreateFontString(nil, layer, template)
+    fs:SetJustifyH("LEFT")
+    NS.Skin.Font(fs)
+    if token then NS.Skin.Text(fs, token) end
+    return fs
 end
 
 local function buildHeader(f)
-    local x = WIN.LEFT_W + 2 * C.WINDOW.INSET
     f.icon = CreateFrame("Button", nil, f)
     f.icon:SetSize(WIN.ICON, WIN.ICON)
-    f.icon:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", x, -8)
+    f.icon:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", rightX(), -8)
     f.icon.art = f.icon:CreateTexture(nil, "ARTWORK")
     f.icon.art:SetAllPoints(f.icon)
-    f.icon:SetScript("OnEnter", function(self) showItemTip(self, shownItem) end)
-    f.icon:SetScript("OnLeave", hideTip)
-    f.name = f:CreateFontString(nil, "OVERLAY", "GameFontNormalLarge")
-    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 8, 0)
-    f.name:SetJustifyH("LEFT")
-    NS.Skin.Font(f.name)
-    f.line = text(f, WIN.FONT - 2)
+    linkable(f.icon)
+    f.name = smallText(f, "OVERLAY", "GameFontNormal")
+    f.name:SetPoint("TOPLEFT", f.icon, "TOPRIGHT", 8, -1)
+    f.name:SetWordWrap(false)
+    f.nameButton = CreateFrame("Button", nil, f)
+    f.nameButton:SetAllPoints(f.name)
+    linkable(f.nameButton)
+    f.line = smallText(f, "OVERLAY", "GameFontHighlightSmall", "text.muted")
     f.line:SetPoint("TOPLEFT", f.name, "BOTTOMLEFT", 0, -3)
-    f.linkButton = NS.Window.TextButton(f, 104, "chat", L["Link in chat"], function() ISW.LinkInChat() end)
-    f.linkButton:SetPoint("TOPRIGHT", f.titleBar, "BOTTOMRIGHT", -C.WINDOW.INSET, -10)
-    NS.Window.AttachTooltip(f.linkButton, function()
-        return L["Link in chat"], NS.TipMarks.Row(L["Puts"], L["the item's link in your chat box"])
-    end, "chrome")
-    f.notice = text(f, WIN.FONT)
+    f.linkHint = smallText(f, "OVERLAY", "GameFontHighlightSmall", "dw.idle")
+    f.linkHint:SetPoint("TOPRIGHT", f.titleBar, "BOTTOMRIGHT", -K.INSET, -12)
+    f.linkHint:SetText(L["Shift-click the name or icon to link it"])
+    f.notice = smallText(f, "OVERLAY", "GameFontHighlightSmall", "text.muted")
     f.notice:SetPoint("TOPLEFT", f.icon, "BOTTOMLEFT", 0, -8)
-    f.notice:SetWidth(WIN.WIDTH - x - C.WINDOW.INSET)
+    f.notice:SetPoint("RIGHT", f, "RIGHT", -K.INSET, 0)
     f.notice:SetWordWrap(true)
-    NS.Skin.Text(f.notice, "text.muted")
-    f.empty = text(f, WIN.FONT)
-    f.empty:SetPoint("TOP", f, "TOPLEFT", x + (WIN.WIDTH - x) / 2, -120)
+    -- An item ForeverDB (loaded) knows nothing about: this line under the header and no tab strip.
+    f.noFacts = smallText(f, "OVERLAY", "GameFontHighlightSmall", "text.muted")
+    f.noFacts:SetPoint("TOPLEFT", f.icon, "BOTTOMLEFT", 0, -8)
+    f.noFacts:SetText(L["Nothing is known about this item: no drop, vendor, quest, recipe or skinning source."])
+    f.noFacts:Hide()
+    f.empty = smallText(f, "OVERLAY", "GameFontHighlight", "text.muted")
+    f.empty:SetPoint("TOP", f.titleBar, "BOTTOM", WIN.LEFT_W / 2, -120)
     f.empty:SetText(L["Type an item's name or id on the left."])
-    NS.Skin.Text(f.empty, "text.muted")
 end
 
-local function buildDetail(f)
-    local x = WIN.LEFT_W + 2 * C.WINDOW.INSET
-    f.detailScroll, f.detailContent = scrollArea(f)
-    f.detailScroll:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", x, -WIN.ICON - 40)
-    f.detailScroll:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -C.WINDOW.SCROLL_W - 4, NS.FooterMetric("HEIGHT") + 4)
-    f.detailW = WIN.WIDTH - x - C.WINDOW.SCROLL_W - 10
-    f.detailContent:SetWidth(f.detailW)
-    f.headings = {}
+-- One tab of the strip (the main window's look, modules/WindowTabs.lua's buildTab).
+local function buildTab(strip, key)
+    local tab = CreateFrame("Button", nil, strip)
+    tab:SetHeight(K.TAB_H)
+    tab.key = key
+    tab.label = tab:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    tab.label:SetPoint("CENTER", tab, "CENTER", 0, 0)
+    if NS.Skin.IsEnabled() then
+        NS.Skin.Tab(tab, { text = tab.label, selected = false })
+    else
+        tab.underline = tab:CreateTexture(nil, "ARTWORK")
+        NS.SkinPaint(tab.underline, function(t) t:SetColorTexture(NS.SkinColor("tab.onLine")) end)
+        tab.underline:SetHeight(2)
+        tab.underline:SetPoint("BOTTOMLEFT", tab, "BOTTOMLEFT", 8, 0)
+        tab.underline:SetPoint("BOTTOMRIGHT", tab, "BOTTOMRIGHT", -8, 0)
+    end
+    tab:SetScript("OnClick", function() ISW.SelectTab(key) end)
+    NS.Window.AttachTooltip(tab, function() return ISW.TabTip(key) end, "chrome")
+    tab:Hide()
+    return tab
 end
+
+local function filterRows(tab)
+    local rows = {}
+    for _, flt in ipairs(TABS.DEF[tab].filters) do
+        rows[#rows + 1] = { value = flt.key, label = flt.label, keepOpen = true,
+            selected = function() return stateOf(tab).filters[flt.key] == true end,
+            onClick = function() ISW.SetFilter(tab, flt.key) end }
+    end
+    return rows
+end
+
+local function sortRows(tab)
+    local rows = {}
+    for _, ch in ipairs(TABS.SortChoices(tab)) do
+        rows[#rows + 1] = { value = ch.key, label = ch.label, radio = true,
+            selected = function() return stateOf(tab).sort.col == ch.key end,
+            onClick = function()
+                if stateOf(tab).sort.col ~= ch.key then ISW.SortBy(tab, ch.key) end
+            end }
+    end
+    return rows
+end
+
+local function resetTip()
+    return L["Reset"], TM().Row(L["Puts back"], L["Best for you, with no filters"]), TM().Hint(L["Click: reset this tab"])
+end
+
+local function buildSection(f)
+    f.section = ISG.Header(f, {
+        { key = "filter", icon = "ph:funnel", glyph = "Y", tip = function() return ISW.FilterTip(shownTab) end,
+          onClick = function(self) if shownTab then NS.ContextMenu(self, filterRows(shownTab)) end end },
+        { key = "sort", icon = "ph:arrows-down-up", glyph = "=", tip = function() return ISW.SortTip(shownTab) end,
+          onClick = function(self) if shownTab then NS.ContextMenu(self, sortRows(shownTab)) end end },
+        { key = "reset", icon = "reset", glyph = "x", tip = resetTip,
+          onClick = function() if shownTab then ISW.ResetView(shownTab) end end },
+    })
+    f.grid = ISG.Table(f)
+end
+
+local function buildRight(f)
+    buildHeader(f)
+    f.tabStrip = CreateFrame("Frame", nil, f)
+    f.tabStrip:SetPoint("TOPLEFT", f.titleBar, "BOTTOMLEFT", rightX(), -(WIN.ICON + 18))
+    f.tabStrip:SetPoint("RIGHT", f, "RIGHT", -K.INSET, 0)
+    f.tabStrip:SetHeight(K.TAB_H)
+    f.tabs = {}
+    for _, key in ipairs(TABS.ORDER) do f.tabs[key] = buildTab(f.tabStrip, key) end
+    buildSection(f)
+    f.section:SetPoint("TOPLEFT", f.tabStrip, "BOTTOMLEFT", 0, -4)
+    f.section:SetPoint("RIGHT", f, "RIGHT", -K.INSET, 0)
+    f.grid.frame:SetPoint("TOPLEFT", f.section, "BOTTOMLEFT", 0, -2)
+    f.grid.frame:SetPoint("BOTTOMRIGHT", f, "BOTTOMRIGHT", -K.INSET, NS.FooterMetric("HEIGHT") + 4)
+end
+
+-- ── building: the footer, the grip, the frame ───────────────────────────────────────────────
 
 local function buildFooter(f)
-    f.foot = NS.MakeFooter(f, { inset = 1 }) or NS.BareFooter(f, {})
+    f.foot = NS.MakeFooter(f, { inset = 1, grip = true }) or NS.BareFooter(f, {})
+end
+
+local function onResizeStop(f, w, h)
+    if type(w) == "number" and type(h) == "number" and w > 0 and h > 0 then
+        geometry().size = { math.floor(w + 0.5), math.floor(h + 0.5) }
+        f.dwW, f.dwH = w, h
+    end
+    savePoint()
+    repaintView()
+end
+
+local function makeResizable(f)
+    NS.MakeResizable(f, {
+        minWidth = WIN.MIN_W, minHeight = WIN.MIN_H, owner = addonName,
+        -- In the footer's bottom-right corner (LibKa0s Widgets' Footer, its `grip` corner).
+        gripParent = f.foot,
+        onResize = function(w, h)
+            if type(w) == "number" and w > 0 then f.dwW = w end
+            if type(h) == "number" and h > 0 then f.dwH = h end
+            repaintView()
+        end,
+        -- The anchor is saved with the size: sizing from the corner moves the frame's anchor.
+        onResizeStop = function(w, h) onResizeStop(f, w, h) end,
+    })
 end
 
 local function onHide()
-    hideTip()
+    ISG.HideTip()
+    NS.CloseMenu()
     if searchTimer then searchTimer:Cancel(); searchTimer = nil end
 end
 
@@ -534,16 +534,16 @@ local function build()
     f:SetMovable(true)
     f:SetClampedToScreen(true)
     f:EnableMouse(true)
-    f:SetSize(WIN.WIDTH, WIN.HEIGHT)
     f:Hide()
     frame = f
+    applySize()
     applyPoint()
     buildTitle(f)
     buildSearch(f)
     buildLeft(f)
-    buildHeader(f)
-    buildDetail(f)
+    buildRight(f)
     buildFooter(f)
+    makeResizable(f)
     NS.ApplySkin(f)
     NS.Skin.Shell(f, { noTopBar = true })
     NS.Skin.Header(f, { bars = { f.titleBar } })
@@ -556,121 +556,206 @@ local function ensureFrame()
     return frame or build()
 end
 
--- ── painting ────────────────────────────────────────────────────────────────────────────────
+-- ── tooltips ────────────────────────────────────────────────────────────────────────────────
 
---- The lock mark's look: full strength while locked, dimmed while unlocked (as the main window's).
-function ISW.PaintLock()
-    if frame and frame.lockButton then NS.WindowTitleBar.PaintLock(frame, NS.Window.IsLocked()) end
-end
-
--- A list row (a match or a recent item): icon, name in quality color, id.
-local function paintItemRow(row, r, width, h)
-    blank(row)
-    row.itemID = r.id
-    local qr, qg, qb = NS.QualityColor(r.quality)
-    local icon = r.icon or Compat.ItemIcon(r.id)
-    local label = (icon and ("|T%s:0|t "):format(tostring(icon)) or "") .. (r.name or L["Item %d"]:format(r.id))
-    placeCell(row, 1, { x = 0, w = width - COLUMN_W.id - 4 }, h, label, { qr, qg, qb })
-    placeCell(row, 2, { x = width - COLUMN_W.id, w = COLUMN_W.id }, h, tostring(r.id), "muted", "RIGHT")
-end
-
-local function paintList(key, parent, rows, o)
-    local h = WIN.ROW_H[o.density]
-    local p = poolOf(key, parent, o.fontSize)
-    NS.Pool.ReleaseAll(p.pool)
-    local width = WIN.LEFT_W - C.WINDOW.SCROLL_W
-    for i, r in ipairs(rows) do
-        local row = NS.Pool.Acquire(p.pool, function() return newRow(parent, o.fontSize) end)
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", parent, "TOPLEFT", 0, -(i - 1) * h)
-        row:SetSize(width, h)
-        paintItemRow(row, r, width, h)
+--- A tab's tooltip: its title, its rows, Crafting's count in your professions.
+--- @param key string
+--- @return string title, string... lines
+function ISW.TabTip(key)
+    local def = TABS.DEF[key]
+    local t = frame and frame.tabs[key]
+    local out = { def.title, TM().Row(L["Rows"], tostring(t and t.dwTotal or 0)) }
+    if key == "crafting" and t and t.dwCount ~= t.dwTotal then
+        out[#out + 1] = TM().Row(L["In your professions"], tostring(t.dwCount))
     end
-    return #rows * h
+    out[#out + 1] = TM().Hint(L["Click: show this tab"])
+    return unpack(out)
 end
 
-local function recentRows()
-    local out = {}
-    local db = loadedDB()
-    for _, id in ipairs(ISW.Recent()) do
-        local it = db and db.Item(id) or Compat.ItemInfoByID(id)
-        out[#out + 1] = { id = id, name = type(it) == "table" and it.name or nil,
-            quality = type(it) == "table" and it.quality or nil, icon = type(it) == "table" and it.icon or nil }
+--- The Filter mark's tooltip: what narrows the rows now.
+--- @param tab string|nil
+--- @return string title, string... lines
+function ISW.FilterTip(tab)
+    if not tab then return end
+    local st, on = stateOf(tab), {}
+    for _, flt in ipairs(TABS.DEF[tab].filters) do
+        if (st.filters[flt.key] == true) == flt.narrows then
+            on[#on + 1] = flt.narrows and flt.label or L["no %s"]:format(flt.label:lower())
+        end
     end
-    return out
+    local now = #on > 0 and table.concat(on, ", ") or L["everything"]
+    return L["Filter"], TM().Row(L["Showing"], now), TM().Hint(L["Click: choose what to show; not saved"])
 end
 
-local function paintLeft(o)
+--- The Sort mark's tooltip: the sort in force.
+--- @param tab string|nil
+--- @return string title, string... lines
+function ISW.SortTip(tab)
+    if not tab then return end
+    return L["Sort"], TM().Row(L["Now"], TABS.SortLabel(tab, stateOf(tab).sort)),
+        TM().Hint(L["Click: pick an order; a column's title sorts too"])
+end
+
+-- ── painting: the left pane ─────────────────────────────────────────────────────────────────
+
+local function paintLeft(m)
     local f = frame
-    local h = paintList("matches", f.matchContent, matches.rows or {}, o)
-    f.matchContent:SetSize(WIN.LEFT_W - C.WINDOW.SCROLL_W, math.max(1, h))
+    local rows = ISV.SortMatches(matches.rows or {}, matchSort)
+    local w = WIN.LEFT_W - K.SCROLL_W
+    NS.Pool.ReleaseAll(f.matchPool)
+    for i, r in ipairs(rows) do
+        local row = NS.Pool.Acquire(f.matchPool, function()
+            return ISG.MatchRow(f.matchContent, function(id) ISW.ShowItem(id) end)
+        end)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", f.matchContent, "TOPLEFT", 0, -(i - 1) * m.height)
+        row:SetSize(w, m.height)
+        ISG.PaintMatch(row, r, i, w, m.height, r.id == shownItem, m)
+    end
+    f.matchContent:SetSize(w, math.max(1, #rows * m.height))
     local note = ISV.NoteText(matches.note)
     f.matchNote:SetText(note or "")
     f.matchNote:SetShown(note ~= nil)
-    f.recentHead:SetShown(o.recent)
-    f.recentHost:SetShown(o.recent)
-    if o.recent then paintList("recent", f.recentHost, recentRows(), o) end
+    ISG.PaintHeader(f.matchHead, { title = L["Matches"], count = #rows > 0 and tostring(#rows) or nil,
+        note = #rows > 1 and ISV.MATCH_SORT_LABEL[matchSort] or nil,
+        marks = { sort = { shown = #rows > 1 } } })
 end
 
-local function headingOf(i)
-    local f = frame
-    if not f.headings[i] then f.headings[i] = heading(f.detailContent, "") end
-    return f.headings[i]
+--- The match rows the list draws now, in order (for the tests).
+--- @return table
+function ISW.MatchRows()
+    local out = {}
+    for i, row in ipairs(frame and frame.matchPool.active or {}) do out[i] = row end
+    return out
 end
 
-local function paintSection(s, y, o)
-    local f = frame
-    local h = WIN.ROW_H[o.density]
-    local cols = layout((o.columns or not s.spec.bare) and s.spec.cols or s.spec.bare, f.detailW)
-    local p = poolOf("detail", f.detailContent, o.fontSize)
-    for _, r in ipairs(s.rows) do
-        local row = NS.Pool.Acquire(p.pool, function() return newRow(f.detailContent, o.fontSize) end)
-        blank(row)
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", f.detailContent, "TOPLEFT", 0, -y)
-        row:SetSize(f.detailW, h)
-        s.spec.paint(row, cols, h, r, o)
-        y = y + h
-    end
-    return y
-end
+-- ── painting: the right pane ────────────────────────────────────────────────────────────────
 
 local function itemHeader(facts)
     local f = frame
     local item = facts and facts.item or { id = shownItem }
-    local qr, qg, qb = NS.QualityColor(item.quality)
     f.icon.art:SetTexture(item.icon or Compat.ItemIcon(item.id) or NS.Icon("help"))
     f.name:SetText(item.name or L["Item %d"]:format(item.id))
-    if qr == nil then qr, qg, qb = tone("plain") end
+    local qr, qg, qb = NS.QualityColor(item.quality)
+    if qr == nil then qr, qg, qb = toneRGB("plain") end
     f.name:SetTextColor(qr, qg, qb)
-    f.line:SetText(ISV.ItemLine(item, viewContext()))
-    f.linkButton:SetEnabled(itemLink(item.id) ~= nil)
+    f.line:SetText(ISV.ItemLine(item, headerContext()))
 end
 
-local function paintDetail(o)
+local function tabLabel(t)
+    if t.key == "crafting" and t.count ~= t.total then
+        local r, g, b = NS.SkinColor("text.muted")
+        return ("%s %d %s"):format(t.title, t.count, NS.GroupRoster.Colored(("/ %d"):format(t.total), r, g, b))
+    end
+    return ("%s %d"):format(t.title, t.count)
+end
+
+local function selectTab(tab, on)
+    if tab.underline then
+        NS.Skin.Text(tab.label, on and "accent" or "dw.idle")
+        tab.underline:SetShown(on)
+    else
+        NS.Skin.SetTabSelection(tab, on)
+    end
+end
+
+local function paintTabs(tabs, active)
+    local f = frame
+    for _, tab in pairs(f.tabs) do tab:Hide() end
+    local x = 0
+    for _, t in ipairs(tabs) do
+        local tab = f.tabs[t.key]
+        tab.dwCount, tab.dwTotal = t.count, t.total
+        tab.label:SetText(tabLabel(t))
+        local w = math.max(96, math.floor((tab.label:GetStringWidth() or 0) + 28))
+        tab:SetWidth(w)
+        tab:ClearAllPoints()
+        tab:SetPoint("LEFT", f.tabStrip, "LEFT", x, 0)
+        x = x + w + K.TAB_GAP
+        selectTab(tab, t.key == active)
+        tab:Show()
+    end
+end
+
+local function chipOf(tab, st)
+    if not TABS.DEF[tab].chip then return nil end
+    local mine = st.filters.mine == true
+    return {
+        text = mine and L["My professions"] or L["All professions"],
+        onClick = function() ISW.SetFilter(tab, "mine") end,
+        tip = function()
+            return mine and L["My professions"] or L["All professions"],
+                TM().Row(L["Shows"], mine and L["recipes in the professions you know"] or L["every recipe that uses the item"]),
+                TM().Hint(L["Click: switch; for this view only, not saved"])
+        end,
+    }
+end
+
+local function paintSection(tab, st, shown, total)
+    local def = TABS.DEF[tab]
+    ISG.PaintHeader(frame.section, {
+        title = def.title, count = TABS.CountText(tab, shown, total),
+        note = L["sorted: %s"]:format(TABS.SortLabel(tab, st.sort)),
+        marks = { filter = { shown = #def.filters > 0, badge = TABS.Narrowed(tab, st) }, sort = { shown = true },
+            reset = { shown = not TABS.IsDefault(tab, st, { mine = IS.MyProfessionsOnly() }) } },
+        chip = chipOf(tab, st),
+    })
+end
+
+local function tableOpts(tab, st, m, o)
+    return {
+        metrics = m, sort = st.sort, onSort = function(key) ISW.SortBy(tab, key) end,
+        barColor = function() return barColor(o) end,
+        canPin = function(spot) return o.pins and type(spot.map) == "number" and WP().Method() or nil end,
+        questMark = questMark, onPin = function(spot, title) ISW.SetPin(spot, title) end,
+        onOpen = function(id) ISW.ShowItem(id) end, empty = L["No rows match these filters."],
+    }
+end
+
+local function showTabs(on)
+    local f = frame
+    f.tabStrip:SetShown(on)
+    f.section:SetShown(on)
+    f.grid.frame:SetShown(on)
+end
+
+local function paintTab(built, m)
+    local f = frame
+    local tabs = TABS.Tabs(built, stateOf("crafting").filters.mine == true)
+    local key = TABS.Pick(tabs, ISW.PickedTab())
+    shownTab = key
+    showTabs(key ~= nil)
+    f.noFacts:SetShown(key == nil and fdbState() == "loaded")
+    if not key then return end
+    paintTabs(tabs, key)
+    local st = stateOf(key)
+    local rows = TABS.View(key, built[key], st)
+    paintSection(key, st, TABS.Count(rows), TABS.Count(built[key]))
+    local w = width() - rightX() - K.INSET - K.SCROLL_W
+    ISG.PaintTable(f.grid, key, rows, math.max(1, w), tableOpts(key, st, m, ISW.Options()))
+end
+
+local function paintDetail(m, reuse)
     local f = frame
     local has = shownItem ~= nil
-    for _, w in ipairs({ f.icon, f.name, f.line, f.linkButton, f.detailScroll }) do w:SetShown(has) end
+    for _, w in ipairs({ f.icon, f.name, f.nameButton, f.line, f.linkHint }) do w:SetShown(has) end
     f.empty:SetShown(not has)
     local notice = ISV.Notice(fdbState())
     f.notice:SetText(notice or "")
     f.notice:SetShown(notice ~= nil)
-    for _, fs in ipairs(f.headings) do fs:Hide() end
-    local p = poolOf("detail", f.detailContent, o.fontSize)
-    NS.Pool.ReleaseAll(p.pool)
-    if not has then return end
-    local facts = IS.Get(shownItem)
-    itemHeader(facts)
-    local y = 0
-    for i, s in ipairs(ISW.Sections(facts, viewContext())) do
-        local hd = headingOf(i)
-        hd:ClearAllPoints()
-        hd:SetPoint("TOPLEFT", f.detailContent, "TOPLEFT", 0, -y - 4)
-        hd:SetText(s.title)
-        hd:Show()
-        y = paintSection(s, y + 20, o) + 6
+    if not has then
+        shownTab = nil
+        showTabs(false)
+        f.noFacts:Hide()
+        return
     end
-    f.detailContent:SetHeight(math.max(1, y))
+    if not (reuse and lastBuild.item == shownItem and lastBuild.rows) then
+        local facts = IS.Get(shownItem)
+        lastBuild.item, lastBuild.facts = shownItem, facts
+        lastBuild.rows = ISC.Build(facts, IS.Me(facts and facts.ranks), cellsContext())
+    end
+    itemHeader(lastBuild.facts)
+    paintTab(lastBuild.rows, m)
 end
 
 local function paintFooter()
@@ -679,18 +764,25 @@ local function paintFooter()
     local meta = IS.State() == "loaded" and NS.ForeverDB.Meta() or nil
     local version = (meta and meta.version) or (type(st) == "table" and st.version) or nil
     f.foot:SetLeft(ISV.FooterText(fdbState(), version))
-    local key = Compat.BindingKeyText(C.ITEM_SEARCH.BINDING)
-    f.foot:SetRight(key and L["%s: open in Item Search"]:format(key) or "")
+    f.foot:SetRight("")
 end
 
 --- Repaint the whole window from the current state (a no-op while it is closed).
 function ISW.Refresh()
+    local reuse = viewOnly
+    viewOnly = false
     if not (frame and frame:IsShown()) then return end
-    local o = ISW.Options()
-    paintLeft(o)
-    paintDetail(o)
+    local m = NS.WindowRows.Metrics()
+    paintLeft(m)
+    paintDetail(m, reuse)
     paintFooter()
-    ISW.PaintLock()
+end
+
+--- The table's rows on screen now (ISG rows: `dwTip`, `cells`), for the tests.
+--- @return table
+function ISW.TableRows()
+    if not frame then return {} end
+    return ISG.Rows(frame.grid)
 end
 
 -- ── the search ──────────────────────────────────────────────────────────────────────────────
@@ -720,10 +812,10 @@ function ISW.SearchNow()
     runSearch()
 end
 
---- Enter: run the search now and show its first match.
+--- Enter: run the search now and show its first match (in the Sort in force).
 function ISW.ShowFirst()
     ISW.SearchNow()
-    local first = matches.rows and matches.rows[1]
+    local first = ISV.SortMatches(matches.rows or {}, matchSort)[1]
     if first then ISW.ShowItem(first.id) end
 end
 
@@ -736,12 +828,17 @@ function ISW.Clear()
     ISW.Refresh()
 end
 
---- The matches the list shows now: `{ rows, note }` (a copy of the rows).
+--- The matches the list shows now: `{ rows, note }` (a copy of the rows, in the Sort in force).
 --- @return table
 function ISW.Matches()
-    local rows = {}
-    for i, r in ipairs(matches.rows or {}) do rows[i] = r end
-    return { rows = rows, note = matches.note }
+    return { rows = ISV.SortMatches(matches.rows or {}, matchSort), note = matches.note }
+end
+
+--- Sort the matches (spec §5.2): "best", "name" or "id"; for the session.
+--- @param mode string
+function ISW.SortMatches(mode)
+    matchSort = ISV.MATCH_SORT_LABEL[mode] and mode or "best"
+    ISW.Refresh()
 end
 
 -- ── showing an item ─────────────────────────────────────────────────────────────────────────
@@ -760,18 +857,13 @@ local function retryUncached(id)
     end)
 end
 
---- Show `itemID` in the detail pane (opening the window), and put it first in the recent searches
---- while they are remembered.
+--- Show `itemID` in the detail pane (opening the window).
 --- @param itemID number
 --- @return boolean shown
 function ISW.ShowItem(itemID)
     itemID = tonumber(itemID)
     if not (itemID and itemID > 0) or not ISW.Available() then return false end
     shownItem, retries = itemID, 0
-    if ISW.Options().recent then
-        local store = recentStore()
-        if store then store.recent = ISV.PushRecent(store.recent, itemID, WIN.RECENT) end
-    end
     if not ISW.IsShown() then ensureFrame():Show() end
     ISW.Refresh()
     retryUncached(itemID)
@@ -782,28 +874,20 @@ end
 --- @return number|nil
 function ISW.ShownItem() return shownItem end
 
---- Link in chat: the shown item's link into the chat box. Answers whether it went.
---- @return boolean
-function ISW.LinkInChat()
-    local link = shownItem and itemLink(shownItem)
-    if not link then
-        if shownItem then Compat.RequestItem(shownItem) end
-        NS.Print(L["That item is still loading: try again in a moment."])
-        return false
-    end
-    return Compat.LinkInChat(link)
-end
-
---- A pin's click: set a waypoint at `spot`. Answers the method used, or nil.
+--- A pin's click: set a waypoint at `spot` through NS.ItemSearchWaypoint (TomTom's, or Drop
+--- Watcher's arrow; Item Search feedback spec §6), and say so in chat. Answers the method used, or nil.
 --- @param spot table|nil { map, x, y }
 --- @param title string|nil
 --- @return string|nil
 function ISW.SetPin(spot, title)
-    if type(spot) ~= "table" then return nil end
-    local how = Compat.SetWaypoint(spot.map, spot.x, spot.y, title)
+    if type(spot) ~= "table" or type(spot.map) ~= "number" then return nil end
     local zone = Compat.MapName(spot.map) or L["Map %d"]:format(spot.map)
+    local how = WP().Set(spot, title, zone)
     if how then
-        NS.Print(L["Waypoint set: %s (%s, %.1f, %.1f)."]:format(tostring(title or ""), zone, spot.x * 100, spot.y * 100))
+        NS.Print(L["Waypoint set: %s (%s, %.1f, %.1f), shown by %s."]:format(tostring(title or ""), zone,
+            spot.x * 100, spot.y * 100, WP().MethodLabel(how)))
+    elseif WP().Method() == nil then
+        NS.Print(L["No waypoint: TomTom is not loaded and Drop Watcher's arrow is not available."])
     else
         NS.Print(L["No waypoint: this map takes none here."])
     end
@@ -876,9 +960,13 @@ function ISW.SlashSearch(rest)
     return true
 end
 
---- Settings moved (the lock, a window setting, a profile switch): repaint an open window.
+--- Settings moved (a window setting, a profile switch): put the frame at its saved size and point
+--- and repaint an open window.
 function ISW.ApplySettings()
-    if frame then applyPoint() end
+    if frame then
+        applySize()
+        applyPoint()
+    end
     ISW.Refresh()
 end
 

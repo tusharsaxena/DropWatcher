@@ -875,6 +875,8 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |
 | `TT.TickerPeriod` (`modules/TradeTimer.lua`) | reads the private ticker's period |
 | `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
+| `ISW.ViewState`, `ISW.ShownTab`, `ISW.MatchRows`, `ISW.TableRows` (`modules/ItemSearchWindow.lua`) | read the Item Search window's session view state, the tab on screen and the rows its list and table draw (ISF-DW-05, ISF-DW-06) |
+| `ISG.Rows` (`modules/ItemSearchGrid.lua`) | reads the rows a table draws, in order |
 
 ## The four suites, and which checkpoint each gates
 

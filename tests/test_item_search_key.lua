@@ -1,7 +1,8 @@
 -- tests/test_item_search_key.lua — the Item Search key (DropWatcher#17, Item Search spec §4.6, the
 -- owner's rules; modules/ItemSearchKey.lua): a press over an item tooltip opens that item, with none
 -- it opens empty, while open it closes over the same item or no tooltip and switches over another;
--- and the one-time Ctrl-Alt-D default, set once per character and only on a free key. The binding
+-- and the one-time Alt-Ctrl-D default, set once per character and only on a free key (re-tried once,
+-- Item Search feedback spec §1, where the first try stored the dead chord CTRL-ALT-D). The binding
 -- model is the kit's (tests/_kit/mock_bindings.lua); the item tooltips are tests/mock_tooltip_data.lua's
 -- stand-ins. Every ForeverDB value is the kit fake's invented data.
 
@@ -17,7 +18,8 @@ local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the
 local RETAIL_ONLY = T.forever and "the Retail profile's inert case; the Forever cases cover WoW Forever" or nil
 
 local COMMAND = "CLICK DropWatcherItemSearch:LeftButton"
-local KEY = "CTRL-ALT-D"
+local KEY = "ALT-CTRL-D"
+local DEAD = "CTRL-ALT-D"
 
 -- The addon enabled with the ForeverDB fake and the tooltip stand-ins, before the first
 -- PLAYER_ENTERING_WORLD unless `world`.
@@ -122,7 +124,7 @@ end, RETAIL_ONLY)
 
 -- ── the default key ─────────────────────────────────────────────────────────────────────────
 
-test("item search key: Ctrl-Alt-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force", function()
+test("item search key: Alt-Ctrl-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force", function()
     local NS, m = enabled()
     assertEqual(m.GetBindingKey(COMMAND), nil)
     m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
@@ -130,7 +132,7 @@ test("item search key: Ctrl-Alt-D is bound at the first PLAYER_ENTERING_WORLD on
     assertEqual(m.GetBindingKey(COMMAND), KEY)
     assertEqual(m.GetBindingAction(KEY), COMMAND)
     assertEqual(table.concat(m.__savedBindingSets, ","), tostring(m.GetCurrentBindingSet()))
-    assertTrue(NS.addon.db.char.itemSearch.keyDefaulted == true)
+    assertEqual(NS.addon.db.char.itemSearch.keyDefaultedV, 2)
 end, FOREVER_ONLY)
 
 test("item search key: a key that runs something else is never taken", function()
@@ -139,14 +141,14 @@ test("item search key: a key that runs something else is never taken", function(
     -- red under: a default that steals a bound key (ItemTree's rule, the spec)
     assertEqual(m.GetBindingAction(KEY), "TOGGLEWORLDMAP")
     assertEqual(m.GetBindingKey(COMMAND), nil)
-    assertTrue(NS.addon.db.char.itemSearch.keyDefaulted == true, "tried: never again on this character")
+    assertEqual(NS.addon.db.char.itemSearch.keyDefaultedV, 2, "tried: never again on this character")
 end, FOREVER_ONLY)
 
 test("item search key: a binding that already has a key keeps it", function()
     local _, m = enabled({ setup = function(mm) mm.bindKey("F9", COMMAND) end })
     m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
     assertEqual(m.GetBindingKey(COMMAND), "F9")
-    assertEqual(m.GetBindingAction(KEY), "", "Ctrl-Alt-D left free")
+    assertEqual(m.GetBindingAction(KEY), "", "Alt-Ctrl-D left free")
 end, FOREVER_ONLY)
 
 test("item search key: once per character: a key the player clears is not put back", function()
@@ -172,12 +174,110 @@ test("item search key: in combat the default waits for the combat's end", functi
     assertEqual(m.GetBindingKey(COMMAND), KEY)
 end, FOREVER_ONLY)
 
-test("item search key: the tooltip block's hint and the window's footer name the bound key", function()
+test("item search key: the bound key's text reads through, and the window's footer carries no key hint (W2)", function()
     local NS, m = enabled({ world = true })
     assertEqual(NS.Compat.BindingKeyText(NS.Constants.ITEM_SEARCH.BINDING), KEY)
     NS.ItemSearchWindow.Open()
-    assertEqual(NS.ItemSearchWindow.Frame().foot.right:GetText(), KEY .. ": open in Item Search")
+    -- red under: the "ALT-CTRL-D: open in Item Search" hint the owner asked to remove (feedback spec §5.1)
+    assertEqual(NS.ItemSearchWindow.Frame().foot.right:GetText(), "", "bound: still no hint in the footer")
     m.SetBinding(KEY, nil)
     NS.ItemSearchWindow.Refresh()
     assertEqual(NS.ItemSearchWindow.Frame().foot.right:GetText(), "", "unbound: no hint")
+end, FOREVER_ONLY)
+
+-- ── the canonical chord and the re-try (Item Search feedback spec §1) ──────────────────────
+
+-- The client writes a chord's modifiers ALT, CTRL, SHIFT, META (the kit's chord builder, BindingUtil's
+-- order): a constant in any other order is a key no press ever matches.
+local MOD_RANK = { ALT = 1, CTRL = 2, SHIFT = 3, META = 4 }
+local function canonical(chord)
+    local last = 0
+    local parts = {}
+    for part in chord:gmatch("[^-]+") do parts[#parts + 1] = part end
+    for i = 1, #parts - 1 do
+        local rank = MOD_RANK[parts[i]]
+        if not rank or rank <= last then return false end
+        last = rank
+    end
+    return #parts >= 1
+end
+
+test("item search key: every key constant the addon binds is in the client's canonical modifier order", function()
+    local NS = T.newAddon()
+    local IS = NS.Constants.ITEM_SEARCH
+    -- red under: the first default, "CTRL-ALT-D", which never fired (the owner's report)
+    assertFalse(canonical("CTRL-ALT-D"), "the check is falsifiable")
+    assertTrue(canonical("ALT-CTRL-SHIFT-F1") and canonical("F8"))
+    assertEqual(IS.DEFAULT_KEY, "ALT-CTRL-D")
+    local seen = 0
+    local function walk(t, depth)
+        for k, v in pairs(t) do
+            if type(v) == "string" and type(k) == "string" and k:find("_KEY$") and k ~= "DEAD_KEY" then
+                seen = seen + 1
+                assertTrue(canonical(v), k .. " = " .. v)
+            elseif type(v) == "table" and depth < 3 then
+                walk(v, depth + 1)
+            end
+        end
+    end
+    walk(NS.Constants, 0)
+    assertTrue(seen >= 1, "the walk found the default key")
+end)
+
+test("item search key: a character the first try marked is re-tried once: the dead chord cleared, Alt-Ctrl-D bound", function()
+    local NS, m = enabled({ setup = function(mm) mm.bindKey(DEAD, COMMAND) end })
+    NS.addon.db.char.itemSearch = { keyDefaulted = true }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    -- red under: the old marker honored (no re-try), or the dead chord left on the binding (the
+    -- binding then counts as keyed and the re-try leaves it)
+    assertEqual(m.GetBindingAction(DEAD), "", "the dead chord cleared")
+    assertEqual(m.GetBindingKey(COMMAND), KEY)
+    assertEqual(NS.addon.db.char.itemSearch.keyDefaultedV, 2)
+    assertEqual(NS.ItemSearchKey.TryDefaultKey(), "done", "once")
+end, FOREVER_ONLY)
+
+test("item search key: the re-try keeps the rules: a key the player bound stays, a taken Alt-Ctrl-D is not taken", function()
+    local NS, m = enabled({ setup = function(mm)
+        mm.bindKey("F9", COMMAND)
+        mm.bindKey(DEAD, "TOGGLEWORLDMAP")
+    end })
+    NS.addon.db.char.itemSearch = { keyDefaulted = true }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    -- red under: a clear of a dead chord that runs something else, or a key put over the player's own
+    assertEqual(m.GetBindingAction(DEAD), "TOGGLEWORLDMAP", "a CTRL-ALT-D that is not ours is left alone")
+    assertEqual(m.GetBindingKey(COMMAND), "F9")
+    assertEqual(m.GetBindingAction(KEY), "")
+
+    local NS2, m2 = enabled({ setup = function(mm) mm.bindKey(KEY, "TOGGLEWORLDMAP") end })
+    NS2.addon.db.char.itemSearch = { keyDefaulted = true }
+    m2.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    assertEqual(m2.GetBindingAction(KEY), "TOGGLEWORLDMAP")
+    assertEqual(m2.GetBindingKey(COMMAND), nil)
+    assertEqual(NS2.addon.db.char.itemSearch.keyDefaultedV, 2)
+end, FOREVER_ONLY)
+
+test("item search key: a marked character whose dead chord is gone is not re-tried: a key the player cleared stays cleared", function()
+    local NS, m = enabled()
+    NS.addon.db.char.itemSearch = { keyDefaulted = true }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    -- red under: the re-try binding Alt-Ctrl-D for a player who cleared the dead CTRL-ALT-D
+    -- themselves after the first build (the key module's promise, docs/schema.md)
+    assertEqual(m.GetBindingKey(COMMAND), nil, "no key put back")
+    assertEqual(m.GetBindingAction(KEY), "")
+    assertEqual(NS.addon.db.char.itemSearch.keyDefaultedV, 2, "tried, once")
+    assertEqual(NS.ItemSearchKey.TryDefaultKey(), "done")
+end, FOREVER_ONLY)
+
+test("item search key: the re-try waits out combat before it clears anything", function()
+    local NS, m = enabled({ setup = function(mm) mm.bindKey(DEAD, COMMAND) end })
+    NS.addon.db.char.itemSearch = { keyDefaulted = true }
+    m.inCombat = true
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    -- red under: a SetBinding in combat (#nocombat)
+    assertEqual(#m.__bindingRefusals, 0)
+    assertEqual(m.GetBindingAction(DEAD), COMMAND)
+    m.inCombat = false
+    m.fireEvent("PLAYER_REGEN_ENABLED")
+    assertEqual(m.GetBindingAction(DEAD), "")
+    assertEqual(m.GetBindingKey(COMMAND), KEY)
 end, FOREVER_ONLY)

@@ -1245,8 +1245,16 @@ the key (CLICK DropWatcherItemSearch) ─> ItemSearchKey.Press ─> the shown it
     ─> open on it | switch to it | close (the same item, or none while open)
 the magnifier, /dw search [name|id] ─> ItemSearchWindow.Open / SlashSearch
 the search box ─> 0.25 s ─> an id: ForeverDB's row, else the client's cache | a name: SearchItems
-    ─> ShowItem(id) ─> ItemSearch.Get ─> ItemSearchView's rows (pure) ─> the sections painted
-    ─> global.itemSearch.recent (while Remember recent searches is on)
+    ─> ShowItem(id) ─> ItemSearch.Get ─> ItemSearchCells.Build(facts, ItemSearch.Me, ctx) (pure,
+         each tab's rows in IS.Rank's order) ─> ItemSearchTabs.Tabs / View (the tab set; the tab's
+         filters and sort, a session view state) ─> ItemSearchGrid's header and table painted
+    a column's title, the Filter / Sort / Reset marks, the Crafting chip ─> the view state ─> Refresh
+    a match or the header's icon / name, shift-click ─> the item's link in chat (Compat.LinkInChat)
+    a row's map pin ─> ItemSearchWindow.SetPin ─> ItemSearchWaypoint.Set ─> Method() (itemSearch.waypoints:
+         Automatic = TomTom when loaded, else Drop Watcher's arrow) ─> Compat.AddTomTomWaypoint |
+         the LibKa0s-WaypointArrow-1.0 instance's SetTarget (never C_Map.SetUserWaypoint) ─> one chat line
+    the arrow: a drag, its Lock, Reset position ─> SchemaRuntime.Set(itemSearch.arrow.x / .y / .lock);
+         arrival ─> cleared, "You have arrived"; a row, a profile switch or a skin change ─> ApplySettings
 
 TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE ─> 1 s after the burst, out of combat, Item Search on
     ─> each listed recipe the shipped table lacks ─> global.itemSearch.learnedRecipes ─> Invalidate

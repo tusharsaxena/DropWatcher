@@ -6,8 +6,9 @@
 -- through the opener its launcher registered.
 --
 -- The windows: the main window (lock, layout, minimize, settings, close; on WoW Forever the Item
--- Search magnifier first) and, on WoW Forever, the Item Search window (lock, settings, close: not a
--- companion, since its key opens it on its own and it keeps a saved position). Its companions carry no
+-- Search magnifier first) and, on WoW Forever, the Item Search window (settings, close: not a
+-- companion, since its key opens it on its own and it keeps a saved position; its lock went in
+-- ISF-DW-05, Item Search feedback spec §5.1, W13). Its companions carry no
 -- settings mark (FB-DW-01, W.HeaderButtons' companion = true): the Rolls panel (Expand all / Collapse
 -- all, close) and the Offer panel (close), both docked beside the window and showing only its drops,
 -- and the Edit message box (close), a modal over it. The detail card is the Drops table's expanded row
@@ -100,8 +101,7 @@ local WINDOWS = {
     { "the main window", mainWindow, MAIN_ORDER, MAIN_FIELDS },
 }
 if T.forever then
-    WINDOWS[#WINDOWS + 1] = { "the Item Search window", itemSearchWindow, { "lock", "settings", "close" },
-        { lock = "lockButton" } }
+    WINDOWS[#WINDOWS + 1] = { "the Item Search window", itemSearchWindow, { "settings", "close" }, {} }
 end
 
 -- The companions (FB-DW-01): docked beside the feed window or over it, each showing only its content.

@@ -215,6 +215,11 @@ local FIXED_TONE = {
     skillYellow = { r = 1.00, g = 1.00, b = 0.00 },
     skillGreen  = { r = 0.25, g = 0.75, b = 0.25 },
     skillGray   = { r = 0.50, g = 0.50, b = 0.50 },
+    -- The recipe glyphs past the skill-ups (Item Search feedback spec §5.7): a known recipe with no
+    -- skill-up, its flat dash light gray (#b0b0b0), and a recipe you don't know, its padlock dark
+    -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
+    glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
+    glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -436,25 +441,30 @@ for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.For
 -- (modules/ItemSearchLearn.lua).
 -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
 -- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
--- rule; Sold by lists at most TIP_VENDORS vendors before "and N more".
+-- rule; every section stops at itemSearch.tooltip.rows before "and N more" (Item Search feedback
+-- spec §7, NS.ItemSearch.Cap).
 C.ITEM_SEARCH = {
     LOAD_DELAY  = 5,
     DEBOUNCE    = 0.25,
     LEARN_DELAY = 1,
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
     RULE_WIDTH  = 160,
-    TIP_VENDORS = 3,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
-    -- while the key runs nothing (modules/ItemSearchKey.lua).
-    DEFAULT_KEY = "CTRL-ALT-D",
-    -- The window (modules/ItemSearchWindow.lua, spec §4.5, mockup board 2): its global name (the
-    -- UISpecialFrames entry), its fixed size, the left pane's width, the rows' heights by density,
-    -- the matches a name search lists, the recent searches it keeps and the item header's icon.
+    -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
+    -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D
+    -- arrives as ALT-CTRL-D, so a binding stored as CTRL-ALT-D never fires. DEAD_KEY is that
+    -- broken first default, cleared off the binding before the re-try (KEY_DEFAULT_V).
+    DEFAULT_KEY = "ALT-CTRL-D",
+    DEAD_KEY    = "CTRL-ALT-D",
+    KEY_DEFAULT_V = 2,
+    -- The window (modules/ItemSearchWindow.lua, spec §4.5; Item Search feedback spec §5.1): its
+    -- global name (the UISpecialFrames entry), its default size and its least one (resizable from
+    -- the corner up to the screen, W14), the left pane's width, the matches a name search lists,
+    -- the item header's icon and a row pin's size. Its rows' height and font are the main window's
+    -- (NS.WindowRows.Metrics), so it keeps none of its own.
     WINDOW = {
-        NAME = "DropWatcherItemSearchFrame", WIDTH = 760, HEIGHT = 520, LEFT_W = 240,
-        ROW_H = { comfortable = 20, compact = 16 }, MATCHES = 50, RECENT = 10, ICON = 32,
-        ROW_ICON = 16, BAR_W = 90, PIN = 14, FONT = 13, FONT_MIN = 10, FONT_MAX = 16,
-        LOAD_RETRY = 0.5,
+        NAME = "DropWatcherItemSearchFrame", WIDTH = 980, HEIGHT = 600, MIN_W = 760, MIN_H = 440,
+        LEFT_W = 250, MATCHES = 50, ICON = 32, PIN = 14, LOAD_RETRY = 0.5,
     },
 }
 

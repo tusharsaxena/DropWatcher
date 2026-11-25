@@ -77,7 +77,6 @@ L["Cosmetic armor and weapons: a look to collect, never gear."] = "Cosmetic armo
 L["Lockboxes"] = "Lockboxes"
 L["Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."] =
     "Lockboxes and other boxes that open, shown as Lockbox: no gain for anyone."
-L["Containers"] = "Containers"
 L["Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."] =
     "Bags, and on WoW Forever quivers and ammo pouches, shown as Container: no gain for anyone."
 L["Everything else that is rolled on"] = "Everything else that is rolled on"
@@ -438,7 +437,6 @@ L["Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
     "Reset the Alerts page's settings (toast and upgrade glow) to their defaults."
 L["Simulator"] = "Simulator"
 -- settings/SchemaRows.lua: General › Role (Forever port design §11.4)
-L["Role"] = "Role"
 L["Tank"] = "Tank"
 L["Healer"] = "Healer"
 L["Damage"] = "Damage"
@@ -490,10 +488,11 @@ L["The quests that ask for the item: in your log, not picked up yet, or complete
     "The quests that ask for the item: in your log, not picked up yet, or completed."
 L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] =
     "The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."
+L["The creatures the item is skinned from, likeliest first, with their chance."] =
+    "The creatures the item is skinned from, likeliest first, with their chance."
 L["Reward from / starts quest"] = "Reward from / starts quest"
 L["The quests that reward the item, and the quest the item starts."] =
     "The quests that reward the item, and the quest the item starts."
-L["Comfortable"] = "Comfortable"
 L["Item tooltip"] = "Item tooltip"
 L["Tooltip block"] = "Tooltip block"
 L["Add Item Search to item tooltips"] = "Add Item Search to item tooltips"
@@ -505,17 +504,17 @@ L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item 
 L["Separator and title line"] = "Separator and title line"
 L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."] =
     "Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."
-L["Keybind hint line"] = "Keybind hint line"
-L["Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."] =
-    "Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"
 L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."] =
     "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."
 L["Sections"] = "Sections"
 L["Needs Add Item Search to item tooltips."] = "Needs Add Item Search to item tooltips."
-L["Drop sources shown"] = "Drop sources shown"
-L["How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."] =
-    "How many drop sources the tooltip names, 1 to 10, before \"and N more\". The Item Search window lists every one. Needs Drops from."
+L["Rows per section"] = "Rows per section"
+L["How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."] =
+    "How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."
+L["Only professions you know"] = "Only professions you know"
+L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."] =
+    "Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."
 L["Hide completed quests"] = "Hide completed quests"
 L["Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."] =
     "Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."
@@ -532,23 +531,70 @@ L["The color of the drop chance bars in DROPS FROM. Not read while Use the skin'
     "The color of the drop chance bars in DROPS FROM. Not read while Use the skin's color is on."
 L["Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."] =
     "Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."
-L["Rows"] = "Rows"
-L["Density"] = "Density"
-L["How tall the window's rows are: Comfortable or Compact."] =
-    "How tall the window's rows are: Comfortable or Compact."
-L["The size of the window's text, 10 to 16."] = "The size of the window's text, 10 to 16."
-L["Zone and level columns"] = "Zone and level columns"
-L["Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."] =
-    "Show the level and zone columns in DROPS FROM, SOLD BY and QUESTS."
 L["Waypoint pins"] = "Waypoint pins"
-L["Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."] =
-    "Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."
-L["Remember recent searches"] = "Remember recent searches"
-L["List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."] =
-    "List the last 10 items you looked at under the search box, on every character. Off, the list is hidden and nothing new is added."
+-- settings/ItemSearchRows.lua and settings/ItemSearchArrowRows.lua: the key hint, the Waypoints tab and
+-- Drop Watcher's arrow's rows (Item Search feedback spec §6, §9; ISF-DW-07, ISF-DW-08)
+L["Show the key hint"] = "Show the key hint"
+L["Close the block with a line naming the key bound to Item Search and what it does. No line while the key is unbound. Needs Add Item Search to item tooltips."] =
+    "Close the block with a line naming the key bound to Item Search and what it does. No line while the key is unbound. Needs Add Item Search to item tooltips."
+L["Tooltip and window"] = "Tooltip and window"
+L["Waypoints"] = "Waypoints"
+L["Who points the way to a waypoint pin. Automatic uses TomTom when it is loaded, and Drop Watcher's arrow otherwise. TomTom needs the TomTom addon: while it is not loaded, Drop Watcher's arrow is used instead."] =
+    "Who points the way to a waypoint pin. Automatic uses TomTom when it is loaded, and Drop Watcher's arrow otherwise. TomTom needs the TomTom addon: while it is not loaded, Drop Watcher's arrow is used instead."
+L["Show a map pin on each row of the Item Search window with a known spot. Clicking it sets a waypoint there, with the arrow Waypoints names."] =
+    "Show a map pin on each row of the Item Search window with a known spot. Clicking it sets a waypoint there, with the arrow Waypoints names."
+L["Waypoint arrow"] = "Waypoint arrow"
+L["Arrow text"] = "Arrow text"
+L["Arrow style"] = "Arrow style"
+L["How the arrow is drawn. Raised floats over the world on a soft shadow; On the ground lies flat, tilted toward you."] =
+    "How the arrow is drawn. Raised floats over the world on a soft shadow; On the ground lies flat, tilted toward you."
+L["Flat"] = "Flat"
+L["Ridge"] = "Ridge"
+L["Raised"] = "Raised"
+L["Faceted"] = "Faceted"
+L["On the ground"] = "On the ground"
+L["Use the skin's colors"] = "Use the skin's colors"
+L["The arrow fades from the skin's accent color, far away, to its good color as you arrive. Off: your own two colors."] =
+    "The arrow fades from the skin's accent color, far away, to its good color as you arrive. Off: your own two colors."
+L["Far color"] = "Far color"
+L["The arrow's color 300 yards away or more. Not read while Use the skin's colors is on."] =
+    "The arrow's color 300 yards away or more. Not read while Use the skin's colors is on."
+L["Near color"] = "Near color"
+L["The arrow's color 30 yards away or closer. Not read while Use the skin's colors is on."] =
+    "The arrow's color 30 yards away or closer. Not read while Use the skin's colors is on."
+L["Arrow scale"] = "Arrow scale"
+L["The size of the arrow and its distance, 0.5 to 2."] = "The size of the arrow and its distance, 0.5 to 2."
+L["The face the arrow's distance is drawn in."] = "The face the arrow's distance is drawn in."
+L["Height of the arrow's distance, in points."] = "Height of the arrow's distance, in points."
+L["Font color"] = "Font color"
+L["The color the arrow's distance is drawn in."] = "The color the arrow's distance is drawn in."
+L["Use class color"] = "Use class color"
+L["Draw the arrow's distance in your class color instead of the swatch beside it."] = "Draw the arrow's distance in your class color instead of the swatch beside it."
+L["Draw a soft shadow behind the arrow's distance, for legibility over bright art."] = "Draw a soft shadow behind the arrow's distance, for legibility over bright art."
+L["Draw the arrow's distance in the skin's font. The font picker is not read while this is on."] =
+    "Draw the arrow's distance in the skin's font. The font picker is not read while this is on."
+L["Text position"] = "Text position"
+L["Where the distance sits beside the arrow, or Hidden for the arrow alone."] = "Where the distance sits beside the arrow, or Hidden for the arrow alone."
+L["Below"] = "Below"
+L["Above"] = "Above"
+L["Show the target's name"] = "Show the target's name"
+L["A second line under the distance with the name of the source the arrow points to."] =
+    "A second line under the distance with the name of the source the arrow points to."
+L["Distance units"] = "Distance units"
+L["Yards, or thousands of yards from 1000 on (4.2k yd)."] = "Yards, or thousands of yards from 1000 on (4.2k yd)."
+L["Yards"] = "Yards"
+L["Arrow position"] = "Arrow position"
+L["X offset"] = "X offset"
+L["How far right of the screen's center the arrow sits; the Arrow scale does not move it. Dragging the arrow sets it."] =
+    "How far right of the screen's center the arrow sits; the Arrow scale does not move it. Dragging the arrow sets it."
+L["Y offset"] = "Y offset"
+L["How far above the screen's center the arrow sits; the Arrow scale does not move it. Dragging the arrow sets it."] =
+    "How far above the screen's center the arrow sits; the Arrow scale does not move it. Dragging the arrow sets it."
+L["While on, the arrow cannot be dragged. Its right-click menu still opens."] = "While on, the arrow cannot be dragged. Its right-click menu still opens."
+L["Put the arrow back at its default position."] = "Put the arrow back at its default position."
 -- settings/ItemSearchPage.lua and settings/Pages.lua (Item Search, DropWatcher#17)
 L["Drag to reorder"] = "Drag to reorder"
-L["The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."] =
-    "The Item Search key opens Item Search on the item under the pointer, or closes it. Ctrl-Alt-D is set for you once, only when that key runs nothing else."
-L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."] =
-    "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."
+L["The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."] =
+    "The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."
+L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."] =
+    "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."

@@ -101,12 +101,12 @@ files["core/CompatCollect.lua"] = {
 }
 
 -- Item Search's reads (DropWatcher#17): core/CompatSearch.lua alone names the race, the quest log,
--- the skill list, the client build, the crafting reagent enum and the profession window's API,
+-- the skill list, the player's side and zone (the ranking's context), the client build, the crafting reagent enum and the profession window's API,
 -- and the item tooltip's post call, the bound key's display text and the coin string; and the
 -- Item Search window's and key's reads: map names, waypoints (the client's own and TomTom's) and
 -- the key binding API for the one-time default key.
 files["core/CompatSearch.lua"] = {
-  read_globals = { "UnitRace", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
+  read_globals = { "UnitRace", "UnitFactionGroup", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
     "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString",
     "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
     "GetCurrentBindingSet" },
