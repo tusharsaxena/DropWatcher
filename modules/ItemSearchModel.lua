@@ -23,7 +23,8 @@ local _, NS = ...
 --   learned    the profession window's recipes, `{ [spell] = { skillLine, reagents, made, name } }`
 --   race, class the player's race and class ids (nil: no filter)
 -- Live half:
---   questState function(questID) -> "log" | "done" | "todo"
+--   questState function(questID) -> "done" | "ready" | "log" | "todo" ("ready": in the log and
+--              complete, not turned in; round 3 spec §4.2)
 --   knows      function(spell) -> boolean|nil
 --   ranks      { [skillLine] = rank } or nil
 --
@@ -196,6 +197,24 @@ function IS.SkillColor(rank, yellow, gray)
     if rank >= IS.Green(yellow, gray) then return "green" end
     if rank >= yellow then return "yellow" end
     return "orange"
+end
+
+--- A recipe's breakpoints as colored parts: orange (its minimum, only above 1: the shipped table's
+--- 1 is a placeholder), yellow, green and gray, each `{ text, tone }` (a C.TONE key); `{}` without
+--- breakpoints. The window's Skill column draws them (NS.ItemSearchCells.SkillParts is this) and so
+--- does the tooltip's crafting row (round 3 spec §4.2, item 4).
+--- @param r table a crafting row
+--- @return table
+function IS.SkillParts(r)
+    local out = {}
+    local yellow, gray = num(r.yellow), num(r.gray)
+    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return out end
+    local min = num(r.min)
+    if min and min > 1 then out[#out + 1] = { text = tostring(min), tone = "skillOrange" } end
+    out[#out + 1] = { text = tostring(yellow), tone = "skillYellow" }
+    if num(r.green) then out[#out + 1] = { text = tostring(r.green), tone = "skillGreen" } end
+    out[#out + 1] = { text = tostring(gray), tone = "skillGray" }
+    return out
 end
 
 -- ── quests ──────────────────────────────────────────────────────────────────────────────────
@@ -424,7 +443,7 @@ end
 --   faction      "A" | "H" (UnitFactionGroup's first letter)
 --   ranks        { [skillLine] = rank }
 --   known(spell) -> boolean, for a row that carries no `known`
---   questState(id) -> "log" | "done" | "todo", for a row that carries no `state`
+--   questState(id) -> "done" | "ready" | "log" | "todo", for a row that carries no `state`
 --   spots(kind, id) -> ForeverDB's Spots answer, `{ [uiMapID] = { { x, y }, ... } }`
 --
 -- THE LEVEL BAND. A creature is in your band when its level range overlaps
@@ -633,19 +652,26 @@ end
 
 local function questTier(row, me)
     local state = questStateOf(row, me)
-    if state == "log" then return 1 end
+    if state == "log" or state == "ready" then return 1 end
     if state == "done" then return 4 end
     local level, minLevel = num(me.level), num(row.minLevel)
     if not (level and minLevel) or level >= minLevel then return 2 end
     return 3
 end
 
+-- Within the log's tier, a quest ready to turn in comes before every one still in progress.
+local READY_FIRST = 1e6
+
 local function questKey(row, me)
-    return questTier(row, me), num(row.level) or math.huge
+    local tier = questTier(row, me)
+    local level = num(row.level) or math.huge
+    if tier == 1 and questStateOf(row, me) == "ready" then level = (num(row.level) or 0) - READY_FIRST end
+    return tier, level
 end
 
---- QUESTS: in your log, then can pick up now (your level at least its minimum, not done), then too
---- high for you now, last completed. Within a tier, the lower quest level first.
+--- QUESTS: in your log (ready to turn in first), then can pick up now (your level at least its
+--- minimum, not done), then too high for you now, last completed. Within a tier, the lower quest
+--- level first.
 --- @param rows table facts.quests (or the Reward from / Starts rows)
 --- @param me table
 --- @return table

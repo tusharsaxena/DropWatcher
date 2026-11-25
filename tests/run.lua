@@ -312,6 +312,9 @@ Kit.skinValues = {
           why = "a recipe's green (easy) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
         { file = "core/Constants.lua", substring = "skillGray   = {",
           why = "a recipe's gray (trivial) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
+        -- Item Search round 3 (spec §4.2, item 13): the quest marks are the game's own gossip icons.
+        { file = "modules/ItemSearchTip.lua", substring = "local QUEST_ICON =",
+          why = "Item Search's quest marks, the game's own gossip ! and ? players know, the same under every skin", cause = "A6" },
         -- RC.Grid's answer for no rows: one column, no lines, none shown. Counts, not a color.
         { file = "modules/RollCells.lua", substring = "if n == 0 then return 1, 0, 0 end",
           why = "the roster box's columns, lines and shown count for no rows", category = "not a color" },

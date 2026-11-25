@@ -164,6 +164,47 @@ function Compat.QuestDone(questID)
     return done == true
 end
 
+-- One read of a quest-log API, in pcall: its first answer when it is a plain boolean, else nil (no
+-- API, an error, a secret or any other shape).
+local function plainFlag(fn, ...)
+    if type(fn) ~= "function" then return nil end
+    local ok, v = pcall(fn, ...)
+    if not ok or Compat.IsSecret(v) or type(v) ~= "boolean" then return nil end
+    return v
+end
+
+-- The 1.12-style log's complete flag (GetQuestLogIndexByID, then GetQuestLogTitle's sixth answer:
+-- 1 complete, -1 failed, nil not yet), where the client has both; nil otherwise.
+local function logTitleComplete(questID)
+    local indexOf, titleOf = GetQuestLogIndexByID, GetQuestLogTitle
+    if type(indexOf) ~= "function" or type(titleOf) ~= "function" then return nil end
+    local ok, index = pcall(indexOf, questID)
+    if not ok or not plainId(index) then return nil end
+    local ok2, _, _, _, _, _, complete = pcall(titleOf, index)
+    if not ok2 or Compat.IsSecret(complete) then return nil end
+    return complete == 1 or complete == true
+end
+
+--- Whether a quest in the player's log is complete and only waits to be turned in (Item Search
+--- round 3 spec §4.2, item 13): C_QuestLog.ReadyForTurnIn, then C_QuestLog.IsComplete, then the
+--- log entry's complete flag through GetQuestLogIndexByID and GetQuestLogTitle where those exist.
+--- The first rung that answers a plain boolean decides; each call is in pcall. Nil for unknown (no
+--- API, an error or a secret answer). Which rung answers on WoW Forever is a smoke probe
+--- (ITEM-SEARCH-35).
+--- @param questID number
+--- @return boolean|nil
+function Compat.QuestReady(questID)
+    if not plainId(questID) then return nil end
+    local ql = type(C_QuestLog) == "table" and C_QuestLog or nil
+    if ql then
+        local ready = plainFlag(ql.ReadyForTurnIn, questID)
+        if ready ~= nil then return ready end
+        local complete = plainFlag(ql.IsComplete, questID)
+        if complete ~= nil then return complete end
+    end
+    return logTitleComplete(questID)
+end
+
 -- ── spells and professions ──────────────────────────────────────────────────────────────────
 
 -- Keep the higher of `rank` and what `ranks` already has for `line` (nil: no line).

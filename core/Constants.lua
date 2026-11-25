@@ -440,18 +440,22 @@ for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.For
 -- profession window's reagents are read LEARN_DELAY seconds after its last list update
 -- (modules/ItemSearchLearn.lua).
 -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
--- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
--- rule; every section stops at itemSearch.tooltip.rows before "and N more" (Item Search feedback
--- spec §7, NS.ItemSearch.Cap).
+-- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a hairline across
+-- the tooltip, RULE_INSET in from each edge (round 3 spec §4.2); every section stops at
+-- itemSearch.tooltip.rows before "and N more" (Item Search feedback spec §7, NS.ItemSearch.Cap).
 C.ITEM_SEARCH = {
     LOAD_DELAY  = 5,
     DEBOUNCE    = 0.25,
     LEARN_DELAY = 1,
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
-    RULE_WIDTH  = 160,
+    -- The separator's inset from the tooltip's left and right edges, in UI units (round 3 spec §4.2).
+    RULE_INSET  = 8,
     -- The recipe glyphs' size in pixels, the tooltip's and the window's alike (round 3 spec §4.1):
     -- an explicit escape size, so both faces draw them the same.
     GLYPH_SIZE  = 14,
+    -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
+    -- GLYPH_SIZE's, so a mark and a glyph read as one family.
+    MARK_SIZE   = 14,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
     -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
     -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D

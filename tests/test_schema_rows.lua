@@ -921,6 +921,8 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.enabled", "bool", "true" },
     { "itemSearch.tooltip.shiftOnly", "bool", "false" },
     { "itemSearch.tooltip.header", "bool", "true" },
+    -- ISR3-DW-02 (Item Search round 3 spec §4.2): the crafting rows' skill levels, on.
+    { "itemSearch.tooltip.craftSkill", "bool", "true" },
     { "itemSearch.tooltip.hint", "bool", "true" },
     { "itemSearch.tooltip.comparison", "bool", "false" },
     { "itemSearch.tooltip.sections.drops", "bool", "true" },

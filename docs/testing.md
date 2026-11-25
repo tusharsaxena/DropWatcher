@@ -284,7 +284,7 @@ color, the swatch's mode for no quality), the Drops row, its Me icons, the detai
 compact card and the toast styled live, the glow's frame level over the border, and a profile copy
 re-reading it), the ten skin suites (the skinning rollout, DW-01 to DW-04, the skin fonts run's two,
 the full skinning run's `test_skin_flip` and `test_skin_host`, and round 5's `test_header_band`):
-`test_skin_setup` (the seam: the owner and its facade, the twenty-four `dw.*` owner tokens at Ka0s
+`test_skin_setup` (the seam: the owner and its facade, the twenty-five `dw.*` owner tokens at Ka0s
 Default's pixels and their follow tokens elsewhere, `C.TONE` refilled in place, the eight `skin.*`
 rows, `/dw set` on a skin, an exception and an override, the write seam, the Skin tab's place, one
 pick one repaint, the profile's skin applied after AceDB and on every profile event, the factories

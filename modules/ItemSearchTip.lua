@@ -23,9 +23,16 @@ local _, NS = ...
 -- else of the tooltip: never another line's text (client-quirks: a tooltip's text can be secret).
 --
 -- WHAT IT WRITES (IST.Lines, pure; IST.Paint writes it):
---   * the separator, a 1 px rule in the skin's accent (`text.accent`, read at call time), and the
---     title line "Drop Watcher · Item Search" in the same accent, with no icon before it (Item
---     Search feedback spec §7, T2; the "Separator and title line" setting);
+--   * the separator (round 3 spec §4.2, item 14b; the "Separator line" setting): one blank spacer
+--     line with a hairline lying across its middle, a Texture of the tooltip's own (one per
+--     tooltip, made on first use), C.ITEM_SEARCH.RULE_INSET in from each edge, one physical pixel
+--     tall (LibKa0s-Core's __PixelSize) and tinted the owner token `dw.tipRule`. It never sets the
+--     tooltip's width. It is hidden on the tooltip's OnHide and OnTooltipCleared, and placed again
+--     on its OnSizeChanged and once on the next frame (the post call can run before the tooltip is
+--     laid out);
+--   * the label line, always (item 14a): "Drop Watcher" at the left in the tooltip label's muted
+--     gold, the verdict badge's place at the right (ISR3-DW-05; nothing yet). The old title line
+--     "Drop Watcher · Item Search" is gone;
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
 --     the tooltip label's muted gold and its rows, an empty section left out. Every section's rows
 --     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at
@@ -33,12 +40,18 @@ local _, NS = ...
 --       Drops from    the sources (name, level range; chance on the right), then a World drop row
 --                     with its minimum level, then "and N more";
 --       Sold by       the vendors (the cheapest one's price on the right);
---       Quests        `!` in your log, `?` not picked up yet, a check mark completed (left out while
---                     "Hide completed quests" is on); the quest's level on the right;
---       Crafting      the recipe glyph (IST.CraftMark, §5.7) and the profession on the right; with
---                     "Only professions you know" on (§4) the other professions' recipes are left
---                     out and counted on one dim line, "+N in professions you don't know", after
---                     "and N more" (the heading and that line alone when every recipe is filtered);
+--       Quests        the game's marks (IST.QuestMark, round 3 item 13): the yellow `!` not picked
+--                     up (dimmed while your level is too low), the gray `?` in your log, the green
+--                     `?` complete and waiting to be turned in, a green check turned in (left out
+--                     while "Hide completed quests" is on); the quest's level on the right;
+--       Crafting      the recipe glyph (IST.CraftMark, §5.7); on the right the recipe's skill
+--                     breakpoints, each in its skill-up hue (round 3 item 4, the window's Skill
+--                     column's parts, memoized per recipe), then " · <profession>" in muted when
+--                     the rows shown mix professions; the profession alone for a recipe with no
+--                     breakpoints or with "Show recipe skill levels" off. With "Only professions
+--                     you know" on (§4) the other professions' recipes are left out and counted on
+--                     one dim line, "+N in professions you don't know", after "and N more" (the
+--                     heading and that line alone when every recipe is filtered);
 --       Skinned from  the creatures (name, level range; chance on the right);
 --       Also          the quests that reward the item and the quest it starts;
 --   * the hint "<key>: open in Item Search", naming the key bound to C.ITEM_SEARCH.BINDING as the
@@ -46,11 +59,13 @@ local _, NS = ...
 --     left out when nothing is bound (the "Show the key hint" setting, feedback spec §1).
 -- An item with no row in any switched-on section gets no block at all, title and hint included.
 --
--- THE MARKS are texture escapes of LibKa0s media icons (`confirm`, and the recipe glyphs
--- `ph:arrow-fat-up`, `ph:arrows-horizontal` and `ph:lock`), tinted through the escape: the tooltip's
--- face draws no check mark, arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict
--- marks. The recipe glyphs carry an explicit C.ITEM_SEARCH.GLYPH_SIZE (14:14), so the tooltip and the
--- window's glyph column draw them at one size (round 3 spec §4.1). `!` and `?` are text.
+-- THE MARKS are texture escapes, tinted through the escape: the tooltip's face draws no check mark,
+-- arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict marks. The recipe glyphs
+-- are LibKa0s media icons (`ph:arrow-fat-up`, `ph:arrows-horizontal` and `ph:lock`) at an explicit
+-- C.ITEM_SEARCH.GLYPH_SIZE (14:14), so the tooltip and the window's glyph column draw them at one
+-- size (round 3 spec §4.1). The quest marks are the client's own GossipFrame icons and the media
+-- icon `ph:check-fat`, at C.ITEM_SEARCH.MARK_SIZE, the same in the tooltip and the window (§4.2).
+-- With the media library absent every mark falls back to a character every face has.
 
 NS.ItemSearchTip = NS.ItemSearchTip or {}
 local IST = NS.ItemSearchTip
@@ -64,7 +79,7 @@ local Compat = NS.Compat
 IST.ORDER = { "drops", "vendors", "quests", "crafting", "skinned", "also" }
 IST.SECTIONS = { drops = true, vendors = true, quests = true, crafting = true, skinned = true, also = false }
 
--- The separator's texture: the client's plain white square, tinted by the escape.
+-- The separator's texture: the client's plain white square, tinted `dw.tipRule`.
 IST.RULE_TEXTURE = "Interface\\Buttons\\WHITE8X8"
 
 local SKILL_TONE = { orange = "skillOrange", yellow = "skillYellow", green = "skillGreen", gray = "skillGray" }
@@ -78,13 +93,40 @@ local GLYPH = {
 }
 local SKILL_UP = { orange = true, yellow = true, green = true }
 
--- With the media library absent (NS.Icon answers nil) a mark falls back to a character every face has.
-local FALLBACK = { done = "+" }
+-- The quest marks (round 3 spec §4.2, item 13), per ISC.QuestStatus' state: the client's own
+-- GossipFrame icon (`gossip`, QUEST_ICON's word) or the media icon, the tint multiplied in (nil:
+-- none, the texture's own colors; a C.TONE key; or "dim", the `!` at half its brightness), and the
+-- character and tone of the fallback with the media library absent.
+local QUEST_ICON = "Interface\\GossipFrame\\%sQuestIcon"
+local QUEST_MARK = {
+    can   = { gossip = "Available", fallback = "!", fallbackTone = "yellow" },
+    high  = { gossip = "Available", tint = "dim", fallback = "!", fallbackTone = "muted" },
+    log   = { gossip = "Incomplete", fallback = "?", fallbackTone = "muted" },
+    ready = { gossip = "Active", tint = "good", fallback = "?", fallbackTone = "good" },
+    done  = { icon = "ph:check-fat", tint = "good", fallback = "+", fallbackTone = "good" },
+}
+local DIM = 0.5
 
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
+local rules = setmetatable({}, { __mode = "k" })     -- tooltip -> its separator { tex, line, place }
 local installed = false
 local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each post call (never kept)
+
+-- The memos a hover reads instead of building strings (round 3 spec §4.2): the quest marks per
+-- size and state, and each recipe's colored skill parts. Both hold skin tones, so a skin switch
+-- empties them.
+local markMemo, partsMemo = {}, {}
+local function forgetLooks()
+    markMemo, partsMemo = {}, {}
+end
+if NS.Skin and type(NS.Skin.OnLooksChanged) == "function" then NS.Skin.OnLooksChanged(forgetLooks) end
+
+--- Empty the hover's memos (the quest marks and the recipes' skill parts): the skin's
+--- OnLooksChanged listener, and a suite's handle.
+function IST.ForgetLooks()
+    forgetLooks()
+end
 
 -- ── colors and marks ────────────────────────────────────────────────────────────────────────
 
@@ -112,13 +154,40 @@ local function icon(name, tone, fallback, size)
     return NS.TipMarks.Escape(path, r, g, b, size)
 end
 
---- A quest row's mark: `!` (in your log), `?` (not picked up), the check mark (completed).
---- @param state string "log" | "todo" | "done"
+-- A mark's tint: its tone's color, or the texture's own colors scaled by 1 (none) or DIM.
+local function tintOf(m)
+    if m.tint and m.tint ~= "dim" then return rgb(m.tint) end
+    local k = m.tint == "dim" and DIM or 1
+    return k, k, k
+end
+
+local function questMark(m, size)
+    if not NS.Icon(QUEST_MARK.done.icon) then return colored(m.fallback, m.fallbackTone) end
+    local path = m.icon and NS.Icon(m.icon) or QUEST_ICON:format(m.gossip)
+    local r, g, b = tintOf(m)
+    return NS.TipMarks.Escape(path, r, g, b, size)
+end
+
+--- A quest's mark in the game's style (round 3 spec §4.2, item 13), the tooltip's and the window's
+--- alike, by NS.ItemSearchCells.QuestStatus' state: "can" the yellow `!` (AvailableQuestIcon),
+--- "high" the same `!` dimmed (your level is too low), "log" the gray `?` (IncompleteQuestIcon),
+--- "ready" the `?` (ActiveQuestIcon) tinted green, "done" a plain fat check (`ph:check-fat`) in
+--- green. `size` pixels square (C.ITEM_SEARCH.MARK_SIZE by default). Without the media library the
+--- characters `!`, `?` and `+`, colored. An unknown state reads as "can".
+--- @param state string
+--- @param size number|nil
 --- @return string
-function IST.QuestMark(state)
-    if state == "log" then return colored("!", "yellow") end
-    if state == "done" then return icon("confirm", "good", FALLBACK.done) end
-    return colored("?", "muted")
+function IST.QuestMark(state, size)
+    size = size or C.ITEM_SEARCH.MARK_SIZE
+    local bySize = markMemo[size]
+    if not bySize then bySize = {}; markMemo[size] = bySize end
+    local key = QUEST_MARK[state] and state or "can"
+    local mark = bySize[key]
+    if not mark then
+        mark = questMark(QUEST_MARK[key], size)
+        bySize[key] = mark
+    end
+    return mark
 end
 
 --- A crafting row's glyph (feedback spec §5.7): "up" for a known recipe that can skill up (orange,
@@ -145,13 +214,25 @@ function IST.CraftMark(row)
     return icon(g.icon, tone, g.fallback, C.ITEM_SEARCH.GLYPH_SIZE)
 end
 
---- The separator: a RULE_WIDTH x 1 rule in the accent.
---- @return string
-function IST.Rule()
-    local r, g, b = rgb("accent")
-    local function byte(v) return math.floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
-    return ("|T%s:1:%d:0:0:8:8:0:8:0:8:%d:%d:%d|t"):format(IST.RULE_TEXTURE, C.ITEM_SEARCH.RULE_WIDTH,
-        byte(r), byte(g), byte(b))
+--- A crafting row's skill breakpoints as one string, each part in its skill-up hue (IS.SkillParts,
+--- the window's Skill column's), memoized per recipe: the breakpoints are static and the hues
+--- change only with the skin (IST.ForgetLooks). Nil for a recipe with no breakpoints.
+--- @param row table a crafting row
+--- @return string|nil
+function IST.SkillText(row)
+    local spell = row.spell
+    local memo
+    if spell ~= nil then memo = partsMemo[spell] end
+    if memo == false then return nil end
+    if memo then return memo end
+    local parts = IS.SkillParts(row)
+    local text
+    for _, p in ipairs(parts) do
+        local part = colored(p.text, p.tone)
+        text = text and (text .. " " .. part) or part
+    end
+    if spell ~= nil then partsMemo[spell] = text or false end
+    return text
 end
 
 -- ── the profession names ────────────────────────────────────────────────────────────────────
@@ -229,7 +310,7 @@ local function vendorLines(f, r, o, out)
     more(out, rest)
 end
 
-local function questLines(_, r, o, out)
+local function questLines(_, r, o, out, me)
     local rows = {}
     for _, q in ipairs(r.quests) do
         if not (o.hideCompleted and q.state == "done") then rows[#rows + 1] = q end
@@ -237,12 +318,33 @@ local function questLines(_, r, o, out)
     if #rows == 0 then return end
     add(out, L["Quests"], "mutedGold")
     local shown, rest = capped(rows, o.rows)
+    local status, level = NS.ItemSearchCells.QuestStatus, me and me.level
     for i = 1, shown do
         local q = rows[i]
-        add(out, INDENT .. IST.QuestMark(q.state) .. " " .. (q.title or L["Quest %d"]:format(q.id)), "plain",
+        local mark = IST.QuestMark(status(q.state, q.minLevel, level), C.ITEM_SEARCH.MARK_SIZE)
+        add(out, INDENT .. mark .. " " .. (q.title or L["Quest %d"]:format(q.id)), "plain",
             q.level and L["level %d"]:format(q.level) or nil, "muted")
     end
     more(out, rest)
+end
+
+-- Whether the first `n` crafting rows come from more than one profession.
+local function mixed(rows, n)
+    local first = rows[1] and rows[1].skillLine
+    for i = 2, n do
+        if rows[i].skillLine ~= first then return true end
+    end
+    return false
+end
+
+-- A crafting row's right side: the skill parts (then " · <profession>" when the rows mix
+-- professions), else the profession alone, muted.
+local function craftRight(c, o, mix)
+    local profession = professionName(c.skillLine)
+    local parts = o.craftSkill and IST.SkillText(c) or nil
+    if not parts then return profession, "muted" end
+    if mix and profession then return parts .. " " .. colored(L["· %s"]:format(profession), "muted"), "plain" end
+    return parts, "plain"
 end
 
 local function craftingLines(_, r, o, out)
@@ -250,10 +352,12 @@ local function craftingLines(_, r, o, out)
     if #r.crafting == 0 and hidden == 0 then return end
     add(out, L["Crafting"], "mutedGold")
     local shown, rest = capped(r.crafting, o.rows)
+    local mix = o.craftSkill and mixed(r.crafting, shown)
     for i = 1, shown do
         local c = r.crafting[i]
+        local right, rightTone = craftRight(c, o, mix)
         add(out, INDENT .. IST.CraftMark(c) .. " " .. (c.name or L["Recipe %d"]:format(c.spell)),
-            c.known and "plain" or "muted", professionName(c.skillLine), "muted")
+            c.known and "plain" or "muted", right, rightTone)
     end
     more(out, rest)
     if hidden > 0 then add(out, INDENT .. L["+%d in professions you don't know"]:format(hidden), "muted") end
@@ -296,19 +400,17 @@ local SECTION = { drops = dropsLines, vendors = vendorLines, quests = questLines
 --- @param o table
 --- @param keyText string|nil
 --- @param me table|nil
---- @return table lines `{ { text, tone, right, rightTone } ... }`
+--- @return table lines `{ { text, tone, right, rightTone, rule } ... }` (`rule`: the separator's spacer)
 function IST.Lines(facts, o, keyText, me)
     local ranked = IS.Ranked(facts, me or {}, o.mine)
     local body = {}
     for _, key in ipairs(o.order) do
-        if o.sections[key] and SECTION[key] then SECTION[key](facts, ranked, o, body) end
+        if o.sections[key] and SECTION[key] then SECTION[key](facts, ranked, o, body, me) end
     end
     if #body == 0 then return body end
     local out = {}
-    if o.header then
-        add(out, IST.Rule(), "accent")
-        add(out, L["Drop Watcher · Item Search"], "accent")
-    end
+    if o.header then out[1] = { text = " ", rule = true } end
+    add(out, L["Drop Watcher"], "mutedGold")
     for _, line in ipairs(body) do out[#out + 1] = line end
     if o.hint and keyText then add(out, L["%s: open in Item Search"]:format(keyText), "muted") end
     return out
@@ -374,8 +476,8 @@ local function sectionsOf(stored)
 end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
---- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, rows, mine, sections, order }`
---- (`mine`: itemSearch.myProfessionsOnly, feedback spec §4).
+--- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, craftSkill, rows, mine, sections,
+--- order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec §4; `craftSkill`: round 3 §4.2).
 --- @return table
 function IST.Options()
     local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
@@ -383,32 +485,152 @@ function IST.Options()
         enabled = setting("enabled", true) == true, shiftOnly = setting("shiftOnly", false) == true,
         header = setting("header", true) == true, hint = setting("hint", true) == true,
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
-        rows = shown, mine = IS.MyProfessionsOnly(),
+        craftSkill = setting("craftSkill", true) == true, rows = shown, mine = IS.MyProfessionsOnly(),
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end
 
+-- ── the separator (round 3 spec §4.2, item 14b) ────────────────────────────────────────────
+
+local function isNum(v) return type(v) == "number" and v == v end
+
+--- Where the hairline's top goes, as an offset from the tooltip's top (UI units, negative going
+--- down): across the vertical middle of the spacer line whose font string spans `lineTop` to
+--- `lineBottom`, one `px` tall, rounded to whole pixels. Pure. Nil when any input is not a number
+--- or `px` is not above 0 (the tooltip not laid out yet).
+--- @param tipTop number|nil
+--- @param lineTop number|nil
+--- @param lineBottom number|nil
+--- @param px number|nil one physical pixel in the tooltip's units
+--- @return number|nil
+function IST.RuleOffset(tipTop, lineTop, lineBottom, px)
+    if not (isNum(tipTop) and isNum(lineTop) and isNum(lineBottom) and isNum(px)) or px <= 0 then return nil end
+    local off = (lineTop + lineBottom) / 2 + px / 2 - tipTop
+    return math.floor(off / px + 0.5) * px
+end
+
+-- One plain number from a region's geometry getter, or nil (no getter, not laid out, a secret).
+local function geom(obj, getter)
+    local fn = type(obj) == "table" and obj[getter]
+    if type(fn) ~= "function" then return nil end
+    local v = fn(obj)
+    if Compat.IsSecret(v) or type(v) ~= "number" then return nil end
+    return v
+end
+
+-- One physical pixel in `tip`'s units: LibKa0s-Core's __PixelSize (the library's one mechanism for
+-- a 1 px edge), 1 without it.
+local function onePixel(tip)
+    local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
+    local px = core and type(core.__PixelSize) == "function" and core.__PixelSize(tip, 1) or nil
+    if type(px) ~= "number" or px <= 0 then return 1 end
+    return px
+end
+
+local function paintRule(tex)
+    tex:SetVertexColor(NS.SkinColor("dw.tipRule"))
+end
+
+-- Lay the separator across its spacer line, or hide it: no spacer line on the tooltip now, or the
+-- tooltip not laid out yet (the next frame's call, or its OnSizeChanged, places it then).
+local function placeRule(tip)
+    local st = rules[tip]
+    if not st then return end
+    local tex = st.tex
+    local fs = st.line and Compat.TooltipLeftLine(tip, st.line)
+    local px = onePixel(tip)
+    local off = fs and IST.RuleOffset(geom(tip, "GetTop"), geom(fs, "GetTop"), geom(fs, "GetBottom"), px)
+    if not off then tex:Hide(); return end
+    local inset = C.ITEM_SEARCH.RULE_INSET
+    tex:ClearAllPoints()
+    tex:SetPoint("TOPLEFT", tip, "TOPLEFT", inset, off)
+    tex:SetPoint("TOPRIGHT", tip, "TOPRIGHT", -inset, off)
+    tex:SetHeight(px)
+    tex:Show()
+end
+
+-- The tooltip's separator, made on its first block: a Texture of the tooltip's own, pixel snapping
+-- off (its offset is rounded instead), painted `dw.tipRule` now and on every skin switch, placed
+-- again on the tooltip's OnSizeChanged. Nil for a tooltip that makes no texture.
+local function ruleOf(tip)
+    local st = rules[tip]
+    if st then return st end
+    if type(tip.CreateTexture) ~= "function" then return nil end
+    local tex = tip:CreateTexture(nil, "ARTWORK")
+    if type(tex) ~= "table" then return nil end
+    tex:SetTexture(IST.RULE_TEXTURE)
+    if type(tex.SetSnapToPixelGrid) == "function" then tex:SetSnapToPixelGrid(false) end
+    if type(tex.SetTexelSnappingBias) == "function" then tex:SetTexelSnappingBias(0) end
+    NS.SkinPaint(tex, paintRule)
+    tex:Hide()
+    st = { tex = tex }
+    st.place = function() placeRule(tip) end
+    rules[tip] = st
+    if type(tip.HookScript) == "function" then tip:HookScript("OnSizeChanged", st.place) end
+    return st
+end
+
+local function hideRule(tip)
+    local st = rules[tip]
+    if not st then return end
+    st.line = nil
+    st.tex:Hide()
+end
+
+--- The tooltip's separator texture, or nil before its first block (for the tests and diagnostics).
+--- @param tip table
+--- @return table|nil
+function IST.RuleOf(tip)
+    local st = rules[tip]
+    return st and st.tex or nil
+end
+
 -- ── painting and the hook ───────────────────────────────────────────────────────────────────
 
---- Write `lines` onto `tip`: AddDoubleLine for a line with a right side, else AddLine (no wrap),
---- each in its tone; then Show again, so a shown tooltip lays itself out around the new lines.
+-- Write one line: AddDoubleLine with a right side, else AddLine (no wrap), each in its tone.
+local function addTo(tip, line)
+    local r, g, b = rgb(line.tone)
+    if line.right and type(tip.AddDoubleLine) == "function" then
+        local rr, rg, rb = rgb(line.rightTone)
+        tip:AddDoubleLine(line.text, line.right, r, g, b, rr, rg, rb)
+    else
+        tip:AddLine(line.text, r, g, b, false)
+    end
+end
+
+-- The spacer line's number on `tip` now, or nil.
+local function lineCount(tip)
+    if type(tip.NumLines) ~= "function" then return nil end
+    local n = tip:NumLines()
+    if Compat.IsSecret(n) or type(n) ~= "number" then return nil end
+    return n
+end
+
+--- Write `lines` onto `tip`, each in its tone, the separator laid across its spacer line (placed
+--- now, and again on the next frame, once the tooltip is laid out); then Show again, so a shown
+--- tooltip lays itself out around the new lines.
 --- @param tip table
 --- @param lines table IST.Lines' answer
 function IST.Paint(tip, lines)
+    local st
     for _, line in ipairs(lines) do
-        local r, g, b = rgb(line.tone)
-        if line.right and type(tip.AddDoubleLine) == "function" then
-            local rr, rg, rb = rgb(line.rightTone)
-            tip:AddDoubleLine(line.text, line.right, r, g, b, rr, rg, rb)
-        else
-            tip:AddLine(line.text, r, g, b, false)
+        addTo(tip, line)
+        if line.rule then
+            st = ruleOf(tip)
+            if st then st.line = lineCount(tip) end
         end
     end
+    if not st then hideRule(tip) end
     if type(tip.IsShown) == "function" and tip:IsShown() and type(tip.Show) == "function" then tip:Show() end
+    if st and st.line then
+        placeRule(tip)
+        C_Timer.After(0, st.place)
+    end
 end
 
 local function clearMark(tip)
     shownOn[tip] = nil
+    hideRule(tip)
 end
 
 -- Hook the tooltip's OnHide and OnTooltipCleared once, so its mark goes when it hides or clears.

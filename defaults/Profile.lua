@@ -372,10 +372,11 @@ do
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
             -- sections, the rows per section (feedback spec §7: 5, replacing dropsShown through
             -- schema step 16), completed quests hidden, and the order the sections are written in
-            -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
+            -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole). `header` is the
+            -- separator line and `craftSkill` the recipe rows' skill levels (round 3 spec §4.2, §5).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                rows = 5, hideCompleted = true,
+                rows = 5, hideCompleted = true, craftSkill = true,
                 sections = { drops = true, vendors = true, quests = true, crafting = true, skinned = true,
                     also = false },
                 order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },

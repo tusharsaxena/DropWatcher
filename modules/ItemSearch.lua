@@ -186,9 +186,14 @@ local function staticContext(state)
     }
 end
 
+-- A quest's state for the player (round 3 spec §4.2): turned in, then in the log and complete
+-- (waiting to be turned in), then in the log, else not picked up.
 local function questState(questID)
-    if NS.Compat.QuestInLog(questID) then return "log" end
-    if NS.Compat.QuestDone(questID) then return "done" end
+    local Compat = NS.Compat
+    if Compat.QuestDone(questID) then return "done" end
+    if Compat.QuestInLog(questID) then
+        return Compat.QuestReady(questID) == true and "ready" or "log"
+    end
     return "todo"
 end
 

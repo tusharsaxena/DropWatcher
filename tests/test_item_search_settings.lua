@@ -23,6 +23,7 @@ local ROWS = {
     { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.shiftOnly",         "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.craftSkill",        "Item tooltip", "Tooltip block" },
     { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
@@ -148,6 +149,7 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 5
     local S = NS.Setting
     assertTrue(S("itemSearch.tooltip.enabled")); assertFalse(S("itemSearch.tooltip.shiftOnly"))
     assertTrue(S("itemSearch.tooltip.header")); assertTrue(S("itemSearch.tooltip.hint"))
+    assertTrue(S("itemSearch.tooltip.craftSkill"), "the recipe rows' skill levels on (round 3 spec §4.2)")
     assertFalse(S("itemSearch.tooltip.comparison"), "comparison tooltips off (the owner)")
     for key, on in pairs({ drops = true, vendors = true, quests = true, crafting = true, also = false }) do
         assertEqual(S("itemSearch.tooltip.sections." .. key), on, key)
@@ -195,7 +197,7 @@ test("item search settings: a dimmed knob names what it needs; the block's switc
     local R = NS.SchemaRuntime.FindRow
     assertFalse(R("itemSearch.tooltip.shiftOnly").disabledIf(), "on by default")
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", false)
-    for _, p in ipairs({ "shiftOnly", "header", "hint", "comparison", "sections.drops", "rows", "hideCompleted" }) do
+    for _, p in ipairs({ "shiftOnly", "header", "craftSkill", "hint", "comparison", "sections.drops", "rows", "hideCompleted" }) do
         assertTrue(R("itemSearch.tooltip." .. p).disabledIf(), p .. " dims with the block off")
     end
     -- the profession filter also sets the window's default (feedback spec §4): never dimmed by the block

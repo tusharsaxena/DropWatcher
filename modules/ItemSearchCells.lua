@@ -342,22 +342,27 @@ end
 
 ISC.ROLE_LABEL = { needs = L["Needs it"], rewards = L["Rewards it"], starts = L["Starts it"] }
 local ROLE_ORDER = { needs = 1, rewards = 2, starts = 3 }
-local STATUS_ORDER = { log = 1, can = 2, high = 3, done = 4 }
+local STATUS_ORDER = { ready = 1, log = 2, can = 3, high = 4, done = 5 }
+local KEPT_STATUS = { ready = true, log = true, done = true }
 
---- A quest's status for the player: "log" (in your log), "can" (can pick up now), "high" (its
---- minimum level is above yours) or "done".
---- @param state string "log" | "done" | "todo"
+--- A quest's status for the player: "ready" (in your log and complete, not turned in), "log" (in
+--- your log), "can" (can pick up now), "high" (its minimum level is above yours) or "done". The
+--- tooltip's quest marks read it too (round 3 spec §4.2).
+--- @param state string "done" | "ready" | "log" | "todo"
 --- @param minLevel number|nil
 --- @param level number|nil the player's
 --- @return string
 function ISC.QuestStatus(state, minLevel, level)
-    if state == "log" or state == "done" then return state end
+    if KEPT_STATUS[state] then return state end
     minLevel, level = num(minLevel), num(level)
     if minLevel and level and level < minLevel then return "high" end
     return "can"
 end
 
+local STATUS_TONE = { done = "good", ready = "good" }
+
 local function statusText(status, minLevel)
+    if status == "ready" then return L["Ready to turn in"] end
     if status == "log" then return L["In your log"] end
     if status == "done" then return L["Completed"] end
     if status == "high" then return L["Requires level %d"]:format(minLevel) end
@@ -419,7 +424,7 @@ end
 local function questCells(q, status, title, giver, where, me)
     return { mark = { mark = status }, quest = textCell(title, ISC.LevelTone(q.level, me.level)),
         role = textCell(ISC.ROLE_LABEL[q.role]), level = textCell(numText(q.level)), min = textCell(numText(q.minLevel)),
-        status = textCell(statusText(status, q.minLevel), status == "done" and "good" or "muted"),
+        status = textCell(statusText(status, q.minLevel), STATUS_TONE[status] or "muted"),
         giver = giver and textCell(giverText(giver, where)) or textCell(nil) }
 end
 
@@ -463,21 +468,9 @@ local COLOR_WORDS = {
     green = L["Green: unlikely to skill up"], gray = L["Gray: no skill-up"],
 }
 
---- A recipe's breakpoints as colored parts: orange (its minimum, only above 1: the shipped table's
---- 1 is a placeholder), yellow, green and gray; `{}` without breakpoints.
---- @param r table a crafting row
---- @return table
-function ISC.SkillParts(r)
-    local out = {}
-    local yellow, gray = num(r.yellow), num(r.gray)
-    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return out end
-    local min = num(r.min)
-    if min and min > 1 then out[#out + 1] = { text = tostring(min), tone = "skillOrange" } end
-    out[#out + 1] = { text = tostring(yellow), tone = "skillYellow" }
-    if num(r.green) then out[#out + 1] = { text = tostring(r.green), tone = "skillGreen" } end
-    out[#out + 1] = { text = tostring(gray), tone = "skillGray" }
-    return out
-end
+--- A recipe's breakpoints as colored parts: the model's NS.ItemSearch.SkillParts, which the
+--- tooltip's crafting row shares (round 3 spec §4.2).
+ISC.SkillParts = IS.SkillParts
 
 --- Whether the player has the recipe's profession: a rank in its skill line, or no skill line, or
 --- the skills not read yet (spec §4).

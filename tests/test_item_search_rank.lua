@@ -132,6 +132,19 @@ test("item search rank: quests: in your log, can pick up, too high, completed; t
     assertEqual(names(ranked), "Log,Open A,Open B,High,Done")
 end)
 
+test("item search rank: quests: ready to turn in shares the log's tier and comes first in it", function()
+    local S = IS()
+    local ranked = S.Rank.quests({
+        { id = 1, name = "Log Low", level = 10, state = "log" },
+        { id = 2, name = "Ready High", level = 60, state = "ready" },
+        { id = 3, name = "Open", level = 5, minLevel = 1 },
+        { id = 4, name = "Ready Low", level = 20, state = "ready" },
+        { id = 5, name = "Ready Unknown", state = "ready" },
+    }, me({}))
+    -- red under: ready ranked as not picked up (no tier), or after a log quest of a lower level
+    assertEqual(names(ranked), "Ready Unknown,Ready Low,Ready High,Log Low,Open")
+end)
+
 -- ── crafting ────────────────────────────────────────────────────────────────────────────────
 
 test("item search rank: crafting: known skill-ups orange, yellow, green, then gray, then not known, then other professions", function()

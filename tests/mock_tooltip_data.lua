@@ -25,23 +25,73 @@
 --   * A stand-in tooltip (handle.tooltip(name)) is a tracked mock frame with a name, AddLine and
 --     AddDoubleLine recording `__lines` ({ text, right, r, g, b }), NumLines, ClearLines, Show and
 --     Hide, and IsForbidden answering `forbidden`.
+--   * ITS GEOMETRY, for the block's separator (Item Search round 3 spec §4.2): GetTop answers
+--     `__top` (500; nil before layout), and line n's left font string is the client's global
+--     `<name>TextLeft<n>`, made on the line's first write, its GetTop / GetBottom
+--     `__top - PAD - (n - 1) * LINE_H` and that less FONT_H (nil while `__top` is). The client keeps
+--     a tooltip's font strings across a clear, and so does the double. OnSizeChanged is fired by
+--     handle.resize(tip). CreateTexture answers a recording Texture of the tooltip's own (its
+--     texture, vertex color, points, height and shown state; handle.textures(tip) lists them), where
+--     the base mock answers the frame itself.
 -- Nothing else of a tooltip is modeled: neither reader reads a line's text, so none is offered.
 
 local TDP = {}
 
 local ITEM = 0
 
+TDP.TOP, TDP.PAD, TDP.LINE_H, TDP.FONT_H = 500, 10, 14, 12
+
+-- A recording Texture: what it was told, and nothing else.
+local function newTexture(owner, layer)
+    local t = { __owner = owner, __layer = layer, __shown = true, __points = {} }
+    function t:SetTexture(path) self.__texture = path end
+    function t:SetVertexColor(r, g, b, a) self.__vertex = { r, g, b, a or 1 } end
+    function t:SetPoint(...) self.__points[#self.__points + 1] = { ... } end
+    function t:ClearAllPoints() self.__points = {} end
+    function t:GetNumPoints() return #self.__points end
+    function t:GetPoint(i) return unpack(self.__points[i or 1] or {}) end
+    function t:SetHeight(h) self.__h = h end
+    function t:GetHeight() return self.__h or 0 end
+    function t:SetSnapToPixelGrid(v) self.__snap = not not v end
+    function t:SetTexelSnappingBias(v) self.__bias = v end
+    function t:Show() self.__shown = true end
+    function t:Hide() self.__shown = false end
+    function t:IsShown() return self.__shown end
+    return t
+end
+
+-- Line n's left font string, the client's global for a named tooltip, made once.
+local function lineString(M, tip, n)
+    if not tip.__name then return end
+    local key = tip.__name .. "TextLeft" .. n
+    if M[key] then return end
+    local fs = {}
+    function fs.GetTop() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H) or nil end
+    function fs.GetBottom() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H - TDP.FONT_H) or nil end
+    M[key] = fs
+end
+
 local function decorate(M, tip, name)
     tip.__name = name
     tip.__lines = {}
+    tip.__textures = {}
+    tip.__top = TDP.TOP
     tip.forbidden = false
     tip.GetName = function(self) return self.__name end
+    tip.GetTop = function(self) return self.__top end
     tip.IsForbidden = function(self) return self.forbidden == true end
+    tip.CreateTexture = function(self, _, layer)
+        local t = newTexture(self, layer)
+        self.__textures[#self.__textures + 1] = t
+        return t
+    end
     tip.AddLine = function(self, text, r, g, b)
         self.__lines[#self.__lines + 1] = { text = text, r = r, g = g, b = b }
+        lineString(M, self, #self.__lines)
     end
     tip.AddDoubleLine = function(self, left, right, r, g, b)
         self.__lines[#self.__lines + 1] = { text = left, right = right, r = r, g = g, b = b }
+        lineString(M, self, #self.__lines)
     end
     tip.NumLines = function(self) return #self.__lines end
     tip.GetItem = function(self)
@@ -109,6 +159,14 @@ function TDP.install(M)
 
     function h.hide(tip)
         tip:Hide()
+    end
+
+    function h.resize(tip)
+        tip:__fire("OnSizeChanged")
+    end
+
+    function h.textures(tip)
+        return tip.__textures
     end
 
     function h.texts(tip)

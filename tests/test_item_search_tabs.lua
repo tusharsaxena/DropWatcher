@@ -275,6 +275,15 @@ test("item search cells: QUESTS' rows join the objectives, the rewards and the o
     assertEqual(texts(rows, "status"), "In your log,Requires level 40,Completed")
     assertEqual(rows[1].cells.mark.mark, "log"); assertEqual(rows[2].cells.mark.mark, "high")
     assertEqual(rows[1].cells.giver.text, "Gnoll · Vale"); assertEqual(rows[1].spot.map, 9)
+    -- round 3 item 13: complete but not turned in, its own status, sorted before the log
+    facts.quests[1].state = "ready"
+    rows = C.Quests(facts, { level = 20, questState = function(id) return id == 3 and "done" or "todo" end },
+        { quest = function(id) return quest[id] end })
+    assertEqual(rows[1].cells.status.text, "Ready to turn in"); assertEqual(rows[1].cells.status.tone, "good")
+    assertEqual(rows[1].cells.mark.mark, "ready")
+    assertTrue(rows[1].sort.status < C.Quests({ quests = { { id = 1, state = "log" } } }, { level = 20 }, {})[1].sort.status,
+        "ready sorts before in your log")
+    assertEqual(C.QuestStatus("ready", 50, 20), "ready", "kept whatever the level")
     assertEqual(rows[2].cells.min.text, "40", "the minimum level from the quest row")
     assertEqual(rows[1].cells.quest.tone, "skillGray", "a level-12 quest is gray for a level-20 player (gray from 13)")
     assertEqual(rows[2].cells.quest.tone, "red", "a level-44 quest is red")

@@ -448,8 +448,9 @@ every item tooltip; it needs ForeverDB, and with the window's switch off too For
 then Comparison tooltips too (off, the owner's call), Rows per section (`itemSearch.tooltip.rows`, 5,
 a 1 to 20 slider by 1: every section's cap before "and N more"), Show the key hint
 (`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
-is bound), Only while holding Shift (off) and Separator and title line (on), each dimmed while the
-block is off. **Tooltip and window:** Only professions you know (`itemSearch.myProfessionsOnly`, on;
+is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
+hairline above the block) and Show recipe skill levels (`itemSearch.tooltip.craftSkill`, on: the
+Crafting rows' breakpoints), each dimmed while the block is off. **Tooltip and window:** Only professions you know (`itemSearch.myProfessionsOnly`, on;
 never dimmed, since it also sets the window's Crafting default).
 **Sections:** a switch per section, Drops from, Sold by, Quests, Crafting, Skinned from (all on) and
 Reward from / starts quest (off), then Hide completed quests (on, dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list

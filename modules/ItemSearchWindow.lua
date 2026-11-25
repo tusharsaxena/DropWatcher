@@ -165,13 +165,10 @@ local function toneRGB(tone)
     return t.r, t.g, t.b
 end
 
--- A quest row's mark (spec §5.4): ! in your log, ? can pick up, the check done, a dim ? too high.
+-- A quest row's mark: the tooltip's own, in the game's style and at its size (round 3 spec §4.2,
+-- item 13).
 local function questMark(status)
-    local IST = NS.ItemSearchTip
-    if status == "log" then return IST.QuestMark("log") end
-    if status == "done" then return IST.QuestMark("done") end
-    if status == "high" then return IST.QuestMark("todo") end
-    return NS.GroupRoster.Colored("?", toneRGB("plain"))
+    return NS.ItemSearchTip.QuestMark(status, C.ITEM_SEARCH.MARK_SIZE)
 end
 
 -- ── the view states ─────────────────────────────────────────────────────────────────────────

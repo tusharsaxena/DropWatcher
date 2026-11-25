@@ -154,6 +154,9 @@ NS.SKIN_TOKENS = {
     ["dw.cardBorder"] = { default = { 0.24, 0.24, 0.27, 0.85 }, follow = "card.border" },
     -- DW-G15: a tooltip row's label and bullet.
     ["dw.tipLabel"]   = { default = { 0.80, 0.68, 0.36, 1 }, follow = "gtip.title" },     -- C.TONE.mutedGold
+    -- Item Search round 3 (spec §4.2, item 14b): the tooltip block's hairline separator, a dim gold
+    -- under Ka0s Default, every other skin's divider.
+    ["dw.tipRule"]    = { default = { 0.55, 0.46, 0.25, 0.9 }, follow = "divider" },
     -- FS-DW-FLIP, cause D5: the upgrade glows. Ka0s Default keeps this addon's two hues (owner ruling
     -- D-18), not its `glow.color`; the off-spec glow follows the Warband blue dw.offSpec follows, so
     -- the main spec and the off-spec stay apart in every skin (ruling E6: the hues tell them apart).

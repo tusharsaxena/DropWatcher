@@ -9,7 +9,8 @@ local _, NS = ...
 -- feedback spec §9):
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
 --     window switch it decides whether ForeverDB loads at all, spec §2), Comparison tooltips too,
---     Rows per section, Show the key hint, Only while holding Shift, Separator and title line; then,
+--     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show recipe
+--     skill levels (round 3 spec §4.2, §5); then,
 --     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4);
 --     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
@@ -101,7 +102,8 @@ local function tooltip()
         M.with(at, { solo = true, onChange = refreshSearch }))
     local sub = M.with(at, { disabledIf = off })
     -- The block's rows in the Settings artboard's order (Item Search feedback spec §9): Comparison
-    -- tooltips, Rows per section and Show the key hint, then Shift-only and the title line.
+    -- tooltips, Rows per section and Show the key hint, then Shift-only, the separator line and the
+    -- recipe skill levels (round 3 spec §5).
     M.bool("itemSearch.tooltip.comparison", T.comparison, L["Comparison tooltips too"],
         L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."], sub)
     M.slider("itemSearch.tooltip.rows", T.rows, NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX, 1,
@@ -112,8 +114,10 @@ local function tooltip()
         L["Close the block with a line naming the key bound to Item Search and what it does. No line while the key is unbound. Needs Add Item Search to item tooltips."], sub)
     M.bool("itemSearch.tooltip.shiftOnly", T.shiftOnly, L["Only while holding Shift"],
         L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."], sub)
-    M.bool("itemSearch.tooltip.header", T.header, L["Separator and title line"],
-        L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.header", T.header, L["Separator line"],
+        L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.craftSkill", T.craftSkill, L["Show recipe skill levels"],
+        L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],

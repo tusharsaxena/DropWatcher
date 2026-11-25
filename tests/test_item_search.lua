@@ -232,6 +232,60 @@ test("compat search: a quest's log and completion reads, nil for no API or a sec
     assertNil(Compat.QuestInLog(1)); assertNil(Compat.QuestDone(1)); assertNil(Compat.QuestInLog(nil))
 end)
 
+test("compat search: QuestReady tries ReadyForTurnIn, then IsComplete, then the log title's flag; each guarded", function()
+    local Compat, m = compat()
+    local said = {}
+    m.C_QuestLog = {
+        ReadyForTurnIn = function(id) said[#said + 1] = "ready"; if id == 1 then return true end if id == 2 then return false end
+            if id == 3 then return T.secret(true) end if id == 4 then error("boom") end end,
+        IsComplete = function(id) said[#said + 1] = "complete"; if id == 3 then return true end end,
+    }
+    -- red under: a rung that answers false ignored (ReadyForTurnIn decides when it answers)
+    assertTrue(Compat.QuestReady(1)); assertFalse(Compat.QuestReady(2))
+    assertEqual(table.concat(said, ","), "ready,ready", "IsComplete not asked once ReadyForTurnIn answered")
+    -- red under: a secret or a raising rung taken as the answer, or raising out of the read
+    assertTrue(Compat.QuestReady(3), "a secret answer falls to IsComplete")
+    assertNil(Compat.QuestReady(4), "an error, then no answer anywhere: unknown")
+    m.C_QuestLog.ReadyForTurnIn = nil
+    assertTrue(Compat.QuestReady(3), "IsComplete's rung")
+    -- the third rung: GetQuestLogIndexByID, then GetQuestLogTitle's sixth answer (1 complete)
+    m.C_QuestLog = nil
+    m.GetQuestLogIndexByID = function(id) if id == 7 then return 3 end if id == 8 then return 5 end if id == 9 then return T.secret(2) end end
+    m.GetQuestLogTitle = function(i)
+        if i == 3 then return "Seven", 10, 0, false, false, 1 end
+        if i == 5 then return "Eight", 10, 0, false, false, nil end
+    end
+    assertTrue(Compat.QuestReady(7), "the log title's complete flag"); assertFalse(Compat.QuestReady(8))
+    assertNil(Compat.QuestReady(9), "a secret index"); assertNil(Compat.QuestReady(10), "not in the log")
+    m.GetQuestLogTitle = function() return "Seven", 10, 0, false, false, T.secret(1) end
+    assertNil(Compat.QuestReady(7), "a secret flag")
+    m.GetQuestLogIndexByID, m.GetQuestLogTitle = nil, nil
+    assertNil(Compat.QuestReady(7), "no API at all"); assertNil(Compat.QuestReady(nil)); assertNil(Compat.QuestReady(T.secret(7)))
+end)
+
+test("item search: a quest's state is done, then ready, then in the log, else not picked up", function()
+    local NS, m = T.enableAddon{ mock = function(mm)
+        dofile("tests/_kit/mock_foreverdb.lua").install(mm, { preset = "present" })
+    end }
+    local log, ready, done = {}, {}, {}
+    m.C_QuestLog = {
+        GetLogIndexForQuestID = function(id) if log[id] then return 1 end end,
+        IsQuestFlaggedCompleted = function(id) return done[id] == true end,
+        ReadyForTurnIn = function(id) return ready[id] == true end,
+    }
+    local state = NS.ItemSearch.Me().questState
+    assertEqual(state(1), "todo")
+    log[1] = true
+    assertEqual(state(1), "log")
+    ready[1] = true
+    -- red under: no ready state (round 3 item 13: complete but not turned in reads as in the log)
+    assertEqual(state(1), "ready")
+    done[1] = true
+    assertEqual(state(1), "done", "turned in beats every log read")
+    log[2], ready[2] = nil, true
+    assertEqual(state(2), "todo", "ready only counts for a quest in the log")
+end)
+
 test("compat search: the skill-line ranks answer a child line under its parent, else the professions", function()
     local Compat, m = compat()
     local lines = {

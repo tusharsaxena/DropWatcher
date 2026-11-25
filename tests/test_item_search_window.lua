@@ -476,6 +476,33 @@ test("item search window: the blade has a tab per section with rows, its count i
     assertEqual(W.ShownTab(), "quests", "an item without the picked tab shows its first")
 end, FOREVER_ONLY)
 
+test("item search window: the Quests tab's marks are the tooltip's, game-style at MARK_SIZE: ready, in the log, can pick up", function()
+    local states = {}
+    local NS = enabled({ setup = function(mm)
+        mm.UnitRace = function() return "R", "R", 1 end
+        mm.UnitClass = function() return "C", "C", 4 end
+        mm.C_QuestLog = {
+            GetLogIndexForQuestID = function(id) if states[id] then return 1 end end,
+            IsQuestFlaggedCompleted = function() return false end,
+            ReadyForTurnIn = function(id) return states[id] == "ready" end,
+        }
+    end })
+    states[IDS.hunt], states[IDS.errand] = "ready", "log"
+    local W, IST, C = NS.ItemSearchWindow, NS.ItemSearchTip, NS.Constants
+    W.ShowItem(IDS.leather)
+    W.Frame().tabs.quests:__fire("OnClick", "LeftButton")
+    local marks, titles = {}, {}
+    for _, row in ipairs(W.TableRows()) do
+        marks[#marks + 1] = row.cells[1].text:GetText()
+        titles[#titles + 1] = row.cells[2].text:GetText()
+    end
+    -- red under: the window's own mark mapping (a `?` for can, the old `!` for the log)
+    assertEqual(marks[1], IST.QuestMark("ready", C.ITEM_SEARCH.MARK_SIZE), "ready to turn in ranks first")
+    assertEqual(marks[2], IST.QuestMark("log", C.ITEM_SEARCH.MARK_SIZE))
+    assertTrue(marks[1]:find("ActiveQuestIcon:14:14:", 1, true) ~= nil)
+    assertEqual(table.concat(titles, ","), "Fixture Hunt,Fixture Errand")
+end, FOREVER_ONLY)
+
 test("item search window: the section header counts the rows, names the sort and shows Reset only off the default", function()
     local NS = enabled()
     local W = NS.ItemSearchWindow

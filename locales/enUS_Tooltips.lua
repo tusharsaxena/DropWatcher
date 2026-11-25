@@ -612,7 +612,6 @@ L["Lock frame on General > Master controls"] = "Lock frame on General > Master c
 L["Open settings"] = "Open settings"
 
 -- modules/ItemSearchTip.lua: Item Search's block on every item tooltip (DropWatcher#17, WoW Forever)
-L["Drop Watcher · Item Search"] = "Drop Watcher · Item Search"
 L["Drops from"] = "Drops from"
 L["level %d+"] = "level %d+"
 L["Quests"] = "Quests"
@@ -620,6 +619,7 @@ L["Quest %d"] = "Quest %d"
 L["level %d"] = "level %d"
 L["Crafting"] = "Crafting"
 L["Recipe %d"] = "Recipe %d"
+L["· %s"] = "· %s"
 L["+%d in professions you don't know"] = "+%d in professions you don't know"
 L["First Aid"] = "First Aid"
 L["Also"] = "Also"
@@ -629,11 +629,13 @@ L["%s: open in Item Search"] = "%s: open in Item Search"
 
 -- modules/ItemSearchWindow.lua, modules/ItemSearchView.lua and modules/ItemSearchKey.lua: the Item
 -- Search window, its key and its slash verb (DropWatcher#17, WoW Forever)
+L["Drop Watcher · Item Search"] = "Drop Watcher · Item Search"
 L["ForeverDB: loading…"] = "ForeverDB: loading…"
 L["ForeverDB not installed: drop sources, quests and name search are unavailable"] = "ForeverDB not installed: drop sources, quests and name search are unavailable"
 L["Type two letters or more, or an item id."] = "Type two letters or more, or an item id."
 L["No item by that name."] = "No item by that name."
 L["In your log"] = "In your log"
+L["Ready to turn in"] = "Ready to turn in"
 L["Completed"] = "Completed"
 L["Not known"] = "Not known"
 L["Skinned from"] = "Skinned from"

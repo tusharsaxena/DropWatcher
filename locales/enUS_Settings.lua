@@ -501,9 +501,12 @@ L["Under every item tooltip (your bags, chat links, the loot window, other addon
 L["Only while holding Shift"] = "Only while holding Shift"
 L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."] =
     "Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."
-L["Separator and title line"] = "Separator and title line"
-L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."] =
-    "Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."
+L["Separator line"] = "Separator line"
+L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."] =
+    "Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."
+L["Show recipe skill levels"] = "Show recipe skill levels"
+L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."] =
+    "On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"
 L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."] =
     "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."
