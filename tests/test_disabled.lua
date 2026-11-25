@@ -33,7 +33,9 @@ local OTHER_CLIENT = {
     forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true,
                 TRADE_SKILL_SHOW = true, TRADE_SKILL_LIST_UPDATE = true,
                 -- Item Search round 3 (spec §4.4): the merchant window's prices, recorded.
-                MERCHANT_SHOW = true, MERCHANT_UPDATE = true, MERCHANT_CLOSED = true },
+                MERCHANT_SHOW = true, MERCHANT_UPDATE = true, MERCHANT_CLOSED = true,
+                -- Item Search round 3 (spec §4.5): the tooltip badge's verdicts, worked out again.
+                QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"

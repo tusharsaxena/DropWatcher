@@ -515,6 +515,12 @@ L["ForeverDB (Full) knows where far more creatures and vendors stand than Foreve
 L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."] =
     "Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."
 L["Show recipe skill levels"] = "Show recipe skill levels"
+L["Show the Keep / Hold / Sell / Toss badge"] = "Show the Keep / Hold / Sell / Toss badge"
+L["At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."] =
+    "At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."
+L["Explain the badge"] = "Explain the badge"
+L["Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."] =
+    "Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."
 L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."] =
     "On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"

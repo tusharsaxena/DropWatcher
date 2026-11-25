@@ -63,9 +63,13 @@ function IS.Wanted()
     return NS.Setting("itemSearch.tooltip.enabled") == true or NS.Setting("itemSearch.window.enabled") == true
 end
 
---- Empty the per-item cache (a recipe learned, ForeverDB's state moved).
+--- Empty the per-item cache (a recipe learned, ForeverDB's state moved, ForeverDB_Full loaded, a
+--- vendor's price recorded), and with it the tooltip badge's verdicts (round 3 spec §4.5), which read
+--- those facts.
 function IS.Invalidate()
     cache = {}
+    local verdicts = NS.ItemSearchVerdict
+    if verdicts and verdicts.Bump then verdicts.Bump() end
 end
 
 --- Where ForeverDB stands for Item Search, never loading it: "loaded", "failed", "missing", "off",

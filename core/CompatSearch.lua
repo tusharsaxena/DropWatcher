@@ -247,21 +247,24 @@ end
 -- ── items and the client ────────────────────────────────────────────────────────────────────
 
 --- An item the client has cached, by id: `{ id, name, link, quality, itemLevel, requiredLevel, icon,
---- classID, subclassID }` from C_Item.GetItemInfo; nil while it is not cached, for a secret answer
---- or no API.
+--- classID, subclassID, equipLoc, sellPrice, bindType }` from C_Item.GetItemInfo (returns 1 to 5, 9
+--- to 14; `sellPrice` in copper, 0 for an item no vendor buys; `bindType` 4 a quest item; the round 3
+--- spec §4.5's verdict reads those two); nil while it is not cached, for a secret answer or no API.
 --- @param itemID number
 --- @return table|nil
 function Compat.ItemInfoByID(itemID)
     local item = C_Item
     if not (plainId(itemID) and type(item) == "table" and type(item.GetItemInfo) == "function") then return nil end
-    local name, link, quality, itemLevel, reqLevel, _, _, _, _, icon, _, classID, subclassID = item.GetItemInfo(itemID)
+    local name, link, quality, itemLevel, reqLevel, _, _, _, equipLoc, icon, sellPrice, classID, subclassID,
+        bindType = item.GetItemInfo(itemID)
     name = plainString(name)
     if not name then return nil end
     return {
         id = itemID, name = name, link = plainString(link), quality = plainNumber(quality),
         itemLevel = plainNumber(itemLevel), requiredLevel = plainNumber(reqLevel),
         icon = plainNumber(icon) or plainString(icon), classID = plainNumber(classID),
-        subclassID = plainNumber(subclassID),
+        subclassID = plainNumber(subclassID), equipLoc = plainString(equipLoc), sellPrice = plainNumber(sellPrice),
+        bindType = plainNumber(bindType),
     }
 end
 

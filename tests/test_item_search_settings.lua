@@ -23,6 +23,8 @@ local ROWS = {
     { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.shiftOnly",         "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.badge",             "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.reasons",           "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.craftSkill",        "Item tooltip", "Tooltip block" },
     { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },

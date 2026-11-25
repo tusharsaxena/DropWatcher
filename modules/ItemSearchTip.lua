@@ -31,8 +31,13 @@ local _, NS = ...
 --     on its OnSizeChanged and once on the next frame (the post call can run before the tooltip is
 --     laid out);
 --   * the label line, always (item 14a): "Drop Watcher" at the left in the tooltip label's muted
---     gold, the verdict badge's place at the right (ISR3-DW-05; nothing yet). The old title line
+--     gold, the verdict badge at the right (round 3 spec §4.5, item 14c; the "Show the Keep / Hold /
+--     Sell / Toss badge" setting): `<icon> <Verdict> <score> · <Tier>`, the icon, word and score in
+--     the verdict's tone and the tier muted (NS.ItemSearchVerdict, IST.Badge). The old title line
 --     "Drop Watcher · Item Search" is gone;
+--   * the badge's reasons (the "Explain the badge" setting, under the badge): its top two, each
+--     "  · <reason>" with the bullet in muted gold, then, below a High confidence, the
+--     confidence's fix, muted ("Confidence Medium: open your profession window to rank recipes");
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
 --     the tooltip label's muted gold and its rows, an empty section left out. Every section's rows
 --     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at
@@ -113,6 +118,7 @@ local QUEST_MARK = {
     done  = { icon = "ph:check-fat", tint = "good", fallback = "+", fallbackTone = "good" },
 }
 local DIM = 0.5
+local INDENT = "  "
 
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
@@ -123,13 +129,19 @@ local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each pos
 -- The memos a hover reads instead of building strings (round 3 spec §4.2): the quest marks per
 -- size and state, and each recipe's colored skill parts. Both hold skin tones, so a skin switch
 -- empties them.
-local markMemo, partsMemo = {}, {}
+-- The badge's strings and its reason lines (round 3 spec §4.5) are kept too, by what they show
+-- rather than by answer, so a verdict worked out again draws the same strings: the badge per verdict,
+-- tier and score, each reason's line per reason text and each confidence line per tier and fix (at
+-- most C.ITEM_SEARCH.VERDICT.LINE_CAP reason lines, then emptied). They go with the skin's tones.
+local markMemo, partsMemo, badgeMemo, reasonMemo, hintMemo = {}, {}, {}, {}, {}
+local reasonCount = 0
 local function forgetLooks()
-    markMemo, partsMemo = {}, {}
+    markMemo, partsMemo, badgeMemo, reasonMemo, hintMemo = {}, {}, {}, {}, {}
+    reasonCount = 0
 end
 if NS.Skin and type(NS.Skin.OnLooksChanged) == "function" then NS.Skin.OnLooksChanged(forgetLooks) end
 
---- Empty the hover's memos (the quest marks and the recipes' skill parts): the skin's
+--- Empty the hover's memos (the quest marks, the recipes' skill parts and the badges): the skin's
 --- OnLooksChanged listener, and a suite's handle.
 function IST.ForgetLooks()
     forgetLooks()
@@ -242,6 +254,96 @@ function IST.SkillText(row)
     return text
 end
 
+-- ── the verdict badge (round 3 spec §4.5, item 14c) ───────────────────────────────────────────
+
+-- Each verdict's icon and tone: Keep a padlock in `good`, Hold an hourglass in `yellow`, Sell coins in
+-- `warn` (amber: gold is the label's tone on the same line), Toss a bin in `bad`.
+local VERDICT_LOOK = {
+    keep = { icon = "ph:lock", tone = "good" },
+    hold = { icon = "ph:hourglass", tone = "yellow" },
+    sell = { icon = "ph:coins", tone = "warn" },
+    toss = { icon = "ph:trash", tone = "bad" },
+}
+
+local function verdictWord(verdict)
+    if verdict == "keep" then return L["Keep"] end
+    if verdict == "sell" then return L["Sell"] end
+    if verdict == "toss" then return L["Toss"] end
+    return L["Hold"]
+end
+
+local function tierWord(tier)
+    if tier == "high" then return L["High"] end
+    if tier == "medium" then return L["Medium"] end
+    return L["Low"]
+end
+
+local function badgeText(v)
+    local look = VERDICT_LOOK[v.verdict] or VERDICT_LOOK.hold
+    local mark = NS.Icon(look.icon) and (icon(look.icon, look.tone, "", C.ITEM_SEARCH.MARK_SIZE) .. " ") or ""
+    return mark .. colored(("%s %d"):format(verdictWord(v.verdict), v.score), look.tone) .. " "
+        .. colored(L["· %s"]:format(tierWord(v.tier)), "muted")
+end
+
+-- A memo's branch under `key`, made on first use.
+local function branch(t, key)
+    local b = t[key]
+    if not b then b = {}; t[key] = b end
+    return b
+end
+
+--- The badge's string for a verdict answer (NS.ItemSearch.Verdict's): `<icon> <Verdict> <score> ·
+--- <Tier>`, the icon (C.ITEM_SEARCH.MARK_SIZE; none without the media library), word and score in
+--- the verdict's tone, the tier muted. The same string for the same verdict, tier and score until
+--- the skin's looks change.
+--- @param v table
+--- @return string
+function IST.Badge(v)
+    local byScore = branch(branch(badgeMemo, v.verdict or "hold"), v.tier or "low")
+    local text = byScore[v.score]
+    if not text then
+        text = badgeText(v)
+        byScore[v.score] = text
+    end
+    return text
+end
+
+local function reasonLine(text)
+    local line = reasonMemo[text]
+    if line then return line end
+    if reasonCount >= C.ITEM_SEARCH.VERDICT.LINE_CAP then reasonMemo, reasonCount = {}, 0 end
+    line = { text = INDENT .. colored("·", "mutedGold") .. " " .. text, tone = "plain" }
+    reasonMemo[text], reasonCount = line, reasonCount + 1
+    return line
+end
+
+local function hintLine(v)
+    local byHint = branch(hintMemo, v.tier or "low")
+    local line = byHint[v.hint]
+    if not line then
+        line = { text = L["Confidence %s: %s"]:format(tierWord(v.tier), v.hint), tone = "muted" }
+        byHint[v.hint] = line
+    end
+    return line
+end
+
+-- Append a verdict's reason lines to `out`: no table of their own (the block runs on every hover).
+local function addReasons(out, v)
+    for _, text in ipairs(v.reasons or {}) do out[#out + 1] = reasonLine(text) end
+    if v.hint then out[#out + 1] = hintLine(v) end
+end
+
+--- The badge's reason lines for a verdict answer, a new array: one "  · <reason>" per reason (the
+--- bullet in muted gold), then the confidence's fix, muted, below a High confidence. Each line is the
+--- same table for the same text until the skin's looks change: a line is read, never changed.
+--- @param v table
+--- @return table
+function IST.ReasonLines(v)
+    local out = {}
+    addReasons(out, v)
+    return out
+end
+
 -- ── the profession names ────────────────────────────────────────────────────────────────────
 
 local PROFESSION
@@ -268,8 +370,6 @@ end
 local function add(out, text, tone, right, rightTone)
     out[#out + 1] = { text = text, tone = tone, right = right, rightTone = rightTone }
 end
-
-local INDENT = "  "
 
 local function levelRange(s)
     if not s.minLevel then return "" end
@@ -434,24 +534,36 @@ end
 local SECTION = { drops = dropsLines, gathered = gatheredLines, vendors = vendorLines, quests = questLines, crafting = craftingLines,
     skinned = skinnedLines, also = alsoLines }
 
+-- The block's head: the separator's spacer (the "Separator line" setting), the label line with the
+-- badge at its right (the "Show the Keep / Hold / Sell / Toss badge" setting), and the badge's
+-- reasons (the "Explain the badge" setting).
+local function head(o, verdict)
+    local out = {}
+    if o.header then out[1] = { text = " ", rule = true } end
+    verdict = o.badge and verdict or nil
+    add(out, L["Drop Watcher"], "mutedGold", verdict and IST.Badge(verdict) or nil, "plain")
+    if verdict and o.reasons then addReasons(out, verdict) end
+    return out
+end
+
 --- The block's lines for `facts` under the options `o` (IST.Options' shape), the bound key's text
---- (nil: unbound) and the ranking's context `me` (NS.ItemSearch.Me's shape; nil ranks with no
---- context). `{}` when no switched-on section has a row: no block at all.
+--- (nil: unbound), the ranking's context `me` (NS.ItemSearch.Me's shape; nil ranks with no
+--- context) and the item's verdict (NS.ItemSearch.Verdict's answer; nil or `o.badge` off: no badge,
+--- no reasons). `{}` when no switched-on section has a row: no block at all.
 --- @param facts table NS.ItemSearch.Get's answer
 --- @param o table
 --- @param keyText string|nil
 --- @param me table|nil
+--- @param verdict table|nil
 --- @return table lines `{ { text, tone, right, rightTone, rule } ... }` (`rule`: the separator's spacer)
-function IST.Lines(facts, o, keyText, me)
+function IST.Lines(facts, o, keyText, me, verdict)
     local ranked = IS.Ranked(facts, me or {}, o.mine)
     local body = {}
     for _, key in ipairs(o.order) do
         if o.sections[key] and SECTION[key] then SECTION[key](facts, ranked, o, body, me) end
     end
     if #body == 0 then return body end
-    local out = {}
-    if o.header then out[1] = { text = " ", rule = true } end
-    add(out, L["Drop Watcher"], "mutedGold")
+    local out = head(o, verdict)
     for _, line in ipairs(body) do out[#out + 1] = line end
     if o.hint and keyText then add(out, L["%s: open in Item Search"]:format(keyText), "muted") end
     return out
@@ -517,8 +629,9 @@ local function sectionsOf(stored)
 end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
---- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, craftSkill, rows, mine, sections,
---- order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec §4; `craftSkill`: round 3 §4.2).
+--- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, craftSkill, badge, reasons, rows,
+--- mine, sections, order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec §4; `craftSkill`:
+--- round 3 §4.2; `badge` and `reasons`: round 3 §4.5).
 --- @return table
 function IST.Options()
     local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
@@ -526,7 +639,8 @@ function IST.Options()
         enabled = setting("enabled", true) == true, shiftOnly = setting("shiftOnly", false) == true,
         header = setting("header", true) == true, hint = setting("hint", true) == true,
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
-        craftSkill = setting("craftSkill", true) == true, rows = shown, mine = IS.MyProfessionsOnly(),
+        craftSkill = setting("craftSkill", true) == true, badge = setting("badge", true) == true,
+        reasons = setting("reasons", true) == true, rows = shown, mine = IS.MyProfessionsOnly(),
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end
@@ -706,8 +820,9 @@ function IST.OnTooltip(tip, data)
     if o.shiftOnly and not Compat.ShiftDown() then return false end
     local facts = IS.Get(itemID)
     if not facts then return false end
-    local lines = IST.Lines(facts, o, o.hint and Compat.BindingKeyText(C.ITEM_SEARCH.BINDING) or nil,
-        IS.Me(facts.ranks, tipMe))
+    local me = IS.Me(facts.ranks, tipMe)
+    local verdict = o.badge and NS.ItemSearchVerdict.For(itemID, facts, me) or nil
+    local lines = IST.Lines(facts, o, o.hint and Compat.BindingKeyText(C.ITEM_SEARCH.BINDING) or nil, me, verdict)
     if #lines == 0 then return false end
     watch(tip)
     shownOn[tip] = itemID

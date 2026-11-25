@@ -390,6 +390,7 @@ Kit.run{
         "test_item_search_rank",
         "test_item_search_sources",
         "test_item_search_prices",
+        "test_item_search_verdict",
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",

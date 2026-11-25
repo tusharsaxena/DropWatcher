@@ -923,6 +923,9 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.header", "bool", "true" },
     -- ISR3-DW-02 (Item Search round 3 spec §4.2): the crafting rows' skill levels, on.
     { "itemSearch.tooltip.craftSkill", "bool", "true" },
+    -- ISR3-DW-05 (Item Search round 3 spec §4.5): the Keep / Hold / Sell / Toss badge and its reasons, on.
+    { "itemSearch.tooltip.badge", "bool", "true" },
+    { "itemSearch.tooltip.reasons", "bool", "true" },
     { "itemSearch.tooltip.hint", "bool", "true" },
     { "itemSearch.tooltip.comparison", "bool", "false" },
     { "itemSearch.tooltip.sections.drops", "bool", "true" },

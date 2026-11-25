@@ -466,6 +466,23 @@ C.ITEM_SEARCH = {
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
+    -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
+    -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
+    -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the
+    -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
+    -- item info or gear verdict was still loading waits before it is worked out again, and how many
+    -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
+    VERDICT = {
+        KEEP = 50, HOLD = 20,
+        QUEST_LOG = 60, QUEST_CAN = 35, QUEST_CAN_ABOVE = 3, STARTS = 50, QUESTS_CAP = 80,
+        CRAFT = { orange = 30, yellow = 20, green = 8, gray = 0 }, LEARN = 10, CRAFT_CAP = 50,
+        OTHERS = 3, OTHERS_CAP = 9, UPGRADE = 70, SIDEGRADE = 20,
+        REBUY = -20, REBUY_VENDORS = 3, REBUY_PRICE = 500, TRIVIAL = -15,
+        POOR_CAP = 15, QUEST_FLOOR = 20,
+        HIGH = 80, MEDIUM = 50,
+        WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
+        REASONS = 2, RETRY = 1, LINE_CAP = 500,
+    },
     -- The vendor prices Drop Watcher records (modules/ItemSearchPrices.lua, round 3 spec §4.4): at
     -- most PRICE_CAP entries over every vendor (past it the oldest tenth goes), and MERCHANT_UPDATE
     -- read PRICE_DEBOUNCE seconds after its last fire.

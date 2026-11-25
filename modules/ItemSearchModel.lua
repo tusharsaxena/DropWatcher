@@ -375,11 +375,11 @@ end
 
 -- ── the static half ─────────────────────────────────────────────────────────────────────────
 
--- The item's facts: ForeverDB's row when loaded, the client's cached item filling what it lacks.
+-- The item's facts: ForeverDB's row when loaded (`inDB`: it had one), the client's item filling the rest.
 local function itemFacts(itemID, ctx, db)
-    local out = { id = itemID }
     local client = type(ctx.clientItem) == "function" and ctx.clientItem(itemID) or nil
     local sources = { db and db.Item(itemID) or false, client or false }
+    local out = { id = itemID, inDB = sources[1] ~= false }
     for i = 1, 2 do
         local src = sources[i]
         if type(src) == "table" then

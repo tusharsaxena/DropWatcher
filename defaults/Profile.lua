@@ -373,10 +373,11 @@ do
             -- sections, the rows per section (feedback spec §7: 5, replacing dropsShown through
             -- schema step 16), completed quests hidden, and the order the sections are written in
             -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole). `header` is the
-            -- separator line and `craftSkill` the recipe rows' skill levels (round 3 spec §4.2, §5).
+            -- separator line and `craftSkill` the recipe rows' skill levels (round 3 spec §4.2, §5);
+            -- `badge` the Keep / Hold / Sell / Toss badge and `reasons` its reason lines (§4.5).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                rows = 5, hideCompleted = true, craftSkill = true,
+                rows = 5, hideCompleted = true, craftSkill = true, badge = true, reasons = true,
                 sections = { drops = true, gathered = true, vendors = true, quests = true, crafting = true,
                     skinned = true, also = false },
                 order = { "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" },

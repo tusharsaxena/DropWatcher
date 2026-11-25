@@ -17,8 +17,13 @@ local RETAIL_ONLY = T.forever and "the Retail profile's inert case; the Forever 
 
 local LINEN = 2589   -- Linen Cloth: a First Aid and Tailoring reagent in the shipped table
 
+local function tipSettings(NS) return NS.addon.db.profile.itemSearch.tooltip end
+
 -- The addon enabled with the ForeverDB fake and the tooltip double; `load` runs the 5 s login load.
--- `setup(m)` runs on the mock before the load. Answers NS, the mock, the double, the fake.
+-- `setup(m)` runs on the mock before the load. The verdict badge (round 3 spec §4.5) is switched
+-- off unless `badge` is true, so the cases about the sections read their lines where they were;
+-- tests/test_item_search_verdict.lua covers the badge on the tooltip. Answers NS, the mock, the
+-- double, the fake.
 local function enabled(opts)
     opts = opts or {}
     local tdp, fake
@@ -28,14 +33,13 @@ local function enabled(opts)
         mm.GetCoinTextureString = function(copper) return ("%dc"):format(copper) end
         if opts.setup then opts.setup(mm) end
     end }
+    if NS.addon.db and NS.addon.db.profile.itemSearch then tipSettings(NS).badge = opts.badge == true end
     if opts.load ~= false then
         m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
         m.advance(5)
     end
     return NS, m, tdp, fake
 end
-
-local function tipSettings(NS) return NS.addon.db.profile.itemSearch.tooltip end
 
 -- The block's lines on `tip` (the double writes one client line first: the item's name).
 local function block(tdp, tip)
