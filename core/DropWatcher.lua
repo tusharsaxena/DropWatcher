@@ -764,6 +764,10 @@ function DW:OnEnable()
     -- Forever port design §7): installed once, whatever the latch says; the hooks gate on it.
     if NS.RollPopup then NS.RollPopup.Install() end
 
+    -- Item Search's block on every item tooltip (modules/ItemSearchTip.lua, WoW Forever's alone): one
+    -- TooltipDataProcessor post call, installed once, whatever the latch says; the call gates on it.
+    if NS.ItemSearchTip then NS.ItemSearchTip.Install() end
+
     -- The first-run skin picker's login fuse (core/SkinSetup.lua), before the latch: a profile
     -- stored disabled stands down below, which puts it out again.
     if NS.ArmSkinPicker then NS.ArmSkinPicker(true) end

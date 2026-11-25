@@ -10,7 +10,8 @@
 --
 -- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
 -- too, DW-C5), the loot parser's line (DW-25), the Insights tab's recompute over a full log
--- (issue #12, DW-N1) and the Rolls panel's raid refresh (RX-18). The questions are
+-- (issue #12, DW-N1), the Rolls panel's raid refresh (RX-18) and Item Search's tooltip block on a
+-- cold and a warm hover (IS-DW-04). The questions are
 -- performance-§9's: does each bracket cost nothing with capture off (zero overhead), and is the
 -- stood-down show decision free.
 --
@@ -58,9 +59,18 @@ local INSIGHTS_CEILING = 5200000
 -- block's rows while its roll reads the same (RollsPanel's rowsOf) and left a pooled frame already
 -- in place where it is: 79328 bytes, under the same ceiling, which is not raised.
 local ROLLS_PANEL_RAID_CEILING = 95000
+-- Item Search's tooltip block (Item Search spec §4.4; WoW Forever's alone): one item hover's post
+-- call over the kit's ForeverDB fake, the item with every kind of source. COLD reads the database
+-- again (the item's static facts emptied first); WARM is the hover the cache serves: the live reads
+-- (quest states, known recipes, the skill ranks), the options and the lines. Their ceilings are that
+-- work: measured 2026-11-25 (IS-DW-04) at 16080 and 5664 bytes, each ceiling that plus a margin. On
+-- Retail the call is the inert early return, pinned at 0.
+local ITEM_SEARCH_TIP_COLD = 17500
+local ITEM_SEARCH_TIP_WARM = 6500
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
-    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING, rollsPanelRaid = ROLLS_PANEL_RAID_CEILING }
+    refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING, rollsPanelRaid = ROLLS_PANEL_RAID_CEILING,
+    itemSearchTipCold = ITEM_SEARCH_TIP_COLD, itemSearchTipWarm = ITEM_SEARCH_TIP_WARM, itemSearchTipInert = 0 }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
@@ -71,7 +81,7 @@ local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
     parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1,
-    insightsCompute = 0, rollsPanelRaid = 0 }
+    insightsCompute = 0, rollsPanelRaid = 0, itemSearchTipCold = 0, itemSearchTipWarm = 0, itemSearchTipInert = 0 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -267,6 +277,37 @@ do
         "the Rolls panel did not show six raid blocks")
     NS.Perf.on = false
     measure("rollsPanelRaid", 200, NS.RollsPanel.Refresh)
+end
+
+-- Item Search's tooltip block (Item Search spec §4.4): the post call on an item hover, WoW Forever's
+-- alone. On WoW Forever, against the kit's ForeverDB fake once its login load has run, a COLD hover
+-- (the item's static facts emptied first, so the database is read again) and a WARM one (the facts
+-- kept, only the live reads and the lines); the tooltip is cleared before each, as the client
+-- clears it, so each iteration writes the block once. On Retail the call is the inert early return.
+do
+    local tip = { lines = 0 }
+    function tip.AddLine(self) self.lines = self.lines + 1 end
+    function tip.AddDoubleLine(self) self.lines = self.lines + 1 end
+    function tip.GetName() return "GameTooltip" end
+    function tip.IsShown() return false end
+    function tip.HookScript(self, script, fn) self[script] = fn end   -- the block's OnHide / OnTooltipCleared
+    local IST, ISM = NS.ItemSearchTip, NS.ItemSearch
+    if NS.Constants.FEATURE.itemSearch then
+        local FDB = dofile("tests/_kit/mock_foreverdb.lua")
+        FDB.install(mock, { preset = "present" })
+        mock.inCombat = false
+        mock.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+        mock.advance(5)
+        check(ISM.State() == "loaded", "ForeverDB's fake did not load for the tooltip scenarios")
+        local data = { id = FDB.IDS.blade }
+        local function clear() tip.lines = 0; if tip.OnTooltipCleared then tip.OnTooltipCleared(tip) end end
+        check(IST.OnTooltip(tip, data), "the tooltip block was not written")
+        measure("itemSearchTipCold", N, function() ISM.Invalidate(); clear(); IST.OnTooltip(tip, data) end)
+        measure("itemSearchTipWarm", N, function() clear(); IST.OnTooltip(tip, data) end)
+    else
+        local data = { id = 990101 }
+        measure("itemSearchTipInert", N, function() IST.OnTooltip(tip, data) end)
+    end
 end
 NS.Perf.Note = realNote
 

@@ -617,3 +617,18 @@ L["/dw unlock"] = "/dw unlock"
 L["Lock frame on General > Master controls"] = "Lock frame on General > Master controls"
 -- core/WidgetsSetup.lua NS.HeaderButtons: every window's settings mark (AD-86-DW, LibKa0s#86)
 L["Open settings"] = "Open settings"
+
+-- modules/ItemSearchTip.lua: Item Search's block on every item tooltip (DropWatcher#17, WoW Forever)
+L["Drop Watcher · Item Search"] = "Drop Watcher · Item Search"
+L["Drops from"] = "Drops from"
+L["level %d+"] = "level %d+"
+L["Quests"] = "Quests"
+L["Quest %d"] = "Quest %d"
+L["level %d"] = "level %d"
+L["Crafting"] = "Crafting"
+L["Recipe %d"] = "Recipe %d"
+L["First Aid"] = "First Aid"
+L["Also"] = "Also"
+L["Reward from"] = "Reward from"
+L["Starts quest"] = "Starts quest"
+L["%s: open in Item Search"] = "%s: open in Item Search"

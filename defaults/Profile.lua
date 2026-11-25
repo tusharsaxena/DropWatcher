@@ -370,7 +370,15 @@ do
     -- is Item Search's own (spec §4.7); the rest of its rows join this table with it.
     if F.itemSearch then
         P.itemSearch = {
-            tooltip = { enabled = true },
+            -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
+            -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
+            -- sections, how many drop sources, and completed quests hidden. The section order is
+            -- the block's own default (NS.ItemSearchTip.ORDER) until its page stores one.
+            tooltip = {
+                enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
+                dropsShown = 3, hideCompleted = true,
+                sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
+            },
             window  = { enabled = true },
         }
     end

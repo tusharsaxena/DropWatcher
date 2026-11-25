@@ -100,9 +100,11 @@ files["core/CompatCollect.lua"] = {
 }
 
 -- Item Search's reads (DropWatcher#17): core/CompatSearch.lua alone names the race, the quest log,
--- the skill list, the client build, the crafting reagent enum and the profession window's API.
+-- the skill list, the client build, the crafting reagent enum and the profession window's API,
+-- and the item tooltip's post call, the bound key's display text and the coin string.
 files["core/CompatSearch.lua"] = {
-  read_globals = { "UnitRace", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI" },
+  read_globals = { "UnitRace", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
+    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString" },
 }
 
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):

@@ -2,9 +2,12 @@ local _, NS = ...
 -- core/CompatSearch.lua — the client reads Item Search makes (DropWatcher#17, Item Search spec §4.2,
 -- §4.3): who the player is (race and class ids, for a quest's masks), where a quest stands (in the
 -- log, completed), the player's rank in each profession, an item the
--- client has cached, the client's build and the open profession window's recipes and reagents.
--- WoW Forever's feature alone (C.FEATURE.itemSearch): modules/ItemSearch.lua and
--- modules/ItemSearchLearn.lua are the callers, and on Retail nothing calls these.
+-- client has cached, the client's build and the open profession window's recipes and reagents;
+-- and the item tooltip's hook and reads (spec §4.4: the post call, the item a post call names, the
+-- comparison tooltips, the bound key, Shift, a coin string).
+-- WoW Forever's feature alone (C.FEATURE.itemSearch): modules/ItemSearch.lua,
+-- modules/ItemSearchLearn.lua and modules/ItemSearchTip.lua are the callers, and on Retail nothing
+-- calls these.
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret meets
 -- nothing but IsSecret first, a missing API answers its documented absent value and never raises.
@@ -221,4 +224,82 @@ function Compat.TradeSkillRecipes()
         if row then out[#out + 1] = row end
     end
     return out
+end
+
+-- ── the item tooltip ────────────────────────────────────────────────────────────────────────
+
+--- Register `fn(tooltip, data)` as a post call of every item tooltip:
+--- TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, fn). The client keeps it
+--- for the session (there is no removal), so the caller registers once. False when the client has
+--- no TooltipDataProcessor or no item data type.
+--- @param fn function
+--- @return boolean
+function Compat.HookItemTooltips(fn)
+    local tdp = TooltipDataProcessor
+    local types = Enum and Enum.TooltipDataType
+    local item = type(types) == "table" and plainNumber(types.Item)
+    if not (type(fn) == "function" and type(tdp) == "table" and type(tdp.AddTooltipPostCall) == "function"
+        and item) then
+        return false
+    end
+    tdp.AddTooltipPostCall(item, fn)
+    return true
+end
+
+--- The item a tooltip post call's data names: its `id`, else the id in its `hyperlink`. Only those
+--- two fields are read (a tooltip's line texts can be secret); nil for a secret or anything else.
+--- @param data table|nil
+--- @return number|nil
+function Compat.TooltipItemID(data)
+    data = plainTable(data)
+    if not data then return nil end
+    local id = plainId(data.id)
+    if id then return id end
+    local link = plainString(data.hyperlink)
+    return link and plainId(tonumber(link:match("item:(%d+)")))
+end
+
+--- Whether a tooltip may be written to: a table, not forbidden.
+--- @param tip table|nil
+--- @return boolean
+function Compat.TooltipWritable(tip)
+    if not plainTable(tip) or type(tip.AddLine) ~= "function" then return false end
+    if type(tip.IsForbidden) == "function" and tip:IsForbidden() == true then return false end
+    return true
+end
+
+--- Whether a tooltip is one of the client's comparison tooltips (ShoppingTooltip1 / 2,
+--- ItemRefShoppingTooltip1 / 2), by its frame name.
+--- @param tip table
+--- @return boolean
+function Compat.IsComparisonTooltip(tip)
+    local name = type(tip.GetName) == "function" and plainString(tip:GetName())
+    return name ~= nil and name:find("ShoppingTooltip%d$") ~= nil
+end
+
+--- The first key bound to a binding command, as the client names it for display (GetBindingText:
+--- `CTRL-ALT-D` reads `Ctrl-Alt-D` on an English client); nil when nothing is bound.
+--- @param command string
+--- @return string|nil
+function Compat.BindingKeyText(command)
+    if type(GetBindingKey) ~= "function" then return nil end
+    local key = plainString((GetBindingKey(command)))
+    if not key or key == "" then return nil end
+    local text = type(GetBindingText) == "function" and plainString(GetBindingText(key)) or nil
+    return (text and text ~= "") and text or key
+end
+
+--- Whether Shift is held (IsShiftKeyDown); false without it.
+--- @return boolean
+function Compat.ShiftDown()
+    return type(IsShiftKeyDown) == "function" and IsShiftKeyDown() == true
+end
+
+--- An amount of copper as the client's coin string (GetCoinTextureString); nil without it.
+--- @param copper number
+--- @return string|nil
+function Compat.CoinText(copper)
+    copper = plainNumber(copper)
+    if not copper or type(GetCoinTextureString) ~= "function" then return nil end
+    return plainString(GetCoinTextureString(copper))
 end

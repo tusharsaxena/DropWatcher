@@ -208,6 +208,13 @@ local FIXED_TONE = {
     -- glows part from the verdicts' `good` and `offspec`, each channel the hex byte over 255.
     glowMain    = { r = 25 / 255,  g = 255 / 255, b = 25 / 255 },
     glowOffSpec = { r = 63 / 255,  g = 199 / 255, b = 235 / 255 },
+    -- A recipe's skill-up color on Item Search's Crafting rows (Item Search spec §4.2): the client's
+    -- own trade-skill difficulty hues (orange optimal, yellow medium, green easy, gray trivial), a
+    -- meaning every player reads the same under every skin, as an item quality's is.
+    skillOrange = { r = 1.00, g = 0.50, b = 0.25 },
+    skillYellow = { r = 1.00, g = 1.00, b = 0.00 },
+    skillGreen  = { r = 0.25, g = 0.75, b = 0.25 },
+    skillGray   = { r = 0.50, g = 0.50, b = 0.50 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -428,10 +435,16 @@ for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.For
 -- (modules/ItemSearch.lua); the window's search box waits DEBOUNCE seconds after the last key; the
 -- profession window's reagents are read LEARN_DELAY seconds after its last list update
 -- (modules/ItemSearchLearn.lua).
+-- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
+-- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
+-- rule; Sold by lists at most TIP_VENDORS vendors before "and N more".
 C.ITEM_SEARCH = {
     LOAD_DELAY  = 5,
     DEBOUNCE    = 0.25,
     LEARN_DELAY = 1,
+    BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
+    RULE_WIDTH  = 160,
+    TIP_VENDORS = 3,
 }
 
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged
