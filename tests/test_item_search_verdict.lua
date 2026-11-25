@@ -326,17 +326,23 @@ test("verdict: the memo keeps one answer per item until a quest, skill, level or
     local f = facts({ quests = { q }, item = { inDB = true } })
     local me = { level = 20 }
     local function score() return IVD.For(IDS.blade, f, me).score end
+    -- the score each quest state earns (in the log 60, not picked up 35), and the state moved
+    local WORTH = { log = 60, todo = 35 }
+    local OTHER = { log = "todo", todo = "log" }
+    local function flip() q.state = OTHER[q.state] end
+    local function fresh() return WORTH[q.state] end
+    local function stale() return WORTH[OTHER[q.state]] end
     assertEqual(score(), 35)
     for _, event in ipairs({ "QUEST_LOG_UPDATE", "QUEST_TURNED_IN", "SKILL_LINES_CHANGED", "PLAYER_LEVEL_UP",
         "NEW_RECIPE_LEARNED" }) do
-        q.state = q.state == "todo" and "log" or "todo"
+        flip()
         -- red under: a warm hover working the verdict out again (it would read the moved state)
-        assertEqual(score(), q.state == "log" and 35 or 60, event .. ": kept before the event")
+        assertEqual(score(), stale(), event .. ": kept before the event")
         m.__fire(event)
-        assertEqual(score(), q.state == "log" and 60 or 35, event .. " makes it stale")
+        assertEqual(score(), fresh(), event .. " makes it stale")
     end
-    q.state = q.state == "todo" and "log" or "todo"
-    local want = q.state == "log" and 60 or 35
+    flip()
+    local want = fresh()
     IS.Invalidate()
     assertEqual(score(), want, "Item Search's cache emptied")
     -- a verdict worked out again to the same answer is the same table: no garbage, the same badge
@@ -344,9 +350,9 @@ test("verdict: the memo keeps one answer per item until a quest, skill, level or
     m.__fire("QUEST_LOG_UPDATE")
     assertTrue(IVD.For(IDS.blade, f, me) == kept, "unchanged: the same answer")
     -- the blade's item info is not cached (the double caches none): worked out again a second on
-    q.state = q.state == "todo" and "log" or "todo"
+    flip()
     m.advance(0.5)
     assertEqual(score(), want, "half a second: kept")
     m.advance(0.6)
-    assertEqual(score(), q.state == "log" and 60 or 35, "past the retry")
+    assertEqual(score(), fresh(), "past the retry")
 end, FOREVER_ONLY)
