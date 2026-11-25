@@ -479,19 +479,31 @@ local function chanceKey(chance)
     return chance and -chance or 1
 end
 
+-- A row's name for the tie-break, or nil.
+local function nameOf(row)
+    return type(row.name) == "string" and row.name or nil
+end
+
+-- `a` before `b` by name (a named row before an unnamed one), then by id; nil for a full tie.
+local function nameBefore(a, b)
+    local na, nb = nameOf(a), nameOf(b)
+    if na ~= nb then
+        if na == nil then return false end
+        if nb == nil then return true end
+        return na < nb
+    end
+    local ia, ib = num(a.id) or num(a.spell) or 0, num(b.id) or num(b.spell) or 0
+    if ia ~= ib then return ia < ib end
+    return nil
+end
+
 -- `a` before `b` by their keys (arrays of numbers, lower first), then name, then id.
 local function keyBefore(ka, kb, a, b)
     for i = 1, math.max(#ka, #kb) do
         local x, y = ka[i] or 0, kb[i] or 0
         if x ~= y then return x < y end
     end
-    local na, nb = type(a.name) == "string" and a.name or nil, type(b.name) == "string" and b.name or nil
-    if na ~= nb then
-        if na == nil then return false end
-        if nb == nil then return true end
-        return na < nb
-    end
-    return (num(a.id) or num(a.spell) or 0) < (num(b.id) or num(b.spell) or 0)
+    return nameBefore(a, b) == true
 end
 
 -- A new array of `rows` sorted by `keyOf(row)`.
