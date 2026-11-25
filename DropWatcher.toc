@@ -530,6 +530,17 @@ modules\ItemSearchLearn.lua
 # at load and publishes NS.ItemSearchTip, the item tooltip block; core\DropWatcher.lua's OnEnable installs
 # its post call. NS.Setting, NS.SkinColor, NS.Icon, NS.TipMarks and NS.GroupRoster are read at call time.
 modules\ItemSearchTip.lua
+# LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above) and NS.L at load and publishes
+# NS.ItemSearchView, the Item Search window's pure rows; modules\ItemSearchWindow.lua (below) takes it.
+modules\ItemSearchView.lua
+# LOAD-BEARING: takes NS.ItemSearch, NS.ItemSearchView (above), NS.Constants, NS.L and NS.Compat at
+# load, publishes NS.ItemSearchWindow and appends a NS.STAND_DOWN step. NS.Window, NS.WindowTitleBar,
+# NS.ItemSearchTip, NS.ForeverDB, NS.Skin and NS.Setting are read at call time.
+modules\ItemSearchWindow.lua
+# LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above), NS.Constants and NS.Compat at
+# load and publishes NS.ItemSearchKey, the Item Search key's press and its one-time default. core\LauncherSetup.lua's button and
+# modules\ItemSearch.lua's event handlers call it at run time.
+modules\ItemSearchKey.lua
 # Conventional: publishes NS.ItemSources, where a drop comes from (WoW Forever, from the optional
 # ForeverDB addon); takes NS.Constants and NS.L at load. NS.ForeverDB, NS.Item, NS.TipMarks and
 # NS.Setting are read at call time, when modules\DetailCard.lua (below) paints its header.

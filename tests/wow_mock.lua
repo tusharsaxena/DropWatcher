@@ -121,14 +121,15 @@ local base = dofile("tests/_kit/mock_base.lua")
 local WINDOW_NAME = "DropWatcherWindow"
 local TOAST_NAME = "DropWatcherToast"
 local SIM_PANEL_NAME = "DropWatcherSimPanel"
+local ITEM_SEARCH_NAME = "DropWatcherItemSearchFrame"
 
 -- The main window and every frame built inside it, recorded (modules/Window.lua and the tabs it
 -- hosts): the kit's frame answers every unmodeled getter with the frame itself, so "the window went
 -- back to where it started" or "the badge reads `Encounter · 2 queued`" could not fail without this.
 -- A frame is decorated when it is the window, a toast (the first `DropWatcherToast`, and each the
--- stack pools after it, `DropWatcherToast2`, ...: LibKa0s-Toast-1.0 minor 4, issue #14) or the
--- simulation panel, or when its parent is decorated (`__dwTree`), so the whole tree is, and nothing
--- outside it changes.
+-- stack pools after it, `DropWatcherToast2`, ...: LibKa0s-Toast-1.0 minor 4, issue #14), the
+-- simulation panel or the Item Search window (`DropWatcherItemSearchFrame`), or when its parent is
+-- decorated (`__dwTree`), so the whole tree is, and nothing outside it changes.
 
 -- Text, color, font, texture, vertex color and check state, recorded on any widget or region of
 -- the tree (a font string never given a font answers the game's default face at 10 points).
@@ -1021,7 +1022,7 @@ local function build()
         local f = baseCreateFrame(frameType, name, parent, template)
         local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
             and name:sub(#TOAST_NAME + 1):match("^%d*$") ~= nil
-        if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME
+        if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME or name == ITEM_SEARCH_NAME
             or (type(parent) == "table" and parent.__dwTree)
             or (M.__decorateUIParent and parent ~= nil and parent == M.UIParent) then
             decorateGeometry(M, f)

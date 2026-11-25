@@ -1,6 +1,7 @@
 -- tests/mock_tooltip_data.lua — an opt-in test double of the client's TooltipDataProcessor (Item
--- Search's tooltip block, modules/ItemSearchTip.lua). The kit (tests/_kit/) models no tooltip data
--- processor, so this addon keeps its own, outside the vendored folder.
+-- Search's tooltip block, modules/ItemSearchTip.lua, and its key's read of the shown item). The kit
+-- (tests/_kit/) models no tooltip data processor, so this addon keeps its own, outside the vendored
+-- folder.
 --
 --   local TDP = dofile("tests/mock_tooltip_data.lua")
 --   local NS, _, m = T.enableAddon{ mock = function(mm) tdp = TDP.install(mm) end }
@@ -19,10 +20,12 @@
 --     refreshes a bag item's tooltip this way). handle.repost(tip, itemID) runs the post calls
 --     again WITHOUT a clear (another addon processing the same data twice).
 --   * handle.hide(tip) hides it, running OnHide.
+--   * tip:GetItem() answers the shown item as the client does (name, link, id): the item of the
+--     last handle.show, nil while hidden (the Item Search key's read, modules/ItemSearchKey.lua).
 --   * A stand-in tooltip (handle.tooltip(name)) is a tracked mock frame with a name, AddLine and
 --     AddDoubleLine recording `__lines` ({ text, right, r, g, b }), NumLines, ClearLines, Show and
 --     Hide, and IsForbidden answering `forbidden`.
--- Nothing else of a tooltip is modeled: the block reads no line text, so none is offered.
+-- Nothing else of a tooltip is modeled: neither reader reads a line's text, so none is offered.
 
 local TDP = {}
 
@@ -41,6 +44,10 @@ local function decorate(M, tip, name)
         self.__lines[#self.__lines + 1] = { text = left, right = right, r = r, g = g, b = b }
     end
     tip.NumLines = function(self) return #self.__lines end
+    tip.GetItem = function(self)
+        if not (self.__shown and self.__item) then return nil end
+        return "Item " .. self.__item, nil, self.__item
+    end
     tip.ClearLines = function(self)
         self.__lines = {}
         self:__fire("OnTooltipCleared")
@@ -88,6 +95,7 @@ function TDP.install(M)
     end
 
     function h.show(tip, itemID, data)
+        tip.__item = itemID
         tip:ClearLines()
         tip:Show()
         tip:AddLine("Item " .. tostring(itemID))

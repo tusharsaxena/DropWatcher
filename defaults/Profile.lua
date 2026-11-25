@@ -379,7 +379,14 @@ do
                 dropsShown = 3, hideCompleted = true,
                 sections = { drops = true, vendors = true, quests = true, crafting = true, also = false },
             },
-            window  = { enabled = true },
+            -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
+            -- skin's accent, or the custom one), row density, font size, the zone and level
+            -- columns, the waypoint pins and the recent searches. Its saved point is written by a
+            -- drag (`point`), with no default: it opens centered.
+            window  = {
+                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 },
+                density = "comfortable", fontSize = 13, columns = true, pins = true, recent = true,
+            },
         }
     end
 end

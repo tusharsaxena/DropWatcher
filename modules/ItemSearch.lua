@@ -224,10 +224,12 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnItemSea
 
 function NS.addon.OnItemSearchWorld()
     IS.Arm()
+    if NS.ItemSearchKey then NS.ItemSearchKey.OnWorld() end
 end
 
 function NS.addon.OnItemSearchRegen()
     if load.waitCombat then IS.TryLoad() end
+    if NS.ItemSearchKey then NS.ItemSearchKey.OnRegen() end
 end
 
 -- A stand-down takes the timer back; the stand-up arms it again unless ForeverDB is loaded.

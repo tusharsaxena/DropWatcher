@@ -908,7 +908,9 @@ test("shell: the lock button sits in the right-hand cluster left of the layout t
     local hb = f.headerButtons
     assertEqual(b.__points[1][1], "RIGHT"); assertEqual(b.__points[1][2], f.titleBar)
     assertEqual(hb.offsets.lock, hb.offsets.mode - f.modeButton:GetWidth() - 6, "immediately left of the layout toggle")
-    assertEqual(hb.order[1], "lock", "the cluster's first")
+    -- WoW Forever's Item Search magnifier stands left of it (Item Search spec §4.5).
+    assertEqual(hb.order[1], T.forever and "search" or "lock", "the cluster's first")
+    if T.forever then assertEqual(hb.order[2], "lock", "the lock next") end
     assertEqual(b.mark, "lock")
     assertTrue(b.art:IsShown(), "the catalog's lock mark")
     assertTrue(b.art:GetAlpha() < 1 and b.art:IsDesaturated(), "unlocked: the same mark, dimmed")

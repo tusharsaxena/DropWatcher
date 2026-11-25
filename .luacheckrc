@@ -54,7 +54,8 @@ files["core/Compat.lua"] = {
     "GetInventoryItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
     "InspectFrame", "hooksecurefunc",
-    "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "DressUpItemLink",
+    "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "ChatEdit_GetActiveWindow",
+    "ChatFrame_OpenChat", "DressUpItemLink",
     "DressUpLink", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
     "C_ChallengeMode", "UnitName",
@@ -101,10 +102,14 @@ files["core/CompatCollect.lua"] = {
 
 -- Item Search's reads (DropWatcher#17): core/CompatSearch.lua alone names the race, the quest log,
 -- the skill list, the client build, the crafting reagent enum and the profession window's API,
--- and the item tooltip's post call, the bound key's display text and the coin string.
+-- and the item tooltip's post call, the bound key's display text and the coin string; and the
+-- Item Search window's and key's reads: map names, waypoints (the client's own and TomTom's) and
+-- the key binding API for the one-time default key.
 files["core/CompatSearch.lua"] = {
   read_globals = { "UnitRace", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
-    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString" },
+    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString",
+    "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
+    "GetCurrentBindingSet" },
 }
 
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):

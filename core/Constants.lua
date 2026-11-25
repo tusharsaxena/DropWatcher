@@ -445,6 +445,18 @@ C.ITEM_SEARCH = {
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
     RULE_WIDTH  = 160,
     TIP_VENDORS = 3,
+    -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
+    -- while the key runs nothing (modules/ItemSearchKey.lua).
+    DEFAULT_KEY = "CTRL-ALT-D",
+    -- The window (modules/ItemSearchWindow.lua, spec §4.5, mockup board 2): its global name (the
+    -- UISpecialFrames entry), its fixed size, the left pane's width, the rows' heights by density,
+    -- the matches a name search lists, the recent searches it keeps and the item header's icon.
+    WINDOW = {
+        NAME = "DropWatcherItemSearchFrame", WIDTH = 760, HEIGHT = 520, LEFT_W = 240,
+        ROW_H = { comfortable = 20, compact = 16 }, MATCHES = 50, RECENT = 10, ICON = 32,
+        ROW_ICON = 16, BAR_W = 90, PIN = 14, FONT = 13, FONT_MIN = 10, FONT_MAX = 16,
+        LOAD_RETRY = 0.5,
+    },
 }
 
 -- The client's inventory slot ids (the INVSLOT_* FrameXML constants). Slot 18, the old ranged

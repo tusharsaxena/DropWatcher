@@ -303,3 +303,170 @@ function Compat.CoinText(copper)
     if not copper or type(GetCoinTextureString) ~= "function" then return nil end
     return plainString(GetCoinTextureString(copper))
 end
+
+-- ── the Item Search window and its key (spec §4.5, §4.6) ────────────────────────────────────
+
+--- A map's name (C_Map.GetMapInfo(mapID).name); nil for no API, no such map or a secret answer.
+--- @param mapID number
+--- @return string|nil
+function Compat.MapName(mapID)
+    local map = C_Map
+    if not (plainId(mapID) and type(map) == "table" and type(map.GetMapInfo) == "function") then return nil end
+    local info = plainTable(map.GetMapInfo(mapID))
+    return info and plainString(info.name) or nil
+end
+
+-- The client's own user waypoint, where the client has it and the map takes one.
+local function clientWaypoint(mapID)
+    local map, point = C_Map, UiMapPoint
+    if not (type(map) == "table" and type(map.SetUserWaypoint) == "function" and type(point) == "table"
+        and type(point.CreateFromCoordinates) == "function") then
+        return false
+    end
+    if type(map.CanSetUserWaypointOnMap) == "function" and map.CanSetUserWaypointOnMap(mapID) ~= true then
+        return false
+    end
+    return true
+end
+
+-- TomTom's AddWaypoint, when TomTom is installed and loaded.
+local function tomTom()
+    local tt = TomTom
+    if type(tt) == "table" and type(tt.AddWaypoint) == "function" then return tt end
+    return nil
+end
+
+--- How a waypoint on `mapID` would be set: "client" (C_Map.SetUserWaypoint, the map takes one),
+--- else "tomtom" (TomTom installed), else nil (the window hides the pin).
+--- @param mapID number
+--- @return string|nil
+function Compat.WaypointMethod(mapID)
+    if not plainId(mapID) then return nil end
+    if clientWaypoint(mapID) then return "client" end
+    if tomTom() then return "tomtom" end
+    return nil
+end
+
+--- Set a waypoint at `x`, `y` (0..1) on `mapID`, named `title`: the client's user waypoint, super
+--- tracked where the client can, else TomTom's. Answers the method used ("client" | "tomtom"), or
+--- nil when neither can.
+--- @param mapID number
+--- @param x number
+--- @param y number
+--- @param title string|nil
+--- @return string|nil
+function Compat.SetWaypoint(mapID, x, y, title)
+    x, y = plainNumber(x), plainNumber(y)
+    local how = Compat.WaypointMethod(mapID)
+    if not (how and x and y) then return nil end
+    if how == "client" then
+        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
+        local track = C_SuperTrack
+        if type(track) == "table" and type(track.SetSuperTrackedUserWaypoint) == "function" then
+            track.SetSuperTrackedUserWaypoint(true)
+        end
+        return how
+    end
+    tomTom():AddWaypoint(mapID, x, y, { title = title, from = NS.BRAND })
+    return how
+end
+
+--- The item a shown tooltip holds now (its GetItem: name, link, id), else nil: hidden, forbidden,
+--- no item, or a secret answer. Only the item fields are read, never a line's text.
+--- @param tip table|nil
+--- @return number|nil
+function Compat.ShownTooltipItemID(tip)
+    tip = plainTable(tip)
+    if not (tip and type(tip.IsShown) == "function" and tip:IsShown() == true) then return nil end
+    if type(tip.IsForbidden) == "function" and tip:IsForbidden() == true then return nil end
+    if type(tip.GetItem) ~= "function" then return nil end
+    local _, link, id = tip:GetItem()
+    id = plainId(id)
+    if id then return id end
+    link = plainString(link)
+    return link and plainId(tonumber(link:match("item:(%d+)"))) or nil
+end
+
+--- The item the first shown item tooltip among the named ones holds (`names`, global frame names
+--- in order), or nil: the key's "is an item tooltip showing" read.
+--- @param names table
+--- @return number|nil
+function Compat.ShownItemTooltipItemID(names)
+    for _, name in ipairs(type(names) == "table" and names or {}) do
+        local id = Compat.ShownTooltipItemID(_G[name])
+        if id then return id end
+    end
+    return nil
+end
+
+--- Ask the client to load an item's data (C_Item.RequestLoadItemDataByID). True when asked.
+--- @param itemID number
+--- @return boolean
+function Compat.RequestItem(itemID)
+    local item = C_Item
+    if not (plainId(itemID) and type(item) == "table" and type(item.RequestLoadItemDataByID) == "function") then
+        return false
+    end
+    item.RequestLoadItemDataByID(itemID)
+    return true
+end
+
+--- An item class's and subclass's names (C_Item.GetItemClassInfo / GetItemSubClassInfo), each nil
+--- where the client names none.
+--- @param classID number|nil
+--- @param subclassID number|nil
+--- @return string|nil className, string|nil subclassName
+function Compat.ItemClassNames(classID, subclassID)
+    local item = C_Item
+    classID, subclassID = plainNumber(classID), plainNumber(subclassID)
+    if not (classID and type(item) == "table") then return nil, nil end
+    local class = type(item.GetItemClassInfo) == "function" and plainString(item.GetItemClassInfo(classID)) or nil
+    local sub = subclassID and type(item.GetItemSubClassInfo) == "function"
+        and plainString(item.GetItemSubClassInfo(classID, subclassID)) or nil
+    return class, sub
+end
+
+--- An item quality's name (the client's ITEM_QUALITY<n>_DESC global), or nil.
+--- @param quality number|nil
+--- @return string|nil
+function Compat.QualityName(quality)
+    quality = plainNumber(quality)
+    if not quality then return nil end
+    return plainString(_G["ITEM_QUALITY" .. quality .. "_DESC"])
+end
+
+-- ── the key binding's one-time default (spec §4.6) ──────────────────────────────────────────
+
+--- The command bound to `key` now (GetBindingAction), "" for a free key; nil without the API.
+--- @param key string
+--- @return string|nil
+function Compat.BindingAction(key)
+    if type(GetBindingAction) ~= "function" or type(key) ~= "string" then return nil end
+    local action = GetBindingAction(key)
+    if Compat.IsSecret(action) then return nil end
+    return type(action) == "string" and action or ""
+end
+
+--- Whether `command` has any key bound (GetBindingKey); nil without the API.
+--- @param command string
+--- @return boolean|nil
+function Compat.HasBinding(command)
+    if type(GetBindingKey) ~= "function" then return nil end
+    local key = plainString((GetBindingKey(command)))
+    return key ~= nil and key ~= ""
+end
+
+--- Bind `key` to `command` and save the set in force (SetBinding, then
+--- SaveBindings(GetCurrentBindingSet())). True when both ran; out of combat only (the caller asks).
+--- @param key string
+--- @param command string
+--- @return boolean
+function Compat.BindKey(key, command)
+    if not (type(SetBinding) == "function" and type(SaveBindings) == "function"
+        and type(GetCurrentBindingSet) == "function") then
+        return false
+    end
+    if not SetBinding(key, command) then return false end
+    SaveBindings(GetCurrentBindingSet())
+    return true
+end

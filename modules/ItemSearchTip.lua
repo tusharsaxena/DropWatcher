@@ -132,6 +132,14 @@ local function professionName(skillLine)
     return skillLine and PROFESSION[skillLine] or nil
 end
 
+--- A crafting skill line's profession name (the shipped table's nine), or nil. The Item Search
+--- window's Crafting rows name it too.
+--- @param skillLine number|nil
+--- @return string|nil
+function IST.ProfessionName(skillLine)
+    return professionName(skillLine)
+end
+
 -- ── the lines (pure over the facts and the options) ────────────────────────────────────────
 
 -- A line: { text, tone, right, rightTone }.

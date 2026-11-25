@@ -1034,6 +1034,46 @@ Total.
 - item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
+### test_item_search_window.lua (22)
+
+- item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
+- item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
+- item search view: a name searches ForeverDB only once it is loaded; before it says loading, without it the spec line
+- item search view: the recent list puts the newest first, keeps each item once, and keeps ten
+- item search view: a source's map is the one with the most spots (the lower id on a tie), its first spot the pin
+- item search view: DROPS FROM lists every source with a bar scaled to the top chance, then the World drop row
+- item search view: a known recipe's breakpoints against your rank; an unknown one learnable at its minimum
+- item search view: the item line names quality, class, subclass, level and id; the footer names ForeverDB's state
+- item search window: on Retail there is no window, no magnifier and no `search` verb
+- item search window: the main window's magnifier opens it, with the search box focused, and closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: `/dw search <id>` shows the item, `/dw search <name>` lists the matches, bare opens it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the search runs 0.25 s after the last key, and Enter shows the first match (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: without ForeverDB an id still shows the item, with Crafting and the spec §1 line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: before the load a name search says loading and reads nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: each item shown joins the account-wide recent searches, newest first, while remembered (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the blade's pane: DROPS FROM, SOLD BY and ALSO, the header and the footer (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the leather's QUESTS rows carry the mark, title, zone and state (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a pin sets the client's user waypoint at the source's spot, else TomTom's; no spot, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: without the client's waypoint, TomTom when installed; neither, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: Link in chat puts the item's link in the chat box, or says it is still loading (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a drag saves its point per profile, the next open puts it back, and the lock holds it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+
+### test_item_search_key.lua (12)
+
+- item search key: the press's decision follows the owner's table
+- item search key: with no item tooltip a press opens the window empty, and the next press closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: over an item tooltip it opens that item; over the same one it closes, over another it switches (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a chat link's tooltip and a comparison tooltip count; a hidden one does not (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: stood down, a press refuses with the one line and opens nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: on Retail a press does nothing and no key is set
+- item search key: Ctrl-Alt-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a key that runs something else is never taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: a binding that already has a key keeps it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: once per character: a key the player clears is not put back (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: in combat the default waits for the combat's end (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search key: the tooltip block's hint and the window's footer name the bound key (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+
 ### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
@@ -2958,10 +2998,11 @@ Total.
 - sim checkbox R7: unticking with the window open and idle closes it, and ticking reopens it
 - sim checkbox R7: the window's show and hide refresh the open page
 
-### test_bindings.lua (14)
+### test_bindings.lua (15)
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
 - bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
+- bindings: the Item Search button is a plain hidden Button registered for AnyDown, labeled Item Search
 - bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
 - bindings: one press is one NS.Window.Toggle
 - bindings: the category label is the brand and the binding label is localized, with no brand in it
@@ -3276,6 +3317,8 @@ Total.
 | test_recipe_reagents.lua | 1 |
 | test_item_search.lua | 15 |
 | test_item_search_tip.lua | 1 |
+| test_item_search_window.lua | 9 |
+| test_item_search_key.lua | 2 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3355,7 +3398,7 @@ Total.
 | test_sim_report.lua | 18 |
 | test_sim_panel.lua | 22 |
 | test_sim_checkbox.lua | 11 |
-| test_bindings.lua | 14 |
+| test_bindings.lua | 15 |
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
@@ -3369,5 +3412,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 40 |
-| **Total** | **2765** |
+| Skipped | 63 |
+| **Total** | **2777** |

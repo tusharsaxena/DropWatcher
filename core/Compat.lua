@@ -1038,6 +1038,24 @@ function Compat.InsertChatLink(link)
     return true
 end
 
+--- Puts `link` in chat (Item Search's Link in chat): into the open edit box (Compat.InsertChatLink),
+--- else opens the chat edit box with it (ChatFrameUtil.OpenChat, then ChatFrame_OpenChat). True when
+--- one was called.
+--- @param link string
+--- @return boolean
+function Compat.LinkInChat(link)
+    if type(link) ~= "string" or Compat.IsSecret(link) then return false end
+    local box = type(ChatEdit_GetActiveWindow) == "function" and ChatEdit_GetActiveWindow() or nil
+    if box and Compat.InsertChatLink(link) then return true end
+    local util = ChatFrameUtil and ChatFrameUtil.OpenChat
+    local open = util or ChatFrame_OpenChat
+    if type(open) == "function" then
+        open(link)
+        return true
+    end
+    return Compat.InsertChatLink(link)
+end
+
 --- Shows `link` in the dressing room (an item button's ctrl-click): DressUpItemLink, then the
 --- older DressUpLink. True when one was called.
 --- @param link string

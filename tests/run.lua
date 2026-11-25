@@ -371,6 +371,8 @@ Kit.run{
         "test_recipe_reagents",
         "test_item_search",
         "test_item_search_tip",
+        "test_item_search_window",
+        "test_item_search_key",
         "test_own_drops",
         "test_tip_marks",
         "test_drops_strip",
