@@ -1181,7 +1181,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (16)
+### test_item_search_verdict.lua (17)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1194,6 +1194,7 @@ Total.
 - verdict: each confidence input is needed only when the score needs it, and counts when answered
 - verdict: under High the hint names the heaviest unanswered input's fix
 - verdict: a Low confidence never says Toss: it holds
+- verdict: gear whose gear verdict has not answered never says Toss, at any confidence
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
 - verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word and score in the verdict's tone (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: on the tooltip the badge sits right of Drop Watcher, its reasons under it; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
@@ -3449,7 +3450,7 @@ Total.
 | test_item_search_rank.lua | 14 |
 | test_item_search_sources.lua | 13 |
 | test_item_search_prices.lua | 5 |
-| test_item_search_verdict.lua | 12 |
+| test_item_search_verdict.lua | 13 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3544,4 +3545,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 113 |
-| **Total** | **2838** |
+| **Total** | **2839** |

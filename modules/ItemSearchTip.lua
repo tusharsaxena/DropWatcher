@@ -37,7 +37,7 @@ local _, NS = ...
 --     "Drop Watcher · Item Search" is gone;
 --   * the badge's reasons (the "Explain the badge" setting, under the badge): its top two, each
 --     "  · <reason>" with the bullet in muted gold, then, below a High confidence, the
---     confidence's fix, muted ("Confidence Medium: open your profession window to rank recipes");
+--     confidence's fix, muted ("Confidence Medium: Open your profession window to rank recipes");
 --   * the switched-on sections in the settings' order (IST.ORDER by default), each a heading in
 --     the tooltip label's muted gold and its rows, an empty section left out. Every section's rows
 --     come in NS.ItemSearch.Rank's order for the player now (feedback spec §3) and stop at

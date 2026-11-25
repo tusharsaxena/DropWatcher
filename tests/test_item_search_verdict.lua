@@ -189,12 +189,12 @@ test("verdict: under High the hint names the heaviest unanswered input's fix", f
     assertNil(select(3, C(facts(), ME, item())), "High: no hint")
     assertEqual(select(3, C(facts({ fdb = "loading" }), ME, item())), "ForeverDB is not loaded")
     assertEqual(select(3, C(facts({ crafting = { recipe({}) } }), { level = 20 }, item())),
-        "open your profession window to rank recipes")
-    assertEqual(select(3, C(facts(), ME, item({ sellPrice = false }))), "item info is still loading")
+        "Open your profession window to rank recipes")
+    assertEqual(select(3, C(facts(), ME, item({ sellPrice = false }))), "Item info is still loading")
     assertEqual(select(3, C(facts(), ME, item({ equippable = true }))), "Pawn is still scoring")
     -- the ranks (3) outweigh the item info (2)
     assertEqual(select(3, C(facts({ crafting = { recipe({}) } }), { level = 20 }, item({ sellPrice = false }))),
-        "open your profession window to rank recipes")
+        "Open your profession window to rank recipes")
 end)
 
 test("verdict: a Low confidence never says Toss: it holds", function()
@@ -205,6 +205,16 @@ test("verdict: a Low confidence never says Toss: it holds", function()
     assertEqual(v.verdict, "hold"); assertEqual(#v.reasons, 0)
     assertEqual(v.hint, "ForeverDB is not loaded")
     assertEqual(IS.Verdict(facts(), ME, item({ sellPrice = 0 })).verdict, "toss", "High: tossed")
+end)
+
+test("verdict: gear whose gear verdict has not answered never says Toss, at any confidence", function()
+    local _, IS = addon()
+    local v = IS.Verdict(facts(), ME, item({ sellPrice = 0, equippable = true }))
+    assertEqual(v.tier, "medium", "Pawn still scoring: 6 of 8")
+    -- red under: a Toss for gear the addon has not judged (the gear part could add +70)
+    assertEqual(v.verdict, "hold"); assertEqual(v.hint, "Pawn is still scoring")
+    v = IS.Verdict(facts(), ME, item({ sellPrice = 0, equippable = true, gear = "downgrade" }))
+    assertEqual(v.verdict, "toss", "judged a downgrade, and no use: tossed")
 end)
 
 -- ── the reasons ─────────────────────────────────────────────────────────────────────────────
@@ -273,8 +283,8 @@ test("verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word a
     local lines = IST.ReasonLines(v)
     assertEqual(#lines, 1, "High: no confidence line")
     assertEqual(lines[1].text, "  |cff" .. hex("mutedGold") .. "·|r Invented reason"); assertEqual(lines[1].tone, "plain")
-    lines = IST.ReasonLines({ verdict = "hold", score = 30, tier = "medium", reasons = {}, hint = "item info is still loading" })
-    assertEqual(lines[1].text, "Confidence Medium: item info is still loading"); assertEqual(lines[1].tone, "muted")
+    lines = IST.ReasonLines({ verdict = "hold", score = 30, tier = "medium", reasons = {}, hint = "Item info is still loading" })
+    assertEqual(lines[1].text, "Confidence Medium: Item info is still loading"); assertEqual(lines[1].tone, "muted")
 end, FOREVER_ONLY)
 
 test("verdict: on the tooltip the badge sits right of Drop Watcher, its reasons under it; both settings", function()
@@ -285,7 +295,7 @@ test("verdict: on the tooltip the badge sits right of Drop Watcher, its reasons 
     -- the blade: no client item info (the double caches none), so Hold under a Medium confidence
     assertTrue(b[2]:find("^Drop Watcher | ") ~= nil, "the badge at the label line's right")
     assertTrue(b[2]:find("Hold 0", 1, true) ~= nil and b[2]:find("· Medium", 1, true) ~= nil, b[2])
-    assertEqual(b[3], "Confidence Medium: item info is still loading", "the hint under the badge")
+    assertEqual(b[3], "Confidence Medium: Item info is still loading", "the hint under the badge")
     assertEqual(b[4], "Drops from")
     local S = NS.addon.db.profile.itemSearch.tooltip
     S.reasons = false

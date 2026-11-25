@@ -4946,7 +4946,8 @@ item a quest in your log needs → `Keep` with a score and a reason line naming 
 `Sell` with `Sells for …`; a reagent of a profession you have → Keep or Hold by its recipes' colors,
 the reason naming the profession; an item no quest, recipe or vendor wants → Toss only with High or
 Medium confidence. After a fresh login, before opening your profession window, hover a reagent →
-Medium or Low with the hint `open your profession window to rank recipes`, and never Toss. Untick
+Medium or Low with the hint `Open your profession window to rank recipes`, and never Toss; hover
+unwanted gear while Pawn is still scoring (the hint `Pawn is still scoring`) → Hold, never Toss. Untick
 Explain the badge → the reason lines go, the badge stays; untick Show the Keep / Hold / Sell / Toss
 badge → `Drop Watcher` stands alone and Explain the badge grays out. Drop Watcher never moves or
 deletes anything. Result:

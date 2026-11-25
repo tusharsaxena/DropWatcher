@@ -302,5 +302,6 @@ the code reads every case the design leaves open, module by module, is in
     (ITEM-SEARCH-41).
   - **The Keep / Hold / Sell / Toss badge is advice, never an action**: Drop Watcher moves, sells and
     deletes nothing. Its score reads only what the client and ForeverDB answer, so before your
-    profession window or the gear verdict is read its confidence is Medium or Low, and a Low
-    confidence never says Toss (ITEM-SEARCH-42).
+    profession window or the gear verdict is read its confidence is Medium or Low, a Low
+    confidence never says Toss, and neither does gear whose gear verdict has not answered yet
+    (ITEM-SEARCH-42).

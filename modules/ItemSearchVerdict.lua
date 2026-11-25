@@ -23,7 +23,9 @@ local _, NS = ...
 -- be sold and is risky to delete.
 -- THE VERDICT WORD: Keep at 50 and up, Hold at 20 and up; under 20, Sell when a vendor buys it, Toss
 -- when none does, Hold while the sell price is not known. A Low confidence never says Toss: it holds
--- instead, so the addon never tells a player to delete what it could not judge.
+-- instead, so the addon never tells a player to delete what it could not judge. Nor does gear whose
+-- gear verdict has not answered (Pawn still scoring), at any confidence: that part alone could add
+-- +70, so a Toss would rest on the one input that could overturn it.
 -- THE CONFIDENCE is not the score: it is how much of what the score needs was answered, by weight
 -- (C.ITEM_SEARCH.VERDICT.WEIGHT): ForeverDB loaded 3, the quest states 3 (needed with a quest row, or
 -- without ForeverDB), the profession ranks 3 (needed with a recipe row), the client's item info 2
@@ -277,8 +279,8 @@ local INPUTS = {
 
 local function hintText(key)
     if key == "fdb" then return L["ForeverDB is not loaded"] end
-    if key == "ranks" then return L["open your profession window to rank recipes"] end
-    if key == "item" then return L["item info is still loading"] end
+    if key == "ranks" then return L["Open your profession window to rank recipes"] end
+    if key == "item" then return L["Item info is still loading"] end
     return L["Pawn is still scoring"]
 end
 
@@ -329,11 +331,12 @@ end
 
 -- ── the verdict ─────────────────────────────────────────────────────────────────────────────
 
-local function decide(score, tier, sellPrice)
+-- `unjudged`: an input that could overturn a Toss has not answered (gear with no gear verdict yet).
+local function decide(score, tier, sellPrice, unjudged)
     if score >= V.KEEP then return "keep" end
     if score >= V.HOLD or not sellPrice then return "hold" end
     if sellPrice > 0 then return "sell" end
-    return tier == "low" and "hold" or "toss"
+    return (tier == "low" or unjudged) and "hold" or "toss"
 end
 
 local function before(a, b)
@@ -384,7 +387,7 @@ function IS.Verdict(facts, me, item, into)
         score = scoreOf(facts, me, item, acc)
     end
     local sellPrice = num(item.sellPrice)
-    local verdict = decide(score, tier, sellPrice)
+    local verdict = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
     if not into then
         return { verdict = verdict, score = score, confidence = confidence, tier = tier,
             reasons = topReasons(acc, verdict, sellPrice), hint = hint }
