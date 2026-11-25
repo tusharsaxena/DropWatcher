@@ -4,20 +4,24 @@ local _, NS = ...
 -- read (spec §1, clients-§4), so this file returns before it declares anything, and every row also
 -- carries `clients` as settings/SchemaRows.lua's Forever-only rows do.
 --
--- The page (`itemSearch`, settings/Pages.lua) draws two schema tabs and the library's Keybindings
--- host tab (settings/ItemSearchPage.lua):
+-- The page (`itemSearch`, settings/Pages.lua) draws three schema tabs and the library's Keybindings
+-- host tab (settings/ItemSearchPage.lua), its rows in the Settings artboard's order (Item Search
+-- feedback spec §9):
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
---     window switch it decides whether ForeverDB loads at all, spec §2), Only while holding Shift,
---     Separator and title line, Keybind hint line, Comparison tooltips too, Rows per section and
---     Only professions you know (Item Search feedback spec §4, §7); then the sections' switches and
---     Hide completed quests; then the section order, a drag list
+--     window switch it decides whether ForeverDB loads at all, spec §2), Comparison tooltips too,
+--     Rows per section, Show the key hint, Only while holding Shift, Separator and title line; then,
+--     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4);
+--     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
---   * Item Search window: its switch, the bar color (Use the skin's color, else the swatch beside
---     it) and the waypoint pins. Density, Font size, Zone and level columns and Remember recent
---     searches went in ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4; schema step 17): the
---     window's rows take the main window's table font and row height, and every tab draws all its
---     columns.
+--   * Item Search window: its switch and the bar color (Use the skin's color, else the swatch
+--     beside it). Density, Font size, Zone and level columns and Remember recent searches went in
+--     ISF-DW-05 (feedback spec §5.1, §5.2, §5.4; schema step 17): the window's rows take the main
+--     window's table font and row height, and every tab draws all its columns. The window has no
+--     lock (W13) and remembers its size and last tab with no setting.
+--   * Waypoints (ISF-DW-07, feedback spec §6): Waypoints (Automatic, TomTom or Drop Watcher's
+--     arrow) and Waypoint pins; then Drop Watcher's arrow's own blocks, LibKa0s's
+--     WaypointArrowSettings rows (settings/ItemSearchArrowRows.lua, after the Options instance).
 -- Every `default` references defaults/Profile.lua (savedvariables-§2). The makers and checks are
 -- settings/SchemaRows.lua's (Settings.RowMakers), so a row here is shaped like every other row.
 
@@ -91,21 +95,24 @@ local function tooltip()
         L["Under every item tooltip (your bags, chat links, the loot window, other addons' tooltips), say where the item drops, who sells it, its quests and its recipes. Needs the ForeverDB addon: without it the tooltip shows nothing of Item Search. ForeverDB loads a few seconds after login, out of combat, unless this and the Item Search window are both off."],
         M.with(at, { solo = true, onChange = refreshSearch }))
     local sub = M.with(at, { disabledIf = off })
-    M.bool("itemSearch.tooltip.shiftOnly", T.shiftOnly, L["Only while holding Shift"],
-        L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."], sub)
-    M.bool("itemSearch.tooltip.header", T.header, L["Separator and title line"],
-        L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."], sub)
-    M.bool("itemSearch.tooltip.hint", T.hint, L["Keybind hint line"],
-        L["Close the block with the Item Search key and what it does. Left out while the key is unbound. Needs Add Item Search to item tooltips."], sub)
+    -- The block's rows in the Settings artboard's order (Item Search feedback spec §9): Comparison
+    -- tooltips, Rows per section and Show the key hint, then Shift-only and the title line.
     M.bool("itemSearch.tooltip.comparison", T.comparison, L["Comparison tooltips too"],
         L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."], sub)
     M.slider("itemSearch.tooltip.rows", T.rows, NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX, 1,
         L["Rows per section"],
         L["How many rows each section of the tooltip shows, 1 to 20, before \"and N more\": drop sources, vendors, quests, recipes and skinned creatures alike. The Item Search window lists every one. Needs Add Item Search to item tooltips."],
         M.with(sub, { validate = M.wholeIn(NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX) }))
+    M.bool("itemSearch.tooltip.hint", T.hint, L["Show the key hint"],
+        L["Close the block with a line naming the key bound to Item Search and what it does. No line while the key is unbound. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.shiftOnly", T.shiftOnly, L["Only while holding Shift"],
+        L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.header", T.header, L["Separator and title line"],
+        L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."], sub)
+    -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],
-        M.with(at, { onChange = repaintSearchWindow }))
+        M.with(at, { subgroup = L["Tooltip and window"], onChange = repaintSearchWindow }))
 
     local sections = M.with(sub, { subgroup = L["Sections"] })
     for _, s in ipairs(SECTIONS) do
@@ -139,12 +146,33 @@ local function window()
         tooltip = L["The color of the drop chance bars in DROPS FROM. Not read while Use the skin's color is on."] }))
     M.bool("itemSearch.window.barFromSkin", W.barFromSkin, L["Use the skin's color"],
         L["Draw the drop chance bars in the skin's accent color. Bar color, beside this, is not read while this is on."], bars)
-    local rows = M.with(at, { subgroup = L["Rows"] })
-    M.bool("itemSearch.window.pins", W.pins, L["Waypoint pins"],
-        L["Show a pin on each row with a known spot. Clicking it sets a waypoint on the map, or a TomTom waypoint when TomTom is installed."], rows)
+end
+
+-- ── Waypoints (Item Search feedback spec §6, §9) ────────────────────────────────────────────
+
+-- Who draws the way to a pin, then the pins' switch. Drop Watcher's arrow's own rows
+-- (LibKa0s-WaypointArrow-1.0's WaypointArrowSettings) follow on this tab, composed after the
+-- Options instance exists (settings/ItemSearchArrowRows.lua).
+Settings.ITEM_SEARCH_WAYPOINTS = L["Waypoints"]
+
+local function waypoints()
+    local at = { page = PAGE, group = Settings.ITEM_SEARCH_WAYPOINTS, subgroup = L["Waypoints"], clients = CLIENTS }
+    local WP = NS.ItemSearchWaypoint
+    M.pick(WP.SETTING, D.waypoints, M.choices({
+        "auto", L["Automatic"], "tomtom", L["TomTom"], "arrow", L["Drop Watcher's arrow"],
+    }), L["Waypoints"],
+        L["Who points the way to a waypoint pin. Automatic uses TomTom when it is loaded, and Drop Watcher's arrow otherwise. TomTom needs the TomTom addon: while it is not loaded, Drop Watcher's arrow is used instead."],
+        M.with(at, { onChange = function()
+            WP.ApplySettings()
+            repaintSearchWindow()
+        end }))
+    M.bool("itemSearch.window.pins", D.window.pins, L["Waypoint pins"],
+        L["Show a map pin on each row of the Item Search window with a known spot. Clicking it sets a waypoint there, with the arrow Waypoints names."],
+        M.with(at, { onChange = repaintSearchWindow }))
 end
 
 NS.SchemaRuntime.AddRows(M.Collect(function()
     tooltip()
     window()
+    waypoints()
 end))

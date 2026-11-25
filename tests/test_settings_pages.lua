@@ -32,7 +32,7 @@ local PAGES = {
 -- covers it; on Retail it is not registered.
 if os.getenv("KA0S_KIT_CLIENT") == "forever" then
     PAGES[#PAGES + 1] = { key = "itemSearch", title = "Item Search",
-        strip = { "Item tooltip", "Item Search window", "Keybindings" } }
+        strip = { "Item tooltip", "Item Search window", "Waypoints", "Keybindings" } }
 end
 
 local function gui(m) return m.__libs["AceGUI-3.0"] end

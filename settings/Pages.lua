@@ -66,6 +66,8 @@ if ISP then
       tip = L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, and the Item Search window) to their defaults. The Item Search key is not changed."],
       afterGroup = { [L["Item tooltip"]] = function(ctx) ISP.SectionOrder(ctx) end },
       beforeClear = function(ctx) ISP.Park(ctx) end,
+      -- The Waypoints tab's arrow Position block's Reset position (settings/ItemSearchArrowRows.lua).
+      afterSubgroup = Settings.ITEM_SEARCH_ARROW_HOOKS,
       keybinds = function() return ISP.KeybindTab() end }
 end
 
@@ -75,7 +77,7 @@ local function builder(page)
             pageKey = page.key, defaultsButton = true, defaultsTooltip = page.tip,
         })
         ctx.panel.defaultsOnClick = function() Helpers.RestoreDefaults(page.key, ctx) end
-        local opts = { tabs = page.tabs, chrome = page.chrome }
+        local opts = { tabs = page.tabs, chrome = page.chrome, afterSubgroup = page.afterSubgroup }
         local function render(c)
             if page.beforeClear then page.beforeClear(c) end
             Helpers.ClearScroll(c)

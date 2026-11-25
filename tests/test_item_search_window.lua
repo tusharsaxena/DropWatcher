@@ -576,32 +576,127 @@ end, FOREVER_ONLY)
 
 -- ── the window: pins ────────────────────────────────────────────────────────────────────────
 
-test("item search window: a pin sets the client's user waypoint at the source's spot, else TomTom's; no spot, no pin", function()
-    local NS, m = enabled()
-    local W = NS.ItemSearchWindow
-    assertEqual(NS.Compat.WaypointMethod(IDS.mapA), "client")
-    -- red under: a pin that names no map, or the waypoint at the wrong spot
-    assertEqual(W.SetPin({ map = IDS.mapA, x = 0.5, y = 0.25 }, "Fixture Gnoll"), "client")
-    assertEqual(#m.waypoints, 1)
-    assertEqual(m.waypoints[1].map, IDS.mapA); assertEqual(m.waypoints[1].x, 0.5); assertEqual(m.waypoints[1].y, 0.25)
-    assertTrue(m.prints[#m.prints]:find("Fixture Vale", 1, true) ~= nil, "the line names the zone")
-    local rows = NS.ItemSearchCells.Drops(NS.ItemSearch.Get(IDS.blade), {},
-        { spots = NS.ForeverDB.Spots, mapName = NS.Compat.MapName })
-    local byName = {}
-    for _, r in ipairs(rows) do byName[r.cells.source.text] = r end
-    assertEqual(byName["Fixture Gnoll"].spot.map, IDS.mapA)
-    assertEqual(byName["Fixture Gnoll"].cells.zone.text, "Fixture Vale")
-    assertNil(byName["Fixture Coffer"].spot, "a container has no spot: no pin")
-end, FOREVER_ONLY)
-
-test("item search window: without the client's waypoint, TomTom when installed; neither, no pin", function()
-    local NS, m = enabled({ waypoint = false })
-    assertNil(NS.Compat.WaypointMethod(IDS.mapA), "neither: the pin hides")
+-- Item Search feedback spec §6 (ISF-DW-07): TomTom or Drop Watcher's arrow, never the client's own
+-- user waypoint. `m.waypoints` records every C_Map.SetUserWaypoint call, which must stay empty.
+local function withTomTom(m)
     local added = {}
     m.TomTom = { AddWaypoint = function(_, map, x, y, opts) added[#added + 1] = { map, x, y, opts.title } end }
-    assertEqual(NS.Compat.WaypointMethod(IDS.mapA), "tomtom")
+    return added
+end
+
+test("item search waypoints: who draws the way, by the setting and what is loaded (pure)", function()
+    local NS = T.newAddon()
+    local R = NS.ItemSearchWaypoint.Resolve
+    -- red under: Automatic preferring the arrow over a loaded TomTom (the spec's W12 call)
+    assertEqual(R("auto", true, true), "tomtom")
+    assertEqual(R("auto", false, true), "arrow")
+    assertEqual(R("arrow", true, true), "arrow", "the arrow even with TomTom loaded")
+    assertEqual(R("tomtom", true, true), "tomtom")
+    assertEqual(R("tomtom", false, true), "arrow", "TomTom not loaded: Drop Watcher's arrow instead")
+    assertEqual(R("arrow", true, false), "tomtom", "no arrow library: TomTom")
+    assertNil(R("auto", false, false), "neither: no pin")
+    assertEqual(R("bogus", false, true), "arrow", "an unknown choice reads as Automatic")
+end)
+
+test("item search window: with TomTom loaded, Automatic sets TomTom's waypoint at the spot; never the client's", function()
+    local NS, m = enabled()
+    local added = withTomTom(m)
+    assertEqual(NS.Setting("itemSearch.waypoints"), "auto", "the default (spec §6)")
+    assertEqual(NS.ItemSearchWaypoint.Method(), "tomtom")
+    -- red under: a pin that names no map, or the waypoint at the wrong spot
     assertEqual(NS.ItemSearchWindow.SetPin({ map = IDS.mapA, x = 0.1, y = 0.2 }, "Fixture Gnoll"), "tomtom")
-    assertEqual(added[1][1], IDS.mapA); assertEqual(added[1][4], "Fixture Gnoll")
+    assertEqual(added[1][1], IDS.mapA); assertEqual(added[1][2], 0.1); assertEqual(added[1][3], 0.2)
+    assertEqual(added[1][4], "Fixture Gnoll")
+    assertEqual(#m.waypoints, 0, "C_Map.SetUserWaypoint is never called")
+    local line = m.prints[#m.prints]
+    assertTrue(line:find("Fixture Vale", 1, true) ~= nil and line:find("TomTom", 1, true) ~= nil,
+        "one chat line names the zone and the arrow: " .. line)
+end, FOREVER_ONLY)
+
+test("item search window: without TomTom, Drop Watcher's arrow points at the spot; Drop Watcher's arrow wins over TomTom", function()
+    local NS, m = enabled()
+    local WP = NS.ItemSearchWaypoint
+    assertTrue(WP.ArrowAvailable(), "LibKa0s-WaypointArrow-1.0 is vendored")
+    assertEqual(WP.Method(), "arrow")
+    assertEqual(NS.ItemSearchWindow.SetPin({ map = IDS.mapA, x = 0.5, y = 0.25 }, "Fixture Gnoll"), "arrow")
+    local target = WP.Instance():Target()
+    -- red under: the client's user waypoint (no arrow on Forever), or the arrow at the wrong spot
+    assertEqual(#m.waypoints, 0, "C_Map.SetUserWaypoint is never called")
+    assertEqual(target.mapID, IDS.mapA); assertEqual(target.x, 0.5); assertEqual(target.y, 0.25)
+    assertEqual(target.label, "Fixture Gnoll")
+    assertTrue(m.prints[#m.prints]:find("Drop Watcher's arrow", 1, true) ~= nil, "the chat line names the arrow")
+    -- TomTom chosen while it is not loaded: the arrow still points
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.waypoints", "tomtom")))
+    assertEqual(WP.Method(), "arrow", "TomTom not loaded: Drop Watcher's arrow")
+    -- Drop Watcher's arrow chosen with TomTom loaded
+    local added = withTomTom(m)
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.waypoints", "arrow")))
+    assertEqual(NS.ItemSearchWindow.SetPin({ map = IDS.mapB, x = 0.3, y = 0.4 }, "Fixture Kobold"), "arrow")
+    assertEqual(#added, 0, "TomTom is not called while Drop Watcher's arrow is picked")
+    assertEqual(WP.Instance():Target().mapID, IDS.mapB, "the arrow retargets")
+    -- a choice that hands the way to TomTom takes the arrow down
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.waypoints", "tomtom")))
+    assertNil(WP.Instance():Target(), "the arrow's waypoint went with the choice")
+    assertFalse((NS.SchemaRuntime.Set("itemSearch.waypoints", "client")), "the seam refuses an unknown choice")
+end, FOREVER_ONLY)
+
+test("item search window: a pin is a dim map pin, lit on its row's hover, and its tooltip names the arrow", function()
+    local NS = enabled()
+    local W = NS.ItemSearchWindow
+    W.ShowItem(IDS.blade)
+    local gnoll
+    for _, row in ipairs(W.TableRows()) do if row.dwTip.title == "Fixture Gnoll" then gnoll = row end end
+    local pin = gnoll.pin
+    assertTrue(pin:IsShown(), "a row with a spot has a pin")
+    -- red under: the white arrow glyph (W11)
+    assertEqual(pin.art:GetTexture(), NS.Icon("ph:map-pin"))
+    local _, _, _, a = pin.art:GetVertexColor()
+    assertEqual(a, NS.ItemSearchGrid.PIN_ALPHA, "dim at rest")
+    gnoll:__fire("OnEnter")
+    _, _, _, a = pin.art:GetVertexColor()
+    assertEqual(a, 1, "lit while the pointer is on its row")
+    gnoll:__fire("OnLeave")
+    _, _, _, a = pin.art:GetVertexColor()
+    assertEqual(a, NS.ItemSearchGrid.PIN_ALPHA, "dim again")
+    local text = table.concat(NS.Window.TooltipOf(pin), "\n")
+    assertTrue(text:find("Set a waypoint", 1, true) == 1, "its title")
+    assertTrue(text:find("Fixture Vale", 1, true) ~= nil, "the place")
+    assertTrue(text:find("Drop Watcher's arrow", 1, true) ~= nil, "the arrow it uses: " .. text)
+    assertTrue(text:find("Click: set a waypoint", 1, true) ~= nil, "the hint")
+end, FOREVER_ONLY)
+
+test("item search window: a stand-down takes Drop Watcher's arrow down", function()
+    local NS = enabled()
+    local WP = NS.ItemSearchWaypoint
+    NS.ItemSearchWindow.SetPin({ map = IDS.mapA, x = 0.5, y = 0.25 }, "Fixture Gnoll")
+    local inst = WP.Instance()
+    assertTrue(inst:Target() ~= nil)
+    NS.addon:SlashEnabled(false)
+    -- red under: an arrow left pointing while the addon is off
+    assertNil(inst:Target(), "the stand-down cleared it")
+    assertFalse(inst:IsShown())
+end, FOREVER_ONLY)
+
+test("item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way", function()
+    local NS, m = enabled()
+    local R = NS.SchemaRuntime.FindRow
+    local style = R("itemSearch.arrow.style")
+    assertTrue(style ~= nil and style.group == "Waypoints", "the library's rows on the Waypoints tab")
+    assertFalse(style.disabledIf(style), "no TomTom: the arrow is the one used")
+    withTomTom(m)
+    -- red under: the arrow's rows live while TomTom points every waypoint
+    assertTrue(style.disabledIf(style), "Automatic with TomTom loaded: TomTom draws")
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.waypoints", "arrow")))
+    assertFalse(style.disabledIf(style), "Drop Watcher's arrow picked")
+    -- the library's own dimming is kept: the swatches while the skin's colors are drawn
+    local far = R("itemSearch.arrow.farColor")
+    assertTrue(far.disabledIf(far), "Use the skin's colors is on by default")
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.arrow.useSkinColors", false)))
+    assertFalse(far.disabledIf(far))
+    assertFalse((NS.SchemaRuntime.Set("itemSearch.arrow.scale", 5)), "the seam refuses a scale past 2")
+    assertFalse((NS.SchemaRuntime.Set("itemSearch.arrow.style", "spiral")), "and an unknown style")
+    assertTrue((NS.SchemaRuntime.Set("itemSearch.arrow.style", "flat")))
+    assertEqual(NS.ItemSearchWaypoint.Instance():Get("style"), "flat", "a row's change reaches the arrow")
 end, FOREVER_ONLY)
 
 test("item search window: a stand-down closes it", function()

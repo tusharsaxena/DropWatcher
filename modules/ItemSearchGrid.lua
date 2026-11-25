@@ -24,8 +24,8 @@ local _, NS = ...
 -- and its scale), and a tooltip under the Ka0s rules (spec §5.6: the title, label and value rows,
 -- dim hint lines last; NS.Window.AttachTooltip places it beside the window). A container's row and a
 -- recipe's Makes cell show the item's own game tooltip instead, and a shift-click links that item in
--- chat (NS.ItemSearchGrid.LinkItem). The pin column's button sets the waypoint (the provider is the
--- window's, ISF-DW-07's to change).
+-- chat (NS.ItemSearchGrid.LinkItem). The pin column's button, a dim map pin lit on its row's hover,
+-- sets the waypoint (TomTom's or Drop Watcher's arrow, modules/ItemSearchWaypoint.lua).
 --
 -- THE MATCH ROW (spec §5.2): the icon, the name in its quality color and the id dim at the right;
 -- the stripe, the hover wash, and the selected look on the item the right pane shows: a wash and a
@@ -256,16 +256,40 @@ local function onRowClick(row)
     if Compat.ShiftDown() then ISG.LinkItem(id) elseif row.dwOpen then row.dwOpen(id) end
 end
 
+-- THE PIN (Item Search feedback spec §6, W11): a map-pin icon (Phosphor `map-pin`), dim at rest
+-- (ISG.PIN_ALPHA of `icon.tint`) and lit `text.link` while the pointer is on its row or on it. Its
+-- tooltip: Set a waypoint, the place, the arrow that will point the way, the click hint.
+ISG.PIN_ICON, ISG.PIN_ALPHA = "ph:map-pin", 0.5
+
+local function paintPinArt(pin)
+    local r, g, b = NS.SkinColor(pin.dwHot and ISG.MARK_HOT or ISG.MARK_REST)
+    pin.art:SetVertexColor(r, g, b, pin.dwHot and 1 or ISG.PIN_ALPHA)
+end
+
+--- Light or dim a row's pin (its row's, or its own, hover).
+--- @param row table
+--- @param hot boolean
+function ISG.PinHot(row, hot)
+    local pin = row and row.pin
+    if not pin then return end
+    pin.dwHot = hot == true
+    paintPinArt(pin)
+end
+
 local function newPin(row)
     local pin = CreateFrame("Button", nil, row)
     pin:SetSize(C.ITEM_SEARCH.WINDOW.PIN, C.ITEM_SEARCH.WINDOW.PIN)
     pin.art = pin:CreateTexture(nil, "ARTWORK")
     pin.art:SetAllPoints(pin)
-    pin.art:SetTexture(NS.Icon("arrow-right"))
+    pin.art:SetTexture(NS.Icon(ISG.PIN_ICON))
+    NS.SkinPaint(pin.art, function() paintPinArt(pin) end)
     pin:SetScript("OnClick", function(self) if row.dwPin then row.dwPin(self.spot, self.title) end end)
     NS.Window.AttachTooltip(pin, function()
-        return L["Set a waypoint"], TM().Row(L["At"], pin.where or ""), TM().Hint(L["Click: set a waypoint"])
+        return L["Set a waypoint"], TM().Row(L["At"], pin.where or ""),
+            TM().Row(L["Arrow"], NS.ItemSearchWaypoint.MethodLabel(pin.how)), TM().Hint(L["Click: set a waypoint"])
     end)
+    pin:HookScript("OnEnter", function() ISG.PinHot(row, true) end)
+    pin:HookScript("OnLeave", function() ISG.PinHot(row, false) end)
     return pin
 end
 
@@ -300,6 +324,8 @@ function ISG.NewRow(parent)
     row.link = newLink(row)
     NS.Window.AttachTooltip(row, function() return rowTip(row) end)
     row:HookScript("OnEnter", onRowEnter)
+    row:HookScript("OnEnter", function(self) ISG.PinHot(self, true) end)
+    row:HookScript("OnLeave", function(self) ISG.PinHot(self, false) end)
     row:HookScript("OnLeave", function(self) if type(self.dwTip) == "table" and self.dwTip.item then ISG.HideTip() end end)
     row:SetScript("OnClick", onRowClick)
     return row
@@ -343,7 +369,7 @@ local function paintPin(row, at, r, opts)
     local pin = row.pin
     local spot = r.spot
     local how = spot and opts.canPin(spot) or nil
-    pin.spot, pin.title = spot, r.tip and r.tip.title or nil
+    pin.spot, pin.title, pin.how = spot, r.tip and r.tip.title or nil, how
     pin.where = spot and ("%s %.1f, %.1f"):format(Compat.MapName(spot.map) or L["Map %d"]:format(spot.map),
         spot.x * 100, spot.y * 100) or nil
     pin:ClearAllPoints()

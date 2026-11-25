@@ -381,19 +381,6 @@ function Compat.MapName(mapID)
     return info and plainString(info.name) or nil
 end
 
--- The client's own user waypoint, where the client has it and the map takes one.
-local function clientWaypoint(mapID)
-    local map, point = C_Map, UiMapPoint
-    if not (type(map) == "table" and type(map.SetUserWaypoint) == "function" and type(point) == "table"
-        and type(point.CreateFromCoordinates) == "function") then
-        return false
-    end
-    if type(map.CanSetUserWaypointOnMap) == "function" and map.CanSetUserWaypointOnMap(mapID) ~= true then
-        return false
-    end
-    return true
-end
-
 -- TomTom's AddWaypoint, when TomTom is installed and loaded.
 local function tomTom()
     local tt = TomTom
@@ -401,39 +388,27 @@ local function tomTom()
     return nil
 end
 
---- How a waypoint on `mapID` would be set: "client" (C_Map.SetUserWaypoint, the map takes one),
---- else "tomtom" (TomTom installed), else nil (the window hides the pin).
---- @param mapID number
---- @return string|nil
-function Compat.WaypointMethod(mapID)
-    if not plainId(mapID) then return nil end
-    if clientWaypoint(mapID) then return "client" end
-    if tomTom() then return "tomtom" end
-    return nil
+--- Whether TomTom is loaded (its AddWaypoint answers). The client's own user waypoint
+--- (C_Map.SetUserWaypoint) is no longer used (Item Search feedback spec §6): it draws no arrow on
+--- WoW Forever, so a pin is TomTom's or Drop Watcher's arrow (modules/ItemSearchWaypoint.lua).
+--- @return boolean
+function Compat.TomTomLoaded()
+    return tomTom() ~= nil
 end
 
---- Set a waypoint at `x`, `y` (0..1) on `mapID`, named `title`: the client's user waypoint, super
---- tracked where the client can, else TomTom's. Answers the method used ("client" | "tomtom"), or
---- nil when neither can.
+--- Add a TomTom waypoint at `x`, `y` (0..1) on `mapID`, named `title`. Answers true when TomTom
+--- took it; false with no TomTom, no plain map or point, or an AddWaypoint that raised.
 --- @param mapID number
 --- @param x number
 --- @param y number
 --- @param title string|nil
---- @return string|nil
-function Compat.SetWaypoint(mapID, x, y, title)
+--- @return boolean
+function Compat.AddTomTomWaypoint(mapID, x, y, title)
+    local tt = tomTom()
     x, y = plainNumber(x), plainNumber(y)
-    local how = Compat.WaypointMethod(mapID)
-    if not (how and x and y) then return nil end
-    if how == "client" then
-        C_Map.SetUserWaypoint(UiMapPoint.CreateFromCoordinates(mapID, x, y))
-        local track = C_SuperTrack
-        if type(track) == "table" and type(track.SetSuperTrackedUserWaypoint) == "function" then
-            track.SetSuperTrackedUserWaypoint(true)
-        end
-        return how
-    end
-    tomTom():AddWaypoint(mapID, x, y, { title = title, from = NS.BRAND })
-    return how
+    if not (tt and plainId(mapID) and x and y) then return false end
+    local ok = pcall(tt.AddWaypoint, tt, mapID, x, y, { title = title, from = NS.BRAND })
+    return ok == true
 end
 
 --- The item a shown tooltip holds now (its GetItem: name, link, id), else nil: hidden, forbidden,

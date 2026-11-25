@@ -1026,7 +1026,7 @@ Total.
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_window.lua (29)
+### test_item_search_window.lua (33)
 
 - item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
 - item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
@@ -1054,8 +1054,12 @@ Total.
 - item search window: a column's title sorts the table, and a second click flips it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: Linen's Crafting tab: the glyphs, the My professions chip and the filtered count (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a pin sets the client's user waypoint at the source's spot, else TomTom's; no spot, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: without the client's waypoint, TomTom when installed; neither, no pin (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search waypoints: who draws the way, by the setting and what is loaded (pure)
+- item search window: with TomTom loaded, Automatic sets TomTom's waypoint at the spot; never the client's (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: without TomTom, Drop Watcher's arrow points at the spot; Drop Watcher's arrow wins over TomTom (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a pin is a dim map pin, lit on its row's hover, and its tooltip names the arrow (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a stand-down takes Drop Watcher's arrow down (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 
 ### test_item_search_tabs.lua (13)
@@ -3365,7 +3369,7 @@ Total.
 | test_recipe_reagents.lua | 1 |
 | test_item_search.lua | 19 |
 | test_item_search_tip.lua | 1 |
-| test_item_search_window.lua | 7 |
+| test_item_search_window.lua | 8 |
 | test_item_search_tabs.lua | 12 |
 | test_item_search_key.lua | 3 |
 | test_item_search_settings.lua | 1 |
@@ -3463,5 +3467,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 84 |
-| **Total** | **2799** |
+| Skipped | 87 |
+| **Total** | **2800** |

@@ -43,7 +43,7 @@ local _, NS = ...
 --       Also          the quests that reward the item and the quest it starts;
 --   * the hint "<key>: open in Item Search", naming the key bound to C.ITEM_SEARCH.BINDING as the
 --     client writes it (GetBindingKey through GetBindingText, so `ALT-CTRL-D` reads `Alt-Ctrl-D`),
---     left out when nothing is bound (the "Keybind hint line" setting, feedback spec §1).
+--     left out when nothing is bound (the "Show the key hint" setting, feedback spec §1).
 -- An item with no row in any switched-on section gets no block at all, title and hint included.
 --
 -- THE MARKS are texture escapes of LibKa0s media icons (`confirm`, and the recipe glyphs

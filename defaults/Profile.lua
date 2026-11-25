@@ -390,6 +390,25 @@ do
             window  = {
                 enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
             },
+            -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
+            -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
+            waypoints = "auto",
+            -- Drop Watcher's arrow (LibKa0s-WaypointArrow-1.0): its settings at the library's own key
+            -- names, seeded from its DEFAULTS (docs/api/WaypointArrow/version-3.3-docs.md): the look
+            -- (Raised, the skin's colors, else the far and near swatches, scale 1), the Text block (the
+            -- canonical Font block with its three "Use the skin's ..." companions, then Text position,
+            -- Show the target's name, Distance units) and the Position block (offsets from the screen's
+            -- center, written by a drag, and the arrow's own lock).
+            arrow = {
+                style = "raised", useSkinColors = true,
+                farColor = { r = 1, g = 0.82, b = 0, a = 1 }, nearColor = { r = 0.35, g = 0.80, b = 0.45, a = 1 },
+                scale = 1,
+                font = "Ka0s Prototype", fontFromSkin = true, fontSize = 12,
+                fontColor = { r = 1, g = 1, b = 1, a = 1 }, fontColorFromSkin = true, useClassColorFont = false,
+                fontFlags = "@skin", fontShadow = true, fontShadowFromSkin = true,
+                textPosition = "BELOW", showLabel = false, distanceUnits = "yards",
+                x = 0, y = 200, lock = false,
+            },
         }
     end
 end

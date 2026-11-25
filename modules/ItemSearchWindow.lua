@@ -73,6 +73,7 @@ local views = {}            -- [tab] = TABS' view state, for the session (spec �
 local shownTab              -- the tab on screen now
 
 local function TM() return NS.TipMarks end
+local function WP() return NS.ItemSearchWaypoint end
 
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
 
@@ -686,7 +687,7 @@ local function tableOpts(tab, st, m, o)
     return {
         metrics = m, sort = st.sort, onSort = function(key) ISW.SortBy(tab, key) end,
         barColor = function() return barColor(o) end,
-        canPin = function(spot) return o.pins and Compat.WaypointMethod(spot.map) or nil end,
+        canPin = function(spot) return o.pins and type(spot.map) == "number" and WP().Method() or nil end,
         questMark = questMark, onPin = function(spot, title) ISW.SetPin(spot, title) end,
         onOpen = function(id) ISW.ShowItem(id) end, empty = L["No rows match these filters."],
     }
@@ -848,16 +849,20 @@ end
 --- @return number|nil
 function ISW.ShownItem() return shownItem end
 
---- A pin's click: set a waypoint at `spot`. Answers the method used, or nil.
+--- A pin's click: set a waypoint at `spot` through NS.ItemSearchWaypoint (TomTom's, or Drop
+--- Watcher's arrow; Item Search feedback spec §6), and say so in chat. Answers the method used, or nil.
 --- @param spot table|nil { map, x, y }
 --- @param title string|nil
 --- @return string|nil
 function ISW.SetPin(spot, title)
-    if type(spot) ~= "table" then return nil end
-    local how = Compat.SetWaypoint(spot.map, spot.x, spot.y, title)
+    if type(spot) ~= "table" or type(spot.map) ~= "number" then return nil end
     local zone = Compat.MapName(spot.map) or L["Map %d"]:format(spot.map)
+    local how = WP().Set(spot, title, zone)
     if how then
-        NS.Print(L["Waypoint set: %s (%s, %.1f, %.1f)."]:format(tostring(title or ""), zone, spot.x * 100, spot.y * 100))
+        NS.Print(L["Waypoint set: %s (%s, %.1f, %.1f), shown by %s."]:format(tostring(title or ""), zone,
+            spot.x * 100, spot.y * 100, WP().MethodLabel(how)))
+    elseif WP().Method() == nil then
+        NS.Print(L["No waypoint: TomTom is not loaded and Drop Watcher's arrow is not available."])
     else
         NS.Print(L["No waypoint: this map takes none here."])
     end

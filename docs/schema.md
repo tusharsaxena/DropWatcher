@@ -279,22 +279,26 @@ clients-§4). The tooltip's are read at each hover (`NS.ItemSearchTip.Options`),
 repaint (`NS.ItemSearchWindow.Options`). Step 16 carried `itemSearch.tooltip.dropsShown` into
 `itemSearch.tooltip.rows`; step 17 (ISF-DW-05, `NS.RetireItemSearchRows`) deleted the window's
 `density`, `fontSize`, `columns` and `recent` rows' stored values and `global.itemSearch.recent`.
+The Waypoints tab's keys (ISF-DW-07, feedback spec §6) are new and take no step; the window's lock was
+never a key of its own (it read the main window's `window.locked`), so retiring it deleted nothing.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `itemSearch.tooltip.enabled` | `true` | Item tooltip › Tooltip block | Add Item Search to item tooltips: the block under every item tooltip (`modules/ItemSearchTip.lua`), shown only while ForeverDB is loaded. With `itemSearch.window.enabled` off too, ForeverDB never loads (spec §2); its reaction is `NS.ItemSearch.Refresh` |
-| `itemSearch.tooltip.shiftOnly` | `false` | Item tooltip › Tooltip block | the block only while Shift is held as the tooltip opens |
-| `itemSearch.tooltip.header` | `true` | Item tooltip › Tooltip block | the rule and the `Drop Watcher · Item Search` title, in the skin's accent |
-| `itemSearch.tooltip.hint` | `true` | Item tooltip › Tooltip block | the `<key>: open in Item Search` line; left out while the key is unbound |
 | `itemSearch.tooltip.comparison` | `false` | Item tooltip › Tooltip block | the block on the comparison tooltips too (off, the owner) |
 | `itemSearch.tooltip.rows` | `5` | Item tooltip › Tooltip block | the rows each section shows before "and N more", a whole 1 to 20 (Item Search feedback spec §7); it replaced the drops-only `dropsShown` (3, 1 to 10) through schema step 16. The window is never capped |
-| `itemSearch.myProfessionsOnly` | `true` | Item tooltip › Tooltip block | only the recipes of professions the player has a rank in, in the tooltip (the rest counted on one line) and as the window's Crafting default (feedback spec §4); every recipe passes until the player's skills are read. Never dimmed: it also serves the window |
+| `itemSearch.tooltip.hint` | `true` | Item tooltip › Tooltip block | Show the key hint: the `<key>: open in Item Search` line naming the key bound to Item Search; no line while the key is unbound (feedback spec §1, §7) |
+| `itemSearch.tooltip.shiftOnly` | `false` | Item tooltip › Tooltip block | the block only while Shift is held as the tooltip opens |
+| `itemSearch.tooltip.header` | `true` | Item tooltip › Tooltip block | the rule and the `Drop Watcher · Item Search` title, in the skin's accent |
+| `itemSearch.myProfessionsOnly` | `true` | Item tooltip › Tooltip and window | only the recipes of professions the player has a rank in, in the tooltip (the rest counted on one line) and as the window's Crafting default (feedback spec §4); every recipe passes until the player's skills are read. Never dimmed: it also serves the window |
 | `itemSearch.tooltip.sections.<key>` | `drops`, `vendors`, `quests`, `crafting`, `skinned` `true`; `also` `false` | Item tooltip › Sections | each section's switch: Drops from, Sold by, Quests, Crafting, Skinned from (Item Search feedback spec §7), Reward from / starts quest |
 | `itemSearch.tooltip.hideCompleted` | `true` | Item tooltip › Sections | completed quests left out of the tooltip (the window lists them) |
 | `itemSearch.tooltip.order` | `{ "drops", "vendors", "quests", "crafting", "skinned", "also" }` | Item tooltip › Sections (`map`, `skipRender`) | the order the sections are written in, set by the tab's drag list and written whole; its check takes known sections, each once, at least one. A partial or stale list reads as its known keys then the rest in the default order (`NS.ItemSearchTip.Options`). the CLI shows it as its entry count, as every `map` row |
 | `itemSearch.window.enabled` | `true` | Item Search window › Window | the Item Search window can open; off, an open one closes. Its reaction is `NS.ItemSearch.Refresh` |
 | `itemSearch.window.barColor`, `itemSearch.window.barFromSkin` | `{ r = 0.90, g = 0.75, b = 0.30 }`, `true` | Item Search window › Bars | DROPS FROM's chance bars: the skin's accent while Use the skin's color is on, else the swatch (no alpha) |
-| `itemSearch.window.pins` | `true` | Item Search window › Rows | the waypoint pin on each row with a spot (`C_Map.SetUserWaypoint`, or TomTom's when installed) |
+| `itemSearch.waypoints` | `"auto"` | Waypoints › Waypoints | who draws the way to a pin (Item Search feedback spec §6, `NS.ItemSearchWaypoint.Resolve`): `auto` (Automatic: TomTom when it is loaded, else Drop Watcher's arrow), `tomtom` (TomTom; while it is not loaded, Drop Watcher's arrow) or `arrow` (Drop Watcher's arrow). The client's own user waypoint (`C_Map.SetUserWaypoint`) is never used. Its reaction re-applies the arrow (a choice that hands the way to TomTom takes it down) and repaints the window |
+| `itemSearch.window.pins` | `true` | Waypoints › Waypoints | the map pin on each row of the window with a spot; a click sets a waypoint with the arrow `itemSearch.waypoints` names, and chat says so |
+| `itemSearch.arrow.<key>` | the library's `DEFAULTS`: `style` `"raised"`, `useSkinColors` `true`, `farColor` `{ r = 1, g = 0.82, b = 0, a = 1 }`, `nearColor` `{ r = 0.35, g = 0.80, b = 0.45, a = 1 }`, `scale` `1`; `font` `"Ka0s Prototype"`, `fontFromSkin` `true`, `fontSize` `12`, `fontColor` `{ r = 1, g = 1, b = 1, a = 1 }`, `fontColorFromSkin` `true`, `useClassColorFont` `false`, `fontFlags` `"@skin"`, `fontShadow` `true`, `fontShadowFromSkin` `true`, `textPosition` `"BELOW"`, `showLabel` `false`, `distanceUnits` `"yards"`; `x` `0`, `y` `200`, `lock` `false` | Waypoints › Waypoint arrow, Arrow text, Arrow position | Drop Watcher's arrow's settings (LibKa0s-WaypointArrow-1.0's `WaypointArrowSettings` rows, `settings/ItemSearchArrowRows.lua`), each at the library's own key name, the three companions at their rows' paths plus `FromSkin`; ranges and values are the library's (scale 0.5 to 2, font size 6 to 32, offsets -2000 to 2000), each row checked by its type. `x`, `y` and `lock` are also written by a drag of the arrow, its right-click menu's Lock and Reset position, through the seam. Every row is dimmed while `itemSearch.waypoints` resolves to TomTom |
 
 ### Named state (no row)
 

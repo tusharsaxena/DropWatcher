@@ -13,15 +13,17 @@ local FDB = dofile("tests/_kit/mock_foreverdb.lua")
 local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the Retail case asserts it is absent" or nil
 local RETAIL_ONLY = T.forever and "the Retail profile's absent case; the Forever cases cover WoW Forever" or nil
 
--- The page's rows in declaration order: path, tab, subsection (spec §4.7's table, every row).
+-- The page's rows in declaration order: path, tab, subsection (spec §4.7's table, every row; the
+-- Item Search feedback spec §9's order and its Waypoints tab, ISF-DW-07 and ISF-DW-08). The arrow's
+-- rows are LibKa0s-WaypointArrow-1.0's WaypointArrowSettings, in the library's order.
 local ROWS = {
     { "itemSearch.tooltip.enabled",           "Item tooltip", "Tooltip block" },
-    { "itemSearch.tooltip.shiftOnly",         "Item tooltip", "Tooltip block" },
-    { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
-    { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.comparison",        "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.rows",              "Item tooltip", "Tooltip block" },
-    { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.hint",              "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.shiftOnly",         "Item tooltip", "Tooltip block" },
+    { "itemSearch.tooltip.header",            "Item tooltip", "Tooltip block" },
+    { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.quests",   "Item tooltip", "Sections" },
@@ -33,12 +35,34 @@ local ROWS = {
     { "itemSearch.window.enabled",            "Item Search window", "Window" },
     { "itemSearch.window.barColor",           "Item Search window", "Bars" },
     { "itemSearch.window.barFromSkin",        "Item Search window", "Bars" },
-    { "itemSearch.window.pins",               "Item Search window", "Rows" },
+    { "itemSearch.waypoints",                 "Waypoints", "Waypoints" },
+    { "itemSearch.window.pins",               "Waypoints", "Waypoints" },
+    { "itemSearch.arrow.style",               "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.useSkinColors",       "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.farColor",            "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.nearColor",           "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.scale",               "Waypoints", "Waypoint arrow" },
+    { "itemSearch.arrow.font",                "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontSize",            "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontColor",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.useClassColorFont",   "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontFlags",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontShadow",          "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontFromSkin",        "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontColorFromSkin",   "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.fontShadowFromSkin",  "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.textPosition",        "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.showLabel",           "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.distanceUnits",       "Waypoints", "Arrow text" },
+    { "itemSearch.arrow.x",                   "Waypoints", "Arrow position" },
+    { "itemSearch.arrow.y",                   "Waypoints", "Arrow position" },
+    { "itemSearch.arrow.lock",                "Waypoints", "Arrow position" },
 }
 -- Gone in ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4; schema step 17): the window takes
 -- the main window's font and row height, draws every column, and keeps no recent searches.
+-- Gone in ISF-DW-03 (feedback spec §7, schema step 16): dropsShown, replaced by Rows per section.
 local RETIRED = { "itemSearch.window.density", "itemSearch.window.fontSize", "itemSearch.window.columns",
-    "itemSearch.window.recent" }
+    "itemSearch.window.recent", "itemSearch.tooltip.dropsShown", "itemSearch.window.locked" }
 
 local function profileDefault(NS, path)
     local node = NS.C.PROFILE
