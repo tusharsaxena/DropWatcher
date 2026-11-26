@@ -316,3 +316,16 @@ the code reads every case the design leaves open, module by module, is in
     profession window or the gear verdict is read its confidence is Medium or Low, a Low
     confidence never says Toss, and neither does gear whose gear verdict has not answered yet
     (ITEM-SEARCH-42).
+- **Item Search, owner feedback round 4** (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`):
+  - **"The other faction" is ForeverDB's word for it** (R4-DW-08): Hide the other faction's vendors
+    leaves out a vendor whose ForeverDB faction (`nfac`, Alliance, Horde or both) does not include
+    yours. A vendor ForeverDB names no faction for always shows, even if only one side can buy
+    there, and while the client has not told Drop Watcher your side nothing is hidden.
+  - **No vendor cost without a known price** (the owner skipped the estimate): a Sold by row shows a
+    price only once Drop Watcher saw it at that vendor or ForeverDB records one, so most rows show
+    none until you visit the vendor.
+  - **A quest names one giver** (R4-DW-09): the first giver ForeverDB lists whose name is not a test
+    one, in the tooltip and the window alike. Its zone is yours when it stands there, else the zone
+    with most of its spawns; until ForeverDB_Full loads (the window's first open of a session) a few
+    givers' zones are coarser or missing, in both homes. A long title with a giver and a zone widens
+    the tooltip; nothing is cut.

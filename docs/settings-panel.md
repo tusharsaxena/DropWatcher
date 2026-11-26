@@ -459,7 +459,10 @@ badge, since the schema rows have no indent) and Show recipe skill levels
 bracketed), each
 dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions
 you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
-default).
+default), then Hide the other faction's vendors (`itemSearch.hideOtherFaction`, on, round 4 R4-DW-08:
+the tooltip's Sold by leaves out the vendors only the other faction can buy from and counts them on
+one dim line, and the window's Sold by tab starts with Only my faction on; never dimmed, for the
+same reason; a change moves an open window's filter back to it, as Only professions you know does).
 **Sections:** a switch per section, Drops from, Gathered from (round 3 spec §4.3), Sold by, Quests,
 Crafting, Skinned from (all on) and Reward from / starts quest (off), then Hide completed quests (on,
 dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
