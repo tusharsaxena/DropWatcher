@@ -37,12 +37,13 @@ local _, NS = ...
 --     measuring it up to three times a rebuild from half-finished layouts was the dim ghost line;
 --   * the label line, always (item 14a): "Drop Watcher" in the tooltip label's muted gold, the
 --     verdict badge right after it (round 4, R4-DW-07; the "Show the Keep / Hold / Sell / Toss
---     badge" setting): two filled boxes joined flush, `<icon> <Verdict>` on the verdict's bright
---     tone and the score on its darker shade (Keep green, Hold yellow, Sell amber, Toss red;
---     NS.ItemSearchVerdict, IST.Badge). The boxes are textures and font strings of the tooltip's own,
---     kept like the separator: hung by anchors from the label line, stale on a clear or a hide,
---     claimed again by a refill, off on the next frame when nothing claims them. The label's text
---     ends in a transparent texture escape as wide as the badge, so the tooltip sizes itself to fit.
+--     badge" setting): one rounded pill since R5-DW-02, the verdict's icon and "<Verdict> <score>" in
+--     dark ink on its tone (Keep green, Hold yellow, Sell amber, Toss gray; NS.ItemSearchVerdict,
+--     IST.Badge; see "the verdict badge's frames" below). The pill is textures and font strings of
+--     the tooltip's own, kept like the separator: hung by anchors GAP after the label's own text
+--     (R5-DW-01), stale on a clear or a hide, claimed again by a refill, off on the next frame when
+--     nothing claims them. The label line's right side is a transparent texture escape as wide as
+--     the badge's estimate (IST.Blank), so the tooltip sizes itself to fit; nothing is measured.
 --     The confidence tier is never shown (the owner); it still keeps a Low from saying Toss;
 --   * the badge's reasons (the "Explain the badge" setting, under the badge): its top two and the
 --     largest negative part (NS.ItemSearchVerdict), each "  · <reason>" with the bullet in muted
@@ -315,19 +316,20 @@ local function verdictWord(verdict)
     return L["Hold"]
 end
 
--- The ink on a box of the color r, g, b: the skin's plain text tone on a mid or dark tone, the tone's own deep shade on
--- a light one (Hold's yellow), so the word and the score read on every verdict.
-local function inkOf(r, g, b)
-    if 0.299 * r + 0.587 * g + 0.114 * b > 0.6 then return r * 0.2, g * 0.2, b * 0.2 end
-    return rgb("plain")
-end
-
+-- One pill's parts (R5-DW-02): the fill in the verdict's tone, the icon and the text in a deep shade
+-- of it (C.ITEM_SEARCH.BADGE.INK times the tone, so dark ink on every verdict, as ItemTree's), and
+-- the room it takes: GAP, PAD either side, the icon and its gap, and the text at a fixed EM per
+-- character of FONT (an estimate for the tooltip's width alone: the pill itself is laid out by
+-- anchors, never measured).
 local function badgeText(v)
+    local B = C.ITEM_SEARCH.BADGE
     local look = VERDICT_LOOK[v.verdict] or VERDICT_LOOK.hold
-    local ir, ig, ib = inkOf(rgb(look.tone))
-    local path = NS.Icon(look.icon)
-    local mark = path and (NS.TipMarks.Escape(path, ir, ig, ib, C.ITEM_SEARCH.BADGE.ICON) .. " ") or ""
-    return { word = mark .. verdictWord(v.verdict), score = tostring(v.score), tone = look.tone, ink = { ir, ig, ib } }
+    local r, g, b = rgb(look.tone)
+    local word, score = verdictWord(v.verdict), tostring(v.score)
+    local text = word .. " " .. score
+    local width = B.GAP + 2 * B.PAD + B.ICON + B.ICON_GAP + math.ceil(#text * B.FONT * B.EM)
+    return { word = word, score = score, text = text, tone = look.tone, icon = NS.Icon(look.icon),
+        fill = { r, g, b }, ink = { r * B.INK, g * B.INK, b * B.INK }, width = width }
 end
 
 -- A memo's branch under `key`, made on first use.
@@ -363,10 +365,10 @@ function IST.Blank(width, height)
     return out
 end
 
---- The badge's parts for a verdict answer (NS.ItemSearch.Verdict's), round 4 R4-DW-07: `{ word,
---- score, tone, ink }`, `word` the icon (C.ITEM_SEARCH.BADGE.ICON; none without the media library)
---- and the verdict's word, `score` the number, `tone` the box's C.TONE key and `ink` the texts' r,
---- g, b on it. No confidence tier. The same table for the same verdict and score until the skin's
+--- The badge's parts for a verdict answer (NS.ItemSearch.Verdict's), one pill since R5-DW-02: `{ word,
+--- score, text, tone, icon, fill, ink, width }`, `text` "<Verdict> <score>", `icon` the verdict's media
+--- icon's path (nil without the library), `fill` the pill's r, g, b (its `tone`, a C.TONE key), `ink`
+--- the icon's and the text's, `width` the room the tooltip reserves for it. No confidence tier. The same table for the same verdict and score until the skin's
 --- looks change: read, never changed.
 --- @param v table
 --- @return table
@@ -930,48 +932,120 @@ function IST.RuleOf(tip)
     return st and st.tex or nil
 end
 
--- ── the verdict badge's frames (round 4, R4-DW-07) ─────────────────────────────────────────
+-- ── the verdict badge's frames (round 4 R4-DW-07; one rounded pill since R5-DW-02) ──────────
+-- One pill like ItemTree's: the verdict's icon and "<Verdict> <score>" in dark ink on a fill of the
+-- verdict's tone. The fill is LibKa0s' rounded `Ka0s Glass` background (32 px art, an anti-aliased
+-- radius of 8: its corner cells are the art's outer quarter) cut by texture coordinates into four
+-- corners RADIUS square, two edges and a middle, so its corners are smooth at any size, the owner's
+-- "rough edged" square boxes gone; the client's plain white square without the library. The text is
+-- in the skin's body face at FONT points with no outline and no shadow, on a font object of its own
+-- where the client makes one (a 12.0.7 client draws only a font object's shadow). Laid out by
+-- anchors alone (R5-DW-01): the caller hangs the icon (IST.PlaceBadge), the text hangs from the
+-- icon and sizes itself, and the fill's pieces hang from the icon's left and the text's right, so the
+-- post call measures nothing and the label never runs under the pill.
+
+local Q = 0.25
+local PIECES = {
+    { "tl", 0, Q, 0, Q }, { "tr", 1 - Q, 1, 0, Q }, { "bl", 0, Q, 1 - Q, 1 }, { "br", 1 - Q, 1, 1 - Q, 1 },
+    { "l", 0, Q, Q, 1 - Q }, { "r", 1 - Q, 1, Q, 1 - Q }, { "c", Q, 1 - Q, 0, 1 },
+}
+
+--- The pill's fill art: LibKa0s' `Ka0s Glass` background, else the client's plain white square.
+--- @return string
+function IST.BadgeArt()
+    return NS.MediaBackground and NS.MediaBackground("Ka0s Glass") or IST.RULE_TEXTURE
+end
 
 local function showBadge(st, on)
-    for _, r in ipairs({ st.boxL, st.boxR, st.textL, st.textR }) do
-        if on then r:Show() else r:Hide() end
+    for _, r in ipairs(st.regions) do
+        if on and (r ~= st.icon or st.iconOn) then r:Show() else r:Hide() end
     end
 end
 
 local function hideBadge(st) showBadge(st, false) end
 
-local function boxOf(tip)
-    local t = tip:CreateTexture(nil, "ARTWORK")
-    if type(t) ~= "table" then return nil end
-    t:SetTexture(IST.RULE_TEXTURE)
-    snapped(t)
-    t:SetHeight(C.ITEM_SEARCH.BADGE.HEIGHT)
-    return t
+-- The text's face: the skin's body font at FONT points, no outline, no shadow; repainted on a skin
+-- switch (NS.SkinPaint).
+local function paintFace(f)
+    local face = NS.Skin and type(NS.Skin.GetFont) == "function" and NS.Skin.GetFont() or nil
+    if type(face) ~= "string" and type(f.GetFont) == "function" then face = f:GetFont() end
+    if type(face) ~= "string" then face = STANDARD_TEXT_FONT end
+    if type(face) == "string" then f:SetFont(face, C.ITEM_SEARCH.BADGE.FONT, "") end
+    if type(f.SetShadowOffset) == "function" then f:SetShadowOffset(0, 0) end
 end
 
-local function textOf(tip, box)
-    local fs = tip:CreateFontString(nil, "OVERLAY", "GameTooltipText")
-    if type(fs) ~= "table" then return nil end
-    fs:SetPoint("CENTER", box, "CENTER", 0, 0)
-    return fs
+local fontObject   -- nil: not made yet; false: the client makes none
+local function badgeFont(fs)
+    if fontObject == nil then
+        fontObject = false
+        if type(CreateFont) == "function" then
+            local obj = CreateFont("DropWatcherItemSearchBadgeFont")
+            if type(obj) == "table" then
+                fontObject = NS.SkinPaint(obj, paintFace)
+            end
+        end
+    end
+    if fontObject then fs:SetFontObject(fontObject) else NS.SkinPaint(fs, paintFace) end
+end
+
+-- The fill's seven pieces on `parent`, onto `st`, hung from the icon's left and the text's right.
+local function makeFill(parent, st)
+    local B = C.ITEM_SEARCH.BADGE
+    local art, R, H = IST.BadgeArt(), B.RADIUS, B.HEIGHT
+    local P = {}
+    for _, p in ipairs(PIECES) do
+        local t = parent:CreateTexture(nil, "ARTWORK")
+        if type(t) ~= "table" then return false end
+        t:SetTexture(art)
+        if type(t.SetTexCoord) == "function" then t:SetTexCoord(p[2], p[3], p[4], p[5]) end
+        P[p[1]] = t
+        st.regions[#st.regions + 1] = t
+    end
+    for _, k in ipairs({ "tl", "tr", "bl", "br" }) do P[k]:SetSize(R, R) end
+    P.tl:SetPoint("TOPLEFT", st.icon, "LEFT", -B.PAD, H / 2)
+    P.bl:SetPoint("BOTTOMLEFT", st.icon, "LEFT", -B.PAD, -H / 2)
+    P.tr:SetPoint("TOPRIGHT", st.text, "RIGHT", B.PAD, H / 2)
+    P.br:SetPoint("BOTTOMRIGHT", st.text, "RIGHT", B.PAD, -H / 2)
+    P.l:SetPoint("TOPLEFT", P.tl, "BOTTOMLEFT"); P.l:SetPoint("BOTTOMRIGHT", P.bl, "TOPRIGHT")
+    P.r:SetPoint("TOPLEFT", P.tr, "BOTTOMLEFT"); P.r:SetPoint("BOTTOMRIGHT", P.br, "TOPRIGHT")
+    P.c:SetPoint("TOPLEFT", P.tl, "TOPRIGHT"); P.c:SetPoint("BOTTOMRIGHT", P.br, "BOTTOMLEFT")
+    st.piece = P
+    return true
 end
 
 --- The verdict badge's regions on `parent` (a tooltip, or the Item Search window's verdict panel,
---- R4-DW-11: one builder, so both draw the same badge): `{ boxL, boxR, textL, textR }`, the score's
---- box, the word's box joined flush to its left, and each one's text centered on it, hidden. The
---- caller anchors `boxR` and fills them with IST.FillBadge. Nil for a parent that makes no texture
---- or font string.
+--- R4-DW-11: one builder, so both draw the same pill): `{ icon, text, piece, regions }`, `piece` the
+--- fill's seven textures by name (tl, tr, bl, br, l, r, c), hidden. The caller hangs it with
+--- IST.PlaceBadge and fills it with IST.FillBadge. Nil for a parent that makes no texture or font
+--- string.
 --- @param parent table
 --- @return table|nil
 function IST.MakeBadge(parent)
     if type(parent.CreateTexture) ~= "function" or type(parent.CreateFontString) ~= "function" then return nil end
-    local boxL, boxR = boxOf(parent), boxOf(parent)
-    local textL, textR = boxL and textOf(parent, boxL), boxR and textOf(parent, boxR)
-    if not (textL and textR) then return nil end
-    boxL:SetPoint("RIGHT", boxR, "LEFT", 0, 0)
-    local st = { boxL = boxL, boxR = boxR, textL = textL, textR = textR }
+    local B = C.ITEM_SEARCH.BADGE
+    local mark = parent:CreateTexture(nil, "OVERLAY")
+    local text = parent:CreateFontString(nil, "OVERLAY", "GameTooltipText")
+    if type(mark) ~= "table" or type(text) ~= "table" then return nil end
+    mark:SetSize(B.ICON, B.ICON)
+    text:SetPoint("LEFT", mark, "RIGHT", B.ICON_GAP, 0)
+    if type(text.SetWordWrap) == "function" then text:SetWordWrap(false) end
+    badgeFont(text)
+    local st = { icon = mark, text = text, regions = { mark, text } }
+    if not makeFill(parent, st) then return nil end
     hideBadge(st)
     return st
+end
+
+--- Hang a badge (IST.MakeBadge's) with its left edge at `x`, `y` from `relPoint` of `rel`: the icon's
+--- left is PAD further in, and everything else follows it.
+--- @param st table
+--- @param rel table
+--- @param relPoint string
+--- @param x number
+--- @param y number|nil
+function IST.PlaceBadge(st, rel, relPoint, x, y)
+    st.icon:ClearAllPoints()
+    st.icon:SetPoint("LEFT", rel, relPoint, x + C.ITEM_SEARCH.BADGE.PAD, y or 0)
 end
 
 --- Show or hide a badge's regions (IST.MakeBadge's).
@@ -992,39 +1066,27 @@ local function badgeOf(tip)
     return st
 end
 
--- A font string's drawn width, rounded up to a whole unit (0 when the client gives none).
-local function textWidth(fs)
-    local fn = fs.GetUnboundedStringWidth or fs.GetStringWidth
-    local w = type(fn) == "function" and fn(fs) or nil
-    if Compat.IsSecret(w) or type(w) ~= "number" then return 0 end
-    return math.ceil(w)
-end
-
--- Fill a box and its text with one part: the text in `ink`, the box tinted r, g, b, PAD either side.
-local function fillPart(box, fs, text, ink, r, g, b)
-    fs:SetText(text)
-    fs:SetTextColor(ink[1], ink[2], ink[3])
-    box:SetVertexColor(r, g, b)
-    local w = textWidth(fs) + 2 * C.ITEM_SEARCH.BADGE.PAD
-    box:SetWidth(w)
-    return w
-end
-
--- Draw `badge` (IST.Badge's parts) on a badge (IST.MakeBadge's), again only when it changed (the parts
--- are memoized, so a warm hover sets nothing). Answers the width to reserve: GAP and both boxes.
+-- Draw `badge` (IST.Badge's parts) on a badge, again only when it changed (the parts are memoized, so
+-- a warm hover sets nothing). Answers the room to reserve (`badge.width`).
 local function fillBadge(st, badge)
-    if st.badge == badge then return st.width end
-    local r, g, b = rgb(badge.tone)
-    local k = C.ITEM_SEARCH.BADGE.DARK
-    local wl = fillPart(st.boxL, st.textL, badge.word, badge.ink, r, g, b)
-    local wr = fillPart(st.boxR, st.textR, badge.score, badge.ink, r * k, g * k, b * k)
-    st.badge, st.width = badge, C.ITEM_SEARCH.BADGE.GAP + wl + wr
-    return st.width
+    if st.badge == badge then return badge.width end
+    local ink, fill = badge.ink, badge.fill
+    st.iconOn = badge.icon ~= nil
+    if badge.icon then
+        st.icon:SetTexture(badge.icon)
+        st.icon:SetVertexColor(ink[1], ink[2], ink[3])
+    end
+    st.icon:SetWidth(badge.icon and C.ITEM_SEARCH.BADGE.ICON or 1)
+    st.text:SetText(badge.text)
+    st.text:SetTextColor(ink[1], ink[2], ink[3])
+    for _, t in pairs(st.piece) do t:SetVertexColor(fill[1], fill[2], fill[3]) end
+    st.badge = badge
+    return badge.width
 end
 
---- Draw `badge` (IST.Badge's parts) on `st` (IST.MakeBadge's regions): the word's box in the
---- verdict's bright tone, the score's in C.ITEM_SEARCH.BADGE.DARK times it. Sets nothing when `st`
---- already shows those parts. Answers the badge's width with C.ITEM_SEARCH.BADGE.GAP before it.
+--- Draw `badge` (IST.Badge's parts) on `st` (IST.MakeBadge's regions): the fill in the verdict's tone,
+--- the icon and "<Verdict> <score>" in its ink. Sets nothing when `st` already shows those parts.
+--- Answers the room the tooltip reserves for it (C.ITEM_SEARCH.BADGE.GAP included).
 --- @param st table
 --- @param badge table
 --- @return number
@@ -1032,34 +1094,22 @@ function IST.FillBadge(st, badge)
     return fillBadge(st, badge)
 end
 
--- The label's text with the badge's width reserved at its end. Kept per width.
-local labelMemo = {}
-
-local function reservedLabel(text, width)
-    local byText = branch(labelMemo, text)
-    local out = byText[width]
-    if out then return out end
-    out = text .. IST.Blank(width, C.ITEM_SEARCH.BADGE.HEIGHT)
-    byText[width] = out
-    return out
-end
-
--- The block claims the badge for its label line `n`: the score's box hung from the line's right
--- end (the end of the reserved width), anchored again only when the line moved, and shown.
+-- The block claims the badge for its label line `n`: the pill hung GAP to the right of the label's
+-- own text (the line's left font string ends where "Drop Watcher" ends; the room is the line's right
+-- text), hung again only when the line moved, and shown.
 local function claimBadge(tip, st, n)
     st.stale = false
     local fs = n and Compat.TooltipLeftLine(tip, n)
     if not fs then st.line = nil; hideBadge(st); return end
     if st.anchored ~= n then
-        st.boxR:ClearAllPoints()
-        st.boxR:SetPoint("RIGHT", fs, "RIGHT", 0, 0)
+        IST.PlaceBadge(st, fs, "RIGHT", C.ITEM_SEARCH.BADGE.GAP, 0)
         st.anchored = n
     end
     st.line = n
     showBadge(st, true)
 end
 
---- The tooltip's badge `{ boxL, boxR, textL, textR }`, or nil before its first badge (for the tests
+--- The tooltip's badge `{ icon, text, piece, regions }`, or nil before its first badge (for the tests
 --- and diagnostics).
 --- @param tip table
 --- @return table|nil
@@ -1138,12 +1188,13 @@ end
 -- ── painting and the hook ───────────────────────────────────────────────────────────────────
 
 -- Write one line: AddDoubleLine with a right side, else AddLine (no wrap), each in its tone; `text`
--- in place of the line's own when given (the label with the badge's width reserved).
-local function addTo(tip, line, text)
+-- and `right` in place of the line's own when given (the label's right side: the badge's room).
+local function addTo(tip, line, text, right)
     local r, g, b = rgb(line.tone)
-    if line.right and type(tip.AddDoubleLine) == "function" then
+    right = right or line.right
+    if right and type(tip.AddDoubleLine) == "function" then
         local rr, rg, rb = rgb(line.rightTone)
-        tip:AddDoubleLine(text or line.text, line.right, r, g, b, rr, rg, rb)
+        tip:AddDoubleLine(text or line.text, right, r, g, b, rr, rg, rb)
     else
         tip:AddLine(text or line.text, r, g, b, false)
     end
@@ -1171,7 +1222,7 @@ function IST.Paint(tip, lines, filling)
     for _, line in ipairs(lines) do
         bt = line.badge and badgeOf(tip) or bt
         if line.badge and bt then
-            addTo(tip, line, reservedLabel(line.text, fillBadge(bt, line.badge)))
+            addTo(tip, line, nil, IST.Blank(fillBadge(bt, line.badge), C.ITEM_SEARCH.BADGE.HEIGHT))
             claimBadge(tip, bt, lineCount(tip))
         else
             addTo(tip, line)

@@ -877,7 +877,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
 | `ISW.ViewState`, `ISW.ShownTab`, `ISW.MatchRows`, `ISW.TableRows` (`modules/ItemSearchWindow.lua`) | read the Item Search window's session view state, the tab on screen and the rows its list and table draw (ISF-DW-05, ISF-DW-06) |
 | `ISG.Rows` (`modules/ItemSearchGrid.lua`) | reads the rows a table draws, in order |
-| `IST.RuleOf`, `IST.BadgeOf`, `IST.ColumnsOf`, `IST.ReasonLines` (`modules/ItemSearchTip.lua`) | read a tooltip's separator texture, its verdict badge's boxes and texts (R4-DW-07), its crafting rows' profession column (R5-DW-10), and a verdict's reason lines as the block writes them (ISR3-DW-02, ISR3-DW-05) |
+| `IST.RuleOf`, `IST.BadgeOf`, `IST.ColumnsOf`, `IST.ReasonLines` (`modules/ItemSearchTip.lua`) | read a tooltip's separator texture, its verdict badge's pill (R4-DW-07, R5-DW-02), its crafting rows' profession column (R5-DW-10), and a verdict's reason lines as the block writes them (ISR3-DW-02, ISR3-DW-05) |
 
 ## The four suites, and which checkpoint each gates
 

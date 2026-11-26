@@ -145,6 +145,12 @@ files["modules/WindowRows.lua"] = {
   read_globals = { "CreateFont" },
 }
 
+-- modules/ItemSearchTip.lua's verdict badge draws its text on a font object of its own (R5-DW-02),
+-- so a 12.0.7 client draws no shadow under the dark ink: the same constructor.
+files["modules/ItemSearchTip.lua"] = {
+  read_globals = { "CreateFont" },
+}
+
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;
 -- neither body reads the receiver.
 files["settings/Slash.lua"] = {

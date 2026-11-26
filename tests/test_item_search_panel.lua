@@ -64,10 +64,15 @@ test("verdict panel: shown under Matches while you hold the item in your bags, w
     assertEqual(f.verdict.head.note:GetText(), "You have 2")
     local b = f.verdict.dwBreakdown
     local badge = NS.ItemSearchTip.Badge(b)
-    -- the same badge as the tooltip's: IST.Badge's parts, drawn by IST.FillBadge on IST.MakeBadge's regions
-    assertEqual(f.verdict.badge.textL:GetText(), badge.word)
-    assertEqual(f.verdict.badge.textR:GetText(), tostring(b.score))
-    assertTrue(f.verdict.badge.boxL:IsShown() and f.verdict.badge.boxR:IsShown(), "both boxes shown")
+    -- the same pill as the tooltip's (R5-DW-02): IST.Badge's parts, drawn by IST.FillBadge on IST.MakeBadge's
+    -- regions, hung by its left edge (nothing measured)
+    local st = f.verdict.badge
+    assertEqual(st.text:GetText(), badge.text)
+    assertEqual(badge.text, badge.word .. " " .. tostring(b.score))
+    assertTrue(st.text:IsShown() and st.piece.c:IsShown() and st.piece.tl:IsShown(), "the pill shown")
+    local B = NS.Constants.ITEM_SEARCH.BADGE
+    local p = st.icon.__points[1]
+    assertTrue(p[1] == "LEFT" and p[2] == f.verdict and p[3] == "TOPLEFT" and p[4] == 4 + B.PAD, "hung by its left edge: " .. table.concat({ tostring(p[1]), tostring(p[2] == f.verdict), tostring(p[3]), tostring(p[4]) }, ","))
     local bottom = pointOf(f.matchScroll, "BOTTOMLEFT")
     assertTrue(bottom[2] == f.verdict, "the Matches list ends above the panel")
     assertTrue(#P.Lines(f) >= 2, "the breakdown's lines")

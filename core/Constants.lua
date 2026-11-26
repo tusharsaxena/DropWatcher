@@ -513,10 +513,12 @@ C.ITEM_SEARCH = {
     -- right, as wide as the longest profession name shown at CHAR units a character (a fixed estimate:
     -- the post call never measures text), GAP more between it and the skill levels.
     CRAFT_COL   = { CHAR = 7, GAP = 10 },
-    -- The tooltip's verdict badge (round 4, R4-DW-07): two filled boxes joined flush right after the
-    -- "Drop Watcher" label, the word's in the verdict's bright tone and the score's in DARK times it,
-    -- HEIGHT tall, PAD either side of each text, GAP from the label; its icon ICON pixels square.
-    BADGE       = { HEIGHT = 16, PAD = 4, GAP = 6, DARK = 0.5, ICON = 12 },
+    -- The verdict badge (round 4 R4-DW-07; one rounded pill since R5-DW-02), the tooltip's and the
+    -- verdict panel's: HEIGHT tall with RADIUS corners, PAD inside either end, GAP from the label; the
+    -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's
+    -- tone; EM the width a character is reckoned at, in FONT units, for the room the tooltip reserves.
+    BADGE       = { HEIGHT = 16, RADIUS = 5, PAD = 6, GAP = 6, ICON = 12, ICON_GAP = 3, FONT = 11, INK = 0.15,
+        EM = 0.62 },
     -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
     -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
     -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most

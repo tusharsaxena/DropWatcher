@@ -8,8 +8,8 @@ local _, NS = ...
 -- so it works with the bank closed; what you wear is not held. Otherwise it hides and the Matches
 -- list takes the full height again.
 --
--- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same two
--- filled boxes, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge), then one line
+-- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same pill,
+-- R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge, .PlaceBadge), then one line
 -- per part that counted, with its points, in the order the score adds them: the quests by quest; the
 -- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
 -- shown when it was hit; gear; the dampers; the 0..100 clamp, the poor-quality cap and the quest
@@ -233,10 +233,11 @@ local function paintBadge(p, b)
     local st = p.badge
     if not st then return end
     tip.FillBadge(st, tip.Badge(b))
-    local wl = st.boxL:GetWidth()
-    wl = type(wl) == "number" and wl or 0
-    st.boxR:ClearAllPoints()
-    st.boxR:SetPoint("TOPLEFT", p, "TOPLEFT", 4 + wl, -BADGE_TOP)
+    -- hung once by its left edge (R5-DW-02): the pill sizes itself from its text, nothing is measured
+    if not st.dwPlaced then
+        tip.PlaceBadge(st, p, "TOPLEFT", 4, -(BADGE_TOP + B.HEIGHT / 2))
+        st.dwPlaced = true
+    end
     tip.ShowBadge(st, true)
 end
 

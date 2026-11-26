@@ -1227,8 +1227,8 @@ Total.
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
 - compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)
 - verdict: the reasons always carry the largest negative part, so the shown parts explain the score
-- verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)

@@ -5162,6 +5162,19 @@ seconds and move between bag slots → no flicker, no profession left behind on 
 Crafting rows. Fail: a profession missing, glued to the skill levels (`95 · Alchemy`), overlapping
 them, or ragged from row to row. Result:
 
+**ITEM-SEARCH-60. The badge: one smooth pill that never covers the label (R5-DW-01, R5-DW-02).**
+After a full client restart, hover Peacebloom → `Drop Watcher`, then a gap, then one pill: the lock
+and `Keep 65` (or your score) in dark ink on a green fill, the corners smoothly rounded (no steps or
+jagged edges), the text clean with no outline or shadow, the pill no taller than the line. The
+`Drop Watcher` text is never under the pill. Set the UI scale to its lowest and its highest
+(Options → Graphics → UI Scale) and hover again each time → still a gap, still no overlap. Hover a
+Hold (yellow fill), a Sell (amber) and a Toss (gray) item → each in dark readable ink. Open the Item
+Search window on a held item → the verdict panel's badge is the same pill. Compare with ItemTree's
+badge at the bottom of the tooltip if you use it → a similar look. Switch skin → the text takes the
+skin's font and keeps its colors. This replaces ITEM-SEARCH-52's two boxes. Fail: the label under
+the pill, square or jagged corners, white or shadowed text, or a pill sticking out of the tooltip's
+right edge. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
