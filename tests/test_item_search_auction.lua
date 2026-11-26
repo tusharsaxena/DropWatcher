@@ -354,3 +354,15 @@ test("auction settings: the Auction prices block follows the whole Tooltip block
     end
     assertTrue(seen["Item tooltip / Auction prices"] == true, "the Auction prices block")
 end, FOREVER_ONLY)
+
+test("auction settings: the badge row says the badge sits on the tooltip's right side (R5-DW-12)", function()
+    local NS = enabled()
+    local badge
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("itemSearch")) do
+        if row.path == "itemSearch.tooltip.badge" then badge = row end
+    end
+    assertTrue(badge ~= nil, "the badge row")
+    -- red under: "Right after the block's Drop Watcher label", the left anchor R5-DW-12 retired
+    assertTrue(badge.tooltip:find("Right after", 1, true) == nil, badge.tooltip)
+    assertTrue(badge.tooltip:find("on the tooltip's right side", 1, true) ~= nil, badge.tooltip)
+end, FOREVER_ONLY)
