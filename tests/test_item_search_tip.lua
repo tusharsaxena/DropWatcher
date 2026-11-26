@@ -427,6 +427,15 @@ test("item search tip: recipe rows show their skill breakpoints in their hues, m
     IST.SkillText(row)
     IS.SkillParts = real
     assertEqual(calls, 1, "a skin switch empties the memo")
+    -- round 4 (R4-DW-05): the memo is per recipe AND band, so a skill-up redraws the cue
+    local banded = {}
+    for k, v in pairs(row) do banded[k] = v end
+    banded.rank = (banded.yellow or 1)
+    local before = IST.SkillText(banded)
+    assertTrue(before:find("[" .. banded.yellow .. "]", 1, true) ~= nil, "the band bracketed: " .. before)
+    banded.rank = banded.gray
+    local after = IST.SkillText(banded)
+    assertTrue(after ~= before and after:find("[" .. banded.gray .. "]", 1, true) ~= nil, "a new band, a new string: " .. after)
     -- Show recipe skill levels off: today's right side, the profession, muted
     local tip = tdp.tooltip("GameTooltip")
     tipSettings(NS).craftSkill = false

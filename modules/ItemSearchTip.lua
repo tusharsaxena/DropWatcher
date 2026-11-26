@@ -234,24 +234,30 @@ function IST.CraftMark(row)
     return icon(g.icon, tone, g.fallback, C.ITEM_SEARCH.GLYPH_SIZE)
 end
 
---- A crafting row's skill breakpoints as one string, each part in its skill-up hue (IS.SkillParts,
---- the window's Skill column's), memoized per recipe: the breakpoints are static and the hues
---- change only with the skin (IST.ForgetLooks). Nil for a recipe with no breakpoints.
+--- A crafting row's skill breakpoints as one string, each part in its skill-up hue and your band
+--- bracketed (IS.SkillParts, the window's Skill column's), memoized per recipe and band (IS.SkillBand,
+--- round 4 R4-DW-05): the breakpoints are static, the band moves with your rank and the hues change
+--- only with the skin (IST.ForgetLooks). Nil for a recipe with no breakpoints.
 --- @param row table a crafting row
 --- @return string|nil
 function IST.SkillText(row)
     local spell = row.spell
-    local memo
-    if spell ~= nil then memo = partsMemo[spell] end
-    if memo == false then return nil end
-    if memo then return memo end
+    local band = IS.SkillBand(row)
+    local bands
+    if spell ~= nil then
+        bands = partsMemo[spell]
+        if not bands then bands = {}; partsMemo[spell] = bands end
+        local memo = bands[band]
+        if memo == false then return nil end
+        if memo then return memo end
+    end
     local parts = IS.SkillParts(row)
     local text
     for _, p in ipairs(parts) do
         local part = colored(p.text, p.tone)
         text = text and (text .. " " .. part) or part
     end
-    if spell ~= nil then partsMemo[spell] = text or false end
+    if bands then bands[band] = text or false end
     return text
 end
 

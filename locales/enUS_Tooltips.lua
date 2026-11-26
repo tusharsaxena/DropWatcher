@@ -767,7 +767,7 @@ L["the profession it belongs to"] = "the profession it belongs to"
 L["how many of this item one craft takes"] = "how many of this item one craft takes"
 L["what it makes; hover it for the item"] = "what it makes; hover it for the item"
 L["Skill"] = "Skill"
-L["its skill-up breakpoints: orange, yellow, green, gray"] = "its skill-up breakpoints: orange, yellow, green, gray"
+L["where orange, yellow, green and gray start; your band in brackets"] = "where orange, yellow, green and gray start; your band in brackets"
 L["known; else where to learn it (a trainer, or the recipe item's best vendor, quest or drop); or the profession you lack"] =
     "known; else where to learn it (a trainer, or the recipe item's best vendor, quest or drop); or the profession you lack"
 L["Only my professions"] = "Only my professions"

@@ -521,8 +521,8 @@ L["At the right of the block's Drop Watcher line, say what to do with the item: 
 L["Explain the badge"] = "Explain the badge"
 L["Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."] =
     "Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."
-L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."] =
-    "On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."
+L["On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."] =
+    "On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"
 L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."] =
     "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."

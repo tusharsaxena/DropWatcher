@@ -455,7 +455,8 @@ verdict, its 0 to 100 score and its confidence at the right of the block's "Drop
 Explain the badge (`itemSearch.tooltip.reasons`, on: up to two reason lines and, below High
 confidence, the hint; dimmed while the badge is off as well, the page's way of setting it under the
 badge, since the schema rows have no indent) and Show recipe skill levels
-(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues), each
+(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues, your band
+bracketed), each
 dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions
 you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
 default).

@@ -1080,7 +1080,7 @@ Total.
 - item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 
-### test_item_search_tabs.lua (19)
+### test_item_search_tabs.lua (20)
 
 - item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all
 - item search tabs: each tab draws exactly the spec's columns, less the two with no client data
@@ -1099,6 +1099,7 @@ Total.
 - item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)
 - item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins
 - item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item
+- item search cells: the Skill cue: the orange start always, your band bracketed and bright, the rest dimmed
 - item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip
 - item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank
 
@@ -3458,7 +3459,7 @@ Total.
 | test_item_search.lua | 21 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 8 |
-| test_item_search_tabs.lua | 18 |
+| test_item_search_tabs.lua | 19 |
 | test_item_search_key.lua | 4 |
 | test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 14 |
@@ -3559,4 +3560,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 120 |
-| **Total** | **2846** |
+| **Total** | **2847** |

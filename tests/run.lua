@@ -312,6 +312,15 @@ Kit.skinValues = {
           why = "a recipe's green (easy) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
         { file = "core/Constants.lua", substring = "skillGray   = {",
           why = "a recipe's gray (trivial) skill-up mark on Item Search's Crafting rows, the client's own hue", cause = "MC" },
+        -- Item Search round 4 (R4-DW-05): the same hues dimmed, the breakpoints outside your band.
+        { file = "core/Constants.lua", substring = "skillOrangeDim = {",
+          why = "a recipe's orange start dimmed while your rank is in another band, the client's hue", cause = "MC" },
+        { file = "core/Constants.lua", substring = "skillYellowDim = {",
+          why = "a recipe's yellow start dimmed while your rank is in another band, the client's hue", cause = "MC" },
+        { file = "core/Constants.lua", substring = "skillGreenDim  = {",
+          why = "a recipe's green start dimmed while your rank is in another band, the client's hue", cause = "MC" },
+        { file = "core/Constants.lua", substring = "skillGrayDim   = {",
+          why = "a recipe's gray start dimmed while your rank is in another band, the client's hue", cause = "MC" },
         -- Item Search round 4 (R4-DW-01): each drop source Type's hue, a meaning table like the
         -- skill-up hues' (skinning-§9 Meaning colors).
         { file = "core/Constants.lua", substring = "typeCreature  = {",

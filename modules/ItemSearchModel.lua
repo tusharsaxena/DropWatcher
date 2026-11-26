@@ -298,21 +298,61 @@ function IS.SkillColor(rank, yellow, gray)
     return "orange"
 end
 
---- A recipe's breakpoints as colored parts: orange (its minimum, only above 1: the shipped table's
---- 1 is a placeholder), yellow, green and gray, each `{ text, tone }` (a C.TONE key); `{}` without
---- breakpoints. The window's Skill column draws them (NS.ItemSearchCells.SkillParts is this) and so
---- does the tooltip's crafting row (round 3 spec §4.2, item 4).
+-- A recipe's breakpoints, its orange start first (the minimum, 1 when the row has none), or nil
+-- without yellow and gray.
+local function breakpoints(r)
+    local yellow, gray = num(r.yellow), num(r.gray)
+    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return nil end
+    return num(r.min) or 1, yellow, num(r.green), gray
+end
+
+--- The band the row's rank (`r.rank`) is in, by the breakpoints IS.SkillParts draws: 0 with no rank
+--- or no breakpoints, 5 below the orange start, else 1 orange, 2 yellow, 3 green, 4 gray (the highest
+--- start at or under the rank, so equal starts answer the later band). The tooltip keys its memo by it.
 --- @param r table a crafting row
+--- @return number
+function IS.SkillBand(r)
+    local rank = num(r.rank)
+    local min, yellow, green, gray = breakpoints(r)
+    if not (rank and min) then return 0 end
+    if rank < min then return 5 end
+    if rank >= gray then return 4 end
+    if green and rank >= green then return 3 end
+    if rank >= yellow then return 2 end
+    return 1
+end
+
+-- The parts' tones, full and dimmed, in band order (orange, yellow, green, gray).
+local PART_TONE = { "skillOrange", "skillYellow", "skillGreen", "skillGray" }
+local PART_DIM = { "skillOrangeDim", "skillYellowDim", "skillGreenDim", "skillGrayDim" }
+
+local function part(out, value, band, at)
+    if band == 0 then
+        out[#out + 1] = { text = tostring(value), tone = PART_TONE[at] }
+    elseif band == at or (band == 5 and at == 1) then
+        out[#out + 1] = { text = "[" .. value .. "]", tone = band == 5 and "red" or PART_TONE[at] }
+    else
+        out[#out + 1] = { text = tostring(value), tone = PART_DIM[at] }
+    end
+end
+
+--- A recipe's breakpoints as colored parts (round 4, R4-DW-05, the owner's "Orange start +
+--- highlight"): the orange start always (the minimum, 1 for a trainer's placeholder), then where
+--- yellow, green and gray start, each `{ text, tone }` (a C.TONE key); `{}` without breakpoints. With
+--- the row's rank known, the band it is in is bracketed at full brightness and the rest dimmed, and a
+--- rank below the start draws the start red; no rank number is shown. The window's Skill column draws
+--- them (NS.ItemSearchCells.SkillParts is this) and so does the tooltip's crafting row.
+--- @param r table a crafting row (`min`, `yellow`, `green`, `gray`, `rank`)
 --- @return table
 function IS.SkillParts(r)
     local out = {}
-    local yellow, gray = num(r.yellow), num(r.gray)
-    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return out end
-    local min = num(r.min)
-    if min and min > 1 then out[#out + 1] = { text = tostring(min), tone = "skillOrange" } end
-    out[#out + 1] = { text = tostring(yellow), tone = "skillYellow" }
-    if num(r.green) then out[#out + 1] = { text = tostring(r.green), tone = "skillGreen" } end
-    out[#out + 1] = { text = tostring(gray), tone = "skillGray" }
+    local min, yellow, green, gray = breakpoints(r)
+    if not min then return out end
+    local band = IS.SkillBand(r)
+    part(out, min, band, 1)
+    part(out, yellow, band, 2)
+    if green then part(out, green, band, 3) end
+    part(out, gray, band, 4)
     return out
 end
 
