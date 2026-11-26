@@ -299,8 +299,8 @@ the code reads every case the design leaves open, module by module, is in
     dim dash. ITEM-SEARCH-37 checks the values in game.
   - **"Trainer" means no item teaches the recipe in the client's data** (ISR3-DW-08): the Crafting
     tab's source for a recipe you don't know comes from the shipped table's teaching item (the item
-    whose `ItemEffect` teaches the recipe spell, `validate-seeds.md` -> Recipe reagents), and 500 of
-    the 2,466 recipes on 1.60.1.70938 have none. A recipe learned some other way (a quest's spell
+    whose `ItemEffect` teaches the recipe spell, `validate-seeds.md` -> Recipe reagents), and 518 of
+    the 2,493 recipes on 1.60.1.70938 have none. A recipe learned some other way (a quest's spell
     reward, a book the client data does not tie to it) also says "Trainer". The Status names the
     recipe item's best source by kind (a vendor, then a quest that rewards it, then a drop, then a
     world drop), each kind's best by the tabs' own ranking; the row tooltip lists at most 6 of each,

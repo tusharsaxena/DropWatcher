@@ -81,6 +81,22 @@ test("recipe reagents: a recipe's teaching item is a number; taughtBy, when set,
     assertTrue(taught > trainer and trainer > 0 and more > 0 and more < 100, ("%d %d %d"):format(taught, trainer, more))
 end, FOREVER_ONLY)
 
+test("recipe reagents: the gathering lines' recipes are in the table with their breakpoints (round 4)", function()
+    local data = T.newAddon().RecipeReagents.Get()
+    -- red under: the table holding the crafting lines alone (Incense Candle learned-only, Skill "–")
+    local candle = data.recipes[1229705]
+    assertTrue(candle ~= nil, "Incense Candle, a Herbalism recipe")
+    assertEqual(candle.skillLine, 182); assertEqual(candle.made, 279962)
+    assertEqual(candle.yellow, 20); assertEqual(candle.gray, 20)
+    assertEqual(candle.reagents[2447], 1, "Peacebloom")
+    assertEqual(data.recipes[2657].skillLine, 186, "Smelt Copper, Mining")
+    assertEqual(data.recipes[1229745].skillLine, 356, "Fish Bowl, Fishing")
+    assertEqual(data.recipes[1229517].skillLine, 393, "Camp Chair, Skinning")
+    local found = false
+    for _, s in ipairs(data.byReagent[2447]) do found = found or s == 1229705 end
+    assertTrue(found, "Peacebloom leads to Incense Candle")
+end, FOREVER_ONLY)
+
 -- ── Retail: inert ───────────────────────────────────────────────────────────────────────────
 
 test("recipe reagents: on Retail nothing is built and the table answers nil", function()

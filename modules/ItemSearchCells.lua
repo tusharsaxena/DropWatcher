@@ -739,8 +739,14 @@ function ISC.RecipeSource(r, me, ctx)
     return out
 end
 
-local function craftTip(r, profession, product, rank, source)
+-- A recipe only the profession window knows (no shipped row): its skill levels are unknown.
+local function levelsUnknown(r, parts)
+    return r.learned == true and #parts == 0
+end
+
+local function craftTip(r, profession, product, rank, source, parts)
     local rows = { { L["Profession"], profession or DASH } }
+    if levelsUnknown(r, parts) then rows[#rows + 1] = { L["Skill"], L["levels unknown: not in the shipped table"] } end
     if rank then
         local words = COLOR_WORDS[r.color]
         rows[#rows + 1] = { L["Your rank"], words and ("%d · %s"):format(rank, words) or tostring(rank) }
@@ -758,6 +764,12 @@ local function productOf(r, ctx)
     return name, type(it) == "table" and num(it.quality) or nil
 end
 
+local function skillCell(r, parts)
+    if #parts > 0 then return { parts = parts } end
+    if levelsUnknown(r, parts) then return textCell("?", "muted") end
+    return textCell(nil)
+end
+
 local function craftCells(r, name, profession, status, tone, ctx)
     local product, quality = productOf(r, ctx)
     local parts = ISC.SkillParts(r)
@@ -765,7 +777,7 @@ local function craftCells(r, name, profession, status, tone, ctx)
     makes.quality = quality
     return { glyph = { craft = r }, recipe = textCell(name, r.known and "plain" or "muted"),
         profession = textCell(profession), uses = textCell(num(r.count) and L["×%d"]:format(r.count) or nil),
-        makes = makes, skill = #parts > 0 and { parts = parts } or textCell(nil), status = textCell(status, tone) }, product
+        makes = makes, skill = skillCell(r, parts), status = textCell(status, tone) }, product, parts
 end
 
 local function craftRow(r, i, me, ctx)
@@ -773,14 +785,14 @@ local function craftRow(r, i, me, ctx)
     local source = ISC.RecipeSource(r, me, ctx)
     local status, tone, order = ISC.CraftStatus(r, me.ranks, profession, source)
     local name = r.name or L["Recipe %d"]:format(r.spell)
-    local cells, product = craftCells(r, name, profession, status, tone, ctx)
+    local cells, product, parts = craftCells(r, name, profession, status, tone, ctx)
     return {
         best = i, spell = r.spell, known = r.known == true, mine = ISC.HasProfession(r, me.ranks),
         makesID = num(r.made), itemID = source and source.item or nil,
         cells = cells,
         sort = { glyph = i, recipe = lower(name), profession = lower(profession), uses = num(r.count),
             makes = lower(product), skill = num(r.yellow), status = order },
-        tip = craftTip(r, profession, product, num(r.rank), source),
+        tip = craftTip(r, profession, product, num(r.rank), source, parts),
     }
 end
 

@@ -476,6 +476,29 @@ test("item search cells: Known, Learn at N and No <profession> keep their Status
     assertEqual(by[4].cells.status.text, "Not known", "a recipe the profession window learned has no table source")
 end)
 
+test("item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip", function()
+    local NS = T.newAddon()
+    local C, IST = NS.ItemSearchCells, NS.ItemSearchTip
+    -- red under: the gathering lines read as no profession (Incense Candle's "–", round 4 R4-DW-03)
+    assertEqual(IST.ProfessionName(182), "Herbalism"); assertEqual(IST.ProfessionName(186), "Mining")
+    assertEqual(IST.ProfessionName(356), "Fishing"); assertEqual(IST.ProfessionName(393), "Skinning")
+    local facts = { crafting = {
+        { spell = 9, name = "Incense Candle", skillLine = 182, count = 1, learned = true, known = true, rank = 25 },
+        { spell = 10, name = "Fixture Lamp", skillLine = 182, count = 1, min = 1, yellow = 20, gray = 20, green = 20,
+          known = false, rank = 25 },
+    } }
+    local rows = C.Crafting(facts, { ranks = { [182] = 25 } }, { profession = IST.ProfessionName })
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    assertEqual(by[9].cells.profession.text, "Herbalism")
+    assertTrue(by[9].mine, "a gathering line you have counts as your profession")
+    -- red under: the dim dash, which reads as "no skill" rather than "not known"
+    assertEqual(by[9].cells.skill.text, "?"); assertEqual(by[9].cells.skill.tone, "muted")
+    assertEqual(tipRow(by[9], "Skill"), "levels unknown: not in the shipped table")
+    assertTrue(by[10].cells.skill.parts ~= nil, "a table row keeps its breakpoints")
+    assertNil(tipRow(by[10], "Skill"))
+end)
+
 test("item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank", function()
     local NS = T.newAddon()
     local C = NS.ItemSearchCells

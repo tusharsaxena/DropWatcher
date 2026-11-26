@@ -353,12 +353,14 @@ local function professionName(skillLine)
         [129] = L["First Aid"], [164] = L["Blacksmithing"], [165] = L["Leatherworking"], [171] = L["Alchemy"],
         [185] = L["Cooking"], [197] = L["Tailoring"], [202] = L["Engineering"], [333] = L["Enchanting"],
         [755] = L["Jewelcrafting"],
+        -- the gathering lines, which WoW Forever gives recipes too (round 4, R4-DW-03)
+        [182] = L["Herbalism"], [186] = L["Mining"], [356] = L["Fishing"], [393] = L["Skinning"],
     }
     return skillLine and PROFESSION[skillLine] or nil
 end
 
---- A crafting skill line's profession name (the shipped table's nine), or nil. The Item Search
---- window's Crafting rows name it too.
+--- A recipe skill line's profession name (the nine crafting lines and the four gathering ones), or
+--- nil. The Item Search window's Crafting rows name it too.
 --- @param skillLine number|nil
 --- @return string|nil
 function IST.ProfessionName(skillLine)

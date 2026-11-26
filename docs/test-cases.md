@@ -960,12 +960,13 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_recipe_reagents.lua (5)
+### test_recipe_reagents.lua (6)
 
 - recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: every recipe has its ranks and reagents, and byReagent indexes each one exactly (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: a recipe's teaching item is a number; taughtBy, when set, lists it first with the others (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: the gathering lines' recipes are in the table with their breakpoints (round 4) (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: on Retail nothing is built and the table answers nil
 
 ### test_item_search.lua (36)
@@ -1034,7 +1035,7 @@ Total.
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_window.lua (41)
+### test_item_search_window.lua (42)
 
 - item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
 - item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
@@ -1072,13 +1073,14 @@ Total.
 - item search window: without TomTom, Drop Watcher's arrow points at the spot; Drop Watcher's arrow wins over TomTom (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a pin is a dim map pin, lit on its row's hover, and its tooltip names the arrow (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down takes Drop Watcher's arrow down (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: the chrome opens attached to its control, every body tooltip beside the window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 
-### test_item_search_tabs.lua (18)
+### test_item_search_tabs.lua (19)
 
 - item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all
 - item search tabs: each tab draws exactly the spec's columns, less the two with no client data
@@ -1097,6 +1099,7 @@ Total.
 - item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)
 - item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins
 - item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item
+- item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip
 - item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank
 
 ### test_item_search_key.lua (19)
@@ -3452,7 +3455,7 @@ Total.
 | test_item_search.lua | 21 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 8 |
-| test_item_search_tabs.lua | 17 |
+| test_item_search_tabs.lua | 18 |
 | test_item_search_key.lua | 4 |
 | test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 14 |
@@ -3552,5 +3555,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 118 |
-| **Total** | **2842** |
+| Skipped | 120 |
+| **Total** | **2843** |

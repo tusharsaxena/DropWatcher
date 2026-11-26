@@ -262,21 +262,25 @@ client's own DB2. It is generated, so the precedent rules above have nothing to 
   (`LEARN_SPELL_ID`) and `SpellID` the recipe spell, or (any trigger) a `SpellID` whose `SpellEffect`
   effect 36 `LEARN_SPELL` has `EffectTriggerSpell` the recipe spell: an item that teaches several
   recipes at once. A `TriggerType` 0 row whose `SpellID` is the recipe itself (an item that casts it on
-  use, 180 on 1.60.1.70938) teaches nothing. On 1.60.1.70938, 1,966 of the 2,466 recipes (79.7%) have a
+  use, 180 on 1.60.1.70938) teaches nothing. On 1.60.1.70938, 1,975 of the 2,493 recipes (79.2%) have a
   teaching item, 43 of them more than one; the 3 items that teach several recipes at once (effect 36)
-  add 2 recipes the direct rule misses. The other 500 are a trainer's. Every
+  add 2 recipes the direct rule misses. The other 518 are a trainer's. Every
   `ItemEffect` row with a teaching `SpellID` has an `ItemXItemEffect` row.
 - **Coverage by profession** (teaching item / recipes, 1.60.1.70938): Alchemy 150/196,
   Blacksmithing 416/506, Enchanting 195/262, Engineering 202/275, Leatherworking 498/592, Tailoring
-  369/470, Cooking 119/133, First Aid 17/32.
+  369/470, Cooking 119/133, First Aid 17/32; the gathering lines (round 4) Herbalism 2/3, Mining 3/18,
+  Fishing 2/3, Skinning 2/3.
 - **The professions.** Alchemy 171, Blacksmithing 164, Enchanting 333, Engineering 202,
   Leatherworking 165, Tailoring 197, Cooking 185 and First Aid 129, plus Jewelcrafting 755 if the
-  build has it. On 1.60.1.70938 the eight are present and Jewelcrafting is absent. Mining's smelting
-  (186), the gathering lines and Fishing are not kept.
-- **What is left out.** A spell of those lines with no `SpellReagents` row: on 1.60.1.70938, 122 of
-  2,588, the profession ranks and specializations among them, and some recipes the client's DB2 does
+  build has it, and (round 4, R4-DW-03) the gathering lines Herbalism 182, Mining 186 (its smelting),
+  Fishing 356 and Skinning 393 when the build has them: WoW Forever gives each a few craftable recipes
+  (Incense Candle is Herbalism's). Their gathering spells have no reagent row, so only the recipes
+  arrive. On 1.60.1.70938 all twelve are present and Jewelcrafting is absent.
+- **What is left out.** A spell of those lines with no `SpellReagents` row: on 1.60.1.70938, 171 of
+  2,664, the profession ranks and specializations among them, and some recipes the client's DB2 does
   not carry (they have no `SpellName` row either). Item Search's profession-window fallback learns
-  such a recipe in game (spec §4.2 B).
+  such a recipe in game (spec §4.2 B); with no skill levels, its Skill cell reads "?" and its row
+  tooltip says the levels are unknown (round 4).
 - **Shape.** `NS.RecipeReagents.Get()` answers `{ build, recipes, byReagent }`:
   `recipes[spell] = { skillLine, min, yellow, gray, made, name, taught, reagents = { [item] = count } }`
   (`made` and `name` nil when the build has none, `taught` the teaching item of the lowest id, nil for
@@ -292,7 +296,10 @@ client's own DB2. It is generated, so the precedent rules above have nothing to 
   professions' rows (and the teaching items' `ItemEffect`, `ItemXItemEffect` and effect 36 rows).
   The first bundle, `2026-11-25-forever-recipes`, holds five tables and is frozen as it was: the
   generator now reads seven, so it no longer regenerates the file, and `2026-11-26-forever-recipes`
-  (the same build, the same reagent rows byte for byte) supersedes it. `recipes derive --replay` re-derives the manifest from it offline.
+  (the same build, the same reagent rows byte for byte) superseded it. `2026-11-26-forever-recipes-gathering`
+  (round 4, the same build again, with the gathering lines; every row of the crafting lines is the same)
+  supersedes that one in turn: the generator's profession map grew, so the older bundles no longer
+  regenerate the file. `recipes derive --replay` re-derives the manifest from it offline.
 - **The 1500-line cap binds the file** (layout-§1): it is TOC-loaded, so the generated-data
   carve-out does not exempt it. The generator packs its rows (`recipes.WRAP`) to stay under it.
 
@@ -322,6 +329,7 @@ source and ForeverDB the witness.
 | Date | Build | ForeverDB | Recipes | In `sla` | Yellow and gray agree | Minimum agrees | Disagree |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-25 | 1.60.1.70938 | v2026.11.24.46 (6e0a34b) | 2,466 | 2,466 | 2,466 | 2,466 | 0 |
+| 2026-11-26 | 1.60.1.70938 (with the gathering lines) | v2026.11.24.46 | 2,493 | 2,493 | 2,493 | 2,493 | 0 |
 
 The spec (§4.2) asks for a sample; the whole table was checked, since that costs the same.
 
