@@ -5307,7 +5307,9 @@ its How sure reads `Use value well under 20` 100%, `Compare with Auctionator pri
 `Vendor 90` (`Auctionator has no price for it` 80%). A quest item for a quest in your log reads `Keep
 60` or so (`Use value 60, 10 past Keep's 50` 20%); an item whose info is still loading reads a low
 `Hold` such as `Hold 17`. The tooltip's reason lines under the badge are as before. This replaces
-the score's meaning in ITEM-SEARCH-60 to 72 (a use value then; how sure now). Fail: a disposal
+the score's meaning in ITEM-SEARCH-60 to 72 (a use value then; how sure now) and ITEM-SEARCH-72's
+panel word line (`Auction: a score under 20, ...` is now `Use value <U> (Auction, Vendor or Toss
+under 20)`, with `No vendor buys it; an auction brings ~<coins>` under How sure). Fail: a disposal
 badge reading a low number for a clear call, a `0..100` clamp line, or a Score line that disagrees
 with the badge. Result:
 
