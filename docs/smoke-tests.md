@@ -5182,6 +5182,13 @@ pick up (1)` with its points (`+35`), not the quest's name; with two such quests
 one line. A quest already in your log still reads by name (`In your quest log: ...`). Hover it → the
 tooltip's reason says the same count. Result:
 
+**ITEM-SEARCH-62. The panel's numbers in color, no Score line, the verdict in plain words (R5-DW-04,
+R5-DW-05, R5-DW-06).** Open the Item Search window on a held Peacebloom → each part's points read
+green when they add (`+35`, `+60`) and red when they take away (`-20`, `-80`); no `Score` line under
+the parts (the score is in the badge); then one muted line in plain words: `Keep: a score of 50 or
+more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Sell: a score under 20, and a vendor buys
+it`). No `Keep from 50` anywhere. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

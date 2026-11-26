@@ -43,7 +43,7 @@ local _, NS = ...
 -- other professions; gear; the dampers; then every bound that moved the sum, as its own line with
 -- the points it took or gave (a hit cap, the 0..100 clamp, the poor-quality cap, the quest item's
 -- floor). The lines add up to the score, a part worth 0 is left out, and `from` is the line the
--- verdict word comes from ("Keep from 50"). No confidence tier; the fix (`hint`) is the
+-- verdict word comes from, in plain words ("Keep: a score of 50 or more", R5-DW-06). No confidence tier; the fix (`hint`) is the
 -- confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
 -- panel and the badge's reasons can never disagree and the hover pays nothing for it.
 --
@@ -416,14 +416,15 @@ local function decide(score, tier, sellPrice, unjudged)
     return "toss", "toss"
 end
 
--- The line the verdict word comes from, by decide's why.
+-- The line the verdict word comes from, by decide's why, in plain words (R5-DW-06: "Keep from 50"
+-- meant the score is 50 or more, so the word is Keep; the owner asked what it meant).
 local function fromText(why)
-    if why == "keep" then return L["Keep from %d"]:format(V.KEEP) end
-    if why == "hold" then return L["Hold from %d"]:format(V.HOLD) end
-    if why == "price" then return L["Hold: under %d, and the sell price is not known yet"]:format(V.HOLD) end
-    if why == "sell" then return L["Sell: under %d, and a vendor buys it"]:format(V.HOLD) end
-    if why == "toss" then return L["Toss: under %d, and no vendor buys it"]:format(V.HOLD) end
-    return L["Hold: under %d, but too little is known to toss it"]:format(V.HOLD)
+    if why == "keep" then return L["Keep: a score of %d or more"]:format(V.KEEP) end
+    if why == "hold" then return L["Hold: a score of %d to %d"]:format(V.HOLD, V.KEEP - 1) end
+    if why == "price" then return L["Hold: a score under %d, and the sell price is not known yet"]:format(V.HOLD) end
+    if why == "sell" then return L["Sell: a score under %d, and a vendor buys it"]:format(V.HOLD) end
+    if why == "toss" then return L["Toss: a score under %d, and no vendor buys it"]:format(V.HOLD) end
+    return L["Hold: a score under %d, but too little is known to toss it"]:format(V.HOLD)
 end
 
 local function before(a, b)

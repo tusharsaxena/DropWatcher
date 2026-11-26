@@ -13,8 +13,9 @@ local _, NS = ...
 -- per part that counted, with its points, in the order the score adds them: the quests in your log by quest and the ones you could pick up as one count (R5-DW-03); the
 -- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
 -- shown when it was hit; gear; the dampers; the 0..100 clamp, the poor-quality cap and the quest
--- item's floor when they apply. Then the total ("Score  65"), the line the verdict word comes from
--- ("Keep from 50") and, below a High confidence, the missing input's fix as a plain hint ("Open your
+-- item's floor when they apply, each part's points green when it adds and red when it takes away
+-- (R5-DW-04). No total line: the score is in the badge (R5-DW-05). Then the line the verdict word
+-- comes from, in plain words and muted ("Keep: a score of 50 or more", R5-DW-06) and, below a High confidence, the missing input's fix as a plain hint ("Open your
 -- profession window to rank recipes"). No confidence tier. Every number is the verdict module's
 -- (NS.ItemSearchVerdict.Breakdown, IS.Breakdown): the panel adds nothing up, so it and the
 -- tooltip's reasons cannot disagree.
@@ -117,15 +118,23 @@ local function signed(points)
     return tostring(points)
 end
 
--- The lines to draw for a breakdown `b`: `{ text, right, tone }` each, the parts, the total, the
--- word's line and the hint. Built once per breakdown (the panel keeps them).
+-- A part's points' tone (R5-DW-04): green what adds, red what takes away, muted nothing.
+local function pointsTone(points)
+    if points > 0 then return "good" end
+    if points < 0 then return "red" end
+    return "muted"
+end
+
+-- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, the parts (their
+-- points green or red, R5-DW-04), then the word's line in plain words, muted (R5-DW-06), and the
+-- hint. No Score line: the score is in the badge above (R5-DW-05). Built once per breakdown (the
+-- panel keeps them).
 local function rowsOf(b)
     local out = {}
     for _, line in ipairs(b.lines) do
-        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain" }
+        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain", rightTone = pointsTone(line.points) }
     end
-    out[#out + 1] = { text = L["Score"], right = tostring(b.score), tone = "plain", total = true }
-    out[#out + 1] = { text = b.from, tone = "plain" }
+    out[#out + 1] = { text = b.from, tone = "muted" }
     if b.hint then out[#out + 1] = { text = b.hint, tone = "muted" } end
     return out
 end
@@ -145,7 +154,8 @@ local function paintLines(p, rows, m)
         row.cells.text.text:SetText(r.text)
         row.cells.points.text:SetText(r.right or "")
         NS.WindowRows.SetTone(row.cells.text.text, r.tone)
-        NS.WindowRows.SetTone(row.cells.points.text, r.tone)
+        NS.WindowRows.SetTone(row.cells.points.text, r.rightTone or r.tone)
+        row.dwTone, row.dwRightTone = r.tone, r.rightTone or r.tone
         row:Show()
     end
     for i = #rows + 1, #p.lines do p.lines[i]:Hide() end
@@ -274,7 +284,15 @@ function IVP.Paint(f, itemID, m)
     return true
 end
 
---- The panel's lines on screen now, `{ text, right }` each in order (for the tests).
+--- The lines a breakdown draws (`{ text, right, tone, rightTone }` each), worked out as the panel does
+--- (for the tests).
+--- @param b table IS.Breakdown's answer
+--- @return table
+function IVP.Rows(b)
+    return rowsOf(b)
+end
+
+--- The panel's lines on screen now, `{ text, right, tone, rightTone }` each in order (for the tests).
 --- @param f table
 --- @return table
 function IVP.Lines(f)
@@ -283,7 +301,8 @@ function IVP.Lines(f)
     if not (p and p:IsShown()) then return out end
     for _, row in ipairs(p.lines) do
         if row:IsShown() then
-            out[#out + 1] = { text = row.cells.text.text:GetText(), right = row.cells.points.text:GetText() }
+            out[#out + 1] = { text = row.cells.text.text:GetText(), right = row.cells.points.text:GetText(),
+                tone = row.dwTone, rightTone = row.dwRightTone }
         end
     end
     return out

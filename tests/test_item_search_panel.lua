@@ -120,16 +120,31 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
         -- red under: a panel that words or adds up the parts itself
         assertEqual(lines[i].text, part.text)
         assertEqual(tonumber(lines[i].right), part.points)
+        -- red under (R5-DW-04): every number in one tone
+        assertEqual(lines[i].rightTone, part.points > 0 and "good" or "red", "+ green, - red: " .. part.text)
         sum = sum + part.points
     end
-    assertEqual(lines[n + 1].text, "Score"); assertEqual(tonumber(lines[n + 1].right), b.score)
     assertEqual(sum, b.score, "the parts add up to the score")
-    assertEqual(lines[n + 2].text, b.from, "the line the verdict word comes from")
-    assertTrue(b.from:find(" from %d+$") ~= nil or b.from:find("under 20") ~= nil, b.from)
-    if b.hint then assertEqual(lines[n + 3].text, b.hint, "the missing input as a plain hint") end
+    -- red under (R5-DW-05): a "Score" line repeating the badge's number
+    for _, line in ipairs(lines) do assertTrue(line.text ~= "Score", "no Score line") end
+    assertEqual(lines[n + 1].text, b.from, "the line the verdict word comes from, right after the parts")
+    assertEqual(lines[n + 1].tone, "muted"); assertEqual(lines[n + 1].right, "")
+    assertTrue(b.from:find("a score ", 1, true) ~= nil, "in plain words: " .. b.from)
+    if b.hint then assertEqual(lines[n + 2].text, b.hint, "the missing input as a plain hint") end
     for _, text in ipairs(lineTexts(lines)) do
         assertTrue(not text:find("Low") and not text:find("Medium") and not text:find("High"), "no tier: " .. text)
     end
+end, FOREVER_ONLY)
+
+test("verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06)", function()
+    local NS = enabled()
+    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, from = "Sell: a score under 20, and a vendor buys it",
+        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } } })
+    assertEqual(#rows, 3, "the two parts and the word's line: no total")
+    assertEqual(rows[1].right, "+35"); assertEqual(rows[1].rightTone, "good")
+    assertEqual(rows[2].right, "-20"); assertEqual(rows[2].rightTone, "red")
+    assertEqual(rows[3].text, "Sell: a score under 20, and a vendor buys it"); assertEqual(rows[3].tone, "muted")
+    assertTrue(rows[3].right == nil, "no number on the word's line")
 end, FOREVER_ONLY)
 
 test("verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height", function()
