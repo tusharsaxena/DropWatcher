@@ -371,7 +371,7 @@ test("verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on 
     assertEqual(lines[1].text, "Item info is still loading"); assertEqual(lines[1].tone, "muted")
 end, FOREVER_ONLY)
 
-test("verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02)", function()
+test("verdict: on the tooltip the pill hangs on the tooltip's right side, smooth, never measured, never over the label (R5-DW-01, R5-DW-02)", function()
     local NS, m, tdp = enabled({ setup = function(mm) mm.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF" end })
     local IST, C = NS.ItemSearchTip, NS.Constants
     local B = C.ITEM_SEARCH.BADGE
@@ -401,12 +401,15 @@ test("verdict: on the tooltip the pill hangs right after Drop Watcher's text, sm
     assertEqual(room, IST.Badge(NS.ItemSearchVerdict.For(IDS.blade, NS.ItemSearch.Get(IDS.blade),
         NS.ItemSearch.Me())).width, "the room reserved is the badge's own estimate")
     assertEqual(reads, 0, "nothing measured in the post call")
-    -- hung from the label line's left font string (which ends where "Drop Watcher" ends), GAP out
-    local p = { badge.icon:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == m.GameTooltipTextLeft3), p[3], p[4], p[5] }, ","),
-        ("LEFT,true,RIGHT,%d,0"):format(B.GAP + B.PAD), "the icon PAD inside the pill, the pill GAP after the label")
-    p = { badge.text:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == badge.icon), p[3], p[4] }, ","), "LEFT,true,RIGHT," .. B.ICON_GAP)
+    -- red under (R5-DW-12, the owner: "move the badge to the right side of the tooltip"): hung after
+    -- the label's own text. Now its text ends PAD inside the label line's right font string's right
+    -- edge (the tooltip's right side), and the icon sits ICON_GAP before the text.
+    local p = { badge.text:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == m.GameTooltipTextRight3), p[3], p[4], p[5] }, ","),
+        ("RIGHT,true,RIGHT,%d,0"):format(-B.PAD), "the text PAD inside the pill, the pill on the right edge")
+    assertEqual(#badge.text.__points, 1, "the text hangs from one point")
+    p = { badge.icon:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.text), p[3], p[4] }, ","), "RIGHT,true,LEFT," .. -B.ICON_GAP)
     assertTrue(badge.text:GetText():find("Hold", 1, true) ~= nil); assertTrue(badge.text:GetText():find("0", 1, true) ~= nil)
     assertEqual(badge.text.__face and badge.text.__face[3], "", "no outline")
     assertEqual(badge.text.__shadow and table.concat(badge.text.__shadow, ","), "0,0", "no shadow")
