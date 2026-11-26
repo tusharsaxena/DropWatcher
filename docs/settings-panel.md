@@ -451,14 +451,21 @@ a 1 to 20 slider by 1: every section's cap before "and N more"; 5 until ISR3-DW-
 is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
 hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose
 title line is gone), Show the Keep / Hold / Sell / Toss badge (`itemSearch.tooltip.badge`, on: the
-verdict, its 0 to 100 score and its confidence at the right of the block's "Drop Watcher" line),
-Explain the badge (`itemSearch.tooltip.reasons`, on: up to two reason lines and, below High
-confidence, the hint; dimmed while the badge is off as well, the page's way of setting it under the
-badge, since the schema rows have no indent) and Show recipe skill levels
-(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues), each
+verdict as two filled boxes right after the block's "Drop Watcher" label: the verdict's icon (a
+lock, an hourglass, coins or a bin) and its word on the verdict's bright tone, the 0 to 100 score on
+a darker shade of it, and no confidence tier; round 4, R4-DW-07), Explain the badge
+(`itemSearch.tooltip.reasons`, on: the two reasons that weigh most plus the largest one that pulls
+the score down, then, when Drop Watcher isn't sure, the hint on what would make it surer, with no
+tier word; dimmed while the badge is off as well, the page's way of setting it under the badge,
+since the schema rows have no indent) and Show recipe skill levels
+(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues, your band
+bracketed), each
 dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions
 you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
-default).
+default), then Hide the other faction's vendors (`itemSearch.hideOtherFaction`, on, round 4 R4-DW-08:
+the tooltip's Sold by leaves out the vendors only the other faction can buy from and counts them on
+one dim line, and the window's Sold by tab starts with Only my faction on; never dimmed, for the
+same reason; a change moves an open window's filter back to it, as Only professions you know does).
 **Sections:** a switch per section, Drops from, Gathered from (round 3 spec §4.3), Sold by, Quests,
 Crafting, Skinned from (all on) and Reward from / starts quest (off), then Hide completed quests (on,
 dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list

@@ -7,16 +7,16 @@ local _, NS = ...
 --
 -- Build:   1.60.1.70938
 -- Date:    2026-11-26
--- Inputs:  730a2b8ad3a832db72f0f5ce0b1ddbbd338eca63461fc5f85d1846ce791ec0f2
--- Bundle:  docs/seed-research/2026-11-26-forever-recipes
+-- Inputs:  0b5af7244c31774aea2c945b10c48190de5f68a2aa1c2c49a0c640f71b3d478e
+-- Bundle:  docs/seed-research/2026-11-26-forever-recipes-gathering
 --
 -- Inputs is the sha256 of the bundle's frozen extract (SkillLine, SkillLineAbility, SpellReagents,
 -- SpellEffect effects 24 and 36, SpellName, ItemEffect, ItemXItemEffect).
--- Skill lines: 129 First Aid, 164 Blacksmithing, 165 Leatherworking, 171 Alchemy, 185 Cooking, 197 Tailoring, 202 Engineering, 333 Enchanting.
+-- Skill lines: 129 First Aid, 164 Blacksmithing, 165 Leatherworking, 171 Alchemy, 182 Herbalism, 185 Cooking, 186 Mining, 197 Tailoring, 202 Engineering, 333 Enchanting, 356 Fishing, 393 Skinning.
 -- Absent: 755 Jewelcrafting.
--- 2466 recipes; 122 of the lines' spells have no reagent row in the build and are left out (the
+-- 2493 recipes; 171 of the lines' spells have no reagent row in the build and are left out (the
 -- profession-window fallback learns those in game, spec §4.2 B).
--- 1966 recipes are taught by an item (43 by more than one); the other 500 are a trainer's.
+-- 1975 recipes are taught by an item (43 by more than one); the other 518 are a trainer's.
 --
 -- NS.RecipeReagents.Get() answers { build, recipes, byReagent } on WoW Forever, built the first
 -- time it is asked, and the builder is then let go. On Retail (read once at load, NS.Compat.ClientKey)
@@ -992,6 +992,18 @@ if NS.Compat.ClientKey() == "forever" then rows = function()
     r(1259343, 129, 1, 160, 220, 255717, "Clever Poultice", 255724, 1468, 1, 2686, 1, 3713, 1) r(1259344, 129, 1, 225, 285, 255718, "Superior Poultice", 255727, 2596, 1, 2692, 1, 7070, 1) r(1259345, 129, 1, 295, 355, 255719, "Powerful Poultice", 255731, 2594, 1, 2692, 1, 7080, 1)
     r(1259347, 129, 1, 120, 190, 255720, "Woolen Tourniquet", nil, 2321, 2, 2592, 2) r(1259348, 129, 1, 220, 280, 255721, "Leather Tourniquet", 255726, 4291, 2, 4304, 2) r(1259349, 129, 1, 280, 340, 255722, "Surgical Tourniquet", 255730, 8170, 2, 8343, 2, 14047, 2)
     r(1262996, 129, 1, 140, 140, 279940, "Toxin Study", 273105, 4470, 2, 6452, 1, 8544, 2) r(1263001, 129, 1, 300, 300, 279951, "Plague Doctor's Laboratory", 273118, 4470, 2, 6453, 2, 14530, 5)
+    -- Herbalism (182): 3 recipes
+    r(1229705, 182, 1, 20, 20, 279962, "Incense Candle", nil, 765, 1, 2447, 1) r(1262980, 182, 1, 140, 140, 279964, "Greenhouse", 273106, 4470, 2, 8831, 1, 8836, 1) r(1263070, 182, 1, 300, 300, 279947, "Seed Hybridizer", 273120, 8925, 1, 13465, 4, 14047, 2)
+    -- Mining (186): 18 recipes
+    r(2657, 186, 1, 25, 70, 2840, "Smelt Copper", nil, 2770, 1) r(2658, 186, 1, 100, 125, 2842, "Smelt Silver", nil, 2775, 1) r(2659, 186, 1, 65, 115, 2841, "Smelt Bronze", nil, 2840, 1, 3576, 1) r(3304, 186, 1, 50, 75, 3576, "Smelt Tin", nil, 2771, 1) r(3307, 186, 1, 130, 140, 3575, "Smelt Iron", nil, 2772, 1)
+    r(3308, 186, 1, 170, 185, 3577, "Smelt Gold", nil, 2776, 1) r(3569, 186, 1, 165, 165, 3859, "Smelt Steel", nil, 3575, 1, 3857, 1) r(10097, 186, 1, 175, 175, 3860, "Smelt Mithril", nil, 3858, 1) r(10098, 186, 1, 230, 230, 6037, "Smelt Truesilver", nil, 7911, 1)
+    r(14891, 186, 1, 230, 230, 11371, "Smelt Dark Iron", nil, 11370, 8) r(16153, 186, 1, 250, 250, 12359, "Smelt Thorium", nil, 10620, 1) r(22967, 186, 1, 310, 320, 17771, "Smelt Elementium", nil, 12360, 10, 17010, 1, 18562, 1, 18567, 3)
+    r(1213638, 186, 1, 315, 330, 234003, "Smelt Obsidian-Infused Thorium Bar", 234278, 12655, 2, 22203, 2) r(1230161, 186, 1, 20, 20, 279960, "Lodestone", nil, 2835, 1, 2840, 1) r(1249637, 186, 1, 275, 275, 249726, "Smelt Azerothium", nil, 3857, 1, 249426, 2)
+    r(1262975, 186, 1, 140, 140, 279948, "Rock Garden", 273097, 2772, 1, 2838, 2, 2842, 1) r(1263071, 186, 1, 300, 300, 279952, "Molten Foundry", 273122, 6037, 1, 12359, 5, 12365, 2) r(1306126, 186, 1, 300, 315, 251291, "Smelt Heavy Thorium", nil, 248815, 1)
+    -- Fishing (356): 3 recipes
+    r(1229745, 356, 1, 20, 20, 279967, "Fish Bowl", nil, 3371, 1, 6291, 1) r(1262990, 356, 1, 140, 140, 279965, "Fishing Rack", 273141, 4470, 2, 8365, 2, 8925, 1) r(1262998, 356, 1, 300, 300, 279966, "Fishing Hut", 273119, 4470, 5, 14048, 2, 273295, 1)
+    -- Skinning (393): 3 recipes
+    r(1229517, 393, 1, 20, 20, 279979, "Camp Chair", nil, 2318, 3, 4470, 2) r(1262982, 393, 1, 300, 300, 279938, "Trapper's Workbench", 273109, 3575, 1, 4234, 4, 4470, 2) r(1262985, 393, 1, 140, 140, 279969, "Field Guide", 273098, 2319, 3, 2321, 1, 5784, 2)
     -- recipes more than one profession teaches
     shared(461692, 197, 165)
     -- recipes more than one item teaches

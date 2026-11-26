@@ -12,7 +12,8 @@ WHAT THIS IS
 
     The join, per recipe spell:
         SkillLineAbility   Spell, SkillLine, MinSkillLineRank, TrivialSkillLineRankLow (yellow),
-                           TrivialSkillLineRankHigh (gray); crafting professions only (PROFESSIONS)
+                           TrivialSkillLineRankHigh (gray); the PROFESSIONS lines only (crafting, and
+                           since round 4 the gathering lines' recipes)
         SpellReagents      Reagent_0..7 and ReagentCount_0..7
         SpellEffect        Effect 24 (CREATE_ITEM): EffectItemType, the item the recipe makes
         SpellName          Name_lang, the recipe's name
@@ -83,9 +84,11 @@ TABLES = (
     ("ItemXItemEffect", "ItemEffectID -> ItemID: the item that teaches a recipe"),
 )
 
-# The crafting professions Item Search lists (spec §4.2) -> (the build's DisplayName_lang, required).
-# Jewelcrafting is kept only when the build has it; gathering lines (Mining's smelting, Herbalism,
-# Skinning) and Fishing are not crafting professions here.
+# The professions Item Search lists recipes for (spec §4.2) -> (the build's DisplayName_lang, required).
+# Jewelcrafting is kept only when the build has it. The gathering lines (round 4, R4-DW-03) are kept
+# when the build has them: WoW Forever gives Herbalism, Mining (smelting) and Fishing craftable
+# recipes (Incense Candle is Herbalism's), and Skinning too if a build adds any. A gathering line's
+# gathering spells have no reagent row, so only its recipes reach the table.
 PROFESSIONS = {
     171: ("Alchemy", True),
     164: ("Blacksmithing", True),
@@ -96,6 +99,10 @@ PROFESSIONS = {
     185: ("Cooking", True),
     129: ("First Aid", True),
     755: ("Jewelcrafting", False),
+    182: ("Herbalism", False),
+    186: ("Mining", False),
+    356: ("Fishing", False),
+    393: ("Skinning", False),
 }
 # Lua rows packed per line up to this width: the file is TOC-loaded, so the 1500-line cap binds it
 # (layout-§1), and one recipe per line would be ~2,500 lines (three a line is ~850).

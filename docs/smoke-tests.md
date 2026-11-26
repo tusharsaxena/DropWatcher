@@ -4779,10 +4779,11 @@ Zone, Faction, Price, pin; Quests: mark, Quest, Role, Level, Min, Status, Giver,
 glyph, Recipe, Profession, Uses, Makes, Skill, Status; Skinned from: Creature, Level, Skill, Zone,
 Chance, pin). Levels are colored by how hard they are for you; a creature's name is red, an object's
 white, a container's in its quality color (superseded by ITEM-SEARCH-36, 2026-11-26: a creature's name and
-Type in its rank's color, no red). Above each table a section header (dark band, gold title,
+Type in its rank's color, no red; then by ITEM-SEARCH-47, 2026-11-26: each Type in its own color, every
+name plain). Above each table a section header (dark band, gold title,
 dim count, `sorted: Best for you`) with Filter, Sort and Reset marks, each with a tooltip: Filter
 toggles the tab's own filters (Drops: Creatures, Objects, Containers, Only my zone, Only my level
-band; Sold by: Only my faction; Quests: Hide completed; Crafting: Only my professions, Only known;
+band; Sold by: Only my faction (on to start with since ITEM-SEARCH-53, 2026-11-26); Quests: Hide completed; Crafting: Only my professions, Only known;
 Skinned from: Only my zone) and its funnel fills while one narrows the rows; Reset shows only then,
 or while a sort is picked, and puts Best for you back. Crafting's header has a My professions / All
 professions chip, not saved. Click a column's title → the table sorts by it with an arrow; click
@@ -4859,7 +4860,9 @@ same thick up arrow, in its orange, yellow or green, at the same size in the too
 table; a known recipe with no skill-up shows a gray two-way arrow (↔), and one you don't know the
 dark gray padlock. The glyph column sits off the table's left edge with the glyph centered in it, and
 on every tab the first column starts a little in from the edge (the stripes and the hover wash still
-run the full width). Fail: two arrow sizes, a dash, or a column touching the edge. Result:
+run the full width). Fail: two arrow sizes, a dash, or a column touching the edge. (Superseded in
+part by ITEM-SEARCH-55, owner feedback round 4: no skill-up is now a thick gray dash, not the two-way
+arrow.) Result:
 
 **ITEM-SEARCH-32. Clickable column titles and LootHistory's triangles (items 5, 11).** On any tab,
 move the pointer over a column title → it lights up in the link color, a tooltip names the column
@@ -4872,14 +4875,16 @@ Result:
 **ITEM-SEARCH-33. Recipe skill levels in the tooltip (item 4).** Hover Peacebloom (or any reagent of
 a profession you have) → each Crafting row reads the recipe on the left and its skill levels on the
 right, such as `1 40 55 70`, each number in its skill-up color (orange, yellow, green, gray), the same
-numbers the window's Skill column shows; with recipes from two professions shown, ` · <Profession>`
-follows in a muted tone. Settings › Item Search › Item tooltip: untick Show recipe skill levels → the
+numbers the window's Skill column shows (superseded by ITEM-SEARCH-50, 2026-11-26: the orange start
+always, your band bracketed and the rest dimmed); with recipes from two professions shown, ` · <Profession>`
+follows in a muted tone (superseded by ITEM-SEARCH-49, 2026-11-26: the profession in its own color). Settings › Item Search › Item tooltip: untick Show recipe skill levels → the
 right side is the profession alone again. Result:
 
 **ITEM-SEARCH-34. The block's head: the line and the label (items 14a, 14b).** Hover any item → the
 block has no `Drop Watcher · Item Search` title. A thin dim-gold line runs across the tooltip, about
 8 pixels in from each edge, one pixel tall, over an empty line; under it `Drop Watcher` in the muted
-gold at the left, the badge at the right. Hold Shift over gear so the tooltip widens for the
+gold at the left, the badge at the right (superseded by ITEM-SEARCH-52, 2026-11-26: the badge right
+after the label). Hold Shift over gear so the tooltip widens for the
 comparison → the line stays 8 pixels in from both edges. Untick Separator line → the line and its
 empty line go and `Drop Watcher` stays. The line never makes the tooltip wider than its text.
 Result:
@@ -4897,7 +4902,8 @@ three GossipFrame textures draw. Result:
 creatures white, elites gold, rares silver, rare elites a pale blue, bosses purple, in both the Source
 and the Type column (Type reads Creature, Elite, Rare, Rare Elite or Boss); objects white, containers
 in their quality color; no creature is red. The tooltip's Drops from and Skinned from rows and the
-Skinned from tab's Creature use the same colors. `TWO-SOLUTION TEST` and any other test, `(DND)`,
+Skinned from tab's Creature use the same colors (superseded by ITEM-SEARCH-47, 2026-11-26: the Type
+column alone is colored, each type its own color; every Source and creature name is plain). `TWO-SOLUTION TEST` and any other test, `(DND)`,
 `UNUSED` or `[PH]` source are gone from every tab (with `/dw debug on`, the item's first look logs
 how many were left out). Result:
 
@@ -4907,7 +4913,7 @@ with zones, chances and pins; Drops from no longer lists them. Show Copper Ore �
 under Mining with their skill; with Mining below a vein's skill, its Skill reads red. Its Filter
 mark offers Herbalism, Mining, Fishing, Only my professions and Only my zone, and the rows you can
 gather come first. The tooltip has a Gathered from section, `<Profession> <skill> · <chance>` per
-row. Check a few skills against the node's own "Requires Herbalism N" tooltip in the world and note
+row (the profession in its own color since ITEM-SEARCH-49, 2026-11-26). Check a few skills against the node's own "Requires Herbalism N" tooltip in the world and note
 any that differ. Result:
 
 **ITEM-SEARCH-38. Recorded prices and "<Side> only" (item 8).** Visit a vendor and look at its
@@ -4916,7 +4922,9 @@ here <date>` (and `for N` on a stack). A vendor you never visited shows ForeverD
 (`Recorded by ForeverDB`) or a dim dash whose tooltip says to open the vendor once. On an Alliance
 character, a Horde vendor's Faction reads `Horde only` in red, and its tooltip explains that only
 Horde characters can buy there and that Only my faction hides it (and the same the other way round);
-the tooltip's Sold by row says the same. Untick Record vendor prices, visit another vendor → nothing
+the tooltip's Sold by row says the same (superseded by ITEM-SEARCH-53, 2026-11-26: with Hide the
+other faction's vendors on, the default, the tooltip leaves such a vendor out and counts it, and the
+window's Only my faction starts on; as written here with the setting off). Untick Record vendor prices, visit another vendor → nothing
 new is recorded. Result:
 
 **ITEM-SEARCH-39. Spots from world coordinates (items 8, 10).** Show Linen Cloth's Sold by → Maria
@@ -4946,7 +4954,9 @@ item a quest in your log needs → `Keep` with a score and a reason line naming 
 `Sell` with `Sells for …`; a reagent of a profession you have → Keep or Hold by its recipes' colors,
 the reason naming the profession; an item no quest, recipe or vendor wants → Toss only with High or
 Medium confidence. After a fresh login, before opening your profession window, hover a reagent →
-Medium or Low with the hint `Open your profession window to rank recipes`, and never Toss; hover
+Medium or Low with the hint `Open your profession window to rank recipes`, and never Toss
+(superseded by ITEM-SEARCH-52, 2026-11-26: the badge shows no confidence tier, and the hint carries no
+tier word); hover
 unwanted gear while Pawn is still scoring (the hint `Pawn is still scoring`) → Hold, never Toss. Untick
 Explain the badge → the reason lines go, the badge stays; untick Show the Keep / Hold / Sell / Toss
 badge → `Drop Watcher` stands alone and Explain the badge grays out. Drop Watcher never moves or
@@ -4957,7 +4967,8 @@ section on, the badge and its reasons on → no hitch. Settings › Item Search 
 block, top to bottom: Add Item Search to item tooltips, Comparison tooltips too, Rows per section,
 Show the key hint, Only while holding Shift, Separator line, Show the Keep / Hold / Sell / Toss badge,
 Explain the badge (grayed out while the badge is off), Show recipe skill levels; then Tooltip and
-window; then Sections with Gathered from after Drops from, and Section order with Gathered from after
+window (with Hide the other faction's vendors under Only professions you know since ITEM-SEARCH-53,
+2026-11-26); then Sections with Gathered from after Drops from, and Section order with Gathered from after
 Drops from (also on a profile that stored an order before this build). Item Search window: Enable
 the Item Search window, Record vendor prices, Load ForeverDB (Full), then the bars. Every row is
 grayed out where its prerequisite is off. Defaults puts them all back. Result:
@@ -4997,6 +5008,123 @@ chip, the matches' Sort, and the title bar's settings and close → each tooltip
 above its control. Hold Shift over a Makes cell that makes gear → the comparison tooltips open
 further out on the same side, never back over the window. Hover Drop Watcher's waypoint arrow → its
 tooltip opens beside the arrow. Result:
+
+### Item Search owner feedback round 4
+
+The owner feedback round 4 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`,
+R4-DW-01 to R4-DW-09, and R4-DW-11 from its addendum A1; each row names its smoke id from that bundle's manifest). Same
+client and ForeverDB setup as above, on a character with Alchemy and Herbalism (Peacebloom is the
+owner's example item). Where a check here contradicts an earlier ITEM-SEARCH row (the drop source
+colors, the skill levels, the profession names, the badge, the other faction's vendors, the quest
+rows, the no-skill-up glyph), this one is current, and each older row says so where it differs.
+
+**ITEM-SEARCH-47. Each Type in its own color, names plain (R4-DW-01, R4-DW-SM1).** Show Linen
+Cloth (or any item with creature, elite, rare, object and container sources) in the Item Search
+window's Drops from tab → the Type column reads each type in its own color: Creature white, Elite
+gold, Rare teal, Rare Elite pale blue, Boss rose, Object (and `Object ×N`) tan, Container lavender;
+the World drop row's dash stays dim. Every Source name is plain white, whatever its rank or quality.
+The tooltip's Drops from and Skinned from rows and the Skinned from tab's Creature column are plain
+too. No Type color looks like a profession's (ITEM-SEARCH-49), and each reads clearly on the dark
+background. Result:
+
+**ITEM-SEARCH-48. Incense Candle reads Herbalism (R4-DW-03, R4-DW-SM3).** Show Peacebloom, Crafting
+tab → Incense Candle's Profession reads Herbalism and its Skill shows its levels (yellow and gray
+from 20), not a dash; Show Copper Ore → the smelting recipe reads Mining with its levels. The
+tooltip's Crafting rows say the same, and with Only professions you know on, Herbalism and Mining
+recipes count as yours when you have the profession. A recipe Drop Watcher knows only from your
+profession window (not in the shipped table) shows Skill `?`, and its row tooltip says `levels
+unknown: not in the shipped table`. Result:
+
+**ITEM-SEARCH-49. Each profession in its own color (R4-DW-04, R4-DW-SM4).** Hover Peacebloom, then
+Linen Cloth → in the tooltip's Crafting rows (the profession alone, or after the skill levels when
+professions mix) and the Gathered from rows, each profession's name has one fixed color: Alchemy,
+Herbalism, Tailoring, First Aid, Cooking and the rest each differ. The window's Crafting and
+Gathered from Profession columns use the same colors. None is orange, yellow, green, gray or red,
+none matches a Type color, none reads as plain white text (Mining is a verdigris teal; it was a pale
+near-white before round 4's review), and each reads clearly on the tooltip. Result:
+
+**ITEM-SEARCH-50. The orange start always, your band bracketed (R4-DW-05, R4-DW-SM5).** With Alchemy
+known, show Peacebloom's Crafting tab → Elixir of Minor Defense's Skill reads `1 55 75 95`: the
+orange start is always there (1 for a trainer recipe). The number where the band your rank is in
+starts is bracketed at full brightness, and the other numbers are dimmed. A recipe whose minimum is
+above your rank shows its start in red. Recipes you don't know get the same cue. No rank number is
+shown. Hover Peacebloom → the tooltip's Crafting rows match the window. Skill up once (or train) and
+hover again → the bracket moves with your band. Result:
+
+**ITEM-SEARCH-51. No flicker on the separator (R4-DW-06, R4-DW-SM6).** With Separator line on and
+other tooltip addons loaded (ItemTree, if you use it), hover Peacebloom in your bags and keep the
+pointer still for several seconds, then move between bag slots holding the same item and different
+items → the thin line above `Drop Watcher` never flickers, blinks or jumps, and no second dim line
+shows anywhere in the tooltip. Shift-hover gear for comparison tooltips → the same. Untick Separator
+line → the line goes for good. Result:
+
+**ITEM-SEARCH-52. The badge: two filled boxes right after the label (R4-DW-07, R4-DW-SM7).** Hover
+Peacebloom → `Drop Watcher`, then right after it a filled badge: the left box in the verdict's bright
+color holding the lock and the word (`Keep`), the right box in a darker shade of the same color
+holding the score (`65` or whatever yours reads). No `· High`, `Medium` or `Low` anywhere. The
+tooltip is wide enough for the badge. The reason lines add up: a Keep 65 names its two biggest parts
+and `Easy to buy again` (the part that pulls it down). Hover a Hold, a Sell (gray junk) and a Toss
+item → Hold yellow, Sell amber, Toss red. Before opening your profession window after a login, the
+fix hint (`Open your profession window to rank recipes`) still shows, without a tier word, and the
+badge never says Toss then. Switch skin → the badge keeps its colors. Result:
+
+**ITEM-SEARCH-53. The other faction's vendors hidden by default (R4-DW-08, R4-DW-SM8).** On a fresh
+profile, Settings › Item Search › Item tooltip → under Tooltip and window, Hide the other faction's
+vendors, on, right below Only professions you know (never grayed out). On an Alliance character,
+hover Peacebloom → Sold by lists Maria Lumere (with her price only if you recorded one or ForeverDB
+has one; no estimate), then a dim `+2 other-faction vendors` (Hula'mahi and Selina Weston are
+Horde's); an item whose vendors are all the other faction's shows the Sold by heading and that
+line alone; one other-faction vendor reads `+1 other-faction vendor`. Open the window on it, Sold by
+tab → Only my faction is on (the funnel filled, no Reset), only Maria Lumere listed; turn it off →
+the Horde vendors show with `Horde only` in red; Reset → Only my faction is on again. Untick Hide the
+other faction's vendors → the tooltip lists every vendor with `Horde only` in red and no count, the
+open window's filter turns off at once, and Reset keeps it off. A vendor ForeverDB names no faction
+for always shows. On a Horde character, the same the other way round. `/reload` → the setting
+holds. Result:
+
+**ITEM-SEARCH-54. Quest rows: Title (Level) and Giver - Zone (R4-DW-09, R4-DW-SM9).** Hover
+Peacebloom → the Quests row reads the mark, then `My First Alchemy Set (10)` on the left, the title
+and its level in the quest's difficulty color (yellow near your level, gray far below, red well
+above), and on the right the giver and their zone, muted, such as `<Giver> - <Zone>` (the owner's
+example: `Odd Child - Westfall`); no `level 10` on the right any more. A quest with no known giver
+has nothing on the right; a giver with no known spawn shows the name alone; a test-named giver is
+skipped for the next one. Open the window on Peacebloom, Quests tab → the Giver column reads the
+same `<Giver> - <Zone>`, with ` - ` instead of the old ` · `, and the same giver as the tooltip. Hover
+quickly over many quest items → no hitch. Result:
+
+**ITEM-SEARCH-55. No skill-up is a thick gray dash, in both homes (R4-DW-02, R4-DW-SM2).** After a full
+client restart (a new texture file), on a character whose rank leaves some known recipe gray (or one
+with no skill levels), hover the item, then show it in the Item Search window's Crafting tab → that
+recipe's glyph is a thick light gray dash with rounded ends, as wide as the skill-up arrow beside
+other rows and one solid line (not a blurred pair of rows), the same in the tooltip and in the
+table. The skill-up arrow and the padlock are unchanged. Fail: the old two-way arrow (↔) in either
+home, a thin or blurred line, a blank where the dash should be, or a dash of a different width
+between the tooltip and the window. Result:
+
+**ITEM-SEARCH-56. The verdict panel under Matches, while you hold the item (R4-DW-11, R4-DW-SM11).**
+On a character with Alchemy and Herbalism and a few Peacebloom in the bags, open the Item Search
+window on Peacebloom → at the bottom of the left column, under Matches, a `Verdict` header with
+`You have <n>` on its right, then the same two-box badge as the tooltip's (the word with its icon on
+the bright box, the score on the darker one), then one line per part that counted, each with its
+points on the right, in this order: the quests one by one, your known recipes by color
+(`Known recipes, orange skill-up (2)`), the recipes you could learn, other professions, gear, the
+dampers (`Easy to buy again -20`), a cap when one was hit (`Crafting counts 50 at most`), the poor
+cap or the quest-item floor when they apply; then `Score` with the badge's number, then the line the
+word comes from (`Keep from 50`). The points add up to the score, nothing reads 0, and no `High`,
+`Medium` or `Low` anywhere. Hover Peacebloom → the badge's word and score are the panel's. The
+Matches list ends above the panel and still shows at least five rows; drag the window down to its
+smallest → the panel gets shorter and scrolls its lines, the matches keep five rows. Put every
+Peacebloom in the bank and close the bank → the panel stays (`You have <n>`, the bank's count). Sell
+or destroy them all → within a second the panel goes and the Matches list runs down to the footer
+again; loot one → it comes back. Show an item you hold none of → no panel. Before opening your
+profession window after a login, a recipe item's panel ends with the plain hint `Open your
+profession window to rank recipes`. Equip a weapon you have no other copy of and show it → no
+panel (worn is not held); with a second one in the bags → `You have 1`. Show a gear item from your
+bags that reads `Upgrade for you`, then equip something better in that slot → within a second the
+panel's gear line and score change, and hovering the item shows the same word and score on the
+tooltip's badge. Show an item whose info is still loading on a fresh login, then another item, then
+come back → the panel works it out again rather than staying on `Item info is still loading`.
+Looting, moving bags and hovering items with the window open → no hitch. Result:
 
 ## Pending sign-off
 

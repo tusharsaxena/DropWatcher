@@ -101,7 +101,7 @@ TABS.DEF = {
             PIN,
         },
         filters = {
-            { key = "faction", label = L["Only my faction"], default = false, narrows = true, keep = function(r) return not r.other end },
+            { key = "faction", label = L["Only my faction"], default = "faction", narrows = true, keep = function(r) return not r.other end },
         },
     },
     quests = {
@@ -128,7 +128,7 @@ TABS.DEF = {
             col("profession", L["Profession"], 120, { tip = L["the profession it belongs to"] }),
             col("uses", L["Uses"], 56, { tip = L["how many of this item one craft takes"] }),
             col("makes", L["Makes"], "flex", { tip = L["what it makes; hover it for the item"] }),
-            col("skill", L["Skill"], 130, { kind = "parts", tip = L["its skill-up breakpoints: orange, yellow, green, gray"] }),
+            col("skill", L["Skill"], 130, { kind = "parts", tip = L["where orange, yellow, green and gray start; your band in brackets"] }),
             col("status", L["Status"], "flex", { tip = L["known; else where to learn it (a trainer, or the recipe item's best vendor, quest or drop); or the profession you lack"] }),
         },
         filters = {
@@ -211,13 +211,15 @@ end
 
 local function defaultOf(f, opts)
     if f.default == "mine" then return opts.mine == true end
+    if f.default == "faction" then return opts.faction == true end
     return f.default
 end
 
 --- A tab's default view state: Best for you, every filter at its default (Crafting's "Only my
---- professions" is `opts.mine`, the setting, spec §4).
+--- professions" is `opts.mine`, the setting, spec §4; Sold by's "Only my faction" is
+--- `opts.faction`, Hide the other faction's vendors, R4-DW-08).
 --- @param tab string
---- @param opts table|nil { mine }
+--- @param opts table|nil { mine, faction } (NS.ItemSearch.ViewDefaults' shape)
 --- @return table
 function TABS.DefaultState(tab, opts)
     opts = opts or {}

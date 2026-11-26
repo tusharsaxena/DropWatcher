@@ -31,8 +31,10 @@
 --     `__top - PAD - (n - 1) * LINE_H` and that less FONT_H (nil while `__top` is). The client keeps
 --     a tooltip's font strings across a clear, and so does the double. OnSizeChanged is fired by
 --     handle.resize(tip). CreateTexture answers a recording Texture of the tooltip's own (its
---     texture, vertex color, points, height and shown state; handle.textures(tip) lists them), where
---     the base mock answers the frame itself.
+--     texture, alpha, vertex color, points, height and shown state;
+--     handle.textures(tip) lists them), where the base mock answers the frame itself; and
+--     CreateFontString a recording FontString (text, color, points, shown state, and a stand-in
+--     GetStringWidth: TDP.FONT_W a visible character, TDP.ICON_W a texture escape).
 -- Nothing else of a tooltip is modeled: neither reader reads a line's text, so none is offered.
 
 local TDP = {}
@@ -45,6 +47,8 @@ TDP.TOP, TDP.PAD, TDP.LINE_H, TDP.FONT_H = 500, 10, 14, 12
 local function newTexture(owner, layer)
     local t = { __owner = owner, __layer = layer, __shown = true, __points = {} }
     function t:SetTexture(path) self.__texture = path end
+    function t:SetAlpha(a) self.__alpha = a end
+    function t:GetAlpha() return self.__alpha or 1 end
     function t:SetVertexColor(r, g, b, a) self.__vertex = { r, g, b, a or 1 } end
     function t:SetPoint(...) self.__points[#self.__points + 1] = { ... } end
     function t:ClearAllPoints() self.__points = {} end
@@ -52,12 +56,43 @@ local function newTexture(owner, layer)
     function t:GetPoint(i) return unpack(self.__points[i or 1] or {}) end
     function t:SetHeight(h) self.__h = h end
     function t:GetHeight() return self.__h or 0 end
+    function t:SetWidth(w) self.__w = w end
+    function t:GetWidth() return self.__w or 0 end
     function t:SetSnapToPixelGrid(v) self.__snap = not not v end
     function t:SetTexelSnappingBias(v) self.__bias = v end
     function t:Show() self.__shown = true end
     function t:Hide() self.__shown = false end
     function t:IsShown() return self.__shown end
     return t
+end
+
+-- A recording FontString of the tooltip's own (the badge's word and score, R4-DW-07): its text,
+-- color, points and shown state. GetStringWidth answers FONT_W a visible character plus ICON_W a
+-- texture escape (color codes are not drawn), a stand-in for the client's measure.
+TDP.FONT_W, TDP.ICON_W = 7, 14
+
+local function stringWidth(text)
+    local icons = 0
+    text = tostring(text or ""):gsub("|T.-|t", function() icons = icons + 1; return "" end)
+    text = text:gsub("|c%x%x%x%x%x%x%x%x", ""):gsub("|r", "")
+    return #text * TDP.FONT_W + icons * TDP.ICON_W
+end
+
+local function newFontString(owner, layer, template)
+    local fs = { __owner = owner, __layer = layer, __template = template, __shown = true, __points = {} }
+    function fs:SetText(v) self.__text = v end
+    function fs:GetText() return self.__text end
+    function fs:GetStringWidth() return stringWidth(self.__text) end
+    function fs:SetTextColor(r, g, b, a) self.__color = { r, g, b, a or 1 } end
+    function fs:SetFontObject(o) self.__font = o end
+    function fs:SetJustifyH(v) self.__justify = v end
+    function fs:SetPoint(...) self.__points[#self.__points + 1] = { ... } end
+    function fs:ClearAllPoints() self.__points = {} end
+    function fs:GetPoint(i) return unpack(self.__points[i or 1] or {}) end
+    function fs:Show() self.__shown = true end
+    function fs:Hide() self.__shown = false end
+    function fs:IsShown() return self.__shown end
+    return fs
 end
 
 -- Line n's left font string, the client's global for a named tooltip, made once.
@@ -75,6 +110,7 @@ local function decorate(M, tip, name)
     tip.__name = name
     tip.__lines = {}
     tip.__textures = {}
+    tip.__strings = {}
     tip.__top = TDP.TOP
     tip.forbidden = false
     tip.GetName = function(self) return self.__name end
@@ -84,6 +120,11 @@ local function decorate(M, tip, name)
         local t = newTexture(self, layer)
         self.__textures[#self.__textures + 1] = t
         return t
+    end
+    tip.CreateFontString = function(self, _, layer, template)
+        local f = newFontString(self, layer, template)
+        self.__strings[#self.__strings + 1] = f
+        return f
     end
     tip.AddLine = function(self, text, r, g, b)
         self.__lines[#self.__lines + 1] = { text = text, r = r, g = g, b = b }

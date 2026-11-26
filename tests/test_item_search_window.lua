@@ -634,7 +634,7 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
         assertTrue(row.cells[3].text:GetText() == "First Aid", "only First Aid's recipes")
         assertTrue(row.cells[1].text:GetText() ~= "", "a glyph")
         -- round 3 spec §4.1: the tooltip's glyph at its explicit size, centered in its column
-        assertTrue(row.cells[1].text:GetText():find(":14:14:", 1, true) ~= nil, "the glyph at GLYPH_SIZE, as in the tooltip")
+        assertTrue(row.cells[1].text:GetText():find(":%d+:14:0:0:") ~= nil, "the glyph GLYPH_SIZE wide, as in the tooltip")
         assertEqual(row.cells[1].text:GetJustifyH(), "CENTER", "the glyph column centered")
     end
     assertEqual(f.grid.layout.glyph.x, NS.ItemSearchTabs.INSET, "the first column inset off the table's edge")
@@ -644,6 +644,27 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     assertTrue(#W.TableRows() > shown, "every profession's recipes")
     assertEqual(NS.Window.TooltipOf(f.section.chip)[1], "All professions")
     assertFalse(NS.addon.db.profile.itemSearch.myProfessionsOnly == false, "the chip is not saved")
+end, FOREVER_ONLY)
+
+test("item search window: a known recipe with no skill-up draws the tooltip's thick gray dash (R4-DW-02)", function()
+    local NS = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 300, skillID = 129 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+        mm.IsPlayerSpell = function() return true end
+    end })
+    local W = NS.ItemSearchWindow
+    W.ShowItem(LINEN)
+    local dashes = 0
+    for _, row in ipairs(W.TableRows()) do
+        local text = row.cells[1].text:GetText()
+        -- red under: the window's two-way arrow (owner feedback round 4: "both in tooltip and in ItemSearch window")
+        assertTrue(not text:find("arrows-horizontal", 1, true), "no two-way arrow in the window")
+        if text:find("icons\\dash:", 1, true) then
+            dashes = dashes + 1
+            assertEqual(text, NS.ItemSearchTip.CraftMark({ known = true, color = "gray" }), "the tooltip's own dash")
+        end
+    end
+    assertTrue(dashes > 0, "a known First Aid recipe at rank 300 reads no skill-up")
 end, FOREVER_ONLY)
 
 test("item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08)", function()
@@ -673,6 +694,33 @@ test("item search window: not-known recipes say Trainer or name their recipe ite
     taught:__fire("OnClick", "LeftButton")
     -- red under: a row click that opens nothing (the owner's "where to get the recipe from")
     assertEqual(W.ShownItem(), item, "the recipe item shown")
+end, FOREVER_ONLY)
+
+test("item search window: Sold by's Only my faction starts at Hide the other faction's vendors, and Reset returns to it (R4-DW-08)", function()
+    local NS = enabled({ setup = function(mm) mm.UnitFactionGroup = function() return "Horde", "Horde" end end })
+    local W, TABS = NS.ItemSearchWindow, NS.ItemSearchTabs
+    W.ShowItem(IDS.blade)
+    W.SelectTab("vendors")
+    local function names()
+        local out = {}
+        for _, row in ipairs(W.TableRows()) do out[#out + 1] = row.cells[1].text:GetText() end
+        return table.concat(out, ",")
+    end
+    -- red under: the chip's old default of off, which listed the Alliance trainer for a Horde player
+    assertTrue(W.ViewState("vendors").filters.faction, "on, as the setting")
+    assertEqual(names(), "Fixture Vendor")
+    assertTrue(TABS.IsDefault("vendors", W.ViewState("vendors"), { faction = true }), "the default: no Reset")
+    W.SetFilter("vendors", "faction", false)
+    assertEqual(names(), "Fixture Vendor,Fixture Trainer", "the chip off: both, the other side last")
+    W.ResetView("vendors")
+    assertTrue(W.ViewState("vendors").filters.faction, "Reset returns to the setting")
+    NS.SchemaRuntime.Set("itemSearch.hideOtherFaction", false)
+    -- red under: the tab keeping the filter it was made with when the setting moves
+    assertFalse(W.ViewState("vendors").filters.faction, "the setting off: the chip follows")
+    assertEqual(names(), "Fixture Vendor,Fixture Trainer")
+    W.ResetView("vendors")
+    assertFalse(W.ViewState("vendors").filters.faction, "Reset: the setting, now off")
+    assertEqual(TABS.DefaultState("vendors", {}).filters.faction, false, "no option: off")
 end, FOREVER_ONLY)
 
 test("item search window: the Crafting tab's filter follows Only professions you know when the setting moves", function()
@@ -923,7 +971,7 @@ test("item search tooltips: the chrome opens attached to its control, every body
     for _, key in ipairs({ "drops", "vendors", "quests", "skinned", "crafting" }) do W.SelectTab(key) end
     local f = W.Frame()
     local chrome = { [f.clearButton] = "Clear", [f.section.chip] = "the My professions chip",
-        [f.matchHead.chip] = "the matches' chip" }
+        [f.matchHead.chip] = "the matches' chip", [f.verdict.head.chip] = "the verdict panel's chip" }
     for key, tab in pairs(f.tabs) do chrome[tab] = "the " .. key .. " tab" end
     for key, b in pairs(f.section.marks) do chrome[b] = "the section's " .. key .. " mark" end
     for key, b in pairs(f.matchHead.marks) do chrome[b] = "the matches' " .. key .. " mark" end

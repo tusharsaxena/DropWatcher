@@ -215,23 +215,62 @@ local FIXED_TONE = {
     skillYellow = { r = 1.00, g = 1.00, b = 0.00 },
     skillGreen  = { r = 0.25, g = 0.75, b = 0.25 },
     skillGray   = { r = 0.50, g = 0.50, b = 0.50 },
+    -- The same four dimmed (round 4, R4-DW-05): the breakpoints outside the band your rank is in, so
+    -- the bracketed band stands out at full brightness.
+    skillOrangeDim = { r = 0.62, g = 0.31, b = 0.16 },
+    skillYellowDim = { r = 0.62, g = 0.62, b = 0.00 },
+    skillGreenDim  = { r = 0.16, g = 0.47, b = 0.16 },
+    skillGrayDim   = { r = 0.34, g = 0.34, b = 0.34 },
     -- The recipe glyphs past the skill-ups (Item Search feedback spec §5.7): a known recipe with no
     -- skill-up, its flat dash light gray (#b0b0b0), and a recipe you don't know, its padlock dark
     -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
     glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
     glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
-    -- A creature's rank on Item Search's rows (round 3 spec §4.3, item 6): its name and Type in the
-    -- color of what kind of creature it is, as the game's unit frames tell an elite from a rare. A
-    -- normal creature stays `plain` (skinned); elite the game's gold (#FFD100), rare silver
-    -- (#C7CCDB), rare elite a pale silver-blue apart from both (#9ECCFF), boss a lightened epic
-    -- purple (#BF70FF, apart from the skill-up orange on the same window). A game meaning every
-    -- player reads the same under every skin, as the skill-up hues are, so fixed.
-    rankElite     = { r = 1.00, g = 0.82, b = 0.00 },
-    rankRare      = { r = 0.78, g = 0.80, b = 0.86 },
-    rankRareElite = { r = 0.62, g = 0.80, b = 1.00 },
-    rankBoss      = { r = 0.75, g = 0.44, b = 1.00 },
+    -- A drop source's Type on Item Search's Drops from tab (round 4, R4-DW-01): one tone per type,
+    -- so the column reads at a glance, a meaning every player reads the same under every skin.
+    -- Creature white (owner rule), Elite the game's gold (#FFD100), Rare teal (#4DD9C9), Rare Elite
+    -- pale blue (#9ECCFF), Boss rose (#FF6F91, apart from epic purple and the skill-up orange),
+    -- Object tan (#C9A57A), Container lavender (#B39DFF). The source's own name stays plain; no
+    -- profession tone repeats one of these.
+    typeCreature  = { r = 1.00, g = 1.00, b = 1.00 },
+    typeElite     = { r = 1.00, g = 0.82, b = 0.00 },
+    typeRare      = { r = 0.302, g = 0.851, b = 0.788 },
+    typeRareElite = { r = 0.620, g = 0.800, b = 1.000 },
+    typeBoss      = { r = 1.000, g = 0.435, b = 0.569 },
+    typeObject    = { r = 0.788, g = 0.647, b = 0.478 },
+    typeContainer = { r = 0.702, g = 0.616, b = 1.000 },
+    -- A profession's name on Item Search's rows (round 4, R4-DW-04): one tone per skill line
+    -- (C.PROFESSION_TONE), in the tooltip's crafting and gathering rows and the window's Crafting
+    -- and Gathered from Profession columns. None is a skill-up hue (orange, yellow, green, gray) or
+    -- red, none repeats a Type tone above, and each reads on the dark tooltip (contrast 4.8:1 or
+    -- more on #0B0B0B; the closest pair, Leatherworking and Skinning, about 22 apart in CIELAB).
+    -- Each is clearly a color (its channels 0.2 or more apart): Mining is verdigris, copper ore's
+    -- patina (#1A8F94, contrast 5.0:1, 29.6 or more from every other tone here in CIELAB), where its
+    -- first pale near-white read as uncolored text (R4-REV).
+    profAlchemy        = { r = 0.310, g = 0.765, b = 0.969 },
+    profBlacksmithing  = { r = 0.557, g = 0.643, b = 0.784 },
+    profEngineering    = { r = 0.431, g = 0.608, b = 1.000 },
+    profEnchanting     = { r = 0.824, g = 0.490, b = 1.000 },
+    profJewelcrafting  = { r = 1.000, g = 0.361, b = 0.882 },
+    profTailoring      = { r = 1.000, g = 0.604, b = 0.804 },
+    profCooking        = { r = 0.910, g = 0.706, b = 1.000 },
+    profFirstAid       = { r = 1.000, g = 0.788, b = 0.839 },
+    profLeatherworking = { r = 0.725, g = 0.506, b = 0.310 },
+    profSkinning       = { r = 0.690, g = 0.416, b = 0.376 },
+    profHerbalism      = { r = 0.369, g = 0.902, b = 0.659 },
+    profMining         = { r = 0.100, g = 0.560, b = 0.580 },
+    profFishing        = { r = 0.541, g = 0.490, b = 1.000 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
+
+-- The C.TONE key of each profession's name by its skill line (round 4, R4-DW-04): the eight crafting
+-- lines, Jewelcrafting (Retail's), and the four gathering lines WoW Forever gives recipes.
+C.PROFESSION_TONE = {
+    [171] = "profAlchemy", [164] = "profBlacksmithing", [202] = "profEngineering", [333] = "profEnchanting",
+    [755] = "profJewelcrafting", [197] = "profTailoring", [185] = "profCooking", [129] = "profFirstAid",
+    [165] = "profLeatherworking", [393] = "profSkinning", [182] = "profHerbalism", [186] = "profMining",
+    [356] = "profFishing",
+}
 
 -- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key
 -- (modules/DetailCells.lua's SECONDARY): one fixed color per stat (feedback-21 H5).
@@ -463,9 +502,23 @@ C.ITEM_SEARCH = {
     -- The recipe glyphs' size in pixels, the tooltip's and the window's alike (round 3 spec §4.1):
     -- an explicit escape size, so both faces draw them the same.
     GLYPH_SIZE  = 14,
+    -- The no-skill-up dash's height in pixels (round 4, R4-DW-02): LibKa0s' `dash` is 14 of its 64
+    -- rows tall, so at GLYPH_SIZE wide its bar is 14 * 14 / 64 = 3.06 px. The escape crops the
+    -- texture to the bar and draws it a whole 3 px tall, one solid line at any sub-pixel offset.
+    DASH_HEIGHT = 3,
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
+    -- The tooltip's verdict badge (round 4, R4-DW-07): two filled boxes joined flush right after the
+    -- "Drop Watcher" label, the word's in the verdict's bright tone and the score's in DARK times it,
+    -- HEIGHT tall, PAD either side of each text, GAP from the label; its icon ICON pixels square.
+    BADGE       = { HEIGHT = 16, PAD = 4, GAP = 6, DARK = 0.5, ICON = 12 },
+    -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
+    -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
+    -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most
+    -- once each THROTTLE seconds; a breakdown whose item info or gear verdict was still loading is
+    -- worked out again VERDICT.RETRY seconds on, RETRIES times at most per item.
+    PANEL       = { LINES = 8, MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
     -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
     -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the

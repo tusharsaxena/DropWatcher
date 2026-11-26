@@ -75,6 +75,9 @@ local FALLBACK = { upgrade = "+", sidegrade = "~", downgrade = "-" }
 
 local function byte(v) return floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
 
+--- A 0..1 color component as the 0..255 integer a texture escape's tint takes.
+TM.Byte = byte
+
 --- An inline texture escape for `path`, at the text's height (0:0) and tinted r, g, b (0..1):
 --- `|T<path>:0:0:0:0:64:64:0:64:0:64:R:G:B|t`, R, G, B as 0..255. `size` (pixels) draws it
 --- `size` x `size` instead (`|T<path>:14:14:...`), so marks in different faces match (Item Search

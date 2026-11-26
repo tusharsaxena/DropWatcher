@@ -12,7 +12,8 @@ local _, NS = ...
 --     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show the Keep /
 --     Hold / Sell / Toss badge, Explain the badge (dimmed with the badge off, the page's way of
 --     setting it under the badge), Show recipe skill levels (round 3 spec §4.2, §4.5, §5); then,
---     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4);
+--     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4)
+--     and Hide the other faction's vendors (the same, R4-DW-08);
 --     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
@@ -48,7 +49,7 @@ local SECTIONS = {
     { key = "gathered", label = L["Gathered from"],
       tip = L["The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."] },
     { key = "vendors", label = L["Sold by"],
-      tip = L["The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."] },
+      tip = L["The vendors that sell the item, each with its price where one is known; the ones only the other faction can buy from are counted on one line, or listed in red with Hide the other faction's vendors off."] },
     { key = "quests", label = L["Quests"],
       tip = L["The quests that ask for the item: in your log, not picked up yet, or completed."] },
     { key = "crafting", label = L["Crafting"],
@@ -94,6 +95,11 @@ local function followProfessions()
     local W = NS.ItemSearchWindow
     if W and W.FollowProfessionsSetting then W.FollowProfessionsSetting() else repaintSearchWindow() end
 end
+-- "Hide the other faction's vendors": the window's Sold by filter follows the setting again (R4-DW-08).
+local function followFaction()
+    local W = NS.ItemSearchWindow
+    if W and W.FollowFactionSetting then W.FollowFactionSetting() else repaintSearchWindow() end
+end
 
 -- ── Item tooltip ────────────────────────────────────────────────────────────────────────────
 
@@ -122,16 +128,19 @@ local function tooltip()
         L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."], sub)
     -- The verdict badge and its reasons (round 3 spec §4.5, §5): the reasons need the badge.
     M.bool("itemSearch.tooltip.badge", T.badge, L["Show the Keep / Hold / Sell / Toss badge"],
-        L["At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."], sub)
+        L["Right after the block's Drop Watcher label, show a badge that says what to do with the item: Keep, Hold, Sell or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."], sub)
     M.bool("itemSearch.tooltip.reasons", T.reasons, L["Explain the badge"],
-        L["Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."],
+        L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."],
         M.with(sub, { disabledIf = function() return off() or NS.Setting("itemSearch.tooltip.badge") ~= true end }))
     M.bool("itemSearch.tooltip.craftSkill", T.craftSkill, L["Show recipe skill levels"],
-        L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
+        L["On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],
         M.with(at, { subgroup = L["Tooltip and window"], onChange = followProfessions }))
+    M.bool("itemSearch.hideOtherFaction", D.hideOtherFaction, L["Hide the other faction's vendors"],
+        L["Leave out the vendors only the other faction can buy from, in the tooltip's Sold by and, to start with, in the Item Search window's Sold by tab (its Only my faction filter). The tooltip counts them on one line. A vendor ForeverDB names no faction for always shows."],
+        M.with(at, { subgroup = L["Tooltip and window"], onChange = followFaction }))
 
     local sections = M.with(sub, { subgroup = L["Sections"] })
     for _, s in ipairs(SECTIONS) do

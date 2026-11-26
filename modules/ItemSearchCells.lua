@@ -47,6 +47,7 @@ local ISC = NS.ItemSearchCells
 local IS  = NS.ItemSearch
 local ISV = NS.ItemSearchView
 local L   = NS.L
+local C   = NS.Constants
 
 local floor = math.floor
 
@@ -235,21 +236,8 @@ function ISC.TypeOf(s)
     return RANK_TYPE[rank] or L["Creature"], TYPE_ORDER[rank] or 1
 end
 
---- A creature's color by its rank (NS.ItemSearch.RankTone, round 3 spec §4.3): the Source and Type
---- cells, the Skinned from Creature cell and the tooltip's creature rows share it.
-ISC.RankTone = IS.RankTone
-
--- The look a drop source's name and Type share (round 3 spec §4.3, item 6): a creature by its rank,
--- an object plain, a container in its quality, an unnamed source muted.
-local function sourceLook(s, ctx)
-    if s.kind == "item" then
-        local it = call(ctx.item, s.id)
-        return nil, type(it) == "table" and num(it.quality) or nil
-    end
-    if not s.named then return "muted", nil end
-    if s.kind == "npc" then return IS.RankTone(s.rank), nil end
-    return "plain", nil
-end
+--- A drop source's Type tone (NS.ItemSearch.TypeTone, round 4 R4-DW-01): the Type cell only.
+ISC.TypeTone = IS.TypeTone
 
 local function dropTip(s, typeText, where, me)
     local rows, hints = {}, {}
@@ -270,7 +258,6 @@ end
 local function dropRow(s, i, top, me, ctx)
     local where = ISC.Where(spotsOf(s.kind, s, ctx), me.mapID, ctx.mapName)
     local typeText, typeOrder = ISC.TypeOf(s)
-    local tone, quality = sourceLook(s, ctx)
     local chance = chanceCell(s.chance, top)
     local hasLevel = num(s.minLevel) ~= nil
     return {
@@ -278,8 +265,8 @@ local function dropRow(s, i, top, me, ctx)
         itemID = s.kind == "item" and s.id or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         band = (s.kind == "npc" and hasLevel) and IS.InBand(s.minLevel, s.maxLevel, me.level) or nil,
-        cells = { source = { text = s.name, tone = tone, quality = quality }, type = { text = typeText, tone = tone,
-            quality = quality },
+        cells = { source = { text = s.name, tone = s.named and "plain" or "muted" },
+            type = { text = typeText, tone = IS.TypeTone(s.kind, s.rank) },
             level = levelCell(s.minLevel, s.maxLevel, me.level), zone = ISC.ZoneCell(where), chance = chance },
         sort = { source = lower(s.name), type = typeOrder, level = num(s.minLevel), zone = lower(where and where.zone),
             chance = num(s.chance) },
@@ -360,7 +347,8 @@ local function gatherRow(g, i, top, me, ctx)
         best = i, kind = "object", gather = g.gather, id = g.id, spot = where and where.spot or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         mine = rank ~= nil or not IS.SkillsRead(me.ranks),
-        cells = { node = { text = g.name, tone = "plain" }, profession = textCell(profession),
+        cells = { node = { text = g.name, tone = "plain" },
+            profession = textCell(profession, C.PROFESSION_TONE[IS.GATHER_LINE[g.gather] or 0]),
             skill = ISC.GatherSkillCell(g, me.ranks), zone = ISC.ZoneCell(where), chance = chanceCell(g.chance, top) },
         sort = { node = lower(g.name), profession = lower(profession), skill = num(g.skill),
             zone = lower(where and where.zone), chance = num(g.chance) },
@@ -517,31 +505,27 @@ local function questInputs(facts)
     return out
 end
 
--- A giver's name, or nil.
-local function giverName(g, ctx)
-    local reader = g.kind == "object" and ctx.object or ctx.npc
-    local row = call(reader, g.id)
-    return type(row) == "table" and row.name or nil
+-- The quest's giver (NS.ItemSearch.QuestGiver, the tooltip's too: R4-DW-09): its name and where it
+-- stands.
+local function giverOf(info, me, ctx)
+    local g = IS.QuestGiver(type(info) == "table" and info.givers or nil, ctx.npc, ctx.object)
+    if not g then return nil, nil end
+    return g.name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
 end
 
--- The quest's first giver whose name is not a test or dev one (round 3 spec §4.3): its name and
--- where it stands.
-local function giverOf(info, me, ctx)
-    for _, g in ipairs(type(info) == "table" and list(info.givers) or {}) do
-        if type(g) == "table" and num(g.id) then
-            local name = giverName(g, ctx)
-            if not IS.IsTestSource(name) then
-                return name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
-            end
-        end
-    end
-    return nil, nil
+--- A quest giver's text, in the tooltip and the window's Giver column alike (R4-DW-09, the owner's
+--- "Odd Child - Westfall"): "<Giver> - <Zone>", the name alone with no zone, nil with no giver.
+--- @param name string|nil
+--- @param zone string|nil
+--- @return string|nil
+function ISC.GiverText(name, zone)
+    if not name then return nil end
+    if zone then return L["%s - %s"]:format(name, zone) end
+    return name
 end
 
 local function giverText(name, where)
-    if not name then return DASH end
-    if where and where.zone then return L["%s · %s"]:format(name, where.zone) end
-    return name
+    return ISC.GiverText(name, where and where.zone) or DASH
 end
 
 local function questTip(q, title, status, giver, where)
@@ -753,8 +737,14 @@ function ISC.RecipeSource(r, me, ctx)
     return out
 end
 
-local function craftTip(r, profession, product, rank, source)
+-- A recipe only the profession window knows (no shipped row): its skill levels are unknown.
+local function levelsUnknown(r, parts)
+    return r.learned == true and #parts == 0
+end
+
+local function craftTip(r, profession, product, rank, source, parts)
     local rows = { { L["Profession"], profession or DASH } }
+    if levelsUnknown(r, parts) then rows[#rows + 1] = { L["Skill"], L["levels unknown: not in the shipped table"] } end
     if rank then
         local words = COLOR_WORDS[r.color]
         rows[#rows + 1] = { L["Your rank"], words and ("%d · %s"):format(rank, words) or tostring(rank) }
@@ -772,14 +762,20 @@ local function productOf(r, ctx)
     return name, type(it) == "table" and num(it.quality) or nil
 end
 
+local function skillCell(r, parts)
+    if #parts > 0 then return { parts = parts } end
+    if levelsUnknown(r, parts) then return textCell("?", "muted") end
+    return textCell(nil)
+end
+
 local function craftCells(r, name, profession, status, tone, ctx)
     local product, quality = productOf(r, ctx)
     local parts = ISC.SkillParts(r)
     local makes = textCell(product)
     makes.quality = quality
     return { glyph = { craft = r }, recipe = textCell(name, r.known and "plain" or "muted"),
-        profession = textCell(profession), uses = textCell(num(r.count) and L["×%d"]:format(r.count) or nil),
-        makes = makes, skill = #parts > 0 and { parts = parts } or textCell(nil), status = textCell(status, tone) }, product
+        profession = textCell(profession, profession and C.PROFESSION_TONE[r.skillLine or 0] or nil), uses = textCell(num(r.count) and L["×%d"]:format(r.count) or nil),
+        makes = makes, skill = skillCell(r, parts), status = textCell(status, tone) }, product, parts
 end
 
 local function craftRow(r, i, me, ctx)
@@ -787,14 +783,14 @@ local function craftRow(r, i, me, ctx)
     local source = ISC.RecipeSource(r, me, ctx)
     local status, tone, order = ISC.CraftStatus(r, me.ranks, profession, source)
     local name = r.name or L["Recipe %d"]:format(r.spell)
-    local cells, product = craftCells(r, name, profession, status, tone, ctx)
+    local cells, product, parts = craftCells(r, name, profession, status, tone, ctx)
     return {
         best = i, spell = r.spell, known = r.known == true, mine = ISC.HasProfession(r, me.ranks),
         makesID = num(r.made), itemID = source and source.item or nil,
         cells = cells,
         sort = { glyph = i, recipe = lower(name), profession = lower(profession), uses = num(r.count),
             makes = lower(product), skill = num(r.yellow), status = order },
-        tip = craftTip(r, profession, product, num(r.rank), source),
+        tip = craftTip(r, profession, product, num(r.rank), source, parts),
     }
 end
 
@@ -847,7 +843,7 @@ local function skinRow(c, i, top, me, ctx)
     local rank = num(ranks[ISC.SKINNING])
     return {
         best = i, id = c.id, spot = where and where.spot or nil, here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
-        cells = { creature = { text = c.name, tone = IS.RankTone(c.rank) }, level = levelCell(c.minLevel, c.maxLevel, me.level),
+        cells = { creature = { text = c.name, tone = "plain" }, level = levelCell(c.minLevel, c.maxLevel, me.level),
             skill = skinSkillCell(need, rank), zone = ISC.ZoneCell(where), chance = chanceCell(c.chance, top) },
         sort = { creature = lower(c.name), level = num(c.minLevel), skill = need, zone = lower(where and where.zone),
             chance = num(c.chance) },

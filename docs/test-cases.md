@@ -960,12 +960,13 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_recipe_reagents.lua (5)
+### test_recipe_reagents.lua (6)
 
 - recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: every recipe has its ranks and reagents, and byReagent indexes each one exactly (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: a recipe's teaching item is a number; taughtBy, when set, lists it first with the others (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
+- recipe reagents: the gathering lines' recipes are in the table with their breakpoints (round 4) (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
 - recipe reagents: on Retail nothing is built and the table answers nil
 
 ### test_item_search.lua (36)
@@ -1007,22 +1008,27 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (24)
+### test_item_search_tip.lua (29)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
 - item search tip: before ForeverDB's load there is no block at all, and a hover never loads it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: without ForeverDB (or a failed load) no block, not even Crafting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator is a hairline across the spacer line, 8 in from each edge, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator waits for the tooltip's layout: placed on the next frame and on a resize (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a refill of the same item keeps the separator up: no one-frame gap (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a refill never draws the separator at a second height: no ghost line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the post call never shows the tooltip mid-fill; a paint outside a fill does (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: Separator line off: no spacer and no hairline; the label line stays (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: sections follow their switches and the stored order; Also lists the rewarding quest (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the drop count setting caps the rows, the rest is "and N more" (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a quest row reads mark, Title (Level) in its tone on the left, Giver - Zone on the right (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the window's quest marks are the tooltip's, at MARK_SIZE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray left-right arrow for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: crafting glyphs: a fat up arrow for a skill-up, a thick gray dash for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: recipe rows show their skill breakpoints in their hues, memoized per recipe and emptied by a skin switch (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: an item with nothing to show gets no block, title and hint included (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: never twice per show; the client's refresh, a hide and another item write it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -1034,7 +1040,7 @@ Total.
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_window.lua (41)
+### test_item_search_window.lua (44)
 
 - item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
 - item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
@@ -1064,7 +1070,9 @@ Total.
 - item search window: a column title lights under the pointer and shows the triangle its click would give (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: Linen's Crafting tab: the glyphs, the My professions chip and the filtered count (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a known recipe with no skill-up draws the tooltip's thick gray dash (R4-DW-02) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: Sold by's Only my faction starts at Hide the other faction's vendors, and Reset returns to it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: the Crafting tab's filter follows Only professions you know when the setting moves (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a corner drag, a sort click or a tab pick re-lays the table without building it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search waypoints: who draws the way, by the setting and what is loaded (pure)
@@ -1072,13 +1080,14 @@ Total.
 - item search window: without TomTom, Drop Watcher's arrow points at the spot; Drop Watcher's arrow wins over TomTom (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a pin is a dim map pin, lit on its row's hover, and its tooltip names the arrow (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down takes Drop Watcher's arrow down (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: the chrome opens attached to its control, every body tooltip beside the window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 
-### test_item_search_tabs.lua (18)
+### test_item_search_tabs.lua (20)
 
 - item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all
 - item search tabs: each tab draws exactly the spec's columns, less the two with no client data
@@ -1097,6 +1106,8 @@ Total.
 - item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)
 - item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins
 - item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item
+- item search cells: the Skill cue: the orange start always, your band bracketed and bright, the rest dimmed
+- item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip
 - item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank
 
 ### test_item_search_key.lua (19)
@@ -1154,10 +1165,13 @@ Total.
 - item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
 - item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
-### test_item_search_sources.lua (15)
+### test_item_search_sources.lua (21)
 
 - item search sources: a test or dev name is caught, and a word that only contains "test" is not
 - item search sources: a quest's giver skips a test-named one for the next
+- item search sources: one giver helper for the tooltip and the window: the first named, non-test giver (R4-DW-09)
+- item search sources: the static facts resolve each quest's giver once (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
+- item search sources: a quest's giver is read from ForeverDB once, until its state moves (R4-REV) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
 - item search sources: a test-named creature, object, vendor and skinned creature are left out and counted
 - item search sources: the test-named count reaches the debug log once per item
 - item search sources: GatherKind files fishing, then mining, then herbalism, else a drop
@@ -1166,13 +1180,16 @@ Total.
 - item search sources: Gathered from ranks a profession you have at your skill, then above it, then one you lack
 - item search sources: the Gathered from tab sits after Drops from with its columns and filters
 - item search sources: Gathered from's rows: the node, its profession, its skill against yours, zone and chance
-- item search sources: a creature's color is its rank's, the same in the cells and the tooltip
+- item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones
+- item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone
+- item search sources: the tooltip's crafting row names its profession in that profession's tone
+- item search sources: every Type has its own fixed tone; a source's name is plain everywhere
 - item search sources: the tooltip's Gathered from section, after Drops from, capped by Rows per section
-- item search sources: the tooltip draws a creature's name in its rank's color
+- item search sources: the tooltip draws every source's name plain, an unnamed one muted
 - item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
 - item search sources: step 18 puts Gathered from after Drops from in a stored order, once
 
-### test_item_search_prices.lua (14)
+### test_item_search_prices.lua (15)
 
 - item search prices: the merchant's npc id is the creature id in UnitGUID("npc"); anything else is none (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the merchant's slots, a token slot left out, the legacy API as the second rung (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -1183,13 +1200,14 @@ Total.
 - item search prices: past the cap the oldest tenth goes, and an emptied vendor with it
 - item search prices: a row's price: seen, else vendx, else vp, else the dash, each with its note
 - item search prices: the tooltip's vendor rows carry each one's price, and the other side's in red
+- item search prices: hiding the other faction's vendors: counted on one dim line, the unknown side kept (R4-DW-08)
 - item search prices: a source with no spot anywhere says No known spawn on its row tooltip
 - item search prices: the window's first open loads ForeverDB_Full once, empties the caches and the footer says Full (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: in combat the load waits for combat's end; Never and a missing Full load nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (17)
+### test_item_search_verdict.lua (22)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1204,10 +1222,29 @@ Total.
 - verdict: a Low confidence never says Toss: it holds
 - verdict: gear whose gear verdict has not answered never says Toss, at any confidence
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
-- verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word and score in the verdict's tone (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the badge sits right of Drop Watcher, its reasons under it; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: the reasons always carry the largest negative part, so the shown parts explain the score
+- verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)
+- verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed
+- verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
+- verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
+
+### test_item_search_panel.lua (11)
+
+- verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: while the item's info is still loading it is worked out again on its own, four times at most (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3 (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 
 ### test_own_drops.lua (16)
 
@@ -3452,13 +3489,13 @@ Total.
 | test_item_search.lua | 21 |
 | test_item_search_tip.lua | 1 |
 | test_item_search_window.lua | 8 |
-| test_item_search_tabs.lua | 17 |
+| test_item_search_tabs.lua | 19 |
 | test_item_search_key.lua | 4 |
 | test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 14 |
-| test_item_search_sources.lua | 13 |
-| test_item_search_prices.lua | 5 |
-| test_item_search_verdict.lua | 13 |
+| test_item_search_sources.lua | 17 |
+| test_item_search_prices.lua | 6 |
+| test_item_search_verdict.lua | 18 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3552,5 +3589,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 118 |
-| **Total** | **2842** |
+| Skipped | 140 |
+| **Total** | **2854** |

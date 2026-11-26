@@ -43,6 +43,69 @@ test("item search sources: a quest's giver skips a test-named one for the next",
     assertEqual(rows[1].cells.giver.text, "Invented Giver")
 end)
 
+test("item search sources: one giver helper for the tooltip and the window: the first named, non-test giver (R4-DW-09)", function()
+    local NS = T.newAddon()
+    local IS, ISC = NS.ItemSearch, NS.ItemSearchCells
+    local npc = { [1] = { name = "TEST Invented Giver" }, [3] = { name = "Invented Child" } }
+    local object = { [2] = { name = "Invented Board" } }
+    local function n(id) return npc[id] end
+    local function o(id) return object[id] end
+    -- red under: no shared helper (each home picked its own giver)
+    local g = IS.QuestGiver({ { kind = "npc", id = 1 }, { kind = "npc", id = 4 }, { kind = "object", id = 2 },
+        { kind = "npc", id = 3 } }, n, o)
+    assertEqual(g.kind, "object"); assertEqual(g.id, 2); assertEqual(g.name, "Invented Board",
+        "the test-named giver and the nameless one skipped, an object giver read by its own reader")
+    assertNil(IS.QuestGiver(nil, n, o), "no givers")
+    assertNil(IS.QuestGiver({ { kind = "npc", id = 1 } }, n, o), "only a test-named giver")
+    assertNil(IS.QuestGiver({ "junk", { kind = "npc" } }, n, o), "malformed entries")
+    assertEqual(ISC.GiverText("Odd Child", "Westfall"), "Odd Child - Westfall", "the owner's example")
+    assertEqual(ISC.GiverText("Odd Child", nil), "Odd Child", "no zone: the name alone")
+    assertNil(ISC.GiverText(nil, "Westfall"), "no giver: nothing")
+end)
+
+test("item search sources: the static facts resolve each quest's giver once (R4-DW-09)", function()
+    local fake
+    local NS, _, m = T.enableAddon{ mock = function(mm) fake = FDB.install(mm, { preset = "present" }) end }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(5)
+    assertTrue(fake ~= nil)
+    local byId = {}
+    for _, q in ipairs(NS.ItemSearch.Get(IDS.leather).quests) do byId[q.id] = q end
+    local g = byId[IDS.errand].giver
+    -- red under: quest facts with no giver (the tooltip had none to show)
+    assertEqual(g.name, "Fixture Gnoll"); assertEqual(g.kind, "npc"); assertEqual(g.id, IDS.gnoll)
+    assertNil(byId[IDS.hunt].giver, "the hunt has no giver")
+    assertTrue(NS.ItemSearch.Get(IDS.leather).quests[1].giver == NS.ItemSearch.Get(IDS.leather).quests[1].giver,
+        "one giver record per item for the session (the live copy keeps it)")
+end, FOREVER_ONLY)
+
+test("item search sources: a quest's giver is read from ForeverDB once, until its state moves (R4-REV)", function()
+    local NS, _, m = T.enableAddon{ mock = function(mm) FDB.install(mm, { preset = "present" }) end }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(5)
+    local db, reads = NS.ForeverDB, 0
+    local quest = db.Quest
+    db.Quest = function(id) reads = reads + 1; return quest(id) end
+    local IS = NS.ItemSearch
+    IS.Invalidate()
+    assertTrue(#IS.Get(IDS.leather).quests > 0, "the leather has quests")
+    local first = reads
+    assertTrue(first > 0, "the givers were read")
+    -- red under: a Quest read per quest on every rebuild of the facts, each copying out the whole row
+    -- (givers and enders), which cost a cold hover about 1.6 KB (tests/perf.lua itemSearchTipRichCold)
+    IS.Invalidate()
+    local again = IS.Get(IDS.leather).quests
+    assertEqual(reads, first, "a rebuild reads no quest row again")
+    local byId = {}
+    for _, q in ipairs(again) do byId[q.id] = q end
+    assertEqual(byId[IDS.errand].giver.name, "Fixture Gnoll", "the memo answers the same giver")
+    assertNil(byId[IDS.hunt].giver, "and the same no-giver")
+    IS.ForgetSpots(); IS.Invalidate()
+    IS.Get(IDS.leather)
+    assertEqual(reads, first * 2, "ForeverDB's state moved: every giver is read again")
+    db.Quest = quest
+end, FOREVER_ONLY)
+
 -- A reader in LibKa0s-ForeverDB-1.0's shape over invented rows: two herb nodes under one name, a
 -- vein, a School, a quest Pool, a chest, a test chest, a test creature, a test vendor and a
 -- test-named skinned creature.
@@ -247,18 +310,115 @@ test("item search sources: Gathered from's rows: the node, its profession, its s
     assertEqual(#C.Build({ gathered = facts.gathered }, {}, {}).gathered, 4)
 end)
 
--- ── the rank colors (item 6) ────────────────────────────────────────────────────────────────
+-- ── the profession colors (round 4, R4-DW-04) ───────────────────────────────────────────────
 
-test("item search sources: a creature's color is its rank's, the same in the cells and the tooltip", function()
+-- How far apart two { r, g, b } colors are (RGB distance, 0..sqrt(3)).
+local function apart(a, b)
+    return math.sqrt((a.r - b.r) ^ 2 + (a.g - b.g) ^ 2 + (a.b - b.b) ^ 2)
+end
+
+test("item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones", function()
+    local NS = T.newAddon()
+    local C = NS.Constants
+    local lines = { 129, 164, 165, 171, 182, 185, 186, 197, 202, 333, 356, 393, 755 }
+    local profKeys, seen = {}, {}
+    for _, line in ipairs(lines) do
+        local key = C.PROFESSION_TONE[line]
+        assertTrue(type(key) == "string" and C.TONE[key] and C.TONE[key].r ~= nil, "a fixed tone for line " .. line)
+        assertTrue(not seen[key], "each profession its own: " .. key); seen[key] = true
+        profKeys[#profKeys + 1] = key
+        assertEqual(NS.ItemSearchTip.ProfessionTone(line), key)
+    end
+    assertNil(NS.ItemSearchTip.ProfessionTone(nil)); assertNil(NS.ItemSearchTip.ProfessionTone(1))
+    for i = 1, #profKeys do
+        for j = i + 1, #profKeys do
+            assertTrue(apart(C.TONE[profKeys[i]], C.TONE[profKeys[j]]) > 0.1, profKeys[i] .. " vs " .. profKeys[j])
+        end
+        -- red under: a profession drawn in a skill-up hue, red, or a Type's tone (R4-DW-01's palette)
+        for _, other in ipairs({ "skillOrange", "skillYellow", "skillGreen", "skillGray", "glyphKnown", "typeCreature",
+            "typeElite", "typeRare", "typeRareElite", "typeBoss", "typeObject", "typeContainer" }) do
+            assertTrue(apart(C.TONE[profKeys[i]], C.TONE[other]) > 0.1, profKeys[i] .. " vs " .. other)
+        end
+        local t = C.TONE[profKeys[i]]
+        assertTrue(not (t.r > 0.8 and t.g < 0.4 and t.b < 0.4), profKeys[i] .. " is not a red")
+        -- readable on the dark tooltip: a relative luminance well above its near-black background
+        assertTrue(0.2126 * t.r + 0.7152 * t.g + 0.0722 * t.b > 0.3, profKeys[i] .. " is light enough")
+        -- red under: Mining's pale near-white (#C8D8E4), which read as uncolored text beside the plain
+        -- tone (R4-REV): every profession is clearly a color, its channels at least 0.2 apart
+        assertTrue(math.max(t.r, t.g, t.b) - math.min(t.r, t.g, t.b) >= 0.2, profKeys[i] .. " is a color, not a gray")
+    end
+end)
+
+test("item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone", function()
+    local NS = T.newAddon()
+    local C, IST = NS.ItemSearchCells, NS.ItemSearchTip
+    local crafted = C.Crafting({ crafting = {
+        { spell = 1, name = "Fixture Elixir", skillLine = 171, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+        { spell = 2, name = "Fixture Candle", skillLine = 182, count = 1, learned = true },
+    } }, { ranks = { [171] = 30, [182] = 30 } }, { profession = IST.ProfessionName })
+    local by = {}
+    for _, r in ipairs(crafted) do by[r.spell] = r end
+    assertEqual(by[1].cells.profession.tone, "profAlchemy")
+    assertEqual(by[2].cells.profession.tone, "profHerbalism")
+    local gathered = C.Gathered({ gathered = {
+        { kind = "object", id = 1, name = "Peacebloom", gather = "herbalism", skill = 1, chance = 1 },
+        { kind = "object", id = 2, name = "Copper Vein", gather = "mining", skill = 1, chance = 1 },
+        { kind = "object", id = 3, name = "School of Invented Fish", gather = "fishing", chance = 0.85 },
+    } }, {}, {})
+    local tone = {}
+    for _, r in ipairs(gathered) do tone[r.cells.node.text] = r.cells.profession.tone end
+    assertEqual(tone.Peacebloom, "profHerbalism"); assertEqual(tone["Copper Vein"], "profMining")
+    assertEqual(tone["School of Invented Fish"], "profFishing")
+end)
+
+test("item search sources: the tooltip's crafting row names its profession in that profession's tone", function()
+    local NS = T.newAddon()
+    local IST, T0 = NS.ItemSearchTip, NS.Constants.TONE
+    local facts = { drops = {}, vendors = {}, quests = {}, skinnedFrom = {}, rewardFrom = {}, gathered = {}, crafting = {
+        { spell = 1, name = "Fixture Elixir", skillLine = 171, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+        { spell = 2, name = "Fixture Stew", skillLine = 185, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+    } }
+    local alch, cook = T0.profAlchemy, T0.profCooking
+    local alchText = NS.GroupRoster.Colored("Alchemy", alch.r, alch.g, alch.b)
+    local cookText = NS.GroupRoster.Colored("Cooking", cook.r, cook.g, cook.b)
+    local o = { order = IST.ORDER, sections = IST.SECTIONS, rows = 5, header = false, craftSkill = false }
+    local function rights()
+        local out = {}
+        for _, l in ipairs(IST.Lines(facts, o, nil, {})) do
+            if l.text:find("Fixture Elixir", 1, true) then out.elixir = l.right end
+            if l.text:find("Fixture Stew", 1, true) then out.stew = l.right end
+        end
+        return out
+    end
+    -- red under: the profession muted (round 3), the same gray for every profession
+    local r = rights()
+    assertEqual(r.elixir, alchText); assertEqual(r.stew, cookText)
+    o.craftSkill = true
+    r = rights()
+    assertTrue(r.elixir:sub(-#alchText) == alchText, "mixed rows: the parts, then the colored profession: " .. r.elixir)
+end)
+
+-- ── the type colors (round 4, R4-DW-01) ─────────────────────────────────────────────────────
+
+local function hex(c) return ("#%02X%02X%02X"):format(c.r * 255 + 0.5, c.g * 255 + 0.5, c.b * 255 + 0.5) end
+
+test("item search sources: every Type has its own fixed tone; a source's name is plain everywhere", function()
     local NS = T.newAddon()
     local S, C = NS.ItemSearch, NS.ItemSearchCells
-    assertEqual(S.RankTone(0), "plain"); assertEqual(S.RankTone(nil), "plain"); assertEqual(S.RankTone(1), "rankElite")
-    assertEqual(S.RankTone(4), "rankRare"); assertEqual(S.RankTone(2), "rankRareElite"); assertEqual(S.RankTone(3), "rankBoss")
-    local T0 = NS.Constants.TONE
-    assertEqual(T0.rankElite.r .. "," .. T0.rankElite.g .. "," .. T0.rankElite.b, "1,0.82,0", "#FFD100")
-    assertEqual(T0.rankBoss.b, 1); assertEqual(T0.rankRare.b, 0.86); assertEqual(T0.rankRareElite.r, 0.62)
+    assertEqual(S.TypeTone("npc", 0), "typeCreature"); assertEqual(S.TypeTone("npc", nil), "typeCreature")
+    assertEqual(S.TypeTone("npc", 1), "typeElite"); assertEqual(S.TypeTone("npc", 4), "typeRare")
+    assertEqual(S.TypeTone("npc", 2), "typeRareElite"); assertEqual(S.TypeTone("npc", 3), "typeBoss")
+    assertEqual(S.TypeTone("object"), "typeObject"); assertEqual(S.TypeTone("item"), "typeContainer")
+    assertEqual(S.RankTone, nil, "no rank color left on any name")
+    local T0, want = NS.Constants.TONE, { typeCreature = "#FFFFFF", typeElite = "#FFD100", typeRare = "#4DD9C9",
+        typeRareElite = "#9ECCFF", typeBoss = "#FF6F91", typeObject = "#C9A57A", typeContainer = "#B39DFF" }
+    local seen = {}
+    for key, h in pairs(want) do
+        assertEqual(hex(T0[key]), h, key)
+        assertTrue(not seen[h], "each type its own tone: " .. key); seen[h] = true
+    end
     local rows = C.Skinned({ skinnedFrom = { { id = 1, name = "Invented Boss", rank = 3, chance = 0.5 } } }, {}, {})
-    assertEqual(rows[1].cells.creature.tone, "rankBoss", "Skinned from's Creature cell too")
+    assertEqual(rows[1].cells.creature.tone, "plain", "Skinned from's Creature cell plain")
 end)
 
 -- ── the tooltip ─────────────────────────────────────────────────────────────────────────────
@@ -289,28 +449,33 @@ test("item search sources: the tooltip's Gathered from section, after Drops from
     local text = {}
     for i, l in ipairs(lines) do text[i] = l.text .. (l.right and (" | " .. l.right) or "") end
     assertEqual(text[2], "Gathered from")
-    assertTrue(text[3]:find("^  Peacebloom | Herbalism ") ~= nil, text[3])
+    local herb = NS.Constants.TONE.profHerbalism
+    local herbText = NS.GroupRoster.Colored("Herbalism", herb.r, herb.g, herb.b)
+    assertTrue(text[3]:find("  Peacebloom | " .. herbText .. " ", 1, true) == 1, "the profession in its own tone: " .. text[3])
     assertTrue(text[3]:find("· 100%", 1, true) ~= nil, "the chance on the right")
     assertEqual(text[4], "  and 1 more", "capped at one row")
     o.rows = 2
     lines = IST.Lines(facts, o, nil, { ranks = {} })
-    assertEqual(lines[4].right, "Fishing · 85%", "fishing: no skill")
+    local fish = NS.Constants.TONE.profFishing
+    assertEqual(lines[4].right, NS.GroupRoster.Colored("Fishing", fish.r, fish.g, fish.b) .. " · 85%", "fishing: no skill")
     o.sections = { gathered = false }
     assertEqual(#IST.Lines(facts, o, nil, {}), 0, "the section switched off")
 end)
 
-test("item search sources: the tooltip draws a creature's name in its rank's color", function()
+test("item search sources: the tooltip draws every source's name plain, an unnamed one muted", function()
     local NS = T.newAddon()
     local IST = NS.ItemSearchTip
     local facts = { vendors = {}, quests = {}, crafting = {}, rewardFrom = {}, gathered = {},
         drops = { { kind = "npc", id = 1, name = "Invented Elite", named = true, rank = 1, chance = 0.5 },
-            { kind = "object", id = 2, name = "Invented Chest", named = true, chance = 0.4 } },
+            { kind = "object", id = 2, name = "Invented Chest", named = true, chance = 0.4 },
+            { kind = "npc", id = 4, name = "Creature 4", named = false, chance = 0.3 } },
         skinnedFrom = { { id = 3, name = "Invented Rare", rank = 4, chance = 0.5 } } }
     local lines = IST.Lines(facts, { order = IST.ORDER, sections = IST.SECTIONS, rows = 5, header = false }, nil, {})
     local tone = {}
     for _, l in ipairs(lines) do tone[l.text] = l.tone end
-    assertEqual(tone["  Invented Elite"], "rankElite"); assertEqual(tone["  Invented Chest"], "plain")
-    assertEqual(tone["  Invented Rare"], "rankRare")
+    assertEqual(tone["  Invented Elite"], "plain"); assertEqual(tone["  Invented Chest"], "plain")
+    assertEqual(tone["  Invented Rare"], "plain", "Skinned from's rows plain too")
+    assertEqual(tone["  Creature 4"], "muted")
 end)
 
 test("item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake", function()

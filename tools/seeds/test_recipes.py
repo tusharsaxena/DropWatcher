@@ -58,15 +58,18 @@ def reagent_row(rid, spell, pairs):
 def fixture_tables(extra_sla=(), extra_reagents=(), skill_names=None, drop_lines=()):
     """Invented tables: one recipe per required profession (spell 990100 + i), a second Tailoring
     recipe shared with Leatherworking, a recipe with no reagent row, an Enchanting recipe making
-    nothing, and noise rows of a gathering line (186) that the extract must drop. The teaching items
+    nothing, a Mining smelt (186, a gathering line the table keeps since round 4) and noise rows of a
+    line outside PROFESSIONS (633, Lockpicking) that the extract must drop. The teaching items
     (ISR3-DW-08): item 992000 teaches First Aid's recipe (TriggerType 6), items 992001 and 992002 both
     teach Blacksmithing's, item 992003 teaches the shared suit through a learning spell (990600, Effect
     36), item 992004 merely casts Leatherworking's recipe on use (trigger 0: not a teacher) and the rest are a
-    trainer's; item 992009 teaches the Mining smelt, which the extract drops."""
+    trainer's; item 992009 teaches the Mining smelt, and item 992011 the Lockpicking spell, which the
+    extract drops."""
     names = dict(LINES)
     names.update(skill_names or {})
     skill = [["DisplayName_lang", "ID"]] + [[n, line] for line, n in names.items() if line not in drop_lines]
     skill.append(["Mining", 186])
+    skill.append(["Lockpicking", 633])
     sla, reag, eff, spellname = [], [], [], []
     sid = 1
     for i, line in enumerate(sorted(LINES)):
@@ -83,18 +86,21 @@ def fixture_tables(extra_sla=(), extra_reagents=(), skill_names=None, drop_lines
     sla += [[sid, 197, 990200, 5, 50, 30], [sid + 1, 165, 990200, 5, 50, 30]]; sid += 2
     reag.append(reagent_row(sid, 990200, [(990999, 3)]))
     spellname.append([990200, "Fixture Suit"])
-    # A Cooking spell without a reagent row (left out), and a Mining smelt (not a crafting line).
+    # A Cooking spell without a reagent row (left out), a Mining smelt (kept: a gathering line's recipe),
+    # and a Lockpicking spell with a reagent (dropped: not a PROFESSIONS line).
     sla.append([sid, 185, 990300, 1, 0, 0]); sid += 1
     sla.append([sid, 186, 990400, 1, 30, 10]); sid += 1
-    reag.append(reagent_row(sid, 990400, [(990998, 1)]))
+    reag.append(reagent_row(sid, 990400, [(990998, 1)])); sid += 1
+    sla.append([sid, 633, 990450, 1, 30, 10]); sid += 1
+    reag.append(reagent_row(sid, 990450, [(990997, 1)]))
     sla += list(extra_sla)
     reag += list(extra_reagents)
     # The teaching items (see the docstring), and a learning spell's Effect 36.
     eff.append([7000, 0, 0, 36, 0, 990200, 990600])
     item_eff = [[8000, 6, 990100], [8001, 6, 990101], [8002, 6, 990101], [8003, 0, 990600], [8004, 0, 990102],
-                [8009, 6, 990400], [8010, 6, 777777]]
+                [8009, 6, 990400], [8010, 6, 777777], [8011, 6, 990450]]
     itemx = [[1, 8000, 992000], [2, 8001, 992002], [3, 8002, 992001], [4, 8003, 992003], [5, 8004, 992004],
-             [6, 8009, 992009], [7, 8010, 992010]]
+             [6, 8009, 992009], [7, 8010, 992010], [8, 8011, 992011]]
     return {
         "SkillLine": csv_of(skill[0], skill[1:]),
         "SkillLineAbility": csv_of(SLA_HEADER, sla),
@@ -139,17 +145,22 @@ class Fixture(unittest.TestCase):
 
 
 class TestModel(Fixture):
-    def test_extract_keeps_the_crafting_lines_rows_only(self):
+    def test_extract_keeps_the_professions_rows_only(self):
         self.derive()
         texts = recipes.read_extract(self.bundle)
         rows = recipes.parse_extract(texts)
-        self.assertNotIn("186", {r["SkillLine"] for r in rows["SkillLineAbility"]})
-        self.assertNotIn("990400", {r["SpellID"] for r in rows["SpellReagents"]}, "the smelt's reagents")
+        lines = {r["SkillLine"] for r in rows["SkillLineAbility"]}
+        self.assertNotIn("633", lines)
+        self.assertIn("186", lines, "a gathering line's rows are kept (round 4)")
+        self.assertNotIn("990450", {r["SpellID"] for r in rows["SpellReagents"]}, "the Lockpicking spell's reagents")
+        self.assertIn("990400", {r["SpellID"] for r in rows["SpellReagents"]}, "the smelt's reagents")
         self.assertEqual({r["Effect"] for r in rows["SpellEffect"]}, {"24", "36"})
-        self.assertNotIn("Mining", texts["SkillLine"])
+        self.assertNotIn("Lockpicking", texts["SkillLine"])
+        self.assertIn("Mining", texts["SkillLine"])
         self.assertEqual({r["ItemID"] for r in rows["ItemXItemEffect"]},
-                         {"992000", "992001", "992002", "992003", "992004"}, "the smelt's and a stranger's dropped")
-        self.assertEqual(len(rows["ItemEffect"]), 5)
+                         {"992000", "992001", "992002", "992003", "992004", "992009"},
+                         "the Lockpicking spell's and a stranger's dropped")
+        self.assertEqual(len(rows["ItemEffect"]), 6)
 
     def test_the_join(self):
         m = model_of(fixture_tables())
@@ -163,9 +174,10 @@ class TestModel(Fixture):
         self.assertIsNone(r[enchant]["made"], "an enchantment makes no item")
         self.assertEqual(r[990200]["skillLines"], [197, 165])
         self.assertNotIn(990300, r, "no reagent row: left out")
-        self.assertNotIn(990400, r, "Mining is not a crafting line")
+        self.assertEqual(r[990400]["skillLine"], 186, "a gathering line's recipe is kept (round 4)")
+        self.assertNotIn(990450, r, "a line outside PROFESSIONS is not")
         s = m["stats"]
-        self.assertEqual((s["recipes"], s["noReagents"], s["shared"], s["makesNoItem"]), (len(LINES) + 1, 1, 1, 2))
+        self.assertEqual((s["recipes"], s["noReagents"], s["shared"], s["makesNoItem"]), (len(LINES) + 2, 1, 1, 3))
 
     def test_the_teaching_items(self):
         m = model_of(fixture_tables())
@@ -175,17 +187,17 @@ class TestModel(Fixture):
         self.assertEqual(r[990200]["taught"], [992003], "a learning spell's Effect 36 teaches its trigger")
         self.assertEqual(r[990102]["taught"], [], "a trigger-0 cast of the recipe itself teaches nothing")
         s = m["stats"]
-        self.assertEqual((s["taught"], s["taughtByMore"]), (3, 1))
+        self.assertEqual((s["taught"], s["taughtByMore"]), (4, 1))
 
     def test_the_coverage_gate(self):
         with self.assertRaises(SystemExit):
             self.derive(fixture_tables(drop_lines=(171,)))
         with self.assertRaises(SystemExit):
             self.derive(fixture_tables(skill_names={202: "Gnomish Tinkering"}))
-        # Jewelcrafting is optional: absent is recorded, not refused.
+        # Jewelcrafting and the gathering lines are optional: absent is recorded, not refused.
         m = self.derive()
-        self.assertEqual(m["professions"]["absent"], [755])
-        self.assertEqual(m["professions"]["present"], sorted(LINES))
+        self.assertEqual(m["professions"]["absent"], [182, 356, 393, 755])
+        self.assertEqual(m["professions"]["present"], sorted(list(LINES) + [186]))
 
     def test_a_reagent_or_rank_it_has_no_rule_for_is_refused(self):
         with self.assertRaises(SystemExit):
@@ -223,7 +235,7 @@ class TestCli(Fixture):
         self.assertIn('r(990102, 165, 1, 22, 62, 991002, "Fixture \\"Recipe\\" 2", nil, 990902, 2, 990999, 1)', text)
         self.assertIn("shared(990200, 197, 165)", text)
         self.assertIn("teachers(990101, 992001, 992002)", text)
-        self.assertIn("3 recipes are taught by an item (1 by more than one); the other 6 are a trainer's.", text)
+        self.assertIn("4 recipes are taught by an item (1 by more than one); the other 6 are a trainer's.", text)
         self.assertEqual(self.cli("check"), 0)
         # A second apply changes nothing.
         self.assertEqual(self.cli("apply", "--bundle", str(self.bundle)), 0)

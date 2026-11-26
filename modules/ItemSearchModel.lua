@@ -155,15 +155,20 @@ function IS.GatherSkill(name, kind)
     return type(node) == "table" and node.prof == kind and num(node.skill) or nil
 end
 
--- A creature's rank (ForeverDB's npc `rank`) as its color (round 3 spec §4.3, item 6): a C.TONE key.
-local RANK_TONE = { [1] = "rankElite", [2] = "rankRareElite", [3] = "rankBoss", [4] = "rankRare" }
+-- A drop source's Type as its color (round 4, R4-DW-01): a creature by its rank (ForeverDB's npc
+-- `rank`), an object and a container by kind. C.TONE keys.
+local RANK_TONE = { [1] = "typeElite", [2] = "typeRareElite", [3] = "typeBoss", [4] = "typeRare" }
 
---- A creature's color by its rank, as the game's unit frames tell them apart: 1 elite gold, 4 rare
---- silver, 2 rare elite pale blue, 3 boss purple, a normal one (0, or no rank) `plain`.
+--- A drop source's Type tone: a creature by its rank (1 elite gold, 4 rare teal, 2 rare elite pale
+--- blue, 3 boss rose, a normal one white), an object tan, a container lavender. The Type cell's
+--- color only: a source's name is plain everywhere (owner, round 4).
+--- @param kind string "npc", "object" or "item"
 --- @param rank number|nil
 --- @return string a C.TONE key
-function IS.RankTone(rank)
-    return RANK_TONE[num(rank) or 0] or "plain"
+function IS.TypeTone(kind, rank)
+    if kind == "item" then return "typeContainer" end
+    if kind == "object" then return "typeObject" end
+    return RANK_TONE[num(rank) or 0] or "typeCreature"
 end
 
 -- ── sources (SF-DW-01's model) ──────────────────────────────────────────────────────────────
@@ -293,21 +298,61 @@ function IS.SkillColor(rank, yellow, gray)
     return "orange"
 end
 
---- A recipe's breakpoints as colored parts: orange (its minimum, only above 1: the shipped table's
---- 1 is a placeholder), yellow, green and gray, each `{ text, tone }` (a C.TONE key); `{}` without
---- breakpoints. The window's Skill column draws them (NS.ItemSearchCells.SkillParts is this) and so
---- does the tooltip's crafting row (round 3 spec §4.2, item 4).
+-- A recipe's breakpoints, its orange start first (the minimum, 1 when the row has none), or nil
+-- without yellow and gray.
+local function breakpoints(r)
+    local yellow, gray = num(r.yellow), num(r.gray)
+    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return nil end
+    return num(r.min) or 1, yellow, num(r.green), gray
+end
+
+--- The band the row's rank (`r.rank`) is in, by the breakpoints IS.SkillParts draws: 0 with no rank
+--- or no breakpoints, 5 below the orange start, else 1 orange, 2 yellow, 3 green, 4 gray (the highest
+--- start at or under the rank, so equal starts answer the later band). The tooltip keys its memo by it.
 --- @param r table a crafting row
+--- @return number
+function IS.SkillBand(r)
+    local rank = num(r.rank)
+    local min, yellow, green, gray = breakpoints(r)
+    if not (rank and min) then return 0 end
+    if rank < min then return 5 end
+    if rank >= gray then return 4 end
+    if green and rank >= green then return 3 end
+    if rank >= yellow then return 2 end
+    return 1
+end
+
+-- The parts' tones, full and dimmed, in band order (orange, yellow, green, gray).
+local PART_TONE = { "skillOrange", "skillYellow", "skillGreen", "skillGray" }
+local PART_DIM = { "skillOrangeDim", "skillYellowDim", "skillGreenDim", "skillGrayDim" }
+
+local function part(out, value, band, at)
+    if band == 0 then
+        out[#out + 1] = { text = tostring(value), tone = PART_TONE[at] }
+    elseif band == at or (band == 5 and at == 1) then
+        out[#out + 1] = { text = "[" .. value .. "]", tone = band == 5 and "red" or PART_TONE[at] }
+    else
+        out[#out + 1] = { text = tostring(value), tone = PART_DIM[at] }
+    end
+end
+
+--- A recipe's breakpoints as colored parts (round 4, R4-DW-05, the owner's "Orange start +
+--- highlight"): the orange start always (the minimum, 1 for a trainer's placeholder), then where
+--- yellow, green and gray start, each `{ text, tone }` (a C.TONE key); `{}` without breakpoints. With
+--- the row's rank known, the band it is in is bracketed at full brightness and the rest dimmed, and a
+--- rank below the start draws the start red; no rank number is shown. The window's Skill column draws
+--- them (NS.ItemSearchCells.SkillParts is this) and so does the tooltip's crafting row.
+--- @param r table a crafting row (`min`, `yellow`, `green`, `gray`, `rank`)
 --- @return table
 function IS.SkillParts(r)
     local out = {}
-    local yellow, gray = num(r.yellow), num(r.gray)
-    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return out end
-    local min = num(r.min)
-    if min and min > 1 then out[#out + 1] = { text = tostring(min), tone = "skillOrange" } end
-    out[#out + 1] = { text = tostring(yellow), tone = "skillYellow" }
-    if num(r.green) then out[#out + 1] = { text = tostring(r.green), tone = "skillGreen" } end
-    out[#out + 1] = { text = tostring(gray), tone = "skillGray" }
+    local min, yellow, green, gray = breakpoints(r)
+    if not min then return out end
+    local band = IS.SkillBand(r)
+    part(out, min, band, 1)
+    part(out, yellow, band, 2)
+    if green then part(out, green, band, 3) end
+    part(out, gray, band, 4)
     return out
 end
 
@@ -324,13 +369,55 @@ function IS.MaskAllows(mask, id)
     return floor(mask / 2 ^ (id - 1)) % 2 == 1
 end
 
+--- A quest's first giver whose name is not a test or dev one (round 3 spec §4.3), for the tooltip
+--- and the window alike (R4-DW-09): `{ kind, id, name }`, a new table, or nil. A giver with no name
+--- is skipped as a test-named one is.
+--- @param givers table|nil ForeverDB's quest row's `givers`, `{ { kind = "npc"|"object", id } ... }`
+--- @param npc function|nil id -> a creature row (`name`)
+--- @param object function|nil id -> an object row (`name`)
+--- @return table|nil
+function IS.QuestGiver(givers, npc, object)
+    for _, g in ipairs(list(givers)) do
+        if type(g) == "table" and num(g.id) then
+            local reader = g.kind == "object" and object or npc
+            local row = type(reader) == "function" and reader(g.id) or nil
+            local name = type(row) == "table" and type(row.name) == "string" and row.name or nil
+            if name and not IS.IsTestSource(name) then
+                return { kind = g.kind == "object" and "object" or "npc", id = g.id, name = name }
+            end
+        end
+    end
+    return nil
+end
+
+-- A quest's giver for the static facts (R4-DW-09): IS.QuestGiver over ForeverDB's quest row.
+-- Memoized per quest id (false: no giver), because `db.Quest` copies the whole row out, givers and
+-- enders lists included, and the facts are rebuilt on every Invalidate: without the memo a cold hover
+-- of an item with quests allocated about 1.6 KB more (tests/perf.lua's itemSearchTipRichCold, 33120
+-- -> 34720 bytes on WoW Forever, R4-REV). A giver is static data, so the memo is emptied only when
+-- ForeverDB's state moves (IS.SpotsGeneration, the spot memo's). The giver table is shared between
+-- items: read it, never write it. Its spots are not kept: the tooltip reads them once per giver.
+local giverByQuest, giverGeneration = {}, nil
+
+local function questGiver(db, id)
+    local generation = IS.SpotsGeneration()
+    if giverGeneration ~= generation then giverByQuest, giverGeneration = {}, generation end
+    local g = giverByQuest[id]
+    if g == nil then
+        local info = type(db.Quest) == "function" and db.Quest(id) or nil
+        g = IS.QuestGiver(type(info) == "table" and info.givers or nil, db.NPC, db.Object) or false
+        giverByQuest[id] = g
+    end
+    return g or nil
+end
+
 local function questRows(db, itemID, ctx)
     local out = {}
     for _, q in ipairs(list(db.QuestsForItem(itemID))) do
         if type(q) == "table" and num(q.id) and IS.MaskAllows(q.races, ctx.race)
             and IS.MaskAllows(q.classes, ctx.class) then
             out[#out + 1] = { id = q.id, title = q.title, level = num(q.level), minLevel = num(q.minLevel),
-                preQuests = list(q.preQuests) }
+                preQuests = list(q.preQuests), giver = questGiver(db, q.id) }
         end
     end
     return out
@@ -632,10 +719,19 @@ end
 -- `{ [spots] = { [kind] = { [id] = { [map] = true } | false } } }`. IS.ForgetSpots empties it when
 -- ForeverDB's state moves (modules/ItemSearch.lua's IS.State).
 local spotMaps = setmetatable({}, { __mode = "k" })
+local spotsGeneration = 0
 
 --- Empty the spot memo (ForeverDB's state moved, or a test swapped the fake's rows).
 function IS.ForgetSpots()
     spotMaps = setmetatable({}, { __mode = "k" })
+    spotsGeneration = spotsGeneration + 1
+end
+
+--- How many times the spot memo was emptied: a memo built from spots elsewhere (the tooltip's
+--- quest giver zones, R4-DW-09) empties itself when this moves.
+--- @return number
+function IS.SpotsGeneration()
+    return spotsGeneration
 end
 
 -- The maps `id` (of `kind`) has a spot on, `{ [map] = true }`, or nil; read once per reader.

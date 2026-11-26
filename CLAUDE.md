@@ -45,6 +45,6 @@ Green gate before every commit: `lua tests/run.lua`, `KA0S_KIT_CLIENT=forever lu
 `tests/_kit/` (vendored; re-vendor instead). Never auto-stage/commit/push and never bump the version
 without an explicit instruction.
 
-Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.117.0 (MIT).
-LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, close, confirm, copy, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, move, people, ph:arrow-fat-up, ph:arrows-down-up, ph:arrows-horizontal, ph:check-fat, ph:coins, ph:funnel, ph:hourglass, ph:lock, ph:map-pin, ph:sort-ascending, ph:sort-descending, ph:trash, reset, search, settings, sort-down, sort-up, speech-bubble, transfer, volume-high.
+Bundles [LibKa0s](https://github.com/tusharsaxena/LibKa0s) v1.118.0 (MIT).
+LibKa0s icons: add, arrow-down, arrow-right, arrow-up, ban, cancel, chat, chevron-down, chevron-right, chevron-up, clear, close, confirm, copy, dash, edit, external-link, eye, fullscreen-enter, fullscreen-exit, help, info, link-intact, lock, minimise, move, people, ph:arrow-fat-up, ph:arrows-down-up, ph:check-fat, ph:coins, ph:funnel, ph:hourglass, ph:lock, ph:map-pin, ph:sort-ascending, ph:sort-descending, ph:trash, reset, search, settings, sort-down, sort-up, speech-bubble, transfer, volume-high.
 

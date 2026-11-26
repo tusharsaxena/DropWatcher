@@ -236,15 +236,18 @@ test("item search cells: DROPS FROM's rows: the type from its rank, the colored 
     -- red under: the zone with the most spots when one is in yours (spec §5.4: yours first)
     assertEqual(by.Raptor.cells.zone.text, "Vale +1 zone"); assertEqual(by.Raptor.spot.map, 10)
     assertTrue(by.Raptor.here); assertTrue(by.Raptor.band); assertFalse(by.Skarr.band)
-    -- round 3 spec §4.3 (item 6): the color is the creature's rank, never "a creature" in red
-    assertEqual(by.Raptor.cells.source.tone, "plain", "a normal creature in white")
-    assertEqual(by.Skarr.cells.source.tone, "rankRareElite", "a rare elite in its rank's color")
-    assertEqual(by.Skarr.cells.type.tone, "rankRareElite", "its Type in the same color")
-    assertEqual(by.Chest.cells.source.tone, "plain", "an object in white")
-    assertEqual(by.Chest.cells.type.tone, "plain")
-    assertEqual(by.Trunk.cells.source.quality, 2, "a container's name in its quality color")
-    assertEqual(by.Trunk.cells.type.quality, 2, "and its Type")
-    assertEqual(by["Creature 7"].cells.type.tone, "muted")
+    -- round 4 (R4-DW-01): the Type cell in its type's own tone, the Source cell plain for every kind
+    assertEqual(by.Raptor.cells.source.tone, "plain", "a normal creature's name plain")
+    assertEqual(by.Raptor.cells.type.tone, "typeCreature", "Creature in white")
+    assertEqual(by.Skarr.cells.source.tone, "plain", "a rare elite's name plain")
+    assertEqual(by.Skarr.cells.type.tone, "typeRareElite", "its Type in the rare elite tone")
+    assertEqual(by.Chest.cells.source.tone, "plain", "an object's name plain")
+    assertEqual(by.Chest.cells.type.tone, "typeObject")
+    assertEqual(by.Trunk.cells.source.tone, "plain", "a container's name plain")
+    assertEqual(by.Trunk.cells.source.quality, nil, "no longer in its quality color")
+    assertEqual(by.Trunk.cells.type.tone, "typeContainer"); assertEqual(by.Trunk.cells.type.quality, nil)
+    assertEqual(by["Creature 7"].cells.type.tone, "typeCreature", "an unnamed creature is still a Creature")
+    assertEqual(rows[#rows].cells.type.tone, "muted", "the World drop's dash stays muted")
     assertEqual(by.Trunk.tip.item, 3, "a container's row shows its game tooltip")
     assertEqual(by["Creature 7"].cells.source.tone, "muted")
     assertEqual(by.Raptor.best, 1, "in your zone: first")
@@ -294,7 +297,8 @@ test("item search cells: QUESTS' rows join the objectives, the rewards and the o
     assertEqual(texts(rows, "role"), "Needs it,Rewards it,Starts it")
     assertEqual(texts(rows, "status"), "In your log,Requires level 40,Completed")
     assertEqual(rows[1].cells.mark.mark, "log"); assertEqual(rows[2].cells.mark.mark, "high")
-    assertEqual(rows[1].cells.giver.text, "Gnoll · Vale"); assertEqual(rows[1].spot.map, 9)
+    -- red under: the old " · " (R4-DW-09: " - ", as in the tooltip, the owner's "Odd Child - Westfall")
+    assertEqual(rows[1].cells.giver.text, "Gnoll - Vale"); assertEqual(rows[1].spot.map, 9)
     -- round 3 item 13: complete but not turned in, its own status, sorted before the log
     facts.quests[1].state = "ready"
     rows = C.Quests(facts, { level = 20, questState = function(id) return id == 3 and "done" or "todo" end },
@@ -353,11 +357,12 @@ test("item search cells: CRAFTING's rows: the breakpoints, the uses, what it mak
         profession = function(line) return ({ [165] = "Leatherworking", [164] = "Blacksmithing" })[line] end,
         item = function(id) return id == 90 and { name = "Barbaric Gloves", quality = 2 } or nil end })
     assertEqual(texts(rows, "recipe"), "Gloves,Belt,Bracer", "known first, a profession you lack last")
-    -- red under: the placeholder minimum of 1 drawn as an orange breakpoint (IS-REV)
+    -- round 4 (R4-DW-05): the orange start always shown, your band (rank 155: yellow) bracketed
     local parts = {}
     for i, p in ipairs(rows[1].cells.skill.parts) do parts[i] = p.tone .. "=" .. p.text end
-    assertEqual(table.concat(parts, " "), "skillYellow=150 skillGreen=160 skillGray=170")
-    assertEqual(rows[2].cells.skill.parts[1].text, "165", "a real minimum is the orange one")
+    assertEqual(table.concat(parts, " "), "skillOrangeDim=1 skillYellow=[150] skillGreenDim=160 skillGrayDim=170")
+    assertEqual(rows[2].cells.skill.parts[1].text, "[165]", "below a real minimum: the start bracketed")
+    assertEqual(rows[2].cells.skill.parts[1].tone, "red", "and red")
     assertEqual(texts(rows, "uses"), "×6,×5,×4")
     assertEqual(rows[1].cells.makes.text, "Barbaric Gloves"); assertEqual(rows[1].makesID, 90)
     -- red under: "Learn at 1", or a recipe of a profession you lack read as merely not known
@@ -471,6 +476,70 @@ test("item search cells: Known, Learn at N and No <profession> keep their Status
     -- red under: a profession you lack reading its recipe item's sources (a cold Rune Thread build reads ~300)
     assertEqual(tipRow(by[3], "Recipe item"), "Item 502"); assertNil(tipRow(by[3], "Quest reward"))
     assertEqual(by[4].cells.status.text, "Not known", "a recipe the profession window learned has no table source")
+end)
+
+test("item search cells: the Skill cue: the orange start always, your band bracketed and bright, the rest dimmed", function()
+    local NS = T.newAddon()
+    local IS, C = NS.ItemSearch, NS.ItemSearchCells
+    local function cue(r)
+        local out = {}
+        for i, p in ipairs(IS.SkillParts(r)) do out[i] = p.tone .. "=" .. p.text end
+        return table.concat(out, " ")
+    end
+    local base = { min = 1, yellow = 55, green = 75, gray = 95 }
+    local function at(rank, over)
+        local r = { rank = rank }
+        for k, v in pairs(base) do r[k] = v end
+        for k, v in pairs(over or {}) do r[k] = v end
+        return r
+    end
+    -- red under: the placeholder 1 left out (round 3), which hid the orange band (the owner's Elixir at 29)
+    assertEqual(cue(at(nil)), "skillOrange=1 skillYellow=55 skillGreen=75 skillGray=95", "no rank: every start, none bracketed")
+    assertEqual(cue(at(29)), "skillOrange=[1] skillYellowDim=55 skillGreenDim=75 skillGrayDim=95", "orange at 29")
+    assertEqual(cue(at(55)), "skillOrangeDim=1 skillYellow=[55] skillGreenDim=75 skillGrayDim=95", "yellow from 55")
+    assertEqual(cue(at(80)), "skillOrangeDim=1 skillYellowDim=55 skillGreen=[75] skillGrayDim=95")
+    assertEqual(cue(at(120)), "skillOrangeDim=1 skillYellowDim=55 skillGreenDim=75 skillGray=[95]")
+    assertEqual(cue(at(150, { min = 165, yellow = 175, green = 185, gray = 195 })),
+        "red=[165] skillYellowDim=175 skillGreenDim=185 skillGrayDim=195", "below the start: the start red")
+    assertEqual(cue(at(25, { yellow = 20, green = 20, gray = 20 })),
+        "skillOrangeDim=1 skillYellowDim=20 skillGreenDim=20 skillGray=[20]", "equal starts: the highest band you are in")
+    assertEqual(cue(at(10, { min = nil })), "skillOrange=[1] skillYellowDim=55 skillGreenDim=75 skillGrayDim=95",
+        "no minimum: the start is 1")
+    assertEqual(IS.SkillBand(at(nil)), 0); assertEqual(IS.SkillBand(at(29)), 1); assertEqual(IS.SkillBand(at(120)), 4)
+    assertEqual(IS.SkillBand(at(150, { min = 165 })), 5, "below the start")
+    assertEqual(IS.SkillBand({ rank = 10 }), 0, "no breakpoints")
+    -- the cue reaches a recipe you don't know, too
+    local rows = C.Crafting({ crafting = { at(29, { spell = 1, name = "Fixture", skillLine = 171, known = false }) } },
+        { ranks = { [171] = 29 } }, {})
+    assertEqual(rows[1].cells.skill.parts[1].text, "[1]")
+    local tones = NS.Constants.TONE
+    for _, k in ipairs({ "skillOrangeDim", "skillYellowDim", "skillGreenDim", "skillGrayDim" }) do
+        local dim, full = tones[k], tones[k:sub(1, -4)]
+        assertTrue(dim.r <= full.r and dim.g <= full.g and dim.b <= full.b and dim.r + dim.g + dim.b < full.r + full.g + full.b, k)
+    end
+end)
+
+test("item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip", function()
+    local NS = T.newAddon()
+    local C, IST = NS.ItemSearchCells, NS.ItemSearchTip
+    -- red under: the gathering lines read as no profession (Incense Candle's "–", round 4 R4-DW-03)
+    assertEqual(IST.ProfessionName(182), "Herbalism"); assertEqual(IST.ProfessionName(186), "Mining")
+    assertEqual(IST.ProfessionName(356), "Fishing"); assertEqual(IST.ProfessionName(393), "Skinning")
+    local facts = { crafting = {
+        { spell = 9, name = "Incense Candle", skillLine = 182, count = 1, learned = true, known = true, rank = 25 },
+        { spell = 10, name = "Fixture Lamp", skillLine = 182, count = 1, min = 1, yellow = 20, gray = 20, green = 20,
+          known = false, rank = 25 },
+    } }
+    local rows = C.Crafting(facts, { ranks = { [182] = 25 } }, { profession = IST.ProfessionName })
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    assertEqual(by[9].cells.profession.text, "Herbalism")
+    assertTrue(by[9].mine, "a gathering line you have counts as your profession")
+    -- red under: the dim dash, which reads as "no skill" rather than "not known"
+    assertEqual(by[9].cells.skill.text, "?"); assertEqual(by[9].cells.skill.tone, "muted")
+    assertEqual(tipRow(by[9], "Skill"), "levels unknown: not in the shipped table")
+    assertTrue(by[10].cells.skill.parts ~= nil, "a table row keeps its breakpoints")
+    assertNil(tipRow(by[10], "Skill"))
 end)
 
 test("item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank", function()

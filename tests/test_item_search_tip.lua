@@ -131,6 +131,26 @@ test("item search tip: separator, label line, Drops from and Sold by, in order; 
     assertTrue(find(b, "open in Item Search") == nil)
 end, FOREVER_ONLY)
 
+test("item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08)", function()
+    local NS, _, tdp = enabled({ setup = function(mm) mm.UnitFactionGroup = function() return "Horde", "Horde" end end })
+    local tip = tdp.tooltip("GameTooltip")
+    assertTrue(NS.ItemSearchTip.Options().hideOtherFaction, "on by default (the owner)")
+    tdp.show(tip, IDS.blade)
+    local b = block(tdp, tip)
+    local s = find(b, "Sold by")
+    -- red under: "Fixture Trainer | Alliance only" in red (the trainer is ForeverDB's "A")
+    assertEqual(b[s + 1], "  Fixture Vendor | 1400c")
+    assertEqual(b[s + 2], "  +1 other-faction vendor")
+    assertTrue(find(b, "Fixture Trainer") == nil)
+    NS.addon.db.profile.itemSearch.hideOtherFaction = false
+    assertFalse(NS.ItemSearchTip.Options().hideOtherFaction)
+    tdp.hide(tip)
+    tdp.show(tip, IDS.blade)
+    b = block(tdp, tip)
+    assertTrue(find(b, "Fixture Trainer | Alliance only") ~= nil, "off: the other side's vendor in red")
+    assertTrue(find(b, "other-faction") == nil)
+end, FOREVER_ONLY)
+
 test("item search tip: the hint names the bound key as the client writes it, and its switch hides it", function()
     local NS, m, tdp = enabled()
     m.bindKey("ALT-CTRL-D", NS.Constants.ITEM_SEARCH.BINDING)
@@ -150,67 +170,156 @@ local function rulePoints(tex)
     return { tex:GetPoint(1) }, { tex:GetPoint(2) }
 end
 
-test("item search tip: the separator is a hairline across the spacer line, 8 in from each edge, one pixel, dw.tipRule", function()
-    local NS, _, tdp = enabled()
+local function pointText(p, rel)
+    return table.concat({ p[1], tostring(p[2] == rel), p[3], p[4], p[5] }, ",")
+end
+
+test("item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV)", function()
+    local NS, m, tdp = enabled()
+    local factor = 0.5
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return factor end }
+    local tip = tdp.tooltip("GameTooltip")
+    tip.GetEffectiveScale = function() return 1 end
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    assertEqual(tex:GetHeight(), 0.5, "one physical pixel at the first scale")
+    tdp.hide(tip)
+    m.advance(0)
+    -- red under: the height set once, when the line was made (a UI or tooltip scale change later in
+    -- the session left it 0.5 units: two pixels, or none once snapped)
+    factor = 0.75
+    tdp.show(tip, IDS.blade)
+    assertEqual(tex:GetHeight(), 0.75, "re-read on the next claim")
+    local sets, set = 0, tex.SetHeight
+    tex.SetHeight = function(self, h) sets = sets + 1; return set(self, h) end
+    tdp.hide(tip)
+    m.advance(0)
+    tdp.show(tip, IDS.blade)
+    assertEqual(sets, 0, "an unchanged scale sets nothing")
+    tex.SetHeight = set
+    m.PixelUtil = nil
+end, FOREVER_ONLY)
+
+test("item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule", function()
+    local NS, m, tdp = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants
     local tip = tdp.tooltip("GameTooltip")
     assertNil(IST.RuleOf(tip), "no texture before the first block")
     tdp.show(tip, IDS.blade)
     local tex = IST.RuleOf(tip)
     assertTrue(tex ~= nil and tex.__owner == tip, "a texture of the tooltip's own")
-    assertEqual(#tdp.textures(tip), 1)
-    -- red under: no hairline drawn, a fixed width (the old escape's 160), or an inset other than 8
+    -- red under: a measured line (R4-DW-06: two zero-alpha edge textures carry it, no geometry read)
+    assertEqual(#tdp.textures(tip), 3, "the line and its two edges")
     assertTrue(tex:IsShown(), "shown with the block")
     assertEqual(C.ITEM_SEARCH.RULE_INSET, 8)
     local left, right = rulePoints(tex)
-    -- the spacer is line 2 (the client's item name is line 1): its middle is 500 - 10 - 14 - 6 = 470;
-    -- the 1 px line's top half a pixel above it, rounded to a whole pixel: -29.5 -> -29
-    assertEqual(table.concat({ left[1], tostring(left[2] == tip), left[3], left[4], left[5] }, ","), "TOPLEFT,true,TOPLEFT,8,-29")
-    assertEqual(table.concat({ right[1], tostring(right[2] == tip), right[3], right[4], right[5] }, ","), "TOPRIGHT,true,TOPRIGHT,-8,-29")
+    local edgeL, edgeR = left[2], right[2]
+    assertTrue(edgeL ~= tip and edgeR ~= tip and edgeL ~= edgeR, "hung from the edges, not from the tooltip")
+    assertEqual(pointText(left, edgeL), "TOPLEFT,true,BOTTOMLEFT,8,0")
+    assertEqual(pointText(right, edgeR), "TOPRIGHT,true,BOTTOMRIGHT,-8,0")
+    -- the spacer is line 2 (the client's item name is line 1): each edge's bottom is its left middle
+    local spacer = m.GameTooltipTextLeft2
+    assertEqual(pointText({ edgeL:GetPoint(1) }, tip), "TOPLEFT,true,TOPLEFT,0,0")
+    assertEqual(pointText({ edgeL:GetPoint(2) }, spacer), "BOTTOMRIGHT,true,LEFT,0,0")
+    assertEqual(pointText({ edgeR:GetPoint(1) }, tip), "TOPRIGHT,true,TOPRIGHT,0,0")
+    assertEqual(pointText({ edgeR:GetPoint(2) }, spacer), "BOTTOMLEFT,true,LEFT,0,0")
+    assertEqual(edgeL:GetAlpha(), 0, "an invisible edge"); assertEqual(edgeR:GetAlpha(), 0)
     assertEqual(tex:GetHeight(), 1, "one physical pixel (no PixelUtil in the harness: 1)")
     assertEqual(tex.__texture, "Interface\\Buttons\\WHITE8X8")
-    assertFalse(tex.__snap, "pixel snapping off: the offset is rounded instead")
+    assertTrue(tex.__snap == true, "snapped to the pixel grid: the client places it, so the client rounds it")
     local want = NS.SKIN_TOKENS["dw.tipRule"].default
     assertEqual(table.concat(want, ","), "0.55,0.46,0.25,0.9", "a dim gold")
     assertEqual(NS.SKIN_TOKENS["dw.tipRule"].follow, "divider")
     local r, g, b, a = NS.SkinColor("dw.tipRule")
     assertEqual(table.concat(tex.__vertex, ","), table.concat({ r, g, b, a or 1 }, ","), "tinted dw.tipRule")
-    -- red under: the line kept past a clear or a hide (the next item's tooltip would show it stray)
+    -- a hide or a clear marks it stale; nobody claims it, so it comes off on the next frame
     tdp.hide(tip)
-    assertFalse(tex:IsShown(), "hidden on OnHide")
+    assertTrue(tex:IsShown(), "kept through the hide, for a refill of the same item")
+    m.advance(0)
+    assertFalse(tex:IsShown(), "unclaimed: off on the next frame")
     tdp.show(tip, IDS.blade)
     assertTrue(tex:IsShown())
     tip:ClearLines()
-    assertFalse(tex:IsShown(), "hidden on OnTooltipCleared")
+    assertTrue(tex:IsShown(), "kept through the clear")
+    m.advance(0)
+    -- red under: a stale line left on a tooltip that shows something else now
+    assertFalse(tex:IsShown(), "unclaimed after a clear: off on the next frame")
     tdp.show(tip, IDS.blade)
-    assertEqual(#tdp.textures(tip), 1, "one texture per tooltip, made once")
+    assertEqual(#tdp.textures(tip), 3, "made once per tooltip")
 end, FOREVER_ONLY)
 
-test("item search tip: the separator waits for the tooltip's layout: placed on the next frame and on a resize", function()
+-- The client's refill (R4-DW-06, recon (g) H1): about five times a second it clears the tooltip,
+-- sometimes hides it (SetOwner on a bag-slot refill), and fills it again, before the lines are laid out.
+local function refill(m, tdp, tip, itemID)
+    tip:ClearLines()
+    tdp.hide(tip)
+    tip.__top = nil
+    tdp.show(tip, itemID)
+    return m
+end
+
+test("item search tip: a refill of the same item keeps the separator up: no one-frame gap", function()
     local NS, m, tdp = enabled()
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    local hides, hide = 0, tex.Hide
+    tex.Hide = function(self) hides = hides + 1; return hide(self) end
+    refill(m, tdp, tip, IDS.blade)
+    -- red under: hidden on the clear or the hide, and put back only once the tooltip is laid out
+    assertTrue(tex:IsShown(), "shown through the refill, before the next frame")
+    assertEqual(hides, 0, "never hidden on a refill of the same item")
+    m.advance(0)
+    assertTrue(tex:IsShown(), "claimed again: still up after the next frame")
+    assertEqual(hides, 0)
+    -- another item with no block: the stale line comes off on the next frame
+    refill(m, tdp, tip, IDS.pebble)
+    m.advance(0)
+    assertFalse(tex:IsShown(), "an item with no block: off")
+end, FOREVER_ONLY)
+
+test("item search tip: a refill never draws the separator at a second height: no ghost line", function()
+    local NS, m, tdp = enabled()
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    -- the spacer's font string answers the previous pass's rect while the tooltip's top moves, and a
+    -- later post call (another addon's) adds a line and shows the tooltip again, which resizes it
+    local spacer = m.GameTooltipTextLeft2
+    spacer.GetTop = function() return 476 end
+    spacer.GetBottom = function() return 464 end
+    m.TooltipDataProcessor.AddTooltipPostCall(m.Enum.TooltipDataType.Item, function(t)
+        t:AddLine("Another addon")
+        t.__top = 513
+        tdp.resize(t)
+    end)
+    local ys, seen = {}, 0
+    local setPoint = tex.SetPoint
+    tex.SetPoint = function(self, ...)
+        local y = select(5, ...)
+        if not ys[tostring(y)] then ys[tostring(y)] = true; seen = seen + 1 end
+        return setPoint(self, ...)
+    end
+    tip.__top = 520
+    tdp.refresh(tip, IDS.blade)
+    m.advance(0)
+    -- red under: measured three times a rebuild from half-finished layout passes (recon (g) H2)
+    assertTrue(seen <= 1, "one height a refill, got " .. seen)
+    assertTrue(tex:IsShown())
+end, FOREVER_ONLY)
+
+test("item search tip: the post call never shows the tooltip mid-fill; a paint outside a fill does", function()
+    local NS, _, tdp = enabled()
     local IST = NS.ItemSearchTip
     local tip = tdp.tooltip("GameTooltip")
-    tip.__top = nil
     tdp.show(tip, IDS.blade)
-    local tex = IST.RuleOf(tip)
-    -- red under: a line placed from geometry the tooltip has not laid out yet
-    assertFalse(tex:IsShown(), "not laid out: hidden")
-    tip.__top = 500
-    m.advance(0)
-    assertTrue(tex:IsShown(), "the next frame places it")
-    local left = { tex:GetPoint(1) }
-    assertEqual(left[5], -29)
-    tip.__top = 700
-    tdp.resize(tip)
-    -- red under: no OnSizeChanged hook (shift for the comparison tooltips resizes it, ITEM-SEARCH-34)
-    assertTrue(tex:IsShown())
-    assertEqual(tex:GetNumPoints(), 2, "placed again, not stacked")
-    assertEqual(IST.RuleOffset(500, 476, 464, 1), -29)
-    assertEqual(IST.RuleOffset(500, 476, 464, 0.5), -29.5, "rounded to the pixel, here half a unit")
-    assertNil(IST.RuleOffset(nil, 476, 464, 1)); assertNil(IST.RuleOffset(500, 476, 464, 0))
-    tdp.hide(tip)
-    tdp.resize(tip)
-    assertFalse(tex:IsShown(), "a resize with no block keeps it hidden")
+    local before = tip.shows
+    tdp.refresh(tip, IDS.blade)
+    -- red under: DW's own Show inside the client's fill (it resized the tooltip before later post calls)
+    assertEqual(tip.shows - before, 1, "the client's own show alone")
+    before = tip.shows
+    IST.Paint(tip, { { text = "x", tone = "plain" } })
+    assertEqual(tip.shows - before, 1, "a shown tooltip painted outside a fill lays itself out again")
 end, FOREVER_ONLY)
 
 test("item search tip: Separator line off: no spacer and no hairline; the label line stays", function()
@@ -272,6 +381,54 @@ local function questLog(mm, states)
 end
 
 local GOSSIP = "Interface\\GossipFrame\\"
+
+test("item search tip: a quest row reads mark, Title (Level) in its tone on the left, Giver - Zone on the right (R4-DW-09)", function()
+    local maps = 0
+    local NS, m, tdp = enabled({ setup = function(mm)
+        questLog(mm, {})
+        mm.C_Map = { GetMapInfo = function(id)
+            maps = maps + 1
+            return ({ [IDS.mapA] = { name = "Fixture Vale" } })[id]
+        end }
+    end })
+    local tip = tdp.tooltip("GameTooltip")
+    tipSettings(NS).header = false
+    m.__context.level = 12
+    tdp.show(tip, IDS.leather)
+    local b = block(tdp, tip)
+    local q = find(b, "Quests")
+    local errand, hunt
+    for i = q + 1, q + 2 do
+        if b[i]:find("Fixture Errand", 1, true) then errand = b[i] else hunt = b[i] end
+    end
+    -- red under: the old "level 12" on the right, and no giver (the owner: "[Quest Icon] [Quest Name]
+    -- ([Quest Level])    [Giver - e.g. Odd Child - Westfall]")
+    assertTrue(errand:find("|t Fixture Errand (12) | Fixture Gnoll - Fixture Vale", 1, true) ~= nil, errand)
+    assertEqual(hunt:sub(-#"|t Fixture Hunt (14)"), "|t Fixture Hunt (14)", "no giver: nothing on the right")
+    assertTrue(find(b, "level 12") == nil and find(b, "level 14") == nil, "no level on the right")
+    -- the level in the title's difficulty tone: the line's own color (the mark keeps its tint)
+    local lines = NS.ItemSearchTip.Lines(NS.ItemSearch.Get(IDS.leather), NS.ItemSearchTip.Options(), nil,
+        NS.ItemSearch.Me())
+    local tones = {}
+    for _, l in ipairs(lines) do
+        if l.text:find("Fixture Errand", 1, true) then tones.errand = l.tone end
+        if l.text:find("Fixture Hunt", 1, true) then tones.hunt = l.tone end
+    end
+    assertEqual(tones.errand, "skillYellow", "level 12 at 12: yellow")
+    assertEqual(tones.hunt, "skillYellow", "level 14 at 12: yellow (within two)")
+    m.__context.level = 80
+    lines = NS.ItemSearchTip.Lines(NS.ItemSearch.Get(IDS.leather), NS.ItemSearchTip.Options(), nil, NS.ItemSearch.Me())
+    for _, l in ipairs(lines) do
+        if l.text:find("Fixture Errand", 1, true) then assertEqual(l.tone, "skillGray", "gray at 80") end
+    end
+    -- the zone is memoized per giver and map: a warm hover asks the client for no map name
+    tdp.hide(tip)
+    tdp.show(tip, IDS.leather)
+    local before = maps
+    tdp.hide(tip)
+    tdp.show(tip, IDS.leather)
+    assertEqual(maps, before, "warm: no map read")
+end, FOREVER_ONLY)
 
 test("item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default", function()
     local states = {}
@@ -342,7 +499,7 @@ test("item search tip: the window's quest marks are the tooltip's, at MARK_SIZE"
     assertTrue(IST.QuestMark("ready") ~= IST.QuestMark("log"), "ready and log differ")
 end, FOREVER_ONLY)
 
-test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray left-right arrow for none, a dark gray lock for not known", function()
+test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a thick gray dash for none, a dark gray lock for not known", function()
     local known
     local NS, _, tdp = enabled({ setup = function(mm)
         mm.IsPlayerSpell = function(spell) return spell == known end
@@ -355,8 +512,8 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray le
     local c = find(b, "Crafting")
     assertTrue(c ~= nil, "a Crafting section")
     -- red under: the old dots (feedback spec §5.7, T4), the known mark on an unknown recipe, or a
-    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the left-right arrow.
-    assertTrue(b[c + 1]:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil, "known, no skill-up: the left-right arrow, 14 px")
+    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the dash (R4-DW-02).
+    assertTrue(b[c + 1]:find("icons\\dash:3:14:", 1, true) ~= nil, "known, no skill-up: the thick dash, 14 px wide")
     assertTrue(b[c + 1]:find(rows[1].name, 1, true) ~= nil, "a known recipe ranks first")
     assertTrue(b[c + 2]:find("phosphor\\lock:", 1, true) ~= nil, "not known: the padlock")
     assertTrue(find(b, "circle") == nil, "no dot or ring is left")
@@ -366,7 +523,9 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray le
     local profession = { [129] = "First Aid", [164] = "Blacksmithing", [165] = "Leatherworking", [171] = "Alchemy",
         [185] = "Cooking", [197] = "Tailoring", [202] = "Engineering", [333] = "Enchanting" }
     assertTrue(b[c + 1]:find(" | |cff", 1, true) ~= nil, "the colored parts on the right")
-    assertTrue(b[c + 1]:find("· " .. profession[rows[1].skillLine], 1, true) ~= nil, "then the profession")
+    local pt = NS.Constants.TONE[NS.ItemSearchTip.ProfessionTone(rows[1].skillLine)]
+    local named = NS.GroupRoster.Colored(profession[rows[1].skillLine], pt.r, pt.g, pt.b)
+    assertTrue(b[c + 1]:find("·|r " .. named, 1, true) ~= nil, "then the profession, in its own tone")
     local IST = NS.ItemSearchTip
     local C = NS.Constants
     local function tinted(mark, tone)
@@ -380,8 +539,14 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray le
         assertTrue(mark:find("phosphor\\arrow-fat-up:14:14:", 1, true) ~= nil and tinted(mark, tone), color .. ": the fat up arrow in its hue")
     end
     local gray = IST.CraftMark({ known = true, color = "gray" })
-    assertTrue(gray:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil and tinted(gray, "glyphKnown"),
-        "gray: the light gray left-right arrow")
+    -- red under: the two-way arrow (owner feedback round 4, "choose a thick dash instead", R4-DW-02).
+    -- LibKa0s' `dash` cropped to its opaque rows (25..39 of 64), 14 px wide like the arrow and a whole
+    -- 3 px tall, so it is one solid line rather than a smear over two half-lit rows.
+    assertEqual(gray:match("^|T[^:]*\\icons\\dash:(%d+:%d+:%d+:%d+:%d+:%d+:%d+:%d+:%d+:%d+):"),
+        "3:14:0:0:64:64:0:64:25:39", "gray: the dash, cropped to its bar, 3 px tall and 14 wide")
+    assertTrue(tinted(gray, "glyphKnown"), "gray: in the light gray")
+    assertTrue(not gray:find("arrows-horizontal", 1, true), "the two-way arrow is gone")
+    assertEqual(C.ITEM_SEARCH.DASH_HEIGHT, 3, "a whole number of pixels")
     local locked = IST.CraftMark({ known = false, color = "orange" })
     assertTrue(locked:find("phosphor\\lock:14:14:", 1, true) ~= nil and tinted(locked, "glyphLocked"), "not known: the dark gray lock")
     assertEqual(C.ITEM_SEARCH.GLYPH_SIZE, 14, "one size for every glyph")
@@ -392,8 +557,8 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray le
     local up, flat, lock = IST.CraftMark({ known = true, color = "orange" }), IST.CraftMark({ known = true, color = "gray" }),
         IST.CraftMark({ known = false })
     NS.Icon = icon
-    assertTrue(up:find("^", 1, true) ~= nil and flat:find("=", 1, true) ~= nil and lock:find("x", 1, true) ~= nil,
-        "the fallbacks: ^ = x")
+    assertTrue(up:find("^", 1, true) ~= nil and flat:find("-", 1, true) ~= nil and lock:find("x", 1, true) ~= nil,
+        "the fallbacks: ^ - x")
     assertEqual(C.TONE.glyphKnown.r, 176 / 255, "#b0b0b0"); assertEqual(C.TONE.glyphLocked.r, 90 / 255, "#5a5a5a")
     assertEqual(IST.CraftGlyph({ known = true }), "flat", "no breakpoints: no skill-up to show")
 end, FOREVER_ONLY)
@@ -425,16 +590,26 @@ test("item search tip: recipe rows show their skill breakpoints in their hues, m
     IST.SkillText(row)
     IS.SkillParts = real
     assertEqual(calls, 1, "a skin switch empties the memo")
+    -- round 4 (R4-DW-05): the memo is per recipe AND band, so a skill-up redraws the cue
+    local banded = {}
+    for k, v in pairs(row) do banded[k] = v end
+    banded.rank = (banded.yellow or 1)
+    local before = IST.SkillText(banded)
+    assertTrue(before:find("[" .. banded.yellow .. "]", 1, true) ~= nil, "the band bracketed: " .. before)
+    banded.rank = banded.gray
+    local after = IST.SkillText(banded)
+    assertTrue(after ~= before and after:find("[" .. banded.gray .. "]", 1, true) ~= nil, "a new band, a new string: " .. after)
     -- Show recipe skill levels off: today's right side, the profession, muted
     local tip = tdp.tooltip("GameTooltip")
     tipSettings(NS).craftSkill = false
     tdp.show(tip, LINEN)
     local b = block(tdp, tip)
     local c = find(b, "Crafting")
-    assertTrue(b[c + 1]:find(" | |cff", 1, true) == nil, "no parts: " .. b[c + 1])
-    assertTrue(b[c + 1]:find(" | %a") ~= nil, "the profession alone: " .. b[c + 1])
     local line = tip.__lines[c + 2]
-    assertEqual(line.right, IST.ProfessionName(IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine))
+    local first = IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine
+    local pt = C.TONE[IST.ProfessionTone(first)]
+    -- the profession alone, in its own tone (round 4, R4-DW-04), no breakpoints
+    assertEqual(line.right, NS.GroupRoster.Colored(IST.ProfessionName(first), pt.r, pt.g, pt.b))
     assertEqual(NS.ItemSearchTip.Options().craftSkill, false)
 end, FOREVER_ONLY)
 
