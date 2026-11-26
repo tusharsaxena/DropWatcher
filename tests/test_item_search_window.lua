@@ -439,6 +439,16 @@ test("item search window: the header's icon and name show the item's tooltip and
     W.ShowItem(IDS.pebble)
     -- red under: an empty tab strip for an item ForeverDB knows nothing about (spec §5.3)
     assertFalse(f.tabStrip:IsShown()); assertTrue(f.noFacts:IsShown())
+    -- no icon known (neither ForeverDB nor the client has one): the missing-icon fallback, LibKa0s'
+    -- outlined ring (GLYPH-02, the owner's pick: gi:help), never the help mark (ph:question is the
+    -- (?) help's). Red under: Open Iconic's `help`
+    local icon = NS.Compat.ItemIcon
+    NS.Compat.ItemIcon = function() return nil end
+    W.ShowItem(990999)
+    NS.Compat.ItemIcon = icon
+    assertEqual(f.icon.art:GetTexture(), NS.Icon("gi:help"))
+    assertTrue(NS.Icon("gi:help"):find("game-icons\\help", 1, true) ~= nil, tostring(NS.Icon("gi:help")))
+    W.ShowItem(IDS.pebble)
     m.shift = true
     f.icon:__fire("OnClick", "LeftButton")
     assertTrue(m.prints[#m.prints]:find("That item is still loading", 1, true) ~= nil, "no client link yet")

@@ -508,7 +508,7 @@ local function setItem(b, link, where)
     b.ownDropId = where and where.dropId or nil
     b.worn = where and where.unit and where or nil
     local icon = link and NS.Compat.ItemIcon(link)
-    b.art:SetTexture(icon or NS.Icon("help"))
+    b.art:SetTexture(icon or NS.Icon("gi:help"))
     NS.IconStyle.Apply(b, link)  -- the border's quality color follows the item
     b:SetShown(link ~= nil)
 end

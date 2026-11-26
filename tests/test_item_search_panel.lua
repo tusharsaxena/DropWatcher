@@ -172,7 +172,10 @@ test("verdict panel: a (?) beside the badge explains the score from the scorer's
     local help = f.verdict.help
     -- red under: no (?) (the owner: "Add a (?) icon next to the score")
     assertTrue(help ~= nil, "a (?) on the panel")
-    assertTrue(help.icon.__texture ~= nil and help.icon.__texture:find("help", 1, true) ~= nil, "LibKa0s' help icon")
+    -- red under (GLYPH-02, the owner's pick): Open Iconic's `help`; the help mark is ph:question,
+    -- the filled circle with the ? cut out
+    assertEqual(help.icon.__texture, NS.Icon("ph:question"))
+    assertTrue(help.icon.__texture:find("phosphor\\question", 1, true) ~= nil, "LibKa0s' ph:question: " .. help.icon.__texture)
     local p = help.__points[1]
     assertTrue(p[1] == "LEFT" and p[2] == f.verdict.badge.piece.r and p[3] == "RIGHT", "right after the pill")
     local lines = NS.Window.TooltipOf(help)

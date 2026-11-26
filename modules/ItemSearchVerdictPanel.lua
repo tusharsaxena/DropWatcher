@@ -97,7 +97,8 @@ local function newLine(content)
     return row
 end
 
--- The (?) beside the badge (R5-DW-07): LibKa0s' `help` icon, its tooltip how the verdict and score work
+-- The (?) beside the badge (R5-DW-07): LibKa0s' `ph:question` (GLYPH-02, the owner's pick: the filled
+-- circle with the ? cut out), its tooltip how the verdict and score work
 -- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover). As tall
 -- as the pill (R6-DW-02: one size, C.ITEM_SEARCH.BADGE.HEIGHT).
 local function helpIcon(p)
@@ -105,7 +106,7 @@ local function helpIcon(p)
     b:SetSize(B.HEIGHT, B.HEIGHT)
     local t = b:CreateTexture(nil, "ARTWORK")
     t:SetAllPoints(b)
-    t:SetTexture(NS.Icon("help"))
+    t:SetTexture(NS.Icon("ph:question"))
     b.icon = t
     NS.SkinPaint(t, function(x) x:SetVertexColor(NS.SkinColor(ISG.MARK_REST)) end)
     NS.Window.AttachTooltip(b, function() return unpack(IVD.ScoringHelp()) end)
