@@ -164,7 +164,7 @@ end
 --- @param vendor number|nil the vendor's price a unit (0: no vendor buys it, R6-DW-06)
 --- @return string
 function IAU.From(via, net, bar, margin, vendor)
-    if via == "auction" and vendor == 0 then
+    if via == "auction" and vendor ~= nil and vendor <= 0 then
         return L["Auction: a score under %d, no vendor buys it, and an auction brings something after the cut and deposit"]:format(bar)
     end
     if via == "auction" then

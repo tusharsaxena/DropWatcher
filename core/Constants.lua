@@ -520,7 +520,7 @@ C.ITEM_SEARCH = {
     -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's
     -- tone; EM the width a character is reckoned at, in FONT units, for the room the tooltip reserves.
     -- LINE is a tooltip line's pitch: GameTooltipText's 12 points (CRAFT_COL.BASE) and the 2 px the
-    -- client leaves between lines. The pill is centred on its line, so at most LINE tall it never
+    -- client leaves between lines. The pill is centered on its line, so at most LINE tall it never
     -- reaches the line under it (R6-DW-02: at 16 it ran into the reason line). The verdict panel's
     -- pill and the (?) beside it are HEIGHT too: one size for all three.
     BADGE       = { HEIGHT = 14, LINE = 14, RADIUS = 4, PAD = 5, GAP = 6, ICON = 10, ICON_GAP = 3, FONT = 10,
