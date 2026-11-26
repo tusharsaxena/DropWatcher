@@ -174,6 +174,32 @@ local function pointText(p, rel)
     return table.concat({ p[1], tostring(p[2] == rel), p[3], p[4], p[5] }, ",")
 end
 
+test("item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV)", function()
+    local NS, m, tdp = enabled()
+    local factor = 0.5
+    m.PixelUtil = { GetPixelToUIUnitFactor = function() return factor end }
+    local tip = tdp.tooltip("GameTooltip")
+    tip.GetEffectiveScale = function() return 1 end
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    assertEqual(tex:GetHeight(), 0.5, "one physical pixel at the first scale")
+    tdp.hide(tip)
+    m.advance(0)
+    -- red under: the height set once, when the line was made (a UI or tooltip scale change later in
+    -- the session left it 0.5 units: two pixels, or none once snapped)
+    factor = 0.75
+    tdp.show(tip, IDS.blade)
+    assertEqual(tex:GetHeight(), 0.75, "re-read on the next claim")
+    local sets, set = 0, tex.SetHeight
+    tex.SetHeight = function(self, h) sets = sets + 1; return set(self, h) end
+    tdp.hide(tip)
+    m.advance(0)
+    tdp.show(tip, IDS.blade)
+    assertEqual(sets, 0, "an unchanged scale sets nothing")
+    tex.SetHeight = set
+    m.PixelUtil = nil
+end, FOREVER_ONLY)
+
 test("item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule", function()
     local NS, m, tdp = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants

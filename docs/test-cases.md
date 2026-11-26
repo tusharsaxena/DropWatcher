@@ -1008,7 +1008,7 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (28)
+### test_item_search_tip.lua (29)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
@@ -1017,6 +1017,7 @@ Total.
 - item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: a refill of the same item keeps the separator up: no one-frame gap (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: a refill never draws the separator at a second height: no ghost line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -3570,5 +3571,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 128 |
+| Skipped | 129 |
 | **Total** | **2850** |

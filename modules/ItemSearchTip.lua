@@ -860,18 +860,22 @@ local function ruleOf(tip)
     local inset = C.ITEM_SEARCH.RULE_INSET
     tex:SetPoint("TOPLEFT", edgeL, "BOTTOMLEFT", inset, 0)
     tex:SetPoint("TOPRIGHT", edgeR, "BOTTOMRIGHT", -inset, 0)
-    tex:SetHeight(onePixel(tip))
+    local px = onePixel(tip)
+    tex:SetHeight(px)
     tex:Hide()
-    st = keep({ tex = tex, edgeL = edgeL, edgeR = edgeR }, function(r) r.tex:Hide() end)
+    st = keep({ tex = tex, edgeL = edgeL, edgeR = edgeR, px = px }, function(r) r.tex:Hide() end)
     rules[tip] = st
     return st
 end
 
 -- The block on `tip` claims its separator for spacer line `n`: anchored (again only when the line
--- moved), shown, no longer stale.
+-- moved), one physical pixel tall at the tooltip's scale now (set again only when a UI or tooltip
+-- scale change moved it, `st.px`, so a warm hover sets nothing), shown, no longer stale.
 local function claimRule(tip, st, n)
     st.stale = false
     if not (n and anchorRule(tip, st, n)) then st.line = nil; st.tex:Hide(); return end
+    local px = onePixel(tip)
+    if px ~= st.px then st.tex:SetHeight(px); st.px = px end
     st.line = n
     st.tex:Show()
 end
