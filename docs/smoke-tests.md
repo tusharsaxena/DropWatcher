@@ -5249,6 +5249,15 @@ size as the tooltip's, and the (?) beside it is as tall as the pill (no larger).
 pill size of ITEM-SEARCH-60. Fail: the pill reaching into the next line, or a (?) taller than the
 pill. Result:
 
+**ITEM-SEARCH-69. The (?) help in sections (R6-DW-03).** Open the Item Search window on a held item
+and hover the (?) beside the verdict panel's badge → `How the score works`, the line on what the
+score is, then four sections, each after a blank line: `Adds:`, `Takes away:`, `The verdict:` and
+`Confidence:`, each header in the muted gold of the tooltip's section headers, and every entry under
+it on its own line starting with an indented gold `·`. The wording is the same as before (ITEM-SEARCH-63),
+apart from the no-vendor-price Auction rule (ITEM-SEARCH-72). A long entry wraps onto the next line
+from the tooltip's left edge. Fail: a header in white, an entry with no bullet, or two sections with
+no blank line between them. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

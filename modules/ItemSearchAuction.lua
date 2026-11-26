@@ -171,14 +171,14 @@ end
 --- @return table
 function IAU.HelpLines(bar)
     local r = IAU.Rule()
-    local out = { L["  Under %d: Auction or Vendor when a vendor buys it, else Toss."]:format(bar) }
+    local out = { L["Under %d: Auction or Vendor when a vendor buys it, else Toss."]:format(bar) }
     if not r.on then
-        out[#out + 1] = L["  Compare with Auctionator prices is off: a sale is always Vendor."]
+        out[#out + 1] = L["Compare with Auctionator prices is off: a sale is always Vendor."]
     elseif not NS.Compat.AuctionatorLoaded() then
-        out[#out + 1] = L["  Auctionator is not loaded: a sale is always Vendor."]
+        out[#out + 1] = L["Auctionator is not loaded: a sale is always Vendor."]
     else
         local rate = floor((A.DEPOSIT[r.duration] or 0) * 100 + 0.5)
-        out[#out + 1] = L["  Auction when Auctionator's price, less the %d%% cut and the %d-hour deposit (%d%% of the vendor price), beats the vendor by over %d%%; else Vendor. A bound item, or one with no price, is Vendor."]
+        out[#out + 1] = L["Auction when Auctionator's price, less the %d%% cut and the %d-hour deposit (%d%% of the vendor price), beats the vendor by over %d%%; else Vendor. A bound item, or one with no price, is Vendor."]
             :format(r.cut, r.duration, rate, r.margin)
     end
     return out

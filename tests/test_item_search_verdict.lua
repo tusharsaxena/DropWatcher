@@ -291,6 +291,34 @@ test("verdict: the scoring help's collectible number is the scorer's own constan
     assertTrue(found ~= nil and found:find("90", 1, true) ~= nil, "the help reads it: " .. tostring(found))
 end)
 
+test("verdict: the scoring help reads in sections: gold headers, bulleted entries, a blank line between (R6-DW-03)", function()
+    local NS = addon()
+    local C = NS.Constants
+    local t = C.TONE.mutedGold
+    local gold = ("|cff%02x%02x%02x"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
+    local lines = NS.ItemSearchVerdict.ScoringHelp()
+    assertEqual(lines[1], "How the score works", "the title as before")
+    assertEqual(lines[2], "The score, 0 to 100, is what the item is still good for to this character.")
+    -- red under: the headers in the body's color, the entries indented by two spaces alone, no spacer
+    local heads, bullets = {}, 0
+    for i = 3, #lines do
+        local line = lines[i]
+        local head = line:match("^" .. gold:gsub("%p", "%%%0") .. "(.-)|r$")
+        if head then
+            heads[#heads + 1] = head
+            assertEqual(lines[i - 1], " ", head .. ": a blank line before it")
+        elseif line ~= " " then
+            assertTrue(line:find("^  " .. gold:gsub("%p", "%%%0") .. "·|r %S") ~= nil, "a bulleted entry: " .. line)
+            assertTrue(line:find("^  " .. gold:gsub("%p", "%%%0") .. "·|r  ") == nil, "one space after the bullet: " .. line)
+            bullets = bullets + 1
+        end
+    end
+    assertEqual(table.concat(heads, " / "), "Adds: / Takes away: / The verdict: / Confidence:")
+    assertTrue(bullets >= 14, "every entry bulleted (" .. bullets .. ")")
+    assertTrue(lines[#lines]:find("Confidence is how much of what the score needs is known.", 1, true) ~= nil,
+        "the confidence rule under its own header: " .. lines[#lines])
+end)
+
 test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()
     local _, IS = addon()
     -- a Peacebloom-like item (R4-DW-07, the owner's "what does 65 mean"): two orange recipes (+50 at

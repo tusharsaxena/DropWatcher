@@ -552,10 +552,28 @@ end
 
 -- ── how the score works, explained (R5-DW-07) ───────────────────────────────────────────────
 
---- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title, then one line per
---- rule, every number read from C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with
---- the scorer, and the Auction or Vendor rule from the live settings (IAU.HelpLines, R5-DW-15). A
---- new list each call (a hover's, never the tooltip block's).
+-- The help's sections (R6-DW-03, the owner: "Add bullet points and coloring of section header and
+-- some more spacing between sections"): a blank line, the header in muted gold (the tooltip block's
+-- section headers' tone), then each entry bulleted as the tooltip's reason lines are (two spaces and
+-- a muted gold dot). GameTooltip wraps a long entry from the line's left edge: it has no hanging indent.
+local function helpGold(text)
+    local t = C.TONE.mutedGold
+    return NS.GroupRoster.Colored(text, t.r, t.g, t.b)
+end
+
+local function helpSection(out, header, entries)
+    out[#out + 1] = " "
+    out[#out + 1] = helpGold(header)
+    local dot = "  " .. helpGold("·") .. " "
+    for _, entry in ipairs(entries) do out[#out + 1] = dot .. entry end
+end
+
+--- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title and one line on what
+--- the score is, then the sections Adds, Takes away, The verdict and Confidence (R6-DW-03: each after
+--- a blank line, its header in muted gold, its entries bulleted), every number read from
+--- C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with the scorer, and the Auction
+--- or Vendor rule from the live settings (IAU.HelpLines, R5-DW-15). A new list each call (a hover's,
+--- never the tooltip block's).
 --- @return table lines
 function IVD.ScoringHelp()
     local c = V.CRAFT
@@ -563,25 +581,29 @@ function IVD.ScoringHelp()
     local out = {
         L["How the score works"],
         L["The score, 0 to 100, is what the item is still good for to this character."],
-        L["Adds:"],
-        L["  A quest in your log or ready to hand in: +%d each"]:format(V.QUEST_LOG),
-        L["  A quest you could pick up (up to %d levels above you): +%d each"]:format(V.QUEST_CAN_ABOVE, V.QUEST_CAN),
-        L["  A quest it starts: +%d (quests count %d at most)"]:format(V.STARTS, V.QUESTS_CAP),
-        L["  Your recipe by skill-up: orange +%d, yellow +%d, green +%d"]:format(c.orange, c.yellow, c.green),
-        L["  A recipe you could learn: +%d (your recipes count %d at most)"]:format(V.LEARN, V.CRAFT_CAP),
-        L["  Another profession's recipe: +%d (%d at most)"]:format(V.OTHERS, V.OTHERS_CAP),
-        L["  Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
-        L["  New to your collection: %d"]:format(V.COLLECT),
-        L["Takes away:"],
-        L["  Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
-        L["  Every use gray or done: %d"]:format(V.TRIVIAL),
-        L["  Poor quality counts %d at most, unless a quest wants it; a quest item %d at least"]:format(V.POOR_CAP,
-            V.QUEST_FLOOR),
-        L["The verdict:"],
-        L["  Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1),
     }
-    for _, line in ipairs(IAU.HelpLines(V.HOLD)) do out[#out + 1] = line end
-    out[#out + 1] = L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM)
+    helpSection(out, L["Adds:"], {
+        L["A quest in your log or ready to hand in: +%d each"]:format(V.QUEST_LOG),
+        L["A quest you could pick up (up to %d levels above you): +%d each"]:format(V.QUEST_CAN_ABOVE, V.QUEST_CAN),
+        L["A quest it starts: +%d (quests count %d at most)"]:format(V.STARTS, V.QUESTS_CAP),
+        L["Your recipe by skill-up: orange +%d, yellow +%d, green +%d"]:format(c.orange, c.yellow, c.green),
+        L["A recipe you could learn: +%d (your recipes count %d at most)"]:format(V.LEARN, V.CRAFT_CAP),
+        L["Another profession's recipe: +%d (%d at most)"]:format(V.OTHERS, V.OTHERS_CAP),
+        L["Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
+        L["New to your collection: %d"]:format(V.COLLECT),
+    })
+    helpSection(out, L["Takes away:"], {
+        L["Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
+        L["Every use gray or done: %d"]:format(V.TRIVIAL),
+        L["Poor quality counts %d at most, unless a quest wants it; a quest item %d at least"]:format(V.POOR_CAP,
+            V.QUEST_FLOOR),
+    })
+    local verdict = { L["Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1) }
+    for _, line in ipairs(IAU.HelpLines(V.HOLD)) do verdict[#verdict + 1] = line end
+    helpSection(out, L["The verdict:"], verdict)
+    helpSection(out, L["Confidence:"], {
+        L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
+    })
     return out
 end
 
