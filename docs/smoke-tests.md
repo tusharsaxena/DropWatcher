@@ -5234,6 +5234,21 @@ ITEM-SEARCH-64 turns Vendor on the next hover; set it back → Auction again; ch
 24 hours → the (?) help says the 24-hour deposit (60%); untick the comparison → the three rows dim
 and every Sell is Vendor. Result:
 
+### Item Search owner feedback round 6
+
+The owner feedback round 6 run (Ka0sAddonsCommonTasks `docs/2026-11-27-OWNER_FEEDBACK_ROUND6/`,
+R6-DW-01 to R6-DW-06). Same client, ForeverDB and character setup as round 5 above. Where a check
+here contradicts an earlier ITEM-SEARCH row, this one is current.
+
+**ITEM-SEARCH-68. A smaller badge that never covers the line under it; the (?) its size
+(R6-DW-02).** Hover an item whose badge has a reason line under it (Ruined Leather Scraps, or any
+Auction or Vendor item) → the pill is no taller than its line, and never touches or covers the
+reason line below it or the line above it. Set the UI scale to its lowest and its highest and hover
+again → the same. Open the Item Search window on a held item → the verdict panel's pill is the same
+size as the tooltip's, and the (?) beside it is as tall as the pill (no larger). This replaces the
+pill size of ITEM-SEARCH-60. Fail: the pill reaching into the next line, or a (?) taller than the
+pill. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

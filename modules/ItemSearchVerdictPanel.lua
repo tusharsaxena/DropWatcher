@@ -91,10 +91,11 @@ local function newLine(content)
 end
 
 -- The (?) beside the badge (R5-DW-07): LibKa0s' `help` icon, its tooltip how the score works
--- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover).
+-- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover). As tall
+-- as the pill (R6-DW-02: one size, C.ITEM_SEARCH.BADGE.HEIGHT).
 local function helpIcon(p)
     local b = CreateFrame("Button", nil, p)
-    b:SetSize(B.HELP, B.HELP)
+    b:SetSize(B.HEIGHT, B.HEIGHT)
     local t = b:CreateTexture(nil, "ARTWORK")
     t:SetAllPoints(b)
     t:SetTexture(NS.Icon("help"))

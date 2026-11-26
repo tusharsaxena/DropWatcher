@@ -519,8 +519,12 @@ C.ITEM_SEARCH = {
     -- verdict panel's: HEIGHT tall with RADIUS corners, PAD inside either end, GAP from the label; the
     -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's
     -- tone; EM the width a character is reckoned at, in FONT units, for the room the tooltip reserves.
-    BADGE       = { HEIGHT = 16, RADIUS = 5, PAD = 6, GAP = 6, ICON = 12, ICON_GAP = 3, FONT = 11, INK = 0.15,
-        EM = 0.62, HELP = 14 },
+    -- LINE is a tooltip line's pitch: GameTooltipText's 12 points (CRAFT_COL.BASE) and the 2 px the
+    -- client leaves between lines. The pill is centred on its line, so at most LINE tall it never
+    -- reaches the line under it (R6-DW-02: at 16 it ran into the reason line). The verdict panel's
+    -- pill and the (?) beside it are HEIGHT too: one size for all three.
+    BADGE       = { HEIGHT = 14, LINE = 14, RADIUS = 4, PAD = 5, GAP = 6, ICON = 10, ICON_GAP = 3, FONT = 10,
+        INK = 0.15, EM = 0.62 },
     -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
     -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
     -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most

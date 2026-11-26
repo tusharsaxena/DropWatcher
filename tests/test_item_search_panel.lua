@@ -176,6 +176,32 @@ test("verdict panel: a (?) beside the badge explains the score from the scorer's
     V.KEEP = keep
 end, FOREVER_ONLY)
 
+test("verdict panel: the tooltip's pill, the panel's pill and its (?) are one size, within a tooltip line (R6-DW-02)", function()
+    local NS, m, held = enabled()
+    local W, B = NS.ItemSearchWindow, NS.Constants.ITEM_SEARCH.BADGE
+    held[IDS.blade] = { 1, 0 }
+    -- every button's size recorded (the kit's frames record no geometry)
+    local make = m.CreateFrame
+    m.CreateFrame = function(kind, ...)
+        local fr = make(kind, ...)
+        if kind == "Button" then rawset(fr, "SetSize", function(self, w, h) self.dwW, self.dwH = w, h end) end
+        return fr
+    end
+    W.ShowItem(IDS.blade)
+    m.CreateFrame = make
+    local f = W.Frame()
+    -- red under: a 16 px pill on a 14 px tooltip line (it ran into the reason line under it, the
+    -- owner's "overlaps the text below it sometimes") with a separate, larger (?) beside it
+    assertTrue(B.HEIGHT <= B.LINE, ("the pill (%s) fits a tooltip line's pitch (%s)"):format(tostring(B.HEIGHT), tostring(B.LINE)))
+    assertTrue(B.ICON < B.HEIGHT and B.FONT <= B.ICON, "the icon and the text inside the pill")
+    assertTrue(B.HELP == nil, "no size of the (?) apart from the pill's")
+    local help = f.verdict.help
+    assertEqual(help.dwW, B.HEIGHT, "the (?) as wide as the pill is tall")
+    assertEqual(help.dwH, B.HEIGHT, "the (?) as tall as the pill")
+    local tl = f.verdict.badge.piece.tl.__points[1]
+    assertEqual(tl[5], B.HEIGHT / 2, "the panel's pill is HEIGHT tall")
+end, FOREVER_ONLY)
+
 test("verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height", function()
     local NS, m, held = enabled()
     local W = NS.ItemSearchWindow
