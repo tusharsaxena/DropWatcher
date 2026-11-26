@@ -390,11 +390,25 @@ function IS.QuestGiver(givers, npc, object)
     return nil
 end
 
--- A quest's giver for the static facts (R4-DW-09): IS.QuestGiver over ForeverDB's quest row, read
--- once per item. Its spots are not kept: the tooltip reads them once per giver (its zone memo).
+-- A quest's giver for the static facts (R4-DW-09): IS.QuestGiver over ForeverDB's quest row.
+-- Memoized per quest id (false: no giver), because `db.Quest` copies the whole row out, givers and
+-- enders lists included, and the facts are rebuilt on every Invalidate: without the memo a cold hover
+-- of an item with quests allocated about 1.6 KB more (tests/perf.lua's itemSearchTipRichCold, 33120
+-- -> 34720 bytes on WoW Forever, R4-REV). A giver is static data, so the memo is emptied only when
+-- ForeverDB's state moves (IS.SpotsGeneration, the spot memo's). The giver table is shared between
+-- items: read it, never write it. Its spots are not kept: the tooltip reads them once per giver.
+local giverByQuest, giverGeneration = {}, nil
+
 local function questGiver(db, id)
-    local info = type(db.Quest) == "function" and db.Quest(id) or nil
-    return IS.QuestGiver(type(info) == "table" and info.givers or nil, db.NPC, db.Object)
+    local generation = IS.SpotsGeneration()
+    if giverGeneration ~= generation then giverByQuest, giverGeneration = {}, generation end
+    local g = giverByQuest[id]
+    if g == nil then
+        local info = type(db.Quest) == "function" and db.Quest(id) or nil
+        g = IS.QuestGiver(type(info) == "table" and info.givers or nil, db.NPC, db.Object) or false
+        giverByQuest[id] = g
+    end
+    return g or nil
 end
 
 local function questRows(db, itemID, ctx)

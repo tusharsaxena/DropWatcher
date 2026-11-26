@@ -1164,12 +1164,13 @@ Total.
 - item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
 - item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
-### test_item_search_sources.lua (20)
+### test_item_search_sources.lua (21)
 
 - item search sources: a test or dev name is caught, and a word that only contains "test" is not
 - item search sources: a quest's giver skips a test-named one for the next
 - item search sources: one giver helper for the tooltip and the window: the first named, non-test giver (R4-DW-09)
 - item search sources: the static facts resolve each quest's giver once (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
+- item search sources: a quest's giver is read from ForeverDB once, until its state moves (R4-REV) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
 - item search sources: a test-named creature, object, vendor and skinned creature are left out and counted
 - item search sources: the test-named count reaches the debug log once per item
 - item search sources: GatherKind files fishing, then mining, then herbalism, else a drop
@@ -3569,5 +3570,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 127 |
+| Skipped | 128 |
 | **Total** | **2850** |

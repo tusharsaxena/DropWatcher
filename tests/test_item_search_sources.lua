@@ -79,6 +79,33 @@ test("item search sources: the static facts resolve each quest's giver once (R4-
         "one giver record per item for the session (the live copy keeps it)")
 end, FOREVER_ONLY)
 
+test("item search sources: a quest's giver is read from ForeverDB once, until its state moves (R4-REV)", function()
+    local NS, _, m = T.enableAddon{ mock = function(mm) FDB.install(mm, { preset = "present" }) end }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(5)
+    local db, reads = NS.ForeverDB, 0
+    local quest = db.Quest
+    db.Quest = function(id) reads = reads + 1; return quest(id) end
+    local IS = NS.ItemSearch
+    IS.Invalidate()
+    assertTrue(#IS.Get(IDS.leather).quests > 0, "the leather has quests")
+    local first = reads
+    assertTrue(first > 0, "the givers were read")
+    -- red under: a Quest read per quest on every rebuild of the facts, each copying out the whole row
+    -- (givers and enders), which cost a cold hover about 1.6 KB (tests/perf.lua itemSearchTipRichCold)
+    IS.Invalidate()
+    local again = IS.Get(IDS.leather).quests
+    assertEqual(reads, first, "a rebuild reads no quest row again")
+    local byId = {}
+    for _, q in ipairs(again) do byId[q.id] = q end
+    assertEqual(byId[IDS.errand].giver.name, "Fixture Gnoll", "the memo answers the same giver")
+    assertNil(byId[IDS.hunt].giver, "and the same no-giver")
+    IS.ForgetSpots(); IS.Invalidate()
+    IS.Get(IDS.leather)
+    assertEqual(reads, first * 2, "ForeverDB's state moved: every giver is read again")
+    db.Quest = quest
+end, FOREVER_ONLY)
+
 -- A reader in LibKa0s-ForeverDB-1.0's shape over invented rows: two herb nodes under one name, a
 -- vein, a School, a quest Pool, a chest, a test chest, a test creature, a test vendor and a
 -- test-named skinned creature.
