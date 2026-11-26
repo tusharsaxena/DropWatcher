@@ -51,8 +51,16 @@ marked as such rather than listed as a requirement.
   (`Compat.AuctionatorLoaded`, `Compat.AuctionPrice`): its public API v1,
   `Auctionator.API.v1.GetAuctionPriceByItemLink` then `GetAuctionPriceByItemID`, asked as
   `"DropWatcher"` under `pcall` (its code is never copied). With it, the Item Search badge's Sell
-  says Auction or Vendor (`modules/ItemSearchAuction.lua`, R5-DW-13..16); without it, every Sell says
-  Vendor and the Auction prices rows are dimmed.
+  says Auction or Vendor (`modules/ItemSearchAuction.lua`, R5-DW-13..16), an item no vendor buys says
+  Auction when an auction brings anything (R6-DW-06), and its price feeds the badge's how-sure score
+  (`modules/ItemSearchVerdict.lua`, R6-DW-07); without it, every Sell says Vendor and the Auction
+  prices rows are dimmed.
+- **Optional: TomTom (read on WoW Forever, where Item Search runs).** Not named in `## OptionalDeps:`:
+  it is looked up at call time only, through `core/CompatSearch.lua` (`Compat.TomTomLoaded`,
+  `Compat.AddTomTomWaypoint`, its `AddWaypoint` under `pcall`). With it, an Item Search row's map pin
+  can set a TomTom waypoint (`itemSearch.waypoints` `auto` or `tomtom`,
+  `modules/ItemSearchWaypoint.lua`); without it, a pin uses Drop Watcher's own arrow
+  (LibKa0s-WaypointArrow-1.0, vendored).
 - **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
   When it can skin this addon, Settings → General → Skin offers it as the skin source, through
   LibKa0s-Skin-1.0's own EllesmereUI provider; this addon calls no EllesmereUI API. Without it the
@@ -68,8 +76,8 @@ marked as such rather than listed as a requirement.
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh`, which runs it over a sanitized shadow and checks function-count parity, because `lizard` alone is blind in Lua (automated-tests-§3); also the headless suite's one end-to-end lizard case, which SKIPs when lizard is not on PATH | `tests/_kit/run-automated-tests.sh`, `tests/_kit/test_lizard_sighted.lua`, the case "lizard sighted: lizard lists every function of a hazard fixture once it is sanitized" |
 | `git` | any recent | vendoring, the vendored-payload gate (`tests/test_vendor_sync.lua` reads the index and compares against the sibling `../LibKa0s` checkout) and the line-ending gate (`git check-attr`) | `tests/_kit/vendor_sync.lua`, `tests/_kit/test_eol.lua` |
 | POSIX shell (`bash`) | any | `tests/_kit/run-automated-tests.sh` and the commands in this file | the runner's shebang |
-| `python3` | **3.8+**, standard library only | the seed-validation tool `tools/seeds/seeds.py` and its cases (`docs/validate-seeds.md`); not needed to build, run or test the addon itself | `tools/seeds/seeds.py`'s imports; `pytest` is optional (`python3 -m unittest discover -s tools/seeds` runs the same cases) |
-| network access to `wago.tools` | - | a new seed-validation run (`seeds.py status`, and `derive` without `--replay`), which reads `https://wago.tools/api/builds` and the build's DB2 tables as CSV; a `--replay` and the tests run offline | `seeds.py`'s `BUILDS_URL` and `CSV_URL` |
+| `python3` | **3.8+**, standard library only | the seed-validation tool `tools/seeds/seeds.py`, the recipe-reagent generator `tools/seeds/recipes.py` (run as `seeds.py recipes`), and their cases (`docs/validate-seeds.md`), part of the green gate; not needed to build or run the addon itself | `tools/seeds/seeds.py`'s and `tools/seeds/recipes.py`'s imports; `pytest` is optional (`python3 -m unittest discover -s tools/seeds` runs the same cases) |
+| network access to `wago.tools` | - | a new seed-validation run (`seeds.py status`, and `derive` without `--replay`, the `recipes` subcommand's included), which reads `https://wago.tools/api/builds` and the build's DB2 tables as CSV; a `--replay` and the tests run offline | `seeds.py`'s `BUILDS_URL` and `CSV_URL` |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2 — "5.2 will probably work" is false and costs an hour to

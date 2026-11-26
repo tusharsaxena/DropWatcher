@@ -11,7 +11,7 @@ A Retail and WoW Forever addon that watches the loot a party or raid receives, j
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.117.0 payload (twenty-six majors; media/icons pruned to the declared subset,
+LibKa0s v1.118.0 payload (twenty-six majors; media/icons pruned to the declared subset,
 media/sounds to none), twenty-one wired with one setup file each, three reached directly by the
 files that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`,
 `LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`, and `LibKa0s-WaypointArrow-1.0` from
@@ -39,7 +39,7 @@ it (`DEPENDENCIES.md` lists the toolchain):
 | Options | `settings/OptionsSetup.lua` | the settings panel |
 | Slash | `settings/Slash.lua` | the `/dw` dispatcher |
 | Widgets | `core/WidgetsSetup.lua` | the window's flat dropdowns (`NS.MakeDropdown`), the shared menu on a host's rows (`NS.ContextMenu`: the compact Filters ▾ cascade, V89A-DW, and the History row menu at the pointer, V89A-DWH) and its `NS.CloseMenu`, TestStrip (the mode strips, `NS.MakeTestStrip`: the amber test-mode banner, DW-06, LibKa0s#48, and the cyan simulation strip, `kind = "sim"`, Widgets minor 14, DW-10; docked under a title bar, `dock = "title"`, Widgets minor 27, with `NS.TestStripHeight`), Footer (the main window's footer, `NS.MakeFooter` and `NS.FooterMetric`, Widgets minor 27, UC-DW), HeaderButtons (every window's title-bar marks, `NS.HeaderButtons`, WidgetsHeader minor 1, AD-86-DW) and SearchBox (the filter bar's search, `NS.MakeSearchBox`; DW-07, LibKa0s#52) |
-| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and eight verbs (DW-02..DW-04) |
+| Sim | `core/SimSetup.lua` + `modules/Sim.lua` | the simulator: the answer seam over the compat family (`NewSeam`), the session and its two-phase stop, the timeline, the `/dw sim` grammar and the step panel; DropWatcher hosts its scenarios, world providers, event drivers, restriction model and nine verbs (DW-02..DW-04) |
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
@@ -67,13 +67,13 @@ one-line responsibility and why its position is load-bearing or conventional is 
 [`module-map.md`](module-map.md), the only inventory. In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  family (`Compat.lua`, `CompatClient.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, `CompatLoot.lua`, the only files that name the client
+  family (`Compat.lua`, `CompatClient.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, `CompatLoot.lua`, `CompatSearch.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
   it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the library-shaped item reads, the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, and the migration runner.
 - `defaults/Profile.lua`: every default value (`NS.C`).
 - `modules/`: the simulator's session (`Sim.lua`: LibKa0s-Sim-1.0 hosting DropWatcher's scenarios,
-  world providers, event drivers, restriction model and eight verbs); the login session
+  world providers, event drivers, restriction model and nine verbs); the login session
   (`Session.lua`, the session start and This instance kept per character across a reload); the pure
   engine kernels (the verdict kernel and its off-spec pass, `OffSpec.lua`, which judges a drop your
   current spec can't use for the other specs of your class), the item kinds and the collection
@@ -328,7 +328,9 @@ verbs of design spec §12.3 (`scan clear history mine compact situation offer ad
 `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the
 Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5
 spec §3; and issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through
-the item lists' one writer, `NS.ItemLists`, which the settings panel shares). The two reports,
+the item lists' one writer, `NS.ItemLists`, which the settings panel shares; and on WoW Forever alone
+Item Search's `search [name|id]`, `NS.ItemSearchWindow.SlashSearch`, a row `settings/Slash.lua`
+appends only while `C.FEATURE.itemSearch` is on, so Retail has none). The two reports,
 `situation` and an item list's `list`, write to the debug console through `NS.DebugLog:Report` with
 one chat pointer line (debug-logging-§15, AD-79-DW; [`debug.md`](debug.md)); the full table, the
 live-while-disabled set and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). Every
@@ -346,10 +348,13 @@ a sim runs and then the panel closed. A verb or button refused while stood down 
 already enabled.
 
 The launcher's Show window entry has a key binding (launcher-§6, LibKa0s#58). The root
-`Bindings.xml`, which the client reads without a TOC line, declares one
+`Bindings.xml`, which the client reads without a TOC line, declares the
 `CLICK DropWatcherToggleWindow:LeftButton` binding in the addon's own category,
 `BINDING_HEADER_DROPWATCHER`, with no `header` attribute and no default key, so Options →
-Keybindings shows it in a section of its own titled with the brand. `core/LauncherSetup.lua` builds that button at load, above its
+Keybindings shows it in a section of its own titled with the brand. Its second row,
+`CLICK DropWatcherItemSearch:LeftButton`, is Item Search's key (WoW Forever's feature, button
+`DropWatcherItemSearch` built beside the first; its run-time default key is the launcher-§6 row of
+*Documented deviations*). `core/LauncherSetup.lua` builds that button at load, above its
 library check: a plain, named, hidden, non-secure Button registered `AnyDown`. Its OnClick asks
 `NS.StoodDownRefusal()` first, because `NS.ToggleWindow` relies on the dispatcher's gate for
 `/dw toggle`, and prints that one line when it answers (the disabled line under the disabled hold,
@@ -395,7 +400,7 @@ how many handlers it called.
 | `TRADE_SKILL_SHOW`, `TRADE_SKILL_LIST_UPDATE` | `DW.OnItemSearchTradeSkill` | WoW Forever only (DropWatcher#17): a profession window opened or relisted; one read 1 second after the burst, out of combat and only with Item Search on, keeps the recipes the shipped table lacks (`modules/ItemSearchLearn.lua`, Item Search spec §4.2 B) |
 | `MERCHANT_SHOW`, `MERCHANT_UPDATE`, `MERCHANT_CLOSED` | `DW.OnItemSearchMerchantShow`, `DW.OnItemSearchMerchantUpdate`, `DW.OnItemSearchMerchantClosed` | WoW Forever only (`clients = { "forever" }`, Item Search round 3 spec §4.4): a merchant window opened records its prices into `global.itemSearch.prices` now, a refill while it is open records again 0.5 s after the last one, and the close cancels a pending record (`modules/ItemSearchPrices.lua`); a visit in combat records nothing then and runs once at `PLAYER_REGEN_ENABLED` if the merchant is still open; only while Item Search is wanted and `itemSearch.recordPrices` is on |
 | `QUEST_LOG_UPDATE`, `QUEST_TURNED_IN`, `SKILL_LINES_CHANGED`, `TRADE_SKILL_SHOW`, `PLAYER_LEVEL_UP`, `NEW_RECIPE_LEARNED`, `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `AUCTION_HOUSE_CLOSED` (the verdict's rows; the last one R5-DW-13's, as Auctionator's prices move while the house is open) | `DW.OnItemSearchVerdictEvent` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (round 3 spec §4.5): raises the badge's generation, so the next hover of each item works its Keep / Hold / Auction / Vendor / Toss verdict out again (`modules/ItemSearchVerdict.lua`); nothing is read or drawn on the event itself |
-| `BAG_UPDATE_DELAYED`, `PLAYERBANKSLOTS_CHANGED`, `QUEST_LOG_UPDATE`, `QUEST_TURNED_IN`, `SKILL_LINES_CHANGED`, `TRADE_SKILL_SHOW`, `PLAYER_LEVEL_UP`, `NEW_RECIPE_LEARNED` (the verdict panel's rows), and the `GearChanged` message on its own bus receiver | `DW.OnItemSearchPanelEvent` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (round 4 addendum A1, R4-DW-11): while the Item Search window is open on an item, arms one 0.5-second timer (a burst repaints once) that repaints the window's verdict panel alone: shown or hidden by how many of the item you hold, bags and bank, not what you wear (`Compat.ItemCount`), its breakdown worked out again only when the count, the verdict memo's generation or, for gear, your gear's signature moved (`modules/ItemSearchVerdictPanel.lua`); nothing at all while the window is closed, and never on a hover |
+| `BAG_UPDATE_DELAYED`, `PLAYERBANKSLOTS_CHANGED`, `QUEST_LOG_UPDATE`, `QUEST_TURNED_IN`, `SKILL_LINES_CHANGED`, `TRADE_SKILL_SHOW`, `PLAYER_LEVEL_UP`, `NEW_RECIPE_LEARNED`, `AUCTION_HOUSE_CLOSED` (the verdict panel's rows; the last one R6-REV's, so the panel's score and prices follow the verdict's re-read of Auctionator), and the `GearChanged` message on its own bus receiver | `DW.OnItemSearchPanelEvent` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (round 4 addendum A1, R4-DW-11): while the Item Search window is open on an item, arms one 0.5-second timer (a burst repaints once) that repaints the window's verdict panel alone: shown or hidden by how many of the item you hold, bags and bank, not what you wear (`Compat.ItemCount`), its breakdown worked out again only when the count, the verdict memo's generation or, for gear, your gear's signature moved (`modules/ItemSearchVerdictPanel.lua`); nothing at all while the window is closed, and never on a hover |
 | `SPELL_TEXT_UPDATE` | `DW.OnSpellTextUpdate` | (since TT-1) a spell's text arrived: every cached item whose use spell it is and whose use text came back empty (`useSpellLoading`, not loaded yet) reads its use text, tier-token flag, made slot and category again (`modules/ItemFacts.lua`); a drop of such an item already waits for the spell through `ItemFacts.Request` |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnTransmogCollectionUpdated` | Retail only (`clients = C.FEATURE_CLIENTS.transmog`, DW-FP10: WoW Forever has no transmog): re-reads whether each cached item's appearance is collected (`modules/ItemFacts.lua`), then (since DW-CAT3) arms the collection re-read, so a live cosmetic's verdict follows (`modules/Collectibles.lua`) |
 | `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `NEW_RECIPE_LEARNED`, `SKILL_LINES_CHANGED` | `DW.OnCollectionEvent` | (since DW-CAT3) a mount, pet, toy or recipe learned, or a profession gained or lost: arms one 0.5-second timer, so a burst reads once; it re-reads the cached collectibles (`NS.ItemFacts.RereadCollections`, the cache's one writer) and re-judges each live collectible whose verdict moved through `LootFeed.Refresh(rec, "collection")`, which sends `DropUpdated(id, "collection")`; the stand-down cancels the timer (`modules/Collectibles.lua`). `PET_JOURNAL_LIST_UPDATE` is not used: it fires too often |
@@ -432,7 +437,7 @@ while disabled. Events the client refuses are kept in `NS.rejectedEvents` and re
 ### The simulator on LibKa0s-Sim-1.0
 
 The simulator is LibKa0s-Sim-1.0 hosting DropWatcher's scenarios, world providers, event drivers,
-restriction model and eight verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
+restriction model and nine verbs (DW-02..DW-04, LibKa0s#54). The library owns the answer seam, the
 session and its two-phase stop, the timeline's step machine, the `/dw sim` grammar and the step
 panel; it reaches this addon's handlers only through `NS.DeliverEvent` above. The host contract
 (LibKa0s `docs/api/Sim/version-2.3.10.3-docs.md`, *The host contract (H1–H10)*; the standard's
@@ -441,7 +446,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | | Obligation | Where DropWatcher meets it |
 |---|---|---|
 | H1 | Every simulated client read and outward action is a Compat member read at call time; senders and actions are guarded | `NS.Compat` routing (`core/Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`); the chat sender, the inspect calls and the trade action in `core/SimSetup.lua`'s `GUARDED`; `test_sim_e2e`'s scan fails a module that names a world global the simulator answers |
-| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatCollect.lua` (the last of the compat family), under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
+| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatSearch.lua` (the last of the compat family), under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
 | H3 | One `deliver` with the client's handler set and order | `NS.DeliverEvent` (`core/DropWatcher.lua`, this section above): the `NS.FEATURE_EVENTS` rows in order, `NS.rejectedEvents` skipped |
 | H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
@@ -851,12 +856,12 @@ checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` |
+| `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` on Retail, 36 on WoW Forever (`search`) |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Clients includes Retail (documentation-§3): the vendored Retail catalog block (client-quirks-§1), then the addon's own Retail client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
 | `forever-quirks.md` | Present | Clients includes Forever (`Retail · Forever`, forever-quirks-§1): the vendored Forever catalog block, then the addon's own Forever workarounds (the WoW Forever table: spec, Pawn, ranged slot, `lootListKey`) |
-| `compat-layer.md` | Present | The compat family publishes 132 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 16 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 171 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 60, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 7, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 18, `core/CompatSearch.lua` 34 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Present | 11 messages are defined, more than ten (`PENDING_CHANGED`, DW-FP14, was the eleventh) |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |

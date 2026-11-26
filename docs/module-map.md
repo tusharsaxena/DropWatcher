@@ -1,7 +1,7 @@
 # Module map — Ka0s Drop Watcher
 
 Every non-vendored file, its responsibility, and the TOC load order. `libs/` (Ace3, LibSharedMedia,
-LibDataBroker, LibDBIcon, LibCustomGlow, LibKa0s v1.117.0 (its media/icons pruned to the CLAUDE.md
+LibDataBroker, LibDBIcon, LibCustomGlow, LibKa0s v1.118.0 (its media/icons pruned to the CLAUDE.md
 declaration)) and `tests/_kit/` are vendored and never edited.
 
 ## Load order (the TOC)
@@ -190,6 +190,7 @@ appends a `NS.STAND_DOWN` / `NS.STAND_UP` step (walked in TOC order); `test_harn
 | `tests/wow_mock.lua` | the thin extender over `tests/_kit/mock_base.lua`; it records the main window's and the toasts' whole frame trees (each frame of the stack's pool, `DropWatcherToast`, `DropWatcherToast2`, ...) (regions, points, sizes, text, colors, check state) and the drop tables' client surface (item icons, class colors, modifier keys, chat links, the dressing room, item tooltips, spec names), and models the trade window's items and the Encounter Journal (its tiers, instances, loot per difficulty, selection and filters, and entries that load later) |
 | `tests/wow_mock_collect.lua` | the collection surface `core/CompatCollect.lua` reads (the mount, pet and toy journals, the cosmetic flag, the professions, `ITEM_SPELL_KNOWN`, the `INVTYPE_HEAD`, `_SHOULDER`, `_CHEST`, `_HAND` and `_LEGS` slot names a tier token's tooltip carries, and an item's use spell and its text, `C_Item.GetItemSpell` and `C_Spell.GetSpellDescription`, with `C_Spell.RequestLoadSpellData` recording each request in `spellLoadRequests`, TT-1), split out of `tests/wow_mock.lua`, whose builder calls it |
 | `tests/wow_mock_loot.lua` | the loot surface `core/CompatLoot.lua` reads (`C_LootHistory`, serving `lootListID` on the retail profile and `lootListKey` on the forever one, the roll globals, `C_PartyInfo.GetLootMethod`, the loot-window slot globals and plain `GroupLootFrame1`..`4` stand-ins, their edges a case's `rect`), its own mock family |
+| `tests/mock_tooltip_data.lua` | an opt-in double of the client's `TooltipDataProcessor` (the kit models none): the item post calls, a stand-in tooltip's fill, refresh and hide, and `GetItem`, for Item Search's tooltip block and its key's read of the shown item |
 | `tests/prose_waivers.lua` | what the kit's US-English gate must not correct: the icon catalog's British-spelled minimize key, named in `modules/WindowTitleBar.lua` |
 | `tests/test_*.lua` | one suite per subject (see [`testing.md`](testing.md)) |
 | `tests/perf.lua` | the offline scenarios, outside the gate |
@@ -203,4 +204,6 @@ Outside the TOC and the package (`.pkgmeta` ignores `tools/`), Python 3, standar
 | `tools/seeds/seeds.py` | the seed-validation tool (`docs/validate-seeds.md`): `status`, `derive` (one pinned wago.tools build of the flavor's own product, `wow` or `wowf`, cached in the git-ignored `tools/seeds/.cache/`, frozen into `docs/seed-research/<date>-<flavor>/`), `rule`, `check`, `report`, `apply` (the WEAPONS sets only) |
 | `tools/seeds/retail_rulings.json`, `tools/seeds/forever_rulings.json` | the rulings, one per candidate or flag key, written only by `seeds.py rule` |
 | `tools/seeds/test_seeds.py` | its cases, on fixture tables with no network |
+| `tools/seeds/recipes.py` | the generator of `core/RecipeReagentsForever.lua` from a pinned `wowf` build (`docs/validate-seeds.md` -> *Recipe reagents*), driven as `seeds.py recipes` (`status`, `derive`, `apply`, `check`, and the dev-time `crosscheck`); generated, no rulings |
+| `tools/seeds/test_recipes.py` | its cases on invented tables, and the gate case that regenerates the shipped table from the bundle its header names and requires the same bytes |
 | `tools/seeds/.gitignore` | keeps `.cache/` and `__pycache__/` out of git |
