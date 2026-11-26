@@ -150,67 +150,130 @@ local function rulePoints(tex)
     return { tex:GetPoint(1) }, { tex:GetPoint(2) }
 end
 
-test("item search tip: the separator is a hairline across the spacer line, 8 in from each edge, one pixel, dw.tipRule", function()
-    local NS, _, tdp = enabled()
+local function pointText(p, rel)
+    return table.concat({ p[1], tostring(p[2] == rel), p[3], p[4], p[5] }, ",")
+end
+
+test("item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule", function()
+    local NS, m, tdp = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants
     local tip = tdp.tooltip("GameTooltip")
     assertNil(IST.RuleOf(tip), "no texture before the first block")
     tdp.show(tip, IDS.blade)
     local tex = IST.RuleOf(tip)
     assertTrue(tex ~= nil and tex.__owner == tip, "a texture of the tooltip's own")
-    assertEqual(#tdp.textures(tip), 1)
-    -- red under: no hairline drawn, a fixed width (the old escape's 160), or an inset other than 8
+    -- red under: a measured line (R4-DW-06: two zero-alpha edge textures carry it, no geometry read)
+    assertEqual(#tdp.textures(tip), 3, "the line and its two edges")
     assertTrue(tex:IsShown(), "shown with the block")
     assertEqual(C.ITEM_SEARCH.RULE_INSET, 8)
     local left, right = rulePoints(tex)
-    -- the spacer is line 2 (the client's item name is line 1): its middle is 500 - 10 - 14 - 6 = 470;
-    -- the 1 px line's top half a pixel above it, rounded to a whole pixel: -29.5 -> -29
-    assertEqual(table.concat({ left[1], tostring(left[2] == tip), left[3], left[4], left[5] }, ","), "TOPLEFT,true,TOPLEFT,8,-29")
-    assertEqual(table.concat({ right[1], tostring(right[2] == tip), right[3], right[4], right[5] }, ","), "TOPRIGHT,true,TOPRIGHT,-8,-29")
+    local edgeL, edgeR = left[2], right[2]
+    assertTrue(edgeL ~= tip and edgeR ~= tip and edgeL ~= edgeR, "hung from the edges, not from the tooltip")
+    assertEqual(pointText(left, edgeL), "TOPLEFT,true,BOTTOMLEFT,8,0")
+    assertEqual(pointText(right, edgeR), "TOPRIGHT,true,BOTTOMRIGHT,-8,0")
+    -- the spacer is line 2 (the client's item name is line 1): each edge's bottom is its left middle
+    local spacer = m.GameTooltipTextLeft2
+    assertEqual(pointText({ edgeL:GetPoint(1) }, tip), "TOPLEFT,true,TOPLEFT,0,0")
+    assertEqual(pointText({ edgeL:GetPoint(2) }, spacer), "BOTTOMRIGHT,true,LEFT,0,0")
+    assertEqual(pointText({ edgeR:GetPoint(1) }, tip), "TOPRIGHT,true,TOPRIGHT,0,0")
+    assertEqual(pointText({ edgeR:GetPoint(2) }, spacer), "BOTTOMLEFT,true,LEFT,0,0")
+    assertEqual(edgeL:GetAlpha(), 0, "an invisible edge"); assertEqual(edgeR:GetAlpha(), 0)
     assertEqual(tex:GetHeight(), 1, "one physical pixel (no PixelUtil in the harness: 1)")
     assertEqual(tex.__texture, "Interface\\Buttons\\WHITE8X8")
-    assertFalse(tex.__snap, "pixel snapping off: the offset is rounded instead")
+    assertTrue(tex.__snap == true, "snapped to the pixel grid: the client places it, so the client rounds it")
     local want = NS.SKIN_TOKENS["dw.tipRule"].default
     assertEqual(table.concat(want, ","), "0.55,0.46,0.25,0.9", "a dim gold")
     assertEqual(NS.SKIN_TOKENS["dw.tipRule"].follow, "divider")
     local r, g, b, a = NS.SkinColor("dw.tipRule")
     assertEqual(table.concat(tex.__vertex, ","), table.concat({ r, g, b, a or 1 }, ","), "tinted dw.tipRule")
-    -- red under: the line kept past a clear or a hide (the next item's tooltip would show it stray)
+    -- a hide or a clear marks it stale; nobody claims it, so it comes off on the next frame
     tdp.hide(tip)
-    assertFalse(tex:IsShown(), "hidden on OnHide")
+    assertTrue(tex:IsShown(), "kept through the hide, for a refill of the same item")
+    m.advance(0)
+    assertFalse(tex:IsShown(), "unclaimed: off on the next frame")
     tdp.show(tip, IDS.blade)
     assertTrue(tex:IsShown())
     tip:ClearLines()
-    assertFalse(tex:IsShown(), "hidden on OnTooltipCleared")
+    assertTrue(tex:IsShown(), "kept through the clear")
+    m.advance(0)
+    -- red under: a stale line left on a tooltip that shows something else now
+    assertFalse(tex:IsShown(), "unclaimed after a clear: off on the next frame")
     tdp.show(tip, IDS.blade)
-    assertEqual(#tdp.textures(tip), 1, "one texture per tooltip, made once")
+    assertEqual(#tdp.textures(tip), 3, "made once per tooltip")
 end, FOREVER_ONLY)
 
-test("item search tip: the separator waits for the tooltip's layout: placed on the next frame and on a resize", function()
+-- The client's refill (R4-DW-06, recon (g) H1): about five times a second it clears the tooltip,
+-- sometimes hides it (SetOwner on a bag-slot refill), and fills it again, before the lines are laid out.
+local function refill(m, tdp, tip, itemID)
+    tip:ClearLines()
+    tdp.hide(tip)
+    tip.__top = nil
+    tdp.show(tip, itemID)
+    return m
+end
+
+test("item search tip: a refill of the same item keeps the separator up: no one-frame gap", function()
     local NS, m, tdp = enabled()
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    local hides, hide = 0, tex.Hide
+    tex.Hide = function(self) hides = hides + 1; return hide(self) end
+    refill(m, tdp, tip, IDS.blade)
+    -- red under: hidden on the clear or the hide, and put back only once the tooltip is laid out
+    assertTrue(tex:IsShown(), "shown through the refill, before the next frame")
+    assertEqual(hides, 0, "never hidden on a refill of the same item")
+    m.advance(0)
+    assertTrue(tex:IsShown(), "claimed again: still up after the next frame")
+    assertEqual(hides, 0)
+    -- another item with no block: the stale line comes off on the next frame
+    refill(m, tdp, tip, IDS.pebble)
+    m.advance(0)
+    assertFalse(tex:IsShown(), "an item with no block: off")
+end, FOREVER_ONLY)
+
+test("item search tip: a refill never draws the separator at a second height: no ghost line", function()
+    local NS, m, tdp = enabled()
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, IDS.blade)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
+    -- the spacer's font string answers the previous pass's rect while the tooltip's top moves, and a
+    -- later post call (another addon's) adds a line and shows the tooltip again, which resizes it
+    local spacer = m.GameTooltipTextLeft2
+    spacer.GetTop = function() return 476 end
+    spacer.GetBottom = function() return 464 end
+    m.TooltipDataProcessor.AddTooltipPostCall(m.Enum.TooltipDataType.Item, function(t)
+        t:AddLine("Another addon")
+        t.__top = 513
+        tdp.resize(t)
+    end)
+    local ys, seen = {}, 0
+    local setPoint = tex.SetPoint
+    tex.SetPoint = function(self, ...)
+        local y = select(5, ...)
+        if not ys[tostring(y)] then ys[tostring(y)] = true; seen = seen + 1 end
+        return setPoint(self, ...)
+    end
+    tip.__top = 520
+    tdp.refresh(tip, IDS.blade)
+    m.advance(0)
+    -- red under: measured three times a rebuild from half-finished layout passes (recon (g) H2)
+    assertTrue(seen <= 1, "one height a refill, got " .. seen)
+    assertTrue(tex:IsShown())
+end, FOREVER_ONLY)
+
+test("item search tip: the post call never shows the tooltip mid-fill; a paint outside a fill does", function()
+    local NS, _, tdp = enabled()
     local IST = NS.ItemSearchTip
     local tip = tdp.tooltip("GameTooltip")
-    tip.__top = nil
     tdp.show(tip, IDS.blade)
-    local tex = IST.RuleOf(tip)
-    -- red under: a line placed from geometry the tooltip has not laid out yet
-    assertFalse(tex:IsShown(), "not laid out: hidden")
-    tip.__top = 500
-    m.advance(0)
-    assertTrue(tex:IsShown(), "the next frame places it")
-    local left = { tex:GetPoint(1) }
-    assertEqual(left[5], -29)
-    tip.__top = 700
-    tdp.resize(tip)
-    -- red under: no OnSizeChanged hook (shift for the comparison tooltips resizes it, ITEM-SEARCH-34)
-    assertTrue(tex:IsShown())
-    assertEqual(tex:GetNumPoints(), 2, "placed again, not stacked")
-    assertEqual(IST.RuleOffset(500, 476, 464, 1), -29)
-    assertEqual(IST.RuleOffset(500, 476, 464, 0.5), -29.5, "rounded to the pixel, here half a unit")
-    assertNil(IST.RuleOffset(nil, 476, 464, 1)); assertNil(IST.RuleOffset(500, 476, 464, 0))
-    tdp.hide(tip)
-    tdp.resize(tip)
-    assertFalse(tex:IsShown(), "a resize with no block keeps it hidden")
+    local before = tip.shows
+    tdp.refresh(tip, IDS.blade)
+    -- red under: DW's own Show inside the client's fill (it resized the tooltip before later post calls)
+    assertEqual(tip.shows - before, 1, "the client's own show alone")
+    before = tip.shows
+    IST.Paint(tip, { { text = "x", tone = "plain" } })
+    assertEqual(tip.shows - before, 1, "a shown tooltip painted outside a fill lays itself out again")
 end, FOREVER_ONLY)
 
 test("item search tip: Separator line off: no spacer and no hairline; the label line stays", function()

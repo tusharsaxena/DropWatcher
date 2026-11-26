@@ -27,9 +27,14 @@ local _, NS = ...
 --     line with a hairline lying across its middle, a Texture of the tooltip's own (one per
 --     tooltip, made on first use), C.ITEM_SEARCH.RULE_INSET in from each edge, one physical pixel
 --     tall (LibKa0s-Core's __PixelSize) and tinted the owner token `dw.tipRule`. It never sets the
---     tooltip's width. It is hidden on the tooltip's OnHide and OnTooltipCleared, and placed again
---     on its OnSizeChanged and once on the next frame (the post call can run before the tooltip is
---     laid out);
+--     tooltip's width. It is ANCHORED, never measured (round 4, R4-DW-06): two zero-alpha edge
+--     textures hang from the tooltip's top corners down to the spacer's left middle, and the line
+--     hangs from their bottom corners, so the client places it in the same layout pass as the line
+--     and nothing reads geometry inside the post call (where the lines have none yet). The client
+--     rebuilds an item tooltip about five times a second (clear, sometimes a hide, refill), so a
+--     clear or a hide only marks the line stale; the next block claims it again, and a line no
+--     block claimed comes off on the next frame. Hiding it on every clear was the one-frame blink;
+--     measuring it up to three times a rebuild from half-finished layouts was the dim ghost line;
 --   * the label line, always (item 14a): "Drop Watcher" at the left in the tooltip label's muted
 --     gold, the verdict badge at the right (round 3 spec §4.5, item 14c; the "Show the Keep / Hold /
 --     Sell / Toss badge" setting): `<icon> <Verdict> <score> · <Tier>`, the icon, word and score in
@@ -123,7 +128,7 @@ local INDENT = "  "
 
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
-local rules = setmetatable({}, { __mode = "k" })     -- tooltip -> its separator { tex, line, place }
+local rules = setmetatable({}, { __mode = "k" })     -- tooltip -> its separator { tex, edgeL, edgeR, line, ... }
 local installed = false
 local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each post call (never kept)
 
@@ -676,33 +681,7 @@ function IST.Options()
     }
 end
 
--- ── the separator (round 3 spec §4.2, item 14b) ────────────────────────────────────────────
-
-local function isNum(v) return type(v) == "number" and v == v end
-
---- Where the hairline's top goes, as an offset from the tooltip's top (UI units, negative going
---- down): across the vertical middle of the spacer line whose font string spans `lineTop` to
---- `lineBottom`, one `px` tall, rounded to whole pixels. Pure. Nil when any input is not a number
---- or `px` is not above 0 (the tooltip not laid out yet).
---- @param tipTop number|nil
---- @param lineTop number|nil
---- @param lineBottom number|nil
---- @param px number|nil one physical pixel in the tooltip's units
---- @return number|nil
-function IST.RuleOffset(tipTop, lineTop, lineBottom, px)
-    if not (isNum(tipTop) and isNum(lineTop) and isNum(lineBottom) and isNum(px)) or px <= 0 then return nil end
-    local off = (lineTop + lineBottom) / 2 + px / 2 - tipTop
-    return math.floor(off / px + 0.5) * px
-end
-
--- One plain number from a region's geometry getter, or nil (no getter, not laid out, a secret).
-local function geom(obj, getter)
-    local fn = type(obj) == "table" and obj[getter]
-    if type(fn) ~= "function" then return nil end
-    local v = fn(obj)
-    if Compat.IsSecret(v) or type(v) ~= "number" then return nil end
-    return v
-end
+-- ── the separator (round 3 spec §4.2, item 14b; anchored since R4-DW-06) ───────────────────
 
 -- One physical pixel in `tip`'s units: LibKa0s-Core's __PixelSize (the library's one mechanism for
 -- a 1 px edge), 1 without it.
@@ -717,50 +696,87 @@ local function paintRule(tex)
     tex:SetVertexColor(NS.SkinColor("dw.tipRule"))
 end
 
--- Lay the separator across its spacer line, or hide it: no spacer line on the tooltip now, or the
--- tooltip not laid out yet (the next frame's call, or its OnSizeChanged, places it then).
-local function placeRule(tip)
-    local st = rules[tip]
-    if not st then return end
-    local tex = st.tex
-    local fs = st.line and Compat.TooltipLeftLine(tip, st.line)
-    local px = onePixel(tip)
-    local off = fs and IST.RuleOffset(geom(tip, "GetTop"), geom(fs, "GetTop"), geom(fs, "GetBottom"), px)
-    if not off then tex:Hide(); return end
-    local inset = C.ITEM_SEARCH.RULE_INSET
-    tex:ClearAllPoints()
-    tex:SetPoint("TOPLEFT", tip, "TOPLEFT", inset, off)
-    tex:SetPoint("TOPRIGHT", tip, "TOPRIGHT", -inset, off)
-    tex:SetHeight(px)
-    tex:Show()
+-- An invisible texture of the tooltip's own, there only to carry an anchor.
+local function edgeOf(tip)
+    local e = tip:CreateTexture(nil, "BACKGROUND")
+    if type(e) ~= "table" then return nil end
+    e:SetTexture(IST.RULE_TEXTURE)
+    if type(e.SetAlpha) == "function" then e:SetAlpha(0) end
+    return e
 end
 
--- The tooltip's separator, made on its first block: a Texture of the tooltip's own, pixel snapping
--- off (its offset is rounded instead), painted `dw.tipRule` now and on every skin switch, placed
--- again on the tooltip's OnSizeChanged. Nil for a tooltip that makes no texture.
+-- Hang the edges from the spacer line `n`: the left edge from the tooltip's top left to the line's
+-- left middle, the right edge from the tooltip's top right to the same point; the line itself hangs
+-- from their bottom corners. False when the tooltip has no such line (an unnamed tooltip).
+local function anchorRule(tip, st, n)
+    if st.anchored == n then return true end
+    local fs = Compat.TooltipLeftLine(tip, n)
+    if not fs then return false end
+    st.edgeL:ClearAllPoints()
+    st.edgeL:SetPoint("TOPLEFT", tip, "TOPLEFT", 0, 0)
+    st.edgeL:SetPoint("BOTTOMRIGHT", fs, "LEFT", 0, 0)
+    st.edgeR:ClearAllPoints()
+    st.edgeR:SetPoint("TOPRIGHT", tip, "TOPRIGHT", 0, 0)
+    st.edgeR:SetPoint("BOTTOMLEFT", fs, "LEFT", 0, 0)
+    st.anchored = n
+    return true
+end
+
+-- The tooltip's separator, made on its first block: the line (pixel snapped: the client places it,
+-- so the client rounds it) and its two edges, the line hung from the edges once and for all, painted
+-- `dw.tipRule` now and on every skin switch. Nil for a tooltip that makes no texture.
 local function ruleOf(tip)
     local st = rules[tip]
     if st then return st end
     if type(tip.CreateTexture) ~= "function" then return nil end
+    local edgeL, edgeR = edgeOf(tip), edgeOf(tip)
     local tex = tip:CreateTexture(nil, "ARTWORK")
-    if type(tex) ~= "table" then return nil end
+    if not (edgeL and edgeR and type(tex) == "table") then return nil end
     tex:SetTexture(IST.RULE_TEXTURE)
-    if type(tex.SetSnapToPixelGrid) == "function" then tex:SetSnapToPixelGrid(false) end
+    if type(tex.SetSnapToPixelGrid) == "function" then tex:SetSnapToPixelGrid(true) end
     if type(tex.SetTexelSnappingBias) == "function" then tex:SetTexelSnappingBias(0) end
     NS.SkinPaint(tex, paintRule)
+    local inset = C.ITEM_SEARCH.RULE_INSET
+    tex:SetPoint("TOPLEFT", edgeL, "BOTTOMLEFT", inset, 0)
+    tex:SetPoint("TOPRIGHT", edgeR, "BOTTOMRIGHT", -inset, 0)
+    tex:SetHeight(onePixel(tip))
     tex:Hide()
-    st = { tex = tex }
-    st.place = function() placeRule(tip) end
+    st = { tex = tex, edgeL = edgeL, edgeR = edgeR }
+    -- the next frame's sweep: a line still stale then was claimed by no block
+    st.sweep = function()
+        st.sweeping = false
+        if st.stale then st.stale = false; st.line = nil; tex:Hide() end
+    end
     rules[tip] = st
-    if type(tip.HookScript) == "function" then tip:HookScript("OnSizeChanged", st.place) end
     return st
+end
+
+-- The block on `tip` claims its separator for spacer line `n`: anchored (again only when the line
+-- moved), shown, no longer stale.
+local function claimRule(tip, st, n)
+    st.stale = false
+    if not (n and anchorRule(tip, st, n)) then st.line = nil; st.tex:Hide(); return end
+    st.line = n
+    st.tex:Show()
 end
 
 local function hideRule(tip)
     local st = rules[tip]
     if not st then return end
-    st.line = nil
+    st.line, st.stale = nil, false
     st.tex:Hide()
+end
+
+-- A clear or a hide: the line stays up, stale, for a refill to claim; the next frame takes it off
+-- if none did.
+local function staleRule(tip)
+    local st = rules[tip]
+    if not (st and st.line) then return end
+    st.stale = true
+    if not st.sweeping then
+        st.sweeping = true
+        C_Timer.After(0, st.sweep)
+    end
 end
 
 --- The tooltip's separator texture, or nil before its first block (for the tests and diagnostics).
@@ -792,31 +808,32 @@ local function lineCount(tip)
     return n
 end
 
---- Write `lines` onto `tip`, each in its tone, the separator laid across its spacer line (placed
---- now, and again on the next frame, once the tooltip is laid out); then Show again, so a shown
---- tooltip lays itself out around the new lines.
+--- Write `lines` onto `tip`, each in its tone, the separator claimed for its spacer line (anchored,
+--- so the client places it). `filling`: the client is filling the tooltip now (the post call), and
+--- shows it itself once every post call has run (TooltipDataHandler); otherwise a shown tooltip is
+--- shown again, so it lays itself out around the new lines. The post call never shows it mid-fill:
+--- that resized the tooltip before later post calls added their lines (R4-DW-06).
 --- @param tip table
 --- @param lines table IST.Lines' answer
-function IST.Paint(tip, lines)
+--- @param filling boolean|nil
+function IST.Paint(tip, lines, filling)
     local st
     for _, line in ipairs(lines) do
         addTo(tip, line)
         if line.rule then
             st = ruleOf(tip)
-            if st then st.line = lineCount(tip) end
+            if st then claimRule(tip, st, lineCount(tip)) end
         end
     end
     if not st then hideRule(tip) end
-    if type(tip.IsShown) == "function" and tip:IsShown() and type(tip.Show) == "function" then tip:Show() end
-    if st and st.line then
-        placeRule(tip)
-        C_Timer.After(0, st.place)
+    if not filling and type(tip.IsShown) == "function" and tip:IsShown() and type(tip.Show) == "function" then
+        tip:Show()
     end
 end
 
 local function clearMark(tip)
     shownOn[tip] = nil
-    hideRule(tip)
+    staleRule(tip)
 end
 
 -- Hook the tooltip's OnHide and OnTooltipCleared once, so its mark goes when it hides or clears.
@@ -857,7 +874,7 @@ function IST.OnTooltip(tip, data)
     if #lines == 0 then return false end
     watch(tip)
     shownOn[tip] = itemID
-    IST.Paint(tip, lines)
+    IST.Paint(tip, lines, true)
     return true
 end
 

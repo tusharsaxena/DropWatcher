@@ -1008,7 +1008,7 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (24)
+### test_item_search_tip.lua (26)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
@@ -1016,8 +1016,10 @@ Total.
 - item search tip: without ForeverDB (or a failed load) no block, not even Crafting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator is a hairline across the spacer line, 8 in from each edge, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator waits for the tooltip's layout: placed on the next frame and on a resize (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a refill of the same item keeps the separator up: no one-frame gap (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a refill never draws the separator at a second height: no ghost line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: the post call never shows the tooltip mid-fill; a paint outside a fill does (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: Separator line off: no spacer and no hairline; the label line stays (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: sections follow their switches and the stored order; Also lists the rewarding quest (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the drop count setting caps the rows, the rest is "and N more" (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -3559,5 +3561,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 120 |
+| Skipped | 122 |
 | **Total** | **2847** |

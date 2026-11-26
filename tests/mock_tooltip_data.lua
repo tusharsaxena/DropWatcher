@@ -31,8 +31,8 @@
 --     `__top - PAD - (n - 1) * LINE_H` and that less FONT_H (nil while `__top` is). The client keeps
 --     a tooltip's font strings across a clear, and so does the double. OnSizeChanged is fired by
 --     handle.resize(tip). CreateTexture answers a recording Texture of the tooltip's own (its
---     texture, vertex color, points, height and shown state; handle.textures(tip) lists them), where
---     the base mock answers the frame itself.
+--     texture, alpha, vertex color, points, height and shown state;
+--     handle.textures(tip) lists them), where the base mock answers the frame itself.
 -- Nothing else of a tooltip is modeled: neither reader reads a line's text, so none is offered.
 
 local TDP = {}
@@ -45,6 +45,8 @@ TDP.TOP, TDP.PAD, TDP.LINE_H, TDP.FONT_H = 500, 10, 14, 12
 local function newTexture(owner, layer)
     local t = { __owner = owner, __layer = layer, __shown = true, __points = {} }
     function t:SetTexture(path) self.__texture = path end
+    function t:SetAlpha(a) self.__alpha = a end
+    function t:GetAlpha() return self.__alpha or 1 end
     function t:SetVertexColor(r, g, b, a) self.__vertex = { r, g, b, a or 1 } end
     function t:SetPoint(...) self.__points[#self.__points + 1] = { ... } end
     function t:ClearAllPoints() self.__points = {} end
