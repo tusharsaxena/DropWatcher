@@ -228,13 +228,13 @@ test("auction: the hover reads Auctionator's price and the settings; the switch,
     assertEqual(IVD.For(ITEM, f, ME).sellVia, "vendor")
 end, FOREVER_ONLY)
 
-test("auction: the badge says Auction under the trade arrows in its own tone, Vendor under the coins in amber", function()
+test("auction: the badge says Auction under the gavel in its own tone, Vendor under the coins in amber", function()
     local NS = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants
     local auction = IST.Badge({ verdict = "sell", sellVia = "auction", score = 5, reasons = {} })
     local vendor = IST.Badge({ verdict = "sell", sellVia = "vendor", score = 5, reasons = {} })
     assertEqual(auction.text, "Auction 5"); assertEqual(vendor.text, "Vendor 5")
-    assertTrue(auction.icon:find("icons\\transfer", 1, true) ~= nil, "the trade arrows: " .. tostring(auction.icon))
+    assertTrue(auction.icon:find("phosphor\\gavel", 1, true) ~= nil, "the gavel (the owner: \"i want the gavel\"): " .. tostring(auction.icon))
     assertTrue(vendor.icon:find("phosphor\\coins", 1, true) ~= nil, "the coins")
     assertEqual(vendor.tone, "warn"); assertEqual(auction.tone, "auction")
     -- red under: one badge kept per verdict and score (Auction and Vendor would share Sell's)

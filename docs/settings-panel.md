@@ -452,7 +452,7 @@ is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.h
 hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose
 title line is gone), Show the Keep / Hold / Auction / Vendor / Toss badge (`itemSearch.tooltip.badge`, on: the
 verdict as one rounded pill on the block's "Drop Watcher" label line, on the tooltip's right side (R5-DW-12): the verdict's icon (a
-lock, an hourglass, Vendor's coins, Auction's trade arrows or a bin), its word and the 0 to 100 score in dark ink on the verdict's
+lock, an hourglass, Vendor's coins, Auction's gavel or a bin), its word and the 0 to 100 score in dark ink on the verdict's
 tone, and no confidence tier; round 4, R4-DW-07, one pill since R5-DW-02), Explain the badge
 (`itemSearch.tooltip.reasons`, on: the two reasons that weigh most plus the largest one that pulls
 the score down, then, when Drop Watcher isn't sure, the hint on what would make it surer, with no

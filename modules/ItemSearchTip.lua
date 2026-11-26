@@ -310,7 +310,7 @@ local VERDICT_LOOK = {
     keep = { icon = "ph:lock", tone = "good" },
     hold = { icon = "ph:hourglass", tone = "yellow" },
     vendor = { icon = "ph:coins", tone = "warn" },
-    auction = { icon = "transfer", tone = "auction" },
+    auction = { icon = "ph:gavel", tone = "auction" },
     toss = { icon = "ph:trash", tone = "bad" },
 }
 

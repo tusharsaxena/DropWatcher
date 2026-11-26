@@ -5204,7 +5204,7 @@ the pointer leaves. Result:
 Auctionator installed and a full auction house scan done (open the house, scan, close it), hover a
 gray or white item a vendor buys whose auction price is well above its vendor price (a cloth or an
 ore that sells for more on the house) → the badge reads `Auction <score>` in a periwinkle blue with
-the trade-arrows icon, and the reason line under it reads `Auction ~<coins> after the cut and
+the gavel icon, and the reason line under it reads `Auction ~<coins> after the cut and
 deposit, vendor <coins>`, both in coin icons. Hover a vendor-trash item Auctionator prices at or
 under its vendor price → `Vendor <score>` in amber with the coins, and the reason `Vendor <coins>,
 auction ~<coins> after the cut and deposit`. An item Auctionator has no price for, or a soulbound or
