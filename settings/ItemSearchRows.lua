@@ -9,12 +9,15 @@ local _, NS = ...
 -- feedback spec §9):
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
 --     window switch it decides whether ForeverDB loads at all, spec §2), Comparison tooltips too,
---     Rows per section, Show the key hint, Only while holding Shift, Separator and title line; then,
+--     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show the Keep /
+--     Hold / Sell / Toss badge, Explain the badge (dimmed with the badge off, the page's way of
+--     setting it under the badge), Show recipe skill levels (round 3 spec §4.2, §4.5, §5); then,
 --     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4);
 --     then the sections' switches and Hide completed quests; then the section order, a drag list
 --     (LibKa0s-Widgets-1.0 ReorderList, the widget set's reorder control) drawn by the page's
 --     afterGroup over the `itemSearch.tooltip.order` map row (skipRender, written whole).
---   * Item Search window: its switch and the bar color (Use the skin's color, else the swatch
+--   * Item Search window: its switch, Record vendor prices and Load ForeverDB (Full) (round 3 spec
+--     §4.4, §4.6), and the bar color (Use the skin's color, else the swatch
 --     beside it). Density, Font size, Zone and level columns and Remember recent searches went in
 --     ISF-DW-05 (feedback spec §5.1, §5.2, §5.4; schema step 17): the window's rows take the main
 --     window's table font and row height, and every tab draws all its columns. The window has no
@@ -42,8 +45,10 @@ local PAGE = "itemSearch"
 local SECTIONS = {
     { key = "drops", label = L["Drops from"],
       tip = L["The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."] },
+    { key = "gathered", label = L["Gathered from"],
+      tip = L["The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."] },
     { key = "vendors", label = L["Sold by"],
-      tip = L["The vendors that sell the item, with the lowest price seen."] },
+      tip = L["The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."] },
     { key = "quests", label = L["Quests"],
       tip = L["The quests that ask for the item: in your log, not picked up yet, or completed."] },
     { key = "crafting", label = L["Crafting"],
@@ -101,7 +106,8 @@ local function tooltip()
         M.with(at, { solo = true, onChange = refreshSearch }))
     local sub = M.with(at, { disabledIf = off })
     -- The block's rows in the Settings artboard's order (Item Search feedback spec §9): Comparison
-    -- tooltips, Rows per section and Show the key hint, then Shift-only and the title line.
+    -- tooltips, Rows per section and Show the key hint, then Shift-only, the separator line, the
+    -- badge and its reasons, and the recipe skill levels (round 3 spec §5).
     M.bool("itemSearch.tooltip.comparison", T.comparison, L["Comparison tooltips too"],
         L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."], sub)
     M.slider("itemSearch.tooltip.rows", T.rows, NS.ItemSearch.TIP_ROWS_MIN, NS.ItemSearch.TIP_ROWS_MAX, 1,
@@ -112,8 +118,16 @@ local function tooltip()
         L["Close the block with a line naming the key bound to Item Search and what it does. No line while the key is unbound. Needs Add Item Search to item tooltips."], sub)
     M.bool("itemSearch.tooltip.shiftOnly", T.shiftOnly, L["Only while holding Shift"],
         L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."], sub)
-    M.bool("itemSearch.tooltip.header", T.header, L["Separator and title line"],
-        L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.header", T.header, L["Separator line"],
+        L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."], sub)
+    -- The verdict badge and its reasons (round 3 spec §4.5, §5): the reasons need the badge.
+    M.bool("itemSearch.tooltip.badge", T.badge, L["Show the Keep / Hold / Sell / Toss badge"],
+        L["At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.reasons", T.reasons, L["Explain the badge"],
+        L["Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."],
+        M.with(sub, { disabledIf = function() return off() or NS.Setting("itemSearch.tooltip.badge") ~= true end }))
+    M.bool("itemSearch.tooltip.craftSkill", T.craftSkill, L["Show recipe skill levels"],
+        L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],
@@ -143,6 +157,20 @@ local function window()
     M.bool("itemSearch.window.enabled", W.enabled, L["Enable the Item Search window"],
         L["The Item Search window: search an item by name or id and see every source, quest and recipe. Opened by the magnifier in the main window's title bar, the Item Search key or /dw search. Off, it does not open, and with the tooltip block off too ForeverDB is never loaded."],
         M.with(at, { solo = true, onChange = windowSwitch }))
+    -- Round 3 spec §4.4, §4.6: the prices the merchant window shows, recorded; and when
+    -- ForeverDB_Full (the uncapped companion addon, its map spots) loads, if ever.
+    local on = M.unless("itemSearch.window.enabled", true)
+    M.bool("itemSearch.recordPrices", D.recordPrices, L["Record vendor prices"],
+        L["When you open a vendor, write down the price of everything it sells, so the Sold by tab and the tooltip show it the next time you look the item up. Kept for every character on this account; a later visit updates it."],
+        at)
+    M.pick("itemSearch.fullDB", D.fullDB, M.choices({
+        "window", L["When the Item Search window opens"], "never", L["Never"],
+    }), L["Load ForeverDB (Full)"],
+        L["ForeverDB (Full) knows where far more creatures and vendors stand than ForeverDB alone, so more rows get a zone and a waypoint pin. It is large (some 80 MB while loaded), so it loads only on the Item Search window's first open of a session, never in combat and never from a tooltip, or never. Unavailable while ForeverDB_Full is not installed. Needs Enable the Item Search window."],
+        M.with(at, {
+            disabledIf = function() return on() or NS.ForeverDB.FullStatus() == "missing" end,
+            onChange = function() if NS.ItemSearch.TryFull then NS.ItemSearch.TryFull() end end,
+        }))
     local bars = M.with(at, { subgroup = L["Bars"] })
     -- The swatch and its Use the skin's color companion on one line (options-ui-§17). No
     -- `disabledIf` on either (anti-pattern #74).

@@ -482,8 +482,10 @@ L["In a group of more than 5, show the players who passed, and those still to ro
 -- settings/ItemSearchRows.lua: the Item Search page's rows (WoW Forever alone, Item Search spec §4.7)
 L["The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."] =
     "The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."
-L["The vendors that sell the item, with the lowest price seen."] =
-    "The vendors that sell the item, with the lowest price seen."
+L["The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."] =
+    "The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."
+L["The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."] =
+    "The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."
 L["The quests that ask for the item: in your log, not picked up yet, or completed."] =
     "The quests that ask for the item: in your log, not picked up yet, or completed."
 L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] =
@@ -501,9 +503,26 @@ L["Under every item tooltip (your bags, chat links, the loot window, other addon
 L["Only while holding Shift"] = "Only while holding Shift"
 L["Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."] =
     "Add the block only while you hold Shift as the tooltip opens. Needs Add Item Search to item tooltips."
-L["Separator and title line"] = "Separator and title line"
-L["Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."] =
-    "Open the block with a rule and the Drop Watcher · Item Search title, in the skin's accent. Needs Add Item Search to item tooltips."
+L["Separator line"] = "Separator line"
+L["Record vendor prices"] = "Record vendor prices"
+L["When you open a vendor, write down the price of everything it sells, so the Sold by tab and the tooltip show it the next time you look the item up. Kept for every character on this account; a later visit updates it."] =
+    "When you open a vendor, write down the price of everything it sells, so the Sold by tab and the tooltip show it the next time you look the item up. Kept for every character on this account; a later visit updates it."
+L["Load ForeverDB (Full)"] = "Load ForeverDB (Full)"
+L["When the Item Search window opens"] = "When the Item Search window opens"
+L["Never"] = "Never"
+L["ForeverDB (Full) knows where far more creatures and vendors stand than ForeverDB alone, so more rows get a zone and a waypoint pin. It is large (some 80 MB while loaded), so it loads only on the Item Search window's first open of a session, never in combat and never from a tooltip, or never. Unavailable while ForeverDB_Full is not installed. Needs Enable the Item Search window."] =
+    "ForeverDB (Full) knows where far more creatures and vendors stand than ForeverDB alone, so more rows get a zone and a waypoint pin. It is large (some 80 MB while loaded), so it loads only on the Item Search window's first open of a session, never in combat and never from a tooltip, or never. Unavailable while ForeverDB_Full is not installed. Needs Enable the Item Search window."
+L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."] =
+    "Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."
+L["Show recipe skill levels"] = "Show recipe skill levels"
+L["Show the Keep / Hold / Sell / Toss badge"] = "Show the Keep / Hold / Sell / Toss badge"
+L["At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."] =
+    "At the right of the block's Drop Watcher line, say what to do with the item: Keep, Hold, Sell or Toss, a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible), and how sure that is (High, Medium or Low). Advice only: Drop Watcher never moves or deletes an item, and with Low confidence it never says Toss. Needs Add Item Search to item tooltips."
+L["Explain the badge"] = "Explain the badge"
+L["Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."] =
+    "Under the badge, name the two things that weigh most in it, and, below High confidence, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."
+L["On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."] =
+    "On each recipe row of the Crafting section, show the skill levels where the recipe turns yellow, green and gray (and its orange minimum), each in its color, in place of the profession's name. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"
 L["Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."] =
     "Add the block to the comparison tooltips beside the item tooltip as well. Needs Add Item Search to item tooltips."

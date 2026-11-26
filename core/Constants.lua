@@ -220,6 +220,16 @@ local FIXED_TONE = {
     -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
     glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
     glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
+    -- A creature's rank on Item Search's rows (round 3 spec §4.3, item 6): its name and Type in the
+    -- color of what kind of creature it is, as the game's unit frames tell an elite from a rare. A
+    -- normal creature stays `plain` (skinned); elite the game's gold (#FFD100), rare silver
+    -- (#C7CCDB), rare elite a pale silver-blue apart from both (#9ECCFF), boss a lightened epic
+    -- purple (#BF70FF, apart from the skill-up orange on the same window). A game meaning every
+    -- player reads the same under every skin, as the skill-up hues are, so fixed.
+    rankElite     = { r = 1.00, g = 0.82, b = 0.00 },
+    rankRare      = { r = 0.78, g = 0.80, b = 0.86 },
+    rankRareElite = { r = 0.62, g = 0.80, b = 1.00 },
+    rankBoss      = { r = 0.75, g = 0.44, b = 1.00 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 
@@ -440,15 +450,44 @@ for name, clients in pairs(C.FEATURE_CLIENTS) do C.FEATURE[name] = NS.Compat.For
 -- profession window's reagents are read LEARN_DELAY seconds after its last list update
 -- (modules/ItemSearchLearn.lua).
 -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4): its hint names the key bound to BINDING
--- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a RULE_WIDTH x 1
--- rule; every section stops at itemSearch.tooltip.rows before "and N more" (Item Search feedback
--- spec §7, NS.ItemSearch.Cap).
+-- (the Item Search key; Bindings.xml carries it from IS-DW-06); its separator is a hairline across
+-- the tooltip, RULE_INSET in from each edge (round 3 spec §4.2); every section stops at
+-- itemSearch.tooltip.rows before "and N more" (Item Search feedback spec §7, NS.ItemSearch.Cap).
 C.ITEM_SEARCH = {
     LOAD_DELAY  = 5,
     DEBOUNCE    = 0.25,
     LEARN_DELAY = 1,
     BINDING     = "CLICK DropWatcherItemSearch:LeftButton",
-    RULE_WIDTH  = 160,
+    -- The separator's inset from the tooltip's left and right edges, in UI units (round 3 spec §4.2).
+    RULE_INSET  = 8,
+    -- The recipe glyphs' size in pixels, the tooltip's and the window's alike (round 3 spec §4.1):
+    -- an explicit escape size, so both faces draw them the same.
+    GLYPH_SIZE  = 14,
+    -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
+    -- GLYPH_SIZE's, so a mark and a glyph read as one family.
+    MARK_SIZE   = 14,
+    -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
+    -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
+    -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the
+    -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
+    -- item info or gear verdict was still loading waits before it is worked out again, and how many
+    -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
+    VERDICT = {
+        KEEP = 50, HOLD = 20,
+        QUEST_LOG = 60, QUEST_CAN = 35, QUEST_CAN_ABOVE = 3, STARTS = 50, QUESTS_CAP = 80,
+        CRAFT = { orange = 30, yellow = 20, green = 8, gray = 0 }, LEARN = 10, CRAFT_CAP = 50,
+        OTHERS = 3, OTHERS_CAP = 9, UPGRADE = 70, SIDEGRADE = 20,
+        REBUY = -20, REBUY_VENDORS = 3, REBUY_PRICE = 500, TRIVIAL = -15,
+        POOR_CAP = 15, QUEST_FLOOR = 20,
+        HIGH = 80, MEDIUM = 50,
+        WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
+        REASONS = 2, RETRY = 1, LINE_CAP = 500,
+    },
+    -- The vendor prices Drop Watcher records (modules/ItemSearchPrices.lua, round 3 spec §4.4): at
+    -- most PRICE_CAP entries over every vendor (past it the oldest tenth goes), and MERCHANT_UPDATE
+    -- read PRICE_DEBOUNCE seconds after its last fire.
+    PRICE_CAP      = 5000,
+    PRICE_DEBOUNCE = 0.5,
     -- The keybind's one-time default (spec §4.6, the owner): set once per character, and only
     -- while the key runs nothing (modules/ItemSearchKey.lua). Written in the client's canonical
     -- modifier order, ALT-CTRL-SHIFT-META (Item Search feedback spec §1): a press of Ctrl+Alt+D

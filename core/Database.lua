@@ -380,15 +380,18 @@ local STEP16_ROWS = 5
 --- becomes `itemSearch.tooltip.rows` (every section's cap, 1 to 20). A stored count is carried
 --- across, whole and in range, unless the profile already stores a `rows` of its own (one off the
 --- default); the old key goes either way. A profile that never stored it (the default, 3) takes the
---- new default, 5. Idempotent. STEP16_ROWS is the default as of this step (frozen): a `rows` equal
---- to it may be AceDB's default read through, never the player's choice beside a stored dropsShown.
+--- `rows` default (5 then, 3 since ISR3-DW-07, which took no step). Idempotent. A `rows` equal to
+--- a default may be AceDB's default copied into the active profile, never the player's choice
+--- beside a stored dropsShown: STEP16_ROWS, the default as of this step (frozen), or the running
+--- build's (`NS.ItemSearch.TIP_ROWS`), the one AceDB copies in as the step runs (ISR3-DW-07).
 --- @param profile table a raw stored profile
 function NS.MigrateTipRows(profile)
     local is = type(profile) == "table" and profile.itemSearch
     local tip = type(is) == "table" and is.tooltip
     if type(tip) ~= "table" or tip.dropsShown == nil then return end
     local v = tonumber(tip.dropsShown)
-    if (tip.rows == nil or tip.rows == STEP16_ROWS) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
+    local r = tip.rows
+    if (r == nil or r == STEP16_ROWS or r == (NS.ItemSearch and NS.ItemSearch.TIP_ROWS)) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
     tip.dropsShown = nil
 end
 
@@ -420,6 +423,26 @@ function NS.RetireItemSearchRows(sv)
             for _, k in ipairs(STEP17_WINDOW_KEYS) do w[k] = nil end
         end
     end
+end
+
+-- ── step 18: the tooltip's Gathered from section (ISR3-DW-03, Item Search round 3 spec §5) ──
+
+--- Step 18's work on one stored profile: a stored tooltip section order (`itemSearch.tooltip.order`,
+--- written whole by the page's drag list) that lacks the new "gathered" section gets it right after
+--- "drops", or at the end when "drops" is not in it. A profile with no stored order reads the new
+--- default, which has it, and is not written. Nothing else changes. Idempotent.
+--- @param profile table a raw stored profile
+function NS.MigrateGatheredSection(profile)
+    local is = type(profile) == "table" and profile.itemSearch
+    local tip = type(is) == "table" and is.tooltip
+    local order = type(tip) == "table" and tip.order
+    if type(order) ~= "table" then return end
+    local at
+    for i, key in ipairs(order) do
+        if key == "gathered" then return end
+        if key == "drops" then at = i end
+    end
+    table.insert(order, (at or #order) + 1, "gathered")
 end
 
 -- ── the steps ───────────────────────────────────────────────────────────────────────────────
@@ -456,6 +479,8 @@ NS.MIGRATIONS = {
     { to = 16, perProfile = true,        -- 15 -> 16: the tooltip's drop count becomes its rows per section
       run = function(_, profile) NS.MigrateTipRows(profile) end },
     { to = 17, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 16 -> 17: Item Search's retired rows
+    { to = 18, perProfile = true,        -- 17 -> 18: a stored tooltip section order gains Gathered from
+      run = function(_, profile) NS.MigrateGatheredSection(profile) end },
 }
 
 -- The runner's target: the highest step's `to`.

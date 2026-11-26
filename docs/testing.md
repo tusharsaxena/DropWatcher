@@ -284,7 +284,7 @@ color, the swatch's mode for no quality), the Drops row, its Me icons, the detai
 compact card and the toast styled live, the glow's frame level over the border, and a profile copy
 re-reading it), the ten skin suites (the skinning rollout, DW-01 to DW-04, the skin fonts run's two,
 the full skinning run's `test_skin_flip` and `test_skin_host`, and round 5's `test_header_band`):
-`test_skin_setup` (the seam: the owner and its facade, the twenty-four `dw.*` owner tokens at Ka0s
+`test_skin_setup` (the seam: the owner and its facade, the twenty-five `dw.*` owner tokens at Ka0s
 Default's pixels and their follow tokens elsewhere, `C.TONE` refilled in place, the eight `skin.*`
 rows, `/dw set` on a skin, an exception and an override, the write seam, the Skin tab's place, one
 pick one repaint, the profile's skin applied after AceDB and on every profile event, the factories
@@ -877,6 +877,7 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
 | `ISW.ViewState`, `ISW.ShownTab`, `ISW.MatchRows`, `ISW.TableRows` (`modules/ItemSearchWindow.lua`) | read the Item Search window's session view state, the tab on screen and the rows its list and table draw (ISF-DW-05, ISF-DW-06) |
 | `ISG.Rows` (`modules/ItemSearchGrid.lua`) | reads the rows a table draws, in order |
+| `IST.RuleOf`, `IST.ReasonLines` (`modules/ItemSearchTip.lua`) | read a tooltip's separator texture, and a verdict's reason lines as the block writes them (ISR3-DW-02, ISR3-DW-05) |
 
 ## The four suites, and which checkpoint each gates
 

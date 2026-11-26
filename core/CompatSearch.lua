@@ -164,6 +164,47 @@ function Compat.QuestDone(questID)
     return done == true
 end
 
+-- One read of a quest-log API, in pcall: its first answer when it is a plain boolean, else nil (no
+-- API, an error, a secret or any other shape).
+local function plainFlag(fn, ...)
+    if type(fn) ~= "function" then return nil end
+    local ok, v = pcall(fn, ...)
+    if not ok or Compat.IsSecret(v) or type(v) ~= "boolean" then return nil end
+    return v
+end
+
+-- The 1.12-style log's complete flag (GetQuestLogIndexByID, then GetQuestLogTitle's sixth answer:
+-- 1 complete, -1 failed, nil not yet), where the client has both; nil otherwise.
+local function logTitleComplete(questID)
+    local indexOf, titleOf = GetQuestLogIndexByID, GetQuestLogTitle
+    if type(indexOf) ~= "function" or type(titleOf) ~= "function" then return nil end
+    local ok, index = pcall(indexOf, questID)
+    if not ok or not plainId(index) then return nil end
+    local ok2, _, _, _, _, _, complete = pcall(titleOf, index)
+    if not ok2 or Compat.IsSecret(complete) then return nil end
+    return complete == 1 or complete == true
+end
+
+--- Whether a quest in the player's log is complete and only waits to be turned in (Item Search
+--- round 3 spec §4.2, item 13): C_QuestLog.ReadyForTurnIn, then C_QuestLog.IsComplete, then the
+--- log entry's complete flag through GetQuestLogIndexByID and GetQuestLogTitle where those exist.
+--- The first rung that answers a plain boolean decides; each call is in pcall. Nil for unknown (no
+--- API, an error or a secret answer). Which rung answers on WoW Forever is a smoke probe
+--- (ITEM-SEARCH-35).
+--- @param questID number
+--- @return boolean|nil
+function Compat.QuestReady(questID)
+    if not plainId(questID) then return nil end
+    local ql = type(C_QuestLog) == "table" and C_QuestLog or nil
+    if ql then
+        local ready = plainFlag(ql.ReadyForTurnIn, questID)
+        if ready ~= nil then return ready end
+        local complete = plainFlag(ql.IsComplete, questID)
+        if complete ~= nil then return complete end
+    end
+    return logTitleComplete(questID)
+end
+
 -- ── spells and professions ──────────────────────────────────────────────────────────────────
 
 -- Keep the higher of `rank` and what `ranks` already has for `line` (nil: no line).
@@ -206,21 +247,24 @@ end
 -- ── items and the client ────────────────────────────────────────────────────────────────────
 
 --- An item the client has cached, by id: `{ id, name, link, quality, itemLevel, requiredLevel, icon,
---- classID, subclassID }` from C_Item.GetItemInfo; nil while it is not cached, for a secret answer
---- or no API.
+--- classID, subclassID, equipLoc, sellPrice, bindType }` from C_Item.GetItemInfo (returns 1 to 5, 9
+--- to 14; `sellPrice` in copper, 0 for an item no vendor buys; `bindType` 4 a quest item; the round 3
+--- spec §4.5's verdict reads those two); nil while it is not cached, for a secret answer or no API.
 --- @param itemID number
 --- @return table|nil
 function Compat.ItemInfoByID(itemID)
     local item = C_Item
     if not (plainId(itemID) and type(item) == "table" and type(item.GetItemInfo) == "function") then return nil end
-    local name, link, quality, itemLevel, reqLevel, _, _, _, _, icon, _, classID, subclassID = item.GetItemInfo(itemID)
+    local name, link, quality, itemLevel, reqLevel, _, _, _, equipLoc, icon, sellPrice, classID, subclassID,
+        bindType = item.GetItemInfo(itemID)
     name = plainString(name)
     if not name then return nil end
     return {
         id = itemID, name = name, link = plainString(link), quality = plainNumber(quality),
         itemLevel = plainNumber(itemLevel), requiredLevel = plainNumber(reqLevel),
         icon = plainNumber(icon) or plainString(icon), classID = plainNumber(classID),
-        subclassID = plainNumber(subclassID),
+        subclassID = plainNumber(subclassID), equipLoc = plainString(equipLoc), sellPrice = plainNumber(sellPrice),
+        bindType = plainNumber(bindType),
     }
 end
 
@@ -374,6 +418,17 @@ function Compat.CoinText(copper)
     return plainString(GetCoinTextureString(copper))
 end
 
+--- A day as the Sold by tab writes it (`2026-11-26`), from the client's date(); nil for no time or
+--- no API.
+--- @param t number|nil time()
+--- @return string|nil
+function Compat.DateText(t)
+    t = plainNumber(t)
+    if not t or type(date) ~= "function" then return nil end
+    local ok, text = pcall(date, "%Y-%m-%d", t)
+    return ok and plainString(text) or nil
+end
+
 -- ── the Item Search window and its key (spec §4.5, §4.6) ────────────────────────────────────
 
 --- A map's name (C_Map.GetMapInfo(mapID).name); nil for no API, no such map or a secret answer.
@@ -514,4 +569,59 @@ function Compat.BindKey(key, command)
     if not SetBinding(key, command) then return false end
     SaveBindings(GetCurrentBindingSet())
     return true
+end
+
+-- ── the merchant window (round 3 spec §4.4: the prices Drop Watcher records) ───────────────
+
+-- One call in pcall: its answers, or nothing on an error or without the function.
+local function tryCall(fn, ...)
+    if type(fn) ~= "function" then return false end
+    return pcall(fn, ...)
+end
+
+--- The npc id of the merchant the player has open: the creature id in Compat.UnitGUID("npc")
+--- ("Creature-0-<server>-<instance>-<zone>-<npcID>-<spawn>", and "Vehicle-" alike). Nil for no
+--- merchant, a GUID of another kind (a player, an object), a secret, an error or no API: such a visit
+--- is not recorded.
+--- @return number|nil
+function Compat.MerchantNpcID()
+    local ok, guid = pcall(Compat.UnitGUID, "npc")
+    if not ok or Compat.IsSecret(guid) or type(guid) ~= "string" then return nil end
+    local kind, id = guid:match("^(%a+)%-%d+%-%d+%-%d+%-%d+%-(%d+)%-")
+    if kind ~= "Creature" and kind ~= "Vehicle" then return nil end
+    return plainId(tonumber(id))
+end
+
+-- One merchant slot's price, quantity and whether it costs something else than copper: from
+-- C_MerchantFrame.GetItemInfo's table where the client has it, else GetMerchantItemInfo's answers.
+local function slotInfo(i)
+    local mf = C_MerchantFrame
+    if type(mf) == "table" and type(mf.GetItemInfo) == "function" then
+        local ok, info = pcall(mf.GetItemInfo, i)
+        info = ok and plainTable(info) or nil
+        if not info then return nil end
+        return plainNumber(info.price), plainNumber(info.stackCount), info.hasExtendedCost == true
+    end
+    local ok, _, _, price, quantity, _, _, _, extended = tryCall(GetMerchantItemInfo, i)
+    if not ok then return nil end
+    return plainNumber(price), plainNumber(quantity), extended == true
+end
+
+--- What the open merchant sells for copper: `{ { item, price, quantity } }`, price in copper for
+--- `quantity` (the stack the slot sells). A slot with an extended cost and no copper price (a token
+--- vendor's) is left out, as is one the client does not answer plainly. `{}` with no merchant open.
+--- @return table
+function Compat.MerchantItems()
+    local out = {}
+    local ok, n = tryCall(GetMerchantNumItems)
+    n = ok and plainNumber(n) or nil
+    for i = 1, n or 0 do
+        local okID, item = tryCall(GetMerchantItemID, i)
+        item = okID and plainId(item) or nil
+        local price, quantity, extended = slotInfo(i)
+        if item and price and price >= 0 and not (extended and price == 0) then
+            out[#out + 1] = { item = item, price = price, quantity = (quantity and quantity > 0) and quantity or 1 }
+        end
+    end
+    return out
 end

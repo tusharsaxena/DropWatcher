@@ -6,7 +6,8 @@ local _, NS = ...
 -- (modules/ItemSearchGrid.lua, modules/ItemSearchWindow.lua) keeps the state and draws the answer.
 -- No client call and no setting read here.
 --
--- THE TABS (spec §5.3): one per section that has rows, in the order Drops from, Sold by, Quests,
+-- THE TABS (spec §5.3): one per section that has rows, in the order Drops from, Gathered from (round
+-- 3 spec §4.3, item 7: the herbs, veins and fishing nodes, apart from the drops), Sold by, Quests,
 -- Crafting, Skinned from; each label carries its count, and Crafting's the filtered count with the
 -- whole count beside it ("Crafting 12 / 74", spec §4).
 --
@@ -18,11 +19,15 @@ local _, NS = ...
 -- Reset (TABS.DefaultState) is shown only while the state is not the default (TABS.IsDefault).
 --
 -- THE COLUMNS (spec §5.4) are exactly the spec's, less the two the client gives no data for (Sold
--- by's Stock and Requires: ForeverDB's vendx is not in LibKa0s-ForeverDB-1.0's surface; spec §5.4
+-- by's Stock and Requires: LibKa0s-ForeverDB-1.0 reads ForeverDB's vendx for prices only; spec §5.4
 -- lets such a column go). A few widths moved a little so Crafting's fixed columns fit the minimum
 -- window (Profession 120, Skill 130, Status 120). TABS.Layout gives every fixed column its width and
 -- shares the rest among the flex ones, so a wider window truncates less (W8); a narrow one scales the
--- fixed columns down before a flex column falls under FLEX_MIN.
+-- fixed columns down before a flex column falls under FLEX_MIN. The columns start TABS.INSET in from
+-- the table's left edge and end TABS.INSET short of its right (round 3 spec §4.1, item 12: the
+-- window's body margin, C.WINDOW.INSET), so the first column's text sits off the edge; the row's
+-- stripe, hover wash and selection edge still span the whole row. The glyph and mark columns are
+-- centered (`justify`).
 
 NS.ItemSearchTabs = NS.ItemSearchTabs or {}
 local TABS = NS.ItemSearchTabs
@@ -30,8 +35,9 @@ local L    = NS.L
 
 local floor = math.floor
 
-TABS.ORDER = { "drops", "vendors", "quests", "crafting", "skinned" }
+TABS.ORDER = { "drops", "gathered", "vendors", "quests", "crafting", "skinned" }
 TABS.GAP = 6
+TABS.INSET = NS.Constants.WINDOW.INSET   -- 6: the columns' margin at each side of the table
 TABS.FLEX_MIN = 72
 
 local function col(key, title, w, opts)
@@ -66,14 +72,32 @@ TABS.DEF = {
             { key = "band", label = L["Only my level band"], default = false, narrows = true, keep = function(r) return r.band ~= false end },
         },
     },
+    gathered = {
+        title = L["Gathered from"], one = L["node"], many = L["nodes"],
+        columns = {
+            col("node", L["Node"], "flex", { tip = L["the herb, vein or fishing node it is gathered from"] }),
+            col("profession", L["Profession"], 90, { tip = L["the gathering profession it takes"] }),
+            col("skill", L["Skill"], 64, { tip = L["the skill the node needs, red when above yours; ? when unknown"] }),
+            col("zone", L["Zone"], "flex", { tip = L["where it stands: your zone first, else where it mostly stands"] }),
+            col("chance", L["Chance"], 150, { kind = "bar", first = "desc", tip = L["the chance ForeverDB recorded"] }),
+            PIN,
+        },
+        filters = {
+            { key = "herbalism", label = L["Herbalism"], default = true, narrows = false, keep = function(r) return r.gather ~= "herbalism" end },
+            { key = "mining", label = L["Mining"], default = true, narrows = false, keep = function(r) return r.gather ~= "mining" end },
+            { key = "fishing", label = L["Fishing"], default = true, narrows = false, keep = function(r) return r.gather ~= "fishing" end },
+            { key = "mine", label = L["Only my professions"], default = false, narrows = true, keep = function(r) return r.mine end },
+            { key = "zone", label = L["Only my zone"], default = false, narrows = true, keep = function(r) return r.here == true end },
+        },
+    },
     vendors = {
         title = L["Sold by"], one = L["vendor"], many = L["vendors"],
         columns = {
             col("vendor", L["Vendor"], "flex", { tip = L["who sells it; its title on the row's tooltip"] }),
             col("level", L["Level"], 56, { tip = L["the vendor's level"] }),
             col("zone", L["Zone"], "flex", { tip = L["where it stands: your zone first, else where it mostly stands"] }),
-            col("faction", L["Faction"], 90, { tip = L["who can buy from it"] }),
-            col("price", L["Price"], 110, { tip = L["the lowest price seen, on the vendor it was seen at"] }),
+            col("faction", L["Faction"], 90, { tip = L["Alliance, Horde or Both (either faction); red: only the other faction can buy here"] }),
+            col("price", L["Price"], 110, { tip = L["its price at this vendor: the one you saw there, else ForeverDB's"] }),
             PIN,
         },
         filters = {
@@ -83,7 +107,7 @@ TABS.DEF = {
     quests = {
         title = L["Quests"], one = L["quest"], many = L["quests"],
         columns = {
-            col("mark", nil, 24, { kind = "mark", sort = false }),
+            col("mark", nil, 24, { kind = "mark", sort = false, justify = "CENTER" }),
             col("quest", L["Quest"], "flex", { tip = L["its title, in the color of how hard it is for you"] }),
             col("role", L["Role"], 110, { tip = L["whether it needs the item, rewards it or the item starts it"] }),
             col("level", L["Level"], 56, { tip = L["the quest's level"] }),
@@ -99,13 +123,13 @@ TABS.DEF = {
     crafting = {
         title = L["Crafting"], one = L["recipe"], many = L["recipes"], chip = "mine",
         columns = {
-            col("glyph", nil, 24, { kind = "glyph", sort = false }),
+            col("glyph", nil, 24, { kind = "glyph", sort = false, justify = "CENTER" }),
             col("recipe", L["Recipe"], "flex", { tip = L["the recipe; white if you know it"] }),
             col("profession", L["Profession"], 120, { tip = L["the profession it belongs to"] }),
             col("uses", L["Uses"], 56, { tip = L["how many of this item one craft takes"] }),
             col("makes", L["Makes"], "flex", { tip = L["what it makes; hover it for the item"] }),
             col("skill", L["Skill"], 130, { kind = "parts", tip = L["its skill-up breakpoints: orange, yellow, green, gray"] }),
-            col("status", L["Status"], 120, { tip = L["known, not known, or the profession you lack"] }),
+            col("status", L["Status"], "flex", { tip = L["known; else where to learn it (a trainer, or the recipe item's best vendor, quest or drop); or the profession you lack"] }),
         },
         filters = {
             { key = "mine", label = L["Only my professions"], default = "mine", narrows = true, keep = function(r) return r.mine end },
@@ -334,13 +358,15 @@ local function measure(cols)
     return fixed, flex
 end
 
---- Lay `cols` across `width`: `{ [key] = { x, w } }`. Fixed columns keep their width and the flex
---- ones share the rest, TABS.GAP apart; when that leaves a flex column under TABS.FLEX_MIN, the fixed
---- columns are scaled down until it does not.
+--- Lay `cols` across `width`: `{ [key] = { x, w } }`, from x = TABS.INSET across
+--- `width - 2 * TABS.INSET`. Fixed columns keep their width and the flex ones share the rest,
+--- TABS.GAP apart; when that leaves a flex column under TABS.FLEX_MIN, the fixed columns are scaled
+--- down until it does not.
 --- @param cols table a tab's columns
---- @param width number
+--- @param width number the table's whole width
 --- @return table
 function TABS.Layout(cols, width)
+    width = width - 2 * TABS.INSET
     local fixed, flex = measure(cols)
     local gaps = TABS.GAP * math.max(0, #cols - 1)
     local room = width - gaps - fixed
@@ -350,7 +376,7 @@ function TABS.Layout(cols, width)
         room = width - gaps - fixed * scale
     end
     local share = flex > 0 and math.max(TABS.FLEX_MIN, floor(room / flex)) or 0
-    local out, x = {}, 0
+    local out, x = {}, TABS.INSET
     for _, c in ipairs(cols) do
         local w = c.flex and share or floor(c.w * scale)
         out[c.key] = { x = x, w = w }

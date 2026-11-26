@@ -10,7 +10,7 @@ local _, NS = ...
 -- combat, on WoW Forever with its tooltip block or its window switched on (Item Search spec §2).
 --
 -- The library-absent stand-in answers the all-absent values of the library's own *Degradation*
--- section (docs/api/ForeverDB/version-1-docs.md), member for member (minor 2's list members answer
+-- section (docs/api/ForeverDB/version-4-docs.md), member for member (minor 2's list members answer
 -- `{}`, as the live ones do when ForeverDB is unavailable), so the card simply shows no
 -- sources: tests/test_surface_parity.lua holds it to the live surface.
 
@@ -39,4 +39,11 @@ NS.ForeverDB = FDB or {
     SkinnedFrom   = function() return {} end,
     -- minor 3 (LibKa0s v1.116.0, Item Search feedback): an object's name, nil when unavailable.
     Object        = none,
+    -- minor 4 (LibKa0s v1.117.0, Item Search round 3): a price at one vendor, world coordinates to a
+    -- map position, and ForeverDB_Full on demand, as the library's Degradation section answers them.
+    VendorPriceAt = function() return nil, nil end,
+    WorldToMap    = none,
+    FullStatus    = function() return "missing" end,
+    LoadFull      = function() return false, "missing" end,
+    FullCost      = none,
 }

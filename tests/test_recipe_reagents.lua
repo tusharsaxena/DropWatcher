@@ -59,6 +59,28 @@ test("recipe reagents: a recipe two professions teach lists both lines; the rest
     assertTrue(shared < 10, "only the few shared recipes carry skillLines: " .. shared)
 end, FOREVER_ONLY)
 
+test("recipe reagents: a recipe's teaching item is a number; taughtBy, when set, lists it first with the others", function()
+    local data = T.newAddon().RecipeReagents.Get()
+    local taught, trainer, more = 0, 0, 0
+    for spell, r in pairs(data.recipes) do
+        if r.taught == nil then
+            trainer = trainer + 1
+            assertNil(r.taughtBy, "a trainer's recipe has no teaching item: spell " .. spell)
+        else
+            taught = taught + 1
+            assertTrue(type(r.taught) == "number" and r.taught > 0, "spell " .. spell)
+            if r.taughtBy then
+                more = more + 1
+                -- red under: a taughtBy list that does not start with the row's own (lowest) item
+                assertTrue(#r.taughtBy > 1 and r.taughtBy[1] == r.taught, "spell " .. spell)
+            end
+        end
+    end
+    -- Roast Raptor (15855), a Raptor Flesh recipe of the owner's screenshot, is taught by its recipe item.
+    assertEqual(data.recipes[15855].taught, 12228)
+    assertTrue(taught > trainer and trainer > 0 and more > 0 and more < 100, ("%d %d %d"):format(taught, trainer, more))
+end, FOREVER_ONLY)
+
 -- ── Retail: inert ───────────────────────────────────────────────────────────────────────────
 
 test("recipe reagents: on Retail nothing is built and the table answers nil", function()

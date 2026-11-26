@@ -462,10 +462,25 @@ local function registration(out)
     out:list(TAG, "rejected events", NS.rejectedEvents or {})
 end
 
+-- Item Search's ForeverDB line (WoW Forever alone): the base's state for Item Search, ForeverDB_Full's
+-- (the library's FullStatus, never a load) and what its load cost (round 3 spec §4.6).
+local function itemSearchLine(out)
+    local IS = NS.ItemSearch
+    if not (IS and IS.Enabled and IS.Enabled()) then return end
+    local FDB = NS.ForeverDB
+    local cost = read(FDB.FullCost)
+    cost = type(cost) == "table" and cost or {}
+    local mb = type(cost.kb) == "number" and math.floor(cost.kb / 102.4 + 0.5) / 10 or nil
+    local ms = type(cost.ms) == "number" and math.floor(cost.ms + 0.5) or nil
+    out:add(TAG, "itemSearch: foreverDB=%s full=%s fullDB=%s fullMB=%s fullMs=%s", read(IS.State),
+        read(FDB.FullStatus), read(IS.FullPolicy), mb, ms)
+end
+
 local function integrations(out)
     local Lc = NS.Launcher
     out:add(TAG, "launcher: registered=%s shown=%s", Lc and read(Lc.IsRegistered, Lc),
         Lc and read(Lc.IsShown, Lc))
+    itemSearchLine(out)
     -- Transmog, and CanIMogIt with it, is Retail's alone (Forever port design §4.4).
     if not NS.Constants.FEATURE.transmog then
         out:add(TAG, "optional: Pawn=%s", read(NS.Compat.IsAddOnLoaded, "Pawn"))

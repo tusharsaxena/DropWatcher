@@ -60,9 +60,9 @@ local function recipes()
     return {
         recipes = {
             [800001] = { skillLine = 171, min = 1, yellow = 55, gray = 95, made = 900101, name = "Invented Draught",
-                reagents = { [900001] = 2, [900002] = 1 } },
+                taught = 900201, taughtBy = { 900201, 900202 }, reagents = { [900001] = 2, [900002] = 1 } },
             [800002] = { skillLine = 129, min = 1, yellow = 30, gray = 60, made = 900102, name = "Invented Wrap",
-                reagents = { [900001] = 1 } },
+                taught = 900203, reagents = { [900001] = 1 } },
         },
         byReagent = { [900001] = { 800001, 800002 }, [900002] = { 800001 } },
     }
@@ -83,6 +83,10 @@ test("item search: crafting rows are the table's recipes in its order, then the 
     assertEqual(rows[1].yellow .. "/" .. rows[1].green .. "/" .. rows[1].gray, "55/75/95")
     assertEqual(rows[1].made, 900101); assertFalse(rows[1].learned); assertTrue(rows[3].learned)
     assertNil(rows[3].yellow, "a learned recipe has no breakpoints")
+    -- ISR3-DW-08: the recipe items, every one when several teach it, else the table's one; none learned
+    assertEqual(rows[1].taught, 900201); assertEqual(table.concat(rows[1].taughtBy, ","), "900201,900202")
+    assertEqual(rows[2].taught, 900203); assertNil(rows[2].taughtBy, "one recipe item: no list")
+    assertNil(rows[3].taught, "a recipe the profession window learned has no recipe item")
     assertEqual(#S.CraftingRows(900001, nil, nil), 0, "no table (Retail) and nothing learned")
 end)
 
@@ -107,6 +111,7 @@ local function fakeDB()
     db.Item = count(function(id) return items[id] end)
     db.Object = count(function(id) return objects[id] end)
     db.VendorPrice = count(function() return 1200, 16 end)
+    db.VendorPriceAt = count(function(npc) if npc == 16 then return 1200, "vp" end return nil, nil end)
     return db
 end
 
@@ -127,7 +132,9 @@ test("item search: the static facts read ForeverDB's drops, vendors, quests and 
     assertTrue(f.drops[2].named); assertTrue(f.drops[1].named, "an object named through Object(id)")
     assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Invented Vendor,Creature 16")
-    assertEqual(f.vendorPrice.price .. "@" .. f.vendorPrice.npc, "1200@16")
+    -- round 3 spec §4.4: each vendor row carries its own price (VendorPriceAt), none for the first
+    assertNil(f.vendorPrice, "no item-wide price")
+    assertNil(f.vendors[1].price); assertEqual(f.vendors[2].price .. "/" .. f.vendors[2].priceOrigin, "1200/vp")
     local quests = {}
     for i, q in ipairs(f.quests) do quests[i] = q.title end
     -- red under: the race-2 quest kept for a race-1 player, or the class-1 quest dropped for class 2
@@ -230,6 +237,60 @@ test("compat search: a quest's log and completion reads, nil for no API or a sec
     assertTrue(Compat.QuestInLog(2), "IsOnQuest's rung")
     m.C_QuestLog = nil
     assertNil(Compat.QuestInLog(1)); assertNil(Compat.QuestDone(1)); assertNil(Compat.QuestInLog(nil))
+end)
+
+test("compat search: QuestReady tries ReadyForTurnIn, then IsComplete, then the log title's flag; each guarded", function()
+    local Compat, m = compat()
+    local said = {}
+    m.C_QuestLog = {
+        ReadyForTurnIn = function(id) said[#said + 1] = "ready"; if id == 1 then return true end if id == 2 then return false end
+            if id == 3 then return T.secret(true) end if id == 4 then error("boom") end end,
+        IsComplete = function(id) said[#said + 1] = "complete"; if id == 3 then return true end end,
+    }
+    -- red under: a rung that answers false ignored (ReadyForTurnIn decides when it answers)
+    assertTrue(Compat.QuestReady(1)); assertFalse(Compat.QuestReady(2))
+    assertEqual(table.concat(said, ","), "ready,ready", "IsComplete not asked once ReadyForTurnIn answered")
+    -- red under: a secret or a raising rung taken as the answer, or raising out of the read
+    assertTrue(Compat.QuestReady(3), "a secret answer falls to IsComplete")
+    assertNil(Compat.QuestReady(4), "an error, then no answer anywhere: unknown")
+    m.C_QuestLog.ReadyForTurnIn = nil
+    assertTrue(Compat.QuestReady(3), "IsComplete's rung")
+    -- the third rung: GetQuestLogIndexByID, then GetQuestLogTitle's sixth answer (1 complete)
+    m.C_QuestLog = nil
+    m.GetQuestLogIndexByID = function(id) if id == 7 then return 3 end if id == 8 then return 5 end if id == 9 then return T.secret(2) end end
+    m.GetQuestLogTitle = function(i)
+        if i == 3 then return "Seven", 10, 0, false, false, 1 end
+        if i == 5 then return "Eight", 10, 0, false, false, nil end
+    end
+    assertTrue(Compat.QuestReady(7), "the log title's complete flag"); assertFalse(Compat.QuestReady(8))
+    assertNil(Compat.QuestReady(9), "a secret index"); assertNil(Compat.QuestReady(10), "not in the log")
+    m.GetQuestLogTitle = function() return "Seven", 10, 0, false, false, T.secret(1) end
+    assertNil(Compat.QuestReady(7), "a secret flag")
+    m.GetQuestLogIndexByID, m.GetQuestLogTitle = nil, nil
+    assertNil(Compat.QuestReady(7), "no API at all"); assertNil(Compat.QuestReady(nil)); assertNil(Compat.QuestReady(T.secret(7)))
+end)
+
+test("item search: a quest's state is done, then ready, then in the log, else not picked up", function()
+    local NS, m = T.enableAddon{ mock = function(mm)
+        dofile("tests/_kit/mock_foreverdb.lua").install(mm, { preset = "present" })
+    end }
+    local log, ready, done = {}, {}, {}
+    m.C_QuestLog = {
+        GetLogIndexForQuestID = function(id) if log[id] then return 1 end end,
+        IsQuestFlaggedCompleted = function(id) return done[id] == true end,
+        ReadyForTurnIn = function(id) return ready[id] == true end,
+    }
+    local state = NS.ItemSearch.Me().questState
+    assertEqual(state(1), "todo")
+    log[1] = true
+    assertEqual(state(1), "log")
+    ready[1] = true
+    -- red under: no ready state (round 3 item 13: complete but not turned in reads as in the log)
+    assertEqual(state(1), "ready")
+    done[1] = true
+    assertEqual(state(1), "done", "turned in beats every log read")
+    log[2], ready[2] = nil, true
+    assertEqual(state(2), "todo", "ready only counts for a quest in the log")
 end)
 
 test("compat search: the skill-line ranks answer a child line under its parent, else the professions", function()
@@ -426,7 +487,7 @@ local function loaded(setup)
     return NS, m, fake
 end
 
-test("item search: the facts read the fake: drops, vendors, the lowest price, the quest it rewards", function()
+test("item search: the facts read the fake: drops, vendors, each vendor's price, the quest it rewards", function()
     local NS = loaded()
     local f = NS.ItemSearch.Get(IDS.blade)
     local drops = {}
@@ -435,7 +496,9 @@ test("item search: the facts read the fake: drops, vendors, the lowest price, th
     assertEqual(f.drops[2].minLevel .. "-" .. f.drops[2].maxLevel, "10-12")
     assertEqual(f.worldMinLevel, 8)
     assertEqual(f.vendors[1].name .. "," .. f.vendors[2].name, "Fixture Vendor,Fixture Trainer")
-    assertEqual(f.vendorPrice.price, 1200); assertEqual(f.vendorPrice.npc, IDS.trainer)
+    -- the kit's vendx price at the vendor, its vp price at the trainer (round 3 spec §4.4)
+    assertEqual(f.vendors[1].price .. "/" .. f.vendors[1].priceOrigin, "1400/vendx")
+    assertEqual(f.vendors[2].price .. "/" .. f.vendors[2].priceOrigin, "1200/vp")
     assertEqual(f.rewardFrom[1].title, "Fixture Errand"); assertEqual(f.item.name, "Fixture Blade")
     assertEqual(NS.ItemSearch.Get(IDS.letter).startsQuest.title, "Fixture Summons")
 end, FOREVER_ONLY)

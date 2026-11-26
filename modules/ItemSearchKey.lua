@@ -11,12 +11,16 @@ local _, NS = ...
 -- Keybindings draws it on WoW Forever alone; the client's own Keybindings page lists it on both
 -- clients, since the client reads one Bindings.xml for both (spec §1).
 --
--- A PRESS (spec §4.6, the owner):
---   * an item tooltip is showing (GameTooltip, ItemRefTooltip or a comparison tooltip, the first
---     that is shown and holds an item): the window opens with that item shown;
---   * none: the window opens empty with the search box focused;
---   * while the window is open: pressed over the item it already shows, or with no item tooltip
---     showing, it closes; pressed over another item, it switches to that one.
+-- A PRESS (spec §4.6; Item Search round 3 spec §4.7, the owner: "hover -> open on it; no hover ->
+-- toggle"):
+--   * an item is hovered (GameTooltip or a comparison tooltip, the first that is shown and holds an
+--     item): the window shows that item, opening if it is closed. Over the item it already shows,
+--     the window stays open with its tab and nothing is repainted: it never closes because the
+--     item is the same;
+--   * none is hovered: the key toggles the window (closed: it opens empty with the search box
+--     focused; open: it closes).
+--   A chat link's pinned tooltip (ItemRefTooltip and its comparisons) is not a hover: it stays on
+--   screen after the mouse has left it, so it never counts (round 3 spec §4.7).
 -- Stood down, a press refuses as the Show window key does (NS.StoodDownRefusal's one line).
 --
 -- THE DEFAULT KEY (spec §4.6): Alt-Ctrl-D (C.ITEM_SEARCH.DEFAULT_KEY, `ALT-CTRL-D`, the client's
@@ -45,9 +49,10 @@ local C  = NS.Constants
 
 local Compat = NS.Compat
 
---- The tooltips a press reads, in order: the hovered one, the chat link's, then the comparisons.
-IK.TOOLTIPS = { "GameTooltip", "ItemRefTooltip", "ShoppingTooltip1", "ShoppingTooltip2",
-    "ItemRefShoppingTooltip1", "ItemRefShoppingTooltip2" }
+--- The tooltips a press reads, in order: the hovered one, then its comparisons. A chat link's
+--- pinned ItemRefTooltip (and ItemRefShoppingTooltip1/2) is left out: it is not a hover (round 3
+--- spec §4.7).
+IK.TOOLTIPS = { "GameTooltip", "ShoppingTooltip1", "ShoppingTooltip2" }
 
 local waitCombat = false
 
@@ -58,19 +63,16 @@ function IK.HoveredItem()
     return Compat.ShownItemTooltipItemID(IK.TOOLTIPS)
 end
 
---- What a press does, from the window's state and the hovered item (pure): "close", "show" (the
---- hovered item) or "open" (empty, search focused).
+--- What a press does, from the window's state and the hovered item (pure): "show" (the hovered
+--- item, whatever the window shows), else a toggle: "close" or "open" (empty, search focused).
+--- `shown` no longer decides anything (round 3 spec §4.7); it stays in the signature for callers.
 --- @param open boolean the window is shown
 --- @param shown number|nil the item it shows
---- @param hovered number|nil the item tooltip's item
+--- @param hovered number|nil the hovered item tooltip's item
 --- @return string
-function IK.Decide(open, shown, hovered)
-    if open then
-        if hovered == nil or hovered == shown then return "close" end
-        return "show"
-    end
+function IK.Decide(open, shown, hovered) -- luacheck: no unused args
     if hovered then return "show" end
-    return "open"
+    return open and "close" or "open"
 end
 
 --- The key's press (the binding button's click). Answers what it did: "refused", "off", "close",
@@ -93,7 +95,8 @@ function IK.Press()
     if act == "close" then
         W.Close()
     elseif act == "show" then
-        W.ShowItem(hovered)
+        -- Over the item already shown in the open window: nothing new to paint (round 3 spec §4.7).
+        if not (W.IsShown() and W.ShownItem() == hovered) then W.ShowItem(hovered) end
     else
         W.Open()
     end

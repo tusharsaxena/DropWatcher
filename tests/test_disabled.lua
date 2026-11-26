@@ -25,12 +25,17 @@ local PINNED = {
 -- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2); the keystone events
 -- are Retail's alone (Forever port design §4.4), as are the journal pool's loot event and the
 -- transmog collection's, and a level gained rebuilds Forever's gear (its armor type moves at 40).
--- Item Search's profession-window learner is WoW Forever's alone (DropWatcher#17).
+-- Item Search's profession-window learner and its merchant prices are WoW Forever's alone
+-- (DropWatcher#17).
 local OTHER_CLIENT = {
     retail  = { PLAYER_SPECIALIZATION_CHANGED = true, CHALLENGE_MODE_COMPLETED = true, CHALLENGE_MODE_START = true,
                 EJ_LOOT_DATA_RECIEVED = true, TRANSMOG_COLLECTION_UPDATED = true },
     forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true,
-                TRADE_SKILL_SHOW = true, TRADE_SKILL_LIST_UPDATE = true },
+                TRADE_SKILL_SHOW = true, TRADE_SKILL_LIST_UPDATE = true,
+                -- Item Search round 3 (spec §4.4): the merchant window's prices, recorded.
+                MERCHANT_SHOW = true, MERCHANT_UPDATE = true, MERCHANT_CLOSED = true,
+                -- Item Search round 3 (spec §4.5): the tooltip badge's verdicts, worked out again.
+                QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"

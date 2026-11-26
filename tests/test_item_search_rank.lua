@@ -132,6 +132,19 @@ test("item search rank: quests: in your log, can pick up, too high, completed; t
     assertEqual(names(ranked), "Log,Open A,Open B,High,Done")
 end)
 
+test("item search rank: quests: ready to turn in shares the log's tier and comes first in it", function()
+    local S = IS()
+    local ranked = S.Rank.quests({
+        { id = 1, name = "Log Low", level = 10, state = "log" },
+        { id = 2, name = "Ready High", level = 60, state = "ready" },
+        { id = 3, name = "Open", level = 5, minLevel = 1 },
+        { id = 4, name = "Ready Low", level = 20, state = "ready" },
+        { id = 5, name = "Ready Unknown", state = "ready" },
+    }, me({}))
+    -- red under: ready ranked as not picked up (no tier), or after a log quest of a lower level
+    assertEqual(names(ranked), "Ready Unknown,Ready Low,Ready High,Log Low,Open")
+end)
+
 -- ── crafting ────────────────────────────────────────────────────────────────────────────────
 
 test("item search rank: crafting: known skill-ups orange, yellow, green, then gray, then not known, then other professions", function()
@@ -221,7 +234,7 @@ test("item search rank: the cap shows the first n, counts the rest, and clamps n
     assertEqual(#shown, 1); assertEqual(more, 24, "1 at least")
     shown, more = S.Cap({ { id = 1 } }, 5)
     assertEqual(#shown, 1); assertEqual(more, 0)
-    assertEqual(S.ClampRows("x"), 5); assertEqual(S.ClampRows(7.9), 7); assertEqual(S.TIP_ROWS, 5)
+    assertEqual(S.ClampRows("x"), 3); assertEqual(S.ClampRows(7.9), 7); assertEqual(S.TIP_ROWS, 3)
 end)
 
 -- ── schema step 16 ──────────────────────────────────────────────────────────────────────────
@@ -238,7 +251,8 @@ test("item search rank: step 16 carries a stored dropsShown into rows, and the o
             Bare = { feed = { sort = "oldest" } },
         },
     }
-    -- red under: no step 16 (the stored 8 lost to the new default, 5)
+    -- red under: no step 16 (the stored 8 lost to the default), or a step 16 that knew only its
+    -- frozen default of 5 (the active profile reads AceDB's copied-in 3 since ISR3-DW-07)
     NS.addon:OnInitialize()
     local p = _G.DropWatcherDB.profiles
     assertEqual(p.Default.itemSearch.tooltip.rows, 8); assertNil(p.Default.itemSearch.tooltip.dropsShown)
@@ -251,11 +265,11 @@ test("item search rank: step 16 carries a stored dropsShown into rows, and the o
     NS.MigrateTipRows(nil); NS.MigrateTipRows({}); NS.MigrateTipRows({ itemSearch = 3 })
 end)
 
-test("item search rank: the defaults: rows 5, only the professions you know on, no dropsShown", function()
+test("item search rank: the defaults: rows 3, only the professions you know on, no dropsShown", function()
     local NS = T.newAddon()
     NS.addon:OnInitialize()
     local P = NS.addon.db.profile.itemSearch
-    assertEqual(P.tooltip.rows, 5); assertNil(P.tooltip.dropsShown)
+    assertEqual(P.tooltip.rows, 3, "3 rows (ISR3-DW-07)"); assertNil(P.tooltip.dropsShown)
     assertTrue(P.myProfessionsOnly)
     assertTrue(NS.ItemSearch.MyProfessionsOnly())
     assertNil(NS.SchemaRuntime.FindRow("itemSearch.tooltip.dropsShown"), "its row is gone")

@@ -20,12 +20,27 @@ local _, NS = ...
 -- `mine` (a profession you have), `known`.
 --
 -- `ctx`: { spots(kind, id), mapName(map), npc(id), object(id), quest(id), item(id) -> { name,
--- quality }, profession(skillLine), coin(copper) -> text }. Each is optional; a missing one leaves
--- its cell at the dim dash.
+-- quality }, profession(skillLine), coin(copper) -> text, dateText(time) -> text, facts(itemID) ->
+-- NS.ItemSearch.Get's answer (a recipe item's sources) }. Each is optional; a missing one leaves its
+-- cell at the dim dash.
+--
+-- A NOT-KNOWN RECIPE'S SOURCE (ISR3-DW-08, the window alone; the tooltip block is unchanged). A
+-- recipe the shipped table gives no teaching item is a trainer's: its Status says "Trainer". One with
+-- a teaching item (`taught`, the recipe item) says where to get that item, read through ctx.facts:
+-- the best vendor, else the best quest that rewards it, else the best drop (each by IS.Rank, the
+-- tabs' own "Best for you"), else the World drop, with its zone; with none known, the item's name.
+-- Where several items teach the recipe, the one whose best source comes first in that order is shown.
+-- The row's tooltip lists each kind's sources (ISC.SOURCE_ROWS of each, then "and N more"), and the
+-- row's click opens Item Search on the recipe item (its `itemID`; shift-click links it). "Learn at N"
+-- keeps its Status, its tooltip and click still naming the source. "No <profession>" keeps its Status
+-- and reads no source (a cold build of a reagent with hundreds of taught recipes would read every
+-- recipe item's facts): its tooltip names the first recipe item and its click opens it.
 --
 -- THE CLIENT GIVES NO DATA FOR (spec §5.4 lets such a column go): Sold by's Stock and Requires
--- (ForeverDB's vendx is not in LibKa0s-ForeverDB-1.0's surface) and Quests' objective count. The
--- price is the item's lowest price seen at any vendor (VendorPrice), on the vendor it was seen at.
+-- (LibKa0s-ForeverDB-1.0 reads vendx for prices only) and Quests' objective count. A vendor's price
+-- is its own row's (round 3 spec §4.4): what Drop Watcher saw at that vendor, else ForeverDB's, else
+-- the dim dash with a row tooltip that says how to fill it. A source with no spot anywhere says "No
+-- known spawn" on its row tooltip's Zone line.
 
 NS.ItemSearchCells = NS.ItemSearchCells or {}
 local ISC = NS.ItemSearchCells
@@ -168,9 +183,14 @@ local function spotsOf(kind, row, ctx)
     return call(ctx.spots, kind, row.id)
 end
 
--- The tooltip's zone rows: "Fixture Vale (2 spots)" per map.
+-- The tooltip's zone rows: "Fixture Vale (2 spots)" per map; "No known spawn" for a source with no
+-- spot anywhere (round 3 spec §4.4).
 local function zoneRows(rows, where)
-    for _, c in ipairs(where and where.counts or {}) do
+    if not (where and where.counts and #where.counts > 0) then
+        rows[#rows + 1] = { L["Zone"], L["No known spawn"] }
+        return
+    end
+    for _, c in ipairs(where.counts) do
         local spots = c.n == 1 and L["1 spot"] or L["%d spots"]:format(c.n)
         rows[#rows + 1] = { L["Zone"], ("%s (%s)"):format(c.zone, spots) }
     end
@@ -215,13 +235,20 @@ function ISC.TypeOf(s)
     return RANK_TYPE[rank] or L["Creature"], TYPE_ORDER[rank] or 1
 end
 
-local function sourceCell(s, ctx)
+--- A creature's color by its rank (NS.ItemSearch.RankTone, round 3 spec §4.3): the Source and Type
+--- cells, the Skinned from Creature cell and the tooltip's creature rows share it.
+ISC.RankTone = IS.RankTone
+
+-- The look a drop source's name and Type share (round 3 spec §4.3, item 6): a creature by its rank,
+-- an object plain, a container in its quality, an unnamed source muted.
+local function sourceLook(s, ctx)
     if s.kind == "item" then
         local it = call(ctx.item, s.id)
-        return { text = s.name, quality = type(it) == "table" and num(it.quality) or nil }
+        return nil, type(it) == "table" and num(it.quality) or nil
     end
-    if not s.named then return { text = s.name, tone = "muted" } end
-    return { text = s.name, tone = s.kind == "npc" and "red" or "plain" }
+    if not s.named then return "muted", nil end
+    if s.kind == "npc" then return IS.RankTone(s.rank), nil end
+    return "plain", nil
 end
 
 local function dropTip(s, typeText, where, me)
@@ -243,6 +270,7 @@ end
 local function dropRow(s, i, top, me, ctx)
     local where = ISC.Where(spotsOf(s.kind, s, ctx), me.mapID, ctx.mapName)
     local typeText, typeOrder = ISC.TypeOf(s)
+    local tone, quality = sourceLook(s, ctx)
     local chance = chanceCell(s.chance, top)
     local hasLevel = num(s.minLevel) ~= nil
     return {
@@ -250,7 +278,8 @@ local function dropRow(s, i, top, me, ctx)
         itemID = s.kind == "item" and s.id or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         band = (s.kind == "npc" and hasLevel) and IS.InBand(s.minLevel, s.maxLevel, me.level) or nil,
-        cells = { source = sourceCell(s, ctx), type = { text = typeText, tone = "muted" },
+        cells = { source = { text = s.name, tone = tone, quality = quality }, type = { text = typeText, tone = tone,
+            quality = quality },
             level = levelCell(s.minLevel, s.maxLevel, me.level), zone = ISC.ZoneCell(where), chance = chance },
         sort = { source = lower(s.name), type = typeOrder, level = num(s.minLevel), zone = lower(where and where.zone),
             chance = num(s.chance) },
@@ -286,45 +315,148 @@ function ISC.Drops(facts, me, ctx)
     return out
 end
 
+-- ── Gathered from (round 3 spec §4.3, item 7) ──────────────────────────────────────────────
+
+ISC.GATHER_NAME = { herbalism = L["Herbalism"], mining = L["Mining"], fishing = L["Fishing"] }
+
+-- The player's rank in a gathering row's profession, or nil.
+local function gatherRank(g, ranks)
+    if type(ranks) ~= "table" then return nil end
+    return num(ranks[IS.GATHER_LINE[g.gather] or 0])
+end
+
+--- A gathering node's Skill: its minimum in red while above your rank in that profession, plain
+--- otherwise; "?" (muted) when the curated table does not know the node; the dim dash for fishing,
+--- which has no per-node skill on this client. The tooltip's Gathered from rows color it the same.
+--- @param g table a gathered row (`gather`, `skill`)
+--- @param ranks table|nil the player's ranks
+--- @return table cell `{ text, tone }`
+function ISC.GatherSkillCell(g, ranks)
+    if g.gather == "fishing" then return { text = DASH, tone = "muted" } end
+    local need = num(g.skill)
+    if not need then return { text = "?", tone = "muted" } end
+    local rank = gatherRank(g, ranks)
+    if rank and need > rank then return { text = tostring(need), tone = "red" } end
+    return { text = tostring(need), tone = "plain" }
+end
+
+local function gatherTip(g, profession, where, rank)
+    local rows, hints = { { L["Profession"], profession or DASH } }, {}
+    local need = num(g.skill)
+    if need then rows[#rows + 1] = { L["Skill"], rank and L["%d (you %d)"]:format(need, rank) or tostring(need) } end
+    zoneRows(rows, where)
+    rows[#rows + 1] = { L["Chance"], IS.Percent(g.chance) or L["rate unknown"] }
+    local n = #list(g.ids)
+    if n > 1 then rows[#rows + 1] = { L["Merged"], L["%d kinds of %s"]:format(n, g.name) } end
+    pinHint(hints, where)
+    return { title = g.name, rows = rows, hints = hints }
+end
+
+local function gatherRow(g, i, top, me, ctx)
+    local where = ISC.Where(spotsOf("object", g, ctx), me.mapID, ctx.mapName)
+    local rank = gatherRank(g, me.ranks)
+    local profession = ISC.GATHER_NAME[g.gather]
+    return {
+        best = i, kind = "object", gather = g.gather, id = g.id, spot = where and where.spot or nil,
+        here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
+        mine = rank ~= nil or not IS.SkillsRead(me.ranks),
+        cells = { node = { text = g.name, tone = "plain" }, profession = textCell(profession),
+            skill = ISC.GatherSkillCell(g, me.ranks), zone = ISC.ZoneCell(where), chance = chanceCell(g.chance, top) },
+        sort = { node = lower(g.name), profession = lower(profession), skill = num(g.skill),
+            zone = lower(where and where.zone), chance = num(g.chance) },
+        tip = gatherTip(g, profession, where, rank),
+    }
+end
+
+--- GATHERED FROM's rows, best for you first (IS.Rank.gathered).
+--- @return table
+function ISC.Gathered(facts, me, ctx)
+    me, ctx = me or {}, ctx or {}
+    local ranked = IS.Rank.gathered(facts.gathered, me)
+    local top = topChance(ranked)
+    local out = {}
+    for i, g in ipairs(ranked) do out[i] = gatherRow(g, i, top, me, ctx) end
+    return out
+end
+
 -- ── Sold by ─────────────────────────────────────────────────────────────────────────────────
 
 local FACTION = { A = L["Alliance"], H = L["Horde"], AH = L["Both"] }
 
---- A vendor's Faction cell: Alliance, Horde or Both, "can't buy" in red for the other side alone,
---- the dim dash when ForeverDB names no side.
+--- The words for a vendor only the other side can buy from (round 3 spec §4.4, item 8): "Horde
+--- only" or "Alliance only", by the vendor's own side; nil for a vendor the player's side can use.
+--- The Faction cell and the tooltip's vendor row say it, in red.
+--- @param v table a vendor row (`faction`)
+--- @param me table
+--- @return string|nil
+function ISC.SideOnly(v, me)
+    if not IS.OtherSide(v, me) then return nil end
+    return L["%s only"]:format(FACTION[v.faction] or v.faction)
+end
+
+--- A vendor's Faction cell: Alliance, Horde or Both; "Horde only" or "Alliance only" in red when
+--- only the other side can buy there (ISC.SideOnly); the dim dash when ForeverDB names no side.
 --- @param v table a vendor row (`faction`)
 --- @param me table
 --- @return table cell
 function ISC.FactionCell(v, me)
-    if IS.OtherSide(v, me) then return { text = L["can't buy"], tone = "red" } end
+    local only = ISC.SideOnly(v, me)
+    if only then return { text = only, tone = "red" } end
     local text = FACTION[v.faction]
     if not text then return { text = DASH, tone = "muted" } end
     return { text = text, tone = "plain" }
 end
 
-local function vendorTip(v, where, priceText, faction)
+--- A vendor row's price line for its tooltip (round 3 spec §4.4): "Seen here <date>" (and "for N"
+--- when the slot sells a stack), "Recorded by ForeverDB", or how to fill it.
+--- @param v table a vendor row (`priceOrigin`, `seen`: the recorded entry `{ p, q, t }`)
+--- @param ctx table|nil the cells' context (`dateText`)
+--- @return string
+function ISC.PriceNote(v, ctx)
+    if v.priceOrigin == "seen" then
+        local seen = type(v.seen) == "table" and v.seen or {}
+        local day = call(ctx and ctx.dateText, seen.t) or DASH
+        local q = num(seen.q)
+        if q and q > 1 then return L["Seen here %s, for %d"]:format(day, q) end
+        return L["Seen here %s"]:format(day)
+    end
+    if num(v.price) then return L["Recorded by ForeverDB"] end
+    return L["No price recorded yet: open this vendor and Drop Watcher remembers it"]
+end
+
+local function vendorTip(v, other, where, priceText, faction, ctx)
     local rows, hints = {}, {}
     if v.subname then rows[#rows + 1] = { L["Title"], v.subname } end
-    if where and where.zone then rows[#rows + 1] = { L["Zone"], where.zone } end
-    rows[#rows + 1] = { L["Price"], priceText and L["%s (the lowest seen)"]:format(priceText) or L["not seen here"] }
+    if where and where.zone then
+        rows[#rows + 1] = { L["Zone"], where.zone }
+    elseif not where then
+        rows[#rows + 1] = { L["Zone"], L["No known spawn"] }
+    end
+    rows[#rows + 1] = { L["Price"], priceText or DASH }
+    hints[#hints + 1] = ISC.PriceNote(v, ctx)
     rows[#rows + 1] = { L["Faction"], faction.text }
+    if other then
+        local side = FACTION[v.faction] or v.faction
+        hints[#hints + 1] = L["Only %s characters can buy here: ForeverDB marks this vendor %s. Only my faction hides these rows."]:format(side, side)
+    end
     pinHint(hints, where)
     return { title = v.name, rows = rows, hints = hints }
 end
 
-local function vendorRow(v, i, price, me, ctx)
+local function vendorRow(v, i, me, ctx)
     local where = ISC.Where(call(ctx.spots, "npc", v.id), me.mapID, ctx.mapName)
-    local mine = price and price.npc == v.id and num(price.price) or nil
-    local priceText = mine and (call(ctx.coin, mine) or tostring(mine)) or nil
+    local price = num(v.price)
+    local priceText = price and (call(ctx.coin, price) or tostring(price)) or nil
     local faction = ISC.FactionCell(v, me)
     local level = ISV.LevelText(v.minLevel, v.maxLevel)
+    local other = IS.OtherSide(v, me)
     return {
-        best = i, id = v.id, spot = where and where.spot or nil, other = IS.OtherSide(v, me),
+        best = i, id = v.id, spot = where and where.spot or nil, other = other,
         cells = { vendor = textCell(v.name), level = textCell(level), zone = ISC.ZoneCell(where), faction = faction,
             price = textCell(priceText) },
         sort = { vendor = lower(v.name), level = num(v.minLevel), zone = lower(where and where.zone),
-            faction = lower(faction.text), price = mine },
-        tip = vendorTip(v, where, priceText, faction),
+            faction = lower(faction.text), price = IS.UnitPrice(v) },
+        tip = vendorTip(v, other, where, priceText, faction, ctx),
     }
 end
 
@@ -332,9 +464,8 @@ end
 --- @return table
 function ISC.Vendors(facts, me, ctx)
     me, ctx = me or {}, ctx or {}
-    local price = type(facts.vendorPrice) == "table" and facts.vendorPrice or nil
     local out = {}
-    for i, v in ipairs(IS.Rank.vendors(facts.vendors, me)) do out[i] = vendorRow(v, i, price, me, ctx) end
+    for i, v in ipairs(IS.Rank.vendors(facts.vendors, me)) do out[i] = vendorRow(v, i, me, ctx) end
     return out
 end
 
@@ -342,22 +473,27 @@ end
 
 ISC.ROLE_LABEL = { needs = L["Needs it"], rewards = L["Rewards it"], starts = L["Starts it"] }
 local ROLE_ORDER = { needs = 1, rewards = 2, starts = 3 }
-local STATUS_ORDER = { log = 1, can = 2, high = 3, done = 4 }
+local STATUS_ORDER = { ready = 1, log = 2, can = 3, high = 4, done = 5 }
+local KEPT_STATUS = { ready = true, log = true, done = true }
 
---- A quest's status for the player: "log" (in your log), "can" (can pick up now), "high" (its
---- minimum level is above yours) or "done".
---- @param state string "log" | "done" | "todo"
+--- A quest's status for the player: "ready" (in your log and complete, not turned in), "log" (in
+--- your log), "can" (can pick up now), "high" (its minimum level is above yours) or "done". The
+--- tooltip's quest marks read it too (round 3 spec §4.2).
+--- @param state string "done" | "ready" | "log" | "todo"
 --- @param minLevel number|nil
 --- @param level number|nil the player's
 --- @return string
 function ISC.QuestStatus(state, minLevel, level)
-    if state == "log" or state == "done" then return state end
+    if KEPT_STATUS[state] then return state end
     minLevel, level = num(minLevel), num(level)
     if minLevel and level and level < minLevel then return "high" end
     return "can"
 end
 
+local STATUS_TONE = { done = "good", ready = "good" }
+
 local function statusText(status, minLevel)
+    if status == "ready" then return L["Ready to turn in"] end
     if status == "log" then return L["In your log"] end
     if status == "done" then return L["Completed"] end
     if status == "high" then return L["Requires level %d"]:format(minLevel) end
@@ -381,15 +517,25 @@ local function questInputs(facts)
     return out
 end
 
--- The quest's first giver: its name and where it stands.
-local function giverOf(info, me, ctx)
-    local g = type(info) == "table" and list(info.givers)[1] or nil
-    if type(g) ~= "table" or not num(g.id) then return nil, nil end
+-- A giver's name, or nil.
+local function giverName(g, ctx)
     local reader = g.kind == "object" and ctx.object or ctx.npc
     local row = call(reader, g.id)
-    local name = type(row) == "table" and row.name or nil
-    local where = ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
-    return name, where
+    return type(row) == "table" and row.name or nil
+end
+
+-- The quest's first giver whose name is not a test or dev one (round 3 spec §4.3): its name and
+-- where it stands.
+local function giverOf(info, me, ctx)
+    for _, g in ipairs(type(info) == "table" and list(info.givers) or {}) do
+        if type(g) == "table" and num(g.id) then
+            local name = giverName(g, ctx)
+            if not IS.IsTestSource(name) then
+                return name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
+            end
+        end
+    end
+    return nil, nil
 end
 
 local function giverText(name, where)
@@ -419,7 +565,7 @@ end
 local function questCells(q, status, title, giver, where, me)
     return { mark = { mark = status }, quest = textCell(title, ISC.LevelTone(q.level, me.level)),
         role = textCell(ISC.ROLE_LABEL[q.role]), level = textCell(numText(q.level)), min = textCell(numText(q.minLevel)),
-        status = textCell(statusText(status, q.minLevel), status == "done" and "good" or "muted"),
+        status = textCell(statusText(status, q.minLevel), STATUS_TONE[status] or "muted"),
         giver = giver and textCell(giverText(giver, where)) or textCell(nil) }
 end
 
@@ -463,21 +609,9 @@ local COLOR_WORDS = {
     green = L["Green: unlikely to skill up"], gray = L["Gray: no skill-up"],
 }
 
---- A recipe's breakpoints as colored parts: orange (its minimum, only above 1: the shipped table's
---- 1 is a placeholder), yellow, green and gray; `{}` without breakpoints.
---- @param r table a crafting row
---- @return table
-function ISC.SkillParts(r)
-    local out = {}
-    local yellow, gray = num(r.yellow), num(r.gray)
-    if not (yellow and gray) or (yellow <= 0 and gray <= 0) then return out end
-    local min = num(r.min)
-    if min and min > 1 then out[#out + 1] = { text = tostring(min), tone = "skillOrange" } end
-    out[#out + 1] = { text = tostring(yellow), tone = "skillYellow" }
-    if num(r.green) then out[#out + 1] = { text = tostring(r.green), tone = "skillGreen" } end
-    out[#out + 1] = { text = tostring(gray), tone = "skillGray" }
-    return out
-end
+--- A recipe's breakpoints as colored parts: the model's NS.ItemSearch.SkillParts, which the
+--- tooltip's crafting row shares (round 3 spec §4.2).
+ISC.SkillParts = IS.SkillParts
 
 --- Whether the player has the recipe's profession: a rank in its skill line, or no skill line, or
 --- the skills not read yet (spec §4).
@@ -488,19 +622,138 @@ function ISC.HasProfession(r, ranks)
 end
 
 --- A recipe's Status: Known; "No <profession>" for a profession you don't have; "Learn at N" only
---- when its minimum is above 1 and above your rank; else Not known.
+--- when its minimum is above 1 and above your rank; else where it is learned (`source`, ISC.RecipeSource's
+--- answer: "Trainer", or the recipe item's best source), or Not known without one.
+--- @param source table|nil `{ text, tone }`
 --- @return string text, string tone, number order
-function ISC.CraftStatus(r, ranks, professionName)
+function ISC.CraftStatus(r, ranks, professionName, source)
     if r.known then return L["Known"], "good", 1 end
     if not ISC.HasProfession(r, ranks) then
         return L["No %s"]:format(professionName or L["profession"]), "muted", 4
     end
     local min, rank = num(r.min), num(r.rank)
     if min and min > 1 and (not rank or min > rank) then return L["Learn at %d"]:format(min), "muted", 3 end
+    if source and source.text then return source.text, source.tone or "muted", 2 end
     return L["Not known"], "muted", 2
 end
 
-local function craftTip(r, profession, product, rank)
+-- ── a not-known recipe's source (ISR3-DW-08) ────────────────────────────────────────────────
+
+-- How many sources of each kind a recipe row's tooltip lists before "and N more" (the recipe item's
+-- own Item Search page, a click away, has them all).
+ISC.SOURCE_ROWS = 6
+
+-- The source kinds, best first, with their tooltip label and their Status wording.
+ISC.SOURCE_KINDS = {
+    { key = "vendor", label = L["Sold by"], status = L["Sold by %s"] },
+    { key = "quest", label = L["Quest reward"], status = L["Quest reward: %s"] },
+    { key = "drop", label = L["Drops from"], status = L["Drops from %s"] },
+}
+
+-- The quests that reward the item, titled (ForeverDB's quest row when the facts lack it), best first.
+local function rewardQuests(f, me, ctx)
+    local rows = {}
+    for _, q in ipairs(list(f.rewardFrom)) do
+        if num(q.id) then
+            local info = call(ctx.quest, q.id)
+            local title = q.title or (type(info) == "table" and info.title) or L["Quest %d"]:format(q.id)
+            rows[#rows + 1] = { id = q.id, title = title, name = title, level = num(q.level), role = "rewards" }
+        end
+    end
+    return IS.Rank.quests(rows, me)
+end
+
+-- A recipe item's sources by kind, each best first: `{ vendor = rows, quest = rows, drop = rows }`.
+-- The drops end with the World drop (a row of its own, `world`) when the item has one.
+local function sourcesOf(f, me, ctx)
+    local drops = IS.Rank.drops(list(f.drops), me)
+    if num(f.worldMinLevel) then drops[#drops + 1] = { world = true, name = L["World drop"] } end
+    return { vendor = IS.Rank.vendors(list(f.vendors), me), quest = rewardQuests(f, me, ctx), drop = drops }
+end
+
+-- The place of an item's best source kind in ISC.SOURCE_KINDS (1 a vendor ...), or 4 for none.
+local function bestKind(by)
+    for i, k in ipairs(ISC.SOURCE_KINDS) do
+        if #by[k.key] > 0 then return i end
+    end
+    return #ISC.SOURCE_KINDS + 1
+end
+
+-- "Name · Zone" for one source row (a vendor or a drop with a spot; a quest and the World drop alone).
+local function sourceLine(key, s, me, ctx)
+    if s.world or key == "quest" then return s.name end
+    local where = ISC.Where(spotsOf(key == "vendor" and "npc" or s.kind, s, ctx), me.mapID, ctx.mapName)
+    return where and where.zone and L["%s · %s"]:format(s.name, where.zone) or s.name
+end
+
+-- The recipe item, of `taughtBy`, whose best source kind comes first: `item, its facts, its sources, kind`.
+local function pickItem(taughtBy, me, ctx)
+    local best
+    for _, item in ipairs(taughtBy) do
+        local f = call(ctx.facts, item)
+        local by = sourcesOf(type(f) == "table" and f or {}, me, ctx)
+        local kind = bestKind(by)
+        if not best or kind < best.kind then best = { item = item, facts = f, by = by, kind = kind } end
+    end
+    return best
+end
+
+local function itemName(id, ctx)
+    local it = call(ctx.item, id)
+    return type(it) == "table" and it.name or L["Item %d"]:format(id)
+end
+
+-- The tooltip's source rows: each kind's first ISC.SOURCE_ROWS, then "and N more".
+local function sourceRows(rows, pick, me, ctx)
+    for _, k in ipairs(ISC.SOURCE_KINDS) do
+        local found = pick.by[k.key]
+        for i = 1, math.min(#found, ISC.SOURCE_ROWS) do
+            rows[#rows + 1] = { k.label, sourceLine(k.key, found[i], me, ctx) }
+        end
+        if #found > ISC.SOURCE_ROWS then
+            rows[#rows + 1] = { k.label, L["and %d more"]:format(#found - ISC.SOURCE_ROWS) }
+        end
+    end
+end
+
+--- Where a recipe is learned (see the header): nil for a known or learned recipe; else
+--- `{ text, tone, item, rows, hints }`: the Status words, the recipe item to open (nil for a trainer's
+--- recipe) and the tooltip's rows and hints.
+--- @param r table a live crafting row (`known`, `learned`, `taught`, `taughtBy`)
+--- @param me table
+--- @param ctx table
+--- @return table|nil
+function ISC.RecipeSource(r, me, ctx)
+    if r.known or r.learned then return nil end
+    local taughtBy = type(r.taughtBy) == "table" and r.taughtBy or { r.taught }
+    if #taughtBy == 0 then
+        return { text = L["Trainer"], tone = "muted", rows = { { L["Learn"], L["from a profession trainer"] } }, hints = {} }
+    end
+    local hints = { L["Click: search the recipe item"], L["Shift-click: link the recipe item"] }
+    -- A profession you lack keeps its Status and reads no source (a reagent like Rune Thread has some
+    -- 300 taught recipes): the row names its first recipe item and opens it.
+    if not ISC.HasProfession(r, me.ranks) then
+        return { item = taughtBy[1], rows = { { L["Recipe item"], itemName(taughtBy[1], ctx) } }, hints = hints }
+    end
+    local pick = pickItem(taughtBy, me, ctx)
+    local name = itemName(pick.item, ctx)
+    local rows = { { L["Recipe item"], name } }
+    if #taughtBy > 1 then rows[#rows + 1] = { L["Other recipe items"], tostring(#taughtBy - 1) } end
+    local out = { item = pick.item, rows = rows, hints = hints }
+    local kind = ISC.SOURCE_KINDS[pick.kind]
+    if not kind then
+        local fdb = type(pick.facts) == "table" and pick.facts.fdb or nil
+        rows[#rows + 1] = { L["Sources"], fdb == "loaded" and L["none known"] or L["ForeverDB is not loaded"] }
+        out.text, out.tone = name, "muted"
+        return out
+    end
+    local first = pick.by[kind.key][1]
+    out.text, out.tone = first.world and first.name or kind.status:format(sourceLine(kind.key, first, me, ctx)), "plain"
+    sourceRows(rows, pick, me, ctx)
+    return out
+end
+
+local function craftTip(r, profession, product, rank, source)
     local rows = { { L["Profession"], profession or DASH } }
     if rank then
         local words = COLOR_WORDS[r.color]
@@ -508,7 +761,8 @@ local function craftTip(r, profession, product, rank)
     end
     if num(r.count) then rows[#rows + 1] = { L["Uses"], L["%d of this item"]:format(r.count) } end
     if product then rows[#rows + 1] = { L["Makes"], product } end
-    return { title = r.name or L["Recipe %d"]:format(r.spell), rows = rows, hints = {} }
+    for _, row in ipairs(source and source.rows or {}) do rows[#rows + 1] = row end
+    return { title = r.name or L["Recipe %d"]:format(r.spell), rows = rows, hints = source and source.hints or {} }
 end
 
 local function productOf(r, ctx)
@@ -530,16 +784,17 @@ end
 
 local function craftRow(r, i, me, ctx)
     local profession = call(ctx.profession, r.skillLine)
-    local status, tone, order = ISC.CraftStatus(r, me.ranks, profession)
+    local source = ISC.RecipeSource(r, me, ctx)
+    local status, tone, order = ISC.CraftStatus(r, me.ranks, profession, source)
     local name = r.name or L["Recipe %d"]:format(r.spell)
     local cells, product = craftCells(r, name, profession, status, tone, ctx)
     return {
         best = i, spell = r.spell, known = r.known == true, mine = ISC.HasProfession(r, me.ranks),
-        makesID = num(r.made),
+        makesID = num(r.made), itemID = source and source.item or nil,
         cells = cells,
         sort = { glyph = i, recipe = lower(name), profession = lower(profession), uses = num(r.count),
             makes = lower(product), skill = num(r.yellow), status = order },
-        tip = craftTip(r, profession, product, num(r.rank)),
+        tip = craftTip(r, profession, product, num(r.rank), source),
     }
 end
 
@@ -592,7 +847,7 @@ local function skinRow(c, i, top, me, ctx)
     local rank = num(ranks[ISC.SKINNING])
     return {
         best = i, id = c.id, spot = where and where.spot or nil, here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
-        cells = { creature = { text = c.name, tone = "plain" }, level = levelCell(c.minLevel, c.maxLevel, me.level),
+        cells = { creature = { text = c.name, tone = IS.RankTone(c.rank) }, level = levelCell(c.minLevel, c.maxLevel, me.level),
             skill = skinSkillCell(need, rank), zone = ISC.ZoneCell(where), chance = chanceCell(c.chance, top) },
         sort = { creature = lower(c.name), level = num(c.minLevel), skill = need, zone = lower(where and where.zone),
             chance = num(c.chance) },
@@ -613,10 +868,11 @@ end
 
 -- ── every tab's rows ────────────────────────────────────────────────────────────────────────
 
-ISC.BUILDERS = { drops = ISC.Drops, vendors = ISC.Vendors, quests = ISC.Quests, crafting = ISC.Crafting,
-    skinned = ISC.Skinned }
+ISC.BUILDERS = { drops = ISC.Drops, gathered = ISC.Gathered, vendors = ISC.Vendors, quests = ISC.Quests,
+    crafting = ISC.Crafting, skinned = ISC.Skinned }
 
---- Every tab's rows for `facts`: `{ drops, vendors, quests, crafting, skinned }`, each best first.
+--- Every tab's rows for `facts`: `{ drops, gathered, vendors, quests, crafting, skinned }`, each best
+--- first.
 --- @param facts table|nil
 --- @param me table|nil
 --- @param ctx table|nil

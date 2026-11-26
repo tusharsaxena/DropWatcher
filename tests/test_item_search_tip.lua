@@ -5,8 +5,8 @@
 -- shipped recipe table (Blizzard client DB2 data, core/RecipeReagentsForever.lua).
 
 local T = _G.DW_TEST
-local test, assertEqual, assertTrue, assertFalse =
-    T.test, T.assertEqual, T.assertTrue, T.assertFalse
+local test, assertEqual, assertTrue, assertFalse, assertNil =
+    T.test, T.assertEqual, T.assertTrue, T.assertFalse, T.assertNil
 
 local FDB = dofile("tests/_kit/mock_foreverdb.lua")
 local TDP = dofile("tests/mock_tooltip_data.lua")
@@ -17,8 +17,13 @@ local RETAIL_ONLY = T.forever and "the Retail profile's inert case; the Forever 
 
 local LINEN = 2589   -- Linen Cloth: a First Aid and Tailoring reagent in the shipped table
 
+local function tipSettings(NS) return NS.addon.db.profile.itemSearch.tooltip end
+
 -- The addon enabled with the ForeverDB fake and the tooltip double; `load` runs the 5 s login load.
--- `setup(m)` runs on the mock before the load. Answers NS, the mock, the double, the fake.
+-- `setup(m)` runs on the mock before the load. The verdict badge (round 3 spec §4.5) is switched
+-- off unless `badge` is true, so the cases about the sections read their lines where they were;
+-- tests/test_item_search_verdict.lua covers the badge on the tooltip. Answers NS, the mock, the
+-- double, the fake.
 local function enabled(opts)
     opts = opts or {}
     local tdp, fake
@@ -28,14 +33,13 @@ local function enabled(opts)
         mm.GetCoinTextureString = function(copper) return ("%dc"):format(copper) end
         if opts.setup then opts.setup(mm) end
     end }
+    if NS.addon.db and NS.addon.db.profile.itemSearch then tipSettings(NS).badge = opts.badge == true end
     if opts.load ~= false then
         m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
         m.advance(5)
     end
     return NS, m, tdp, fake
 end
-
-local function tipSettings(NS) return NS.addon.db.profile.itemSearch.tooltip end
 
 -- The block's lines on `tip` (the double writes one client line first: the item's name).
 local function block(tdp, tip)
@@ -98,26 +102,29 @@ end, FOREVER_ONLY)
 
 -- ── what it writes ──────────────────────────────────────────────────────────────────────────
 
-test("item search tip: separator, title, Drops from and Sold by, in order; Also off; no hint unbound", function()
+test("item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound", function()
     local _, _, tdp = enabled()
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
-    assertTrue(b[1]:find("WHITE8X8:1:160:", 1, true) ~= nil, "the separator: a 160 x 1 rule")
-    -- red under: the magnifier before the title (feedback spec §7, T2)
-    assertEqual(b[2], "Drop Watcher · Item Search", "the title, no icon")
+    -- red under: the old 160-wide rule escape (round 3 spec §4.2, item 14b: it set the tooltip's width)
+    assertEqual(b[1], " ", "the separator's spacer line, no escape")
+    -- red under: the old "Drop Watcher · Item Search" title (item 14a)
+    assertEqual(b[2], "Drop Watcher", "the label line, nothing at its right yet")
+    assertTrue(find(b, "Item Search") == nil, "no title line")
     assertEqual(b[3], "Drops from")
     -- ranked for a level-80 player standing nowhere (feedback spec §3): the object and the
     -- container (no level) before the creatures far below the band, each tier by chance
     assertEqual(b[4], "  Fixture Crate | 100%")
     assertEqual(b[5], "  Fixture Coffer | 5.0%")
     assertEqual(b[6], "  Fixture Gnoll (10-12) | 25%")
-    assertEqual(b[7], "  Fixture Kobold (5-6) | rate unknown")
-    assertEqual(b[8], "  World drop | level 8+")
+    -- red under: the old default of 5 rows per section (ISR3-DW-07: 3), which listed the Kobold too
+    assertEqual(b[7], "  World drop | level 8+")
+    assertEqual(b[8], "  and 1 more")
     assertEqual(b[9], "Sold by")
-    -- neither vendor is in your zone or on your continent: by name; the cheapest (the trainer,
-    -- 1200) carries the price
-    assertEqual(b[10], "  Fixture Trainer | 1200c"); assertEqual(b[11], "  Fixture Vendor")
+    -- neither vendor is in your zone or on your continent: the cheaper first, each with its own
+    -- price (round 3 spec §4.4: the trainer's vp 1200, the vendor's vendx 1400)
+    assertEqual(b[10], "  Fixture Trainer | 1200c"); assertEqual(b[11], "  Fixture Vendor | 1400c")
     -- red under: the Also section on by default, or a hint with nothing bound
     assertEqual(#b, 11)
     assertTrue(find(b, "Reward from") == nil)
@@ -138,22 +145,92 @@ test("item search tip: the hint names the bound key as the client writes it, and
     assertTrue(find(b, "open in Item Search") == nil, "the hint's switch")
 end, FOREVER_ONLY)
 
-test("item search tip: the separator and title follow their switch; the accent is read at call time", function()
+-- The separator texture's first two points, as { point, relative, relPoint, x, y } each.
+local function rulePoints(tex)
+    return { tex:GetPoint(1) }, { tex:GetPoint(2) }
+end
+
+test("item search tip: the separator is a hairline across the spacer line, 8 in from each edge, one pixel, dw.tipRule", function()
+    local NS, _, tdp = enabled()
+    local IST, C = NS.ItemSearchTip, NS.Constants
+    local tip = tdp.tooltip("GameTooltip")
+    assertNil(IST.RuleOf(tip), "no texture before the first block")
+    tdp.show(tip, IDS.blade)
+    local tex = IST.RuleOf(tip)
+    assertTrue(tex ~= nil and tex.__owner == tip, "a texture of the tooltip's own")
+    assertEqual(#tdp.textures(tip), 1)
+    -- red under: no hairline drawn, a fixed width (the old escape's 160), or an inset other than 8
+    assertTrue(tex:IsShown(), "shown with the block")
+    assertEqual(C.ITEM_SEARCH.RULE_INSET, 8)
+    local left, right = rulePoints(tex)
+    -- the spacer is line 2 (the client's item name is line 1): its middle is 500 - 10 - 14 - 6 = 470;
+    -- the 1 px line's top half a pixel above it, rounded to a whole pixel: -29.5 -> -29
+    assertEqual(table.concat({ left[1], tostring(left[2] == tip), left[3], left[4], left[5] }, ","), "TOPLEFT,true,TOPLEFT,8,-29")
+    assertEqual(table.concat({ right[1], tostring(right[2] == tip), right[3], right[4], right[5] }, ","), "TOPRIGHT,true,TOPRIGHT,-8,-29")
+    assertEqual(tex:GetHeight(), 1, "one physical pixel (no PixelUtil in the harness: 1)")
+    assertEqual(tex.__texture, "Interface\\Buttons\\WHITE8X8")
+    assertFalse(tex.__snap, "pixel snapping off: the offset is rounded instead")
+    local want = NS.SKIN_TOKENS["dw.tipRule"].default
+    assertEqual(table.concat(want, ","), "0.55,0.46,0.25,0.9", "a dim gold")
+    assertEqual(NS.SKIN_TOKENS["dw.tipRule"].follow, "divider")
+    local r, g, b, a = NS.SkinColor("dw.tipRule")
+    assertEqual(table.concat(tex.__vertex, ","), table.concat({ r, g, b, a or 1 }, ","), "tinted dw.tipRule")
+    -- red under: the line kept past a clear or a hide (the next item's tooltip would show it stray)
+    tdp.hide(tip)
+    assertFalse(tex:IsShown(), "hidden on OnHide")
+    tdp.show(tip, IDS.blade)
+    assertTrue(tex:IsShown())
+    tip:ClearLines()
+    assertFalse(tex:IsShown(), "hidden on OnTooltipCleared")
+    tdp.show(tip, IDS.blade)
+    assertEqual(#tdp.textures(tip), 1, "one texture per tooltip, made once")
+end, FOREVER_ONLY)
+
+test("item search tip: the separator waits for the tooltip's layout: placed on the next frame and on a resize", function()
+    local NS, m, tdp = enabled()
+    local IST = NS.ItemSearchTip
+    local tip = tdp.tooltip("GameTooltip")
+    tip.__top = nil
+    tdp.show(tip, IDS.blade)
+    local tex = IST.RuleOf(tip)
+    -- red under: a line placed from geometry the tooltip has not laid out yet
+    assertFalse(tex:IsShown(), "not laid out: hidden")
+    tip.__top = 500
+    m.advance(0)
+    assertTrue(tex:IsShown(), "the next frame places it")
+    local left = { tex:GetPoint(1) }
+    assertEqual(left[5], -29)
+    tip.__top = 700
+    tdp.resize(tip)
+    -- red under: no OnSizeChanged hook (shift for the comparison tooltips resizes it, ITEM-SEARCH-34)
+    assertTrue(tex:IsShown())
+    assertEqual(tex:GetNumPoints(), 2, "placed again, not stacked")
+    assertEqual(IST.RuleOffset(500, 476, 464, 1), -29)
+    assertEqual(IST.RuleOffset(500, 476, 464, 0.5), -29.5, "rounded to the pixel, here half a unit")
+    assertNil(IST.RuleOffset(nil, 476, 464, 1)); assertNil(IST.RuleOffset(500, 476, 464, 0))
+    tdp.hide(tip)
+    tdp.resize(tip)
+    assertFalse(tex:IsShown(), "a resize with no block keeps it hidden")
+end, FOREVER_ONLY)
+
+test("item search tip: Separator line off: no spacer and no hairline; the label line stays", function()
     local NS, _, tdp = enabled()
     local tip = tdp.tooltip("GameTooltip")
-    local real = NS.SkinColor
-    NS.SkinColor = function(name)
-        if name == "text.accent" then return 0.2, 0.4, 0.6 end
-        return real(name)
-    end
     tdp.show(tip, IDS.blade)
-    NS.SkinColor = real
-    -- red under: the accent cached at load (a skin switch would not follow)
-    assertTrue(tip.__lines[2].text:find(":51:102:153|t", 1, true) ~= nil, "the rule tinted 0.2, 0.4, 0.6")
-    assertEqual(tip.__lines[3].r, 0.2); assertEqual(tip.__lines[3].b, 0.6)
+    local tex = NS.ItemSearchTip.RuleOf(tip)
     tipSettings(NS).header = false
     tdp.show(tip, IDS.blade)
-    assertEqual(block(tdp, tip)[1], "Drops from", "no separator or title")
+    local b = block(tdp, tip)
+    -- red under: the label line tied to the separator's switch (14a: always drawn with the block)
+    assertEqual(b[1], "Drop Watcher"); assertEqual(b[2], "Drops from")
+    assertFalse(tex:IsShown(), "no hairline")
+    local label = tip.__lines[2]
+    local t = NS.Constants.TONE.mutedGold
+    assertEqual(table.concat({ label.r, label.g, label.b }, ","), table.concat({ t.r, t.g, t.b }, ","), "the label's muted gold")
+    -- the settings row's name and words (spec §5)
+    local row = NS.SchemaRuntime.FindRow("itemSearch.tooltip.header")
+    assertEqual(row.label, "Separator line")
+    assertTrue(row.tooltip:find("thin line", 1, true) ~= nil)
 end, FOREVER_ONLY)
 
 test("item search tip: sections follow their switches and the stored order; Also lists the rewarding quest", function()
@@ -165,11 +242,12 @@ test("item search tip: sections follow their switches and the stored order; Also
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
     -- red under: a switched-off section drawn, an unknown key failing, or the stored order ignored
-    assertEqual(b[1], "Also"); assertEqual(b[2], "  Reward from | Fixture Errand")
-    assertEqual(b[3], "Sold by")
+    assertEqual(b[1], "Drop Watcher")
+    assertEqual(b[2], "Also"); assertEqual(b[3], "  Reward from | Fixture Errand")
+    assertEqual(b[4], "Sold by")
     assertTrue(find(b, "Drops from") == nil)
     tdp.show(tip, IDS.letter)
-    assertEqual(block(tdp, tip)[2], "  Starts quest | Fixture Summons")
+    assertEqual(block(tdp, tip)[3], "  Starts quest | Fixture Summons")
 end, FOREVER_ONLY)
 
 test("item search tip: the drop count setting caps the rows, the rest is \"and N more\"", function()
@@ -182,42 +260,89 @@ test("item search tip: the drop count setting caps the rows, the rest is \"and N
     assertEqual(b[6], "  and 3 more")
 end, FOREVER_ONLY)
 
-test("item search tip: quest marks ! ? and the check mark; completed hidden by default", function()
+-- The quest-log double: `states[id]` is "log", "ready" (in the log and ReadyForTurnIn) or "done".
+local function questLog(mm, states)
+    mm.UnitRace = function() return "R", "R", 1 end
+    mm.UnitClass = function() return "C", "C", 4 end
+    mm.C_QuestLog = {
+        GetLogIndexForQuestID = function(id) if states[id] == "log" or states[id] == "ready" then return 2 end end,
+        IsQuestFlaggedCompleted = function(id) return states[id] == "done" end,
+        ReadyForTurnIn = function(id) return states[id] == "ready" end,
+    }
+end
+
+local GOSSIP = "Interface\\GossipFrame\\"
+
+test("item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default", function()
     local states = {}
-    local NS, _, tdp = enabled({ setup = function(mm)
-        mm.UnitRace = function() return "R", "R", 1 end
-        mm.UnitClass = function() return "C", "C", 4 end
-        mm.C_QuestLog = {
-            GetLogIndexForQuestID = function(id) if states[id] == "log" then return 2 end end,
-            IsQuestFlaggedCompleted = function(id) return states[id] == "done" end,
-        }
-    end })
+    local NS, m, tdp = enabled({ setup = function(mm) questLog(mm, states) end })
+    local IST, C = NS.ItemSearchTip, NS.Constants
     local tip = tdp.tooltip("GameTooltip")
     tipSettings(NS).header = false
     tdp.show(tip, IDS.leather)
     local b = block(tdp, tip)
     local q = find(b, "Quests")
     assertTrue(q ~= nil, "a Quests section")
-    assertTrue(b[q + 1]:find("?|r Fixture Errand", 1, true) ~= nil, "not picked up: ?")
-    assertTrue(b[q + 2]:find("?|r Fixture Hunt", 1, true) ~= nil)
+    -- red under: the old text `?` for a quest not picked up (round 3 item 13: the game's yellow `!`)
+    assertTrue(b[q + 1]:find(GOSSIP .. "AvailableQuestIcon:14:14:0:0:64:64:0:64:0:64:255:255:255|t Fixture Errand", 1, true) ~= nil,
+        "not picked up: the yellow !, untinted, 14 px")
+    assertTrue(b[q + 2]:find("AvailableQuestIcon:14:14:", 1, true) ~= nil and b[q + 2]:find("Fixture Hunt", 1, true) ~= nil)
+    m.__context.level = 9
+    tdp.hide(tip)
+    tdp.show(tip, IDS.leather)
+    b = block(tdp, tip)
+    q = find(b, "Quests")
+    -- red under: the tooltip not telling can from high (it reads the quest's minimum level now)
+    assertTrue(b[q + 2]:find("AvailableQuestIcon:14:14:0:0:64:64:0:64:0:64:128:128:128|t Fixture Hunt", 1, true) ~= nil,
+        "level 9 under the hunt's 10: the ! dimmed by half")
+    m.__context.level = 80
     states[IDS.errand], states[IDS.hunt] = "done", "log"
     tdp.show(tip, IDS.leather)
     b = block(tdp, tip)
     q = find(b, "Quests")
     -- red under: a completed quest shown with Hide completed quests on, or the state cached
-    assertTrue(b[q + 1]:find("!|r Fixture Hunt", 1, true) ~= nil, "in the log: !")
+    assertTrue(b[q + 1]:find(GOSSIP .. "IncompleteQuestIcon:14:14:0:0:64:64:0:64:0:64:255:255:255|t Fixture Hunt", 1, true) ~= nil,
+        "in the log: the gray ?")
     assertTrue(find(b, "Fixture Errand") == nil, "completed: hidden")
     tipSettings(NS).hideCompleted = false
+    states[IDS.hunt] = "ready"
     tdp.show(tip, IDS.leather)
     b = block(tdp, tip)
     q = find(b, "Quests")
+    local function tinted(tone)
+        local t = C.TONE[tone]
+        return (":%d:%d:%d|t"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
+    end
     -- ranked: the quest in your log first, the completed one last (feedback spec §3)
-    assertTrue(b[q + 1]:find("Fixture Hunt", 1, true) ~= nil)
-    assertTrue(b[q + 2]:find("icons\\confirm:", 1, true) ~= nil and b[q + 2]:find("Fixture Errand", 1, true) ~= nil,
-        "completed: the check mark")
+    assertTrue(b[q + 1]:find(GOSSIP .. "ActiveQuestIcon:14:14:", 1, true) ~= nil and b[q + 1]:find(tinted("good"), 1, true) ~= nil
+        and b[q + 1]:find("Fixture Hunt", 1, true) ~= nil, "complete, not turned in: the ? tinted green")
+    -- red under: the boxed `confirm` (the owner: a check with no background)
+    assertTrue(b[q + 2]:find("phosphor\\check-fat:14:14:", 1, true) ~= nil and b[q + 2]:find(tinted("good"), 1, true) ~= nil
+        and b[q + 2]:find("Fixture Errand", 1, true) ~= nil, "turned in: the green fat check")
+    assertTrue(find(b, "icons\\confirm:") == nil, "confirm is no longer a quest mark")
+    T.assertGlyphSafe(table.concat(b, "\n"), "the quest marks")
+    assertEqual(C.ITEM_SEARCH.MARK_SIZE, C.ITEM_SEARCH.GLYPH_SIZE, "one size for marks and glyphs")
+    -- the media library absent: the characters, colored
+    local icon = NS.Icon
+    NS.Icon = function() return nil end
+    IST.ForgetLooks()
+    local chars = {}
+    for _, state in ipairs({ "can", "high", "log", "ready", "done" }) do chars[#chars + 1] = IST.QuestMark(state):match("|c%x%x%x%x%x%x%x%x(.)|r") end
+    NS.Icon = icon
+    IST.ForgetLooks()
+    assertEqual(table.concat(chars, ""), "!!??+", "the fallbacks")
 end, FOREVER_ONLY)
 
-test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray dash for none, a dark gray lock for not known", function()
+test("item search tip: the window's quest marks are the tooltip's, at MARK_SIZE", function()
+    local NS = enabled()
+    local IST, C = NS.ItemSearchTip, NS.Constants
+    assertEqual(IST.QuestMark("can"), IST.QuestMark("can", C.ITEM_SEARCH.MARK_SIZE), "the default size is MARK_SIZE")
+    assertTrue(IST.QuestMark("log", 20):find("IncompleteQuestIcon:20:20:", 1, true) ~= nil, "a size is honored")
+    assertEqual(IST.QuestMark("bogus"), IST.QuestMark("can"), "an unknown state reads as can")
+    assertTrue(IST.QuestMark("ready") ~= IST.QuestMark("log"), "ready and log differ")
+end, FOREVER_ONLY)
+
+test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray left-right arrow for none, a dark gray lock for not known", function()
     local known
     local NS, _, tdp = enabled({ setup = function(mm)
         mm.IsPlayerSpell = function(spell) return spell == known end
@@ -230,16 +355,18 @@ test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray
     local c = find(b, "Crafting")
     assertTrue(c ~= nil, "a Crafting section")
     -- red under: the old dots (feedback spec §5.7, T4), the known mark on an unknown recipe, or a
-    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the dash.
-    assertTrue(b[c + 1]:find("phosphor\\minus:", 1, true) ~= nil, "known, no skill-up: the dash")
+    -- glyph the tooltip's face cannot draw. No rank here, so no skill-up color: the left-right arrow.
+    assertTrue(b[c + 1]:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil, "known, no skill-up: the left-right arrow, 14 px")
     assertTrue(b[c + 1]:find(rows[1].name, 1, true) ~= nil, "a known recipe ranks first")
     assertTrue(b[c + 2]:find("phosphor\\lock:", 1, true) ~= nil, "not known: the padlock")
     assertTrue(find(b, "circle") == nil, "no dot or ring is left")
     T.assertGlyphSafe(table.concat(b, "\n"), "the block")
-    -- the dot's tint is the skill-up color (no rank here: plain); the right side names the profession
+    -- the right side: the recipe's skill breakpoints (round 3 item 4), then its profession, since
+    -- Linen's recipes mix professions (no skills read yet: every profession shows)
     local profession = { [129] = "First Aid", [164] = "Blacksmithing", [165] = "Leatherworking", [171] = "Alchemy",
         [185] = "Cooking", [197] = "Tailoring", [202] = "Engineering", [333] = "Enchanting" }
-    assertTrue(b[c + 1]:find(" | " .. profession[rows[1].skillLine], 1, true) ~= nil, "the profession on the right")
+    assertTrue(b[c + 1]:find(" | |cff", 1, true) ~= nil, "the colored parts on the right")
+    assertTrue(b[c + 1]:find("· " .. profession[rows[1].skillLine], 1, true) ~= nil, "then the profession")
     local IST = NS.ItemSearchTip
     local C = NS.Constants
     local function tinted(mark, tone)
@@ -249,14 +376,66 @@ test("item search tip: crafting glyphs: an up arrow for a skill-up, a light gray
     end
     for color, tone in pairs({ orange = "skillOrange", yellow = "skillYellow", green = "skillGreen" }) do
         local mark = IST.CraftMark({ known = true, color = color })
-        assertTrue(mark:find("phosphor\\arrow-up:", 1, true) ~= nil and tinted(mark, tone), color .. ": the up arrow in its hue")
+        -- red under: the thin ph:arrow-up (round 3 item 1), or no explicit size (item 2)
+        assertTrue(mark:find("phosphor\\arrow-fat-up:14:14:", 1, true) ~= nil and tinted(mark, tone), color .. ": the fat up arrow in its hue")
     end
     local gray = IST.CraftMark({ known = true, color = "gray" })
-    assertTrue(gray:find("phosphor\\minus:", 1, true) ~= nil and tinted(gray, "glyphKnown"), "gray: the light gray dash")
+    assertTrue(gray:find("phosphor\\arrows-horizontal:14:14:", 1, true) ~= nil and tinted(gray, "glyphKnown"),
+        "gray: the light gray left-right arrow")
     local locked = IST.CraftMark({ known = false, color = "orange" })
-    assertTrue(locked:find("phosphor\\lock:", 1, true) ~= nil and tinted(locked, "glyphLocked"), "not known: the dark gray lock")
+    assertTrue(locked:find("phosphor\\lock:14:14:", 1, true) ~= nil and tinted(locked, "glyphLocked"), "not known: the dark gray lock")
+    assertEqual(C.ITEM_SEARCH.GLYPH_SIZE, 14, "one size for every glyph")
+    assertTrue(not IST.CraftMark({ known = true, color = "gray" }):find("phosphor\\minus", 1, true), "the dash is gone")
+    -- the media library absent: the characters every face has (`=` for no skill-up, was `-`)
+    local icon = NS.Icon
+    NS.Icon = function() return nil end
+    local up, flat, lock = IST.CraftMark({ known = true, color = "orange" }), IST.CraftMark({ known = true, color = "gray" }),
+        IST.CraftMark({ known = false })
+    NS.Icon = icon
+    assertTrue(up:find("^", 1, true) ~= nil and flat:find("=", 1, true) ~= nil and lock:find("x", 1, true) ~= nil,
+        "the fallbacks: ^ = x")
     assertEqual(C.TONE.glyphKnown.r, 176 / 255, "#b0b0b0"); assertEqual(C.TONE.glyphLocked.r, 90 / 255, "#5a5a5a")
     assertEqual(IST.CraftGlyph({ known = true }), "flat", "no breakpoints: no skill-up to show")
+end, FOREVER_ONLY)
+
+test("item search tip: recipe rows show their skill breakpoints in their hues, memoized per recipe and emptied by a skin switch", function()
+    local NS, m, tdp = enabled()
+    local IS, IST, C = NS.ItemSearch, NS.ItemSearchTip, NS.Constants
+    local row
+    for _, r in ipairs(IS.Get(LINEN).crafting) do
+        if #IS.SkillParts(r) > 0 then row = r; break end
+    end
+    assertTrue(row ~= nil, "a Linen recipe with breakpoints")
+    -- the window's Skill column and the tooltip read one function (item 3 stays dropped)
+    assertEqual(NS.ItemSearchCells.SkillParts, IS.SkillParts)
+    local want = {}
+    for _, p in ipairs(IS.SkillParts(row)) do
+        local t = C.TONE[p.tone]
+        want[#want + 1] = NS.GroupRoster.Colored(p.text, t.r, t.g, t.b)
+    end
+    assertEqual(IST.SkillText(row), table.concat(want, " "), "each part in its skill-up hue")
+    assertNil(IST.SkillText({ spell = -1 }), "no breakpoints: nothing")
+    -- red under: the parts rebuilt on every hover (the warm path's new strings)
+    local real, calls = IS.SkillParts, 0
+    IS.SkillParts = function(r) calls = calls + 1; return real(r) end
+    IST.SkillText(row)
+    assertEqual(calls, 0, "memoized per recipe")
+    -- red under: a memo kept across a skin switch (the hues are the skin's palette)
+    m.LibStub("LibKa0s-Skin-1.0"):SetChoice("DropWatcher", "ka0s", "obsidian")
+    IST.SkillText(row)
+    IS.SkillParts = real
+    assertEqual(calls, 1, "a skin switch empties the memo")
+    -- Show recipe skill levels off: today's right side, the profession, muted
+    local tip = tdp.tooltip("GameTooltip")
+    tipSettings(NS).craftSkill = false
+    tdp.show(tip, LINEN)
+    local b = block(tdp, tip)
+    local c = find(b, "Crafting")
+    assertTrue(b[c + 1]:find(" | |cff", 1, true) == nil, "no parts: " .. b[c + 1])
+    assertTrue(b[c + 1]:find(" | %a") ~= nil, "the profession alone: " .. b[c + 1])
+    local line = tip.__lines[c + 2]
+    assertEqual(line.right, IST.ProfessionName(IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine))
+    assertEqual(NS.ItemSearchTip.Options().craftSkill, false)
 end, FOREVER_ONLY)
 
 test("item search tip: an item with nothing to show gets no block, title and hint included", function()
@@ -370,16 +549,16 @@ test("item search tip: the rows follow the player: the level band and the zone m
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
     -- red under: the old chance-only order (Gnoll after Coffer) for a level-11 player
-    assertEqual(b[2], "  Fixture Crate | 100%")
-    assertEqual(b[3], "  Fixture Gnoll (10-12) | 25%", "in the band [6, 14]: with the object and the container, by chance")
-    assertEqual(b[4], "  Fixture Coffer | 5.0%")
+    assertEqual(b[3], "  Fixture Crate | 100%")
+    assertEqual(b[4], "  Fixture Gnoll (10-12) | 25%", "in the band [6, 14]: with the object and the container, by chance")
+    assertEqual(b[5], "  Fixture Coffer | 5.0%")
     m.C_Map = { GetBestMapForUnit = function() return IDS.mapA end,
         GetMapInfo = function(id) if id == IDS.mapA then return { mapType = 3 } end end }
     m.__context.level = 80
     tdp.hide(tip)
     tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
-    assertEqual(b[2], "  Fixture Gnoll (10-12) | 25%", "a spot in your zone first, whatever its level")
+    assertEqual(b[3], "  Fixture Gnoll (10-12) | 25%", "a spot in your zone first, whatever its level")
     assertEqual(NS.ItemSearch.Me().mapID, IDS.mapA)
 end, FOREVER_ONLY)
 
@@ -420,8 +599,15 @@ test("item search tip: only the professions you know: the rest counted on one di
     tdp.show(tip, LINEN)
     local b = block(tdp, tip)
     local c = find(b, "Crafting")
-    -- red under: other professions' recipes shown, or the count left out
-    for i = c + 1, c + tailoring do assertTrue(b[i]:find(" | Tailoring", 1, true) ~= nil, b[i]) end
+    -- red under: other professions' recipes shown, or the count left out. One profession shown: the
+    -- skill parts alone on the right, no profession name (round 3 spec §4.2)
+    local tailored = {}
+    for _, r in ipairs(all) do if r.skillLine == 197 then tailored[r.name] = true end end
+    for i = c + 1, c + tailoring do
+        local name = b[i]:match("|t (.-) | ")
+        assertTrue(tailored[name] == true, b[i])
+        assertTrue(b[i]:find("Tailoring", 1, true) == nil, "one profession: no name after the parts: " .. b[i])
+    end
     assertEqual(b[c + tailoring + 1], ("  +%d in professions you don't know"):format(#all - tailoring))
     skills(m, { [999] = 1 })
     tdp.hide(tip)

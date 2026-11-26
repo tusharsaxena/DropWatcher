@@ -921,9 +921,17 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.enabled", "bool", "true" },
     { "itemSearch.tooltip.shiftOnly", "bool", "false" },
     { "itemSearch.tooltip.header", "bool", "true" },
+    -- ISR3-DW-02 (Item Search round 3 spec §4.2): the crafting rows' skill levels, on.
+    { "itemSearch.tooltip.craftSkill", "bool", "true" },
+    -- ISR3-DW-05 (Item Search round 3 spec §4.5): the Keep / Hold / Sell / Toss badge and its reasons, on.
+    { "itemSearch.tooltip.badge", "bool", "true" },
+    { "itemSearch.tooltip.reasons", "bool", "true" },
     { "itemSearch.tooltip.hint", "bool", "true" },
     { "itemSearch.tooltip.comparison", "bool", "false" },
     { "itemSearch.tooltip.sections.drops", "bool", "true" },
+    -- ISR3-DW-03 (Item Search round 3 spec §4.3, §5): the Gathered from section, the recorded
+    -- prices and when ForeverDB_Full loads; a stored order gains "gathered" through schema step 18.
+    { "itemSearch.tooltip.sections.gathered", "bool", "true" },
     { "itemSearch.tooltip.sections.vendors", "bool", "true" },
     { "itemSearch.tooltip.sections.quests", "bool", "true" },
     { "itemSearch.tooltip.sections.crafting", "bool", "true" },
@@ -932,11 +940,13 @@ local PINNED_ROWS = {
     { "itemSearch.tooltip.sections.skinned", "bool", "true" },
     -- ISF-DW-03 (Item Search feedback spec §4, §7): the rows per section replace the drop count
     -- (schema step 16), and the profession filter covers the tooltip and the window.
-    { "itemSearch.tooltip.rows", "number", "5" },
+    { "itemSearch.tooltip.rows", "number", "3" },  -- 3 since ISR3-DW-07
     { "itemSearch.myProfessionsOnly", "bool", "true" },
     { "itemSearch.tooltip.hideCompleted", "bool", "true" },
-    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"vendors\",[3]=\"quests\",[4]=\"crafting\",[5]=\"skinned\",[6]=\"also\"}" },
+    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"gathered\",[3]=\"vendors\",[4]=\"quests\",[5]=\"crafting\",[6]=\"skinned\",[7]=\"also\"}" },
     { "itemSearch.window.enabled", "bool", "true" },
+    { "itemSearch.recordPrices", "bool", "true" },
+    { "itemSearch.fullDB", "string", "\"window\"" },
     { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
     { "itemSearch.window.barFromSkin", "bool", "true" },
     { "itemSearch.window.pins", "bool", "true" },

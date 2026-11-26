@@ -76,15 +76,19 @@ local FALLBACK = { upgrade = "+", sidegrade = "~", downgrade = "-" }
 local function byte(v) return floor(math.max(0, math.min(1, v)) * 255 + 0.5) end
 
 --- An inline texture escape for `path`, at the text's height (0:0) and tinted r, g, b (0..1):
---- `|T<path>:0:0:0:0:64:64:0:64:0:64:R:G:B|t`, R, G, B as 0..255.
+--- `|T<path>:0:0:0:0:64:64:0:64:0:64:R:G:B|t`, R, G, B as 0..255. `size` (pixels) draws it
+--- `size` x `size` instead (`|T<path>:14:14:...`), so marks in different faces match (Item Search
+--- round 3 spec §4.1); nil keeps 0:0.
 --- @param path string
 --- @param r number
 --- @param g number
 --- @param b number
+--- @param size number|nil
 --- @return string
-function TM.Escape(path, r, g, b)
+function TM.Escape(path, r, g, b, size)
     local s = TM.TEX_SIZE
-    return ("|T%s:0:0:0:0:%d:%d:0:%d:0:%d:%d:%d:%d|t"):format(path, s, s, s, s, byte(r), byte(g), byte(b))
+    local px = type(size) == "number" and floor(size + 0.5) or 0
+    return ("|T%s:%d:%d:0:0:%d:%d:0:%d:0:%d:%d:%d:%d|t"):format(path, px, px, s, s, s, s, byte(r), byte(g), byte(b))
 end
 
 --- A verdict's mark for a tooltip: the tinted texture escape, its fallback character when the media

@@ -11,7 +11,7 @@
 -- The scenarios grow with the hot paths: the window's repaint (the scaffold; in the compact layout
 -- too, DW-C5), the loot parser's line (DW-25), the Insights tab's recompute over a full log
 -- (issue #12, DW-N1), the Rolls panel's raid refresh (RX-18) and Item Search's tooltip block on a
--- cold and a warm hover (IS-DW-04). The questions are
+-- cold and a warm hover (IS-DW-04), for the blade and for a rich item (ISR3-REV). The questions are
 -- performance-§9's: does each bracket cost nothing with capture off (zero overhead), and is the
 -- stood-down show decision free.
 --
@@ -74,10 +74,22 @@ local ROLLS_PANEL_RAID_CEILING = 95000
 -- return, pinned at 0.
 local ITEM_SEARCH_TIP_COLD = 17500
 local ITEM_SEARCH_TIP_WARM = 6500
+-- The rich hover (ISR3-REV, the round 3 review): the blade reaches none of the badge's costly paths
+-- (the client never has it cached, it has no quest or recipe row, its sources all have spm rows), so
+-- a second pair hovers Linen Cloth, cached with a sell price, an objective of a quest, a reagent of
+-- twelve shipped recipes (one known), dropped by a creature with spw spots alone. NEW ceilings, not
+-- a raise of the blade's: measured 2026-11-26 at 33120 cold and 15352 warm, each ceiling that plus a
+-- margin. The badge's own share is 1152 bytes cold (31968 with the badge off) and 0 warm (the
+-- verdict memo answers). Most of the rest is IS.Get's live half: IS.Live copies every quest and
+-- crafting row per hover (11224 bytes warm over Linen's twelve recipe rows), which is the per-row
+-- design the blade never measured, older than round 3.
+local ITEM_SEARCH_TIP_RICH_COLD = 35000
+local ITEM_SEARCH_TIP_RICH_WARM = 16500
 local BYTE_CEILING = { refreshCaptureOff = 14500, refreshCaptureOn = 14500, showDecisionStoodDown = 0,
     parseCaptureOff = 700, parseCaptureOn = 700, refreshCompactCaptureOff = 11500,
     refreshCompactCaptureOn = 11500, insightsCompute = INSIGHTS_CEILING, rollsPanelRaid = ROLLS_PANEL_RAID_CEILING,
-    itemSearchTipCold = ITEM_SEARCH_TIP_COLD, itemSearchTipWarm = ITEM_SEARCH_TIP_WARM, itemSearchTipInert = 0 }
+    itemSearchTipCold = ITEM_SEARCH_TIP_COLD, itemSearchTipWarm = ITEM_SEARCH_TIP_WARM, itemSearchTipInert = 0,
+    itemSearchTipRichCold = ITEM_SEARCH_TIP_RICH_COLD, itemSearchTipRichWarm = ITEM_SEARCH_TIP_RICH_WARM }
 -- Each bracketed path measured off and on: [off] = on. The bracket with capture off is one upvalue
 -- read and one boolean test, so the off run allocates no more than the on run; the on run adds at
 -- most PAIR_SLACK bytes (the note itself) per iteration. PAIR_NOISE absorbs the two loops'
@@ -88,7 +100,8 @@ local PAIR_SLACK = 64
 local PAIR_NOISE = 1
 local NOTES_PER_ITER = { refreshCaptureOff = 0, refreshCaptureOn = 1, showDecisionStoodDown = 0,
     parseCaptureOff = 0, parseCaptureOn = 1, refreshCompactCaptureOff = 0, refreshCompactCaptureOn = 1,
-    insightsCompute = 0, rollsPanelRaid = 0, itemSearchTipCold = 0, itemSearchTipWarm = 0, itemSearchTipInert = 0 }
+    insightsCompute = 0, rollsPanelRaid = 0, itemSearchTipCold = 0, itemSearchTipWarm = 0, itemSearchTipInert = 0,
+    itemSearchTipRichCold = 0, itemSearchTipRichWarm = 0 }
 
 local N = 1000
 local USAGE = "usage: lua tests/perf.lua [--out <path>] [--label <text>]\n"
@@ -286,6 +299,41 @@ do
     measure("rollsPanelRaid", 200, NS.RollsPanel.Refresh)
 end
 
+-- The rich hover (ISR3-REV): Linen Cloth (a real item id the shipped recipe table names), with
+-- invented ForeverDB rows written into the kit fake before its load: an item row, an objective of
+-- the fixture's errand, and a drop from the wanderer (spw world coordinates, no spm row, so the spot
+-- conversion runs). The client answers it cached with a sell price, the player knows one Tailoring
+-- recipe it is a reagent of, at rank 50. The blade scenarios' numbers are untouched: none of their
+-- rows moves, and the client's half is installed after they are measured.
+local RICH_ID = 2589
+local function richItem(fake, I)
+    local D = fake.data
+    D.item[RICH_ID] = { "Linen Cloth", 1, 0, 5, 7, 5, 0, 9990010 }
+    local wants = D.qx[I.errand][10]
+    wants[#wants + 1] = RICH_ID
+    D.drop[RICH_ID] = { I.wanderer, 1500 }
+end
+-- The client's half, installed after the blade's scenarios so their numbers stay comparable: the
+-- item cached, the skill list, the known recipe (the first Tailoring row of `rows`).
+local function richClient(rows)
+    local real = mock.C_Item.GetItemInfo
+    mock.C_Item.GetItemInfo = function(id)
+        if id == RICH_ID then
+            return "Linen Cloth", "item:2589", 1, 5, 0, "", "", 20, "", 132889, 13, 7, 5, 0
+        end
+        return real(id)
+    end
+    local lines = { { skillLineID = 197, rank = 50 } }
+    mock.C_SkillInfo = { GetNumSkillLines = function() return #lines end,
+        GetSkillLineInfo = function(i) return lines[i] end }
+    local knownSpell
+    for _, r in ipairs(rows) do
+        if r.skillLine == 197 then knownSpell = r.spell; break end
+    end
+    mock.IsPlayerSpell = function(spell) return spell == knownSpell end
+    NS.ItemSearch.Invalidate()
+end
+
 -- Item Search's tooltip block (Item Search spec §4.4): the post call on an item hover, WoW Forever's
 -- alone. On WoW Forever, against the kit's ForeverDB fake once its login load has run, a COLD hover
 -- (the item's static facts emptied first, so the database is read again) and a WARM one (the facts
@@ -301,7 +349,8 @@ do
     local IST, ISM = NS.ItemSearchTip, NS.ItemSearch
     if NS.Constants.FEATURE.itemSearch then
         local FDB = dofile("tests/_kit/mock_foreverdb.lua")
-        FDB.install(mock, { preset = "present" })
+        local fake = FDB.install(mock, { preset = "present" })
+        richItem(fake, FDB.IDS)
         mock.inCombat = false
         mock.fireEvent("PLAYER_ENTERING_WORLD", true, false)
         mock.advance(5)
@@ -311,6 +360,16 @@ do
         check(IST.OnTooltip(tip, data), "the tooltip block was not written")
         measure("itemSearchTipCold", N, function() ISM.Invalidate(); clear(); IST.OnTooltip(tip, data) end)
         measure("itemSearchTipWarm", N, function() clear(); IST.OnTooltip(tip, data) end)
+        -- The badge's own paths (ISR3-REV): Linen, cached by the client with a sell price, wanted by
+        -- a quest, a reagent of a known Tailoring recipe, dropped by a creature with spw spots alone.
+        local rich = { id = RICH_ID }
+        richClient(ISM.Get(RICH_ID).crafting)
+        check(IST.OnTooltip(tip, rich), "the rich item's tooltip block was not written")
+        local v = NS.ItemSearchVerdict.For(RICH_ID, ISM.Get(RICH_ID), ISM.Me())
+        check(v ~= nil and #v.reasons > 0, "the rich item's badge wrote no reasons")
+        check(#ISM.Get(RICH_ID).quests > 0 and #ISM.Get(RICH_ID).crafting > 0, "the rich item has no quest or recipe row")
+        measure("itemSearchTipRichCold", N, function() ISM.Invalidate(); clear(); IST.OnTooltip(tip, rich) end)
+        measure("itemSearchTipRichWarm", N, function() clear(); IST.OnTooltip(tip, rich) end)
     else
         local data = { id = 990101 }
         measure("itemSearchTipInert", N, function() IST.OnTooltip(tip, data) end)

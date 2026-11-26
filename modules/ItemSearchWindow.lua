@@ -141,7 +141,8 @@ local function cellsContext()
     return {
         spots = db and db.Spots or nil, mapName = Compat.MapName, npc = db and db.NPC or nil,
         object = db and db.Object or nil, quest = db and db.Quest or nil, item = itemOf,
-        profession = NS.ItemSearchTip.ProfessionName, coin = Compat.CoinText,
+        profession = NS.ItemSearchTip.ProfessionName, coin = Compat.CoinText, dateText = Compat.DateText,
+        facts = IS.Get,   -- a not-known recipe's recipe item, for where it is learned (ISR3-DW-08)
     }
 end
 
@@ -165,13 +166,10 @@ local function toneRGB(tone)
     return t.r, t.g, t.b
 end
 
--- A quest row's mark (spec §5.4): ! in your log, ? can pick up, the check done, a dim ? too high.
+-- A quest row's mark: the tooltip's own, in the game's style and at its size (round 3 spec §4.2,
+-- item 13).
 local function questMark(status)
-    local IST = NS.ItemSearchTip
-    if status == "log" then return IST.QuestMark("log") end
-    if status == "done" then return IST.QuestMark("done") end
-    if status == "high" then return IST.QuestMark("todo") end
-    return NS.GroupRoster.Colored("?", toneRGB("plain"))
+    return NS.ItemSearchTip.QuestMark(status, C.ITEM_SEARCH.MARK_SIZE)
 end
 
 -- ── the view states ─────────────────────────────────────────────────────────────────────────
@@ -763,7 +761,8 @@ local function paintFooter()
     local st = NS.ForeverDB.Status()
     local meta = IS.State() == "loaded" and NS.ForeverDB.Meta() or nil
     local version = (meta and meta.version) or (type(st) == "table" and st.version) or nil
-    f.foot:SetLeft(ISV.FooterText(fdbState(), version))
+    local full = IS.State() == "loaded" and NS.ForeverDB.FullStatus() == "loaded"
+    f.foot:SetLeft(ISV.FooterText(fdbState(), version, full))
     f.foot:SetRight("")
 end
 
@@ -865,6 +864,9 @@ function ISW.ShowItem(itemID)
     if not (itemID and itemID > 0) or not ISW.Available() then return false end
     shownItem, retries = itemID, 0
     if not ISW.IsShown() then ensureFrame():Show() end
+    -- ForeverDB_Full may load now, the session's first open (round 3 spec §4.6, IS.WantFull: its
+    -- setting, out of combat, never from the tooltip).
+    IS.WantFull()
     ISW.Refresh()
     retryUncached(itemID)
     return true
@@ -916,6 +918,7 @@ function ISW.Open(opts)
     local id = opts and tonumber(opts.itemID)
     if id then return ISW.ShowItem(id) end
     f:Show()
+    IS.WantFull()
     ISW.Refresh()
     if f.searchBox and f.searchBox.SetFocus then f.searchBox:SetFocus() end
     return true

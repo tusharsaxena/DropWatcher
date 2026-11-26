@@ -30,6 +30,12 @@ local function tipRow(r, label)
     return nil
 end
 
+-- Whether a row's tooltip carries `text` as one of its hints.
+local function hint(r, text)
+    for _, h in ipairs(r.tip.hints or {}) do if h == text then return true end end
+    return false
+end
+
 -- ── the tabs ────────────────────────────────────────────────────────────────────────────────
 
 test("item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all", function()
@@ -61,7 +67,8 @@ test("item search tabs: each tab draws exactly the spec's columns, less the two 
     for _, tab in ipairs({ "drops", "vendors", "quests", "crafting", "skinned" }) do
         local flex = 0
         for _, c in ipairs(D[tab].columns) do if c.flex then flex = flex + 1 end end
-        assertEqual(flex, 2, tab .. ": two flex columns")
+        -- Crafting's Status is the third (ISR3-DW-08: a not-known recipe's source, "Sold by <vendor> · <zone>")
+        assertEqual(flex, tab == "crafting" and 3 or 2, tab .. ": its flex columns")
     end
 end)
 
@@ -79,6 +86,28 @@ test("item search tabs: fixed columns keep their width, the flex ones share the 
     local narrow = TABS.Layout(TABS.DEF.crafting.columns, 520)
     assertTrue(narrow.recipe.w >= TABS.FLEX_MIN, "a flex column keeps its least width")
     assertTrue(narrow.skill.w < 130, "the fixed columns gave up room")
+end)
+
+test("item search tabs: the columns start TABS.INSET in and end TABS.INSET short; glyphs and marks are centered", function()
+    local NS = T.newAddon()
+    local TABS = NS.ItemSearchTabs
+    -- round 3 spec §4.1, item 12: the window's own body margin
+    assertEqual(TABS.INSET, 6); assertEqual(TABS.INSET, NS.Constants.WINDOW.INSET)
+    for _, tab in ipairs(TABS.ORDER) do
+        local cols = TABS.DEF[tab].columns
+        local lay = TABS.Layout(cols, 900)
+        -- red under: the first column flush with the table's edge (x = 0)
+        assertEqual(lay[cols[1].key].x, TABS.INSET, tab .. ": the first column inset")
+        local last = lay[cols[#cols].key]
+        assertTrue(last.x + last.w <= 900 - TABS.INSET, tab .. ": the last column ends INSET short")
+        local used = 0
+        for _, c in ipairs(cols) do used = used + lay[c.key].w end
+        used = used + TABS.GAP * (#cols - 1)
+        assertTrue(used <= 900 - 2 * TABS.INSET and used > 900 - 2 * TABS.INSET - #cols, tab .. ": laid across width - 2 * INSET")
+    end
+    assertEqual(TABS.Column("crafting", "glyph").justify, "CENTER", "the glyph column centered")
+    assertEqual(TABS.Column("quests", "mark").justify, "CENTER", "the mark column centered")
+    assertEqual(TABS.Column("drops", "source").justify, nil, "a text column stays left")
 end)
 
 test("item search tabs: a column's click sorts by it, a second flips it; Best for you is the default", function()
@@ -207,9 +236,15 @@ test("item search cells: DROPS FROM's rows: the type from its rank, the colored 
     -- red under: the zone with the most spots when one is in yours (spec §5.4: yours first)
     assertEqual(by.Raptor.cells.zone.text, "Vale +1 zone"); assertEqual(by.Raptor.spot.map, 10)
     assertTrue(by.Raptor.here); assertTrue(by.Raptor.band); assertFalse(by.Skarr.band)
-    assertEqual(by.Raptor.cells.source.tone, "red", "a creature in the hostile color")
+    -- round 3 spec §4.3 (item 6): the color is the creature's rank, never "a creature" in red
+    assertEqual(by.Raptor.cells.source.tone, "plain", "a normal creature in white")
+    assertEqual(by.Skarr.cells.source.tone, "rankRareElite", "a rare elite in its rank's color")
+    assertEqual(by.Skarr.cells.type.tone, "rankRareElite", "its Type in the same color")
     assertEqual(by.Chest.cells.source.tone, "plain", "an object in white")
+    assertEqual(by.Chest.cells.type.tone, "plain")
     assertEqual(by.Trunk.cells.source.quality, 2, "a container's name in its quality color")
+    assertEqual(by.Trunk.cells.type.quality, 2, "and its Type")
+    assertEqual(by["Creature 7"].cells.type.tone, "muted")
     assertEqual(by.Trunk.tip.item, 3, "a container's row shows its game tooltip")
     assertEqual(by["Creature 7"].cells.source.tone, "muted")
     assertEqual(by.Raptor.best, 1, "in your zone: first")
@@ -219,23 +254,30 @@ test("item search cells: DROPS FROM's rows: the type from its rank, the colored 
     assertEqual(tipRow(by.Raptor, "Chance"), "1.6%")
 end)
 
-test("item search cells: SOLD BY's rows: the faction (can't buy for the other side), the price where it was seen", function()
+test("item search cells: SOLD BY's rows: the faction (Horde only for the other side), each row's own price", function()
     local NS = T.newAddon()
     local C = NS.ItemSearchCells
-    local facts = { vendorPrice = { price = 1200, npc = 2 }, vendors = {
+    local facts = { vendors = {
         { id = 1, name = "Darahir", minLevel = 35, maxLevel = 35, faction = "A", subname = "Potions" },
-        { id = 2, name = "Glyx", minLevel = 45, maxLevel = 45, faction = "AH" },
+        { id = 2, name = "Glyx", minLevel = 45, maxLevel = 45, faction = "AH", price = 1200, priceOrigin = "vp" },
         { id = 3, name = "Bro'kin", minLevel = 49, faction = "H" },
     } }
     local rows = C.Vendors(facts, { faction = "A" }, { coin = function(c) return c .. "c" end })
     local by = {}
     for _, r in ipairs(rows) do by[r.cells.vendor.text] = r end
     assertEqual(by.Darahir.cells.faction.text, "Alliance"); assertEqual(by.Glyx.cells.faction.text, "Both")
-    -- red under: a vendor of the other side listed as one you can buy from
-    assertEqual(by["Bro'kin"].cells.faction.text, "can't buy"); assertEqual(by["Bro'kin"].cells.faction.tone, "red")
+    -- red under: a vendor of the other side listed as one you can buy from; round 3 spec §4.4: it
+    -- names the side that can (was "can't buy")
+    assertEqual(by["Bro'kin"].cells.faction.text, "Horde only"); assertEqual(by["Bro'kin"].cells.faction.tone, "red")
+    assertTrue(hint(by["Bro'kin"], "Only Horde characters can buy here: ForeverDB marks this vendor Horde. Only my faction hides these rows."))
     assertTrue(by["Bro'kin"].other); assertEqual(rows[#rows].cells.vendor.text, "Bro'kin", "the other side last")
     assertEqual(by.Glyx.cells.price.text, "1200c"); assertEqual(by.Darahir.cells.price.text, "–")
+    assertTrue(hint(by.Glyx, "Recorded by ForeverDB"))
+    assertTrue(hint(by.Darahir, "No price recorded yet: open this vendor and Drop Watcher remembers it"))
     assertEqual(tipRow(by.Darahir, "Title"), "Potions", "the subname on hover")
+    assertEqual(tipRow(by.Darahir, "Zone"), "No known spawn", "no spot anywhere (round 3 spec §4.4)")
+    local A = C.Vendors(facts, { faction = "H" }, {})
+    assertEqual(A[#A].cells.faction.text, "Alliance only", "the other way round")
 end)
 
 test("item search cells: QUESTS' rows join the objectives, the rewards and the one it starts, with a Role", function()
@@ -253,6 +295,15 @@ test("item search cells: QUESTS' rows join the objectives, the rewards and the o
     assertEqual(texts(rows, "status"), "In your log,Requires level 40,Completed")
     assertEqual(rows[1].cells.mark.mark, "log"); assertEqual(rows[2].cells.mark.mark, "high")
     assertEqual(rows[1].cells.giver.text, "Gnoll · Vale"); assertEqual(rows[1].spot.map, 9)
+    -- round 3 item 13: complete but not turned in, its own status, sorted before the log
+    facts.quests[1].state = "ready"
+    rows = C.Quests(facts, { level = 20, questState = function(id) return id == 3 and "done" or "todo" end },
+        { quest = function(id) return quest[id] end })
+    assertEqual(rows[1].cells.status.text, "Ready to turn in"); assertEqual(rows[1].cells.status.tone, "good")
+    assertEqual(rows[1].cells.mark.mark, "ready")
+    assertTrue(rows[1].sort.status < C.Quests({ quests = { { id = 1, state = "log" } } }, { level = 20 }, {})[1].sort.status,
+        "ready sorts before in your log")
+    assertEqual(C.QuestStatus("ready", 50, 20), "ready", "kept whatever the level")
     assertEqual(rows[2].cells.min.text, "40", "the minimum level from the quest row")
     assertEqual(rows[1].cells.quest.tone, "skillGray", "a level-12 quest is gray for a level-20 player (gray from 13)")
     assertEqual(rows[2].cells.quest.tone, "red", "a level-44 quest is red")
@@ -314,6 +365,112 @@ test("item search cells: CRAFTING's rows: the breakpoints, the uses, what it mak
     assertTrue(rows[2].mine); assertFalse(rows[3].mine)
     assertEqual(rows[1].cells.recipe.tone, "plain"); assertEqual(rows[2].cells.recipe.tone, "muted")
     assertEqual(tipRow(rows[1], "Your rank"), "155 · Yellow: likely to skill up")
+end)
+
+-- ISR3-DW-08: a not-known recipe's source. Invented recipe items: 501 sold by a vendor (and dropped),
+-- 502 a quest's reward, 503 dropped by eight creatures, 504 a world drop, 505 ForeverDB knows no
+-- source of, 506 the context has no facts for.
+local function recipeSourceFacts()
+    local mobs = {}
+    for i = 1, 8 do mobs[i] = { kind = "npc", id = 600 + i, name = ("Mob %d"):format(i), chance = 1 - i / 10 } end
+    return {
+        [501] = { fdb = "loaded", vendors = { { id = 1, name = "Quartermaster" } },
+            drops = { { kind = "npc", id = 2, name = "Raider", chance = 0.1 } } },
+        [502] = { fdb = "loaded", rewardFrom = { { id = 7, level = 10 } } },
+        [503] = { fdb = "loaded", drops = mobs },
+        [504] = { fdb = "loaded", worldMinLevel = 20 },
+        [505] = { fdb = "loaded" },
+    }
+end
+
+local function recipeSourceCtx()
+    local F = recipeSourceFacts()
+    return {
+        facts = function(id) return F[id] end,
+        quest = function(id) return id == 7 and { title = "Fixture Errand" } or nil end,
+        item = function(id) return id == 505 and { name = "Recipe: Fixture Stew" } or nil end,
+        spots = function(kind, id) return kind == "npc" and id == 1 and { [10] = { { x = 0.5, y = 0.5 } } } or nil end,
+        mapName = function(map) return map == 10 and "Fixture Vale" or nil end,
+        profession = function(line) return ({ [185] = "Cooking", [164] = "Blacksmithing" })[line] end,
+    }
+end
+
+-- A live crafting row; `taughtBy` as the model sets it: `taught` its first, the list only for several.
+local function craftRowOf(spell, taughtBy, extra)
+    local r = { spell = spell, name = "Recipe " .. spell, skillLine = 185, count = 1, min = 1, yellow = 50, green = 60,
+        gray = 70, known = false, rank = 100, taught = taughtBy and taughtBy[1],
+        taughtBy = taughtBy and #taughtBy > 1 and taughtBy or nil }
+    for k, v in pairs(extra or {}) do r[k] = v end
+    return r
+end
+
+test("item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = {
+        craftRowOf(1, nil), craftRowOf(2, { 501 }), craftRowOf(3, { 502 }), craftRowOf(4, { 503 }),
+        craftRowOf(5, { 504 }), craftRowOf(6, { 505 }), craftRowOf(7, { 506 }),
+    } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    -- red under: every not-known row still reading "Not known" (the owner's screenshot)
+    assertEqual(by[1].cells.status.text, "Trainer"); assertEqual(by[1].cells.status.tone, "muted")
+    assertNil(by[1].itemID, "a trainer's recipe has no recipe item to open")
+    assertEqual(tipRow(by[1], "Learn"), "from a profession trainer")
+    -- red under: a drop shown before the vendor that sells it (the kinds' order: vendor, quest, drop)
+    assertEqual(by[2].cells.status.text, "Sold by Quartermaster · Fixture Vale"); assertEqual(by[2].cells.status.tone, "plain")
+    assertEqual(by[2].itemID, 501, "the row's click opens the recipe item")
+    assertEqual(tipRow(by[2], "Recipe item"), "Item 501")
+    assertEqual(tipRow(by[2], "Sold by"), "Quartermaster · Fixture Vale")
+    assertEqual(tipRow(by[2], "Drops from"), "Raider", "the other kinds listed too")
+    assertTrue(hint(by[2], "Click: search the recipe item") and hint(by[2], "Shift-click: link the recipe item"))
+    assertEqual(by[3].cells.status.text, "Quest reward: Fixture Errand", "the quest titled from ForeverDB's row")
+    assertEqual(by[4].cells.status.text, "Drops from Mob 1", "the best drop: the highest chance")
+    assertEqual(by[5].cells.status.text, "World drop")
+    assertEqual(by[6].cells.status.text, "Recipe: Fixture Stew", "no source known: the recipe item's name")
+    assertEqual(by[6].cells.status.tone, "muted"); assertEqual(tipRow(by[6], "Sources"), "none known")
+    assertEqual(by[7].cells.status.text, "Item 506"); assertEqual(tipRow(by[7], "Sources"), "ForeverDB is not loaded")
+end)
+
+test("item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = { craftRowOf(4, { 503 }), craftRowOf(8, { 505, 502 }) } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    local drops = {}
+    for _, row in ipairs(by[4].tip.rows) do if row[1] == "Drops from" then drops[#drops + 1] = row[2] end end
+    -- red under: an uncapped list of every creature (a world-drop recipe has scores of them)
+    assertEqual(#drops, C.SOURCE_ROWS + 1)
+    assertEqual(drops[#drops], ("and %d more"):format(8 - C.SOURCE_ROWS))
+    -- red under: the first (lowest id) recipe item kept though it has no known source
+    assertEqual(by[8].itemID, 502); assertEqual(by[8].cells.status.text, "Quest reward: Fixture Errand")
+    assertEqual(tipRow(by[8], "Other recipe items"), "1")
+end)
+
+test("item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local facts = { crafting = {
+        craftRowOf(1, { 501 }, { known = true }),
+        craftRowOf(2, { 501 }, { min = 165 }),
+        craftRowOf(3, { 502 }, { skillLine = 164, rank = nil }),
+        craftRowOf(4, nil, { learned = true }),
+    } }
+    local rows = C.Crafting(facts, { ranks = { [185] = 100 } }, recipeSourceCtx())
+    local by = {}
+    for _, r in ipairs(rows) do by[r.spell] = r end
+    assertEqual(by[1].cells.status.text, "Known"); assertNil(by[1].itemID, "a known recipe opens nothing")
+    assertNil(tipRow(by[1], "Recipe item"))
+    -- red under: "Learn at 165" replaced by the source, or the source dropped from its tooltip
+    assertEqual(by[2].cells.status.text, "Learn at 165"); assertEqual(by[2].itemID, 501)
+    assertEqual(tipRow(by[2], "Sold by"), "Quartermaster · Fixture Vale")
+    assertEqual(by[3].cells.status.text, "No Blacksmithing"); assertEqual(by[3].itemID, 502)
+    -- red under: a profession you lack reading its recipe item's sources (a cold Rune Thread build reads ~300)
+    assertEqual(tipRow(by[3], "Recipe item"), "Item 502"); assertNil(tipRow(by[3], "Quest reward"))
+    assertEqual(by[4].cells.status.text, "Not known", "a recipe the profession window learned has no table source")
 end)
 
 test("item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank", function()

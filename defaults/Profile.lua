@@ -370,15 +370,18 @@ do
             myProfessionsOnly = true,
             -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
-            -- sections, the rows per section (feedback spec §7: 5, replacing dropsShown through
-            -- schema step 16), completed quests hidden, and the order the sections are written in
-            -- (NS.ItemSearchTip.ORDER's; the page's drag list writes it whole).
+            -- sections, the rows per section (feedback spec §7, replacing dropsShown through schema
+            -- step 16; 3 by default since ISR3-DW-07, the owner's addendum, 5 before), completed
+            -- quests hidden, and the order the sections are written in (NS.ItemSearchTip.ORDER's;
+            -- the page's drag list writes it whole). `header` is the separator line and
+            -- `craftSkill` the recipe rows' skill levels (round 3 spec §4.2, §5);
+            -- `badge` the Keep / Hold / Sell / Toss badge and `reasons` its reason lines (§4.5).
             tooltip = {
                 enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                rows = 5, hideCompleted = true,
-                sections = { drops = true, vendors = true, quests = true, crafting = true, skinned = true,
-                    also = false },
-                order = { "drops", "vendors", "quests", "crafting", "skinned", "also" },
+                rows = 3, hideCompleted = true, craftSkill = true, badge = true, reasons = true,
+                sections = { drops = true, gathered = true, vendors = true, quests = true, crafting = true,
+                    skinned = true, also = false },
+                order = { "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" },
             },
             -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
             -- skin's accent, or the custom one) and the waypoint pins. Its rows take the main
@@ -390,6 +393,11 @@ do
             window  = {
                 enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
             },
+            -- Round 3 spec §4.4, §4.6: record the prices the merchant window shows (into
+            -- global.itemSearch.prices, modules/ItemSearchPrices.lua), and when ForeverDB_Full loads:
+            -- "window" (the window's first open of a session) or "never".
+            recordPrices = true,
+            fullDB = "window",
             -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
             -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
             waypoints = "auto",

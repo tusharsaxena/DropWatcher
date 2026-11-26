@@ -278,23 +278,31 @@ default exists on WoW Forever alone (`clients = { "forever" }`, defaults added w
 clients-§4). The tooltip's are read at each hover (`NS.ItemSearchTip.Options`), the window's at each
 repaint (`NS.ItemSearchWindow.Options`). Step 16 carried `itemSearch.tooltip.dropsShown` into
 `itemSearch.tooltip.rows`; step 17 (ISF-DW-05, `NS.RetireItemSearchRows`) deleted the window's
-`density`, `fontSize`, `columns` and `recent` rows' stored values and `global.itemSearch.recent`.
-The Waypoints tab's keys (ISF-DW-07, feedback spec §6) are new and take no step; the window's lock was
+`density`, `fontSize`, `columns` and `recent` rows' stored values and `global.itemSearch.recent`;
+step 18 (ISR3-DW-03, `NS.MigrateGatheredSection`) inserts `gathered` into a stored section order.
+Round 3's other keys (`tooltip.craftSkill`, `tooltip.badge`, `tooltip.reasons`,
+`tooltip.sections.gathered`, `recordPrices`, `fullDB`; Item Search round 3 spec §5) are new and take
+their defaults with no step. The Waypoints tab's keys (ISF-DW-07, feedback spec §6) are new and take no step; the window's lock was
 never a key of its own (it read the main window's `window.locked`), so retiring it deleted nothing.
 
 | Key | Default | Tab | What it is |
 |---|---|---|---|
 | `itemSearch.tooltip.enabled` | `true` | Item tooltip › Tooltip block | Add Item Search to item tooltips: the block under every item tooltip (`modules/ItemSearchTip.lua`), shown only while ForeverDB is loaded. With `itemSearch.window.enabled` off too, ForeverDB never loads (spec §2); its reaction is `NS.ItemSearch.Refresh` |
 | `itemSearch.tooltip.comparison` | `false` | Item tooltip › Tooltip block | the block on the comparison tooltips too (off, the owner) |
-| `itemSearch.tooltip.rows` | `5` | Item tooltip › Tooltip block | the rows each section shows before "and N more", a whole 1 to 20 (Item Search feedback spec §7); it replaced the drops-only `dropsShown` (3, 1 to 10) through schema step 16. The window is never capped |
+| `itemSearch.tooltip.rows` | `3` | Item tooltip › Tooltip block | the rows each section shows before "and N more", a whole 1 to 20 (Item Search feedback spec §7; the default 5 until ISR3-DW-07, the owner's round 3 addendum, which took no step: AceDB never stores a default, so a profile left at 5 now reads 3 and one that chose another count keeps it); it replaced the drops-only `dropsShown` (3, 1 to 10) through schema step 16. The window is never capped |
 | `itemSearch.tooltip.hint` | `true` | Item tooltip › Tooltip block | Show the key hint: the `<key>: open in Item Search` line naming the key bound to Item Search; no line while the key is unbound (feedback spec §1, §7) |
 | `itemSearch.tooltip.shiftOnly` | `false` | Item tooltip › Tooltip block | the block only while Shift is held as the tooltip opens |
-| `itemSearch.tooltip.header` | `true` | Item tooltip › Tooltip block | the rule and the `Drop Watcher · Item Search` title, in the skin's accent |
+| `itemSearch.tooltip.header` | `true` | Item tooltip › Tooltip block | Separator line: the hairline across the tooltip above the block, 8 in from each edge, one pixel tall, in the owner token `dw.tipRule` (round 3 spec §4.2). The block's label line ("Drop Watcher") is drawn whatever this says |
+| `itemSearch.tooltip.badge` | `true` | Item tooltip › Tooltip block | Show the Keep / Hold / Sell / Toss badge: the right side of the block's label line, `<icon> <Verdict> <score> · <Tier>` (`NS.ItemSearch.Verdict`, `modules/ItemSearchVerdict.lua`; round 3 spec §4.5). Off, the label line keeps "Drop Watcher" alone. Advice only: nothing is moved or deleted, and a Low confidence never says Toss |
+| `itemSearch.tooltip.reasons` | `true` | Item tooltip › Tooltip block | Explain the badge: up to two reason lines under the label line (the top contributions by points; Sell and Toss always carry their price), then the hint below High confidence. Dimmed while the badge is off (§4.5) |
+| `itemSearch.tooltip.craftSkill` | `true` | Item tooltip › Tooltip block | Show recipe skill levels: each Crafting row's right side shows the recipe's breakpoints in their skill-up hues (the window's Skill column's parts), then the profession when the rows mix professions; off, the profession alone (round 3 spec §4.2) |
 | `itemSearch.myProfessionsOnly` | `true` | Item tooltip › Tooltip and window | only the recipes of professions the player has a rank in, in the tooltip (the rest counted on one line) and as the window's Crafting default (feedback spec §4); every recipe passes until the player's skills are read. Never dimmed: it also serves the window |
-| `itemSearch.tooltip.sections.<key>` | `drops`, `vendors`, `quests`, `crafting`, `skinned` `true`; `also` `false` | Item tooltip › Sections | each section's switch: Drops from, Sold by, Quests, Crafting, Skinned from (Item Search feedback spec §7), Reward from / starts quest |
+| `itemSearch.tooltip.sections.<key>` | `drops`, `gathered`, `vendors`, `quests`, `crafting`, `skinned` `true`; `also` `false` | Item tooltip › Sections | each section's switch: Drops from, Gathered from (round 3 spec §4.3: the herb, vein and fishing nodes, `<Profession> <skill> · <chance>`), Sold by, Quests, Crafting, Skinned from (Item Search feedback spec §7), Reward from / starts quest |
 | `itemSearch.tooltip.hideCompleted` | `true` | Item tooltip › Sections | completed quests left out of the tooltip (the window lists them) |
-| `itemSearch.tooltip.order` | `{ "drops", "vendors", "quests", "crafting", "skinned", "also" }` | Item tooltip › Sections (`map`, `skipRender`) | the order the sections are written in, set by the tab's drag list and written whole; its check takes known sections, each once, at least one. A partial or stale list reads as its known keys then the rest in the default order (`NS.ItemSearchTip.Options`). the CLI shows it as its entry count, as every `map` row |
+| `itemSearch.tooltip.order` | `{ "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" }` (step 18 inserts `gathered` after `drops` in a stored one) | Item tooltip › Sections (`map`, `skipRender`) | the order the sections are written in, set by the tab's drag list and written whole; its check takes known sections, each once, at least one. A partial or stale list reads as its known keys then the rest in the default order (`NS.ItemSearchTip.Options`). the CLI shows it as its entry count, as every `map` row |
 | `itemSearch.window.enabled` | `true` | Item Search window › Window | the Item Search window can open; off, an open one closes. Its reaction is `NS.ItemSearch.Refresh` |
+| `itemSearch.recordPrices` | `true` | Item Search window › Window | Record vendor prices: on `MERCHANT_SHOW` (and `MERCHANT_UPDATE`, debounced 0.5 s, while the merchant is open) the merchant window's copper prices are written to `global.itemSearch.prices` (below; `modules/ItemSearchPrices.lua`, round 3 spec §4.4). Off, nothing is recorded and what was recorded is still read. Never dimmed |
+| `itemSearch.fullDB` | `"window"` | Item Search window › Window | Load ForeverDB (Full): `window` (When the Item Search window opens: on the window's first open of a session, through LibKa0s-ForeverDB-1.0's `LoadFull`, deferred to the next `PLAYER_REGEN_ENABLED` in combat, never from a tooltip) or `never`. Dimmed while the window is off or `FullStatus()` answers `missing` (round 3 spec §4.6) |
 | `itemSearch.window.barColor`, `itemSearch.window.barFromSkin` | `{ r = 0.90, g = 0.75, b = 0.30 }`, `true` | Item Search window › Bars | DROPS FROM's chance bars: the skin's accent while Use the skin's color is on, else the swatch (no alpha) |
 | `itemSearch.waypoints` | `"auto"` | Waypoints › Waypoints | who draws the way to a pin (Item Search feedback spec §6, `NS.ItemSearchWaypoint.Resolve`): `auto` (Automatic: TomTom when it is loaded, else Drop Watcher's arrow), `tomtom` (TomTom; while it is not loaded, Drop Watcher's arrow) or `arrow` (Drop Watcher's arrow). The client's own user waypoint (`C_Map.SetUserWaypoint`) is never used. Its reaction re-applies the arrow (a choice that hands the way to TomTom takes it down) and repaints the window |
 | `itemSearch.window.pins` | `true` | Waypoints › Waypoints | the map pin on each row of the window with a spot; a click sets a waypoint with the arrow `itemSearch.waypoints` names, and chat says so |
@@ -308,7 +316,7 @@ never a key of its own (it read the main window's `window.locked`), so retiring 
 | `window.minimized` | absent | the minimize button, a double-click on the title bar | the window collapsed to its title bar |
 | `itemSearch.window.point` | absent (WoW Forever alone) | a drag of the Item Search window's title bar, a resize | `{ point, relativePoint, x, y }`; absent, the window opens centered (IS-DW-05) |
 | `itemSearch.window.size` | absent (WoW Forever alone) | a resize from the Item Search window's corner grip | `{ width, height }`, at least 760 x 440; absent, 980 x 600 (Item Search feedback spec §5.1, ISF-DW-05) |
-| `itemSearch.window.tab` | absent (WoW Forever alone) | a click on one of the Item Search window's tabs | the tab picked last (`drops`, `vendors`, `quests`, `crafting`, `skinned`), shown for the next item that has it, else its first tab (feedback spec §5.3, ISF-DW-06) |
+| `itemSearch.window.tab` | absent (WoW Forever alone) | a click on one of the Item Search window's tabs | the tab picked last (`drops`, `gathered`, `vendors`, `quests`, `crafting`, `skinned`), shown for the next item that has it, else its first tab (feedback spec §5.3, ISF-DW-06) |
 | `toast.point` | absent | a drag of the toast in test mode; Reset position clears it | `{ point, relativePoint, x, y }`, the offsets in UIParent's units (feedback-21 G10): a drag stores them times `toast.scale` and they are applied divided by it, so a scale change never moves the anchor; a point saved before G10 was saved at scale 1, so it reads the same |
 
 Each one's owner and every writer are named under
@@ -325,6 +333,7 @@ Each one's owner and every writer are named under
 | `history.v` | absent until the first drop is recorded | the history's own shape stamp, `1` (`NS.History.VERSION`); `NS.History.Normalize` sets it and makes `groups` a list, in place |
 | `history.groups` | absent until the first drop is recorded | the kept drops, below; written by `modules/History.lua` alone, never through the seam |
 | `itemSearch.learnedRecipes` | absent until a profession window is read (WoW Forever alone) | `{ [spell] = { skillLine, reagents, made, name, build } }`: recipes the profession window listed that the shipped table lacks (Item Search spec §4.2 B, `modules/ItemSearchLearn.lua`); the session's first read drops each one the table now covers |
+| `itemSearch.prices` | absent until a merchant window is recorded (WoW Forever alone) | `{ [npcID] = { [itemID] = { p = copper, q = quantity, t = time() } } }`: the prices seen at vendors (Item Search round 3 spec §4.4, `modules/ItemSearchPrices.lua`), behind `itemSearch.recordPrices`. A later visit overwrites the entry; past `C.ITEM_SEARCH.PRICE_CAP` (5000) entries the oldest tenth by `t` goes. Token slots (an extended cost with no copper price) are not recorded. No default and no step |
 | `notices.autoAsk` | absent until auto-ask is first turned on | `true` once auto-ask's one-time chat notice was said (design spec §9.4); written by `modules/AutoAsk.lua` alone, never through the seam |
 
 ### The history (design spec §10)
@@ -463,8 +472,9 @@ it is named.
   after the stand-up when the addon started disabled, and on a confirmed shorter window). Neither
   replaces `global.history` whole, since the retention row's value lives in it.
 - `global.minimap.minimapPos` is LibDBIcon's own write into the table the launcher hands it.
-- `profile.itemSearch.window.point`, `.size` and `.tab`, `global.itemSearch.learnedRecipes`
-  and `char.itemSearch.keyDefaultedV` are Item Search's (WoW Forever alone, DropWatcher#17). Owners
+- `profile.itemSearch.window.point`, `.size` and `.tab`, `global.itemSearch.learnedRecipes`,
+  `global.itemSearch.prices` (round 3; written by `modules/ItemSearchPrices.lua`'s merchant read and
+  its prune) and `char.itemSearch.keyDefaultedV` are Item Search's (WoW Forever alone, DropWatcher#17). Owners
   and writers: `modules/ItemSearchWindow.lua` (`savePoint`, the title bar's drag stop and the resize's
   stop; the size, the resize's stop; `SelectTab`, a tab's click), `modules/ItemSearch.lua` and `modules/ItemSearchLearn.lua`
   (`IS.Learned`, made on first use and pruned once a session; the learner's out-of-combat read of
@@ -533,7 +543,7 @@ on any tab (feedback-4 spec §2, DW-D2).
 ## Migrations
 
 `core/Database.lua`: the load pass is `NS:RunMigrations`, `NS.MIGRATIONS` is a list of steps
-`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 15). The runner
+`{ to, run, perProfile }`, and `NS.SCHEMA_VERSION` is the highest step's `to` (today 18). The runner
 runs in `OnInitialize` straight after `AceDB:New`, before anything reads the profile, and again on
 every profile event. It owns the stamp: a step's `to` is stored only after the step returned, so a
 step that raises is retried on the next load. A `perProfile` step runs for every stored profile in
@@ -556,6 +566,8 @@ the raw SavedVariables, not only the active one. The default stays `0`.
 | 13 | 12 → 13, per profile: Gear only and Include tier tokens become the item kinds (DW-CAT2, issue #13, categories design spec §5.2). A stored `feed.gearOnly = false` (every item class let through) turns every `feed.categories.<key>` on, cosmetics included; a stored `feed.includeTokens` then carries into `feed.categories.tierToken`, so a stored `false` still turns tokens off; both keys go. The key list is a frozen literal, so a kind added later is not turned on by this step. A fresh profile stores neither and passes through (`NS.MigrateItemKinds`) |
 | 14 | 13 → 14, per profile: a picked table text color keeps drawing (SD-RV-DW, LibKa0s v1.108.0). The composer gave Font color its Use the skin's color companion, `window.tableFontColorFromSkin`, on by default (skinning-§9, the owner's R-2); before it a swatch at its default stood for the skin's color and any other value was a pick. A profile whose stored `window.tableFontColor` differs from the default in any channel (a channel AceDB stripped reads as the default) gets the companion off, so its pick still draws; a profile at the default, or with no stored swatch, keeps the new default and follows the skin. Nothing else is written; the stamp keeps a companion the player turns on later from being turned off again (`NS.KeepTableFontColorPick`) |
 | 15 | 14 → 15, per profile: the detail card's Sources chip is retired (IS-DW-07, Item Search spec §4.8). SF-DW-01's Show where it comes from switch, `window.itemSources` (WoW Forever's alone), is removed with the chip, which Item Search replaced; nothing else is written, and a Retail profile, which never stored it, passes through (`NS.RetireItemSources`) |
-| 16 | 15 → 16, per profile: the tooltip's rows per section (ISF-DW-03, Item Search feedback spec §7). A stored `itemSearch.tooltip.dropsShown` (the drops-only count, 1 to 10) is carried into `itemSearch.tooltip.rows` (every section's cap, 1 to 20), whole and in range, unless the profile stores a `rows` off its default (5, frozen in the step); the old key goes either way. A profile that never stored it takes the new default, 5, and a Retail profile passes through (`NS.MigrateTipRows`) |
+| 16 | 15 → 16, per profile: the tooltip's rows per section (ISF-DW-03, Item Search feedback spec §7). A stored `itemSearch.tooltip.dropsShown` (the drops-only count, 1 to 10) is carried into `itemSearch.tooltip.rows` (every section's cap, 1 to 20), whole and in range, unless the profile stores a `rows` off its default (5, frozen in the step, or the running build's, `NS.ItemSearch.TIP_ROWS`, 3 since ISR3-DW-07: AceDB copies it into the active profile before the step runs); the old key goes either way. A profile that never stored it takes the `rows` default (5 then, 3 since ISR3-DW-07), and a Retail profile passes through (`NS.MigrateTipRows`) |
+| 17 | 16 → 17, global: the Item Search window's retired rows (ISF-DW-05, Item Search feedback spec §5). Every stored profile's `itemSearch.window.recent`, `.density`, `.fontSize` and `.columns` are deleted, and so is the account-wide `global.itemSearch.recent`; the window's lock had no key of its own, so nothing of it goes. A Retail account passes through (`NS.RetireItemSearchRows`) |
+| 18 | 17 → 18, per profile: the tooltip's Gathered from section (ISR3-DW-03, Item Search round 3 spec §5). A stored `itemSearch.tooltip.order` (written whole by the page's drag list) that lacks `gathered` gets it right after `drops`, or at the end when `drops` is not in it. A profile with no stored order reads the new default, which has it, and is not written; nothing else changes. `global.itemSearch.prices` has no default and takes no step (`NS.MigrateGatheredSection`) |
 
 A stored-value type change adds a step and raises `NS.SCHEMA_VERSION`.

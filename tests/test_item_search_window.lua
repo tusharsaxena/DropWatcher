@@ -21,6 +21,7 @@ local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the
 local RETAIL_ONLY = T.forever and "the Retail profile's absent case; the Forever cases cover WoW Forever" or nil
 
 local LINEN = 2589   -- Linen Cloth: a First Aid and Tailoring reagent in the shipped table
+local BOLT = 2996    -- Bolt of Linen Cloth: a Tailoring reagent of recipes taught by patterns (ISR3-DW-08)
 
 -- The client's map names and waypoint API, invented: `waypoints` records each user waypoint.
 local function installMap(mm, opts)
@@ -476,6 +477,33 @@ test("item search window: the blade has a tab per section with rows, its count i
     assertEqual(W.ShownTab(), "quests", "an item without the picked tab shows its first")
 end, FOREVER_ONLY)
 
+test("item search window: the Quests tab's marks are the tooltip's, game-style at MARK_SIZE: ready, in the log, can pick up", function()
+    local states = {}
+    local NS = enabled({ setup = function(mm)
+        mm.UnitRace = function() return "R", "R", 1 end
+        mm.UnitClass = function() return "C", "C", 4 end
+        mm.C_QuestLog = {
+            GetLogIndexForQuestID = function(id) if states[id] then return 1 end end,
+            IsQuestFlaggedCompleted = function() return false end,
+            ReadyForTurnIn = function(id) return states[id] == "ready" end,
+        }
+    end })
+    states[IDS.hunt], states[IDS.errand] = "ready", "log"
+    local W, IST, C = NS.ItemSearchWindow, NS.ItemSearchTip, NS.Constants
+    W.ShowItem(IDS.leather)
+    W.Frame().tabs.quests:__fire("OnClick", "LeftButton")
+    local marks, titles = {}, {}
+    for _, row in ipairs(W.TableRows()) do
+        marks[#marks + 1] = row.cells[1].text:GetText()
+        titles[#titles + 1] = row.cells[2].text:GetText()
+    end
+    -- red under: the window's own mark mapping (a `?` for can, the old `!` for the log)
+    assertEqual(marks[1], IST.QuestMark("ready", C.ITEM_SEARCH.MARK_SIZE), "ready to turn in ranks first")
+    assertEqual(marks[2], IST.QuestMark("log", C.ITEM_SEARCH.MARK_SIZE))
+    assertTrue(marks[1]:find("ActiveQuestIcon:14:14:", 1, true) ~= nil)
+    assertEqual(table.concat(titles, ","), "Fixture Hunt,Fixture Errand")
+end, FOREVER_ONLY)
+
 test("item search window: the section header counts the rows, names the sort and shows Reset only off the default", function()
     local NS = enabled()
     local W = NS.ItemSearchWindow
@@ -517,6 +545,46 @@ test("item search window: a column's title sorts the table, and a second click f
     assertEqual(W.TableRows()[1].cells[1].text:GetText(), "Fixture Gnoll", "level 10 first")
     assertTrue(level.arrow:IsShown(), "the arrow shows the sort")
     assertEqual(W.Frame().section.note:GetText(), "sorted: Level, high to low")
+    -- round 3 spec §4.1, item 11: LootHistory's solid triangles, sort-down high to low, sort-up low to high
+    assertTrue(level.arrow:GetTexture():find("sort-down", 1, true) ~= nil, "high to low: sort-down")
+    assertEqual(level.arrow:GetAlpha(), 1, "the sort in force: full alpha")
+    level:__fire("OnClick", "LeftButton")
+    assertTrue(level.arrow:GetTexture():find("sort-up", 1, true) ~= nil, "low to high: sort-up")
+end, FOREVER_ONLY)
+
+test("item search window: a column title lights under the pointer and shows the triangle its click would give", function()
+    local NS = enabled()
+    local W = NS.ItemSearchWindow
+    W.ShowItem(IDS.blade)
+    local g = W.Frame().grid
+    local by = {}
+    for _, b in ipairs(g.labels) do if b:IsShown() and b.key then by[b.key] = b end end
+    local level, chance = by.level, by.chance
+    assertTrue(level ~= nil and chance ~= nil, "the Level and Chance labels")
+    local function same(fs, token)
+        local r, gg, b = fs:GetTextColor()
+        local er, eg, eb = NS.SkinColor(token)
+        return math.abs(r - er) < 1e-6 and math.abs(gg - eg) < 1e-6 and math.abs(b - eb) < 1e-6
+    end
+    assertTrue(same(level.text, "list.header.text"), "at rest: the header's text")
+    assertFalse(level.arrow:IsShown(), "at rest and not the sort: no triangle")
+    level:__fire("OnEnter")
+    -- red under: a header that does not look clickable (round 3 item 5)
+    assertTrue(same(level.text, "text.link"), "hovered: the marks' hot tone")
+    assertTrue(level.arrow:IsShown(), "hovered: the next sort's triangle")
+    assertEqual(level.arrow:GetAlpha(), NS.ItemSearchGrid.ARROW_HINT_ALPHA, "faint")
+    assertTrue(level.arrow:GetTexture():find("sort-up", 1, true) ~= nil, "Level's first click sorts low to high")
+    local tip = NS.Window.TooltipOf(level)
+    assertEqual(tip[#tip]:find("Click: sort by Level; click again to reverse", 1, true) ~= nil, true, "the hint names the column")
+    level:__fire("OnLeave")
+    assertTrue(same(level.text, "list.header.text")); assertFalse(level.arrow:IsShown(), "left: no triangle")
+    chance:__fire("OnEnter")
+    assertTrue(chance.arrow:GetTexture():find("sort-down", 1, true) ~= nil, "Chance's first click sorts high to low")
+    chance:__fire("OnLeave")
+    -- the untitled columns (the pin) get no label at all, and so no hover
+    for _, b in ipairs(g.labels) do
+        if b:IsShown() then assertTrue(b.key ~= nil, "every shown label sorts") end
+    end
 end, FOREVER_ONLY)
 
 test("item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash", function()
@@ -565,13 +633,46 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     for _, row in ipairs(W.TableRows()) do
         assertTrue(row.cells[3].text:GetText() == "First Aid", "only First Aid's recipes")
         assertTrue(row.cells[1].text:GetText() ~= "", "a glyph")
+        -- round 3 spec §4.1: the tooltip's glyph at its explicit size, centered in its column
+        assertTrue(row.cells[1].text:GetText():find(":14:14:", 1, true) ~= nil, "the glyph at GLYPH_SIZE, as in the tooltip")
+        assertEqual(row.cells[1].text:GetJustifyH(), "CENTER", "the glyph column centered")
     end
+    assertEqual(f.grid.layout.glyph.x, NS.ItemSearchTabs.INSET, "the first column inset off the table's edge")
     local shown = #W.TableRows()
     f.section.chip:__fire("OnClick", "LeftButton")
     assertEqual(f.section.chip.label:GetText(), "All professions")
     assertTrue(#W.TableRows() > shown, "every profession's recipes")
     assertEqual(NS.Window.TooltipOf(f.section.chip)[1], "All professions")
     assertFalse(NS.addon.db.profile.itemSearch.myProfessionsOnly == false, "the chip is not saved")
+end, FOREVER_ONLY)
+
+test("item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08)", function()
+    local NS = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 40, skillID = 129 }, { name = "Tailoring", rank = 40, skillID = 197 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+    end })
+    local W = NS.ItemSearchWindow
+    W.ShowItem(LINEN)
+    local byName, taught = {}, nil
+    for _, row in ipairs(W.TableRows()) do byName[row.dwTip.title] = row end
+    -- red under: Linen Bandage (no recipe item in the shipped table) still reading "Not known"
+    local bandage = byName["Linen Bandage"]
+    assertTrue(bandage ~= nil, "Linen Bandage, a First Aid recipe of Linen")
+    local found = false
+    for _, c in ipairs(bandage.cells) do found = found or c.text:GetText() == "Trainer" end
+    assertTrue(found, "its Status: Trainer")
+    assertNil(bandage.dwItem, "a trainer's recipe opens nothing")
+    -- Bolt of Linen Cloth's Tailoring patterns: the kit's ForeverDB knows no source of their recipe
+    -- items, so such a row's Status is the item, and its click opens it.
+    W.ShowItem(BOLT)
+    for _, row in ipairs(W.TableRows()) do if row.dwItem and not taught then taught = row end end
+    assertTrue(taught ~= nil, "a Bolt of Linen Cloth recipe the shipped table gives a recipe item")
+    local text = table.concat(NS.Window.TooltipOf(taught), "\n")
+    assertTrue(text:find("Recipe item", 1, true) ~= nil and text:find("Click: search the recipe item", 1, true) ~= nil, text)
+    local item = taught.dwItem
+    taught:__fire("OnClick", "LeftButton")
+    -- red under: a row click that opens nothing (the owner's "where to get the recipe from")
+    assertEqual(W.ShownItem(), item, "the recipe item shown")
 end, FOREVER_ONLY)
 
 test("item search window: the Crafting tab's filter follows Only professions you know when the setting moves", function()
@@ -715,6 +816,25 @@ test("item search window: a stand-down takes Drop Watcher's arrow down", functio
     assertFalse(inst:IsShown())
 end, FOREVER_ONLY)
 
+-- Audit row 14 (docs/item-search-tooltips.md): the arrow is a HUD display of one icon, a body
+-- element whose window group is itself.
+test("item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE", function()
+    local NS, m = enabled()
+    NS.ItemSearchWindow.SetPin({ map = IDS.mapA, x = 0.5, y = 0.25 }, "Fixture Gnoll")
+    local f = NS.ItemSearchWaypoint.Instance():Frame()
+    assertTrue(f ~= nil, "the arrow has a frame")
+    local spy = T.tipSpy(m)
+    m.GameTooltip.__anchor = nil
+    f:__fire("OnEnter")
+    local c = spy.first()
+    -- red under: the client's default spot (ANCHOR_CURSOR or a corner anchor), or a chrome attach
+    assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", "owned at ANCHOR_NONE")
+    assertTrue(c ~= nil and c.fn == "PlaceBeside", "the body rule")
+    assertTrue(c.el == f, "level with the arrow itself")
+    assertTrue(c.group.main == f, "the arrow is its own window group")
+    f:__fire("OnLeave")
+end, FOREVER_ONLY)
+
 test("item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way", function()
     local NS, m = enabled()
     local R = NS.SchemaRuntime.FindRow
@@ -743,4 +863,176 @@ test("item search window: a stand-down closes it", function()
     NS.addon:SlashEnabled(false)
     -- red under: a window left open while the addon is off
     assertFalse(NS.ItemSearchWindow.IsShown())
+end, FOREVER_ONLY)
+
+-- ── the window: where every tooltip opens (ISR3-DW-09) ──────────────────────────────────────
+
+-- The tooltip anchor audit (docs/item-search-tooltips.md): every tooltip the Item Search window
+-- shows, by where its element sits (standalone-windows, *Tooltip placement*). The CHROME are the
+-- tabs, the Clear button, the section headers' marks and chips, and the title bar's marks:
+-- PlaceAttached on the control itself. Every other one is a BODY element (a row, a pin, a column
+-- label, the Makes cell, a match, the item header's icon and name): PlaceBeside on the row it sits
+-- in, beside its window group. All of them owned at ANCHOR_NONE.
+
+local GAP = 2   -- TIP_GAP, the standard's and the library's
+
+-- Record every widget AttachTooltip hooks from here on: { w, place, file }.
+local function tipRecorder(NS)
+    local list, real = {}, NS.Window.AttachTooltip
+    NS.Window.AttachTooltip = function(w, fn, place)
+        list[#list + 1] = { w = w, place = place,
+            file = tostring(debug.getinfo(2, "S").source):match("modules/([%w_]+)%.lua") or "?" }
+        return real(w, fn, place)
+    end
+    return list
+end
+
+local function outermost(f, UIParent)
+    for _ = 1, 32 do
+        local p = f.GetParent and f:GetParent()
+        if type(p) ~= "table" or p == f or p == UIParent then return f end
+        f = p
+    end
+    return f
+end
+
+-- The addon with First Aid known, its window built on Linen (the Crafting tab: Makes cells).
+local function craftingWindow(record)
+    local list
+    local NS, m = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 40, skillID = 129 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+    end })
+    if record then list = tipRecorder(NS) end
+    NS.ItemSearchWindow.ShowItem(LINEN)
+    return NS, m, list
+end
+
+-- A Crafting row whose Makes cell stands for an item, and that cell's overlay.
+local function makesCell(NS)
+    for _, row in ipairs(NS.ItemSearchWindow.TableRows()) do
+        if row.link and row.link:IsShown() and row.link.itemID then return row, row.link end
+    end
+end
+
+test("item search tooltips: the chrome opens attached to its control, every body tooltip beside the window", function()
+    local NS, m, list = craftingWindow(true)
+    local W = NS.ItemSearchWindow
+    W.SlashSearch("blade")
+    W.ShowItem(LINEN)
+    for _, key in ipairs({ "drops", "vendors", "quests", "skinned", "crafting" }) do W.SelectTab(key) end
+    local f = W.Frame()
+    local chrome = { [f.clearButton] = "Clear", [f.section.chip] = "the My professions chip",
+        [f.matchHead.chip] = "the matches' chip" }
+    for key, tab in pairs(f.tabs) do chrome[tab] = "the " .. key .. " tab" end
+    for key, b in pairs(f.section.marks) do chrome[b] = "the section's " .. key .. " mark" end
+    for key, b in pairs(f.matchHead.marks) do chrome[b] = "the matches' " .. key .. " mark" end
+    local spy = T.tipSpy(m)
+    local seen = { chrome = 0, body = 0 }
+    for i, r in ipairs(list) do
+        local what = r.file .. " #" .. i .. (chrome[r.w] and (" (" .. chrome[r.w] .. ")") or "")
+        local want = (chrome[r.w] or r.file == "WindowTitleBar") and "chrome" or "body"
+        -- red under: the Clear button, a tab or a header mark placed as a body element, or a row,
+        -- a pin or a column label attached to itself
+        assertEqual(r.place or "body", want, what)
+        local lines = r.w.tooltip and { r.w.tooltip() } or {}
+        if #lines > 0 then
+            spy.reset()
+            m.GameTooltip.__anchor = nil
+            r.w:__fire("OnEnter")
+            local c = spy.first()
+            assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", what)
+            assertTrue(c ~= nil, what .. ": a placer was called")
+            if want == "chrome" then
+                assertEqual(c.fn, "PlaceAttached", what)
+                assertTrue(c.el == r.w, what .. ": attached to the control itself")
+            else
+                assertEqual(c.fn, "PlaceBeside", what)
+                assertTrue(c.el == NS.RowTooltip.RowOf(r.w), what .. ": level with the row it sits in")
+                assertTrue(c.group.main == outermost(r.w, m.UIParent), what .. ": beside its window group")
+            end
+            r.w:__fire("OnLeave")
+            seen[want] = seen[want] + 1
+        end
+    end
+    assertTrue(seen.chrome >= 8, "the sweep hovered " .. seen.chrome .. " chrome controls")
+    assertTrue(seen.body >= 10, "the sweep hovered " .. seen.body .. " body elements")
+    -- The item tooltips: the Makes cell, a match row, the header's icon and name.
+    local row, link = makesCell(NS)
+    assertTrue(link ~= nil, "a Crafting row's Makes cell stands for an item")
+    local items = { { link, row, "the Makes cell" }, { f.icon, f.icon, "the header's icon" },
+        { f.nameButton, f.nameButton, "the header's name" } }
+    local match = W.MatchRows()[1]
+    if match then items[#items + 1] = { match, match, "a match row" } end
+    assertTrue(#items == 4, "a match row to hover")
+    for _, it in ipairs(items) do
+        spy.reset()
+        m.GameTooltip.__anchor = nil
+        it[1]:__fire("OnEnter")
+        local c = spy.first()
+        assertEqual(m.GameTooltip.__anchor, "ANCHOR_NONE", it[3])
+        assertTrue(c ~= nil and c.fn == "PlaceBeside", it[3] .. ": the body rule")
+        assertTrue(c.el == it[2], it[3] .. ": level with its row")
+        assertTrue(c.group.main == f, it[3] .. ": beside the window")
+        it[1]:__fire("OnLeave")
+    end
+end, FOREVER_ONLY)
+
+-- The window at 600..1500 (bottom 100, top 800) on a 1920 x 1080 screen, a 320 x 100 tooltip; the
+-- Makes row's top at 600.
+local function makesOnScreen()
+    local NS, m = craftingWindow(false)
+    local scr = T.tipScreen(m, { width = 1920, height = 1080 })
+    local f = NS.ItemSearchWindow.Frame()
+    T.tipRect(f, 600, 100, 1500, 800)
+    local row, link = makesCell(NS)
+    T.tipRect(row, 600, 580, 1500, 600)
+    local tip = m.GameTooltip
+    tip.IsOwned = function(self, owner) return self.__owner == owner end
+    return NS, m, scr, f, row, link, tip
+end
+
+test("item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row", function()
+    local _, m, _, _, _, link = makesOnScreen()
+    link:__fire("OnEnter")
+    local pts, rel, x, y = T.tipPoint(m)
+    -- red under: the client's default spot, or the cell's ANCHOR_RIGHT corner (the owner's Image #115)
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "its TOPLEFT on the screen")
+    assertTrue(rel == m.UIParent, "one absolute point")
+    assertEqual(x, 1500 + GAP, "a gap past the window's right edge")
+    assertEqual(y, 600, "level with the row's top")
+end, FOREVER_ONLY)
+
+test("item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again", function()
+    local _, m, _, _, _, link, tip = makesOnScreen()
+    link:__fire("OnEnter")
+    -- the client re-anchors it on the cell's corner as the item's data arrives (the comparison
+    -- anchor type): the next frame puts it back
+    tip:ClearAllPoints()
+    tip:SetPoint("BOTTOMLEFT", link, "TOPRIGHT", 0, 0)
+    m.advance(0.01)
+    local pts, rel, x, y = T.tipPoint(m)
+    -- red under: an item tooltip placed once, at Show, and left where the client moved it
+    assertEqual(pts, "TOPLEFT>BOTTOMLEFT", "back beside the window")
+    assertTrue(rel == m.UIParent); assertEqual(x, 1500 + GAP); assertEqual(y, 600)
+    -- the item arrives and the tooltip grows past the screen's right edge: left of the window now
+    tip.GetWidth = function() return 500 end
+    tip:__fire("OnSizeChanged", 500, 100)
+    pts, rel, x, y = T.tipPoint(m)
+    -- red under: the first size's spot, which the screen clamp slides back over the window
+    assertEqual(pts, "TOPRIGHT>BOTTOMLEFT", "its TOPRIGHT, left of the window")
+    assertTrue(rel == m.UIParent); assertEqual(x, 600 - GAP); assertEqual(y, 600)
+    -- another owner takes the tooltip: a size change no longer moves it for the cell
+    tip:SetOwner(m.UIParent, "ANCHOR_NONE")
+    tip:SetPoint("CENTER", m.UIParent, "CENTER", 0, 0)
+    tip:__fire("OnSizeChanged", 500, 120)
+    assertEqual((T.tipPoint(m)), "CENTER>CENTER", "left where its new owner put it")
+    -- hidden: it stops following too, though the cell owns it still
+    link:__fire("OnEnter")
+    tip:__fire("OnHide")
+    tip:ClearAllPoints()
+    tip:SetPoint("CENTER", m.UIParent, "CENTER", 0, 0)
+    tip:__fire("OnSizeChanged", 500, 140)
+    m.advance(0.01)
+    assertEqual((T.tipPoint(m)), "CENTER>CENTER", "OnHide ends it")
 end, FOREVER_ONLY)

@@ -274,3 +274,54 @@ function RT.PlaceOrFallback(tip, owner)
     if side then return side end
     return attachAbove(tip, RT.RowOf(owner))
 end
+
+-- LATE GROWTH (ISR3-DW-09, the owner's Image #115 of 2026-11-26: the Item Search window's Makes
+-- cell opened its item's tooltip at the top right of the screen, over the window). An item the
+-- client has not cached yet (a recipe's product the player never saw) shows a short "Retrieving
+-- item information" tooltip at Show, which the body rule places; the client then refills it when
+-- the item arrives and it grows. A tooltip placed for its first size no longer fits where it was
+-- put: the screen clamp slides it back over the window, and the comparison anchor type the placer
+-- set re-anchors it on the owner's corner. RT.PlaceItemTip places it, then places it again, by the
+-- same body rule, on each OnSizeChanged and once on the next frame, while the same owner still
+-- owns it (LibKa0s-Tooltip-1.0's Replace, "for a tooltip that grew after it was placed (item data
+-- arriving after Show)"). The hooks go on a tooltip once; its OnHide, or another owner, ends it.
+local follow = setmetatable({}, { __mode = "k" })   -- tooltip -> the owner it is placed for
+local hooked = setmetatable({}, { __mode = "k" })
+local placing = false
+
+local function owns(tip, owner)
+    local fn = tip.IsOwned
+    if type(fn) ~= "function" then return true end
+    return fn(tip, owner) and true or false
+end
+
+local function regrow(tip)
+    local owner = follow[tip]
+    if not owner or placing then return end
+    if not owns(tip, owner) then follow[tip] = nil; return end
+    placing = true
+    RT.PlaceOrFallback(tip, owner)
+    placing = false
+end
+
+local function unfollow(tip) follow[tip] = nil end
+
+--- RT.PlaceOrFallback for an ITEM tooltip, which the client may fill again after Show: it is placed
+--- again, by the same rule, when it changes size and once on the next frame, while `owner` owns it.
+--- Answers what the first placement did.
+--- @param tip table a GameTooltip, shown
+--- @param owner table the hovered frame
+--- @return string
+function RT.PlaceItemTip(tip, owner)
+    local side = RT.PlaceOrFallback(tip, owner)
+    follow[tip] = owner
+    if not hooked[tip] and type(tip.HookScript) == "function" then
+        hooked[tip] = true
+        tip:HookScript("OnSizeChanged", regrow)
+        tip:HookScript("OnHide", unfollow)
+    end
+    if C_Timer and C_Timer.After then
+        C_Timer.After(0, function() if follow[tip] == owner then regrow(tip) end end)
+    end
+    return side
+end

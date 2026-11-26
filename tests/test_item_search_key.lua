@@ -1,6 +1,7 @@
 -- tests/test_item_search_key.lua — the Item Search key (DropWatcher#17, Item Search spec §4.6, the
--- owner's rules; modules/ItemSearchKey.lua): a press over an item tooltip opens that item, with none
--- it opens empty, while open it closes over the same item or no tooltip and switches over another;
+-- owner's rules; modules/ItemSearchKey.lua): a press over a hovered item shows that item (over the
+-- item already shown it stays open and repaints nothing), with no hover it toggles the window, and a
+-- chat link's pinned ItemRefTooltip is not a hover (Item Search round 3 spec §4.7);
 -- and the one-time Alt-Ctrl-D default, set once per character and only on a free key (re-tried once,
 -- Item Search feedback spec §1, where the first try stored the dead chord CTRL-ALT-D). The binding
 -- model is the kit's (tests/_kit/mock_bindings.lua); the item tooltips are tests/mock_tooltip_data.lua's
@@ -49,10 +50,19 @@ test("item search key: the press's decision follows the owner's table", function
     local D = NS.ItemSearchKey.Decide
     assertEqual(D(false, nil, nil), "open", "closed, no tooltip: open empty")
     assertEqual(D(false, nil, 7), "show", "closed, over an item: open on it")
-    -- red under: a press over the same item that switches instead of closing (the owner's rule)
-    assertEqual(D(true, 7, 7), "close", "open, over the item shown: close")
-    assertEqual(D(true, 7, nil), "close", "open, no tooltip: close")
+    -- red under: round 2's rule, which closed the window over the item it showed (round 3 spec §4.7)
+    assertEqual(D(true, 7, 7), "show", "open, over the item shown: stays on it, never closes")
+    assertEqual(D(true, nil, 7), "show", "open empty, over an item: show it")
+    assertEqual(D(true, 7, nil), "close", "open, no hover: toggle closed")
+    assertEqual(D(true, nil, nil), "close", "open empty, no hover: toggle closed")
     assertEqual(D(true, 7, 8), "show", "open, over another item: switch")
+end)
+
+test("item search key: a pinned chat link's tooltip is not a hover; only GameTooltip and its comparisons are read", function()
+    local NS = T.newAddon()
+    local names = table.concat(NS.ItemSearchKey.TOOLTIPS, ",")
+    -- red under: ItemRefTooltip or its comparisons still in the list (round 3 spec §4.7)
+    assertEqual(names, "GameTooltip,ShoppingTooltip1,ShoppingTooltip2")
 end)
 
 -- ── a press ─────────────────────────────────────────────────────────────────────────────────
@@ -67,7 +77,7 @@ test("item search key: with no item tooltip a press opens the window empty, and 
     assertFalse(W.IsShown(), "no tooltip while open: close")
 end, FOREVER_ONLY)
 
-test("item search key: over an item tooltip it opens that item; over the same one it closes, over another it switches", function()
+test("item search key: over an item tooltip it opens that item; over another it switches, over the same one it stays", function()
     local NS, m, tdp = enabled({ world = true })
     local W = NS.ItemSearchWindow
     local tip = tdp.tooltip("GameTooltip")
@@ -78,26 +88,56 @@ test("item search key: over an item tooltip it opens that item; over the same on
     press(m)
     -- red under: a press over another item that closes the window
     assertTrue(W.IsShown()); assertEqual(W.ShownItem(), IDS.leather, "switched")
+    local tab = W.ShownTab and W.ShownTab()
+    local shows = 0
+    local real = W.ShowItem
+    W.ShowItem = function(...) shows = shows + 1; return real(...) end
+    assertEqual(NS.ItemSearchKey.Press(), "show")
+    W.ShowItem = real
+    -- red under: round 2's close over the item shown, or a repaint of the same item (round 3 spec §4.7)
+    assertTrue(W.IsShown(), "over the item shown: stays open")
+    assertEqual(W.ShownItem(), IDS.leather)
+    assertEqual(shows, 0, "nothing new to paint")
+    if W.ShownTab then assertEqual(W.ShownTab(), tab, "keeps its tab") end
+    tdp.hide(tip)
     press(m)
-    assertFalse(W.IsShown(), "over the item shown: close")
+    assertFalse(W.IsShown(), "no hover: toggle closed")
 end, FOREVER_ONLY)
 
-test("item search key: a chat link's tooltip and a comparison tooltip count; a hidden one does not", function()
+test("item search key: a comparison tooltip counts; a hidden one and a pinned chat link's do not", function()
     local NS, m, tdp = enabled({ world = true })
     local W = NS.ItemSearchWindow
     local game = tdp.tooltip("GameTooltip")
     local ref = tdp.tooltip("ItemRefTooltip")
+    local refShop = tdp.tooltip("ItemRefShoppingTooltip1")
     local shop = tdp.tooltip("ShoppingTooltip1")
     tdp.show(game, IDS.blade); tdp.hide(game)
     tdp.show(ref, IDS.cloak)
+    tdp.show(refShop, IDS.leather)
     press(m)
-    -- red under: a read of GameTooltip alone, or of a hidden tooltip's stale item
-    assertEqual(W.ShownItem(), IDS.cloak, "ItemRefTooltip")
-    W.Close()
-    tdp.hide(ref)
+    -- red under: a pinned ItemRefTooltip (or its comparison) read as a hover, or a hidden
+    -- tooltip's stale item (round 3 spec §4.7): no hover, so the key toggles the window open empty
+    assertTrue(W.IsShown()); assertNil(W.ShownItem(), "a pinned chat link is no hover: opened empty")
+    press(m)
+    assertFalse(W.IsShown(), "still no hover: toggle closed")
     tdp.show(shop, IDS.shard)
     press(m)
     assertEqual(W.ShownItem(), IDS.shard, "a comparison tooltip")
+end, FOREVER_ONLY)
+
+test("item search key: with the window open on an item and a chat link pinned, a press with no hover closes it", function()
+    local NS, m, tdp = enabled({ world = true })
+    local W = NS.ItemSearchWindow
+    local game = tdp.tooltip("GameTooltip")
+    local ref = tdp.tooltip("ItemRefTooltip")
+    tdp.show(game, IDS.blade)
+    press(m)
+    assertEqual(W.ShownItem(), IDS.blade)
+    tdp.hide(game)
+    tdp.show(ref, IDS.cloak)
+    press(m)
+    -- red under: the pinned link's item shown instead of the toggle (round 3 spec §4.7)
+    assertFalse(W.IsShown(), "no hover: toggle closed")
 end, FOREVER_ONLY)
 
 test("item search key: stood down, a press refuses with the one line and opens nothing", function()
