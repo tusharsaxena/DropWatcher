@@ -5040,7 +5040,8 @@ Linen Cloth → in the tooltip's Crafting rows (the profession alone, or after t
 professions mix) and the Gathered from rows, each profession's name has one fixed color: Alchemy,
 Herbalism, Tailoring, First Aid, Cooking and the rest each differ. The window's Crafting and
 Gathered from Profession columns use the same colors. None is orange, yellow, green, gray or red,
-none matches a Type color, and each reads clearly on the tooltip. Result:
+none matches a Type color, none reads as plain white text (Mining is a verdigris teal; it was a pale
+near-white before round 4's review), and each reads clearly on the tooltip. Result:
 
 **ITEM-SEARCH-50. The orange start always, your band bracketed (R4-DW-05, R4-DW-SM5).** With Alchemy
 known, show Peacebloom's Crafting tab → Elixir of Minor Defense's Skill reads `1 55 75 95`: the

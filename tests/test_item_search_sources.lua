@@ -343,6 +343,9 @@ test("item search sources: every profession has its own fixed tone, clear of the
         assertTrue(not (t.r > 0.8 and t.g < 0.4 and t.b < 0.4), profKeys[i] .. " is not a red")
         -- readable on the dark tooltip: a relative luminance well above its near-black background
         assertTrue(0.2126 * t.r + 0.7152 * t.g + 0.0722 * t.b > 0.3, profKeys[i] .. " is light enough")
+        -- red under: Mining's pale near-white (#C8D8E4), which read as uncolored text beside the plain
+        -- tone (R4-REV): every profession is clearly a color, its channels at least 0.2 apart
+        assertTrue(math.max(t.r, t.g, t.b) - math.min(t.r, t.g, t.b) >= 0.2, profKeys[i] .. " is a color, not a gray")
     end
 end)
 

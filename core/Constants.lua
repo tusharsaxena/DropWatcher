@@ -244,6 +244,9 @@ local FIXED_TONE = {
     -- and Gathered from Profession columns. None is a skill-up hue (orange, yellow, green, gray) or
     -- red, none repeats a Type tone above, and each reads on the dark tooltip (contrast 4.8:1 or
     -- more on #0B0B0B; the closest pair, Leatherworking and Skinning, about 22 apart in CIELAB).
+    -- Each is clearly a color (its channels 0.2 or more apart): Mining is verdigris, copper ore's
+    -- patina (#1A8F94, contrast 5.0:1, 29.6 or more from every other tone here in CIELAB), where its
+    -- first pale near-white read as uncolored text (R4-REV).
     profAlchemy        = { r = 0.310, g = 0.765, b = 0.969 },
     profBlacksmithing  = { r = 0.557, g = 0.643, b = 0.784 },
     profEngineering    = { r = 0.431, g = 0.608, b = 1.000 },
@@ -255,7 +258,7 @@ local FIXED_TONE = {
     profLeatherworking = { r = 0.725, g = 0.506, b = 0.310 },
     profSkinning       = { r = 0.690, g = 0.416, b = 0.376 },
     profHerbalism      = { r = 0.369, g = 0.902, b = 0.659 },
-    profMining         = { r = 0.784, g = 0.847, b = 0.894 },
+    profMining         = { r = 0.100, g = 0.560, b = 0.580 },
     profFishing        = { r = 0.541, g = 0.490, b = 1.000 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
