@@ -27,6 +27,7 @@ local ROWS = {
     { "itemSearch.tooltip.reasons",           "Item tooltip", "Tooltip block" },
     { "itemSearch.tooltip.craftSkill",        "Item tooltip", "Tooltip block" },
     { "itemSearch.myProfessionsOnly",         "Item tooltip", "Tooltip and window" },
+    { "itemSearch.hideOtherFaction",          "Item tooltip", "Tooltip and window" },
     { "itemSearch.tooltip.sections.drops",    "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.gathered", "Item tooltip", "Sections" },
     { "itemSearch.tooltip.sections.vendors",  "Item tooltip", "Sections" },
@@ -165,6 +166,7 @@ test("item search settings: the defaults are the spec's (on, off, on, on, off; 3
     end
     assertEqual(S("itemSearch.tooltip.rows"), 3, "3 rows (ISR3-DW-07)"); assertTrue(S("itemSearch.tooltip.hideCompleted"))
     assertTrue(S("itemSearch.myProfessionsOnly"), "only the professions you know (feedback spec §4)")
+    assertTrue(S("itemSearch.hideOtherFaction"), "the other faction's vendors hidden (R4-DW-08, the owner)")
     assertEqual(table.concat(S("itemSearch.tooltip.order"), ","), table.concat(NS.ItemSearchTip.ORDER, ","))
     assertTrue(S("itemSearch.window.barFromSkin"))
     for _, key in ipairs({ "pins", "enabled" }) do assertTrue(S("itemSearch.window." .. key), key) end
@@ -211,6 +213,8 @@ test("item search settings: a dimmed knob names what it needs; the block's switc
     end
     -- the profession filter also sets the window's default (feedback spec §4): never dimmed by the block
     assertTrue(R("itemSearch.myProfessionsOnly").disabledIf == nil or not R("itemSearch.myProfessionsOnly").disabledIf())
+    assertTrue(R("itemSearch.hideOtherFaction").disabledIf == nil or not R("itemSearch.hideOtherFaction").disabledIf(),
+        "Hide the other faction's vendors also sets the window's default (R4-DW-08)")
     NS.SchemaRuntime.Set("itemSearch.tooltip.enabled", true)
     assertTrue(R("itemSearch.tooltip.rows").tooltip:find("Needs Add Item Search to item tooltips.", 1, true) ~= nil)
     -- anti-pattern #74: a color and its companion are never dimmed

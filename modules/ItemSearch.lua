@@ -310,6 +310,20 @@ function IS.MyProfessionsOnly()
     return NS.Setting("itemSearch.myProfessionsOnly") ~= false
 end
 
+--- Whether the views leave out the vendors only the other faction can buy from (R4-DW-08: one
+--- setting for the tooltip and the window's default, on by default).
+--- @return boolean
+function IS.HideOtherFaction()
+    return NS.Setting("itemSearch.hideOtherFaction") ~= false
+end
+
+--- The window's view defaults the settings give (NS.ItemSearchTabs.DefaultState's `opts`): the
+--- Crafting tab's "Only my professions" and the Sold by tab's "Only my faction".
+--- @return table { mine, faction }
+function IS.ViewDefaults()
+    return { mine = IS.MyProfessionsOnly(), faction = IS.HideOtherFaction() }
+end
+
 -- The static facts' counts, written to the debug log once per item: the nameless objects and the
 -- test-named sources left out (round 3 spec §4.3), and the fishing nodes that yield a herb.
 local function logStatic(itemID, static)

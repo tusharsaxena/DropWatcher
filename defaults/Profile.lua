@@ -368,6 +368,9 @@ do
             -- Only the professions you know, in the tooltip and as the window's default (Item Search
             -- feedback spec §4).
             myProfessionsOnly = true,
+            -- Leave the other faction's vendors out of the tooltip's Sold by (counted on one dim
+            -- line) and, to start with, out of the window's Sold by tab (R4-DW-08, the owner).
+            hideOtherFaction = true,
             -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
             -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
             -- sections, the rows per section (feedback spec §7, replacing dropsShown through schema

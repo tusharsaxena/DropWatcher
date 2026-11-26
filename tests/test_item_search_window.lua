@@ -675,6 +675,33 @@ test("item search window: not-known recipes say Trainer or name their recipe ite
     assertEqual(W.ShownItem(), item, "the recipe item shown")
 end, FOREVER_ONLY)
 
+test("item search window: Sold by's Only my faction starts at Hide the other faction's vendors, and Reset returns to it (R4-DW-08)", function()
+    local NS = enabled({ setup = function(mm) mm.UnitFactionGroup = function() return "Horde", "Horde" end end })
+    local W, TABS = NS.ItemSearchWindow, NS.ItemSearchTabs
+    W.ShowItem(IDS.blade)
+    W.SelectTab("vendors")
+    local function names()
+        local out = {}
+        for _, row in ipairs(W.TableRows()) do out[#out + 1] = row.cells[1].text:GetText() end
+        return table.concat(out, ",")
+    end
+    -- red under: the chip's old default of off, which listed the Alliance trainer for a Horde player
+    assertTrue(W.ViewState("vendors").filters.faction, "on, as the setting")
+    assertEqual(names(), "Fixture Vendor")
+    assertTrue(TABS.IsDefault("vendors", W.ViewState("vendors"), { faction = true }), "the default: no Reset")
+    W.SetFilter("vendors", "faction", false)
+    assertEqual(names(), "Fixture Vendor,Fixture Trainer", "the chip off: both, the other side last")
+    W.ResetView("vendors")
+    assertTrue(W.ViewState("vendors").filters.faction, "Reset returns to the setting")
+    NS.SchemaRuntime.Set("itemSearch.hideOtherFaction", false)
+    -- red under: the tab keeping the filter it was made with when the setting moves
+    assertFalse(W.ViewState("vendors").filters.faction, "the setting off: the chip follows")
+    assertEqual(names(), "Fixture Vendor,Fixture Trainer")
+    W.ResetView("vendors")
+    assertFalse(W.ViewState("vendors").filters.faction, "Reset: the setting, now off")
+    assertEqual(TABS.DefaultState("vendors", {}).filters.faction, false, "no option: off")
+end, FOREVER_ONLY)
+
 test("item search window: the Crafting tab's filter follows Only professions you know when the setting moves", function()
     local NS = enabled({ setup = function(mm)
         local lines = { { name = "First Aid", rank = 40, skillID = 129 } }

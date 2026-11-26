@@ -175,7 +175,7 @@ end
 -- ── the view states ─────────────────────────────────────────────────────────────────────────
 
 local function stateOf(tab)
-    if not views[tab] then views[tab] = TABS.DefaultState(tab, { mine = IS.MyProfessionsOnly() }) end
+    if not views[tab] then views[tab] = TABS.DefaultState(tab, IS.ViewDefaults()) end
     return views[tab]
 end
 
@@ -221,6 +221,13 @@ end
 --- the tab's filter follows the setting again, then the window repaints as for any setting.
 function ISW.FollowProfessionsSetting()
     if views.crafting then views.crafting.filters.mine = IS.MyProfessionsOnly() end
+    ISW.ApplySettings()
+end
+
+--- The "Hide the other faction's vendors" setting moved (R4-DW-08): the Sold by tab's "Only my
+--- faction" follows the setting again, then the window repaints as for any setting.
+function ISW.FollowFactionSetting()
+    if views.vendors then views.vendors.filters.faction = IS.HideOtherFaction() end
     ISW.ApplySettings()
 end
 
@@ -695,7 +702,7 @@ local function paintSection(tab, st, shown, total)
         title = def.title, count = TABS.CountText(tab, shown, total),
         note = L["sorted: %s"]:format(TABS.SortLabel(tab, st.sort)),
         marks = { filter = { shown = #def.filters > 0, badge = TABS.Narrowed(tab, st) }, sort = { shown = true },
-            reset = { shown = not TABS.IsDefault(tab, st, { mine = IS.MyProfessionsOnly() }) } },
+            reset = { shown = not TABS.IsDefault(tab, st, IS.ViewDefaults()) } },
         chip = chipOf(tab, st),
     })
 end

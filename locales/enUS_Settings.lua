@@ -484,8 +484,8 @@ L["The creatures, objects and containers that drop the item, likeliest first, wi
     "The creatures, objects and containers that drop the item, likeliest first, with their chance, and the level a world drop starts at."
 L["The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."] =
     "The herbs, veins and fishing nodes the item is gathered from, with the profession and skill each needs and its chance."
-L["The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."] =
-    "The vendors that sell the item, each with its price where one is known, and the ones only the other faction can buy from."
+L["The vendors that sell the item, each with its price where one is known; the ones only the other faction can buy from are counted on one line, or listed in red with Hide the other faction's vendors off."] =
+    "The vendors that sell the item, each with its price where one is known; the ones only the other faction can buy from are counted on one line, or listed in red with Hide the other faction's vendors off."
 L["The quests that ask for the item: in your log, not picked up yet, or completed."] =
     "The quests that ask for the item: in your log, not picked up yet, or completed."
 L["The recipes the item is a reagent in, with the skill-up color your rank gives a recipe you know."] =
@@ -534,6 +534,9 @@ L["How many rows each section of the tooltip shows, 1 to 20, before \"and N more
 L["Only professions you know"] = "Only professions you know"
 L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."] =
     "Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."
+L["Hide the other faction's vendors"] = "Hide the other faction's vendors"
+L["Leave out the vendors only the other faction can buy from, in the tooltip's Sold by and, to start with, in the Item Search window's Sold by tab (its Only my faction filter). The tooltip counts them on one line. A vendor ForeverDB names no faction for always shows."] =
+    "Leave out the vendors only the other faction can buy from, in the tooltip's Sold by and, to start with, in the Item Search window's Sold by tab (its Only my faction filter). The tooltip counts them on one line. A vendor ForeverDB names no faction for always shows."
 L["Hide completed quests"] = "Hide completed quests"
 L["Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."] =
     "Leave the quests you have completed out of the tooltip. The Item Search window still lists them. Needs Quests."

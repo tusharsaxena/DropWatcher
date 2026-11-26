@@ -60,8 +60,11 @@ local _, NS = ...
 --       Gathered from the herbs, veins and fishing nodes (round 3 item 7): the node on the left,
 --                     "<Profession> <skill> · <chance>" on the right, the skill red above your rank;
 --       Sold by       the vendors, each with its own price on the right (round 3 item 8: the one
---                     Drop Watcher saw there, else ForeverDB's), or "Horde only" / "Alliance only"
---                     in red where only the other side can buy;
+--                     Drop Watcher saw there, else ForeverDB's). With "Hide the other faction's
+--                     vendors" on (R4-DW-08, the default) the vendors only the other side can buy
+--                     from are left out and counted on one dim line, "+N other-faction vendors",
+--                     after "and N more" (the heading and that line alone when every vendor is
+--                     the other side's); off, they show "Horde only" / "Alliance only" in red;
 --       Quests        the game's marks (IST.QuestMark, round 3 item 13): the yellow `!` not picked
 --                     up (dimmed while your level is too low), the gray `?` in your log, the green
 --                     `?` complete and waiting to be turned in, a green check turned in (left out
@@ -484,16 +487,36 @@ local function vendorRight(v, me)
     return nil, "plain"
 end
 
+-- The count of the other faction's vendors left out (R4-DW-08): one dim line.
+local function otherFaction(out, n)
+    if n == 1 then add(out, INDENT .. L["+1 other-faction vendor"], "muted")
+    elseif n > 1 then add(out, INDENT .. L["+%d other-faction vendors"]:format(n), "muted") end
+end
+
+-- With `o.hideOtherFaction` (the "Hide the other faction's vendors" setting, R4-DW-08) the vendors
+-- only the other side can buy from are left out and counted; one with no known side stays. Every
+-- vendor the other side's: the heading and the count alone. No array is built: the block is
+-- written on every hover.
 local function vendorLines(_, r, o, out, me)
-    if #r.vendors == 0 then return end
+    local vendors = r.vendors
+    if #vendors == 0 then return end
     add(out, L["Sold by"], "mutedGold")
-    local shown, rest = capped(r.vendors, o.rows)
-    for i = 1, shown do
-        local v = r.vendors[i]
-        local right, rightTone = vendorRight(v, me)
-        add(out, INDENT .. v.name, "plain", right, rightTone)
+    local hide = o.hideOtherFaction and me ~= nil
+    local cap, own, other = IS.ClampRows(o.rows), 0, 0
+    for i = 1, #vendors do
+        local v = vendors[i]
+        if hide and IS.OtherSide(v, me) then
+            other = other + 1
+        else
+            own = own + 1
+            if own <= cap then
+                local right, rightTone = vendorRight(v, me)
+                add(out, INDENT .. v.name, "plain", right, rightTone)
+            end
+        end
     end
-    more(out, rest)
+    more(out, own - math.min(own, cap))
+    otherFaction(out, other)
 end
 
 local function questLines(_, r, o, out, me)
@@ -678,8 +701,9 @@ end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
 --- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, craftSkill, badge, reasons, rows,
---- mine, sections, order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec §4; `craftSkill`:
---- round 3 §4.2; `badge` and `reasons`: round 3 §4.5).
+--- mine, hideOtherFaction, sections, order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec
+--- §4; `hideOtherFaction`: itemSearch.hideOtherFaction, R4-DW-08; `craftSkill`: round 3 §4.2;
+--- `badge` and `reasons`: round 3 §4.5).
 --- @return table
 function IST.Options()
     local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
@@ -689,6 +713,7 @@ function IST.Options()
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
         craftSkill = setting("craftSkill", true) == true, badge = setting("badge", true) == true,
         reasons = setting("reasons", true) == true, rows = shown, mine = IS.MyProfessionsOnly(),
+        hideOtherFaction = IS.HideOtherFaction(),
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end

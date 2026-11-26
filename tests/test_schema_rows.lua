@@ -942,6 +942,8 @@ local PINNED_ROWS = {
     -- (schema step 16), and the profession filter covers the tooltip and the window.
     { "itemSearch.tooltip.rows", "number", "3" },  -- 3 since ISR3-DW-07
     { "itemSearch.myProfessionsOnly", "bool", "true" },
+    -- R4-DW-08: the other faction's vendors hidden in the tooltip and, to start with, the window.
+    { "itemSearch.hideOtherFaction", "bool", "true" },
     { "itemSearch.tooltip.hideCompleted", "bool", "true" },
     { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"gathered\",[3]=\"vendors\",[4]=\"quests\",[5]=\"crafting\",[6]=\"skinned\",[7]=\"also\"}" },
     { "itemSearch.window.enabled", "bool", "true" },

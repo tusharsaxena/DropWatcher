@@ -214,6 +214,47 @@ test("item search prices: the tooltip's vendor rows carry each one's price, and 
     assertNil(NS.ItemSearchCells.SideOnly({ faction = "AH" }, { faction = "A" }))
 end)
 
+test("item search prices: hiding the other faction's vendors: counted on one dim line, the unknown side kept (R4-DW-08)", function()
+    local NS = T.newAddon()
+    local IST = NS.ItemSearchTip
+    local function lines(vendors, me, hide, rows)
+        local facts = { drops = {}, gathered = {}, quests = {}, crafting = {}, skinnedFrom = {}, rewardFrom = {},
+            vendors = vendors }
+        local o = { order = IST.ORDER, sections = IST.SECTIONS, rows = rows or 5, header = false, hideOtherFaction = hide }
+        return IST.Lines(facts, o, nil, me)
+    end
+    local function texts(out)
+        local t = {}
+        for i, l in ipairs(out) do t[i] = l.text end
+        return table.concat(t, "|")
+    end
+    local mixed = { { id = 1, name = "Invented Smith", faction = "A", price = 100 },
+        { id = 2, name = "Invented Grocer", faction = "AH", price = 40 }, { id = 3, name = "Invented Peddler" },
+        { id = 4, name = "Invented Clerk", faction = "A" } }
+    -- red under: the other side's vendors listed in red (the owner: "filter out other faction vendors
+    -- by default"), or the vendor ForeverDB names no side for dropped with them
+    local out = lines(mixed, { faction = "H" }, true)
+    assertEqual(texts(out), "Drop Watcher|Sold by|  Invented Grocer|  Invented Peddler|  +2 other-faction vendors")
+    assertEqual(out[#out].tone, "muted", "the count is dim")
+    assertNil(out[#out].right)
+    -- one of them: the singular
+    out = lines({ mixed[1], mixed[2] }, { faction = "H" }, true)
+    assertEqual(out[#out].text, "  +1 other-faction vendor")
+    -- every vendor the other side's: the heading and the count alone (the lead's call)
+    out = lines({ mixed[1], mixed[4] }, { faction = "H" }, true)
+    assertEqual(texts(out), "Drop Watcher|Sold by|  +2 other-faction vendors")
+    -- the setting off: every vendor, the other side's in red, no count
+    out = lines(mixed, { faction = "H" }, false)
+    assertTrue(texts(out):find("other-faction", 1, true) == nil, texts(out))
+    assertTrue(texts(out):find("Invented Smith", 1, true) ~= nil, "the other side shown")
+    -- no side read for the player: nothing is the other side's
+    out = lines(mixed, {}, true)
+    assertTrue(texts(out):find("other-faction", 1, true) == nil, "no player side: nothing hidden")
+    -- a cap of 1: "and 1 more" counts only the side shown, then the other side's count
+    out = lines(mixed, { faction = "H" }, true, 1)
+    assertEqual(texts(out), "Drop Watcher|Sold by|  Invented Grocer|  and 1 more|  +2 other-faction vendors")
+end)
+
 test("item search prices: a source with no spot anywhere says No known spawn on its row tooltip", function()
     local NS = T.newAddon()
     local rows = NS.ItemSearchCells.Drops({ drops = {

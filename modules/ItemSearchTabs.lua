@@ -101,7 +101,7 @@ TABS.DEF = {
             PIN,
         },
         filters = {
-            { key = "faction", label = L["Only my faction"], default = false, narrows = true, keep = function(r) return not r.other end },
+            { key = "faction", label = L["Only my faction"], default = "faction", narrows = true, keep = function(r) return not r.other end },
         },
     },
     quests = {
@@ -211,13 +211,15 @@ end
 
 local function defaultOf(f, opts)
     if f.default == "mine" then return opts.mine == true end
+    if f.default == "faction" then return opts.faction == true end
     return f.default
 end
 
 --- A tab's default view state: Best for you, every filter at its default (Crafting's "Only my
---- professions" is `opts.mine`, the setting, spec §4).
+--- professions" is `opts.mine`, the setting, spec §4; Sold by's "Only my faction" is
+--- `opts.faction`, Hide the other faction's vendors, R4-DW-08).
 --- @param tab string
---- @param opts table|nil { mine }
+--- @param opts table|nil { mine, faction } (NS.ItemSearch.ViewDefaults' shape)
 --- @return table
 function TABS.DefaultState(tab, opts)
     opts = opts or {}
