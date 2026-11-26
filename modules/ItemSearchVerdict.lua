@@ -36,6 +36,16 @@ local _, NS = ...
 -- none is among them (round 4, R4-DW-07: a damper is never hidden, so the parts shown explain the
 -- score). The tier is never shown (the owner); it is kept so that Low never says Toss.
 --
+-- THE BREAKDOWN (IS.Breakdown, round 4 addendum A1, R4-DW-11: the Item Search window's verdict
+-- panel). The same parts, worked out by the same code, as lines in the order the score adds them:
+-- each quest that counted; the known recipes by skill-up color, the recipes you could learn and the
+-- other professions; gear; the dampers; then every bound that moved the sum, as its own line with
+-- the points it took or gave (a hit cap, the 0..100 clamp, the poor-quality cap, the quest item's
+-- floor). The lines add up to the score, a part worth 0 is left out, and `from` is the line the
+-- verdict word comes from ("Keep from 50"). No confidence tier; the fix (`hint`) is the
+-- confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
+-- panel and the badge's reasons can never disagree and the hover pays nothing for it.
+--
 -- `item`: { quality, classID, subclassID, equippable, sellPrice, bindType, gear, newCollect, inDB },
 -- every field optional: `gear` the gear kernel's verdict for you ("upgrade", "sidegrade", ...; nil
 -- when there is none or Pawn is still scoring), `newCollect` the collection verdict's, `inDB` whether
@@ -59,7 +69,7 @@ local C = NS.Constants
 local L = NS.L
 
 local V = C.ITEM_SEARCH.VERDICT
-local floor, min, max, abs = math.floor, math.min, math.max, math.abs
+local floor, min, abs = math.floor, math.min, math.abs
 
 local EMPTY = {}
 
@@ -76,6 +86,19 @@ end
 
 local function note(acc, points, text)
     acc[#acc + 1] = { text = text, points = points, n = #acc + 1 }
+end
+
+-- A breakdown line (IS.Breakdown) onto `acc.bd`, set only while a breakdown is asked for: the
+-- hover's verdict builds none. A line worth 0 is left out (A1: zero parts hidden).
+local function step(acc, kind, points, text)
+    local bd = acc.bd
+    if bd and points ~= 0 then bd[#bd + 1] = { kind = kind, points = points, text = text } end
+end
+
+-- A part that is both a reason and a breakdown line, in the same words.
+local function both(acc, kind, points, text)
+    note(acc, points, text)
+    step(acc, kind, points, text)
 end
 
 local function titleOf(q)
@@ -96,15 +119,15 @@ end
 local function questRow(q, me, acc)
     local state = questStateOf(q, me)
     if state == "log" then
-        note(acc, V.QUEST_LOG, L["In your quest log: %s"]:format(titleOf(q)))
+        both(acc, "quest", V.QUEST_LOG, L["In your quest log: %s"]:format(titleOf(q)))
         return V.QUEST_LOG
     end
     if state == "ready" then
-        note(acc, V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)))
+        both(acc, "quest", V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)))
         return V.QUEST_LOG
     end
     if state == "todo" and canPickUp(q, num(me.level)) then
-        note(acc, V.QUEST_CAN, L["Quest you can pick up: %s"]:format(titleOf(q)))
+        both(acc, "quest", V.QUEST_CAN, L["Quest you can pick up: %s"]:format(titleOf(q)))
         return V.QUEST_CAN
     end
     return 0
@@ -119,8 +142,11 @@ local function questPart(facts, me, acc)
     end
     local starts = facts.startsQuest
     if type(starts) == "table" and not IN_HAND[questStateOf(starts, me) or ""] then
-        note(acc, V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)))
+        both(acc, "quest", V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)))
         total = total + V.STARTS
+    end
+    if total > V.QUESTS_CAP then
+        step(acc, "cap", V.QUESTS_CAP - total, L["Quests count %d at most"]:format(V.QUESTS_CAP))
     end
     return min(total, V.QUESTS_CAP)
 end
@@ -149,6 +175,7 @@ local function tallyRow(t, c, read)
     if c.known then
         local points = V.CRAFT[c.color] or 0
         t.known = t.known + points
+        if points > 0 then t.byColor[c.color] = t.byColor[c.color] + 1 end
         if points > t.bestPoints then t.best, t.bestPoints = c, points end
     elseif num(c.gray) and rank < c.gray then
         t.learn = t.learn + V.LEARN
@@ -158,19 +185,42 @@ end
 
 -- The tally is one scratch table, filled again on each call (a cold hover builds no table for it):
 -- read straight after, never kept.
-local tally = {}
+local tally = { byColor = {} }
+
+-- The skill-up colors worth points, in the breakdown's order.
+local COLORS = { "orange", "yellow", "green" }
 
 local function craftTally(rows, read)
     local t = tally
     t.known, t.learn, t.others, t.best, t.bestPoints, t.learnRow = 0, 0, 0, nil, 0, nil
+    for _, color in ipairs(COLORS) do t.byColor[color] = 0 end
     for _, c in ipairs(rows) do
         if type(c) == "table" then tallyRow(t, c, read) end
     end
     return t
 end
 
+-- The crafting part's breakdown lines (only while one is asked for): the known recipes by color, the
+-- recipes you could learn, the crafting cap when hit, the other professions and their cap when hit.
+local function craftSteps(acc, t)
+    if not acc.bd then return end
+    for _, color in ipairs(COLORS) do
+        local n = t.byColor[color]
+        step(acc, "craft", n * V.CRAFT[color], L["Known recipes, %s skill-up (%d)"]:format(colorWord(color), n))
+    end
+    step(acc, "craft", t.learn, L["Recipes you could learn (%d)"]:format(floor(t.learn / V.LEARN)))
+    local own = t.known + t.learn
+    if own > V.CRAFT_CAP then step(acc, "cap", V.CRAFT_CAP - own, L["Crafting counts %d at most"]:format(V.CRAFT_CAP)) end
+    local raw = t.others * V.OTHERS
+    step(acc, "craft", raw, L["Other professions use it (%d recipes)"]:format(t.others))
+    if raw > V.OTHERS_CAP then
+        step(acc, "cap", V.OTHERS_CAP - raw, L["Other professions count %d at most"]:format(V.OTHERS_CAP))
+    end
+end
+
 local function craftPart(facts, me, acc)
     local t = craftTally(list(facts.crafting), IS.SkillsRead(me.ranks))
+    craftSteps(acc, t)
     if t.best then
         note(acc, t.known, L["%s skill-up (%s)"]:format(professionOf(t.best), colorWord(t.best.color)))
     end
@@ -183,11 +233,11 @@ end
 local function gearPart(item, acc)
     if not item.equippable then return 0 end
     if item.gear == "upgrade" then
-        note(acc, V.UPGRADE, L["Upgrade for you"])
+        both(acc, "gear", V.UPGRADE, L["Upgrade for you"])
         return V.UPGRADE
     end
     if item.gear == "sidegrade" then
-        note(acc, V.SIDEGRADE, L["Sidegrade"])
+        both(acc, "gear", V.SIDEGRADE, L["Sidegrade"])
         return V.SIDEGRADE
     end
     return 0
@@ -229,21 +279,38 @@ local function questItem(item)
     return num(item.classID) == 12 or num(item.bindType) == 4
 end
 
+-- The sum held to 0..100, the clamp a breakdown line of its own when it moved the sum.
+local function bounded(acc, sum)
+    if sum > 100 then
+        step(acc, "clamp", 100 - sum, L["The score is 100 at most"])
+        return 100
+    end
+    if sum < 0 then
+        step(acc, "clamp", -sum, L["The score is 0 at least"])
+        return 0
+    end
+    return sum
+end
+
 local function scoreOf(facts, me, item, acc)
     local quests = questPart(facts, me, acc)
     local sum = quests + craftPart(facts, me, acc) + gearPart(item, acc)
     if rebuyable(facts) then
-        note(acc, V.REBUY, L["Easy to buy again"])
+        both(acc, "damper", V.REBUY, L["Easy to buy again"])
         sum = sum + V.REBUY
     end
     if trivial(facts, me) then
-        note(acc, V.TRIVIAL, L["Every use is gray or done"])
+        both(acc, "damper", V.TRIVIAL, L["Every use is gray or done"])
         sum = sum + V.TRIVIAL
     end
-    local score = max(0, min(100, sum))
-    if num(item.quality) == 0 and quests == 0 then score = min(score, V.POOR_CAP) end
+    local score = bounded(acc, sum)
+    if num(item.quality) == 0 and quests == 0 and score > V.POOR_CAP then
+        step(acc, "cap", V.POOR_CAP - score, L["Poor quality counts %d at most"]:format(V.POOR_CAP))
+        score = V.POOR_CAP
+    end
     if questItem(item) and quests == 0 and score < V.QUEST_FLOOR then
         note(acc, V.QUEST_FLOOR - score, L["Quest item"])
+        step(acc, "floor", V.QUEST_FLOOR - score, L["A quest item counts %d at least"]:format(V.QUEST_FLOOR))
         score = V.QUEST_FLOOR
     end
     return score
@@ -326,19 +393,33 @@ end
 -- The parts' notes go on one scratch list, emptied on each call: only the reasons shown are kept.
 local notes = {}
 
-local function scratchReasons()
+local function scratchReasons(bd)
     for i = #notes, 1, -1 do notes[i] = nil end
+    notes.bd = bd
     return notes
 end
 
 -- ── the verdict ─────────────────────────────────────────────────────────────────────────────
 
 -- `unjudged`: an input that could overturn a Toss has not answered (gear with no gear verdict yet).
+-- Answers the verdict and why: the key of the breakdown's `from` line (fromText).
 local function decide(score, tier, sellPrice, unjudged)
-    if score >= V.KEEP then return "keep" end
-    if score >= V.HOLD or not sellPrice then return "hold" end
-    if sellPrice > 0 then return "sell" end
-    return (tier == "low" or unjudged) and "hold" or "toss"
+    if score >= V.KEEP then return "keep", "keep" end
+    if score >= V.HOLD then return "hold", "hold" end
+    if not sellPrice then return "hold", "price" end
+    if sellPrice > 0 then return "sell", "sell" end
+    if tier == "low" or unjudged then return "hold", "unjudged" end
+    return "toss", "toss"
+end
+
+-- The line the verdict word comes from, by decide's why.
+local function fromText(why)
+    if why == "keep" then return L["Keep from %d"]:format(V.KEEP) end
+    if why == "hold" then return L["Hold from %d"]:format(V.HOLD) end
+    if why == "price" then return L["Hold: under %d, and the sell price is not known yet"]:format(V.HOLD) end
+    if why == "sell" then return L["Sell: under %d, and a vendor buys it"]:format(V.HOLD) end
+    if why == "toss" then return L["Toss: under %d, and no vendor buys it"]:format(V.HOLD) end
+    return L["Hold: under %d, but too little is known to toss it"]:format(V.HOLD)
 end
 
 local function before(a, b)
@@ -392,6 +473,23 @@ local function topReasons(acc, verdict, sellPrice, buf)
     return out
 end
 
+-- The verdict worked out once for IS.Verdict and IS.Breakdown alike: the breakdown's lines go onto
+-- `bd` when given. Answers the verdict, why, the score, the confidence, its tier, the fix, the sell
+-- price and the parts' notes.
+local function judge(facts, me, item, bd)
+    local confidence, tier, hint = IS.Confidence(facts, me, item)
+    local acc, score = scratchReasons(bd), 100
+    if item.newCollect then
+        both(acc, "collect", 100, L["New to your collection"])
+    else
+        score = scoreOf(facts, me, item, acc)
+    end
+    local sellPrice = num(item.sellPrice)
+    local verdict, why = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
+    acc.bd = nil
+    return verdict, why, score, confidence, tier, hint, sellPrice, acc
+end
+
 --- The item's verdict for the player now (see the header): `{ verdict, score, confidence, tier,
 --- reasons, hint }`, a new table (`reasons` a shared empty list when there is none). Pure: every
 --- input is an argument. `into`, when given, is filled and answered instead, its reasons written
@@ -403,15 +501,7 @@ end
 --- @return table
 function IS.Verdict(facts, me, item, into)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
-    local confidence, tier, hint = IS.Confidence(facts, me, item)
-    local acc, score = scratchReasons(), 100
-    if item.newCollect then
-        note(acc, 100, L["New to your collection"])
-    else
-        score = scoreOf(facts, me, item, acc)
-    end
-    local sellPrice = num(item.sellPrice)
-    local verdict = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
+    local verdict, _, score, confidence, tier, hint, sellPrice, acc = judge(facts, me, item)
     if not into then
         return { verdict = verdict, score = score, confidence = confidence, tier = tier,
             reasons = topReasons(acc, verdict, sellPrice), hint = hint }
@@ -419,6 +509,23 @@ function IS.Verdict(facts, me, item, into)
     into.verdict, into.score, into.confidence, into.tier, into.hint = verdict, score, confidence, tier, hint
     into.reasons = topReasons(acc, verdict, sellPrice, into.reasons or {})
     return into
+end
+
+--- The score's breakdown (see the header; round 4 addendum A1, R4-DW-11): `{ verdict, score, lines,
+--- from, hint }`, `lines` each `{ kind, points, text }` in the order the score adds them (`kind`
+--- "quest", "craft", "gear", "damper", "collect", or a bound: "cap", "clamp", "floor"), adding up to
+--- `score`; `from` the line the verdict word comes from; `hint` the confidence's fix below High, or
+--- nil. No confidence or tier. The same verdict and score as IS.Verdict's for the same inputs. A new
+--- table each call (the window's verdict panel asks for it, never a hover). Pure.
+--- @param facts table NS.ItemSearch.Get's answer
+--- @param me table NS.ItemSearch.Me's answer
+--- @param item table the client's facts (see the header)
+--- @return table
+function IS.Breakdown(facts, me, item)
+    facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
+    local lines = {}
+    local verdict, why, score, _, _, hint = judge(facts, me, item, lines)
+    return { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
 end
 
 -- ── the edge: the client's facts and the memo ───────────────────────────────────────────────
@@ -431,6 +538,13 @@ local memo, generation = {}, 0
 --- suites' handle.
 function IVD.Bump()
     generation = generation + 1
+end
+
+--- The memo's generation: it moves on every IVD.Bump, so a caller that keeps what it drew from a
+--- verdict (the window's verdict panel) knows when to work it out again.
+--- @return number
+function IVD.Generation()
+    return generation
 end
 
 local function now()
@@ -489,6 +603,18 @@ function IVD.ClientFacts(itemID, facts, into)
     item.equippable = C.SLOT_PLAN[info.equipLoc or ""] ~= nil
     item.gear, item.newCollect = judgeOf(info.link)
     return item, true
+end
+
+--- The breakdown on `itemID` now (IS.Breakdown over the client's facts, IVD.ClientFacts'), worked out
+--- afresh: for the window's verdict panel, never a hover. Also whether it is settled: false while the
+--- client had not cached the item or the gear verdict had not answered (IVD.For's retry case).
+--- @param itemID number
+--- @param facts table NS.ItemSearch.Get's answer
+--- @param me table NS.ItemSearch.Me's answer
+--- @return table breakdown, boolean settled
+function IVD.Breakdown(itemID, facts, me)
+    local item, cached = IVD.ClientFacts(itemID, facts)
+    return IS.Breakdown(facts, me, item), cached and not (item.equippable and item.gear == nil)
 end
 
 -- The client's facts and the answer for the verdict being worked out: one table each, filled again

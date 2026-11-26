@@ -971,7 +971,7 @@ test("item search tooltips: the chrome opens attached to its control, every body
     for _, key in ipairs({ "drops", "vendors", "quests", "skinned", "crafting" }) do W.SelectTab(key) end
     local f = W.Frame()
     local chrome = { [f.clearButton] = "Clear", [f.section.chip] = "the My professions chip",
-        [f.matchHead.chip] = "the matches' chip" }
+        [f.matchHead.chip] = "the matches' chip", [f.verdict.head.chip] = "the verdict panel's chip" }
     for key, tab in pairs(f.tabs) do chrome[tab] = "the " .. key .. " tab" end
     for key, b in pairs(f.section.marks) do chrome[b] = "the section's " .. key .. " mark" end
     for key, b in pairs(f.matchHead.marks) do chrome[b] = "the matches' " .. key .. " mark" end

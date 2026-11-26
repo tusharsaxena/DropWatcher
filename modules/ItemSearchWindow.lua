@@ -31,7 +31,10 @@ local addonName, NS = ...
 -- under a "Matches · n" section header with a Sort mark (Best match, Name, Item id). Each match row
 -- is ISG.MatchRow: striped, washed under the pointer, the selected look on the item the right pane
 -- shows (W5), its game tooltip on hover, a shift-click linking it (W7). Recent searches are gone
--- (W4): no list, no store, no setting (schema step 17).
+-- (W4): no list, no store, no setting (schema step 17). Under the matches, while you hold the item
+-- shown (bags or bank), the verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum A1,
+-- R4-DW-11): the tooltip's badge and the score's breakdown; the Matches list shrinks to make room
+-- and takes the full height again when it hides.
 --
 -- THE RIGHT PANE (spec §5.3). The item header (icon, name in its quality color, the line, and a dim
 -- "Shift-click the name or icon to link it"): hovering the icon or the name shows the item's game
@@ -79,6 +82,7 @@ local lastBuild = { item = nil, facts = nil, rows = nil }
 local viewOnly = false      -- the next ISW.Refresh may reuse lastBuild (repaintView sets it)
 
 local function TM() return NS.TipMarks end
+local function VP() return NS.ItemSearchVerdictPanel end
 local function WP() return NS.ItemSearchWaypoint end
 
 -- ── settings ────────────────────────────────────────────────────────────────────────────────
@@ -368,6 +372,7 @@ local function buildLeft(f)
     f.matchNote:SetWordWrap(true)
     NS.Skin.Font(f.matchNote)
     NS.Skin.Text(f.matchNote, "text.muted")
+    VP().Build(f)
 end
 
 -- ── building: the right pane ────────────────────────────────────────────────────────────────
@@ -779,6 +784,7 @@ function ISW.Refresh()
     viewOnly = false
     if not (frame and frame:IsShown()) then return end
     local m = NS.WindowRows.Metrics()
+    VP().Paint(frame, shownItem, m)
     paintLeft(m)
     paintDetail(m, reuse)
     paintFooter()

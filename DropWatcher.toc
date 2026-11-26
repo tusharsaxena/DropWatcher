@@ -558,6 +558,11 @@ modules\ItemSearchTabs.lua
 # publishes NS.ItemSearchGrid, the window's section headers, tables and match rows. NS.Window,
 # NS.WindowRows, NS.ItemSearchTip, NS.Skin, NS.Pool and NS.TipMarks are read at call time.
 modules\ItemSearchGrid.lua
+# LOAD-BEARING: takes NS.ItemSearch, NS.ItemSearchVerdict, NS.ItemSearchGrid (above), NS.Constants,
+# NS.L and NS.Compat at load and publishes NS.ItemSearchVerdictPanel, the window's verdict panel
+# (R4-DW-11); modules\ItemSearchWindow.lua (below) builds and paints it at call time.
+# NS.ItemSearchTip, NS.ItemSearchWindow and NS.WindowRows are read at call time.
+modules\ItemSearchVerdictPanel.lua
 # LOAD-BEARING: takes NS.L, NS.Compat and NS.Skin at load, publishes NS.ItemSearchWaypoint (who
 # draws the way to a pin: TomTom or LibKa0s-WaypointArrow-1.0), registers a skin listener and
 # appends a NS.STAND_DOWN step; settings\ItemSearchRows.lua and settings\ItemSearchArrowRows.lua

@@ -422,3 +422,101 @@ test("verdict: the memo keeps one answer per item until a quest, skill, level or
     m.advance(0.6)
     assertEqual(score(), fresh(), "past the retry")
 end, FOREVER_ONLY)
+
+-- ── the breakdown (round 4 addendum A1, R4-DW-11: the Item Search window's verdict panel) ─────
+
+-- The breakdown's lines' points, summed; and the line of `kind` whose text holds `find`, or nil.
+local function sum(b)
+    local n = 0
+    for _, line in ipairs(b.lines) do n = n + line.points end
+    return n
+end
+
+local function lineOf(b, kind, find)
+    for _, line in ipairs(b.lines) do
+        if line.kind == kind and (not find or line.text:find(find, 1, true)) then return line end
+    end
+    return nil
+end
+
+local function kinds(b)
+    local out = {}
+    for _, line in ipairs(b.lines) do out[#out + 1] = line.kind end
+    return table.concat(out, ",")
+end
+
+test("verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)", function()
+    local _, IS = addon()
+    local f = facts({ quests = { quest("log"), quest("todo", { id = 2, title = "Invented Chore" }) },
+        crafting = { recipe({ color = "orange" }), recipe({ spell = 2, color = "orange" }),
+            recipe({ spell = 3, known = false }) },
+        vendors = { {}, {}, {} } })
+    local it = item({ equippable = true, gear = "sidegrade" })
+    local b = IS.Breakdown(f, ME, it)
+    local v = IS.Verdict(f, ME, it)
+    -- red under: a panel score of its own that can disagree with the badge's
+    assertEqual(b.score, v.score, "the badge's score"); assertEqual(b.verdict, v.verdict)
+    assertEqual(sum(b), b.score, "the lines add up to the score")
+    -- quests by quest (60 + 35 = 95, capped at 80), crafting by color (2 orange 60 + learn 10, capped 50),
+    -- gear 20, rebuy -20: 80 + 50 + 20 - 20 = 130, clamped to 100
+    assertEqual(kinds(b), "quest,quest,cap,craft,craft,cap,gear,damper,clamp")
+    assertEqual(lineOf(b, "quest", "Invented Errand").points, 60)
+    assertEqual(lineOf(b, "quest", "Invented Chore").points, 35)
+    assertEqual(lineOf(b, "cap", "80").points, -15, "the quests' cap shown when hit")
+    assertEqual(lineOf(b, "craft", "orange").points, 60, "the known recipes by color")
+    assertTrue(lineOf(b, "craft", "orange").text:find("2", 1, true) ~= nil, "with their count")
+    assertEqual(lineOf(b, "craft", "learn").points, 10)
+    assertEqual(lineOf(b, "cap", "50").points, -20, "the crafting cap shown when hit")
+    assertEqual(lineOf(b, "damper").text, "Easy to buy again")
+    assertEqual(lineOf(b, "clamp").points, -30)
+    assertEqual(b.from, "Keep from 50", "the line the verdict word comes from")
+end)
+
+test("verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed", function()
+    local _, IS = addon()
+    local b = IS.Breakdown(facts({ crafting = { recipe({ color = "gray" }) } }), ME, item())
+    -- the gray recipe (0) left out; every use gray: -15, clamped back to 0
+    assertNil(lineOf(b, "craft"), "a part worth 0 is hidden")
+    assertEqual(lineOf(b, "damper").text, "Every use is gray or done"); assertEqual(lineOf(b, "damper").points, -15)
+    assertEqual(lineOf(b, "clamp").points, 15); assertEqual(sum(b), 0); assertEqual(b.score, 0)
+    local poor = IS.Breakdown(facts({ crafting = { recipe({ color = "orange" }) } }), ME, item({ quality = 0 }))
+    assertEqual(poor.score, 15)
+    assertEqual(lineOf(poor, "cap", "Poor").points, -15, "the poor-quality cap when it applies")
+    assertEqual(sum(poor), 15)
+    local qi = IS.Breakdown(facts(), ME, item({ classID = 12 }))
+    assertEqual(qi.score, 20); assertEqual(lineOf(qi, "floor").points, 20, "the quest-item floor when it applies")
+    assertEqual(sum(qi), 20); assertEqual(qi.from, "Hold from 20")
+    local others = {}
+    for i = 1, 4 do others[i] = recipe({ spell = i, skillLine = ALCHEMY, rank = false, known = false }) end
+    local o = IS.Breakdown(facts({ crafting = others }), ME, item())
+    assertEqual(lineOf(o, "craft", "Other").points, 12); assertEqual(lineOf(o, "cap", "9").points, -3)
+    assertEqual(o.score, 9); assertEqual(sum(o), 9)
+end)
+
+test("verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier", function()
+    local _, IS = addon()
+    local f = facts()
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Sell: under 20, and a vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: under 20, and no vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: under 20, and the sell price is not known yet")
+    local low = IS.Breakdown(facts({ fdb = "loading" }), ME, item({ sellPrice = 0 }))
+    assertEqual(low.verdict, "hold")
+    assertEqual(low.from, "Hold: under 20, but too little is known to toss it")
+    assertEqual(low.hint, "ForeverDB is not loaded", "a missing input as a plain hint")
+    assertNil(low.tier, "no confidence tier"); assertNil(low.confidence)
+    local ranks = IS.Breakdown(facts({ crafting = { recipe({}) } }), { level = 20 }, item())
+    assertEqual(ranks.hint, "Open your profession window to rank recipes")
+    local new = IS.Breakdown(facts({ vendors = { {}, {}, {} } }), ME, item({ newCollect = true }))
+    assertEqual(kinds(new), "collect"); assertEqual(sum(new), 100); assertEqual(new.from, "Keep from 50")
+end)
+
+test("verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown", function()
+    local _, IS = addon()
+    local f = facts({ quests = { quest("log") }, vendors = { {}, {}, {} } })
+    local before = IS.Verdict(f, ME, item())
+    IS.Breakdown(f, ME, item())
+    local after = IS.Verdict(f, ME, item())
+    assertEqual(after.score, before.score); assertEqual(#after.reasons, #before.reasons)
+    for i = 1, #before.reasons do assertEqual(after.reasons[i], before.reasons[i]) end
+    assertNil(after.lines, "no breakdown on the hover's answer")
+end)

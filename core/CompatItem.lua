@@ -1,5 +1,5 @@
 local _, NS = ...
--- core/CompatItem.lua — the exact item reads at a bag location, the game tooltip's item
+-- core/CompatItem.lua — the exact item reads at a bag location, how many of an item you hold, the game tooltip's item
 -- setters (ui spec §0, DW-80) and a tooltip's line by number (feedback-7 spec §3: a grid's cells
 -- anchor to the lines it reserved, modules/TipGrid.lua), published on NS.Compat so the simulator's answer seam
 -- (core/SimSetup.lua) answers them too: a simulated drop sits in a bag slot the client does not
@@ -45,6 +45,20 @@ function Compat.BagItemLevelQuality(bag, slot)
     local level = item.GetCurrentItemLevel and plainNumber(item.GetCurrentItemLevel(location)) or nil
     local quality = item.GetItemQuality and plainNumber(item.GetItemQuality(location)) or nil
     return level, quality
+end
+
+--- How many of `itemID` you hold (round 4 addendum A1, R4-DW-11: the Item Search window's verdict
+--- panel): in your bags, and in your bags and bank together, from C_Item.GetItemCount (the bank from
+--- the client's cached count, so it answers with the bank closed). Each 0 for an id that is not a
+--- number, a secret or missing answer, or no API.
+--- @param itemID number
+--- @return number bags, number total
+function Compat.ItemCount(itemID)
+    local item = C_Item
+    if type(itemID) ~= "number" or not (item and item.GetItemCount) then return 0, 0 end
+    local bags = plainNumber(item.GetItemCount(itemID, false)) or 0
+    local total = plainNumber(item.GetItemCount(itemID, true)) or 0
+    return bags, math.max(bags, total)
 end
 
 -- tip[method](tip, ...) when the tooltip has it; true when called.

@@ -14,7 +14,7 @@ local PINNED = {
     "CANCEL_LOOT_ROLL", "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_CLEAR_HISTORY",
     "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER", "LOOT_OPENED", "LOOT_READY",
     "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_RECIPE_LEARNED", "NEW_TOY_ADDED", "PARTY_LOOT_METHOD_CHANGED",
-    "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
+    "PLAYERBANKSLOTS_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED", "SKILL_LINES_CHANGED",
     "SPELL_TEXT_UPDATE", "START_LOOT_ROLL",
     "TRADE_ACCEPT_UPDATE", "TRADE_CLOSED", "TRADE_PLAYER_ITEM_CHANGED", "TRADE_SHOW", "TRADE_TARGET_ITEM_CHANGED",
@@ -25,8 +25,8 @@ local PINNED = {
 -- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2); the keystone events
 -- are Retail's alone (Forever port design §4.4), as are the journal pool's loot event and the
 -- transmog collection's, and a level gained rebuilds Forever's gear (its armor type moves at 40).
--- Item Search's profession-window learner and its merchant prices are WoW Forever's alone
--- (DropWatcher#17).
+-- Item Search's profession-window learner, its merchant prices and its window's verdict panel are
+-- WoW Forever's alone (DropWatcher#17).
 local OTHER_CLIENT = {
     retail  = { PLAYER_SPECIALIZATION_CHANGED = true, CHALLENGE_MODE_COMPLETED = true, CHALLENGE_MODE_START = true,
                 EJ_LOOT_DATA_RECIEVED = true, TRANSMOG_COLLECTION_UPDATED = true },
@@ -35,7 +35,9 @@ local OTHER_CLIENT = {
                 -- Item Search round 3 (spec §4.4): the merchant window's prices, recorded.
                 MERCHANT_SHOW = true, MERCHANT_UPDATE = true, MERCHANT_CLOSED = true,
                 -- Item Search round 3 (spec §4.5): the tooltip badge's verdicts, worked out again.
-                QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true },
+                QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true,
+                -- Item Search round 4 (addendum A1, R4-DW-11): the window's verdict panel, on a bank change.
+                PLAYERBANKSLOTS_CHANGED = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"

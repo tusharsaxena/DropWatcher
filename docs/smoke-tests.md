@@ -5012,7 +5012,7 @@ tooltip opens beside the arrow. Result:
 ### Item Search owner feedback round 4
 
 The owner feedback round 4 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`,
-R4-DW-01 to R4-DW-09; each row names its smoke id from that bundle's manifest). Same
+R4-DW-01 to R4-DW-09, and R4-DW-11 from its addendum A1; each row names its smoke id from that bundle's manifest). Same
 client and ForeverDB setup as above, on a character with Alchemy and Herbalism (Peacebloom is the
 owner's example item). Where a check here contradicts an earlier ITEM-SEARCH row (the drop source
 colors, the skill levels, the profession names, the badge, the other faction's vendors, the quest
@@ -5100,6 +5100,26 @@ other rows and one solid line (not a blurred pair of rows), the same in the tool
 table. The skill-up arrow and the padlock are unchanged. Fail: the old two-way arrow (↔) in either
 home, a thin or blurred line, a blank where the dash should be, or a dash of a different width
 between the tooltip and the window. Result:
+
+**ITEM-SEARCH-56. The verdict panel under Matches, while you hold the item (R4-DW-11, R4-DW-SM11).**
+On a character with Alchemy and Herbalism and a few Peacebloom in the bags, open the Item Search
+window on Peacebloom → at the bottom of the left column, under Matches, a `Verdict` header with
+`You have <n>` on its right, then the same two-box badge as the tooltip's (the word with its icon on
+the bright box, the score on the darker one), then one line per part that counted, each with its
+points on the right, in this order: the quests one by one, your known recipes by color
+(`Known recipes, orange skill-up (2)`), the recipes you could learn, other professions, gear, the
+dampers (`Easy to buy again -20`), a cap when one was hit (`Crafting counts 50 at most`), the poor
+cap or the quest-item floor when they apply; then `Score` with the badge's number, then the line the
+word comes from (`Keep from 50`). The points add up to the score, nothing reads 0, and no `High`,
+`Medium` or `Low` anywhere. Hover Peacebloom → the badge's word and score are the panel's. The
+Matches list ends above the panel and still shows at least five rows; drag the window down to its
+smallest → the panel gets shorter and scrolls its lines, the matches keep five rows. Put every
+Peacebloom in the bank and close the bank → the panel stays (`You have <n>`, the bank's count). Sell
+or destroy them all → within a second the panel goes and the Matches list runs down to the footer
+again; loot one → it comes back. Show an item you hold none of → no panel. Before opening your
+profession window after a login, a recipe item's panel ends with the plain hint `Open your
+profession window to rank recipes`. Looting, moving bags and hovering items with the window open →
+no hitch. Result:
 
 ## Pending sign-off
 

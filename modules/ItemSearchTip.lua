@@ -915,18 +915,38 @@ local function textOf(tip, box)
     return fs
 end
 
--- The tooltip's badge, made on its first badge: the score's box, the word's box joined flush to its
--- left, and each one's text centered on it. Nil for a tooltip that makes no texture or font string.
+--- The verdict badge's regions on `parent` (a tooltip, or the Item Search window's verdict panel,
+--- R4-DW-11: one builder, so both draw the same badge): `{ boxL, boxR, textL, textR }`, the score's
+--- box, the word's box joined flush to its left, and each one's text centered on it, hidden. The
+--- caller anchors `boxR` and fills them with IST.FillBadge. Nil for a parent that makes no texture
+--- or font string.
+--- @param parent table
+--- @return table|nil
+function IST.MakeBadge(parent)
+    if type(parent.CreateTexture) ~= "function" or type(parent.CreateFontString) ~= "function" then return nil end
+    local boxL, boxR = boxOf(parent), boxOf(parent)
+    local textL, textR = boxL and textOf(parent, boxL), boxR and textOf(parent, boxR)
+    if not (textL and textR) then return nil end
+    boxL:SetPoint("RIGHT", boxR, "LEFT", 0, 0)
+    local st = { boxL = boxL, boxR = boxR, textL = textL, textR = textR }
+    hideBadge(st)
+    return st
+end
+
+--- Show or hide a badge's regions (IST.MakeBadge's).
+--- @param st table
+--- @param on boolean
+function IST.ShowBadge(st, on)
+    showBadge(st, on)
+end
+
+-- The tooltip's badge, made on its first badge (IST.MakeBadge) and kept like the separator.
 local function badgeOf(tip)
     local st = badges[tip]
     if st then return st end
-    if type(tip.CreateTexture) ~= "function" or type(tip.CreateFontString) ~= "function" then return nil end
-    local boxL, boxR = boxOf(tip), boxOf(tip)
-    local textL, textR = boxL and textOf(tip, boxL), boxR and textOf(tip, boxR)
-    if not (textL and textR) then return nil end
-    boxL:SetPoint("RIGHT", boxR, "LEFT", 0, 0)
-    st = keep({ boxL = boxL, boxR = boxR, textL = textL, textR = textR }, hideBadge)
-    hideBadge(st)
+    st = IST.MakeBadge(tip)
+    if not st then return nil end
+    keep(st, hideBadge)
     badges[tip] = st
     return st
 end
@@ -949,8 +969,8 @@ local function fillPart(box, fs, text, ink, r, g, b)
     return w
 end
 
--- Draw `badge` (IST.Badge's parts) on the tooltip's badge, again only when it changed (the parts are
--- memoized, so a warm hover sets nothing). Answers the width to reserve: GAP and both boxes.
+-- Draw `badge` (IST.Badge's parts) on a badge (IST.MakeBadge's), again only when it changed (the parts
+-- are memoized, so a warm hover sets nothing). Answers the width to reserve: GAP and both boxes.
 local function fillBadge(st, badge)
     if st.badge == badge then return st.width end
     local r, g, b = rgb(badge.tone)
@@ -959,6 +979,16 @@ local function fillBadge(st, badge)
     local wr = fillPart(st.boxR, st.textR, badge.score, badge.ink, r * k, g * k, b * k)
     st.badge, st.width = badge, C.ITEM_SEARCH.BADGE.GAP + wl + wr
     return st.width
+end
+
+--- Draw `badge` (IST.Badge's parts) on `st` (IST.MakeBadge's regions): the word's box in the
+--- verdict's bright tone, the score's in C.ITEM_SEARCH.BADGE.DARK times it. Sets nothing when `st`
+--- already shows those parts. Answers the badge's width with C.ITEM_SEARCH.BADGE.GAP before it.
+--- @param st table
+--- @param badge table
+--- @return number
+function IST.FillBadge(st, badge)
+    return fillBadge(st, badge)
 end
 
 -- The label's text with the badge's width reserved at its end: a texture escape cropped to one
