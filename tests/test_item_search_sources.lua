@@ -43,6 +43,42 @@ test("item search sources: a quest's giver skips a test-named one for the next",
     assertEqual(rows[1].cells.giver.text, "Invented Giver")
 end)
 
+test("item search sources: one giver helper for the tooltip and the window: the first named, non-test giver (R4-DW-09)", function()
+    local NS = T.newAddon()
+    local IS, ISC = NS.ItemSearch, NS.ItemSearchCells
+    local npc = { [1] = { name = "TEST Invented Giver" }, [3] = { name = "Invented Child" } }
+    local object = { [2] = { name = "Invented Board" } }
+    local function n(id) return npc[id] end
+    local function o(id) return object[id] end
+    -- red under: no shared helper (each home picked its own giver)
+    local g = IS.QuestGiver({ { kind = "npc", id = 1 }, { kind = "npc", id = 4 }, { kind = "object", id = 2 },
+        { kind = "npc", id = 3 } }, n, o)
+    assertEqual(g.kind, "object"); assertEqual(g.id, 2); assertEqual(g.name, "Invented Board",
+        "the test-named giver and the nameless one skipped, an object giver read by its own reader")
+    assertNil(IS.QuestGiver(nil, n, o), "no givers")
+    assertNil(IS.QuestGiver({ { kind = "npc", id = 1 } }, n, o), "only a test-named giver")
+    assertNil(IS.QuestGiver({ "junk", { kind = "npc" } }, n, o), "malformed entries")
+    assertEqual(ISC.GiverText("Odd Child", "Westfall"), "Odd Child - Westfall", "the owner's example")
+    assertEqual(ISC.GiverText("Odd Child", nil), "Odd Child", "no zone: the name alone")
+    assertNil(ISC.GiverText(nil, "Westfall"), "no giver: nothing")
+end)
+
+test("item search sources: the static facts resolve each quest's giver once (R4-DW-09)", function()
+    local fake
+    local NS, _, m = T.enableAddon{ mock = function(mm) fake = FDB.install(mm, { preset = "present" }) end }
+    m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
+    m.advance(5)
+    assertTrue(fake ~= nil)
+    local byId = {}
+    for _, q in ipairs(NS.ItemSearch.Get(IDS.leather).quests) do byId[q.id] = q end
+    local g = byId[IDS.errand].giver
+    -- red under: quest facts with no giver (the tooltip had none to show)
+    assertEqual(g.name, "Fixture Gnoll"); assertEqual(g.kind, "npc"); assertEqual(g.id, IDS.gnoll)
+    assertNil(byId[IDS.hunt].giver, "the hunt has no giver")
+    assertTrue(NS.ItemSearch.Get(IDS.leather).quests[1].giver == NS.ItemSearch.Get(IDS.leather).quests[1].giver,
+        "one giver record per item for the session (the live copy keeps it)")
+end, FOREVER_ONLY)
+
 -- A reader in LibKa0s-ForeverDB-1.0's shape over invented rows: two herb nodes under one name, a
 -- vein, a School, a quest Pool, a chest, a test chest, a test creature, a test vendor and a
 -- test-named skinned creature.

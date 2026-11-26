@@ -369,13 +369,41 @@ function IS.MaskAllows(mask, id)
     return floor(mask / 2 ^ (id - 1)) % 2 == 1
 end
 
+--- A quest's first giver whose name is not a test or dev one (round 3 spec §4.3), for the tooltip
+--- and the window alike (R4-DW-09): `{ kind, id, name }`, a new table, or nil. A giver with no name
+--- is skipped as a test-named one is.
+--- @param givers table|nil ForeverDB's quest row's `givers`, `{ { kind = "npc"|"object", id } ... }`
+--- @param npc function|nil id -> a creature row (`name`)
+--- @param object function|nil id -> an object row (`name`)
+--- @return table|nil
+function IS.QuestGiver(givers, npc, object)
+    for _, g in ipairs(list(givers)) do
+        if type(g) == "table" and num(g.id) then
+            local reader = g.kind == "object" and object or npc
+            local row = type(reader) == "function" and reader(g.id) or nil
+            local name = type(row) == "table" and type(row.name) == "string" and row.name or nil
+            if name and not IS.IsTestSource(name) then
+                return { kind = g.kind == "object" and "object" or "npc", id = g.id, name = name }
+            end
+        end
+    end
+    return nil
+end
+
+-- A quest's giver for the static facts (R4-DW-09): IS.QuestGiver over ForeverDB's quest row, read
+-- once per item. Its spots are not kept: the tooltip reads them once per giver (its zone memo).
+local function questGiver(db, id)
+    local info = type(db.Quest) == "function" and db.Quest(id) or nil
+    return IS.QuestGiver(type(info) == "table" and info.givers or nil, db.NPC, db.Object)
+end
+
 local function questRows(db, itemID, ctx)
     local out = {}
     for _, q in ipairs(list(db.QuestsForItem(itemID))) do
         if type(q) == "table" and num(q.id) and IS.MaskAllows(q.races, ctx.race)
             and IS.MaskAllows(q.classes, ctx.class) then
             out[#out + 1] = { id = q.id, title = q.title, level = num(q.level), minLevel = num(q.minLevel),
-                preQuests = list(q.preQuests) }
+                preQuests = list(q.preQuests), giver = questGiver(db, q.id) }
         end
     end
     return out
@@ -677,10 +705,19 @@ end
 -- `{ [spots] = { [kind] = { [id] = { [map] = true } | false } } }`. IS.ForgetSpots empties it when
 -- ForeverDB's state moves (modules/ItemSearch.lua's IS.State).
 local spotMaps = setmetatable({}, { __mode = "k" })
+local spotsGeneration = 0
 
 --- Empty the spot memo (ForeverDB's state moved, or a test swapped the fake's rows).
 function IS.ForgetSpots()
     spotMaps = setmetatable({}, { __mode = "k" })
+    spotsGeneration = spotsGeneration + 1
+end
+
+--- How many times the spot memo was emptied: a memo built from spots elsewhere (the tooltip's
+--- quest giver zones, R4-DW-09) empties itself when this moves.
+--- @return number
+function IS.SpotsGeneration()
+    return spotsGeneration
 end
 
 -- The maps `id` (of `kind`) has a spot on, `{ [map] = true }`, or nil; read once per reader.

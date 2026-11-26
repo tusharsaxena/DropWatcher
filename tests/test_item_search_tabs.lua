@@ -297,7 +297,8 @@ test("item search cells: QUESTS' rows join the objectives, the rewards and the o
     assertEqual(texts(rows, "role"), "Needs it,Rewards it,Starts it")
     assertEqual(texts(rows, "status"), "In your log,Requires level 40,Completed")
     assertEqual(rows[1].cells.mark.mark, "log"); assertEqual(rows[2].cells.mark.mark, "high")
-    assertEqual(rows[1].cells.giver.text, "Gnoll · Vale"); assertEqual(rows[1].spot.map, 9)
+    -- red under: the old " · " (R4-DW-09: " - ", as in the tooltip, the owner's "Odd Child - Westfall")
+    assertEqual(rows[1].cells.giver.text, "Gnoll - Vale"); assertEqual(rows[1].spot.map, 9)
     -- round 3 item 13: complete but not turned in, its own status, sorted before the log
     facts.quests[1].state = "ready"
     rows = C.Quests(facts, { level = 20, questState = function(id) return id == 3 and "done" or "todo" end },

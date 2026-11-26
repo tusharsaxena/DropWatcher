@@ -505,31 +505,27 @@ local function questInputs(facts)
     return out
 end
 
--- A giver's name, or nil.
-local function giverName(g, ctx)
-    local reader = g.kind == "object" and ctx.object or ctx.npc
-    local row = call(reader, g.id)
-    return type(row) == "table" and row.name or nil
+-- The quest's giver (NS.ItemSearch.QuestGiver, the tooltip's too: R4-DW-09): its name and where it
+-- stands.
+local function giverOf(info, me, ctx)
+    local g = IS.QuestGiver(type(info) == "table" and info.givers or nil, ctx.npc, ctx.object)
+    if not g then return nil, nil end
+    return g.name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
 end
 
--- The quest's first giver whose name is not a test or dev one (round 3 spec §4.3): its name and
--- where it stands.
-local function giverOf(info, me, ctx)
-    for _, g in ipairs(type(info) == "table" and list(info.givers) or {}) do
-        if type(g) == "table" and num(g.id) then
-            local name = giverName(g, ctx)
-            if not IS.IsTestSource(name) then
-                return name, ISC.Where(call(ctx.spots, g.kind, g.id), me.mapID, ctx.mapName)
-            end
-        end
-    end
-    return nil, nil
+--- A quest giver's text, in the tooltip and the window's Giver column alike (R4-DW-09, the owner's
+--- "Odd Child - Westfall"): "<Giver> - <Zone>", the name alone with no zone, nil with no giver.
+--- @param name string|nil
+--- @param zone string|nil
+--- @return string|nil
+function ISC.GiverText(name, zone)
+    if not name then return nil end
+    if zone then return L["%s - %s"]:format(name, zone) end
+    return name
 end
 
 local function giverText(name, where)
-    if not name then return DASH end
-    if where and where.zone then return L["%s · %s"]:format(name, where.zone) end
-    return name
+    return ISC.GiverText(name, where and where.zone) or DASH
 end
 
 local function questTip(q, title, status, giver, where)

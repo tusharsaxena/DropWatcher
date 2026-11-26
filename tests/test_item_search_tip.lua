@@ -356,6 +356,54 @@ end
 
 local GOSSIP = "Interface\\GossipFrame\\"
 
+test("item search tip: a quest row reads mark, Title (Level) in its tone on the left, Giver - Zone on the right (R4-DW-09)", function()
+    local maps = 0
+    local NS, m, tdp = enabled({ setup = function(mm)
+        questLog(mm, {})
+        mm.C_Map = { GetMapInfo = function(id)
+            maps = maps + 1
+            return ({ [IDS.mapA] = { name = "Fixture Vale" } })[id]
+        end }
+    end })
+    local tip = tdp.tooltip("GameTooltip")
+    tipSettings(NS).header = false
+    m.__context.level = 12
+    tdp.show(tip, IDS.leather)
+    local b = block(tdp, tip)
+    local q = find(b, "Quests")
+    local errand, hunt
+    for i = q + 1, q + 2 do
+        if b[i]:find("Fixture Errand", 1, true) then errand = b[i] else hunt = b[i] end
+    end
+    -- red under: the old "level 12" on the right, and no giver (the owner: "[Quest Icon] [Quest Name]
+    -- ([Quest Level])    [Giver - e.g. Odd Child - Westfall]")
+    assertTrue(errand:find("|t Fixture Errand (12) | Fixture Gnoll - Fixture Vale", 1, true) ~= nil, errand)
+    assertEqual(hunt:sub(-#"|t Fixture Hunt (14)"), "|t Fixture Hunt (14)", "no giver: nothing on the right")
+    assertTrue(find(b, "level 12") == nil and find(b, "level 14") == nil, "no level on the right")
+    -- the level in the title's difficulty tone: the line's own color (the mark keeps its tint)
+    local lines = NS.ItemSearchTip.Lines(NS.ItemSearch.Get(IDS.leather), NS.ItemSearchTip.Options(), nil,
+        NS.ItemSearch.Me())
+    local tones = {}
+    for _, l in ipairs(lines) do
+        if l.text:find("Fixture Errand", 1, true) then tones.errand = l.tone end
+        if l.text:find("Fixture Hunt", 1, true) then tones.hunt = l.tone end
+    end
+    assertEqual(tones.errand, "skillYellow", "level 12 at 12: yellow")
+    assertEqual(tones.hunt, "skillYellow", "level 14 at 12: yellow (within two)")
+    m.__context.level = 80
+    lines = NS.ItemSearchTip.Lines(NS.ItemSearch.Get(IDS.leather), NS.ItemSearchTip.Options(), nil, NS.ItemSearch.Me())
+    for _, l in ipairs(lines) do
+        if l.text:find("Fixture Errand", 1, true) then assertEqual(l.tone, "skillGray", "gray at 80") end
+    end
+    -- the zone is memoized per giver and map: a warm hover asks the client for no map name
+    tdp.hide(tip)
+    tdp.show(tip, IDS.leather)
+    local before = maps
+    tdp.hide(tip)
+    tdp.show(tip, IDS.leather)
+    assertEqual(maps, before, "warm: no map read")
+end, FOREVER_ONLY)
+
 test("item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default", function()
     local states = {}
     local NS, m, tdp = enabled({ setup = function(mm) questLog(mm, states) end })

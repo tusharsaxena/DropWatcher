@@ -68,7 +68,10 @@ local _, NS = ...
 --       Quests        the game's marks (IST.QuestMark, round 3 item 13): the yellow `!` not picked
 --                     up (dimmed while your level is too low), the gray `?` in your log, the green
 --                     `?` complete and waiting to be turned in, a green check turned in (left out
---                     while "Hide completed quests" is on); the quest's level on the right;
+--                     while "Hide completed quests" is on), then "<Title> (<Level>)" in the quest's
+--                     difficulty tone; on the right "<Giver> - <Zone>" (R4-DW-09), muted: the first
+--                     giver not test-named (NS.ItemSearch.QuestGiver, resolved once per item), its
+--                     text memoized per giver and map;
 --       Crafting      the recipe glyph (IST.CraftMark, §5.7); on the right the recipe's skill
 --                     breakpoints, each in its skill-up hue (round 3 item 4, the window's Skill
 --                     column's parts, memoized per recipe), then " · <profession>" in muted when
@@ -519,6 +522,38 @@ local function vendorLines(_, r, o, out, me)
     otherFaction(out, other)
 end
 
+-- A quest giver's "<Giver> - <Zone>" (NS.ItemSearchCells.GiverText, the window's Giver column's),
+-- memoized per giver (kind and id) and map, so a hover builds no string and reads no spot or map
+-- name once the giver was shown on that map. False in the memo: no text. Emptied when the spots
+-- are (NS.ItemSearch.SpotsGeneration: ForeverDB's state moved, or ForeverDB_Full loaded).
+local giverMemo, giverGeneration = { npc = {}, object = {} }, nil
+
+local function giverZone(g, me, map)
+    local spots = me and me.spots
+    local where = type(spots) == "function"
+        and NS.ItemSearchCells.Where(spots(g.kind, g.id), map, Compat.MapName) or nil
+    return where and where.zone or nil
+end
+
+local function giverRight(g, me)
+    if type(g) ~= "table" or not giverMemo[g.kind] then return nil end
+    local generation = IS.SpotsGeneration()
+    if giverGeneration ~= generation then giverMemo, giverGeneration = { npc = {}, object = {} }, generation end
+    local map = me and me.mapID
+    local byId = giverMemo[g.kind]
+    local byMap = byId[g.id]
+    if not byMap then byMap = {}; byId[g.id] = byMap end
+    local text = byMap[map or 0]
+    if text == nil then
+        text = NS.ItemSearchCells.GiverText(g.name, giverZone(g, me, map)) or false
+        byMap[map or 0] = text
+    end
+    return text or nil
+end
+
+-- A quest row (R4-DW-09, the owner's layout): "<mark> <Title> (<Level>)" on the left in the title's
+-- difficulty tone (NS.ItemSearchCells.LevelTone, the window's Quest cell's), "<Giver> - <Zone>" on
+-- the right, muted.
 local function questLines(_, r, o, out, me)
     local rows = {}
     for _, q in ipairs(r.quests) do
@@ -527,12 +562,13 @@ local function questLines(_, r, o, out, me)
     if #rows == 0 then return end
     add(out, L["Quests"], "mutedGold")
     local shown, rest = capped(rows, o.rows)
-    local status, level = NS.ItemSearchCells.QuestStatus, me and me.level
+    local cells, level = NS.ItemSearchCells, me and me.level
     for i = 1, shown do
         local q = rows[i]
-        local mark = IST.QuestMark(status(q.state, q.minLevel, level), C.ITEM_SEARCH.MARK_SIZE)
-        add(out, INDENT .. mark .. " " .. (q.title or L["Quest %d"]:format(q.id)), "plain",
-            q.level and L["level %d"]:format(q.level) or nil, "muted")
+        local mark = IST.QuestMark(cells.QuestStatus(q.state, q.minLevel, level), C.ITEM_SEARCH.MARK_SIZE)
+        local text = INDENT .. mark .. " " .. (q.title or L["Quest %d"]:format(q.id))
+        if q.level then text = text .. L[" (%d)"]:format(q.level) end
+        add(out, text, cells.LevelTone(q.level, level), giverRight(q.giver, me), "muted")
     end
     more(out, rest)
 end
