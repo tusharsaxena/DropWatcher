@@ -89,9 +89,9 @@ local _, NS = ...
 --
 -- THE MARKS are texture escapes, tinted through the escape: the tooltip's face draws no check mark,
 -- arrow or padlock (the glyph guard's safe set), as NS.TipMarks' verdict marks. The recipe glyphs
--- are LibKa0s media icons (`ph:arrow-fat-up`, `ph:arrows-horizontal` and `ph:lock`) at an explicit
--- C.ITEM_SEARCH.GLYPH_SIZE (14:14), so the tooltip and the window's glyph column draw them at one
--- size (round 3 spec §4.1). The quest marks are the client's own GossipFrame icons and the media
+-- are LibKa0s media icons (`ph:arrow-fat-up`, `dash` and `ph:lock`) at an explicit
+-- C.ITEM_SEARCH.GLYPH_SIZE (14:14; the dash 14 wide, cropped to its bar and DASH_HEIGHT tall), so the
+-- tooltip and the window's glyph column draw them at one size (round 3 spec §4.1, round 4 R4-DW-02). The quest marks are the client's own GossipFrame icons and the media
 -- icon `ph:check-fat`, at C.ITEM_SEARCH.MARK_SIZE, the same in the tooltip and the window (§4.2).
 -- With the media library absent every mark falls back to a character every face has.
 
@@ -117,7 +117,7 @@ local SKILL_TONE = { orange = "skillOrange", yellow = "skillYellow", green = "sk
 -- skill-up's own for an up arrow), and the character it falls back to.
 local GLYPH = {
     up     = { icon = "ph:arrow-fat-up", fallback = "^" },
-    flat   = { icon = "ph:arrows-horizontal", tone = "glyphKnown", fallback = "=" },
+    flat   = { icon = "dash", tone = "glyphKnown", fallback = "-" },
     locked = { icon = "ph:lock", tone = "glyphLocked", fallback = "x" },
 }
 local SKILL_UP = { orange = true, yellow = true, green = true }
@@ -238,15 +238,30 @@ function IST.CraftGlyph(row)
     return "flat"
 end
 
+-- LibKa0s' `dash` (tools/artwork/dash_icon.py): its bar's rows on the 64-pixel canvas, top and bottom.
+local DASH_TOP, DASH_BOTTOM = 25, 39
+
+-- The no-skill-up dash: the texture cropped to its bar, GLYPH_SIZE wide (the fat arrow's width) and
+-- DASH_HEIGHT tall, a whole number of pixels, so the line never smears over two half-lit rows.
+local function dashMark(g)
+    local path = NS.Icon(g.icon)
+    if not path then return colored(g.fallback, g.tone) end
+    local r, gr, b = rgb(g.tone)
+    local s, S = NS.TipMarks.TEX_SIZE, NS.TipMarks.Byte
+    return ("|T%s:%d:%d:0:0:%d:%d:0:%d:%d:%d:%d:%d:%d|t"):format(path, C.ITEM_SEARCH.DASH_HEIGHT,
+        C.ITEM_SEARCH.GLYPH_SIZE, s, s, s, DASH_TOP, DASH_BOTTOM, S(r), S(gr), S(b))
+end
+
 --- A crafting row's mark, in the tooltip and the window alike: a fat up arrow in the skill-up color,
---- a light gray left-right arrow, or a dark gray padlock (IST.CraftGlyph), each at
---- C.ITEM_SEARCH.GLYPH_SIZE. The shapes differ as well as the colors, so a color-blind player reads
---- them too.
+--- a thick light gray dash (round 4, R4-DW-02), or a dark gray padlock (IST.CraftGlyph), each
+--- C.ITEM_SEARCH.GLYPH_SIZE wide. The shapes differ as well as the colors, so a color-blind player
+--- reads them too.
 --- @param row table a crafting row (IS.Live's)
 --- @return string
 function IST.CraftMark(row)
     local glyph = IST.CraftGlyph(row)
     local g = GLYPH[glyph]
+    if glyph == "flat" then return dashMark(g) end
     local tone = glyph == "up" and SKILL_TONE[row.color] or g.tone
     return icon(g.icon, tone, g.fallback, C.ITEM_SEARCH.GLYPH_SIZE)
 end

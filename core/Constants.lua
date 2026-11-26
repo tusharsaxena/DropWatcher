@@ -499,6 +499,10 @@ C.ITEM_SEARCH = {
     -- The recipe glyphs' size in pixels, the tooltip's and the window's alike (round 3 spec §4.1):
     -- an explicit escape size, so both faces draw them the same.
     GLYPH_SIZE  = 14,
+    -- The no-skill-up dash's height in pixels (round 4, R4-DW-02): LibKa0s' `dash` is 14 of its 64
+    -- rows tall, so at GLYPH_SIZE wide its bar is 14 * 14 / 64 = 3.06 px. The escape crops the
+    -- texture to the bar and draws it a whole 3 px tall, one solid line at any sub-pixel offset.
+    DASH_HEIGHT = 3,
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,

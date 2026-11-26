@@ -1027,7 +1027,7 @@ Total.
 - item search tip: a quest row reads mark, Title (Level) in its tone on the left, Giver - Zone on the right (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the window's quest marks are the tooltip's, at MARK_SIZE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray left-right arrow for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: crafting glyphs: a fat up arrow for a skill-up, a thick gray dash for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: recipe rows show their skill breakpoints in their hues, memoized per recipe and emptied by a skin switch (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: an item with nothing to show gets no block, title and hint included (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: never twice per show; the client's refresh, a hide and another item write it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -1039,7 +1039,7 @@ Total.
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_window.lua (43)
+### test_item_search_window.lua (44)
 
 - item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
 - item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
@@ -1069,6 +1069,7 @@ Total.
 - item search window: a column title lights under the pointer and shows the triangle its click would give (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: Linen's Crafting tab: the glyphs, the My professions chip and the filtered count (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
+- item search window: a known recipe with no skill-up draws the tooltip's thick gray dash (R4-DW-02) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: Sold by's Only my faction starts at Hide the other faction's vendors, and Reset returns to it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
 - item search window: the Crafting tab's filter follows Only professions you know when the setting moves (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
@@ -3568,5 +3569,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 126 |
+| Skipped | 127 |
 | **Total** | **2850** |

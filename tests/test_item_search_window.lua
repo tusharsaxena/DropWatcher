@@ -634,7 +634,7 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
         assertTrue(row.cells[3].text:GetText() == "First Aid", "only First Aid's recipes")
         assertTrue(row.cells[1].text:GetText() ~= "", "a glyph")
         -- round 3 spec §4.1: the tooltip's glyph at its explicit size, centered in its column
-        assertTrue(row.cells[1].text:GetText():find(":14:14:", 1, true) ~= nil, "the glyph at GLYPH_SIZE, as in the tooltip")
+        assertTrue(row.cells[1].text:GetText():find(":%d+:14:0:0:") ~= nil, "the glyph GLYPH_SIZE wide, as in the tooltip")
         assertEqual(row.cells[1].text:GetJustifyH(), "CENTER", "the glyph column centered")
     end
     assertEqual(f.grid.layout.glyph.x, NS.ItemSearchTabs.INSET, "the first column inset off the table's edge")
@@ -644,6 +644,27 @@ test("item search window: Linen's Crafting tab: the glyphs, the My professions c
     assertTrue(#W.TableRows() > shown, "every profession's recipes")
     assertEqual(NS.Window.TooltipOf(f.section.chip)[1], "All professions")
     assertFalse(NS.addon.db.profile.itemSearch.myProfessionsOnly == false, "the chip is not saved")
+end, FOREVER_ONLY)
+
+test("item search window: a known recipe with no skill-up draws the tooltip's thick gray dash (R4-DW-02)", function()
+    local NS = enabled({ setup = function(mm)
+        local lines = { { name = "First Aid", rank = 300, skillID = 129 } }
+        mm.C_SkillInfo = { GetNumSkillLines = function() return #lines end, GetSkillLineInfo = function(i) return lines[i] end }
+        mm.IsPlayerSpell = function() return true end
+    end })
+    local W = NS.ItemSearchWindow
+    W.ShowItem(LINEN)
+    local dashes = 0
+    for _, row in ipairs(W.TableRows()) do
+        local text = row.cells[1].text:GetText()
+        -- red under: the window's two-way arrow (owner feedback round 4: "both in tooltip and in ItemSearch window")
+        assertTrue(not text:find("arrows-horizontal", 1, true), "no two-way arrow in the window")
+        if text:find("icons\\dash:", 1, true) then
+            dashes = dashes + 1
+            assertEqual(text, NS.ItemSearchTip.CraftMark({ known = true, color = "gray" }), "the tooltip's own dash")
+        end
+    end
+    assertTrue(dashes > 0, "a known First Aid recipe at rank 300 reads no skill-up")
 end, FOREVER_ONLY)
 
 test("item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08)", function()

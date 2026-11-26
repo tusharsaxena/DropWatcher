@@ -4860,7 +4860,9 @@ same thick up arrow, in its orange, yellow or green, at the same size in the too
 table; a known recipe with no skill-up shows a gray two-way arrow (↔), and one you don't know the
 dark gray padlock. The glyph column sits off the table's left edge with the glyph centered in it, and
 on every tab the first column starts a little in from the edge (the stripes and the hover wash still
-run the full width). Fail: two arrow sizes, a dash, or a column touching the edge. Result:
+run the full width). Fail: two arrow sizes, a dash, or a column touching the edge. (Superseded in
+part by ITEM-SEARCH-55, owner feedback round 4: no skill-up is now a thick gray dash, not the two-way
+arrow.) Result:
 
 **ITEM-SEARCH-32. Clickable column titles and LootHistory's triangles (items 5, 11).** On any tab,
 move the pointer over a column title → it lights up in the link color, a tooltip names the column
@@ -5010,12 +5012,11 @@ tooltip opens beside the arrow. Result:
 ### Item Search owner feedback round 4
 
 The owner feedback round 4 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`,
-R4-DW-01 and R4-DW-03 to R4-DW-09; each row names its smoke id from that bundle's manifest). Same
+R4-DW-01 to R4-DW-09; each row names its smoke id from that bundle's manifest). Same
 client and ForeverDB setup as above, on a character with Alchemy and Herbalism (Peacebloom is the
 owner's example item). Where a check here contradicts an earlier ITEM-SEARCH row (the drop source
 colors, the skill levels, the profession names, the badge, the other faction's vendors, the quest
-rows), this one is current, and each older row says so where it differs. R4-DW-02 (the thick gray
-dash) has no row here yet: it waits on the LibKa0s `dash` icon, and its row comes with it.
+rows, the no-skill-up glyph), this one is current, and each older row says so where it differs.
 
 **ITEM-SEARCH-47. Each Type in its own color, names plain (R4-DW-01, R4-DW-SM1).** Show Linen
 Cloth (or any item with creature, elite, rare, object and container sources) in the Item Search
@@ -5089,6 +5090,15 @@ has nothing on the right; a giver with no known spawn shows the name alone; a te
 skipped for the next one. Open the window on Peacebloom, Quests tab → the Giver column reads the
 same `<Giver> - <Zone>`, with ` - ` instead of the old ` · `, and the same giver as the tooltip. Hover
 quickly over many quest items → no hitch. Result:
+
+**ITEM-SEARCH-55. No skill-up is a thick gray dash, in both homes (R4-DW-02, R4-DW-SM2).** After a full
+client restart (a new texture file), on a character whose rank leaves some known recipe gray (or one
+with no skill levels), hover the item, then show it in the Item Search window's Crafting tab → that
+recipe's glyph is a thick light gray dash with rounded ends, as wide as the skill-up arrow beside
+other rows and one solid line (not a blurred pair of rows), the same in the tooltip and in the
+table. The skill-up arrow and the padlock are unchanged. Fail: the old two-way arrow (↔) in either
+home, a thin or blurred line, a blank where the dash should be, or a dash of a different width
+between the tooltip and the window. Result:
 
 ## Pending sign-off
 
