@@ -25,5 +25,14 @@ function NS.MediaFont(name)
     return Media.Font(addonName, name)
 end
 
+--- The path of one shipped background (the library's `BACKGROUNDS`, e.g. "Ka0s Glass", the verdict
+--- badge's rounded fill, R5-DW-02), or nil when the library is absent.
+--- @param name string
+--- @return string|nil
+function NS.MediaBackground(name)
+    if not Media or type(Media.Background) ~= "function" then return nil end
+    return Media.Background(addonName, name)
+end
+
 -- At FILE LOAD, not PLAYER_LOGIN: LibSharedMedia is vendored under libs/ and has already run.
 if Media then Media.RegisterLSM(addonName) end

@@ -1008,7 +1008,7 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (29)
+### test_item_search_tip.lua (33)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
@@ -1035,10 +1035,14 @@ Total.
 - item search tip: every item tooltip, comparison tooltips only with their setting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: Shift-only writes the block only while Shift is held (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a fill nested in the post call (Pawn's private scan tooltip) is skipped, never recursed (R5-DW-00) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: an error inside the post call releases the guard (R5-DW-00) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the rows follow the player: the level band and the zone move a creature up (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: crafting rows are a table: glyph and name left, skill levels and profession right in fixed columns (R5-DW-09, R5-DW-10) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a larger tooltip font widens the crafting profession column instead of cutting the name short (R5-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
 ### test_item_search_window.lua (44)
 
@@ -1207,7 +1211,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (22)
+### test_item_search_verdict.lua (24)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1222,9 +1226,11 @@ Total.
 - verdict: a Low confidence never says Toss: it holds
 - verdict: gear whose gear verdict has not answered never says Toss, at any confidence
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
+- compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)
+- verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)
 - verdict: the reasons always carry the largest negative part, so the shown parts explain the score
-- verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)
@@ -1232,12 +1238,14 @@ Total.
 - verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
 
-### test_item_search_panel.lua (11)
+### test_item_search_panel.lua (13)
 
 - verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
@@ -3495,7 +3503,7 @@ Total.
 | test_item_search_rank.lua | 14 |
 | test_item_search_sources.lua | 17 |
 | test_item_search_prices.lua | 6 |
-| test_item_search_verdict.lua | 18 |
+| test_item_search_verdict.lua | 20 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3589,5 +3597,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 140 |
-| **Total** | **2854** |
+| Skipped | 146 |
+| **Total** | **2856** |

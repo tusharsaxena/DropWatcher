@@ -12,7 +12,8 @@ local _, NS = ...
 --     tier = "high" | "medium" | "low", reasons = { text, ... }, hint = text | nil }
 -- THE SCORE is clamp(sum, 0, 100) of the parts in C.ITEM_SEARCH.VERDICT, each one noting a reason: a
 -- new collectible is 100 and nothing else is worked out; a quest in your log (or ready to turn in)
--- that needs the item +60 each, one you can pick up (its minimum level at most yours + 3) +35, a
+-- that needs the item +60 each, one you can pick up (its minimum level at most yours + 3) +35 (one
+-- reason and one breakdown line for them all, "Quests you could pick up (N)", R5-DW-03), a
 -- quest the item starts +50, the quests together at most 80; a known recipe in a profession you have
 -- by its skill-up color (orange 30, yellow 20, green 8, gray 0), an unknown one your rank is below
 -- the gray of +10, those together at most 50; +3 a recipe of a profession you lack (at most 9, and
@@ -42,7 +43,7 @@ local _, NS = ...
 -- other professions; gear; the dampers; then every bound that moved the sum, as its own line with
 -- the points it took or gave (a hit cap, the 0..100 clamp, the poor-quality cap, the quest item's
 -- floor). The lines add up to the score, a part worth 0 is left out, and `from` is the line the
--- verdict word comes from ("Keep from 50"). No confidence tier; the fix (`hint`) is the
+-- verdict word comes from, in plain words ("Keep: a score of 50 or more", R5-DW-06). No confidence tier; the fix (`hint`) is the
 -- confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
 -- panel and the badge's reasons can never disagree and the hover pays nothing for it.
 --
@@ -126,20 +127,23 @@ local function questRow(q, me, acc)
         both(acc, "quest", V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)))
         return V.QUEST_LOG
     end
-    if state == "todo" and canPickUp(q, num(me.level)) then
-        both(acc, "quest", V.QUEST_CAN, L["Quest you can pick up: %s"]:format(titleOf(q)))
-        return V.QUEST_CAN
-    end
+    if state == "todo" and canPickUp(q, num(me.level)) then return V.QUEST_CAN, true end
     return 0
 end
 
 local IN_HAND = { done = true, log = true, ready = true }
 
 local function questPart(facts, me, acc)
-    local total = 0
+    local total, can = 0, 0
     for _, q in ipairs(list(facts.quests)) do
-        if type(q) == "table" then total = total + questRow(q, me, acc) end
+        if type(q) == "table" then
+            local points, pickUp = questRow(q, me, acc)
+            total = total + points
+            if pickUp then can = can + 1 end
+        end
     end
+    -- the quests you could pick up as one count, like the recipes you could learn (R5-DW-03)
+    if can > 0 then both(acc, "quest", can * V.QUEST_CAN, L["Quests you could pick up (%d)"]:format(can)) end
     local starts = facts.startsQuest
     if type(starts) == "table" and not IN_HAND[questStateOf(starts, me) or ""] then
         both(acc, "quest", V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)))
@@ -412,14 +416,15 @@ local function decide(score, tier, sellPrice, unjudged)
     return "toss", "toss"
 end
 
--- The line the verdict word comes from, by decide's why.
+-- The line the verdict word comes from, by decide's why, in plain words (R5-DW-06: "Keep from 50"
+-- meant the score is 50 or more, so the word is Keep; the owner asked what it meant).
 local function fromText(why)
-    if why == "keep" then return L["Keep from %d"]:format(V.KEEP) end
-    if why == "hold" then return L["Hold from %d"]:format(V.HOLD) end
-    if why == "price" then return L["Hold: under %d, and the sell price is not known yet"]:format(V.HOLD) end
-    if why == "sell" then return L["Sell: under %d, and a vendor buys it"]:format(V.HOLD) end
-    if why == "toss" then return L["Toss: under %d, and no vendor buys it"]:format(V.HOLD) end
-    return L["Hold: under %d, but too little is known to toss it"]:format(V.HOLD)
+    if why == "keep" then return L["Keep: a score of %d or more"]:format(V.KEEP) end
+    if why == "hold" then return L["Hold: a score of %d to %d"]:format(V.HOLD, V.KEEP - 1) end
+    if why == "price" then return L["Hold: a score under %d, and the sell price is not known yet"]:format(V.HOLD) end
+    if why == "sell" then return L["Sell: a score under %d, and a vendor buys it"]:format(V.HOLD) end
+    if why == "toss" then return L["Toss: a score under %d, and no vendor buys it"]:format(V.HOLD) end
+    return L["Hold: a score under %d, but too little is known to toss it"]:format(V.HOLD)
 end
 
 local function before(a, b)
@@ -478,9 +483,9 @@ end
 -- price and the parts' notes.
 local function judge(facts, me, item, bd)
     local confidence, tier, hint = IS.Confidence(facts, me, item)
-    local acc, score = scratchReasons(bd), 100
+    local acc, score = scratchReasons(bd), V.COLLECT
     if item.newCollect then
-        both(acc, "collect", 100, L["New to your collection"])
+        both(acc, "collect", V.COLLECT, L["New to your collection"])
     else
         score = scoreOf(facts, me, item, acc)
     end
@@ -526,6 +531,39 @@ function IS.Breakdown(facts, me, item)
     local lines = {}
     local verdict, why, score, _, _, hint = judge(facts, me, item, lines)
     return { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
+end
+
+-- ── how the score works, explained (R5-DW-07) ───────────────────────────────────────────────
+
+--- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title, then one line per
+--- rule, every number read from C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with
+--- the scorer. A new list each call (a hover's, never the tooltip block's).
+--- @return table lines
+function IVD.ScoringHelp()
+    local c = V.CRAFT
+    local cheap = NS.Compat.CoinText(V.REBUY_PRICE) or tostring(V.REBUY_PRICE)
+    return {
+        L["How the score works"],
+        L["The score, 0 to 100, is what the item is still good for to this character."],
+        L["Adds:"],
+        L["  A quest in your log or ready to hand in: +%d each"]:format(V.QUEST_LOG),
+        L["  A quest you could pick up (up to %d levels above you): +%d each"]:format(V.QUEST_CAN_ABOVE, V.QUEST_CAN),
+        L["  A quest it starts: +%d (quests count %d at most)"]:format(V.STARTS, V.QUESTS_CAP),
+        L["  Your recipe by skill-up: orange +%d, yellow +%d, green +%d"]:format(c.orange, c.yellow, c.green),
+        L["  A recipe you could learn: +%d (your recipes count %d at most)"]:format(V.LEARN, V.CRAFT_CAP),
+        L["  Another profession's recipe: +%d (%d at most)"]:format(V.OTHERS, V.OTHERS_CAP),
+        L["  Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
+        L["  New to your collection: %d"]:format(V.COLLECT),
+        L["Takes away:"],
+        L["  Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
+        L["  Every use gray or done: %d"]:format(V.TRIVIAL),
+        L["  Poor quality counts %d at most, unless a quest wants it; a quest item %d at least"]:format(V.POOR_CAP,
+            V.QUEST_FLOOR),
+        L["The verdict:"],
+        L["  Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1),
+        L["  Under %d: Sell when a vendor buys it, else Toss."]:format(V.HOLD),
+        L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
+    }
 end
 
 -- ── the edge: the client's facts and the memo ───────────────────────────────────────────────

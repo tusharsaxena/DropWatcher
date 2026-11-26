@@ -382,20 +382,22 @@ test("item search sources: the tooltip's crafting row names its profession in th
     local alchText = NS.GroupRoster.Colored("Alchemy", alch.r, alch.g, alch.b)
     local cookText = NS.GroupRoster.Colored("Cooking", cook.r, cook.g, cook.b)
     local o = { order = IST.ORDER, sections = IST.SECTIONS, rows = 5, header = false, craftSkill = false }
-    local function rights()
+    -- the profession is the row's own column since R5-DW-10 (`col`), never in the right text
+    local function cols()
         local out = {}
         for _, l in ipairs(IST.Lines(facts, o, nil, {})) do
-            if l.text:find("Fixture Elixir", 1, true) then out.elixir = l.right end
-            if l.text:find("Fixture Stew", 1, true) then out.stew = l.right end
+            if l.text:find("Fixture Elixir", 1, true) then out.elixir = l.col; out.elixirRight = l.right end
+            if l.text:find("Fixture Stew", 1, true) then out.stew = l.col end
         end
         return out
     end
     -- red under: the profession muted (round 3), the same gray for every profession
-    local r = rights()
+    local r = cols()
     assertEqual(r.elixir, alchText); assertEqual(r.stew, cookText)
     o.craftSkill = true
-    r = rights()
-    assertTrue(r.elixir:sub(-#alchText) == alchText, "mixed rows: the parts, then the colored profession: " .. r.elixir)
+    r = cols()
+    assertEqual(r.elixir, alchText, "with the skill levels shown too")
+    assertTrue(r.elixirRight:find("Alchemy", 1, true) == nil, "not glued to the levels: " .. r.elixirRight)
 end)
 
 -- ── the type colors (round 4, R4-DW-01) ─────────────────────────────────────────────────────

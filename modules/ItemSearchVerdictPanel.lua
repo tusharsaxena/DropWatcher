@@ -8,13 +8,15 @@ local _, NS = ...
 -- so it works with the bank closed; what you wear is not held. Otherwise it hides and the Matches
 -- list takes the full height again.
 --
--- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same two
--- filled boxes, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge), then one line
--- per part that counted, with its points, in the order the score adds them: the quests by quest; the
+-- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same pill,
+-- a (?) beside it whose tooltip explains how the score works, R5-DW-07: NS.ItemSearchVerdict.ScoringHelp;
+-- R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge, .PlaceBadge), then one line
+-- per part that counted, with its points, in the order the score adds them: the quests in your log by quest and the ones you could pick up as one count (R5-DW-03); the
 -- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
 -- shown when it was hit; gear; the dampers; the 0..100 clamp, the poor-quality cap and the quest
--- item's floor when they apply. Then the total ("Score  65"), the line the verdict word comes from
--- ("Keep from 50") and, below a High confidence, the missing input's fix as a plain hint ("Open your
+-- item's floor when they apply, each part's points green when it adds and red when it takes away
+-- (R5-DW-04). No total line: the score is in the badge (R5-DW-05). Then the line the verdict word
+-- comes from, in plain words and muted ("Keep: a score of 50 or more", R5-DW-06) and, below a High confidence, the missing input's fix as a plain hint ("Open your
 -- profession window to rank recipes"). No confidence tier. Every number is the verdict module's
 -- (NS.ItemSearchVerdict.Breakdown, IS.Breakdown): the panel adds nothing up, so it and the
 -- tooltip's reasons cannot disagree.
@@ -88,6 +90,20 @@ local function newLine(content)
     return row
 end
 
+-- The (?) beside the badge (R5-DW-07): LibKa0s' `help` icon, its tooltip how the score works
+-- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover).
+local function helpIcon(p)
+    local b = CreateFrame("Button", nil, p)
+    b:SetSize(B.HELP, B.HELP)
+    local t = b:CreateTexture(nil, "ARTWORK")
+    t:SetAllPoints(b)
+    t:SetTexture(NS.Icon("help"))
+    b.icon = t
+    NS.SkinPaint(t, function(x) x:SetVertexColor(NS.SkinColor(ISG.MARK_REST)) end)
+    NS.Window.AttachTooltip(b, function() return unpack(IVD.ScoringHelp()) end)
+    return b
+end
+
 --- Build the panel on the window `f` (hidden): `f.verdict`, with its `head` (ISG.Header's), `badge`
 --- (NS.ItemSearchTip.MakeBadge's regions), `scroll`, `content` and `lines`.
 --- @param f table the Item Search window
@@ -101,6 +117,7 @@ function IVP.Build(f)
     p.head:SetPoint("TOPLEFT", p, "TOPLEFT", 0, 0)
     p.head:SetWidth(WIN.LEFT_W)
     p.badge = IST().MakeBadge(p)
+    p.help = helpIcon(p)
     p.scroll, p.content = ISG.ScrollArea(p)
     p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 0, -LINES_TOP)
     p.scroll:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 0, 0)
@@ -117,15 +134,23 @@ local function signed(points)
     return tostring(points)
 end
 
--- The lines to draw for a breakdown `b`: `{ text, right, tone }` each, the parts, the total, the
--- word's line and the hint. Built once per breakdown (the panel keeps them).
+-- A part's points' tone (R5-DW-04): green what adds, red what takes away, muted nothing.
+local function pointsTone(points)
+    if points > 0 then return "good" end
+    if points < 0 then return "red" end
+    return "muted"
+end
+
+-- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, the parts (their
+-- points green or red, R5-DW-04), then the word's line in plain words, muted (R5-DW-06), and the
+-- hint. No Score line: the score is in the badge above (R5-DW-05). Built once per breakdown (the
+-- panel keeps them).
 local function rowsOf(b)
     local out = {}
     for _, line in ipairs(b.lines) do
-        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain" }
+        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain", rightTone = pointsTone(line.points) }
     end
-    out[#out + 1] = { text = L["Score"], right = tostring(b.score), tone = "plain", total = true }
-    out[#out + 1] = { text = b.from, tone = "plain" }
+    out[#out + 1] = { text = b.from, tone = "muted" }
     if b.hint then out[#out + 1] = { text = b.hint, tone = "muted" } end
     return out
 end
@@ -145,7 +170,8 @@ local function paintLines(p, rows, m)
         row.cells.text.text:SetText(r.text)
         row.cells.points.text:SetText(r.right or "")
         NS.WindowRows.SetTone(row.cells.text.text, r.tone)
-        NS.WindowRows.SetTone(row.cells.points.text, r.tone)
+        NS.WindowRows.SetTone(row.cells.points.text, r.rightTone or r.tone)
+        row.dwTone, row.dwRightTone = r.tone, r.rightTone or r.tone
         row:Show()
     end
     for i = #rows + 1, #p.lines do p.lines[i]:Hide() end
@@ -233,10 +259,12 @@ local function paintBadge(p, b)
     local st = p.badge
     if not st then return end
     tip.FillBadge(st, tip.Badge(b))
-    local wl = st.boxL:GetWidth()
-    wl = type(wl) == "number" and wl or 0
-    st.boxR:ClearAllPoints()
-    st.boxR:SetPoint("TOPLEFT", p, "TOPLEFT", 4 + wl, -BADGE_TOP)
+    -- hung once by its left edge (R5-DW-02): the pill sizes itself from its text, nothing is measured
+    if not st.dwPlaced then
+        tip.PlaceBadge(st, p, "TOPLEFT", 4, -(BADGE_TOP + B.HEIGHT / 2))
+        if p.help then p.help:SetPoint("LEFT", st.piece.r, "RIGHT", P.GAP + 2, 0) end
+        st.dwPlaced = true
+    end
     tip.ShowBadge(st, true)
 end
 
@@ -273,7 +301,15 @@ function IVP.Paint(f, itemID, m)
     return true
 end
 
---- The panel's lines on screen now, `{ text, right }` each in order (for the tests).
+--- The lines a breakdown draws (`{ text, right, tone, rightTone }` each), worked out as the panel does
+--- (for the tests).
+--- @param b table IS.Breakdown's answer
+--- @return table
+function IVP.Rows(b)
+    return rowsOf(b)
+end
+
+--- The panel's lines on screen now, `{ text, right, tone, rightTone }` each in order (for the tests).
 --- @param f table
 --- @return table
 function IVP.Lines(f)
@@ -282,7 +318,8 @@ function IVP.Lines(f)
     if not (p and p:IsShown()) then return out end
     for _, row in ipairs(p.lines) do
         if row:IsShown() then
-            out[#out + 1] = { text = row.cells.text.text:GetText(), right = row.cells.points.text:GetText() }
+            out[#out + 1] = { text = row.cells.text.text:GetText(), right = row.cells.points.text:GetText(),
+                tone = row.dwTone, rightTone = row.dwRightTone }
         end
     end
     return out

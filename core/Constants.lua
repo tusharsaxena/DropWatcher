@@ -509,10 +509,17 @@ C.ITEM_SEARCH = {
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
-    -- The tooltip's verdict badge (round 4, R4-DW-07): two filled boxes joined flush right after the
-    -- "Drop Watcher" label, the word's in the verdict's bright tone and the score's in DARK times it,
-    -- HEIGHT tall, PAD either side of each text, GAP from the label; its icon ICON pixels square.
-    BADGE       = { HEIGHT = 16, PAD = 4, GAP = 6, DARK = 0.5, ICON = 12 },
+    -- The tooltip's Crafting rows as a table (R5-DW-10): the profession in a column of its own at the
+    -- right, as wide as the longest profession name shown at CHAR units a character (a fixed estimate:
+    -- the post call never measures text) for tooltip text of BASE points, scaled by the size the
+    -- column's font (GameTooltipText) has now (R5-REV), GAP more between it and the skill levels.
+    CRAFT_COL   = { CHAR = 7, BASE = 12, GAP = 10 },
+    -- The verdict badge (round 4 R4-DW-07; one rounded pill since R5-DW-02), the tooltip's and the
+    -- verdict panel's: HEIGHT tall with RADIUS corners, PAD inside either end, GAP from the label; the
+    -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's
+    -- tone; EM the width a character is reckoned at, in FONT units, for the room the tooltip reserves.
+    BADGE       = { HEIGHT = 16, RADIUS = 5, PAD = 6, GAP = 6, ICON = 12, ICON_GAP = 3, FONT = 11, INK = 0.15,
+        EM = 0.62, HELP = 14 },
     -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
     -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
     -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most
@@ -521,7 +528,8 @@ C.ITEM_SEARCH = {
     PANEL       = { LINES = 8, MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
     -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
-    -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the
+    -- part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a new
+    -- collectible's score (COLLECT, the scorer's and the (?) help's, R5-REV); then the
     -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
     -- item info or gear verdict was still loading waits before it is worked out again, and how many
     -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
@@ -531,7 +539,7 @@ C.ITEM_SEARCH = {
         CRAFT = { orange = 30, yellow = 20, green = 8, gray = 0 }, LEARN = 10, CRAFT_CAP = 50,
         OTHERS = 3, OTHERS_CAP = 9, UPGRADE = 70, SIDEGRADE = 20,
         REBUY = -20, REBUY_VENDORS = 3, REBUY_PRICE = 500, TRIVIAL = -15,
-        POOR_CAP = 15, QUEST_FLOOR = 20,
+        POOR_CAP = 15, QUEST_FLOOR = 20, COLLECT = 100,
         HIGH = 80, MEDIUM = 50,
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,

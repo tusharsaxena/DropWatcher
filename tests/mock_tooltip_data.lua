@@ -27,7 +27,7 @@
 --     Hide, and IsForbidden answering `forbidden`.
 --   * ITS GEOMETRY, for the block's separator (Item Search round 3 spec §4.2): GetTop answers
 --     `__top` (500; nil before layout), and line n's left font string is the client's global
---     `<name>TextLeft<n>`, made on the line's first write, its GetTop / GetBottom
+--     `<name>TextLeft<n>` (and `<name>TextRight<n>`, R5-DW-10), made on the line's first write, its GetTop / GetBottom
 --     `__top - PAD - (n - 1) * LINE_H` and that less FONT_H (nil while `__top` is). The client keeps
 --     a tooltip's font strings across a clear, and so does the double. OnSizeChanged is fired by
 --     handle.resize(tip). CreateTexture answers a recording Texture of the tooltip's own (its
@@ -58,6 +58,8 @@ local function newTexture(owner, layer)
     function t:GetHeight() return self.__h or 0 end
     function t:SetWidth(w) self.__w = w end
     function t:GetWidth() return self.__w or 0 end
+    function t:SetSize(w, h) self.__w, self.__h = w, h end
+    function t:SetTexCoord(...) self.__coords = { ... } end
     function t:SetSnapToPixelGrid(v) self.__snap = not not v end
     function t:SetTexelSnappingBias(v) self.__bias = v end
     function t:Show() self.__shown = true end
@@ -86,6 +88,13 @@ local function newFontString(owner, layer, template)
     function fs:SetTextColor(r, g, b, a) self.__color = { r, g, b, a or 1 } end
     function fs:SetFontObject(o) self.__font = o end
     function fs:SetJustifyH(v) self.__justify = v end
+    function fs:SetWidth(w) self.__w = w end
+    function fs:GetWidth() return self.__w or 0 end
+    function fs:SetWordWrap(v) self.__wrap = v end
+    function fs:SetFont(path, size, flags) self.__face = { path, size, flags } end
+    function fs:GetFont() return unpack(self.__face or {}) end
+    function fs:SetShadowOffset(x, y) self.__shadow = { x, y } end
+    function fs:SetShadowColor(r, g, b, a) self.__shadowColor = { r, g, b, a } end
     function fs:SetPoint(...) self.__points[#self.__points + 1] = { ... } end
     function fs:ClearAllPoints() self.__points = {} end
     function fs:GetPoint(i) return unpack(self.__points[i or 1] or {}) end
@@ -95,15 +104,18 @@ local function newFontString(owner, layer, template)
     return fs
 end
 
--- Line n's left font string, the client's global for a named tooltip, made once.
+-- Line n's left and right font strings, the client's globals for a named tooltip, made once.
 local function lineString(M, tip, n)
     if not tip.__name then return end
-    local key = tip.__name .. "TextLeft" .. n
-    if M[key] then return end
-    local fs = {}
-    function fs.GetTop() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H) or nil end
-    function fs.GetBottom() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H - TDP.FONT_H) or nil end
-    M[key] = fs
+    for _, side in ipairs({ "TextLeft", "TextRight" }) do
+        local key = tip.__name .. side .. n
+        if not M[key] then
+            local fs = {}
+            function fs.GetTop() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H) or nil end
+            function fs.GetBottom() return tip.__top and (tip.__top - TDP.PAD - (n - 1) * TDP.LINE_H - TDP.FONT_H) or nil end
+            M[key] = fs
+        end
+    end
 end
 
 local function decorate(M, tip, name)

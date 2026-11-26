@@ -227,18 +227,68 @@ test("verdict: the reasons are the top two by points; Sell and Toss name the pri
     }), ME, item())
     assertEqual(#v.reasons, 2)
     assertEqual(v.reasons[1], "Ready to turn in: Invented Errand Two")
-    assertEqual(v.reasons[2], "Quest you can pick up: Invented Errand")
+    assertEqual(v.reasons[2], "Quests you could pick up (1)")
     v = IS.Verdict(facts({ crafting = { recipe({ color = "orange" }) } }), ME, item())
     assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
     v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
     assertEqual(v.verdict, "sell")
-    assertEqual(v.reasons[1], "Sells for 12"); assertEqual(v.reasons[2], "Easy to buy again", "a damper by its size")
+    -- red under: "Sells for 12", a bare number (the owner, R5-DW-11: "Sells for 30 what?")
+    assertEqual(v.reasons[1], "Sells for 12|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t")
+    assertEqual(v.reasons[2], "Easy to buy again", "a damper by its size")
     v = IS.Verdict(facts(), ME, item({ sellPrice = 0 }))
     assertEqual(v.reasons[1], "No use found, and no vendor buys it"); assertEqual(#v.reasons, 1)
     v = IS.Verdict(facts({ crafting = { recipe({ known = false }) } }), ME, item())
     assertEqual(v.reasons[2], "Tailoring recipe you could learn")
     v = IS.Verdict(facts({ crafting = { recipe({ skillLine = ALCHEMY, rank = false, known = false }) } }), ME, item())
     assertEqual(v.reasons[2], "Other professions use it (1 recipes)")
+end)
+
+test("compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)", function()
+    local NS = T.newAddon()
+    local Compat = NS.Compat
+    local G, S, K = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t", "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t",
+        "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
+    -- neither client has the bare GetCoinTextureString (BankLedger's probe P9): the coins drawn by hand
+    assertEqual(Compat.CoinText(30), "30" .. K)
+    assertEqual(Compat.CoinText(120), "1" .. S .. " 20" .. K)
+    assertEqual(Compat.CoinText(123456), "12" .. G .. " 34" .. S .. " 56" .. K)
+    assertEqual(Compat.CoinText(10000), "1" .. G, "an empty silver and copper left out")
+    assertEqual(Compat.CoinText(0), "0" .. K, "nothing is no copper")
+    assertNil(Compat.CoinText(nil)); assertNil(Compat.CoinText("x"))
+    -- the client's own coin string first, where it has one
+    local withClient = T.newAddon({ mock = function(mm)
+        mm.C_CurrencyInfo = mm.C_CurrencyInfo or {}
+        mm.C_CurrencyInfo.GetCoinTextureString = function(copper) return ("client %d"):format(copper) end
+    end })
+    assertEqual(withClient.Compat.CoinText(30), "client 30")
+    -- R5-REV: a debt keeps its sign (red under: -5 read "99 silver 95 copper"), part of a copper is
+    -- dropped before the client sees it, and an empty client string falls back to the drawn coins
+    assertEqual(Compat.CoinText(-120), "-1" .. S .. " 20" .. K)
+    assertEqual(Compat.CoinText(-5), "-5" .. K)
+    assertEqual(Compat.CoinText(2.7), "2" .. K)
+    assertEqual(withClient.Compat.CoinText(2.7), "client 2")
+    local blank = T.newAddon({ mock = function(mm)
+        mm.C_CurrencyInfo = mm.C_CurrencyInfo or {}
+        mm.C_CurrencyInfo.GetCoinTextureString = function() return "" end
+    end })
+    assertEqual(blank.Compat.CoinText(0), "0" .. K, "the client's empty string is not money")
+end)
+
+test("verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)", function()
+    local NS, IS = addon()
+    local V = NS.Constants.ITEM_SEARCH.VERDICT
+    -- red under: 100 written by hand in the scorer and the help
+    assertEqual(type(V.COLLECT), "number")
+    local old = V.COLLECT
+    V.COLLECT = 90
+    local v = IS.Verdict(facts({}), ME, item({ newCollect = true }))
+    local found
+    for _, line in ipairs(NS.ItemSearchVerdict.ScoringHelp()) do
+        if line:find("New to your collection", 1, true) then found = line end
+    end
+    V.COLLECT = old
+    assertEqual(v.score, 90, "the scorer reads it")
+    assertTrue(found ~= nil and found:find("90", 1, true) ~= nil, "the help reads it: " .. tostring(found))
 end)
 
 test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()
@@ -254,7 +304,7 @@ test("verdict: the reasons always carry the largest negative part, so the shown 
     -- red under: the top two alone (the -20 hidden, the 65 left partly unexplained)
     assertEqual(#v.reasons, 3)
     assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
-    assertEqual(v.reasons[2], "Quest you can pick up: Invented Errand")
+    assertEqual(v.reasons[2], "Quests you could pick up (1)")
     assertEqual(v.reasons[3], "Easy to buy again", "the largest negative part, after the top two")
     -- already among the top two: not repeated
     v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
@@ -286,9 +336,10 @@ local function block(tdp, tip)
     return out
 end
 
-test("verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier", function()
+test("verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02)", function()
     local NS = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants
+    local B = C.ITEM_SEARCH.BADGE
     local function hex(tone)
         local t = C.TONE[tone]
         return ("%02x%02x%02x"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
@@ -297,11 +348,16 @@ test("verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the s
         sell = { "coins", "warn", "Sell" }, toss = { "trash", "bad", "Toss" } }) do
         local badge = IST.Badge({ verdict = verdict, score = 42, tier = "medium", reasons = {} })
         assertEqual(badge.tone, look[2], verdict .. "'s tone")
-        assertTrue(badge.word:find("phosphor\\" .. look[1], 1, true) ~= nil, verdict .. "'s icon")
-        assertTrue(badge.word:find(look[3], 1, true) ~= nil, verdict .. "'s word")
-        assertEqual(badge.score, "42")
-        -- red under: the tier shown (the owner: "Remove the High/Medium/etc confidence bit")
-        assertTrue(badge.word:find("Medium", 1, true) == nil and badge.score:find("Medium", 1, true) == nil)
+        assertTrue(badge.icon:find("phosphor\\" .. look[1], 1, true) ~= nil, verdict .. "'s icon")
+        -- red under: the word and the score in two boxes of two shades (R4-DW-07, "shabby")
+        assertEqual(badge.text, look[3] .. " 42", "the word and the score in one text")
+        local t = C.TONE[look[2]]
+        assertEqual(table.concat(badge.fill, ","), table.concat({ t.r, t.g, t.b }, ","), "filled in the verdict's tone")
+        -- red under: white text on a mid tone (the owner: "font colors all look bad"); dark ink, as ItemTree's
+        assertEqual(table.concat(badge.ink, ","), table.concat({ t.r * B.INK, t.g * B.INK, t.b * B.INK }, ","))
+        assertTrue(badge.ink[1] + badge.ink[2] + badge.ink[3] < 0.5, verdict .. ": dark ink")
+        assertTrue(badge.text:find("Medium", 1, true) == nil, "no tier")
+        assertEqual(badge.width, B.GAP + 2 * B.PAD + B.ICON + B.ICON_GAP + math.ceil(#badge.text * B.FONT * B.EM))
     end
     local v = { verdict = "keep", score = 72, tier = "high", reasons = { "Invented reason" } }
     -- red under: a new table or line built per hover; a badge kept per tier
@@ -315,54 +371,82 @@ test("verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the s
     assertEqual(lines[1].text, "Item info is still loading"); assertEqual(lines[1].tone, "muted")
 end, FOREVER_ONLY)
 
-test("verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings", function()
-    local NS, m, tdp = enabled()
+test("verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02)", function()
+    local NS, m, tdp = enabled({ setup = function(mm) mm.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF" end })
     local IST, C = NS.ItemSearchTip, NS.Constants
+    local B = C.ITEM_SEARCH.BADGE
     local tip = tdp.tooltip("GameTooltip")
+    local reads = 0
+    local make = tip.CreateFontString
+    tip.CreateFontString = function(self, ...)
+        local fs = make(self, ...)
+        fs.GetStringWidth = function() reads = reads + 1; return 0 end
+        fs.GetUnboundedStringWidth = fs.GetStringWidth
+        return fs
+    end
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
-    -- the blade: no client item info (the double caches none), so Hold under a Medium confidence
-    -- red under: the badge as right-hand text ("Drop Watcher | Hold 0 · Medium")
-    assertTrue(b[2]:find("^Drop Watcher|T") ~= nil, "the label, then the escape that reserves the badge's width: " .. b[2])
-    assertTrue(b[2]:find(" | ", 1, true) == nil, "nothing at the line's right")
+    -- the blade: no client item info (the double caches none), so Hold under a Medium confidence.
+    -- red under (R5-DW-01): the label's own text padded with the badge's room, the pill hung from that
+    -- padded end and sized from a width read in the post call, so the label ran under it at a scale
+    local label = tip.__lines[3]
+    assertEqual(label.text, "Drop Watcher", "the label alone on the left")
+    local room = tonumber(label.right:match("^|T[^:]+:" .. B.HEIGHT .. ":(%d+):0:0:%d+:%d+:0:1:0:1|t$"))
+    assertTrue(room ~= nil, "the badge's room is the line's right side: " .. tostring(label.right))
     assertEqual(b[3], "Item info is still loading", "the hint under the badge, no tier")
     assertEqual(b[4], "Drops from")
     for _, line in ipairs(b) do assertTrue(line:find("Medium", 1, true) == nil, "no tier anywhere: " .. line) end
     local badge = IST.BadgeOf(tip)
     assertTrue(badge ~= nil, "the tooltip's badge")
-    assertTrue(badge.boxL:IsShown() and badge.boxR:IsShown() and badge.textL:IsShown() and badge.textR:IsShown())
-    assertTrue(badge.textL:GetText():find("Hold", 1, true) ~= nil); assertEqual(badge.textR:GetText(), "0")
+    assertEqual(room, IST.Badge(NS.ItemSearchVerdict.For(IDS.blade, NS.ItemSearch.Get(IDS.blade),
+        NS.ItemSearch.Me())).width, "the room reserved is the badge's own estimate")
+    assertEqual(reads, 0, "nothing measured in the post call")
+    -- hung from the label line's left font string (which ends where "Drop Watcher" ends), GAP out
+    local p = { badge.icon:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == m.GameTooltipTextLeft3), p[3], p[4], p[5] }, ","),
+        ("LEFT,true,RIGHT,%d,0"):format(B.GAP + B.PAD), "the icon PAD inside the pill, the pill GAP after the label")
+    p = { badge.text:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.icon), p[3], p[4] }, ","), "LEFT,true,RIGHT," .. B.ICON_GAP)
+    assertTrue(badge.text:GetText():find("Hold", 1, true) ~= nil); assertTrue(badge.text:GetText():find("0", 1, true) ~= nil)
+    assertEqual(badge.text.__face and badge.text.__face[3], "", "no outline")
+    assertEqual(badge.text.__shadow and table.concat(badge.text.__shadow, ","), "0,0", "no shadow")
+    -- the fill: seven pieces of the rounded art, never the square white box (the owner: "rough edged")
     local y = C.TONE.yellow
-    assertEqual(table.concat(badge.boxL.__vertex, ",", 1, 3), table.concat({ y.r, y.g, y.b }, ","), "Hold's bright yellow")
-    local k = C.ITEM_SEARCH.BADGE.DARK
-    assertEqual(table.concat(badge.boxR.__vertex, ",", 1, 3), table.concat({ y.r * k, y.g * k, y.b * k }, ","),
-        "its darker shade")
-    -- hung from the label line: the score's box ends where the reserved width ends, the word's box
-    -- joined flush to its left
-    local label = m.GameTooltipTextLeft3
-    local p = { badge.boxR:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == label), p[3], p[4], p[5] }, ","), "RIGHT,true,RIGHT,0,0")
-    p = { badge.boxL:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == badge.boxR), p[3], p[4], p[5] }, ","), "RIGHT,true,LEFT,0,0")
-    local reserved = tonumber(b[2]:match("|T[^:]+:%d+:(%d+):"))
-    assertEqual(reserved, C.ITEM_SEARCH.BADGE.GAP + badge.boxL:GetWidth() + badge.boxR:GetWidth(), "the gap and both boxes")
+    local n = 0
+    for name, t in pairs(badge.piece) do
+        n = n + 1
+        assertEqual(t.__texture, IST.BadgeArt(), name .. ": the rounded art")
+        assertTrue(t.__texture ~= IST.RULE_TEXTURE, name .. ": not WHITE8X8")
+        assertTrue(t.__coords ~= nil, name .. ": cut by texture coordinates")
+        assertEqual(table.concat(t.__vertex, ",", 1, 3), table.concat({ y.r, y.g, y.b }, ","), name .. ": Hold's yellow")
+        assertTrue(t:IsShown(), name .. " shown")
+    end
+    assertEqual(n, 7, "four corners, two edges and the middle")
+    assertTrue(IST.BadgeArt():find("glass-fill", 1, true) ~= nil, "LibKa0s' Ka0s Glass fill")
+    assertEqual(table.concat(badge.piece.tl.__coords, ","), "0,0.25,0,0.25", "a corner is the art's corner cell")
+    p = { badge.piece.tl:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.icon), p[3], p[4], p[5] }, ","),
+        ("TOPLEFT,true,LEFT,%d,%s"):format(-B.PAD, tostring(B.HEIGHT / 2)))
+    p = { badge.piece.br:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.text), p[3], p[4], p[5] }, ","),
+        ("BOTTOMRIGHT,true,RIGHT,%d,%s"):format(B.PAD, tostring(-B.HEIGHT / 2)))
     -- kept through the client's refill of the same item, as the separator is (R4-DW-06)
-    local hides, hide = 0, badge.boxL.Hide
-    badge.boxL.Hide = function(self) hides = hides + 1; return hide(self) end
+    local hides, hide = 0, badge.text.Hide
+    badge.text.Hide = function(self) hides = hides + 1; return hide(self) end
     tip:ClearLines(); tdp.hide(tip); tdp.show(tip, IDS.blade)
-    assertTrue(badge.boxL:IsShown()); m.advance(0)
-    assertTrue(badge.boxL:IsShown()); assertEqual(hides, 0, "never hidden on a refill of the same item")
+    assertTrue(badge.text:IsShown()); m.advance(0)
+    assertTrue(badge.text:IsShown()); assertEqual(hides, 0, "never hidden on a refill of the same item")
     local S = NS.addon.db.profile.itemSearch.tooltip
     S.reasons = false
     tdp.hide(tip); tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
-    assertTrue(badge.boxL:IsShown()); assertEqual(b[3], "Drops from", "Explain the badge off")
+    assertTrue(badge.text:IsShown()); assertEqual(b[3], "Drops from", "Explain the badge off")
     S.badge, S.reasons = false, true
     tdp.hide(tip); tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
     -- red under: the reasons drawn with the badge off
     assertEqual(b[2], "Drop Watcher"); assertEqual(b[3], "Drops from")
-    assertFalse(badge.boxL:IsShown() or badge.textR:IsShown(), "no badge")
+    assertFalse(badge.text:IsShown() or badge.piece.c:IsShown(), "no badge")
     assertFalse(NS.ItemSearchTip.Options().badge)
 end, FOREVER_ONLY)
 
@@ -461,7 +545,16 @@ test("verdict breakdown: the score's parts in the order the score adds them, add
     -- gear 20, rebuy -20: 80 + 50 + 20 - 20 = 130, clamped to 100
     assertEqual(kinds(b), "quest,quest,cap,craft,craft,cap,gear,damper,clamp")
     assertEqual(lineOf(b, "quest", "Invented Errand").points, 60)
-    assertEqual(lineOf(b, "quest", "Invented Chore").points, 35)
+    -- red under (R5-DW-03, the owner): the quest you could pick up named ("Quest you can pick up: ...")
+    assertEqual(lineOf(b, "quest", "pick up").text, "Quests you could pick up (1)")
+    assertEqual(lineOf(b, "quest", "pick up").points, 35)
+    assertTrue(lineOf(b, "quest", "Invented Chore") == nil, "a count, not the quest")
+    -- two you could pick up: one line, their points together
+    local two = IS.Breakdown(facts({ quests = { quest("todo"), quest("todo", { id = 2, title = "Invented Chore" }) } }),
+        ME, item())
+    assertEqual(lineOf(two, "quest", "pick up").text, "Quests you could pick up (2)")
+    assertEqual(lineOf(two, "quest", "pick up").points, 70)
+    assertEqual(#two.lines, 1, "one line for both")
     assertEqual(lineOf(b, "cap", "80").points, -15, "the quests' cap shown when hit")
     assertEqual(lineOf(b, "craft", "orange").points, 60, "the known recipes by color")
     assertTrue(lineOf(b, "craft", "orange").text:find("2", 1, true) ~= nil, "with their count")
@@ -469,7 +562,8 @@ test("verdict breakdown: the score's parts in the order the score adds them, add
     assertEqual(lineOf(b, "cap", "50").points, -20, "the crafting cap shown when hit")
     assertEqual(lineOf(b, "damper").text, "Easy to buy again")
     assertEqual(lineOf(b, "clamp").points, -30)
-    assertEqual(b.from, "Keep from 50", "the line the verdict word comes from")
+    -- red under (R5-DW-06, the owner: "what does keep from 50 mean?"): "Keep from 50"
+    assertEqual(b.from, "Keep: a score of 50 or more", "the line the verdict word comes from, in plain words")
 end)
 
 test("verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed", function()
@@ -485,7 +579,7 @@ test("verdict breakdown: a zero part is left out; the dampers, the poor cap and 
     assertEqual(sum(poor), 15)
     local qi = IS.Breakdown(facts(), ME, item({ classID = 12 }))
     assertEqual(qi.score, 20); assertEqual(lineOf(qi, "floor").points, 20, "the quest-item floor when it applies")
-    assertEqual(sum(qi), 20); assertEqual(qi.from, "Hold from 20")
+    assertEqual(sum(qi), 20); assertEqual(qi.from, "Hold: a score of 20 to 49")
     local others = {}
     for i = 1, 4 do others[i] = recipe({ spell = i, skillLine = ALCHEMY, rank = false, known = false }) end
     local o = IS.Breakdown(facts({ crafting = others }), ME, item())
@@ -496,18 +590,18 @@ end)
 test("verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier", function()
     local _, IS = addon()
     local f = facts()
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Sell: under 20, and a vendor buys it")
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: under 20, and no vendor buys it")
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: under 20, and the sell price is not known yet")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Sell: a score under 20, and a vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: a score under 20, and no vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: a score under 20, and the sell price is not known yet")
     local low = IS.Breakdown(facts({ fdb = "loading" }), ME, item({ sellPrice = 0 }))
     assertEqual(low.verdict, "hold")
-    assertEqual(low.from, "Hold: under 20, but too little is known to toss it")
+    assertEqual(low.from, "Hold: a score under 20, but too little is known to toss it")
     assertEqual(low.hint, "ForeverDB is not loaded", "a missing input as a plain hint")
     assertNil(low.tier, "no confidence tier"); assertNil(low.confidence)
     local ranks = IS.Breakdown(facts({ crafting = { recipe({}) } }), { level = 20 }, item())
     assertEqual(ranks.hint, "Open your profession window to rank recipes")
     local new = IS.Breakdown(facts({ vendors = { {}, {}, {} } }), ME, item({ newCollect = true }))
-    assertEqual(kinds(new), "collect"); assertEqual(sum(new), 100); assertEqual(new.from, "Keep from 50")
+    assertEqual(kinds(new), "collect"); assertEqual(sum(new), 100); assertEqual(new.from, "Keep: a score of 50 or more")
 end)
 
 test("verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown", function()

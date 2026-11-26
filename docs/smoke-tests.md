@@ -5126,6 +5126,80 @@ tooltip's badge. Show an item whose info is still loading on a fresh login, then
 come back → the panel works it out again rather than staying on `Item info is still loading`.
 Looting, moving bags and hovering items with the window open → no hitch. Result:
 
+### Item Search owner feedback round 5
+
+The owner feedback round 5 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND5/`,
+R5-DW-01 to R5-DW-11). Same client, ForeverDB and character setup as round 4 above (Alchemy and
+Herbalism, a few Peacebloom in the bags). Where a check here contradicts an earlier ITEM-SEARCH row
+(the badge, the skill levels, the crafting rows, the verdict panel's lines), this one is current.
+
+**ITEM-SEARCH-57. Money in gold, silver and copper coins (R5-DW-11).** Hover a gray junk item a
+vendor buys → the badge says Sell and its reason reads `Sells for` then the amount with the coin
+icons (for 30 copper: `30` and the copper coin; for 1 silver 20 copper: `1`, the silver coin, `20`,
+the copper coin), never a bare number. Open the Item Search window on an item with a recorded or
+ForeverDB vendor price, Sold by tab → the Price column and the tooltip's Sold by rows show coins
+the same way. Fail: any price or `Sells for` amount as a bare number, or a blank where a coin should
+be. Result:
+
+**ITEM-SEARCH-58. Your band first, the levels you passed left out (R5-DW-08).** With Alchemy known,
+show Peacebloom's Crafting tab → a recipe whose orange band you are in reads `[1] 55 75 95`, as
+before; a recipe you have passed into gray reads its gray start alone (the owner's Incense Candle at
+Herbalism 20 or more: `[20]`, not `1 20 20 [20]`); one in yellow or green starts at its bracketed
+number with the higher ones dimmed after it. A recipe whose start is above your rank still shows
+every number, the start red. Hover Peacebloom → the tooltip's Crafting rows match the Skill column.
+This replaces ITEM-SEARCH-50's "the orange start is always there". Fail: any number left of the
+bracket, or a bracket that is not your band. Result:
+
+**ITEM-SEARCH-59. Crafting rows as a table, every row naming its profession (R5-DW-09, R5-DW-10).**
+Hover Peacebloom (Alchemy, First Aid and Herbalism recipes), then Linen Cloth → under Crafting, each
+row reads the glyph and the recipe's name from the left, the glyphs in one column and the names
+starting at one edge; on the right the skill levels, ending at one edge, then the profession (Cooking,
+Alchemy, First Aid, Herbalism...) in its own color, right-aligned at the tooltip's right edge. Every
+row names its profession, including when all rows share one. The professions line up with each other
+and the skill levels line up with each other, whatever the profession names' lengths. Untick Show
+recipe skill levels → the professions stay in their column. Keep the pointer still for several
+seconds and move between bag slots → no flicker, no profession left behind on an item with no
+Crafting rows. With a larger tooltip font (an addon or a skin that enlarges the tooltip's text), hover
+an item with a Leatherworking or Blacksmithing recipe → the name is whole (R5-REV). Fail: a profession
+missing, glued to the skill levels (`95 · Alchemy`), overlapping them, cut short (`Leatherwor...`), or
+ragged from row to row. Result:
+
+**ITEM-SEARCH-60. The badge: one smooth pill that never covers the label (R5-DW-01, R5-DW-02).**
+After a full client restart, hover Peacebloom → `Drop Watcher`, then a gap, then one pill: the lock
+and `Keep 65` (or your score) in dark ink on a green fill, the corners smoothly rounded (no steps or
+jagged edges), the text clean with no outline or shadow, the pill no taller than the line. The
+`Drop Watcher` text is never under the pill. Set the UI scale to its lowest and its highest
+(Options → Graphics → UI Scale) and hover again each time → still a gap, still no overlap. Hover a
+Hold (yellow fill), a Sell (amber) and a Toss (gray) item → each in dark readable ink. Open the Item
+Search window on a held item → the verdict panel's badge is the same pill. Compare with ItemTree's
+badge at the bottom of the tooltip if you use it → a similar look. Switch skin → the text takes the
+skin's font and keeps its colors. This replaces ITEM-SEARCH-52's two boxes. Fail: the label under
+the pill, square or jagged corners, white or shadowed text, or a pill sticking out of the tooltip's
+right edge. Result:
+
+**ITEM-SEARCH-61. Quests you could pick up as a count (R5-DW-03).** On a character that has not
+picked up the quests Peacebloom serves (My First Alchemy Set, or any quest item's quest you could
+take), open the Item Search window on a held Peacebloom → the verdict panel reads `Quests you could
+pick up (1)` with its points (`+35`), not the quest's name; with two such quests, `(2)` and `+70` on
+one line. A quest already in your log still reads by name (`In your quest log: ...`). Hover it → the
+tooltip's reason says the same count. Result:
+
+**ITEM-SEARCH-62. The panel's numbers in color, no Score line, the verdict in plain words (R5-DW-04,
+R5-DW-05, R5-DW-06).** Open the Item Search window on a held Peacebloom → each part's points read
+green when they add (`+35`, `+60`) and red when they take away (`-20`, `-80`); no `Score` line under
+the parts (the score is in the badge); then one muted line in plain words: `Keep: a score of 50 or
+more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Sell: a score under 20, and a vendor buys
+it`). No `Keep from 50` anywhere. Result:
+
+**ITEM-SEARCH-63. A (?) that explains the score (R5-DW-07).** Open the Item Search window on a held
+Peacebloom → a small (?) icon sits right after the verdict panel's badge. Hover it → a tooltip,
+`How the score works`, lists what adds (quests in your log +60 each, quests you could pick up +35
+each, a quest it starts, your recipes by skill-up color, recipes you could learn, other professions,
+gear, a new collectible), what takes away (easy to buy again -20 with its coin price, every use gray
+or done -15, the poor-quality cap and the quest-item floor), the verdict bands (Keep 50 or more, Hold
+20 to 49, under 20 Sell or Toss) and the confidence rule. The tooltip fits on screen and goes when
+the pointer leaves. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

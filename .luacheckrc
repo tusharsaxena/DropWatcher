@@ -107,7 +107,7 @@ files["core/CompatCollect.lua"] = {
 -- the key binding API for the one-time default key.
 files["core/CompatSearch.lua"] = {
   read_globals = { "UnitRace", "UnitFactionGroup", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
-    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString",
+    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString", "C_CurrencyInfo",
     "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
     "GetCurrentBindingSet",
     -- Compat.QuestReady's third rung, read only where the client has them (round 3 spec §4.2)
@@ -143,6 +143,13 @@ files["core/SkinSetup.lua"] = {
 -- (DW-01), so a 12.0.7 client draws its shadow: the same constructor.
 files["modules/WindowRows.lua"] = {
   read_globals = { "CreateFont" },
+}
+
+-- modules/ItemSearchTip.lua's verdict badge draws its text on a font object of its own (R5-DW-02),
+-- so a 12.0.7 client draws no shadow under the dark ink: the same constructor. Its crafting column
+-- reads GameTooltipText's size for its width (R5-REV).
+files["modules/ItemSearchTip.lua"] = {
+  read_globals = { "CreateFont", "GameTooltipText" },
 }
 
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;

@@ -64,10 +64,15 @@ test("verdict panel: shown under Matches while you hold the item in your bags, w
     assertEqual(f.verdict.head.note:GetText(), "You have 2")
     local b = f.verdict.dwBreakdown
     local badge = NS.ItemSearchTip.Badge(b)
-    -- the same badge as the tooltip's: IST.Badge's parts, drawn by IST.FillBadge on IST.MakeBadge's regions
-    assertEqual(f.verdict.badge.textL:GetText(), badge.word)
-    assertEqual(f.verdict.badge.textR:GetText(), tostring(b.score))
-    assertTrue(f.verdict.badge.boxL:IsShown() and f.verdict.badge.boxR:IsShown(), "both boxes shown")
+    -- the same pill as the tooltip's (R5-DW-02): IST.Badge's parts, drawn by IST.FillBadge on IST.MakeBadge's
+    -- regions, hung by its left edge (nothing measured)
+    local st = f.verdict.badge
+    assertEqual(st.text:GetText(), badge.text)
+    assertEqual(badge.text, badge.word .. " " .. tostring(b.score))
+    assertTrue(st.text:IsShown() and st.piece.c:IsShown() and st.piece.tl:IsShown(), "the pill shown")
+    local B = NS.Constants.ITEM_SEARCH.BADGE
+    local p = st.icon.__points[1]
+    assertTrue(p[1] == "LEFT" and p[2] == f.verdict and p[3] == "TOPLEFT" and p[4] == 4 + B.PAD, "hung by its left edge: " .. table.concat({ tostring(p[1]), tostring(p[2] == f.verdict), tostring(p[3]), tostring(p[4]) }, ","))
     local bottom = pointOf(f.matchScroll, "BOTTOMLEFT")
     assertTrue(bottom[2] == f.verdict, "the Matches list ends above the panel")
     assertTrue(#P.Lines(f) >= 2, "the breakdown's lines")
@@ -115,16 +120,60 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
         -- red under: a panel that words or adds up the parts itself
         assertEqual(lines[i].text, part.text)
         assertEqual(tonumber(lines[i].right), part.points)
+        -- red under (R5-DW-04): every number in one tone
+        assertEqual(lines[i].rightTone, part.points > 0 and "good" or "red", "+ green, - red: " .. part.text)
         sum = sum + part.points
     end
-    assertEqual(lines[n + 1].text, "Score"); assertEqual(tonumber(lines[n + 1].right), b.score)
     assertEqual(sum, b.score, "the parts add up to the score")
-    assertEqual(lines[n + 2].text, b.from, "the line the verdict word comes from")
-    assertTrue(b.from:find(" from %d+$") ~= nil or b.from:find("under 20") ~= nil, b.from)
-    if b.hint then assertEqual(lines[n + 3].text, b.hint, "the missing input as a plain hint") end
+    -- red under (R5-DW-05): a "Score" line repeating the badge's number
+    for _, line in ipairs(lines) do assertTrue(line.text ~= "Score", "no Score line") end
+    assertEqual(lines[n + 1].text, b.from, "the line the verdict word comes from, right after the parts")
+    assertEqual(lines[n + 1].tone, "muted"); assertEqual(lines[n + 1].right, "")
+    assertTrue(b.from:find("a score ", 1, true) ~= nil, "in plain words: " .. b.from)
+    if b.hint then assertEqual(lines[n + 2].text, b.hint, "the missing input as a plain hint") end
     for _, text in ipairs(lineTexts(lines)) do
         assertTrue(not text:find("Low") and not text:find("Medium") and not text:find("High"), "no tier: " .. text)
     end
+end, FOREVER_ONLY)
+
+test("verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06)", function()
+    local NS = enabled()
+    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, from = "Sell: a score under 20, and a vendor buys it",
+        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } } })
+    assertEqual(#rows, 3, "the two parts and the word's line: no total")
+    assertEqual(rows[1].right, "+35"); assertEqual(rows[1].rightTone, "good")
+    assertEqual(rows[2].right, "-20"); assertEqual(rows[2].rightTone, "red")
+    assertEqual(rows[3].text, "Sell: a score under 20, and a vendor buys it"); assertEqual(rows[3].tone, "muted")
+    assertTrue(rows[3].right == nil, "no number on the word's line")
+end, FOREVER_ONLY)
+
+test("verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07)", function()
+    local NS, _, held = enabled()
+    local W, V = NS.ItemSearchWindow, NS.Constants.ITEM_SEARCH.VERDICT
+    held[IDS.blade] = { 1, 0 }
+    W.ShowItem(IDS.blade)
+    local f = W.Frame()
+    local help = f.verdict.help
+    -- red under: no (?) (the owner: "Add a (?) icon next to the score")
+    assertTrue(help ~= nil, "a (?) on the panel")
+    assertTrue(help.icon.__texture ~= nil and help.icon.__texture:find("help", 1, true) ~= nil, "LibKa0s' help icon")
+    local p = help.__points[1]
+    assertTrue(p[1] == "LEFT" and p[2] == f.verdict.badge.piece.r and p[3] == "RIGHT", "right after the pill")
+    local lines = NS.Window.TooltipOf(help)
+    assertEqual(lines[1], "How the score works")
+    local text = table.concat(lines, "\n")
+    for _, want in ipairs({ ("+%d each"):format(V.QUEST_LOG), ("+%d each"):format(V.QUEST_CAN),
+        ("orange +%d, yellow +%d, green +%d"):format(V.CRAFT.orange, V.CRAFT.yellow, V.CRAFT.green),
+        ("an upgrade +%d"):format(V.UPGRADE), (": %d"):format(V.REBUY), (": %d"):format(V.TRIVIAL),
+        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Sell"):format(V.HOLD),
+        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM) }) do
+        assertTrue(text:find(want, 1, true) ~= nil, "names " .. want)
+    end
+    -- read from the constants, never copied: a moved bar moves the help
+    local keep = V.KEEP
+    V.KEEP = 61
+    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
+    V.KEEP = keep
 end, FOREVER_ONLY)
 
 test("verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height", function()

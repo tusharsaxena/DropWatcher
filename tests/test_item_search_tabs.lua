@@ -357,10 +357,11 @@ test("item search cells: CRAFTING's rows: the breakpoints, the uses, what it mak
         profession = function(line) return ({ [165] = "Leatherworking", [164] = "Blacksmithing" })[line] end,
         item = function(id) return id == 90 and { name = "Barbaric Gloves", quality = 2 } or nil end })
     assertEqual(texts(rows, "recipe"), "Gloves,Belt,Bracer", "known first, a profession you lack last")
-    -- round 4 (R4-DW-05): the orange start always shown, your band (rank 155: yellow) bracketed
+    -- your band (rank 155: yellow) bracketed (R4-DW-05) and leftmost, the orange start before it left
+    -- out (R5-DW-08)
     local parts = {}
     for i, p in ipairs(rows[1].cells.skill.parts) do parts[i] = p.tone .. "=" .. p.text end
-    assertEqual(table.concat(parts, " "), "skillOrangeDim=1 skillYellow=[150] skillGreenDim=160 skillGrayDim=170")
+    assertEqual(table.concat(parts, " "), "skillYellow=[150] skillGreenDim=160 skillGrayDim=170")
     assertEqual(rows[2].cells.skill.parts[1].text, "[165]", "below a real minimum: the start bracketed")
     assertEqual(rows[2].cells.skill.parts[1].tone, "red", "and red")
     assertEqual(texts(rows, "uses"), "×6,×5,×4")
@@ -496,13 +497,15 @@ test("item search cells: the Skill cue: the orange start always, your band brack
     -- red under: the placeholder 1 left out (round 3), which hid the orange band (the owner's Elixir at 29)
     assertEqual(cue(at(nil)), "skillOrange=1 skillYellow=55 skillGreen=75 skillGray=95", "no rank: every start, none bracketed")
     assertEqual(cue(at(29)), "skillOrange=[1] skillYellowDim=55 skillGreenDim=75 skillGrayDim=95", "orange at 29")
-    assertEqual(cue(at(55)), "skillOrangeDim=1 skillYellow=[55] skillGreenDim=75 skillGrayDim=95", "yellow from 55")
-    assertEqual(cue(at(80)), "skillOrangeDim=1 skillYellowDim=55 skillGreen=[75] skillGrayDim=95")
-    assertEqual(cue(at(120)), "skillOrangeDim=1 skillYellowDim=55 skillGreenDim=75 skillGray=[95]")
+    -- red under (R5-DW-08, the owner): the starts left of your band still drawn ("1 20 20 [20]")
+    assertEqual(cue(at(55)), "skillYellow=[55] skillGreenDim=75 skillGrayDim=95", "yellow from 55: the bracket leftmost")
+    assertEqual(cue(at(80)), "skillGreen=[75] skillGrayDim=95")
+    assertEqual(cue(at(120)), "skillGray=[95]")
     assertEqual(cue(at(150, { min = 165, yellow = 175, green = 185, gray = 195 })),
         "red=[165] skillYellowDim=175 skillGreenDim=185 skillGrayDim=195", "below the start: the start red")
     assertEqual(cue(at(25, { yellow = 20, green = 20, gray = 20 })),
-        "skillOrangeDim=1 skillYellowDim=20 skillGreenDim=20 skillGray=[20]", "equal starts: the highest band you are in")
+        "skillGray=[20]", "equal starts: the highest band you are in, alone (the owner's \"1 20 20 [20]\" is \"[20]\")")
+    assertEqual(cue(at(22, { yellow = 20, green = 20, gray = 25 })), "skillGreen=[20] skillGrayDim=25")
     assertEqual(cue(at(10, { min = nil })), "skillOrange=[1] skillYellowDim=55 skillGreenDim=75 skillGrayDim=95",
         "no minimum: the start is 1")
     assertEqual(IS.SkillBand(at(nil)), 0); assertEqual(IS.SkillBand(at(29)), 1); assertEqual(IS.SkillBand(at(120)), 4)
