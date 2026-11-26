@@ -10,7 +10,7 @@ local _, NS = ...
 --   * Item tooltip: Add Item Search to item tooltips (the block's switch; with Item Search's
 --     window switch it decides whether ForeverDB loads at all, spec §2), Comparison tooltips too,
 --     Rows per section, Show the key hint, Only while holding Shift, Separator line, Show the Keep /
---     Hold / Sell / Toss badge, Explain the badge (dimmed with the badge off, the page's way of
+--     Hold / Auction / Vendor / Toss badge, Explain the badge (dimmed with the badge off, the page's way of
 --     setting it under the badge), Show recipe skill levels (round 3 spec §4.2, §4.5, §5); then,
 --     under Tooltip and window, Only professions you know (one switch for both, feedback spec §4)
 --     and Hide the other faction's vendors (the same, R4-DW-08);
@@ -103,6 +103,42 @@ end
 
 -- ── Item tooltip ────────────────────────────────────────────────────────────────────────────
 
+-- A Sell verdict's Auction or Vendor answer (R5-DW-13..16): its comparison with Auctionator's prices,
+-- under its own heading. Each row is dimmed while Auctionator is not loaded, and the length and the
+-- two percentages while the comparison is off; a change makes every kept verdict stale and repaints
+-- the window's verdict panel.
+local function auctionChanged()
+    local IVD = NS.ItemSearchVerdict
+    if IVD and IVD.Bump then IVD.Bump() end
+    repaintSearchWindow()
+end
+
+local function auctionRows(base)
+    local A, AD = K.ITEM_SEARCH.AUCTION, D.auction
+    local missing = function() return not NS.Compat.AuctionatorLoaded() end
+    local at = M.with(base, { subgroup = L["Auction prices"], disabledIf = missing, onChange = auctionChanged })
+    local needs = L["Needs the Auctionator addon: while it is not loaded, every sale says Vendor."]
+    M.bool("itemSearch.auction.enabled", AD.enabled, L["Compare with Auctionator prices"],
+        L["When the badge says to sell an item, compare the price Auctionator last saw on the auction house with the vendor's: Auction when an auction brings more, after the house's cut and the deposit, by the margin below; else Vendor. A bound item, or one Auctionator has no price for, always says Vendor."]
+            .. " " .. needs, at)
+    local sub = M.with(at, {
+        disabledIf = function() return missing() or NS.Setting("itemSearch.auction.enabled") ~= true end })
+    local list = {}
+    for _, hours in ipairs(A.DURATIONS) do
+        list[#list + 1] = hours
+        list[#list + 1] = L["%d hours"]:format(hours)
+    end
+    M.pick("itemSearch.auction.duration", AD.duration, M.choices(list), L["Auction duration"],
+        L["The auction length the deposit is worked out for: a share of the vendor price, larger for a longer auction. The deposit counts against the auction, as it is lost when the item does not sell."]
+            .. " " .. needs, sub)
+    M.slider("itemSearch.auction.cut", AD.cut, 0, A.CUT_MAX, 1, L["Auction house cut %"],
+        L["The share of the sale price the auction house keeps, 5% on a faction auction house."] .. " " .. needs,
+        M.with(sub, { validate = M.wholeIn(0, A.CUT_MAX) }))
+    M.slider("itemSearch.auction.margin", AD.margin, 0, A.MARGIN_MAX, 1, L["Auction must beat vendor by %"],
+        L["How much more than the vendor's price, in percent, an auction must bring after the cut and the deposit before the badge says Auction."]
+            .. " " .. needs, M.with(sub, { validate = M.wholeIn(0, A.MARGIN_MAX) }))
+end
+
 local function tooltip()
     local T = D.tooltip
     local at = { page = PAGE, group = L["Item tooltip"], subgroup = L["Tooltip block"], clients = CLIENTS }
@@ -127,11 +163,12 @@ local function tooltip()
     M.bool("itemSearch.tooltip.header", T.header, L["Separator line"],
         L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."], sub)
     -- The verdict badge and its reasons (round 3 spec §4.5, §5): the reasons need the badge.
-    M.bool("itemSearch.tooltip.badge", T.badge, L["Show the Keep / Hold / Sell / Toss badge"],
-        L["Right after the block's Drop Watcher label, show a badge that says what to do with the item: Keep, Hold, Sell or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."], sub)
+    M.bool("itemSearch.tooltip.badge", T.badge, L["Show the Keep / Hold / Auction / Vendor / Toss badge"],
+        L["Right after the block's Drop Watcher label, show a badge that says what to do with the item: Keep, Hold, Auction, Vendor or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."], sub)
     M.bool("itemSearch.tooltip.reasons", T.reasons, L["Explain the badge"],
-        L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."],
+        L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Auction / Vendor / Toss badge."],
         M.with(sub, { disabledIf = function() return off() or NS.Setting("itemSearch.tooltip.badge") ~= true end }))
+    auctionRows(at)
     M.bool("itemSearch.tooltip.craftSkill", T.craftSkill, L["Show recipe skill levels"],
         L["On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.

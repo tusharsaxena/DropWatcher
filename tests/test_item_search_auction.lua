@@ -286,3 +286,35 @@ test("auction: the verdict panel shows the vendor's price, Auctionator's and the
     assertEqual(#r, 2, "switched off or bound: the vendor's price alone")
     assertEqual(#rows({ verdict = "keep" }), 1, "only a Sell shows prices")
 end, FOREVER_ONLY)
+
+-- ── the settings (R5-DW-16) ─────────────────────────────────────────────────────────────────
+
+test("auction settings: four rows under Auction prices, dimmed without Auctionator, the client's lengths, a change re-judges", function()
+    local NS, m = enabled()
+    local byPath = {}
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("itemSearch")) do byPath[row.path] = row end
+    local on, length = byPath["itemSearch.auction.enabled"], byPath["itemSearch.auction.duration"]
+    local cut, margin = byPath["itemSearch.auction.cut"], byPath["itemSearch.auction.margin"]
+    assertTrue(on and length and cut and margin, "the four rows")
+    assertEqual(on.label, "Compare with Auctionator prices"); assertEqual(on.default, true)
+    assertEqual(length.label, "Auction duration"); assertEqual(length.default, 8)
+    local values = {}
+    for i, e in ipairs(length.values) do values[i] = e.value .. "=" .. e.text end
+    assertEqual(table.concat(values, ","), "2=2 hours,8=8 hours,24=24 hours", "WoW Forever's lengths")
+    assertEqual(cut.label, "Auction house cut %"); assertEqual(cut.default, 5); assertEqual(cut.max, 50)
+    assertEqual(margin.label, "Auction must beat vendor by %"); assertEqual(margin.default, 10)
+    assertFalse(cut.validate(2.5), "a whole percent"); assertFalse(length.validate(12), "Retail's 12 hours is not WoW Forever's")
+    -- red under: the rows live without Auctionator (they would change nothing)
+    for _, row in ipairs({ on, length, cut, margin }) do
+        assertTrue(row.disabledIf(), row.path .. " dimmed without Auctionator")
+        assertTrue(row.tooltip:find("Needs the Auctionator addon", 1, true) ~= nil, row.path .. " says why")
+    end
+    m.Auctionator = auctionator({})
+    assertFalse(on.disabledIf()); assertFalse(length.disabledIf(), "Auctionator loaded, the comparison on")
+    NS.addon.db.profile.itemSearch.auction.enabled = false
+    assertTrue(length.disabledIf(), "the comparison off: the length dims"); assertFalse(on.disabledIf())
+    -- a change makes every kept verdict stale
+    local gen = NS.ItemSearchVerdict.Generation()
+    margin.onChange(25)
+    assertTrue(NS.ItemSearchVerdict.Generation() > gen, "re-judged")
+end, FOREVER_ONLY)
