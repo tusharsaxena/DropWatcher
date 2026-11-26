@@ -533,6 +533,39 @@ function IS.Breakdown(facts, me, item)
     return { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
 end
 
+-- ── how the score works, explained (R5-DW-07) ───────────────────────────────────────────────
+
+--- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title, then one line per
+--- rule, every number read from C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with
+--- the scorer. A new list each call (a hover's, never the tooltip block's).
+--- @return table lines
+function IVD.ScoringHelp()
+    local c = V.CRAFT
+    local cheap = NS.Compat.CoinText(V.REBUY_PRICE) or tostring(V.REBUY_PRICE)
+    return {
+        L["How the score works"],
+        L["The score, 0 to 100, is what the item is still good for to this character."],
+        L["Adds:"],
+        L["  A quest in your log or ready to hand in: +%d each"]:format(V.QUEST_LOG),
+        L["  A quest you could pick up (up to %d levels above you): +%d each"]:format(V.QUEST_CAN_ABOVE, V.QUEST_CAN),
+        L["  A quest it starts: +%d (quests count %d at most)"]:format(V.STARTS, V.QUESTS_CAP),
+        L["  Your recipe by skill-up: orange +%d, yellow +%d, green +%d"]:format(c.orange, c.yellow, c.green),
+        L["  A recipe you could learn: +%d (your recipes count %d at most)"]:format(V.LEARN, V.CRAFT_CAP),
+        L["  Another profession's recipe: +%d (%d at most)"]:format(V.OTHERS, V.OTHERS_CAP),
+        L["  Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
+        L["  New to your collection: %d"]:format(100),
+        L["Takes away:"],
+        L["  Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
+        L["  Every use gray or done: %d"]:format(V.TRIVIAL),
+        L["  Poor quality counts %d at most, unless a quest wants it; a quest item %d at least"]:format(V.POOR_CAP,
+            V.QUEST_FLOOR),
+        L["The verdict:"],
+        L["  Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1),
+        L["  Under %d: Sell when a vendor buys it, else Toss."]:format(V.HOLD),
+        L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
+    }
+end
+
 -- ── the edge: the client's facts and the memo ───────────────────────────────────────────────
 
 -- Per item id: `{ gen, answer, retryAt, gearSig }`. An entry under an older generation is stale;

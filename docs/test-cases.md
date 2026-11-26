@@ -1236,13 +1236,14 @@ Total.
 - verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
 
-### test_item_search_panel.lua (12)
+### test_item_search_panel.lua (13)
 
 - verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
@@ -3594,5 +3595,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 144 |
+| Skipped | 145 |
 | **Total** | **2855** |

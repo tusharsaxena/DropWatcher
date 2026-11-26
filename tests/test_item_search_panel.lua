@@ -147,6 +147,35 @@ test("verdict panel: + points green, - points red, no Score line, the word's lin
     assertTrue(rows[3].right == nil, "no number on the word's line")
 end, FOREVER_ONLY)
 
+test("verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07)", function()
+    local NS, _, held = enabled()
+    local W, V = NS.ItemSearchWindow, NS.Constants.ITEM_SEARCH.VERDICT
+    held[IDS.blade] = { 1, 0 }
+    W.ShowItem(IDS.blade)
+    local f = W.Frame()
+    local help = f.verdict.help
+    -- red under: no (?) (the owner: "Add a (?) icon next to the score")
+    assertTrue(help ~= nil, "a (?) on the panel")
+    assertTrue(help.icon.__texture ~= nil and help.icon.__texture:find("help", 1, true) ~= nil, "LibKa0s' help icon")
+    local p = help.__points[1]
+    assertTrue(p[1] == "LEFT" and p[2] == f.verdict.badge.piece.r and p[3] == "RIGHT", "right after the pill")
+    local lines = NS.Window.TooltipOf(help)
+    assertEqual(lines[1], "How the score works")
+    local text = table.concat(lines, "\n")
+    for _, want in ipairs({ ("+%d each"):format(V.QUEST_LOG), ("+%d each"):format(V.QUEST_CAN),
+        ("orange +%d, yellow +%d, green +%d"):format(V.CRAFT.orange, V.CRAFT.yellow, V.CRAFT.green),
+        ("an upgrade +%d"):format(V.UPGRADE), (": %d"):format(V.REBUY), (": %d"):format(V.TRIVIAL),
+        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Sell"):format(V.HOLD),
+        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM) }) do
+        assertTrue(text:find(want, 1, true) ~= nil, "names " .. want)
+    end
+    -- read from the constants, never copied: a moved bar moves the help
+    local keep = V.KEEP
+    V.KEEP = 61
+    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
+    V.KEEP = keep
+end, FOREVER_ONLY)
+
 test("verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height", function()
     local NS, m, held = enabled()
     local W = NS.ItemSearchWindow

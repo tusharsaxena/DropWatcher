@@ -9,6 +9,7 @@ local _, NS = ...
 -- list takes the full height again.
 --
 -- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same pill,
+-- a (?) beside it whose tooltip explains how the score works, R5-DW-07: NS.ItemSearchVerdict.ScoringHelp;
 -- R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge, .PlaceBadge), then one line
 -- per part that counted, with its points, in the order the score adds them: the quests in your log by quest and the ones you could pick up as one count (R5-DW-03); the
 -- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
@@ -89,6 +90,20 @@ local function newLine(content)
     return row
 end
 
+-- The (?) beside the badge (R5-DW-07): LibKa0s' `help` icon, its tooltip how the score works
+-- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover).
+local function helpIcon(p)
+    local b = CreateFrame("Button", nil, p)
+    b:SetSize(B.HELP, B.HELP)
+    local t = b:CreateTexture(nil, "ARTWORK")
+    t:SetAllPoints(b)
+    t:SetTexture(NS.Icon("help"))
+    b.icon = t
+    NS.SkinPaint(t, function(x) x:SetVertexColor(NS.SkinColor(ISG.MARK_REST)) end)
+    NS.Window.AttachTooltip(b, function() return unpack(IVD.ScoringHelp()) end)
+    return b
+end
+
 --- Build the panel on the window `f` (hidden): `f.verdict`, with its `head` (ISG.Header's), `badge`
 --- (NS.ItemSearchTip.MakeBadge's regions), `scroll`, `content` and `lines`.
 --- @param f table the Item Search window
@@ -102,6 +117,7 @@ function IVP.Build(f)
     p.head:SetPoint("TOPLEFT", p, "TOPLEFT", 0, 0)
     p.head:SetWidth(WIN.LEFT_W)
     p.badge = IST().MakeBadge(p)
+    p.help = helpIcon(p)
     p.scroll, p.content = ISG.ScrollArea(p)
     p.scroll:SetPoint("TOPLEFT", p, "TOPLEFT", 0, -LINES_TOP)
     p.scroll:SetPoint("BOTTOMLEFT", p, "BOTTOMLEFT", 0, 0)
@@ -246,6 +262,7 @@ local function paintBadge(p, b)
     -- hung once by its left edge (R5-DW-02): the pill sizes itself from its text, nothing is measured
     if not st.dwPlaced then
         tip.PlaceBadge(st, p, "TOPLEFT", 4, -(BADGE_TOP + B.HEIGHT / 2))
+        if p.help then p.help:SetPoint("LEFT", st.piece.r, "RIGHT", P.GAP + 2, 0) end
         st.dwPlaced = true
     end
     tip.ShowBadge(st, true)

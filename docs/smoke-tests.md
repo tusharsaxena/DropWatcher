@@ -5189,6 +5189,15 @@ the parts (the score is in the badge); then one muted line in plain words: `Keep
 more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Sell: a score under 20, and a vendor buys
 it`). No `Keep from 50` anywhere. Result:
 
+**ITEM-SEARCH-63. A (?) that explains the score (R5-DW-07).** Open the Item Search window on a held
+Peacebloom → a small (?) icon sits right after the verdict panel's badge. Hover it → a tooltip,
+`How the score works`, lists what adds (quests in your log +60 each, quests you could pick up +35
+each, a quest it starts, your recipes by skill-up color, recipes you could learn, other professions,
+gear, a new collectible), what takes away (easy to buy again -20 with its coin price, every use gray
+or done -15, the poor-quality cap and the quest-item floor), the verdict bands (Keep 50 or more, Hold
+20 to 49, under 20 Sell or Toss) and the confidence rule. The tooltip fits on screen and goes when
+the pointer leaves. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
