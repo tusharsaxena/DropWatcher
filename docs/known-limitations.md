@@ -312,11 +312,18 @@ the code reads every case the design leaves open, module by module, is in
     every item, the key toggles the window even while a chat link's tooltip is open
     (ITEM-SEARCH-41).
   - **The Keep / Hold / Auction / Vendor / Toss badge is advice, never an action**: Drop Watcher moves, sells and
-    deletes nothing. Its score reads only what the client and ForeverDB answer, so before your
-    profession window or the gear verdict is read its confidence is Medium or Low, a Low
+    deletes nothing. Its word reads only what the client and ForeverDB answer, so before your
+    profession window or the gear verdict is read its confidence is Medium or Low (the badge's
+    score, how sure the word is, is the evidence times that confidence since R6-DW-07), a Low
     confidence never says Toss, and neither does gear whose gear verdict has not answered yet
     (ITEM-SEARCH-42). Either may still say Auction for an item no vendor buys (R6-DW-06): an
     auction is not destructive, as a Vendor at any confidence is not.
+  - **The badge's score is how sure the word is, not how good the item is** (R6-DW-07,
+    ITEM-SEARCH-73): two items with the same word and score can be worth very different amounts.
+    Its money part reads Auctionator's last scan against the margin, so a stale scan gives a stale
+    score, and an item Auctionator has no price for reads 80% (Auctionator loaded) or 60% (not
+    loaded, or the comparison off) on the money side, constants of the design rather than
+    measurements. Nothing sorts on it: Item Search's Best for you ranks an item's sources.
   - **Auction or Vendor rests on assumed deposit rates and Auctionator's last scan** (R5-DW-13,
     R5-DW-14): the deposit is worked out from `C.ITEM_SEARCH.AUCTION.DEPOSIT` (WoW Forever 5%, 20%,
     60% of the vendor price for 2, 8, 24 hours, the Classic faction house's rule, at least 1 silver a

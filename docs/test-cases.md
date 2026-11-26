@@ -1213,7 +1213,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (25)
+### test_item_search_verdict.lua (33)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1232,6 +1232,13 @@ Total.
 - verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)
 - verdict: the scoring help reads in sections: gold headers, bulleted entries, a blank line between (R6-DW-03)
 - verdict: the reasons always carry the largest negative part, so the shown parts explain the score
+- verdict score: the use value picks the word, unclamped; the score is how sure (R6-DW-07)
+- verdict score: the design's worked examples (R6-DW-07)
+- verdict score: each word's evidence, edges 0.5 and clear calls 1 (R6-DW-07)
+- verdict score: the money part for Auction, Vendor and Toss (R6-DW-07, IAU.Money)
+- verdict score: Toss, Auction for no vendor, and a Low hold read their money and data known (R6-DW-07)
+- verdict score: the breakdown's lines add up to the use value; its score is the badge's (R6-DW-07)
+- verdict breakdown: How sure says each evidence part, the data known and the score (R6-DW-08)
 - verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: on the tooltip the pill hangs on the tooltip's right side, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
@@ -1240,6 +1247,7 @@ Total.
 - verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed
 - verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
+- verdict score: the memo keeps a new answer when the use value moves under the same score (R6-DW-07) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 
 ### test_item_search_auction.lua (14)
 
@@ -1264,7 +1272,7 @@ Total.
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: + points green, - points red, the word's line in plain words, then How sure (R5-DW-04..06, R6-DW-08) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: the tooltip's pill, the panel's pill and its (?) are one size, within a tooltip line (R6-DW-02) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
@@ -3524,7 +3532,7 @@ Total.
 | test_item_search_rank.lua | 14 |
 | test_item_search_sources.lua | 18 |
 | test_item_search_prices.lua | 6 |
-| test_item_search_verdict.lua | 21 |
+| test_item_search_verdict.lua | 28 |
 | test_item_search_auction.lua | 6 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
@@ -3619,5 +3627,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 156 |
-| **Total** | **2864** |
+| Skipped | 157 |
+| **Total** | **2871** |

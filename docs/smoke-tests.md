@@ -5237,7 +5237,7 @@ and every Sell is Vendor. Result:
 ### Item Search owner feedback round 6
 
 The owner feedback round 6 run (Ka0sAddonsCommonTasks `docs/2026-11-27-OWNER_FEEDBACK_ROUND6/`,
-R6-DW-01 to R6-DW-06). Same client, ForeverDB and character setup as round 5 above. Where a check
+R6-DW-01 to R6-DW-08 and GLYPH-02). Same client, ForeverDB and character setup as round 5 above. Where a check
 here contradicts an earlier ITEM-SEARCH row, this one is current.
 
 **ITEM-SEARCH-68. A smaller badge that never covers the line under it; the (?) its size
@@ -5291,6 +5291,46 @@ Auction if an auction brings anything after the cut and deposit, else Toss.` An 
 that Auctionator prices at under about 1 silver, has no price for, or a soulbound one → `Toss` as
 before; untick Compare with Auctionator prices → `Toss` again. Fail: a Toss for an unbound item Auctionator prices well above 1 silver, or Auction for a
 soulbound one. Result:
+
+**ITEM-SEARCH-73. The score says how sure: Liferoot reads Auction 100, a gray Vendor 80 (R6-DW-07,
+R6-DW-08).** With Auctionator loaded and a recent scan, hover Liferoot (the owner's image 45: a
+vendor price of 75 copper, Auctionator's well above it) → the badge reads `Auction 100` with the
+gavel, never `Auction 0`. Open the Item Search window on it while you hold one → under `Why this
+word` (a gold header) its parts as before (`Other professions use it`, its cap, `Easy to buy again`,
+`Every use is gray or done`), then `Use value -26 (Auction, Vendor or Toss under 20)` (no `The score
+is 0 at least` line), the vendor price, Auctionator's price and the net; then a blank line and `How
+sure` (a gold header): `Use value well under 20` 100%, `Auction beats vendor by <N>% (needs 10%)`
+100% (N about 283 at the owner's price), `Evidence for Auction` 100%, `Data known` 100%, `Score` 100.
+Hover a gray (poor) item a vendor buys, with Compare with Auctionator prices unticked → `Vendor 80`;
+its How sure reads `Use value well under 20` 100%, `Compare with Auctionator prices is off` 60%,
+`Evidence for Vendor` 80%, `Score` 80. Tick it again → a gray Auctionator has no price for reads
+`Vendor 90` (`Auctionator has no price for it` 80%). A quest item for a quest in your log reads `Keep
+60` or so (`Use value 60, 10 past Keep's 50` 20%); an item whose info is still loading reads a low
+`Hold` such as `Hold 17`. The tooltip's reason lines under the badge are as before. This replaces
+the score's meaning in ITEM-SEARCH-60 to 72 (a use value then; how sure now). Fail: a disposal
+badge reading a low number for a clear call, a `0..100` clamp line, or a Score line that disagrees
+with the badge. Result:
+
+**ITEM-SEARCH-74. The (?) help explains both numbers (R6-DW-08).** Open the Item Search window on a
+held item and hover the (?) → `How the verdict and score work`, then `The word comes from the use
+value: ... The score, 0 to 100, is how sure Drop Watcher is of that word.`, then four gold sections,
+each after a blank line: `The use value adds:`, `The use value takes away:` (the same entries as
+ITEM-SEARCH-69), `The word:` (`Keep: a use value of 50 or more. Hold: 20 to 49.`, `A use value under
+20: Auction or Vendor ...`, and the live cut, length and margin) and `The score:` (`Score = evidence
+for the word x data known`, the edges and clear calls, the money part with `beats the vendor by 110%
+or more (it needs over 10%)`, the Hold fallback 25%, and the data-known rule with its 80% hint and
+50% never-Toss bars). Set the margin to 25% → the money entry reads `125% or more (it needs over
+25%)`. This replaces ITEM-SEARCH-69's headers and title and ITEM-SEARCH-72's help wording. Fail: a
+header in white, the old `How the score works`, or a margin that does not follow the setting.
+Result:
+
+**ITEM-SEARCH-75. The help mark and the missing-icon ring (GLYPH-02).** Open the Item Search window
+on a held item → the (?) beside the verdict panel's badge is a filled circle with the `?` cut out
+(Phosphor's question), tinted as before, never the old Open Iconic mark. Search for an item whose
+icon the client has not loaded yet (a fresh item id typed into the box, or right after a `/reload`)
+→ its Matches row and the item header draw an outlined ring with a `?` (Game-icons.net's help) until
+the icon arrives; the Drops tab's item buttons the same for a drop with no icon yet. Fail: a green
+square or an empty box in place of either mark. Result:
 
 ## Pending sign-off
 
