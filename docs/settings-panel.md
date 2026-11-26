@@ -450,14 +450,19 @@ a 1 to 20 slider by 1: every section's cap before "and N more"; 5 until ISR3-DW-
 (`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
 is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
 hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose
-title line is gone), Show the Keep / Hold / Sell / Toss badge (`itemSearch.tooltip.badge`, on: the
+title line is gone), Show the Keep / Hold / Auction / Vendor / Toss badge (`itemSearch.tooltip.badge`, on: the
 verdict as one rounded pill right after the block's "Drop Watcher" label: the verdict's icon (a
-lock, an hourglass, coins or a bin), its word and the 0 to 100 score in dark ink on the verdict's
+lock, an hourglass, Vendor's coins, Auction's trade arrows or a bin), its word and the 0 to 100 score in dark ink on the verdict's
 tone, and no confidence tier; round 4, R4-DW-07, one pill since R5-DW-02), Explain the badge
 (`itemSearch.tooltip.reasons`, on: the two reasons that weigh most plus the largest one that pulls
 the score down, then, when Drop Watcher isn't sure, the hint on what would make it surer, with no
 tier word; dimmed while the badge is off as well, the page's way of setting it under the badge,
-since the schema rows have no indent) and Show recipe skill levels
+since the schema rows have no indent), then, under its own Auction prices heading (R5-DW-16),
+Compare with Auctionator prices (`itemSearch.auction.enabled`, on), Auction duration
+(`itemSearch.auction.duration`, WoW Forever's 2, 8 or 24 hours, default 8), Auction house cut %
+(`itemSearch.auction.cut`, 5) and Auction must beat vendor by % (`itemSearch.auction.margin`, 10),
+all four dimmed while Auctionator is not loaded and the last three while the comparison is off,
+each tooltip saying it needs Auctionator; and Show recipe skill levels
 (`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues, your band
 bracketed), each
 dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions

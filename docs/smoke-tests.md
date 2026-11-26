@@ -5188,8 +5188,8 @@ tooltip's reason says the same count. Result:
 R5-DW-05, R5-DW-06).** Open the Item Search window on a held Peacebloom → each part's points read
 green when they add (`+35`, `+60`) and red when they take away (`-20`, `-80`); no `Score` line under
 the parts (the score is in the badge); then one muted line in plain words: `Keep: a score of 50 or
-more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Sell: a score under 20, and a vendor buys
-it`). No `Keep from 50` anywhere. Result:
+more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Vendor: a score under 20, and a vendor buys
+it` since R5-DW-15, or its Auction line, ITEM-SEARCH-66). No `Keep from 50` anywhere. Result:
 
 **ITEM-SEARCH-63. A (?) that explains the score (R5-DW-07).** Open the Item Search window on a held
 Peacebloom → a small (?) icon sits right after the verdict panel's badge. Hover it → a tooltip,
@@ -5197,8 +5197,42 @@ Peacebloom → a small (?) icon sits right after the verdict panel's badge. Hove
 each, a quest it starts, your recipes by skill-up color, recipes you could learn, other professions,
 gear, a new collectible), what takes away (easy to buy again -20 with its coin price, every use gray
 or done -15, the poor-quality cap and the quest-item floor), the verdict bands (Keep 50 or more, Hold
-20 to 49, under 20 Sell or Toss) and the confidence rule. The tooltip fits on screen and goes when
+20 to 49, under 20 Auction, Vendor or Toss, with the Auction rule, ITEM-SEARCH-66) and the confidence rule. The tooltip fits on screen and goes when
 the pointer leaves. Result:
+
+**ITEM-SEARCH-64. Auction or Vendor from Auctionator's prices (R5-DW-13, R5-DW-14, R5-DW-15).** With
+Auctionator installed and a full auction house scan done (open the house, scan, close it), hover a
+gray or white item a vendor buys whose auction price is well above its vendor price (a cloth or an
+ore that sells for more on the house) → the badge reads `Auction <score>` in a periwinkle blue with
+the trade-arrows icon, and the reason line under it reads `Auction ~<coins> after the cut and
+deposit, vendor <coins>`, both in coin icons. Hover a vendor-trash item Auctionator prices at or
+under its vendor price → `Vendor <score>` in amber with the coins, and the reason `Vendor <coins>,
+auction ~<coins> after the cut and deposit`. An item Auctionator has no price for, or a soulbound or
+quest item → `Vendor`, with `Sells for <coins>`. Keep, Hold and Toss look as before. Result:
+
+**ITEM-SEARCH-65. The deposit and the cut match the game (R5-DW-14; the deposit rates are assumed).**
+At the auction house on WoW Forever, put an item in the sell slot and read the client's own deposit
+for 2, 8 and 24 hours against its vendor price → Drop Watcher assumes 5%, 20% and 60% of the vendor
+price (at least 1 silver a listing) and a 5% cut on a sale. Note any client value that differs in
+the Result, so `C.ITEM_SEARCH.AUCTION` can be corrected. Result:
+
+**ITEM-SEARCH-66. The verdict panel shows both prices; the (?) explains the rule (R5-DW-15).** Open
+the Item Search window on a held item the badge says Auction for → under the panel's word line
+(`Auction: a score under 20, and an auction beats the vendor by over 10%`), the lines `Vendor price`,
+`Auction price (Auctionator)` and `Auction after the cut and deposit`, each with its coins on the
+right, the net in the Auction blue. On a Vendor item with no price, `No auction price known
+(Auctionator)`. Hover the (?) → `Under 20: Auction or Vendor when a vendor buys it, else Toss.` and
+the rule with the live numbers (`less the 5% cut and the 8-hour deposit (20% of the vendor price),
+beats the vendor by over 10%`). Result:
+
+**ITEM-SEARCH-67. The Auction prices settings (R5-DW-16).** Settings → Item Search → Item tooltip →
+Auction prices: Compare with Auctionator prices (on), Auction duration (2, 8 or 24 hours, 8 picked),
+Auction house cut % (5) and Auction must beat vendor by % (10). With Auctionator disabled in the
+AddOns list and the UI reloaded, all four are dimmed and their tooltips say they need Auctionator,
+and every Sell reads Vendor. With it loaded: set the margin to 200 → the Auction item from
+ITEM-SEARCH-64 turns Vendor on the next hover; set it back → Auction again; change the duration to
+24 hours → the (?) help says the 24-hour deposit (60%); untick the comparison → the three rows dim
+and every Sell is Vendor. Result:
 
 ## Pending sign-off
 

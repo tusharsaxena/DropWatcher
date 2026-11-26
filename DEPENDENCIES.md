@@ -46,6 +46,13 @@ marked as such rather than listed as a requirement.
   search. Without it, the tooltip shows nothing of Item Search, and the window searches by id and
   shows the recipes from the shipped table alone; on Retail there is no Item Search. Its data is GPL-3.0 and is
   never copied into this repo, tests included (the kit's `tests/_kit/mock_foreverdb.lua` is invented).
+- **Optional: Auctionator (read on WoW Forever, where Item Search runs).** Named in `## OptionalDeps:`
+  so it loads first when installed, and reached only through `core/CompatSearch.lua`
+  (`Compat.AuctionatorLoaded`, `Compat.AuctionPrice`): its public API v1,
+  `Auctionator.API.v1.GetAuctionPriceByItemLink` then `GetAuctionPriceByItemID`, asked as
+  `"DropWatcher"` under `pcall` (its code is never copied). With it, the Item Search badge's Sell
+  says Auction or Vendor (`modules/ItemSearchAuction.lua`, R5-DW-13..16); without it, every Sell says
+  Vendor and the Auction prices rows are dimmed.
 - **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
   When it can skin this addon, Settings → General → Skin offers it as the skin source, through
   LibKa0s-Skin-1.0's own EllesmereUI provider; this addon calls no EllesmereUI API. Without it the

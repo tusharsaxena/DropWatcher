@@ -129,6 +129,8 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `PawnCustomScale(classID)` | Your visible custom scale for the class (no provider, naming neither another class nor a spec): what WoW Forever scores you with when no talent tree is known | `nil` |
 | | `PawnClassScales(classID)` | Every starter scale of an active provider for the class (`PawnCommon.Scales`, WoW Forever's Classic scales, one per talent tree), shown or hidden, as `{ { name, index } }` sorted by index: the "best of the class" a looter, or you with no tree, is scored with | `{}` |
 | | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`'s unenchanted value (its second return, what Pawn's own upgrade test compares), else its first; a number | `nil` |
+| Auctionator (`core/CompatSearch.lua`, R5-DW-13) | `AuctionatorLoaded()` | whether the optional Auctionator addon is loaded with its public API v1's price reads (`Auctionator.API.v1.GetAuctionPriceByItemLink` or `GetAuctionPriceByItemID`) | `false` |
+| | `AuctionPrice(link, itemID)` | the unit price Auctionator last scanned, in copper: `GetAuctionPriceByItemLink("DropWatcher", link)`, else `GetAuctionPriceByItemID("DropWatcher", itemID)`, each under `pcall`; a positive plain number only | `nil` |
 | Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
