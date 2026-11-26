@@ -5141,6 +5141,15 @@ ForeverDB vendor price, Sold by tab → the Price column and the tooltip's Sold 
 the same way. Fail: any price or `Sells for` amount as a bare number, or a blank where a coin should
 be. Result:
 
+**ITEM-SEARCH-58. Your band first, the levels you passed left out (R5-DW-08).** With Alchemy known,
+show Peacebloom's Crafting tab → a recipe whose orange band you are in reads `[1] 55 75 95`, as
+before; a recipe you have passed into gray reads its gray start alone (the owner's Incense Candle at
+Herbalism 20 or more: `[20]`, not `1 20 20 [20]`); one in yellow or green starts at its bracketed
+number with the higher ones dimmed after it. A recipe whose start is above your rank still shows
+every number, the start red. Hover Peacebloom → the tooltip's Crafting rows match the Skill column.
+This replaces ITEM-SEARCH-50's "the orange start is always there". Fail: any number left of the
+bracket, or a bracket that is not your band. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

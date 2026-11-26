@@ -326,7 +326,11 @@ end
 local PART_TONE = { "skillOrange", "skillYellow", "skillGreen", "skillGray" }
 local PART_DIM = { "skillOrangeDim", "skillYellowDim", "skillGreenDim", "skillGrayDim" }
 
+-- A start left of the bracketed band is not drawn (R5-DW-08, the owner: "always start with the [X]
+-- as the leftmost"): band 1 to 4 drops the starts before its own; band 5 (below the start) and band
+-- 0 (no rank) draw every start.
 local function part(out, value, band, at)
+    if band >= 1 and band <= 4 and at < band then return end
     if band == 0 then
         out[#out + 1] = { text = tostring(value), tone = PART_TONE[at] }
     elseif band == at or (band == 5 and at == 1) then
@@ -337,10 +341,11 @@ local function part(out, value, band, at)
 end
 
 --- A recipe's breakpoints as colored parts (round 4, R4-DW-05, the owner's "Orange start +
---- highlight"): the orange start always (the minimum, 1 for a trainer's placeholder), then where
---- yellow, green and gray start, each `{ text, tone }` (a C.TONE key); `{}` without breakpoints. With
---- the row's rank known, the band it is in is bracketed at full brightness and the rest dimmed, and a
---- rank below the start draws the start red; no rank number is shown. The window's Skill column draws
+--- highlight"): the orange start (the minimum, 1 for a trainer's placeholder), then where yellow,
+--- green and gray start, each `{ text, tone }` (a C.TONE key); `{}` without breakpoints. With the
+--- row's rank known, the band it is in is bracketed at full brightness and leftmost: the starts
+--- before it are left out (R5-DW-08: `[1] 55 75 95` stays, `1 20 20 [20]` is `[20]`), the ones after
+--- it dimmed, and a rank below the start draws the start red; no rank number is shown. The window's Skill column draws
 --- them (NS.ItemSearchCells.SkillParts is this) and so does the tooltip's crafting row.
 --- @param r table a crafting row (`min`, `yellow`, `green`, `gray`, `rank`)
 --- @return table
