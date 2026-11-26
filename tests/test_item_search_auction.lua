@@ -318,3 +318,22 @@ test("auction settings: four rows under Auction prices, dimmed without Auctionat
     margin.onChange(25)
     assertTrue(NS.ItemSearchVerdict.Generation() > gen, "re-judged")
 end, FOREVER_ONLY)
+
+test("auction: a profile switch, copy or reset makes every kept verdict stale (its auction settings came with it)", function()
+    local NS, m = enabled({ ["item:990777"] = 5000 })
+    cachedItem(m)
+    local IVD = NS.ItemSearchVerdict
+    local f = { fdb = "loaded", item = { inDB = true } }
+    assertEqual(IVD.For(ITEM, f, ME).sellVia, "auction")
+    -- red under: the memo kept the old profile's answer (no row reaction runs on a switch)
+    local gen = IVD.Generation()
+    NS.addon.db:SetProfile("Other")
+    assertTrue(IVD.Generation() > gen, "a switch re-judges")
+    NS.addon.db.profile.itemSearch.auction.enabled = false
+    gen = IVD.Generation()
+    NS.addon.db:ResetProfile()
+    assertTrue(IVD.Generation() > gen, "a reset re-judges")
+    NS.addon.db.profile.itemSearch.auction.margin = 200
+    NS.addon.db:SetProfile("Third")
+    assertEqual(IVD.For(ITEM, f, ME).sellVia, "auction", "the fresh profile's defaults")
+end, FOREVER_ONLY)
