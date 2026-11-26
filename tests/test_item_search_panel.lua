@@ -165,7 +165,7 @@ test("verdict panel: a (?) beside the badge explains the score from the scorer's
     for _, want in ipairs({ ("+%d each"):format(V.QUEST_LOG), ("+%d each"):format(V.QUEST_CAN),
         ("orange +%d, yellow +%d, green +%d"):format(V.CRAFT.orange, V.CRAFT.yellow, V.CRAFT.green),
         ("an upgrade +%d"):format(V.UPGRADE), (": %d"):format(V.REBUY), (": %d"):format(V.TRIVIAL),
-        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Sell"):format(V.HOLD),
+        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Auction or Vendor"):format(V.HOLD),
         ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM) }) do
         assertTrue(text:find(want, 1, true) ~= nil, "names " .. want)
     end

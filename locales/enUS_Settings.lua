@@ -515,12 +515,12 @@ L["ForeverDB (Full) knows where far more creatures and vendors stand than Foreve
 L["Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."] =
     "Draw a thin line across the tooltip above Drop Watcher's block. Needs Add Item Search to item tooltips."
 L["Show recipe skill levels"] = "Show recipe skill levels"
-L["Show the Keep / Hold / Sell / Toss badge"] = "Show the Keep / Hold / Sell / Toss badge"
-L["Right after the block's Drop Watcher label, show a badge that says what to do with the item: Keep, Hold, Sell or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."] =
-    "Right after the block's Drop Watcher label, show a badge that says what to do with the item: Keep, Hold, Sell or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."
+L["Show the Keep / Hold / Auction / Vendor / Toss badge"] = "Show the Keep / Hold / Auction / Vendor / Toss badge"
+L["On the block's Drop Watcher label line, on the tooltip's right side, show a badge that says what to do with the item: Keep, Hold, Auction, Vendor or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."] =
+    "On the block's Drop Watcher label line, on the tooltip's right side, show a badge that says what to do with the item: Keep, Hold, Auction, Vendor or Toss, with a score from 0 to 100 of what the item is still for to this character (its quests, your recipes, an upgrade, a new collectible). Advice only: Drop Watcher never moves or deletes an item, and when it isn't sure it never says Toss. Needs Add Item Search to item tooltips."
 L["Explain the badge"] = "Explain the badge"
-L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."] =
-    "Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Sell / Toss badge."
+L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Auction / Vendor / Toss badge."] =
+    "Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Auction / Vendor / Toss badge."
 L["On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."] =
     "On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."
 L["Comparison tooltips too"] = "Comparison tooltips too"
@@ -620,3 +620,16 @@ L["The Item Search key opens Item Search on the item under the pointer, or close
     "The Item Search key opens Item Search on the item under the pointer, or closes it. Alt-Ctrl-D is set for you once, only when that key runs nothing else."
 L["Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."] =
     "Reset the Item Search page's settings (the item tooltip's block, its sections and their order, the Item Search window, the waypoints and Drop Watcher's arrow) to their defaults. The Item Search key is not changed."
+
+-- Item Search › Item tooltip › Auction prices (settings/ItemSearchRows.lua, R5-DW-16).
+L["Auction prices"] = "Auction prices"
+L["Needs the Auctionator addon: while it is not loaded, every sale says Vendor."] = "Needs the Auctionator addon: while it is not loaded, every sale says Vendor."
+L["Compare with Auctionator prices"] = "Compare with Auctionator prices"
+L["When the badge says to sell an item, compare the price Auctionator last saw on the auction house with the vendor's: Auction when an auction brings more, after the house's cut and the deposit, by the margin below; else Vendor. A bound item, or one Auctionator has no price for, always says Vendor."] = "When the badge says to sell an item, compare the price Auctionator last saw on the auction house with the vendor's: Auction when an auction brings more, after the house's cut and the deposit, by the margin below; else Vendor. A bound item, or one Auctionator has no price for, always says Vendor."
+L["%d hours"] = "%d hours"
+L["Auction duration"] = "Auction duration"
+L["The auction length the deposit is worked out for: a share of the vendor price, larger for a longer auction. The deposit counts against the auction, as it is lost when the item does not sell."] = "The auction length the deposit is worked out for: a share of the vendor price, larger for a longer auction. The deposit counts against the auction, as it is lost when the item does not sell."
+L["Auction house cut %"] = "Auction house cut %"
+L["The share of the sale price the auction house keeps, 5% on a faction auction house."] = "The share of the sale price the auction house keeps, 5% on a faction auction house."
+L["Auction must beat vendor by %"] = "Auction must beat vendor by %"
+L["How much more than the vendor's price, in percent, an auction must bring after the cut and the deposit before the badge says Auction."] = "How much more than the vendor's price, in percent, an auction must bring after the cut and the deposit before the badge says Auction."

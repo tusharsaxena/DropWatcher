@@ -345,7 +345,8 @@ test("verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on 
         return ("%02x%02x%02x"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
     end
     for verdict, look in pairs({ keep = { "lock", "good", "Keep" }, hold = { "hourglass", "yellow", "Hold" },
-        sell = { "coins", "warn", "Sell" }, toss = { "trash", "bad", "Toss" } }) do
+        sell = { "coins", "warn", "Vendor" }, toss = { "trash", "bad", "Toss" } }) do
+        -- a Sell with no sub-answer is a Vendor (R5-DW-15; tests/test_item_search_auction.lua: Auction)
         local badge = IST.Badge({ verdict = verdict, score = 42, tier = "medium", reasons = {} })
         assertEqual(badge.tone, look[2], verdict .. "'s tone")
         assertTrue(badge.icon:find("phosphor\\" .. look[1], 1, true) ~= nil, verdict .. "'s icon")
@@ -371,7 +372,7 @@ test("verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on 
     assertEqual(lines[1].text, "Item info is still loading"); assertEqual(lines[1].tone, "muted")
 end, FOREVER_ONLY)
 
-test("verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02)", function()
+test("verdict: on the tooltip the pill hangs on the tooltip's right side, smooth, never measured, never over the label (R5-DW-01, R5-DW-02)", function()
     local NS, m, tdp = enabled({ setup = function(mm) mm.STANDARD_TEXT_FONT = "Fonts\\FRIZQT__.TTF" end })
     local IST, C = NS.ItemSearchTip, NS.Constants
     local B = C.ITEM_SEARCH.BADGE
@@ -401,12 +402,15 @@ test("verdict: on the tooltip the pill hangs right after Drop Watcher's text, sm
     assertEqual(room, IST.Badge(NS.ItemSearchVerdict.For(IDS.blade, NS.ItemSearch.Get(IDS.blade),
         NS.ItemSearch.Me())).width, "the room reserved is the badge's own estimate")
     assertEqual(reads, 0, "nothing measured in the post call")
-    -- hung from the label line's left font string (which ends where "Drop Watcher" ends), GAP out
-    local p = { badge.icon:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == m.GameTooltipTextLeft3), p[3], p[4], p[5] }, ","),
-        ("LEFT,true,RIGHT,%d,0"):format(B.GAP + B.PAD), "the icon PAD inside the pill, the pill GAP after the label")
-    p = { badge.text:GetPoint(1) }
-    assertEqual(table.concat({ p[1], tostring(p[2] == badge.icon), p[3], p[4] }, ","), "LEFT,true,RIGHT," .. B.ICON_GAP)
+    -- red under (R5-DW-12, the owner: "move the badge to the right side of the tooltip"): hung after
+    -- the label's own text. Now its text ends PAD inside the label line's right font string's right
+    -- edge (the tooltip's right side), and the icon sits ICON_GAP before the text.
+    local p = { badge.text:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == m.GameTooltipTextRight3), p[3], p[4], p[5] }, ","),
+        ("RIGHT,true,RIGHT,%d,0"):format(-B.PAD), "the text PAD inside the pill, the pill on the right edge")
+    assertEqual(#badge.text.__points, 1, "the text hangs from one point")
+    p = { badge.icon:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.text), p[3], p[4] }, ","), "RIGHT,true,LEFT," .. -B.ICON_GAP)
     assertTrue(badge.text:GetText():find("Hold", 1, true) ~= nil); assertTrue(badge.text:GetText():find("0", 1, true) ~= nil)
     assertEqual(badge.text.__face and badge.text.__face[3], "", "no outline")
     assertEqual(badge.text.__shadow and table.concat(badge.text.__shadow, ","), "0,0", "no shadow")
@@ -590,7 +594,7 @@ end)
 test("verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier", function()
     local _, IS = addon()
     local f = facts()
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Sell: a score under 20, and a vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Vendor: a score under 20, and a vendor buys it")
     assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: a score under 20, and no vendor buys it")
     assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: a score under 20, and the sell price is not known yet")
     local low = IS.Breakdown(facts({ fdb = "loading" }), ME, item({ sellPrice = 0 }))

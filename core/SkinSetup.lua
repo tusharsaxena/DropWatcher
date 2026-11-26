@@ -123,6 +123,10 @@ NS.SKIN_TOKENS = {
     ["dw.offSpec"]    = { default = { 0.30, 0.85, 0.85, 1 }, follow = "sem.warband" },    -- C.TONE.offspec
     ["dw.cantUse"]    = { default = { 0.72, 0.36, 0.34, 1 }, follow = "sem.badAlt" },     -- C.TONE.redMuted
     ["dw.notWanted"]  = { default = { 0.55, 0.55, 0.58, 1 }, follow = "sem.neutral" },    -- C.TONE.bad
+    -- R5-DW-15: a Sell's Auction answer on the Item Search badge, a periwinkle blue apart from Keep's
+    -- green, Hold's yellow, Vendor's amber and Toss's gray (and from Offer's cyan); it follows the
+    -- Warband binding's blue, the library role nearest it that no other verdict tone follows.
+    ["dw.auction"]    = { default = { 0.55, 0.62, 1.00, 1 }, follow = "sem.boundWarband" }, -- C.TONE.auction
     -- DW-G2: a trade window ending soon.
     ["dw.urgent"]     = { default = { 1.00, 0.65, 0.15, 1 }, follow = "sem.warn" },       -- C.TONE.warn
     -- DW-G3: a stat gained on the detail card's Stats row.

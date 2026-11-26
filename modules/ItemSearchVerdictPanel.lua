@@ -141,10 +141,29 @@ local function pointsTone(points)
     return "muted"
 end
 
+local function money(copper)
+    copper = math.floor(math.max(0, copper) + 0.5)
+    return Compat.CoinText(copper) or tostring(copper)
+end
+
+-- A Sell's prices (R5-DW-15: the panel shows both): the vendor's, then Auctionator's and what it
+-- brings after the cut and the deposit, or, while the comparison is on, that no auction price is
+-- known (none for a bound item, which never auctions).
+local function priceRows(b, out)
+    out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice or 0), tone = "plain" }
+    if b.auctionPrice then
+        out[#out + 1] = { text = L["Auction price (Auctionator)"], right = money(b.auctionPrice), tone = "plain" }
+        out[#out + 1] = { text = L["Auction after the cut and deposit"], right = money(b.auctionNet or 0),
+            tone = "plain", rightTone = b.sellVia == "auction" and "auction" or "plain" }
+    elseif b.auctionOn then
+        out[#out + 1] = { text = L["No auction price known (Auctionator)"], tone = "muted" }
+    end
+end
+
 -- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, the parts (their
 -- points green or red, R5-DW-04), then the word's line in plain words, muted (R5-DW-06), and the
--- hint. No Score line: the score is in the badge above (R5-DW-05). Built once per breakdown (the
--- panel keeps them).
+-- hint, then a Sell's prices (priceRows). No Score line: the score is in the badge above (R5-DW-05).
+-- Built once per breakdown (the panel keeps them).
 local function rowsOf(b)
     local out = {}
     for _, line in ipairs(b.lines) do
@@ -152,6 +171,7 @@ local function rowsOf(b)
     end
     out[#out + 1] = { text = b.from, tone = "muted" }
     if b.hint then out[#out + 1] = { text = b.hint, tone = "muted" } end
+    if b.verdict == "sell" then priceRows(b, out) end
     return out
 end
 

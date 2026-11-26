@@ -659,7 +659,8 @@ end
 
 -- The three profile events share one reaction: migrations, the incoming profile's skin, panel
 -- refresh, the latch re-read (an incoming profile carries its own answer to `enabled`), auto-ask's
--- and the toast's `enabled` re-read (no row reaction runs on a switch) and the window's settings.
+-- and the toast's `enabled` re-read (no row reaction runs on a switch), the kept Item Search
+-- verdicts and the window's settings.
 local function reloadProfile(self)
     -- The first-run skin picker down first (core/SkinSetup.lua), unmarked: its put-back of a
     -- pending preview must land BEFORE the new profile's skin is applied, never over it.
@@ -687,6 +688,10 @@ local function reloadProfile(self)
     if NS.Toast then NS.Toast.OnProfileReloaded() end
     if NS.Glow then NS.Glow.Refresh() end   -- the incoming profile's glow settings
     if NS.IconStyle then NS.IconStyle.Refresh() end   -- and its Window › Icons look
+    -- Every kept Item Search verdict: it was judged under the old profile's itemSearch.auction.*
+    -- (R5-DW-13..16), and a switch runs no row's onChange (R5-REV). Before the window repaints.
+    local IVD = NS.ItemSearchVerdict
+    if IVD and IVD.Bump then IVD.Bump() end
     if NS.Window then NS.Window.ApplySettings() end
 end
 

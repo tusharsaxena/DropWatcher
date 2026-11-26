@@ -433,6 +433,7 @@ Kit.run{
         "test_item_search_sources",
         "test_item_search_prices",
         "test_item_search_verdict",
+        "test_item_search_auction",
         "test_item_search_panel",
         "test_own_drops",
         "test_tip_marks",

@@ -36,12 +36,12 @@ local _, NS = ...
 --     block claimed comes off on the next frame. Hiding it on every clear was the one-frame blink;
 --     measuring it up to three times a rebuild from half-finished layouts was the dim ghost line;
 --   * the label line, always (item 14a): "Drop Watcher" in the tooltip label's muted gold, the
---     verdict badge right after it (round 4, R4-DW-07; the "Show the Keep / Hold / Sell / Toss
+--     verdict badge on the line's right side (round 4, R4-DW-07; the "Show the Keep / Hold / Sell / Toss
 --     badge" setting): one rounded pill since R5-DW-02, the verdict's icon and "<Verdict> <score>" in
 --     dark ink on its tone (Keep green, Hold yellow, Sell amber, Toss gray; NS.ItemSearchVerdict,
 --     IST.Badge; see "the verdict badge's frames" below). The pill is textures and font strings of
---     the tooltip's own, kept like the separator: hung by anchors GAP after the label's own text
---     (R5-DW-01), stale on a clear or a hide, claimed again by a refill, off on the next frame when
+--     the tooltip's own, kept like the separator: hung by anchors flush with the tooltip's right
+--     side (R5-DW-01, R5-DW-12), stale on a clear or a hide, claimed again by a refill, off on the next frame when
 --     nothing claims them. The label line's right side is a transparent texture escape as wide as
 --     the badge's estimate (IST.Blank), so the tooltip sizes itself to fit; nothing is measured.
 --     The confidence tier is never shown (the owner); it still keeps a Low from saying Toss;
@@ -301,19 +301,23 @@ end
 
 -- ── the verdict badge (round 3 spec §4.5, item 14c) ───────────────────────────────────────────
 
--- Each verdict's icon and tone: Keep a padlock in `good`, Hold an hourglass in `yellow`, Sell coins in
--- `warn` (amber: gold is the label's tone on the same line), Toss a bin in `bad`.
+-- Each look's icon and tone (NS.ItemSearchAuction.Look's key): Keep a padlock in `good`, Hold an
+-- hourglass in `yellow`, a Sell's Vendor coins in `warn` (amber: gold is the label's tone on the same
+-- line) and its Auction LibKa0s' `transfer` (a trade's arrows) in `auction` (R5-DW-15: a gavel was
+-- asked for; `ph:gavel` is in the library's catalog but not in this addon's vendored icon set, one
+-- declaration and re-vendor away), Toss a bin in `bad`.
 local VERDICT_LOOK = {
     keep = { icon = "ph:lock", tone = "good" },
     hold = { icon = "ph:hourglass", tone = "yellow" },
-    sell = { icon = "ph:coins", tone = "warn" },
+    vendor = { icon = "ph:coins", tone = "warn" },
+    auction = { icon = "transfer", tone = "auction" },
     toss = { icon = "ph:trash", tone = "bad" },
 }
 
-local function verdictWord(verdict)
-    if verdict == "keep" then return L["Keep"] end
-    if verdict == "sell" then return L["Sell"] end
-    if verdict == "toss" then return L["Toss"] end
+local function verdictWord(look)
+    if look == "keep" then return L["Keep"] end
+    if look == "vendor" or look == "auction" then return NS.ItemSearchAuction.Word(look) end
+    if look == "toss" then return L["Toss"] end
     return L["Hold"]
 end
 
@@ -324,9 +328,10 @@ end
 -- anchors, never measured).
 local function badgeText(v)
     local B = C.ITEM_SEARCH.BADGE
-    local look = VERDICT_LOOK[v.verdict] or VERDICT_LOOK.hold
+    local key = NS.ItemSearchAuction.Look(v)
+    local look = VERDICT_LOOK[key] or VERDICT_LOOK.hold
     local r, g, b = rgb(look.tone)
-    local word, score = verdictWord(v.verdict), tostring(v.score)
+    local word, score = verdictWord(key), tostring(v.score)
     local text = word .. " " .. score
     local width = B.GAP + 2 * B.PAD + B.ICON + B.ICON_GAP + math.ceil(#text * B.FONT * B.EM)
     return { word = word, score = score, text = text, tone = look.tone, icon = NS.Icon(look.icon),
@@ -374,7 +379,7 @@ end
 --- @param v table
 --- @return table
 function IST.Badge(v)
-    local byScore = branch(badgeMemo, v.verdict or "hold")
+    local byScore = branch(badgeMemo, NS.ItemSearchAuction.Look(v))
     local badge = byScore[v.score]
     if not badge then
         badge = badgeText(v)
@@ -956,8 +961,8 @@ end
 -- "rough edged" square boxes gone; the client's plain white square without the library. The text is
 -- in the skin's body face at FONT points with no outline and no shadow, on a font object of its own
 -- where the client makes one (a 12.0.7 client draws only a font object's shadow). Laid out by
--- anchors alone (R5-DW-01): the caller hangs the icon (IST.PlaceBadge), the text hangs from the
--- icon and sizes itself, and the fill's pieces hang from the icon's left and the text's right, so the
+-- anchors alone (R5-DW-01): the caller hangs it by its left (IST.PlaceBadge, the text hanging from
+-- the icon) or by its right (IST.PlaceBadgeRight, the icon hanging from the text), the text sizes itself, and the fill's pieces hang from the icon's left and the text's right, so the
 -- post call measures nothing and the label never runs under the pill.
 
 local Q = 0.25
@@ -1060,8 +1065,26 @@ end
 --- @param x number
 --- @param y number|nil
 function IST.PlaceBadge(st, rel, relPoint, x, y)
+    local B = C.ITEM_SEARCH.BADGE
     st.icon:ClearAllPoints()
-    st.icon:SetPoint("LEFT", rel, relPoint, x + C.ITEM_SEARCH.BADGE.PAD, y or 0)
+    st.icon:SetPoint("LEFT", rel, relPoint, x + B.PAD, y or 0)
+    st.text:ClearAllPoints()
+    st.text:SetPoint("LEFT", st.icon, "RIGHT", B.ICON_GAP, 0)
+end
+
+--- Hang a badge (IST.MakeBadge's) with its right edge at `x`, `y` from `relPoint` of `rel`: the text's
+--- right is PAD further in, the icon ICON_GAP before the text (R5-DW-12, the tooltip's right side).
+--- @param st table
+--- @param rel table
+--- @param relPoint string
+--- @param x number
+--- @param y number|nil
+function IST.PlaceBadgeRight(st, rel, relPoint, x, y)
+    local B = C.ITEM_SEARCH.BADGE
+    st.text:ClearAllPoints()
+    st.text:SetPoint("RIGHT", rel, relPoint, x - B.PAD, y or 0)
+    st.icon:ClearAllPoints()
+    st.icon:SetPoint("RIGHT", st.text, "LEFT", -B.ICON_GAP, 0)
 end
 
 --- Show or hide a badge's regions (IST.MakeBadge's).
@@ -1110,15 +1133,16 @@ function IST.FillBadge(st, badge)
     return fillBadge(st, badge)
 end
 
--- The block claims the badge for its label line `n`: the pill hung GAP to the right of the label's
--- own text (the line's left font string ends where "Drop Watcher" ends; the room is the line's right
--- text), hung again only when the line moved, and shown.
+-- The block claims the badge for its label line `n`: the pill's right edge on the right edge of the
+-- line's right text (the room reserved for it, which the tooltip lays out flush with its right side:
+-- R5-DW-12, the owner's "move the badge to the right side of the tooltip"), hung again only when the
+-- line moved, and shown.
 local function claimBadge(tip, st, n)
     st.stale = false
-    local fs = n and Compat.TooltipLeftLine(tip, n)
+    local fs = n and Compat.TooltipRightLine(tip, n)
     if not fs then st.line = nil; hideBadge(st); return end
     if st.anchored ~= n then
-        IST.PlaceBadge(st, fs, "RIGHT", C.ITEM_SEARCH.BADGE.GAP, 0)
+        IST.PlaceBadgeRight(st, fs, "RIGHT", 0, 0)
         st.anchored = n
     end
     st.line = n

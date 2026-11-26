@@ -39,6 +39,7 @@ local function glow(enabled, style, tone)
     }
 end
 local TONE = NS.Constants.TONE
+local AU = NS.Constants.ITEM_SEARCH.AUCTION
 
 -- The client picked once (clients-§5): the per-situation defaults below are one table per client,
 -- keyed like that client's C.SITUATIONS (Forever port design §4.4).
@@ -401,6 +402,14 @@ do
             -- "window" (the window's first open of a session) or "never".
             recordPrices = true,
             fullDB = "window",
+            -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16):
+            -- compare with Auctionator's prices (read only while it is loaded), the auction's length
+            -- in hours (WoW Forever's 2, 8 or 24, default 8; Retail's 12, 24 or 48, default 12:
+            -- C.ITEM_SEARCH.AUCTION.DURATIONS), the house's cut in percent and how much more than
+            -- the vendor, in percent, the auction must bring after the cut and the deposit.
+            auction = {
+                enabled = true, duration = AU.DURATION, cut = AU.CUT, margin = AU.MARGIN,
+            },
             -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
             -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
             waypoints = "auto",
