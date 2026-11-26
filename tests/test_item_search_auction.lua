@@ -177,6 +177,44 @@ test("auction: a Sell keeps its key and says Auction or Vendor, with the prices;
     assertEqual(b.from, "Vendor: a score under 20, and a vendor buys it")
 end)
 
+test("auction: no vendor price but an auction price: Auction where it was Toss, at any confidence (R6-DW-06)", function()
+    local NS = T.newAddon()
+    local IS, A = NS.ItemSearch, NS.Constants.ITEM_SEARCH.AUCTION
+    local r = rule()
+    -- red under: the Auction or Vendor split only for an item a vendor buys (the owner: "yes")
+    local v = IS.Verdict(facts(), ME, item({ sellPrice = 0, auctionPrice = 1000, auctionRule = r }))
+    assertEqual(v.verdict, "sell", "the key is sell: a sale, at the auction house")
+    assertEqual(v.sellVia, "auction"); assertEqual(v.auctionPrice, 1000)
+    -- the deposit is a share of the vendor price, 0 here, so only the least deposit is charged
+    assertTrue(math.abs(v.auctionNet - (1000 * 0.95 - A.MIN_DEPOSIT)) < 1e-9, "net: " .. tostring(v.auctionNet))
+    assertEqual(v.reasons[1], ("Auction ~%s after the cut and deposit; no vendor buys it"):format(NS.Compat.CoinText(850)))
+    -- a stack shares the least deposit: 20 to a stack pays 5 copper a unit
+    v = IS.Verdict(facts(), ME, item({ sellPrice = 0, stackCount = 20, auctionPrice = 10, auctionRule = r }))
+    assertEqual(v.sellVia, "auction", "9.5 less 5 is over 0")
+    -- the margin over a vendor price of 0 is any net over 0
+    for _, case in ipairs({ { 100, "100 x 0.95 - 100 is under 0" }, { 105, "99.75 - 100 is under 0" } }) do
+        v = IS.Verdict(facts(), ME, item({ sellPrice = 0, auctionPrice = case[1], auctionRule = r }))
+        assertEqual(v.verdict, "toss", case[2]); assertNil(v.sellVia)
+    end
+    -- no comparison (switched off, bound, no price): Toss as before
+    assertEqual(IS.Verdict(facts(), ME, item({ sellPrice = 0, auctionPrice = 1000, auctionRule = rule({ on = false }) })).verdict, "toss")
+    assertEqual(IS.Verdict(facts(), ME, item({ sellPrice = 0, auctionPrice = 1000, bindType = 1, auctionRule = r })).verdict, "toss")
+    assertEqual(IS.Verdict(facts(), ME, item({ sellPrice = 0, auctionRule = r })).verdict, "toss")
+    -- a Low confidence and gear not yet judged may say Auction (it is not destructive); they still
+    -- hold where they would have tossed
+    local low = { fdb = "loading", quests = {}, crafting = {}, vendors = {} }
+    v = IS.Verdict(low, ME, item({ sellPrice = 0, auctionPrice = 1000, auctionRule = r }))
+    assertEqual(v.tier, "low"); assertEqual(v.verdict, "sell"); assertEqual(v.sellVia, "auction")
+    assertEqual(IS.Verdict(low, ME, item({ sellPrice = 0, auctionRule = r })).verdict, "hold", "Low: no Toss")
+    v = IS.Verdict(facts(), ME, item({ sellPrice = 0, equippable = true, auctionPrice = 1000, auctionRule = r }))
+    assertEqual(v.verdict, "sell"); assertEqual(v.sellVia, "auction")
+    -- the sell price not known yet: Hold, never judged against an auction
+    assertEqual(IS.Verdict(facts(), ME, item({ sellPrice = false, auctionPrice = 1000, auctionRule = r })).verdict, "hold")
+    local b = IS.Breakdown(facts(), ME, item({ sellPrice = 0, auctionPrice = 1000, auctionRule = r }))
+    assertEqual(b.verdict, "sell"); assertEqual(b.sellVia, "auction"); assertEqual(b.sellPrice, 0)
+    assertEqual(b.from, "Auction: a score under 20, no vendor buys it, and an auction brings something after the cut and deposit")
+end)
+
 -- The addon enabled with the ForeverDB fake, the tooltip double and an Auctionator double.
 local function enabled(prices)
     local NS, _, m = T.enableAddon{ mock = function(mm)
@@ -249,7 +287,8 @@ test("auction: the (?) help explains Auction and Vendor from the live settings",
     local NS, m = enabled({})
     local IVD = NS.ItemSearchVerdict
     local text = table.concat(IVD.ScoringHelp(), "\n")
-    assertTrue(text:find("Under 20: Auction or Vendor when a vendor buys it, else Toss.", 1, true) ~= nil)
+    -- red under (R6-DW-06): "Under 20: Auction or Vendor when a vendor buys it, else Toss."
+    assertTrue(text:find("Under 20: Auction or Vendor when a vendor buys it. When none does, Auction if an auction brings anything after the cut and deposit, else Toss.", 1, true) ~= nil, text)
     assertTrue(text:find("less the 5% cut and the 8-hour deposit (20% of the vendor price), beats the vendor by over 10%", 1, true) ~= nil,
         text)
     NS.addon.db.profile.itemSearch.auction.margin = 25
@@ -285,6 +324,10 @@ test("auction: the verdict panel shows the vendor's price, Auctionator's and the
     r = rows({ sellVia = "vendor", sellPrice = 80, auctionOn = false })
     assertEqual(#r, 2, "switched off or bound: the vendor's price alone")
     assertEqual(#rows({ verdict = "keep" }), 1, "only a Sell shows prices")
+    -- no vendor price (R6-DW-06): said in words, not as 0 coins
+    r = rows({ sellVia = "auction", sellPrice = 0, auctionPrice = 200, auctionNet = 90, auctionOn = true })
+    assertEqual(r[2].text, "No vendor buys it"); assertEqual(r[2].tone, "muted"); assertEqual(r[2].right, nil)
+    assertEqual(r[4].right, coins(90))
 end, FOREVER_ONLY)
 
 -- ── the settings (R5-DW-16) ─────────────────────────────────────────────────────────────────

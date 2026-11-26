@@ -5278,6 +5278,20 @@ you left it at. Show an item you do not hold → no panel, the Matches list down
 replaces the panel's 8-line height in the earlier panel checks. Fail: the Matches list growing or
 shrinking on a resize while the panel shows, or fewer than five match rows. Result:
 
+**ITEM-SEARCH-72. No vendor price but an auction price: Auction, not Toss (R6-DW-06).** With
+Auctionator loaded and a recent scan, hover an item no vendor buys (no `Sell Price` line) whose
+score is under 20 and that Auctionator prices above about 1 silver (a trade good or a crafting
+reagent with no vendor price; not soulbound) → the badge reads `Auction <score>` with the gavel, and
+the reason line `Auction ~<coins> after the cut and deposit; no vendor buys it`. Open the Item Search
+window on it while you hold one → the panel's word line reads `Auction: a score under 20, no vendor
+buys it, and an auction brings something after the cut and deposit`, then `No vendor buys it` (no
+vendor price in coins), `Auction price (Auctionator)` and `Auction after the cut and deposit`. Hover
+the (?) → under The verdict: `Under 20: Auction or Vendor when a vendor buys it. When none does,
+Auction if an auction brings anything after the cut and deposit, else Toss.` An item no vendor buys
+that Auctionator prices at under about 1 silver, has no price for, or a soulbound one → `Toss` as
+before; untick Compare with Auctionator prices → `Toss` again. Fail: a Toss for an unbound item Auctionator prices well above 1 silver, or Auction for a
+soulbound one. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

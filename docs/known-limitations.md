@@ -315,7 +315,8 @@ the code reads every case the design leaves open, module by module, is in
     deletes nothing. Its score reads only what the client and ForeverDB answer, so before your
     profession window or the gear verdict is read its confidence is Medium or Low, a Low
     confidence never says Toss, and neither does gear whose gear verdict has not answered yet
-    (ITEM-SEARCH-42).
+    (ITEM-SEARCH-42). Either may still say Auction for an item no vendor buys (R6-DW-06): an
+    auction is not destructive, as a Vendor at any confidence is not.
   - **Auction or Vendor rests on assumed deposit rates and Auctionator's last scan** (R5-DW-13,
     R5-DW-14): the deposit is worked out from `C.ITEM_SEARCH.AUCTION.DEPOSIT` (WoW Forever 5%, 20%,
     60% of the vendor price for 2, 8, 24 hours, the Classic faction house's rule, at least 1 silver a
@@ -323,7 +324,9 @@ the code reads every case the design leaves open, module by module, is in
     WoW Forever's own rates are unmeasured (ITEM-SEARCH-65). The price is the one Auctionator last
     scanned, read again once the auction house closes, so a stale scan gives a stale answer. A bind
     on equip item you have already equipped is soulbound, but its item id still says bind on equip,
-    so it can read Auction. No neutral auction house rule: set the cut to match one.
+    so it can read Auction. No neutral auction house rule: set the cut to match one. An item no
+    vendor buys (R6-DW-06) pays only the least deposit (1 silver a full stack, as the share of a
+    vendor price of 0 is nothing), so its Auction rests on the assumed least too (ITEM-SEARCH-72).
 - **Item Search, owner feedback round 4** (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`):
   - **"The other faction" is ForeverDB's word for it** (R4-DW-08): Hide the other faction's vendors
     leaves out a vendor whose ForeverDB faction (`nfac`, Alliance, Horde or both) does not include

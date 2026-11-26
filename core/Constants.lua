@@ -550,8 +550,9 @@ C.ITEM_SEARCH = {
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,
     },
-    -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16): the
-    -- price Auctionator last saw (its public API, asked as CALLER) against the vendor's, per unit.
+    -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16; and an
+    -- Auction for an item no vendor buys, R6-DW-06): the price Auctionator last saw (its public API,
+    -- asked as CALLER) against the vendor's, per unit.
     -- The net an auction brings is the price less the house's cut, less the deposit, counted as a
     -- cost (it is lost when the auction does not sell: the cautious reading). The deposit is a
     -- share of the vendor sell price by the auction's length, at least MIN_DEPOSIT a listing (a full

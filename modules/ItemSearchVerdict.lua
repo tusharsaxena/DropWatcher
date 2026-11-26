@@ -26,7 +26,10 @@ local _, NS = ...
 -- when none does, Hold while the sell price is not known. A Low confidence never says Toss: it holds
 -- instead, so the addon never tells a player to delete what it could not judge. Nor does gear whose
 -- gear verdict has not answered (Pawn still scoring), at any confidence: that part alone could add
--- +70, so a Toss would rest on the one input that could overturn it.
+-- +70, so a Toss would rest on the one input that could overturn it. An item no vendor buys that
+-- would Toss (or hold for Low or unjudged gear) is a Sell said as Auction instead when an auction
+-- brings anything after the cut and the deposit (R6-DW-06, NS.ItemSearchAuction's IAU.Via against a
+-- vendor price of 0), at any confidence: an auction deletes nothing.
 -- THE CONFIDENCE is not the score: it is how much of what the score needs was answered, by weight
 -- (C.ITEM_SEARCH.VERDICT.WEIGHT): ForeverDB loaded 3, the quest states 3 (needed with a quest row, or
 -- without ForeverDB), the profession ranks 3 (needed with a recipe row), the client's item info 2
@@ -494,7 +497,14 @@ local function judge(facts, me, item, bd)
     local verdict, why = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
     acc.bd = nil
     local via, net, price
-    if verdict == "sell" then via, net, price = IAU.Via(item, item.auctionRule) end
+    if verdict == "sell" then
+        via, net, price = IAU.Via(item, item.auctionRule)
+    elseif why == "toss" or why == "unjudged" then
+        -- no vendor buys it (R6-DW-06, the owner): an auction that brings anything after the cut and
+        -- the deposit is an Auction, at any confidence (it is not destructive); else Toss or Hold
+        via, net, price = IAU.Via(item, item.auctionRule)
+        if via == "auction" then verdict, why = "sell", "sell" else via, net, price = nil, nil, nil end
+    end
     return verdict, why, score, confidence, tier, hint, sellPrice, acc, via, net, price
 end
 
@@ -542,7 +552,7 @@ function IS.Breakdown(facts, me, item)
     local b = { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
     if verdict == "sell" then
         local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
-        b.from = IAU.From(via, net, V.HOLD, margin)
+        b.from = IAU.From(via, net, V.HOLD, margin, sellPrice)
         b.sellVia, b.sellPrice, b.auctionPrice, b.auctionNet = via, sellPrice, price, net
         -- whether a price was looked for: the comparison on and the item auctionable
         b.auctionOn = type(item.auctionRule) == "table" and item.auctionRule.on == true and IAU.Auctionable(item.bindType)

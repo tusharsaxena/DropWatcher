@@ -13,7 +13,9 @@ local _, NS = ...
 -- reading charges it. Auction when net > vendor x (1 + margin / 100), else Vendor. A bound item
 -- (C.ITEM_SEARCH.AUCTION.BOUND), no price (Auctionator absent, not loaded, or no scan of the item)
 -- or the comparison switched off answers Vendor. `rule` is IAU.Rule's: { on, duration, cut,
--- margin }, the settings `itemSearch.auction.*` read and bounded.
+-- margin }, the settings `itemSearch.auction.*` read and bounded. The verdict asks it for an item no
+-- vendor buys as well (R6-DW-06, the owner: an item Auctionator prices should not say Toss): with a
+-- vendor price of 0 the deposit is MIN_DEPOSIT over the stack and any net over 0 is Auction.
 --
 -- THE WORDS. The verdict key stays "sell" (score bands, sorting and every reader of it unchanged);
 -- `sellVia` ("auction" | "vendor") is the sub-answer, with the prices used. IAU.Look names the
@@ -135,13 +137,17 @@ local function money(copper)
 end
 
 --- A Sell's reason line, the prices first: Auction's "Auction ~<net> after the cut and deposit,
---- vendor <price>", a Vendor judged against a price "Vendor <price>, auction ~<net> after the cut
---- and deposit", else the vendor's price alone ("Sells for <price>").
+--- vendor <price>" (with no vendor price, "Auction ~<net> after the cut and deposit; no vendor buys
+--- it", R6-DW-06), a Vendor judged against a price "Vendor <price>, auction ~<net> after the cut and
+--- deposit", else the vendor's price alone ("Sells for <price>").
 --- @param via string
 --- @param vendor number
 --- @param net number|nil
 --- @return string
 function IAU.Reason(via, vendor, net)
+    if net and via == "auction" and vendor <= 0 then
+        return L["Auction ~%s after the cut and deposit; no vendor buys it"]:format(money(net))
+    end
     if net and via == "auction" then
         return L["Auction ~%s after the cut and deposit, vendor %s"]:format(money(net), money(vendor))
     end
@@ -149,13 +155,18 @@ function IAU.Reason(via, vendor, net)
     return L["Sells for %s"]:format(money(vendor))
 end
 
---- The breakdown's word line for a Sell, in plain words (as the other verdicts' lines).
+--- The breakdown's word line for a Sell, in plain words (as the other verdicts' lines); an Auction
+--- for an item no vendor buys (`vendor` 0, R6-DW-06) says so.
 --- @param via string
 --- @param net number|nil
 --- @param bar number the score under which a verdict sells
 --- @param margin number the rule's margin, in percent
+--- @param vendor number|nil the vendor's price a unit (0: no vendor buys it, R6-DW-06)
 --- @return string
-function IAU.From(via, net, bar, margin)
+function IAU.From(via, net, bar, margin, vendor)
+    if via == "auction" and vendor == 0 then
+        return L["Auction: a score under %d, no vendor buys it, and an auction brings something after the cut and deposit"]:format(bar)
+    end
     if via == "auction" then
         return L["Auction: a score under %d, and an auction beats the vendor by over %d%%"]:format(bar, margin)
     end
@@ -171,7 +182,7 @@ end
 --- @return table
 function IAU.HelpLines(bar)
     local r = IAU.Rule()
-    local out = { L["Under %d: Auction or Vendor when a vendor buys it, else Toss."]:format(bar) }
+    local out = { L["Under %d: Auction or Vendor when a vendor buys it. When none does, Auction if an auction brings anything after the cut and deposit, else Toss."]:format(bar) }
     if not r.on then
         out[#out + 1] = L["Compare with Auctionator prices is off: a sale is always Vendor."]
     elseif not NS.Compat.AuctionatorLoaded() then

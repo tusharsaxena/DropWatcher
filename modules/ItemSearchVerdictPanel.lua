@@ -153,7 +153,12 @@ end
 -- brings after the cut and the deposit, or, while the comparison is on, that no auction price is
 -- known (none for a bound item, which never auctions).
 local function priceRows(b, out)
-    out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice or 0), tone = "plain" }
+    if (b.sellPrice or 0) <= 0 then
+        -- an Auction for an item no vendor buys (R6-DW-06): said in words, not as 0 coins
+        out[#out + 1] = { text = L["No vendor buys it"], tone = "muted" }
+    else
+        out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice), tone = "plain" }
+    end
     if b.auctionPrice then
         out[#out + 1] = { text = L["Auction price (Auctionator)"], right = money(b.auctionPrice), tone = "plain" }
         out[#out + 1] = { text = L["Auction after the cut and deposit"], right = money(b.auctionNet or 0),
