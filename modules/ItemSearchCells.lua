@@ -235,21 +235,8 @@ function ISC.TypeOf(s)
     return RANK_TYPE[rank] or L["Creature"], TYPE_ORDER[rank] or 1
 end
 
---- A creature's color by its rank (NS.ItemSearch.RankTone, round 3 spec §4.3): the Source and Type
---- cells, the Skinned from Creature cell and the tooltip's creature rows share it.
-ISC.RankTone = IS.RankTone
-
--- The look a drop source's name and Type share (round 3 spec §4.3, item 6): a creature by its rank,
--- an object plain, a container in its quality, an unnamed source muted.
-local function sourceLook(s, ctx)
-    if s.kind == "item" then
-        local it = call(ctx.item, s.id)
-        return nil, type(it) == "table" and num(it.quality) or nil
-    end
-    if not s.named then return "muted", nil end
-    if s.kind == "npc" then return IS.RankTone(s.rank), nil end
-    return "plain", nil
-end
+--- A drop source's Type tone (NS.ItemSearch.TypeTone, round 4 R4-DW-01): the Type cell only.
+ISC.TypeTone = IS.TypeTone
 
 local function dropTip(s, typeText, where, me)
     local rows, hints = {}, {}
@@ -270,7 +257,6 @@ end
 local function dropRow(s, i, top, me, ctx)
     local where = ISC.Where(spotsOf(s.kind, s, ctx), me.mapID, ctx.mapName)
     local typeText, typeOrder = ISC.TypeOf(s)
-    local tone, quality = sourceLook(s, ctx)
     local chance = chanceCell(s.chance, top)
     local hasLevel = num(s.minLevel) ~= nil
     return {
@@ -278,8 +264,8 @@ local function dropRow(s, i, top, me, ctx)
         itemID = s.kind == "item" and s.id or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         band = (s.kind == "npc" and hasLevel) and IS.InBand(s.minLevel, s.maxLevel, me.level) or nil,
-        cells = { source = { text = s.name, tone = tone, quality = quality }, type = { text = typeText, tone = tone,
-            quality = quality },
+        cells = { source = { text = s.name, tone = s.named and "plain" or "muted" },
+            type = { text = typeText, tone = IS.TypeTone(s.kind, s.rank) },
             level = levelCell(s.minLevel, s.maxLevel, me.level), zone = ISC.ZoneCell(where), chance = chance },
         sort = { source = lower(s.name), type = typeOrder, level = num(s.minLevel), zone = lower(where and where.zone),
             chance = num(s.chance) },
@@ -847,7 +833,7 @@ local function skinRow(c, i, top, me, ctx)
     local rank = num(ranks[ISC.SKINNING])
     return {
         best = i, id = c.id, spot = where and where.spot or nil, here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
-        cells = { creature = { text = c.name, tone = IS.RankTone(c.rank) }, level = levelCell(c.minLevel, c.maxLevel, me.level),
+        cells = { creature = { text = c.name, tone = "plain" }, level = levelCell(c.minLevel, c.maxLevel, me.level),
             skill = skinSkillCell(need, rank), zone = ISC.ZoneCell(where), chance = chanceCell(c.chance, top) },
         sort = { creature = lower(c.name), level = num(c.minLevel), skill = need, zone = lower(where and where.zone),
             chance = num(c.chance) },

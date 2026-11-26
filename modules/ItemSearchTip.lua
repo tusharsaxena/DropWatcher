@@ -396,8 +396,7 @@ local function dropsLines(f, r, o, out)
     local shown, rest = capped(r.drops, o.rows)
     for i = 1, shown do
         local s = r.drops[i]
-        local tone = not s.named and "muted" or s.kind == "npc" and IS.RankTone(s.rank) or "plain"
-        add(out, INDENT .. s.name .. levelRange(s), tone,
+        add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
             IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
     end
     if f.worldMinLevel then
@@ -511,7 +510,7 @@ local function skinnedLines(_, r, o, out)
     local shown, rest = capped(r.skinned, o.rows)
     for i = 1, shown do
         local s = r.skinned[i]
-        add(out, INDENT .. s.name .. levelRange(s), IS.RankTone(s.rank), IS.Percent(s.chance) or L["rate unknown"],
+        add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or L["rate unknown"],
             s.chance and "plain" or "muted")
     end
     more(out, rest)

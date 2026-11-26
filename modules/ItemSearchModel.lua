@@ -155,15 +155,20 @@ function IS.GatherSkill(name, kind)
     return type(node) == "table" and node.prof == kind and num(node.skill) or nil
 end
 
--- A creature's rank (ForeverDB's npc `rank`) as its color (round 3 spec §4.3, item 6): a C.TONE key.
-local RANK_TONE = { [1] = "rankElite", [2] = "rankRareElite", [3] = "rankBoss", [4] = "rankRare" }
+-- A drop source's Type as its color (round 4, R4-DW-01): a creature by its rank (ForeverDB's npc
+-- `rank`), an object and a container by kind. C.TONE keys.
+local RANK_TONE = { [1] = "typeElite", [2] = "typeRareElite", [3] = "typeBoss", [4] = "typeRare" }
 
---- A creature's color by its rank, as the game's unit frames tell them apart: 1 elite gold, 4 rare
---- silver, 2 rare elite pale blue, 3 boss purple, a normal one (0, or no rank) `plain`.
+--- A drop source's Type tone: a creature by its rank (1 elite gold, 4 rare teal, 2 rare elite pale
+--- blue, 3 boss rose, a normal one white), an object tan, a container lavender. The Type cell's
+--- color only: a source's name is plain everywhere (owner, round 4).
+--- @param kind string "npc", "object" or "item"
 --- @param rank number|nil
 --- @return string a C.TONE key
-function IS.RankTone(rank)
-    return RANK_TONE[num(rank) or 0] or "plain"
+function IS.TypeTone(kind, rank)
+    if kind == "item" then return "typeContainer" end
+    if kind == "object" then return "typeObject" end
+    return RANK_TONE[num(rank) or 0] or "typeCreature"
 end
 
 -- ── sources (SF-DW-01's model) ──────────────────────────────────────────────────────────────

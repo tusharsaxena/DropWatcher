@@ -247,18 +247,27 @@ test("item search sources: Gathered from's rows: the node, its profession, its s
     assertEqual(#C.Build({ gathered = facts.gathered }, {}, {}).gathered, 4)
 end)
 
--- ── the rank colors (item 6) ────────────────────────────────────────────────────────────────
+-- ── the type colors (round 4, R4-DW-01) ─────────────────────────────────────────────────────
 
-test("item search sources: a creature's color is its rank's, the same in the cells and the tooltip", function()
+local function hex(c) return ("#%02X%02X%02X"):format(c.r * 255 + 0.5, c.g * 255 + 0.5, c.b * 255 + 0.5) end
+
+test("item search sources: every Type has its own fixed tone; a source's name is plain everywhere", function()
     local NS = T.newAddon()
     local S, C = NS.ItemSearch, NS.ItemSearchCells
-    assertEqual(S.RankTone(0), "plain"); assertEqual(S.RankTone(nil), "plain"); assertEqual(S.RankTone(1), "rankElite")
-    assertEqual(S.RankTone(4), "rankRare"); assertEqual(S.RankTone(2), "rankRareElite"); assertEqual(S.RankTone(3), "rankBoss")
-    local T0 = NS.Constants.TONE
-    assertEqual(T0.rankElite.r .. "," .. T0.rankElite.g .. "," .. T0.rankElite.b, "1,0.82,0", "#FFD100")
-    assertEqual(T0.rankBoss.b, 1); assertEqual(T0.rankRare.b, 0.86); assertEqual(T0.rankRareElite.r, 0.62)
+    assertEqual(S.TypeTone("npc", 0), "typeCreature"); assertEqual(S.TypeTone("npc", nil), "typeCreature")
+    assertEqual(S.TypeTone("npc", 1), "typeElite"); assertEqual(S.TypeTone("npc", 4), "typeRare")
+    assertEqual(S.TypeTone("npc", 2), "typeRareElite"); assertEqual(S.TypeTone("npc", 3), "typeBoss")
+    assertEqual(S.TypeTone("object"), "typeObject"); assertEqual(S.TypeTone("item"), "typeContainer")
+    assertEqual(S.RankTone, nil, "no rank color left on any name")
+    local T0, want = NS.Constants.TONE, { typeCreature = "#FFFFFF", typeElite = "#FFD100", typeRare = "#4DD9C9",
+        typeRareElite = "#9ECCFF", typeBoss = "#FF6F91", typeObject = "#C9A57A", typeContainer = "#B39DFF" }
+    local seen = {}
+    for key, h in pairs(want) do
+        assertEqual(hex(T0[key]), h, key)
+        assertTrue(not seen[h], "each type its own tone: " .. key); seen[h] = true
+    end
     local rows = C.Skinned({ skinnedFrom = { { id = 1, name = "Invented Boss", rank = 3, chance = 0.5 } } }, {}, {})
-    assertEqual(rows[1].cells.creature.tone, "rankBoss", "Skinned from's Creature cell too")
+    assertEqual(rows[1].cells.creature.tone, "plain", "Skinned from's Creature cell plain")
 end)
 
 -- ── the tooltip ─────────────────────────────────────────────────────────────────────────────
@@ -299,18 +308,20 @@ test("item search sources: the tooltip's Gathered from section, after Drops from
     assertEqual(#IST.Lines(facts, o, nil, {}), 0, "the section switched off")
 end)
 
-test("item search sources: the tooltip draws a creature's name in its rank's color", function()
+test("item search sources: the tooltip draws every source's name plain, an unnamed one muted", function()
     local NS = T.newAddon()
     local IST = NS.ItemSearchTip
     local facts = { vendors = {}, quests = {}, crafting = {}, rewardFrom = {}, gathered = {},
         drops = { { kind = "npc", id = 1, name = "Invented Elite", named = true, rank = 1, chance = 0.5 },
-            { kind = "object", id = 2, name = "Invented Chest", named = true, chance = 0.4 } },
+            { kind = "object", id = 2, name = "Invented Chest", named = true, chance = 0.4 },
+            { kind = "npc", id = 4, name = "Creature 4", named = false, chance = 0.3 } },
         skinnedFrom = { { id = 3, name = "Invented Rare", rank = 4, chance = 0.5 } } }
     local lines = IST.Lines(facts, { order = IST.ORDER, sections = IST.SECTIONS, rows = 5, header = false }, nil, {})
     local tone = {}
     for _, l in ipairs(lines) do tone[l.text] = l.tone end
-    assertEqual(tone["  Invented Elite"], "rankElite"); assertEqual(tone["  Invented Chest"], "plain")
-    assertEqual(tone["  Invented Rare"], "rankRare")
+    assertEqual(tone["  Invented Elite"], "plain"); assertEqual(tone["  Invented Chest"], "plain")
+    assertEqual(tone["  Invented Rare"], "plain", "Skinned from's rows plain too")
+    assertEqual(tone["  Creature 4"], "muted")
 end)
 
 test("item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake", function()

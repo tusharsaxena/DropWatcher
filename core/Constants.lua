@@ -220,16 +220,19 @@ local FIXED_TONE = {
     -- gray (#5a5a5a). Each glyph's shape differs too, so the colors are never the only signal.
     glyphKnown  = { r = 176 / 255, g = 176 / 255, b = 176 / 255 },
     glyphLocked = { r = 90 / 255,  g = 90 / 255,  b = 90 / 255 },
-    -- A creature's rank on Item Search's rows (round 3 spec §4.3, item 6): its name and Type in the
-    -- color of what kind of creature it is, as the game's unit frames tell an elite from a rare. A
-    -- normal creature stays `plain` (skinned); elite the game's gold (#FFD100), rare silver
-    -- (#C7CCDB), rare elite a pale silver-blue apart from both (#9ECCFF), boss a lightened epic
-    -- purple (#BF70FF, apart from the skill-up orange on the same window). A game meaning every
-    -- player reads the same under every skin, as the skill-up hues are, so fixed.
-    rankElite     = { r = 1.00, g = 0.82, b = 0.00 },
-    rankRare      = { r = 0.78, g = 0.80, b = 0.86 },
-    rankRareElite = { r = 0.62, g = 0.80, b = 1.00 },
-    rankBoss      = { r = 0.75, g = 0.44, b = 1.00 },
+    -- A drop source's Type on Item Search's Drops from tab (round 4, R4-DW-01): one tone per type,
+    -- so the column reads at a glance, a meaning every player reads the same under every skin.
+    -- Creature white (owner rule), Elite the game's gold (#FFD100), Rare teal (#4DD9C9), Rare Elite
+    -- pale blue (#9ECCFF), Boss rose (#FF6F91, apart from epic purple and the skill-up orange),
+    -- Object tan (#C9A57A), Container lavender (#B39DFF). The source's own name stays plain; no
+    -- profession tone repeats one of these.
+    typeCreature  = { r = 1.00, g = 1.00, b = 1.00 },
+    typeElite     = { r = 1.00, g = 0.82, b = 0.00 },
+    typeRare      = { r = 0.302, g = 0.851, b = 0.788 },
+    typeRareElite = { r = 0.620, g = 0.800, b = 1.000 },
+    typeBoss      = { r = 1.000, g = 0.435, b = 0.569 },
+    typeObject    = { r = 0.788, g = 0.647, b = 0.478 },
+    typeContainer = { r = 0.702, g = 0.616, b = 1.000 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
 

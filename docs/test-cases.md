@@ -1166,9 +1166,9 @@ Total.
 - item search sources: Gathered from ranks a profession you have at your skill, then above it, then one you lack
 - item search sources: the Gathered from tab sits after Drops from with its columns and filters
 - item search sources: Gathered from's rows: the node, its profession, its skill against yours, zone and chance
-- item search sources: a creature's color is its rank's, the same in the cells and the tooltip
+- item search sources: every Type has its own fixed tone; a source's name is plain everywhere
 - item search sources: the tooltip's Gathered from section, after Drops from, capped by Rows per section
-- item search sources: the tooltip draws a creature's name in its rank's color
+- item search sources: the tooltip draws every source's name plain, an unnamed one muted
 - item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
 - item search sources: step 18 puts Gathered from after Drops from in a stored order, once
 
