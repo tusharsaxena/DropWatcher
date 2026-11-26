@@ -116,6 +116,9 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
     local lines = P.Lines(f)
     local n = #b.lines
     local sum = 0
+    -- red under (R6-DW-08): no sections; the parts under "Why this word", a gold header
+    assertEqual(lines[1].text, "Why this word"); assertEqual(lines[1].tone, "mutedGold")
+    table.remove(lines, 1)
     for i, part in ipairs(b.lines) do
         -- red under: a panel that words or adds up the parts itself
         assertEqual(lines[i].text, part.text)
@@ -125,26 +128,39 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
         sum = sum + part.points
     end
     assertEqual(sum, b.use, "the parts add up to the use value (R6-DW-07)")
-    -- red under (R5-DW-05): a "Score" line repeating the badge's number
-    for _, line in ipairs(lines) do assertTrue(line.text ~= "Score", "no Score line") end
     assertEqual(lines[n + 1].text, b.from, "the line the verdict word comes from, right after the parts")
     assertEqual(lines[n + 1].tone, "muted"); assertEqual(lines[n + 1].right, "")
-    assertTrue(b.from:find("a score ", 1, true) ~= nil, "in plain words: " .. b.from)
-    if b.hint then assertEqual(lines[n + 2].text, b.hint, "the missing input as a plain hint") end
+    assertTrue(b.from:find("^Use value %-?%d+ %(") ~= nil, "the use value and its band: " .. b.from)
+    -- then "How sure": the score's parts, the data known and the score (the design's Score line)
+    local at
+    for i, line in ipairs(lines) do if line.text == "How sure" then at = i end end
+    assertTrue(at ~= nil and lines[at].tone == "mutedGold", "a How sure header")
+    for i, s in ipairs(b.sure) do
+        assertEqual(lines[at + i].text, s.text); assertEqual(lines[at + i].right, s.right)
+    end
+    assertEqual(lines[at + #b.sure].text, "Score"); assertEqual(lines[at + #b.sure].right, tostring(b.score))
+    if b.hint then assertEqual(lines[at + #b.sure + 1].text, b.hint, "the missing input as a plain hint, last") end
     for _, text in ipairs(lineTexts(lines)) do
         assertTrue(not text:find("Low") and not text:find("Medium") and not text:find("High"), "no tier: " .. text)
     end
 end, FOREVER_ONLY)
 
-test("verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06)", function()
+test("verdict panel: + points green, - points red, the word's line in plain words, then How sure (R5-DW-04..06, R6-DW-08)", function()
     local NS = enabled()
-    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, from = "Sell: a score under 20, and a vendor buys it",
-        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } } })
-    assertEqual(#rows, 3, "the two parts and the word's line: no total")
-    assertEqual(rows[1].right, "+35"); assertEqual(rows[1].rightTone, "good")
-    assertEqual(rows[2].right, "-20"); assertEqual(rows[2].rightTone, "red")
-    assertEqual(rows[3].text, "Sell: a score under 20, and a vendor buys it"); assertEqual(rows[3].tone, "muted")
-    assertTrue(rows[3].right == nil, "no number on the word's line")
+    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, use = 15, from = "Invented word line",
+        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } },
+        sure = { { text = "Invented evidence", right = "50%" }, { text = "Score", right = "15" } }, hint = "Invented hint" })
+    assertEqual(#rows, 9, "two headers, the two parts, the word's line, a spacer, two sure lines and the hint")
+    assertEqual(rows[1].text, "Why this word"); assertEqual(rows[1].tone, "mutedGold")
+    assertEqual(rows[2].right, "+35"); assertEqual(rows[2].rightTone, "good")
+    assertEqual(rows[3].right, "-20"); assertEqual(rows[3].rightTone, "red")
+    assertEqual(rows[4].text, "Invented word line"); assertEqual(rows[4].tone, "muted")
+    assertTrue(rows[4].right == nil, "no number on the word's line")
+    assertEqual(rows[5].text, "", "a blank line between the sections")
+    assertEqual(rows[6].text, "How sure"); assertEqual(rows[6].tone, "mutedGold")
+    assertEqual(rows[7].text, "Invented evidence"); assertEqual(rows[7].right, "50%")
+    assertEqual(rows[8].text, "Score"); assertEqual(rows[8].right, "15")
+    assertEqual(rows[9].text, "Invented hint"); assertEqual(rows[9].tone, "muted")
 end, FOREVER_ONLY)
 
 test("verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07)", function()
@@ -160,19 +176,22 @@ test("verdict panel: a (?) beside the badge explains the score from the scorer's
     local p = help.__points[1]
     assertTrue(p[1] == "LEFT" and p[2] == f.verdict.badge.piece.r and p[3] == "RIGHT", "right after the pill")
     local lines = NS.Window.TooltipOf(help)
-    assertEqual(lines[1], "How the score works")
+    assertEqual(lines[1], "How the verdict and score work")
     local text = table.concat(lines, "\n")
     for _, want in ipairs({ ("+%d each"):format(V.QUEST_LOG), ("+%d each"):format(V.QUEST_CAN),
         ("orange +%d, yellow +%d, green +%d"):format(V.CRAFT.orange, V.CRAFT.yellow, V.CRAFT.green),
         ("an upgrade +%d"):format(V.UPGRADE), (": %d"):format(V.REBUY), (": %d"):format(V.TRIVIAL),
-        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Auction or Vendor"):format(V.HOLD),
-        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM) }) do
+        ("Keep: a use value of %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1),
+        ("A use value under %d: Auction or Vendor"):format(V.HOLD),
+        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM),
+        -- the score (R6-DW-08): how sure, from the evidence and the data known
+        "Score = evidence for the word x data known", ("A Hold only because too little is known: %d%%"):format(V.SURE.FALLBACK * 100) }) do
         assertTrue(text:find(want, 1, true) ~= nil, "names " .. want)
     end
     -- read from the constants, never copied: a moved bar moves the help
     local keep = V.KEEP
     V.KEEP = 61
-    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
+    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: a use value of 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
     V.KEEP = keep
 end, FOREVER_ONLY)
 

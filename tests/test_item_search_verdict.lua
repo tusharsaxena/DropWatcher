@@ -298,8 +298,9 @@ test("verdict: the scoring help reads in sections: gold headers, bulleted entrie
     local t = C.TONE.mutedGold
     local gold = ("|cff%02x%02x%02x"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
     local lines = NS.ItemSearchVerdict.ScoringHelp()
-    assertEqual(lines[1], "How the score works", "the title as before")
-    assertEqual(lines[2], "The score, 0 to 100, is what the item is still good for to this character.")
+    -- red under (R6-DW-08): "How the score works" and the score as what the item is still good for
+    assertEqual(lines[1], "How the verdict and score work")
+    assertEqual(lines[2], "The word comes from the use value: what the item is still good for to this character. The score, 0 to 100, is how sure Drop Watcher is of that word.")
     -- red under: the headers in the body's color, the entries indented by two spaces alone, no spacer
     local heads, bullets = {}, 0
     for i = 3, #lines do
@@ -314,10 +315,10 @@ test("verdict: the scoring help reads in sections: gold headers, bulleted entrie
             bullets = bullets + 1
         end
     end
-    assertEqual(table.concat(heads, " / "), "Adds: / Takes away: / The verdict: / Confidence:")
-    assertTrue(bullets >= 14, "every entry bulleted (" .. bullets .. ")")
-    assertTrue(lines[#lines]:find("Confidence is how much of what the score needs is known.", 1, true) ~= nil,
-        "the confidence rule under its own header: " .. lines[#lines])
+    assertEqual(table.concat(heads, " / "), "The use value adds: / The use value takes away: / The word: / The score:")
+    assertTrue(bullets >= 18, "every entry bulleted (" .. bullets .. ")")
+    assertTrue(lines[#lines]:find("Data known is how much of what the verdict needs is known.", 1, true) ~= nil,
+        "the data-known rule last, under The score: " .. lines[#lines])
 end)
 
 test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()
@@ -486,6 +487,53 @@ test("verdict score: the breakdown's lines add up to the use value; its score is
     assertEqual(b.use, -35); assertEqual(n, b.use, "the lines add up to the use value")
     assertEqual(b.score, IS.Verdict(f, ME, item({ sellPrice = 20 })).score, "the badge's score")
     for _, line in ipairs(b.lines) do assertTrue(line.kind ~= "clamp", "no clamp line: " .. line.text) end
+end)
+
+-- The breakdown's "How sure" lines as "text = right" strings (R6-DW-08).
+local function sureOf(b)
+    local out = {}
+    for _, s in ipairs(b.sure or {}) do out[#out + 1] = s.text .. " = " .. tostring(s.right) end
+    return table.concat(out, " | ")
+end
+
+test("verdict breakdown: How sure says each evidence part, the data known and the score (R6-DW-08)", function()
+    local _, IS = addon()
+    local r = auctionRule()
+    -- Liferoot: the design's own lines ("Auction beats vendor by 283% (needs 10%): 100%")
+    local rows = { recipe({ color = "gray" }) }
+    for i = 1, 5 do rows[#rows + 1] = recipe({ spell = 10 + i, skillLine = ALCHEMY, rank = false, known = false }) end
+    local life = IS.Breakdown(facts({ crafting = rows, vendors = { {}, {}, {} } }), ME, item({ sellPrice = 75,
+        auctionPrice = 318, stackCount = 20, bindType = 0, auctionRule = r, auctionator = true }))
+    local beat = T.forever and 283 or 288   -- the 8-hour deposit (Forever) or the 12-hour one (Retail)
+    -- red under: no How sure lines (the score's parts unexplained)
+    assertEqual(sureOf(life), ("Use value well under 20 = 100%% | Auction beats vendor by %d%% (needs 10%%) = 100%% | "
+        .. "Evidence for Auction = 100%% | Data known = 100%% | Score = 100"):format(beat))
+    assertEqual(life.from, "Use value -26 (Auction, Vendor or Toss under 20)")
+    -- a gray item, Auctionator absent: the money part 60%, so Vendor 80
+    local gray = IS.Breakdown(facts(), ME, item({ quality = 0, sellPrice = 20, auctionRule = r }))
+    assertEqual(sureOf(gray), "Use value well under 20 = 100% | Auctionator is not loaded = 60% | "
+        .. "Evidence for Vendor = 80% | Data known = 100% | Score = 80")
+    -- the near tie: the auction short of the margin
+    local IAU = select(1, addon()).ItemSearchAuction
+    local price = (95 + IAU.Deposit(100, r.duration, 1)) / 0.95
+    local short = IS.Breakdown(facts(), ME, item({ sellPrice = 100, auctionPrice = price, stackCount = 1, bindType = 0,
+        auctionRule = r, auctionator = true }))
+    assertTrue(sureOf(short):find("Auction trails vendor by 5% (needs to beat it by 10%) = 14%", 1, true) ~= nil, sureOf(short))
+    -- Keep and Hold: the use value's place in its band
+    local keep = IS.Breakdown(facts({ quests = { quest("log") } }), ME, item())
+    assertEqual(sureOf(keep), "Use value 60, 10 past Keep's 50 = 20% | Evidence for Keep = 60% | Data known = 100% | Score = 60")
+    local hold = IS.Breakdown(facts({ quests = { quest("todo") } }), ME, item())
+    assertTrue(sureOf(hold):find("^Use value 35, 15 inside Hold's 20 to 49 = 100%% | Evidence for Hold = 100%%") ~= nil, sureOf(hold))
+    local up = IS.Breakdown(facts({ quests = { quest("log") } }), ME, item({ equippable = true, gear = "upgrade" }))
+    assertTrue(sureOf(up):find("^Use value well past Keep's 50 = 100%%") ~= nil, sureOf(up))
+    -- a Toss, bound: the money part 100%
+    local toss = IS.Breakdown(facts({ crafting = GRAY }), ME, item({ sellPrice = 0, bindType = 1, auctionRule = r }))
+    assertEqual(toss.verdict, "toss")
+    assertTrue(sureOf(toss):find("Bound: no auction takes it = 100%", 1, true) ~= nil, sureOf(toss))
+    -- a fallback Hold: no part, its evidence 25%, the data known, and the hint stays the breakdown's
+    local loading = IS.Breakdown(facts(), ME, item({ sellPrice = false }))
+    assertEqual(sureOf(loading), "Evidence for Hold, too little known to say more = 25% | Data known = 67% | Score = 17")
+    assertEqual(loading.hint, "Item info is still loading")
 end)
 
 -- ── the badge and the tooltip ───────────────────────────────────────────────────────────────
@@ -744,7 +792,8 @@ test("verdict breakdown: the score's parts in the order the score adds them, add
     assertEqual(lineOf(b, "cap", "50").points, -20, "the crafting cap shown when hit")
     assertEqual(lineOf(b, "damper").text, "Easy to buy again")
     -- red under (R5-DW-06, the owner: "what does keep from 50 mean?"): "Keep from 50"
-    assertEqual(b.from, "Keep: a score of 50 or more", "the line the verdict word comes from, in plain words")
+    -- R6-DW-08: the use value and its band ("Use value <U> (<band>)"), the score being how sure
+    assertEqual(b.from, "Use value 130 (Keep at 50 or more)", "the line the verdict word comes from, in plain words")
 end)
 
 test("verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed", function()
@@ -760,7 +809,7 @@ test("verdict breakdown: a zero part is left out; the dampers, the poor cap and 
     assertEqual(sum(poor), 15)
     local qi = IS.Breakdown(facts(), ME, item({ classID = 12 }))
     assertEqual(qi.use, 20); assertEqual(lineOf(qi, "floor").points, 20, "the quest-item floor when it applies")
-    assertEqual(sum(qi), 20); assertEqual(qi.from, "Hold: a score of 20 to 49")
+    assertEqual(sum(qi), 20); assertEqual(qi.from, "Use value 20 (Hold from 20 to 49)")
     local others = {}
     for i = 1, 4 do others[i] = recipe({ spell = i, skillLine = ALCHEMY, rank = false, known = false }) end
     local o = IS.Breakdown(facts({ crafting = others }), ME, item())
@@ -771,18 +820,20 @@ end)
 test("verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier", function()
     local _, IS = addon()
     local f = facts()
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Vendor: a score under 20, and a vendor buys it")
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: a score under 20, and no vendor buys it")
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: a score under 20, and the sell price is not known yet")
+    -- red under (R6-DW-08): "Vendor: a score under 20, ..." (the score is how sure now, not the use value)
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Use value 0 (Auction, Vendor or Toss under 20)")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Use value 0 (Auction, Vendor or Toss under 20)")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from,
+        "Use value 0 (under 20, but the sell price is not known yet: Hold)")
     local low = IS.Breakdown(facts({ fdb = "loading" }), ME, item({ sellPrice = 0 }))
     assertEqual(low.verdict, "hold")
-    assertEqual(low.from, "Hold: a score under 20, but too little is known to toss it")
+    assertEqual(low.from, "Use value 0 (under 20, but too little is known to toss it: Hold)")
     assertEqual(low.hint, "ForeverDB is not loaded", "a missing input as a plain hint")
     assertNil(low.tier, "no confidence tier"); assertNil(low.confidence)
     local ranks = IS.Breakdown(facts({ crafting = { recipe({}) } }), { level = 20 }, item())
     assertEqual(ranks.hint, "Open your profession window to rank recipes")
     local new = IS.Breakdown(facts({ vendors = { {}, {}, {} } }), ME, item({ newCollect = true }))
-    assertEqual(kinds(new), "collect"); assertEqual(sum(new), 100); assertEqual(new.from, "Keep: a score of 50 or more")
+    assertEqual(kinds(new), "collect"); assertEqual(sum(new), 100); assertEqual(new.from, "Use value 100 (Keep at 50 or more)")
 end)
 
 test("verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown", function()

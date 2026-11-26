@@ -55,8 +55,10 @@ local _, NS = ...
 -- other professions; gear; the dampers; then every bound that moved the sum, as its own line with
 -- the points it took or gave (a hit cap, the poor-quality cap, the quest item's floor). The lines
 -- add up to the use value, a part worth 0 is left out, and `from` is the line the
--- verdict word comes from, in plain words ("Keep: a score of 50 or more", R5-DW-06). No confidence tier; the fix (`hint`) is the
--- confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
+-- verdict word comes from, in plain words (R5-DW-06; since R6-DW-08 the use value and its band, "Use
+-- value 60 (Keep at 50 or more)"), and `sure` the score's lines (How sure, R6-DW-08: the use value's
+-- part, a disposal's money part, the evidence, the data known, the score). No confidence tier; the
+-- fix (`hint`) is the confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
 -- panel and the badge's reasons can never disagree and the hover pays nothing for it.
 --
 -- `item`: { quality, classID, subclassID, equippable, sellPrice, bindType, gear, newCollect, inDB,
@@ -420,13 +422,19 @@ local function decide(use, tier, sellPrice, unjudged)
 end
 
 -- The line the verdict word comes from, by decide's why, in plain words (R5-DW-06: "Keep from 50"
--- meant the score is 50 or more, so the word is Keep; the owner asked what it meant).
-local function fromText(why)
-    if why == "keep" then return L["Keep: a score of %d or more"]:format(V.KEEP) end
-    if why == "hold" then return L["Hold: a score of %d to %d"]:format(V.HOLD, V.KEEP - 1) end
-    if why == "price" then return L["Hold: a score under %d, and the sell price is not known yet"]:format(V.HOLD) end
-    if why == "toss" then return L["Toss: a score under %d, and no vendor buys it"]:format(V.HOLD) end
-    return L["Hold: a score under %d, but too little is known to toss it"]:format(V.HOLD)
+-- meant the score is 50 or more, so the word is Keep; the owner asked what it meant): since R6-DW-08
+-- the use value and its band, "Use value -26 (Auction, Vendor or Toss under 20)" (the score being
+-- how sure, the money's part of a disposal is in How sure).
+local function fromText(why, use)
+    if why == "keep" then return L["Use value %d (Keep at %d or more)"]:format(use, V.KEEP) end
+    if why == "hold" then return L["Use value %d (Hold from %d to %d)"]:format(use, V.HOLD, V.KEEP - 1) end
+    if why == "price" then
+        return L["Use value %d (under %d, but the sell price is not known yet: Hold)"]:format(use, V.HOLD)
+    end
+    if why == "unjudged" then
+        return L["Use value %d (under %d, but too little is known to toss it: Hold)"]:format(use, V.HOLD)
+    end
+    return L["Use value %d (Auction, Vendor or Toss under %d)"]:format(use, V.HOLD)
 end
 
 local function before(a, b)
@@ -547,14 +555,16 @@ local function judge(facts, me, item, bd)
         -- no vendor buys it (R6-DW-06, the owner): an auction that brings anything after the cut and
         -- the deposit is an Auction, at any confidence (it is not destructive); else Toss or Hold
         via, net, price = IAU.Via(item, item.auctionRule)
-        if via == "auction" then verdict, why = "sell", "sell" else via, price = nil, nil end
+        if via == "auction" then verdict, why = "sell", "sell" else via = nil end
     end
     local money, moneyKey, ratio
     if why == "sell" or why == "toss" then money, moneyKey, ratio = IAU.Money(via or "toss", item, net) end
-    if verdict ~= "sell" then net = nil end
     r.verdict, r.why, r.use, r.confidence, r.tier, r.hint, r.sellPrice, r.acc = verdict, why, use, confidence,
         tier, hint, sellPrice, acc
-    r.via, r.net, r.price = via, net, price
+    -- the net and the price a Sell carries (nil for every other verdict, R5-DW-15); a Toss's
+    -- comparison is kept apart (`seenPrice`) for the panel's prices
+    r.via, r.net, r.price = via, verdict == "sell" and net or nil, verdict == "sell" and price or nil
+    r.seenNet, r.seenPrice = why == "toss" and net or nil, why == "toss" and price or nil
     r.money, r.moneyKey, r.ratio = money, moneyKey, ratio
     r.score, r.evidence, r.usePart = IS.Score(why, use, confidence, money)
     return r
@@ -589,12 +599,62 @@ function IS.Verdict(facts, me, item, into)
     return into
 end
 
+-- ── How sure: the score's lines (R6-DW-08) ─────────────────────────────────────────────────
+
+local function pct(x)
+    return ("%d%%"):format(floor(100 * x + 0.5))
+end
+
+-- The word on the badge for a worked-out verdict: Keep, Hold, Auction, Vendor or Toss.
+local function wordOf(r)
+    if r.verdict == "sell" then return IAU.Word(r.via) end
+    if r.verdict == "keep" then return L["Keep"] end
+    if r.verdict == "toss" then return L["Toss"] end
+    return L["Hold"]
+end
+
+-- The use value's evidence line: where in its band it sits (a full part says "well past" or "well
+-- under", as the design's "Use value well under 20").
+local function useLine(r)
+    local use, p = r.use, r.usePart
+    if r.why == "keep" then
+        if p >= 1 then return L["Use value well past Keep's %d"]:format(V.KEEP) end
+        return L["Use value %d, %d past Keep's %d"]:format(use, use - V.KEEP, V.KEEP)
+    end
+    if r.why == "hold" then
+        return L["Use value %d, %d inside Hold's %d to %d"]:format(use, min(use - V.HOLD, V.KEEP - use), V.HOLD, V.KEEP - 1)
+    end
+    if p >= 1 then return L["Use value well under %d"]:format(V.HOLD) end
+    return L["Use value %d, %d under %d"]:format(use, V.HOLD - use, V.HOLD)
+end
+
+-- How sure's lines, `{ text, right }` each: the use value's part, a disposal's money part (with the
+-- margin it was judged against, IAU.MoneyLine), the evidence for the word, the data known and the
+-- score. A Hold only because too little is known has no part: its evidence line says so.
+local function sureRows(r, item)
+    local out = {}
+    if r.usePart then
+        out[#out + 1] = { text = useLine(r), right = pct(r.usePart) }
+        if r.money then
+            local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
+            out[#out + 1] = { text = IAU.MoneyLine(r.moneyKey, r.ratio, margin, r.net), right = pct(r.money) }
+        end
+        out[#out + 1] = { text = L["Evidence for %s"]:format(wordOf(r)), right = pct(r.evidence) }
+    else
+        out[#out + 1] = { text = L["Evidence for Hold, too little known to say more"], right = pct(r.evidence) }
+    end
+    out[#out + 1] = { text = L["Data known"], right = ("%d%%"):format(r.confidence) }
+    out[#out + 1] = { text = L["Score"], right = tostring(r.score) }
+    return out
+end
+
 --- The verdict's breakdown (see the header; round 4 addendum A1, R4-DW-11): `{ verdict, score, use, lines,
---- from, hint, sellVia, sellPrice, auctionPrice, auctionNet }` (the last four a Sell's, R5-DW-15:
---- the verdict panel shows both prices), `lines` each `{ kind, points, text }` in the order the use value adds them (`kind`
+--- from, hint, sure, sellVia, sellPrice, auctionPrice, auctionNet, auctionOn }` (the last five a Sell's
+--- or a Toss's, R5-DW-15: the verdict panel shows both prices; `sure` How sure's `{ text, right }`
+--- lines, R6-DW-08), `lines` each `{ kind, points, text }` in the order the use value adds them (`kind`
 --- "quest", "craft", "gear", "damper", "collect", or a bound: "cap", "floor"), adding up to
 --- `use`; `from` the line the verdict word comes from; `hint` the confidence's fix below High, or
---- nil. No confidence or tier. The same verdict and score as IS.Verdict's for the same inputs. A new
+--- nil. No confidence or tier fields (How sure words the data known). The same verdict and score as IS.Verdict's for the same inputs. A new
 --- table each call (the window's verdict panel asks for it, never a hover). Pure.
 --- @param facts table NS.ItemSearch.Get's answer
 --- @param me table NS.ItemSearch.Me's answer
@@ -604,12 +664,11 @@ function IS.Breakdown(facts, me, item)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
     local lines = {}
     local r = judge(facts, me, item, lines)
-    local verdict, why, sellPrice, via, net, price = r.verdict, r.why, r.sellPrice, r.via, r.net, r.price
-    local b = { verdict = verdict, score = r.score, use = r.use, lines = lines, from = fromText(why), hint = r.hint }
-    if verdict == "sell" then
-        local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
-        b.from = IAU.From(via, net, V.HOLD, margin, sellPrice)
-        b.sellVia, b.sellPrice, b.auctionPrice, b.auctionNet = via, sellPrice, price, net
+    local verdict, sellPrice = r.verdict, r.sellPrice
+    local b = { verdict = verdict, score = r.score, use = r.use, lines = lines, from = fromText(r.why, r.use),
+        hint = r.hint, sure = sureRows(r, item) }
+    if verdict == "sell" or verdict == "toss" then
+        b.sellVia, b.sellPrice, b.auctionPrice, b.auctionNet = r.via, sellPrice, r.price or r.seenPrice, r.net or r.seenNet
         -- whether a price was looked for: the comparison on and the item auctionable
         b.auctionOn = type(item.auctionRule) == "table" and item.auctionRule.on == true and IAU.Auctionable(item.bindType)
     end
@@ -634,21 +693,23 @@ local function helpSection(out, header, entries)
     for _, entry in ipairs(entries) do out[#out + 1] = dot .. entry end
 end
 
---- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title and one line on what
---- the score is, then the sections Adds, Takes away, The verdict and Confidence (R6-DW-03: each after
---- a blank line, its header in muted gold, its entries bulleted), every number read from
+--- How the verdict and its score work, for the verdict panel's (?) icon (R5-DW-07; R6-DW-08): the
+--- title and one line on the two numbers (the use value picks the word, the score says how sure),
+--- then the sections The use value adds, The use value takes away, The word and The score (R6-DW-03:
+--- each after a blank line, its header in muted gold, its entries bulleted), every number read from
 --- C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with the scorer, and the Auction
---- or Vendor rule from the live settings (IAU.HelpLines, R5-DW-15). A new list each call (a hover's,
---- never the tooltip block's).
+--- or Vendor rule and the score's money part from the live settings (IAU.HelpLines, R5-DW-15;
+--- IAU.ScoreHelp). The data-known rule keeps its hint and never-Toss bars. A new list each call (a
+--- hover's, never the tooltip block's).
 --- @return table lines
 function IVD.ScoringHelp()
     local c = V.CRAFT
     local cheap = NS.Compat.CoinText(V.REBUY_PRICE) or tostring(V.REBUY_PRICE)
     local out = {
-        L["How the score works"],
-        L["The score, 0 to 100, is what the item is still good for to this character."],
+        L["How the verdict and score work"],
+        L["The word comes from the use value: what the item is still good for to this character. The score, 0 to 100, is how sure Drop Watcher is of that word."],
     }
-    helpSection(out, L["Adds:"], {
+    helpSection(out, L["The use value adds:"], {
         L["A quest in your log or ready to hand in: +%d each"]:format(V.QUEST_LOG),
         L["A quest you could pick up (up to %d levels above you): +%d each"]:format(V.QUEST_CAN_ABOVE, V.QUEST_CAN),
         L["A quest it starts: +%d (quests count %d at most)"]:format(V.STARTS, V.QUESTS_CAP),
@@ -658,17 +719,25 @@ function IVD.ScoringHelp()
         L["Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
         L["New to your collection: %d"]:format(V.COLLECT),
     })
-    helpSection(out, L["Takes away:"], {
+    helpSection(out, L["The use value takes away:"], {
         L["Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
         L["Every use gray or done: %d"]:format(V.TRIVIAL),
         L["Poor quality counts %d at most, unless a quest wants it; a quest item %d at least"]:format(V.POOR_CAP,
             V.QUEST_FLOOR),
     })
-    local verdict = { L["Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1) }
-    for _, line in ipairs(IAU.HelpLines(V.HOLD)) do verdict[#verdict + 1] = line end
-    helpSection(out, L["The verdict:"], verdict)
-    helpSection(out, L["Confidence:"], {
-        L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
+    local word = { L["Keep: a use value of %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1) }
+    for _, line in ipairs(IAU.HelpLines(V.HOLD)) do word[#word + 1] = line end
+    helpSection(out, L["The word:"], word)
+    local edge = floor(SURE.EDGE * 100 + 0.5)
+    helpSection(out, L["The score:"], {
+        L["Score = evidence for the word x data known, 0 to 100."],
+        L["Evidence: %d%% for a call on its band's edge, 100%% for a clear one: a Keep at a use value of %d or more, a Hold at %d."]
+            :format(edge, V.KEEP + SURE.KEEP_FULL, V.HOLD + SURE.HOLD_FULL),
+        L["Auction, Vendor or Toss: the weaker of how far the use value is under %d (100%% at %d or less) and how clear the money is."]
+            :format(V.HOLD, V.HOLD - SURE.USE_FULL),
+        IAU.ScoreHelp(),
+        L["A Hold only because too little is known: %d%%."]:format(floor(SURE.FALLBACK * 100 + 0.5)),
+        L["Data known is how much of what the verdict needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
     })
     return out
 end
