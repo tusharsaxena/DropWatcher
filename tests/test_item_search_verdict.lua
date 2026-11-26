@@ -232,13 +232,35 @@ test("verdict: the reasons are the top two by points; Sell and Toss name the pri
     assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
     v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
     assertEqual(v.verdict, "sell")
-    assertEqual(v.reasons[1], "Sells for 12"); assertEqual(v.reasons[2], "Easy to buy again", "a damper by its size")
+    -- red under: "Sells for 12", a bare number (the owner, R5-DW-11: "Sells for 30 what?")
+    assertEqual(v.reasons[1], "Sells for 12|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t")
+    assertEqual(v.reasons[2], "Easy to buy again", "a damper by its size")
     v = IS.Verdict(facts(), ME, item({ sellPrice = 0 }))
     assertEqual(v.reasons[1], "No use found, and no vendor buys it"); assertEqual(#v.reasons, 1)
     v = IS.Verdict(facts({ crafting = { recipe({ known = false }) } }), ME, item())
     assertEqual(v.reasons[2], "Tailoring recipe you could learn")
     v = IS.Verdict(facts({ crafting = { recipe({ skillLine = ALCHEMY, rank = false, known = false }) } }), ME, item())
     assertEqual(v.reasons[2], "Other professions use it (1 recipes)")
+end)
+
+test("compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)", function()
+    local NS = T.newAddon()
+    local Compat = NS.Compat
+    local G, S, K = "|TInterface\\MoneyFrame\\UI-GoldIcon:0:0:2:0|t", "|TInterface\\MoneyFrame\\UI-SilverIcon:0:0:2:0|t",
+        "|TInterface\\MoneyFrame\\UI-CopperIcon:0:0:2:0|t"
+    -- neither client has the bare GetCoinTextureString (BankLedger's probe P9): the coins drawn by hand
+    assertEqual(Compat.CoinText(30), "30" .. K)
+    assertEqual(Compat.CoinText(120), "1" .. S .. " 20" .. K)
+    assertEqual(Compat.CoinText(123456), "12" .. G .. " 34" .. S .. " 56" .. K)
+    assertEqual(Compat.CoinText(10000), "1" .. G, "an empty silver and copper left out")
+    assertEqual(Compat.CoinText(0), "0" .. K, "nothing is no copper")
+    assertNil(Compat.CoinText(nil)); assertNil(Compat.CoinText("x"))
+    -- the client's own coin string first, where it has one
+    local withClient = T.newAddon({ mock = function(mm)
+        mm.C_CurrencyInfo = mm.C_CurrencyInfo or {}
+        mm.C_CurrencyInfo.GetCoinTextureString = function(copper) return ("client %d"):format(copper) end
+    end })
+    assertEqual(withClient.Compat.CoinText(30), "client 30")
 end)
 
 test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()

@@ -5126,6 +5126,21 @@ tooltip's badge. Show an item whose info is still loading on a fresh login, then
 come back → the panel works it out again rather than staying on `Item info is still loading`.
 Looting, moving bags and hovering items with the window open → no hitch. Result:
 
+### Item Search owner feedback round 5
+
+The owner feedback round 5 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND5/`,
+R5-DW-01 to R5-DW-11). Same client, ForeverDB and character setup as round 4 above (Alchemy and
+Herbalism, a few Peacebloom in the bags). Where a check here contradicts an earlier ITEM-SEARCH row
+(the badge, the skill levels, the crafting rows, the verdict panel's lines), this one is current.
+
+**ITEM-SEARCH-57. Money in gold, silver and copper coins (R5-DW-11).** Hover a gray junk item a
+vendor buys → the badge says Sell and its reason reads `Sells for` then the amount with the coin
+icons (for 30 copper: `30` and the copper coin; for 1 silver 20 copper: `1`, the silver coin, `20`,
+the copper coin), never a bare number. Open the Item Search window on an item with a recorded or
+ForeverDB vendor price, Sold by tab → the Price column and the tooltip's Sold by rows show coins
+the same way. Fail: any price or `Sells for` amount as a bare number, or a blank where a coin should
+be. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

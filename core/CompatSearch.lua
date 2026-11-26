@@ -409,13 +409,43 @@ function Compat.ShiftDown()
     return type(IsShiftKeyDown) == "function" and IsShiftKeyDown() == true
 end
 
---- An amount of copper as the client's coin string (GetCoinTextureString); nil without it.
+-- The coins drawn by hand (R5-DW-11): the client's MoneyFrame icons, which both clients ship, each
+-- after its count, an empty denomination left out and nothing at all read as 0 copper.
+local COIN = "|TInterface\\MoneyFrame\\UI-%sIcon:0:0:2:0|t"
+local COINS = { { 10000, COIN:format("Gold") }, { 100, COIN:format("Silver") }, { 1, COIN:format("Copper") } }
+
+local function handCoins(copper)
+    copper = math.floor(copper)
+    local out
+    for _, c in ipairs(COINS) do
+        local n = math.floor(copper / c[1])
+        copper = copper - n * c[1]
+        if n > 0 then out = (out and (out .. " ") or "") .. n .. c[2] end
+    end
+    return out or ("0" .. COINS[3][2])
+end
+
+-- The client's own coin string: C_CurrencyInfo's, else a bare global where one exists. Neither
+-- client has the bare GetCoinTextureString (BankLedger's probe P9), which is why "Sells for 30"
+-- read as a bare number before R5-DW-11.
+local function clientCoins(copper)
+    local ci = C_CurrencyInfo
+    local fn = type(ci) == "table" and ci.GetCoinTextureString or nil
+    if type(fn) ~= "function" and type(GetCoinTextureString) == "function" then fn = GetCoinTextureString end
+    if type(fn) ~= "function" then return nil end
+    local ok, text = pcall(fn, copper)
+    return ok and plainString(text) or nil
+end
+
+--- An amount of copper with gold, silver and copper coins (R5-DW-11): the client's coin string when
+--- it has one, else the coins drawn by hand from the MoneyFrame icons (`1<silver> 20<copper>`).
+--- Nil only for no amount.
 --- @param copper number
 --- @return string|nil
 function Compat.CoinText(copper)
     copper = plainNumber(copper)
-    if not copper or type(GetCoinTextureString) ~= "function" then return nil end
-    return plainString(GetCoinTextureString(copper))
+    if not copper then return nil end
+    return clientCoins(copper) or handCoins(copper)
 end
 
 --- A day as the Sold by tab writes it (`2026-11-26`), from the client's date(); nil for no time or
