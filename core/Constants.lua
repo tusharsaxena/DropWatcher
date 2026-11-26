@@ -533,9 +533,9 @@ C.ITEM_SEARCH = {
     -- most per item.
     PANEL       = { MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
-    -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
-    -- part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a new
-    -- collectible's score (COLLECT, the scorer's and the (?) help's, R5-REV); then the
+    -- §4.5): the use value's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses),
+    -- each part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a
+    -- new collectible's use value (COLLECT, the scorer's and the (?) help's, R5-REV); then the
     -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
     -- item info or gear verdict was still loading waits before it is worked out again, and how many
     -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
@@ -549,6 +549,22 @@ C.ITEM_SEARCH = {
         HIGH = 80, MEDIUM = 50,
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,
+        -- The score shown on the badge (R6-DW-07): how sure Drop Watcher is of the word, never how
+        -- useful the item is (that is the use value, the sum of the parts above, which picks the
+        -- word). The owner-approved design is Ka0sAddonsCommonTasks
+        -- docs/2026-11-27-OWNER_FEEDBACK_ROUND6/01_DW_SCORING_DESIGN.md: score = round(100 x E x D),
+        -- D the confidence above as a fraction, E the evidence for the word, EDGE + (1 - EDGE) x p
+        -- with p (0 to 1) how clear the call is: Keep's p reaches 1 KEEP_FULL over KEEP; Hold's at
+        -- HOLD_FULL from the nearer of its band's edges; Auction's, Vendor's and Toss's p is the
+        -- weaker of the use part (1 at USE_FULL under HOLD) and the money part. A Hold only because
+        -- too little is known (the sell price unknown, gear still scoring, a Low confidence) is
+        -- FALLBACK. The money part: an Auction's is 1 at MONEY_FULL percent past the margin (none
+        -- just past it), 1 with no vendor price; a Vendor's or a Toss's judged against a price is
+        -- how far short of the margin the auction falls (1 when it brings nothing); bound BOUND;
+        -- with no price, NO_PRICE while Auctionator is loaded, ABSENT without it or with the
+        -- comparison off.
+        SURE = { EDGE = 0.5, FALLBACK = 0.25, KEEP_FULL = 50, HOLD_FULL = 15, USE_FULL = 20,
+            MONEY_FULL = 100, BOUND = 1, NO_PRICE = 0.8, ABSENT = 0.6 },
     },
     -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16; and an
     -- Auction for an item no vendor buys, R6-DW-06): the price Auctionator last saw (its public API,

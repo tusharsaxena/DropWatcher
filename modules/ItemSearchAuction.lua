@@ -91,6 +91,44 @@ function IAU.Via(item, rule)
     return "vendor", net, price
 end
 
+local function part(x)
+    if x < 0 then return 0 end
+    if x > 1 then return 1 end
+    return x
+end
+
+--- How clearly the money points at a disposal's word (R6-DW-07, the score's money part,
+--- C.ITEM_SEARCH.VERDICT.SURE): 0 (a near tie) to 1 (clear), and why, a key IAU.MoneyLine words:
+--- "beat" (an auction price compared: `ratio` the net over the vendor price), "noVendor" (an
+--- Auction no vendor buys), "worthless" (no vendor, and an auction brings nothing), "bound",
+--- "noPrice" (Auctionator loaded, no price for it), "absent" (Auctionator not loaded) or "off" (the
+--- comparison off). Pure: `item` the client's facts (sellPrice, bindType, auctionRule, auctionator:
+--- whether Auctionator was loaded when they were read), `net` IAU.Via's for this item.
+--- @param look string "auction", "vendor" or "toss"
+--- @param item table
+--- @param net number|nil
+--- @return number money, string key, number|nil ratio
+function IAU.Money(look, item, net)
+    local S = C.ITEM_SEARCH.VERDICT.SURE
+    local rule = type(item.auctionRule) == "table" and item.auctionRule or nil
+    local vendor = num(item.sellPrice) or 0
+    local bar = 1 + (rule and rule.margin or A.MARGIN) / 100
+    if look == "auction" then
+        if vendor <= 0 or not net then return 1, "noVendor" end
+        local ratio = net / vendor
+        return part((ratio - bar) / (S.MONEY_FULL / 100)), "beat", ratio
+    end
+    if not IAU.Auctionable(item.bindType) then return S.BOUND, "bound" end
+    if net then
+        if vendor <= 0 then return 1, "worthless" end
+        local ratio = net / vendor
+        return part((bar - ratio) / bar), "beat", ratio
+    end
+    if not (rule and rule.on) then return S.ABSENT, "off" end
+    if item.auctionator then return S.NO_PRICE, "noPrice" end
+    return S.ABSENT, "absent"
+end
+
 -- A whole number setting within lo..hi, else `default`.
 local function within(v, lo, hi, default)
     v = num(v)

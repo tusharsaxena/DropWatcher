@@ -8,9 +8,10 @@ local _, NS = ...
 -- values). From the item's facts (NS.ItemSearch.Get's: its quests, recipes, vendors), the ranking's
 -- context `me` (NS.ItemSearch.Me's: level, ranks, quest states) and the client's facts about the item
 -- (`item`, below), it answers
---   { verdict = "keep" | "hold" | "sell" | "toss", score = 0..100, confidence = 0..100,
---     tier = "high" | "medium" | "low", reasons = { text, ... }, hint = text | nil }
--- THE SCORE is clamp(sum, 0, 100) of the parts in C.ITEM_SEARCH.VERDICT, each one noting a reason: a
+--   { verdict = "keep" | "hold" | "sell" | "toss", score = 0..100, use = the use value,
+--     confidence = 0..100, tier = "high" | "medium" | "low", reasons = { text, ... }, hint = text | nil }
+-- THE USE VALUE (`use`) is the sum of the parts in C.ITEM_SEARCH.VERDICT, never clamped (R6-DW-07:
+-- a disposal's may be under 0, a Keep's over 100), each one noting a reason: a
 -- new collectible is 100 and nothing else is worked out; a quest in your log (or ready to turn in)
 -- that needs the item +60 each, one you can pick up (its minimum level at most yours + 3) +35 (one
 -- reason and one breakdown line for them all, "Quests you could pick up (N)", R5-DW-03), a
@@ -22,7 +23,7 @@ local _, NS = ...
 -- use it has is gray or done. A poor-quality item stays at 15 or under unless a quest wants it; a
 -- quest item (class 12, or bind type 4) no quest part counted is floored at 20, a Hold: it cannot
 -- be sold and is risky to delete.
--- THE VERDICT WORD: Keep at 50 and up, Hold at 20 and up; under 20, Sell when a vendor buys it, Toss
+-- THE VERDICT WORD, from the use value: Keep at 50 and up, Hold at 20 and up; under 20, Sell when a vendor buys it, Toss
 -- when none does, Hold while the sell price is not known. A Low confidence never says Toss: it holds
 -- instead, so the addon never tells a player to delete what it could not judge. Nor does gear whose
 -- gear verdict has not answered (Pawn still scoring), at any confidence: that part alone could add
@@ -30,7 +31,15 @@ local _, NS = ...
 -- would Toss (or hold for Low or unjudged gear) is a Sell said as Auction instead when an auction
 -- brings anything after the cut and the deposit (R6-DW-06, NS.ItemSearchAuction's IAU.Via against a
 -- vendor price of 0), at any confidence: an auction deletes nothing.
--- THE CONFIDENCE is not the score: it is how much of what the score needs was answered, by weight
+-- THE SCORE (R6-DW-07, the owner: "a normalized score from 0-100; higher is more confident; should
+-- work across all verdicts") is the number on the badge: how sure Drop Watcher is of the word, never
+-- how useful the item is. IS.Score: round(100 x E x D), D the confidence below as a fraction, E the
+-- evidence for the word (C.ITEM_SEARCH.VERDICT.SURE, with the owner-approved design it cites): a
+-- call on its band's edge 0.5, a clear one 1, a Hold only because too little is known 0.25; an
+-- Auction's, a Vendor's or a Toss's the weaker of how far the use value is under 20 and the money
+-- part (NS.ItemSearchAuction's IAU.Money: how far the auction beats, or falls short of, the margin).
+-- Nothing ranks or sorts on it: Item Search's "Best for you" ranks an item's sources, never a verdict.
+-- THE CONFIDENCE is not the use value: it is how much of what the verdict needs was answered, by weight
 -- (C.ITEM_SEARCH.VERDICT.WEIGHT): ForeverDB loaded 3, the quest states 3 (needed with a quest row, or
 -- without ForeverDB), the profession ranks 3 (needed with a recipe row), the client's item info 2
 -- (its quality and sell price), the gear verdict 2 (needed for gear), ForeverDB knowing the item 1.
@@ -38,22 +47,24 @@ local _, NS = ...
 -- unanswered input's fix. The reasons are the top C.ITEM_SEARCH.VERDICT.REASONS by points (either
 -- sign), a Sell's or a Toss's price reason always first, and then the largest negative part when
 -- none is among them (round 4, R4-DW-07: a damper is never hidden, so the parts shown explain the
--- score). The tier is never shown (the owner); it is kept so that Low never says Toss.
+-- use value). The tier is never shown (the owner); it is kept so that Low never says Toss.
 --
 -- THE BREAKDOWN (IS.Breakdown, round 4 addendum A1, R4-DW-11: the Item Search window's verdict
--- panel). The same parts, worked out by the same code, as lines in the order the score adds them:
+-- panel). The same parts, worked out by the same code, as lines in the order the use value adds them:
 -- each quest that counted; the known recipes by skill-up color, the recipes you could learn and the
 -- other professions; gear; the dampers; then every bound that moved the sum, as its own line with
--- the points it took or gave (a hit cap, the 0..100 clamp, the poor-quality cap, the quest item's
--- floor). The lines add up to the score, a part worth 0 is left out, and `from` is the line the
+-- the points it took or gave (a hit cap, the poor-quality cap, the quest item's floor). The lines
+-- add up to the use value, a part worth 0 is left out, and `from` is the line the
 -- verdict word comes from, in plain words ("Keep: a score of 50 or more", R5-DW-06). No confidence tier; the fix (`hint`) is the
 -- confidence's, below High. The tooltip's hover asks for no breakdown and builds no line, so the
 -- panel and the badge's reasons can never disagree and the hover pays nothing for it.
 --
--- `item`: { quality, classID, subclassID, equippable, sellPrice, bindType, gear, newCollect, inDB },
--- every field optional: `gear` the gear kernel's verdict for you ("upgrade", "sidegrade", ...; nil
--- when there is none or Pawn is still scoring), `newCollect` the collection verdict's, `inDB` whether
--- ForeverDB has the item's row.
+-- `item`: { quality, classID, subclassID, equippable, sellPrice, bindType, gear, newCollect, inDB,
+-- stackCount, auctionPrice, auctionRule, auctionator }, every field optional: `gear` the gear
+-- kernel's verdict for you ("upgrade", "sidegrade", ...; nil when there is none or Pawn is still
+-- scoring), `newCollect` the collection verdict's, `inDB` whether ForeverDB has the item's row, the
+-- last four the Auction or Vendor rule's (NS.ItemSearchAuction), `auctionator` whether Auctionator
+-- was loaded (the score's money part with no price).
 --
 -- THE EDGE (IVD.For). The tooltip asks for the verdict on every hover, so it is kept per item id and
 -- every kept verdict goes stale (IVD.Bump) when what it read can have moved: a quest log update or a
@@ -287,20 +298,9 @@ local function questItem(item)
     return num(item.classID) == 12 or num(item.bindType) == 4
 end
 
--- The sum held to 0..100, the clamp a breakdown line of its own when it moved the sum.
-local function bounded(acc, sum)
-    if sum > 100 then
-        step(acc, "clamp", 100 - sum, L["The score is 100 at most"])
-        return 100
-    end
-    if sum < 0 then
-        step(acc, "clamp", -sum, L["The score is 0 at least"])
-        return 0
-    end
-    return sum
-end
-
-local function scoreOf(facts, me, item, acc)
+-- The use value: the parts summed, with no 0..100 clamp (R6-DW-07: the shown score is the
+-- sureness, so a disposal's use value may go below 0 and a Keep's above 100).
+local function useOf(facts, me, item, acc)
     local quests = questPart(facts, me, acc)
     local sum = quests + craftPart(facts, me, acc) + gearPart(item, acc)
     if rebuyable(facts) then
@@ -311,17 +311,16 @@ local function scoreOf(facts, me, item, acc)
         both(acc, "damper", V.TRIVIAL, L["Every use is gray or done"])
         sum = sum + V.TRIVIAL
     end
-    local score = bounded(acc, sum)
-    if num(item.quality) == 0 and quests == 0 and score > V.POOR_CAP then
-        step(acc, "cap", V.POOR_CAP - score, L["Poor quality counts %d at most"]:format(V.POOR_CAP))
-        score = V.POOR_CAP
+    if num(item.quality) == 0 and quests == 0 and sum > V.POOR_CAP then
+        step(acc, "cap", V.POOR_CAP - sum, L["Poor quality counts %d at most"]:format(V.POOR_CAP))
+        sum = V.POOR_CAP
     end
-    if questItem(item) and quests == 0 and score < V.QUEST_FLOOR then
-        note(acc, V.QUEST_FLOOR - score, L["Quest item"])
-        step(acc, "floor", V.QUEST_FLOOR - score, L["A quest item counts %d at least"]:format(V.QUEST_FLOOR))
-        score = V.QUEST_FLOOR
+    if questItem(item) and quests == 0 and sum < V.QUEST_FLOOR then
+        note(acc, V.QUEST_FLOOR - sum, L["Quest item"])
+        step(acc, "floor", V.QUEST_FLOOR - sum, L["A quest item counts %d at least"]:format(V.QUEST_FLOOR))
+        sum = V.QUEST_FLOOR
     end
-    return score
+    return sum
 end
 
 -- ── the confidence ──────────────────────────────────────────────────────────────────────────
@@ -371,7 +370,7 @@ function IS.ConfidenceTier(confidence)
     return "low"
 end
 
---- How much of what the score needs was answered (see the header): the confidence (0 to 100), its
+--- How much of what the verdict needs was answered (see the header): the confidence (0 to 100), its
 --- tier ("high", "medium" or "low") and, under High, the heaviest unanswered input's fix (nil when
 --- that input has none). Pure.
 --- @param facts table NS.ItemSearch.Get's answer
@@ -411,9 +410,9 @@ end
 
 -- `unjudged`: an input that could overturn a Toss has not answered (gear with no gear verdict yet).
 -- Answers the verdict and why: the key of the breakdown's `from` line (fromText).
-local function decide(score, tier, sellPrice, unjudged)
-    if score >= V.KEEP then return "keep", "keep" end
-    if score >= V.HOLD then return "hold", "hold" end
+local function decide(use, tier, sellPrice, unjudged)
+    if use >= V.KEEP then return "keep", "keep" end
+    if use >= V.HOLD then return "hold", "hold" end
     if not sellPrice then return "hold", "price" end
     if sellPrice > 0 then return "sell", "sell" end
     if tier == "low" or unjudged then return "hold", "unjudged" end
@@ -481,20 +480,65 @@ local function topReasons(acc, verdict, sellPrice, buf, via, net)
     return out
 end
 
--- The verdict worked out once for IS.Verdict and IS.Breakdown alike: the breakdown's lines go onto
--- `bd` when given. Answers the verdict, why, the score, the confidence, its tier, the fix, the sell
--- price and the parts' notes, then a Sell's Auction or Vendor answer (`via`, NS.ItemSearchAuction's
--- IAU.Via on `item.auctionRule`), the net and the auction price it was judged on (R5-DW-14).
+-- ── the score: how sure (R6-DW-07) ─────────────────────────────────────────────────────────
+
+local SURE = V.SURE
+
+local function part(x)
+    if x < 0 then return 0 end
+    if x > 1 then return 1 end
+    return x
+end
+
+-- The use value's part of the evidence, 0 to 1, for the word decide answered (`why`): how far into
+-- its band the use value is. Nil for a fallback Hold (too little known), which has no part.
+local function usePart(why, use)
+    if why == "keep" then return part((use - V.KEEP) / SURE.KEEP_FULL) end
+    if why == "hold" then return part(min(use - V.HOLD, V.KEEP - use) / SURE.HOLD_FULL) end
+    if why == "price" or why == "unjudged" then return nil end
+    return part((V.HOLD - use) / SURE.USE_FULL)
+end
+
+--- The score shown on the badge (R6-DW-07, C.ITEM_SEARCH.VERDICT.SURE): how sure the word is,
+--- round(100 x E x D), D the confidence as a fraction and E the evidence for the word, EDGE plus
+--- the rest times how clear the call is (a Keep's or a Hold's use part; a disposal's weaker of its
+--- use part and `money`, NS.ItemSearchAuction's IAU.Money), FALLBACK for a Hold only because too
+--- little is known. Answers the score, E, and the use part (nil for a fallback Hold). Pure.
+--- @param why string decide's: "keep", "hold", "price", "unjudged", "sell" or "toss"
+--- @param use number the use value
+--- @param confidence number 0 to 100
+--- @param money number|nil a disposal's money part, 0 to 1
+--- @return number score, number evidence, number|nil usePart
+function IS.Score(why, use, confidence, money)
+    local p = usePart(why, use)
+    local evidence = SURE.FALLBACK
+    if p then
+        local clear = p
+        if (why == "sell" or why == "toss") and money then clear = min(p, money) end
+        evidence = SURE.EDGE + (1 - SURE.EDGE) * clear
+    end
+    return floor(evidence * confidence + 0.5), evidence, p
+end
+
+-- The verdict worked out once for IS.Verdict and IS.Breakdown alike, onto the one scratch `res`
+-- (read straight after, never kept): the breakdown's lines go onto `bd` when given. Fills the
+-- verdict, why, the use value, the confidence, its tier, the fix, the sell price and the parts'
+-- notes (`acc`), then a Sell's Auction or Vendor answer (`via`, NS.ItemSearchAuction's IAU.Via on
+-- `item.auctionRule`), the net and the auction price it was judged on (R5-DW-14), and the score
+-- (R6-DW-07): its evidence, use part, money part and the money's key and ratio (IAU.Money).
+local res = {}
+
 local function judge(facts, me, item, bd)
+    local r = res
     local confidence, tier, hint = IS.Confidence(facts, me, item)
-    local acc, score = scratchReasons(bd), V.COLLECT
+    local acc, use = scratchReasons(bd), V.COLLECT
     if item.newCollect then
         both(acc, "collect", V.COLLECT, L["New to your collection"])
     else
-        score = scoreOf(facts, me, item, acc)
+        use = useOf(facts, me, item, acc)
     end
     local sellPrice = num(item.sellPrice)
-    local verdict, why = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
+    local verdict, why = decide(use, tier, sellPrice, item.equippable == true and item.gear == nil)
     acc.bd = nil
     local via, net, price
     if verdict == "sell" then
@@ -503,13 +547,22 @@ local function judge(facts, me, item, bd)
         -- no vendor buys it (R6-DW-06, the owner): an auction that brings anything after the cut and
         -- the deposit is an Auction, at any confidence (it is not destructive); else Toss or Hold
         via, net, price = IAU.Via(item, item.auctionRule)
-        if via == "auction" then verdict, why = "sell", "sell" else via, net, price = nil, nil, nil end
+        if via == "auction" then verdict, why = "sell", "sell" else via, price = nil, nil end
     end
-    return verdict, why, score, confidence, tier, hint, sellPrice, acc, via, net, price
+    local money, moneyKey, ratio
+    if why == "sell" or why == "toss" then money, moneyKey, ratio = IAU.Money(via or "toss", item, net) end
+    if verdict ~= "sell" then net = nil end
+    r.verdict, r.why, r.use, r.confidence, r.tier, r.hint, r.sellPrice, r.acc = verdict, why, use, confidence,
+        tier, hint, sellPrice, acc
+    r.via, r.net, r.price = via, net, price
+    r.money, r.moneyKey, r.ratio = money, moneyKey, ratio
+    r.score, r.evidence, r.usePart = IS.Score(why, use, confidence, money)
+    return r
 end
 
---- The item's verdict for the player now (see the header): `{ verdict, score, confidence, tier,
---- reasons, hint, sellVia, auctionNet, auctionPrice }`, a new table (`reasons` a shared empty list
+--- The item's verdict for the player now (see the header): `{ verdict, score, use, confidence, tier,
+--- reasons, hint, sellVia, auctionNet, auctionPrice }` (`score` how sure, IS.Score's; `use` the use
+--- value the word comes from, R6-DW-07), a new table (`reasons` a shared empty list
 --- when there is none). A Sell keeps the verdict "sell" and says how in `sellVia`, "auction" or
 --- "vendor", with the net and the auction price it was judged on (nil when there was no
 --- comparison); the three are nil for every other verdict (R5-DW-15). Pure: every
@@ -522,23 +575,25 @@ end
 --- @return table
 function IS.Verdict(facts, me, item, into)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
-    local verdict, _, score, confidence, tier, hint, sellPrice, acc, via, net, price = judge(facts, me, item)
+    local r = judge(facts, me, item)
+    local verdict, via, net = r.verdict, r.via, r.net
     if not into then
-        return { verdict = verdict, score = score, confidence = confidence, tier = tier,
-            reasons = topReasons(acc, verdict, sellPrice, nil, via, net), hint = hint,
-            sellVia = via, auctionNet = net, auctionPrice = price }
+        return { verdict = verdict, score = r.score, use = r.use, confidence = r.confidence, tier = r.tier,
+            reasons = topReasons(r.acc, verdict, r.sellPrice, nil, via, net), hint = r.hint,
+            sellVia = via, auctionNet = net, auctionPrice = r.price }
     end
-    into.verdict, into.score, into.confidence, into.tier, into.hint = verdict, score, confidence, tier, hint
-    into.reasons = topReasons(acc, verdict, sellPrice, into.reasons or {}, via, net)
-    into.sellVia, into.auctionNet, into.auctionPrice = via, net, price
+    into.verdict, into.score, into.use, into.confidence, into.tier, into.hint = verdict, r.score, r.use,
+        r.confidence, r.tier, r.hint
+    into.reasons = topReasons(r.acc, verdict, r.sellPrice, into.reasons or {}, via, net)
+    into.sellVia, into.auctionNet, into.auctionPrice = via, net, r.price
     return into
 end
 
---- The score's breakdown (see the header; round 4 addendum A1, R4-DW-11): `{ verdict, score, lines,
+--- The verdict's breakdown (see the header; round 4 addendum A1, R4-DW-11): `{ verdict, score, use, lines,
 --- from, hint, sellVia, sellPrice, auctionPrice, auctionNet }` (the last four a Sell's, R5-DW-15:
---- the verdict panel shows both prices), `lines` each `{ kind, points, text }` in the order the score adds them (`kind`
---- "quest", "craft", "gear", "damper", "collect", or a bound: "cap", "clamp", "floor"), adding up to
---- `score`; `from` the line the verdict word comes from; `hint` the confidence's fix below High, or
+--- the verdict panel shows both prices), `lines` each `{ kind, points, text }` in the order the use value adds them (`kind`
+--- "quest", "craft", "gear", "damper", "collect", or a bound: "cap", "floor"), adding up to
+--- `use`; `from` the line the verdict word comes from; `hint` the confidence's fix below High, or
 --- nil. No confidence or tier. The same verdict and score as IS.Verdict's for the same inputs. A new
 --- table each call (the window's verdict panel asks for it, never a hover). Pure.
 --- @param facts table NS.ItemSearch.Get's answer
@@ -548,8 +603,9 @@ end
 function IS.Breakdown(facts, me, item)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
     local lines = {}
-    local verdict, why, score, _, _, hint, sellPrice, _, via, net, price = judge(facts, me, item, lines)
-    local b = { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
+    local r = judge(facts, me, item, lines)
+    local verdict, why, sellPrice, via, net, price = r.verdict, r.why, r.sellPrice, r.via, r.net, r.price
+    local b = { verdict = verdict, score = r.score, use = r.use, lines = lines, from = fromText(why), hint = r.hint }
     if verdict == "sell" then
         local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
         b.from = IAU.From(via, net, V.HOLD, margin, sellPrice)
@@ -685,7 +741,7 @@ function IVD.ClientFacts(itemID, facts, into)
     if not info then
         item.quality, item.classID, item.subclassID = num(row.quality), num(row.classID), num(row.subclassID)
         item.sellPrice, item.bindType, item.equippable, item.gear, item.newCollect = nil, nil, nil, nil, nil
-        item.stackCount, item.auctionPrice, item.auctionRule = nil, nil, nil
+        item.stackCount, item.auctionPrice, item.auctionRule, item.auctionator = nil, nil, nil, nil
         return item, false
     end
     item.quality, item.classID, item.subclassID = info.quality, info.classID, info.subclassID
@@ -695,6 +751,8 @@ function IVD.ClientFacts(itemID, facts, into)
     local rule = IAU.Rule()
     item.auctionRule = rule
     item.auctionPrice = rule.on and NS.Compat.AuctionPrice(info.link, itemID) or nil
+    -- whether Auctionator is loaded: with no price, the score's money part (R6-DW-07, IAU.Money)
+    item.auctionator = NS.Compat.AuctionatorLoaded()
     item.equippable = C.SLOT_PLAN[info.equipLoc or ""] ~= nil
     item.gear, item.newCollect = judgeOf(info.link)
     return item, true
@@ -731,7 +789,7 @@ local clientScratch = {}
 local answerScratch = { reasons = {} }
 
 local function sameAnswer(a, b)
-    if a.verdict ~= b.verdict or a.score ~= b.score or a.confidence ~= b.confidence or a.tier ~= b.tier
+    if a.verdict ~= b.verdict or a.score ~= b.score or a.use ~= b.use or a.confidence ~= b.confidence or a.tier ~= b.tier
         or a.hint ~= b.hint or #a.reasons ~= #b.reasons or a.sellVia ~= b.sellVia
         or a.auctionNet ~= b.auctionNet or a.auctionPrice ~= b.auctionPrice then
         return false
@@ -748,7 +806,7 @@ local function copyAnswer(a)
         reasons = {}
         for i, text in ipairs(a.reasons) do reasons[i] = text end
     end
-    return { verdict = a.verdict, score = a.score, confidence = a.confidence, tier = a.tier, reasons = reasons,
+    return { verdict = a.verdict, score = a.score, use = a.use, confidence = a.confidence, tier = a.tier, reasons = reasons,
         hint = a.hint, sellVia = a.sellVia, auctionNet = a.auctionNet, auctionPrice = a.auctionPrice }
 end
 
@@ -761,7 +819,8 @@ end
 --- The verdict on `itemID` for the tooltip's hover (IS.Verdict's answer), kept per item until the
 --- memo empties (IVD.Bump), your gear moves (gear only), or, while its item info or gear verdict
 --- was still loading, C.ITEM_SEARCH.VERDICT.RETRY seconds on. A kept answer is the same table, and
---- so is one worked out again to the same verdict, score, confidence, reasons and fix.
+--- so is one worked out again to the same verdict, score, use value, confidence, reasons, fix and
+--- prices (the score's every input among them, R6-DW-07).
 --- @param itemID number
 --- @param facts table NS.ItemSearch.Get's answer
 --- @param me table NS.ItemSearch.Me's answer

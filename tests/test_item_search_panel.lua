@@ -124,7 +124,7 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
         assertEqual(lines[i].rightTone, part.points > 0 and "good" or "red", "+ green, - red: " .. part.text)
         sum = sum + part.points
     end
-    assertEqual(sum, b.score, "the parts add up to the score")
+    assertEqual(sum, b.use, "the parts add up to the use value (R6-DW-07)")
     -- red under (R5-DW-05): a "Score" line repeating the badge's number
     for _, line in ipairs(lines) do assertTrue(line.text ~= "Score", "no Score line") end
     assertEqual(lines[n + 1].text, b.from, "the line the verdict word comes from, right after the parts")
@@ -355,21 +355,24 @@ test("verdict panel: a gear change works the breakdown out again, so it and the 
     W.ShowItem(IDS.blade)
     local f = W.Frame()
     local facts = IS.Get(IDS.blade)
+    -- the use value (R6-DW-07: the parts' sum; the score shown is how sure) and the score, both compared
+    local function tooltipUse() return IVD.For(IDS.blade, facts, IS.Me(facts.ranks)).use end
     local function tooltipScore() return IVD.For(IDS.blade, facts, IS.Me(facts.ranks)).score end
-    local before = f.verdict.dwBreakdown.score
-    assertEqual(before, tooltipScore())
+    local before = f.verdict.dwBreakdown.use
+    assertEqual(before, tooltipUse()); assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
     -- you equip something better: the gear snapshot moves, and Drop Watcher's own GearChanged says so
     verdict.gear, verdict.sig = "downgrade", "worn-2"
     NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
     m.advance(NS.Constants.ITEM_SEARCH.PANEL.THROTTLE + 0.01)
     -- red under: the panel keeping "Upgrade for you +70" while the tooltip works out the new verdict
-    assertEqual(f.verdict.dwBreakdown.score, tooltipScore(), "the panel and the tooltip agree")
-    assertEqual(f.verdict.dwBreakdown.score, before - NS.Constants.ITEM_SEARCH.VERDICT.UPGRADE, "the upgrade gone")
+    assertEqual(f.verdict.dwBreakdown.use, tooltipUse(), "the panel and the tooltip agree")
+    assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
+    assertEqual(f.verdict.dwBreakdown.use, before - NS.Constants.ITEM_SEARCH.VERDICT.UPGRADE, "the upgrade gone")
     -- a window repaint after a gear move with no event yet: worked out again too, as the tooltip's memo is
     verdict.gear, verdict.sig = "upgrade", "worn-3"
     W.Refresh()
     assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
-    assertEqual(f.verdict.dwBreakdown.score, before)
+    assertEqual(f.verdict.dwBreakdown.use, before)
     undo()
 end, FOREVER_ONLY)
 
