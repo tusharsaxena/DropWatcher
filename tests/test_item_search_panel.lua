@@ -424,3 +424,18 @@ test("verdict panel: still loading after its retries, a repaint or coming back t
     assertEqual(calls, away + 2, "back on the blade: its retries again")
     IVD.Breakdown = real
 end, FOREVER_ONLY)
+
+test("verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV)", function()
+    local NS, m, held = enabled()
+    local W, IVD = NS.ItemSearchWindow, NS.ItemSearchVerdict
+    held[IDS.blade] = { 1, 0 }
+    W.ShowItem(IDS.blade)
+    m.advance(10)   -- the item info's retries spent: nothing else repaints it
+    local real, calls = IVD.Breakdown, 0
+    IVD.Breakdown = function(...) calls = calls + 1; return real(...) end
+    m.__fire("AUCTION_HOUSE_CLOSED")
+    m.advance(NS.Constants.ITEM_SEARCH.PANEL.THROTTLE + 0.01)
+    IVD.Breakdown = real
+    -- red under: the memo re-judged at the close but the panel kept the old score and prices
+    assertEqual(calls, 1, "worked out again once the house shuts")
+end, FOREVER_ONLY)

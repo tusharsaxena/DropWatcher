@@ -389,8 +389,10 @@ end
 
 -- WoW Forever's alone; each event is shared with its other rows through core/DropWatcher.lua's
 -- dispatcher (the verdict's own events: modules/ItemSearchVerdict.lua, which bumps the memo first).
+-- AUCTION_HOUSE_CLOSED (R6-REV): the verdict reads Auctionator's prices again once the house shuts,
+-- and the panel's score and prices with it.
 for _, event in ipairs({ "BAG_UPDATE_DELAYED", "PLAYERBANKSLOTS_CHANGED", "QUEST_LOG_UPDATE", "QUEST_TURNED_IN",
-    "SKILL_LINES_CHANGED", "TRADE_SKILL_SHOW", "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED" }) do
+    "SKILL_LINES_CHANGED", "TRADE_SKILL_SHOW", "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED", "AUCTION_HOUSE_CLOSED" }) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnItemSearchPanelEvent", clients = { "forever" } }
 end
 
