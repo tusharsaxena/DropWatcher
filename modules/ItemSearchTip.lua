@@ -1111,11 +1111,7 @@ function IST.Active()
     return IS.State() == "loaded"
 end
 
---- The item tooltip post call (see the header). Answers whether it wrote a block, for the tests.
---- @param tip table
---- @param data table|nil the post call's tooltip data
---- @return boolean
-function IST.OnTooltip(tip, data)
+local function onTooltip(tip, data)
     if not IST.Active() or not Compat.TooltipWritable(tip) then return false end
     local itemID = Compat.TooltipItemID(data)
     if not itemID or shownOn[tip] == itemID then return false end
@@ -1132,6 +1128,27 @@ function IST.OnTooltip(tip, data)
     shownOn[tip] = itemID
     IST.Paint(tip, lines, true)
     return true
+end
+
+-- NEVER RE-ENTERED (R5-DW-00). The verdict reads Pawn (NS.Compat.PawnItemValue), and Pawn's
+-- PawnGetItemData fills its own hidden PawnPrivateTooltip1 with SetHyperlink. That fill runs every Item
+-- post call, this one included, on that tooltip, which asked Pawn again: a C stack overflow. A post
+-- call that arrives while one is running is another addon's scan inside ours, so it writes nothing.
+-- The body runs in pcall, so an error releases the guard before it is raised again.
+local busy = false
+
+--- The item tooltip post call (see the header). Answers whether it wrote a block, for the tests.
+--- A call made while another runs (a scan tooltip filled from inside it) answers false.
+--- @param tip table
+--- @param data table|nil the post call's tooltip data
+--- @return boolean
+function IST.OnTooltip(tip, data)
+    if busy then return false end
+    busy = true
+    local ok, wrote = pcall(onTooltip, tip, data)
+    busy = false
+    if not ok then error(wrote, 0) end
+    return wrote
 end
 
 --- Register the post call, once a session, on WoW Forever (core/DropWatcher.lua's OnEnable).

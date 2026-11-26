@@ -687,6 +687,43 @@ test("item search tip: the tooltip switch, a stand-down and a forbidden tooltip 
     assertEqual(#block(tdp, tip), 0, "forbidden")
 end, FOREVER_ONLY)
 
+test("item search tip: a fill nested in the post call (Pawn's private scan tooltip) is skipped, never recursed (R5-DW-00)", function()
+    local NS, _, tdp = enabled({ badge = true })
+    local tip, scan = tdp.tooltip("GameTooltip"), tdp.tooltip("PawnPrivateTooltip1")
+    local For, calls = NS.ItemSearchVerdict.For, 0
+    -- Pawn's PawnGetItemData fills its private tooltip (SetHyperlink), so every Item post call runs
+    -- again on it from inside the verdict's Pawn read; the nested call must not score again.
+    NS.ItemSearchVerdict.For = function(...)
+        calls = calls + 1
+        if calls > 5 then error("recursed") end
+        tdp.show(scan, IDS.blade)
+        return For(...)
+    end
+    tdp.show(tip, IDS.blade)
+    NS.ItemSearchVerdict.For = For
+    -- red under: no re-entry guard (C stack overflow in game; here, "recursed")
+    assertEqual(calls, 1, "the nested fill does not score")
+    assertEqual(#block(tdp, scan), 0, "the nested tooltip gets no block")
+    assertTrue(#block(tdp, tip) > 0, "the outer tooltip keeps its block")
+    tdp.show(scan, IDS.blade)
+    assertTrue(#block(tdp, scan) > 0, "a later fill of that tooltip is not blocked: the guard is released")
+end, FOREVER_ONLY)
+
+test("item search tip: an error inside the post call releases the guard (R5-DW-00)", function()
+    local NS, _, tdp = enabled({ badge = true })
+    local tip = tdp.tooltip("GameTooltip")
+    local For = NS.ItemSearchVerdict.For
+    NS.ItemSearchVerdict.For = function() error("boom") end
+    local ok, err = pcall(tdp.show, tip, IDS.blade)
+    NS.ItemSearchVerdict.For = For
+    assertFalse(ok, "the error is raised again")
+    assertTrue(tostring(err):find("boom", 1, true) ~= nil, tostring(err))
+    tdp.hide(tip)
+    tdp.show(tip, IDS.blade)
+    -- red under: the guard left set by the error (no block ever again this session)
+    assertTrue(#block(tdp, tip) > 0, "the next fill writes its block")
+end, FOREVER_ONLY)
+
 -- ── secret-safe ─────────────────────────────────────────────────────────────────────────────
 
 test("item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing", function()
