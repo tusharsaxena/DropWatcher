@@ -518,14 +518,9 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a thick g
     assertTrue(b[c + 2]:find("phosphor\\lock:", 1, true) ~= nil, "not known: the padlock")
     assertTrue(find(b, "circle") == nil, "no dot or ring is left")
     T.assertGlyphSafe(table.concat(b, "\n"), "the block")
-    -- the right side: the recipe's skill breakpoints (round 3 item 4), then its profession, since
-    -- Linen's recipes mix professions (no skills read yet: every profession shows)
-    local profession = { [129] = "First Aid", [164] = "Blacksmithing", [165] = "Leatherworking", [171] = "Alchemy",
-        [185] = "Cooking", [197] = "Tailoring", [202] = "Engineering", [333] = "Enchanting" }
+    -- the right side: the recipe's skill breakpoints (round 3 item 4); its profession has its own
+    -- column since R5-DW-10 (the crafting columns case at the end)
     assertTrue(b[c + 1]:find(" | |cff", 1, true) ~= nil, "the colored parts on the right")
-    local pt = NS.Constants.TONE[NS.ItemSearchTip.ProfessionTone(rows[1].skillLine)]
-    local named = NS.GroupRoster.Colored(profession[rows[1].skillLine], pt.r, pt.g, pt.b)
-    assertTrue(b[c + 1]:find("·|r " .. named, 1, true) ~= nil, "then the profession, in its own tone")
     local IST = NS.ItemSearchTip
     local C = NS.Constants
     local function tinted(mark, tone)
@@ -599,17 +594,15 @@ test("item search tip: recipe rows show their skill breakpoints in their hues, m
     banded.rank = banded.gray
     local after = IST.SkillText(banded)
     assertTrue(after ~= before and after:find("[" .. banded.gray .. "]", 1, true) ~= nil, "a new band, a new string: " .. after)
-    -- Show recipe skill levels off: today's right side, the profession, muted
+    -- Show recipe skill levels off: no breakpoints on the right (the profession keeps its own column,
+    -- R5-DW-10: the crafting columns case at the end)
     local tip = tdp.tooltip("GameTooltip")
     tipSettings(NS).craftSkill = false
     tdp.show(tip, LINEN)
     local b = block(tdp, tip)
     local c = find(b, "Crafting")
     local line = tip.__lines[c + 2]
-    local first = IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine
-    local pt = C.TONE[IST.ProfessionTone(first)]
-    -- the profession alone, in its own tone (round 4, R4-DW-04), no breakpoints
-    assertEqual(line.right, NS.GroupRoster.Colored(IST.ProfessionName(first), pt.r, pt.g, pt.b))
+    assertTrue(line.right:find("|cff", 1, true) == nil, "no colored parts: " .. line.right)
     assertEqual(NS.ItemSearchTip.Options().craftSkill, false)
 end, FOREVER_ONLY)
 
@@ -811,14 +804,14 @@ test("item search tip: only the professions you know: the rest counted on one di
     tdp.show(tip, LINEN)
     local b = block(tdp, tip)
     local c = find(b, "Crafting")
-    -- red under: other professions' recipes shown, or the count left out. One profession shown: the
-    -- skill parts alone on the right, no profession name (round 3 spec §4.2)
+    -- red under: other professions' recipes shown, or the count left out. The right text holds the
+    -- skill parts alone: the profession is in its own column (R5-DW-10)
     local tailored = {}
     for _, r in ipairs(all) do if r.skillLine == 197 then tailored[r.name] = true end end
     for i = c + 1, c + tailoring do
         local name = b[i]:match("|t (.-) | ")
         assertTrue(tailored[name] == true, b[i])
-        assertTrue(b[i]:find("Tailoring", 1, true) == nil, "one profession: no name after the parts: " .. b[i])
+        assertTrue(b[i]:find("Tailoring", 1, true) == nil, "no name in the right text: " .. b[i])
     end
     assertEqual(b[c + tailoring + 1], ("  +%d in professions you don't know"):format(#all - tailoring))
     skills(m, { [999] = 1 })
@@ -833,4 +826,86 @@ test("item search tip: only the professions you know: the rest counted on one di
     tdp.show(tip, LINEN)
     b = block(tdp, tip)
     assertTrue(find(b, "professions you don't know") == nil, "off: nothing filtered")
+end, FOREVER_ONLY)
+
+-- ── owner feedback round 5: the crafting rows as a table (R5-DW-09, R5-DW-10) ────────────────
+
+-- Count every width read of the font strings `tip` makes from here on: the block anchors its columns
+-- and never measures (R4-DW-06's rule, the owner's R5-DW-01).
+local function countWidthReads(tip)
+    local reads = { n = 0 }
+    local make = tip.CreateFontString
+    tip.CreateFontString = function(self, ...)
+        local fs = make(self, ...)
+        fs.GetStringWidth = function() reads.n = reads.n + 1; return 0 end
+        fs.GetUnboundedStringWidth = fs.GetStringWidth
+        return fs
+    end
+    return reads
+end
+
+-- The column font string anchored on `rel` (a line's right font string), or nil.
+local function columnOn(tip, rel)
+    for _, fs in ipairs(tip.__strings) do
+        local p = { fs:GetPoint(1) }
+        if p[2] == rel and fs:IsShown() then return fs, p end
+    end
+    return nil
+end
+
+test("item search tip: crafting rows are a table: glyph and name left, skill levels and profession right in fixed columns (R5-DW-09, R5-DW-10)", function()
+    local NS, m, tdp = enabled({ setup = function(mm) skills(mm, { [197] = 50, [129] = 1 }) end })
+    local IS, IST, C = NS.ItemSearch, NS.ItemSearchTip, NS.Constants
+    local col = C.ITEM_SEARCH.CRAFT_COL
+    local p = tipSettings(NS)
+    p.header, p.rows = false, 20
+    local tip = tdp.tooltip("GameTooltip")
+    local reads = countWidthReads(tip)
+    tdp.show(tip, LINEN)
+    local b = block(tdp, tip)
+    local c = find(b, "Crafting")
+    local rows = IS.Ranked(IS.Get(LINEN), IS.Me(), IS.MyProfessionsOnly()).crafting
+    assertTrue(#rows > 1, "Linen has recipes in your professions")
+    -- the profession column is as wide as the longest name shown, by a fixed width per character
+    local longest = 0
+    for _, r in ipairs(rows) do longest = math.max(longest, #(IST.ProfessionName(r.skillLine) or "")) end
+    local width = col.GAP + col.CHAR * longest
+    for i, r in ipairs(rows) do
+        local n = c + 1 + i   -- the tooltip's line (the double's first line is the item's name)
+        local line = tip.__lines[n]
+        local name = IST.ProfessionName(r.skillLine)
+        -- red under: the profession after the parts in one right-aligned string ("[1] 55 75 95 · Alchemy"),
+        -- so the parts never lined up (R5-DW-10), or no profession when the rows share one (R5-DW-09)
+        assertTrue(line.right:find(name, 1, true) == nil, "the profession is not in the right text: " .. line.right)
+        local parts = IST.SkillText(r)
+        local reserve = ("|T[^|]+:1:%d:0:0:%d:%d:0:1:0:1|t$"):format(width, NS.TipMarks.TEX_SIZE, NS.TipMarks.TEX_SIZE)
+        assertTrue(line.right:find(reserve) ~= nil, "the profession column reserved at the right: " .. line.right)
+        if parts then assertEqual(line.right:sub(1, #parts), parts, "the skill levels, then the reserve") end
+        local fs, pt = columnOn(tip, m["GameTooltipTextRight" .. n])
+        assertTrue(fs ~= nil, "row " .. i .. ": a column of the tooltip's own on the line's right text")
+        assertEqual(table.concat({ pt[1], pt[3], pt[4], pt[5] }, ","), "RIGHT,RIGHT,0,0", "hung from its right end")
+        local tone = C.TONE[IST.ProfessionTone(r.skillLine)]
+        assertEqual(fs:GetText(), NS.GroupRoster.Colored(name, tone.r, tone.g, tone.b), "every row names its profession")
+        assertEqual(fs.__justify, "RIGHT"); assertEqual(fs:GetWidth(), width - col.GAP, "one fixed column")
+        assertEqual(fs.__template, "GameTooltipText", "in the tooltip's own font")
+        assertTrue(b[c + i]:find(IST.CraftMark(r), 1, true) ~= nil, "the glyph first on the left")
+    end
+    assertEqual(reads.n, 0, "nothing measured in the post call")
+    -- kept through the client's refill of the same item, as the badge and the separator are
+    local first = columnOn(tip, m["GameTooltipTextRight" .. (c + 2)])
+    tip:ClearLines(); tdp.hide(tip); tdp.show(tip, LINEN)
+    m.advance(0)
+    assertTrue(first:IsShown(), "claimed again by the refill")
+    -- Show recipe skill levels off: the reserve alone on the right, the profession still in its column
+    p.craftSkill = false
+    tdp.hide(tip); tdp.show(tip, LINEN)
+    local line = tip.__lines[c + 2]
+    assertTrue(line.right:find("^|T[^|]+:1:%d+:") ~= nil, "no skill levels: " .. line.right)
+    assertTrue(columnOn(tip, m["GameTooltipTextRight" .. (c + 2)]) ~= nil, "the profession stays")
+    -- an item with no Crafting row: every column comes down
+    tdp.hide(tip); tdp.show(tip, IDS.blade)
+    m.advance(0)
+    for _, fs in ipairs(tip.__strings) do
+        if fs.__justify == "RIGHT" then assertFalse(fs:IsShown(), "no column left up") end
+    end
 end, FOREVER_ONLY)

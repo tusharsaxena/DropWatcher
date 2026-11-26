@@ -509,6 +509,10 @@ C.ITEM_SEARCH = {
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
+    -- The tooltip's Crafting rows as a table (R5-DW-10): the profession in a column of its own at the
+    -- right, as wide as the longest profession name shown at CHAR units a character (a fixed estimate:
+    -- the post call never measures text), GAP more between it and the skill levels.
+    CRAFT_COL   = { CHAR = 7, GAP = 10 },
     -- The tooltip's verdict badge (round 4, R4-DW-07): two filled boxes joined flush right after the
     -- "Drop Watcher" label, the word's in the verdict's bright tone and the score's in DARK times it,
     -- HEIGHT tall, PAD either side of each text, GAP from the label; its icon ICON pixels square.

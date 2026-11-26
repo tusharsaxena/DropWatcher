@@ -5150,6 +5150,18 @@ every number, the start red. Hover Peacebloom → the tooltip's Crafting rows ma
 This replaces ITEM-SEARCH-50's "the orange start is always there". Fail: any number left of the
 bracket, or a bracket that is not your band. Result:
 
+**ITEM-SEARCH-59. Crafting rows as a table, every row naming its profession (R5-DW-09, R5-DW-10).**
+Hover Peacebloom (Alchemy, First Aid and Herbalism recipes), then Linen Cloth → under Crafting, each
+row reads the glyph and the recipe's name from the left, the glyphs in one column and the names
+starting at one edge; on the right the skill levels, ending at one edge, then the profession (Cooking,
+Alchemy, First Aid, Herbalism...) in its own color, right-aligned at the tooltip's right edge. Every
+row names its profession, including when all rows share one. The professions line up with each other
+and the skill levels line up with each other, whatever the profession names' lengths. Untick Show
+recipe skill levels → the professions stay in their column. Keep the pointer still for several
+seconds and move between bag slots → no flicker, no profession left behind on an item with no
+Crafting rows. Fail: a profession missing, glued to the skill levels (`95 · Alchemy`), overlapping
+them, or ragged from row to row. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

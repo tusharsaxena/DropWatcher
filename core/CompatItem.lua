@@ -110,10 +110,23 @@ end
 --- @param tip table a GameTooltip
 --- @param n number
 --- @return table|nil
-function Compat.TooltipLeftLine(tip, n)
+local function lineString(tip, side, n)
     if type(tip) ~= "table" or type(tip.GetName) ~= "function" or type(n) ~= "number" then return nil end
     local name = tip:GetName()
     if type(name) ~= "string" or Compat.IsSecret(name) then return nil end
-    local fs = _G[name .. "TextLeft" .. n]
+    local fs = _G[name .. side .. n]
     return type(fs) == "table" and fs or nil
+end
+
+function Compat.TooltipLeftLine(tip, n)
+    return lineString(tip, "TextLeft", n)
+end
+
+--- The font string of `tip`'s line `n`, its right column (`<name>TextRight<n>`, R5-DW-10: the Item
+--- Search block's crafting columns hang from it); nil for an unnamed tooltip or a line it does not have.
+--- @param tip table a GameTooltip
+--- @param n number
+--- @return table|nil
+function Compat.TooltipRightLine(tip, n)
+    return lineString(tip, "TextRight", n)
 end
