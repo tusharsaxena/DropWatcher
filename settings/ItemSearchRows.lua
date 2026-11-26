@@ -168,9 +168,11 @@ local function tooltip()
     M.bool("itemSearch.tooltip.reasons", T.reasons, L["Explain the badge"],
         L["Under the badge, name the two things that weigh most in it and the largest thing that pulls it down, then, when Drop Watcher isn't sure, what would make it surer (open your profession window, wait for the item info). Needs Show the Keep / Hold / Auction / Vendor / Toss badge."],
         M.with(sub, { disabledIf = function() return off() or NS.Setting("itemSearch.tooltip.badge") ~= true end }))
-    auctionRows(at)
     M.bool("itemSearch.tooltip.craftSkill", T.craftSkill, L["Show recipe skill levels"],
         L["On each recipe row of the Crafting section, show the skill levels where the recipe's orange, yellow, green and gray start, each in its color, the band your rank is in bracketed, in place of the profession's name. Needs Add Item Search to item tooltips."], sub)
+    -- After the whole Tooltip block: the page heads each run of one subgroup, so rows of the block
+    -- after these would draw its heading a second time (R5-REV).
+    auctionRows(at)
     -- One switch for the tooltip and the window's Crafting tab (spec §4), under its own heading.
     M.bool("itemSearch.myProfessionsOnly", D.myProfessionsOnly, L["Only professions you know"],
         L["Show only the recipes of professions you have, in the tooltip and, to start with, in the Item Search window's Crafting tab. The tooltip counts the rest on one line. Until your skills are read, every recipe shows."],

@@ -337,3 +337,20 @@ test("auction: a profile switch, copy or reset makes every kept verdict stale (i
     NS.addon.db:SetProfile("Third")
     assertEqual(IVD.For(ITEM, f, ME).sellVia, "auction", "the fresh profile's defaults")
 end, FOREVER_ONLY)
+
+test("auction settings: the Auction prices block follows the whole Tooltip block (no subgroup drawn twice)", function()
+    local NS = enabled()
+    -- The page draws a heading each time a row's subgroup differs from the row before it, so a
+    -- subgroup that comes back after another one draws its heading again.
+    local seen, last = {}, nil
+    for _, row in ipairs(NS.addon.Settings.RowsForPage("itemSearch")) do
+        local key = tostring(row.group) .. " / " .. tostring(row.subgroup)
+        if row.subgroup and key ~= last then
+            -- red under: Show recipe skill levels after the Auction prices rows, a second Tooltip block
+            assertNil(seen[key], key .. " drawn twice (at " .. tostring(row.path) .. ")")
+            seen[key] = true
+        end
+        last = row.subgroup and key or last
+    end
+    assertTrue(seen["Item tooltip / Auction prices"] == true, "the Auction prices block")
+end, FOREVER_ONLY)

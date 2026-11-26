@@ -457,15 +457,15 @@ tone, and no confidence tier; round 4, R4-DW-07, one pill since R5-DW-02), Expla
 (`itemSearch.tooltip.reasons`, on: the two reasons that weigh most plus the largest one that pulls
 the score down, then, when Drop Watcher isn't sure, the hint on what would make it surer, with no
 tier word; dimmed while the badge is off as well, the page's way of setting it under the badge,
-since the schema rows have no indent), then, under its own Auction prices heading (R5-DW-16),
-Compare with Auctionator prices (`itemSearch.auction.enabled`, on), Auction duration
-(`itemSearch.auction.duration`, WoW Forever's 2, 8 or 24 hours, default 8), Auction house cut %
-(`itemSearch.auction.cut`, 5) and Auction must beat vendor by % (`itemSearch.auction.margin`, 10),
-all four dimmed while Auctionator is not loaded and the last three while the comparison is off,
-each tooltip saying it needs Auctionator; and Show recipe skill levels
+since the schema rows have no indent) and Show recipe skill levels
 (`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues, your band
 bracketed), each
-dimmed while the block is off (Item Search round 3 spec §5). **Tooltip and window:** Only professions
+dimmed while the block is off (Item Search round 3 spec §5). **Auction prices** (R5-DW-16, after the
+whole Tooltip block): Compare with Auctionator prices (`itemSearch.auction.enabled`, on), Auction
+duration (`itemSearch.auction.duration`, WoW Forever's 2, 8 or 24 hours, default 8), Auction house
+cut % (`itemSearch.auction.cut`, 5) and Auction must beat vendor by % (`itemSearch.auction.margin`,
+10), all four dimmed while Auctionator is not loaded and the last three while the comparison is off,
+each tooltip saying it needs Auctionator. **Tooltip and window:** Only professions
 you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
 default), then Hide the other faction's vendors (`itemSearch.hideOtherFaction`, on, round 4 R4-DW-08:
 the tooltip's Sold by leaves out the vendors only the other faction can buy from and counts them on
