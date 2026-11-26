@@ -96,11 +96,19 @@ Everything design spec §1 puts in v1 is built; what is still owed is the in-gam
   and Forever's trade model: a looted bind-on-pickup drop is soulbound, so only a bind-on-equip drop
   is tradeable. Mythic+, delves, follower dungeons, Raid Finder, scenarios, transmog, upgrade tracks,
   off-spec, the Encounter Journal pool and the trade countdown are Retail's alone.
+- **Item Search** (DropWatcher#17, WoW Forever alone; the spec is Ka0sAddonsCommonTasks
+  `docs/2026-11-25-ITEM_SEARCH/03_SPEC.md`). With the optional ForeverDB addon, a block on every
+  item tooltip says where the item drops (with the chances), is gathered, sold, wanted by quests,
+  used in recipes and skinned, under a Keep / Hold / Auction / Vendor / Toss badge whose score is how
+  sure the word is (an Auction or Vendor answer from the optional Auctionator's prices); the Item
+  Search window (Alt-Ctrl-D, the title bar's magnifier, `/dw search`) searches by name or id and
+  lays the same facts out in tabs, with a verdict panel for an item you hold and map pins for
+  TomTom or Drop Watcher's own arrow. Advice only: nothing is moved, sold or deleted.
 - **The extras.** The upgrade toast (with its own scale, and up to five stacked at once, three by
   default: DW-T2), on for a new profile since 2026-10-25, and
   auto-ask, off by default.
 - **The standard surfaces.** The settings pages (General, Drops, Comparison, Messages, Window,
-  Alerts and Profiles; feedback-24, with Situations a Drops tab since item 020), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
+  Alerts and Profiles, plus Item Search on WoW Forever; feedback-24, with Situations a Drops tab since item 020), the `/dw` command with the feature verbs of design spec §12.3, the launcher, the
   debug console and the diagnostics report, the performance harness and the stand-down latch.
 
 ## Item categories (issue #13)

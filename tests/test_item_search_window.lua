@@ -874,7 +874,7 @@ test("item search window: a stand-down takes Drop Watcher's arrow down", functio
     assertFalse(inst:IsShown())
 end, FOREVER_ONLY)
 
--- Audit row 14 (docs/item-search-tooltips.md): the arrow is a HUD display of one icon, a body
+-- Audit row 14 (docs/ARCHITECTURE.md, The Item Search window's tooltips): the arrow is a HUD display of one icon, a body
 -- element whose window group is itself.
 test("item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE", function()
     local NS, m = enabled()
@@ -925,7 +925,7 @@ end, FOREVER_ONLY)
 
 -- ── the window: where every tooltip opens (ISR3-DW-09) ──────────────────────────────────────
 
--- The tooltip anchor audit (docs/item-search-tooltips.md): every tooltip the Item Search window
+-- The tooltip anchor audit (docs/ARCHITECTURE.md, The Item Search window's tooltips): every tooltip the Item Search window
 -- shows, by where its element sits (standalone-windows, *Tooltip placement*). The CHROME are the
 -- tabs, the Clear button, the section headers' marks and chips, and the title bar's marks:
 -- PlaceAttached on the control itself. Every other one is a BODY element (a row, a pin, a column

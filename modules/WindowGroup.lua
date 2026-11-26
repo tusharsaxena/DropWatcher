@@ -64,7 +64,7 @@ local _, NS = ...
 --
 -- THE EXPAND INDICATOR (feedback-5 spec §0). Every drop row draws the header's chevron at its left
 -- edge, before the Item column: chevron-down while collapsed, chevron-up while its card is open,
--- muted white (C.CHEVRON_ROW) and the same on hover. The rows read as their header's children: each
+-- muted white (the owner token `dw.chevron`) and the same on hover. The rows read as their header's children: each
 -- row (stripe, chevron, every cell) and its detail card is indented K.ROW_INDENT from the header's
 -- left edge, and the column labels move with them (WG.LEAD, the indent and the chevron's lead, is
 -- what the columns lose of the pane's width). A header's own chevron is gold, as its text, on every

@@ -822,7 +822,7 @@ stay as integration over this addon's host half: `test_sim_core` (the seam's mem
 the refusals, the session log, the stop's host steps), `test_sim_e2e` (the H1 scan and `Unwrapped`,
 every scenario through the real engine), `test_sim_events` (the event drivers and the world
 providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the loot step's report),
-`test_sim_scenario` (the scenarios, the timeline's steps, the eight verbs through `/dw sim`, `drop <kind>` included) and
+`test_sim_scenario` (the scenarios, the timeline's steps, the nine verbs through `/dw sim`, `drop <kind>` included) and
 `test_sim_panel` (the panel's presentation fields). Where a DropWatcher case was deleted because a
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
