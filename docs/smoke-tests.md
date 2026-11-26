@@ -5299,7 +5299,7 @@ gavel, never `Auction 0`. Open the Item Search window on it while you hold one â
 word` (a gold header) its parts as before (`Other professions use it`, its cap, `Easy to buy again`,
 `Every use is gray or done`), then `Use value -26 (Auction, Vendor or Toss under 20)` (no `The score
 is 0 at least` line), the vendor price, Auctionator's price and the net; then a blank line and `How
-sure` (a gold header): `Use value well under 20` 100%, `Auction beats vendor by <N>% (needs 10%)`
+sure` (a gold header): `Use value well under 20` 100%, `Auction beats vendor by <N>% (needs over 10%)`
 100% (N about 283 at the owner's price), `Evidence for Auction` 100%, `Data known` 100%, `Score` 100.
 Hover a gray (poor) item a vendor buys, with Compare with Auctionator prices unticked â†’ `Vendor 80`;
 its How sure reads `Use value well under 20` 100%, `Compare with Auctionator prices is off` 60%,

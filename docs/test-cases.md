@@ -1249,7 +1249,7 @@ Total.
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
 - verdict score: the memo keeps a new answer when the use value moves under the same score (R6-DW-07) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 
-### test_item_search_auction.lua (14)
+### test_item_search_auction.lua (15)
 
 - auction: the deposit is the vendor price's share by the auction's length, at least 1 silver a full stack
 - auction: Auction when the net beats the vendor by over the margin; else Vendor; bound, off or no price is Vendor
@@ -1265,8 +1265,9 @@ Total.
 - auction: a profile switch, copy or reset makes every kept verdict stale (its auction settings came with it) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
 - auction settings: the Auction prices block follows the whole Tooltip block (no subgroup drawn twice) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
 - auction settings: the badge row says the badge sits on the tooltip's right side (R5-DW-12) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: How sure's money line stays on its word's side of the margin at the edge (R6-REV)
 
-### test_item_search_panel.lua (14)
+### test_item_search_panel.lua (15)
 
 - verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
@@ -1282,6 +1283,7 @@ Total.
 - verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3 (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 
 ### test_own_drops.lua (16)
 
@@ -3533,7 +3535,7 @@ Total.
 | test_item_search_sources.lua | 18 |
 | test_item_search_prices.lua | 6 |
 | test_item_search_verdict.lua | 28 |
-| test_item_search_auction.lua | 6 |
+| test_item_search_auction.lua | 7 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3627,5 +3629,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 157 |
-| **Total** | **2871** |
+| Skipped | 158 |
+| **Total** | **2872** |

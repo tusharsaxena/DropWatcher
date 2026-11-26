@@ -637,7 +637,7 @@ local function sureRows(r, item)
         out[#out + 1] = { text = useLine(r), right = pct(r.usePart) }
         if r.money then
             local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
-            out[#out + 1] = { text = IAU.MoneyLine(r.moneyKey, r.ratio, margin, r.net), right = pct(r.money) }
+            out[#out + 1] = { text = IAU.MoneyLine(r.moneyKey, r.ratio, margin, r.net, r.via), right = pct(r.money) }
         end
         out[#out + 1] = { text = L["Evidence for %s"]:format(wordOf(r)), right = pct(r.evidence) }
     else

@@ -499,14 +499,15 @@ end
 test("verdict breakdown: How sure says each evidence part, the data known and the score (R6-DW-08)", function()
     local _, IS = addon()
     local r = auctionRule()
-    -- Liferoot: the design's own lines ("Auction beats vendor by 283% (needs 10%): 100%")
+    -- Liferoot: the design's own lines ("Auction beats vendor by 283% (needs 10%): 100%"; "needs over"
+    -- since R6-REV, as the rule wants the net over the margin)
     local rows = { recipe({ color = "gray" }) }
     for i = 1, 5 do rows[#rows + 1] = recipe({ spell = 10 + i, skillLine = ALCHEMY, rank = false, known = false }) end
     local life = IS.Breakdown(facts({ crafting = rows, vendors = { {}, {}, {} } }), ME, item({ sellPrice = 75,
         auctionPrice = 318, stackCount = 20, bindType = 0, auctionRule = r, auctionator = true }))
     local beat = T.forever and 283 or 288   -- the 8-hour deposit (Forever) or the 12-hour one (Retail)
     -- red under: no How sure lines (the score's parts unexplained)
-    assertEqual(sureOf(life), ("Use value well under 20 = 100%% | Auction beats vendor by %d%% (needs 10%%) = 100%% | "
+    assertEqual(sureOf(life), ("Use value well under 20 = 100%% | Auction beats vendor by %d%% (needs over 10%%) = 100%% | "
         .. "Evidence for Auction = 100%% | Data known = 100%% | Score = 100"):format(beat))
     assertEqual(life.from, "Use value -26 (Auction, Vendor or Toss under 20)")
     -- a gray item, Auctionator absent: the money part 60%, so Vendor 80

@@ -930,7 +930,7 @@ L["Evidence: %d%% for a call on its band's edge, 100%% for a clear one: a Keep a
 L["Auction, Vendor or Toss: the weaker of how far the use value is under %d (100%% at %d or less) and how clear the money is."] = "Auction, Vendor or Toss: the weaker of how far the use value is under %d (100%% at %d or less) and how clear the money is."
 L["A Hold only because too little is known: %d%%."] = "A Hold only because too little is known: %d%%."
 L["Data known is how much of what the verdict needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."] = "Data known is how much of what the verdict needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."
-L["Auction beats vendor by %d%% (needs %d%%)"] = "Auction beats vendor by %d%% (needs %d%%)"
+L["Auction beats vendor by %d%% (needs over %d%%)"] = "Auction beats vendor by %d%% (needs over %d%%)"
 L["Auction trails vendor by %d%% (needs to beat it by %d%%)"] = "Auction trails vendor by %d%% (needs to beat it by %d%%)"
 L["No vendor buys it; an auction brings ~%s"] = "No vendor buys it; an auction brings ~%s"
 L["No vendor buys it, and an auction brings nothing after the cut and deposit"] = "No vendor buys it, and an auction brings nothing after the cut and deposit"

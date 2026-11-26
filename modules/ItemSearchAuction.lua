@@ -196,16 +196,20 @@ end
 
 --- The verdict panel's money line under How sure (R6-DW-08), by IAU.Money's key: how far an
 --- auction beats the vendor, or falls short, against the margin ("Auction beats vendor by 283%
---- (needs 10%)"), or why no price was compared.
+--- (needs over 10%)"), or why no price was compared. The rule wants the net OVER the margin, so
+--- the rounded percent stays on the word's side of it (R6-REV): an Auction's past the margin, a
+--- Vendor's at it at most, never a Vendor that reads as the margin beaten.
 --- @param key string IAU.Money's
 --- @param ratio number|nil IAU.Money's: the net over the vendor price
 --- @param margin number the rule's margin, in percent
 --- @param net number|nil the net an auction brings (an Auction no vendor buys)
+--- @param via string|nil the Sell's answer ("auction" or "vendor"; nil for a Toss)
 --- @return string
-function IAU.MoneyLine(key, ratio, margin, net)
+function IAU.MoneyLine(key, ratio, margin, net, via)
     if key == "beat" then
         local by = floor((ratio - 1) * 100 + 0.5)
-        if by >= 0 then return L["Auction beats vendor by %d%% (needs %d%%)"]:format(by, margin) end
+        if via == "auction" then by = max(by, floor(margin) + 1) elseif by > margin then by = floor(margin) end
+        if by >= 0 then return L["Auction beats vendor by %d%% (needs over %d%%)"]:format(by, margin) end
         return L["Auction trails vendor by %d%% (needs to beat it by %d%%)"]:format(-by, margin)
     end
     if key == "noVendor" then return L["No vendor buys it; an auction brings ~%s"]:format(money(net or 0)) end

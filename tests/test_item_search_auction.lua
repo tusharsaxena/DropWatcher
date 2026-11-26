@@ -173,7 +173,7 @@ test("auction: a Sell keeps its key and says Auction or Vendor, with the prices;
     -- R6-DW-08: the word's line is the use value's; the money's answer is How sure's second line
     local function money(bd) return bd.sure[2].text end
     assertEqual(b.from, "Use value 0 (Auction, Vendor or Toss under 20)")
-    assertTrue(money(b):find("^Auction beats vendor by %d+%% %(needs 10%%%)$") ~= nil, money(b))
+    assertTrue(money(b):find("^Auction beats vendor by %d+%% %(needs over 10%%%)$") ~= nil, money(b))
     b = IS.Breakdown(facts(), ME, item({ auctionPrice = 120, auctionRule = r }))
     assertTrue(money(b):find("^Auction trails vendor by %d+%% %(needs to beat it by 10%%%)$") ~= nil, money(b))
     b = IS.Breakdown(facts(), ME, item({ auctionRule = r }))
@@ -431,3 +431,25 @@ test("auction settings: the badge row says the badge sits on the tooltip's right
     assertTrue(badge.tooltip:find("Right after", 1, true) == nil, badge.tooltip)
     assertTrue(badge.tooltip:find("on the tooltip's right side", 1, true) ~= nil, badge.tooltip)
 end, FOREVER_ONLY)
+
+test("auction: How sure's money line stays on its word's side of the margin at the edge (R6-REV)", function()
+    local NS = T.newAddon()
+    local IS = NS.ItemSearch
+    -- no cut, so the net is the price less the least deposit (100 copper on either client)
+    local r = rule({ cut = 0 })
+    -- r exactly 1 + X: a net of 110 on a vendor's 100 is not OVER the 10% margin, so Vendor
+    local b = IS.Breakdown(facts(), ME, item({ auctionPrice = 210, auctionRule = r }))
+    assertEqual(b.sellVia, "vendor")
+    -- red under: "Auction beats vendor by 10% (needs 10%)" under a Vendor, read as the margin met
+    assertEqual(b.sure[2].text, "Auction beats vendor by 10% (needs over 10%)")
+    -- 10.4% over: an Auction, whose rounded 10% would read as only meeting the margin
+    b = IS.Breakdown(facts(), ME, item({ auctionPrice = 210.4, auctionRule = r }))
+    assertEqual(b.sellVia, "auction")
+    assertEqual(b.sure[2].text, "Auction beats vendor by 11% (needs over 10%)")
+    -- 9.6% over: a Vendor, whose rounded 10% stays at the margin, never past it
+    b = IS.Breakdown(facts(), ME, item({ auctionPrice = 209.6, auctionRule = r }))
+    assertEqual(b.sellVia, "vendor")
+    assertEqual(b.sure[2].text, "Auction beats vendor by 10% (needs over 10%)")
+    b = IS.Breakdown(facts(), ME, item({ auctionPrice = 260, auctionRule = r }))
+    assertEqual(b.sure[2].text, "Auction beats vendor by 60% (needs over 10%)", "away from the edge: as rounded")
+end)
