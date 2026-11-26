@@ -483,9 +483,9 @@ end
 -- price and the parts' notes.
 local function judge(facts, me, item, bd)
     local confidence, tier, hint = IS.Confidence(facts, me, item)
-    local acc, score = scratchReasons(bd), 100
+    local acc, score = scratchReasons(bd), V.COLLECT
     if item.newCollect then
-        both(acc, "collect", 100, L["New to your collection"])
+        both(acc, "collect", V.COLLECT, L["New to your collection"])
     else
         score = scoreOf(facts, me, item, acc)
     end
@@ -553,7 +553,7 @@ function IVD.ScoringHelp()
         L["  A recipe you could learn: +%d (your recipes count %d at most)"]:format(V.LEARN, V.CRAFT_CAP),
         L["  Another profession's recipe: +%d (%d at most)"]:format(V.OTHERS, V.OTHERS_CAP),
         L["  Gear: an upgrade +%d, a sidegrade +%d"]:format(V.UPGRADE, V.SIDEGRADE),
-        L["  New to your collection: %d"]:format(100),
+        L["  New to your collection: %d"]:format(V.COLLECT),
         L["Takes away:"],
         L["  Easy to buy again (%d or more vendors, or %s or less): %d"]:format(V.REBUY_VENDORS, cheap, V.REBUY),
         L["  Every use gray or done: %d"]:format(V.TRIVIAL),

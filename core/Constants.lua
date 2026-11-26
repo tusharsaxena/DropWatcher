@@ -528,7 +528,8 @@ C.ITEM_SEARCH = {
     PANEL       = { LINES = 8, MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
     -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
-    -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the
+    -- part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a new
+    -- collectible's score (COLLECT, the scorer's and the (?) help's, R5-REV); then the
     -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
     -- item info or gear verdict was still loading waits before it is worked out again, and how many
     -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
@@ -538,7 +539,7 @@ C.ITEM_SEARCH = {
         CRAFT = { orange = 30, yellow = 20, green = 8, gray = 0 }, LEARN = 10, CRAFT_CAP = 50,
         OTHERS = 3, OTHERS_CAP = 9, UPGRADE = 70, SIDEGRADE = 20,
         REBUY = -20, REBUY_VENDORS = 3, REBUY_PRICE = 500, TRIVIAL = -15,
-        POOR_CAP = 15, QUEST_FLOOR = 20,
+        POOR_CAP = 15, QUEST_FLOOR = 20, COLLECT = 100,
         HIGH = 80, MEDIUM = 50,
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,

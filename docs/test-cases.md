@@ -1211,7 +1211,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (23)
+### test_item_search_verdict.lua (24)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1227,6 +1227,7 @@ Total.
 - verdict: gear whose gear verdict has not answered never says Toss, at any confidence
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
 - compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)
+- verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)
 - verdict: the reasons always carry the largest negative part, so the shown parts explain the score
 - verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
@@ -3502,7 +3503,7 @@ Total.
 | test_item_search_rank.lua | 14 |
 | test_item_search_sources.lua | 17 |
 | test_item_search_prices.lua | 6 |
-| test_item_search_verdict.lua | 19 |
+| test_item_search_verdict.lua | 20 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3597,4 +3598,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 146 |
-| **Total** | **2855** |
+| **Total** | **2856** |

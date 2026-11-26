@@ -261,6 +261,34 @@ test("compat: money reads in gold, silver and copper coins on both clients, neve
         mm.C_CurrencyInfo.GetCoinTextureString = function(copper) return ("client %d"):format(copper) end
     end })
     assertEqual(withClient.Compat.CoinText(30), "client 30")
+    -- R5-REV: a debt keeps its sign (red under: -5 read "99 silver 95 copper"), part of a copper is
+    -- dropped before the client sees it, and an empty client string falls back to the drawn coins
+    assertEqual(Compat.CoinText(-120), "-1" .. S .. " 20" .. K)
+    assertEqual(Compat.CoinText(-5), "-5" .. K)
+    assertEqual(Compat.CoinText(2.7), "2" .. K)
+    assertEqual(withClient.Compat.CoinText(2.7), "client 2")
+    local blank = T.newAddon({ mock = function(mm)
+        mm.C_CurrencyInfo = mm.C_CurrencyInfo or {}
+        mm.C_CurrencyInfo.GetCoinTextureString = function() return "" end
+    end })
+    assertEqual(blank.Compat.CoinText(0), "0" .. K, "the client's empty string is not money")
+end)
+
+test("verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)", function()
+    local NS, IS = addon()
+    local V = NS.Constants.ITEM_SEARCH.VERDICT
+    -- red under: 100 written by hand in the scorer and the help
+    assertEqual(type(V.COLLECT), "number")
+    local old = V.COLLECT
+    V.COLLECT = 90
+    local v = IS.Verdict(facts({}), ME, item({ newCollect = true }))
+    local found
+    for _, line in ipairs(NS.ItemSearchVerdict.ScoringHelp()) do
+        if line:find("New to your collection", 1, true) then found = line end
+    end
+    V.COLLECT = old
+    assertEqual(v.score, 90, "the scorer reads it")
+    assertTrue(found ~= nil and found:find("90", 1, true) ~= nil, "the help reads it: " .. tostring(found))
 end)
 
 test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()

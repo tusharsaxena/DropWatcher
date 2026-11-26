@@ -434,17 +434,21 @@ local function clientCoins(copper)
     if type(fn) ~= "function" and type(GetCoinTextureString) == "function" then fn = GetCoinTextureString end
     if type(fn) ~= "function" then return nil end
     local ok, text = pcall(fn, copper)
-    return ok and plainString(text) or nil
+    text = ok and plainString(text) or nil
+    return text ~= "" and text or nil
 end
 
 --- An amount of copper with gold, silver and copper coins (R5-DW-11): the client's coin string when
 --- it has one, else the coins drawn by hand from the MoneyFrame icons (`1<silver> 20<copper>`).
---- Nil only for no amount.
+--- Part of a copper is dropped, a debt keeps its sign in front (`-5<copper>`, R5-REV), and an
+--- empty client string falls back to the drawn coins. Nil only for no amount.
 --- @param copper number
 --- @return string|nil
 function Compat.CoinText(copper)
     copper = plainNumber(copper)
     if not copper then return nil end
+    if copper < 0 then return "-" .. Compat.CoinText(-copper) end
+    copper = math.floor(copper)
     return clientCoins(copper) or handCoins(copper)
 end
 
