@@ -502,6 +502,10 @@ C.ITEM_SEARCH = {
     -- The quest marks' size in pixels, the tooltip's and the window's alike (round 3 spec §4.2):
     -- GLYPH_SIZE's, so a mark and a glyph read as one family.
     MARK_SIZE   = 14,
+    -- The tooltip's verdict badge (round 4, R4-DW-07): two filled boxes joined flush right after the
+    -- "Drop Watcher" label, the word's in the verdict's bright tone and the score's in DARK times it,
+    -- HEIGHT tall, PAD either side of each text, GAP from the label; its icon ICON pixels square.
+    BADGE       = { HEIGHT = 16, PAD = 4, GAP = 6, DARK = 0.5, ICON = 12 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
     -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
     -- part's points and caps, the dampers, the poor-quality cap and the quest item's floor; then the

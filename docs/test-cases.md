@@ -1198,7 +1198,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (17)
+### test_item_search_verdict.lua (18)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1213,8 +1213,9 @@ Total.
 - verdict: a Low confidence never says Toss: it holds
 - verdict: gear whose gear verdict has not answered never says Toss, at any confidence
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
-- verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word and score in the verdict's tone (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the badge sits right of Drop Watcher, its reasons under it; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: the reasons always carry the largest negative part, so the shown parts explain the score
+- verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 
@@ -3467,7 +3468,7 @@ Total.
 | test_item_search_rank.lua | 14 |
 | test_item_search_sources.lua | 16 |
 | test_item_search_prices.lua | 5 |
-| test_item_search_verdict.lua | 13 |
+| test_item_search_verdict.lua | 14 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3562,4 +3563,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 122 |
-| **Total** | **2847** |
+| **Total** | **2848** |

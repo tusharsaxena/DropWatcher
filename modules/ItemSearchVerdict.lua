@@ -32,7 +32,9 @@ local _, NS = ...
 -- (its quality and sell price), the gear verdict 2 (needed for gear), ForeverDB knowing the item 1.
 -- High at 80 and up, Medium at 50 and up, else Low; under High the `hint` names the heaviest
 -- unanswered input's fix. The reasons are the top C.ITEM_SEARCH.VERDICT.REASONS by points (either
--- sign), a Sell's or a Toss's price reason always first.
+-- sign), a Sell's or a Toss's price reason always first, and then the largest negative part when
+-- none is among them (round 4, R4-DW-07: a damper is never hidden, so the parts shown explain the
+-- score). The tier is never shown (the owner); it is kept so that Low never says Toss.
 --
 -- `item`: { quality, classID, subclassID, equippable, sellPrice, bindType, gear, newCollect, inDB },
 -- every field optional: `gear` the gear kernel's verdict for you ("upgrade", "sidegrade", ...; nil
@@ -346,10 +348,34 @@ local function before(a, b)
 end
 
 -- The reasons shown: a Sell's or a Toss's price reason first, then the parts with the most points
--- (either sign; a part worth nothing is left out), C.ITEM_SEARCH.VERDICT.REASONS in all, onto
+-- (either sign; a part worth nothing is left out), C.ITEM_SEARCH.VERDICT.REASONS in all, then the
+-- largest negative part when none of those is negative (R4-DW-07), onto
 -- `buf` (emptied first) when given. Without `buf`, no reason at all answers the one shared empty
 -- list (read, never changed).
 local NO_REASONS = {}
+
+-- The parts with the most points onto `out`, up to C.ITEM_SEARCH.VERDICT.REASONS lines in all:
+-- whether one of them is negative, and the last one shown.
+local function topParts(acc, out)
+    local negative, shown = false, nil
+    for _, r in ipairs(acc) do
+        if #out >= V.REASONS then break end
+        if r.points ~= 0 then
+            out[#out + 1], shown = r.text, r
+            negative = negative or r.points < 0
+        end
+    end
+    return negative, shown
+end
+
+-- The largest negative part past `shown` onto `out` (acc runs by size, so the first one found).
+local function largestNegative(acc, shown, out)
+    local past = shown == nil
+    for _, r in ipairs(acc) do
+        if past and r.points < 0 then out[#out + 1] = r.text; return end
+        if r == shown then past = true end
+    end
+end
 
 local function topReasons(acc, verdict, sellPrice, buf)
     if not buf and #acc == 0 and verdict ~= "sell" and verdict ~= "toss" then return NO_REASONS end
@@ -361,10 +387,8 @@ local function topReasons(acc, verdict, sellPrice, buf)
         out[1] = L["No use found, and no vendor buys it"]
     end
     table.sort(acc, before)
-    for _, r in ipairs(acc) do
-        if #out >= V.REASONS then break end
-        if r.points ~= 0 then out[#out + 1] = r.text end
-    end
+    local negative, shown = topParts(acc, out)
+    if not negative then largestNegative(acc, shown, out) end
     return out
 end
 

@@ -241,6 +241,29 @@ test("verdict: the reasons are the top two by points; Sell and Toss name the pri
     assertEqual(v.reasons[2], "Other professions use it (1 recipes)")
 end)
 
+test("verdict: the reasons always carry the largest negative part, so the shown parts explain the score", function()
+    local _, IS = addon()
+    -- a Peacebloom-like item (R4-DW-07, the owner's "what does 65 mean"): two orange recipes (+50 at
+    -- the cap), a quest you can pick up (+35), three vendors (-20)
+    local v = IS.Verdict(facts({
+        quests = { quest("todo") },
+        crafting = { recipe({ color = "orange" }), recipe({ spell = 2, color = "orange" }) },
+        vendors = { {}, {}, {} },
+    }), ME, item())
+    assertEqual(v.score, 65); assertEqual(v.verdict, "keep")
+    -- red under: the top two alone (the -20 hidden, the 65 left partly unexplained)
+    assertEqual(#v.reasons, 3)
+    assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
+    assertEqual(v.reasons[2], "Quest you can pick up: Invented Errand")
+    assertEqual(v.reasons[3], "Easy to buy again", "the largest negative part, after the top two")
+    -- already among the top two: not repeated
+    v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
+    assertEqual(#v.reasons, 2); assertEqual(v.reasons[2], "Easy to buy again")
+    -- no negative part: the top two alone
+    v = IS.Verdict(facts({ quests = { quest("todo") }, crafting = { recipe({ color = "orange" }) } }), ME, item())
+    assertEqual(#v.reasons, 2)
+end)
+
 -- ── the badge and the tooltip ───────────────────────────────────────────────────────────────
 
 local function enabled(opts)
@@ -263,7 +286,7 @@ local function block(tdp, tip)
     return out
 end
 
-test("verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word and score in the verdict's tone", function()
+test("verdict: the badge's two parts: <icon> <Verdict> on the bright tone, the score on its dark shade; no tier", function()
     local NS = enabled()
     local IST, C = NS.ItemSearchTip, NS.Constants
     local function hex(tone)
@@ -273,40 +296,73 @@ test("verdict: the badge is <icon> <Verdict> <score> · <Tier>, the icon, word a
     for verdict, look in pairs({ keep = { "lock", "good", "Keep" }, hold = { "hourglass", "yellow", "Hold" },
         sell = { "coins", "warn", "Sell" }, toss = { "trash", "bad", "Toss" } }) do
         local badge = IST.Badge({ verdict = verdict, score = 42, tier = "medium", reasons = {} })
-        assertTrue(badge:find("phosphor\\" .. look[1] .. ":14:14", 1, true) ~= nil, verdict .. "'s icon at 14 px")
-        assertTrue(badge:find("|cff" .. hex(look[2]) .. look[3] .. " 42|r", 1, true) ~= nil, verdict .. "'s word and score")
-        assertTrue(badge:find("|cff" .. hex("muted") .. "· Medium|r", 1, true) ~= nil, verdict .. "'s tier, muted")
+        assertEqual(badge.tone, look[2], verdict .. "'s tone")
+        assertTrue(badge.word:find("phosphor\\" .. look[1], 1, true) ~= nil, verdict .. "'s icon")
+        assertTrue(badge.word:find(look[3], 1, true) ~= nil, verdict .. "'s word")
+        assertEqual(badge.score, "42")
+        -- red under: the tier shown (the owner: "Remove the High/Medium/etc confidence bit")
+        assertTrue(badge.word:find("Medium", 1, true) == nil and badge.score:find("Medium", 1, true) == nil)
     end
     local v = { verdict = "keep", score = 72, tier = "high", reasons = { "Invented reason" } }
-    -- red under: a new string or line table built per hover
+    -- red under: a new table or line built per hover; a badge kept per tier
     assertTrue(IST.Badge(v) == IST.Badge(v)); assertTrue(IST.ReasonLines(v)[1] == IST.ReasonLines(v)[1])
+    assertTrue(IST.Badge(v) == IST.Badge({ verdict = "keep", score = 72, tier = "low" }), "one badge whatever the tier")
     local lines = IST.ReasonLines(v)
-    assertEqual(#lines, 1, "High: no confidence line")
+    assertEqual(#lines, 1, "High: no hint line")
     assertEqual(lines[1].text, "  |cff" .. hex("mutedGold") .. "·|r Invented reason"); assertEqual(lines[1].tone, "plain")
     lines = IST.ReasonLines({ verdict = "hold", score = 30, tier = "medium", reasons = {}, hint = "Item info is still loading" })
-    assertEqual(lines[1].text, "Confidence Medium: Item info is still loading"); assertEqual(lines[1].tone, "muted")
+    -- red under: "Confidence Medium: ..." (the fix stays, without the tier word)
+    assertEqual(lines[1].text, "Item info is still loading"); assertEqual(lines[1].tone, "muted")
 end, FOREVER_ONLY)
 
-test("verdict: on the tooltip the badge sits right of Drop Watcher, its reasons under it; both settings", function()
-    local NS, _, tdp = enabled()
+test("verdict: on the tooltip the badge is two filled boxes right after Drop Watcher, its width reserved; both settings", function()
+    local NS, m, tdp = enabled()
+    local IST, C = NS.ItemSearchTip, NS.Constants
     local tip = tdp.tooltip("GameTooltip")
     tdp.show(tip, IDS.blade)
     local b = block(tdp, tip)
     -- the blade: no client item info (the double caches none), so Hold under a Medium confidence
-    assertTrue(b[2]:find("^Drop Watcher | ") ~= nil, "the badge at the label line's right")
-    assertTrue(b[2]:find("Hold 0", 1, true) ~= nil and b[2]:find("· Medium", 1, true) ~= nil, b[2])
-    assertEqual(b[3], "Confidence Medium: Item info is still loading", "the hint under the badge")
+    -- red under: the badge as right-hand text ("Drop Watcher | Hold 0 · Medium")
+    assertTrue(b[2]:find("^Drop Watcher|T") ~= nil, "the label, then the escape that reserves the badge's width: " .. b[2])
+    assertTrue(b[2]:find(" | ", 1, true) == nil, "nothing at the line's right")
+    assertEqual(b[3], "Item info is still loading", "the hint under the badge, no tier")
     assertEqual(b[4], "Drops from")
+    for _, line in ipairs(b) do assertTrue(line:find("Medium", 1, true) == nil, "no tier anywhere: " .. line) end
+    local badge = IST.BadgeOf(tip)
+    assertTrue(badge ~= nil, "the tooltip's badge")
+    assertTrue(badge.boxL:IsShown() and badge.boxR:IsShown() and badge.textL:IsShown() and badge.textR:IsShown())
+    assertTrue(badge.textL:GetText():find("Hold", 1, true) ~= nil); assertEqual(badge.textR:GetText(), "0")
+    local y = C.TONE.yellow
+    assertEqual(table.concat(badge.boxL.__vertex, ",", 1, 3), table.concat({ y.r, y.g, y.b }, ","), "Hold's bright yellow")
+    local k = C.ITEM_SEARCH.BADGE.DARK
+    assertEqual(table.concat(badge.boxR.__vertex, ",", 1, 3), table.concat({ y.r * k, y.g * k, y.b * k }, ","),
+        "its darker shade")
+    -- hung from the label line: the score's box ends where the reserved width ends, the word's box
+    -- joined flush to its left
+    local label = m.GameTooltipTextLeft3
+    local p = { badge.boxR:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == label), p[3], p[4], p[5] }, ","), "RIGHT,true,RIGHT,0,0")
+    p = { badge.boxL:GetPoint(1) }
+    assertEqual(table.concat({ p[1], tostring(p[2] == badge.boxR), p[3], p[4], p[5] }, ","), "RIGHT,true,LEFT,0,0")
+    local reserved = tonumber(b[2]:match("|T[^:]+:%d+:(%d+):"))
+    assertEqual(reserved, C.ITEM_SEARCH.BADGE.GAP + badge.boxL:GetWidth() + badge.boxR:GetWidth(), "the gap and both boxes")
+    -- kept through the client's refill of the same item, as the separator is (R4-DW-06)
+    local hides, hide = 0, badge.boxL.Hide
+    badge.boxL.Hide = function(self) hides = hides + 1; return hide(self) end
+    tip:ClearLines(); tdp.hide(tip); tdp.show(tip, IDS.blade)
+    assertTrue(badge.boxL:IsShown()); m.advance(0)
+    assertTrue(badge.boxL:IsShown()); assertEqual(hides, 0, "never hidden on a refill of the same item")
     local S = NS.addon.db.profile.itemSearch.tooltip
     S.reasons = false
     tdp.hide(tip); tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
-    assertTrue(b[2]:find("Hold 0", 1, true) ~= nil); assertEqual(b[3], "Drops from", "Explain the badge off")
+    assertTrue(badge.boxL:IsShown()); assertEqual(b[3], "Drops from", "Explain the badge off")
     S.badge, S.reasons = false, true
     tdp.hide(tip); tdp.show(tip, IDS.blade)
     b = block(tdp, tip)
     -- red under: the reasons drawn with the badge off
     assertEqual(b[2], "Drop Watcher"); assertEqual(b[3], "Drops from")
+    assertFalse(badge.boxL:IsShown() or badge.textR:IsShown(), "no badge")
     assertFalse(NS.ItemSearchTip.Options().badge)
 end, FOREVER_ONLY)
 

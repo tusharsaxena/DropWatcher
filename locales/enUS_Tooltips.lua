@@ -862,15 +862,11 @@ L["No arrow"] = "No arrow"
 L["Waypoint set: %s (%s, %.1f, %.1f), shown by %s."] = "Waypoint set: %s (%s, %.1f, %.1f), shown by %s."
 L["No waypoint: TomTom is not loaded and Drop Watcher's arrow is not available."] = "No waypoint: TomTom is not loaded and Drop Watcher's arrow is not available."
 -- The item tooltip's Keep / Hold / Sell / Toss badge (round 3 spec §4.5, item 14c): the verdicts,
--- the confidence tiers and its fixes, and the reasons (modules/ItemSearchVerdict.lua).
+-- the confidence's fixes (the tier is never shown, R4-DW-07), and the reasons (modules/ItemSearchVerdict.lua).
 L["Keep"] = "Keep"
 L["Hold"] = "Hold"
 L["Sell"] = "Sell"
 L["Toss"] = "Toss"
-L["High"] = "High"
-L["Medium"] = "Medium"
-L["Low"] = "Low"
-L["Confidence %s: %s"] = "Confidence %s: %s"
 L["In your quest log: %s"] = "In your quest log: %s"
 L["Ready to turn in: %s"] = "Ready to turn in: %s"
 L["Quest you can pick up: %s"] = "Quest you can pick up: %s"
