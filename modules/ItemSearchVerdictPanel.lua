@@ -21,10 +21,12 @@ local _, NS = ...
 -- (NS.ItemSearchVerdict.Breakdown, IS.Breakdown): the panel adds nothing up, so it and the
 -- tooltip's reasons cannot disagree.
 --
--- SPACE. The panel is the header, the badge and up to C.ITEM_SEARCH.PANEL.LINES lines tall, in the
--- main window's table font and row height (NS.WindowRows.Metrics); more lines scroll inside it. The
--- Matches list keeps C.ITEM_SEARCH.PANEL.MIN_ROWS rows at least: in a window too short for both the
--- panel gives way (down to its header, the badge and one line) and scrolls.
+-- SPACE. The Matches list above the panel is C.ITEM_SEARCH.PANEL.MIN_ROWS rows tall, and the panel
+-- takes the rest of the column (R6-DW-05, the owner: "Resizing the window vertically should resize
+-- the verdict panel not the matches panel"), so a taller window shows more of the breakdown and a
+-- resize never moves the Matches list. Its lines are in the main window's table font and row height
+-- (NS.WindowRows.Metrics); more than fit scroll inside it. In a window too short for both, the panel
+-- keeps its header, the badge and one line, and scrolls.
 --
 -- WHEN IT UPDATES. Every window repaint, from a kept breakdown: it is worked out again only when the
 -- item, the count you hold, the verdict memo's generation (NS.ItemSearchVerdict.Generation) or, for
@@ -207,17 +209,16 @@ local function windowHeight(f)
     return h
 end
 
---- The panel's height for the window `f` at row height `rowH`: the header, the badge and
---- C.ITEM_SEARCH.PANEL.LINES lines, less what the Matches list's MIN_ROWS rows need, down to the
---- header, the badge and one line.
+--- The panel's height for the window `f` at row height `rowH` (R6-DW-05): the column less the
+--- Matches list's C.ITEM_SEARCH.PANEL.MIN_ROWS rows and the gap above the panel, so every pixel a
+--- resize adds or takes is the panel's; at least the header, the badge and one line.
 --- @param f table
 --- @param rowH number
 --- @return number
 function IVP.Height(f, rowH)
-    local full = LINES_TOP + P.LINES * rowH + P.GAP
     local least = LINES_TOP + rowH
     local room = windowHeight(f) - columnTop() - columnBottom() - P.MIN_ROWS * rowH - P.GAP
-    return math.max(least, math.min(full, room))
+    return math.max(least, room)
 end
 
 -- The Matches list ends above the panel while it shows, at the footer otherwise.

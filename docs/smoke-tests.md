@@ -5267,6 +5267,17 @@ raised so the row shows) → its Drops from and Skinned from rows read a dim `?`
 Gathered from row ends `· ?`. Known rates read their percent as before. Fail: `rate unknown` or
 `rate un...` anywhere in a column or on a tooltip row's right. Result:
 
+**ITEM-SEARCH-71. A resize moves the verdict panel, never the Matches list (R6-DW-05).** Open the
+Item Search window on a held item → the Matches list is five rows tall and the verdict panel fills
+the rest of the left column, showing more lines than before (the owner's Liferoot: the parts, the
+word line, `Vendor price`, `Auction price (Auctionator)` and `Auction after the cut and deposit`, all
+without scrolling at the default size). Drag the corner down to make the window taller → only the
+panel grows, the Matches list stays five rows; drag it up to its smallest → the panel shrinks and
+scrolls its lines, the Matches list still five rows. Close and reopen → the window keeps the size
+you left it at. Show an item you do not hold → no panel, the Matches list down to the footer. This
+replaces the panel's 8-line height in the earlier panel checks. Fail: the Matches list growing or
+shrinking on a resize while the panel shows, or fewer than five match rows. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

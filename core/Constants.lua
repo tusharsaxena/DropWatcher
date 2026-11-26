@@ -526,11 +526,12 @@ C.ITEM_SEARCH = {
     BADGE       = { HEIGHT = 14, LINE = 14, RADIUS = 4, PAD = 5, GAP = 6, ICON = 10, ICON_GAP = 3, FONT = 10,
         INK = 0.15, EM = 0.62 },
     -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
-    -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
-    -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most
-    -- once each THROTTLE seconds; a breakdown whose item info or gear verdict was still loading is
-    -- worked out again VERDICT.RETRY seconds on, RETRIES times at most per item.
-    PANEL       = { LINES = 8, MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
+    -- A1, R4-DW-11): the Matches list above it MIN_ROWS rows tall and the panel every other pixel of
+    -- the column (R6-DW-05: a resize moves the panel alone), GAP between its parts, and a bag, bank
+    -- or verdict change repainting it at most once each THROTTLE seconds; a breakdown whose item info
+    -- or gear verdict was still loading is worked out again VERDICT.RETRY seconds on, RETRIES times at
+    -- most per item.
+    PANEL       = { MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
     -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
     -- part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a new

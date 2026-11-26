@@ -234,7 +234,7 @@ test("verdict panel: a bag change for the item repaints it, throttled, and its h
     assertTrue(f.verdict:IsShown(), "a closed window is not repainted")
 end, FOREVER_ONLY)
 
-test("verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows", function()
+test("verdict panel: the Matches list keeps its 5 rows; the panel takes every other pixel, so a resize moves the panel alone (R6-DW-05)", function()
     local NS, _, held = enabled()
     local W, P = NS.ItemSearchWindow, NS.ItemSearchVerdictPanel
     local K, ISG, PANEL = NS.Constants.WINDOW, NS.ItemSearchGrid, NS.Constants.ITEM_SEARCH.PANEL
@@ -243,16 +243,28 @@ test("verdict panel: the header, the badge and 8 lines tall; it gives way to the
     local f = W.Frame()
     local rowH = NS.WindowRows.Metrics().height
     local top = ISG.HEADER_H + PANEL.GAP + NS.Constants.ITEM_SEARCH.BADGE.HEIGHT + PANEL.GAP
-    -- the default 600 tall window: the full panel
-    assertEqual(P.Height(f, rowH), top + PANEL.LINES * rowH + PANEL.GAP)
+    local function column(height)
+        return height - (1 + K.TITLE_H + 8 + K.CONTROL_H + 8 + ISG.HEADER_H + 2) - (NS.FooterMetric("HEIGHT") + 4)
+    end
+    -- red under (the owner: "Resizing the window vertically should resize the verdict panel not the
+    -- matches panel"): the panel held at 8 lines and the Matches list taking the rest
+    assertEqual(PANEL.LINES, nil, "no line count holds the panel")
+    -- the default 600 tall window: the Matches list MIN_ROWS rows, the panel the rest
+    assertEqual(P.Height(f, rowH), column(600) - PANEL.MIN_ROWS * rowH - PANEL.GAP)
     assertEqual(f.verdict:GetHeight(), P.Height(f, rowH))
-    -- a short window with tall rows: what stays for the matches is at least MIN_ROWS rows
+    -- taller: every added pixel is the panel's, the Matches list's height unchanged
+    f:SetSize(980, 800)
+    assertEqual(P.Height(f, rowH), column(800) - PANEL.MIN_ROWS * rowH - PANEL.GAP)
+    assertEqual(column(800) - P.Height(f, rowH) - PANEL.GAP, PANEL.MIN_ROWS * rowH, "the Matches list stays MIN_ROWS rows")
+    W.Refresh()
+    assertEqual(f.verdict:GetHeight(), P.Height(f, rowH), "a repaint lays the panel out at the new height")
+    -- a short window with tall rows: the Matches list still keeps MIN_ROWS rows, the panel shrinks
     f:SetSize(760, 440)
-    local column = 440 - (1 + K.TITLE_H + 8 + K.CONTROL_H + 8 + ISG.HEADER_H + 2) - (NS.FooterMetric("HEIGHT") + 4)
     local h = P.Height(f, 30)
-    assertTrue(column - h - PANEL.GAP >= PANEL.MIN_ROWS * 30, "five 30 px rows of matches kept")
-    assertTrue(h < top + PANEL.LINES * 30 + PANEL.GAP, "the panel gave way")
+    assertEqual(column(440) - h - PANEL.GAP, PANEL.MIN_ROWS * 30, "five 30 px rows of matches kept")
     assertTrue(h >= top + 30, "down to its header, the badge and one line at least")
+    -- rows so tall that both cannot fit: the panel keeps its header, the badge and one line
+    assertEqual(P.Height(f, 60), top + 60)
 end, FOREVER_ONLY)
 
 test("verdict panel: a corner drag re-lays it without working the breakdown out again", function()
