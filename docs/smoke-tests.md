@@ -5118,8 +5118,13 @@ Peacebloom in the bank and close the bank → the panel stays (`You have <n>`, t
 or destroy them all → within a second the panel goes and the Matches list runs down to the footer
 again; loot one → it comes back. Show an item you hold none of → no panel. Before opening your
 profession window after a login, a recipe item's panel ends with the plain hint `Open your
-profession window to rank recipes`. Looting, moving bags and hovering items with the window open →
-no hitch. Result:
+profession window to rank recipes`. Equip a weapon you have no other copy of and show it → no
+panel (worn is not held); with a second one in the bags → `You have 1`. Show a gear item from your
+bags that reads `Upgrade for you`, then equip something better in that slot → within a second the
+panel's gear line and score change, and hovering the item shows the same word and score on the
+tooltip's badge. Show an item whose info is still loading on a fresh login, then another item, then
+come back → the panel works it out again rather than staying on `Item info is still loading`.
+Looting, moving bags and hovering items with the window open → no hitch. Result:
 
 ## Pending sign-off
 

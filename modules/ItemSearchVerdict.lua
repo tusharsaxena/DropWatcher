@@ -605,16 +605,27 @@ function IVD.ClientFacts(itemID, facts, into)
     return item, true
 end
 
+--- Your gear snapshot's signature now (NS.Gear's), false when there is none: a caller that keeps a
+--- gear item's breakdown (the window's verdict panel) works it out again when it moved, as the memo
+--- does (IVD.For).
+--- @return string|boolean
+function IVD.GearSignature()
+    return gearSignature()
+end
+
 --- The breakdown on `itemID` now (IS.Breakdown over the client's facts, IVD.ClientFacts'), worked out
 --- afresh: for the window's verdict panel, never a hover. Also whether it is settled: false while the
---- client had not cached the item or the gear verdict had not answered (IVD.For's retry case).
+--- client had not cached the item or the gear verdict had not answered (IVD.For's retry case). And,
+--- for gear, the gear signature it was judged under (IVD.GearSignature's; nil for an item that is not
+--- gear), the memo's own stale rule.
 --- @param itemID number
 --- @param facts table NS.ItemSearch.Get's answer
 --- @param me table NS.ItemSearch.Me's answer
---- @return table breakdown, boolean settled
+--- @return table breakdown, boolean settled, string|boolean|nil gearSig
 function IVD.Breakdown(itemID, facts, me)
     local item, cached = IVD.ClientFacts(itemID, facts)
-    return IS.Breakdown(facts, me, item), cached and not (item.equippable and item.gear == nil)
+    local gearSig = item.equippable and gearSignature() or nil
+    return IS.Breakdown(facts, me, item), cached and not (item.equippable and item.gear == nil), gearSig
 end
 
 -- The client's facts and the answer for the verdict being worked out: one table each, filled again

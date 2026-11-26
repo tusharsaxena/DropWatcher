@@ -66,7 +66,8 @@ end
 -- pending store hears GearChanged too, to judge your verdict on a pending item again; DW-FP20's roll
 -- popup mark hears PendingChanged and GearChanged, to repaint the marks on the shown popups; RX-10's
 -- auto-close hears DropAdded and PendingChanged, to start its count over; RX-17's Rolls panel hears
--- PendingChanged, to follow the rolls).
+-- PendingChanged, to follow the rolls; R4-REV's Item Search verdict panel hears GearChanged, to judge
+-- a gear item's breakdown again as the tooltip's memo does).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -74,7 +75,7 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
-    "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",

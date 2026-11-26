@@ -1232,7 +1232,7 @@ Total.
 - verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
 
-### test_item_search_panel.lua (8)
+### test_item_search_panel.lua (11)
 
 - verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
@@ -1242,6 +1242,9 @@ Total.
 - verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: while the item's info is still loading it is worked out again on its own, four times at most (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3 (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 
 ### test_own_drops.lua (16)
 
@@ -3586,5 +3589,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 137 |
+| Skipped | 140 |
 | **Total** | **2854** |

@@ -16,8 +16,9 @@ local IDS = FDB.IDS
 
 local FOREVER_ONLY = (not T.forever) and "WoW Forever's alone (clients-§4): the panel rides the Item Search window" or nil
 
--- The addon enabled with the ForeverDB fake loaded; `held[id] = { bags, bank }` is what
--- C_Item.GetItemCount answers (the bank counted only when asked for, as the client does).
+-- The addon enabled with the ForeverDB fake loaded; `held[id] = { bags, bank, worn }` is what
+-- C_Item.GetItemCount answers as the client does: the bags and what you wear, the bank only when
+-- asked for. Each worn one is in a slot of `m.inventoryIDs.player` too (GetInventoryItemID's).
 local function enabled()
     local held = {}
     local NS, _, m = T.enableAddon{ mock = function(mm)
@@ -26,7 +27,7 @@ local function enabled()
         mm.C_Item.GetItemCount = function(id, bank)
             local h = held[id]
             if not h then return 0 end
-            return h[1] + (bank and h[2] or 0)
+            return h[1] + (h[3] or 0) + (bank and h[2] or 0)
         end
     end }
     m.fireEvent("PLAYER_ENTERING_WORLD", true, false)
@@ -216,5 +217,98 @@ test("verdict panel: while the item's info is still loading it is worked out aga
     assertEqual(calls, 2, "worked out again RETRY seconds on")
     m.advance(10)
     assertEqual(calls, 1 + NS.Constants.ITEM_SEARCH.PANEL.RETRIES, "and no more than RETRIES times")
+    IVD.Breakdown = real
+end, FOREVER_ONLY)
+
+test("verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3", function()
+    local NS, m, held = enabled()
+    local W = NS.ItemSearchWindow
+    local MH = NS.Constants.SLOT.MAINHAND
+    m.inventoryIDs.player = { [MH] = IDS.blade }
+    held[IDS.blade] = { 0, 0, 1 }
+    -- red under: C_Item.GetItemCount's count taken whole, the worn one with it
+    assertEqual(select(2, NS.Compat.ItemCount(IDS.blade)), 0, "worn alone: none held")
+    W.ShowItem(IDS.blade)
+    local f = W.Frame()
+    assertFalse(f.verdict:IsShown(), "worn alone: hidden")
+    held[IDS.blade] = { 1, 2, 1 }
+    local bags, total = NS.Compat.ItemCount(IDS.blade)
+    assertEqual(bags, 1); assertEqual(total, 3)
+    W.ShowItem(IDS.blade)
+    assertTrue(f.verdict:IsShown())
+    assertEqual(f.verdict.head.note:GetText(), "You have 3", "the bags and the bank, not the worn one")
+end, FOREVER_ONLY)
+
+-- The blade as cached gear (an invented one-hander) judged `verdict.gear` by a stubbed feed judge,
+-- under a stubbed gear snapshot whose signature is `verdict.sig`. Answers the undo.
+local function gearBlade(NS, m, verdict)
+    local realInfo = m.C_Item.GetItemInfo
+    m.C_Item.GetItemInfo = function(id)
+        if id == IDS.blade then
+            return "Fixture Blade", "item:990101", 2, 15, 10, "", "", 1, "INVTYPE_WEAPON", 7, 250, 2, 0, 0
+        end
+        return realInfo(id)
+    end
+    local IF, LF, G = NS.ItemFacts, NS.LootFeed, NS.Gear
+    local get, judge, snap = IF.Get, LF.JudgeMe, G.Snapshot
+    IF.Get = function() return {} end
+    LF.JudgeMe = function() return { verdict = verdict.gear, reasons = {} } end
+    G.Snapshot = function() return { signature = verdict.sig } end
+    return function()
+        m.C_Item.GetItemInfo, IF.Get, LF.JudgeMe, G.Snapshot = realInfo, get, judge, snap
+    end
+end
+
+test("verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree", function()
+    local NS, m, held = enabled()
+    local W, IVD, IS = NS.ItemSearchWindow, NS.ItemSearchVerdict, NS.ItemSearch
+    local verdict = { gear = "upgrade", sig = "worn-1" }
+    local undo = gearBlade(NS, m, verdict)
+    held[IDS.blade] = { 1, 0 }
+    W.ShowItem(IDS.blade)
+    local f = W.Frame()
+    local facts = IS.Get(IDS.blade)
+    local function tooltipScore() return IVD.For(IDS.blade, facts, IS.Me(facts.ranks)).score end
+    local before = f.verdict.dwBreakdown.score
+    assertEqual(before, tooltipScore())
+    -- you equip something better: the gear snapshot moves, and Drop Watcher's own GearChanged says so
+    verdict.gear, verdict.sig = "downgrade", "worn-2"
+    NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
+    m.advance(NS.Constants.ITEM_SEARCH.PANEL.THROTTLE + 0.01)
+    -- red under: the panel keeping "Upgrade for you +70" while the tooltip works out the new verdict
+    assertEqual(f.verdict.dwBreakdown.score, tooltipScore(), "the panel and the tooltip agree")
+    assertEqual(f.verdict.dwBreakdown.score, before - NS.Constants.ITEM_SEARCH.VERDICT.UPGRADE, "the upgrade gone")
+    -- a window repaint after a gear move with no event yet: worked out again too, as the tooltip's memo is
+    verdict.gear, verdict.sig = "upgrade", "worn-3"
+    W.Refresh()
+    assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
+    assertEqual(f.verdict.dwBreakdown.score, before)
+    undo()
+end, FOREVER_ONLY)
+
+test("verdict panel: still loading after its retries, a repaint or coming back to the item works it out again", function()
+    local NS, m, held = enabled()
+    local W, IVD = NS.ItemSearchWindow, NS.ItemSearchVerdict
+    local RETRIES = NS.Constants.ITEM_SEARCH.PANEL.RETRIES
+    held[IDS.blade] = { 1, 0 }
+    held[IDS.leather] = { 1, 0 }
+    local real, calls = IVD.Breakdown, 0
+    IVD.Breakdown = function(...) calls = calls + 1; return real(...) end
+    -- the double caches no item info for the blade: never settled
+    W.ShowItem(IDS.blade)
+    m.advance(10)
+    assertEqual(calls, 1 + RETRIES, "the retries spent")
+    W.Refresh()
+    -- red under: "Item info is still loading" kept until the count or the verdict memo moves
+    assertEqual(calls, 2 + RETRIES, "a window repaint works an unsettled breakdown out again")
+    m.advance(10)
+    assertEqual(calls, 2 + RETRIES, "and starts no timer of its own")
+    W.ShowItem(IDS.leather)
+    local away = calls
+    W.ShowItem(IDS.blade)
+    assertEqual(calls, away + 1)
+    m.advance(NS.Constants.ITEM_SEARCH.VERDICT.RETRY + 0.01)
+    -- red under: no retries for an item that spent them once
+    assertEqual(calls, away + 2, "back on the blade: its retries again")
     IVD.Breakdown = real
 end, FOREVER_ONLY)
