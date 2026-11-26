@@ -146,9 +146,10 @@ files["modules/WindowRows.lua"] = {
 }
 
 -- modules/ItemSearchTip.lua's verdict badge draws its text on a font object of its own (R5-DW-02),
--- so a 12.0.7 client draws no shadow under the dark ink: the same constructor.
+-- so a 12.0.7 client draws no shadow under the dark ink: the same constructor. Its crafting column
+-- reads GameTooltipText's size for its width (R5-REV).
 files["modules/ItemSearchTip.lua"] = {
-  read_globals = { "CreateFont" },
+  read_globals = { "CreateFont", "GameTooltipText" },
 }
 
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;

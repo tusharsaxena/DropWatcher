@@ -511,8 +511,9 @@ C.ITEM_SEARCH = {
     MARK_SIZE   = 14,
     -- The tooltip's Crafting rows as a table (R5-DW-10): the profession in a column of its own at the
     -- right, as wide as the longest profession name shown at CHAR units a character (a fixed estimate:
-    -- the post call never measures text), GAP more between it and the skill levels.
-    CRAFT_COL   = { CHAR = 7, GAP = 10 },
+    -- the post call never measures text) for tooltip text of BASE points, scaled by the size the
+    -- column's font (GameTooltipText) has now (R5-REV), GAP more between it and the skill levels.
+    CRAFT_COL   = { CHAR = 7, BASE = 12, GAP = 10 },
     -- The verdict badge (round 4 R4-DW-07; one rounded pill since R5-DW-02), the tooltip's and the
     -- verdict panel's: HEIGHT tall with RADIUS corners, PAD inside either end, GAP from the label; the
     -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's

@@ -5159,8 +5159,10 @@ row names its profession, including when all rows share one. The professions lin
 and the skill levels line up with each other, whatever the profession names' lengths. Untick Show
 recipe skill levels → the professions stay in their column. Keep the pointer still for several
 seconds and move between bag slots → no flicker, no profession left behind on an item with no
-Crafting rows. Fail: a profession missing, glued to the skill levels (`95 · Alchemy`), overlapping
-them, or ragged from row to row. Result:
+Crafting rows. With a larger tooltip font (an addon or a skin that enlarges the tooltip's text), hover
+an item with a Leatherworking or Blacksmithing recipe → the name is whole (R5-REV). Fail: a profession
+missing, glued to the skill levels (`95 · Alchemy`), overlapping them, cut short (`Leatherwor...`), or
+ragged from row to row. Result:
 
 **ITEM-SEARCH-60. The badge: one smooth pill that never covers the label (R5-DW-01, R5-DW-02).**
 After a full client restart, hover Peacebloom → `Drop Watcher`, then a gap, then one pill: the lock

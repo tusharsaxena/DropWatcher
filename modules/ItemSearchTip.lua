@@ -80,7 +80,8 @@ local _, NS = ...
 --                     the profession in a column of its own: a font string of the tooltip's own,
 --                     right-justified, hung from the right end of the row's right text, whose
 --                     blank room (IST.Blank) is as wide as the longest profession shown at
---                     C.ITEM_SEARCH.CRAFT_COL.CHAR a character, kept like the badge. With "Only professions
+--                     IST.CraftChar a character (C.ITEM_SEARCH.CRAFT_COL.CHAR, scaled by the
+--                     tooltip text's size), kept like the badge. With "Only professions
 --                     you know" on (§4) the other professions' recipes are left out and counted on
 --                     one dim line, "+N in professions you don't know", after "and N more" (the
 --                     heading and that line alone when every recipe is filtered);
@@ -144,7 +145,7 @@ local INDENT = "  "
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
 local rules = setmetatable({}, { __mode = "k" })     -- tooltip -> its separator { tex, edgeL, edgeR, line, ... }
-local badges = setmetatable({}, { __mode = "k" })    -- tooltip -> its verdict badge { boxL, boxR, textL, textR, line, ... }
+local badges = setmetatable({}, { __mode = "k" })    -- tooltip -> its verdict badge { icon, text, piece, regions, line, ... }
 local columns = setmetatable({}, { __mode = "k" })   -- tooltip -> its crafting rows' profession column { list, line, ... }
 local installed = false
 local tipMe = {}   -- the hover's ranking context, refilled by IS.Me on each post call (never kept)
@@ -620,16 +621,31 @@ local function questLines(_, r, o, out, me)
     more(out, rest)
 end
 
--- The profession column's width for the first `n` crafting rows (R5-DW-10): GAP and CHAR units per
+--- The units a character of a profession name is reckoned at in the crafting rows' column (R5-DW-10):
+--- C.ITEM_SEARCH.CRAFT_COL.CHAR for tooltip text of BASE points, scaled by the size the column's font
+--- (GameTooltipText) has now (R5-REV), so a player's larger tooltip font widens the column rather
+--- than cutting "Leatherworking" short. Reads the font object, never a tooltip's text or geometry;
+--- CHAR when there is no font object or no plain size.
+--- @return number
+function IST.CraftChar()
+    local col = C.ITEM_SEARCH.CRAFT_COL
+    local font = GameTooltipText
+    if type(font) ~= "table" or type(font.GetFont) ~= "function" then return col.CHAR end
+    local _, size = font:GetFont()
+    if Compat.IsSecret(size) or type(size) ~= "number" or size <= 0 then return col.CHAR end
+    return math.ceil(col.CHAR * size / col.BASE)
+end
+
+-- The profession column's width for the first `n` crafting rows (R5-DW-10): GAP and `char` units per
 -- character of the longest profession name, a fixed estimate (the post call never measures text).
-local function columnWidth(rows, n)
+local function columnWidth(rows, n, char)
     local longest = 0
     for i = 1, n do
         local name = professionName(rows[i].skillLine)
         if name and #name > longest then longest = #name end
     end
     local col = C.ITEM_SEARCH.CRAFT_COL
-    return col.GAP + col.CHAR * longest
+    return col.GAP + (char or col.CHAR) * longest
 end
 
 -- A crafting row's right text (R5-DW-10): the skill parts when shown, then a transparent escape as
@@ -654,7 +670,7 @@ local function craftingLines(_, r, o, out)
     if #r.crafting == 0 and hidden == 0 then return end
     add(out, L["Crafting"], "mutedGold")
     local shown, rest = capped(r.crafting, o.rows)
-    local width = columnWidth(r.crafting, shown)
+    local width = columnWidth(r.crafting, shown, o.craftChar)
     for i = 1, shown do
         local c = r.crafting[i]
         add(out, INDENT .. IST.CraftMark(c) .. " " .. (c.name or L["Recipe %d"]:format(c.spell)),
@@ -795,9 +811,9 @@ end
 
 --- The tooltip block's settings, read now (spec §4.7; every key under itemSearch.tooltip):
 --- `{ enabled, shiftOnly, header, hint, comparison, hideCompleted, craftSkill, badge, reasons, rows,
---- mine, hideOtherFaction, sections, order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec
+--- mine, hideOtherFaction, craftChar, sections, order }` (`mine`: itemSearch.myProfessionsOnly, feedback spec
 --- §4; `hideOtherFaction`: itemSearch.hideOtherFaction, R4-DW-08; `craftSkill`: round 3 §4.2;
---- `badge` and `reasons`: round 3 §4.5).
+--- `badge` and `reasons`: round 3 §4.5; `craftChar`: IST.CraftChar, read now, R5-REV).
 --- @return table
 function IST.Options()
     local shown = IS.ClampRows(setting("rows", IS.TIP_ROWS))
@@ -807,7 +823,7 @@ function IST.Options()
         comparison = setting("comparison", false) == true, hideCompleted = setting("hideCompleted", true) == true,
         craftSkill = setting("craftSkill", true) == true, badge = setting("badge", true) == true,
         reasons = setting("reasons", true) == true, rows = shown, mine = IS.MyProfessionsOnly(),
-        hideOtherFaction = IS.HideOtherFaction(),
+        hideOtherFaction = IS.HideOtherFaction(), craftChar = IST.CraftChar(),
         sections = sectionsOf(setting("sections")), order = orderOf(setting("order")),
     }
 end

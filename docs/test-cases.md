@@ -1008,7 +1008,7 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (32)
+### test_item_search_tip.lua (33)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
@@ -1042,6 +1042,7 @@ Total.
 - item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: crafting rows are a table: glyph and name left, skill levels and profession right in fixed columns (R5-DW-09, R5-DW-10) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: a larger tooltip font widens the crafting profession column instead of cutting the name short (R5-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
 ### test_item_search_window.lua (44)
 
@@ -3595,5 +3596,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 145 |
+| Skipped | 146 |
 | **Total** | **2855** |

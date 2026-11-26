@@ -909,3 +909,33 @@ test("item search tip: crafting rows are a table: glyph and name left, skill lev
         if fs.__justify == "RIGHT" then assertFalse(fs:IsShown(), "no column left up") end
     end
 end, FOREVER_ONLY)
+
+test("item search tip: a larger tooltip font widens the crafting profession column instead of cutting the name short (R5-REV)", function()
+    -- the column's font is GameTooltipText; a player or an addon that sets it to 18 points
+    local NS, m, tdp = enabled({ setup = function(mm)
+        skills(mm, { [197] = 50, [129] = 1 })
+        mm.GameTooltipText = { GetFont = function() return "Fonts\\FRIZQT__.TTF", 18, "" end }
+    end })
+    local IS, IST, C = NS.ItemSearch, NS.ItemSearchTip, NS.Constants
+    local col = C.ITEM_SEARCH.CRAFT_COL
+    local p = tipSettings(NS)
+    p.header, p.rows = false, 20
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, LINEN)
+    local b = block(tdp, tip)
+    local c = find(b, "Crafting")
+    local rows = IS.Ranked(IS.Get(LINEN), IS.Me(), IS.MyProfessionsOnly()).crafting
+    local longest = 0
+    for _, r in ipairs(rows) do longest = math.max(longest, #(IST.ProfessionName(r.skillLine) or "")) end
+    local char = math.ceil(col.CHAR * 18 / col.BASE)
+    -- red under: CHAR units a character whatever the font's size, so "Leatherworking" at 18 points
+    -- runs past its column and the client cuts it to "Leatherwor..."
+    assertTrue(char > col.CHAR, "18 points is wider than the base")
+    local fs = columnOn(tip, m["GameTooltipTextRight" .. (c + 2)])
+    assertTrue(fs ~= nil, "a column on the first row")
+    assertEqual(fs:GetWidth(), char * longest, "the column scaled to the font's size")
+    assertEqual(IST.CraftChar(), char)
+    -- no font object (or no size): the base estimate
+    m.GameTooltipText = nil
+    assertEqual(IST.CraftChar(), col.CHAR)
+end, FOREVER_ONLY)
