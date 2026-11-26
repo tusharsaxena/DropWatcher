@@ -301,19 +301,23 @@ end
 
 -- ── the verdict badge (round 3 spec §4.5, item 14c) ───────────────────────────────────────────
 
--- Each verdict's icon and tone: Keep a padlock in `good`, Hold an hourglass in `yellow`, Sell coins in
--- `warn` (amber: gold is the label's tone on the same line), Toss a bin in `bad`.
+-- Each look's icon and tone (NS.ItemSearchAuction.Look's key): Keep a padlock in `good`, Hold an
+-- hourglass in `yellow`, a Sell's Vendor coins in `warn` (amber: gold is the label's tone on the same
+-- line) and its Auction LibKa0s' `transfer` (a trade's arrows) in `auction` (R5-DW-15: a gavel was
+-- asked for; `ph:gavel` is in the library's catalog but not in this addon's vendored icon set, one
+-- declaration and re-vendor away), Toss a bin in `bad`.
 local VERDICT_LOOK = {
     keep = { icon = "ph:lock", tone = "good" },
     hold = { icon = "ph:hourglass", tone = "yellow" },
-    sell = { icon = "ph:coins", tone = "warn" },
+    vendor = { icon = "ph:coins", tone = "warn" },
+    auction = { icon = "transfer", tone = "auction" },
     toss = { icon = "ph:trash", tone = "bad" },
 }
 
-local function verdictWord(verdict)
-    if verdict == "keep" then return L["Keep"] end
-    if verdict == "sell" then return L["Sell"] end
-    if verdict == "toss" then return L["Toss"] end
+local function verdictWord(look)
+    if look == "keep" then return L["Keep"] end
+    if look == "vendor" or look == "auction" then return NS.ItemSearchAuction.Word(look) end
+    if look == "toss" then return L["Toss"] end
     return L["Hold"]
 end
 
@@ -324,9 +328,10 @@ end
 -- anchors, never measured).
 local function badgeText(v)
     local B = C.ITEM_SEARCH.BADGE
-    local look = VERDICT_LOOK[v.verdict] or VERDICT_LOOK.hold
+    local key = NS.ItemSearchAuction.Look(v)
+    local look = VERDICT_LOOK[key] or VERDICT_LOOK.hold
     local r, g, b = rgb(look.tone)
-    local word, score = verdictWord(v.verdict), tostring(v.score)
+    local word, score = verdictWord(key), tostring(v.score)
     local text = word .. " " .. score
     local width = B.GAP + 2 * B.PAD + B.ICON + B.ICON_GAP + math.ceil(#text * B.FONT * B.EM)
     return { word = word, score = score, text = text, tone = look.tone, icon = NS.Icon(look.icon),
@@ -374,7 +379,7 @@ end
 --- @param v table
 --- @return table
 function IST.Badge(v)
-    local byScore = branch(badgeMemo, v.verdict or "hold")
+    local byScore = branch(badgeMemo, NS.ItemSearchAuction.Look(v))
     local badge = byScore[v.score]
     if not badge then
         badge = badgeText(v)

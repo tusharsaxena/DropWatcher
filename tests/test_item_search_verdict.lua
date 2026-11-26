@@ -345,7 +345,8 @@ test("verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on 
         return ("%02x%02x%02x"):format(math.floor(t.r * 255 + 0.5), math.floor(t.g * 255 + 0.5), math.floor(t.b * 255 + 0.5))
     end
     for verdict, look in pairs({ keep = { "lock", "good", "Keep" }, hold = { "hourglass", "yellow", "Hold" },
-        sell = { "coins", "warn", "Sell" }, toss = { "trash", "bad", "Toss" } }) do
+        sell = { "coins", "warn", "Vendor" }, toss = { "trash", "bad", "Toss" } }) do
+        -- a Sell with no sub-answer is a Vendor (R5-DW-15; tests/test_item_search_auction.lua: Auction)
         local badge = IST.Badge({ verdict = verdict, score = 42, tier = "medium", reasons = {} })
         assertEqual(badge.tone, look[2], verdict .. "'s tone")
         assertTrue(badge.icon:find("phosphor\\" .. look[1], 1, true) ~= nil, verdict .. "'s icon")
@@ -593,7 +594,7 @@ end)
 test("verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier", function()
     local _, IS = addon()
     local f = facts()
-    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Sell: a score under 20, and a vendor buys it")
+    assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 7 })).from, "Vendor: a score under 20, and a vendor buys it")
     assertEqual(IS.Breakdown(f, ME, item({ sellPrice = 0 })).from, "Toss: a score under 20, and no vendor buys it")
     assertEqual(IS.Breakdown(f, ME, item({ sellPrice = false })).from, "Hold: a score under 20, and the sell price is not known yet")
     local low = IS.Breakdown(facts({ fdb = "loading" }), ME, item({ sellPrice = 0 }))

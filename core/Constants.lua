@@ -188,6 +188,7 @@ C.TONE_TOKEN = {
     good = "dw.upgrade", bad = "dw.notWanted", warn = "dw.urgent", yellow = "dw.sidegrade",
     red = "dw.downgrade", cyan = "dw.offer", offspec = "dw.offSpec", redMuted = "dw.cantUse",
     greenMuted = "dw.statGain", mutedGold = "dw.tipLabel", plain = "dw.plain", muted = "text.muted",
+    auction = "dw.auction",
 }
 
 C.TONE = {}
@@ -543,6 +544,33 @@ C.ITEM_SEARCH = {
         HIGH = 80, MEDIUM = 50,
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,
+    },
+    -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16): the
+    -- price Auctionator last saw (its public API, asked as CALLER) against the vendor's, per unit.
+    -- The net an auction brings is the price less the house's cut, less the deposit, counted as a
+    -- cost (it is lost when the auction does not sell: the cautious reading). The deposit is a
+    -- share of the vendor sell price by the auction's length, at least MIN_DEPOSIT a listing (a full
+    -- stack's listing, so a stacking item pays its share of it a unit).
+    -- WoW Forever lists 2, 8 or 24 hours (Auctionator's own Source_Forever/Constants.lua: Short 2,
+    -- Medium 8, Long 24) at 5%, 20% and 60% of the vendor price: the Classic faction house's rule
+    -- (Wowhead's Classic auction house guide; a WoW Forever report gives the same three and the
+    -- 1 silver least). ASSUMED for WoW Forever, never measured: the client's GetAuctionDeposit needs
+    -- an item in the sell slot, so a hover cannot ask it. Retail lists 12, 24 or 48 hours at 15%,
+    -- 30% and 60% (warcraft.wiki.gg's Auction House page, with the 1 silver least); Retail has no
+    -- 8 hours, so its default is 12. Item Search is WoW Forever's alone today (C.FEATURE.itemSearch),
+    -- so Retail's row waits for the day it is not. The cut (5%, the house's on both clients) and
+    -- the margin are settings (`itemSearch.auction.*`), each within its MAX. BOUND: the bind types
+    -- an auction never takes (1 bind on pickup, so already yours; 4 a quest item; 7 to 9 bound to
+    -- the account or Warband).
+    AUCTION = {
+        CALLER = "DropWatcher",
+        DURATIONS = FOREVER and { 2, 8, 24 } or { 12, 24, 48 },
+        DEPOSIT = FOREVER and { [2] = 0.05, [8] = 0.20, [24] = 0.60 } or { [12] = 0.15, [24] = 0.30, [48] = 0.60 },
+        DURATION = FOREVER and 8 or 12,
+        MIN_DEPOSIT = 100,
+        CUT = 5, CUT_MAX = 50,
+        MARGIN = 10, MARGIN_MAX = 200,
+        BOUND = { [1] = true, [4] = true, [7] = true, [8] = true, [9] = true },
     },
     -- The vendor prices Drop Watcher records (modules/ItemSearchPrices.lua, round 3 spec §4.4): at
     -- most PRICE_CAP entries over every vendor (past it the oldest tenth goes), and MERCHANT_UPDATE

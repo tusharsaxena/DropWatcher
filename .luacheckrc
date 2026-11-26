@@ -109,7 +109,7 @@ files["core/CompatSearch.lua"] = {
   read_globals = { "UnitRace", "UnitFactionGroup", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
     "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString", "C_CurrencyInfo",
     "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
-    "GetCurrentBindingSet",
+    "GetCurrentBindingSet", "Auctionator",
     -- Compat.QuestReady's third rung, read only where the client has them (round 3 spec §4.2)
     "GetQuestLogIndexByID", "GetQuestLogTitle",
     -- the merchant window's reads, for the prices Drop Watcher records (round 3 spec §4.4)

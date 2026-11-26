@@ -69,6 +69,7 @@ local IVD = NS.ItemSearchVerdict
 local C = NS.Constants
 local L = NS.L
 
+local IAU = NS.ItemSearchAuction
 local V = C.ITEM_SEARCH.VERDICT
 local floor, min, abs = math.floor, math.min, math.abs
 
@@ -422,7 +423,6 @@ local function fromText(why)
     if why == "keep" then return L["Keep: a score of %d or more"]:format(V.KEEP) end
     if why == "hold" then return L["Hold: a score of %d to %d"]:format(V.HOLD, V.KEEP - 1) end
     if why == "price" then return L["Hold: a score under %d, and the sell price is not known yet"]:format(V.HOLD) end
-    if why == "sell" then return L["Sell: a score under %d, and a vendor buys it"]:format(V.HOLD) end
     if why == "toss" then return L["Toss: a score under %d, and no vendor buys it"]:format(V.HOLD) end
     return L["Hold: a score under %d, but too little is known to toss it"]:format(V.HOLD)
 end
@@ -463,12 +463,12 @@ local function largestNegative(acc, shown, out)
     end
 end
 
-local function topReasons(acc, verdict, sellPrice, buf)
+local function topReasons(acc, verdict, sellPrice, buf, via, net)
     if not buf and #acc == 0 and verdict ~= "sell" and verdict ~= "toss" then return NO_REASONS end
     local out = buf or {}
     for i = #out, 1, -1 do out[i] = nil end
     if verdict == "sell" then
-        out[1] = L["Sells for %s"]:format(NS.Compat.CoinText(sellPrice) or tostring(sellPrice))
+        out[1] = IAU.Reason(via, sellPrice, net)
     elseif verdict == "toss" then
         out[1] = L["No use found, and no vendor buys it"]
     end
@@ -480,7 +480,8 @@ end
 
 -- The verdict worked out once for IS.Verdict and IS.Breakdown alike: the breakdown's lines go onto
 -- `bd` when given. Answers the verdict, why, the score, the confidence, its tier, the fix, the sell
--- price and the parts' notes.
+-- price and the parts' notes, then a Sell's Auction or Vendor answer (`via`, NS.ItemSearchAuction's
+-- IAU.Via on `item.auctionRule`), the net and the auction price it was judged on (R5-DW-14).
 local function judge(facts, me, item, bd)
     local confidence, tier, hint = IS.Confidence(facts, me, item)
     local acc, score = scratchReasons(bd), V.COLLECT
@@ -492,11 +493,16 @@ local function judge(facts, me, item, bd)
     local sellPrice = num(item.sellPrice)
     local verdict, why = decide(score, tier, sellPrice, item.equippable == true and item.gear == nil)
     acc.bd = nil
-    return verdict, why, score, confidence, tier, hint, sellPrice, acc
+    local via, net, price
+    if verdict == "sell" then via, net, price = IAU.Via(item, item.auctionRule) end
+    return verdict, why, score, confidence, tier, hint, sellPrice, acc, via, net, price
 end
 
 --- The item's verdict for the player now (see the header): `{ verdict, score, confidence, tier,
---- reasons, hint }`, a new table (`reasons` a shared empty list when there is none). Pure: every
+--- reasons, hint, sellVia, auctionNet, auctionPrice }`, a new table (`reasons` a shared empty list
+--- when there is none). A Sell keeps the verdict "sell" and says how in `sellVia`, "auction" or
+--- "vendor", with the net and the auction price it was judged on (nil when there was no
+--- comparison); the three are nil for every other verdict (R5-DW-15). Pure: every
 --- input is an argument. `into`, when given, is filled and answered instead, its reasons written
 --- onto its own `into.reasons` list (the memo's scratch: see IVD.For).
 --- @param facts table NS.ItemSearch.Get's answer
@@ -506,18 +512,21 @@ end
 --- @return table
 function IS.Verdict(facts, me, item, into)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
-    local verdict, _, score, confidence, tier, hint, sellPrice, acc = judge(facts, me, item)
+    local verdict, _, score, confidence, tier, hint, sellPrice, acc, via, net, price = judge(facts, me, item)
     if not into then
         return { verdict = verdict, score = score, confidence = confidence, tier = tier,
-            reasons = topReasons(acc, verdict, sellPrice), hint = hint }
+            reasons = topReasons(acc, verdict, sellPrice, nil, via, net), hint = hint,
+            sellVia = via, auctionNet = net, auctionPrice = price }
     end
     into.verdict, into.score, into.confidence, into.tier, into.hint = verdict, score, confidence, tier, hint
-    into.reasons = topReasons(acc, verdict, sellPrice, into.reasons or {})
+    into.reasons = topReasons(acc, verdict, sellPrice, into.reasons or {}, via, net)
+    into.sellVia, into.auctionNet, into.auctionPrice = via, net, price
     return into
 end
 
 --- The score's breakdown (see the header; round 4 addendum A1, R4-DW-11): `{ verdict, score, lines,
---- from, hint }`, `lines` each `{ kind, points, text }` in the order the score adds them (`kind`
+--- from, hint, sellVia, sellPrice, auctionPrice, auctionNet }` (the last four a Sell's, R5-DW-15:
+--- the verdict panel shows both prices), `lines` each `{ kind, points, text }` in the order the score adds them (`kind`
 --- "quest", "craft", "gear", "damper", "collect", or a bound: "cap", "clamp", "floor"), adding up to
 --- `score`; `from` the line the verdict word comes from; `hint` the confidence's fix below High, or
 --- nil. No confidence or tier. The same verdict and score as IS.Verdict's for the same inputs. A new
@@ -529,20 +538,29 @@ end
 function IS.Breakdown(facts, me, item)
     facts, me, item = facts or EMPTY, me or EMPTY, item or EMPTY
     local lines = {}
-    local verdict, why, score, _, _, hint = judge(facts, me, item, lines)
-    return { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
+    local verdict, why, score, _, _, hint, sellPrice, _, via, net, price = judge(facts, me, item, lines)
+    local b = { verdict = verdict, score = score, lines = lines, from = fromText(why), hint = hint }
+    if verdict == "sell" then
+        local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
+        b.from = IAU.From(via, net, V.HOLD, margin)
+        b.sellVia, b.sellPrice, b.auctionPrice, b.auctionNet = via, sellPrice, price, net
+        -- whether a price was looked for: the comparison on and the item auctionable
+        b.auctionOn = type(item.auctionRule) == "table" and item.auctionRule.on == true and IAU.Auctionable(item.bindType)
+    end
+    return b
 end
 
 -- ── how the score works, explained (R5-DW-07) ───────────────────────────────────────────────
 
 --- How the score works, for the verdict panel's (?) icon (R5-DW-07): the title, then one line per
 --- rule, every number read from C.ITEM_SEARCH.VERDICT (never copied by hand), so the help moves with
---- the scorer. A new list each call (a hover's, never the tooltip block's).
+--- the scorer, and the Auction or Vendor rule from the live settings (IAU.HelpLines, R5-DW-15). A
+--- new list each call (a hover's, never the tooltip block's).
 --- @return table lines
 function IVD.ScoringHelp()
     local c = V.CRAFT
     local cheap = NS.Compat.CoinText(V.REBUY_PRICE) or tostring(V.REBUY_PRICE)
-    return {
+    local out = {
         L["How the score works"],
         L["The score, 0 to 100, is what the item is still good for to this character."],
         L["Adds:"],
@@ -561,9 +579,10 @@ function IVD.ScoringHelp()
             V.QUEST_FLOOR),
         L["The verdict:"],
         L["  Keep: %d or more. Hold: %d to %d."]:format(V.KEEP, V.HOLD, V.KEEP - 1),
-        L["  Under %d: Sell when a vendor buys it, else Toss."]:format(V.HOLD),
-        L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM),
     }
+    for _, line in ipairs(IAU.HelpLines(V.HOLD)) do out[#out + 1] = line end
+    out[#out + 1] = L["Confidence is how much of what the score needs is known. Under %d%% a hint says what is missing; under %d%% it never says Toss, and holds instead."]:format(V.HIGH, V.MEDIUM)
+    return out
 end
 
 -- ── the edge: the client's facts and the memo ───────────────────────────────────────────────
@@ -634,10 +653,16 @@ function IVD.ClientFacts(itemID, facts, into)
     if not info then
         item.quality, item.classID, item.subclassID = num(row.quality), num(row.classID), num(row.subclassID)
         item.sellPrice, item.bindType, item.equippable, item.gear, item.newCollect = nil, nil, nil, nil, nil
+        item.stackCount, item.auctionPrice, item.auctionRule = nil, nil, nil
         return item, false
     end
     item.quality, item.classID, item.subclassID = info.quality, info.classID, info.subclassID
-    item.sellPrice, item.bindType = info.sellPrice, info.bindType
+    item.sellPrice, item.bindType, item.stackCount = info.sellPrice, info.bindType, info.stackCount
+    -- A Sell's Auction or Vendor answer (R5-DW-13): the live settings, and Auctionator's price only
+    -- while the comparison is on (NS.Compat.AuctionPrice: nil without Auctionator).
+    local rule = IAU.Rule()
+    item.auctionRule = rule
+    item.auctionPrice = rule.on and NS.Compat.AuctionPrice(info.link, itemID) or nil
     item.equippable = C.SLOT_PLAN[info.equipLoc or ""] ~= nil
     item.gear, item.newCollect = judgeOf(info.link)
     return item, true
@@ -675,7 +700,8 @@ local answerScratch = { reasons = {} }
 
 local function sameAnswer(a, b)
     if a.verdict ~= b.verdict or a.score ~= b.score or a.confidence ~= b.confidence or a.tier ~= b.tier
-        or a.hint ~= b.hint or #a.reasons ~= #b.reasons then
+        or a.hint ~= b.hint or #a.reasons ~= #b.reasons or a.sellVia ~= b.sellVia
+        or a.auctionNet ~= b.auctionNet or a.auctionPrice ~= b.auctionPrice then
         return false
     end
     for i = 1, #a.reasons do
@@ -691,7 +717,7 @@ local function copyAnswer(a)
         for i, text in ipairs(a.reasons) do reasons[i] = text end
     end
     return { verdict = a.verdict, score = a.score, confidence = a.confidence, tier = a.tier, reasons = reasons,
-        hint = a.hint }
+        hint = a.hint, sellVia = a.sellVia, auctionNet = a.auctionNet, auctionPrice = a.auctionPrice }
 end
 
 local function stale(e)
@@ -727,7 +753,10 @@ end
 -- WoW Forever's alone; each event is shared with its other rows through core/DropWatcher.lua's
 -- dispatcher.
 for _, event in ipairs({ "QUEST_LOG_UPDATE", "QUEST_TURNED_IN", "SKILL_LINES_CHANGED", "TRADE_SKILL_SHOW",
-    "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED", "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED" }) do
+    "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED", "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED",
+    -- Auctionator's prices move while the auction house is open (its scans): read again once it shuts
+    -- (R5-DW-13).
+    "AUCTION_HOUSE_CLOSED" }) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnItemSearchVerdictEvent", clients = { "forever" } }
 end
 

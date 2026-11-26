@@ -9,7 +9,7 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
-    "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
+    "ADDON_RESTRICTION_STATE_CHANGED", "AUCTION_HOUSE_CLOSED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
     "CHAT_MSG_LOOT", "DISPLAY_SIZE_CHANGED", "EJ_LOOT_DATA_RECIEVED", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
     "CANCEL_LOOT_ROLL", "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_CLEAR_HISTORY",
     "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER", "LOOT_OPENED", "LOOT_READY",
@@ -37,7 +37,9 @@ local OTHER_CLIENT = {
                 -- Item Search round 3 (spec §4.5): the tooltip badge's verdicts, worked out again.
                 QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true,
                 -- Item Search round 4 (addendum A1, R4-DW-11): the window's verdict panel, on a bank change.
-                PLAYERBANKSLOTS_CHANGED = true },
+                PLAYERBANKSLOTS_CHANGED = true,
+                -- R5-DW-13: the badge's Auction or Vendor answer, read again once the auction house shuts.
+                AUCTION_HOUSE_CLOSED = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"

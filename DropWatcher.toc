@@ -5,7 +5,7 @@
 ## Version: 1.1.0
 ## IconTexture: Interface\AddOns\DropWatcher\media\logos\dropwatcher.logo.128.tga
 ## SavedVariables: DropWatcherDB, DropWatcherPerfDB
-## OptionalDeps: Pawn, CanIMogIt, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0, EllesmereUI, ForeverDB
+## OptionalDeps: Pawn, CanIMogIt, Auctionator, Ace3, LibStub, CallbackHandler-1.0, LibSharedMedia-3.0, LibDataBroker-1.1, LibDBIcon-1.0, LibCustomGlow-1.0, EllesmereUI, ForeverDB
 ## DefaultState: enabled
 ## Category-enUS: Group
 ## X-License: MIT
@@ -535,6 +535,10 @@ modules\ItemSearchLearn.lua
 # MERCHANT_SHOW, MERCHANT_UPDATE and MERCHANT_CLOSED are WoW Forever's, and it appends a
 # NS.STAND_DOWN step. NS.Compat and NS.Setting are read at call time.
 modules\ItemSearchPrices.lua
+# LOAD-BEARING: takes NS.Constants and NS.L at load and publishes NS.ItemSearchAuction, a Sell
+# verdict's Auction or Vendor answer (R5-DW-13..16); modules\ItemSearchVerdict.lua (below) reads it.
+# NS.Setting and NS.Compat (its Auctionator seam, core\CompatSearch.lua) are read at call time.
+modules\ItemSearchAuction.lua
 # LOAD-BEARING: takes NS.ItemSearch (modules\ItemSearch.lua, above), NS.Constants and NS.L at load and
 # publishes NS.ItemSearchVerdict and IS.Verdict, the item tooltip's Keep / Hold / Sell / Toss badge; its
 # rows on QUEST_LOG_UPDATE, QUEST_TURNED_IN and seven shared events are WoW Forever's. NS.Compat,

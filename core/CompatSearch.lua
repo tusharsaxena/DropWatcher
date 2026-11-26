@@ -255,8 +255,8 @@ end
 function Compat.ItemInfoByID(itemID)
     local item = C_Item
     if not (plainId(itemID) and type(item) == "table" and type(item.GetItemInfo) == "function") then return nil end
-    local name, link, quality, itemLevel, reqLevel, _, _, _, equipLoc, icon, sellPrice, classID, subclassID,
-        bindType = item.GetItemInfo(itemID)
+    local name, link, quality, itemLevel, reqLevel, _, _, stackCount, equipLoc, icon, sellPrice, classID,
+        subclassID, bindType = item.GetItemInfo(itemID)
     name = plainString(name)
     if not name then return nil end
     return {
@@ -264,7 +264,7 @@ function Compat.ItemInfoByID(itemID)
         itemLevel = plainNumber(itemLevel), requiredLevel = plainNumber(reqLevel),
         icon = plainNumber(icon) or plainString(icon), classID = plainNumber(classID),
         subclassID = plainNumber(subclassID), equipLoc = plainString(equipLoc), sellPrice = plainNumber(sellPrice),
-        bindType = plainNumber(bindType),
+        bindType = plainNumber(bindType), stackCount = plainNumber(stackCount),
     }
 end
 
@@ -658,4 +658,46 @@ function Compat.MerchantItems()
         end
     end
     return out
+end
+
+-- ── Auctionator's prices (R5-DW-13) ─────────────────────────────────────────────────────────
+
+-- Auctionator's public API table (Auctionator.API.v1, its Source/API/v1/), or nil while the addon
+-- is not loaded. Optional (`## OptionalDeps`): nothing else of Auctionator is read.
+local function auctionatorAPI()
+    local a = Auctionator
+    if Compat.IsSecret(a) or type(a) ~= "table" then return nil end
+    local api = type(a.API) == "table" and a.API.v1 or nil
+    return type(api) == "table" and api or nil
+end
+
+--- Whether Auctionator is loaded with the price reads Drop Watcher asks (its public API v1's
+--- GetAuctionPriceByItemLink or GetAuctionPriceByItemID).
+--- @return boolean
+function Compat.AuctionatorLoaded()
+    local api = auctionatorAPI()
+    return api ~= nil and (type(api.GetAuctionPriceByItemLink) == "function"
+        or type(api.GetAuctionPriceByItemID) == "function")
+end
+
+-- A positive plain price from one of the API's reads under pcall, or nil.
+local function askPrice(fn, key)
+    if type(fn) ~= "function" or key == nil then return nil end
+    local ok, v = pcall(fn, NS.Constants.ITEM_SEARCH.AUCTION.CALLER, key)
+    v = ok and plainNumber(v) or nil
+    return v and v > 0 and v or nil
+end
+
+--- The price a unit of the item last sold for on the auction house as Auctionator scanned it, in
+--- copper: Auctionator.API.v1.GetAuctionPriceByItemLink on `link` (it tells item levels and suffixes
+--- apart), else GetAuctionPriceByItemID on `itemID`. Nil without Auctionator, before its database
+--- loads, with no scan of the item, or on an error (both reads run under pcall, as Drop Watcher).
+--- @param link string|nil
+--- @param itemID number|nil
+--- @return number|nil
+function Compat.AuctionPrice(link, itemID)
+    local api = auctionatorAPI()
+    if not api then return nil end
+    return askPrice(api.GetAuctionPriceByItemLink, plainString(link))
+        or askPrice(api.GetAuctionPriceByItemID, plainId(itemID))
 end
