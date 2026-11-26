@@ -131,6 +131,21 @@ test("item search tip: separator, label line, Drops from and Sold by, in order; 
     assertTrue(find(b, "open in Item Search") == nil)
 end, FOREVER_ONLY)
 
+test("item search tip: an unknown drop rate reads a ? on the right, never \"rate unknown\" (R6-DW-04)", function()
+    local NS, _, tdp = enabled()
+    tipSettings(NS).rows = 5
+    local tip = tdp.tooltip("GameTooltip")
+    tdp.show(tip, IDS.blade)
+    local b = block(tdp, tip)
+    local kobold
+    for _, line in ipairs(b) do
+        if line:find("^  Fixture Kobold") then kobold = kobold or line end
+        -- red under: the owner's "rate unknown which gets cut off (same in tooltip)"
+        assertTrue(line:find("rate unknown", 1, true) == nil, "no rate unknown: " .. line)
+    end
+    assertTrue(kobold ~= nil and kobold:find(" | %?$") ~= nil, "the Kobold's unknown rate as a ?: " .. tostring(kobold))
+end, FOREVER_ONLY)
+
 test("item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08)", function()
     local NS, _, tdp = enabled({ setup = function(mm) mm.UnitFactionGroup = function() return "Horde", "Horde" end end })
     local tip = tdp.tooltip("GameTooltip")

@@ -5258,6 +5258,15 @@ apart from the no-vendor-price Auction rule (ITEM-SEARCH-72). A long entry wraps
 from the tooltip's left edge. Fail: a header in white, an entry with no bullet, or two sections with
 no blank line between them. Result:
 
+**ITEM-SEARCH-70. An unknown rate is a ? (R6-DW-04).** Open the Item Search window on an item some
+of whose sources ForeverDB has no rate for (the owner's Ruined Leather Scraps, or any item whose
+Drops from rows read `rate un...` before) → the Chance column reads a dim `?` with no bar for those
+rows, never `rate unknown` cut short; hover such a row → its tooltip's Chance line reads `rate
+unknown`. The same on the Gathered from and Skinned from tabs. Hover the item (Rows per section
+raised so the row shows) → its Drops from and Skinned from rows read a dim `?` on the right, and a
+Gathered from row ends `· ?`. Known rates read their percent as before. Fail: `rate unknown` or
+`rate un...` anywhere in a column or on a tooltip row's right. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17
