@@ -632,7 +632,7 @@ function ISG.PaintMatch(row, r, i, width, h, selected, m)
     NS.WindowRows.ApplyRowFont(row, m.fontSize, m.font)
     local iconSize = math.max(8, h - 4)
     row.icon:SetSize(iconSize, iconSize)
-    row.icon:SetTexture(r.icon or Compat.ItemIcon(r.id) or NS.Icon("help"))
+    row.icon:SetTexture(r.icon or Compat.ItemIcon(r.id) or NS.Icon("gi:help"))
     local idW = 56
     local name, id = row.cells.name.text, row.cells.id.text
     name:ClearAllPoints()

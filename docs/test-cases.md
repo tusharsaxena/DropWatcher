@@ -1008,13 +1008,14 @@ Total.
 - item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search: a merged object's window row unions its parts' spots and counts its kinds
 
-### test_item_search_tip.lua (33)
+### test_item_search_tip.lua (34)
 
 - item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: on Retail nothing is registered and nothing is written
 - item search tip: before ForeverDB's load there is no block at all, and a hover never loads it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: without ForeverDB (or a failed load) no block, not even Crafting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
+- item search tip: an unknown drop rate reads a ? on the right, never "rate unknown" (R6-DW-04) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
@@ -1169,7 +1170,7 @@ Total.
 - item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
 - item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
-### test_item_search_sources.lua (21)
+### test_item_search_sources.lua (22)
 
 - item search sources: a test or dev name is caught, and a word that only contains "test" is not
 - item search sources: a quest's giver skips a test-named one for the next
@@ -1184,6 +1185,7 @@ Total.
 - item search sources: Gathered from ranks a profession you have at your skill, then above it, then one you lack
 - item search sources: the Gathered from tab sits after Drops from with its columns and filters
 - item search sources: Gathered from's rows: the node, its profession, its skill against yours, zone and chance
+- item search sources: an unknown rate's Chance cell is a muted ?, its hover says the rate is unknown (R6-DW-04)
 - item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones
 - item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone
 - item search sources: the tooltip's crafting row names its profession in that profession's tone
@@ -1211,7 +1213,7 @@ Total.
 - item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 - item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
 
-### test_item_search_verdict.lua (24)
+### test_item_search_verdict.lua (33)
 
 - verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
 - verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
@@ -1228,31 +1230,60 @@ Total.
 - verdict: the reasons are the top two by points; Sell and Toss name the price first
 - compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)
 - verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)
+- verdict: the scoring help reads in sections: gold headers, bulleted entries, a blank line between (R6-DW-03)
 - verdict: the reasons always carry the largest negative part, so the shown parts explain the score
+- verdict score: the use value picks the word, unclamped; the score is how sure (R6-DW-07)
+- verdict score: the design's worked examples (R6-DW-07)
+- verdict score: each word's evidence, edges 0.5 and clear calls 1 (R6-DW-07)
+- verdict score: the money part for Auction, Vendor and Toss (R6-DW-07, IAU.Money)
+- verdict score: Toss, Auction for no vendor, and a Low hold read their money and data known (R6-DW-07)
+- verdict score: the breakdown's lines add up to the use value; its score is the badge's (R6-DW-07)
+- verdict breakdown: How sure says each evidence part, the data known and the score (R6-DW-08)
 - verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the pill hangs right after Drop Watcher's text, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
+- verdict: on the tooltip the pill hangs on the tooltip's right side, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 - verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)
 - verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed
 - verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
 - verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
+- verdict score: the memo keeps a new answer when the use value moves under the same score (R6-DW-07) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
 
-### test_item_search_panel.lua (13)
+### test_item_search_auction.lua (15)
+
+- auction: the deposit is the vendor price's share by the auction's length, at least 1 silver a full stack
+- auction: Auction when the net beats the vendor by over the margin; else Vendor; bound, off or no price is Vendor
+- auction: the rule reads the settings, bounded; the words and the reason line
+- auction: the seam asks Auctionator's public API by link, then by id, as DropWatcher; nil without it or on an error
+- auction: a Sell keeps its key and says Auction or Vendor, with the prices; the reason names both
+- auction: no vendor price but an auction price: Auction where it was Toss, at any confidence (R6-DW-06)
+- auction: the hover reads Auctionator's price and the settings; the switch, a bind and the house closing move it (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: the badge says Auction under the gavel in its own tone, Vendor under the coins in amber (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: the (?) help explains Auction and Vendor from the live settings (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: the verdict panel shows the vendor's price, Auctionator's and the net, after the word's line (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction settings: four rows under Auction prices, dimmed without Auctionator, the client's lengths, a change re-judges (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: a profile switch, copy or reset makes every kept verdict stale (its auction settings came with it) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction settings: the Auction prices block follows the whole Tooltip block (no subgroup drawn twice) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction settings: the badge row says the badge sits on the tooltip's right side (R5-DW-12) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
+- auction: How sure's money line stays on its word's side of the margin at the edge (R6-REV)
+
+### test_item_search_panel.lua (15)
 
 - verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: + points green, - points red, the word's line in plain words, then How sure (R5-DW-04..06, R6-DW-08) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: the tooltip's pill, the panel's pill and its (?) are one size, within a tooltip line (R6-DW-02) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: the Matches list keeps its 5 rows; the panel takes every other pixel, so a resize moves the panel alone (R6-DW-05) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: while the item's info is still loading it is worked out again on its own, four times at most (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3 (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
+- verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 
 ### test_own_drops.lua (16)
 
@@ -3501,9 +3532,10 @@ Total.
 | test_item_search_key.lua | 4 |
 | test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 14 |
-| test_item_search_sources.lua | 17 |
+| test_item_search_sources.lua | 18 |
 | test_item_search_prices.lua | 6 |
-| test_item_search_verdict.lua | 20 |
+| test_item_search_verdict.lua | 28 |
+| test_item_search_auction.lua | 7 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3597,5 +3629,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 146 |
-| **Total** | **2856** |
+| Skipped | 158 |
+| **Total** | **2872** |

@@ -310,6 +310,24 @@ test("item search sources: Gathered from's rows: the node, its profession, its s
     assertEqual(#C.Build({ gathered = facts.gathered }, {}, {}).gathered, 4)
 end)
 
+test("item search sources: an unknown rate's Chance cell is a muted ?, its hover says the rate is unknown (R6-DW-04)", function()
+    local NS = T.newAddon()
+    local C = NS.ItemSearchCells
+    local drops = C.Drops({ drops = { { kind = "npc", id = 1, name = "Invented Bat", chance = 0.5 },
+        { kind = "npc", id = 2, name = "Invented Snapjaw" } } }, {}, {})
+    local gathered = C.Gathered({ gathered = { { kind = "object", id = 3, name = "Invented Vein", gather = "mining" } } }, {}, {})
+    local skinned = C.Skinned({ skinned = { { id = 4, name = "Invented Boar" } } }, {}, {})
+    for label, row in pairs({ drop = drops[2], gather = gathered[1], skin = skinned[1] }) do
+        -- red under: "rate unknown" in a 48 px column (the owner's "rate un...")
+        assertEqual(row.cells.chance.pct, "?", label .. ": a ? in the column")
+        assertFalse(row.cells.chance.known, label .. ": muted, no bar")
+        local said
+        for _, r in ipairs(row.tip.rows) do if r[1] == "Chance" then said = r[2] end end
+        assertEqual(said, "rate unknown", label .. ": the hover explains the ?")
+    end
+    assertEqual(drops[1].cells.chance.pct, "50%", "a known rate as before")
+end)
+
 -- ── the profession colors (round 4, R4-DW-04) ───────────────────────────────────────────────
 
 -- How far apart two { r, g, b } colors are (RGB distance, 0..sqrt(3)).

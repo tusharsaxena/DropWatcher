@@ -519,18 +519,23 @@ C.ITEM_SEARCH = {
     -- verdict panel's: HEIGHT tall with RADIUS corners, PAD inside either end, GAP from the label; the
     -- icon ICON square and ICON_GAP before the text; the text at FONT points in INK times the fill's
     -- tone; EM the width a character is reckoned at, in FONT units, for the room the tooltip reserves.
-    BADGE       = { HEIGHT = 16, RADIUS = 5, PAD = 6, GAP = 6, ICON = 12, ICON_GAP = 3, FONT = 11, INK = 0.15,
-        EM = 0.62, HELP = 14 },
+    -- LINE is a tooltip line's pitch: GameTooltipText's 12 points (CRAFT_COL.BASE) and the 2 px the
+    -- client leaves between lines. The pill is centered on its line, so at most LINE tall it never
+    -- reaches the line under it (R6-DW-02: at 16 it ran into the reason line). The verdict panel's
+    -- pill and the (?) beside it are HEIGHT too: one size for all three.
+    BADGE       = { HEIGHT = 14, LINE = 14, RADIUS = 4, PAD = 5, GAP = 6, ICON = 10, ICON_GAP = 3, FONT = 10,
+        INK = 0.15, EM = 0.62 },
     -- The Item Search window's verdict panel (modules/ItemSearchVerdictPanel.lua, round 4 addendum
-    -- A1, R4-DW-11): up to LINES breakdown lines before it scrolls, the Matches list's MIN_ROWS rows
-    -- kept above it, GAP between its parts, and a bag, bank or verdict change repainting it at most
-    -- once each THROTTLE seconds; a breakdown whose item info or gear verdict was still loading is
-    -- worked out again VERDICT.RETRY seconds on, RETRIES times at most per item.
-    PANEL       = { LINES = 8, MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
+    -- A1, R4-DW-11): the Matches list above it MIN_ROWS rows tall and the panel every other pixel of
+    -- the column (R6-DW-05: a resize moves the panel alone), GAP between its parts, and a bag, bank
+    -- or verdict change repainting it at most once each THROTTLE seconds; a breakdown whose item info
+    -- or gear verdict was still loading is worked out again VERDICT.RETRY seconds on, RETRIES times at
+    -- most per item.
+    PANEL       = { MIN_ROWS = 5, GAP = 4, THROTTLE = 0.5, RETRIES = 4 },
     -- The tooltip's Keep / Hold / Sell / Toss badge (modules/ItemSearchVerdict.lua, round 3 spec
-    -- §4.5): the score's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses), each
-    -- part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a new
-    -- collectible's score (COLLECT, the scorer's and the (?) help's, R5-REV); then the
+    -- §4.5): the use value's bars (KEEP and up keeps, HOLD and up holds, below it sells or tosses),
+    -- each part's points and caps, the dampers, the poor-quality cap, the quest item's floor and a
+    -- new collectible's use value (COLLECT, the scorer's and the (?) help's, R5-REV); then the
     -- confidence's tiers and each input's weight, the reason lines shown, how long a verdict whose
     -- item info or gear verdict was still loading waits before it is worked out again, and how many
     -- reason lines the tooltip keeps drawn. Constants, not settings (the spec's call).
@@ -544,9 +549,26 @@ C.ITEM_SEARCH = {
         HIGH = 80, MEDIUM = 50,
         WEIGHT = { fdb = 3, quests = 3, ranks = 3, item = 2, gear = 2, source = 1 },
         REASONS = 2, RETRY = 1, LINE_CAP = 500,
+        -- The score shown on the badge (R6-DW-07): how sure Drop Watcher is of the word, never how
+        -- useful the item is (that is the use value, the sum of the parts above, which picks the
+        -- word). The owner-approved design is Ka0sAddonsCommonTasks
+        -- docs/2026-11-27-OWNER_FEEDBACK_ROUND6/01_DW_SCORING_DESIGN.md: score = round(100 x E x D),
+        -- D the confidence above as a fraction, E the evidence for the word, EDGE + (1 - EDGE) x p
+        -- with p (0 to 1) how clear the call is: Keep's p reaches 1 KEEP_FULL over KEEP; Hold's at
+        -- HOLD_FULL from the nearer of its band's edges; Auction's, Vendor's and Toss's p is the
+        -- weaker of the use part (1 at USE_FULL under HOLD) and the money part. A Hold only because
+        -- too little is known (the sell price unknown, gear still scoring, a Low confidence) is
+        -- FALLBACK. The money part: an Auction's is 1 at MONEY_FULL percent past the margin (none
+        -- just past it), 1 with no vendor price; a Vendor's or a Toss's judged against a price is
+        -- how far short of the margin the auction falls (1 when it brings nothing); bound BOUND;
+        -- with no price, NO_PRICE while Auctionator is loaded, ABSENT without it or with the
+        -- comparison off.
+        SURE = { EDGE = 0.5, FALLBACK = 0.25, KEEP_FULL = 50, HOLD_FULL = 15, USE_FULL = 20,
+            MONEY_FULL = 100, BOUND = 1, NO_PRICE = 0.8, ABSENT = 0.6 },
     },
-    -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16): the
-    -- price Auctionator last saw (its public API, asked as CALLER) against the vendor's, per unit.
+    -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16; and an
+    -- Auction for an item no vendor buys, R6-DW-06): the price Auctionator last saw (its public API,
+    -- asked as CALLER) against the vendor's, per unit.
     -- The net an auction brings is the price less the house's cut, less the deposit, counted as a
     -- cost (it is lost when the auction does not sell: the cautious reading). The deposit is a
     -- share of the vendor sell price by the auction's length, at least MIN_DEPOSIT a listing (a full

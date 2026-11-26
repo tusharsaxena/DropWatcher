@@ -9,22 +9,29 @@ local _, NS = ...
 -- list takes the full height again.
 --
 -- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same pill,
--- a (?) beside it whose tooltip explains how the score works, R5-DW-07: NS.ItemSearchVerdict.ScoringHelp;
--- R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge, .PlaceBadge), then one line
--- per part that counted, with its points, in the order the score adds them: the quests in your log by quest and the ones you could pick up as one count (R5-DW-03); the
--- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
--- shown when it was hit; gear; the dampers; the 0..100 clamp, the poor-quality cap and the quest
--- item's floor when they apply, each part's points green when it adds and red when it takes away
--- (R5-DW-04). No total line: the score is in the badge (R5-DW-05). Then the line the verdict word
--- comes from, in plain words and muted ("Keep: a score of 50 or more", R5-DW-06) and, below a High confidence, the missing input's fix as a plain hint ("Open your
--- profession window to rank recipes"). No confidence tier. Every number is the verdict module's
+-- a (?) beside it whose tooltip explains how the verdict and its score work, R5-DW-07, R6-DW-08:
+-- NS.ItemSearchVerdict.ScoringHelp; R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge,
+-- .Badge, .FillBadge, .PlaceBadge), then two sections under muted gold headers (R6-DW-08, the
+-- scoring design). WHY THIS WORD: one line per part of the use value that counted, with its points,
+-- in the order it adds them: the quests in your log by quest and the ones you could pick up as one
+-- count (R5-DW-03); the known recipes by skill-up color, the recipes you could learn and the other
+-- professions, with a cap shown when it was hit; gear; the dampers; the poor-quality cap and the
+-- quest item's floor when they apply (no 0..100 clamp since R6-DW-07), each part's points green when
+-- it adds and red when it takes away (R5-DW-04); then the line the verdict word comes from, muted
+-- ("Use value -26 (Auction, Vendor or Toss under 20)", R5-DW-06), and a Sell's or a Toss's prices.
+-- HOW SURE: the score's parts (the use value's place in its band, a disposal's money part with the
+-- margin it was judged on, the evidence for the word), "Data known", "Score" and, below a High
+-- confidence, the missing input's fix as a plain hint ("Open your profession window to rank
+-- recipes"). No confidence tier. Every number is the verdict module's
 -- (NS.ItemSearchVerdict.Breakdown, IS.Breakdown): the panel adds nothing up, so it and the
 -- tooltip's reasons cannot disagree.
 --
--- SPACE. The panel is the header, the badge and up to C.ITEM_SEARCH.PANEL.LINES lines tall, in the
--- main window's table font and row height (NS.WindowRows.Metrics); more lines scroll inside it. The
--- Matches list keeps C.ITEM_SEARCH.PANEL.MIN_ROWS rows at least: in a window too short for both the
--- panel gives way (down to its header, the badge and one line) and scrolls.
+-- SPACE. The Matches list above the panel is C.ITEM_SEARCH.PANEL.MIN_ROWS rows tall, and the panel
+-- takes the rest of the column (R6-DW-05, the owner: "Resizing the window vertically should resize
+-- the verdict panel not the matches panel"), so a taller window shows more of the breakdown and a
+-- resize never moves the Matches list. Its lines are in the main window's table font and row height
+-- (NS.WindowRows.Metrics); more than fit scroll inside it. In a window too short for both, the panel
+-- keeps its header, the badge and one line, and scrolls.
 --
 -- WHEN IT UPDATES. Every window repaint, from a kept breakdown: it is worked out again only when the
 -- item, the count you hold, the verdict memo's generation (NS.ItemSearchVerdict.Generation) or, for
@@ -90,14 +97,16 @@ local function newLine(content)
     return row
 end
 
--- The (?) beside the badge (R5-DW-07): LibKa0s' `help` icon, its tooltip how the score works
--- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover).
+-- The (?) beside the badge (R5-DW-07): LibKa0s' `ph:question` (GLYPH-02, the owner's pick: the filled
+-- circle with the ? cut out), its tooltip how the verdict and score work
+-- (NS.ItemSearchVerdict.ScoringHelp, read from the scorer's own constants on every hover). As tall
+-- as the pill (R6-DW-02: one size, C.ITEM_SEARCH.BADGE.HEIGHT).
 local function helpIcon(p)
     local b = CreateFrame("Button", nil, p)
-    b:SetSize(B.HELP, B.HELP)
+    b:SetSize(B.HEIGHT, B.HEIGHT)
     local t = b:CreateTexture(nil, "ARTWORK")
     t:SetAllPoints(b)
-    t:SetTexture(NS.Icon("help"))
+    t:SetTexture(NS.Icon("ph:question"))
     b.icon = t
     NS.SkinPaint(t, function(x) x:SetVertexColor(NS.SkinColor(ISG.MARK_REST)) end)
     NS.Window.AttachTooltip(b, function() return unpack(IVD.ScoringHelp()) end)
@@ -146,11 +155,17 @@ local function money(copper)
     return Compat.CoinText(copper) or tostring(copper)
 end
 
--- A Sell's prices (R5-DW-15: the panel shows both): the vendor's, then Auctionator's and what it
--- brings after the cut and the deposit, or, while the comparison is on, that no auction price is
--- known (none for a bound item, which never auctions).
+-- A Sell's or a Toss's prices (R5-DW-15: the panel shows both; a Toss's since R6-DW-08, the facts
+-- behind its money part): the vendor's, then Auctionator's and what it brings after the cut and the
+-- deposit, or, while the comparison is on, that no auction price is known (none for a bound item,
+-- which never auctions).
 local function priceRows(b, out)
-    out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice or 0), tone = "plain" }
+    if (b.sellPrice or 0) <= 0 then
+        -- an Auction for an item no vendor buys (R6-DW-06): said in words, not as 0 coins
+        out[#out + 1] = { text = L["No vendor buys it"], tone = "muted" }
+    else
+        out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice), tone = "plain" }
+    end
     if b.auctionPrice then
         out[#out + 1] = { text = L["Auction price (Auctionator)"], right = money(b.auctionPrice), tone = "plain" }
         out[#out + 1] = { text = L["Auction after the cut and deposit"], right = money(b.auctionNet or 0),
@@ -160,18 +175,24 @@ local function priceRows(b, out)
     end
 end
 
--- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, the parts (their
--- points green or red, R5-DW-04), then the word's line in plain words, muted (R5-DW-06), and the
--- hint, then a Sell's prices (priceRows). No Score line: the score is in the badge above (R5-DW-05).
--- Built once per breakdown (the panel keeps them).
+-- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, in two sections
+-- (R6-DW-08, the scoring design), each under a muted gold header, a blank line between them. Why
+-- this word: the parts (their points green or red, R5-DW-04), the word's line in plain words, muted
+-- (R5-DW-06: since R6-DW-08 the use value and its band), then a Sell's or a Toss's prices
+-- (priceRows). How sure: the score's lines (`b.sure`: the use value's part, a disposal's money
+-- part, the evidence for the word, the data known, and the score, the design's Score line, which
+-- R5-DW-05 had left to the badge), then the hint. Built once per breakdown (the panel keeps them).
 local function rowsOf(b)
-    local out = {}
+    local out = { { text = L["Why this word"], tone = "mutedGold" } }
     for _, line in ipairs(b.lines) do
         out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain", rightTone = pointsTone(line.points) }
     end
     out[#out + 1] = { text = b.from, tone = "muted" }
+    if b.verdict == "sell" or b.verdict == "toss" then priceRows(b, out) end
+    out[#out + 1] = { text = "", tone = "plain" }
+    out[#out + 1] = { text = L["How sure"], tone = "mutedGold" }
+    for _, s in ipairs(b.sure or {}) do out[#out + 1] = { text = s.text, right = s.right, tone = "plain" } end
     if b.hint then out[#out + 1] = { text = b.hint, tone = "muted" } end
-    if b.verdict == "sell" then priceRows(b, out) end
     return out
 end
 
@@ -206,17 +227,16 @@ local function windowHeight(f)
     return h
 end
 
---- The panel's height for the window `f` at row height `rowH`: the header, the badge and
---- C.ITEM_SEARCH.PANEL.LINES lines, less what the Matches list's MIN_ROWS rows need, down to the
---- header, the badge and one line.
+--- The panel's height for the window `f` at row height `rowH` (R6-DW-05): the column less the
+--- Matches list's C.ITEM_SEARCH.PANEL.MIN_ROWS rows and the gap above the panel, so every pixel a
+--- resize adds or takes is the panel's; at least the header, the badge and one line.
 --- @param f table
 --- @param rowH number
 --- @return number
 function IVP.Height(f, rowH)
-    local full = LINES_TOP + P.LINES * rowH + P.GAP
     local least = LINES_TOP + rowH
     local room = windowHeight(f) - columnTop() - columnBottom() - P.MIN_ROWS * rowH - P.GAP
-    return math.max(least, math.min(full, room))
+    return math.max(least, room)
 end
 
 -- The Matches list ends above the panel while it shows, at the footer otherwise.
@@ -369,8 +389,10 @@ end
 
 -- WoW Forever's alone; each event is shared with its other rows through core/DropWatcher.lua's
 -- dispatcher (the verdict's own events: modules/ItemSearchVerdict.lua, which bumps the memo first).
+-- AUCTION_HOUSE_CLOSED (R6-REV): the verdict reads Auctionator's prices again once the house shuts,
+-- and the panel's score and prices with it.
 for _, event in ipairs({ "BAG_UPDATE_DELAYED", "PLAYERBANKSLOTS_CHANGED", "QUEST_LOG_UPDATE", "QUEST_TURNED_IN",
-    "SKILL_LINES_CHANGED", "TRADE_SKILL_SHOW", "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED" }) do
+    "SKILL_LINES_CHANGED", "TRADE_SKILL_SHOW", "PLAYER_LEVEL_UP", "NEW_RECIPE_LEARNED", "AUCTION_HOUSE_CLOSED" }) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnItemSearchPanelEvent", clients = { "forever" } }
 end
 

@@ -5204,7 +5204,7 @@ the pointer leaves. Result:
 Auctionator installed and a full auction house scan done (open the house, scan, close it), hover a
 gray or white item a vendor buys whose auction price is well above its vendor price (a cloth or an
 ore that sells for more on the house) → the badge reads `Auction <score>` in a periwinkle blue with
-the trade-arrows icon, and the reason line under it reads `Auction ~<coins> after the cut and
+the gavel icon, and the reason line under it reads `Auction ~<coins> after the cut and
 deposit, vendor <coins>`, both in coin icons. Hover a vendor-trash item Auctionator prices at or
 under its vendor price → `Vendor <score>` in amber with the coins, and the reason `Vendor <coins>,
 auction ~<coins> after the cut and deposit`. An item Auctionator has no price for, or a soulbound or
@@ -5233,6 +5233,106 @@ and every Sell reads Vendor. With it loaded: set the margin to 200 → the Aucti
 ITEM-SEARCH-64 turns Vendor on the next hover; set it back → Auction again; change the duration to
 24 hours → the (?) help says the 24-hour deposit (60%); untick the comparison → the three rows dim
 and every Sell is Vendor. Result:
+
+### Item Search owner feedback round 6
+
+The owner feedback round 6 run (Ka0sAddonsCommonTasks `docs/2026-11-27-OWNER_FEEDBACK_ROUND6/`,
+R6-DW-01 to R6-DW-08 and GLYPH-02). Same client, ForeverDB and character setup as round 5 above. Where a check
+here contradicts an earlier ITEM-SEARCH row, this one is current.
+
+**ITEM-SEARCH-68. A smaller badge that never covers the line under it; the (?) its size
+(R6-DW-02).** Hover an item whose badge has a reason line under it (Ruined Leather Scraps, or any
+Auction or Vendor item) → the pill is no taller than its line, and never touches or covers the
+reason line below it or the line above it. Set the UI scale to its lowest and its highest and hover
+again → the same. Open the Item Search window on a held item → the verdict panel's pill is the same
+size as the tooltip's, and the (?) beside it is as tall as the pill (no larger). This replaces the
+pill size of ITEM-SEARCH-60. Fail: the pill reaching into the next line, or a (?) taller than the
+pill. Result:
+
+**ITEM-SEARCH-69. The (?) help in sections (R6-DW-03).** Open the Item Search window on a held item
+and hover the (?) beside the verdict panel's badge → `How the score works`, the line on what the
+score is, then four sections, each after a blank line: `Adds:`, `Takes away:`, `The verdict:` and
+`Confidence:`, each header in the muted gold of the tooltip's section headers, and every entry under
+it on its own line starting with an indented gold `·`. The wording is the same as before (ITEM-SEARCH-63),
+apart from the no-vendor-price Auction rule (ITEM-SEARCH-72). A long entry wraps onto the next line
+from the tooltip's left edge. Fail: a header in white, an entry with no bullet, or two sections with
+no blank line between them. Result:
+
+**ITEM-SEARCH-70. An unknown rate is a ? (R6-DW-04).** Open the Item Search window on an item some
+of whose sources ForeverDB has no rate for (the owner's Ruined Leather Scraps, or any item whose
+Drops from rows read `rate un...` before) → the Chance column reads a dim `?` with no bar for those
+rows, never `rate unknown` cut short; hover such a row → its tooltip's Chance line reads `rate
+unknown`. The same on the Gathered from and Skinned from tabs. Hover the item (Rows per section
+raised so the row shows) → its Drops from and Skinned from rows read a dim `?` on the right, and a
+Gathered from row ends `· ?`. Known rates read their percent as before. Fail: `rate unknown` or
+`rate un...` anywhere in a column or on a tooltip row's right. Result:
+
+**ITEM-SEARCH-71. A resize moves the verdict panel, never the Matches list (R6-DW-05).** Open the
+Item Search window on a held item → the Matches list is five rows tall and the verdict panel fills
+the rest of the left column, showing more lines than before (the owner's Liferoot: the parts, the
+word line, `Vendor price`, `Auction price (Auctionator)` and `Auction after the cut and deposit`, all
+without scrolling at the default size). Drag the corner down to make the window taller → only the
+panel grows, the Matches list stays five rows; drag it up to its smallest → the panel shrinks and
+scrolls its lines, the Matches list still five rows. Close and reopen → the window keeps the size
+you left it at. Show an item you do not hold → no panel, the Matches list down to the footer. This
+replaces the panel's 8-line height in the earlier panel checks. Fail: the Matches list growing or
+shrinking on a resize while the panel shows, or fewer than five match rows. Result:
+
+**ITEM-SEARCH-72. No vendor price but an auction price: Auction, not Toss (R6-DW-06).** With
+Auctionator loaded and a recent scan, hover an item no vendor buys (no `Sell Price` line) whose
+score is under 20 and that Auctionator prices above about 1 silver (a trade good or a crafting
+reagent with no vendor price; not soulbound) → the badge reads `Auction <score>` with the gavel, and
+the reason line `Auction ~<coins> after the cut and deposit; no vendor buys it`. Open the Item Search
+window on it while you hold one → the panel's word line reads `Auction: a score under 20, no vendor
+buys it, and an auction brings something after the cut and deposit`, then `No vendor buys it` (no
+vendor price in coins), `Auction price (Auctionator)` and `Auction after the cut and deposit`. Hover
+the (?) → under The verdict: `Under 20: Auction or Vendor when a vendor buys it. When none does,
+Auction if an auction brings anything after the cut and deposit, else Toss.` An item no vendor buys
+that Auctionator prices at under about 1 silver, has no price for, or a soulbound one → `Toss` as
+before; untick Compare with Auctionator prices → `Toss` again. Fail: a Toss for an unbound item Auctionator prices well above 1 silver, or Auction for a
+soulbound one. Result:
+
+**ITEM-SEARCH-73. The score says how sure: Liferoot reads Auction 100, a gray Vendor 80 (R6-DW-07,
+R6-DW-08).** With Auctionator loaded and a recent scan, hover Liferoot (the owner's image 45: a
+vendor price of 75 copper, Auctionator's well above it) → the badge reads `Auction 100` with the
+gavel, never `Auction 0`. Open the Item Search window on it while you hold one → under `Why this
+word` (a gold header) its parts as before (`Other professions use it`, its cap, `Easy to buy again`,
+`Every use is gray or done`), then `Use value -26 (Auction, Vendor or Toss under 20)` (no `The score
+is 0 at least` line), the vendor price, Auctionator's price and the net; then a blank line and `How
+sure` (a gold header): `Use value well under 20` 100%, `Auction beats vendor by <N>% (needs over 10%)`
+100% (N about 283 at the owner's price), `Evidence for Auction` 100%, `Data known` 100%, `Score` 100.
+Hover a gray (poor) item a vendor buys, with Compare with Auctionator prices unticked → `Vendor 80`;
+its How sure reads `Use value well under 20` 100%, `Compare with Auctionator prices is off` 60%,
+`Evidence for Vendor` 80%, `Score` 80. Tick it again → a gray Auctionator has no price for reads
+`Vendor 90` (`Auctionator has no price for it` 80%). A quest item for a quest in your log reads `Keep
+60` or so (`Use value 60, 10 past Keep's 50` 20%); an item whose info is still loading reads a low
+`Hold` such as `Hold 17`. The tooltip's reason lines under the badge are as before. This replaces
+the score's meaning in ITEM-SEARCH-60 to 72 (a use value then; how sure now) and ITEM-SEARCH-72's
+panel word line (`Auction: a score under 20, ...` is now `Use value <U> (Auction, Vendor or Toss
+under 20)`, with `No vendor buys it; an auction brings ~<coins>` under How sure). Fail: a disposal
+badge reading a low number for a clear call, a `0..100` clamp line, or a Score line that disagrees
+with the badge. Result:
+
+**ITEM-SEARCH-74. The (?) help explains both numbers (R6-DW-08).** Open the Item Search window on a
+held item and hover the (?) → `How the verdict and score work`, then `The word comes from the use
+value: ... The score, 0 to 100, is how sure Drop Watcher is of that word.`, then four gold sections,
+each after a blank line: `The use value adds:`, `The use value takes away:` (the same entries as
+ITEM-SEARCH-69), `The word:` (`Keep: a use value of 50 or more. Hold: 20 to 49.`, `A use value under
+20: Auction or Vendor ...`, and the live cut, length and margin) and `The score:` (`Score = evidence
+for the word x data known`, the edges and clear calls, the money part with `beats the vendor by 110%
+or more (it needs over 10%)`, the Hold fallback 25%, and the data-known rule with its 80% hint and
+50% never-Toss bars). Set the margin to 25% → the money entry reads `125% or more (it needs over
+25%)`. This replaces ITEM-SEARCH-69's headers and title and ITEM-SEARCH-72's help wording. Fail: a
+header in white, the old `How the score works`, or a margin that does not follow the setting.
+Result:
+
+**ITEM-SEARCH-75. The help mark and the missing-icon ring (GLYPH-02).** Open the Item Search window
+on a held item → the (?) beside the verdict panel's badge is a filled circle with the `?` cut out
+(Phosphor's question), tinted as before, never the old Open Iconic mark. Search for an item whose
+icon the client has not loaded yet (a fresh item id typed into the box, or right after a `/reload`)
+→ its Matches row and the item header draw an outlined ring with a `?` (Game-icons.net's help) until
+the icon arrives; the Drops tab's item buttons the same for a drop with no icon yet. Fail: a green
+square or an empty box in place of either mark. Result:
 
 ## Pending sign-off
 

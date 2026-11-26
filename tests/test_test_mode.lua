@@ -991,7 +991,7 @@ test("window: test mode draws every sample, under the two key runs and the six b
     assertEqual(#drawn.rows, #NS.LootFeed.Drops("test"), "every sample, yours too (feedback-5 spec §2)")
     for _, r in ipairs(drawn.rows) do
         local tex = r.cells.item.button.art:GetTexture()
-        assertTrue(tex ~= 134400 and tex ~= NS.Icon("help"), "a real icon: " .. tostring(tex))
+        assertTrue(tex ~= 134400 and tex ~= NS.Icon("gi:help"), "a real icon, not the missing-icon ring (GLYPH-02): " .. tostring(tex))
     end
     assertFalse(drawn.empty:IsShown())
     NS.addon.db.profile.feed = { showOwn = false }   -- a stored value is ignored

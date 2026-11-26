@@ -644,7 +644,7 @@ end
 local function itemHeader(facts)
     local f = frame
     local item = facts and facts.item or { id = shownItem }
-    f.icon.art:SetTexture(item.icon or Compat.ItemIcon(item.id) or NS.Icon("help"))
+    f.icon.art:SetTexture(item.icon or Compat.ItemIcon(item.id) or NS.Icon("gi:help"))
     f.name:SetText(item.name or L["Item %d"]:format(item.id))
     local qr, qg, qb = NS.QualityColor(item.quality)
     if qr == nil then qr, qg, qb = toneRGB("plain") end

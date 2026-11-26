@@ -201,10 +201,11 @@ local function pinHint(hints, where)
     if where and where.spot then hints[#hints + 1] = L["Click the pin: set a waypoint"] end
 end
 
--- A chance cell: the percent and the bar's fraction of the top chance.
+-- A chance cell: the percent and the bar's fraction of the top chance; an unknown rate a ? (muted, no
+-- bar: R6-DW-04, "rate unknown" was cut short in the column), the row's hover saying it is unknown.
 local function chanceCell(chance, top)
     chance = num(chance)
-    return { pct = IS.Percent(chance) or L["rate unknown"], fraction = (chance and top > 0) and chance / top or 0,
+    return { pct = IS.Percent(chance) or "?", fraction = (chance and top > 0) and chance / top or 0,
         known = chance ~= nil }
 end
 

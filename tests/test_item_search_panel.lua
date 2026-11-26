@@ -116,6 +116,9 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
     local lines = P.Lines(f)
     local n = #b.lines
     local sum = 0
+    -- red under (R6-DW-08): no sections; the parts under "Why this word", a gold header
+    assertEqual(lines[1].text, "Why this word"); assertEqual(lines[1].tone, "mutedGold")
+    table.remove(lines, 1)
     for i, part in ipairs(b.lines) do
         -- red under: a panel that words or adds up the parts itself
         assertEqual(lines[i].text, part.text)
@@ -124,27 +127,40 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
         assertEqual(lines[i].rightTone, part.points > 0 and "good" or "red", "+ green, - red: " .. part.text)
         sum = sum + part.points
     end
-    assertEqual(sum, b.score, "the parts add up to the score")
-    -- red under (R5-DW-05): a "Score" line repeating the badge's number
-    for _, line in ipairs(lines) do assertTrue(line.text ~= "Score", "no Score line") end
+    assertEqual(sum, b.use, "the parts add up to the use value (R6-DW-07)")
     assertEqual(lines[n + 1].text, b.from, "the line the verdict word comes from, right after the parts")
     assertEqual(lines[n + 1].tone, "muted"); assertEqual(lines[n + 1].right, "")
-    assertTrue(b.from:find("a score ", 1, true) ~= nil, "in plain words: " .. b.from)
-    if b.hint then assertEqual(lines[n + 2].text, b.hint, "the missing input as a plain hint") end
+    assertTrue(b.from:find("^Use value %-?%d+ %(") ~= nil, "the use value and its band: " .. b.from)
+    -- then "How sure": the score's parts, the data known and the score (the design's Score line)
+    local at
+    for i, line in ipairs(lines) do if line.text == "How sure" then at = i end end
+    assertTrue(at ~= nil and lines[at].tone == "mutedGold", "a How sure header")
+    for i, s in ipairs(b.sure) do
+        assertEqual(lines[at + i].text, s.text); assertEqual(lines[at + i].right, s.right)
+    end
+    assertEqual(lines[at + #b.sure].text, "Score"); assertEqual(lines[at + #b.sure].right, tostring(b.score))
+    if b.hint then assertEqual(lines[at + #b.sure + 1].text, b.hint, "the missing input as a plain hint, last") end
     for _, text in ipairs(lineTexts(lines)) do
         assertTrue(not text:find("Low") and not text:find("Medium") and not text:find("High"), "no tier: " .. text)
     end
 end, FOREVER_ONLY)
 
-test("verdict panel: + points green, - points red, no Score line, the word's line in plain words (R5-DW-04..06)", function()
+test("verdict panel: + points green, - points red, the word's line in plain words, then How sure (R5-DW-04..06, R6-DW-08)", function()
     local NS = enabled()
-    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, from = "Sell: a score under 20, and a vendor buys it",
-        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } } })
-    assertEqual(#rows, 3, "the two parts and the word's line: no total")
-    assertEqual(rows[1].right, "+35"); assertEqual(rows[1].rightTone, "good")
-    assertEqual(rows[2].right, "-20"); assertEqual(rows[2].rightTone, "red")
-    assertEqual(rows[3].text, "Sell: a score under 20, and a vendor buys it"); assertEqual(rows[3].tone, "muted")
-    assertTrue(rows[3].right == nil, "no number on the word's line")
+    local rows = NS.ItemSearchVerdictPanel.Rows({ score = 15, use = 15, from = "Invented word line",
+        lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } },
+        sure = { { text = "Invented evidence", right = "50%" }, { text = "Score", right = "15" } }, hint = "Invented hint" })
+    assertEqual(#rows, 9, "two headers, the two parts, the word's line, a spacer, two sure lines and the hint")
+    assertEqual(rows[1].text, "Why this word"); assertEqual(rows[1].tone, "mutedGold")
+    assertEqual(rows[2].right, "+35"); assertEqual(rows[2].rightTone, "good")
+    assertEqual(rows[3].right, "-20"); assertEqual(rows[3].rightTone, "red")
+    assertEqual(rows[4].text, "Invented word line"); assertEqual(rows[4].tone, "muted")
+    assertTrue(rows[4].right == nil, "no number on the word's line")
+    assertEqual(rows[5].text, "", "a blank line between the sections")
+    assertEqual(rows[6].text, "How sure"); assertEqual(rows[6].tone, "mutedGold")
+    assertEqual(rows[7].text, "Invented evidence"); assertEqual(rows[7].right, "50%")
+    assertEqual(rows[8].text, "Score"); assertEqual(rows[8].right, "15")
+    assertEqual(rows[9].text, "Invented hint"); assertEqual(rows[9].tone, "muted")
 end, FOREVER_ONLY)
 
 test("verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07)", function()
@@ -156,24 +172,56 @@ test("verdict panel: a (?) beside the badge explains the score from the scorer's
     local help = f.verdict.help
     -- red under: no (?) (the owner: "Add a (?) icon next to the score")
     assertTrue(help ~= nil, "a (?) on the panel")
-    assertTrue(help.icon.__texture ~= nil and help.icon.__texture:find("help", 1, true) ~= nil, "LibKa0s' help icon")
+    -- red under (GLYPH-02, the owner's pick): Open Iconic's `help`; the help mark is ph:question,
+    -- the filled circle with the ? cut out
+    assertEqual(help.icon.__texture, NS.Icon("ph:question"))
+    assertTrue(help.icon.__texture:find("phosphor\\question", 1, true) ~= nil, "LibKa0s' ph:question: " .. help.icon.__texture)
     local p = help.__points[1]
     assertTrue(p[1] == "LEFT" and p[2] == f.verdict.badge.piece.r and p[3] == "RIGHT", "right after the pill")
     local lines = NS.Window.TooltipOf(help)
-    assertEqual(lines[1], "How the score works")
+    assertEqual(lines[1], "How the verdict and score work")
     local text = table.concat(lines, "\n")
     for _, want in ipairs({ ("+%d each"):format(V.QUEST_LOG), ("+%d each"):format(V.QUEST_CAN),
         ("orange +%d, yellow +%d, green +%d"):format(V.CRAFT.orange, V.CRAFT.yellow, V.CRAFT.green),
         ("an upgrade +%d"):format(V.UPGRADE), (": %d"):format(V.REBUY), (": %d"):format(V.TRIVIAL),
-        ("Keep: %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1), ("Under %d: Auction or Vendor"):format(V.HOLD),
-        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM) }) do
+        ("Keep: a use value of %d or more. Hold: %d to %d."):format(V.KEEP, V.HOLD, V.KEEP - 1),
+        ("A use value under %d: Auction or Vendor"):format(V.HOLD),
+        ("Under %d%%"):format(V.HIGH), ("under %d%%"):format(V.MEDIUM),
+        -- the score (R6-DW-08): how sure, from the evidence and the data known
+        "Score = evidence for the word x data known", ("A Hold only because too little is known: %d%%"):format(V.SURE.FALLBACK * 100) }) do
         assertTrue(text:find(want, 1, true) ~= nil, "names " .. want)
     end
     -- read from the constants, never copied: a moved bar moves the help
     local keep = V.KEEP
     V.KEEP = 61
-    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
+    assertTrue(table.concat(NS.Window.TooltipOf(help), "\n"):find("Keep: a use value of 61 or more. Hold: 20 to 60.", 1, true) ~= nil)
     V.KEEP = keep
+end, FOREVER_ONLY)
+
+test("verdict panel: the tooltip's pill, the panel's pill and its (?) are one size, within a tooltip line (R6-DW-02)", function()
+    local NS, m, held = enabled()
+    local W, B = NS.ItemSearchWindow, NS.Constants.ITEM_SEARCH.BADGE
+    held[IDS.blade] = { 1, 0 }
+    -- every button's size recorded (the kit's frames record no geometry)
+    local make = m.CreateFrame
+    m.CreateFrame = function(kind, ...)
+        local fr = make(kind, ...)
+        if kind == "Button" then rawset(fr, "SetSize", function(self, w, h) self.dwW, self.dwH = w, h end) end
+        return fr
+    end
+    W.ShowItem(IDS.blade)
+    m.CreateFrame = make
+    local f = W.Frame()
+    -- red under: a 16 px pill on a 14 px tooltip line (it ran into the reason line under it, the
+    -- owner's "overlaps the text below it sometimes") with a separate, larger (?) beside it
+    assertTrue(B.HEIGHT <= B.LINE, ("the pill (%s) fits a tooltip line's pitch (%s)"):format(tostring(B.HEIGHT), tostring(B.LINE)))
+    assertTrue(B.ICON < B.HEIGHT and B.FONT <= B.ICON, "the icon and the text inside the pill")
+    assertTrue(B.HELP == nil, "no size of the (?) apart from the pill's")
+    local help = f.verdict.help
+    assertEqual(help.dwW, B.HEIGHT, "the (?) as wide as the pill is tall")
+    assertEqual(help.dwH, B.HEIGHT, "the (?) as tall as the pill")
+    local tl = f.verdict.badge.piece.tl.__points[1]
+    assertEqual(tl[5], B.HEIGHT / 2, "the panel's pill is HEIGHT tall")
 end, FOREVER_ONLY)
 
 test("verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height", function()
@@ -208,7 +256,7 @@ test("verdict panel: a bag change for the item repaints it, throttled, and its h
     assertTrue(f.verdict:IsShown(), "a closed window is not repainted")
 end, FOREVER_ONLY)
 
-test("verdict panel: the header, the badge and 8 lines tall; it gives way to the Matches list's 5 rows", function()
+test("verdict panel: the Matches list keeps its 5 rows; the panel takes every other pixel, so a resize moves the panel alone (R6-DW-05)", function()
     local NS, _, held = enabled()
     local W, P = NS.ItemSearchWindow, NS.ItemSearchVerdictPanel
     local K, ISG, PANEL = NS.Constants.WINDOW, NS.ItemSearchGrid, NS.Constants.ITEM_SEARCH.PANEL
@@ -217,16 +265,28 @@ test("verdict panel: the header, the badge and 8 lines tall; it gives way to the
     local f = W.Frame()
     local rowH = NS.WindowRows.Metrics().height
     local top = ISG.HEADER_H + PANEL.GAP + NS.Constants.ITEM_SEARCH.BADGE.HEIGHT + PANEL.GAP
-    -- the default 600 tall window: the full panel
-    assertEqual(P.Height(f, rowH), top + PANEL.LINES * rowH + PANEL.GAP)
+    local function column(height)
+        return height - (1 + K.TITLE_H + 8 + K.CONTROL_H + 8 + ISG.HEADER_H + 2) - (NS.FooterMetric("HEIGHT") + 4)
+    end
+    -- red under (the owner: "Resizing the window vertically should resize the verdict panel not the
+    -- matches panel"): the panel held at 8 lines and the Matches list taking the rest
+    assertEqual(PANEL.LINES, nil, "no line count holds the panel")
+    -- the default 600 tall window: the Matches list MIN_ROWS rows, the panel the rest
+    assertEqual(P.Height(f, rowH), column(600) - PANEL.MIN_ROWS * rowH - PANEL.GAP)
     assertEqual(f.verdict:GetHeight(), P.Height(f, rowH))
-    -- a short window with tall rows: what stays for the matches is at least MIN_ROWS rows
+    -- taller: every added pixel is the panel's, the Matches list's height unchanged
+    f:SetSize(980, 800)
+    assertEqual(P.Height(f, rowH), column(800) - PANEL.MIN_ROWS * rowH - PANEL.GAP)
+    assertEqual(column(800) - P.Height(f, rowH) - PANEL.GAP, PANEL.MIN_ROWS * rowH, "the Matches list stays MIN_ROWS rows")
+    W.Refresh()
+    assertEqual(f.verdict:GetHeight(), P.Height(f, rowH), "a repaint lays the panel out at the new height")
+    -- a short window with tall rows: the Matches list still keeps MIN_ROWS rows, the panel shrinks
     f:SetSize(760, 440)
-    local column = 440 - (1 + K.TITLE_H + 8 + K.CONTROL_H + 8 + ISG.HEADER_H + 2) - (NS.FooterMetric("HEIGHT") + 4)
     local h = P.Height(f, 30)
-    assertTrue(column - h - PANEL.GAP >= PANEL.MIN_ROWS * 30, "five 30 px rows of matches kept")
-    assertTrue(h < top + PANEL.LINES * 30 + PANEL.GAP, "the panel gave way")
+    assertEqual(column(440) - h - PANEL.GAP, PANEL.MIN_ROWS * 30, "five 30 px rows of matches kept")
     assertTrue(h >= top + 30, "down to its header, the badge and one line at least")
+    -- rows so tall that both cannot fit: the panel keeps its header, the badge and one line
+    assertEqual(P.Height(f, 60), top + 60)
 end, FOREVER_ONLY)
 
 test("verdict panel: a corner drag re-lays it without working the breakdown out again", function()
@@ -317,21 +377,24 @@ test("verdict panel: a gear change works the breakdown out again, so it and the 
     W.ShowItem(IDS.blade)
     local f = W.Frame()
     local facts = IS.Get(IDS.blade)
+    -- the use value (R6-DW-07: the parts' sum; the score shown is how sure) and the score, both compared
+    local function tooltipUse() return IVD.For(IDS.blade, facts, IS.Me(facts.ranks)).use end
     local function tooltipScore() return IVD.For(IDS.blade, facts, IS.Me(facts.ranks)).score end
-    local before = f.verdict.dwBreakdown.score
-    assertEqual(before, tooltipScore())
+    local before = f.verdict.dwBreakdown.use
+    assertEqual(before, tooltipUse()); assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
     -- you equip something better: the gear snapshot moves, and Drop Watcher's own GearChanged says so
     verdict.gear, verdict.sig = "downgrade", "worn-2"
     NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
     m.advance(NS.Constants.ITEM_SEARCH.PANEL.THROTTLE + 0.01)
     -- red under: the panel keeping "Upgrade for you +70" while the tooltip works out the new verdict
-    assertEqual(f.verdict.dwBreakdown.score, tooltipScore(), "the panel and the tooltip agree")
-    assertEqual(f.verdict.dwBreakdown.score, before - NS.Constants.ITEM_SEARCH.VERDICT.UPGRADE, "the upgrade gone")
+    assertEqual(f.verdict.dwBreakdown.use, tooltipUse(), "the panel and the tooltip agree")
+    assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
+    assertEqual(f.verdict.dwBreakdown.use, before - NS.Constants.ITEM_SEARCH.VERDICT.UPGRADE, "the upgrade gone")
     -- a window repaint after a gear move with no event yet: worked out again too, as the tooltip's memo is
     verdict.gear, verdict.sig = "upgrade", "worn-3"
     W.Refresh()
     assertEqual(f.verdict.dwBreakdown.score, tooltipScore())
-    assertEqual(f.verdict.dwBreakdown.score, before)
+    assertEqual(f.verdict.dwBreakdown.use, before)
     undo()
 end, FOREVER_ONLY)
 
@@ -360,4 +423,19 @@ test("verdict panel: still loading after its retries, a repaint or coming back t
     -- red under: no retries for an item that spent them once
     assertEqual(calls, away + 2, "back on the blade: its retries again")
     IVD.Breakdown = real
+end, FOREVER_ONLY)
+
+test("verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV)", function()
+    local NS, m, held = enabled()
+    local W, IVD = NS.ItemSearchWindow, NS.ItemSearchVerdict
+    held[IDS.blade] = { 1, 0 }
+    W.ShowItem(IDS.blade)
+    m.advance(10)   -- the item info's retries spent: nothing else repaints it
+    local real, calls = IVD.Breakdown, 0
+    IVD.Breakdown = function(...) calls = calls + 1; return real(...) end
+    m.__fire("AUCTION_HOUSE_CLOSED")
+    m.advance(NS.Constants.ITEM_SEARCH.PANEL.THROTTLE + 0.01)
+    IVD.Breakdown = real
+    -- red under: the memo re-judged at the close but the panel kept the old score and prices
+    assertEqual(calls, 1, "worked out again once the house shuts")
 end, FOREVER_ONLY)

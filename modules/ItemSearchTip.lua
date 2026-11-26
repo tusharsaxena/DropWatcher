@@ -141,6 +141,9 @@ local QUEST_MARK = {
 }
 local DIM = 0.5
 local INDENT = "  "
+-- An unknown drop, gather or skinning rate (R6-DW-04, the owner): a muted ? on the row's right, as
+-- the Item Search window's Chance column draws it; "rate unknown" was cut short there.
+local UNKNOWN_RATE = "?"
 
 local shownOn = setmetatable({}, { __mode = "k" })   -- tooltip -> the item id its block shows
 local watched = setmetatable({}, { __mode = "k" })   -- tooltips whose OnHide / OnTooltipCleared are hooked
@@ -310,7 +313,7 @@ local VERDICT_LOOK = {
     keep = { icon = "ph:lock", tone = "good" },
     hold = { icon = "ph:hourglass", tone = "yellow" },
     vendor = { icon = "ph:coins", tone = "warn" },
-    auction = { icon = "transfer", tone = "auction" },
+    auction = { icon = "ph:gavel", tone = "auction" },
     toss = { icon = "ph:trash", tone = "bad" },
 }
 
@@ -501,7 +504,7 @@ local function dropsLines(f, r, o, out)
     for i = 1, shown do
         local s = r.drops[i]
         add(out, INDENT .. s.name .. levelRange(s), s.named and "plain" or "muted",
-            IS.Percent(s.chance) or L["rate unknown"], s.chance and "plain" or "muted")
+            IS.Percent(s.chance) or UNKNOWN_RATE, s.chance and "plain" or "muted")
     end
     if f.worldMinLevel then
         add(out, INDENT .. L["World drop"], "plain", L["level %d+"]:format(f.worldMinLevel), "muted")
@@ -518,7 +521,7 @@ local function gatherRight(g, ranks)
         local skill = cells.GatherSkillCell(g, ranks)
         right = right .. " " .. colored(skill.text, skill.tone)
     end
-    return right .. " " .. L["· %s"]:format(IS.Percent(g.chance) or L["rate unknown"])
+    return right .. " " .. L["· %s"]:format(IS.Percent(g.chance) or colored(UNKNOWN_RATE, "muted"))
 end
 
 local function gatheredLines(_, r, o, out, me)
@@ -693,7 +696,7 @@ local function skinnedLines(_, r, o, out)
     local shown, rest = capped(r.skinned, o.rows)
     for i = 1, shown do
         local s = r.skinned[i]
-        add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or L["rate unknown"],
+        add(out, INDENT .. s.name .. levelRange(s), "plain", IS.Percent(s.chance) or UNKNOWN_RATE,
             s.chance and "plain" or "muted")
     end
     more(out, rest)
