@@ -359,6 +359,29 @@ local function professionName(skillLine)
     return skillLine and PROFESSION[skillLine] or nil
 end
 
+-- Each profession's name in its own tone (R4-DW-04), per skill line: the tones are fixed, so the
+-- strings are built once, not on every hover. False for a line with no name.
+local professionMemo = {}
+
+local function professionText(skillLine)
+    if skillLine == nil then return nil end
+    local memo = professionMemo[skillLine]
+    if memo == nil then
+        local name = professionName(skillLine)
+        memo = name and colored(name, C.PROFESSION_TONE[skillLine]) or false
+        professionMemo[skillLine] = memo
+    end
+    return memo or nil
+end
+
+--- A recipe skill line's profession tone (C.PROFESSION_TONE, round 4 R4-DW-04), or nil: the
+--- tooltip's crafting and gathering rows and the window's Profession columns color the name with it.
+--- @param skillLine number|nil
+--- @return string|nil a C.TONE key
+function IST.ProfessionTone(skillLine)
+    return skillLine and C.PROFESSION_TONE[skillLine] or nil
+end
+
 --- A recipe skill line's profession name (the nine crafting lines and the four gathering ones), or
 --- nil. The Item Search window's Crafting rows name it too.
 --- @param skillLine number|nil
@@ -411,7 +434,7 @@ end
 -- tab's tone (NS.ItemSearchCells.GatherSkillCell), no skill for fishing.
 local function gatherRight(g, ranks)
     local cells = NS.ItemSearchCells
-    local right = cells.GATHER_NAME[g.gather] or ""
+    local right = professionText(IS.GATHER_LINE[g.gather]) or ""
     if g.gather ~= "fishing" then
         local skill = cells.GatherSkillCell(g, ranks)
         right = right .. " " .. colored(skill.text, skill.tone)
@@ -481,12 +504,12 @@ local function mixed(rows, n)
 end
 
 -- A crafting row's right side: the skill parts (then " · <profession>" when the rows mix
--- professions), else the profession alone, muted.
+-- professions), else the profession alone; the profession in its own tone (R4-DW-04).
 local function craftRight(c, o, mix)
-    local profession = professionName(c.skillLine)
+    local profession = professionText(c.skillLine)
     local parts = o.craftSkill and IST.SkillText(c) or nil
-    if not parts then return profession, "muted" end
-    if mix and profession then return parts .. " " .. colored(L["· %s"]:format(profession), "muted"), "plain" end
+    if not parts then return profession, "plain" end
+    if mix and profession then return parts .. " " .. colored("·", "muted") .. " " .. profession, "plain" end
     return parts, "plain"
 end
 

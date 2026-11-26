@@ -717,6 +717,7 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
 | `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
 | The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
+| Item Search's meaning tones: the skill-up hues (`C.TONE.skill*`), each drop source Type's (`type*`, round 4 R4-DW-01) and each profession's (`prof*` by `C.PROFESSION_TONE`, R4-DW-04) | identity by hue, the same under every skin: a recipe's skill-up color is the client's own, a Type and a profession are each told from the others by color; no profession tone is a skill-up hue, red or a Type tone (`tests/test_item_search_sources.lua` checks it) |
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |

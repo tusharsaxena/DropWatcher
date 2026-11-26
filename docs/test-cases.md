@@ -1157,7 +1157,7 @@ Total.
 - item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
 - item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
 
-### test_item_search_sources.lua (15)
+### test_item_search_sources.lua (18)
 
 - item search sources: a test or dev name is caught, and a word that only contains "test" is not
 - item search sources: a quest's giver skips a test-named one for the next
@@ -1169,6 +1169,9 @@ Total.
 - item search sources: Gathered from ranks a profession you have at your skill, then above it, then one you lack
 - item search sources: the Gathered from tab sits after Drops from with its columns and filters
 - item search sources: Gathered from's rows: the node, its profession, its skill against yours, zone and chance
+- item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones
+- item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone
+- item search sources: the tooltip's crafting row names its profession in that profession's tone
 - item search sources: every Type has its own fixed tone; a source's name is plain everywhere
 - item search sources: the tooltip's Gathered from section, after Drops from, capped by Rows per section
 - item search sources: the tooltip draws every source's name plain, an unnamed one muted
@@ -3459,7 +3462,7 @@ Total.
 | test_item_search_key.lua | 4 |
 | test_item_search_settings.lua | 2 |
 | test_item_search_rank.lua | 14 |
-| test_item_search_sources.lua | 13 |
+| test_item_search_sources.lua | 16 |
 | test_item_search_prices.lua | 5 |
 | test_item_search_verdict.lua | 13 |
 | test_own_drops.lua | 16 |
@@ -3556,4 +3559,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 120 |
-| **Total** | **2843** |
+| **Total** | **2846** |

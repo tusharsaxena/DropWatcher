@@ -47,6 +47,7 @@ local ISC = NS.ItemSearchCells
 local IS  = NS.ItemSearch
 local ISV = NS.ItemSearchView
 local L   = NS.L
+local C   = NS.Constants
 
 local floor = math.floor
 
@@ -346,7 +347,8 @@ local function gatherRow(g, i, top, me, ctx)
         best = i, kind = "object", gather = g.gather, id = g.id, spot = where and where.spot or nil,
         here = where ~= nil and me.mapID ~= nil and where.map == me.mapID,
         mine = rank ~= nil or not IS.SkillsRead(me.ranks),
-        cells = { node = { text = g.name, tone = "plain" }, profession = textCell(profession),
+        cells = { node = { text = g.name, tone = "plain" },
+            profession = textCell(profession, C.PROFESSION_TONE[IS.GATHER_LINE[g.gather] or 0]),
             skill = ISC.GatherSkillCell(g, me.ranks), zone = ISC.ZoneCell(where), chance = chanceCell(g.chance, top) },
         sort = { node = lower(g.name), profession = lower(profession), skill = num(g.skill),
             zone = lower(where and where.zone), chance = num(g.chance) },
@@ -776,7 +778,7 @@ local function craftCells(r, name, profession, status, tone, ctx)
     local makes = textCell(product)
     makes.quality = quality
     return { glyph = { craft = r }, recipe = textCell(name, r.known and "plain" or "muted"),
-        profession = textCell(profession), uses = textCell(num(r.count) and L["×%d"]:format(r.count) or nil),
+        profession = textCell(profession, profession and C.PROFESSION_TONE[r.skillLine or 0] or nil), uses = textCell(num(r.count) and L["×%d"]:format(r.count) or nil),
         makes = makes, skill = skillCell(r, parts), status = textCell(status, tone) }, product, parts
 end
 

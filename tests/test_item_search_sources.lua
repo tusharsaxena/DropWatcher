@@ -247,6 +247,91 @@ test("item search sources: Gathered from's rows: the node, its profession, its s
     assertEqual(#C.Build({ gathered = facts.gathered }, {}, {}).gathered, 4)
 end)
 
+-- ── the profession colors (round 4, R4-DW-04) ───────────────────────────────────────────────
+
+-- How far apart two { r, g, b } colors are (RGB distance, 0..sqrt(3)).
+local function apart(a, b)
+    return math.sqrt((a.r - b.r) ^ 2 + (a.g - b.g) ^ 2 + (a.b - b.b) ^ 2)
+end
+
+test("item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones", function()
+    local NS = T.newAddon()
+    local C = NS.Constants
+    local lines = { 129, 164, 165, 171, 182, 185, 186, 197, 202, 333, 356, 393, 755 }
+    local profKeys, seen = {}, {}
+    for _, line in ipairs(lines) do
+        local key = C.PROFESSION_TONE[line]
+        assertTrue(type(key) == "string" and C.TONE[key] and C.TONE[key].r ~= nil, "a fixed tone for line " .. line)
+        assertTrue(not seen[key], "each profession its own: " .. key); seen[key] = true
+        profKeys[#profKeys + 1] = key
+        assertEqual(NS.ItemSearchTip.ProfessionTone(line), key)
+    end
+    assertNil(NS.ItemSearchTip.ProfessionTone(nil)); assertNil(NS.ItemSearchTip.ProfessionTone(1))
+    for i = 1, #profKeys do
+        for j = i + 1, #profKeys do
+            assertTrue(apart(C.TONE[profKeys[i]], C.TONE[profKeys[j]]) > 0.1, profKeys[i] .. " vs " .. profKeys[j])
+        end
+        -- red under: a profession drawn in a skill-up hue, red, or a Type's tone (R4-DW-01's palette)
+        for _, other in ipairs({ "skillOrange", "skillYellow", "skillGreen", "skillGray", "glyphKnown", "typeCreature",
+            "typeElite", "typeRare", "typeRareElite", "typeBoss", "typeObject", "typeContainer" }) do
+            assertTrue(apart(C.TONE[profKeys[i]], C.TONE[other]) > 0.1, profKeys[i] .. " vs " .. other)
+        end
+        local t = C.TONE[profKeys[i]]
+        assertTrue(not (t.r > 0.8 and t.g < 0.4 and t.b < 0.4), profKeys[i] .. " is not a red")
+        -- readable on the dark tooltip: a relative luminance well above its near-black background
+        assertTrue(0.2126 * t.r + 0.7152 * t.g + 0.0722 * t.b > 0.3, profKeys[i] .. " is light enough")
+    end
+end)
+
+test("item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone", function()
+    local NS = T.newAddon()
+    local C, IST = NS.ItemSearchCells, NS.ItemSearchTip
+    local crafted = C.Crafting({ crafting = {
+        { spell = 1, name = "Fixture Elixir", skillLine = 171, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+        { spell = 2, name = "Fixture Candle", skillLine = 182, count = 1, learned = true },
+    } }, { ranks = { [171] = 30, [182] = 30 } }, { profession = IST.ProfessionName })
+    local by = {}
+    for _, r in ipairs(crafted) do by[r.spell] = r end
+    assertEqual(by[1].cells.profession.tone, "profAlchemy")
+    assertEqual(by[2].cells.profession.tone, "profHerbalism")
+    local gathered = C.Gathered({ gathered = {
+        { kind = "object", id = 1, name = "Peacebloom", gather = "herbalism", skill = 1, chance = 1 },
+        { kind = "object", id = 2, name = "Copper Vein", gather = "mining", skill = 1, chance = 1 },
+        { kind = "object", id = 3, name = "School of Invented Fish", gather = "fishing", chance = 0.85 },
+    } }, {}, {})
+    local tone = {}
+    for _, r in ipairs(gathered) do tone[r.cells.node.text] = r.cells.profession.tone end
+    assertEqual(tone.Peacebloom, "profHerbalism"); assertEqual(tone["Copper Vein"], "profMining")
+    assertEqual(tone["School of Invented Fish"], "profFishing")
+end)
+
+test("item search sources: the tooltip's crafting row names its profession in that profession's tone", function()
+    local NS = T.newAddon()
+    local IST, T0 = NS.ItemSearchTip, NS.Constants.TONE
+    local facts = { drops = {}, vendors = {}, quests = {}, skinnedFrom = {}, rewardFrom = {}, gathered = {}, crafting = {
+        { spell = 1, name = "Fixture Elixir", skillLine = 171, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+        { spell = 2, name = "Fixture Stew", skillLine = 185, count = 1, min = 1, yellow = 55, green = 75, gray = 95 },
+    } }
+    local alch, cook = T0.profAlchemy, T0.profCooking
+    local alchText = NS.GroupRoster.Colored("Alchemy", alch.r, alch.g, alch.b)
+    local cookText = NS.GroupRoster.Colored("Cooking", cook.r, cook.g, cook.b)
+    local o = { order = IST.ORDER, sections = IST.SECTIONS, rows = 5, header = false, craftSkill = false }
+    local function rights()
+        local out = {}
+        for _, l in ipairs(IST.Lines(facts, o, nil, {})) do
+            if l.text:find("Fixture Elixir", 1, true) then out.elixir = l.right end
+            if l.text:find("Fixture Stew", 1, true) then out.stew = l.right end
+        end
+        return out
+    end
+    -- red under: the profession muted (round 3), the same gray for every profession
+    local r = rights()
+    assertEqual(r.elixir, alchText); assertEqual(r.stew, cookText)
+    o.craftSkill = true
+    r = rights()
+    assertTrue(r.elixir:sub(-#alchText) == alchText, "mixed rows: the parts, then the colored profession: " .. r.elixir)
+end)
+
 -- ── the type colors (round 4, R4-DW-01) ─────────────────────────────────────────────────────
 
 local function hex(c) return ("#%02X%02X%02X"):format(c.r * 255 + 0.5, c.g * 255 + 0.5, c.b * 255 + 0.5) end
@@ -298,12 +383,15 @@ test("item search sources: the tooltip's Gathered from section, after Drops from
     local text = {}
     for i, l in ipairs(lines) do text[i] = l.text .. (l.right and (" | " .. l.right) or "") end
     assertEqual(text[2], "Gathered from")
-    assertTrue(text[3]:find("^  Peacebloom | Herbalism ") ~= nil, text[3])
+    local herb = NS.Constants.TONE.profHerbalism
+    local herbText = NS.GroupRoster.Colored("Herbalism", herb.r, herb.g, herb.b)
+    assertTrue(text[3]:find("  Peacebloom | " .. herbText .. " ", 1, true) == 1, "the profession in its own tone: " .. text[3])
     assertTrue(text[3]:find("· 100%", 1, true) ~= nil, "the chance on the right")
     assertEqual(text[4], "  and 1 more", "capped at one row")
     o.rows = 2
     lines = IST.Lines(facts, o, nil, { ranks = {} })
-    assertEqual(lines[4].right, "Fishing · 85%", "fishing: no skill")
+    local fish = NS.Constants.TONE.profFishing
+    assertEqual(lines[4].right, NS.GroupRoster.Colored("Fishing", fish.r, fish.g, fish.b) .. " · 85%", "fishing: no skill")
     o.sections = { gathered = false }
     assertEqual(#IST.Lines(facts, o, nil, {}), 0, "the section switched off")
 end)

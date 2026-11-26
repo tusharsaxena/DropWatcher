@@ -233,8 +233,35 @@ local FIXED_TONE = {
     typeBoss      = { r = 1.000, g = 0.435, b = 0.569 },
     typeObject    = { r = 0.788, g = 0.647, b = 0.478 },
     typeContainer = { r = 0.702, g = 0.616, b = 1.000 },
+    -- A profession's name on Item Search's rows (round 4, R4-DW-04): one tone per skill line
+    -- (C.PROFESSION_TONE), in the tooltip's crafting and gathering rows and the window's Crafting
+    -- and Gathered from Profession columns. None is a skill-up hue (orange, yellow, green, gray) or
+    -- red, none repeats a Type tone above, and each reads on the dark tooltip (contrast 4.8:1 or
+    -- more on #0B0B0B; the closest pair, Leatherworking and Skinning, about 22 apart in CIELAB).
+    profAlchemy        = { r = 0.310, g = 0.765, b = 0.969 },
+    profBlacksmithing  = { r = 0.557, g = 0.643, b = 0.784 },
+    profEngineering    = { r = 0.431, g = 0.608, b = 1.000 },
+    profEnchanting     = { r = 0.824, g = 0.490, b = 1.000 },
+    profJewelcrafting  = { r = 1.000, g = 0.361, b = 0.882 },
+    profTailoring      = { r = 1.000, g = 0.604, b = 0.804 },
+    profCooking        = { r = 0.910, g = 0.706, b = 1.000 },
+    profFirstAid       = { r = 1.000, g = 0.788, b = 0.839 },
+    profLeatherworking = { r = 0.725, g = 0.506, b = 0.310 },
+    profSkinning       = { r = 0.690, g = 0.416, b = 0.376 },
+    profHerbalism      = { r = 0.369, g = 0.902, b = 0.659 },
+    profMining         = { r = 0.784, g = 0.847, b = 0.894 },
+    profFishing        = { r = 0.541, g = 0.490, b = 1.000 },
 }
 for key, c in pairs(FIXED_TONE) do C.TONE[key] = c end
+
+-- The C.TONE key of each profession's name by its skill line (round 4, R4-DW-04): the eight crafting
+-- lines, Jewelcrafting (Retail's), and the four gathering lines WoW Forever gives recipes.
+C.PROFESSION_TONE = {
+    [171] = "profAlchemy", [164] = "profBlacksmithing", [202] = "profEngineering", [333] = "profEnchanting",
+    [755] = "profJewelcrafting", [197] = "profTailoring", [185] = "profCooking", [129] = "profFirstAid",
+    [165] = "profLeatherworking", [393] = "profSkinning", [182] = "profHerbalism", [186] = "profMining",
+    [356] = "profFishing",
+}
 
 -- The C.TONE key of each stat the detail card's Stats row names, by its C_Item.GetItemStats key
 -- (modules/DetailCells.lua's SECONDARY): one fixed color per stat (feedback-21 H5).

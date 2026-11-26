@@ -366,7 +366,9 @@ test("item search tip: crafting glyphs: a fat up arrow for a skill-up, a gray le
     local profession = { [129] = "First Aid", [164] = "Blacksmithing", [165] = "Leatherworking", [171] = "Alchemy",
         [185] = "Cooking", [197] = "Tailoring", [202] = "Engineering", [333] = "Enchanting" }
     assertTrue(b[c + 1]:find(" | |cff", 1, true) ~= nil, "the colored parts on the right")
-    assertTrue(b[c + 1]:find("· " .. profession[rows[1].skillLine], 1, true) ~= nil, "then the profession")
+    local pt = NS.Constants.TONE[NS.ItemSearchTip.ProfessionTone(rows[1].skillLine)]
+    local named = NS.GroupRoster.Colored(profession[rows[1].skillLine], pt.r, pt.g, pt.b)
+    assertTrue(b[c + 1]:find("·|r " .. named, 1, true) ~= nil, "then the profession, in its own tone")
     local IST = NS.ItemSearchTip
     local C = NS.Constants
     local function tinted(mark, tone)
@@ -431,10 +433,11 @@ test("item search tip: recipe rows show their skill breakpoints in their hues, m
     tdp.show(tip, LINEN)
     local b = block(tdp, tip)
     local c = find(b, "Crafting")
-    assertTrue(b[c + 1]:find(" | |cff", 1, true) == nil, "no parts: " .. b[c + 1])
-    assertTrue(b[c + 1]:find(" | %a") ~= nil, "the profession alone: " .. b[c + 1])
     local line = tip.__lines[c + 2]
-    assertEqual(line.right, IST.ProfessionName(IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine))
+    local first = IS.Ranked(IS.Get(LINEN), NS.ItemSearch.Me(), true).crafting[1].skillLine
+    local pt = C.TONE[IST.ProfessionTone(first)]
+    -- the profession alone, in its own tone (round 4, R4-DW-04), no breakpoints
+    assertEqual(line.right, NS.GroupRoster.Colored(IST.ProfessionName(first), pt.r, pt.g, pt.b))
     assertEqual(NS.ItemSearchTip.Options().craftSkill, false)
 end, FOREVER_ONLY)
 
