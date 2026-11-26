@@ -227,7 +227,7 @@ test("verdict: the reasons are the top two by points; Sell and Toss name the pri
     }), ME, item())
     assertEqual(#v.reasons, 2)
     assertEqual(v.reasons[1], "Ready to turn in: Invented Errand Two")
-    assertEqual(v.reasons[2], "Quest you can pick up: Invented Errand")
+    assertEqual(v.reasons[2], "Quests you could pick up (1)")
     v = IS.Verdict(facts({ crafting = { recipe({ color = "orange" }) } }), ME, item())
     assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
     v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
@@ -276,7 +276,7 @@ test("verdict: the reasons always carry the largest negative part, so the shown 
     -- red under: the top two alone (the -20 hidden, the 65 left partly unexplained)
     assertEqual(#v.reasons, 3)
     assertEqual(v.reasons[1], "Tailoring skill-up (orange)")
-    assertEqual(v.reasons[2], "Quest you can pick up: Invented Errand")
+    assertEqual(v.reasons[2], "Quests you could pick up (1)")
     assertEqual(v.reasons[3], "Easy to buy again", "the largest negative part, after the top two")
     -- already among the top two: not repeated
     v = IS.Verdict(facts({ vendors = { {}, {}, {} } }), ME, item({ sellPrice = 12 }))
@@ -517,7 +517,16 @@ test("verdict breakdown: the score's parts in the order the score adds them, add
     -- gear 20, rebuy -20: 80 + 50 + 20 - 20 = 130, clamped to 100
     assertEqual(kinds(b), "quest,quest,cap,craft,craft,cap,gear,damper,clamp")
     assertEqual(lineOf(b, "quest", "Invented Errand").points, 60)
-    assertEqual(lineOf(b, "quest", "Invented Chore").points, 35)
+    -- red under (R5-DW-03, the owner): the quest you could pick up named ("Quest you can pick up: ...")
+    assertEqual(lineOf(b, "quest", "pick up").text, "Quests you could pick up (1)")
+    assertEqual(lineOf(b, "quest", "pick up").points, 35)
+    assertTrue(lineOf(b, "quest", "Invented Chore") == nil, "a count, not the quest")
+    -- two you could pick up: one line, their points together
+    local two = IS.Breakdown(facts({ quests = { quest("todo"), quest("todo", { id = 2, title = "Invented Chore" }) } }),
+        ME, item())
+    assertEqual(lineOf(two, "quest", "pick up").text, "Quests you could pick up (2)")
+    assertEqual(lineOf(two, "quest", "pick up").points, 70)
+    assertEqual(#two.lines, 1, "one line for both")
     assertEqual(lineOf(b, "cap", "80").points, -15, "the quests' cap shown when hit")
     assertEqual(lineOf(b, "craft", "orange").points, 60, "the known recipes by color")
     assertTrue(lineOf(b, "craft", "orange").text:find("2", 1, true) ~= nil, "with their count")

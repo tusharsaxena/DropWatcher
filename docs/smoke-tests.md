@@ -5175,6 +5175,13 @@ skin's font and keeps its colors. This replaces ITEM-SEARCH-52's two boxes. Fail
 the pill, square or jagged corners, white or shadowed text, or a pill sticking out of the tooltip's
 right edge. Result:
 
+**ITEM-SEARCH-61. Quests you could pick up as a count (R5-DW-03).** On a character that has not
+picked up the quests Peacebloom serves (My First Alchemy Set, or any quest item's quest you could
+take), open the Item Search window on a held Peacebloom → the verdict panel reads `Quests you could
+pick up (1)` with its points (`+35`), not the quest's name; with two such quests, `(2)` and `+70` on
+one line. A quest already in your log still reads by name (`In your quest log: ...`). Hover it → the
+tooltip's reason says the same count. Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

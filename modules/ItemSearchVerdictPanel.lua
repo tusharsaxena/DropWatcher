@@ -10,7 +10,7 @@ local _, NS = ...
 --
 -- WHAT IT SHOWS. A section header ("Verdict", "You have N"), then the tooltip's badge (the same pill,
 -- R5-DW-02, from the one builder: NS.ItemSearchTip.MakeBadge, .Badge, .FillBadge, .PlaceBadge), then one line
--- per part that counted, with its points, in the order the score adds them: the quests by quest; the
+-- per part that counted, with its points, in the order the score adds them: the quests in your log by quest and the ones you could pick up as one count (R5-DW-03); the
 -- known recipes by skill-up color, the recipes you could learn and the other professions, with a cap
 -- shown when it was hit; gear; the dampers; the 0..100 clamp, the poor-quality cap and the quest
 -- item's floor when they apply. Then the total ("Score  65"), the line the verdict word comes from

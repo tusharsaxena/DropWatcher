@@ -12,7 +12,8 @@ local _, NS = ...
 --     tier = "high" | "medium" | "low", reasons = { text, ... }, hint = text | nil }
 -- THE SCORE is clamp(sum, 0, 100) of the parts in C.ITEM_SEARCH.VERDICT, each one noting a reason: a
 -- new collectible is 100 and nothing else is worked out; a quest in your log (or ready to turn in)
--- that needs the item +60 each, one you can pick up (its minimum level at most yours + 3) +35, a
+-- that needs the item +60 each, one you can pick up (its minimum level at most yours + 3) +35 (one
+-- reason and one breakdown line for them all, "Quests you could pick up (N)", R5-DW-03), a
 -- quest the item starts +50, the quests together at most 80; a known recipe in a profession you have
 -- by its skill-up color (orange 30, yellow 20, green 8, gray 0), an unknown one your rank is below
 -- the gray of +10, those together at most 50; +3 a recipe of a profession you lack (at most 9, and
@@ -126,20 +127,23 @@ local function questRow(q, me, acc)
         both(acc, "quest", V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)))
         return V.QUEST_LOG
     end
-    if state == "todo" and canPickUp(q, num(me.level)) then
-        both(acc, "quest", V.QUEST_CAN, L["Quest you can pick up: %s"]:format(titleOf(q)))
-        return V.QUEST_CAN
-    end
+    if state == "todo" and canPickUp(q, num(me.level)) then return V.QUEST_CAN, true end
     return 0
 end
 
 local IN_HAND = { done = true, log = true, ready = true }
 
 local function questPart(facts, me, acc)
-    local total = 0
+    local total, can = 0, 0
     for _, q in ipairs(list(facts.quests)) do
-        if type(q) == "table" then total = total + questRow(q, me, acc) end
+        if type(q) == "table" then
+            local points, pickUp = questRow(q, me, acc)
+            total = total + points
+            if pickUp then can = can + 1 end
+        end
     end
+    -- the quests you could pick up as one count, like the recipes you could learn (R5-DW-03)
+    if can > 0 then both(acc, "quest", can * V.QUEST_CAN, L["Quests you could pick up (%d)"]:format(can)) end
     local starts = facts.startsQuest
     if type(starts) == "table" and not IN_HAND[questStateOf(starts, me) or ""] then
         both(acc, "quest", V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)))
