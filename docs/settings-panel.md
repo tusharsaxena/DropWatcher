@@ -42,7 +42,8 @@ Forever, Item Search last),
 (`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, two
 closing lines, one opening note and one table have no row the flow engine can draw; they are host
 tabs, `afterGroup` hooks and a page `chrome` handed to the library's tabbed renderer
-(`settings/PageEditors.lua`, over the pure `settings/Editors.lua`), and Drops › Retention's Clear
+(`settings/PageEditors.lua`, over the pure `settings/Editors.lua`; the Comparison page's two are the
+verdict library's), and Drops › Retention's Clear
 history button is Keep history for's `pairWith` partner, the right half of its line.
 
 ## General → Master controls
@@ -296,6 +297,11 @@ panel beside the window alone on its line (`solo`), then Side | Keep the panel o
 and Waiting in a raid.
 
 ## Comparison
+
+The page is LibKa0s-Verdict-1.0's Comparison section since the Item Search split (owner ruling
+R10): its six rows (`Settings.Rows`) and its two editors (`Settings.Tabs`, drawn on this addon's
+Options instance through its owner proxy, every write through the schema seam). The words are
+this addon's locale keys, read through `NS.L`.
 
 **Scoring:** Score with, Sidegrade band, Compare against items in my bags, Protect heirlooms.
 

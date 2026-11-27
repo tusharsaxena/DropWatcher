@@ -24,11 +24,11 @@ marked as such rather than listed as a requirement.
   load first when installed, and reached only through `core/Compat.lua` (their API is called under
   `pcall`, never copied).
   **Pawn**, once it has initialized (its `PawnIsReady()`), drives the `pawn` scorer
-  (`modules/Scoring.lua`, design spec §5.4): `comparison.scorer` `auto` picks it then, and until
+  (LibKa0s-Verdict-1.0's `VerdictScore.lua`, through `core/VerdictSetup.lua`; design spec §5.4): `comparison.scorer` `auto` picks it then, and until
   then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights.
   On WoW Forever (Pawn 2.14.1 there) Pawn has no specs and one Classic scale per talent tree, so you
   are scored with the scale of your top talent tree, and another player with the best of their
-  class's scales (`modules/Scoring.lua`, Forever port design §4.3). **CanIMogIt** serves transmog, which
+  class's scales (the same scorer, Forever port design §4.3). **CanIMogIt** serves transmog, which
   WoW Forever lacks, so it is read on Retail alone (design §4.4); when loaded, it answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
   Without Pawn, the comparison uses your own weights when any are set, else item level alone;
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is

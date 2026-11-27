@@ -1752,7 +1752,7 @@ panel tooltips are unchanged prose. Result: passed in the client, 2026-10-23 (th
 
 **FEED-90. A gear grid right under the title, muted gold labels, an arrow on every worn item (feedback-21 H3).** Client: both.
 The headless `test_tip_marks` (every tooltip's grid on line 2, the labels' color), `test_side_cells` (each
-worn item's arrow) and `test_evaluate` (`ItemVerdict`) cover the data. `/dw test`, expand every group, then
+worn item's arrow) and LibKa0s-Verdict-1.0's `test_verdict_kernel` (`ItemVerdict`) cover the data. `/dw test`, expand every group, then
 hover a Me and a Them cell, a History Me and Them cell, the Offer panel's Their eq, your own drop's `Upgrade
 for N` and an off-spec (cyan) cell → each tooltip's gear line (`Seta  321  <item>  ▼10`) is the first line
 under the title, above every bullet row. Every row's bullet and label (`Slot`, `Inspected`, `Means`, ...)
@@ -1800,7 +1800,7 @@ it takes off. With the toast on, a trinket toast whose looter wears two reads `Y
 usual width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-93. One mark where the drop was not judged against either worn item, or where two do not fit
-(feedback-21 R5).** Client: both. The headless `test_evaluate` (the kernel's `either`), `test_side_cells` (one mark for
+(feedback-21 R5).** Client: both. The headless LibKa0s-Verdict-1.0's `test_verdict_kernel` (the kernel's `either`), `test_side_cells` (one mark for
 a one-hander without dual wield, a two-hander against both hands, a bag baseline; the painted cell at a
 wider character measure), `test_compact_group` (line 3 at the least width, a wider measure) and
 `test_test_mode` cover the data. On a character that cannot dual wield (a Protection Paladin, a priest),
@@ -1814,7 +1814,7 @@ read reads `321/324 ▼10`, one mark, nothing running into the Trade column; in 
 line 3 reads the same and Trade stays on the line. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-94. A ring slot always reads both rings, a unique-equipped copy too (feedback-22).** Client: both. The
-headless `test_evaluate` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
+headless LibKa0s-Verdict-1.0's `test_verdict_kernel` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
 and `test_test_mode` (the unique ring samples) cover the data. Wear a unique-equipped ring (say
 Pilfered Precious Band, 315) and another ring (295); when a 318 copy of it drops for someone else →
 the Drops row's Me, compact line 3, the detail card's FOR YOU Item level and the toast all read both
@@ -2162,7 +2162,7 @@ raised: …probe` line for each. Restore with
 
 ## Item facts
 
-The facts and the load are headless-tested (`test_item_facts`); these checks confirm the shapes the
+The facts and the load are headless-tested (LibKa0s-Verdict-1.0's `test_verdict_facts`); these checks confirm the shapes the
 client answers, which the mock models from the API documentation. Each is a `/dump` on an item link
 (shift-click the item into the chat box after `/dump `).
 
@@ -2323,7 +2323,7 @@ equipment tierToken mount pet toy recipe` (cosmetic only when turned on) and `co
 blacklist=n`, and each drop line names its `kind=`. Result: Passed (owner, 2026-11-05)
 
 **COLL-10. Crafting reagents (DW-RG1, owner report 2026-11-19: Jade never reached the feed).** Client:
-both (the report was WoW Forever). The headless `test_collectibles`, `test_feed`, `test_pending` and
+both (the report was WoW Forever). The headless LibKa0s-Verdict-1.0's `test_verdict_collect`, `test_feed`, `test_pending` and
 `test_feed_counts` cover the rule. Settings › Drops › Items › Item kinds → Crafting reagents (ticked)
 beside Containers, and Everything else that is rolled on alone on the last line. With the minimum
 quality at Uncommon (WoW Forever's default), a group member (or you) loots Jade (item 1529, Trade
@@ -4233,7 +4233,7 @@ all. At the end → `Roll ended` or the winner, never a negative time. Record on
 row read at the start and after your choice. Result:
 
 **ROLLS-11. Lockboxes, bags and the catch-all (RX-04, RX-15, rolls UX ruling 3; Review Focus 3).**
-Client: both. Probe P-BOX first. The headless `test_collectibles`, `test_pending` and `test_feed`
+Client: both. Probe P-BOX first. The headless LibKa0s-Verdict-1.0's `test_verdict_collect`, `test_pending` and `test_feed`
 cover the kinds. Settings › Drops › Items › Item kinds lists Lockboxes (ticked), Containers (ticked)
 and Everything else that is rolled on (unticked). A group roll on a lockbox (a Junkbox, a Heavy or
 Ornate Bronze Lockbox) → Rolling now shows it with `Lockbox` where gear shows a verdict, in the

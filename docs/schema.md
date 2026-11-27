@@ -146,9 +146,15 @@ button and profiles reach them as any row.
 
 ### Comparison
 
+The six rows are LibKa0s-Verdict-1.0's (`Settings.Rows` at `comparison.*`, registered by
+`settings/SchemaRows.lua`, their defaults `defaults/Profile.lua`'s from `Settings.Defaults()`), and
+the Weights and Unwanted types editors are its `Settings.Tabs`, drawn on this addon's Options
+instance and written through the schema seam (owner ruling R10 of the Item Search split). Without
+the library the page has no rows.
+
 | Key | Default | Tab | What it is |
 |---|---|---|---|
-| `comparison.scorer` | `"auto"` | Scoring | `auto`, `pawn`, `weights` or `none`; the adapter in use (`modules/Scoring.lua`) can differ, see the Known Limitations |
+| `comparison.scorer` | `"auto"` | Scoring | `auto`, `pawn`, `weights` or `none`; the adapter in use (LibKa0s-Verdict-1.0's scorer, `NS.Scoring.InUse`) can differ, see the Known Limitations |
 | `comparison.sidegradeBand` | `0` | Scoring | item levels either side of equal that read as a sidegrade, 0 to 20 |
 | `comparison.compareOwned` | `false` | Scoring | judge against the best of worn and carried |
 | `comparison.heirloomProtect` | `true` | Scoring | a slot holding an heirloom is not called an upgrade for you (LootFeed → Evaluate's `heirloomProtect`) |

@@ -194,7 +194,7 @@ Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5
 Ornate Bronze Lockbox), the same lockbox once picked, a bag and, on Forever, a quiver and an ammo pouch:
 `/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
 then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
-The code (rolls UX RX-04, RX-15: `modules/Collectibles.lua` by class, `Compat.ItemOpens` for the
+The code (rolls UX RX-04, RX-15: `libs/LibKa0s/VerdictCollect.lua` by class, `Compat.ItemOpens` for the
 lines alone) takes any Container-class item (class 1) and
 any Quiver-class item (class 11: quivers and ammo pouches) as a container, `Container`, and a
 Miscellaneous Junk item (class 15, subclass 0) as a lockbox, `Lockbox`, only when one of its lines
@@ -206,7 +206,7 @@ kind, and shows only through the catch-all, as `Item`. Result:
 
 **P-STATS. Which secondary stats the weights editor should offer.** The weights strip (Comparison ›
 Weights) offers Strength, Agility, Intellect, Stamina, Critical Strike, Haste, Mastery and Versatility
-on both clients (`settings/Editors.lua`'s `SECONDARY`). On Forever, link five drops across armor types
+on both clients (`libs/LibKa0s/VerdictSettings.lua`'s `SECONDARY`). On Forever, link five drops across armor types
 and slots (a caster's, a melee's, a tank's, a ranged weapon and a trinket) and run
 `/dump C_Item.GetItemStats(<link>)` on each. Read every key that comes back: is any of
 `ITEM_MOD_HASTE_RATING_SHORT`, `ITEM_MOD_MASTERY_RATING_SHORT` or `ITEM_MOD_VERSATILITY` ever there, and

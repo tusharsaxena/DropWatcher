@@ -9,7 +9,7 @@ limitations that follow from these readings are listed in [`known-limitations.md
 
 ## The verdict kernel
 
-The verdict kernel (`modules/Evaluate.lua`) reads a few cases the design leaves open as
+The verdict kernel (LibKa0s-Verdict-1.0's `libs/LibKa0s/VerdictEvaluate.lua`, Drop Watcher's own until the Item Search split; the readings below moved with it) reads a few cases the design leaves open as
 follows. With the spec unknown, an item whose primary stat suits only some of the class's specs
 is `unknown`, not `ok`. With a score, the verdict follows spec §5.2 step 4 to the letter: only
 an ilvl and a score that agree in sign give that sign, so one inside its band and the other
@@ -38,7 +38,7 @@ holds the category, else the lowest holder anywhere.
 
 ## Scoring
 
-Scoring (DW-50, `modules/Scoring.lua`) settles how it reads design spec §5.4. The adapter in use
+Scoring (DW-50, `libs/LibKa0s/VerdictScore.lua`) settles how it reads design spec §5.4. The adapter in use
 can differ from `comparison.scorer`: `auto` takes Pawn once it has **initialized**
 (Pawn's `PawnIsReady()`, spec §5.4; a Pawn that is loaded but not yet initialized does not count, so
 your weights are not displaced while it starts, DW-62), else your weights when any spec has one,
@@ -94,7 +94,7 @@ Loot History's Price sources look; the rows are `skipRender` and the table write
 
 ## The class tables
 
-The class tables (`core/ClassData.lua`) are a fallback for a candidate whose spec is not known
+The class tables (`libs/LibKa0s/VerdictClassData.lua`) are a fallback for a candidate whose spec is not known
 yet, or whose class the item's spec list does not cover; an item's own spec list wins whenever it
 exists for the candidate's class, save one rule on WoW Forever: an armor type the class wears only
 from a later level (`armorLevel`) still refuses, since the list names a class-wide spec and knows
@@ -157,7 +157,7 @@ the normalized one is ROSTER-1.
 
 ## The item facts
 
-The item facts (`modules/ItemFacts.lua`) read six cases the design leaves open. A track's tier
+The item facts (`libs/LibKa0s/VerdictFacts.lua`) read six cases the design leaves open. A track's tier
 comes from its `trackStringID` through `C.TRACK_TIER_BY_STRING_ID`, which stays empty until
 FEED-5 records the client's ids, so today every tier comes from the enUS track name and a
 localized client leaves the track delta unset. A tier token is an item that names its classes
@@ -175,7 +175,7 @@ is FEED-5; the item readers' shapes are ITEM-1.
 
 ## The gear snapshot
 
-The gear snapshot (`modules/Gear.lua`) reads five cases the design leaves open. "Best owned per
+The gear snapshot (`libs/LibKa0s/VerdictGear.lua`) reads five cases the design leaves open. "Best owned per
 slot" is a per-slot best, not a loadout planner: the slots fill in id order, each with the
 highest-level item that fits it and is not placed already, so a pair holds your best two and one
 item never fills two slots, but unique-equipped limits and a two-hander's claim on both hands are

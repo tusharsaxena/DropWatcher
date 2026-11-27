@@ -26,7 +26,7 @@ through `NS.StoodDownRefusal()`, never the disabled line's `enable it with /dw e
 | `evaluate` (within `feed.add`) | `modules/LootFeed.lua` `evaluate` | one verdict for one candidate (you, the looter, or a member for your own drop) |
 | `quality.gate` (within `feed.add`) | `modules/LootFeed.lua` `qualityGate` | one minimum-quality decision |
 | `tradeTimer.scan` | `modules/TradeTimer.lua` `TradeTimer.Scan` | one read of your own drops' bag items and their trade-time lines (at most one per 2 seconds) |
-| `gear.rebuild` | `modules/Gear.lua` `Gear.Refresh` | one read of your worn and bag items into the gear snapshot (deferred out of combat for bag events; a bag-only rebuild reads no worn tooltip) |
+| `gear.rebuild` | `libs/LibKa0s/VerdictGear.lua` `RefreshGear` (the engine's instance, timed through `core/VerdictSetup.lua`'s `host.perf`) | one read of your worn and bag items into the gear snapshot (deferred out of combat for bag events; a bag-only rebuild reads no worn tooltip) |
 | `window.refresh` | `modules/Window.lua` `Window.Refresh` | one repaint pass of the window |
 | `insights.compute` (within `window.refresh`) | `modules/WindowInsights.lua` `compute` | one Insights recompute: Rows, Normalize, Filter, Period and the stats pass (issue #12), run only when the tab's cache key says the data or the filters changed |
 | `insights.layout` (within `window.refresh`) | `modules/WindowInsights.lua` `layout` | one Insights layout pass: the cards and every chart section, run on a recompute, a width or layout change, or a skin switch |

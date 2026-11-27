@@ -6,11 +6,14 @@ standing rules. This file supplies Drop Watcher's procedure: the tool, the files
 precedent a ruling follows and the nuances of each client. The headings below are the interface
 the command reads, so keep their names.
 
-The seeds are the class lists (clients-§5): `core/ClassData.lua` for Retail and
-`core/ClassDataForever.lua` for WoW Forever, each built by `CD.Build`. Every run also checks the
+The seeds are the class lists (clients-§5), LibKa0s-Verdict-1.0's since the Item Search split
+(DropWatcher#19): `libs/LibKa0s/VerdictClassData.lua`, the vendored copy, holds Retail's
+(`RETAIL`) and WoW Forever's (`FOREVER`) lists, each built by `CD.Build`. This repo checks them
+read-only: a ruled edit is the library's, made in LibKa0s's `LibKa0s/VerdictClassData.lua` and
+re-vendored, and `apply` refuses to write under `libs/`. Every run also checks the
 item enum fallback literals in `core/Constants.lua` (`C.ITEM_CLASS`, `C.WEAPON_SUBCLASS`,
 `C.ARMOR_SUBCLASS`, `C.RECIPE_SUBCLASS`, `C.MISC_SUBCLASS`), the recipe skill lines
-(`C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s `PROFESSION`) and `core/ItemRead.lua`'s
+(`C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s `PROFESSION`) and the library's `VerdictFacts.lua`
 `IR.GEAR_CLASSES`. These are name and existence checks only, with no candidates: they mirror the
 client's enums and are not a curated list. Nothing else in `core/` or `modules/` is a seed: the
 inventory slots (`C.SLOT`) are FrameXML constants that no DB2 table holds, `C.TIER_TOKENS` and
@@ -35,13 +38,15 @@ outside the seed loop: `## Gathering nodes` below says how it is kept.
 
 | Flavor | Source | Seed files | Tools |
 | --- | --- | --- | --- |
-| `retail` | wago.tools product `wow` (Retail live) | `core/ClassData.lua` (hand-curated, tool-checked; `apply` writes `RETAIL.WEAPONS` only), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor retail` |
-| `forever` | wago.tools product `wowf` (WoW Forever) | `core/ClassDataForever.lua` (hand-curated, tool-checked; `apply` writes `FOREVER.WEAPONS` only), plus the shared literals above (checked only), and `core/RecipeReagentsForever.lua` (generated whole, recipe reagents) | `tools/seeds/seeds.py --flavor forever`, `tools/seeds/seeds.py recipes` (`tools/seeds/recipes.py`) |
+| `retail` | wago.tools product `wow` (Retail live) | `libs/LibKa0s/VerdictClassData.lua`'s `RETAIL` (hand-curated in LibKa0s, tool-checked here; the ruled `RETAIL.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor retail` |
+| `forever` | wago.tools product `wowf` (WoW Forever) | `libs/LibKa0s/VerdictClassData.lua`'s `FOREVER` (hand-curated in LibKa0s, tool-checked here; the ruled `FOREVER.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only), and `core/RecipeReagentsForever.lua` (generated whole, recipe reagents) | `tools/seeds/seeds.py --flavor forever`, `tools/seeds/seeds.py recipes` (`tools/seeds/recipes.py`) |
 
 ## Rules
 
 - **Only `apply` writes a WEAPONS set**, and only for an accepted `weapon:` candidate or a
-  `weapon-unlisted` flag ruled `remove`. Every other row (class ids, armor, specs, trees, relics,
+  `weapon-unlisted` flag ruled `remove`. Since the Item Search split the lists are vendored here
+  (`libs/LibKa0s/`), so `apply` stops with the edit it would make and the edit is made in LibKa0s
+  and re-vendored; the rulings stay this repo's. Every other row (class ids, armor, specs, trees, relics,
   flags such as `D`, `T`, `S`) is a hand edit. An accepted hand candidate or a flag ruled `fix` makes
   `apply` refuse until the file carries the edit and a `derive --replay` stops raising it.
 - **Rulings are data.** They live in `tools/seeds/retail_rulings.json` and
@@ -51,7 +56,7 @@ outside the seed loop: `## Gathering nodes` below says how it is kept.
 - **Precedent, in this order, never re-litigated:**
   1. a ruling already in the flavor's rulings file;
   2. the seed file's own header and comments. The one that decides most weapon candidates is
-     `core/ClassData.lua`'s note above `RETAIL.WEAPONS`: a skill the class has but no loot of its
+     the class list file's note above `RETAIL.WEAPONS` (LibKa0s's `VerdictClassData.lua`): a skill the class has but no loot of its
      primary stat drops for is left out, so a ranged weapon reads as the hunter's alone (its own
      example is a warrior's bow). Devourer's weapon and off-hand rules stay a known limitation until
      smoke-checked (FEED-7);
@@ -62,7 +67,7 @@ outside the seed loop: `## Gathering nodes` below says how it is kept.
      `docs/superpowers/specs/2026-11-13-drop-watcher-forever-port-design.md` §4.2. Those rows are
      marked INFERRED until probed, so a build row that contradicts them is the owner's call, not
      the tool's;
-  5. the assertions in `tests/test_class_data.lua`, which pin today's lists. A ruling that
+  5. the assertions in LibKa0s's `tests/test_verdict_classdata.lua`, which pin today's lists. A ruling that
      contradicts one goes to the owner.
 - **What "accept" means here.** Accept a proficiency only when the build grants it
   (`SkillRaceClassInfo`, with `SkillLineAbility` as a second witness), the loot-relevance rule
@@ -133,17 +138,17 @@ nothing.
 
 ### After
 
-- Roll any assertion in `tests/test_class_data.lua` (and the other suites that read the list) that
+- Roll any assertion in LibKa0s's `tests/test_verdict_classdata.lua` (and the other suites that read the list) that
   pins a row the run changed.
 - Write the bundle's `ANALYSIS.md` by hand, in the 2026-11-15 bundles' shape: what the build
   says, what was proposed, accepted and rejected and why, and what a later run should re-check.
 - Add a smoke check to `docs/smoke-tests.md` for every list that changed, with its
   *Pending sign-off* note. A run that changes nothing adds none.
-- Re-resolve any `core/ClassData.lua:N` citation the docs suite flags.
+- Re-resolve any `libs/LibKa0s/VerdictClassData.lua:N` citation the docs suite flags.
 
 ### Stage
 
-`core/ClassData.lua`, `tools/seeds/retail_rulings.json`, `docs/seed-research/<date>-retail`, plus any
+`tools/seeds/retail_rulings.json` (the list's edit is LibKa0s's), `docs/seed-research/<date>-retail`, plus any
 test, smoke or citation edits. Commit message: `Seeds (retail): re-validated against <build> (<date>)`.
 
 ## Flavor: forever
@@ -201,7 +206,7 @@ Nuances:
 - **The level-40 switch is data.** The heavier armor line's `MinLevel` is the switch: Plate Mail and
   Mail answer 40 on 1.60.1, which is `ARMOR_LEVEL`.
 - **The vanilla proficiencies are INFERRED.** A build row that adds one (a druid's polearm, a rogue's
-  axe on 1.60.1) contradicts the research and `tests/test_class_data.lua`, so it goes to the owner
+  axe on 1.60.1) contradicts the research and LibKa0s's `tests/test_verdict_classdata.lua`, so it goes to the owner
   (`needs owner review`) and is not accepted by a run.
 - **The shared literals are Retail's.** `core/Constants.lua` and `C.RECIPE_SKILL_LINE` are one table
   for both clients. A Retail-only subclass or skill line (Jewelcrafting, Inscription, Mount
@@ -229,7 +234,7 @@ header names, and exits 1 otherwise.
 
 ### After
 
-- Roll any `tests/test_class_data.lua` assertion that pins a changed row, under both kit profiles.
+- Roll any LibKa0s's `tests/test_verdict_classdata.lua` assertion that pins a changed row, under both kit profiles.
 - Write the bundle's `ANALYSIS.md` by hand, in the 2026-11-15 bundles' shape.
 - Add a FOREVER smoke check (or a `docs/forever-probes.md` probe) for every list that changed, with
   its *Pending sign-off* note.
@@ -240,7 +245,7 @@ header names, and exits 1 otherwise.
 
 ### Stage
 
-`core/ClassDataForever.lua`, `tools/seeds/forever_rulings.json`, `docs/seed-research/<date>-forever`,
+`tools/seeds/forever_rulings.json` (the list's edit is LibKa0s's), `docs/seed-research/<date>-forever`,
 `core/RecipeReagentsForever.lua` and `docs/seed-research/<date>-forever-recipes`, plus any test,
 smoke or citation edits. Commit message:
 `Seeds (forever): re-validated against <build> (<date>)`.

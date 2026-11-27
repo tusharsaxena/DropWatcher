@@ -150,7 +150,7 @@ Total.
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 - rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
-### test_settings_pages.lua (57)
+### test_settings_pages.lua (51)
 
 - pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order
 - pages: each page's strip is its own tabs, one per group, in declaration order
@@ -196,12 +196,6 @@ Total.
 - pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
 - pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)
-- editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
-- editors: a spec's stats are its primary stat, Stamina and the four secondaries
-- editors: unwanted types are the class's weapons, then shields where a spec carries one
-- editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
-- editors: the spec strip keeps the remembered spec, else yours, else the first
-- editors: on Forever the strip lists your class's talent trees by name
 - editors: the counter label counts bytes and turns red past the limit
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
@@ -1684,7 +1678,7 @@ Total.
 - rx30: RollPopupRight is nil for a secret, absent or unplaced right edge
 - rx30: RollPopupRight scales the edge into UIParent's units, and a secret scale counts as 1
 
-### test_text_parse.lua (12)
+### test_text_parse.lua (10)
 
 - textparse: the module is pure — it names no client global and reads no _G
 - textparse: EscapePattern makes every magic character literal
@@ -1696,8 +1690,6 @@ Total.
 - textparse: StatLine reads a primary stat line's value, grouping marks dropped
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
-- textparse: WordMap, FirstWord and EndsWithWord read whole words, any case (TT-1)
-- textparse: TokenUseSlot reads the class phrase and the set <slot> item, in the words it is handed (TT-1)
 
 ### test_constants.lua (15)
 
@@ -1717,92 +1709,24 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (18)
+### test_offspec.lua (2)
 
-- class data: the active list is the client's, picked once at load
-- class data: ForClient names a client's list on either profile, Retail's for any other key
-- class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker
-- class data: ArmorFor("HUNTER", 30) is leather, ArmorFor("HUNTER", 40) is mail
-- class data: Forever's rows are keyed by class and talent tree, with the Pawn index
-- classdata: thirteen classes with their client classIDs, each with an armor type
-- classdata: every spec row is well-formed and its class lists it
-- classdata: every spec has its place in its class, 1 to n with none twice
-- classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
-- classdata: dual wield and Titan's Grip are the right specs
-- classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
-- classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
-- classdata: held off hands go to the caster and healer specs
-- classdata: a spec of another class is not trusted over the class
-- classdata: armor type is exact, and an unknown class or subclass cannot tell
-- classdata: weapon proficiencies by class
-- classdata: primary stat is the spec's, or the class's when every spec shares one
-- classdata: lookups never throw on junk input
-
-### test_evaluate.lua (47)
-
-- evaluate: every equip location in SLOT_PLAN compares against its slot
-- evaluate: an equip location with no plan is unknown (not gear)
-- evaluate: pair compares against the lower of the two slots
-- evaluate: an empty slot is an upgrade with the emptySlot reason
-- evaluate: a slot that is not known is unknown, never an upgrade
-- evaluate: a one-hander compares against the main hand only, unless the candidate dual wields
-- evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
-- evaluate: a two-hander compares against the average of both hands
-- evaluate: Titan's Grip compares a two-hander as a pair over both hands
-- evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)
-- evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
-- evaluate: ranged weapons are two-handers for hunters and main hand for wand users
-- evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
-- evaluate: a unique-equipped drop compares against the item holding its category
-- evaluate: a unique drop whose own slot holds the category replaces that item
-- evaluate: compareOwned takes the better of equipped and owned per slot
-- evaluate: a known spec is judged by the item's own spec list
-- evaluate: a spec list read for another class leaves the candidate to the class tables
-- evaluate: the primary stat check takes every primary the item carries
-- evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
-- evaluate: a known spec with no item spec list uses the spec's own class data
-- evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
-- evaluate: an unknown class cannot be judged
-- evaluate: tier tokens are judged by their class list
-- evaluate: a class-restricted item refuses other classes
-- evaluate: an undesired subclass is doesntWant, but only when the item is usable
-- evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
-- evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0
-- evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
-- evaluate: the scorer is optional, may be pending, and may fail without harm
-- evaluate: a two-hander's score baseline is the average of both hands' scores
-- evaluate: scoreFirst, a lower item level with a higher score is an upgrade
-- evaluate: scoreFirst, a score within 1% defers to item level
-- evaluate: scoreFirst, no score is item level with reason noScore
-- evaluate: ilvlFirst unchanged
-- evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
-- evaluate: the track delta orders tracks by tier, then rank
-- evaluate: the output carries every field of spec 5.2 step 5
-- evaluate: nil and garbage inputs never throw and answer unknown with a reason
-- evaluate: garbage inside the tables never throws
-- evaluate: an internal failure is caught and reported as unknown
-- evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
-- evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
-- evaluate: on Forever the item's spec list does not lift the armor level rule
-- evaluate: on Forever a relic is its class's alone: libram, idol, totem
-- evaluate: on Retail's class list a relic is not gear, never the relic reason
-- evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
-
-### test_offspec.lua (13)
-
-- offspec: a Protection paladin's Intellect axe is an off-spec upgrade for Holy over an empty hand
-- offspec: against the best Holy item owned, the off-spec verdict takes the band
-- offspec: a refusal on the class skips the pass; so does a drop the main spec can use
-- offspec: an unknown spec is skipped
-- offspec: the spec list and the dual-wield flag are spec refusals too
-- offspec: the best spec wins: verdict, then the larger difference (an empty slot largest), then the lower id
-- offspec: doesntWant, cantUse and unknown are never chosen; with none left there is no off-spec
-- offspec: item level only: the scorer is never asked, so it never waits on a score
-- offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
-- offspec: Who derives a spec's candidate from ClassData, never from the main spec
-- offspec: WornGear keeps each worn item the spec could wear, false where it could not
 - offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
+
+### test_verdict_setup.lua (11)
+
+- verdict setup: one instance of the library's major, on this client
+- verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
+- verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them
+- verdict setup: the first read is lazy and quiet, a later change sends GearChanged
+- verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
+- verdict setup: the engine's collection change runs the feed's pass
+- verdict views: every kernel call names the client in force, and the caller's opts stay unwritten
+- verdict setup: InUse and Scorer follow the settings and whether Pawn is initialized
+- verdict setup: the feed judges your drop with your weights once they are set
+- verdict setup: the Comparison rows are the library's six, their defaults the profile's
+- verdict setup: without the library the stand-in carries the instance's surface and judges unknown
 
 ### test_tier_token.lua (30)
 
@@ -1894,32 +1818,6 @@ Total.
 - off-spec offer: the candidate cell's gear is the item compared with, not the main spec's worn pair
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
-
-### test_scoring.lua (23)
-
-- scoring: a Pawn v1 string imports its stats under GetItemStats' keys
-- scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
-- scoring: ImportInto replaces one spec's weights in a fresh map and keeps the others
-- scoring: a weights score is the sum of stat times weight
-- scoring: a weight on an unknown stat key counts 0 and is logged once per key
-- scoring: HasWeights is true once any spec has a weight
-- scoring: Resolve picks the adapter for every setting, Pawn presence and weights
-- scoring: InUse and Scorer follow the settings and whether Pawn is initialized
-- scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
-- scoring: for you, a drop that upgrades no scale is valued on your spec's scale
-- scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn
-- scoring: for a looter, Pawn uses the scale for their class and spec
-- scoring: Pawn answers pending while it is not ready or has not read the item
-- scoring: on Forever your score uses the scale of your top talent tree
-- scoring: with no tree, the best of your class's scales, how = bestOfClass
-- scoring: another player is scored with the best of their class's scales
-- scoring: Feral Druid tank uses Pawn 3, damage Pawn 2
-- scoring: on Forever the weights are keyed by class and talent tree
-- scoring: the scorer and weights are the caller's config, never a setting read here
-- scoring: ScoreFor with your weights is how = custom, and none without a scorer
-- scoring: the kernel hands the scorer the drop beside each item
-- scoring: with weights, a higher item level that scores lower is a sidegrade
-- scoring: the feed judges your drop with your weights once they are set
 
 ### test_quality_gate.lua (26)
 
@@ -2064,57 +1962,6 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (26)
-
-- item facts: a cached ring reads every field of spec §5.1
-- item facts: a chest reads its appearance, account binds and no specs or track
-- item facts: the stats carry every primary stat on the tooltip, not the playing spec's alone
-- item facts: the spec list says which class the client read it for
-- item facts: a three-stat cloak read on a hunter suits a Blood death knight and a Retribution paladin
-- item facts: the track tier, by string id first, then by enUS name, else unset
-- item facts: the track falls back to the tooltip's upgrade line
-- item facts: an item unique on its own takes its item id as the category
-- item facts: a token naming classes is a tier token; class gear carries classes only
-- item facts: a tier token's use text names the slot it makes, read once; gear's never (TT-1)
-- item facts: a relic is gear on Forever, not gear on Retail
-- item facts: the quality falls back to the link's color
-- item facts: the facts feed the verdict kernel
-- item facts: Get caches by link
-- item facts: at its cap the cache drops its least recently used quarter, never the whole
-- item facts: garbage links answer nil and never raise
-- item facts: learning an appearance re-reads the flag on the cached facts
-- item facts: OnCollectionsChanged subscribers hear an appearance learned, after the re-read
-- item facts: rawEquipLoc and the category are filled on every item (issue #13)
-- item facts: the appearance event reads the raw equipLoc, not a slot set later
-- item facts: Request answers a cached item at once and never calls back
-- item facts: an uncached item loads, and every waiter is called back once
-- item facts: the callback retries until the item arrives
-- item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
-- item facts: a client that cannot load items answers unavailable
-- item facts: stood down, the cache and the loads are dropped and a late answer is ignored
-
-### test_collectibles.lua (19)
-
-- collectibles: CategoryOf names each category
-- collectibles: CategoryOf's precedence
-- collectibles: the out-of-scope classes are not watched
-- collectibles: IsCollectible is true for the collectible categories alone
-- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; Trade Goods a reagent
-- collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
-- collectibles: Verdict reads new, collected and no answer
-- collectibles: a pet carries its count, and a partial collection says n/limit
-- collectibles: a recipe for a profession you lack is can't use
-- collectibles: a cosmetic reads its live transmogKnown
-- collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
-- collectibles: Read fills a mount's, a pet's and a toy's collection state
-- collectibles: Read fills a recipe's profession and known line
-- collectibles: Read tells a lockbox and a box that opens from Junk that does not
-- collectibles: Read files a bag, a quiver and an ammo pouch as containers
-- collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
-- collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
-- collectibles: Read leaves a tier token's category to its flag and probes nothing
-- collectibles: Read answers its argument and survives no facts
-
 ### test_item_read.lua (25)
 
 - BUG-1 repro: chat first, the drop reads 311 Epic
@@ -2168,7 +2015,7 @@ Total.
 - gear: sorting your bags moves no gear, so it sends no GearChanged
 - gear: the gear events share one throttled rebuild, which announces a change once
 - gear: a bag event in combat arms nothing; the combat's end rebuilds once
-- gear: the bag defer is the host's predicate (SetDeferPredicate), none defers nothing
+- gear: the bag defer is the engine host's deferWhile, NS.Restrictions.InCombat
 - gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
 - gear: the player's spec change rebuilds; another unit's does not
 - gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen
@@ -2573,7 +2420,7 @@ Total.
 - collect feed: combat's end reads again only the drops still at collectUnknown
 - collect feed: combat's end with no unknown collectible arms nothing
 - collect feed: a learned appearance re-judges a live cosmetic through the same re-read
-- collect feed: the re-read is the feed's (CollectFeed), Collectibles keeps no timer or event
+- collect feed: the collection events are the engine's, the feed's pass is CollectFeed's
 - collect feed: the stand-down cancels a waiting re-read
 - collect feed: RereadCollections is the cache's one writer and reads the collectibles alone
 - collect feed: Asks refuses an ask, an offer and an announce for a collectible
@@ -3573,7 +3420,7 @@ Total.
 | test_database.lua | 17 |
 | test_schema.lua | 11 |
 | test_schema_rows.lua | 31 |
-| test_settings_pages.lua | 57 |
+| test_settings_pages.lua | 51 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 21 |
 | test_launcher_skin_entry.lua | 2 |
@@ -3636,24 +3483,20 @@ Total.
 | test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
 | test_compat_loot.lua | 21 |
-| test_text_parse.lua | 12 |
+| test_text_parse.lua | 10 |
 | test_constants.lua | 15 |
-| test_class_data.lua | 18 |
-| test_evaluate.lua | 47 |
-| test_offspec.lua | 13 |
+| test_offspec.lua | 2 |
+| test_verdict_setup.lua | 11 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 23 |
 | test_quality_gate.lua | 26 |
 | test_situations.lua | 17 |
 | test_trade_rules.lua | 26 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
-| test_item_facts.lua | 26 |
-| test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 30 |
 | test_verdict_golden.lua | 59 |
@@ -3715,4 +3558,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 168 |
-| **Total** | **2940** |
+| **Total** | **2799** |
