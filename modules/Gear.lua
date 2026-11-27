@@ -77,6 +77,15 @@ G.SLOTS = SLOTS
 local timer
 local pendingFull = false     -- a cause other than a bag event shares the armed rebuild
 local deferredBags = false    -- a bag event came in combat; the combat's end rebuilds
+local deferBags               -- the host's "hold bag events now" predicate (G.SetDeferPredicate)
+
+--- The host's predicate for holding a bag event (Item Search split plan, task A2): while `fn()` is
+--- true a BAG_UPDATE_DELAYED arms nothing and the next G.OnCombatEnd rebuilds. Drop Watcher's is
+--- combat (modules/GearQualities.lua); with none, every bag event arms the rebuild.
+--- @param fn function|nil
+function G.SetDeferPredicate(fn)
+    deferBags = type(fn) == "function" and fn or nil
+end
 
 -- The causes that move only your bags: their rebuild keeps the worn slots whose link stayed.
 local BAG_ONLY = { BAG_UPDATE_DELAYED = true, afterCombat = true }
@@ -323,11 +332,11 @@ function G.Schedule(cause)
     end)
 end
 
---- A gear event: BAG_UPDATE_DELAYED in combat is noted for the combat's end; anything else arms
---- the rebuild.
+--- A gear event: BAG_UPDATE_DELAYED while the host's defer predicate holds (G.SetDeferPredicate:
+--- combat) is noted for the combat's end; anything else arms the rebuild.
 --- @param event string
 function G.OnEvent(event)
-    if event == "BAG_UPDATE_DELAYED" and NS.Restrictions.InCombat() then
+    if event == "BAG_UPDATE_DELAYED" and deferBags and deferBags() then
         deferredBags = true
         return
     end
@@ -387,17 +396,6 @@ function G.OffSpecGear(specID)
     if not row or row.class ~= s.classFile or s.loading > 0 then return nil end
     if not s.bySpec[specID] then s.bySpec[specID] = offSpecGearOf(s, specID) end
     return s.bySpec[specID]
-end
-
---- The quality worn in each slot, `{ [slot] = quality | false }` (false = empty), for the
---- minimum-quality gate's ctx.gear (design spec §6.2). A slot still loading is absent.
---- @return table
-function G.Qualities()
-    local out = {}
-    for slot, e in pairs(G.Snapshot().equipped) do
-        if e == false then out[slot] = false else out[slot] = e.quality end
-    end
-    return out
 end
 
 -- ── events and the lifecycle ────────────────────────────────────────────────────────────────

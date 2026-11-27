@@ -497,6 +497,27 @@ test("gear: a bag event in combat arms nothing; the combat's end rebuilds once",
     assertTrue(NS ~= nil)
 end)
 
+test("gear: the bag defer is the host's predicate (SetDeferPredicate), none defers nothing", function()
+    local _, m, G = enabled(function(m) wear(m, SLOT.HEAD, 3001, leather("INVTYPE_HEAD", 600)) end)
+    G.Snapshot()
+    m.inCombat = true
+    m.__fire("PLAYER_REGEN_DISABLED")
+    G.SetDeferPredicate(nil)
+    m.__fire("BAG_UPDATE_DELAYED")
+    -- red under: a Gear that asks NS.Restrictions.InCombat itself (Item Search split plan, A2)
+    assertTrue(G.IsScheduled(), "no predicate: a bag event in combat still arms the rebuild")
+    m.advance(G.THROTTLE)
+    local held = false
+    G.SetDeferPredicate(function() return held end)
+    m.inCombat = false
+    held = true
+    m.__fire("BAG_UPDATE_DELAYED")
+    assertFalse(G.IsScheduled(), "the host's predicate holds it, out of combat too")
+    held = false
+    G.OnCombatEnd()
+    assertTrue(G.IsScheduled(), "the next combat end rebuilds the held event")
+end)
+
 test("gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again", function()
     local _, m, G = enabled(function(m)
         wear(m, SLOT.HEAD, 3001, leather("INVTYPE_HEAD", 600))

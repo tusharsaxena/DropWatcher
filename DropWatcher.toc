@@ -300,6 +300,10 @@ modules\CollectFeed.lua
 # above) and reads NS.Constants, NS.ClassData and NS.State at load. NS.Compat, NS.ItemFacts and
 # NS.Evaluate (above) are read at call time.
 modules\Gear.lua
+# LOAD-BEARING: reads NS.Gear (modules\Gear.lua, above) at load: adds NS.Gear.Qualities, the worn
+# qualities the feed's gate reads, and hands it the combat defer of bag events. NS.Restrictions
+# (modules\Restrictions.lua, above) is read at call time, inside the predicate.
+modules\GearQualities.lua
 # Conventional: publishes NS.LootParser, the CHAT_MSG_LOOT reader; appends its row to
 # NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load, and takes
 # NS.Perf (core\PerfSetup.lua, above) as a load-time upvalue. NS.Compat and NS.Roster are read at
