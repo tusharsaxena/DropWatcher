@@ -1,8 +1,8 @@
 local _, NS = ...
--- modules/GearQualities.lua — Drop Watcher's own reads over your gear snapshot (NS.Gear), peeled out
--- of modules/Gear.lua (Item Search split plan, task A2) so the snapshot holds nothing the feed alone
--- needs: the worn qualities the minimum-quality gate reads, and the combat defer of bag events
--- (NS.Restrictions.InCombat, handed to NS.Gear.SetDeferPredicate at load).
+-- modules/GearQualities.lua — Drop Watcher's own read over your gear snapshot (NS.Gear, the verdict
+-- engine's: core/VerdictViews.lua), kept out of the library (Item Search split plan, tasks A2, C1)
+-- because the feed alone needs it: the worn qualities the minimum-quality gate reads. The combat
+-- defer of bag events is the engine host's deferWhile (core/VerdictSetup.lua).
 
 local G = NS.Gear
 
@@ -17,5 +17,3 @@ function G.Qualities()
     return out
 end
 
--- A bag event in combat waits for the combat's end (the PLAYER_REGEN_ENABLED edge, NS.Gear's).
-G.SetDeferPredicate(function() return NS.Restrictions.InCombat() end)

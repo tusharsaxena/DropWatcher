@@ -28,9 +28,9 @@ local _, NS = ...
 --   onChange   "gear" sends NS.MSG.GEAR_CHANGED; "collection" runs the feed's re-judge
 --              (NS.CollectFeed.OnCollectionsChanged).
 --
--- THE LIFECYCLE. The instance stands up at OnEnable and at every stand-up (NS.VerdictStandUp, run by
--- core/DropWatcher.lua), which registers its handlers and reads your gear once; it stands down with
--- the addon (NS.STAND_DOWN), which drops its timers and caches.
+-- THE LIFECYCLE. The instance stands up at OnEnable (NS.VerdictEnable, core/DropWatcher.lua) and at
+-- every stand-up (NS.VerdictStandUp), which registers its handlers and reads your gear; it stands
+-- down with the addon (NS.STAND_DOWN), which drops its timers and caches.
 --
 -- Absent library: NS.Verdict is a stand-in whose kernel answers `unknown` for every item, and
 -- NS.VerdictEngine one that reads nothing, so every verdict reads "unknown" and nothing raises.
@@ -149,7 +149,10 @@ for _, e in ipairs(EVENTS) do
 end
 
 -- The events whose handling has moved onto the instance so far (the C1 slices widen it).
-local ADOPTED = { SPELL_TEXT_UPDATE = true, TRANSMOG_COLLECTION_UPDATED = true }
+local ADOPTED = { SPELL_TEXT_UPDATE = true, TRANSMOG_COLLECTION_UPDATED = true,
+    PLAYER_EQUIPMENT_CHANGED = true, BAG_UPDATE_DELAYED = true, PLAYER_REGEN_ENABLED = true,
+    PLAYER_SPECIALIZATION_CHANGED = true, TRAIT_CONFIG_UPDATED = true, CHARACTER_POINTS_CHANGED = true,
+    PLAYER_LEVEL_UP = true }
 
 -- The instance's handler per event, kept while it is stood up.
 local handlers = {}
@@ -158,6 +161,14 @@ function NS.addon.OnVerdictEvent(_, event, ...)
     local fn = handlers[event]
     if fn then fn(event, ...) end
 end
+
+-- THE FIRST READ IS LAZY, as it was when the snapshot was this addon's own: nobody has judged
+-- against an older one, so it announces nothing, and it reads the client when something first
+-- asks for your gear. The instance reads your gear as it stands up, which at OnEnable is only so its
+-- handlers are kept: that read is quiet (`quietGear`) and provisional, and the first ask through
+-- NS.Gear (NS.VerdictFresh) reads again, quietly. A gear change the instance announces in between
+-- makes its snapshot the real one. The latch's stand-up announces its read, as before.
+local quietGear, provisional = false, false
 
 local host = {
     client = CLIENT,
@@ -176,7 +187,10 @@ local host = {
     unregisterEvent = function(event) handlers[event] = nil end,
     onChange = function(kind)
         if kind == "gear" then
-            return   -- modules/Gear.lua still sends it (until the gear slice)
+            if quietGear then return end
+            provisional = false
+            NS.State.gear = NS.VerdictEngine:Snapshot()   -- the mirror (core/VerdictViews.lua's NS.Gear)
+            NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
         elseif kind == "collection" and NS.CollectFeed then
             NS.CollectFeed.OnCollectionsChanged()
         end
@@ -192,9 +206,32 @@ host.perf = setmetatable({
 
 NS.VerdictEngine = V and V:New(host) or stubEngine(CLIENT)
 
---- Stand the instance up: its handlers kept and your gear read once (core/DropWatcher.lua's
---- OnEnable and stand-up).
-function NS.VerdictStandUp() NS.VerdictEngine:StandUp() end
+--- Stand the instance up at the latch's stand-up: its handlers kept and your gear read and
+--- announced (NS.STAND_UP).
+function NS.VerdictStandUp()
+    provisional = false
+    NS.VerdictEngine:StandUp()
+end
 
-NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function() NS.VerdictEngine:StandDown() end
+--- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept, its gear read
+--- quietly and provisionally (see THE FIRST READ IS LAZY above).
+function NS.VerdictEnable()
+    quietGear = true
+    local ok, err = pcall(NS.VerdictEngine.StandUp, NS.VerdictEngine)
+    quietGear, provisional = false, true
+    if not ok then error(err, 0) end
+end
+
+--- Before a gear read through NS.Gear: the stand-up's provisional snapshot read again, quietly,
+--- once (core/VerdictViews.lua).
+function NS.VerdictFresh()
+    if not provisional then return end
+    provisional = false
+    NS.VerdictEngine:RefreshGear("lazy", true)
+end
+
+NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
+    NS.VerdictEngine:StandDown()
+    NS.State.gear = nil
+end
 NS.STAND_UP[#NS.STAND_UP + 1] = NS.VerdictStandUp

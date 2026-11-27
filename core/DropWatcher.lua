@@ -759,7 +759,7 @@ function DW:OnEnable()
 
     -- The verdict engine's instance (core/VerdictSetup.lua): its event handlers kept and your gear
     -- read, before anything below can judge an item.
-    if NS.VerdictStandUp then NS.VerdictStandUp() end
+    if NS.VerdictEnable then NS.VerdictEnable() end
 
     -- Eager category registration (options-ui-§1); bodies stay lazy.
     if self.Settings and self.Settings.Register then self.Settings.Register() end

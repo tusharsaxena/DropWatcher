@@ -272,17 +272,8 @@ modules\Collectibles.lua
 # (above), NS.ItemFacts and NS.LootFeed are read at call time; core\VerdictSetup.lua's onChange calls
 # its OnCollectionsChanged.
 modules\CollectFeed.lua
-# LOAD-BEARING: appends its rows to NS.FEATURE_EVENTS where other files share the event:
-# BAG_UPDATE_DELAYED before modules\TradeTimer.lua's, and PLAYER_REGEN_ENABLED after
-# core\DropWatcher.lua's and modules\CollectFeed.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN
-# / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes NS.Gear, the
-# player's gear snapshot and candidate; appends its handlers to NS.addon (core\DropWatcher.lua,
-# above) and reads NS.Constants, NS.ClassData and NS.State at load. NS.Compat, NS.ItemFacts and
-# NS.Evaluate (core\VerdictViews.lua, above) are read at call time.
-modules\Gear.lua
-# LOAD-BEARING: reads NS.Gear (modules\Gear.lua, above) at load: adds NS.Gear.Qualities, the worn
-# qualities the feed's gate reads, and hands it the combat defer of bag events. NS.Restrictions
-# (modules\Restrictions.lua, above) is read at call time, inside the predicate.
+# LOAD-BEARING: reads NS.Gear (core\VerdictViews.lua, above) at load: adds NS.Gear.Qualities, the
+# worn qualities the feed's gate reads.
 modules\GearQualities.lua
 # Conventional: publishes NS.LootParser, the CHAT_MSG_LOOT reader; appends its row to
 # NS.FEATURE_EVENTS and its handler to NS.addon (core\DropWatcher.lua, above) at load, and takes
