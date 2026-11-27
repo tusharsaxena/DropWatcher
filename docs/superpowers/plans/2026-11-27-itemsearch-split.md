@@ -29,7 +29,7 @@
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | done | b940cc70 |
 | B2 | LK | Reads, facts, gear, score, collect + instance API | done | fc303a5e |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | done | 021bdc46 |
-| B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | todo | |
+| B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | done | 110e02be |
 | C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | todo | |
 | C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | todo | |
 | C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | todo | |
@@ -216,9 +216,25 @@ ported).
 
 **Files:** `CHANGELOG.md` (v1.119.0 block naming every file minor), `docs/api/Verdict/version-1-docs.md` + `members-1.json` (owner ruling R4 recorded, the two consumers), `docs/api/README.md`, `docs/api/CONSUMERS.md`, `README.md` (major count, payload tree), `docs/releasing.md` (minor-name list incl. the eight Verdict constants, version pointers), `docs/test-cases.md` (regenerated), `docs/automated-tests/<stamp>/` bundle + `RESULTS.md` row.
 
-- [ ] **Step 1:** Follow `docs/releasing.md` order of operations; `tests/test_versioning.lua` green.
-- [ ] **Step 2:** Run the vendored automated-test runner (`/dev-copilot:wow-automated-tests` playbook) → bundle.
-- [ ] **Step 3:** Commit `IS-B4: v1.119.0 release record`; `git push -u origin feat/2026-11-27-itemsearch-split`. No tag (G1).
+- [x] **Step 1:** Follow `docs/releasing.md` order of operations; `tests/test_versioning.lua` green.
+- [x] **Step 2:** Run the vendored automated-test runner (`/dev-copilot:wow-automated-tests` playbook) → bundle.
+- [x] **Step 3:** Commit `IS-B4: v1.119.0 release record`; `git push -u origin feat/2026-11-27-itemsearch-split`. No tag (G1).
+
+Builder note (B4): LibKa0s commits `39fc0021` (the release, all but its evidence: CHANGELOG dated
+`## v1.119.0 — 2026-11-27`, the Verdict document complete with the consumers at the tag beside R4, README
+twenty-seven majors / row / tree, releasing.md pointers and lists, CONSUMERS.md, test-cases unchanged),
+`55a7c6dc` and `110e02be` (the record: bundle `docs/automated-tests/20261127-234144/`, ANALYSIS.md,
+RESULTS row, release-gate lines), as releasing.md step 7's two commits. Decisions: (1) the first release
+run measured `seed` in `tests/test_verdict_golden.lua` at CCN 18 (the tag gate allows none over 15), so
+`55a7c6dc` split it in three, behavior unchanged, and the run was retaken; the first bundle was not
+committed. (2) The vendored runner refuses a git worktree (it tests `-d .git`, and a worktree's `.git`
+is a file), so the run was taken in a fresh clone of the branch at the same commit, named `LibKa0s`, and
+the bundle copied back; ANALYSIS.md records it and names the kit fix as a new action. (3) README's
+standards pointer stays v2.121.0, WowAddonStandards `master` (its checkout is on another run's branch
+at v2.122.1). (4) `tests/test_verdict_kernel.lua` (1092) entered the 1000–1500 band; its RESULTS
+disposition is accepted with a 1250-line trigger, not yet in LibKa0s CLAUDE.md's band census (the
+ForeverDB.lua precedent). (5) Seen, not changed: `LibKa0s/Verdict.lua`'s header file list omits
+`VerdictSettings.lua`; for F1.
 
 ### Task C1: Drop Watcher on the major (DW)
 
