@@ -27,7 +27,7 @@
 | A1 | DW | Golden verdict characterization suite | done | 5dafd4e |
 | A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | done | 5a50224 |
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | done | b940cc70 |
-| B2 | LK | Reads, facts, gear, score, collect + instance API | todo | |
+| B2 | LK | Reads, facts, gear, score, collect + instance API | done | fc303a5e |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | todo | |
 | B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | todo | |
 | C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | todo | |
@@ -127,9 +127,55 @@ Builder note (B1): commit `b940cc70` in LibKa0s. (1) WHERE: the LibKa0s checkout
 - `v:Judge(link) -> me|nil, pending:boolean`; `v:JudgeFacts(facts, {forced=bool, candidate=cand|nil}) -> me`; `v:Facts(link) -> facts|nil`; `v:Request(link)`; `v:Snapshot() -> {signature, equipped, owned, ...}`; `v:Signature() -> string|false`; `v:Candidate() -> cand`; `v:OffSpecGear()`; `v:Scorer() -> fn`; `v:StandDown()`; `v:StandUp()`.
 - `reads` override: every read the instance makes goes through `host.reads[name] or VerdictReads[name]`, resolved at call time (so a host's simulator seam can guard it).
 
-- [ ] **Step 1:** Port DW's test_gear / test_item_facts / test_item_read / test_scoring / test_collectibles to instance form + Review Focus tests 2, 4, 5; run → FAIL.
-- [ ] **Step 2:** Move the code; events through `host.registerEvent`; throttle 0.5 s; `onChange("gear")` where DW sent `GEAR_CHANGED`.
-- [ ] **Step 3:** Gate green → commit `IS-B2: Verdict instance: reads, facts, gear, score, collect`.
+- [x] **Step 1:** Port DW's test_gear / test_item_facts / test_item_read / test_scoring / test_collectibles to instance form + Review Focus tests 2, 4, 5; run → FAIL.
+- [x] **Step 2:** Move the code; events through `host.registerEvent`; throttle 0.5 s; `onChange("gear")` where DW sent `GEAR_CHANGED`.
+- [x] **Step 3:** Gate green → commit `IS-B2: Verdict instance: reads, facts, gear, score, collect`.
+
+Builder note (B2): commit `fc303a5e` in LibKa0s, built in the same worktree as B1
+(`/mnt/d/Profile/Users/Tushar/Documents/GIT/.worktrees/LibKa0s-itemsearch`, branch
+`feat/2026-11-27-itemsearch-split`); the checkout itself is still on the Feed run's branch. Five
+files, load order Reads, Collect, Facts, Score, Gear after VerdictEvaluate, each minor 1 paired on the
+shell; the version key is `1.1.1.1.1.1.1.1.1.1` (document and manifest renamed). Decisions C1 and C3
+must follow: (1) ONCHANGE KINDS: `gear`, `collection`, `score` and a fourth, `item`, which the plan did
+not list: `v:Judge(link)` on an uncached item asks for it and fires `onChange("item", link)` when it
+loads, so a host need not hold its own Request callback; `score` and `item` carry the link second.
+(2) `v:Judge(link, forced)` answers `me, pending` (`nil, true` loading; `me, true` score pending,
+retried every `SCORE_RETRY` 1 s, `SCORE_TRIES` 5, DW's LootFeed values; `nil, false` no item).
+`v:JudgeFacts(facts, { forced, candidate })`: with `candidate` (another player) there is no
+heirloomProtect, DW's judgeLooter rule; the sidegrade band, compareOwned, scorer and verdict mode
+still come from the host's config. (3) THE COLLECTION EVENTS ARE THE LIBRARY'S (A2 left it to B2):
+NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and the
+transmog event arm one 0.5 s re-read per instance (`v:RereadCollections`), then
+`onChange("collection")`. C1: DW's `modules/CollectFeed.lua` drops its five event rows and its
+`RereadCollections` call and runs its feed pass from `onChange("collection")`; its
+PLAYER_REGEN_ENABLED collectUnknown pass stays DW's. `IsFeedOnly` is not in the library (it reads a
+feed record): it stays DW's. (4) READS: `PawnScaleForSpec` and `PawnVisibleScale` take a trailing
+`client` (the class list Pawn's spec index is read from); DW's members ignore it. The library's
+`PlayerRole` reads LibKa0s-Role-1.0 with no store, so DW (and IS if it keeps a role store) must hand
+its own `PlayerRole` in `host.reads` or the Feral tank scale and the role override are lost. (5)
+CLIENT PER CALL in the pure halves: `lib.Collect.Verdict(facts, forced, client)` (whose slot plans
+say an item of no category reads as gear; either client's when nil), `lib.Score.WeightsScorer(map,
+client, warn)` and `WeightsFor(map, candidate, dropStats, client, warn)` (Retail's list when nil),
+`ParseImport/ImportInto/WeightsScore` take an optional `warn(key, name)` for the once-per-key debug
+line DW's NS.DebugOnce gave. C1 must pass the client wherever DW's group-side code calls them.
+`ScoreFor`/`InUse` are instance methods (`v:ScoreFor(link, who, cfg)`, `v:ScorerInUse(cfg)`; cfg nil
+reads the host's config). (6) `host.config()` is the A2 `VerdictConfig` shape; a nil `verdictMode`
+reads `V.VerdictModeFor(client)` (scoreFirst on Forever), so IS need not name it. A host with no
+config judges on all-nil values, not DW's defaults: B3's `V.Settings.DEFAULTS` is where a host gets
+them (the golden suite carries DW's six defaults inline until then). (7) `host.deferWhile`'s release
+edge is PLAYER_REGEN_ENABLED (DW's is combat); a host with another predicate calls
+`v:OnGearDeferEnd()` itself. DW's `G.Qualities` stays DW's, read off `v:Snapshot().equipped`. (8) The
+fixture sets the mock's `_G` to the mock set so `Reads.GlobalString` (`_G[name]`, as DW's) reads the
+client's strings. (9) A small B1-file fix, unreleased so no minor moves: VerdictTierTokens read a key
+missing from a host's locale table as nil and raised; it now reads as its own word (a red-first case in
+test_verdict_tokens). (10) Tests beyond the plan's list: `tests/test_verdict_reads.lua` (the reads'
+absent values and secret guards) and the shared `tests/fixture_verdict_client.lua` (a fresh mock
+client per case, ported from DW's wow_mock item, tooltip, gear and collection fakes). The golden read
+half runs all 16 cases through `v:JudgeFacts` on a fresh client per case, and the kernel half's 14
+declared skips lifted (17 skips to 3). TDD order: the library files were written before the suites;
+red was shown by running the six new suites and the golden suite against the B1 library (116 of 152
+failed), then green. Gate: 5523 passed / 0 failed / 3 skipped on both kit profiles, luacheck 0/0 (419
+files), lizard -C 15 clean.
 
 ### Task B3: `VerdictSettings.lua` (LibKa0s)
 
