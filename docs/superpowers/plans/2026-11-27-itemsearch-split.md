@@ -25,7 +25,7 @@
 |---|---|---|---|---|
 | A0 | DW | Design, research note, this plan | done | (this commit) |
 | A1 | DW | Golden verdict characterization suite | done | 5dafd4e |
-| A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | done | b2bfc9d |
+| A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | done | 7af4670 |
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | todo | |
 | B2 | LK | Reads, facts, gear, score, collect + instance API | todo | |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | todo | |
