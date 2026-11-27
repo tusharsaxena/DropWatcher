@@ -29,6 +29,7 @@ no Item Search code afterwards. Both addons pass their full green gates and a st
 | R8 | Claude may bump LibKa0s to v1.119.0 and tag it, the tag only after the owner approves the LibKa0s merge. Item Search starts at **v0.1.0**. Drop Watcher's version is not bumped. |
 | R9 | No CurseForge project yet: the TOC leaves `X-Curse-Project-ID` out; README/DEPENDENCIES note it. |
 | R10 | The verdict's six settings (scorer, sidegrade band, compare owned, heirloom protect, per-spec stat weights, unwanted types) and their two custom editors ship **in the library as a drop-in settings section**. Item Search gets a Comparison page from it; Drop Watcher's Comparison page is rebuilt from the same section. Each addon stores its own values; a fresh Item Search install gives Drop Watcher's out-of-box verdicts. |
+| R11 | The default key becomes **Ctrl-Alt-S** (stored `ALT-CTRL-S`, the client's canonical order; was Alt-Ctrl-D). The tooltip hint writes the bound key in Ctrl, Alt, Shift order (`Ctrl-Alt-S: open in Item Search`), not the client's `GetBindingText` order. The tooltip's label line reads **Item Search**. Mockup: https://claude.ai/artifact/YFERKSnAVrgK9Hz7CYbsUs (owner asked to see it before the build). |
 
 ## 3. Goals, non-goals, anti-goals
 
@@ -150,8 +151,8 @@ Search window). Skin picker preview: test. Sim mode checkbox: none.
 **Test mode** (new, session-only): fills the window with a canned item set and its verdicts and shows
 a sample tooltip block, without ForeverDB, behind the test strip (preview-mode).
 
-**Keybinding:** `Bindings.xml` `CLICK ItemSearchKey:LeftButton` with the same once-per-character
-free-key default Drop Watcher used. No binding migration (R5).
+**Keybinding:** `Bindings.xml` `CLICK ItemSearchKey:LeftButton`, default `ALT-CTRL-S` (R11), with the
+same once-per-character free-key rule Drop Watcher used; the hint formats the key Ctrl-Alt-Shift order. No binding migration (R5).
 
 **Optional dependencies:** ForeverDB, ForeverDB_Full, Auctionator, Pawn, TomTom.
 
