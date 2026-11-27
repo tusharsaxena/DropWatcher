@@ -30,7 +30,7 @@
 | B2 | LK | Reads, facts, gear, score, collect + instance API | done | fc303a5e |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | done | 021bdc46 |
 | B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | done | 110e02be |
-| C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | todo | |
+| C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | done | 296e8ec |
 | C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | todo | |
 | C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | todo | |
 | D1 | DW | Clean cut of Item Search; retire its data; docs; push | todo | |
@@ -240,9 +240,52 @@ ForeverDB.lua precedent). (5) Seen, not changed: `LibKa0s/Verdict.lua`'s header 
 
 **Files:** `libs/LibKa0s/`, `tests/_kit/` (re-vendored from LibKa0s branch HEAD), `CLAUDE.md` provenance line `v1.119.0` + icons line; new `core/VerdictSetup.lua` (the instance: `host.reads` = the DW Compat members so the Sim seam guards them; `onChange("gear")` → `NS.MSG.GEAR_CHANGED`); rewire every reader of `NS.Evaluate`, `NS.ClassData`, `NS.OffSpec`, `NS.TierTokens`, `NS.Scoring`, `NS.Collectibles` (pure half), `NS.ItemFacts`, `NS.ItemRead`, `NS.Gear` onto the instance or `V.*`; delete the moved DW files and their now-library tests (keeping DW-side tests + golden); Comparison page from `V.Settings`; TOC; docs (ARCHITECTURE module map, module-map, schema, compat-layer, DEPENDENCIES, revendor bundle `docs/revendor/2026-11-27-v1.119.0/`).
 
-- [ ] **Step 1:** Re-vendor per `/dev-copilot:wow-revendor-libka0s` (copy only; adoption decisions are this task's).
-- [ ] **Step 2:** Rewire in slices (kernel readers → facts/read → gear → scoring → collect → settings), full gate both clients after each, commit `IS-C1.<n>`.
-- [ ] **Step 3:** Golden suite unchanged and green; push.
+- [x] **Step 1:** Re-vendor per `/dev-copilot:wow-revendor-libka0s` (copy only; adoption decisions are this task's).
+- [x] **Step 2:** Rewire in slices (kernel readers → facts/read → gear → scoring → collect → settings), full gate both clients after each, commit `IS-C1.<n>`.
+- [x] **Step 3:** Golden suite unchanged and green; push.
+
+Builder note (C1): commits `b3b324b` (IS-C1.1, the re-vendor and bundle `docs/revendor/2026-11-28-v1.119.0/`)
+.. `296e8ec` (IS-C1.9, docs). Decisions C3, D1, F1 and G1 should know: (1) THE VENDOR GATE: the
+provenance line names v1.119.0, which is untagged (G1's), so `tests/test_vendor_sync.lua`'s two
+payload cases fail on both profiles at every C1 commit ("the library repo v1.119.0 carries
+LibKa0s/"); no tag was made (`../LibKa0s` is another session's, and the Feed branch also opens
+v1.119.0). The bytes were proven instead: a scratch clone of the LibKa0s worktree with a throwaway
+local tag at `110e02be` beside a clone of this branch passes all three VendorSync cases. Every other
+case is green; G1's tag turns the two green in place. IS (C2/C3) meets the same two cases. (2) THE
+SHAPE: `core/VerdictSetup.lua` (the host, `NS.Verdict`, `NS.VerdictEngine`, the stand-in) and
+`core/VerdictViews.lua`: DW keeps its reader names (`NS.Evaluate`, `NS.ClassData`, `NS.OffSpec`,
+`NS.TierTokens`, `NS.ItemRead`, `NS.ItemFacts`, `NS.Gear`, `NS.Scoring`, `NS.Collectibles`) as thin
+views, because the golden suite (byte-unchanged, green) and the A2 spy cases drive those names, and
+suites stand members in (NS.Scoring, NS.Gear.Snapshot). Every kernel view names the client of the
+class list in force (`NS.ClassData.ClientKey()`, Install for suites); the off-spec gate stays
+`C.FEATURE.offSpec` (a candidate's offSpecGear is withheld from the kernel where it is false). The
+feed (`LootFeed.judgeMe`, judgeLooter, candidates) still judges through the views, not
+`v:JudgeFacts`, so its `evaluate` perf parent and test seams hold; DW's Item Search runs on the
+instance through the same views. (3) EVENTS: `host.registerEvent` only keeps the instance's
+handler; each library event is an `NS.FEATURE_EVENTS` row (`OnVerdictEvent`, the list from the API
+document), so stand-down and the simulator's `NS.DeliverEvent` reach them. (4) THE FIRST READ: the
+library's `StandUp` reads gear at once, and DW's snapshot was lazy and quiet. OnEnable stands the
+instance up with its gear change suppressed and marks the read provisional; the first ask through
+`NS.Gear` re-reads quietly (`NS.VerdictEnable`, `NS.VerdictFresh`); the latch's stand-up announces as
+before. A library `StandUp(lazy)` would remove this; for F1. `NS.State.gear` mirrors the snapshot
+DW last saw, for the diagnostics. (5) `host.reads` resolves every name through `NS.Compat` (NS.Item
+for the item load) at each call. (6) SETTINGS: rows from `V.Settings.Rows` (defaults set to
+`P.comparison[key]`, which defaults/Profile.lua takes from `Settings.Defaults()`), tabs from
+`V.Settings.Tabs(Helpers, spec)` with `spec.client` read per draw; no rows without the library.
+The noStats key is the library's new text. test_locale reads `VerdictTierTokens.lua` and
+`VerdictSettings.lua` as readers of NS.L. test_skin_settings no longer counts the import box as DW's
+own widget (the library draws it through the owner proxy). (7) SEEDS: deleting
+`core/ClassData.lua` (IS-C1.2) broke `pytest tools/seeds` and IS-C1.2..C1.6 were committed with it
+red (only the Lua gate was run); IS-C1.7 fixed it: the tool reads `libs/LibKa0s/VerdictClassData.lua`
+and `VerdictFacts.lua` read-only and `apply` refuses under `libs/`. The class-list seed contract
+should move to LibKa0s (raise at F1/E1). (8) TESTS: deleted as now-library: test_evaluate,
+test_class_data, test_item_facts, test_scoring, test_collectibles, the kernel cases of test_offspec,
+the editor pure-halves of test_settings_pages, the tier-token parser cases of test_text_parse. Kept
+as host integration: test_gear (its off-spec cases Retail-only), test_tier_token, test_item_read,
+test_collect_feed. New: tests/test_verdict_setup.lua (11 cases). Total 2799. (9) Left for F1: DW's
+`core/Constants.lua` still carries kernel tables only the library now reads (`TRACK_TIER`,
+`TRACK_TIER_BY_STRING_ID`, the slot plans' kernel half); `C.TIER_SLOTS`/`C.TIER_TOKENS` were removed.
+The item read's deviation row is retired (the read is the library's).
 
 ### Task C2: Item Search repo + scaffold (IS)
 
