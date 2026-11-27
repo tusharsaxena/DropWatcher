@@ -442,7 +442,7 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
-  ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
+  ├─> DetailCells.ForYou(drop, Scoring.InUse(vcfg), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, TestMode.InspectOf(drop), Compat.SpecName(specID), now,
   │     WindowOwn.IsRevealed(id), looterLeft(drop))                 (pure; left: the looter is no
   │     longer in your group, the drop's own read kept and Spec reading `not in your group`, never
@@ -608,7 +608,7 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
 `SPELL_TEXT_UPDATE` re-reads every cached item whose `useSpellLoading` is that spell (rereadToken).
 
 `TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
-calls `Collectibles.Changed`. `RereadCollections` runs `Collectibles.Read` again on every cached
+tells its `ItemFacts.OnCollectionsChanged` subscribers (the feed's, `CollectFeed.Changed`). `RereadCollections` runs `Collectibles.Read` again on every cached
 collectible, for the collection re-read. The stand-down drops the
 cache and the loads; a load that answers after it is ignored.
 
@@ -629,8 +629,11 @@ an item load answering ───┘   Gear.Refresh ─> Gear.Read:
                                 owned: each slot in id order takes the best unplaced item fitting it
                               ─> State.gear; signature moved ─> GearChanged
 Gear.Candidate() ─> { classFile, specID, dualWield, titanGrip, gear, owned }   (Evaluate, for you)
-Gear.Qualities() ─> { [slot] = quality | false }                             (QualityGate ctx.gear)
+Gear.Qualities() ─> { [slot] = quality | false }     (QualityGate ctx.gear; modules/GearQualities.lua)
 ```
+
+A bag event is held while the host's predicate (`Gear.SetDeferPredicate`; Drop Watcher's is
+combat, set by `modules/GearQualities.lua`) holds, and the next combat end rebuilds.
 
 A link the client has not cached is requested and its slot left out (unknown, not empty); its
 arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
@@ -707,7 +710,8 @@ LootFeed.Receive   [Perf bucket `feed.add`]
     rolled on, a roll table on the drop or Pending's gate, with the `other` catch-all on: RX-04), a
     kind turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
-    (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
+    (opts from LootFeed.VerdictConfig(); opts.scorer = Scoring.Scorer(vcfg): Pawn, your weights or
+     none, read per judgment)
     a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
       { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
     a lockbox (`lockbox`), a bag, quiver or ammo pouch (`container`), a crafting reagent (`reagent`, DW-RG1)
@@ -735,7 +739,7 @@ TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read
     cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
 NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED,
-  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read) ─> Collectibles.Changed
+  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read, OnCollectionsChanged) ─> CollectFeed.Changed
   PLAYER_REGEN_ENABLED, a live collectible at collectUnknown ─> the same, for those alone
     ─> one 0.5s timer per burst ─> ItemFacts.RereadCollections (the cache's one writer)
     ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")

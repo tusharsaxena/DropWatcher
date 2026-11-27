@@ -58,7 +58,8 @@ visible scale is never used: for you, your visible custom scale, else your top t
 class's scales; for a looter the best of their class's scales, the one that values the drop
 highest (`NS.Compat.PawnClassScales`). Weights there are keyed `"<classFile>:<tree>"`, and a
 looter with no tree is scored with the class's tree whose weights score the drop highest.
-`NS.Scoring.ScoreFor(link, who)` answers one item's score and how its scale or weights were
+`NS.Scoring.ScoreFor(link, who, cfg)` (`cfg` the verdict's config, `NS.LootFeed.VerdictConfig`:
+its `scorer` and `weights`; Scoring reads no setting itself) answers one item's score and how its scale or weights were
 chosen (`tree`, `bestOfClass`, `custom` or `none`). The kernel hands every scorer the drop beside the
 item it values (`scorer(facts, candidate, drop)`). Weights are per spec and apply to anyone of
 that spec, a looter included; a spec without weights is not scored. The Pawn scale string import
@@ -241,7 +242,9 @@ rule's). A moved estimate sends `DropUpdated(id, "trade")`. A pending score is r
 second apart, on one shared timer, and a drop that used them up keeps its answer. Each feed keeps
 200 drops (`MAX_DROPS`), the oldest dropped first; the stand-down keeps the drops and drops the
 dedupe window, the encounter context and any item still loading. The feed reads its settings,
-the `feed.*`, `comparison.*` and `trade.rules.*` rows, through `NS.Setting` (`LootFeed.Config`).
+the `feed.*`, `comparison.*` and `trade.rules.*` rows, through `NS.Setting` (`LootFeed.Config`); the
+verdict's own six `comparison.*` values and the client's verdict mode are `LootFeed.VerdictConfig`,
+which `Config` carries whole as `verdict`.
 `/dw add` (DW-42) and `/dw offer` for a bag item the feed never saw reach it through `NS.LootFeed.Add`; `/dw clear` empties the live feed (`NS.LootFeed.Clear`).
 
 ## The trade timer
