@@ -33,7 +33,7 @@
 | C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | done | 5e28f3f |
 | C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | done | IS 91dd3a4 |
 | C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | done | IS 9d11bbe |
-| D1 | DW | Clean cut of Item Search; retire its data; docs; push | done | 8addbd5 |
+| D1 | DW | Clean cut of Item Search; retire its data; docs; push | done | 830d610 |
 | E1 | STD | Roster row + library-stack-§7 ripple; push | done | STD 7b99af2 |
 | F1 | all | Reviews, Item Search standards audit, fix pass; push | todo | |
 | G1 | all | Owner go-ahead → merge, tag, re-verify, close #19, cleanup | todo | |
@@ -403,6 +403,20 @@ index rows went, FOREVER-21 checks the cut, and its *Pending sign-off* line is a
 for G1 or the owner: DW has no CurseForge description in the repo, so "the CurseForge text" (design
 §5.3) is the owner's edit on the project page; a key a player bound to the old Item Search binding
 stays in the game's binding set, recorded in known-limitations.md.
+
+Builder note (D1 review fixes, 830d610): (1) VENDOR GATE: `tests/test_vendor_sync.lua` now carries IS's
+pre-tag branch (provenance tag missing in `../LibKa0s` -> the two payload cases are declared skips
+with that reason; the runner case still runs), so DW's suite is 0 failed on both clients (Skipped
+6 -> 8, Total 2671 -> 2669, badge and test-cases.md regenerated). G1 drops that branch in DW and IS
+after tagging and re-runs both clients. (2) validate-seeds' `forever` Flavors row no longer names
+`core/RecipeReagentsForever.lua` or `seeds.py recipes`; message-bus' GEAR_CHANGED row no longer
+names ItemSearchVerdictPanel. (3) `NS.MediaBackground` (dead since the cut) removed. (4) The first
+new test_database case was run red with step 19 commented out (1 failed, that case); the second
+case is retitled as the steps-16-to-18 guard it is, since step 17 alone empties its data. (5) README:
+no released tag contains Item Search (1.1.0 predates `0d3ed4d`), so the `Next` row now says Item
+Search ships as its own addon instead, without the "has moved" / "settings cleared" wording. The
+`Next | Unreleased` label still conflicts with documentation-§1 item 11 ("the top row is the
+current release"): G1 MUST rename it to the released version at the bump, or the owner rules it.
 
 ### Task E1: Standard (STD)
 
