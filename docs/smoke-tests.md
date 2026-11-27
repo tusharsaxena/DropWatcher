@@ -5334,6 +5334,26 @@ icon the client has not loaded yet (a fresh item id typed into the box, or right
 the icon arrives; the Drops tab's item buttons the same for a drop with no icon yet. Fail: a green
 square or an empty box in place of either mark. Result:
 
+**ITEM-SEARCH-76. A corner drag is smooth (R7-DW-01).** Open the Item Search window on an item with a
+long Drops from list (Linen Cloth: about 395 sources) that you hold, so the verdict panel shows. Drag
+the corner grip in circles for a few seconds → the window follows the cursor with no stutter, the
+table's columns widen and narrow with it, and the verdict panel grows and shrinks with the height.
+Let go → the table repaints once (names longer or shorter to fit), nothing jumps, and the size is
+kept after `/reload`. Fail: the drag lags behind the cursor, or a column stays at the old width after
+you let go. Result:
+
+**ITEM-SEARCH-77. Every verdict panel line has a tooltip (R7-DW-02).** On the same item, hover each
+line of the verdict panel in turn → each shows a title and a few plain lines: the headers what their
+section means, each part the rule behind it with its number (Quests you could pick up: "adds 35"; a
+cap such as Other professions count 9 at most: "Taken off here: N"), the use value line its bands,
+each How sure line how it is worked out, Data known its weights. On an item to sell, the auction
+lines name your own cut, length and margin (change the margin in Settings and hover again: the number
+follows). The blank line between the sections has no tooltip. Fail: a line with no tooltip, or a
+number that disagrees with the (?) help. Result:
+
+**ITEM-SEARCH-78. The first section reads Why this verdict (R7-DW-03).** The verdict panel's first
+gold header reads **Why this verdict**, never "Why this word". Result:
+
 ## Pending sign-off
 
 On 2026-10-23 the owner reported every check in this file then written passed in the client, SIM-17

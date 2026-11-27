@@ -116,8 +116,8 @@ test("verdict panel: its lines are the verdict module's breakdown, in order, add
     local lines = P.Lines(f)
     local n = #b.lines
     local sum = 0
-    -- red under (R6-DW-08): no sections; the parts under "Why this word", a gold header
-    assertEqual(lines[1].text, "Why this word"); assertEqual(lines[1].tone, "mutedGold")
+    -- red under (R6-DW-08): no sections; the parts under "Why this verdict", a gold header
+    assertEqual(lines[1].text, "Why this verdict"); assertEqual(lines[1].tone, "mutedGold")
     table.remove(lines, 1)
     for i, part in ipairs(b.lines) do
         -- red under: a panel that words or adds up the parts itself
@@ -151,7 +151,7 @@ test("verdict panel: + points green, - points red, the word's line in plain word
         lines = { { kind = "quest", text = "Invented gain", points = 35 }, { kind = "damper", text = "Invented loss", points = -20 } },
         sure = { { text = "Invented evidence", right = "50%" }, { text = "Score", right = "15" } }, hint = "Invented hint" })
     assertEqual(#rows, 9, "two headers, the two parts, the word's line, a spacer, two sure lines and the hint")
-    assertEqual(rows[1].text, "Why this word"); assertEqual(rows[1].tone, "mutedGold")
+    assertEqual(rows[1].text, "Why this verdict"); assertEqual(rows[1].tone, "mutedGold")
     assertEqual(rows[2].right, "+35"); assertEqual(rows[2].rightTone, "good")
     assertEqual(rows[3].right, "-20"); assertEqual(rows[3].rightTone, "red")
     assertEqual(rows[4].text, "Invented word line"); assertEqual(rows[4].tone, "muted")

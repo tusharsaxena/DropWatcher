@@ -322,7 +322,7 @@ test("auction: the verdict panel shows the vendor's price, Auctionator's and the
         for k, v in pairs(t) do b[k] = v end
         return IVP.Rows(b)
     end
-    -- Why this word's rows alone, the header dropped (R6-DW-08: How sure after a blank line)
+    -- Why this verdict's rows alone, the header dropped (R6-DW-08: How sure after a blank line)
     local function why(r)
         local out = {}
         for i = 2, #r do

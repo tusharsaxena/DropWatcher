@@ -508,6 +508,7 @@ local function buildFooter(f)
 end
 
 local function onResizeStop(f, w, h)
+    f.dwSizing = false
     if type(w) == "number" and type(h) == "number" and w > 0 and h > 0 then
         geometry().size = { math.floor(w + 0.5), math.floor(h + 0.5) }
         f.dwW, f.dwH = w, h
@@ -516,19 +517,40 @@ local function onResizeStop(f, w, h)
     repaintView()
 end
 
+-- One step of a drag (R7-DW-01). The full repaint (sort, every row's text and font, Matches, the
+-- verdict, the footer) ran on every OnSizeChanged, so each frame of the drag redrew the whole
+-- table. Now a drag only moves things: the verdict panel fits the new height, and the table's
+-- columns are laid across a new width for the rows in view. Mouse-up repaints in full.
+local function sizeStep(f, w)
+    if not f:IsShown() then return end
+    local m = NS.WindowRows.Metrics()
+    VP().Fit(f, m.height)
+    local tw = math.max(1, w - rightX() - K.INSET - K.SCROLL_W)
+    if f.grid and f.grid.dwW ~= tw then
+        f.grid.dwW = tw
+        ISG.Relayout(f.grid, tw, m.height)
+    end
+end
+
 local function makeResizable(f)
-    NS.MakeResizable(f, {
+    local grip = NS.MakeResizable(f, {
         minWidth = WIN.MIN_W, minHeight = WIN.MIN_H, owner = addonName,
         -- In the footer's bottom-right corner (LibKa0s Widgets' Footer, its `grip` corner).
         gripParent = f.foot,
         onResize = function(w, h)
             if type(w) == "number" and w > 0 then f.dwW = w end
             if type(h) == "number" and h > 0 then f.dwH = h end
+            if f.dwSizing then return sizeStep(f, width()) end
             repaintView()
         end,
         -- The anchor is saved with the size: sizing from the corner moves the frame's anchor.
         onResizeStop = function(w, h) onResizeStop(f, w, h) end,
     })
+    if grip and grip.HookScript then
+        grip:HookScript("OnMouseDown", function(_, button)
+            if button == nil or button == "LeftButton" then f.dwSizing = true end
+        end)
+    end
 end
 
 local function onHide()
@@ -742,6 +764,7 @@ local function paintTab(built, m)
     local rows = TABS.View(key, built[key], st)
     paintSection(key, st, TABS.Count(rows), TABS.Count(built[key]))
     local w = width() - rightX() - K.INSET - K.SCROLL_W
+    f.grid.dwW = math.max(1, w)
     ISG.PaintTable(f.grid, key, rows, math.max(1, w), tableOpts(key, st, m, ISW.Options()))
 end
 

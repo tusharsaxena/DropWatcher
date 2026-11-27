@@ -562,6 +562,9 @@ modules\ItemSearchTabs.lua
 # publishes NS.ItemSearchGrid, the window's section headers, tables and match rows. NS.Window,
 # NS.WindowRows, NS.ItemSearchTip, NS.Skin, NS.Pool and NS.TipMarks are read at call time.
 modules\ItemSearchGrid.lua
+# Conventional: takes NS.Constants and NS.L at load and publishes NS.ItemSearchVerdictTips, the verdict
+# panel's line tooltips (R7-DW-02); NS.ItemSearchAuction and NS.Compat are read at call time.
+modules\ItemSearchVerdictTips.lua
 # LOAD-BEARING: takes NS.ItemSearch, NS.ItemSearchVerdict, NS.ItemSearchGrid (above), NS.Constants,
 # NS.L and NS.Compat at load and publishes NS.ItemSearchVerdictPanel, the window's verdict panel
 # (R4-DW-11); modules\ItemSearchWindow.lua (below) builds and paints it at call time.
