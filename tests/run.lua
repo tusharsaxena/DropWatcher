@@ -459,7 +459,6 @@ Kit.run{
         "test_offspec_cells",
         "test_offspec_ask",
         "test_offspec_offer",
-        "test_scoring",
         "test_quality_gate",
         "test_situations",
         "test_trade_rules",

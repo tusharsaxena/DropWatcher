@@ -21,6 +21,8 @@ local _, NS = ...
 --   NS.ItemFacts    the instance's facts cache: Get, Read, Request, Counts, RereadCollections.
 --   NS.Gear         the instance's snapshot of your gear and your candidate; NS.State.gear mirrors
 --                   the snapshot this addon last saw (the diagnostics read it without a read).
+--   NS.Scoring      the scorers: the pure halves (V.Score, the client named, a stat it does not
+--                   score said once in the debug log) and the instance's Pawn and adapter reads.
 
 local V = NS.Verdict
 local C = NS.Constants
@@ -201,3 +203,37 @@ NS.Gear = {
     OnEvent = function(event) return engine():OnGearEvent(event) end,
     OnCombatEnd = function() return engine():OnGearDeferEnd() end,
 }
+
+-- ── NS.Scoring ─────────────────────────────────────────────────────────────────────────────
+
+local Score = V.Score
+
+-- The once-per-key debug line for a stat the verdict does not score (NS.DebugOnce).
+local function warn(key, name)
+    if NS.DebugOnce then
+        NS.DebugOnce(key, "SCORE", "%s is not a stat the verdict scores; it counts 0", tostring(name))
+    end
+end
+
+local S = {
+    PAWN_STATS = Score.PAWN_STATS,
+    STAT_KEYS = Score.STAT_KEYS,
+    SCORERS = Score.SCORERS,
+    ParseImport = function(text) return Score.ParseImport(text, warn) end,
+    ImportInto = function(map, specID, text) return Score.ImportInto(map, specID, text, warn) end,
+    WeightsScore = function(stats, weights) return Score.WeightsScore(stats, weights, warn) end,
+    HasWeights = function(map) return Score.HasWeights(map) end,
+    Resolve = function(configured, pawnReady, hasWeights) return Score.Resolve(configured, pawnReady, hasWeights) end,
+    WeightsFor = function(map, candidate, dropStats) return Score.WeightsFor(map, candidate, dropStats, client(), warn) end,
+    WeightsScorer = function(map) return Score.WeightsScorer(map, client(), warn) end,
+    --- The adapter in use now ("pawn" | "weights" | "none"), from `cfg` (the host's config when nil).
+    InUse = function(cfg) return engine():ScorerInUse(cfg) end,
+    --- The scorer the kernel takes, from `cfg` (the host's config when nil).
+    Scorer = function(cfg) return engine():Scorer(cfg) end,
+    --- One item's score for `who` and how it was chosen.
+    ScoreFor = function(link, who, cfg) return engine():ScoreFor(link, who, cfg) end,
+}
+-- Assigned apart: the compat gate reads a Pawn name in a table constructor as a client call.
+S.PawnScale = function(candidate, dropLink) local e = engine(); return e.PawnScale(e, candidate, dropLink) end
+S.PawnScorer = function() local e = engine(); return e.PawnScorer(e) end
+NS.Scoring = S

@@ -1113,17 +1113,19 @@ end)
 -- The verdict's opts for the looter and the candidates (Item Search split plan, A2 review)
 -- ---------------------------------------------------------------------------------------------
 
--- Every opts the kernel is handed for someone other than you, and the scorer the weights
--- adapter made, on a party whose scorer setting is `weights`.
+-- Every opts the kernel is handed for someone other than you, and each scorer the verdict engine
+-- made from a config naming the `weights` setting, on a party whose scorer setting is `weights`.
 local function spyOpts(NS)
     assertTrue(NS.SchemaRuntime.Set("comparison.scorer", "weights"))
     assertTrue(NS.SchemaRuntime.Set("comparison.weights", { [62] = { INTELLECT = 1 } }))
     local made, seen = {}, {}
-    local S, E = NS.Scoring, NS.Evaluate
-    local weights, evaluate = S.WeightsScorer, E.Evaluate
-    S.WeightsScorer = function(map)
-        local fn = weights(map)
-        made[fn] = true
+    local V, E = NS.VerdictEngine, NS.Evaluate
+    local scorer, evaluate = V.Scorer, E.Evaluate
+    V.Scorer = function(self, cfg)
+        local fn = scorer(self, cfg)
+        if fn and type(cfg) == "table" and cfg.scorer == "weights" and self:ScorerInUse(cfg) == "weights" then
+            made[fn] = true
+        end
         return fn
     end
     E.Evaluate = function(facts, cand, opts)

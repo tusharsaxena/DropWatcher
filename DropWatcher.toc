@@ -188,10 +188,6 @@ defaults\Profile.lua
 # NS.FEATURE_EVENTS and NS.STAND_DOWN and its handler to NS.addon (core\DropWatcher.lua) at load;
 # every module below is read at call time.
 modules\Sim.lua
-# Conventional: publishes NS.Scoring, the scorers behind the kernel's opts.scorer (Pawn, your weights,
-# none); read by the feed and the diagnostics at call time only, and itself reads NS.ClassData
-# (core\, above) at load. NS.Compat's Pawn seam, NS.Setting and NS.DebugOnce are read at call time.
-modules\Scoring.lua
 # Conventional: publishes NS.QualityGate, the pure minimum-quality gate; read by the feed at call
 # time only, and itself reads NS.Constants (core\, above), NS.L (locales\, above) and NS.C
 # (defaults\, above) at load.
