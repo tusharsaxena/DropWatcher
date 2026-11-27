@@ -279,19 +279,21 @@ modules\CharFilter.lua
 # and reads NS.Constants and NS.State at load. NS.Compat, NS.Item, NS.TierTokens and NS.Debug are read at
 # call time.
 modules\ItemFacts.lua
+# Conventional: publishes NS.Collectibles, a drop's category and the collection verdict (issue #13);
+# reads NS.Constants at load. NS.Compat (core\CompatCollect.lua, above) is read at call time;
+# modules\ItemFacts.lua (above) calls its Read while it builds the facts.
+modules\Collectibles.lua
 # LOAD-BEARING: appends its PLAYER_REGEN_ENABLED row to NS.FEATURE_EVENTS after
 # core\DropWatcher.lua's and before modules\Gear.lua's, modules\Inspect.lua's and modules\Toast.lua's
 # (its other rows, NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED and
 # SKILL_LINES_CHANGED, no other file handles), and its NS.STAND_DOWN step runs in TOC order, after
-# those of the modules above. Publishes NS.Collectibles, a drop's category, the collection verdict
-# and its re-read on collection events (issue #13); reads NS.Constants at load and adds its handlers
-# to NS.addon (core\DropWatcher.lua, above). NS.Compat (core\CompatCollect.lua, above), NS.ItemFacts
-# and NS.LootFeed are read at call time; modules\ItemFacts.lua (above) calls its Read while it builds
-# the facts.
-modules\Collectibles.lua
+# those of the modules above. Publishes NS.CollectFeed, the feed's re-read on collection events
+# (issue #13); adds its handlers to NS.addon (core\DropWatcher.lua, above). NS.Collectibles (above),
+# NS.ItemFacts and NS.LootFeed are read at call time.
+modules\CollectFeed.lua
 # LOAD-BEARING: appends its rows to NS.FEATURE_EVENTS where other files share the event:
 # BAG_UPDATE_DELAYED before modules\TradeTimer.lua's, and PLAYER_REGEN_ENABLED after
-# core\DropWatcher.lua's and modules\Collectibles.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN
+# core\DropWatcher.lua's and modules\CollectFeed.lua's and before modules\Inspect.lua's and modules\Toast.lua's; its NS.STAND_DOWN
 # / NS.STAND_UP steps run in TOC order, after those of the modules above. Publishes NS.Gear, the
 # player's gear snapshot and candidate; appends its handlers to NS.addon (core\DropWatcher.lua,
 # above) and reads NS.Constants, NS.ClassData and NS.State at load. NS.Compat, NS.ItemFacts and

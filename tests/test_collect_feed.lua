@@ -167,7 +167,7 @@ test("collect feed: a burst of collection events reads once, and re-judges only 
     m.__fire("NEW_MOUNT_ADDED", 77)
     m.__fire("SKILL_LINES_CHANGED")
     assertEqual(calls.n, 0, "nothing read before the delay")
-    m.advance(NS.Collectibles.REREAD_DELAY)
+    m.advance(NS.CollectFeed.REREAD_DELAY)
     -- red under: one re-read per event, not one per burst
     assertEqual(calls.n, 1, "one re-read")
     assertEqual(learned.me.verdict, "collected")
@@ -188,7 +188,7 @@ test("collect feed: combat's end reads again only the drops still at collectUnkn
     assertEqual(unread.me.verdict, "collectUnknown")
     m.mounts.collected[77], m.mounts.collected[78] = true, true
     m.__fire("PLAYER_REGEN_ENABLED")
-    m.advance(NS.Collectibles.REREAD_DELAY)
+    m.advance(NS.CollectFeed.REREAD_DELAY)
     assertEqual(unread.me.verdict, "collected")
     assertEqual(count(seen, unread.id .. ":collection"), 1)
     -- red under: the regen pass widened to every collectible
@@ -202,7 +202,7 @@ test("collect feed: combat's end with no unknown collectible arms nothing", func
     brakkLoots(m, 300)
     local calls = spyReread(NS)
     m.__fire("PLAYER_REGEN_ENABLED")
-    m.advance(NS.Collectibles.REREAD_DELAY * 2)
+    m.advance(NS.CollectFeed.REREAD_DELAY * 2)
     assertEqual(calls.n, 0)
 end)
 
@@ -216,11 +216,21 @@ test("collect feed: a learned appearance re-judges a live cosmetic through the s
     assertEqual(rec.me.verdict, "newCollect")
     m.items[link(300)].transmog = true
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
-    m.advance(NS.Collectibles.REREAD_DELAY)
-    -- red under: ItemFacts' transmog handler not calling Collectibles.Changed
+    m.advance(NS.CollectFeed.REREAD_DELAY)
+    -- red under: ItemFacts' transmog handler not calling CollectFeed.Changed
     assertEqual(rec.me.verdict, "collected")
     assertEqual(count(seen, rec.id .. ":collection"), 1)
 end, T.RETAIL_ONLY)
+
+test("collect feed: the re-read is the feed's (CollectFeed), Collectibles keeps no timer or event", function()
+    local NS = T.newAddon()
+    assertTrue(type(NS.CollectFeed.Changed) == "function")
+    -- red under: the feed refresh left in modules/Collectibles.lua (Item Search split plan, A2)
+    assertNil(NS.Collectibles.Changed); assertNil(NS.Collectibles.REREAD_DELAY)
+    for _, name in ipairs({ "Verdict", "Read", "CategoryOf", "IsCollectible" }) do
+        assertTrue(type(NS.Collectibles[name]) == "function", name .. " stays on Collectibles")
+    end
+end)
 
 test("collect feed: the stand-down cancels a waiting re-read", function()
     local NS, m = party()
@@ -229,7 +239,7 @@ test("collect feed: the stand-down cancels a waiting re-read", function()
     local calls = spyReread(NS)
     m.__fire("NEW_MOUNT_ADDED", 77)
     NS.addon:OnSlashCommand("disable")
-    m.advance(NS.Collectibles.REREAD_DELAY * 2)
+    m.advance(NS.CollectFeed.REREAD_DELAY * 2)
     -- red under: a stand-down that leaves the timer armed
     assertEqual(calls.n, 0)
 end)

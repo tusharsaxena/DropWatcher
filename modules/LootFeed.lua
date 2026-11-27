@@ -61,7 +61,7 @@ local _, NS = ...
 -- scorer answering "pending" is retried on one shared SCORE_RETRY timer, SCORE_TRIES times per
 -- drop; your own drop the trade timer matched to its bag item is read from it on each
 -- TradeTimerTick (ReadBagItems: the exact level and quality). Each sends DropUpdated(id, cause):
--- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/Collectibles.lua's re-read,
+-- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/CollectFeed.lua's re-read,
 -- through Refresh). A new drop sends DropAdded(id). Updates re-judge
 -- the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.

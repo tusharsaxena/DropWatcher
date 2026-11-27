@@ -48,7 +48,7 @@ local _, NS = ...
 -- appearance is read from it, never from a slot a later step may set. Last, NS.Collectibles.Read
 -- (modules/Collectibles.lua) fills `category` and, for a collectible, `collect` on the facts being
 -- built, before they are cached. A collection event re-reads them on every cached collectible
--- (RereadCollections, the cache's one writer; modules/Collectibles.lua arms it).
+-- (RereadCollections, the cache's one writer; modules/CollectFeed.lua arms it).
 --
 -- THE CACHE AND THE LOAD. Get(link) answers the cached facts, or builds them when the client has
 -- the item cached, or nil. Request(link, callback) does the same and, on a miss, asks the client
@@ -372,12 +372,12 @@ function NS.addon.OnSpellTextUpdate(_, _, spellID)
 end
 
 -- An appearance was learned (or lost): re-read the flag on every cached link, then let the live
--- cosmetics be judged again (NS.Collectibles.Changed).
+-- cosmetics be judged again (NS.CollectFeed.Changed).
 function NS.addon.OnTransmogCollectionUpdated()
     for link, facts in pairs(store().cache) do
         facts.transmogKnown = readTransmog(link, facts.rawEquipLoc)
     end
-    if NS.Collectibles then NS.Collectibles.Changed() end
+    if NS.CollectFeed then NS.CollectFeed.Changed() end
 end
 
 --- Read the collection state again on every cached collectible (NS.Collectibles.Read on the

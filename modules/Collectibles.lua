@@ -42,13 +42,8 @@ local _, NS = ...
 -- feed-only drop (IsFeedOnly: `me.collect`) has no action: no Ask, toast, AutoAsk, Offer,
 -- Announce, Post my tradeables or glow, and no inspect (spec §6.2).
 --
--- THE RE-READ (spec §4.6). NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED,
--- SKILL_LINES_CHANGED and ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (Changed) arm one
--- REREAD_DELAY timer, so a burst reads once. It runs NS.ItemFacts.RereadCollections (the cache is
--- ItemFacts' to write), then sends each live collectible whose verdict moved through
--- NS.LootFeed.Refresh(rec, "collection"), which re-judges it and sends DropUpdated(id,
--- "collection"). PLAYER_REGEN_ENABLED arms the same timer for the drops still at collectUnknown
--- alone (a protected answer reads once combat ends). The stand-down cancels the timer.
+-- THE RE-READ (spec §4.6) is the feed's, in modules/CollectFeed.lua: this file holds no timer, no
+-- event and no feed record.
 
 NS.Collectibles = NS.Collectibles or {}
 local CO = NS.Collectibles
@@ -264,77 +259,4 @@ end
 --- @return boolean
 function CO.IsFeedOnly(drop)
     return type(drop) == "table" and type(drop.me) == "table" and drop.me.collect == true
-end
-
--- ── reading the collections again (spec §4.6) ──────────────────────────────────────────────
-
-CO.REREAD_DELAY = 0.5
-
--- The one coalescing timer, and whether the pass it runs is the full one (`all`) or the regen pass
--- (`unknown`: only the drops still at collectUnknown).
-local pending = { timer = nil, scope = nil }
-
--- A verdict's state as the re-read compares it: the verdict and a pet's count.
-local function stateOf(me)
-    return type(me) == "table" and (tostring(me.verdict) .. ":" .. tostring(me.count)) or nil
-end
-
--- Whether a live drop's collection verdict may be read again by a pass of `scope`.
-local function wanted(rec, scope)
-    if rec.test or not CO.IsFeedOnly(rec) then return false end
-    return scope == "all" or rec.me.verdict == "collectUnknown"
-end
-
--- The pass: the cache's collectibles read again (ItemFacts writes its own cache), then each live
--- collectible whose verdict moved is re-judged through the feed's Refresh (DropUpdated `collection`).
-local function reread(scope)
-    NS.ItemFacts.RereadCollections()
-    local n = 0
-    for _, rec in ipairs(NS.LootFeed.Drops("live")) do
-        local facts = wanted(rec, scope) and NS.ItemFacts.Get(rec.link)
-        local now = facts and CO.Verdict(facts, rec.forced)
-        if now and stateOf(now) ~= stateOf(rec.me) then
-            NS.LootFeed.Refresh(rec, "collection")
-            n = n + 1
-        end
-    end
-    NS.Debug("EVAL", "collections read again (%s): %d drops moved", scope, n)
-    return n
-end
-
--- Arm the one timer; a full pass asked for while the regen pass waits widens it.
-local function arm(scope)
-    if NS.IsStoodDown and NS.IsStoodDown() then return end
-    if scope == "all" or not pending.scope then pending.scope = scope end
-    if pending.timer then return end
-    pending.timer = C_Timer.NewTimer(CO.REREAD_DELAY, function()
-        local s = pending.scope
-        pending.timer, pending.scope = nil, nil
-        reread(s)
-    end)
-end
-
---- A collection changed (a mount, pet, toy or recipe learned, a profession gained or lost, an
---- appearance learned): read the collectibles again, once, CO.REREAD_DELAY seconds from the first
---- call of a burst. ItemFacts' transmog handler calls it too.
-function CO.Changed() arm("all") end
-
-for _, event in ipairs({ "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED", "NEW_RECIPE_LEARNED",
-    "SKILL_LINES_CHANGED" }) do
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnCollectionEvent" }
-end
-NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnCollectRegenEvent" }
-
-function NS.addon.OnCollectionEvent() CO.Changed() end
-
--- Combat ended: a protected answer may read now, so the drops still at collectUnknown are read again.
-function NS.addon.OnCollectRegenEvent()
-    for _, rec in ipairs(NS.LootFeed.Drops("live")) do
-        if wanted(rec, "unknown") then return arm("unknown") end
-    end
-end
-
-NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
-    if pending.timer then pending.timer:Cancel() end
-    pending.timer, pending.scope = nil, nil
 end
