@@ -28,7 +28,7 @@
 | A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | done | 5a50224 |
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | done | b940cc70 |
 | B2 | LK | Reads, facts, gear, score, collect + instance API | done | fc303a5e |
-| B3 | LK | `VerdictSettings.lua` drop-in Comparison section | todo | |
+| B3 | LK | `VerdictSettings.lua` drop-in Comparison section | done | 021bdc46 |
 | B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | todo | |
 | C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | todo | |
 | C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | todo | |
@@ -185,8 +185,32 @@ files), lizard -C 15 clean.
 - `V.Settings.Rows(spec) -> schemaRows` and `V.Settings.Section(container, helpers, spec)` in the `CalloutSettings.lua` shape: `spec = { root = "comparison", L = host L, client, get = fn(path), set = fn(path, v) }`; emits the six rows with DW's defaults (`defaults/Profile.lua:159` values) and the weights + undesired editors (moved from DW `settings/PageEditors.lua`, `settings/ListEditors.lua`), built on LibKa0s Options widgets.
 - `V.Settings.DEFAULTS` — the six defaults table.
 
-- [ ] **Step 1:** Tests: rows/keys/defaults equal DW's; editor writes go through `spec.set`; run → FAIL.
-- [ ] **Step 2:** Implement; gate green → commit `IS-B3: Verdict settings section (the six comparison rows and both editors)`.
+- [x] **Step 1:** Tests: rows/keys/defaults equal DW's; editor writes go through `spec.set`; run → FAIL.
+- [x] **Step 2:** Implement; gate green → commit `IS-B3: Verdict settings section (the six comparison rows and both editors)`.
+
+Builder note (B3): LibKa0s commit `021bdc46`, same worktree and branch as B1/B2. Version key now
+`1.1.1.1.1.1.1.1.1.1.1` (document and manifest renamed). Decisions C1 and C3 follow: (1) THE
+UNDESIRED EDITOR was not in `settings/ListEditors.lua` (that file is the Item lists editor and
+stays DW's); it is `settings/PageEditors.lua`'s `PrefsTab`, moved with `WeightsTab` and the pure
+halves of `settings/Editors.lua` (SpecNamer, ClassSpecs, PickSpec, StatsFor, StatLabel, Weight,
+WithWeight, ImportText, UndesiredChoices, IsUndesired, WithUndesired; the client is a trailing
+argument). (2) SURFACE: `V.Settings.Rows(spec)` (the six path rows in DW's order, groups Scoring /
+Weights / Unwanted types, maps `skipRender`, `page` only when `spec.page` is given),
+`V.Settings.Section(ctx, O, spec, tab)` (`O` = the host's Options instance, the plan's "helpers";
+`tab` "scoring" | "weights" | "undesired", or nil for all three under headings, the two editors
+then sharing ONE spec strip, because O.SubTabStrip keeps one strip ledger per ctx), and
+`V.Settings.Tabs(O, spec)`, the two host tabs keyed `L["Weights"]` / `L["Unwanted types"]` that
+DW's Pages.lua `comparison.tabs` takes as is. Also `DEFAULTS`, `Defaults()`, `KEYS`, `SCORERS`,
+`Checks`, `WORDS`. (3) SPEC beyond the plan's fields: `page`, `print` (the import's chat line; DW
+passes NS.Print) and `reads` (overrides of `lib.Reads` for UnitClass, PlayerSpecID,
+PlayerTalentTree, SpecName, TalentTreeNames; DW hands its NS.Compat members). `spec.set(path,
+value)` is the host's seam (DW: NS.SchemaRuntime.Set); a nil `spec.get` value reads as the default.
+(4) WORDS are DW's locale keys, read with rawget, else the English key; the one changed string is
+the import's noStats line, now "That scale has no stat the verdict scores, so nothing was
+imported." (the library names no addon): DW and IS add that key to their locales. (5)
+VerdictReads (unreleased, minor 1) gained `SpecName` and `TalentTreeNames`. (6) Test:
+`tests/test_verdict_settings.lua` (21 cases, DW's test_settings_pages Comparison and editors cases
+ported).
 
 ### Task B4: v1.119.0 release record (LibKa0s)
 
