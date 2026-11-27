@@ -23,6 +23,9 @@ local _, NS = ...
 --                   the snapshot this addon last saw (the diagnostics read it without a read).
 --   NS.Scoring      the scorers: the pure halves (V.Score, the client named, a stat it does not
 --                   score said once in the debug log) and the instance's Pawn and adapter reads.
+--   NS.Collectibles a drop's category and its collection verdict (V.Collect, the client named; the
+--                   instance's reads); IsFeedOnly, which reads a feed record, is the feed's own
+--                   (modules/CollectFeed.lua).
 
 local V = NS.Verdict
 local C = NS.Constants
@@ -237,3 +240,18 @@ local S = {
 S.PawnScale = function(candidate, dropLink) local e = engine(); return e.PawnScale(e, candidate, dropLink) end
 S.PawnScorer = function() local e = engine(); return e.PawnScorer(e) end
 NS.Scoring = S
+
+-- ── NS.Collectibles ────────────────────────────────────────────────────────────────────────
+
+local CO = V.Collect
+
+NS.Collectibles = {
+    --- The category the facts and the probe's collection answers name, first match wins.
+    CategoryOf = function(facts, probe) return CO.CategoryOf(facts, probe) end,
+    --- Whether a category gets a collection verdict.
+    IsCollectible = function(facts) return CO.IsCollectible(facts) end,
+    --- The `me` evaluation of a collectible, a kind word or an item of no kind; nil for gear.
+    Verdict = function(facts, forced) return CO.Verdict(facts, forced, client()) end,
+    --- Fill `facts.category` and `facts.collect` through the instance's reads; answers the table.
+    Read = function(facts) return CO.Read(facts, engine().R) end,
+}

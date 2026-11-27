@@ -144,10 +144,12 @@ end)
 -- Reading the collections again
 -- ---------------------------------------------------------------------------------------------
 
--- Spy on ItemFacts.RereadCollections: answers the call counter.
+-- Spy on the verdict engine's RereadCollections (its timer's and the regen pass's): answers the
+-- call counter.
 local function spyReread(NS)
-    local calls, real = { n = 0 }, NS.ItemFacts.RereadCollections
-    NS.ItemFacts.RereadCollections = function(...)
+    local E = NS.VerdictEngine
+    local calls, real = { n = 0 }, E.RereadCollections
+    E.RereadCollections = function(...)
         calls.n = calls.n + 1
         return real(...)
     end
@@ -217,16 +219,25 @@ test("collect feed: a learned appearance re-judges a live cosmetic through the s
     m.items[link(300)].transmog = true
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
     m.advance(NS.CollectFeed.REREAD_DELAY)
-    -- red under: ItemFacts' transmog handler not telling its OnCollectionsChanged subscribers
+    -- red under: the engine's "collection" change not running the feed's pass
     assertEqual(rec.me.verdict, "collected")
     assertEqual(count(seen, rec.id .. ":collection"), 1)
 end, T.RETAIL_ONLY)
 
-test("collect feed: the re-read is the feed's (CollectFeed), Collectibles keeps no timer or event", function()
+test("collect feed: the collection events are the engine's, the feed's pass is CollectFeed's", function()
     local NS = T.newAddon()
-    assertTrue(type(NS.CollectFeed.Changed) == "function")
-    -- red under: the feed refresh left in modules/Collectibles.lua (Item Search split plan, A2)
+    assertTrue(type(NS.CollectFeed.OnCollectionsChanged) == "function")
+    -- red under: the feed refresh left on NS.Collectibles (Item Search split plan, A2)
     assertNil(NS.Collectibles.Changed); assertNil(NS.Collectibles.REREAD_DELAY)
+    -- red under: CollectFeed still declaring a collection event of its own beside the engine's (C1)
+    local engine = false
+    for _, r in ipairs(NS.FEATURE_EVENTS) do
+        if r[1] == "NEW_MOUNT_ADDED" then
+            assertTrue(r[2] ~= "OnCollectionEvent", "no feed row of its own")
+            engine = engine or r[2] == "OnVerdictEvent"
+        end
+    end
+    assertTrue(engine, "the engine's row")
     for _, name in ipairs({ "Verdict", "Read", "CategoryOf", "IsCollectible" }) do
         assertTrue(type(NS.Collectibles[name]) == "function", name .. " stays on Collectibles")
     end

@@ -1,16 +1,16 @@
 local _, NS = ...
 -- modules/CollectFeed.lua — the feed's re-read of the collections (issue #13, categories design
--- spec §4.6), peeled out of modules/Collectibles.lua (Item Search split plan, task A2) so that file
--- keeps the category, the collection verdict and the read alone. Drop Watcher's only.
+-- spec §4.6), Drop Watcher's only. The collections themselves are the verdict engine's
+-- (LibKa0s-Verdict-1.0, core/VerdictSetup.lua): NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED,
+-- NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and TRANSMOG_COLLECTION_UPDATED arm its one coalescing
+-- timer, which reads the cached collectibles again and tells the host (onChange "collection"). The
+-- feed's pass then runs at once (CF.OnCollectionsChanged): each live collectible whose verdict moved
+-- (NS.Collectibles.Verdict) goes through NS.LootFeed.Refresh(rec, "collection"), which re-judges it
+-- and sends DropUpdated(id, "collection"). PLAYER_REGEN_ENABLED arms this file's own REREAD_DELAY
+-- timer for the drops still at collectUnknown alone (a protected answer reads once combat ends),
+-- which reads the cache again itself. The stand-down cancels the timer.
 --
--- NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and
--- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (NS.ItemFacts.OnCollectionsChanged) arm one
--- REREAD_DELAY timer, so a burst reads once. It runs NS.ItemFacts.RereadCollections (the cache is
--- ItemFacts' to write), then sends each live collectible whose verdict moved
--- (NS.Collectibles.Verdict) through NS.LootFeed.Refresh(rec, "collection"), which re-judges it and
--- sends DropUpdated(id, "collection"). PLAYER_REGEN_ENABLED arms the same timer for the drops still
--- at collectUnknown alone (a protected answer reads once combat ends). The stand-down cancels the
--- timer.
+-- IsFeedOnly is the feed's too: it reads a feed record (NS.Collectibles.IsFeedOnly).
 
 NS.CollectFeed = NS.CollectFeed or {}
 local CF = NS.CollectFeed
@@ -50,7 +50,7 @@ local function reread(scope, fresh)
     return n
 end
 
--- Arm the one timer; a full pass asked for while the regen pass waits widens it.
+-- Arm the regen pass's timer.
 local function arm(scope)
     if NS.IsStoodDown and NS.IsStoodDown() then return end
     if scope == "all" or not pending.scope then pending.scope = scope end
@@ -62,31 +62,29 @@ local function arm(scope)
     end)
 end
 
---- A collection changed (a mount, pet, toy or recipe learned, a profession gained or lost, an
---- appearance learned): read the collectibles again, once, CF.REREAD_DELAY seconds from the first
---- call of a burst. ItemFacts' OnCollectionsChanged calls it too.
-function CF.Changed() arm("all") end
-
 --- The verdict engine read the collections again (core/VerdictSetup.lua's onChange "collection":
---- an appearance learned, coalesced by the engine's own REREAD_DELAY timer): the feed's pass now.
+--- a collection learned, coalesced by the engine's own timer): the feed's pass now.
 function CF.OnCollectionsChanged()
     if NS.IsStoodDown and NS.IsStoodDown() then return end
     reread("all", true)
 end
 
-for _, event in ipairs({ "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED", "NEW_RECIPE_LEARNED",
-    "SKILL_LINES_CHANGED" }) do
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnCollectionEvent" }
-end
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnCollectRegenEvent" }
-
-function NS.addon.OnCollectionEvent() CF.Changed() end
 
 -- Combat ended: a protected answer may read now, so the drops still at collectUnknown are read again.
 function NS.addon.OnCollectRegenEvent()
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
         if wanted(rec, "unknown") then return arm("unknown") end
     end
+end
+
+--- Whether a drop is feed-only (categories design spec §6.2): its verdict for you is a collection
+--- verdict (`me.collect`), so it is watched and never asked for, toasted, auto-asked, offered,
+--- announced, posted or glowed. Pure: reads the drop record alone.
+--- @param drop table|nil a feed record
+--- @return boolean
+function NS.Collectibles.IsFeedOnly(drop)
+    return type(drop) == "table" and type(drop.me) == "table" and drop.me.collect == true
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

@@ -148,12 +148,6 @@ for _, e in ipairs(EVENTS) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { e[1], "OnVerdictEvent", clients = e[2] }
 end
 
--- The events whose handling has moved onto the instance so far (the C1 slices widen it).
-local ADOPTED = { SPELL_TEXT_UPDATE = true, TRANSMOG_COLLECTION_UPDATED = true,
-    PLAYER_EQUIPMENT_CHANGED = true, BAG_UPDATE_DELAYED = true, PLAYER_REGEN_ENABLED = true,
-    PLAYER_SPECIALIZATION_CHANGED = true, TRAIT_CONFIG_UPDATED = true, CHARACTER_POINTS_CHANGED = true,
-    PLAYER_LEVEL_UP = true }
-
 -- The instance's handler per event, kept while it is stood up.
 local handlers = {}
 
@@ -178,7 +172,6 @@ local host = {
     debug = function(tag, msg) NS.Debug(tag, "%s", msg) end,
     deferWhile = function() return NS.Restrictions ~= nil and NS.Restrictions.InCombat() end,
     registerEvent = function(event, fn)
-        if not ADOPTED[event] then return end
         if not ROUTED[event] then
             NS.Debug("Init", "verdict: %s has no NS.FEATURE_EVENTS row; it is not heard", tostring(event))
         end

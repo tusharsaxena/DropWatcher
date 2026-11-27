@@ -256,17 +256,13 @@ modules\GroupPlace.lua
 # (feedback-2 spec §4), which modules\WindowFilterBar.lua (below) takes as a load-time upvalue;
 # reads NS.L at load. NS.Compat is read at call time.
 modules\CharFilter.lua
-# Conventional: publishes NS.Collectibles, a drop's category and the collection verdict (issue #13);
-# reads NS.Constants at load. NS.Compat (core\CompatCollect.lua, above) is read at call time.
-modules\Collectibles.lua
-# LOAD-BEARING: appends its PLAYER_REGEN_ENABLED row to NS.FEATURE_EVENTS after
-# core\DropWatcher.lua's and before modules\Gear.lua's, modules\Inspect.lua's and modules\Toast.lua's
-# (its other rows, NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED and
-# SKILL_LINES_CHANGED, no other file handles), and its NS.STAND_DOWN step runs in TOC order, after
-# those of the modules above. Publishes NS.CollectFeed, the feed's re-read on collection events
-# (issue #13); adds its handlers to NS.addon (core\DropWatcher.lua, above) at load. NS.Collectibles
-# (above), NS.ItemFacts and NS.LootFeed are read at call time; core\VerdictSetup.lua's onChange calls
-# its OnCollectionsChanged.
+# LOAD-BEARING: appends its PLAYER_REGEN_ENABLED row to NS.FEATURE_EVENTS after core\DropWatcher.lua's
+# and core\VerdictSetup.lua's and before modules\Inspect.lua's and modules\Toast.lua's, and its
+# NS.STAND_DOWN step runs in TOC order, after those of the modules above. Publishes NS.CollectFeed, the
+# feed's re-read on the verdict engine's collection change (issue #13), and NS.Collectibles.IsFeedOnly
+# (NS.Collectibles is core\VerdictViews.lua's, above); adds its handler to NS.addon at load.
+# NS.ItemFacts and NS.LootFeed are read at call time; core\VerdictSetup.lua's onChange calls its
+# OnCollectionsChanged.
 modules\CollectFeed.lua
 # LOAD-BEARING: reads NS.Gear (core\VerdictViews.lua, above) at load: adds NS.Gear.Qualities, the
 # worn qualities the feed's gate reads.
