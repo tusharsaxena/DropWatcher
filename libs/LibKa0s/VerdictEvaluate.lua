@@ -1,0 +1,821 @@
+-- LibKa0s-Verdict-1.0 -- the verdict kernel and the off-spec pass: is an item an upgrade for a
+-- candidate? Moved from Ka0s Drop Watcher's modules/Evaluate.lua and modules/OffSpec.lua
+-- (DropWatcher#19). Its members are the major's own: lib.Evaluate, lib.Equippability,
+-- lib.ItemVerdict, lib.TrackDelta, lib.SubClassKey and lib.OffSpec.
+--
+-- PURE. It takes plain tables and makes no WoW API call, reads no saved variable and keeps no
+-- state but one kernel per class list, so a headless suite can drive it exhaustively. Its inputs
+-- are built by the edges: the facts reader (the drop and every gear entry), the player's gear
+-- snapshot, another player's (a host's inspect), and the scorer. Settings reach it as plain `opts`.
+--
+--   facts     = { itemID, ilvl, equipLoc, classID, subClassID, quality, specs = { [specID] = true },
+--                 stats = { [STAT_KEY] = n }, track = { name, rank, max, tier },
+--                 unique = { cat, max }, isTierToken, classes = { [classFile] = true },
+--                 tokenSlot = "INVTYPE_*" | "any" | nil }
+--   candidate = { classFile, specID, tree, level, dualWield, titanGrip, gear = { [slot] = facts | false },
+--                 owned = { [slot] = facts }, prefs = { undesired = { [SubClassKey] = true } },
+--                 offSpecGear = function(specID), undesiredBySpec = { [specID] = { [SubClassKey] = true } } }
+--   opts      = { client = "retail" | "forever", sidegradeBand = 0, compareOwned = false,
+--                 heirloomProtect = false, scorer = function(facts, candidate, drop),
+--                 verdictMode = "ilvlFirst" | "scoreFirst" }
+--
+-- `client` picks the class list (VerdictClassData.lua), the ranged slot plans (VerdictConstants.lua)
+-- and the off-spec gate; left out, Retail's list and plans and no off-spec pass (Verdict.lua's
+-- header). Drop Watcher read all three from the client it ran on, at file load.
+--
+-- `verdictMode` is the caller's, set by client: "ilvlFirst" (Retail, and the default) or
+-- "scoreFirst" (WoW Forever: the score decides, item level breaks a tie within 1% of the worn
+-- score, and with no score item level decides, reason `noScore`). Under scoreFirst a compared
+-- verdict carries `led` = "score" or "ilvl".
+--
+-- With `heirloomProtect`, a drop whose baseline is an heirloom is never called an upgrade: what
+-- would be one reads as a sidegrade, with the reason `heirloomProtected`.
+--
+-- In `gear`, false is an empty slot and nil a slot nobody has read yet. A scorer answers a number,
+-- "pending" (Pawn not ready), or nil.
+--
+-- TIER TOKENS. A tier token's equipLoc is the slot the token makes (the facts reader sets it from
+-- `tokenSlot`), so it is judged as gear against what is worn there, by item level alone: the scorer
+-- is skipped (Pawn cannot value a token), and armor type and primary stat are not checked (the
+-- piece suits the class). Its class list still refuses other classes. Facts with no `tokenSlot` (an
+-- old history entry) answer `unknown`, reason `tierToken`; a token judged in any slot
+-- (`tokenSlot == "any"`: a Curio, or a token whose text named no slot) in its best tier slot
+-- (lib.TierTokens.Fold, read at call time).
+--
+-- A `cantUse` that depends on the spec also carries `offSpec`, the best verdict for another spec of
+-- the class (lib.OffSpec, below); the verdict itself stays `cantUse`.
+--
+-- It NEVER THROWS: any nil or unexpected input answers verdict "unknown" with a reason, and the
+-- public entry point runs the whole evaluation under pcall as the last line of defense.
+--
+-- Depends on the Verdict shell (Verdict.lua), VerdictConstants.lua and VerdictClassData.lua, loaded
+-- before it; VerdictTierTokens.lua is read at call time.
+
+local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
+if not lib or not lib.C or not lib.ClassData then return end
+
+local EVALUATE_MINOR = 1
+-- Minor 1 (DropWatcher#19, task B1): Drop Watcher's kernel and off-spec pass, the client named
+-- per call.
+if lib.__evaluateMinor and lib.__evaluateMinor >= EVALUATE_MINOR
+  and lib.__evaluateShellMinor == lib.MINOR then return end
+lib.__evaluateMinor      = EVALUATE_MINOR
+lib.__evaluateShellMinor = lib.MINOR
+
+lib.MODULES = lib.MODULES or {}
+lib.MODULES.VerdictEvaluate = EVALUATE_MINOR
+
+local C = lib.C
+local OS = {}
+lib.OffSpec = OS
+
+local MH, OH = C.SLOT.MAINHAND, C.SLOT.OFFHAND
+local ITEM_CLASS, ARMOR = C.ITEM_CLASS, C.ARMOR_SUBCLASS
+
+local STAT = lib.ClassData.STAT
+local PRIMARY = { STAT.STRENGTH, STAT.AGILITY, STAT.INTELLECT }
+
+-- Verdicts by the sign of the comparison.
+local BY_SIGN = { [1] = "upgrade", [0] = "sidegrade", [-1] = "downgrade" }
+
+local function isTable(v) return type(v) == "table" end
+
+-- A real number, or nil (NaN and every non-number are nil).
+local function num(v)
+  if type(v) == "number" and v == v then return v end
+  return nil
+end
+
+local function sign(x, band)
+  if x > band then return 1 end
+  if x < -band then return -1 end
+  return 0
+end
+
+-- Appends { key = key } once.
+local function addReason(reasons, key, detail)
+  for _, r in ipairs(reasons) do
+    if r.key == key then return end
+  end
+  reasons[#reasons + 1] = { key = key, detail = detail }
+end
+
+--- The key `prefs.undesired` is indexed by: "<classID>:<subClassID>", or nil when either is not a
+--- number. Keying by both keeps a one-hand mace (weapon 4) apart from plate (armor 4).
+function lib.SubClassKey(classID, subClassID)
+  if not num(classID) or not num(subClassID) then return nil end
+  return classID .. ":" .. subClassID
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Step 2: the slot plan -> { slot, items = { facts, ... } } | { slot, empty = true } | nil
+-- ---------------------------------------------------------------------------------------------
+
+-- One slot's entry as a baseline: facts with a numeric ilvl, false (empty), or nil (not known).
+local function entry(v)
+  if v == false then return false end
+  if isTable(v) and num(v.ilvl) then return v end
+  return nil
+end
+
+-- The slot reader for this candidate: equipped, or the better of equipped and owned.
+local function slotReader(candidate, opts)
+  local gear = isTable(candidate.gear) and candidate.gear or {}
+  local owned = opts.compareOwned == true and isTable(candidate.owned) and candidate.owned or nil
+  return function(slot)
+    local equipped = entry(gear[slot])
+    local alt = owned and entry(owned[slot])
+    if alt and not (equipped and equipped.ilvl >= alt.ilvl) then return alt end
+    return equipped
+  end
+end
+
+-- Two-handers fill both hands: bows (RANGED) and guns, crossbows and wands (RANGEDRIGHT) too.
+local TWO_HAND = { INVTYPE_2HWEAPON = true, INVTYPE_RANGED = true, INVTYPE_RANGEDRIGHT = true }
+
+local function isTwoHand(f)
+  return isTable(f) and TWO_HAND[f.equipLoc] == true
+end
+
+local function one(f, slot)
+  if f == false then return { slot = slot, empty = true } end
+  if f == nil then return nil end
+  return { slot = slot, items = { f } }
+end
+
+-- The lower of two slots; an empty slot wins, an unknown one leaves the answer unknown. Of two
+-- items read, the plan is `either`: the drop could take either slot (feedback-21 R5).
+local function lowerOf(a, sa, b, sb)
+  if a == false then return one(a, sa) end
+  if b == false then return one(b, sb) end
+  if a == nil or b == nil then return nil end
+  local plan = b.ilvl < a.ilvl and one(b, sb) or one(a, sa)
+  plan.either = true
+  return plan
+end
+
+local function vsTwoHand(mh)
+  local plan = one(mh, MH)
+  plan.vsTwoHand = true
+  return plan
+end
+
+local PLANS = {}
+
+function PLANS.single(slots, read) return one(read(slots[1]), slots[1]) end
+
+function PLANS.pair(slots, read) return lowerOf(read(slots[1]), slots[1], read(slots[2]), slots[2]) end
+
+function PLANS.weapon1H(_, read, ctx)
+  local mh, oh = read(MH), read(OH)
+  if not ctx.dualWield then return one(mh, MH) end
+  if isTwoHand(mh) and not isTable(oh) and not ctx.titanGrip then return vsTwoHand(mh) end
+  return lowerOf(mh, MH, oh, OH)
+end
+
+function PLANS.weapon2H(_, read, ctx)
+  local mh, oh = read(MH), read(OH)
+  if ctx.titanGrip then return lowerOf(mh, MH, oh, OH) end
+  if mh == false or mh == nil or isTwoHand(mh) or oh == false then return one(mh, MH) end
+  if oh == nil then return nil end
+  return { slot = MH, items = { mh, oh } }
+end
+
+function PLANS.offhand(_, read)
+  local mh, oh = read(MH), read(OH)
+  if isTwoHand(mh) and not isTable(oh) then return vsTwoHand(mh) end
+  return one(oh, OH)
+end
+
+function PLANS.ranged(slots, read, ctx)
+  if ctx.classFile == "HUNTER" then return PLANS.weapon2H(slots, read, ctx) end
+  return one(read(MH), MH)
+end
+
+-- The unique-equipped redirection: when the candidate already wears `max` items of the drop's
+-- unique category, the drop can only replace one of them, so the lowest of those is the baseline.
+-- When one of the drop's own slots holds the category, the drop goes there (the count stays the
+-- same), so the lowest holder among its own slots is the baseline.
+-- Whether the gear entry in `slot` holds unique category `cat`: its facts, or nil.
+local function holder(slot, v, cat)
+  local f = entry(v)
+  if not f or not num(slot) or not isTable(f.unique) then return nil end
+  if f.unique.cat ~= cat then return nil end
+  return f
+end
+
+-- Whether `f` in `slot` sorts below the current pick: the lower ilvl, then the lower slot id.
+local function below(f, slot, best, bestSlot)
+  if not best then return true end
+  if f.ilvl ~= best.ilvl then return f.ilvl < best.ilvl end
+  return slot < bestSlot
+end
+
+local function asSet(list)
+  local set = {}
+  for _, slot in ipairs(list) do set[slot] = true end
+  return set
+end
+
+local function uniquePlan(facts, candidate, plan)
+  local u = facts.unique
+  if not isTable(u) or u.cat == nil or not isTable(candidate.gear) then return nil end
+  local own = asSet(plan.slots)
+  local best, bestSlot, mine, mineSlot, count = nil, nil, nil, nil, 0
+  for slot, v in pairs(candidate.gear) do
+    local f = holder(slot, v, u.cat)
+    if f then
+      count = count + 1
+      if below(f, slot, best, bestSlot) then best, bestSlot = f, slot end
+      if own[slot] and below(f, slot, mine, mineSlot) then mine, mineSlot = f, slot end
+    end
+  end
+  if count == 0 or count < (num(u.max) or 1) then return nil end
+  -- In one of a pair's own slots (a unique ring worn, the drop another copy): the drop is judged
+  -- against that item, but both worn items are marked, as for any ring (`either`, feedback-22: a
+  -- ring slot always reads both rings, `315 ▲3 / 295 ▲23`, on every surface).
+  if mine then return { slot = mineSlot, items = { mine }, unique = true, either = #plan.slots == 2 or nil } end
+  return { slot = bestSlot, items = { best }, unique = true }
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Step 3: deltas
+-- ---------------------------------------------------------------------------------------------
+
+local function tierOf(track)
+  return num(track.tier) or C.TRACK_TIER[track.name]
+end
+
+--- The track change from `base` to `drop`: { tier, rank, sign }, or nil when either has no track
+--- or no known tier. Tier first (Explorer < ... < Myth), then rank within it.
+function lib.TrackDelta(drop, base)
+  if not isTable(drop) or not isTable(base) then return nil end
+  local ta, tb = tierOf(drop), tierOf(base)
+  if not ta or not tb then return nil end
+  local dt = ta - tb
+  local dr = (num(drop.rank) or 0) - (num(base.rank) or 0)
+  local s = sign(dt, 0)
+  if s == 0 then s = sign(dr, 0) end
+  return { tier = dt, rank = dr, sign = s }
+end
+
+local function average(items, value)
+  local sum = 0
+  for _, f in ipairs(items) do
+    local v = value(f)
+    if not v then return nil end
+    sum = sum + v
+  end
+  return sum / #items
+end
+
+-- The scorer's answer for one item: a number, "pending", or nil. A scorer that throws is no score.
+-- It is handed the drop as well, so a scorer can value the drop and its baseline on one scale.
+local function scoreOf(scorer, f, candidate, drop)
+  local ok, v = pcall(scorer, f, candidate, drop)
+  if not ok then return nil end
+  if v == "pending" then return v end
+  return num(v)
+end
+
+local function scoreDelta(facts, items, candidate, opts, reasons)
+  local scorer = opts.scorer
+  if type(scorer) ~= "function" then return nil end
+  local pending = false
+  local function value(f)
+    local v = scoreOf(scorer, f, candidate, facts)
+    if v == "pending" then pending = true return nil end
+    return v
+  end
+  local mine, base = value(facts), average(items, value)
+  if pending then addReason(reasons, "scorePending") end
+  if not mine or not base then return nil end
+  return mine - base, base
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- Step 4: the verdict
+-- ---------------------------------------------------------------------------------------------
+
+-- ilvlFirst (Retail, the default): ilvl alone, or ilvl and score (spec section 5.2 step 4): the verdict
+-- takes the sign only when the two agree in sign; when they disagree (one of them within its band
+-- counts) it is a sidegrade, as it is when both are within. The band is in item levels, so the
+-- score's band is 0.
+local function ilvlFirst(out, band)
+  local si = sign(out.ilvlDelta, band)
+  if out.scoreDelta == nil then return BY_SIGN[si] end
+  local ss = sign(out.scoreDelta, 0)
+  if si == ss then return BY_SIGN[si] end
+  addReason(out.reasons, "scoreDisagrees")
+  return "sidegrade"
+end
+
+-- scoreFirst (WoW Forever, Forever port design section 4.5): the score's sign decides, unless it is a tie
+-- (|scoreDelta| within SCORE_TIE of the worn item's score), where item level decides by the band;
+-- with no score, item level alone, reason `noScore`. `led` says which one decided (the toast's and
+-- auto-ask's least gain apply only to an item-level-led verdict).
+local SCORE_TIE = 0.01
+local function scoreFirst(out, band, worn)
+  local sd = out.scoreDelta
+  if sd == nil then addReason(out.reasons, "noScore") end
+  if sd ~= nil and math.abs(sd) > SCORE_TIE * math.abs(worn or 0) then
+    out.led = "score"
+    return BY_SIGN[sign(sd, 0)]
+  end
+  out.led = "ilvl"
+  return BY_SIGN[sign(out.ilvlDelta, band)]
+end
+
+local function decide(out, band, opts, worn)
+  if opts.verdictMode == "scoreFirst" then return scoreFirst(out, band, worn) end
+  return ilvlFirst(out, band)
+end
+
+local function verdictOf(out, base, band, opts, worn)
+  if out.equip == "cant" then return "cantUse" end
+  if out.equip == "doesntWant" then return "doesntWant" end
+  if out.equip ~= "ok" or not base then return "unknown" end
+  if base.empty then
+    addReason(out.reasons, "emptySlot")
+    return "upgrade"
+  end
+  if not out.ilvlDelta then return "unknown" end
+  return decide(out, band, opts, worn)
+end
+
+-- Heirloom protection (opts.heirloomProtect): a slot that holds an heirloom is kept, so a drop
+-- that would be an upgrade over it reads as a sidegrade. An empty slot holds no heirloom.
+local function heirloomHeld(base)
+  for _, f in ipairs(base and base.items or {}) do
+    if isTable(f) and f.quality == C.QUALITY.HEIRLOOM then return true end
+  end
+  return false
+end
+
+local function protect(out, base, opts)
+  if out.verdict ~= "upgrade" or opts.heirloomProtect ~= true or not heirloomHeld(base) then return end
+  addReason(out.reasons, "heirloomProtected")
+  out.verdict = "sidegrade"
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The kernel, one per class list: steps 1 and 2 read the list and the slot plans
+-- ---------------------------------------------------------------------------------------------
+
+-- The kernel bound to class list `CD` and slot plans `SLOT_PLAN`: { run, Equippability }. Drop
+-- Watcher's file-level functions, unchanged, closed over the list a client names instead of the one
+-- its file load installed.
+local function buildKernel(CD, SLOT_PLAN)
+  -- ---------------------------------------------------------------------------------------------
+  -- Step 1: equippability -> "ok" | "cant" | "doesntWant" | "unknown", plus a reason key
+  -- ---------------------------------------------------------------------------------------------
+
+  -- A ClassData answer (true / false / nil) as a status; the reason names what decided a refusal.
+  local function tri(v, key)
+    if v == true then return "ok" end
+    if v == false then return "cant", key end
+    return "unknown", key
+  end
+
+  local function hasEntries(t) return isTable(t) and next(t) ~= nil end
+
+  -- The armor type at the candidate's level: on WoW Forever a type the class wears only from a later
+  -- level answers "cant" with the reason armorLevel (design section 4.2, Review Focus 5).
+  local function armorTypeCheck(facts, candidate)
+    local ok, why = CD.CanWearArmor(candidate.classFile, facts.subClassID, num(candidate.level))
+    return tri(ok, why or "armorType")
+  end
+
+  -- Shields, held off hands, relics (WoW Forever), jewelry and cloaks, then the armor types.
+  local function armorCheck(facts, candidate, specID)
+    local loc, classFile, tree = facts.equipLoc, candidate.classFile, num(candidate.tree)
+    if loc == "INVTYPE_SHIELD" or facts.subClassID == ARMOR.SHIELD then
+      return tri(CD.CanUseShield(classFile, specID, tree), "shield")
+    end
+    if loc == "INVTYPE_HOLDABLE" then return tri(CD.CanUseOffhand(classFile, specID, tree), "offhand") end
+    -- A list with no relics (Retail) leaves a relic not gear, below.
+    if loc == "INVTYPE_RELIC" and CD.RELIC then return tri(CD.CanUseRelic(classFile, facts.subClassID), "relic") end
+    if C.UNIVERSAL_EQUIPLOC[loc] then return "ok" end
+    if C.ARMOR_TYPED_EQUIPLOC[loc] then return armorTypeCheck(facts, candidate) end
+    return "unknown", "notGear"
+  end
+
+  -- The candidate's own flag when it carries one, else the spec's (or talent tree's), else the
+  -- class's when every spec agrees; nil when it cannot tell.
+  local function flagOf(candidate, field, lookup)
+    if type(candidate[field]) == "boolean" then return candidate[field] end
+    return lookup(candidate.classFile, num(candidate.specID), num(candidate.tree))
+  end
+
+  -- Weapon proficiency; an off-hand-only weapon also needs a dual wielder.
+  local function weaponCheck(facts, candidate)
+    local status, why = tri(CD.CanUseWeapon(candidate.classFile, facts.subClassID), "weaponType")
+    if status == "ok" and facts.equipLoc == "INVTYPE_WEAPONOFFHAND" then
+      return tri(flagOf(candidate, "dualWield", CD.DualWieldFor), "dualWield")
+    end
+    return status, why
+  end
+
+  -- The primary stats an item carries, as a set, or nil when it carries none.
+  local function primariesOf(stats)
+    if not isTable(stats) then return nil end
+    local found
+    for _, key in ipairs(PRIMARY) do
+      local v = num(stats[key])
+      if v and v > 0 then
+        found = found or {}
+        found[key] = true
+      end
+    end
+    return found
+  end
+
+  -- Whether the item's primary stat suits the candidate: by the spec (or the class, when every spec
+  -- shares one), else by how many of the class's specs it suits: all, none, or some (ambiguous). The
+  -- list's soft gate (WoW Forever, design section 4.5) never refuses by stat: vanilla items carry several,
+  -- and the score weighs them.
+  local function statCheck(facts, classFile, specID, tree)
+    if CD.STAT_GATE == "soft" then return "ok" end
+    local prim = primariesOf(facts.stats)
+    if not prim then return "ok" end
+    local stat = CD.PrimaryStat(classFile, specID, tree)
+    if stat then return tri(prim[stat] == true, "primaryStat") end
+    local any, all = false, true
+    for _, id in ipairs(CD.CLASS_SPECS[classFile] or {}) do
+      if prim[CD.SPECS[id].stat] then any = true else all = false end
+    end
+    if any and all then return "ok" end
+    if not any then return "cant", "primaryStat" end
+    return "unknown", "primaryStat"
+  end
+
+  -- The spec-unknown fallback (and the known-spec path when the item has no spec list).
+  local function byClassData(facts, candidate)
+    local classFile, specID = candidate.classFile, num(candidate.specID)
+    if not CD.ARMOR[classFile] then return "unknown", "unknownClass" end
+    local status, why
+    if facts.classID == ITEM_CLASS.ARMOR then
+      status, why = armorCheck(facts, candidate, specID)
+    elseif facts.classID == ITEM_CLASS.WEAPON then
+      status, why = weaponCheck(facts, candidate)
+    else
+      return "unknown", "notGear"
+    end
+    if status ~= "ok" then return status, why end
+    return statCheck(facts, classFile, specID, num(candidate.tree))
+  end
+
+  -- The spec list's "ok" still waits for the armor level (WoW Forever, Review Focus 5): the client's
+  -- list names a class-wide spec, which knows the class, not the level. Only CanWearArmor's
+  -- "armorLevel" answer refuses here; Retail's list never gives it, so Retail trusts its list as before.
+  local function armorLevelCheck(facts, candidate)
+    if facts.classID ~= ITEM_CLASS.ARMOR or not C.ARMOR_TYPED_EQUIPLOC[facts.equipLoc] then return "ok" end
+    local ok, why = CD.CanWearArmor(candidate.classFile, facts.subClassID, num(candidate.level))
+    if ok == false and why == "armorLevel" then return "cant", why end
+    return "ok"
+  end
+
+  local function usable(facts, candidate)
+    if type(candidate.classFile) ~= "string" then return "unknown", "unknownClass" end
+    if isTable(facts.classes) and not facts.classes[candidate.classFile] then
+      return "cant", "classRestricted"
+    end
+    if facts.isTierToken then
+      if isTable(facts.classes) or facts.tokenSlot then return "ok" end
+      return "unknown", "tierToken"
+    end
+    local specID = num(candidate.specID)
+    -- The client's spec list covers the class it was read on alone (`specsClass`); any other class
+    -- is left to the class tables.
+    local listed = facts.specsClass == nil or facts.specsClass == candidate.classFile
+    if specID and listed and hasEntries(facts.specs) then
+      if not facts.specs[specID] then return "cant", "specList" end
+      return armorLevelCheck(facts, candidate)
+    end
+    return byClassData(facts, candidate)
+  end
+
+  local function undesired(facts, candidate)
+    local prefs = candidate.prefs
+    local list = isTable(prefs) and prefs.undesired
+    if not isTable(list) then return false end
+    local key = lib.SubClassKey(facts.classID, facts.subClassID)
+    return key ~= nil and list[key] == true
+  end
+
+  -- Step 1 alone: "ok", "cant", "doesntWant" or "unknown", and the reason key for anything but ok.
+  local function equippability(facts, candidate)
+    if not isTable(facts) or not isTable(candidate) then return "unknown", "badInput" end
+    local status, why = usable(facts, candidate)
+    if status == "ok" and undesired(facts, candidate) then return "doesntWant", "undesired" end
+    return status, why
+  end
+
+  local function planFor(facts, candidate, opts)
+    local plan = SLOT_PLAN[facts.equipLoc]
+    if not plan then return nil, facts.isTierToken and "tierToken" or "notGear" end
+    local ctx = {
+      classFile = candidate.classFile,
+      dualWield = flagOf(candidate, "dualWield", CD.DualWieldFor) == true,
+      titanGrip = flagOf(candidate, "titanGrip", CD.TitanGripFor) == true,
+    }
+    local base = uniquePlan(facts, candidate, plan) or PLANS[plan.kind](plan.slots, slotReader(candidate, opts), ctx)
+    if not base then return nil, "noBaseline" end
+    return base
+  end
+
+  -- Fills the baseline and the deltas; answers the plan (nil when there is no baseline) and the worn
+  -- item's score (nil when unscored).
+  local function compare(out, facts, candidate, opts)
+    local ilvl = num(facts.ilvl)
+    if not ilvl then
+      addReason(out.reasons, "noIlvl")
+      return nil
+    end
+    local base, why = planFor(facts, candidate, opts)
+    if not base then
+      addReason(out.reasons, why)
+      return nil
+    end
+    out.baselineSlot = base.slot
+    if base.empty then return base end
+    if base.unique then addReason(out.reasons, "uniqueEquipped") end
+    if base.vsTwoHand then addReason(out.reasons, "vsTwoHand") end
+    out.baseline = base.items[1]
+    out.either = base.either   -- the lower of two the drop could take: a reader judges the other too
+    out.averaged = #base.items > 1 or nil   -- a two-hander against both hands: the pair, not one item
+    out.ilvlDelta = ilvl - average(base.items, function(f) return f.ilvl end)
+    out.trackDelta = lib.TrackDelta(facts.track, out.baseline.track)
+    -- A tier token is judged by item level alone: no scorer can value it.
+    if facts.isTierToken then return base end
+    local sd, worn = scoreDelta(facts, base.items, candidate, opts, out.reasons)
+    out.scoreDelta = sd
+    return base, worn
+  end
+
+  local function run(facts, candidate, opts)
+    local out = { verdict = "unknown", equip = "unknown", reasons = {} }
+    if not isTable(facts) then
+      addReason(out.reasons, "badFacts")
+      return out
+    end
+    if not isTable(candidate) then
+      addReason(out.reasons, "badCandidate")
+      return out
+    end
+    opts = isTable(opts) and opts or {}
+    -- An omni token: the kernel once per tier slot, the best kept (VerdictTierTokens.lua).
+    if facts.tokenSlot == "any" and lib.TierTokens then return lib.TierTokens.Fold(facts, candidate, opts, run) end
+    local equip, why = equippability(facts, candidate)
+    out.equip = equip
+    if why then addReason(out.reasons, why) end
+    local base, worn = compare(out, facts, candidate, opts)
+    local band = math.abs(num(opts.sidegradeBand) or 0)
+    out.verdict = verdictOf(out, base, band, opts, worn)
+    if band > 0 then out.band = band end   -- for a tooltip's other worn items (lib.ItemVerdict)
+    protect(out, base, opts)
+    -- The off-spec pass (below): only a spec refusal, only with offSpecGear, only on a client it
+    -- serves.
+    OS.Attach(out, facts, candidate, opts, run)
+    return out
+  end
+
+  return { run = run, Equippability = equippability }
+end
+
+local kernels = {}
+
+local function clientOf(client) return client == "forever" and "forever" or "retail" end
+
+-- The kernel of `client`: WoW Forever's list and plans for "forever", Retail's for any other value.
+local function kernelFor(client)
+  local key = clientOf(client)
+  local k = kernels[key]
+  if not k then
+    k = buildKernel(lib.ClassData.ForClient(key), C.SlotPlanFor(key))
+    kernels[key] = k
+  end
+  return k
+end
+
+--- Step 1 alone: "ok", "cant", "doesntWant" or "unknown", and the reason key for anything but ok.
+--- `client` picks the class list (Retail's when nil).
+--- @param facts table
+--- @param candidate table
+--- @param client string|nil "retail" | "forever"
+--- @return string status, string|nil reason
+function lib.Equippability(facts, candidate, client)
+  if not isTable(facts) or not isTable(candidate) then return "unknown", "badInput" end
+  return kernelFor(client).Equippability(facts, candidate)
+end
+
+--- One item level's verdict as step 4 takes it with no score (feedback-21 H3): `upgrade`,
+--- `sidegrade` within `band` item levels either side of equal, else `downgrade`. A tooltip's grid
+--- judges the drop against each worn item of a dual slot this way, beside the verdict itself.
+--- @param delta number the drop's item level less the worn item's
+--- @param band number|nil the sidegrade band (an evaluation's `band`; 0 when nil)
+--- @return string|nil nil when delta is not a number
+function lib.ItemVerdict(delta, band)
+  local d = num(delta)
+  if not d then return nil end
+  return BY_SIGN[sign(d, math.abs(num(band) or 0))]
+end
+
+--- Evaluates `facts` for `candidate` (design spec section 5.2). Answers
+--- { verdict, equip, ilvlDelta, trackDelta, scoreDelta, baselineSlot, baseline, reasons, band?, either?, averaged?, led? }, where
+--- verdict is "upgrade", "sidegrade", "downgrade", "cantUse", "doesntWant" or "unknown", and
+--- reasons is a list of { key = ... }; `band` is the sidegrade band, kept only when it is not 0;
+--- `either` is true when the drop's slot holds two worn items a reader marks each of: the baseline the
+--- lower of two the drop could take either of (rings, trinkets, a dual wielder's one-hander, Titan's
+--- Grip: feedback-21 R5), or a unique-equipped item worn in one of the pair's own slots (feedback-22);
+--- nil when the drop was judged against one item (the main hand alone, both hands averaged, a unique
+--- redirection to another slot);
+--- `averaged` is true when it was judged against both hands averaged (the baseline is the main hand's);
+--- `tokenSlot` is the tier slot an omni token was judged in (lib.TierTokens.Fold), else nil;
+--- `led` is "score" or "ilvl" under the scoreFirst mode (what decided), else nil.
+--- Never throws.
+function lib.Evaluate(facts, candidate, opts)
+  local run = kernelFor(type(opts) == "table" and opts.client or nil).run
+  local ok, res = pcall(run, facts, candidate, opts)
+  if ok then return res end
+  return { verdict = "unknown", equip = "unknown", reasons = { { key = "error", detail = tostring(res) } } }
+end
+
+-- ---------------------------------------------------------------------------------------------
+-- The off-spec pass (Drop Watcher's modules/OffSpec.lua), as lib.OffSpec
+-- ---------------------------------------------------------------------------------------------
+--
+-- A drop your current spec cannot use, judged for every other spec of your class against your best
+-- owned item for that spec. PURE, like the kernel it serves: the kernel's run calls Attach after
+-- the main verdict, inside the same pcall; a host's gear snapshot and inspect take Who and WornGear
+-- to build each spec's gear.
+--
+-- WHEN. Only on a client the pass serves (OS.Enabled(opts.client): Retail's alone, since WoW
+-- Forever's spec is class-wide and has no other spec to judge; no client named, no pass), and only
+-- on a main verdict of `cantUse` whose refusal depends on the spec (SPEC_REASONS): a refusal on the
+-- class (armor type, weapon type, the item's class list) rules out every spec. The candidate must
+-- name a known spec and bring `offSpecGear(specID)`, which answers that spec's kernel `gear` map
+-- (false = empty); a throw or a non-table answer skips the spec. The spec's own undesired list
+-- comes from `candidate.undesiredBySpec[specID]`.
+--
+-- HOW. Each spec is judged by the kernel itself on a derived candidate (Who: the spec's own hand
+-- flags, never the main spec's), with the same sidegrade band, heirloom rule and client,
+-- compareOwned off and NO scorer: off-spec is item level only, so it never waits on a score.
+--
+--   eval.offSpec = { specID, mainSpecID, verdict = "upgrade" | "sidegrade" | "downgrade", ilvlDelta,
+--                    trackDelta, baseline (nil for an empty slot), baselineSlot, reasons }
+--
+-- `mainSpecID` is the candidate's own spec, so a reader can say which spec could not use it.
+-- OS.Of answers the off-spec part a reader may show, OS.EvalFor the verdict a gain reader reads
+-- (the off-spec part when it counts, else the eval).
+--
+-- THE BEST SPEC. Upgrade beats sidegrade beats downgrade; then the larger ilvlDelta (an empty slot
+-- the largest); then the lower spec id. doesntWant, cantUse and unknown are never kept. The main
+-- verdict is never changed.
+--
+-- Drop Watcher's OS.Initialized (its module's registration gate, read once from the client it ran
+-- on) stays in Drop Watcher: here the gate is OS.Enabled of the evaluation's own client.
+
+--- Whether the off-spec pass runs on client `clientKey` ("retail" | "forever"): pure. A nil or
+--- unknown key answers false (no client named: no off-spec), unlike ClassData.ForClient, whose nil
+--- or unknown key answers Retail's list; the two defaults are kept apart on purpose. It reads
+--- C.FEATURE_CLIENTS.offSpec.
+--- @param clientKey string|nil
+--- @return boolean
+function OS.Enabled(clientKey)
+  for _, token in ipairs(C.FEATURE_CLIENTS.offSpec) do
+    if token == "both" or token == clientKey then return true end
+  end
+  return false
+end
+
+-- The cantUse reasons that depend on the spec: another spec of the class may answer otherwise.
+OS.SPEC_REASONS = { primaryStat = true, specList = true, shield = true, offhand = true, dualWield = true }
+
+-- The verdicts an off-spec may carry, by rank.
+local RANK = { upgrade = 3, sidegrade = 2, downgrade = 1 }
+
+local function knownSpec(v)
+  if type(v) == "number" and v == v then return v end
+  return nil
+end
+
+--- The identity fields of `classFile`'s spec `specID` as a kernel candidate: the hand flags are
+--- that spec's own, from the class list `client` names (Retail's when nil).
+--- @param classFile string
+--- @param specID number
+--- @param client string|nil "retail" | "forever"
+--- @return table { classFile, specID, dualWield, titanGrip }
+function OS.Who(classFile, specID, client)
+  local CD = lib.ClassData.ForClient(client)
+  return {
+    classFile = classFile, specID = specID,
+    dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
+  }
+end
+
+--- Worn gear as another spec's kernel gear: each worn item `who` could wear, false where it could
+--- not (the slot reads as empty), false for an empty slot, and a slot still loading left absent.
+--- @param gear table { [slot] = facts | false }
+--- @param who table a candidate's identity (Who)
+--- @param client string|nil "retail" | "forever", the class list Equippability reads
+--- @return table|nil
+function OS.WornGear(gear, who, client)
+  if not isTable(gear) then return nil end
+  local out = {}
+  for slot, item in pairs(gear) do
+    out[slot] = isTable(item) and lib.Equippability(item, who, client) == "ok" and item or false
+  end
+  return out
+end
+
+local function specRefusal(out)
+  if out.verdict ~= "cantUse" then return false end
+  for _, r in ipairs(out.reasons) do
+    if OS.SPEC_REASONS[r.key] then return true end
+  end
+  return false
+end
+
+-- The spec's gear, or nil when the candidate's builder throws or answers no table.
+local function gearOf(candidate, specID)
+  local ok, gear = pcall(candidate.offSpecGear, specID)
+  if ok and isTable(gear) then return gear end
+  return nil
+end
+
+local function undesiredOf(candidate, specID)
+  local lists = candidate.undesiredBySpec
+  local list = isTable(lists) and lists[specID]
+  if isTable(list) then return { undesired = list } end
+  return nil
+end
+
+-- The kernel's answer for spec `specID`, or nil when the spec has no gear to judge against.
+local function judge(facts, candidate, specID, opts, run)
+  local gear = gearOf(candidate, specID)
+  if not gear then return nil end
+  local who = OS.Who(candidate.classFile, specID, opts.client)
+  who.gear, who.prefs, who.isPlayer = gear, undesiredOf(candidate, specID), candidate.isPlayer
+  return run(facts, who, opts)
+end
+
+-- The difference used to break a tie: an empty slot is the largest.
+local function gain(res)
+  if res.baselineSlot and not res.baseline then return math.huge end
+  return res.ilvlDelta or -math.huge
+end
+
+-- Whether `res` beats `best`. Specs come in ascending order, so a tie keeps the lower id.
+local function better(res, best)
+  if not best then return true end
+  local a, b = RANK[res.verdict], RANK[best.verdict]
+  if a ~= b then return a > b end
+  return gain(res) > gain(best)
+end
+
+local function shape(res, specID, mainSpecID)
+  return {
+    specID = specID, mainSpecID = mainSpecID, verdict = res.verdict, ilvlDelta = res.ilvlDelta, trackDelta = res.trackDelta,
+    baseline = res.baseline, baselineSlot = res.baselineSlot, reasons = res.reasons, band = res.band,
+  }
+end
+
+--- The off-spec part of a verdict (lib.Evaluate's, or a history snapshot) that a reader shows: the
+--- main verdict is `cantUse` and the part's verdict is one of the three; nil otherwise.
+--- @param eval any
+--- @return table|nil
+function OS.Of(eval)
+  if not (isTable(eval) and eval.verdict == "cantUse" and isTable(eval.offSpec)) then return nil end
+  if RANK[eval.offSpec.verdict] then return eval.offSpec end
+  return nil
+end
+
+--- The verdict a gain reader reads (the toast's least gain, say): the off-spec part when it is the
+--- one that counts (OS.Of), else `eval` itself.
+--- @param eval any
+--- @return any
+function OS.EvalFor(eval)
+  return OS.Of(eval) or eval
+end
+
+--- Sets `out.offSpec` when another spec of the candidate's class can use what the main spec
+--- cannot (see the section header). `run` is the kernel's own evaluation, `run(facts, candidate,
+--- opts)`; `opts.client` names the client, and the pass runs only where OS.Enabled answers true.
+function OS.Attach(out, facts, candidate, opts, run)
+  if not OS.Enabled(opts.client) then return end
+  local CD = lib.ClassData.ForClient(opts.client)
+  local specID = knownSpec(candidate.specID)
+  -- A spec the list has no row for (WoW Forever's class-wide spec, whose trees are not specs a
+  -- candidate switches between here) has no off-spec to judge.
+  if not CD.Spec(specID) then return end
+  local specs = CD.CLASS_SPECS[candidate.classFile]
+  if not (specID and specs and type(candidate.offSpecGear) == "function" and specRefusal(out)) then return end
+  local sub = { sidegradeBand = opts.sidegradeBand, heirloomProtect = opts.heirloomProtect, client = opts.client }
+  local best, bestID
+  for _, x in ipairs(specs) do
+    local res = x ~= specID and judge(facts, candidate, x, sub, run)
+    if res and RANK[res.verdict] and better(res, best) then best, bestID = res, x end
+  end
+  if best then out.offSpec = shape(best, bestID, specID) end
+end

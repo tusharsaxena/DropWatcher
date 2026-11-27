@@ -11,6 +11,17 @@
 	<Script file="Pool.lua"/>
 	<Script file="Item.lua"/>
 	<Script file="ForeverDB.lua"/>
+	<Script file="Verdict.lua"/>
+	<Script file="VerdictConstants.lua"/>
+	<Script file="VerdictClassData.lua"/>
+	<Script file="VerdictTierTokens.lua"/>
+	<Script file="VerdictEvaluate.lua"/>
+	<Script file="VerdictReads.lua"/>
+	<Script file="VerdictCollect.lua"/>
+	<Script file="VerdictFacts.lua"/>
+	<Script file="VerdictScore.lua"/>
+	<Script file="VerdictGear.lua"/>
+	<Script file="VerdictSettings.lua"/>
 	<Script file="Glow.lua"/>
 	<Script file="Toast.lua"/>
 	<Script file="Callout.lua"/>
