@@ -24,7 +24,7 @@
 | ID | Repo | Task | Status | Commit |
 |---|---|---|---|---|
 | A0 | DW | Design, research note, this plan | done | (this commit) |
-| A1 | DW | Golden verdict characterization suite | todo | |
+| A1 | DW | Golden verdict characterization suite | done | 5dafd4e |
 | A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | todo | |
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | todo | |
 | B2 | LK | Reads, facts, gear, score, collect + instance API | todo | |
@@ -71,9 +71,11 @@ C1 and C2/C3 run in parallel once B4 is green. D1 follows C1 and C3. E1 can run 
 **Interfaces:**
 - Produces: `tests/fixtures/verdict_golden.lua` returning `{ cases = { {name, client, facts, candidate, opts, expect = {verdict, reasonKeys}} , ... }, me = { {name, client, link, setup, expect} } }`. B1/B2 port the same fixture file into LibKa0s unchanged, so the same table pins both sides.
 
-- [ ] **Step 1:** Write cases through the current public seams only (`NS.Evaluate.Evaluate`, `NS.LootFeed.JudgeMe`, `NS.Collectibles.Verdict`, `NS.Scoring.Scorer`, `NS.Gear.Snapshot`), covering at least: upgrade / sidegrade (band edge) / downgrade / cantUse / doesntWant / unknown; scoreFirst (Forever) vs ilvlFirst (Retail); Pawn pending → `scorePending`; weights scorer; compareOwned on/off; heirloomProtect; undesired subclass; tier token fold; off-spec attach (Retail); each collectible kind (newCollect, collected, lockbox); a group candidate (Inspect-shaped) judged through `Evaluate`.
-- [ ] **Step 2:** Run both clients: `lua tests/run.lua` and `KA0S_KIT_CLIENT=forever lua tests/run.lua`. Expected: PASS (characterizing today's behavior; any surprise is recorded as the expected value, not fixed).
-- [ ] **Step 3:** Commit `IS-A1: golden verdict suite pins today's engine on both clients`.
+- [x] **Step 1:** Write cases through the current public seams only (`NS.Evaluate.Evaluate`, `NS.LootFeed.JudgeMe`, `NS.Collectibles.Verdict`, `NS.Scoring.Scorer`, `NS.Gear.Snapshot`), covering at least: upgrade / sidegrade (band edge) / downgrade / cantUse / doesntWant / unknown; scoreFirst (Forever) vs ilvlFirst (Retail); Pawn pending → `scorePending`; weights scorer; compareOwned on/off; heirloomProtect; undesired subclass; tier token fold; off-spec attach (Retail); each collectible kind (newCollect, collected, lockbox); a group candidate (Inspect-shaped) judged through `Evaluate`.
+- [x] **Step 2:** Run both clients: `lua tests/run.lua` and `KA0S_KIT_CLIENT=forever lua tests/run.lua`. Expected: PASS (characterizing today's behavior; any surprise is recorded as the expected value, not fixed).
+- [x] **Step 3:** Commit `IS-A1: golden verdict suite pins today's engine on both clients`.
+
+Builder note (A1): the fixture shape grew a few fields beyond the sketch, all plain data and documented in its header: a case's `profile` (the kit profile it runs on alone; only the Retail off-spec case uses it), `via` (`evaluate` or `collect`), `forced`, and `expect.fields` / `details` / `offSpec` / `none`. Two things are data the suite turns into functions: `opts.scorer` (`{kind="table", scores}` or `{kind="weights", weights}`) and `candidate.offSpecGear` (`{[specID]=gear}`). In a `me` case, `client` is the kit profile it runs on, and the case is a declared skip on the other. In `setup`, items and worn/bag slots are keyed by link. B1 and B2 interpret the same fields. One surprise is recorded as found, not fixed: under scoreFirst a `cantUse` carries no `noScore`, because the refusal returns before the score is weighed. Kernel cases: 48. Read cases: 16. The gate's eol check also flagged this run's design spec as LF on disk (A0's write). Re-checking it out fixed that; its content is unchanged.
 
 ### Task A2: De-tangle refactors (DW, behavior-neutral)
 
