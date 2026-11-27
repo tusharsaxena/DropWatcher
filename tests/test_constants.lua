@@ -113,13 +113,6 @@ test("constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) a
     assertEqual(c.QUALITY_MODES[3], "dynamicCharacter")
 end)
 
-test("constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)", function()
-    local c = C()
-    local order = { "Explorer", "Adventurer", "Veteran", "Champion", "Hero", "Myth" }
-    for i, name in ipairs(order) do assertEqual(c.TRACK_TIER[name], i, name) end
-    assertEqual(#keysOf(c.TRACK_TIER), #order)
-end)
-
 test("constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone", function()
     local c = C()
     assertEqual(c.SLOT.HEAD, 1)

@@ -1691,7 +1691,7 @@ Total.
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
 
-### test_constants.lua (15)
+### test_constants.lua (14)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
@@ -1699,7 +1699,6 @@ Total.
 - constants: each recipe subclass names its profession's skill line; book and first aid none
 - constants: the categories in display order, the tier slots and the empty token table
 - constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)
-- constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone
 - constants: every slot plan has a known kind and real slot ids
 - constants: the slot plan maps each equip location to the spec §5.2 kind
@@ -1714,11 +1713,12 @@ Total.
 - offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
 
-### test_verdict_setup.lua (11)
+### test_verdict_setup.lua (12)
 
 - verdict setup: one instance of the library's major, on this client
 - verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
 - verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them
+- verdict setup: every event the instance registers has its row on this client, and no row is dead
 - verdict setup: the first read is lazy and quiet, a later change sends GearChanged
 - verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
 - verdict setup: the engine's collection change runs the feed's pass
@@ -3484,9 +3484,9 @@ Total.
 | test_compat_collect.lua | 21 |
 | test_compat_loot.lua | 21 |
 | test_text_parse.lua | 10 |
-| test_constants.lua | 15 |
+| test_constants.lua | 14 |
 | test_offspec.lua | 2 |
-| test_verdict_setup.lua | 11 |
+| test_verdict_setup.lua | 12 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |

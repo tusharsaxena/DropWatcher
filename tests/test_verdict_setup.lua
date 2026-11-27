@@ -70,6 +70,28 @@ test("verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the repla
     assertTrue(NS.Gear.IsScheduled(), "the replayed event armed the engine's rebuild")
 end)
 
+test("verdict setup: every event the instance registers has its row on this client, and no row is dead", function()
+    local NS = T.enableAddon()
+    local client = NS.Compat.ClientKey()
+    local rows = {}
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        local serves = row.clients == nil
+        for _, c in ipairs(row.clients or {}) do serves = serves or c == client end
+        if row[2] == "OnVerdictEvent" and serves then rows[row[1]] = true end
+    end
+    local registered = NS.VerdictEngine.__registered
+    assertTrue(type(registered) == "table" and #registered > 0, "the instance stood up and registered")
+    local seen = {}
+    for _, event in ipairs(registered) do
+        seen[event] = true
+        -- red under: a library minor adding an event (lib.__events) the hand-kept list lacks
+        assertTrue(rows[event], event .. " is registered by the instance but has no row on " .. client)
+    end
+    for event in pairs(rows) do
+        assertTrue(seen[event], event .. " has a row on " .. client .. " but the instance does not listen to it")
+    end
+end)
+
 test("verdict setup: the first read is lazy and quiet, a later change sends GearChanged", function()
     local NS, _, m = T.enableAddon()
     NS.ArmSkinPicker(false)

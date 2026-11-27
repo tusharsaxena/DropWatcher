@@ -404,16 +404,8 @@ C.QUALITY = fromEnum(Enum.ItemQuality, {
 -- defaults/Profile.lua's `feed.quality`.
 C.QUALITY_MODES = { "fixed", "dynamicSlot", "dynamicCharacter" }
 
--- Upgrade tracks in ascending order (design spec §5.2, step 3). The evaluation kernel compares a
--- track's numeric `tier` first; ItemFacts fills it from the track's string id where the client has
--- one. These enUS names are the fallback for a track that carries only its name, so a localized
--- name that matches none of them leaves the track delta unset rather than guessed.
-C.TRACK_TIER = { Explorer = 1, Adventurer = 2, Veteran = 3, Champion = 4, Hero = 5, Myth = 6 }
-
--- trackStringID (C_Item.GetItemUpgradeInfo) -> tier, the locale-proof key ItemFacts tries first.
--- Empty until FEED-5 records the client's ids in game (the research names the field, not its
--- values); until then every track's tier comes from the enUS names above.
-C.TRACK_TIER_BY_STRING_ID = {}
+-- The upgrade tracks' tiers (C.TRACK_TIER, C.TRACK_TIER_BY_STRING_ID) are the verdict engine's
+-- (LibKa0s-Verdict-1.0: NS.Verdict.C, read by its facts).
 
 -- ---------------------------------------------------------------------------------------------
 -- Watched categories (issue #13, categories design spec §1)

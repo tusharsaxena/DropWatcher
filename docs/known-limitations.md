@@ -30,7 +30,7 @@ the code reads every case the design leaves open, module by module, is in
   client, is judged in its best tier slot (`Token: any slot`), never a wrong one. An omni Curio is
   told by its name ending in `Curio` (an epic Miscellaneous or Reagent item), so on a non-English
   client an unlisted Curio is not seen as a token. Legion's cloak tokens are not a tier slot here: a
-  cloak noun names no slot, and such a token reads `any`. `C.TIER_TOKENS` overrides any of this per
+  cloak noun names no slot, and such a token reads `any`. `C.TIER_TOKENS` (LibKa0s-Verdict-1.0's) overrides any of this per
   item id, and ships empty (categories design spec §7, DW-CAT4).
 - **Collectibles** (issue #13). A caged battle pet arrives as a `|Hbattlepet:` link and is never
   watched; only companion items are. A recipe's "known" state is the client's `ITEM_SPELL_KNOWN`

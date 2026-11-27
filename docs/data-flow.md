@@ -579,8 +579,13 @@ the roster; the stand-up re-reads it.
 
 ## The item facts
 
+The facts cache is the verdict engine's (LibKa0s-Verdict-1.0's `VerdictFacts.lua`), held by this
+addon's one instance (`NS.VerdictEngine`, `core/VerdictSetup.lua`); `NS.ItemFacts` and `NS.ItemRead`
+(`core/VerdictViews.lua`) are views onto it, and every `Compat.*` read below is the host's `reads`
+(NS.Compat's member of that name, looked up at each call, so the simulator's seam still guards it).
+
 ```
-ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
+ItemFacts.Get(link) ─> v:Facts(link): the cache, else v:ReadFacts(link):
   Compat.GetItemInfo (nil: uncached) ─> name, base ilvl, equipLoc, classID, subClassID, bindType, setID
   ItemRead.QualityOf ─> quality + qualitySource (the client's for the link `item`, else its color `link`)
   ItemRead.EffectiveItemLevel ─> ilvl + ilvlSource (gear: `detailed`, else `base`;
@@ -596,7 +601,7 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
   Collectibles.Read ─> category, collect
 
-ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per link:
+ItemFacts.Request(link, cb) ─> v:Request: facts now ("ready"), else one shared load per link:
   NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back
                                                   └─> still uncached: LoadItem again, up to 5,
                                                       then every waiter with nil
@@ -607,12 +612,17 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
 
 `SPELL_TEXT_UPDATE` re-reads every cached item whose `useSpellLoading` is that spell (rereadToken).
 
-`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
-tells its `ItemFacts.OnCollectionsChanged` subscribers (the feed's, `CollectFeed.Changed`). `RereadCollections` runs `Collectibles.Read` again on every cached
-collectible, for the collection re-read. The stand-down drops the
+`TRANSMOG_COLLECTION_UPDATED` (Retail) re-reads `transmogKnown` on the cached facts (from
+`rawEquipLoc`), then arms the engine's collection re-read (`v:CollectionsChanged`, see the feed
+below). `RereadCollections` runs `Collectibles.Read` again on every cached collectible, for that
+re-read and for the feed's regen pass. Each event reaches the instance through its
+`NS.FEATURE_EVENTS` row (`OnVerdictEvent`). The stand-down (the instance's `StandDown`) drops the
 cache and the loads; a load that answers after it is ignored.
 
 ## The gear snapshot
+
+The snapshot is the instance's too (LibKa0s-Verdict-1.0's `VerdictGear.lua`); `NS.Gear` is its view,
+and `NS.State.gear` mirrors the last snapshot this addon saw, for the diagnostics.
 
 ```
 PLAYER_EQUIPMENT_CHANGED ─┐
@@ -627,17 +637,21 @@ an item load answering ───┘   Gear.Refresh ─> Gear.Read:
                                 bags 0-4: Compat.BagSlotCount / BagItemLink ─> ItemFacts.Request
                                   ─> kept when Evaluate.Equippability says "ok"
                                 owned: each slot in id order takes the best unplaced item fitting it
-                              ─> State.gear; signature moved ─> GearChanged
+                              ─> the snapshot; signature moved ─> host.onChange("gear")
+                                 ─> State.gear (the mirror) ─> GearChanged
 Gear.Candidate() ─> { classFile, specID, dualWield, titanGrip, gear, owned }   (Evaluate, for you)
 Gear.Qualities() ─> { [slot] = quality | false }     (QualityGate ctx.gear; modules/GearQualities.lua)
 ```
 
-A bag event is held while the host's predicate (`Gear.SetDeferPredicate`; Drop Watcher's is
-combat, set by `modules/GearQualities.lua`) holds, and the next combat end rebuilds.
+A bag event is held while the host's `deferWhile` holds (Drop Watcher's is combat,
+`NS.Restrictions.InCombat`, in `core/VerdictSetup.lua`), and the next `PLAYER_REGEN_ENABLED` rebuilds.
 
 A link the client has not cached is requested and its slot left out (unknown, not empty); its
-arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
-stand-down cancels the timer and drops the snapshot; the stand-up rebuilds it and announces it.
+arrival arms the same timer. The instance stands up at OnEnable (`NS.VerdictEnable`) and reads your
+gear then, quietly and provisionally; the first ask through `NS.Gear` reads it again, quietly
+(`NS.VerdictFresh`), so the first read a caller sees announces nothing and reflects the client at
+that ask. A gear change announced in between makes the snapshot the real one. The stand-down
+cancels the timer and drops the snapshot and the mirror; the stand-up rebuilds it and announces it.
 
 ## The loot parser
 
@@ -739,10 +753,13 @@ TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read
     cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
 NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED,
-  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read, OnCollectionsChanged) ─> CollectFeed.Changed
-  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown ─> the same, for those alone
-    ─> one 0.5s timer per burst ─> ItemFacts.RereadCollections (the cache's one writer)
-    ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
+  TRANSMOG_COLLECTION_UPDATED (Retail; after the facts' own transmog re-read)
+    ─> the engine's v:CollectionsChanged ─> its one 0.5s timer per burst
+    ─> v:RereadCollections (the cache's one writer) ─> host.onChange("collection")
+    ─> CollectFeed.OnCollectionsChanged: every live collectible (the full pass)
+  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown (OnCollectRegenEvent)
+    ─> CollectFeed's own REREAD_DELAY 0.5s timer ─> ItemFacts.RereadCollections, for those alone
+  either pass ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
        ─> re-judged ─> DropUpdated(id, "collection")
 ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
 ```

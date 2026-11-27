@@ -17,9 +17,9 @@ local CF = NS.CollectFeed
 
 CF.REREAD_DELAY = 0.5
 
--- The one coalescing timer, and whether the pass it runs is the full one (`all`) or the regen pass
--- (`unknown`: only the drops still at collectUnknown).
-local pending = { timer = nil, scope = nil }
+-- The regen pass's timer (the drops still at collectUnknown alone). The full pass has no timer
+-- here: the engine coalesces the collection events itself.
+local pending = { timer = nil }
 
 -- A verdict's state as the re-read compares it: the verdict and a pet's count.
 local function stateOf(me)
@@ -50,15 +50,13 @@ local function reread(scope, fresh)
     return n
 end
 
--- Arm the regen pass's timer.
-local function arm(scope)
+-- Arm the regen pass's timer; later calls join the one already armed.
+local function arm()
     if NS.IsStoodDown and NS.IsStoodDown() then return end
-    if scope == "all" or not pending.scope then pending.scope = scope end
     if pending.timer then return end
     pending.timer = C_Timer.NewTimer(CF.REREAD_DELAY, function()
-        local s = pending.scope
-        pending.timer, pending.scope = nil, nil
-        reread(s)
+        pending.timer = nil
+        reread("unknown")
     end)
 end
 
@@ -74,7 +72,7 @@ NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "PLAYER_REGEN_ENABLED", "OnCollect
 -- Combat ended: a protected answer may read now, so the drops still at collectUnknown are read again.
 function NS.addon.OnCollectRegenEvent()
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
-        if wanted(rec, "unknown") then return arm("unknown") end
+        if wanted(rec, "unknown") then return arm() end
     end
 end
 
@@ -89,5 +87,5 @@ end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()
     if pending.timer then pending.timer:Cancel() end
-    pending.timer, pending.scope = nil, nil
+    pending.timer = nil
 end

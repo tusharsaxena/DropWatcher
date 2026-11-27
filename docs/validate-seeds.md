@@ -16,8 +16,9 @@ item enum fallback literals in `core/Constants.lua` (`C.ITEM_CLASS`, `C.WEAPON_S
 (`C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s `PROFESSION`) and the library's `VerdictFacts.lua`
 `IR.GEAR_CLASSES`. These are name and existence checks only, with no candidates: they mirror the
 client's enums and are not a curated list. Nothing else in `core/` or `modules/` is a seed: the
-inventory slots (`C.SLOT`) are FrameXML constants that no DB2 table holds, `C.TIER_TOKENS` and
-`C.TRACK_TIER_BY_STRING_ID` are empty, and `core/CompatJournal.lua`, `modules/TestData.lua` and the
+inventory slots (`C.SLOT`) are FrameXML constants that no DB2 table holds (the tier token override
+table and the track ids, `C.TIER_TOKENS` and `C.TRACK_TIER_BY_STRING_ID`, are the library's
+`VerdictConstants.lua` now, and empty), and `core/CompatJournal.lua`, `modules/TestData.lua` and the
 simulator's files hold reads or invented test data, not game ids.
 
 Each run ends in a frozen bundle under `docs/seed-research/<date>-<flavor>/`. The tool is
