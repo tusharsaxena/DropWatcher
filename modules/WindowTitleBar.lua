@@ -505,25 +505,12 @@ TB.UNLOCKED_ALPHA = 0.4
 -- catalog's minimize mark's key is the library's spelling (tests/prose_waivers.lua). Settings opens
 -- this addon's settings through the launcher's opener; the window is in the window tier, under the
 -- settings panel, so it is not hidden first.
--- The Item Search magnifier (Item Search spec §4.5): on WoW Forever alone (C.FEATURE.itemSearch),
--- the cluster's first mark, left of the lock; a click opens the Item Search window or closes it.
-local function searchTip()
-    local TM = NS.TipMarks
-    return L["Item Search"], TM.Row(L["Finds"], L["where an item drops, who sells it, its quests and recipes"]),
-        TM.Row(L["Typed"], L["/dw search"])
-end
-
 local function controlSpecs(W)
-    local extras = {
+    return {
         { key = "lock", icon = "lock", glyph = "L", onClick = function() NS.ToggleLock() end },
         { key = "mode", icon = "fullscreen-exit", glyph = "><", onClick = function() NS.ToggleWindowMode() end },
         { key = "minimize", icon = "minimise", glyph = "-", onClick = function() W.ToggleMinimized() end },
     }
-    if NS.Constants.FEATURE.itemSearch then
-        table.insert(extras, 1, { key = "search", icon = "search", glyph = "?",
-            onClick = function() NS.ItemSearchWindow.Toggle() end })
-    end
-    return extras
 end
 
 local function buildControls(f, bar)
@@ -531,11 +518,9 @@ local function buildControls(f, bar)
     local hb = TB.Marks(bar, { frame = f, close = function() W.Close() end, extras = controlSpecs(W) })
     f.closeButton = hb.close
     f.lockButton, f.modeButton, f.minimizeButton = hb.extras.lock, hb.extras.mode, hb.extras.minimize
-    f.searchButton = hb.extras.search
     W.AttachTooltip(f.lockButton, lockTip, "chrome")
     W.AttachTooltip(f.modeButton, modeTip, "chrome")
     W.AttachTooltip(f.minimizeButton, minimizeTip, "chrome")
-    if f.searchButton then W.AttachTooltip(f.searchButton, searchTip, "chrome") end
     f.badge = buildBadge(bar)
     f.badge:SetPoint("RIGHT", f.lockButton, "LEFT", -8, 0)
 end

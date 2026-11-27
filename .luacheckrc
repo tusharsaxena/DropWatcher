@@ -54,8 +54,8 @@ files["core/Compat.lua"] = {
     "GetInventoryItemLink",
     "GetInventoryItemID", "CanInspect", "CheckInteractDistance", "NotifyInspect", "ClearInspectPlayer",
     "InspectFrame", "hooksecurefunc",
-    "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink", "ChatEdit_GetActiveWindow",
-    "ChatFrame_OpenChat", "DressUpItemLink",
+    "C_ClassColor", "RAID_CLASS_COLORS", "ChatFrameUtil", "ChatEdit_InsertLink",
+    "DressUpItemLink",
     "DressUpLink", "GetTradePlayerItemLink", "GetTradeTargetItemLink", "LE_GAME_ERR_TRADE_COMPLETE", "ERR_TRADE_COMPLETE",
     "MenuUtil", "PlaySound", "SOUNDKIT", "PixelUtil",
     "C_ChallengeMode", "UnitName",
@@ -93,27 +93,10 @@ files["core/CompatJournal.lua"] = {
 -- The collection reads (issue #13): core/CompatCollect.lua alone names the mount, pet and toy
 -- journals, the toy and profession globals, the hyperlink tooltip it reads a recipe's line and a
 -- tier token's slot line from, the client's class names (a tier token's classes, DW-CAT4), and the
--- spell namespace an item's use text is read from (TT-1) and the known-spell readers (Item Search).
+-- spell namespace an item's use text is read from (TT-1).
 files["core/CompatCollect.lua"] = {
   read_globals = { "C_MountJournal", "C_PetJournal", "C_ToyBox", "PlayerHasToy", "C_TooltipInfo",
-    "GetProfessions", "GetProfessionInfo", "LOCALIZED_CLASS_NAMES_MALE", "C_Spell",
-    "IsPlayerSpell", "C_SpellBook", "IsSpellKnown" },
-}
-
--- Item Search's reads (DropWatcher#17): core/CompatSearch.lua alone names the race, the quest log,
--- the skill list, the player's side and zone (the ranking's context), the client build, the crafting reagent enum and the profession window's API,
--- and the item tooltip's post call, the bound key's display text and the coin string; and the
--- Item Search window's and key's reads: map names, waypoints (the client's own and TomTom's) and
--- the key binding API for the one-time default key.
-files["core/CompatSearch.lua"] = {
-  read_globals = { "UnitRace", "UnitFactionGroup", "C_QuestLog", "C_SkillInfo", "GetBuildInfo", "Enum", "C_TradeSkillUI",
-    "TooltipDataProcessor", "GetBindingKey", "GetBindingText", "GetCoinTextureString", "C_CurrencyInfo",
-    "C_Map", "UiMapPoint", "C_SuperTrack", "TomTom", "GetBindingAction", "SetBinding", "SaveBindings",
-    "GetCurrentBindingSet", "Auctionator",
-    -- Compat.QuestReady's third rung, read only where the client has them (round 3 spec §4.2)
-    "GetQuestLogIndexByID", "GetQuestLogTitle",
-    -- the merchant window's reads, for the prices Drop Watcher records (round 3 spec §4.4)
-    "C_MerchantFrame", "GetMerchantItemInfo", "GetMerchantNumItems", "GetMerchantItemID" },
+    "GetProfessions", "GetProfessionInfo", "LOCALIZED_CLASS_NAMES_MALE", "C_Spell" },
 }
 
 -- The stable world reads (the group, its units, the instance, combat, optional-addon presence):
@@ -143,13 +126,6 @@ files["core/SkinSetup.lua"] = {
 -- (DW-01), so a 12.0.7 client draws its shadow: the same constructor.
 files["modules/WindowRows.lua"] = {
   read_globals = { "CreateFont" },
-}
-
--- modules/ItemSearchTip.lua's verdict badge draws its text on a font object of its own (R5-DW-02),
--- so a 12.0.7 client draws no shadow under the dark ink: the same constructor. Its crafting column
--- reads GameTooltipText's size for its width (R5-REV).
-files["modules/ItemSearchTip.lua"] = {
-  read_globals = { "CreateFont", "GameTooltipText" },
 }
 
 -- DW:SlashEnabled and DW:OnSlashCommand are methods on the addon object by calling convention;

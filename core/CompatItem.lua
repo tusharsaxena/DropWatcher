@@ -1,5 +1,5 @@
 local _, NS = ...
--- core/CompatItem.lua — the exact item reads at a bag location, how many of an item you hold, the game tooltip's item
+-- core/CompatItem.lua — the exact item reads at a bag location, the game tooltip's item
 -- setters (ui spec §0, DW-80) and a tooltip's line by number (feedback-7 spec §3: a grid's cells
 -- anchor to the lines it reserved, modules/TipGrid.lua), published on NS.Compat so the simulator's answer seam
 -- (core/SimSetup.lua) answers them too: a simulated drop sits in a bag slot the client does not
@@ -47,36 +47,6 @@ function Compat.BagItemLevelQuality(bag, slot)
     return level, quality
 end
 
--- The equipped inventory slots (INVSLOT_FIRST_EQUIPPED .. INVSLOT_LAST_EQUIPPED: head to tabard).
-local FIRST_WORN, LAST_WORN = 1, 19
-
--- How many of `itemID` you wear: GetInventoryItemID over the equipped slots (Compat.InventoryItemID).
-local function wornCount(itemID)
-    local n = 0
-    for slot = FIRST_WORN, LAST_WORN do
-        if Compat.InventoryItemID("player", slot) == itemID then n = n + 1 end
-    end
-    return n
-end
-
---- How many of `itemID` you hold (round 4 addendum A1, R4-DW-11: the Item Search window's verdict
---- panel): in your bags, and in your bags and bank together, from C_Item.GetItemCount (the bank from
---- the client's cached count, so it answers with the bank closed). The client's count takes in what
---- you wear too; that is taken out again, so an item you only wear is not held. Each 0 for an id that
---- is not a number, a secret or missing answer, or no API.
---- @param itemID number
---- @return number bags, number total
-function Compat.ItemCount(itemID)
-    local item = C_Item
-    if type(itemID) ~= "number" or not (item and item.GetItemCount) then return 0, 0 end
-    local bags = plainNumber(item.GetItemCount(itemID, false)) or 0
-    local total = plainNumber(item.GetItemCount(itemID, true)) or 0
-    if bags <= 0 and total <= 0 then return 0, 0 end
-    local worn = wornCount(itemID)
-    bags = math.max(0, bags - worn)
-    return bags, math.max(bags, total - worn)
-end
-
 -- tip[method](tip, ...) when the tooltip has it; true when called.
 local function setTooltip(tip, method, ...)
     if type(tip) ~= "table" or type(tip[method]) ~= "function" then return false end
@@ -120,13 +90,4 @@ end
 
 function Compat.TooltipLeftLine(tip, n)
     return lineString(tip, "TextLeft", n)
-end
-
---- The font string of `tip`'s line `n`, its right column (`<name>TextRight<n>`, R5-DW-10: the Item
---- Search block's crafting columns hang from it); nil for an unnamed tooltip or a line it does not have.
---- @param tip table a GameTooltip
---- @param n number
---- @return table|nil
-function Compat.TooltipRightLine(tip, n)
-    return lineString(tip, "TextRight", n)
 end

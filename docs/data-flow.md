@@ -1245,39 +1245,3 @@ cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter 
         the stand-down
 first turned on ─> one-time notice ─> global.notices.autoAsk = true
 ```
-
-## Item Search (WoW Forever alone, DropWatcher#17)
-
-```
-the session's first PLAYER_ENTERING_WORLD ─> ItemSearch.Arm: a 5 s timer (C.ITEM_SEARCH.LOAD_DELAY),
-    only while ItemSearch.Wanted() (a switch on, not stood down)
-timer fires ─> ItemSearch.TryLoad: in combat? wait for PLAYER_REGEN_ENABLED ─> ForeverDB.Available()
-    (the one load) ─> the adapter's name and quest indexes, one per frame
-a switch turned on after the timer (settings/ItemSearchRows.lua's onChange) ─> ItemSearch.Refresh ─> TryLoad
-
-an item tooltip shows ─> TooltipDataProcessor post call ─> ItemSearchTip.OnTooltip(tip, data)
-    ─> on, not forbidden, a comparison tooltip only with its switch, Shift if Shift-only, not marked
-    ─> ItemSearch.State() == "loaded"? (never loads) ─> ItemSearch.Get(data.id)
-         (the static half kept per item; quest state, known recipes and ranks read live)
-    ─> ItemSearchTip.Lines(facts, Options()) (pure: the rule and title, the sections in the stored
-         order, the key hint) ─> Paint ─> tip:Show()          OnHide / OnTooltipCleared ─> the mark goes
-
-the key (CLICK DropWatcherItemSearch) ─> ItemSearchKey.Press ─> the shown item tooltip's item?
-    ─> open on it | switch to it | close (the same item, or none while open)
-the magnifier, /dw search [name|id] ─> ItemSearchWindow.Open / SlashSearch
-the search box ─> 0.25 s ─> an id: ForeverDB's row, else the client's cache | a name: SearchItems
-    ─> ShowItem(id) ─> ItemSearch.Get ─> ItemSearchCells.Build(facts, ItemSearch.Me, ctx) (pure,
-         each tab's rows in IS.Rank's order) ─> ItemSearchTabs.Tabs / View (the tab set; the tab's
-         filters and sort, a session view state) ─> ItemSearchGrid's header and table painted
-    a column's title, the Filter / Sort / Reset marks, the Crafting chip ─> the view state ─> Refresh
-    a match or the header's icon / name, shift-click ─> the item's link in chat (Compat.LinkInChat)
-    a row's map pin ─> ItemSearchWindow.SetPin ─> ItemSearchWaypoint.Set ─> Method() (itemSearch.waypoints:
-         Automatic = TomTom when loaded, else Drop Watcher's arrow) ─> Compat.AddTomTomWaypoint |
-         the LibKa0s-WaypointArrow-1.0 instance's SetTarget (never C_Map.SetUserWaypoint) ─> one chat line
-    the arrow: a drag, its Lock, Reset position ─> SchemaRuntime.Set(itemSearch.arrow.x / .y / .lock);
-         arrival ─> cleared, "You have arrived"; a row, a profile switch or a skin change ─> ApplySettings
-
-TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE ─> 1 s after the burst, out of combat, Item Search on
-    ─> each listed recipe the shipped table lacks ─> global.itemSearch.learnedRecipes ─> Invalidate
-```
-

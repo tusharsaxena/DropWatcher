@@ -38,9 +38,6 @@ test("tip marks: the escape is the whole 64x64 canvas at the text's height, tint
     local TM = T.newAddon().TipMarks
     assertEqual(TM.Escape("Interface\\X", 1, 0.5, 0), "|TInterface\\X:0:0:0:0:64:64:0:64:0:64:255:128:0|t")
     assertEqual(TM.Escape("p", 2, -1, 0.3), "|Tp:0:0:0:0:64:64:0:64:0:64:255:0:77|t", "clamped, rounded")
-    -- Item Search round 3 spec §4.1: an optional size draws it size x size; nil keeps 0:0
-    assertEqual(TM.Escape("p", 1, 1, 1, 14), "|Tp:14:14:0:0:64:64:0:64:0:64:255:255:255|t", "an explicit size")
-    assertEqual(TM.Escape("p", 1, 1, 1, nil), TM.Escape("p", 1, 1, 1), "no size: the text's height")
     for _, name in ipairs({ "arrow-up", "arrow-down", "transfer" }) do
         local w, h = tgaSize("libs/LibKa0s/media/icons/" .. name .. ".tga")
         assertEqual(w, TM.TEX_SIZE, name .. "'s width is the escape's texture size")

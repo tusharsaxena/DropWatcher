@@ -130,99 +130,11 @@ panes were re-anchored on every pass), both pinned by `test_window_shell`.
 After it: `refreshCaptureOff`/`On` 11120.0 and `refreshCompactCaptureOff`/`On` 6768.0, the ceilings
 unmoved.
 
-## Item Search (WoW Forever alone)
+## Item Search
 
-Item Search (DropWatcher#17, Item Search spec §2, §4.2, §4.4) is the one reader of the optional
-ForeverDB addon, through LibKa0s-ForeverDB-1.0. On Retail all of it is absent: the hook is never
-installed, the reagent table's builder is never made, and nothing loads (`itemSearchTipInert`, 0
-bytes). SF-DW-01's detail card Sources chip, which used to load ForeverDB on the first card opened,
-is retired (IS-DW-07), so a detail card reads nothing of ForeverDB. The budgets below are this
-addon's own; they are not in the refresh ceilings above, which no Item Search path touches.
-
-| Cost | Budget | Measured | Where |
-|---|---|---|---|
-| ForeverDB itself | not this addon's: some **12 MB on disk**, LoadOnDemand; the addon list charges its tables to ForeverDB | the kit fake counts the loads | `modules/ItemSearch.lua`: one load a session, `C.ITEM_SEARCH.LOAD_DELAY` (5 s) after the first `PLAYER_ENTERING_WORLD`, out of combat (else at `PLAYER_REGEN_ENABLED`), and none while both switches are off; never on a hover, a card or a login frame |
-| The adapter's name and quest indexes | built once a session, right after the load, one per frame, never on a hover (spec §4.4) | the library's (`docs/api/ForeverDB/version-1-docs.md`) | LibKa0s-ForeverDB-1.0 minor 2, warmed by `modules/ItemSearch.lua` |
-| The recipe-reagent table (`core/RecipeReagentsForever.lua`, 2493 recipes) | **under 2.5 MB** resident on WoW Forever, built once on Item Search's first ask, the builder then let go; **0** on Retail (the chunk's constants are let go after the load) | 2076 KB kept with the file's strings, 3.3 ms, the same way on 2026-11-26 with the gathering lines' 27 recipes (R4-DW-03); before them 2059 KB kept with the file's strings, 3.1 ms, headless Lua 5.1 on 2026-11-26, with each recipe's teaching item (ISR3-DW-08; 2044 KB by the same count without it, 1906 KB built and 2041 KB kept on 2026-11-25); the 253 KB file's constants are let go on Retail | `NS.RecipeReagents.Get()` |
-| A not-known recipe's source in the window's Crafting tab (ISR3-DW-08) | no ceiling (the window has no perf scenario); one `NS.ItemSearch.Get` per recipe item of a not-known recipe in a profession you have, kept by its per-item cache for the session, and none for a profession you lack, a known recipe or a trainer's | not measured in game; the tooltip's scenarios are unchanged by it (`itemSearchTipRichCold` 33120.0, the same as before; round 4 re-measured it below) | `modules/ItemSearchCells.lua` (`ISC.RecipeSource`) |
-| One item hover, cold (the item's static facts read from ForeverDB, then kept for the session) | `itemSearchTipCold`, **17500 bytes** | 17112.0 on WoW Forever at round 3's end (ISR3-DW-06; 16656.0 at the Item Search run, 16080 at IS-DW-04; below) | `modules/ItemSearchTip.lua`, `tests/perf.lua` |
-| One item hover, warm (the cache serves the static half; quest state, known recipes and ranks read live) | `itemSearchTipWarm`, **6500 bytes** | 6088.0 at round 3's end (6240.0 at the Item Search run, 5664 at IS-DW-04) | the same |
-| One rich item hover, cold (Linen Cloth: cached with a sell price, a quest objective, twelve recipe rows with one known, a drop with spw spots alone; ISR3-REV) | `itemSearchTipRichCold`, **35000 bytes** (new) | 33120.0 on WoW Forever, 2026-11-26; the badge's share 1152 (31968 with it off). Round 4 re-measured: R4-DW-01 to R4-DW-08 left it at 33120.0, R4-DW-09 (each quest's giver, read through `db.Quest`, which copies the whole row out on every rebuild of the facts) took it to 34720.0, 280 bytes under the ceiling (bisected with `tests/perf.lua` on WoW Forever), and R4-REV's giver memo per quest id brought it back to 33120.0 | `tests/perf.lua` |
-| One rich item hover, warm | `itemSearchTipRichWarm`, **16500 bytes** (new) | 15352.0; the badge's share 0 (the verdict memo); `NS.ItemSearch.Get`'s live half alone 11224 | the same |
-| The per-item cache | grows with the items hovered, one entry each, for the session; emptied when ForeverDB's state moves or a recipe is learned | not measured headless | `NS.ItemSearch.Get` / `Invalidate` |
-| CPU | no budget in milliseconds (performance-§9: offline timings are orientation only); the hover is a cache read plus at most one ForeverDB lookup per source kind | about 0.07 ms cold, 0.04 ms warm per hover in the same run | `lua tests/perf.lua` |
-
-The ceilings were not moved by IS-DW-07: both hovers stay under them, with 844 and 260 bytes left.
-The 576-byte rise was measured commit by commit (`tests/perf.lua` over each exported commit): 16080
-and 5664 at bec0d6e, 8415639 and 9242fb1, 16656 and 6240 from 8786d8f, the settings page, whose
-default stores the section order, so `NS.ItemSearchTip.Options` now builds the order list and its
-seen set (`orderOf`) on every hover where it used to answer the default list. It is the work, and the warm hover's margin is now small, so the next rise there is to be bisected
-before a ceiling moves.
-
-**ForeverDB_Full (round 3 spec §4.6, ISR3-DW-03).** The uncapped companion addon loads only through
-LibKa0s's `LoadFull()`, on the Item Search window's first open of a session (`itemSearch.fullDB`,
-"When the Item Search window opens", the default; "Never" loads nothing), never in combat and never
-from a tooltip. Measured offline at ForeverDB v2026.11.25.48 (Lua 5.1, the seven files read from the
-client folder read-only by a scratch script in no repo, after the base addon's four; numbers only):
-
-| Measure | Value |
-|---|---|
-| The files on disk | 7, 20.6 MB |
-| The base addon resident, for comparison | 62.8 MB |
-| ForeverDB_Full's tables kept after a full collect | **+82.3 MB** (+98.9 MB before the collect) |
-| The load's time, `os.clock` | 487 to 521 ms over three runs |
-
-The resident cost is about four times the files' size: the "some 20 MB" the planning spec quoted is
-the disk, not the memory. The in-game numbers, `collectgarbage("count")` and `debugprofilestop()`
-around the load, go to the debug log ("ForeverDB_Full loaded: N MB, N ms") and the diagnostics line
-(`itemSearch: ... fullMB= fullMs=`), and smoke row ITEM-SEARCH-40 records them. The load empties the
-per-item cache and the spot memo, so the next hover of each item is a cold one.
-
-The round 3 source work (ISR3-DW-03: the test-name filter, the Gathered from split, the per-vendor
-prices) left `itemSearchTipCold` at 17112.0 (17127.8 before it) and moved `itemSearchTipWarm` from
-6024.0 to 6088.0 (the Gathered from ranking's empty array, one a hover), both on WoW Forever, the
-ceilings unmoved. A vendor row is built in one constructor of eight fields, and the drops keep their
-array when no object is a gathering node, so a cold hover pays for neither.
-
-**The tooltip ceilings through round 3 (round 3 spec §6).** Round 3 put the recipe rows' skill
-parts, the hairline and the label line, the Gathered from section, the per-vendor prices and the
-verdict badge with its reasons on the hover, and moved neither ceiling. Measured with `tests/perf.lua`
-on WoW Forever after each item:
-
-| After | `itemSearchTipCold` | `itemSearchTipWarm` | What held it |
-|---|---|---|---|
-| ISR3-DW-01 (glyphs, inset, header hover) | 17247.8 | 6144.0 | nothing new on the hover |
-| ISR3-DW-02 (skill parts, hairline, label line, quest marks) | 17127.8 | 6024.0 | the colored parts kept per recipe, emptied on a skin change; the hairline one texture per tooltip frame; the old 160-wide rule escape gone |
-| ISR3-DW-03 (rank tones, test sources, Gathered from, prices) | 17112.0 | 6088.0 | a vendor row built in one constructor; the drops keep their array when no object is a node; +64 warm for the Gathered from ranking's empty array |
-| ISR3-DW-05 (the badge and its reasons) | 17112.0 | 6088.0 | the verdict kept per item under a generation, the same table kept when it is worked out again to the same answer, the badge strings and reason lines kept by content |
-| ISR3-DW-06 (docs; this table) | 17112.0 (17111.8 on one run) | 6088.0 | |
-
-The cold hover's margin is 388 bytes and the warm one's 412: the next rise is to be bisected before
-a ceiling moves. `itemSearchTipInert` (Retail) stays 0.
-
-**The rich hover (ISR3-REV, the round 3 review).** The table above rests on the blade, and the blade
-reaches none of the badge's costly paths: the client never has it cached (the mock's `GetItemInfo` is
-keyed by link, `Compat.ItemInfoByID` asks by id), so there is no sell price, no Sell reason and no
-gear judge; it has no quest or recipe row, so no quest or tally reason is written; and every one of
-its sources has an spm row, so the spw conversion never runs. A second pair now hovers Linen Cloth
-(2589, the real id the shipped recipe table names) with invented ForeverDB rows written into the
-kit fake before its load (an item row, an objective of the fixture's errand, a drop from the
-wanderer, whose spots are spw alone) and the client's half installed after the blade is measured
-(an id-keyed `GetItemInfo` with a 13-copper sell price, Tailoring at 50, one recipe known), so the
-blade's figures do not move. Its verdict is Hold, High, 44, with two reasons (the quest, the other
-professions' recipes). Measured on WoW Forever:
-
-| Scenario | Bytes | Of which |
-|---|---|---|
-| `itemSearchTipRichCold` | 33120.0 | the badge 1152 (31968.0 with `itemSearch.tooltip.badge` off); `NS.ItemSearch.Get` cold 27840. Re-measured at round 4's review: 34720.0 after R4-DW-09's quest givers, 33120.0 again with the giver memo (R4-REV) |
-| `itemSearchTipRichWarm` | 15352.0 | the badge 0 (the memo answers); `NS.ItemSearch.Get` warm 11224 |
-
-These are **new ceilings**, 35000 and 16500, the measure plus a margin; the blade's 17500 and 6500
-are not raised. The badge is a small part of the rich hover. The bulk is `IS.Live`, which copies
-every quest and crafting row on each hover (`modules/ItemSearchModel.lua`); a reagent with twelve
-recipes pays twelve row copies warm. That design is older than round 3 and is the place to look if
-a reagent's hover is ever too dear. A Sell or Toss verdict's price reason (`CoinText`) and the gear
-judge stay unmeasured offline: the rich item is wanted, so it holds.
+Item Search's budgets (the item hover, ForeverDB and ForeverDB_Full, the recipe table) and its
+five `itemSearchTip*` scenarios went with it to Ka0s Item Search (DropWatcher#19); nothing of
+Drop Watcher reads ForeverDB.
 
 ## In game
 

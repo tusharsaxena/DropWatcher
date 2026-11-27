@@ -238,39 +238,3 @@ Expected 0 or nil: the journal is disabled, so the simulator's pool is your own 
 **P-JOURNALS. The collection journals.**
 `/dump C_MountJournal.GetNumMounts(), C_ToyBox.GetNumToys(), C_PetJournal.GetNumPets()`. Read which
 journals hold anything: a collectible's verdict reads them. (R4 #12) Result:
-
-## Item Search (round 3)
-
-The reads Item Search round 3 leans on (Ka0sAddonsCommonTasks
-`docs/2026-11-25-ITEM_SEARCH_ROUND3/03_SPEC.md` §4.2, §4.6, §1.2). The smoke rows that carry them are
-ITEM-SEARCH-35, ITEM-SEARCH-39 and ITEM-SEARCH-40.
-
-**P-QREADY. Which quest-complete read answers.** With a quest in the log whose objectives are done
-but not turned in, and its id at hand:
-`/dump C_QuestLog and C_QuestLog.ReadyForTurnIn, C_QuestLog and C_QuestLog.IsComplete, GetQuestLogIndexByID, GetQuestLogTitle`,
-then `/dump C_QuestLog.ReadyForTurnIn(<id>), C_QuestLog.IsComplete(<id>)` for whichever exist. Record
-which members exist and which answers true. `Compat.QuestReady` tries them in that order, each in a
-pcall, and answers nil when none does, so the quest then reads as in the log (the gray `?`) rather
-than ready (the green `?`). (ITEM-SEARCH-35) Result:
-
-**P-GOSSIP. The game's quest-mark textures.**
-`/run local t=UIParent:CreateTexture() for _,p in ipairs({"AvailableQuestIcon","IncompleteQuestIcon","ActiveQuestIcon"}) do print(p, t:SetTexture("Interface\\GossipFrame\\"..p), t:GetTexture()) end`.
-Expected each to load (a true and a file id or path). Then look at the Quests tab and a quest item's
-tooltip: are the yellow `!`, the gray `?` and the green-tinted `?` legible at 14 px, and is the
-level-locked `!` visibly dimmer? A texture missing on this client draws an empty square: the mark
-would then need the fallback characters (`!`, `?`). (ITEM-SEARCH-35) Result:
-
-**P-FULL. ForeverDB_Full's load cost.** With ForeverDB_Full installed and Load ForeverDB (Full) on
-When the Item Search window opens: `/dw debug on`, reload, open the Item Search window, and read the
-debug log's "ForeverDB_Full loaded: N MB, N ms" line and the diagnostics' `itemSearch:` line
-(`fullMB=`, `fullMs=`). Offline it measured +82.3 MB after a collect and 487 to 521 ms
-([`performance.md`](performance.md)); record the client's numbers, and `/dump collectgarbage("count")`
-before and after for comparison. (ITEM-SEARCH-40) Result:
-
-**P-W2M. The adapter's world-to-map against the client's.** For a creature ForeverDB stores only as
-world coordinates (a vendor whose Sold by row got its zone in round 3), with its creature id `<id>`:
-`/run local L=LibStub("LibKa0s-ForeverDB-1.0") local r=ForeverDB.spw["c<id>"][1] local c,x,y=r[1],r[2],r[3] print("adapter", L.WorldToMap(c,x,y)) local m,p=C_Map.GetMapPosFromWorldPos(c,CreateVector2D(x,y)) print("client", m, p and p.x, p and p.y)`.
-Record whether `C_Map.GetMapPosFromWorldPos` exists on Forever, and whether the two answers name the
-same map and lie within about 1% of each other. If the axes disagree, try `CreateVector2D(y,x)` and
-record which matches. The adapter stays pure either way; a large gap is a LibKa0s finding.
-(ITEM-SEARCH-39) Result:

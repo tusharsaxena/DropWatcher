@@ -20,7 +20,6 @@ A switch with dependent knobs sits alone on its line (`solo`) and its knobs pair
 | Messages | `Sending`, `Auto-ask`, `Templates` |
 | Window | `Layout`, `Columns`, `Starting view`, `Icons` |
 | Alerts | `Toast`, `Upgrade glow` |
-| Item Search (key `itemSearch`, WoW Forever alone) | `Item tooltip`, `Item Search window`, `Waypoints`, `Keybindings` |
 | Profiles | AceDBOptions: switch, copy, reset and delete profiles |
 
 Until feedback-24 the pages were General (Master controls, When to show, Simulation), Feed (Quality,
@@ -36,9 +35,8 @@ fold, both the owner's call: Drops' Defaults now also resets the situations tabl
 window, and every situation's tracking, auto-open, quality and loot rule), and `/dw list`'s
 `situations` section is gone, its rows listed under `feed`.
 
-`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it (six on WoW
-Forever, Item Search last),
-`settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
+`settings/Panel.lua` registers General, `settings/Pages.lua` the five after it (Item Search's page
+went with Item Search, DropWatcher#19), `settings/Profiles.lua` the last. Window › Icons' Border block is composed by the library
 (`settings/ComposedRows.lua`, options-ui-§16), like General's Master controls. Three tabs, two
 closing lines, one opening note and one table have no row the flow engine can draw; they are host
 tabs, `afterGroup` hooks and a page `chrome` handed to the library's tabbed renderer
@@ -350,8 +348,8 @@ spec §1: the window's layout, also switched by the title-bar toggle, `/dw compa
 Compact view when it auto-opens in a run (`Open in compact view during a run` until item 020; on by
 default: an auto-open inside a dungeon, raid, key or delve opens compact until the run ends, and the
 title-bar toggle's tooltip names it while it holds). WoW Forever's **Detail card** heading and its
-Show where it comes from row (`window.itemSources`, SF-DW-01) are retired (IS-DW-07, schema step 15):
-Item Search's tooltip block and window say where an item comes from. **Tables:** Row height (18 by default, both tabs of
+Show where it comes from row (`window.itemSources`, SF-DW-01) are retired (IS-DW-07, schema step 15).
+**Tables:** Row height (18 by default, both tabs of
 the full layout, a Drops row taller by its countdown bar's room while Trade window shows; the
 compact layout's cards size from their text), then the tables' font: the library's composed font
 block (`H.FontGroup`, `settings/ComposedRows.lua`; DW-01, the lead's ruling on D-07) — Font | Font
@@ -438,93 +436,3 @@ style's subsection. Offset serves three styles and is always drawn. A glow's Sty
 is off; a drawn knob also while its glow is in a style the knob does not apply to (the other glow's
 column of a shown subsection). A hidden row is still a schema row, which `/dw set` and Defaults reach. A color and its Use class color are never dimmed (anti-pattern #74). Every change restarts the glowing icons at once
 (`NS.Glow.Refresh`). Ranges and defaults: [`schema.md`](schema.md#alerts--upgrade-glow-feedback-21). Under each glow's Use class color, **Use the skin's color** (on; `glow.<g>.colorFromSkin`, FS-DW-FLIP) draws it in the skin's color; the swatch is not read while it is on, and is never dimmed.
-
-## Item Search (WoW Forever alone)
-
-Item Search spec §4.7, mockup board 3 (DropWatcher#17). The page follows Alerts and is registered
-only where `C.FEATURE.itemSearch` is true: on Retail there is no page, no row and no default (spec
-§1, clients-§4; a Retail equivalent is DropWatcher#18). Its rows are `settings/ItemSearchRows.lua`'s,
-its section order list and its Keybindings tab `settings/ItemSearchPage.lua`'s. Its Defaults resets
-the page's rows, the section order included, and never the key. The Item Search window's gear opens
-this page. Paths, defaults and ranges: [`schema.md`](schema.md#item-search-page-key-itemsearch-wow-forever-alone).
-
-**Item tooltip.** **Tooltip block,** in the Settings artboard's order (Item Search feedback spec §9):
-Add Item Search to item tooltips (`itemSearch.tooltip.enabled`, on, alone on its line: the block under
-every item tooltip; it needs ForeverDB, and with the window's switch off too ForeverDB never loads),
-then Comparison tooltips too (off, the owner's call), Rows per section (`itemSearch.tooltip.rows`, 3,
-a 1 to 20 slider by 1: every section's cap before "and N more"; 5 until ISR3-DW-07), Show the key hint
-(`itemSearch.tooltip.hint`, on: the last line names the key bound to Item Search; no line while none
-is bound), Only while holding Shift (off), Separator line (`itemSearch.tooltip.header`, on: the
-hairline across the tooltip above the block; renamed from Separator and title line in round 3, whose
-title line is gone), Show the Keep / Hold / Auction / Vendor / Toss badge (`itemSearch.tooltip.badge`, on: the
-verdict as one rounded pill on the block's "Drop Watcher" label line, on the tooltip's right side (R5-DW-12): the verdict's icon (a
-lock, an hourglass, Vendor's coins, Auction's gavel or a bin), its word and the 0 to 100 score (how sure the word is, R6-DW-07) in dark ink on the verdict's
-tone, and no confidence tier; round 4, R4-DW-07, one pill since R5-DW-02), Explain the badge
-(`itemSearch.tooltip.reasons`, on: the two reasons that weigh most plus the largest one that pulls
-the use value down, then, when Drop Watcher isn't sure, the hint on what would make it surer, with no
-tier word; dimmed while the badge is off as well, the page's way of setting it under the badge,
-since the schema rows have no indent) and Show recipe skill levels
-(`itemSearch.tooltip.craftSkill`, on: the Crafting rows' breakpoints in their skill-up hues, your band
-bracketed), each
-dimmed while the block is off (Item Search round 3 spec §5). **Auction prices** (R5-DW-16, after the
-whole Tooltip block): Compare with Auctionator prices (`itemSearch.auction.enabled`, on), Auction
-duration (`itemSearch.auction.duration`, WoW Forever's 2, 8 or 24 hours, default 8), Auction house
-cut % (`itemSearch.auction.cut`, 5) and Auction must beat vendor by % (`itemSearch.auction.margin`,
-10), all four dimmed while Auctionator is not loaded and the last three while the comparison is off,
-each tooltip saying it needs Auctionator. **Tooltip and window:** Only professions
-you know (`itemSearch.myProfessionsOnly`, on; never dimmed, since it also sets the window's Crafting
-default), then Hide the other faction's vendors (`itemSearch.hideOtherFaction`, on, round 4 R4-DW-08:
-the tooltip's Sold by leaves out the vendors only the other faction can buy from and counts them on
-one dim line, and the window's Sold by tab starts with Only my faction on; never dimmed, for the
-same reason; a change moves an open window's filter back to it, as Only professions you know does).
-**Sections:** a switch per section, Drops from, Gathered from (round 3 spec §4.3), Sold by, Quests,
-Crafting, Skinned from (all on) and Reward from / starts quest (off), then Hide completed quests (on,
-dimmed without Quests). The tab closes with **Section order**, the `afterGroup` hook: a drag list
-(LibKa0s-Widgets-1.0 `ReorderList`, the collection's row boxes and handle, options-ui-§18) with a row
-per section in the order the tooltip writes them (Drops from, Gathered from, Sold by, Quests, Crafting,
-Skinned from, Reward from / starts quest by default; schema step 18 inserts Gathered from after Drops
-from in an order a profile already stored). A drop stores the whole order (`itemSearch.tooltip.order`, a `map` row
-with `skipRender`); the switches stay checkboxes above it. The list's host is built once and parked
-before every render (the page's `beforeClear` and the placeholder's OnRelease, options-ui-§19), as
-Drops › Situations' table is.
-
-**Item Search window.** **Window:** Enable the Item Search window (`itemSearch.window.enabled`, on,
-alone on its line; off, the window closes and does not open), then Record vendor prices
-(`itemSearch.recordPrices`, on: the merchant window's prices are written down for Sold by, into the
-account-wide `global.itemSearch.prices`; round 3 spec §4.4) and Load ForeverDB (Full)
-(`itemSearch.fullDB`, a dropdown of When the Item Search window opens, the default, and Never: when
-the uncapped ForeverDB_Full companion loads, never in combat and never from a tooltip; §4.6). Record
-vendor prices is never dimmed (the tooltip's Sold by reads the prices too); Load ForeverDB (Full) is
-dimmed while the window is off or ForeverDB_Full is not installed (its tooltip says so: the schema
-row carries no note of its own). The window remembers its
-size and the tab last picked with no setting, and the Crafting tab's Status of a recipe you don't
-know names where it is learned (a trainer, or its recipe item's best vendor, quest or drop;
-ISR3-DW-08) with no setting either. **Bars:** Bar color | Use the skin's color (on: the drop chance bars
-in the skin's accent, the swatch not read), never dimmed (anti-pattern #74). Density, Font size, Zone
-and level columns and Remember recent searches went in ISF-DW-05 (Item Search feedback spec §5.1,
-§5.2, §5.4; schema step 17): the window draws in the main window's table font and row height (Window ›
-Layout), every tab draws all its columns, and there are no recent searches. Nothing served a window
-lock (W13): the window has none.
-
-**Waypoints** (ISF-DW-07, feedback spec §6). **Waypoints:** Waypoints (`itemSearch.waypoints`,
-Automatic, a dropdown of Automatic, TomTom and Drop Watcher's arrow: Automatic uses TomTom when it is
-loaded and Drop Watcher's arrow otherwise; TomTom while TomTom is not loaded uses Drop Watcher's
-arrow, which the row's tooltip says, since a dropdown cannot disable one choice), then Waypoint pins
-(`itemSearch.window.pins`, on). Then Drop Watcher's arrow's own rows, LibKa0s-WaypointArrow-1.0's
-`WaypointArrowSettings` (the same blocks Skill Master's Trainers and Waypoints page shows), composed by
-the Options instance in `settings/ItemSearchArrowRows.lua`: **Waypoint arrow:** Arrow style (Raised),
-Use the skin's colors (on), Far color and Near color (dimmed while the skin's are drawn), Arrow scale
-(0.5 to 2). **Arrow text:** the canonical Font block (Font, Font size, Font color | Use class color,
-Font flags, Font shadow) with Use the skin's font, Use the skin's color and Use the skin's shadow, then
-Text position, Show the target's name and Distance units. **Arrow position:** X offset | Y offset,
-Lock the arrow, and the Reset position button (the block's `afterSubgroup` hook, handed through
-`settings/Pages.lua`). Every arrow row is dimmed while Waypoints resolves to TomTom (Automatic with
-TomTom loaded, or TomTom), so the block is live exactly when Drop Watcher's arrow can be the one used.
-Without the library there is no arrow and no arrow row.
-
-**Keybindings.** The library's key editor (`O.KeybindingsTab`, options-ui-§20) over the Item Search
-row of `NS.BINDINGS` alone, the same row General › Keybindings draws on WoW Forever, so the key is
-shown and changed the way the window toggle's is: one key button (click, then press a key; a
-right-click clears it) and Clear. Alt-Ctrl-D is set once per character at login, only on a free key
-(`modules/ItemSearchKey.lua`; written `ALT-CTRL-D`, the client's modifier order, and re-tried once where
-the first try stored the dead chord `CTRL-ALT-D`).

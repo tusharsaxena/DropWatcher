@@ -14,7 +14,7 @@ the trade timer (`modules/TradeTimer.lua`) `DROP_ADDED`, the messaging edge (`mo
 `RESTRICTION_CHANGED`, and the window (`modules/Window.lua`) `RESTRICTION_CHANGED`,
 `ASK_STATE_CHANGED`, `SITUATION_CHANGED`, `DROP_ADDED`, `DROP_UPDATED`, `GEAR_CHANGED` (since DW-83),
 `INSPECT_DONE`, `TRADE_TIMER_TICK`, `TRADE_TIMER_EXPIRING` and `PENDING_CHANGED` (since DW-FP15), each on its own tracked target; compact
-mode's switch (`modules/WindowCompact.lua`) `SITUATION_CHANGED` on its own (DW-C0), and Item Search's verdict panel (`modules/ItemSearchVerdictPanel.lua`, WoW Forever alone) `GEAR_CHANGED` on its own. The window only listens: it reads records through the engine's read-only
+mode's switch (`modules/WindowCompact.lua`) `SITUATION_CHANGED` on its own (DW-C0). The window only listens: it reads records through the engine's read-only
 accessors and never calls an engine action; a button's action goes through the host handler its
 slash verb shares (`NS.ScanGroup`, `NS.SetQualityMode`, `NS.PressAsk`, `NS.ToggleWindowMode`, and the
 detail card's `NS.RetryInspect` and `NS.TradeWithLooter`, the Offer

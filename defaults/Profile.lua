@@ -39,7 +39,6 @@ local function glow(enabled, style, tone)
     }
 end
 local TONE = NS.Constants.TONE
-local AU = NS.Constants.ITEM_SEARCH.AUCTION
 
 -- The client picked once (clients-§5): the per-situation defaults below are one table per client,
 -- keyed like that client's C.SITUATIONS (Forever port design §4.4).
@@ -354,75 +353,5 @@ do
     if F.offSpec then
         P.messages.templates.askOffSpec = "Hi {player}, if you don't need {item}, could I have it for my off-spec? It'd be +{mygain} for me. No worries if not!"
         P.glow.offSpec = glow(true, "proc", TONE.glowOffSpec)
-    end
-    -- WoW Forever's alone (DropWatcher#17): Item Search's two switches, the item tooltip's block and
-    -- the window. With both off nothing loads ForeverDB (Item Search spec §2). Every key below is a
-    -- row of Item Search's own settings page (settings/ItemSearchRows.lua, spec §4.7).
-    if F.itemSearch then
-        P.itemSearch = {
-            -- Only the professions you know, in the tooltip and as the window's default (Item Search
-            -- feedback spec §4).
-            myProfessionsOnly = true,
-            -- Leave the other faction's vendors out of the tooltip's Sold by (counted on one dim
-            -- line) and, to start with, out of the window's Sold by tab (R4-DW-08, the owner).
-            hideOtherFaction = true,
-            -- The tooltip block (modules/ItemSearchTip.lua, spec §4.4, §4.7): Shift-only, the
-            -- separator and title, the keybind hint, the comparison tooltips (off, the owner), the
-            -- sections, the rows per section (feedback spec §7, replacing dropsShown through schema
-            -- step 16; 3 by default since ISR3-DW-07, the owner's addendum, 5 before), completed
-            -- quests hidden, and the order the sections are written in (NS.ItemSearchTip.ORDER's;
-            -- the page's drag list writes it whole). `header` is the separator line and
-            -- `craftSkill` the recipe rows' skill levels (round 3 spec §4.2, §5);
-            -- `badge` the Keep / Hold / Sell / Toss badge and `reasons` its reason lines (§4.5).
-            tooltip = {
-                enabled = true, shiftOnly = false, header = true, hint = true, comparison = false,
-                rows = 3, hideCompleted = true, craftSkill = true, badge = true, reasons = true,
-                sections = { drops = true, gathered = true, vendors = true, quests = true, crafting = true,
-                    skinned = true, also = false },
-                order = { "drops", "gathered", "vendors", "quests", "crafting", "skinned", "also" },
-            },
-            -- The window (modules/ItemSearchWindow.lua, spec §4.5, §4.7): its bar color (the
-            -- skin's accent, or the custom one) and the waypoint pins. Its rows take the main
-            -- window's table font and row height (feedback spec §5.1), so it has no density or font
-            -- size of its own; the recent searches and the zone-and-level-columns switch went too
-            -- (schema step 17). Its saved point and size are written by a drag and a resize
-            -- (`point`, `size`) and its last tab by a pick (`tab`), with no default: it opens
-            -- centered at C.ITEM_SEARCH.WINDOW's size on the first tab.
-            window  = {
-                enabled = true, barFromSkin = true, barColor = { r = 0.90, g = 0.75, b = 0.30 }, pins = true,
-            },
-            -- Round 3 spec §4.4, §4.6: record the prices the merchant window shows (into
-            -- global.itemSearch.prices, modules/ItemSearchPrices.lua), and when ForeverDB_Full loads:
-            -- "window" (the window's first open of a session) or "never".
-            recordPrices = true,
-            fullDB = "window",
-            -- A Sell verdict's Auction or Vendor answer (modules/ItemSearchAuction.lua, R5-DW-13..16):
-            -- compare with Auctionator's prices (read only while it is loaded), the auction's length
-            -- in hours (WoW Forever's 2, 8 or 24, default 8; Retail's 12, 24 or 48, default 12:
-            -- C.ITEM_SEARCH.AUCTION.DURATIONS), the house's cut in percent and how much more than
-            -- the vendor, in percent, the auction must bring after the cut and the deposit.
-            auction = {
-                enabled = true, duration = AU.DURATION, cut = AU.CUT, margin = AU.MARGIN,
-            },
-            -- Who draws the way to a pin (Item Search feedback spec §6, modules/ItemSearchWaypoint.lua):
-            -- "auto" (TomTom when it is loaded, else Drop Watcher's arrow), "tomtom" or "arrow".
-            waypoints = "auto",
-            -- Drop Watcher's arrow (LibKa0s-WaypointArrow-1.0): its settings at the library's own key
-            -- names, seeded from its DEFAULTS (docs/api/WaypointArrow/version-3.3-docs.md): the look
-            -- (Raised, the skin's colors, else the far and near swatches, scale 1), the Text block (the
-            -- canonical Font block with its three "Use the skin's ..." companions, then Text position,
-            -- Show the target's name, Distance units) and the Position block (offsets from the screen's
-            -- center, written by a drag, and the arrow's own lock).
-            arrow = {
-                style = "raised", useSkinColors = true,
-                farColor = { r = 1, g = 0.82, b = 0, a = 1 }, nearColor = { r = 0.35, g = 0.80, b = 0.45, a = 1 },
-                scale = 1,
-                font = "Ka0s Prototype", fontFromSkin = true, fontSize = 12,
-                fontColor = { r = 1, g = 1, b = 1, a = 1 }, fontColorFromSkin = true, useClassColorFont = false,
-                fontFlags = "@skin", fontShadow = true, fontShadowFromSkin = true,
-                textPosition = "BELOW", showLabel = false, distanceUnits = "yards",
-                x = 0, y = 200, lock = false,
-            },
-        }
     end
 end

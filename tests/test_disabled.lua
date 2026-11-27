@@ -9,12 +9,12 @@ local test, assertEqual, assertTrue, assertFalse = T.test, T.assertEqual, T.asse
 
 -- The game events the addon owns today, pinned as literals (sorted).
 local PINNED = {
-    "ADDON_RESTRICTION_STATE_CHANGED", "AUCTION_HOUSE_CLOSED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
+    "ADDON_RESTRICTION_STATE_CHANGED", "BAG_UPDATE_DELAYED", "CHALLENGE_MODE_COMPLETED", "CHALLENGE_MODE_START",
     "CHAT_MSG_LOOT", "DISPLAY_SIZE_CHANGED", "EJ_LOOT_DATA_RECIEVED", "ENCOUNTER_END", "ENCOUNTER_LOOT_RECEIVED", "ENCOUNTER_START",
     "CANCEL_LOOT_ROLL", "GROUP_ROSTER_UPDATE", "INSPECT_READY", "LOOT_CLOSED", "LOOT_HISTORY_CLEAR_HISTORY",
     "LOOT_HISTORY_UPDATE_DROP", "LOOT_HISTORY_UPDATE_ENCOUNTER", "LOOT_OPENED", "LOOT_READY",
     "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_RECIPE_LEARNED", "NEW_TOY_ADDED", "PARTY_LOOT_METHOD_CHANGED",
-    "PLAYERBANKSLOTS_CHANGED", "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
+    "PLAYER_DIFFICULTY_CHANGED", "PLAYER_ENTERING_WORLD", "PLAYER_EQUIPMENT_CHANGED",
     "PLAYER_REGEN_DISABLED", "PLAYER_REGEN_ENABLED", "PLAYER_SPECIALIZATION_CHANGED", "SKILL_LINES_CHANGED",
     "SPELL_TEXT_UPDATE", "START_LOOT_ROLL",
     "TRADE_ACCEPT_UPDATE", "TRADE_CLOSED", "TRADE_PLAYER_ITEM_CHANGED", "TRADE_SHOW", "TRADE_TARGET_ITEM_CHANGED",
@@ -25,21 +25,10 @@ local PINNED = {
 -- is WoW Forever's talent change (libs/LibKa0s/VerdictGear.lua, Forever port design §4.2); the keystone events
 -- are Retail's alone (Forever port design §4.4), as are the journal pool's loot event and the
 -- transmog collection's, and a level gained rebuilds Forever's gear (its armor type moves at 40).
--- Item Search's profession-window learner, its merchant prices and its window's verdict panel are
--- WoW Forever's alone (DropWatcher#17).
 local OTHER_CLIENT = {
     retail  = { PLAYER_SPECIALIZATION_CHANGED = true, CHALLENGE_MODE_COMPLETED = true, CHALLENGE_MODE_START = true,
                 EJ_LOOT_DATA_RECIEVED = true, TRANSMOG_COLLECTION_UPDATED = true },
-    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true,
-                TRADE_SKILL_SHOW = true, TRADE_SKILL_LIST_UPDATE = true,
-                -- Item Search round 3 (spec §4.4): the merchant window's prices, recorded.
-                MERCHANT_SHOW = true, MERCHANT_UPDATE = true, MERCHANT_CLOSED = true,
-                -- Item Search round 3 (spec §4.5): the tooltip badge's verdicts, worked out again.
-                QUEST_LOG_UPDATE = true, QUEST_TURNED_IN = true,
-                -- Item Search round 4 (addendum A1, R4-DW-11): the window's verdict panel, on a bank change.
-                PLAYERBANKSLOTS_CHANGED = true,
-                -- R5-DW-13: the badge's Auction or Vendor answer, read again once the auction house shuts.
-                AUCTION_HOUSE_CLOSED = true },
+    forever = { CHARACTER_POINTS_CHANGED = true, TRAIT_CONFIG_UPDATED = true, PLAYER_LEVEL_UP = true },
 }
 do
     local mine, theirs = T.forever and "forever" or "retail", T.forever and "retail" or "forever"
@@ -68,8 +57,7 @@ end
 -- pending store hears GearChanged too, to judge your verdict on a pending item again; DW-FP20's roll
 -- popup mark hears PendingChanged and GearChanged, to repaint the marks on the shown popups; RX-10's
 -- auto-close hears DropAdded and PendingChanged, to start its count over; RX-17's Rolls panel hears
--- PendingChanged, to follow the rolls; R4-REV's Item Search verdict panel hears GearChanged, to judge
--- a gear item's breakdown again as the tooltip's memo does).
+-- PendingChanged, to follow the rolls).
 local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_AskStateChanged",
     "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded", "Ka0s_DropWatcher_DropAdded",
@@ -77,7 +65,7 @@ local PINNED_MESSAGES = { "Ka0s_DropWatcher_AskStateChanged", "Ka0s_DropWatcher_
     "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated", "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_DropUpdated",
     "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
-    "Ka0s_DropWatcher_GearChanged", "Ka0s_DropWatcher_GearChanged",
+    "Ka0s_DropWatcher_GearChanged",
     "Ka0s_DropWatcher_HistoryChanged", "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_HistoryChanged",
     "Ka0s_DropWatcher_InspectDone", "Ka0s_DropWatcher_InspectDone",

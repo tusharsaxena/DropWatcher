@@ -31,8 +31,7 @@ local _, NS = ...
 -- entry (NS.Inspect.Get), the ask's state (NS.Asks.StateOf), the message preview (NS.Asks.Preview),
 -- the trade guard (NS.TradeHelper.CanTradeWith) and the client through NS.Compat (the spec's name,
 -- Pawn's presence), all read-only. SF-DW-01's Sources chip (where the item comes from, from the
--- optional ForeverDB addon) is retired: Item Search (DropWatcher#17) says it on every item tooltip
--- and in its own window. Its buttons go through the host handlers in core/DropWatcher.lua
+-- optional ForeverDB addon) is retired (schema step 15). Its buttons go through the host handlers in core/DropWatcher.lua
 -- (NS.PressAsk, NS.RetryInspect, NS.TradeWithLooter); Link in chat is
 -- Compat.InsertChatLink, as an item button's shift-click is.
 --

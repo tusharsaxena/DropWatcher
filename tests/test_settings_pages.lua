@@ -27,13 +27,6 @@ local PAGES = {
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
     { key = "alerts",     title = "Alerts",     strip = { "Toast", "Upgrade glow" } },
 }
--- Item Search's page, WoW Forever's alone (Item Search spec §4.7, DropWatcher#17): its two schema
--- tabs, then the library's key editor over the Item Search key. tests/test_item_search_settings.lua
--- covers it; on Retail it is not registered.
-if os.getenv("KA0S_KIT_CLIENT") == "forever" then
-    PAGES[#PAGES + 1] = { key = "itemSearch", title = "Item Search",
-        strip = { "Item tooltip", "Item Search window", "Waypoints", "Keybindings" } }
-end
 
 local function gui(m) return m.__libs["AceGUI-3.0"] end
 
@@ -102,7 +95,7 @@ end
 
 -- ── the pages and their strips ──────────────────────────────────────────────────────────────
 
-test("pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order", function()
+test("pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order, on both clients", function()
     local NS = T.enableAddon()
     local built = {}
     for _, p in ipairs(NS.addon.Settings.Helpers.__pages()) do

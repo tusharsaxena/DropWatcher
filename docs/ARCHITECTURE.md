@@ -12,14 +12,13 @@ looter, estimates whether it can be traded, and asks for it in one click ([`scop
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
 LibKa0s v1.119.0 payload (twenty-seven majors; media/icons pruned to the declared subset,
-media/sounds to none), twenty-two wired with one setup file each, three reached directly by the
-files that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`,
-`LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`, and `LibKa0s-WaypointArrow-1.0` from
-`modules/ItemSearchWaypoint.lua`, Drop Watcher's arrow for Item Search's pins on WoW Forever, with
-its settings rows composed in `settings/ItemSearchArrowRows.lua`, ISF-DW-07) and two deliberately
-unwired: `LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, and
-`LibKa0s-Callout-1.0`, since it draws no callout; each loads and creates nothing until a host calls
-it (`DEPENDENCIES.md` lists the toolchain):
+media/sounds to none), twenty-one wired with one setup file each, two reached directly by the
+files that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`, and
+`LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`) and four deliberately unwired:
+`LibKa0s-IconBrowser-1.0`, since this addon offers no icon picker, `LibKa0s-Callout-1.0`, since it
+draws no callout, and `LibKa0s-ForeverDB-1.0` and `LibKa0s-WaypointArrow-1.0`, which only Item
+Search read and which went with it to Ka0s Item Search (DropWatcher#19); each loads and creates
+nothing until a host calls it (`DEPENDENCIES.md` lists the toolchain):
 
 | Major | Setup file | Gives |
 |---|---|---|
@@ -30,7 +29,6 @@ it (`DEPENDENCIES.md` lists the toolchain):
 | Pool | `core/PoolSetup.lua` | the row pool (for the drop tables) |
 | Item | `core/ItemSetup.lua` | link parsing, quality labels, the item load (for item facts) |
 | Verdict | `core/VerdictSetup.lua` + `core/VerdictViews.lua` | the verdict engine (Item Search split, DropWatcher#19): the kernel and its off-spec pass, the class lists, the tier tokens, the collection verdict, the scorers, the item facts cache and your gear snapshot, through one instance (`NS.VerdictEngine`, `V:New(host)`: this client, the verdict's config, every read through `NS.Compat` so the simulator's seam guards it, the combat defer, its events as `NS.FEATURE_EVENTS` rows, `GearChanged` and the feed's collection pass on its changes) and the views the readers keep (`NS.Evaluate`, `NS.ClassData`, `NS.OffSpec`, `NS.TierTokens`, `NS.ItemRead`, `NS.ItemFacts`, `NS.Gear`, `NS.Scoring`, `NS.Collectibles`); the Comparison page's rows and editors (`Settings.Rows`, `Settings.Tabs`). Without it every verdict reads `unknown`, nothing is read and the Comparison page has no rows |
-| ForeverDB | `core/ForeverDBSetup.lua` | the reader of the optional ForeverDB addon, WoW Forever's data (`NS.ForeverDB`, read by Item Search, `modules/ItemSearch*.lua`, DropWatcher#17; SF-DW-01, LibKa0s#105); its first lookup loads ForeverDB, which Item Search makes once, a few seconds after login and out of combat, and without it, or the library, every lookup answers nil |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch; `NS.StoodDownRefusal()`, the one stood-down refusal line (the dispatcher's under the `disabled` hold, `Not available during a performance capture.` under the `perf` hold alone) |
 | Perf | `core/PerfSetup.lua` | the performance harness |
@@ -44,7 +42,7 @@ it (`DEPENDENCIES.md` lists the toolchain):
 | Charts | `core/ChartsSetup.lua` | the Insights tab's cards and chart renderers (`NS.Charts`, a context per pane through `NS.ChartsHost()`, the skin owner `DropWatcher`; issue #12); without it `NS.Charts` is nil, with no drawing stub (anti-pattern #73), and the tab keeps its filters and strip and says the charts are unavailable |
 | Glow | `core/GlowSetup.lua` | the stateless LibCustomGlow-1.0 driver behind the upgrade glow (`NS.GlowLib`, read by `modules/Glow.lua`; DW-08, LibKa0s#56); without it no icon glows |
 | Toast | `core/ToastSetup.lua` | the alert-toast shell under the upgrade toast (`NS.NewToast`, called by `modules/Toast.lua`; LibKa0s#60, AT-A2): the queue, the stack (Toast-1.0 minor 4's opt-in `stack`, `stackGrow` and `SetStack`: up to `toast.stack` toasts at once, each on its own pooled frame, DW-T2), the countdown and its hover pause, the close mark and right-click, the HIGH tier, the drag, the scale and the sound, around the content `modules/Toast.lua` builds; without it (`NS.ToastStub`) no toast shows. |
-| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-five `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
+| Skin | `core/SkinSetup.lua` | the skin the addon wears (skinning-§3): the owner `DropWatcher` with its twenty-three `dw.*` owner tokens, the facade `NS.Skin`, the Skin tab's read and write seams and the first-run skin picker ([§ Skins](#skins)); without it a degraded facade answers Ka0s Default's values |
 
 Without LibKa0s-Widgets-1.0 the window draws no dropdown and no search box at all (`NS.MakeDropdown`
 and `NS.MakeSearchBox` answer nil, and nothing filters by text), `NS.ContextMenu` answers nil (no
@@ -68,7 +66,7 @@ one-line responsibility and why its position is load-bearing or conventional is 
 [`module-map.md`](module-map.md), the only inventory. In short:
 
 - `locales/` and `core/`: the strings, the identity, one setup file per LibKa0s major, the compat
-  family (`Compat.lua`, `CompatClient.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, `CompatLoot.lua`, `CompatSearch.lua`, the only files that name the client
+  family (`Compat.lua`, `CompatClient.lua`, `CompatWorld.lua`, `CompatItem.lua`, `CompatJournal.lua`, `CompatCollect.lua`, `CompatLoot.lua`, the only files that name the client
   globals they wrap, with the pure parsers in `TextParse.lua`) and the simulator's answer seam over
   it (`SimSetup.lua`, LibKa0s-Sim-1.0's `NewSeam`), the game-data tables, the session state, the
   addon object with its lifecycle and shared host handlers, the verdict engine's seam
@@ -156,11 +154,9 @@ proficiencies, specs or talent trees, relics, the Titan's Grip, shield and dual-
 `core/Constants.lua`'s enum fallback literals and the recipe skill lines; a ruled edit to a list is the
 library's, made in LibKa0s and re-vendored (`apply` never writes under `libs/`). Every candidate and flag is
 ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bundle under
-`docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md). One seed is
-generated rather than curated: `core/RecipeReagentsForever.lua`, WoW Forever's recipe-reagent table
-for Item Search (each recipe's reagents, ranks, product and teaching item), which
-`tools/seeds/recipes.py` (`seeds.py recipes`) writes from the `wowf` DB2 of a pinned build. It has no rulings; a pytest gate requires it to equal the generator's output for the
-bundle its header names, and its builder is made on WoW Forever alone (clients-§4).
+`docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md). The generated
+recipe-reagent table and the hand-curated gathering nodes went with Item Search to Ka0s Item
+Search (DropWatcher#19), with their generator `tools/seeds/recipes.py`.
 
 | Feature | Client | Gated in |
 |---|---|---|
@@ -195,7 +191,6 @@ bundle its header names, and its builder is made on WoW Forever alone (clients-�
 | The trade rule `soulbound` alone: a BoP drop is `no soulbound`, basis `bind`; only a BoE drop changes hands (design §4.6) | `forever` | `core/Constants.lua`, `defaults/Profile.lua`, `modules/TradeRules.lua` |
 | The trade timer's countdown and warning (`TradeTimer.Initialized`; on Forever the bag match runs and every entry is permanent), the Drops table's Trade window column and its Shown columns row (`window.columns.tradeWindow`), the `trade.warnAt` row and default, the card's bag-timer basis line, the words `Trade window` on the Offer panel's item line | `retail` | `modules/TradeTimer.lua`, `modules/WindowGroup.lua` (the column's `clients`), `settings/SchemaRows.lua`, `defaults/Profile.lua`, `modules/DetailCells.lua`, `modules/MineCells.lua` (`PanelHeader`), `modules/Diagnostics.lua` |
 | General › Role, the role override (`char.role`: Automatic, Tank, Healer or Damage, saved per character through LibKa0s `Role.SetOverride`; on a Druid it picks the Feral Pawn scale, design §11.4, DW-FP22) | `forever` | `settings/SchemaRows.lua` (`role`, `Settings.RefreshRoleTooltip`), `settings/Schema.lua` (the `CHAR` closure row), `core/CompatClient.lua` (`Compat.AutomaticRole`, `Compat.SetRoleOverride`), `settings/Panel.lua`, `defaults/Profile.lua` (`ROLE_DEFAULT`) |
-| Item Search (DropWatcher#17): the block on every item tooltip (a `TooltipDataProcessor` post call for items), the Item Search window and its magnifier in the main window's title bar, the `search` slash verb, the Item Search key's action and its one-time Alt-Ctrl-D default, ForeverDB's delayed out-of-combat load, the recipe-reagent table and the profession-window learner, and the Item Search settings page with every row and default under `itemSearch.*` (Item Search spec §1: on Retail all of it is absent, DropWatcher#18 tracks an equivalent; the Bindings.xml row exists on both clients, its press does nothing on Retail and its Keybindings row is drawn on WoW Forever alone). It replaced SF-DW-01's detail card Sources chip (`window.itemSources`, retired by schema step 15). Round 3 (Item Search round 3 spec) added the Gathered from tab and section over the hand-curated node table, the vendor prices recorded at the merchant window (`MERCHANT_SHOW`, `MERCHANT_UPDATE`, `MERCHANT_CLOSED`), ForeverDB_Full loaded on the window's first open, and the tooltip's Keep / Hold / Sell / Toss badge. Owner feedback round 5 (R5-DW-13..16) split Sell into Auction and Vendor from the optional Auctionator addon's prices (`modules/ItemSearchAuction.lua`, `Compat.AuctionPrice`, the `itemSearch.auction.*` rows; the verdict key stays `sell`, with `sellVia`); round 6 (R6-DW-06) asks the same rule for an item no vendor buys, so a would-be Toss with a usable Auctionator price is an Auction. Owner feedback round 4 (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`) colored each drop Type and each profession, gave the gathering lines' recipes their profession and skill levels, bracketed the player's skill band, anchored the separator, drew the badge as two filled boxes, hid the other faction's vendors by default (`itemSearch.hideOtherFaction`), put the quest's giver and zone on the tooltip's quest rows and (addendum A1, R4-DW-11) added the window's verdict panel under Matches, shown while you hold the item shown (`Compat.ItemCount`, the bank from the client's cache), the badge and the score's breakdown (`IS.Breakdown`). Owner feedback round 6 (R6-DW-07, R6-DW-08; the owner-approved scoring design in Ka0sAddonsCommonTasks `docs/2026-11-27-OWNER_FEEDBACK_ROUND6/01_DW_SCORING_DESIGN.md`) made the badge's number how sure the word is, 0 to 100 (`IS.Score`: round(100 x evidence x data known), `C.ITEM_SEARCH.VERDICT.SURE`, a disposal's money part `IAU.Money`), over the unclamped use value (`v.use`) that picks the word by the same bands, and split the verdict panel into Why this word and How sure; round 7 (R7-DW-01..03) renamed the first Why this verdict, gave every panel line a tooltip (`modules/ItemSearchVerdictTips.lua`) and made a corner drag move the columns and the panel only (`ISG.Relayout`, `IVP.Fit`), painting in full on mouse-up | `forever` | `core/Constants.lua` (`C.FEATURE.itemSearch`), `modules/ItemSearch*.lua` (`ItemSearchPrices.lua`, `ItemSearchAuction.lua`, `ItemSearchVerdict.lua`, `ItemSearchVerdictTips.lua` and `ItemSearchVerdictPanel.lua` among them), `core/CompatItem.lua` (`Compat.ItemCount`), `core/CompatSearch.lua`, `core/RecipeReagentsForever.lua`, `core/GatherNodes.lua`, `core/LauncherSetup.lua` (`NS.BINDINGS`' `clients`), `modules/WindowTitleBar.lua` (the magnifier), `settings/Slash.lua` (`search`), `settings/ItemSearchRows.lua`, `settings/ItemSearchArrowRows.lua`, `settings/ItemSearchPage.lua`, `settings/Pages.lua`, `defaults/Profile.lua`, the event rows' `clients` |
 | The per-situation loot rule rows (`trade.rules.<situation>`) and the Situations table's Loot rule column | `retail` | `settings/SchemaRows.lua`, `settings/Editors.lua` (`SITUATION_FIELDS`), `settings/PageEditors.lua` |
 | Everyone's group-loot rolls: the pending store's roll kind, the Drops tab's Rolling now section, a rolled drop's Rolls box, the roll table kept in History, the Drops › Rolls rows, `/dw sim roll` and test mode's sample roll (design §5, §8; DW-FP13 to DW-FP17), and `/dw sim raid`'s 40-player roll on six items for the Rolls panel's raid mode (RX-19); since the rolls UX round the icon count line and the every-roll tooltip that Rolling now (full and compact), the Rolls box, History and the popup mark share (`RollCells.CountLine`, `RollCells.Tooltip`, RX-06), and the time left read from your own popup's timer (`Compat.LootRollTimeLeft`) or derived from the history and shown only up to 5 minutes (`RollCells.MAX_LEFT`, RX-02) | `both` | `core/CompatLoot.lua`, `modules/Pending.lua`, `modules/WindowPending.lua`, `modules/RollCells.lua`, `modules/History.lua`, `modules/SimEvents.lua`, `modules/SimRoster.lua` (`Raiders`), `modules/TestData.lua` |
 | Master-loot pending and Ask the master looter: an item at or above the group's loot threshold in the loot window you opened, held as awaiting the master looter until a receipt names who got it, the `askML` template and its row, `/dw sim ml` (design §6; DW-FP18, DW-FP19). On Retail the method is Guild Master Loot alone (design §11.2): a declared reach of the client, not a client gate | `both` | `core/CompatLoot.lua` (`LootMethod`, `LootThreshold`, `LootSlots`), `modules/PendingML.lua`, `modules/Asks.lua`, `modules/WindowPending.lua` (`AskAction`), `modules/SimEvents.lua` |
@@ -298,14 +293,11 @@ whose one writer, `NS.ItemLists` (`modules/ItemLists.lua`), the panel's Item lis
 `/dw whitelist|blacklist` both call, so an ID on one list is refused by the other on both surfaces.
 The seam's `resetExempt` keeps them out of the Drops page's Defaults (plan #13, Q9). On WoW Forever, General › Role
 (`char.role`) is a per-character closure row over the role store, which no profile reset reaches.
-Also on WoW Forever alone, Item Search's page (`itemSearch.*`) has its rows in
-`settings/ItemSearchRows.lua`, appended through `Settings.RowMakers.Collect`, and its section order
-is a whole-value `map` row written by the page's drag list (`settings/ItemSearchPage.lua`).
 
 State written outside the seam (architecture-§5) is named, each key with its one owner module and
 every writer, in one place: the window's per-layout geometry and its minimized flag, the toast's
 position (the simulation panel's is session-only, held by LibKa0s-Sim-1.0), auto-ask's one-time notice, the history's own record, the per-character session
-(`char.session`, feedback-15 spec §0), the per-character role store (`char.role`, LibKa0s-Role-1.0's, DW-FP02), Item Search's window position, size and last tab, learned recipes, recorded vendor prices and key-default record (WoW Forever) and LibDBIcon's own write. The load pass is `NS:RunMigrations` (`core/Database.lua`), and
+(`char.session`, feedback-15 spec §0), the per-character role store (`char.role`, LibKa0s-Role-1.0's, DW-FP02) and LibDBIcon's own write; schema step 19 deletes the `itemSearch` tables Item Search left behind (DropWatcher#19). The load pass is `NS:RunMigrations` (`core/Database.lua`), and
 no structural registry exists yet. The shape, every default, the named state with its writers, the
 session-only state and each migration step are in [`schema.md`](schema.md).
 
@@ -337,9 +329,8 @@ verbs of design spec §12.3 (`scan clear history mine compact situation offer ad
 `NS.RollsPanel.Toggle`; it never opens the window) and issue #12's `insights`, which opens the
 Insights tab as `history` opens History; `mine` opens Drops since My drops was retired, feedback-5
 spec §3; and issue #13's `whitelist` and `blacklist`, each `add|remove <id|link>` or `list`, through
-the item lists' one writer, `NS.ItemLists`, which the settings panel shares; and on WoW Forever alone
-Item Search's `search [name|id]`, `NS.ItemSearchWindow.SlashSearch`, a row `settings/Slash.lua`
-appends only while `C.FEATURE.itemSearch` is on, so Retail has none). The two reports,
+the item lists' one writer, `NS.ItemLists`, which the settings panel shares; Item Search's `search`
+went with it, DropWatcher#19). The two reports,
 `situation` and an item list's `list`, write to the debug console through `NS.DebugLog:Report` with
 one chat pointer line (debug-logging-§15, AD-79-DW; [`debug.md`](debug.md)); the full table, the
 live-while-disabled set and the handlers are in [`slash-dispatch.md`](slash-dispatch.md). Every
@@ -360,11 +351,10 @@ The launcher's Show window entry has a key binding (launcher-§6, LibKa0s#58). T
 `Bindings.xml`, which the client reads without a TOC line, declares the
 `CLICK DropWatcherToggleWindow:LeftButton` binding in the addon's own category,
 `BINDING_HEADER_DROPWATCHER`, with no `header` attribute and no default key, so Options →
-Keybindings shows it in a section of its own titled with the brand. Its second row,
-`CLICK DropWatcherItemSearch:LeftButton`, is Item Search's key (WoW Forever's feature, button
-`DropWatcherItemSearch` built beside the first; its run-time default key is the launcher-§6 row of
-*Documented deviations*). `core/LauncherSetup.lua` builds that button at load, above its
-library check: a plain, named, hidden, non-secure Button registered `AnyDown`. Its OnClick asks
+Keybindings shows it in a section of its own titled with the brand. It is the one binding: the
+Item Search key went with Item Search (DropWatcher#19). `core/LauncherSetup.lua` builds that
+button at load, above its library check: a plain, named, hidden, non-secure Button registered
+`AnyDown`. Its OnClick asks
 `NS.StoodDownRefusal()` first, because `NS.ToggleWindow` relies on the dispatcher's gate for
 `/dw toggle`, and prints that one line when it answers (the disabled line under the disabled hold,
 `Not available during a performance capture.` under the perf hold alone). Otherwise it calls
@@ -405,11 +395,6 @@ how many handlers it called.
 | `CHALLENGE_MODE_COMPLETED` | `DW.OnSituationEvent`, then `DW.OnFeedRunEnd`, then `DW.OnAskFlushEvent`, then `DW.OnCompactRunEnd` (the same) | Retail only (`clients = { "retail" }`, DW-FP09): the same (a keystone ended); then keeps the run's group open while you stay in its instance, else 120 seconds, for the chest and a late bonus roll (feedback-20); then re-reads the restrictions and flushes the queued asks when chat may be sent (`modules/Asks.lua`); then (since DW-C0) arms compact mode's grace timer: 120 seconds later the run override ends (a hidden window lets go at once, a shown one when next hidden) and the situation is latched, since a completed key still reads as mythicPlus until the player leaves (`modules/WindowCompact.lua`) |
 | `GROUP_ROSTER_UPDATE` | `DW.OnSimWorldEvent`, then `DW.OnSituationEvent`, then `DW.OnRosterEvent`, then `DW.OnInspectRosterEvent`, then `DW.OnPendingRoster`, then `DW.OnAskRosterEvent`, then `DW.OnAutoAskRosterEvent`, then `DW.OnRollsPanelRosterEvent` (through `DW:OnSharedFeatureEvent`) | the simulation's automatic stop (joining a real group ends it); then the situation (solo and open-world group turn on it); then re-reads the group's members (`modules/Roster.lua`), and on a change its sinks grow the open group's roster and its History group's (`modules/GroupRoster.lua`); then drops the inspect entries of members who left and arms the inspect warm-up (`modules/Inspect.lua`); then (since DW-FP18), out of a group, expires every pending master-loot item (`modules/PendingML.lua`); then cancels the asks queued to members who left, and the queued announces once you are out of a group (`modules/Asks.lua`); then cancels the waiting automatic asks to looters who left (`modules/AutoAsk.lua`); then (RX-28) repaints a shown Rolls panel, so a group growing into a raid folds it at once (`modules/RollsPanel.lua`) |
 | `PLAYER_DIFFICULTY_CHANGED` | `DW.OnSituationEvent` | the same |
-| `PLAYER_ENTERING_WORLD`, `PLAYER_REGEN_ENABLED` (Item Search's rows) | `DW.OnItemSearchWorld`, `DW.OnItemSearchRegen`, `DW.OnItemSearchLearnRegen` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (`clients = { "forever" }`, DropWatcher#17): the session's first `PLAYER_ENTERING_WORLD` arms ForeverDB's 5-second load and the key's one-time default (`modules/ItemSearch.lua`, `modules/ItemSearchKey.lua`); the end of combat runs a load or a default that was due in combat, a merchant visit that was (`modules/ItemSearchPrices.lua`), and the profession-window read that was (`modules/ItemSearchLearn.lua`) |
-| `TRADE_SKILL_SHOW`, `TRADE_SKILL_LIST_UPDATE` | `DW.OnItemSearchTradeSkill` | WoW Forever only (DropWatcher#17): a profession window opened or relisted; one read 1 second after the burst, out of combat and only with Item Search on, keeps the recipes the shipped table lacks (`modules/ItemSearchLearn.lua`, Item Search spec §4.2 B) |
-| `MERCHANT_SHOW`, `MERCHANT_UPDATE`, `MERCHANT_CLOSED` | `DW.OnItemSearchMerchantShow`, `DW.OnItemSearchMerchantUpdate`, `DW.OnItemSearchMerchantClosed` | WoW Forever only (`clients = { "forever" }`, Item Search round 3 spec §4.4): a merchant window opened records its prices into `global.itemSearch.prices` now, a refill while it is open records again 0.5 s after the last one, and the close cancels a pending record (`modules/ItemSearchPrices.lua`); a visit in combat records nothing then and runs once at `PLAYER_REGEN_ENABLED` if the merchant is still open; only while Item Search is wanted and `itemSearch.recordPrices` is on |
-| `QUEST_LOG_UPDATE`, `QUEST_TURNED_IN`, `SKILL_LINES_CHANGED`, `TRADE_SKILL_SHOW`, `PLAYER_LEVEL_UP`, `NEW_RECIPE_LEARNED`, `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `AUCTION_HOUSE_CLOSED` (the verdict's rows; the last one R5-DW-13's, as Auctionator's prices move while the house is open) | `DW.OnItemSearchVerdictEvent` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (round 3 spec §4.5): raises the badge's generation, so the next hover of each item works its Keep / Hold / Auction / Vendor / Toss verdict out again (`modules/ItemSearchVerdict.lua`); nothing is read or drawn on the event itself |
-| `BAG_UPDATE_DELAYED`, `PLAYERBANKSLOTS_CHANGED`, `QUEST_LOG_UPDATE`, `QUEST_TURNED_IN`, `SKILL_LINES_CHANGED`, `TRADE_SKILL_SHOW`, `PLAYER_LEVEL_UP`, `NEW_RECIPE_LEARNED`, `AUCTION_HOUSE_CLOSED` (the verdict panel's rows; the last one R6-REV's, so the panel's score and prices follow the verdict's re-read of Auctionator), and the `GearChanged` message on its own bus receiver | `DW.OnItemSearchPanelEvent` (through `DW:OnSharedFeatureEvent`, after the rows above in TOC order) | WoW Forever only (round 4 addendum A1, R4-DW-11): while the Item Search window is open on an item, arms one 0.5-second timer (a burst repaints once) that repaints the window's verdict panel alone: shown or hidden by how many of the item you hold, bags and bank, not what you wear (`Compat.ItemCount`), its breakdown worked out again only when the count, the verdict memo's generation or, for gear, your gear's signature moved (`modules/ItemSearchVerdictPanel.lua`); nothing at all while the window is closed, and never on a hover |
 | `SPELL_TEXT_UPDATE` | `DW.OnVerdictEvent` (core/VerdictSetup.lua: the verdict engine's row, handed to its instance) | (since TT-1) a spell's text arrived: every cached item whose use spell it is and whose use text came back empty (`useSpellLoading`, not loaded yet) reads its use text, tier-token flag, made slot and category again (the engine's facts cache); a drop of such an item already waits for the spell through `ItemFacts.Request` |
 | `TRANSMOG_COLLECTION_UPDATED` | `DW.OnVerdictEvent` (core/VerdictSetup.lua: the verdict engine's row, handed to its instance) | Retail only (`clients = { "retail" }`, the engine's `C.FEATURE_CLIENTS.transmog`, DW-FP10: WoW Forever has no transmog): re-reads whether each cached item's appearance is collected, then arms the engine's collection re-read, whose `"collection"` change runs the feed's pass, so a live cosmetic's verdict follows (`modules/CollectFeed.lua`) |
 | `NEW_MOUNT_ADDED`, `NEW_PET_ADDED`, `NEW_TOY_ADDED`, `NEW_RECIPE_LEARNED`, `SKILL_LINES_CHANGED` | `DW.OnVerdictEvent` (core/VerdictSetup.lua: the verdict engine's row, handed to its instance) | (since DW-CAT3) a mount, pet, toy or recipe learned, or a profession gained or lost: arms the engine's one 0.5-second timer, so a burst reads once; it re-reads the cached collectibles and tells the host, whose `"collection"` change re-judges each live collectible whose verdict moved through `LootFeed.Refresh(rec, "collection")`, which sends `DropUpdated(id, "collection")` (`modules/CollectFeed.lua`); the stand-down cancels the timer. `PET_JOURNAL_LIST_UPDATE` is not used: it fires too often |
@@ -455,7 +440,7 @@ preview-mode, *The in-game simulator*) binds this addon, and each obligation is 
 | | Obligation | Where DropWatcher meets it |
 |---|---|---|
 | H1 | Every simulated client read and outward action is a Compat member read at call time; senders and actions are guarded | `NS.Compat` routing (`core/Compat.lua`, `CompatWorld.lua`, `CompatItem.lua`); the chat sender, the inspect calls and the trade action in `core/SimSetup.lua`'s `GUARDED`; `test_sim_e2e`'s scan fails a module that names a world global the simulator answers |
-| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatSearch.lua` (the last of the compat family), under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
+| H2 | `Sim:NewSeam` straight after the Compat files, and `Unwrapped()` empty | `core/SimSetup.lua`'s TOC slot right after `core/CompatCollect.lua` (the last of the compat family), under a LOAD-BEARING comment; `test_sim_e2e` asserts `NS.SimSeam:Unwrapped()` empty |
 | H3 | One `deliver` with the client's handler set and order | `NS.DeliverEvent` (`core/DropWatcher.lua`, this section above): the `NS.FEATURE_EVENTS` rows in order, `NS.rejectedEvents` skipped |
 | H4 | Session-only storage for every saved write the capture path reaches, and a before/after test | `History.LogFor` (`modules/History.lua`) gives a simulated drop or trade the session's log, never `global.history`; `test_sim_core`'s `sim history` cases hold the saved history untouched |
 | H5 | `refusal` covers stood-down, test mode and the world rules | `NS.SimHost.Refusal` (`modules/Sim.lua`): stood down, test mode, combat, an instance, a real group; test mode refuses while a simulation runs (`Test mode is not available while a simulation runs.`) |
@@ -536,52 +521,6 @@ No addon file names `ANCHOR_CURSOR`, a corner anchor or `GetCursorPosition` for 
 | The History row menu's entries (`NS.ContextMenu`, `{ cursor = true }`) and every other client `MenuUtil` menu | The client's menu system, or LibKa0s-Widgets' menu | A menu the client draws (its entries' tooltips are `MenuUtil`'s); the library's own menus are the library's to place. The menu opening at the pointer is a menu, not a tooltip |
 | The library's own windows (debug console, perf, sim and step panels, skin picker, icon browser, Copy window, dropdown menus, drag handles) | LibKa0s, since v1.105.0 | A window the library draws is the library's to move |
 | The game's own tooltips over Blizzard frames (the group-loot roll frame the popup's side card sits beside) | The client | Blizzard's frames; the addon writes no lines onto them |
-
-### The Item Search window's tooltips (the ISR3-DW-09 audit, 2026-11-26)
-
-The owner, on the round 3 smoke (Image #115): "The makes tooltip is not in the right position as per
-ka0s standard (should be to the right). Audit all tooltips for this Drop Watcher Item Search". Every
-tooltip the Item Search window (WoW Forever only), its settings page and its waypoint arrow show is
-listed here with the call that places it. Each one was already owned at `ANCHOR_NONE` and placed
-after `Show()` by its class, so the audit found no tooltip on the cursor, at a corner, or over the
-window by its first placement. What it did find: an **item** tooltip is placed once, for the size it
-has at `Show()`. An item the client has not loaded yet (a recipe's product the player never saw, as
-the Makes cell's Roast Raptor) first shows a short "Retrieving item information" tooltip. The client
-refills it when the item arrives, and it grows past the spot it was given. The screen clamp then slides
-it back over the window, and the comparison anchor type the placer set (`ANCHOR_RIGHT`) re-anchors it
-on the cell's corner. The fix is `RowTooltip.PlaceItemTip`: the body placement, then the same placement
-again on the tooltip's `OnSizeChanged` and once on the next frame, for as long as the same owner owns
-it (an `OnHide` or another owner ends it). It is `LibKa0s-Tooltip-1.0`'s own advice for late growth
-(`Replace`, "item data arriving after Show").
-
-| # | Tooltip | Where | Class | Placed by, before | Now |
-|---|---|---|---|---|---|
-| 1 | A Crafting row's **Makes** cell (the product's item tooltip) | `modules/ItemSearchGrid.lua:306` (`newLink`) → `ISG.ItemTip` `:71` | body | `PlaceOrFallback` once, at `Show()`; it moved when a not-yet-loaded item grew | **Fixed**: `PlaceItemTip`, beside the window and level with its row after the item loads too |
-| 2 | A **match** row (left pane) | `modules/ItemSearchGrid.lua:615` → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
-| 3 | The item header's **icon** and **name** | `modules/ItemSearchWindow.lua:372` (`linkable`, on `f.icon` `:391` and `f.nameButton` `:397`) → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
-| 4 | A **container** row (Drops from, a row whose tip is an item) | `modules/ItemSearchGrid.lua:257` (`onRowEnter`) → `ISG.ItemTip` | body | the same once-only placement | **Fixed**: `PlaceItemTip` |
-| 5 | Every other **table row** (Drops from, Gathered from, Sold by, Quests, Crafting with ISR3-DW-08's source lines, Skinned from) | `modules/ItemSearchGrid.lua:332` → `Window.AttachTooltip` (`modules/Window.lua:192`) | body | `PlaceBeside` on the row, beside the window group (text only, so it does not grow) | compliant, unchanged |
-| 6 | A row's waypoint **pin** | `modules/ItemSearchGrid.lua:294` | body | `PlaceBeside` on its row | compliant, unchanged |
-| 7 | A **column title** | `modules/ItemSearchGrid.lua:506` | body (a list's column-header row) | `PlaceBeside` on the header row | compliant, unchanged |
-| 8 | The section headers' **Filter**, **Sort** and **Reset** marks, and the matches' **Sort** | `modules/ItemSearchGrid.lua:156` (`ISG.Mark`, built for `f.section` and `f.matchHead`) | chrome (the tab's filter bar) | `PlaceAttached`, centered above the mark | compliant, unchanged |
-| 9 | The **My professions** chip (and the matches' and the verdict panel's header chip slots) | `modules/ItemSearchGrid.lua:207` | chrome (a filter-bar control) | `PlaceAttached` | compliant, unchanged |
-| 10 | The **tabs** | `modules/ItemSearchWindow.lua:434` | chrome | `PlaceAttached` | compliant, unchanged |
-| 11 | **Clear**, beside the search box | `modules/ItemSearchWindow.lua:326` | chrome (a filter-bar control) | `PlaceAttached` | compliant, unchanged |
-| 12 | The title bar's **settings** and **close** marks | `modules/ItemSearchWindow.lua:299` → `NS.WindowTitleBar.Marks` (LibKa0s-Widgets' `HeaderButtons`) | chrome | the library's `PlaceAttached`, above the mark | compliant, unchanged |
-| 13 | The **footer** (ForeverDB's state) and its resize grip | `modules/ItemSearchWindow.lua:495` (`NS.MakeFooter`) | chrome | no tooltip of Drop Watcher's; the library's footer and grip | compliant, unchanged |
-| 14 | The **waypoint arrow** (a HUD display of one icon) | `modules/ItemSearchWaypoint.lua:129` (`onEnter`) | body (its group is itself) | `PlaceOrFallback`, beside the arrow (text only) | compliant, unchanged |
-| 15 | The arrow's right-click menu and the Filter, Sort and matches' Sort menus' entries | `libs/LibKa0s/WaypointArrow.lua:1022`; `modules/ItemSearchWindow.lua:344`, `:468`, `:470` (`NS.ContextMenu`) | the library's menu | LibKa0s-Widgets' menu (library-placed since v1.105.0) | out of scope: a window the library draws |
-| 16 | Item Search's block on every item tooltip (bags, chat links, the loot window, other addons') | `modules/ItemSearchTip.lua` (`Compat.HookItemTooltips`, `core/CompatSearch.lua:351`) | lines on a tooltip the client anchors | the client | out of scope (*What it does not bind*): the addon only adds lines |
-| 17 | The Item Search settings page (`settings/ItemSearchPage.lua`, `settings/ItemSearchRows.lua`, `settings/ItemSearchArrowRows.lua`) | LibKa0s-Options-1.0's rows and the section-order drag list | Settings canvas | LibKa0s-Options-1.0 | out of scope: options-ui governs the Settings canvas |
-
-`tests/test_item_search_window.lua` pins it: a sweep hovers every widget the window hooks (rows 5 to
-11) and every item tooltip (rows 1 to 4) and asserts the placer, the element and the window group; on
-the kit's fake screen the Makes cell's tooltip lands a TIP_GAP right of the window, level with its
-row, and is placed again when the client moves it (the next frame) or it grows past the screen's
-right edge (`OnSizeChanged`, now left of the window), and never once another owner holds it or it
-has hidden. The in-game check is `docs/smoke-tests.md` ITEM-SEARCH-46. The main window's own item
-tooltips (`WindowGroup`'s item buttons, the Rolls panel's item headers) keep `PlaceOrFallback`: their
-items are ones the group looted, so the client already holds them.
 
 ## Frame layering
 
@@ -732,7 +671,6 @@ What stays out of the skin, each for its reason (the literal gate's allow-list c
 | Chat output: the `[DW]` prefix, the command highlights, debug ON / OFF, the schema validator's errors | printed into the client's chat frame, not a frame this addon draws |
 | `NS.GroupRoster.Colored`'s escape format | it writes the color its caller hands it (a token's, a class's) |
 | The four secondary stats' name colors (`C.TONE.stat*`) | identity by hue: each stat is told from the others by its color |
-| Item Search's meaning tones: the skill-up hues (`C.TONE.skill*`), each drop source Type's (`type*`, round 4 R4-DW-01) and each profession's (`prof*` by `C.PROFESSION_TONE`, R4-DW-04) | identity by hue, the same under every skin: a recipe's skill-up color is the client's own, a Type and a profession are each told from the others by color; no profession tone is a skill-up hue, red or a Type tone (`tests/test_item_search_sources.lua` checks it) |
 | The upgrade glows' default colors (`C.TONE.glowMain`, `glowOffSpec`) | Ka0s Default's values of `dw.glowMain` and `dw.glowOffSpec`, and of the swatches a player sees with the companion off; the two hues mean main spec against off-spec |
 | Item quality and class colors | game meaning; a quality reads the skin's `q.*` (Ka0s Default's are the client's own colors byte for byte since LibKa0s v1.81.0), and a quality the schema does not name the client's |
 | GameTooltip's frame, StaticPopups, the launcher's button and menu | Blizzard or third-party frames (skinning-§7); the tooltip LINES this addon writes take skin colors |
@@ -832,13 +770,8 @@ per-boss breakdown inside a Mythic+ key, and reads a collectible recorded before
 equipment; an install missing LibKa0s shows no toast (its shell is LibKa0s-Toast-1.0); and a
 simulation does not exercise every live path (a member's spec, cross-source de-duplication, a
 situation's tracking switch); auto-close's settings row sits on the line beneath Auto-open the
-window rather than indented (RX-10); and Item Search is WoW Forever's alone (DropWatcher#18 looks
-for a Retail equivalent), needs the optional ForeverDB addon for everything but Crafting and
-search by id, and its tooltip hook is assumed on Forever until probed; since round 3 a spawn converted
-from world coordinates can land on a neighbor's map near a zone border, a recorded price carries your
-reputation discount, the test-source filter reads names alone, ForeverDB_Full costs some 80 MB while
-loaded, the gathering skills are hand-curated, a pinned chat link is no hover for the key, and the
-Keep / Hold / Auction / Vendor / Toss badge is advice, never an action. Every limitation, with its smoke-check id, is in
+window rather than indented (RX-10). Item Search's limitations went with it to Ka0s Item Search
+(DropWatcher#19). Every limitation, with its smoke-check id, is in
 [`known-limitations.md`](known-limitations.md).
 
 ## Documentation map
@@ -865,12 +798,12 @@ checkpointed plan) and `docs/investigations/`.
 | Doc | Status | Trigger |
 |---|---|---|
 | `perf-analysis/README.md` | Present | The performance harness is wired (`core/PerfSetup.lua`) |
-| `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` on Retail, 36 on WoW Forever (`search`) |
+| `slash-dispatch.md` | Present | 35 commands in `NS.COMMANDS` on both clients |
 | `profiles.md` | Present | The Profiles page ships in the options UI |
 | `debug.md` | Present | The diagnostics dump ships in every addon (debug-logging-§14) |
 | `midnight-quirks.md` | Present | Clients includes Retail (documentation-§3): the vendored Retail catalog block (client-quirks-§1), then the addon's own Retail client-version workarounds; `core/Compat.lua` carries the addon's own client-version workarounds (secret guards on tooltip and gate answers, the deprecated-global fallbacks, enums by name, the trade-time decode) |
 | `forever-quirks.md` | Present | Clients includes Forever (`Retail · Forever`, forever-quirks-§1): the vendored Forever catalog block, then the addon's own Forever workarounds (the WoW Forever table: spec, Pawn, ranged slot, `lootListKey`) |
-| `compat-layer.md` | Present | The compat family publishes 171 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 60, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 7, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 18, `core/CompatSearch.lua` 34 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
+| `compat-layer.md` | Present | The compat family publishes 132 addon-specific shims (three or more), counted across the family per documentation-§3: `core/Compat.lua` 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18, `core/CompatItem.lua` 5, `core/CompatJournal.lua` 5, `core/CompatCollect.lua` 16 (`cat core/Compat*.lua \| grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'`) |
 | `message-bus.md` | Present | 11 messages are defined, more than ten (`PENDING_CHANGED`, DW-FP14, was the eleventh) |
 | `known-limitations.md` | Present | Known Limitations passed roughly 60 lines in this hub and spilled there |
 | `taint.md` | Not applicable | Taint Notes is under roughly 60 lines |
@@ -910,16 +843,12 @@ deviation not in this table is not ratified.
 | standalone-windows, *Tooltip placement* rule 1 | A main-window row's body tooltip opens flush beside the window itself (right when it fits, else left, 2 px off, level with the row) and goes outside the whole window group only when that flush spot would overlap a shown docked panel (the Rolls or Offer panel); rule 3 (never over a frame of the group) still holds. A docked panel's own rows keep rule 1 | The owner's ruling on the adoption smoke (Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/inputs/OWNER_FEEDBACK.md`, img-15 and img-16): a tooltip beyond the Rolls panel when the panel is nowhere near it is too far from the row (AF-DW-TIP) | 2026-11-19 | the standard adopting a flush-first body rule, or LibKa0s-Tooltip-1.0 gaining one |
 | standalone-windows, *Which marks a window owes* (anti-pattern #120) | The roll popup mark's side card carries a `Drop Watcher` header and no close (nor settings or lock) | The owner's ruling (Ka0sAddonsCommonTasks `docs/2026-11-19-ADOPTION_FEEDBACK/inputs/OWNER_FEEDBACK.md`, img-17): "no window controls needed". The card is an overlay that lives and dies with Blizzard's roll popup (and test mode's stand-in), not a window the player opens or closes; Settings › Drops › Rolls › Mark the roll popup turns it off (AF-DW-ROLLHDR) | 2026-11-19 | the card becoming movable or outliving its popup |
 | options-ui-§17 | the class-color companion sits below its swatch in the tab's mirrored two-column layout | owner's choice: main spec left, off-spec right on every row | 2026-10-18 | the next options-ui-§17 edit, or LibKa0s gaining a mirrored color-pair layout |
-| launcher-§6, *No default key* and *Labels* | The Item Search binding (`CLICK DropWatcherItemSearch:LeftButton`, Bindings.xml's second row, WoW Forever's feature) gets a default key at run time: Alt-Ctrl-D (`ALT-CTRL-D`, the client's modifier order; re-tried once under `keyDefaultedV` where the first try stored the dead `CTRL-ALT-D`), set once per character by `NS.ItemSearchKey.TryDefaultKey` (`modules/ItemSearchKey.lua`) only while the key runs nothing and the binding has no key, saved to the binding set in force; Bindings.xml itself still carries no `default` attribute. Its label is the owner's "Item Search", a noun, not a verb phrase | The owner's decision for Item Search (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/03_SPEC.md` §4.6): the key is the feature's headline way in, and the never-steal check (ItemTree's rule) answers the rule's reason, a key that collides with an existing binding | 2026-11-25 | A smoke report of the key taking a bound key, or the standard ruling on runtime default keys |
 
 ### Files over the 1500-line cap
 
 The layout-§1 census of authored `.lua` files over the 1500-line cap. Vendored code (`libs/`,
-`tests/_kit/`) is out of scope. The one generated file, `core/RecipeReagentsForever.lua` (written by
-`tools/seeds/recipes.py`), is loaded by the TOC, so the generated-data carve-out does not exempt it
-and the cap binds it like authored source: the generator packs its rows to stay under it (1027 lines
-on build 1.60.1.70938 with the gathering lines' recipes since R4-DW-03; 1015 with each recipe's
-teaching item since ISR3-DW-08; 913 before).
+`tests/_kit/`) is out of scope. The one generated file, `core/RecipeReagentsForever.lua`, went with
+Item Search (DropWatcher#19).
 
 Nothing is over the cap today. `locales/enUS.lua` came back under it when the settings panel's
 strings moved to the topic file `locales/enUS_Settings.lua` (feedback-21), and it left the

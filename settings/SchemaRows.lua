@@ -196,13 +196,9 @@ end
 -- A row declaring `clients` (clients-§4) is registered only where NS.Compat.ForClient(clients) is
 -- true: on the other client it is not in the schema at all, so the panel, `/dw list|get|set|reset`
 -- and the defaults reset never see it (Forever port design §4.4's Retail-only rows).
--- `into` is the list a maker adds to: this file's Rows, or another file's while it runs its makers
--- through Settings.RowMakers.Collect (settings/ItemSearchRows.lua).
-local into = Rows
-
 local function add(row)
     if not NS.Compat.ForClient(row.clients) then return row end
-    into[#into + 1] = row
+    Rows[#Rows + 1] = row
     return row
 end
 
@@ -830,23 +826,6 @@ local function skin()
     bool("skin.pickerSeen", P.skin.pickerSeen, L["Skin picker seen"],
         L["Whether the first-run skin picker was closed on this profile."], at)
 end
-
--- The makers, the checks and the dimming predicate for a page's rows declared in another file
--- (settings/ItemSearchRows.lua, Item Search spec §4.7), so its rows are shaped like these.
--- Collect(fn) runs fn with every maker adding to a fresh list and answers that list, for the
--- caller's own NS.SchemaRuntime.AddRows.
-Settings.RowMakers = {
-    add = function(row) return add(row) end, bool = bool, pick = pick, slider = slider, map = map,
-    with = with, unless = unless, choices = choices, wholeIn = wholeIn, isColor = isColor,
-    Collect = function(fn)
-        local out, saved = {}, into
-        into = out
-        local ok, err = pcall(fn)
-        into = saved
-        if not ok then error(err, 2) end
-        return out
-    end,
-}
 
 role()
 simulation()
