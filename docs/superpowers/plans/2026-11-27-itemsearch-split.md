@@ -30,7 +30,7 @@
 | B2 | LK | Reads, facts, gear, score, collect + instance API | done | fc303a5e |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | done | 021bdc46 |
 | B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | done | 110e02be |
-| C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | done | 296e8ec |
+| C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | done | 5e28f3f |
 | C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | todo | |
 | C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | todo | |
 | D1 | DW | Clean cut of Item Search; retire its data; docs; push | todo | |
@@ -286,6 +286,16 @@ test_collect_feed. New: tests/test_verdict_setup.lua (11 cases). Total 2799. (9)
 `core/Constants.lua` still carries kernel tables only the library now reads (`TRACK_TIER`,
 `TRACK_TIER_BY_STRING_ID`, the slot plans' kernel half); `C.TIER_SLOTS`/`C.TIER_TOKENS` were removed.
 The item read's deviation row is retired (the read is the library's).
+
+Builder note (review fixes, `5e28f3f`): data-flow.md, module-map.md, validate-seeds.md brought in
+step with the instance (facts, gear, deferWhile, the provisional OnEnable read, the collection
+events through the engine's timer). CollectFeed's dead `all` timer scope removed. `C.TRACK_TIER` and
+`C.TRACK_TIER_BY_STRING_ID` removed from `core/Constants.lua` (no DW reader; their test went with
+them); the slot plans stay (QualityGate, ItemSearchVerdict, SimRoster read them). test_verdict_setup
+gains a case that every event the instance registers has its `NS.FEATURE_EVENTS` row on the client
+and no row is dead (12 cases; total still 2799, badge unchanged). Still open: the 2 vendor-sync
+cases wait on G1's v1.119.0 tag (G1 re-runs both clients after tagging; C2/C3 hit the same two);
+the class-list seed contract reading `libs/` read-only goes to LibKa0s, raise at E1/F1.
 
 ### Task C2: Item Search repo + scaffold (IS)
 
