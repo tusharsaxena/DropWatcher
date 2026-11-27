@@ -236,7 +236,7 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertFalse(S.Set("comparison.undesired", { mage = { ["4:1"] = true } }), "a specID that is not a number")
     assertTrue(S.Set("comparison.weights", { [62] = { INTELLECT = 1, HASTE = 0.8 } }))
     assertFalse(S.Set("comparison.weights", { [62] = { INTELLECT = "high" } }))
-    local cfg = NS.LootFeed.Config()
+    local cfg = NS.LootFeed.Config().verdict
     assertTrue(cfg.undesired[62]["4:1"] == true, "the feed reads the stored map")
     assertEqual(NS.addon.Settings.FormatValue(S.FindRow("comparison.undesired"), cfg.undesired,
         function() return "lib" end), "{1}", "the CLI renders a map as its entry count")
@@ -262,8 +262,11 @@ test("rows: the verdict's config is the six comparison values and the client's v
     assertEqual(v.sidegradeBand, 7); assertEqual(v.scorer, "weights"); assertEqual(v.weights[62].INTELLECT, 1)
     assertEqual(v.verdictMode, T.forever and "scoreFirst" or "ilvlFirst")
     local cfg = NS.LootFeed.Config()
-    assertEqual(cfg.sidegradeBand, 7, "the feed's config keeps its judging fields, read from the verdict's")
-    assertEqual(cfg.verdict.scorer, "weights", "and carries the verdict's whole")
+    -- red under: the feed's config keeping some verdict fields at its top level, a second shape a
+    -- verdict read could take for the verdict's (A2 review: the looter judged with no verdict mode)
+    for k in pairs(v) do assertNil(cfg[k], "the feed's config carries no verdict field of its own: " .. k) end
+    assertEqual(cfg.verdict.sidegradeBand, 7, "it carries the verdict's whole")
+    assertEqual(cfg.verdict.scorer, "weights")
 end)
 
 test("rows: the feed, the situations and the messaging edge read the rows", function()

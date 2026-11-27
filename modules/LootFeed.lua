@@ -179,20 +179,17 @@ function LF.VerdictConfig()
 end
 
 --- The settings the feed reads: `feed.*` and `trade.rules.*` through the schema seam, and the
---- verdict's own (LF.VerdictConfig, `verdict`) with its four judging fields kept at the top level
---- (`feed.clearOnBossKill` is read at each kill instead).
+--- verdict's own (LF.VerdictConfig) whole under `verdict` and only there, so a verdict read cannot
+--- take the feed's table for the verdict's (`feed.clearOnBossKill` is read at each kill instead).
 --- @return table cfg
 function LF.Config()
-    local v = LF.VerdictConfig()
     return {
         categories = categories(), minIlvlMode = get("feed.minIlvlMode"), minIlvl = get("feed.minIlvl"),
         whitelist = get("feed.whitelist"), blacklist = get("feed.blacklist"),
         relativeIlvl = get("feed.relativeIlvl"),
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
-        sidegradeBand = v.sidegradeBand, compareOwned = v.compareOwned,
-        undesired = v.undesired, heirloomProtect = v.heirloomProtect,
-        rules = tradeRules(), verdict = v,
+        rules = tradeRules(), verdict = LF.VerdictConfig(),
     }
 end
 
@@ -402,7 +399,7 @@ local function candidateEntry(rec, m, cfg, ask)
     local e = { guid = m.guid, name = m.fullName or m.name, classFile = m.classFile }
     local cand = NS.Inspect.Candidate(m.guid)
     if cand then
-        e.status, e.eval = "ready", evaluate(rec.facts, cand, evalOpts(cfg))
+        e.status, e.eval = "ready", evaluate(rec.facts, cand, evalOpts(cfg.verdict))
         return e
     end
     local entry = NS.Inspect.Get(m.guid)
@@ -446,7 +443,7 @@ local function judgeLooter(rec, cfg, request)
         if request and inGroup and not rec.test then NS.Inspect.Request(guid, NS.Inspect.PRIORITY.looter) end
         rec.inspect = inspectState(guid)
         local cand = inGroup and NS.Inspect.Candidate(guid) or nil
-        rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg)) or nil
+        rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg.verdict)) or nil
     end
     estimate(rec, rec.them, cfg, rec.inspect)
 end
