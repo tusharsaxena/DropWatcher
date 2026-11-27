@@ -332,7 +332,8 @@ test("collectibles: a cosmetic's verdict follows a learned appearance, with no s
     local f = IF.Get(LOOK)
     assertEqual(NS.Collectibles.Verdict(f).verdict, "newCollect")
     m.items[LOOK].transmog = true
-    NS.addon.OnTransmogCollectionUpdated()
+    NS.VerdictStandUp()   -- the engine's handlers (core/VerdictSetup.lua), then the appearance event
+    NS.addon:OnVerdictEvent("TRANSMOG_COLLECTION_UPDATED")
     f = IF.Get(LOOK)
     assertTrue(f.transmogKnown); assertEqual(NS.Collectibles.Verdict(f).verdict, "collected")
     -- red under: Read copying transmogKnown into collect.known, which the event never refreshes

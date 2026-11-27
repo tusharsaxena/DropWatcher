@@ -148,6 +148,9 @@ for _, e in ipairs(EVENTS) do
     NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { e[1], "OnVerdictEvent", clients = e[2] }
 end
 
+-- The events whose handling has moved onto the instance so far (the C1 slices widen it).
+local ADOPTED = { SPELL_TEXT_UPDATE = true, TRANSMOG_COLLECTION_UPDATED = true }
+
 -- The instance's handler per event, kept while it is stood up.
 local handlers = {}
 
@@ -164,6 +167,7 @@ local host = {
     debug = function(tag, msg) NS.Debug(tag, "%s", msg) end,
     deferWhile = function() return NS.Restrictions ~= nil and NS.Restrictions.InCombat() end,
     registerEvent = function(event, fn)
+        if not ADOPTED[event] then return end
         if not ROUTED[event] then
             NS.Debug("Init", "verdict: %s has no NS.FEATURE_EVENTS row; it is not heard", tostring(event))
         end
@@ -172,7 +176,7 @@ local host = {
     unregisterEvent = function(event) handlers[event] = nil end,
     onChange = function(kind)
         if kind == "gear" then
-            NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
+            return   -- modules/Gear.lua still sends it (until the gear slice)
         elseif kind == "collection" and NS.CollectFeed then
             NS.CollectFeed.OnCollectionsChanged()
         end
@@ -193,3 +197,4 @@ NS.VerdictEngine = V and V:New(host) or stubEngine(CLIENT)
 function NS.VerdictStandUp() NS.VerdictEngine:StandUp() end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function() NS.VerdictEngine:StandDown() end
+NS.STAND_UP[#NS.STAND_UP + 1] = NS.VerdictStandUp

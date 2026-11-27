@@ -16,6 +16,9 @@ local _, NS = ...
 --   NS.OffSpec      the off-spec pass's readers; Initialized() is the clients-§4 gate
 --                   (C.FEATURE.offSpec), Enabled(client) the pure query.
 --   NS.TierTokens   tier tokens judged as gear, in this addon's words.
+--   NS.ItemRead     a link read: the pure halves (V.ItemRead) and the instance's level and quality
+--                   reads (EffectiveItemLevel, QualityOf, ItemLevelAt, QualityAt).
+--   NS.ItemFacts    the instance's facts cache: Get, Read, Request, Counts, RereadCollections.
 
 local V = NS.Verdict
 local C = NS.Constants
@@ -120,3 +123,39 @@ NS.TierTokens = {
     SlotOf = function(facts, readTooltip) return TT.SlotOf(facts, readTooltip, NS.L) end,
     Fold = function(facts, candidate, opts, run) return TT.Fold(facts, candidate, withClient(opts), run) end,
 }
+
+-- ── NS.ItemRead and NS.ItemFacts ───────────────────────────────────────────────────────────
+
+local IR = V.ItemRead
+
+-- The instance, read at each call (core/VerdictSetup.lua).
+local function engine() return NS.VerdictEngine end
+
+NS.ItemRead = {
+    GEAR_CLASSES = IR.GEAR_CLASSES,
+    ItemString = function(link) return IR.ItemString(link) end,
+    LinkDetail = function(link) return IR.LinkDetail(link) end,
+    BetterLink = function(a, b) return IR.BetterLink(a, b) end,
+    IdentityKey = function(link) return IR.IdentityKey(link) end,
+    EffectiveItemLevel = function(where) return engine():EffectiveItemLevel(where) end,
+    QualityOf = function(link) return engine():QualityOf(link) end,
+    ItemLevelAt = function(bag, slot) return engine():ItemLevelAt(bag, slot) end,
+    QualityAt = function(bag, slot) return engine():QualityAt(bag, slot) end,
+}
+
+-- The cache tunables (MAX_LOAD_TRIES, CACHE_CAP, EVICT_SHARE, SPELL_LOAD_WAIT) are the library's
+-- (V.Facts), read through the view.
+NS.ItemFacts = setmetatable({
+    --- The cached facts of `link`, or the facts read now when the client has the item, or nil.
+    Get = function(link) return engine():Facts(link) end,
+    --- The facts read now, uncached.
+    Read = function(link) return engine():ReadFacts(link) end,
+    --- Get, else a load: `facts, status` ("ready" | "loading" | "invalid" | "unavailable");
+    --- `callback(facts | nil, link)` once the load answers.
+    Request = function(link, callback) return engine():Request(link, callback) end,
+    --- How many links are cached, and how many are loading.
+    Counts = function() return engine():FactsCounts() end,
+    --- Read the collection state again on every cached collectible; answers how many.
+    RereadCollections = function() return engine():RereadCollections() end,
+    TrackTier = function(stringID, name) return V.Facts.TrackTier(stringID, name) end,
+}, { __index = V.Facts })

@@ -466,7 +466,6 @@ Kit.run{
         "test_messaging",
         "test_restrictions",
         "test_roster",
-        "test_item_facts",
         "test_collectibles",
         "test_item_read",
         "test_gear",

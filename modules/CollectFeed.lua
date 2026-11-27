@@ -32,10 +32,11 @@ local function wanted(rec, scope)
     return scope == "all" or rec.me.verdict == "collectUnknown"
 end
 
--- The pass: the cache's collectibles read again (ItemFacts writes its own cache), then each live
--- collectible whose verdict moved is re-judged through the feed's Refresh (DropUpdated `collection`).
-local function reread(scope)
-    NS.ItemFacts.RereadCollections()
+-- The pass: the cache's collectibles read again (the engine writes its own cache; `fresh` when it
+-- just did), then each live collectible whose verdict moved is re-judged through the feed's
+-- Refresh (DropUpdated `collection`).
+local function reread(scope, fresh)
+    if not fresh then NS.ItemFacts.RereadCollections() end
     local n = 0
     for _, rec in ipairs(NS.LootFeed.Drops("live")) do
         local facts = wanted(rec, scope) and NS.ItemFacts.Get(rec.link)
@@ -66,8 +67,12 @@ end
 --- call of a burst. ItemFacts' OnCollectionsChanged calls it too.
 function CF.Changed() arm("all") end
 
--- ItemFacts tells its subscribers when an appearance is learned; the feed is one.
-NS.ItemFacts.OnCollectionsChanged(function() CF.Changed() end)
+--- The verdict engine read the collections again (core/VerdictSetup.lua's onChange "collection":
+--- an appearance learned, coalesced by the engine's own REREAD_DELAY timer): the feed's pass now.
+function CF.OnCollectionsChanged()
+    if NS.IsStoodDown and NS.IsStoodDown() then return end
+    reread("all", true)
+end
 
 for _, event in ipairs({ "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED", "NEW_RECIPE_LEARNED",
     "SKILL_LINES_CHANGED" }) do
