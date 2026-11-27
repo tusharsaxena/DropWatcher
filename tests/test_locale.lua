@@ -176,9 +176,16 @@ test("locale: enUS carries every string routed through NS.L", function()
         .. table.concat(missing, "\n", 1, math.min(#missing, 20)))
 end)
 
+-- The library files that read this addon's NS.L by key: LibKa0s-Verdict-1.0's tier-token words
+-- (TierTokens.WORDS) and its Comparison section's (Settings.WORDS), each handed NS.L by
+-- core/VerdictViews.lua and the Comparison page. A key one of them reads is read.
+local LIBRARY_READERS = { "libs/LibKa0s/VerdictTierTokens.lua", "libs/LibKa0s/VerdictSettings.lua" }
+
 test("locale: every enUS key is still read by the addon's files", function()
     local parts = {}
-    for _, rel in ipairs(addonFiles()) do
+    local files = addonFiles()
+    for _, rel in ipairs(LIBRARY_READERS) do files[#files + 1] = rel end
+    for _, rel in ipairs(files) do
         local f = assert(io.open(rel, "r"))
         parts[#parts + 1] = f:read("*a")
         f:close()

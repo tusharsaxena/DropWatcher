@@ -454,8 +454,6 @@ Kit.run{
         "test_compat_loot",
         "test_text_parse",
         "test_constants",
-        "test_class_data",
-        "test_evaluate",
         "test_offspec",
         "test_tier_token",
         "test_offspec_cells",

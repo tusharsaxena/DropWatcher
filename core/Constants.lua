@@ -442,14 +442,8 @@ C.CATEGORIES = {
 -- its own Watched item, sorted after every category, not as equipment (the pre-#13 fallback).
 C.CATEGORY_WATCHED = "watched"
 
--- The slots a tier token can make, in the order an omni token's slots are tried.
-C.TIER_SLOTS = { "INVTYPE_HEAD", "INVTYPE_SHOULDER", "INVTYPE_CHEST", "INVTYPE_HAND", "INVTYPE_LEGS" }
-
--- itemID -> { slot = "INVTYPE_HEAD" | ... | "any" }: an override for a token whose own text misreads;
--- the first rung of NS.TierTokens.SlotOf, ahead of the Use text and the name, and a token on its own
--- (TierTokens.Listed). Empty by default: since TT-1 a token's slot is read from its text, so no
--- table is kept up per season (docs/common-tasks.md, "Add a season's tier tokens").
-C.TIER_TOKENS = {}
+-- The tier slots and the token override table are the verdict engine's (LibKa0s-Verdict-1.0:
+-- NS.Verdict.C.TIER_SLOTS, NS.Verdict.C.TIER_TOKENS, read by its TierTokens).
 
 -- ---------------------------------------------------------------------------------------------
 -- Inventory slots and slot plans (design spec §5.2)

@@ -206,7 +206,8 @@ test("test mode data: without LibKa0s nobody is named: numbered placeholders, no
     local TD = NS.TestData
     for key, who in pairs(TD.MEMBERS) do
         assertEqual(who.name, "Member" .. key:sub(2), key)
-        assertTrue(NS.ClassData.CLASS_ID[who.classFile] ~= nil, key .. ": still a class")
+        -- The class lists are LibKa0s-Verdict-1.0's, absent here: the member keeps its class token.
+        assertTrue(type(who.classFile) == "string" and who.classFile:match("^%u+$") ~= nil, key .. ": still a class")
     end
     assertEqual(TD.ALT.name, "Member00")
 end)

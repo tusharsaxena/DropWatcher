@@ -55,8 +55,8 @@ end)
 
 test("tier token: the curated table beats the tooltip, and lists a Curio with no class line", function()
     local NS, m = T.enableAddon()
-    NS.Constants.TIER_TOKENS[701] = { slot = "INVTYPE_LEGS" }
-    NS.Constants.TIER_TOKENS[702] = { slot = "any" }
+    NS.Verdict.C.TIER_TOKENS[701] = { slot = "INVTYPE_LEGS" }
+    NS.Verdict.C.TIER_TOKENS[702] = { slot = "any" }
     m.addItem(link(701), token()); m.addItem(link(702), token())
     m.tooltips.hyperlink[link(701)] = tip("Mage", "Head")
     m.tooltips.hyperlink[link(702)] = tip(nil, "Head")
@@ -89,7 +89,7 @@ end)
 
 test("tier token: the tooltip is not read when the table answers", function()
     local NS = T.newAddon()
-    NS.Constants.TIER_TOKENS[705] = { slot = "INVTYPE_CHEST" }
+    NS.Verdict.C.TIER_TOKENS[705] = { slot = "INVTYPE_CHEST" }
     local asked = 0
     local slot, source = NS.TierTokens.SlotOf({ itemID = 705 }, function() asked = asked + 1 return "INVTYPE_HEAD" end)
     assertEqual(slot, "INVTYPE_CHEST"); assertEqual(source, "table"); assertEqual(asked, 0)
@@ -240,7 +240,7 @@ end)
 test("tier token: the rungs run in order: table, then use, then name", function()
     local NS = T.newAddon()
     local TT = NS.TierTokens
-    NS.Constants.TIER_TOKENS[720] = { slot = "INVTYPE_LEGS" }
+    NS.Verdict.C.TIER_TOKENS[720] = { slot = "INVTYPE_LEGS" }
     local asked = 0
     local function reader() asked = asked + 1 return "INVTYPE_CHEST" end
     local both = { name = "Gauntlets of the Foreseen Conqueror", useText = NULLCORE }
