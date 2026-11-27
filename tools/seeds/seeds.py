@@ -2,12 +2,13 @@
 """tools/seeds/seeds.py — re-validate Drop Watcher's class seed lists against a wago.tools build.
 
 WHAT THIS IS
-    core/ClassData.lua (Retail) and core/ClassDataForever.lua (WoW Forever) hand-curate one class
-    list per client (clients-§5): the class ids, the armor each class's loot comes in, the weapon
+    LibKa0s-Verdict-1.0's VerdictClassData.lua (vendored at libs/LibKa0s/; Drop Watcher's
+    core/ClassData.lua and core/ClassDataForever.lua until the Item Search split) hand-curates one
+    class list per client (clients-§5): the class ids, the armor each class's loot comes in, the weapon
     subclasses it can use, its specs (Retail) or talent trees (Forever), and on Forever the relic
     and the level-40 armor switch. core/Constants.lua mirrors the client's item class and subclass
     enums as fallback literals, and the recipe skill lines (with modules/CollectCells.lua's
-    profession names and core/ItemRead.lua's gear classes). None of it turns red when a patch
+    profession names and the library's VerdictFacts.lua gear classes). None of it turns red when a patch
     moves it. This tool re-checks every one of those rows against ONE pinned build of the client's
     own DB2 data on wago.tools (clients-§10: product `wow` for Retail, `wowf` for Forever, never
     one filtered from the other) and turns what it finds into CANDIDATES and FLAGS, each of which
@@ -105,18 +106,25 @@ COMMON_TABLES = (
     ("ItemClass", "item class ids and names, for the Constants fallback literals"),
     ("ItemSubClass", "item subclass ids and names, for the Constants fallback literals"),
 )
+# The class lists and the gear classes are LibKa0s-Verdict-1.0's since the Item Search split
+# (DropWatcher#19, task C1): both lists live in one library file, vendored here. They are checked
+# read-only from the vendored copy; `apply` never writes under libs/ (a ruling's edit is the
+# library's, made in LibKa0s and re-vendored).
+CLASS_DATA = "libs/LibKa0s/VerdictClassData.lua"
+VENDORED = "libs/"
+
 FLAVORS = {
-    "retail": {"product": "wow", "title": "Retail", "seed": "core/ClassData.lua", "prefix": "RETAIL",
+    "retail": {"product": "wow", "title": "Retail", "seed": CLASS_DATA, "prefix": "RETAIL",
                "tables": COMMON_TABLES + (
                    ("SpecializationSpells", "SpecID x SpellID: which spec has Titan's Grip"),)},
-    "forever": {"product": "wowf", "title": "WoW Forever", "seed": "core/ClassDataForever.lua",
+    "forever": {"product": "wowf", "title": "WoW Forever", "seed": CLASS_DATA,
                 "prefix": "FOREVER",
                 "tables": COMMON_TABLES + (
                     ("TalentTab", "the talent trees per class: ClassMask, OrderIndex, Name_lang"),)},
 }
 CONSTANTS = "core/Constants.lua"
 COLLECT_CELLS = "modules/CollectCells.lua"
-ITEM_READ = "core/ItemRead.lua"
+ITEM_READ = "libs/LibKa0s/VerdictFacts.lua"
 
 # The armor and weapon skill lines -> (the build's name, the C.ARMOR_SUBCLASS or C.WEAPON_SUBCLASS
 # key, the flavors that have the line). A line whose name moved is a SystemExit, not a flag: every
@@ -883,6 +891,10 @@ def apply_bundle(doc: dict, rulings: dict, repo: Path = REPO) -> list[str]:
     changes = plan_apply(doc, rulings)
     if not changes:
         return []
+    if spec["seed"].startswith(VENDORED):
+        raise SystemExit("%s is vendored (LibKa0s-Verdict-1.0): apply the ruled WEAPONS edit in LibKa0s's "
+                         "LibKa0s/VerdictClassData.lua and re-vendor; this tool never writes under libs/."
+                         % spec["seed"])
     raw = path.read_bytes().decode("utf-8")
     text, changed = edit_weapons(raw, spec["prefix"], changes)
     if text != raw:

@@ -31,6 +31,17 @@ local ISP      = Settings.ItemSearchPage   -- nil on Retail
 --- The pages after General, in list order: key, title, the Defaults tooltip, and the render's
 --- host tabs, afterGroup hooks, pairWith partners, `chrome` (drawn under the strip, before the
 --- tab's rows) and `beforeClear` (run before each render's ClearScroll).
+-- The Comparison section's spec (LibKa0s-Verdict-1.0's Settings): this addon's paths, words, class
+-- list and reads, its schema seam for every write and its printer for the import's line.
+local VS = NS.Verdict.Settings
+-- Its `client` is the class list in force (NS.ClassData.ClientKey), read at each draw.
+local COMPARISON = setmetatable({
+    root = "comparison", L = L, reads = NS.Compat,
+    get = function(path) return NS.Setting(path) end,
+    set = function(path, value) return NS.SchemaRuntime.Set(path, value) end,
+    print = function(line) NS.Print(line) end,
+}, { __index = function(_, k) if k == "client" then return NS.ClassData.ClientKey() end end })
+
 local PAGES = {
     { key = "feed", title = L["Drops"],
       tip = L["Reset the Drops page's settings (situations, quality, item kinds and item level, how long drops are kept, and rolls) to their defaults. The item lists are kept."],
@@ -48,10 +59,9 @@ local PAGES = {
       beforeClear = function(ctx) PE.ParkSituationTable(ctx) end },
     { key = "comparison", title = L["Comparison"],
       tip = L["Reset the Comparison page's settings (scoring, every spec's weights and unwanted types) to their defaults."],
-      tabs = {
-          { key = L["Weights"], render = function(ctx) PE.WeightsTab(ctx) end },
-          { key = L["Unwanted types"], render = function(ctx) PE.PrefsTab(ctx) end },
-      } },
+      -- The Weights and Unwanted types editors are the verdict engine's (LibKa0s-Verdict-1.0's
+      -- Settings.Tabs), drawn on this addon's Options instance and written through the schema seam.
+      tabs = VS and VS.Tabs(Helpers, COMPARISON) or nil },
     { key = "messages", title = L["Messages"],
       tip = L["Reset the Messages page's settings (sending, auto-ask and templates) to their defaults."],
       tabs = { { key = L["Templates"], render = function(ctx, rows) PE.TemplatesTab(ctx, rows) end } } },

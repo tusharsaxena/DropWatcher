@@ -154,16 +154,10 @@ NS.C = {
             panel     = { enabled = true, side = "right", linger = 10, foldInRaid = true },
         },
 
-        -- How a drop is judged (design spec §5). `weights` and `undesired` are keyed by specID:
-        -- weights[specID] = { STAT_KEY = weight }, undesired[specID] = { ["<classID>:<subClassID>"] = true }.
-        comparison = {
-            scorer          = "auto",   -- auto | pawn | weights | none
-            weights         = {},
-            sidegradeBand   = 0,        -- item levels either side of equal that read as a sidegrade
-            compareOwned    = false,    -- compare against the best of worn and owned
-            heirloomProtect = true,     -- a slot holding an heirloom is not called an upgrade
-            undesired       = {},
-        },
+        -- How a drop is judged (design spec §5): the verdict engine's six (LibKa0s-Verdict-1.0's
+        -- Settings.Defaults(): scorer auto, sidegradeBand 0, compareOwned false, heirloomProtect
+        -- true, weights and undesired empty, keyed by spec). Empty when the library is absent.
+        comparison = NS.Verdict.Settings and NS.Verdict.Settings.Defaults() or {},
 
         -- The trade estimate (design spec §7). `rules` is the rule each situation takes (§7.2,
         -- TRADE_RULES above), the owner's override once changed (§7.3).

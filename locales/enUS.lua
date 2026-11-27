@@ -185,7 +185,8 @@ L["Test mode found no items to show."] = "Test mode found no items to show."
 L["You"] = "You"
 L["the chat throttle"] = "the chat throttle"
 
--- The Pawn scale import's chat lines (settings/Editors.lua, design spec §5.4)
+-- The Pawn scale import's chat lines (LibKa0s-Verdict-1.0's Comparison section, read through NS.L;
+-- design spec §5.4)
 L["Imported %s into %s: %d weights."] = "Imported %s into %s: %d weights."
 L["Not scored: %s."] = "Not scored: %s."
 L["Paste a Pawn scale string first."] = "Paste a Pawn scale string first."
@@ -193,8 +194,8 @@ L["Pick a specialization first."] = "Pick a specialization first."
 L["Talent tree %d"] = "Talent tree %d"
 L["That is not a Pawn scale string: it reads ( Pawn: v1: \"name\": Key=value, ... )."] =
     "That is not a Pawn scale string: it reads ( Pawn: v1: \"name\": Key=value, ... )."
-L["That scale has no stat Drop Watcher scores, so nothing was imported."] =
-    "That scale has no stat Drop Watcher scores, so nothing was imported."
+L["That scale has no stat the verdict scores, so nothing was imported."] =
+    "That scale has no stat the verdict scores, so nothing was imported."
 
 -- Settings panel, window and chat acknowledgments
 L["Debug console"] = "Debug console"

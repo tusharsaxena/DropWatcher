@@ -4,7 +4,7 @@ local _, NS = ...
 -- One row per setting: its stored path, type, label, tooltip, the page and the tab it draws on
 -- (design spec §12.2; `group` is the tab, options-ui-§13), its widget hints and the check the write
 -- seam runs before storing it. Every `default` references defaults/Profile.lua (savedvariables-§2),
--- never a literal here. The composed Master controls rows are settings/Panel.lua's; these are
+-- never a literal here (the Comparison rows' are the library's, as defaults/Profile.lua's are). The composed Master controls rows are settings/Panel.lua's; these are
 -- appended after them, so the General page's `Master controls` tab stays first. Within a page, a
 -- tab's place in the strip is its first row's place here, so the makers below run in page order
 -- (feedback-24 regrouped the pages; item 020 folded Situations into Drops: Drops, Comparison,
@@ -13,9 +13,9 @@ local _, NS = ...
 -- needs the Options instance, made after this file), so it follows this file's Zoom row on that
 -- tab; it takes this file's checks from Settings.Checks.
 --
--- Two `map` rows, `comparison.weights` and `comparison.undesired`, are whole-value tables keyed by
--- specID, or on WoW Forever by "<classFile>:<tree>" (architecture-§5's value route): written
--- whole through the seam, drawn by their own editors (`skipRender`). Drops › Situations'
+-- The Comparison page's six rows are the verdict engine's (LibKa0s-Verdict-1.0's Settings.Rows):
+-- their defaults, checks and words are the library's, two of them whole-value `map` rows its editors
+-- draw (`skipRender`). Drops › Situations'
 -- per-situation rows (`situations.<key>.track`, `.autoOpen`, `.quality` and `trade.rules.<key>`)
 -- are `skipRender` too: its table draws them, one line per situation. The window's geometry, its minimized flag and the toast's position have no
 -- row: they are named non-setting state (docs/schema.md -> State written outside the seam). Alerts › Upgrade glow's
@@ -66,28 +66,8 @@ local function isColor(v)
     return type(v) == "table" and unit(v.r) and unit(v.g) and unit(v.b) and (v.a == nil or unit(v.a))
 end
 
-local function isSpecID(k) return type(k) == "number" and k > 0 and k == math.floor(k) end
-
--- A per-spec map's key: a specID (Retail), or WoW Forever's "<classFile>:<tree>" (Forever port
--- design §4.3, NS.ClassData.SpecKey).
-local function isSpecKey(k)
-    return isSpecID(k) or (type(k) == "string" and k:match("^%u+:%d+$") ~= nil)
-end
-
 -- The checks a composed block's rows take too (settings/ComposedRows.lua): the composer emits none.
 Settings.Checks = { isBool = isBool, inRange = inRange, nonEmptyString = nonEmptyString, isColor = isColor }
-
--- weights: { [specKey] = { [STAT_KEY] = number } }.
-local function validWeights(v)
-    if type(v) ~= "table" then return false end
-    for spec, w in pairs(v) do
-        if not isSpecKey(spec) or type(w) ~= "table" then return false end
-        for stat, n in pairs(w) do
-            if type(stat) ~= "string" or type(n) ~= "number" or n ~= n then return false end
-        end
-    end
-    return true
-end
 
 -- An item list (feed.whitelist, feed.blacklist): { [itemID] = true }. The shape alone: the two lists
 -- exclude each other in their one writer (modules/ItemLists.lua) and at read time, never here, so a
@@ -96,18 +76,6 @@ local function validItemSet(v)
     if type(v) ~= "table" then return false end
     for id, on in pairs(v) do
         if type(id) ~= "number" or id < 1 or id ~= math.floor(id) or on ~= true then return false end
-    end
-    return true
-end
-
--- undesired: { [specID] = { ["<classID>:<subClassID>"] = true } }, Evaluate's prefs key.
-local function validUndesired(v)
-    if type(v) ~= "table" then return false end
-    for spec, set in pairs(v) do
-        if not isSpecKey(spec) or type(set) ~= "table" then return false end
-        for key, on in pairs(set) do
-            if type(key) ~= "string" or not key:match("^%d+:%d+$") or on ~= true then return false end
-        end
     end
     return true
 end
@@ -192,7 +160,6 @@ local CATEGORY_ROWS = {
 local CONTENTS = choices{ "instance", L["This instance"], "session", L["This session"] }
 local SORTS    = choices{ "newest", L["Newest"], "oldest", L["Oldest"], "ilvl", L["Item level"], "gain", L["Gain"] }
 local ILVL_MODES = choices{ "off", L["Off"], "absolute", L["Absolute"], "relative", L["Relative to my gear"] }
-local SCORERS  = choices{ "auto", L["Automatic"], "pawn", L["Pawn"], "weights", L["My weights"], "none", L["None"] }
 local CHANNELS = choices{
     "auto", L["Automatic"], "INSTANCE_CHAT", L["Instance"], "RAID", L["Raid"], "PARTY", L["Party"],
 }
@@ -436,22 +403,20 @@ local function feed()
 end
 
 -- ── Comparison › Scoring, Weights and Unwanted types (design spec §5) ───────────────────────
+--
+-- The verdict engine's six rows (LibKa0s-Verdict-1.0's Settings.Rows, owner ruling R10 of the Item
+-- Search split): Scoring's four, then the two `map` rows its editors draw (settings/Pages.lua's
+-- Comparison tabs), at `comparison.*`, in this addon's words. None when the library is absent.
 
 local function comparison()
-    local Cm = P.comparison
-    local scoring = { page = "comparison", group = L["Scoring"] }
-    pick("comparison.scorer", Cm.scorer, SCORERS, L["Score with"],
-        L["Automatic uses Pawn once it has loaded and initialized, else your weights, else item level alone."], scoring)
-    slider("comparison.sidegradeBand", Cm.sidegradeBand, 0, 20, 1, L["Sidegrade band"],
-        L["Item levels either side of equal that still read as a sidegrade."], scoring)
-    bool("comparison.compareOwned", Cm.compareOwned, L["Compare against items in my bags"],
-        L["Judge a drop against the best of what you wear and what you carry."], scoring)
-    bool("comparison.heirloomProtect", Cm.heirloomProtect, L["Protect heirlooms"],
-        L["A drop for a slot that holds an heirloom is not called an upgrade."], scoring)
-    map("comparison.weights", Cm.weights, validWeights, L["Stat weights"],
-        L["Your stat weights for each specialization."], { page = "comparison", group = L["Weights"] })
-    map("comparison.undesired", Cm.undesired, validUndesired, L["Unwanted item types"],
-        L["The item types each specialization never wants."], { page = "comparison", group = L["Unwanted types"] })
+    local VS = NS.Verdict.Settings
+    if not VS then return end
+    for _, row in ipairs(VS.Rows({ root = "comparison", L = L, page = "comparison" })) do
+        -- The default is defaults/Profile.lua's (the same Settings.Defaults() values, the stored
+        -- table itself), and the schema keys a row by its path.
+        row.default, row.key = P.comparison[row.key], nil
+        add(row)
+    end
 end
 
 -- ── Messages › Sending, Auto-ask and Templates (design spec §9) ─────────────────────────────
