@@ -472,6 +472,7 @@ Kit.run{
         "test_collectibles",
         "test_item_read",
         "test_gear",
+        "test_verdict_golden",
         "test_loot_parser",
         "test_inspect",
         "test_feed",

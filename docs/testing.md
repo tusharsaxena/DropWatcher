@@ -827,6 +827,8 @@ providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the lo
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
 
+The golden verdict suite, `test_verdict_golden` (Item Search split plan, task A1), pins today's "my verdict on this item" engine over a plain-data table, `tests/fixtures/verdict_golden.lua`: its kernel half drives `NS.Evaluate.Evaluate` and `NS.Collectibles.Verdict` on both kit profiles with the case's class list installed, and its read half seeds the mock and judges a link through `NS.ItemFacts.Get` and `NS.LootFeed.JudgeMe`, each case on its own client's profile (a declared skip on the other). LibKa0s-Verdict-1.0's own golden suite ports the same table unchanged, so the move into the library keeps every verdict. An expected value there is what the engine answers, never what it ought to: a surprise is recorded, not fixed.
+
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 

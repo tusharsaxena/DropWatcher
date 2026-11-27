@@ -1285,6 +1285,14 @@ Total.
 - verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 - verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
 
+### test_item_search_round7.lua (5)
+
+- item search window: a corner drag moves the columns and the panel, painting nothing until the mouse comes up (R7-DW-01) (skipped: WoW Forever's alone (clients-§4): Item Search is)
+- verdict panel: its first header reads Why this verdict (R7-DW-03) (skipped: WoW Forever's alone (clients-§4): Item Search is)
+- verdict panel: every line but the blank one explains itself on hover (R7-DW-02) (skipped: WoW Forever's alone (clients-§4): Item Search is)
+- verdict tips: every part and How sure key the scorer emits has a tooltip, its numbers read live (R7-DW-02) (skipped: WoW Forever's alone (clients-§4): Item Search is)
+- verdict tips: every breakdown line the scorer builds carries a key with a tooltip (R7-DW-02) (skipped: WoW Forever's alone (clients-§4): Item Search is)
+
 ### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
@@ -2161,6 +2169,73 @@ Total.
 - gear: the first lazy read announces nothing
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
+
+### test_verdict_golden.lua (64)
+
+- golden kernel: upgrade: a plate helm 10 levels over the worn one
+- golden kernel: downgrade: a plate helm 10 levels under
+- golden kernel: sidegrade: equal item level
+- golden kernel: sidegrade: at the band's edge (+10, band 10)
+- golden kernel: upgrade: one past the band's edge (+11, band 10)
+- golden kernel: downgrade: one past the band's lower edge (-11, band 10)
+- golden kernel: upgrade: an empty slot
+- golden kernel: upgrade: a ring against the lower of two worn rings
+- golden kernel: cantUse: plate for a mage
+- golden kernel: cantUse: an intellect plate helm for Arms (primary stat)
+- golden kernel: cantUse: the item's class list leaves the warrior out
+- golden kernel: doesntWant: plate is on Arms' undesired list
+- golden kernel: unknown: the slot was never read
+- golden kernel: unknown: a tabard is not gear
+- golden kernel: unknown: no item level
+- golden kernel: unknown: facts that are not a table
+- golden kernel: ilvlFirst: item level and score agree
+- golden kernel: ilvlFirst: the score disagrees, a sidegrade
+- golden kernel: ilvlFirst: Pawn pending, item level alone with scorePending
+- golden kernel: ilvlFirst: the weights scorer values strength
+- golden kernel: scoreFirst: the score decides over a lower item level
+- golden kernel: scoreFirst: a tie within 1% falls to item level
+- golden kernel: scoreFirst: no score, item level with noScore
+- golden kernel: scoreFirst: Pawn pending, scorePending and noScore
+- golden kernel: scoreFirst: the weights scorer by talent tree
+- golden kernel: forever: an intellect plate helm passes the soft stat gate
+- golden kernel: forever: plate below level 40 is cantUse (armorLevel)
+- golden kernel: compareOwned on: a better helm in the bags is the baseline
+- golden kernel: compareOwned off: the bags are not read
+- golden kernel: heirloomProtect on: an upgrade over an heirloom reads as a sidegrade
+- golden kernel: heirloomProtect off: the upgrade stands
+- golden kernel: tier token: an omni token folds to its best tier slot
+- golden kernel: tier token: another class's token is cantUse
+- golden kernel: group: a looter's upgrade over their inspected chest
+- golden kernel: group: the item's spec list leaves the looter's spec out
+- golden kernel: off-spec: a shield Fury cannot use is an upgrade for Protection
+- golden kernel: collect: a mount not yet learned is newCollect
+- golden kernel: collect: a known mount is collected
+- golden kernel: collect: a pet with no answer yet is collectUnknown
+- golden kernel: collect: a pet held 1 of 3 is collected, petPartial
+- golden kernel: collect: a recipe of a profession you lack is cantUse
+- golden kernel: collect: an appearance not learned is newCollect
+- golden kernel: collect: a whitelisted known mount adds whitelisted
+- golden kernel: collect: a lockbox answers its kind word
+- golden kernel: collect: a whitelisted lockbox adds whitelisted
+- golden kernel: collect: an item of no kind is item, category other
+- golden kernel: collect: gear has no collection verdict
+- golden kernel: collect: a forced item whose class is not read is unknown
+- golden me: retail: a leather helm over the worn one is an upgrade
+- golden me: retail: a plate helm is cantUse for a rogue
+- golden me: retail: the weights scorer disagrees, a sidegrade
+- golden me: retail: compareOwned reads the better helm in the bags
+- golden me: retail: leather on the spec's undesired list is doesntWant
+- golden me: retail: an upgrade over a worn heirloom is a sidegrade (the default protects)
+- golden me: retail: Pawn ready but the drop unread, scorePending
+- golden me: retail: Pawn values the drop and the helm on the drop's best scale
+- golden me: retail: a mount not yet learned is newCollect
+- golden me: retail: a box that reads Locked is a lockbox
+- golden me: retail: off-spec, a shield Fury cannot use is an upgrade for Protection
+- golden me: forever: a plate helm over the worn one, no score: item level, noScore (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: the weights scorer decides over a lower item level (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: Pawn ready but the drop unread, scorePending (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: plate at level 30 is cantUse (armorLevel) (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: a box that reads Locked is a lockbox (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
 
 ### test_loot_parser.lua (29)
 
@@ -3572,6 +3647,7 @@ Total.
 | test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
 | test_gear.lua | 29 |
+| test_verdict_golden.lua | 59 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
 | test_feed.lua | 56 |
@@ -3629,5 +3705,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 158 |
-| **Total** | **2872** |
+| Skipped | 168 |
+| **Total** | **2931** |
