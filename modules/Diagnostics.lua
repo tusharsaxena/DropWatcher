@@ -405,7 +405,7 @@ end
 
 -- Your Pawn scale, read from the stored gear snapshot's class, spec and talent tree (never a fresh
 -- read): the one you show in Pawn, else your spec's (on WoW Forever your tree's) starter scale, as
--- the scorer falls back (modules/Scoring.lua).
+-- the scorer falls back (libs/LibKa0s/VerdictScore.lua).
 local function pawnScale()
     local g = NS.State.gear
     local classID = g and NS.ClassData.CLASS_ID[g.classFile]
@@ -415,7 +415,7 @@ local function pawnScale()
         or NS.Compat.PawnScaleForSpec(classID, g.specID, g.tree, role)
 end
 
--- The adapter actually in use (modules/Scoring.lua), which can differ from the one configured:
+-- The adapter actually in use (libs/LibKa0s/VerdictScore.lua), which can differ from the one configured:
 -- `pawn` without Pawn initialized is none, `auto` falls back to your weights, then to none.
 local function scorerInUse()
     local S = NS.Scoring

@@ -351,7 +351,7 @@ test("compat collect: no other shipped file names a collection API in code", fun
             local src = fh:read("*a"); fh:close()
             local code = src:gsub("%-%-[^\r\n]*", ""):gsub('"[^"\r\n]*"', '""')
             for _, api in ipairs(COLLECT_APIS) do
-                -- red under: modules/Collectibles.lua calling C_ToyBox.GetToyInfo itself
+                -- red under: libs/LibKa0s/VerdictCollect.lua calling C_ToyBox.GetToyInfo itself
                 assertNil(code:find("[^%w_.]" .. api), rel .. " names " .. api .. " outside core/CompatCollect.lua")
             end
         end

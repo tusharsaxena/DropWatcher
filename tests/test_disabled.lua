@@ -22,7 +22,7 @@ local PINNED = {
 }
 
 -- Per client (clients-§4, §6): a row for the other client is not registered. Retail's spec change
--- is WoW Forever's talent change (modules/Gear.lua, Forever port design §4.2); the keystone events
+-- is WoW Forever's talent change (libs/LibKa0s/VerdictGear.lua, Forever port design §4.2); the keystone events
 -- are Retail's alone (Forever port design §4.4), as are the journal pool's loot event and the
 -- transmog collection's, and a level gained rebuilds Forever's gear (its armor type moves at 40).
 -- Item Search's profession-window learner, its merchant prices and its window's verdict panel are

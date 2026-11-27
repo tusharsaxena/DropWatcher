@@ -2,9 +2,9 @@ local _, NS = ...
 -- core/CompatCollect.lua — the collection reads (issue #13, categories design spec §2): mounts,
 -- battle pets, toys, the cosmetic flag, a recipe's "Already known" line and the player's
 -- professions, published on NS.Compat like the rest of the compat family, split out of
--- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller of
+-- core/Compat.lua to keep it under the 1000-line band. libs/LibKa0s/VerdictCollect.lua is the one caller of
 -- those; the tier-token reads (the slot a token's tooltip names, an item's use text, a class's name) are
--- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
+-- libs/LibKa0s/VerdictFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
 -- the link of a curated sample's id is modules/SimPool.lua's (spec §8, DW-CAT6).
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
@@ -256,7 +256,7 @@ end
 --- equals ITEM_OPENABLE ("<Right Click to Open>"), false once the tooltip was read with neither; nil
 --- for no API, neither GlobalString (one alone is enough to read its line), a secret link, a missing
 --- or malformed tooltip or a secret line. It reads lines only: the item's class is the caller's.
---- modules/Collectibles.lua asks it of Miscellaneous Junk alone, the class a lockbox has, after the
+--- libs/LibKa0s/VerdictCollect.lua asks it of Miscellaneous Junk alone, the class a lockbox has, after the
 --- toy probe (a toy is never asked), and takes either answer as a lockbox (its Kind); a bag, quiver
 --- or ammo pouch is a container by its class there, and never asks it (RX-30).
 --- @param link string
@@ -307,7 +307,7 @@ end
 --- or none readable. The use spell's description first; when that cannot be read, the tooltip's
 --- use line. With no text, the second return is the use spell's id when its description came back
 --- empty: a spell the client has not loaded yet (Compat.RequestSpellLoad, then read again; the
---- caller is modules/ItemFacts.lua).
+--- caller is libs/LibKa0s/VerdictFacts.lua).
 --- @param link string
 --- @return string|nil text, number|nil loadingSpellID
 function Compat.ItemUseText(link)

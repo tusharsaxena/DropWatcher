@@ -1,6 +1,6 @@
 -- tests/test_offspec_offer.lua — Offer for off-spec (feedback-19 spec §3, DW-O3): a member whose
 -- current spec cannot use your drop but another spec of their class can (eval.offSpec,
--- modules/OffSpec.lua) is an Offer candidate of its own, ranked after every main-spec upgrade and
+-- libs/LibKa0s/VerdictEvaluate.lua) is an Offer candidate of its own, ranked after every main-spec upgrade and
 -- equal. Case by case: MineCells' two statuses, their rank and explanations, offerable, the gain
 -- sort within a tier and the baseline from the off-spec part; the Their eq cell in the offspec cyan
 -- with the spec's name (`311 ▲14 Holy`, NS.SideCells.Candidate); Upgrade for N and the keep-hidden

@@ -160,7 +160,7 @@ end
 -- the realm normalized, and the player's own (the mock's Testrealm) when the row names none.
 local FOREVER = (os.getenv("KA0S_KIT_CLIENT") or "retail") == "forever"
 
--- Pins Retail's class list (core/ClassData.lua's CD.LISTS.retail) as NS.ClassData's active one on
+-- Pins Retail's class list (libs/LibKa0s/VerdictClassData.lua's CD.LISTS.retail) as NS.ClassData's active one on
 -- `NS`, on either kit profile: a case written against Retail's spec model (its specIDs, off-specs,
 -- Titan's Grip, Pawn's spec index) drives the same pure code under the forever profile, where the
 -- client installed Forever's list. The Forever list's own cases stand beside them (clients-§6).
@@ -455,6 +455,7 @@ Kit.run{
         "test_text_parse",
         "test_constants",
         "test_offspec",
+        "test_verdict_setup",
         "test_tier_token",
         "test_offspec_cells",
         "test_offspec_ask",

@@ -27,7 +27,7 @@ local BUCKETS = {
     { key = "evaluate", within = "feed.add" },      -- modules/LootFeed.lua evaluate: one verdict, one candidate
     { key = "quality.gate", within = "feed.add" },  -- modules/LootFeed.lua qualityGate: one quality decision
     { key = "tradeTimer.scan" },  -- modules/TradeTimer.lua Scan: one read of your own drops' bag items
-    { key = "gear.rebuild" },     -- modules/Gear.lua Refresh: one read of your worn and bag items
+    { key = "gear.rebuild" },     -- libs/LibKa0s/VerdictGear.lua RefreshGear (core/VerdictSetup.lua host.perf): one read of your worn and bag items
     { key = "window.refresh" },   -- modules/Window.lua Refresh: one window repaint pass
     -- The Insights tab's pass runs inside a window repaint (its refresh is the active tab's).
     { key = "insights.compute", within = "window.refresh" },  -- modules/WindowInsights.lua: rows to stats

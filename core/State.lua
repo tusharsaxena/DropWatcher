@@ -73,13 +73,11 @@ State.restrictionSignature = nil
 -- until the first read and again while stood down.
 State.roster = nil
 
--- The item facts cache (modules/ItemFacts.lua, design spec §4): { cache = { [link] = facts }, count,
--- loads = { [link] = job } }, created on first use and dropped while stood down.
-State.itemFacts = nil
-
--- The player's gear snapshot (modules/Gear.lua, design spec §4): { equipped, owned, classFile,
--- specID, dualWield, titanGrip, loading, signature }, nil until the first read and again while
--- stood down.
+-- The player's gear snapshot as this addon last saw it (design spec §4; the verdict engine's own,
+-- libs/LibKa0s/VerdictGear.lua, mirrored by core/VerdictViews.lua's NS.Gear): { equipped, owned,
+-- classFile, specID, dualWield, titanGrip, loading, signature }, nil until something asks for your
+-- gear and again while stood down. The diagnostics read it without a read. The item facts cache is
+-- the engine instance's own.
 State.gear = nil
 
 -- The loot parser's counters since login (modules/LootParser.lua, design spec §13): { hits, ignored,

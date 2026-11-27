@@ -147,7 +147,7 @@ P.COLLECTIBLE_SAMPLES = { tierToken = {}, mount = {}, pet = {}, toy = {}, recipe
 -- Plain gear, known from the cheap facts P.Facts fills (class, subclass, equip location) and the
 -- client's cosmetic flag: an armor or weapon item with a slot the comparisons know, not cosmetic
 -- and not a listed tier token. NS.Collectibles.CategoryOf answers `equipment` for every such item
--- (a token the class line names never has such a slot, modules/ItemFacts.lua's readClasses), so
+-- (a token the class line names never has such a slot, libs/LibKa0s/VerdictFacts.lua's readClasses), so
 -- the full facts read is kept for the few that are not, and a big pool never floods the cache.
 local function plainGear(e)
     P.Facts(e)

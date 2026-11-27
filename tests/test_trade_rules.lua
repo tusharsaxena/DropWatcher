@@ -29,7 +29,7 @@ local function drop(over)
     return f
 end
 
--- The looter's evaluation (modules/Evaluate.lua's output) for a drop `delta` item levels over
+-- The looter's evaluation (libs/LibKa0s/VerdictEvaluate.lua's output) for a drop `delta` item levels over
 -- their baseline; the verdict follows the sign unless given.
 local function looter(delta, verdict)
     if not verdict then

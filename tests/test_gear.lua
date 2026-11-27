@@ -398,7 +398,7 @@ test("gear: the candidate brings its off-spec gear, and the kernel judges Holy a
         carry(m, 0, 1, 3010, mace(600))
     end)
     local c = G.Candidate()
-    -- off-spec gear is Retail's alone (modules/OffSpec.lua): a Forever candidate carries none
+    -- off-spec gear is Retail's alone (libs/LibKa0s/VerdictEvaluate.lua): a Forever candidate carries none
     if T.forever then assertNil(c.offSpecGear) else assertEqual(type(c.offSpecGear), "function") end
     assertTrue(c.gear == G.Snapshot().equipped, "gear and owned stay as they were")
     local drop = NS.ItemFacts.Get(m.addItem(link(3020), def("INVTYPE_WEAPON", 650, 2, 0, { stats = { [INT] = 100 } })))

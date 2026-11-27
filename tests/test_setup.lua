@@ -120,7 +120,7 @@ test("bus: a tracked target's registrations come down with the stand-down and ba
     -- red under: drop `NS.Bus:StandDown()` from NS.StandDown
     assertEqual(heard, 1, "nothing heard while stood down")
     NS.SchemaRuntime.Set("enabled", true)
-    -- The gear snapshot's own stand-up rebuild may announce first (modules/Gear.lua): count from here.
+    -- The gear snapshot's own stand-up rebuild may announce first (libs/LibKa0s/VerdictGear.lua): count from here.
     local before = heard
     NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
     assertEqual(heard, before + 1, "replayed on the stand-up")

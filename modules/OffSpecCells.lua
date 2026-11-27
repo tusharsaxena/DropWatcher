@@ -1,6 +1,6 @@
 local _, NS = ...
 -- modules/OffSpecCells.lua — how off-spec looks (feedback-19 spec §1): a drop the current spec
--- cannot use (`cantUse`) that another spec of the class can (eval.offSpec, modules/OffSpec.lua)
+-- cannot use (`cantUse`) that another spec of the class can (eval.offSpec, libs/LibKa0s/VerdictEvaluate.lua)
 -- shows as that spec's verdict, in the `offspec` cyan (C.TONE.offspec), followed by the spec's name:
 --
 --   Me cell  291 ▲20 Holy        compact  You 291 ▲20 Holy        detail chip  OFF-SPEC UPGRADE

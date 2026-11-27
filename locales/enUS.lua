@@ -650,7 +650,7 @@ L["Any class"] = "Any class"
 L["Your class"] = "Your class"
 L["Makes: %s"] = "Makes: %s"
 L["any slot"] = "any slot"
--- A tier token's own text, matched against the client's (TT-1; modules/TierTokens.lua and
+-- A tier token's own text, matched against the client's (TT-1; libs/LibKa0s/VerdictTierTokens.lua and
 -- core/CompatCollect.lua, parsed by core/TextParse.lua). INPUT, not display: a documented
 -- localization-§4 deviation (docs/ARCHITECTURE.md, Documented deviations). `Use:` stands in for
 -- ITEM_SPELL_TRIGGER_ONUSE when the client's cannot be read. A translation keeps each value's shape:

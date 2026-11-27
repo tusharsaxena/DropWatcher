@@ -511,7 +511,7 @@ end
 -- ── Item readers (the item facts, design spec §4 and §5.1) ──────────────────────────────────
 -- Each takes a link, calls C_Item's spelling, copies plain fields only and answers nil (or false)
 -- for an uncached item or a missing call. The bare globals are dead rungs (every client at this
--- interface has C_Item), so they are deleted, not shimmed. Caching is modules/ItemFacts.lua's.
+-- interface has C_Item), so they are deleted, not shimmed. Caching is libs/LibKa0s/VerdictFacts.lua's.
 
 -- C_Item[name], or nil.
 local function itemApi(name)

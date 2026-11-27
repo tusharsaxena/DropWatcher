@@ -1,5 +1,5 @@
 -- tests/test_offspec_cells.lua — how off-spec looks (feedback-19 spec §1, DW-O1): a drop your
--- current spec cannot use but another spec of your class can (eval.offSpec, modules/OffSpec.lua)
+-- current spec cannot use but another spec of your class can (eval.offSpec, libs/LibKa0s/VerdictEvaluate.lua)
 -- shows as that spec's verdict, in the `offspec` cyan, with the spec's name. Case by case: the tone,
 -- the verdict cell (NS.OffSpecCells through WindowCells.Verdict), the Me cell's gear half from the
 -- off-spec baseline (a bag item's icon reads its link), the compact line, the tooltip marks' tone

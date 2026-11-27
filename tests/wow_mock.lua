@@ -305,7 +305,7 @@ local CLASS_NAMES = {
     MONK = "Monk", DRUID = "Druid", DEMONHUNTER = "Demon Hunter", EVOKER = "Evoker",
 }
 
--- The item cache behind C_Item's readers and the transmog collection (modules/ItemFacts.lua).
+-- The item cache behind C_Item's readers and the transmog collection (libs/LibKa0s/VerdictFacts.lua).
 -- Each reader answers only for a cached item (loadsNeeded 0 or nil); GetItemInfo's seventeen
 -- returns are the client's order.
 local function cachedItem(M, link)
@@ -446,7 +446,7 @@ local function installCompatSurface(M)
     end
     M.C_Container = {}
 
-    -- What the player wears and carries (modules/Gear.lua), and the spec the client answers.
+    -- What the player wears and carries (libs/LibKa0s/VerdictGear.lua), and the spec the client answers.
     M.inventory, M.bags = { player = {} }, {}
     M.GetInventoryItemLink = function(unit, slot)
         local worn = M.inventory[unit]

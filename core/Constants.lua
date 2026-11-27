@@ -3,7 +3,7 @@ local _, NS = ...
 --
 -- Data only: the item, quality, bind, slot, difficulty and situation ids, the slot plans, the trade
 -- rules and the message templates (design spec §4, §5.2, §6.1, §6.2, §7.2, §9.1). The class and
--- spec tables are core/ClassData.lua.
+-- spec tables are libs/LibKa0s/VerdictClassData.lua.
 
 NS.Constants = NS.Constants or {}
 local C = NS.Constants
@@ -353,7 +353,7 @@ C.RECIPE_SKILL_LINE = {
 }
 
 -- Enum.ItemArmorSubclass. GENERIC is jewelry, trinkets and held off hands; COSMETIC is never gear.
--- LIBRAM, IDOL and TOTEM are WoW Forever's relics (the ranged slot, core/ClassDataForever.lua).
+-- LIBRAM, IDOL and TOTEM are WoW Forever's relics (the ranged slot, libs/LibKa0s/VerdictClassData.lua).
 C.ARMOR_SUBCLASS = fromEnum(Enum.ItemArmorSubclass, {
     GENERIC  = { "Generic", 0 },
     CLOTH    = { "Cloth", 1 },
@@ -383,7 +383,7 @@ C.WEAPON_SUBCLASS = fromEnum(Enum.ItemWeaponSubclass, {
     FIST      = { "Unarmed", 13 },
     GENERIC   = { "Generic", 14 },
     DAGGER    = { "Dagger", 15 },
-    THROWN    = { "Thrown", 16 },   -- WoW Forever's ranged slot (core/ClassDataForever.lua)
+    THROWN    = { "Thrown", 16 },   -- WoW Forever's ranged slot (libs/LibKa0s/VerdictClassData.lua)
     CROSSBOW  = { "Crossbow", 18 },
     WAND      = { "Wand", 19 },
 })
@@ -456,7 +456,7 @@ local FOREVER = NS.Compat.ClientKey() == "forever"
 -- (clients-§4) and gated where it registers by C.FEATURE, its ForClient answer read once: the
 -- Encounter Journal source of the simulator's pool (modules/SimPool.lua), transmog (the look read,
 -- its event, chips, ask and rows), upgrade tracks (the Track row, the track in the item level chip
--- and tooltip, the {track} token), off-spec (modules/OffSpec.lua, its glow, ask and words) and the
+-- and tooltip, the {track} token), off-spec (libs/LibKa0s/VerdictEvaluate.lua, its glow, ask and words) and the
 -- simulator's bonus rolls (modules/SimEvents.lua), your own BoP drop's trade countdown and its
 -- warning (modules/TradeTimer.lua, the `trade.warnAt` row) and the per-situation loot rule rows
 -- (`trade.rules.<situation>`, Drops › Situations' Loot rule column): WoW Forever has one rule,

@@ -28,7 +28,7 @@ local _, NS = ...
 -- mount, pet, toy, recipe, cosmetic, lockbox, container, reagent; `other` for an item of no kind
 -- rolled on, RX-04, RX-15, DW-RG1),
 -- `tokenSlot` a tier token's made slot and `tokenUsers` who may
--- use a token naming no classes (`every`, a Curio; `yours`, a Use text alone; modules/ItemFacts.lua),
+-- use a token naming no classes (`every`, a Curio; `yours`, a Use text alone; libs/LibKa0s/VerdictFacts.lua),
 -- since TT-1 (an older token entry has none, and its Type reads a dash); an entry kept before
 -- they existed has neither and reads as equipment (Insights: a tier token for the slot
 -- INVTYPE_NON_EQUIP_IGNORE). An Always watch item of no kind (a reagent, a quest item) is kept as

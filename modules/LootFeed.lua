@@ -279,7 +279,7 @@ local function myCandidate(cfg)
     local key = NS.ClassData.SpecKey(cand.classFile, cand.specID, cand.tree) or cand.specID
     local undesired = cfg.undesired and key and cfg.undesired[key]
     if type(undesired) == "table" then cand.prefs = { undesired = undesired } end
-    cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (modules/OffSpec.lua)
+    cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (libs/LibKa0s/VerdictEvaluate.lua)
     return cand
 end
 
