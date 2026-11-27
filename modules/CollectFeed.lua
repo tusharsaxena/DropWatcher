@@ -5,11 +5,12 @@ local _, NS = ...
 --
 -- NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and
 -- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (NS.ItemFacts.OnCollectionsChanged) arm one
--- REREAD_DELAY timer, so a burst reads once. It runs NS.ItemFacts.RereadCollections (the cache is ItemFacts' to write), then sends
--- each live collectible whose verdict moved (NS.Collectibles.Verdict) through
--- NS.LootFeed.Refresh(rec, "collection"), which re-judges it and sends DropUpdated(id,
--- "collection"). PLAYER_REGEN_ENABLED arms the same timer for the drops still at collectUnknown
--- alone (a protected answer reads once combat ends). The stand-down cancels the timer.
+-- REREAD_DELAY timer, so a burst reads once. It runs NS.ItemFacts.RereadCollections (the cache is
+-- ItemFacts' to write), then sends each live collectible whose verdict moved
+-- (NS.Collectibles.Verdict) through NS.LootFeed.Refresh(rec, "collection"), which re-judges it and
+-- sends DropUpdated(id, "collection"). PLAYER_REGEN_ENABLED arms the same timer for the drops still
+-- at collectUnknown alone (a protected answer reads once combat ends). The stand-down cancels the
+-- timer.
 
 NS.CollectFeed = NS.CollectFeed or {}
 local CF = NS.CollectFeed

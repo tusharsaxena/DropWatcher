@@ -39,6 +39,8 @@ end)
 test("class data: ForClient names a client's list on either profile, Retail's for any other key", function()
     local CD = T.newAddon().ClassData
     -- red under: a list picked only by the file-load client (Item Search split plan, A2)
+    assertTrue(CD.LISTS.forever ~= nil, "Forever's list is built")
+    assertTrue(CD.LISTS.retail ~= nil, "Retail's list is built")
     assertTrue(CD.ForClient("forever") == CD.LISTS.forever, "Forever's")
     assertTrue(CD.ForClient("retail") == CD.LISTS.retail, "Retail's")
     assertTrue(CD.ForClient(nil) == CD.LISTS.retail, "no key: Retail's")

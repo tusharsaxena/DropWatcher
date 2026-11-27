@@ -261,10 +261,6 @@ end)
 -- Per client (Forever port design §4.4, clients-§4, §6)
 -- ---------------------------------------------------------------------------------------------
 
--- Off-spec is Retail's alone: WoW Forever's spec is class-wide, so there is no other spec to judge.
--- On Forever the module is not initialized (no off-spec pass, even on Retail's spec model, and no
--- off-spec gear on a candidate), the off-spec glow and the askOffSpec template have no row, there is
--- no askOffSpec template, and no column tip or note speaks of it. On Retail each is there.
 test("offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)", function()
     local NS = T.newAddon()
     -- red under: an off-spec gate fixed by the file-load client alone (Item Search split plan, A2)
@@ -275,6 +271,10 @@ test("offspec: Enabled(client) answers per client; the module's gate is C.FEATUR
     assertEqual(NS.OffSpec.Enabled(NS.Compat.ClientKey()), NS.Constants.FEATURE.offSpec == true, "the two agree")
 end)
 
+-- Off-spec is Retail's alone: WoW Forever's spec is class-wide, so there is no other spec to judge.
+-- On Forever the module is not initialized (no off-spec pass, even on Retail's spec model, and no
+-- off-spec gear on a candidate), the off-spec glow and the askOffSpec template have no row, there is
+-- no askOffSpec template, and no column tip or note speaks of it. On Retail each is there.
 test("offspec: not initialized, no rows, no askOffSpec on Forever", function()
     local NS = T.retailList((T.enableAddon()))
     local retail = NS.Compat.ClientKey() == "retail"

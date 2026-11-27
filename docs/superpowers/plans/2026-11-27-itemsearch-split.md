@@ -99,6 +99,8 @@ Builder note (A2 review fixes): the verifier found that `judgeLooter` and `candi
 
 Builder note (A2 review fixes, round 2): the off-spec registration gate went back to clients-§4. A2 had set `INITIALIZED = OS.Enabled(NS.Compat.ClientKey())`, which bypassed `Compat.ForClient` and its load-time error on an unknown token. It is again `NS.Constants.FEATURE.offSpec == true`. `OS.Enabled(key)` stays only as the pure query for a named client, and `tests/test_offspec.lua` now pins `Initialized() == C.FEATURE.offSpec`. The two client helpers keep different defaults for a nil or unknown key, and their docblocks now say so: `CD.ForClient` answers Retail's list, `OS.Enabled` answers false. B2 must not merge them into one default. The `ForClientKey` helper is still out of A2's scope (see above).
 
+Builder note (A2 review fixes, round 3): `docs/test-cases.md` is regenerated (testing-§5: Total 2931 -> 2940, A2's nine new cases) and the README tests badge moved with it. `docs/message-bus.md`'s `collection` cause now names `modules/CollectFeed.lua`. In `tests/test_offspec.lua` the `Enabled(client)` test sits above the Forever comment block, which again heads the test it describes. `tests/test_class_data.lua` asserts both lists are built before the identity checks. `modules/CollectFeed.lua`'s header paragraph is rewrapped, with no line past 100 columns.
+
 ### Task B1: `LibKa0s-Verdict-1.0` shell + pure kernel (LibKa0s)
 
 **Files:**

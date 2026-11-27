@@ -116,7 +116,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (30)
+### test_schema_rows.lua (31)
 
 - settings: no Retail-only row on the Forever panel
 - defaults: WoW Forever's profile has none of the Retail-only features' defaults
@@ -128,6 +128,7 @@ Total.
 - rows: a value outside a row's list or range is refused and stores nothing
 - rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
+- rows: the verdict's config is the six comparison values and the client's verdict mode
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order
 - rows: the filter bar seeds a fresh tab from the rows
@@ -1716,9 +1717,10 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (17)
+### test_class_data.lua (18)
 
 - class data: the active list is the client's, picked once at load
+- class data: ForClient names a client's list on either profile, Retail's for any other key
 - class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker
 - class data: ArmorFor("HUNTER", 30) is leather, ArmorFor("HUNTER", 40) is mail
 - class data: Forever's rows are keyed by class and talent tree, with the Pawn index
@@ -1786,7 +1788,7 @@ Total.
 - evaluate: on Retail's class list a relic is not gear, never the relic reason
 - evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
 
-### test_offspec.lua (12)
+### test_offspec.lua (13)
 
 - offspec: a Protection paladin's Intellect axe is an off-spec upgrade for Holy over an empty hand
 - offspec: against the best Holy item owned, the off-spec verdict takes the band
@@ -1799,6 +1801,7 @@ Total.
 - offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
 - offspec: Who derives a spec's candidate from ClassData, never from the main spec
 - offspec: WornGear keeps each worn item the spec could wear, false where it could not
+- offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
 
 ### test_tier_token.lua (30)
@@ -1892,7 +1895,7 @@ Total.
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
 
-### test_scoring.lua (22)
+### test_scoring.lua (23)
 
 - scoring: a Pawn v1 string imports its stats under GetItemStats' keys
 - scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
@@ -1912,6 +1915,7 @@ Total.
 - scoring: another player is scored with the best of their class's scales
 - scoring: Feral Druid tank uses Pawn 3, damage Pawn 2
 - scoring: on Forever the weights are keyed by class and talent tree
+- scoring: the scorer and weights are the caller's config, never a setting read here
 - scoring: ScoreFor with your weights is how = custom, and none without a scorer
 - scoring: the kernel hands the scorer the drop beside each item
 - scoring: with weights, a higher item level that scores lower is a sidegrade
@@ -2060,7 +2064,7 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (25)
+### test_item_facts.lua (26)
 
 - item facts: a cached ring reads every field of spec §5.1
 - item facts: a chest reads its appearance, account binds and no specs or track
@@ -2079,6 +2083,7 @@ Total.
 - item facts: at its cap the cache drops its least recently used quarter, never the whole
 - item facts: garbage links answer nil and never raise
 - item facts: learning an appearance re-reads the flag on the cached facts
+- item facts: OnCollectionsChanged subscribers hear an appearance learned, after the re-read
 - item facts: rawEquipLoc and the category are filled on every item (issue #13)
 - item facts: the appearance event reads the raw equipLoc, not a slot set later
 - item facts: Request answers a cached item at once and never calls back
@@ -2138,7 +2143,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (29)
+### test_gear.lua (30)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class-wide spec and your talent tree
@@ -2163,6 +2168,7 @@ Total.
 - gear: sorting your bags moves no gear, so it sends no GearChanged
 - gear: the gear events share one throttled rebuild, which announces a change once
 - gear: a bag event in combat arms nothing; the combat's end rebuilds once
+- gear: the bag defer is the host's predicate (SetDeferPredicate), none defers nothing
 - gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
 - gear: the player's spec change rebuilds; another unit's does not
 - gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen
@@ -2306,7 +2312,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (56)
+### test_feed.lua (58)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -2364,6 +2370,8 @@ Total.
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 - filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
 - filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold
+- feed: the looter's verdict takes the client's verdict mode and the scorer setting
+- own: each candidate's verdict takes the client's verdict mode and the scorer setting
 
 ### test_pending.lua (18)
 
@@ -2555,7 +2563,7 @@ Total.
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 
-### test_collect_feed.lua (15)
+### test_collect_feed.lua (16)
 
 - collect feed: someone else's mount reads its collection verdict, asks no inspect and has no Them
 - collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no
@@ -2565,6 +2573,7 @@ Total.
 - collect feed: combat's end reads again only the drops still at collectUnknown
 - collect feed: combat's end with no unknown collectible arms nothing
 - collect feed: a learned appearance re-judges a live cosmetic through the same re-read
+- collect feed: the re-read is the feed's (CollectFeed), Collectibles keeps no timer or event
 - collect feed: the stand-down cancels a waiting re-read
 - collect feed: RereadCollections is the cache's one writer and reads the collectibles alone
 - collect feed: Asks refuses an ask, an offer and an announce for a collectible
@@ -3563,7 +3572,7 @@ Total.
 | test_setup.lua | 25 |
 | test_database.lua | 17 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 30 |
+| test_schema_rows.lua | 31 |
 | test_settings_pages.lua | 57 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 21 |
@@ -3629,28 +3638,28 @@ Total.
 | test_compat_loot.lua | 21 |
 | test_text_parse.lua | 12 |
 | test_constants.lua | 15 |
-| test_class_data.lua | 17 |
+| test_class_data.lua | 18 |
 | test_evaluate.lua | 47 |
-| test_offspec.lua | 12 |
+| test_offspec.lua | 13 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 22 |
+| test_scoring.lua | 23 |
 | test_quality_gate.lua | 26 |
 | test_situations.lua | 17 |
 | test_trade_rules.lua | 26 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
-| test_item_facts.lua | 25 |
+| test_item_facts.lua | 26 |
 | test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
-| test_gear.lua | 29 |
+| test_gear.lua | 30 |
 | test_verdict_golden.lua | 59 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 56 |
+| test_feed.lua | 58 |
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
@@ -3659,7 +3668,7 @@ Total.
 | test_roll_popup.lua | 24 |
 | test_rolls_panel.lua | 66 |
 | test_feed_counts.lua | 10 |
-| test_collect_feed.lua | 15 |
+| test_collect_feed.lua | 16 |
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -3706,4 +3715,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 168 |
-| **Total** | **2931** |
+| **Total** | **2940** |
