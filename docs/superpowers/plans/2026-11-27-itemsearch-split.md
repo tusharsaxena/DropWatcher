@@ -25,7 +25,7 @@
 |---|---|---|---|---|
 | A0 | DW | Design, research note, this plan | done | (this commit) |
 | A1 | DW | Golden verdict characterization suite | done | 5dafd4e |
-| A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | todo | |
+| A2 | DW | De-tangle refactors (6 cuts), behavior-neutral | done | 03e7451 |
 | B1 | LK | `LibKa0s-Verdict-1.0` shell + pure kernel files | todo | |
 | B2 | LK | Reads, facts, gear, score, collect + instance API | todo | |
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | todo | |
@@ -90,8 +90,10 @@ Builder note (A1): the fixture shape grew a few fields beyond the sketch, all pl
   - `NS.Gear` takes `G.SetDeferPredicate(fn)` for the combat defer; `G.Qualities` moves to `modules/GearQualities.lua` (DW-only).
   - `NS.ClassData.ForClient(clientKey)` and `NS.OffSpec.Enabled(clientKey)`; file-load selection kept as a call to them with `NS.Compat.ClientKey()`.
 
-- [ ] **Step 1:** One cut at a time (1-6 of the boundary map's *Tangles* list), each: refactor → full gate on both clients + luacheck → commit `IS-A2.<n>: <cut>`. A1's golden suite must stay green unchanged at every commit.
-- [ ] **Step 2:** Update `docs/module-map.md` and `docs/ARCHITECTURE.md` module map rows for the two new files; layout-§1 census if any file nears 1500.
+- [x] **Step 1:** One cut at a time (1-6 of the boundary map's *Tangles* list), each: refactor → full gate on both clients + luacheck → commit `IS-A2.<n>: <cut>`. A1's golden suite must stay green unchanged at every commit.
+- [x] **Step 2:** Update `docs/module-map.md` and `docs/ARCHITECTURE.md` module map rows for the two new files; layout-§1 census if any file nears 1500.
+
+Builder note (A2): commits 8324b0d (A2.1) .. 948fd20 (A2.6), docs 03e7451; the golden suite and its fixture are byte-unchanged since A1. Decisions: (1) `LF.Config()` carries the verdict config whole as `cfg.verdict` beside its four flat judging fields, and `judgeMe` takes the verdict config alone. (2) `ScoreFor` keeps its `who` and takes the config third, `S.ScoreFor(link, who, cfg)`; `S.InUse(cfg)` takes it too (the detail card and diagnostics pass `LF.VerdictConfig()`); a nil cfg reads as `{}` (auto with nothing set). (3) Only the transmog call moved to `IF.OnCollectionsChanged`; the five collection events (NEW_MOUNT_ADDED ...) and the regen pass stay in `modules/CollectFeed.lua` with the timer (behavior-neutral); B2 decides whether the library owns them as `onChange("collection")`. `IsFeedOnly` stays on `NS.Collectibles` (pure, widely read). (4) `G.Qualities` is still published as `NS.Gear.Qualities`, now defined in `modules/GearQualities.lua` (LOAD-BEARING after Gear.lua), which also calls `G.SetDeferPredicate` with combat; with no predicate set Gear defers nothing. C1 must keep a `Qualities` reader once `NS.Gear` becomes the library instance. (5) `CD.ForClient(key)` answers Forever's list for "forever", Retail's for any other key (nil for "forever" before ClassDataForever loads); `OS.Enabled(key)` reads `C.FEATURE_CLIENTS.offSpec`, the declaration `C.FEATURE.offSpec` already reads.
 
 ### Task B1: `LibKa0s-Verdict-1.0` shell + pure kernel (LibKa0s)
 
