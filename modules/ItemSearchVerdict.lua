@@ -107,16 +107,17 @@ local function note(acc, points, text)
 end
 
 -- A breakdown line (IS.Breakdown) onto `acc.bd`, set only while a breakdown is asked for: the
--- hover's verdict builds none. A line worth 0 is left out (A1: zero parts hidden).
-local function step(acc, kind, points, text)
+-- hover's verdict builds none. A line worth 0 is left out (A1: zero parts hidden). `key` names the
+-- rule behind the line, for its tooltip in the verdict panel (R7-DW-02, NS.ItemSearchVerdictTips).
+local function step(acc, kind, points, text, key)
     local bd = acc.bd
-    if bd and points ~= 0 then bd[#bd + 1] = { kind = kind, points = points, text = text } end
+    if bd and points ~= 0 then bd[#bd + 1] = { kind = kind, points = points, text = text, key = key } end
 end
 
 -- A part that is both a reason and a breakdown line, in the same words.
-local function both(acc, kind, points, text)
+local function both(acc, kind, points, text, key)
     note(acc, points, text)
-    step(acc, kind, points, text)
+    step(acc, kind, points, text, key)
 end
 
 local function titleOf(q)
@@ -137,11 +138,11 @@ end
 local function questRow(q, me, acc)
     local state = questStateOf(q, me)
     if state == "log" then
-        both(acc, "quest", V.QUEST_LOG, L["In your quest log: %s"]:format(titleOf(q)))
+        both(acc, "quest", V.QUEST_LOG, L["In your quest log: %s"]:format(titleOf(q)), "questLog")
         return V.QUEST_LOG
     end
     if state == "ready" then
-        both(acc, "quest", V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)))
+        both(acc, "quest", V.QUEST_LOG, L["Ready to turn in: %s"]:format(titleOf(q)), "questLog")
         return V.QUEST_LOG
     end
     if state == "todo" and canPickUp(q, num(me.level)) then return V.QUEST_CAN, true end
@@ -160,14 +161,14 @@ local function questPart(facts, me, acc)
         end
     end
     -- the quests you could pick up as one count, like the recipes you could learn (R5-DW-03)
-    if can > 0 then both(acc, "quest", can * V.QUEST_CAN, L["Quests you could pick up (%d)"]:format(can)) end
+    if can > 0 then both(acc, "quest", can * V.QUEST_CAN, L["Quests you could pick up (%d)"]:format(can), "questCan") end
     local starts = facts.startsQuest
     if type(starts) == "table" and not IN_HAND[questStateOf(starts, me) or ""] then
-        both(acc, "quest", V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)))
+        both(acc, "quest", V.STARTS, L["Starts a quest: %s"]:format(titleOf(starts)), "starts")
         total = total + V.STARTS
     end
     if total > V.QUESTS_CAP then
-        step(acc, "cap", V.QUESTS_CAP - total, L["Quests count %d at most"]:format(V.QUESTS_CAP))
+        step(acc, "cap", V.QUESTS_CAP - total, L["Quests count %d at most"]:format(V.QUESTS_CAP), "questsCap")
     end
     return min(total, V.QUESTS_CAP)
 end
@@ -227,15 +228,15 @@ local function craftSteps(acc, t)
     if not acc.bd then return end
     for _, color in ipairs(COLORS) do
         local n = t.byColor[color]
-        step(acc, "craft", n * V.CRAFT[color], L["Known recipes, %s skill-up (%d)"]:format(colorWord(color), n))
+        step(acc, "craft", n * V.CRAFT[color], L["Known recipes, %s skill-up (%d)"]:format(colorWord(color), n), "craft")
     end
-    step(acc, "craft", t.learn, L["Recipes you could learn (%d)"]:format(floor(t.learn / V.LEARN)))
+    step(acc, "craft", t.learn, L["Recipes you could learn (%d)"]:format(floor(t.learn / V.LEARN)), "learn")
     local own = t.known + t.learn
-    if own > V.CRAFT_CAP then step(acc, "cap", V.CRAFT_CAP - own, L["Crafting counts %d at most"]:format(V.CRAFT_CAP)) end
+    if own > V.CRAFT_CAP then step(acc, "cap", V.CRAFT_CAP - own, L["Crafting counts %d at most"]:format(V.CRAFT_CAP), "craftCap") end
     local raw = t.others * V.OTHERS
-    step(acc, "craft", raw, L["Other professions use it (%d recipes)"]:format(t.others))
+    step(acc, "craft", raw, L["Other professions use it (%d recipes)"]:format(t.others), "others")
     if raw > V.OTHERS_CAP then
-        step(acc, "cap", V.OTHERS_CAP - raw, L["Other professions count %d at most"]:format(V.OTHERS_CAP))
+        step(acc, "cap", V.OTHERS_CAP - raw, L["Other professions count %d at most"]:format(V.OTHERS_CAP), "othersCap")
     end
 end
 
@@ -254,11 +255,11 @@ end
 local function gearPart(item, acc)
     if not item.equippable then return 0 end
     if item.gear == "upgrade" then
-        both(acc, "gear", V.UPGRADE, L["Upgrade for you"])
+        both(acc, "gear", V.UPGRADE, L["Upgrade for you"], "upgrade")
         return V.UPGRADE
     end
     if item.gear == "sidegrade" then
-        both(acc, "gear", V.SIDEGRADE, L["Sidegrade"])
+        both(acc, "gear", V.SIDEGRADE, L["Sidegrade"], "sidegrade")
         return V.SIDEGRADE
     end
     return 0
@@ -306,20 +307,20 @@ local function useOf(facts, me, item, acc)
     local quests = questPart(facts, me, acc)
     local sum = quests + craftPart(facts, me, acc) + gearPart(item, acc)
     if rebuyable(facts) then
-        both(acc, "damper", V.REBUY, L["Easy to buy again"])
+        both(acc, "damper", V.REBUY, L["Easy to buy again"], "rebuy")
         sum = sum + V.REBUY
     end
     if trivial(facts, me) then
-        both(acc, "damper", V.TRIVIAL, L["Every use is gray or done"])
+        both(acc, "damper", V.TRIVIAL, L["Every use is gray or done"], "trivial")
         sum = sum + V.TRIVIAL
     end
     if num(item.quality) == 0 and quests == 0 and sum > V.POOR_CAP then
-        step(acc, "cap", V.POOR_CAP - sum, L["Poor quality counts %d at most"]:format(V.POOR_CAP))
+        step(acc, "cap", V.POOR_CAP - sum, L["Poor quality counts %d at most"]:format(V.POOR_CAP), "poorCap")
         sum = V.POOR_CAP
     end
     if questItem(item) and quests == 0 and sum < V.QUEST_FLOOR then
         note(acc, V.QUEST_FLOOR - sum, L["Quest item"])
-        step(acc, "floor", V.QUEST_FLOOR - sum, L["A quest item counts %d at least"]:format(V.QUEST_FLOOR))
+        step(acc, "floor", V.QUEST_FLOOR - sum, L["A quest item counts %d at least"]:format(V.QUEST_FLOOR), "questFloor")
         sum = V.QUEST_FLOOR
     end
     return sum
@@ -541,7 +542,7 @@ local function judge(facts, me, item, bd)
     local confidence, tier, hint = IS.Confidence(facts, me, item)
     local acc, use = scratchReasons(bd), V.COLLECT
     if item.newCollect then
-        both(acc, "collect", V.COLLECT, L["New to your collection"])
+        both(acc, "collect", V.COLLECT, L["New to your collection"], "collect")
     else
         use = useOf(facts, me, item, acc)
     end
@@ -634,17 +635,19 @@ end
 local function sureRows(r, item)
     local out = {}
     if r.usePart then
-        out[#out + 1] = { text = useLine(r), right = pct(r.usePart) }
+        out[#out + 1] = { text = useLine(r), right = pct(r.usePart), key = "use" }
         if r.money then
             local margin = type(item.auctionRule) == "table" and item.auctionRule.margin or C.ITEM_SEARCH.AUCTION.MARGIN
-            out[#out + 1] = { text = IAU.MoneyLine(r.moneyKey, r.ratio, margin, r.net, r.via), right = pct(r.money) }
+            out[#out + 1] = { text = IAU.MoneyLine(r.moneyKey, r.ratio, margin, r.net, r.via), right = pct(r.money),
+                key = "money" }
         end
-        out[#out + 1] = { text = L["Evidence for %s"]:format(wordOf(r)), right = pct(r.evidence) }
+        out[#out + 1] = { text = L["Evidence for %s"]:format(wordOf(r)), right = pct(r.evidence), key = "evidence" }
     else
-        out[#out + 1] = { text = L["Evidence for Hold, too little known to say more"], right = pct(r.evidence) }
+        out[#out + 1] = { text = L["Evidence for Hold, too little known to say more"], right = pct(r.evidence),
+            key = "fallback" }
     end
-    out[#out + 1] = { text = L["Data known"], right = ("%d%%"):format(r.confidence) }
-    out[#out + 1] = { text = L["Score"], right = tostring(r.score) }
+    out[#out + 1] = { text = L["Data known"], right = ("%d%%"):format(r.confidence), key = "data" }
+    out[#out + 1] = { text = L["Score"], right = tostring(r.score), key = "score" }
     return out
 end
 

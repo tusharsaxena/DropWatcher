@@ -94,6 +94,8 @@ local function newLine(content)
     text:SetPoint("RIGHT", points, "LEFT", -6, 0)
     points:SetPoint("RIGHT", row, "RIGHT", -4, 0)
     row.cells = { text = { text = text }, points = { text = points } }
+    -- each line explains itself on hover (R7-DW-02): its rule, read on every hover
+    NS.Window.AttachTooltip(row, function() return unpack(NS.ItemSearchVerdictTips.Lines(row.dwTip)) end)
     return row
 end
 
@@ -162,37 +164,44 @@ end
 local function priceRows(b, out)
     if (b.sellPrice or 0) <= 0 then
         -- an Auction for an item no vendor buys (R6-DW-06): said in words, not as 0 coins
-        out[#out + 1] = { text = L["No vendor buys it"], tone = "muted" }
+        out[#out + 1] = { text = L["No vendor buys it"], tone = "muted", tip = { key = "noVendor" } }
     else
-        out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice), tone = "plain" }
+        out[#out + 1] = { text = L["Vendor price"], right = money(b.sellPrice), tone = "plain", tip = { key = "vendor" } }
     end
     if b.auctionPrice then
-        out[#out + 1] = { text = L["Auction price (Auctionator)"], right = money(b.auctionPrice), tone = "plain" }
+        out[#out + 1] = { text = L["Auction price (Auctionator)"], right = money(b.auctionPrice), tone = "plain",
+            tip = { key = "auction" } }
         out[#out + 1] = { text = L["Auction after the cut and deposit"], right = money(b.auctionNet or 0),
-            tone = "plain", rightTone = b.sellVia == "auction" and "auction" or "plain" }
+            tone = "plain", rightTone = b.sellVia == "auction" and "auction" or "plain", tip = { key = "net" } }
     elseif b.auctionOn then
-        out[#out + 1] = { text = L["No auction price known (Auctionator)"], tone = "muted" }
+        out[#out + 1] = { text = L["No auction price known (Auctionator)"], tone = "muted", tip = { key = "noPrice" } }
     end
 end
 
 -- The lines to draw for a breakdown `b`: `{ text, right, tone, rightTone }` each, in two sections
 -- (R6-DW-08, the scoring design), each under a muted gold header, a blank line between them. Why
--- this word: the parts (their points green or red, R5-DW-04), the word's line in plain words, muted
+-- this verdict: the parts (their points green or red, R5-DW-04), the word's line in plain words, muted
 -- (R5-DW-06: since R6-DW-08 the use value and its band), then a Sell's or a Toss's prices
 -- (priceRows). How sure: the score's lines (`b.sure`: the use value's part, a disposal's money
 -- part, the evidence for the word, the data known, and the score, the design's Score line, which
 -- R5-DW-05 had left to the badge), then the hint. Built once per breakdown (the panel keeps them).
+-- The first section's header reads Why this verdict (R7-DW-03, the owner's rename of Why this word).
+-- Every line but the blank one carries a `tip` (R7-DW-02: NS.ItemSearchVerdictTips' key, and a
+-- part's points for a cap's "Taken off here").
 local function rowsOf(b)
-    local out = { { text = L["Why this word"], tone = "mutedGold" } }
+    local out = { { text = L["Why this verdict"], tone = "mutedGold", tip = { key = "whyHead" } } }
     for _, line in ipairs(b.lines) do
-        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain", rightTone = pointsTone(line.points) }
+        out[#out + 1] = { text = line.text, right = signed(line.points), tone = "plain", rightTone = pointsTone(line.points),
+            tip = { key = line.key, points = line.points } }
     end
-    out[#out + 1] = { text = b.from, tone = "muted" }
+    out[#out + 1] = { text = b.from, tone = "muted", tip = { key = "from" } }
     if b.verdict == "sell" or b.verdict == "toss" then priceRows(b, out) end
     out[#out + 1] = { text = "", tone = "plain" }
-    out[#out + 1] = { text = L["How sure"], tone = "mutedGold" }
-    for _, s in ipairs(b.sure or {}) do out[#out + 1] = { text = s.text, right = s.right, tone = "plain" } end
-    if b.hint then out[#out + 1] = { text = b.hint, tone = "muted" } end
+    out[#out + 1] = { text = L["How sure"], tone = "mutedGold", tip = { key = "sureHead" } }
+    for _, s in ipairs(b.sure or {}) do
+        out[#out + 1] = { text = s.text, right = s.right, tone = "plain", tip = { key = s.key } }
+    end
+    if b.hint then out[#out + 1] = { text = b.hint, tone = "muted", tip = { key = "hint" } } end
     return out
 end
 
@@ -212,7 +221,7 @@ local function paintLines(p, rows, m)
         row.cells.points.text:SetText(r.right or "")
         NS.WindowRows.SetTone(row.cells.text.text, r.tone)
         NS.WindowRows.SetTone(row.cells.points.text, r.rightTone or r.tone)
-        row.dwTone, row.dwRightTone = r.tone, r.rightTone or r.tone
+        row.dwTone, row.dwRightTone, row.dwTip = r.tone, r.rightTone or r.tone, r.tip
         row:Show()
     end
     for i = #rows + 1, #p.lines do p.lines[i]:Hide() end
@@ -339,6 +348,17 @@ function IVP.Paint(f, itemID, m)
     p:Show()
     placeMatches(f, true)
     return true
+end
+
+--- While the window is being sized (R7-DW-01): fit the panel to the new height and hang Matches
+--- above it, without working the verdict out or painting a line.
+--- @param f table
+--- @param rowH number
+function IVP.Fit(f, rowH)
+    local p = f and f.verdict
+    if not (p and p:IsShown()) then return end
+    p:SetHeight(IVP.Height(f, rowH))
+    placeMatches(f, true)
 end
 
 --- The lines a breakdown draws (`{ text, right, tone, rightTone }` each), worked out as the panel does

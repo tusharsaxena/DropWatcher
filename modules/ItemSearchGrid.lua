@@ -353,21 +353,27 @@ local function paintText(fs, cell)
     if r then fs:SetTextColor(r, g, b) else NS.WindowRows.SetTone(fs, cell.tone or "plain") end
 end
 
-local function paintBar(row, fs, at, h, cell, opts)
+-- Where a chance bar and its percent sit in `at` (geometry only: no color, no text).
+local function placeBar(row, fs, at, h, cell)
     local pctW = math.min(48, at.w)
     local barW = math.max(1, at.w - pctW - 4)
     local barH = math.max(4, h - 10)
     row.barBack:ClearAllPoints()
     row.barBack:SetPoint("LEFT", row, "LEFT", at.x, 0)
     row.barBack:SetSize(barW, barH)
-    row.barBack:SetShown(cell.known == true)
     local w = (cell.fraction or 0) > 0 and math.max(1, math.floor(barW * cell.fraction + 0.5)) or 0
     row.barFill:ClearAllPoints()
     row.barFill:SetPoint("LEFT", row, "LEFT", at.x, 0)
     row.barFill:SetSize(math.max(w, 1), barH)
+    place(fs, row, { x = at.x + barW + 4, w = pctW }, h, "RIGHT")
+    return w
+end
+
+local function paintBar(row, fs, at, h, cell, opts)
+    local w = placeBar(row, fs, at, h, cell)
+    row.barBack:SetShown(cell.known == true)
     row.barFill:SetColorTexture(opts.barColor())
     row.barFill:SetShown(w > 0)
-    place(fs, row, { x = at.x + barW + 4, w = pctW }, h, "RIGHT")
     fs:SetText(cell.pct or "")
     NS.WindowRows.SetTone(fs, cell.known and "plain" or "muted")
 end
@@ -379,9 +385,14 @@ local function paintPin(row, at, r, opts)
     pin.spot, pin.title, pin.how = spot, r.tip and r.tip.title or nil, how
     pin.where = spot and ("%s %.1f, %.1f"):format(Compat.MapName(spot.map) or L["Map %d"]:format(spot.map),
         spot.x * 100, spot.y * 100) or nil
-    pin:ClearAllPoints()
-    pin:SetPoint("LEFT", row, "LEFT", at.x + math.floor((at.w - C.ITEM_SEARCH.WINDOW.PIN) / 2), 0)
+    ISG.PlacePin(row, at)
     pin:SetShown(how ~= nil)
+end
+
+--- Center a row's pin in its column `at`.
+function ISG.PlacePin(row, at)
+    row.pin:ClearAllPoints()
+    row.pin:SetPoint("LEFT", row, "LEFT", at.x + math.floor((at.w - C.ITEM_SEARCH.WINDOW.PIN) / 2), 0)
 end
 
 -- One cell of a row, by its column's kind.
@@ -426,7 +437,7 @@ end
 function ISG.PaintRow(row, cols, layout, r, i, h, opts)
     blank(row)
     row.stripe:SetShown(i % 2 == 0)
-    row.dwTip, row.dwItem = r.tip, r.itemID
+    row.dwTip, row.dwItem, row.dwRow = r.tip, r.itemID, r
     row.dwPin, row.dwOpen = opts.onPin, opts.onOpen
     local n = 0
     for _, c in ipairs(cols) do
@@ -570,6 +581,61 @@ function ISG.PaintTable(t, tab, rows, width, opts)
     t.empty:SetText(opts.empty or "")
     t.empty:SetShown(#rows == 0 and opts.empty ~= nil)
     t.layout = layout
+end
+
+-- Move one painted row's cells to `layout` (no text, color or font is set: the row keeps what
+-- ISG.PaintRow drew).
+local function placeRow(row, cols, layout, h)
+    local r = row.dwRow
+    if not r then return end
+    local n = 0
+    for _, c in ipairs(cols) do
+        local at = layout[c.key]
+        if at and c.kind ~= "pin" then n = n + 1 end
+        local cell = at and r.cells[c.key]
+        local fs = row.cells[math.max(1, n)].text
+        if at and c.kind == "pin" then
+            ISG.PlacePin(row, at)
+        elseif cell ~= nil and c.kind == "bar" then
+            placeBar(row, fs, at, h, cell)
+        elseif cell ~= nil then
+            place(fs, row, at, h, c.justify)
+        end
+    end
+    placeLink(row, layout, r, h)
+end
+
+--- While the window is being sized (R7-DW-01): lay table `t`'s columns across `width` again, moving
+--- the cells of the rows in view only. Nothing is sorted, painted or refonted; the rows out of view
+--- keep the old layout until the full paint that ends the drag. Answers how many rows it moved.
+--- @param t table
+--- @param width number
+--- @param rowH number
+--- @return number
+function ISG.Relayout(t, width, rowH)
+    if not (t and t.tab and TABS.DEF[t.tab]) then return 0 end
+    local cols = TABS.DEF[t.tab].columns
+    local layout = TABS.Layout(cols, width)
+    paintLabels(t, cols, layout)
+    t.layout = layout
+    local active = t.pool.active
+    local first, last = 1, #active
+    local scroll = t.scroll
+    local top = scroll and scroll.GetVerticalScroll and scroll:GetVerticalScroll()
+    local seen = scroll and scroll.GetHeight and scroll:GetHeight()
+    if rowH > 0 and type(top) == "number" and type(seen) == "number" and seen > 0 then
+        first = math.max(1, math.floor(top / rowH) + 1)
+        last = math.min(#active, first + math.ceil(seen / rowH))
+    end
+    local moved = 0
+    for i = first, last do
+        local row = active[i]
+        row:SetWidth(width)
+        placeRow(row, cols, layout, rowH)
+        moved = moved + 1
+    end
+    t.content:SetWidth(width)
+    return moved
 end
 
 --- The rows table `t` draws now, in order (for the tests and the tooltip checks).
