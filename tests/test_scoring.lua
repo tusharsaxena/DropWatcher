@@ -136,27 +136,27 @@ test("scoring: InUse and Scorer follow the settings and whether Pawn is initiali
     local NS, _, m = T.enableAddon()
     T.retailList(NS)   -- weights keyed by Retail's specID (Forever's by talent tree is below)
     local S, Set = NS.Scoring, NS.SchemaRuntime.Set
-    assertEqual(S.InUse(), "none")
-    assertNil(S.Scorer(), "no Pawn and no weights: item level alone")
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "none")
+    assertNil(S.Scorer(NS.LootFeed.VerdictConfig()), "no Pawn and no weights: item level alone")
     Set("comparison.weights", { [250] = { [INT] = 1 } })
-    assertEqual(S.InUse(), "weights")
-    assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "weights")
+    assertEqual(S.Scorer(NS.LootFeed.VerdictConfig())({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
     -- Loaded is not enough: the adapter is present only once PawnIsReady() is true (design spec
     -- §5.4; DW-62 review F-003). Until then auto keeps your weights.
     m.loadedAddons.Pawn = true
     -- red under: an InUse that counts a loaded Pawn (modules/Scoring.lua)
-    assertEqual(S.InUse(), "weights", "loaded but not initialized: your weights")
-    assertEqual(S.Scorer()({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "weights", "loaded but not initialized: your weights")
+    assertEqual(S.Scorer(NS.LootFeed.VerdictConfig())({ stats = { [INT] = 7 } }, { specID = 250 }), 7)
     Set("comparison.scorer", "pawn")
-    assertEqual(S.InUse(), "none", "pawn asked for, not initialized: item level alone")
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "none", "pawn asked for, not initialized: item level alone")
     m.PawnIsReady = function() return true end
-    assertEqual(S.InUse(), "pawn")
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "pawn")
     Set("comparison.scorer", "auto")
-    assertEqual(S.InUse(), "pawn", "auto prefers an initialized Pawn")
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "pawn", "auto prefers an initialized Pawn")
     Set("comparison.scorer", "weights")
-    assertEqual(S.InUse(), "weights")
+    assertEqual(S.InUse(NS.LootFeed.VerdictConfig()), "weights")
     Set("comparison.scorer", "none")
-    assertNil(S.Scorer())
+    assertNil(S.Scorer(NS.LootFeed.VerdictConfig()))
     m.loadedAddons.Pawn, m.PawnIsReady = nil, nil
 end)
 
@@ -297,12 +297,12 @@ test("scoring: on Forever your score uses the scale of your top talent tree", fu
     -- red under: a scorer that takes the drop's best visible scale (the tree that gains most, HUNTER3)
     assertEqual(score(drop, me, drop), 20)
     assertEqual(score({ link = "worn" }, me, drop), 25)
-    local v, how = NS.Scoring.ScoreFor("drop", me)
+    local v, how = NS.Scoring.ScoreFor("drop", me, NS.LootFeed.VerdictConfig())
     assertEqual(v, 20); assertEqual(how, "tree")
     -- A visible custom scale of your class wins, as on Retail.
     scales.Mine = {}
     m.PawnGetSingleValueFromItem = function(data, scale) return scale == "Mine" and #data.link or nil end
-    v, how = NS.Scoring.ScoreFor("drop", me)
+    v, how = NS.Scoring.ScoreFor("drop", me, NS.LootFeed.VerdictConfig())
     assertEqual(v, 4); assertEqual(how, "custom")
 end)
 
@@ -316,7 +316,7 @@ test("scoring: with no tree, the best of your class's scales, how = bestOfClass"
     local score = NS.Scoring.PawnScorer()
     assertEqual(score(drop, me, drop), 30)
     assertEqual(score({ link = "worn" }, me, drop), 25, "the baseline on the drop's scale")
-    local v, how = NS.Scoring.ScoreFor("drop", me)
+    local v, how = NS.Scoring.ScoreFor("drop", me, NS.LootFeed.VerdictConfig())
     assertEqual(v, 30); assertEqual(how, "bestOfClass")
     m.PawnGetItemData = function(link) if link ~= "drop" then return { link = link } end end
     assertEqual(NS.Scoring.PawnScorer()(drop, me, drop), "pending", "the drop not read by Pawn yet")
@@ -334,11 +334,11 @@ test("scoring: another player is scored with the best of their class's scales", 
     local score = NS.Scoring.PawnScorer()
     assertEqual(score(drop, them, drop), 30)
     assertEqual(score({ link = "theirs" }, them, drop), 12)
-    local v, how = NS.Scoring.ScoreFor("drop", them)
+    local v, how = NS.Scoring.ScoreFor("drop", them, NS.LootFeed.VerdictConfig())
     assertEqual(v, 30); assertEqual(how, "bestOfClass")
     -- A class Pawn has no scale for: no score, so item level decides.
     assertNil(score(drop, { isPlayer = false, classFile = "ROGUE", specID = 1484 }, drop))
-    v, how = NS.Scoring.ScoreFor("drop", { isPlayer = false, classFile = "ROGUE" })
+    v, how = NS.Scoring.ScoreFor("drop", { isPlayer = false, classFile = "ROGUE" }, NS.LootFeed.VerdictConfig())
     assertNil(v); assertEqual(how, "none")
 end)
 
@@ -379,16 +379,33 @@ test("scoring: on Forever the weights are keyed by class and talent tree", funct
     assertEqual(out["HUNTER:3"][AGI], 2, "an import into a tree")
 end)
 
+test("scoring: the scorer and weights are the caller's config, never a setting read here", function()
+    local NS, _, m = T.enableAddon()
+    T.retailList(NS)
+    local S = NS.Scoring
+    local link = "|cnIQ4:|Hitem:101::::::::90:::::|h[Item 101]|h|r"
+    m.addItem(link, { name = "Item", quality = 4, ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4,
+        subClassID = 0, bindType = 1, stats = { [CRIT] = 10 } })
+    NS.SchemaRuntime.Set("comparison.scorer", "none")
+    local cfg = { scorer = "weights", weights = { [62] = { [CRIT] = 3 } } }
+    -- red under: an InUse, Scorer or ScoreFor that reads comparison.* through NS.Setting
+    assertEqual(S.InUse(cfg), "weights", "the stored `none` is not read")
+    assertEqual(S.Scorer(cfg)({ stats = { [CRIT] = 10 } }, { specID = 62 }), 30)
+    local v, how = S.ScoreFor(link, { classFile = "MAGE", specID = 62 }, cfg)
+    assertEqual(v, 30); assertEqual(how, "custom")
+    assertEqual(S.InUse(nil), "none", "no config: auto with nothing set, item level alone")
+end)
+
 test("scoring: ScoreFor with your weights is how = custom, and none without a scorer", function()
     local NS, _, m = T.enableAddon()
     T.retailList(NS)
-    local v, how = NS.Scoring.ScoreFor("x", { classFile = "MAGE", specID = 62 })
+    local v, how = NS.Scoring.ScoreFor("x", { classFile = "MAGE", specID = 62 }, NS.LootFeed.VerdictConfig())
     assertNil(v); assertEqual(how, "none")
     local link = "|cnIQ4:|Hitem:100::::::::90:::::|h[Item 100]|h|r"
     m.addItem(link, { name = "Item", quality = 4, ilvl = 600, equipLoc = "INVTYPE_FINGER", classID = 4,
         subClassID = 0, bindType = 1, stats = { [CRIT] = 10 } })
     NS.SchemaRuntime.Set("comparison.weights", { [62] = { [CRIT] = 2 } })
-    v, how = NS.Scoring.ScoreFor(link, { classFile = "MAGE", specID = 62 })
+    v, how = NS.Scoring.ScoreFor(link, { classFile = "MAGE", specID = 62 }, NS.LootFeed.VerdictConfig())
     assertEqual(v, 20); assertEqual(how, "custom")
 end)
 

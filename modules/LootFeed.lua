@@ -256,15 +256,15 @@ local function groupSpec(s, encounterID, t) return NS.GroupPlace.Stamp(placeOf(s
 
 -- ── judging ─────────────────────────────────────────────────────────────────────────────────
 
-local function scorer()
+local function scorer(vcfg)
     local S = NS.Scoring
-    if type(S) == "table" and type(S.Scorer) == "function" then return S.Scorer() end
+    if type(S) == "table" and type(S.Scorer) == "function" then return S.Scorer(vcfg) end
     return nil
 end
 
 -- The kernel's opts from the verdict's config (LF.VerdictConfig, or LF.Config's `verdict`).
 local function evalOpts(vcfg)
-    return { sidegradeBand = vcfg.sidegradeBand, compareOwned = vcfg.compareOwned, scorer = scorer(),
+    return { sidegradeBand = vcfg.sidegradeBand, compareOwned = vcfg.compareOwned, scorer = scorer(vcfg),
         verdictMode = vcfg.verdictMode }
 end
 

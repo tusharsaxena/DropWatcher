@@ -602,12 +602,12 @@ end
 -- The scale or weights each score used (NS.Scoring.ScoreFor's `how`, DW-FP07): yours, and the
 -- looter's on another player's drop.
 local function scoreHows(drop, insp)
-    local S = NS.Scoring
-    local _, mine = S.ScoreFor(drop.link, NS.Gear.Candidate())
+    local S, vcfg = NS.Scoring, NS.LootFeed.VerdictConfig()
+    local _, mine = S.ScoreFor(drop.link, NS.Gear.Candidate(), vcfg)
     if drop.isMine then return mine, nil end
     local looter = type(drop.looter) == "table" and drop.looter or {}
     local _, theirs = S.ScoreFor(drop.link, { isPlayer = false, classFile = looter.classFile,
-        specID = type(insp) == "table" and insp.specID or nil })
+        specID = type(insp) == "table" and insp.specID or nil }, vcfg)
     return mine, theirs
 end
 
@@ -632,7 +632,7 @@ function DCard.Paint(card, drop, width, now)
     end
     local snap = NS.Gear.Snapshot()
     local myHow, theirHow = scoreHows(drop, insp)
-    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(), snap and snap.classFile,
+    paintSide(card.me, DC.ForYou(drop, NS.Scoring.InUse(NS.LootFeed.VerdictConfig()), snap and snap.classFile,
         NS.TestMode.GearOf(drop, snap and snap.equipped), myHow), sideW)
     local WO = NS.WindowOwn
     paintSide(card.them, DC.ForLooter(drop, insp, specName, now, WO.IsRevealed(drop.id), looterLeft(drop), theirHow), sideW)

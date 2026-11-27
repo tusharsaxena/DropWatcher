@@ -31,7 +31,7 @@ local _, NS = ...
 -- this file knows contributes 0 and is logged once per key (NS.DebugOnce, tag SCORE); it never
 -- raises. A scorer is called under pcall by the kernel, so even a third-party error is no score.
 --
--- ScoreFor(link, who) answers one item's score by the scorer in use and how its scale or weights
+-- ScoreFor(link, who, cfg) answers one item's score by the scorer in use and how its scale or weights
 -- were chosen ("tree", "bestOfClass", "custom" or "none"), for a reader that names the source.
 
 NS.Scoring = NS.Scoring or {}
@@ -345,20 +345,27 @@ end
 
 -- ── the edge: what the settings and the client say ──────────────────────────────────────────
 
+-- The settings are the caller's (`cfg`: the verdict's config, NS.LootFeed.VerdictConfig, its
+-- `scorer` and `weights`), so this file reads no setting of its own (Item Search split plan, A2).
+local function cfgOf(cfg) return isTable(cfg) and cfg or {} end
+
 --- The adapter in use now (design spec §13's Scoring section prints it beside the configured one).
+--- @param cfg table the verdict's config: `scorer` (auto | pawn | weights | none), `weights`
 --- @return string "pawn" | "weights" | "none"
-function S.InUse()
-    return S.Resolve(NS.Setting("comparison.scorer"), NS.Compat.PawnIsReady(),
-        S.HasWeights(NS.Setting("comparison.weights")))
+function S.InUse(cfg)
+    cfg = cfgOf(cfg)
+    return S.Resolve(cfg.scorer, NS.Compat.PawnIsReady(), S.HasWeights(cfg.weights))
 end
 
 --- The scorer for the kernel's opts.scorer, or nil (item level alone). Read per evaluation pass by
 --- LootFeed, so a settings change or Pawn loading takes effect on the next judgment.
+--- @param cfg table the verdict's config (`scorer`, `weights`)
 --- @return function|nil
-function S.Scorer()
-    local use = S.InUse()
+function S.Scorer(cfg)
+    cfg = cfgOf(cfg)
+    local use = S.InUse(cfg)
     if use == "pawn" then return S.PawnScorer() end
-    if use == "weights" then return S.WeightsScorer(NS.Setting("comparison.weights")) end
+    if use == "weights" then return S.WeightsScorer(cfg.weights) end
     return nil
 end
 
@@ -367,11 +374,13 @@ end
 --- "none". Nil while Pawn or the item cache has not read it, or with no score at all.
 --- @param link string
 --- @param who table
+--- @param cfg table the verdict's config (`scorer`, `weights`)
 --- @return number|nil, string
-function S.ScoreFor(link, who)
+function S.ScoreFor(link, who, cfg)
     link = plainLink(link)
     if not (link and isTable(who)) then return nil, "none" end
-    local use = S.InUse()
+    cfg = cfgOf(cfg)
+    local use = S.InUse(cfg)
     if use == "pawn" then
         local scale, how = S.PawnScale(who, link)
         if scale == nil or scale == "pending" then return nil, how end
@@ -380,7 +389,7 @@ function S.ScoreFor(link, who)
     if use ~= "weights" then return nil, "none" end
     local facts = NS.ItemFacts and NS.ItemFacts.Get(link)
     local stats = isTable(facts) and facts.stats or nil
-    local w, how = S.WeightsFor(NS.Setting("comparison.weights"), who, stats)
+    local w, how = S.WeightsFor(cfg.weights, who, stats)
     local v = w and S.WeightsScore(stats, w)
     if v == nil then return nil, "none" end
     return v, how

@@ -419,7 +419,7 @@ end
 -- `pawn` without Pawn initialized is none, `auto` falls back to your weights, then to none.
 local function scorerInUse()
     local S = NS.Scoring
-    if type(S) == "table" and type(S.InUse) == "function" then return S.InUse() end
+    if type(S) == "table" and type(S.InUse) == "function" then return S.InUse(NS.LootFeed.VerdictConfig()) end
     return "none"
 end
 
