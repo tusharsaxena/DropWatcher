@@ -36,6 +36,14 @@ test("class data: the active list is the client's, picked once at load", functio
     assertEqual(CD.STAT_GATE, key == "forever" and "soft" or "hard")
 end)
 
+test("class data: ForClient names a client's list on either profile, Retail's for any other key", function()
+    local CD = T.newAddon().ClassData
+    -- red under: a list picked only by the file-load client (Item Search split plan, A2)
+    assertTrue(CD.ForClient("forever") == CD.LISTS.forever, "Forever's")
+    assertTrue(CD.ForClient("retail") == CD.LISTS.retail, "Retail's")
+    assertTrue(CD.ForClient(nil) == CD.LISTS.retail, "no key: Retail's")
+end)
+
 test("class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker", function()
     local CD, C = loadForever()
     local nine = { WARRIOR = 1, PALADIN = 2, HUNTER = 3, ROGUE = 4, PRIEST = 5, SHAMAN = 7, MAGE = 8,

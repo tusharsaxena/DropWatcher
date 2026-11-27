@@ -11,9 +11,10 @@ local _, NS = ...
 --
 -- TWO LISTS, PICKED ONCE. CD.Build(data) turns a list's data into a list: the data plus every
 -- lookup, bound to that list alone. CD.LISTS holds both lists (Retail's built here, Forever's by
--- the next file), so the suite reads each one on either kit profile. The ACTIVE list is copied onto
--- NS.ClassData itself at file load, by NS.Compat.ClientKey(): this file installs Retail's unless the
--- client is WoW Forever, and core/ClassDataForever.lua installs Forever's when it is. Never a
+-- the next file), so the suite reads each one on either kit profile. CD.ForClient(clientKey) names
+-- a client's list. The ACTIVE list is copied onto NS.ClassData itself at file load, by
+-- CD.ForClient(NS.Compat.ClientKey()): this file installs Retail's unless the client is WoW
+-- Forever, and core/ClassDataForever.lua installs Forever's when it is. Never a
 -- filtered Retail list. Every reader keeps reading NS.ClassData's members (CD.SPECS, CD.Spec, ...)
 -- as before.
 --
@@ -356,6 +357,15 @@ function CD.Install(list)
     CD.ACTIVE = list
 end
 
+--- The class list for client `clientKey`: Forever's for "forever", Retail's for any other key. Pure,
+--- so an instance that knows its client picks its list itself (Item Search split plan, task A2);
+--- nil for "forever" until core/ClassDataForever.lua has built it.
+--- @param clientKey string|nil
+--- @return table|nil
+function CD.ForClient(clientKey)
+    return CD.LISTS[clientKey == "forever" and "forever" or "retail"]
+end
+
 CD.LISTS = CD.LISTS or {}
 CD.LISTS.retail = CD.Build(RETAIL)
-if NS.Compat.ClientKey() ~= "forever" then CD.Install(CD.LISTS.retail) end
+if NS.Compat.ClientKey() ~= "forever" then CD.Install(CD.ForClient(NS.Compat.ClientKey())) end

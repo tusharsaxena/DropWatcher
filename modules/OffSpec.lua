@@ -32,10 +32,23 @@ local OS = NS.OffSpec
 local CD = NS.ClassData
 
 -- RETAIL'S ALONE (Forever port design §4.4, clients-§4): WoW Forever's spec is class-wide, so it has
--- no other spec to judge. The module initializes where NS.Constants.FEATURE.offSpec is true; on
--- Forever Attach attaches nothing, the candidates bring no off-spec gear (Gear, Inspect) and its
+-- no other spec to judge. The module initializes where OS.Enabled(client) is true for the client
+-- it runs on (NS.Constants.FEATURE_CLIENTS.offSpec, the same declaration C.FEATURE.offSpec reads);
+-- on Forever Attach attaches nothing, the candidates bring no off-spec gear (Gear, Inspect) and its
 -- words (OffSpecCells' legend and notes) are absent. The readers (Of, EvalFor) stay pure.
-local INITIALIZED = NS.Constants.FEATURE.offSpec == true
+
+--- Whether the off-spec pass runs on client `clientKey` ("retail" | "forever"): pure, so an
+--- instance that knows its client asks it directly (Item Search split plan, task A2).
+--- @param clientKey string|nil
+--- @return boolean
+function OS.Enabled(clientKey)
+    for _, token in ipairs(NS.Constants.FEATURE_CLIENTS.offSpec) do
+        if token == "both" or token == clientKey then return true end
+    end
+    return false
+end
+
+local INITIALIZED = OS.Enabled(NS.Compat.ClientKey())
 
 --- Whether the off-spec pass is initialized on this client (Retail only).
 --- @return boolean

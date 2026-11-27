@@ -104,4 +104,4 @@ FOREVER.SPECS = {
 }
 
 CD.LISTS.forever = CD.Build(FOREVER)
-if NS.Compat.ClientKey() == "forever" then CD.Install(CD.LISTS.forever) end
+if NS.Compat.ClientKey() == "forever" then CD.Install(CD.ForClient("forever")) end
