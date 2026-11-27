@@ -371,13 +371,25 @@ function NS.addon.OnSpellTextUpdate(_, _, spellID)
     end
 end
 
--- An appearance was learned (or lost): re-read the flag on every cached link, then let the live
--- cosmetics be judged again (NS.CollectFeed.Changed).
+-- Who hears that the cached facts' collection state moved (IF.OnCollectionsChanged), in the order
+-- they subscribed.
+local collectionListeners = {}
+
+--- Call `fn()` each time the cached facts' collection state moves (an appearance learned or lost),
+--- after the cache is read again. The feed's re-read subscribes (modules/CollectFeed.lua); this
+--- file names no reader of its own (Item Search split plan, task A2).
+--- @param fn function
+function IF.OnCollectionsChanged(fn)
+    if type(fn) == "function" then collectionListeners[#collectionListeners + 1] = fn end
+end
+
+-- An appearance was learned (or lost): re-read the flag on every cached link, then tell the
+-- subscribers (IF.OnCollectionsChanged), so the live cosmetics are judged again.
 function NS.addon.OnTransmogCollectionUpdated()
     for link, facts in pairs(store().cache) do
         facts.transmogKnown = readTransmog(link, facts.rawEquipLoc)
     end
-    if NS.CollectFeed then NS.CollectFeed.Changed() end
+    for _, fn in ipairs(collectionListeners) do fn() end
 end
 
 --- Read the collection state again on every cached collectible (NS.Collectibles.Read on the

@@ -288,8 +288,9 @@ modules\Collectibles.lua
 # (its other rows, NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED and
 # SKILL_LINES_CHANGED, no other file handles), and its NS.STAND_DOWN step runs in TOC order, after
 # those of the modules above. Publishes NS.CollectFeed, the feed's re-read on collection events
-# (issue #13); adds its handlers to NS.addon (core\DropWatcher.lua, above). NS.Collectibles (above),
-# NS.ItemFacts and NS.LootFeed are read at call time.
+# (issue #13); adds its handlers to NS.addon (core\DropWatcher.lua, above) and subscribes to
+# NS.ItemFacts.OnCollectionsChanged (above) at load. NS.Collectibles (above), NS.ItemFacts and
+# NS.LootFeed are read at call time.
 modules\CollectFeed.lua
 # LOAD-BEARING: appends its rows to NS.FEATURE_EVENTS where other files share the event:
 # BAG_UPDATE_DELAYED before modules\TradeTimer.lua's, and PLAYER_REGEN_ENABLED after

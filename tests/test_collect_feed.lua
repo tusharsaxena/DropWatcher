@@ -217,7 +217,7 @@ test("collect feed: a learned appearance re-judges a live cosmetic through the s
     m.items[link(300)].transmog = true
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
     m.advance(NS.CollectFeed.REREAD_DELAY)
-    -- red under: ItemFacts' transmog handler not calling CollectFeed.Changed
+    -- red under: ItemFacts' transmog handler not telling its OnCollectionsChanged subscribers
     assertEqual(rec.me.verdict, "collected")
     assertEqual(count(seen, rec.id .. ":collection"), 1)
 end, T.RETAIL_ONLY)

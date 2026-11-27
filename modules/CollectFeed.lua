@@ -4,7 +4,7 @@ local _, NS = ...
 -- keeps the category, the collection verdict and the read alone. Drop Watcher's only.
 --
 -- NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and
--- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (Changed) arm one REREAD_DELAY timer, so a burst
+-- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (NS.ItemFacts.OnCollectionsChanged) arm one REREAD_DELAY timer, so a burst
 -- reads once. It runs NS.ItemFacts.RereadCollections (the cache is ItemFacts' to write), then sends
 -- each live collectible whose verdict moved (NS.Collectibles.Verdict) through
 -- NS.LootFeed.Refresh(rec, "collection"), which re-judges it and sends DropUpdated(id,
@@ -62,8 +62,11 @@ end
 
 --- A collection changed (a mount, pet, toy or recipe learned, a profession gained or lost, an
 --- appearance learned): read the collectibles again, once, CF.REREAD_DELAY seconds from the first
---- call of a burst. ItemFacts' transmog handler calls it too.
+--- call of a burst. ItemFacts' OnCollectionsChanged calls it too.
 function CF.Changed() arm("all") end
+
+-- ItemFacts tells its subscribers when an appearance is learned; the feed is one.
+NS.ItemFacts.OnCollectionsChanged(function() CF.Changed() end)
 
 for _, event in ipairs({ "NEW_MOUNT_ADDED", "NEW_PET_ADDED", "NEW_TOY_ADDED", "NEW_RECIPE_LEARNED",
     "SKILL_LINES_CHANGED" }) do

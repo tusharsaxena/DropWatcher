@@ -293,6 +293,18 @@ test("item facts: learning an appearance re-reads the flag on the cached facts",
     assertTrue(IF.Get(CHEST).transmogKnown)
 end, T.RETAIL_ONLY)
 
+test("item facts: OnCollectionsChanged subscribers hear an appearance learned, after the re-read", function()
+    local _, m, IF = enabled(function(m) m.addItem(CHEST, chest()) end)
+    IF.Get(CHEST)
+    local heard = {}
+    IF.OnCollectionsChanged(function() heard[#heard + 1] = tostring(IF.Get(CHEST).transmogKnown) end)
+    IF.OnCollectionsChanged("not a function")
+    m.items[CHEST].transmog = true
+    m.__fire("TRANSMOG_COLLECTION_UPDATED")
+    -- red under: a handler that calls a named reader (Collectibles, CollectFeed) instead of its subscribers
+    assertEqual(table.concat(heard, ","), "true", "one call, the cache already read again")
+end, T.RETAIL_ONLY)
+
 test("item facts: rawEquipLoc and the category are filled on every item (issue #13)", function()
     local _, _, IF = enabled(function(m)
         m.addItem(RING, ring()); m.addItem(CHEST, chest())
