@@ -31,10 +31,10 @@
 | B3 | LK | `VerdictSettings.lua` drop-in Comparison section | done | 021bdc46 |
 | B4 | LK | v1.119.0 release record (minors, xml, majors, CHANGELOG, API docs, bundle); push | done | 110e02be |
 | C1 | DW | Re-vendor branch build; DW on the major; moved files deleted; push | done | 5e28f3f |
-| C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | todo | |
-| C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | todo | |
-| D1 | DW | Clean cut of Item Search; retire its data; docs; push | todo | |
-| E1 | STD | Roster row + library-stack-§7 ripple; push | todo | |
+| C2 | IS | Repo + scaffold (NEW_ADDON, Forever-only), #18 transferred | done | IS 91dd3a4 |
+| C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | done | IS 9d11bbe |
+| D1 | DW | Clean cut of Item Search; retire its data; docs; push | done | 8addbd5 |
+| E1 | STD | Roster row + library-stack-§7 ripple; push | done | STD 7b99af2 |
 | F1 | all | Reviews, Item Search standards audit, fix pass; push | todo | |
 | G1 | all | Owner go-ahead → merge, tag, re-verify, close #19, cleanup | todo | |
 
@@ -301,29 +301,125 @@ the class-list seed contract reading `libs/` read-only goes to LibKa0s, raise at
 
 **Files:** new repo `/mnt/d/Profile/Users/Tushar/Documents/GIT/ItemSearch`, everything `NEW_ADDON.md` steps 0-9 lay down, Forever-only shape.
 
-- [ ] **Step 1:** `gh repo create tusharsaxena/ItemSearch --public --description "<one line>"`; clone to the sibling folder; copy labels from DropWatcher (`gh label clone tusharsaxena/DropWatcher -R tusharsaxena/ItemSearch`); transfer #18 (`gh issue transfer 18 tusharsaxena/ItemSearch -R tusharsaxena/DropWatcher`).
-- [ ] **Step 2:** Follow `WowAddonStandards/NEW_ADDON.md` steps 0-9 (context pack read from the scratchpad, never stored), vendoring LibKa0s from its branch HEAD (v1.119.0 pre-tag); launcher entries per Global Constraints.
-- [ ] **Step 3:** Gate green → commit per playbook step; push `master` (initial) and the run branch.
+- [x] **Step 1:** `gh repo create tusharsaxena/ItemSearch --public --description "<one line>"`; clone to the sibling folder; copy labels from DropWatcher (`gh label clone tusharsaxena/DropWatcher -R tusharsaxena/ItemSearch`); transfer #18 (`gh issue transfer 18 tusharsaxena/ItemSearch -R tusharsaxena/DropWatcher`).
+- [x] **Step 2:** Follow `WowAddonStandards/NEW_ADDON.md` steps 0-9 (context pack read from the scratchpad, never stored), vendoring LibKa0s from its branch HEAD (v1.119.0 pre-tag); launcher entries per Global Constraints.
+- [x] **Step 3:** Gate green → commit per playbook step; push `master` (initial) and the run branch.
+
+Builder note (C2): ItemSearch commits `c29ba91` (.gitattributes first, line-endings-§5), `58e7d55`
+(scaffold, NEW_ADDON steps 1-5 and 6a, Forever-only), `fba9863` (README, DEPENDENCIES and the docs
+set, steps 6, 6b, 7), `91dd3a4` (first automated-test record, step 8, bundle `20261128-003221`);
+`master` and `feat/2026-11-27-itemsearch-split` both pushed at `91dd3a4`. Gate at `91dd3a4`: 129
+passed / 0 failed / 3 skipped on both kit profiles (tests/client_pin.lua pins every run to
+Forever), luacheck 0/0 in 43 files, no tools/seeds yet; the bundle green on all four suites (max
+CCN 12, blindFiles 0). GitHub: tusharsaxena/ItemSearch created public and empty, 18 labels cloned
+from DropWatcher, DropWatcher#18 transferred (now ItemSearch#1, labels kept, commented that it
+tracks Retail support). Decisions C3, E1, F1 and G1 follow: (1) THE BINDING NAME: launcher-§6 names
+the Show window button `<Folder>Toggle<Window>`, so it is `CLICK ItemSearchToggleWindow:LeftButton`
+(label "Toggle Item Search window"); `ItemSearchKey` would need a ruled deviation. (2) R11's run-time
+default key conflicts with launcher-§6 *No default key*: C3 owes a `## Documented deviations` row
+citing R11 and DW's launcher-§6 row; the scaffold set no key. (3) THE VENDOR GATE before the tag:
+`tests/test_vendor_sync.lua` passes `probe = "v1.119.0:LibKa0s/Core.lua"`, so its two payload cases
+skip until G1 tags; G1 drops the probe opt and re-runs. By blob ids libs/LibKa0s (outside the
+pruned icons and sounds) and tests/_kit equal LibKa0s `110e02be`. (4) Icons: chevron-down,
+chevron-up, clear, close, confirm, copy, info, lock, move, reset, settings, unlock, volume-high;
+no sounds. (5) Left to C3: the OptionalDeps with their DEPENDENCIES lines, core/Compat.lua,
+tools/seeds/, the README feature text, Version History row and badge. (6) The logo is DW's Ka0s
+shield with the wordmark redrawn "Item Search"; the owner may want proper art. (7) The DoD's first
+docs/audits entry is F1's standards audit; E1 adds the roster row. Ace3 libs came from SkillMaster
+and match DW's; the context pack was read from the scratchpad only. Nothing in DropWatcher was
+touched.
 
 ### Task C3: Port Item Search (IS)
 
 **Files:** from DW (paths in design §5.2) into IS's `core/ modules/ settings/ locales/ defaults/ tests/ tools/seeds/ docs/`; `core/VerdictSetup.lua` (IS instance, `client = "forever"`); `Bindings.xml` (`CLICK ItemSearchKey:LeftButton`); Test mode module; Comparison page; README / ARCHITECTURE / testing / smoke-tests / scope / module-map / schema / settings-panel / validate-seeds / performance / known limitations; automated-test bundle.
 
-- [ ] **Step 1:** Port tests first (DW's `test_item_search*`, `test_tip_marks`, `test_row_tooltip`, `test_tooltip_placement`, `mock_tooltip_data`) with `NS` re-rooted (`itemSearch.*` → top-level profile keys), plus Review Focus 1 and 3 tests; R11 tests (default `ALT-CTRL-S`, hint `Ctrl-Alt-S: open in Item Search`, label `Item Search`); Test mode tests. Run → FAIL.
-- [ ] **Step 2:** Port modules in dependency slices; replace DW-only helpers per design §5.2 with LibKa0s equivalents or IS-local thin helpers; commit per slice `IS-C3.<n>`.
-- [ ] **Step 3:** Gate green; bundle; push.
+- [x] **Step 1:** Port tests first (DW's `test_item_search*`, `test_tip_marks`, `test_row_tooltip`, `test_tooltip_placement`, `mock_tooltip_data`) with `NS` re-rooted (`itemSearch.*` → top-level profile keys), plus Review Focus 1 and 3 tests; R11 tests (default `ALT-CTRL-S`, hint `Ctrl-Alt-S: open in Item Search`, label `Item Search`); Test mode tests. Run → FAIL.
+- [x] **Step 2:** Port modules in dependency slices; replace DW-only helpers per design §5.2 with LibKa0s equivalents or IS-local thin helpers; commit per slice `IS-C3.<n>`.
+- [x] **Step 3:** Gate green; bundle; push.
+
+Builder note (C3): ItemSearch commits `2d18b9a` (IS-C3.1: the code, the verdict seam and the model's
+suites) .. `9bef859` (IS-C3.7: automated-test record, bundle `20261128-015157`), then `f2498e4` and
+`9d11bbe` (review fixes); pushed. Gate at `9d11bbe`: 450 passed / 0 failed / 3 skipped on both kit
+profiles, luacheck 0/0 in 99 files, `pytest tools/seeds` 12 passed; the `--list` Total 450. Ported
+from DW `5a29b1b` and re-rooted: `itemSearch.*` moved to the top-level profile; `global.prices`,
+`global.learnedRecipes` and `char.keyDefaulted`. Decisions: (1) the code landed whole in C3.1 (the
+modules lean on shared helpers and cannot load in parts); the later commits split by suite; ported
+suites ran red first, the new ones (R11, RF1/RF3, test mode, Comparison) were written after the
+code. (2) Two bindings: the scaffold's Show window plus `CLICK ItemSearchKey`; ALT-CTRL-S set once
+per character; DW's dead-chord retry dropped; `Compat.ChordText` writes the hint Ctrl-Alt-Shift.
+The launcher-§6 deviation row (the run-time default key and the noun label, R11) is in IS's
+register (review fix `f2498e4`). (3) Verdict seam `v:Judge`; `onChange` forwards only `"gear"` as
+`GEAR_CHANGED` (forwarding collection/score/item re-judged sooner than DW did); reads use NS.Compat
+members, else the library's; config is `comparison.*`; the Comparison page is `V.Settings.Rows/Tabs`
+with defaults from `V.Settings.Defaults()`; the noStats key is in the locale. (4) DW-only helpers
+rebuilt as `modules/Chrome.lua`; TipMarks and RowTooltip cut to what IS draws, `modules/TipGrid.lua`
+removed (no grid line); DW-only cases dropped from test_tip_marks, test_row_tooltip and
+test_tooltip_placement, which were retargeted at the IS window. (5) The window keeps the
+scaffold's lock (a launcher entry). Test mode marks the tooltip block with a localized "Test data"
+line (preview-mode). test_vendor_sync's two pre-tag payload cases are declared skips. The rest of
+C3's report reached D1 cut short; F1 reads C3's commits for anything not recorded here.
 
 ### Task D1: Drop Watcher clean cut (DW)
 
-- [ ] **Step 1:** Remove every Item Search file/row/string/default/binding/magnifier/`search` verb/sim + diagnostics mention/tests; drop OptionalDeps only Item Search read (ForeverDB, ForeverDB_Full, TomTom, Auctionator — check each for another reader first) and `core/ForeverDBSetup.lua` if unused.
-- [ ] **Step 2:** Migration step: delete `profile.itemSearch` and `global.itemSearch` (extend `NS.RetireItemSearchRows`), with a test.
-- [ ] **Step 3:** Docs sync (README Version History unreleased note "Item Search moved to Ka0s Item Search", scope, ARCHITECTURE incl. per-client table, smoke-tests, DEPENDENCIES, validate-seeds); gate green both clients; push.
+- [x] **Step 1:** Remove every Item Search file/row/string/default/binding/magnifier/`search` verb/sim + diagnostics mention/tests; drop OptionalDeps only Item Search read (ForeverDB, ForeverDB_Full, TomTom, Auctionator — check each for another reader first) and `core/ForeverDBSetup.lua` if unused.
+- [x] **Step 2:** Migration step: delete `profile.itemSearch` and `global.itemSearch` (extend `NS.RetireItemSearchRows`), with a test.
+- [x] **Step 3:** Docs sync (README Version History unreleased note "Item Search moved to Ka0s Item Search", scope, ARCHITECTURE incl. per-client table, smoke-tests, DEPENDENCIES, validate-seeds); gate green both clients; push.
+
+Builder note (D1): commit `8addbd5`, pushed. Gate at `8addbd5`: Retail 2669 passed / 2 failed / 6
+skipped (2677), Forever 2556 / 2 / 114 (2672), the 2 on each profile the vendor gate's pre-tag
+payload cases C1 recorded; luacheck 0/0 in 263 files; `pytest tools/seeds` 22 passed. The vendor
+bytes were proven as C1 did: a scratch clone of the LibKa0s worktree with a throwaway local tag
+`v1.119.0` at `110e02be` beside a clone of this branch gives 2671 passed / 0 failed, all three
+VendorSync cases green (the icon prune below included). `docs/test-cases.md` regenerated, Total 2671
+(it read 2799 with 168 skips before; the C1 inventory was stale), README badge 2671. Decisions F1
+and G1 should know: (1) MIGRATION: `NS.RetireItemSearchRows` deletes every stored `itemSearch`
+table, `global.itemSearch`, each `char.<key>.itemSearch` (the key's once-per-character mark, which the
+plan did not name) and each profile's; it is new step 19 (accounts already at 18 never re-run 17)
+and step 17 calls it too, so steps 16 and 18 meet nothing on an older account. Step 16 no longer
+reads `NS.ItemSearch.TIP_ROWS` (a frozen 3). Two new test_database cases; they were written before
+the step, but their red run was not captured on its own. (2) DEAD WITH IT, removed rather than kept:
+`Compat.LinkInChat`, `ItemCount`, `TooltipRightLine`, `ProfessionRanks`, `SpellKnown` (132 shims now,
+compat-layer.md and ARCHITECTURE recounted), `NS.SelectedColor`, `RT.PlaceItemTip` (ISR3-DW-09's late
+growth), `TM.Escape`'s size argument, `Settings.RowMakers`, the page builder's `keybinds` and
+`afterSubgroup` options, the `dw.auction` and `dw.tipRule` skin tokens (twenty-three owner tokens)
+and `C.TONE.auction`, the skill/type/profession meaning tones. 498 locale keys nothing reads went
+(test_locale's reverse gate found 490; 8 more, `loaded`, `off`, `Title`, `profession`, `source`,
+`recipe`, `everything`, `yellow`, survived it only by matching unrelated string literals). (3) ICONS:
+the 16 only Item Search drew (search, dash, sort-up, sort-down and twelve `ph:*`) left the CLAUDE.md
+declaration, pruned with the worktree's `tools/prune-icons.lua` (the declaration-driven prune; no
+other `libs/` byte moved); the README credits lost Item Search's icons. (4) OPTIONALDEPS: ForeverDB
+and Auctionator dropped from the TOC (no other reader; ForeverDB was there before #17 for SF-DW-01's
+retired chip), and `.pkgmeta`'s `forever-db` optional dependency; TomTom was never listed.
+LibKa0s-ForeverDB-1.0 and LibKa0s-WaypointArrow-1.0 stay vendored (the payload is whole) and are
+now unwired: ARCHITECTURE says twenty-one wired, two direct, four unwired. (5) THE DEVIATION ROW:
+DW's launcher-§6 row (the Alt-Ctrl-D default and the noun label) is retired with the key; IS
+carries its own. (6) SEEDS: `tools/seeds/recipes.py` and its test went; `seeds.py` keeps its class
+lists and `forever_rulings.json` (the class seeds' rulings), so the seed gate stays meaningful (22
+cases). The `*-forever-recipes*` bundles under `docs/seed-research/` stay as frozen records. (7)
+README: the Version History row is `| Next | Unreleased | ... |` (the collection's unreleased rows
+name the coming version, which D1 may not pick: G1 or the owner renames it at release); the FAQ's
+"where a drop comes from" row points at Ka0s Item Search. smoke-tests: the ITEM-SEARCH section and
+index rows went, FOREVER-21 checks the cut, and its *Pending sign-off* line is added. (8) Not done,
+for G1 or the owner: DW has no CurseForge description in the repo, so "the CurseForge text" (design
+§5.3) is the owner's edit on the project page; a key a player bound to the old Item Search binding
+stays in the game's binding set, recorded in known-limitations.md.
 
 ### Task E1: Standard (STD)
 
-- [ ] **Step 1:** `standards/ADDONS.md` row: `| Ka0s Item Search | ../../ItemSearch/ | https://github.com/tusharsaxena/ItemSearch | Forever | Enabled · Locked · Test mode · Show window (the Item Search window) | test | none |` (alphabetical position).
-- [ ] **Step 2:** library-stack-§7 module table row + counts (27 majors, file count), inter-module paragraph (Verdict floors on Core; Options/Widgets read at call time), `EXECUTIVE_SUMMARY.md` counts.
-- [ ] **Step 3:** If the repo's CLAUDE.md requires a version bump for these, STOP and ask the owner (R8 covers LibKa0s only). Commit; push.
+- [x] **Step 1:** `standards/ADDONS.md` row: `| Ka0s Item Search | ../../ItemSearch/ | https://github.com/tusharsaxena/ItemSearch | Forever | Enabled · Locked · Test mode · Show window (the Item Search window) | test | none |` (alphabetical position).
+- [x] **Step 2:** library-stack-§7 module table row + counts (27 majors, file count), inter-module paragraph (Verdict floors on Core; Options/Widgets read at call time), `EXECUTIVE_SUMMARY.md` counts.
+- [x] **Step 3:** If the repo's CLAUDE.md requires a version bump for these, STOP and ask the owner (R8 covers LibKa0s only). Commit; push.
+
+Builder note (E1): WowAddonStandards commit `7b99af2` (`IS-E1: v2.121.1`), in the worktree
+`/mnt/d/Profile/Users/Tushar/Documents/GIT/.worktrees/WowAddonStandards-itemsearch`, branch pushed.
+The roster row for Ka0s Item Search (Forever; Enabled · Locked · Test mode · Show window; preview
+`test`; no Sim mode); library-stack-§7's Verdict row, counts recounted on the LibKa0s release
+branch at `110e02be` (27 majors, 98 files), the Core-floor census (25 of 27 floor, 13 without a
+call) and Verdict's call-time reads named as no edges; the counts rippled into STANDARDS.md,
+EXECUTIVE_SUMMARY.md, NEW_ADDON_CONTEXT.md and open-evolutions; the version stamps moved to
+v2.121.1 (README.md, CLAUDE.md, EXECUTIVE_SUMMARY.md, NEW_ADDON_CONTEXT.md) and v2.121.0's entry
+moved to standards/CHANGELOG.md. Recorded by D1 from the commit itself: E1's own report did not
+reach D1, so whether the v2.121.1 patch bump was put to the owner under Step 3 is F1's to confirm.
 
 ### Task F1: Reviews and audit (all)
 
