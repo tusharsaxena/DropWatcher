@@ -247,6 +247,25 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertFalse(S.Set("comparison.weights", { ["hunter:x"] = { INTELLECT = 1 } }))
 end)
 
+test("rows: the verdict's config is the six comparison values and the client's verdict mode", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("comparison.sidegradeBand", 7))
+    assertTrue(S.Set("comparison.scorer", "weights"))
+    assertTrue(S.Set("comparison.weights", { [62] = { INTELLECT = 1 } }))
+    local v = NS.LootFeed.VerdictConfig()
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys)
+    assertEqual(table.concat(keys, ","),
+        "compareOwned,heirloomProtect,scorer,sidegradeBand,undesired,verdictMode,weights")
+    assertEqual(v.sidegradeBand, 7); assertEqual(v.scorer, "weights"); assertEqual(v.weights[62].INTELLECT, 1)
+    assertEqual(v.verdictMode, T.forever and "scoreFirst" or "ilvlFirst")
+    local cfg = NS.LootFeed.Config()
+    assertEqual(cfg.sidegradeBand, 7, "the feed's config keeps its judging fields, read from the verdict's")
+    assertEqual(cfg.verdict.scorer, "weights", "and carries the verdict's whole")
+end)
+
 test("rows: the feed, the situations and the messaging edge read the rows", function()
     local NS = T.bootAddon()
     local S = NS.SchemaRuntime
