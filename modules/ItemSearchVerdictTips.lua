@@ -145,7 +145,7 @@ local SURE = {}
 SURE.use = function()
     local v, s = V(), V().SURE
     return L["How clear the use value makes it"], {
-        L["How far into its band the use value sits. 100%% is a clear call:"],
+        L["How far into its band the use value sits. 100% is a clear call:"],
         L["Keep: %d or more past %d."]:format(s.KEEP_FULL, v.KEEP),
         L["Hold: %d or more from the nearer edge of %d to %d."]:format(s.HOLD_FULL, v.HOLD, v.KEEP - 1),
         L["Auction, Vendor or Toss: %d or more under %d."]:format(s.USE_FULL, v.HOLD) }

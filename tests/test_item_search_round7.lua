@@ -124,6 +124,8 @@ test("verdict tips: every part and How sure key the scorer emits has a tooltip, 
         assertTrue(#IVT.Lines({ key = key, points = -5 }) >= 2, "a title and a line for " .. key)
     end
     assertEqual(#IVT.Lines(nil), 0); assertEqual(#IVT.Lines({ key = "nope" }), 0)
+    -- red under (R7-REV): an unformatted "100%%" shown with both signs
+    for _, line in ipairs(IVT.Lines({ key = "use" })) do assertTrue(not line:find("%%%%"), "no doubled %: " .. line) end
     local cap = table.concat(IVT.Lines({ key = "questsCap", points = -15 }), "\n")
     assertTrue(cap:find("Taken off here: 15.", 1, true) ~= nil, "a cap says what it took off")
     local real = V.QUEST_CAN

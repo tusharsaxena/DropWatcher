@@ -554,6 +554,8 @@ local function makeResizable(f)
 end
 
 local function onHide()
+    -- a drag that never saw its mouse-up (R7-REV): the next size change paints in full again
+    if frame then frame.dwSizing = false end
     ISG.HideTip()
     NS.CloseMenu()
     if searchTimer then searchTimer:Cancel(); searchTimer = nil end
