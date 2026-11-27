@@ -97,7 +97,7 @@ Total.
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - database: step 15 retires window.itemSources in every stored profile and keeps the rest
 - database: step 19 deletes every stored itemSearch table and keeps the rest
-- database: steps 16 to 19 over a schema-15 account leave no itemSearch table
+- database: a schema-15 account's itemSearch data runs steps 16 to 18 without raising and is gone
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
@@ -2877,9 +2877,9 @@ Total.
 
 ### test_vendor_sync.lua (3)
 
-- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
-- tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
+- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
+- tests/_kit is the test kit that shipped with that release (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
 
 ### test_locale.lua (7)
 
@@ -3203,7 +3203,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 3 |
+| test_vendor_sync.lua | 1 |
 | test_locale.lua | 7 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -3213,5 +3213,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 6 |
-| **Total** | **2671** |
+| Skipped | 8 |
+| **Total** | **2669** |

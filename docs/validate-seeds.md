@@ -36,7 +36,7 @@ made while Drop Watcher held them.
 | Flavor | Source | Seed files | Tools |
 | --- | --- | --- | --- |
 | `retail` | wago.tools product `wow` (Retail live) | `libs/LibKa0s/VerdictClassData.lua`'s `RETAIL` (hand-curated in LibKa0s, tool-checked here; the ruled `RETAIL.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor retail` |
-| `forever` | wago.tools product `wowf` (WoW Forever) | `libs/LibKa0s/VerdictClassData.lua`'s `FOREVER` (hand-curated in LibKa0s, tool-checked here; the ruled `FOREVER.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only), and `core/RecipeReagentsForever.lua` (generated whole, recipe reagents) | `tools/seeds/seeds.py --flavor forever`, `tools/seeds/seeds.py recipes` (`tools/seeds/recipes.py`) |
+| `forever` | wago.tools product `wowf` (WoW Forever) | `libs/LibKa0s/VerdictClassData.lua`'s `FOREVER` (hand-curated in LibKa0s, tool-checked here; the ruled `FOREVER.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor forever` |
 
 ## Rules
 

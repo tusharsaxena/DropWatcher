@@ -293,8 +293,10 @@ test("database: step 19 deletes every stored itemSearch table and keeps the rest
 end)
 
 -- An account stored before Item Search's own steps (16 to 18) runs them over data step 17 now
--- deletes: nothing of it is left, and nothing raises.
-test("database: steps 16 to 19 over a schema-15 account leave no itemSearch table", function()
+-- deletes: nothing of it is left, and nothing raises. A regression guard for steps 16 and 18 meeting
+-- no itemSearch table, not evidence for step 19: step 17 alone empties it here (the case above, seeded
+-- at schema 18, is the one that is red without step 19).
+test("database: a schema-15 account's itemSearch data runs steps 16 to 18 without raising and is gone", function()
     local NS = T.newAddon()
     _G.DropWatcherDB = {
         global = { schemaVersion = 15, itemSearch = { recent = { "Linen Cloth" } } },
