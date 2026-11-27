@@ -265,13 +265,14 @@ end)
 -- On Forever the module is not initialized (no off-spec pass, even on Retail's spec model, and no
 -- off-spec gear on a candidate), the off-spec glow and the askOffSpec template have no row, there is
 -- no askOffSpec template, and no column tip or note speaks of it. On Retail each is there.
-test("offspec: Enabled(client) answers per client, the module's own gate reads it for its client", function()
+test("offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)", function()
     local NS = T.newAddon()
     -- red under: an off-spec gate fixed by the file-load client alone (Item Search split plan, A2)
     assertTrue(NS.OffSpec.Enabled("retail"), "Retail's")
     assertEqual(NS.OffSpec.Enabled("forever"), false, "never Forever's")
     assertEqual(NS.OffSpec.Enabled(nil), false, "no client: none")
-    assertEqual(NS.OffSpec.Initialized(), NS.OffSpec.Enabled(NS.Compat.ClientKey()))
+    assertEqual(NS.OffSpec.Initialized(), NS.Constants.FEATURE.offSpec == true, "gated through ForClient")
+    assertEqual(NS.OffSpec.Enabled(NS.Compat.ClientKey()), NS.Constants.FEATURE.offSpec == true, "the two agree")
 end)
 
 test("offspec: not initialized, no rows, no askOffSpec on Forever", function()

@@ -32,13 +32,17 @@ local OS = NS.OffSpec
 local CD = NS.ClassData
 
 -- RETAIL'S ALONE (Forever port design §4.4, clients-§4): WoW Forever's spec is class-wide, so it has
--- no other spec to judge. The module initializes where OS.Enabled(client) is true for the client
--- it runs on (NS.Constants.FEATURE_CLIENTS.offSpec, the same declaration C.FEATURE.offSpec reads);
--- on Forever Attach attaches nothing, the candidates bring no off-spec gear (Gear, Inspect) and its
+-- no other spec to judge. The module registers through the clients-§4 gate alone: it initializes
+-- where C.FEATURE.offSpec (NS.Compat.ForClient over C.FEATURE_CLIENTS.offSpec, which fails at load
+-- on an unknown token) is true. OS.Enabled(client) is only the pure query for a NAMED client, never
+-- the registration gate. On Forever Attach attaches nothing, the candidates bring no off-spec gear (Gear, Inspect) and its
 -- words (OffSpecCells' legend and notes) are absent. The readers (Of, EvalFor) stay pure.
 
 --- Whether the off-spec pass runs on client `clientKey` ("retail" | "forever"): pure, so an
---- instance that knows its client asks it directly (Item Search split plan, task A2).
+--- instance that knows its client asks it directly (Item Search split plan, task A2). A nil or
+--- unknown key answers false (no client named: no off-spec), unlike CD.ForClient, whose nil or
+--- unknown key answers Retail's list; B2 keeps the two defaults apart. It reads the same
+--- C.FEATURE_CLIENTS.offSpec declaration as C.FEATURE.offSpec but is not the module's gate.
 --- @param clientKey string|nil
 --- @return boolean
 function OS.Enabled(clientKey)
@@ -48,7 +52,7 @@ function OS.Enabled(clientKey)
     return false
 end
 
-local INITIALIZED = OS.Enabled(NS.Compat.ClientKey())
+local INITIALIZED = NS.Constants.FEATURE.offSpec == true
 
 --- Whether the off-spec pass is initialized on this client (Retail only).
 --- @return boolean

@@ -4,8 +4,8 @@ local _, NS = ...
 -- keeps the category, the collection verdict and the read alone. Drop Watcher's only.
 --
 -- NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED and
--- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (NS.ItemFacts.OnCollectionsChanged) arm one REREAD_DELAY timer, so a burst
--- reads once. It runs NS.ItemFacts.RereadCollections (the cache is ItemFacts' to write), then sends
+-- ItemFacts' TRANSMOG_COLLECTION_UPDATED handler (NS.ItemFacts.OnCollectionsChanged) arm one
+-- REREAD_DELAY timer, so a burst reads once. It runs NS.ItemFacts.RereadCollections (the cache is ItemFacts' to write), then sends
 -- each live collectible whose verdict moved (NS.Collectibles.Verdict) through
 -- NS.LootFeed.Refresh(rec, "collection"), which re-judges it and sends DropUpdated(id,
 -- "collection"). PLAYER_REGEN_ENABLED arms the same timer for the drops still at collectUnknown

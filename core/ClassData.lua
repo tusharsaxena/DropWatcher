@@ -357,7 +357,9 @@ function CD.Install(list)
     CD.ACTIVE = list
 end
 
---- The class list for client `clientKey`: Forever's for "forever", Retail's for any other key. Pure,
+--- The class list for client `clientKey`: Forever's for "forever", Retail's for any other key, nil
+--- and unknown keys included (the file-load default; unlike OS.Enabled, whose nil key answers
+--- false, and B2 keeps the two defaults apart). Pure,
 --- so an instance that knows its client picks its list itself (Item Search split plan, task A2);
 --- nil for "forever" until core/ClassDataForever.lua has built it.
 --- @param clientKey string|nil
