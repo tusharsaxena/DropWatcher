@@ -35,7 +35,7 @@
 | C3 | IS | Port Item Search; R11 key; Test mode; Comparison; docs; bundle; push | done | IS 9d11bbe |
 | D1 | DW | Clean cut of Item Search; retire its data; docs; push | done | 830d610 |
 | E1 | STD | Roster row + library-stack-§7 ripple; push | done | STD 7b99af2 |
-| F1 | all | Reviews, Item Search standards audit, fix pass; push | todo | |
+| F1 | all | Reviews, Item Search standards audit, fix pass; push | done (LK, DW; IS its own pass) | LK 37bc229b, bd47d2b |
 | G1 | all | Owner go-ahead → merge, tag, re-verify, close #19, cleanup | todo | |
 
 C1 and C2/C3 run in parallel once B4 is green. D1 follows C1 and C3. E1 can run any time after B4.
@@ -438,6 +438,24 @@ reach D1, so whether the v2.121.1 patch bump was put to the owner under Step 3 i
 ### Task F1: Reviews and audit (all)
 
 - [ ] `/dev-copilot:review` on LibKa0s (branch), DW (branch), IS (all); `/dev-copilot:wow-standards-audit` on IS; adversarially verify findings; fix the confirmed ones (commit `IS-F1.<n>`); every gate green; push all.
+
+Builder note (F1, DW): commits `e1a163c` (IS-F1: re-vendor of the LibKa0s branch at `37bc229b`, its
+F1 fix pass; the library-absent stand-in gains `Events`) .. `bd47d2b` (IS-F1.6, the review bundle
+`docs/reviews/2026-11-28/` with `06_FIX_PASS.md`), pushed. Fixed: F-005 (`seed` split, IS-F1.1),
+F-007 (five dead `NS.Gear` members; two test_gear cases drive the instance, IS-F1.2), F-009 host
+half (`host.perf = NS.Perf`, IS-F1.3), F-010 (settings register before the engine stands up; the
+re-raise keeps its traceback, IS-F1.4), F-002's header (IS-F1.5). Rejected: F-002's breadth (an
+unresolvable ref skipping is testing-§11's own rule, so no deviation row), F-008 (documented suite
+seam), F-011 (schema steps are append-only), F-009's per-verdict opts table (unmeasured). OPEN, for
+G1 or the owner: F-001 (two v1.119.0 branches, DIAG minor 13: LibKa0s renumbers the second to merge),
+F-003 (50 reads overridden by same-named `NS.Compat` members for the sim seam: wrap the instance's
+reads in the seam, or a parity test; a cross-library design ruling), F-004 (the golden suite's
+kernel half and the views' suite-only members, after the tag), F-006 (the seed contract and its
+WEAPONS writer move to LibKa0s), F-012 (the kit fails an unresolvable ref where testing-§11 says
+skip). Not adopted, a candidate: `lib.EventsFor` / `v:Events()` in place of VerdictSetup's hand-kept
+`EVENTS` list. The three pre-branch functions over CCN 15 still hold the release gate red. Gate at
+`bd47d2b`: Retail 2671/0/8, Forever 2558/0/116, luacheck 0/0 (263 files), seeds 22 passed; badge and
+inventory 2671.
 
 ### Task G1: Close-out (owner go-ahead required)
 
