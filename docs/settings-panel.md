@@ -307,7 +307,7 @@ this addon's locale keys, read through `NS.L`.
 `comparison.undesired`). Each opens with a secondary strip of your class's specs (options-ui-§13:
 session state in `ctx.activeSubTab`, keyed by the tab, never stored), on your own spec first. On
 WoW Forever the strip is your class's talent trees instead, named by the client
-(`Compat.TalentTreeNames`, else "Talent tree N") and keyed `"<classFile>:<tree>"`, on your top
+(the library's `TalentTreeNames` read, else "Talent tree N") and keyed `"<classFile>:<tree>"`, on your top
 tree first (Forever port design §4.3).
 Weights draws a slider (0 to 5) per stat: the spec's primary stat, Stamina and the four secondaries,
 keyed by `GetItemStats`' own stat keys; 0 leaves a stat out. Under the sliders, **Import a Pawn

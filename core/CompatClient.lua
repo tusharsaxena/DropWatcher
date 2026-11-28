@@ -1,14 +1,15 @@
 local _, NS = ...
 -- core/CompatClient.lua — the character on this client (Forever port design §4.1, §4.2): the reads
 -- that answer differently on Retail and WoW Forever about who a character is and what it plays. The
--- player's realm, the trade partner's name, a spec's name, another unit's inspected spec, the
--- player's talent tree and the role it plays (LibKa0s-Role-1.0, its store this character's
--- db.char.role, as Ka0s Quick Comms keeps it).
+-- player's realm, the trade partner's name, a spec's name, another unit's inspected spec and the
+-- role it plays (LibKa0s-Role-1.0, its store this character's db.char.role, as Ka0s Quick Comms
+-- keeps it). The player's own spec and talent tree are the verdict engine's reads
+-- (LibKa0s-Verdict-1.0's lib.Reads, LibKa0s#111).
 --
 -- WHY HERE. The client questions themselves (IsForever, IsRetail, ClientKey, ForClient) and the
 -- character-name readers (UnitCharacterName, CharacterKey) are LibKa0s-Compat-1.0 members, so the
--- family's root, core/Compat.lua, routes them with their library-absent stubs (compat, "The root");
--- so does PlayerSpecID, through Role.Spec(). This file holds the hand-written shims of the same topic.
+-- family's root, core/Compat.lua, routes them with their library-absent stubs (compat, "The root").
+-- This file holds the hand-written shims of the same topic.
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, namespaced rung first, a secret
 -- dropped to nil before it is compared, and a missing API or library answers its documented absent
@@ -113,39 +114,6 @@ function Compat.InspectSpecID(unit)
     local id = plainNumber(fn(unit))
     if not id or id <= 0 then return nil end
     return id
-end
-
---- The player's talent tree on WoW Forever: the group of LibKa0s Role.Groups() with the most
---- points spent, as `{ index, name }` (index in the tree's display order). Nil on Retail (Role has
---- no groups there), on a tie for the most points, with no points spent, and without the library.
---- @return table|nil
-function Compat.PlayerTalentTree()
-    if not (RoleLib and RoleLib.Groups) then return nil end
-    local best, tied
-    for _, group in ipairs(RoleLib.Groups()) do
-        local spent = plainNumber(group.spent) or 0
-        if spent > 0 and (not best or spent > best.spent) then
-            best, tied = { index = group.index, name = plainString(group.name), spent = spent }, false
-        elseif best and spent == best.spent then
-            tied = true
-        end
-    end
-    if not best or tied then return nil end
-    return { index = best.index, name = best.name }
-end
-
---- The player's talent trees' names on WoW Forever, by their index in display order (LibKa0s
---- Role.Groups()): `{ [index] = name }`, a name the client does not give left out. Empty on Retail,
---- and without the library (the Comparison page's strip, Forever port design §4.3).
---- @return table
-function Compat.TalentTreeNames()
-    local out = {}
-    if not (RoleLib and RoleLib.Groups) then return out end
-    for _, group in ipairs(RoleLib.Groups()) do
-        local name = plainString(group.name)
-        if type(group.index) == "number" and name and name ~= "" then out[group.index] = name end
-    end
-    return out
 end
 
 -- ── The role (LibKa0s-Role-1.0) ─────────────────────────────────────────────────────────────

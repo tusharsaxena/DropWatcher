@@ -407,8 +407,11 @@ LibKa0s-Verdict-1.0's since the Item Search split, pinned by the library's own s
 golden suite below), `test_offspec` (feedback-19 spec §0: the off-spec pass's gate in this addon,
 Retail's alone through `C.FEATURE.offSpec`, with its rows, template and words),
 `test_verdict_setup` (`core/VerdictSetup.lua` and `core/VerdictViews.lua`: the one instance and its
-client, every read through `NS.Compat` at the call, the events as `NS.FEATURE_EVENTS` rows the
-replay reaches (each event the instance registers has its row on the client, and no row is dead), the lazy and quiet first gear read and `GearChanged` after it, the stand-down, the
+client, the vendored Verdict 3 and Sim 6 minors, `PlayerRole` the one host read and every other the
+library's at the call, the events as `NS.FEATURE_EVENTS` rows read from `EventsFor` of both clients
+that the replay reaches (each event the instance registers has its row on the client, no row is dead,
+and the stand-in has none), the lazy stand-up at OnEnable, the quiet first gear read, a gear event
+before it announcing, and `GearChanged` after it, the stand-down, the
 collection change, the client named on every kernel view, the scorer from the settings, the
 Comparison rows and the stand-in's surface), `test_offspec_cells` (DW-O1: how
 off-spec looks: the `offspec` cyan, the verdict cell through `WindowCells.Verdict`, the Me cell from

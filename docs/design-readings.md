@@ -56,7 +56,7 @@ port design §4.3) Pawn has one Classic scale per talent tree and no specs, and 
 visible scale is never used: for you, your visible custom scale, else your top talent tree's
 (the Druid's Feral 2 or 3 by your role, Restoration 4), else with no tree the best of your
 class's scales; for a looter the best of their class's scales, the one that values the drop
-highest (`NS.Compat.PawnClassScales`). Weights there are keyed `"<classFile>:<tree>"`, and a
+highest (the verdict engine's `PawnClassScales` read, LibKa0s-Verdict-1.0's own since LibKa0s#111). Weights there are keyed `"<classFile>:<tree>"`, and a
 looter with no tree is scored with the class's tree whose weights score the drop highest.
 `NS.Scoring.ScoreFor(link, who, cfg)` (`cfg` the verdict's config, `NS.LootFeed.VerdictConfig`:
 its `scorer` and `weights`; Scoring reads no setting itself) answers one item's score and how its scale or weights were

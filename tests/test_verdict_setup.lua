@@ -1,10 +1,11 @@
 -- tests/test_verdict_setup.lua — core/VerdictSetup.lua and core/VerdictViews.lua (Item Search split
 -- plan, task C1): this addon on LibKa0s-Verdict-1.0. What is pinned is the host, not the engine
 -- (the library's own suites, and the golden suite, pin the verdicts): the one instance and its
--- client; every read through NS.Compat at call time (the simulator's seam) with this addon's own
--- PlayerRole; the instance's events as NS.FEATURE_EVENTS rows the simulator's replay reaches; the
--- gear change as GearChanged and the collection change as the feed's pass; the lazy, quiet first
--- read; the stand-down; the client named on every kernel view; the scorer from the settings; the
+-- client and the vendored minors it is built on; PlayerRole the one host read, every other the
+-- library's at call time (tests/test_sim_e2e.lua pins the seam's cover of them); the instance's
+-- events as NS.FEATURE_EVENTS rows read from the library's EventsFor that the simulator's replay
+-- reaches; the gear change as GearChanged and the collection change as the feed's pass; the lazy
+-- stand-up and the quiet first read; the stand-down; the client named on every kernel view; the scorer from the settings; the
 -- Comparison rows; and the library-absent stand-in's surface.
 
 local T = _G.DW_TEST
@@ -38,25 +39,31 @@ test("verdict setup: one instance of the library's major, on this client", funct
     assertTrue(NS.ClassData.SPECS == NS.Verdict.ClassData.ForClient(NS.Compat.ClientKey()).SPECS)
 end)
 
-test("verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it", function()
+test("verdict setup: the vendored minors this host is built on: Verdict 3, Sim 6", function()
+    local _, m = T.newAddon()
+    -- Verdict 3: v.R's forwarders and the lazy stand-up; Sim 6: Sim:Cover (LibKa0s v1.120.0).
+    -- red under: a re-vendor that moves either without this host's follow-through
+    assertEqual(m.LibStub("LibKa0s-Verdict-1.0").MODULES.Verdict, 3)
+    assertEqual(m.LibStub("LibKa0s-Sim-1.0").MODULES.Sim, 6)
+end)
+
+test("verdict setup: the host names PlayerRole alone; every other read is the library's, at the call", function()
     local NS = T.newAddon()
-    local R = NS.VerdictEngine.R
+    local R, reads = NS.VerdictEngine.R, NS.VerdictEngine.host.reads
+    local names = {}
+    for name in pairs(reads) do names[#names + 1] = name end
+    -- red under: a host handing every NS.Compat member over (a same-named copy shadowing the library)
+    assertEqual(table.concat(names, ","), "PlayerRole", "the one read the host answers itself")
+    assertTrue(reads.PlayerRole == NS.Compat.PlayerRole, "NS.Compat's, the seam-wrapped member")
     -- Answers, not identities: from Verdict minor 3 a member of v.R is a forwarder, never rawequal
-    -- to the host's function (LibKa0s v1.120.0, docs/releasing.md step 8).
-    local function sentinel(owner, name)
-        local mark = {}
-        owner[name] = function() return mark end
-        return mark
-    end
-    local role = sentinel(NS.Compat, "PlayerRole")
-    assertTrue(R.PlayerRole() == role, "this addon's own role read (its role override)")
-    local info = sentinel(NS.Compat, "GetItemInfo")
-    assertTrue(R.GetItemInfo(1) == info)
-    -- red under: a host that hands the reads over once, at load (a seam installed later is missed)
-    local slot = sentinel(NS.Compat, "InventoryItemLink")
-    assertTrue(R.InventoryItemLink("player", 11) == slot, "looked up at each call")
-    local load = sentinel(NS.Item, "LoadItem")
-    assertTrue(R.LoadItem(1) == load, "the item load is NS.Item's")
+    -- to the host's or the library's function (LibKa0s v1.120.0, docs/releasing.md step 8).
+    assertEqual(R.PlayerRole(), NS.Compat.PlayerRole(), "this addon's own role read (its role override)")
+    local lib, mark = NS.Verdict.Reads, {}
+    local was = lib.InventoryItemLink
+    lib.InventoryItemLink = function() return mark end
+    local ok, got = pcall(R.InventoryItemLink, "player", 11)
+    lib.InventoryItemLink = was
+    assertTrue(ok and got == mark, "the library's read, looked up at each call")
 end)
 
 test("verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them", function()

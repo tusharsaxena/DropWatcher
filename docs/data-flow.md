@@ -581,32 +581,33 @@ the roster; the stand-up re-reads it.
 
 The facts cache is the verdict engine's (LibKa0s-Verdict-1.0's `VerdictFacts.lua`), held by this
 addon's one instance (`NS.VerdictEngine`, `core/VerdictSetup.lua`); `NS.ItemFacts` and `NS.ItemRead`
-(`core/VerdictViews.lua`) are views onto it, and every `Compat.*` read below is the host's `reads`
-(NS.Compat's member of that name, looked up at each call, so the simulator's seam still guards it).
+(`core/VerdictViews.lua`) are views onto it, and every `R.*` read below is the instance's own
+(`v.R`, LibKa0s-Verdict-1.0's `lib.Reads`, resolved at each call; the host answers `PlayerRole` alone),
+which the simulator's seam covers in place (`Sim:Cover`, `core/VerdictSetup.lua`, LibKa0s#111).
 
 ```
 ItemFacts.Get(link) ─> v:Facts(link): the cache, else v:ReadFacts(link):
-  Compat.GetItemInfo (nil: uncached) ─> name, base ilvl, equipLoc, classID, subClassID, bindType, setID
+  R.GetItemInfo (nil: uncached) ─> name, base ilvl, equipLoc, classID, subClassID, bindType, setID
   ItemRead.QualityOf ─> quality + qualitySource (the client's for the link `item`, else its color `link`)
   ItemRead.EffectiveItemLevel ─> ilvl + ilvlSource (gear: `detailed`, else `base`;
                                  anything else: the detailed level all the same, else the base)
-  Compat.GetItemUpgradeInfo ─> track (+ tier)
-  Compat.GetItemStats + ItemPrimaryStats ─> stats (every primary stat, off the tooltip)
-  Compat.GetItemSpecs ─> specs, specsClass (the class playing: the list covers it alone)
-  Compat.GetItemUniqueness ─> unique           Compat.IsItemBindToAccount* ─> warbound
-  Compat.ItemUseText (not gear only; TT-1) ─> useText, useSpellLoading (a use spell not loaded yet)
-  Compat.ItemClassRestriction ─> classes; TierTokens.Listed / Users (IsCurio, UseNamesClass) ─> isTierToken, tokenUsers
-  TierTokens.SlotOf (table, use (else Compat.TierTokenSlot), name, else any) ─> tokenSlot +
+  R.GetItemUpgradeInfo ─> track (+ tier)
+  R.GetItemStats + ItemPrimaryStats ─> stats (every primary stat, off the tooltip)
+  R.GetItemSpecs ─> specs, specsClass (the class playing: the list covers it alone)
+  R.GetItemUniqueness ─> unique           R.IsItemBindToAccount* ─> warbound
+  R.ItemUseText (not gear only; TT-1) ─> useText, useSpellLoading (a use spell not loaded yet)
+  R.ItemClassRestriction ─> classes; TierTokens.Listed / Users (IsCurio, UseNamesClass) ─> isTierToken, tokenUsers
+  TierTokens.SlotOf (table, use (else R.TierTokenSlot), name, else any) ─> tokenSlot +
                     tokenSlotSource; a concrete slot becomes equipLoc
-  Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
+  R.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
   Collectibles.Read ─> category, collect
 
 ItemFacts.Request(link, cb) ─> v:Request: facts now ("ready"), else one shared load per link:
-  NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back
+  R.LoadItem(id, retry) ─> retry reads again ───────> facts: every waiter called back
                                                   └─> still uncached: LoadItem again, up to 5,
                                                       then every waiter with nil
-  cached facts waiting on a use spell (useSpellLoading, Compat.CanRequestSpellLoad):
-    Compat.RequestSpellLoad(spellID) ─> C_Timer.After(SPELL_LOAD_WAIT 0.4 s) ─> the use text, token
+  cached facts waiting on a use spell (useSpellLoading, R.CanRequestSpellLoad):
+    R.RequestSpellLoad(spellID) ─> C_Timer.After(SPELL_LOAD_WAIT 0.4 s) ─> the use text, token
     flag, slot and category read again (rereadToken); up to 5 tries, then the facts as read
 ```
 
@@ -630,11 +631,11 @@ BAG_UPDATE_DELAYED ───────┼─> v:ScheduleGear ─> one 0.5 s ti
 PLAYER_SPECIALIZATION_    │                          │
   CHANGED ("player") ─────┤                          v
 an item load answering ───┘   v:RefreshGear ─> v:ReadGear:
-                                UnitClass, Compat.PlayerSpecID ─> classFile, specID
+                                UnitClass, R.PlayerSpecID ─> classFile, specID
                                 ClassData ─> dualWield, titanGrip
-                                every slot: Compat.InventoryItemLink ─> ItemFacts.Request
-                                  ─> a copy at Compat.InventoryItemLevel (else the facts' ilvl)
-                                bags 0-4: Compat.BagSlotCount / BagItemLink ─> ItemFacts.Request
+                                every slot: R.InventoryItemLink ─> ItemFacts.Request
+                                  ─> a copy at R.InventoryItemLevel (else the facts' ilvl)
+                                bags 0-4: R.BagSlotCount / BagItemLink ─> ItemFacts.Request
                                   ─> kept when Evaluate.Equippability says "ok"
                                 owned: each slot in id order takes the best unplaced item fitting it
                               ─> the snapshot; signature moved ─> host.onChange("gear")
@@ -651,8 +652,7 @@ arrival arms the same timer. The instance stands up at OnEnable (`NS.VerdictEnab
 (`v:StandUp{ lazy = true }`, LibKa0s#108) and reads no gear then; the first ask through `NS.Gear`
 reads it, quietly, so the first read a caller sees announces nothing and reflects the client at
 that ask. A gear event before that ask rebuilds and announces as ever, and the ask keeps that
-snapshot. The stand-down
-cancels the timer and drops the snapshot and the mirror; the stand-up rebuilds it and announces it.
+snapshot. The stand-down cancels the timer and drops the snapshot and the mirror; the stand-up rebuilds it and announces it.
 
 ## The loot parser
 

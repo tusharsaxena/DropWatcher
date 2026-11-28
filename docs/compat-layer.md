@@ -18,17 +18,28 @@ at call time, guards them, and passes them in; its members of the same names are
 delegators and stay counted below. `test_text_parse` drives the parsers with the strings passed
 in; `test_compat` drives them through the shims.
 
-**One hundred and thirty-two shims** across the family, counted the way documentation-§3 counts them
-(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `132`): the
-root `core/Compat.lua` publishes 59, `core/CompatClient.lua` 12, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18,
-`core/CompatItem.lua` 5, `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 16. The three
+**One hundred shims** across the family, counted the way documentation-§3 counts them
+(`cat core/Compat*.lua | grep -cE '^\s*function\s+[A-Za-z_][A-Za-z0-9_]*\.'` answers `100`): the
+root `core/Compat.lua` publishes 43, `core/CompatClient.lua` 10, `core/CompatLoot.lua` 17, `core/CompatWorld.lua` 18,
+`core/CompatItem.lua` 4, `core/CompatJournal.lua` 5 and `core/CompatCollect.lua` 3. The three
 secret guards, `IsSecret`, `CanAccess` and `IsSafeKey`, and the four client helpers, `IsForever`,
 `IsRetail`, `ClientKey` and `ForClient` (clients-§3, DW-FP02), are `LibKa0s-Compat-1.0`'s members, wired
 by assignment and not counted: their contract and their library-absent bodies are LibKa0s
 `docs/api/Compat/version-1-docs.md`. The major's six spell and spec readers are not published as
-members, and `test_surface_parity` lists them as unwired on purpose: the two spec readers are
-called on the library inside `PlayerSpecID` only, and nothing reads a spell through them
-(`ItemUseText` reads an item's use spell's description from the client's `C_Spell`, TT-1).
+members, and `test_surface_parity` lists them as unwired on purpose: nothing here reads a spell or
+the player's spec.
+
+**The verdict engine's reads are not here.** LibKa0s-Verdict-1.0's instance (`core/VerdictSetup.lua`)
+reads through its own `lib.Reads`, resolved at each call through `v.R`'s forwarders, and the host
+names one read, `PlayerRole` (this addon's role store). The simulator's seam covers `v.R` in place
+(`Sim:Cover`, LibKa0s#111), so a provider or a guard keyed by a read's name answers the instance's
+read too. The 32 copies this family kept only so the seam could reach them (the census of the
+2026-11-28 review, F-003: the upgrade track, the player's spec and talent tree, the account binds,
+the item stats, specs, uniqueness, class line and primary-stat lines, the transmog read, the item and
+spell load gates, the Pawn item reads and class scales, the bag item level and quality, and the
+mount, pet, toy, lockbox, recipe, profession, tier-token slot and use-text reads) were deleted, so
+there is no second copy to keep in step. Their contracts are LibKa0s's
+`docs/api/Verdict/version-3.1.1.1.1.1.1.1.1.2.2-docs.md`.
 
 ## The rules every shim keeps
 
@@ -59,7 +70,6 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | Tooltip | `ReadTooltipLine(data, typeName, parse)` | the lines of `typeName` (an `Enum.TooltipDataLineType` member) first, when the enum has it; then, when none of them answers (the client tagged the line with another type, or has no such member), every line, first non-nil `parse` wins. `parse` rejects foreign lines | `nil` |
 | | `TradeTimeRemaining(bag, slot)` | `C_TooltipInfo.GetBagItem` → the `TradeTimeRemaining` line → `ParseTradeTimeRemaining`; seconds | `nil` |
 | | `InventoryItemLevel(unit, slot)` | `C_TooltipInfo.GetInventoryItem` → the `ItemLevel` line: its numeric `itemLevel` field, else the `ITEM_LEVEL` pattern | `nil` |
-| | `GetItemUpgradeInfo(link)` | `C_Item.GetItemUpgradeInfo` (copied, plain fields only, `source = "api"`) → `C_TooltipInfo.GetHyperlink`'s `ItemUpgradeLevel` line read with `ITEM_UPGRADE_TOOLTIP_FORMAT_STRING` (`source = "tooltip"`, no `trackStringID`) | `nil` |
 | Restrictions | `InChatMessagingLockdown()` | `C_ChatInfo.InChatMessagingLockdown`; a secret answer reads as locked | `false` |
 | | `RestrictionTypes()` | `Enum.AddOnRestrictionType` | `{}` |
 | | `IsRestrictionStateActive(state)` | anything but `Enum.AddOnRestrictionState.Inactive` (0 without the enum) is active, so `Activating` counts; a boolean (the event's other payload shape) answers itself; a secret state is active | `false` for nil |
@@ -71,9 +81,6 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `UnitCharacterName(unit)` | LibKa0s-Compat-1.0's `UnitCharacterName`, both values (forever-quirks-§4): the whole name, "First Surname", and a nil realm with regional names (WoW Forever); UnitName's name and realm otherwise. A secret or empty part is nil. Library absent: `UnitName`'s two values, the second dropped with regional names, so a surname is never read as a realm. Every unit name the addon reads goes through it (the roster, you, the trade partner, the simulator's members) | `nil` |
 | | `CharacterKey()` | LibKa0s-Compat-1.0's `CharacterKey`, AceDB-3.0 40's character key: "First Surname" with regional names, "Name - Realm" otherwise; a secret answer is nil | `nil` (library absent too) |
 | | `PlayerRecordKey()` (`core/CompatClient.lua`) | the player as stored records name a character (`seenBy`, the Character dropdown): `CharacterKey()` (else the whole name) with regional names; otherwise `Name-Realm` over `NormalizedRealm()`, the shape History has stored since v1 | `nil` until known |
-| | `PlayerSpecID()` | LibKa0s-Role-1.0's `Spec()` (Compat's spec ladder; class-wide on WoW Forever); without Role, LibKa0s-Compat-1.0's `GetSpecialization` (the index) then `GetSpecializationInfo(index)`'s first return, each `C_SpecializationInfo` first and the global second; a secret answer is nil. With the library absent its reader stubs answer nil, so no rung is re-implemented here | `nil` |
-| | `PlayerTalentTree()` (`core/CompatClient.lua`) | the group of LibKa0s-Role-1.0's `Groups()` with the most points spent, as `{ index, name }`; nil on Retail (no groups), on a tie and with no points spent | `nil` |
-| | `TalentTreeNames()` (`core/CompatClient.lua`) | the names of LibKa0s-Role-1.0's `Groups()` by index, `{ [index] = name }` (the Comparison page's strip on WoW Forever); empty on Retail | `{}` |
 | Role | `RoleStore()` (`core/CompatClient.lua`) | `db.char.role`, made on first use (the player's override and Role's last answer) | `nil` before the database |
 | | `PlayerRole()` (`core/CompatClient.lua`) | LibKa0s-Role-1.0's `Resolve(RoleStore())`: role, source, detail. Library absent: the override, then `UnitGroupRolesAssigned("player")` | `nil` |
 | | `AutomaticRole()` (`core/CompatClient.lua`) | what Automatic answers now, whatever the player picked: `PlayerRole`'s ladder over a copy of the store holding only its last answer, so the override stays set and the saved answer is not rewritten (General › Role's tooltip, `settings/SchemaRows.lua`) | `nil` |
@@ -107,28 +114,14 @@ called on the library inside `PlayerSpecID` only, and nothing reads a spell thro
 | | `RollPopupOpen(i)` (`core/CompatLoot.lua`) | popup `i`'s plain `rollID`, only while `IsShown()` (Blizzard can close a popup inside its own OnShow) | `nil` |
 | | `GamepadUI()` (`core/CompatLoot.lua`) | `InputUtil.IsGamepadUIEnabled()`, plain true only: WoW Forever's gamepad mode, whose rolls are in `GamepadGroupLootRollFrame` | `false` |
 | | `ChallengeMapName(mapID)` | `C_ChallengeMode.GetMapUIInfo`'s name; an empty or secret answer is nil | `nil` |
-| Binds | `IsItemBindToAccount(link)` | `C_Item.IsItemBindToAccount`; a secret answer reads as not bound | `false` |
-| | `IsItemBindToAccountUntilEquip(link)` | `C_Item.IsItemBindToAccountUntilEquip` | `false` |
-| | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
-| Items | `CanRequestItemLoad()` | `C_Item.RequestLoadItemDataByID` and `C_Timer.After` both present (LibKa0s-Item-1.0's `LoadItem` is inert without either) | `false` |
-| | `GetItemInfo(link)` | `C_Item.GetItemInfo`; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
+| Binds | `GetBagItemGUID(bag, slot)` | `ItemLocation:CreateFromBagAndSlot` → `C_Item.DoesItemExist` → `C_Item.GetItemGUID` | `nil` |
+| Items | `GetItemInfo(link)` | `C_Item.GetItemInfo`; copies `{ name, quality, itemLevel, equipLoc, classID, subClassID, bindType, setID }`, plain fields only. A nil or secret name means uncached | `nil` |
 | | `ItemEquipLoc(link)` | `C_Item.GetItemInfoInstant`'s fourth return, the `INVTYPE_*` equip location (`""` for an item you cannot wear); needs no item cache, so the gear snapshot skips bag items with no slot plan before asking for their facts | `nil` |
 | | `GetDetailedItemLevel(link)` | `C_Item.GetDetailedItemLevelInfo`; the effective level | `nil` |
-| | `GetItemStats(link)` | `C_Item.GetItemStats`; every plain string key with a plain number, unknown keys included. The client answers the primary stat of the spec playing alone, so `ItemPrimaryStats` supplies the others | `{}` |
-| | `ItemPrimaryStats(link)` | `C_TooltipInfo.GetHyperlink`'s lines read with `ITEM_MOD_STRENGTH`, `_AGILITY` and `_INTELLECT` (`%c` the sign, grouping marks dropped): every primary stat the item carries, the grayed ones included, as `{ [ITEM_MOD_*_SHORT] = n }` | `nil` |
-| | `GetItemSpecs(link)` | `C_Item.GetItemSpecInfo`; the list as a set `{ [specID] = true }`, nil for an empty list. The client lists the specs of the class playing alone, so `libs/LibKa0s/VerdictFacts.lua` records that class as `specsClass` | `nil` |
-| | `GetItemUniqueness(link)` | `C_Item.GetItemUniquenessByID`'s `(isUnique, name, count, categoryID)`; answers `(categoryID, max)`, categoryID nil for an item unique on its own | `nil, nil` |
-| | `PlayerHasTransmog(link)` | CanIMogIt's `PlayerKnowsTransmog` when that optional addon is loaded (the look known from any source; its `IsTransmogable` false answers nil), each call in `pcall` with a non-boolean answer ignored; else `C_TransmogCollection.PlayerHasTransmogByItemInfo`; a secret answer is nil | `nil` |
-| | `TransmogSource()` | which source answers `PlayerHasTransmog` now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
-| | `ItemClassRestriction(link)` | `C_TooltipInfo.GetHyperlink`'s `RestrictedRaceClass` line read with `ITEM_CLASSES_ALLOWED`, split on `LIST_DELIMITER`, each name mapped to its classFile through `LOCALIZED_CLASS_NAMES_MALE` and `_FEMALE`; a set | `nil` |
+| | `TransmogSource()` | which source answers the verdict engine's own `PlayerHasTransmog` read now: `CanIMogIt`, `C_TransmogCollection` or `none` (the diagnostics' integrations section) | `"none"` |
 | Pawn | `PawnIsReady()` | Pawn's own `PawnIsReady()` (its `PawnIsInitialized` is a file local); without that function, a global `PawnIsInitialized` flag or function | `false` |
-| | `PawnItemData(link)` | `PawnGetItemData`; nil while the item is not cached | `nil` |
-| | `PawnUpgradeInfo(link)` | `PawnIsItemAnUpgrade(PawnGetItemData(link))`: the list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, `{}` when it upgrades nothing, `nil` while not ready | `nil` |
 | | `PawnScaleForSpec(classID, specID, tree, role)` | `PawnFindScaleForSpec(classID, index)`, `index` the spec's place in its class (`NS.ClassData.SpecIndex(specID, tree, role, classFile)`; Pawn's scales are numbered so, not by specID). On WoW Forever `tree` is the talent tree's index (the specID is class-wide) and `role` makes the Druid's Feral Pawn 3 to tank, 2 for damage; Restoration is 4; no tree, no scale (Forever port design §4.3) | `nil` |
 | | `PawnVisibleScale(classID, specID, tree, role)` | The scale you show in Pawn's tooltips (`PawnCommon.Scales` and `PawnIsScaleVisible`) for your class and spec: one naming another class or spec, or an abandoned provider's, is skipped; a custom scale before a starter one, one naming your spec before one naming none, then by name; the index as `PawnScaleForSpec`'s | `nil` |
-| | `PawnCustomScale(classID)` | Your visible custom scale for the class (no provider, naming neither another class nor a spec): what WoW Forever scores you with when no talent tree is known | `nil` |
-| | `PawnClassScales(classID)` | Every starter scale of an active provider for the class (`PawnCommon.Scales`, WoW Forever's Classic scales, one per talent tree), shown or hidden, as `{ { name, index } }` sorted by index: the "best of the class" a looter, or you with no tree, is scored with | `{}` |
-| | `PawnItemValue(link, scale)` | `PawnGetSingleValueFromItem(PawnGetItemData(link), scale)`'s unenchanted value (its second return, what Pawn's own upgrade test compares), else its first; a number | `nil` |
 | Trade | `InitiateTrade(unit)` | `InitiateTrade` | `false` |
 | | `InTradeRange(unit)` | `CheckInteractDistance(unit, 2)`, the trade distance; a secret answer is out of range | `true` (the client refuses a trade too far itself) |
 | Trade window | `TradeItemLinks()` | `GetTradePlayerItemLink(i)` and `GetTradeTargetItemLink(i)` over slots 1-6 (slot 7 is not traded): answers `given, received`, two lists of links, a secret or empty answer left out | `{}, {}` |
@@ -214,10 +207,10 @@ answers the inspect members (`NotifyInspect`, guarded, schedules the reply; `Inv
 `InventoryItemID`, `InventoryItemLevel` (the roster's worn level) and `InspectSpecID` answer until
 `ClearInspectPlayer`),
 the bag members for your simulated drops (`BagSlotCount`, `BagItemLink`, `GetBagItemGUID`,
-`TradeTimeRemaining`, and `core/CompatItem.lua`'s `BagItemLevelQuality` and `TooltipBagItem`), `InTradeRange`, `ChallengeMapName`, `KeystoneLevel` (the simulated run's level) and the trade window's members
+`TradeTimeRemaining`, `core/CompatItem.lua`'s `TooltipBagItem`, and the verdict engine's own `BagItemLevelQuality` read under the seam's cover), `InTradeRange`, `ChallengeMapName`, `KeystoneLevel` (the simulated run's level) and the trade window's members
 (`TradePartnerName`, `TradeItemLinks`, `IsTradeCompleteMessage`). `test_sim_events` holds these.
 
-## The item reads at a location and the tooltip setters
+## The tooltip setters
 
 `core/CompatItem.lua` loads after `core/CompatWorld.lua` and before `core/CompatJournal.lua` and `core/SimSetup.lua` (ui spec §0,
 DW-80), on the same terms: none of its calls is version-variant, so they are not counted above, and
@@ -225,18 +218,17 @@ they are `NS.Compat` members so the seam answers them.
 
 | Member | Client call | Absent answer |
 |---|---|---|
-| `BagItemLevelQuality(bag, slot)` | `C_Item.GetCurrentItemLevel` and `C_Item.GetItemQuality` on the slot's `ItemLocation` (`ItemLocation:CreateFromBagAndSlot`, after `C_Item.DoesItemExist`): the exact level and quality, every bonus, upgrade and scaling applied | `nil, nil` for an empty slot or no API; each `nil` for a secret or missing answer |
 | `TooltipBagItem(tip, bag, slot)` | `tip:SetBagItem(bag, slot)`: the client's own tooltip, with its trade-time line | `false` when the tooltip has no such method |
 | `TooltipInventoryItem(tip, unit, slot)` | `tip:SetInventoryItem(unit, slot)` | `false` |
 | `TooltipHyperlink(tip, link)` | `tip:SetHyperlink(link)` | `false`, also for a secret or non-string link |
 | `TooltipLeftLine(tip, n)` | `_G[tip:GetName() .. "TextLeft" .. n]` | `nil`, also for an unnamed tooltip or a missing line |
 
-The verdict engine's item reads (LibKa0s-Verdict-1.0's `ItemLevelAt` and `QualityAt`, through
-`core/VerdictSetup.lua`) read `BagItemLevelQuality`; the drop tables'
+The verdict engine's item reads (LibKa0s-Verdict-1.0's `ItemLevelAt` and `QualityAt`) read its own
+`BagItemLevelQuality` (the exact level and quality on the slot's `ItemLocation`); the drop tables'
 item buttons (`NS.WindowGroup.SetItemTooltip`) call the three setters: your own drop matched to its
 bag item shows the bag slot, an item you wear your inventory slot, anything else its link. While a
-simulation runs, `modules/SimWorld.lua` answers `BagItemLevelQuality` (the link's detailed level and
-quality) and `TooltipBagItem` (the link's tooltip) for a simulated bag slot, which the client does
+simulation runs, `modules/SimWorld.lua` answers the engine's `BagItemLevelQuality` (the link's detailed
+level and quality, a provider under the seam's cover of `v.R`) and `TooltipBagItem` (the link's tooltip) for a simulated bag slot, which the client does
 not have. `test_item_read` and `test_sim_events` hold these.
 
 ## The collection reads
@@ -245,33 +237,16 @@ not have. `test_item_read` and `test_sim_events` hold these.
 (issue #13, categories design spec §2), so the seam wraps its members, on the same rules: globals
 read bare at call time, `IsSecret` first on every answer, enums by name, GlobalStrings through
 `GlobalString`, never a raise. It is a split of the root, which sits at the 1000-line band. The
-recipe's known line, a tier token's slot line and an item's tooltip use line are read through the ratified `ReadTooltipLine`
-(library-stack-§7: new consumers, not a new reader, as `ItemClassRestriction` is); the file asks
-`C_TooltipInfo.GetHyperlink` itself, because the root's `tooltipData` helper is file-local.
+mount, pet, toy, lockbox, recipe, profession, tier-token slot and use-text reads it once held are the
+verdict engine's own since LibKa0s#111 (see above).
 
 | Member | Client call | Absent answer |
 |---|---|---|
-| `MountFromItem(itemID)` | `C_MountJournal.GetMountFromItem` | `nil` (not a mount item, a secret answer) |
-| `MountCollected(mountID)` | `C_MountJournal.GetMountInfoByID`'s 11th return, `isCollected` | `nil` (also while journal data is not loaded) |
-| `PetSpeciesFromItem(itemID)` | `C_PetJournal.GetPetInfoByItemID`'s 13th return, `speciesID` | `nil` |
-| `PetCollected(speciesID)` | `C_PetJournal.GetNumCollectedInfo` → `count, limit` | `nil, nil` |
-| `IsToy(itemID)` | `C_ToyBox.GetToyInfo` answers the item | `false` |
-| `ToyCollected(itemID)` | `PlayerHasToy` | `nil` |
 | `IsCosmeticItem(link)` | `C_Item.IsCosmeticItem` (cosmetic armor and the Weapon-class cosmetic weapons) | `false` |
-| `ItemOpens(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** `LOCKED` ("Locked"): `"locked"`, or `ITEM_OPENABLE` ("<Right Click to Open>"): `"opens"`; else `false` once the tooltip was read; the lines alone, the class is the caller's (RX-04: a lockbox is Miscellaneous Junk, so `libs/LibKa0s/VerdictCollect.lua` asks it of that class alone, after the toy probe, and takes either answer as a lockbox; RX-30) | `nil` (no API, neither GlobalString, no or malformed tooltip, a secret link or line) |
-| `RecipeKnown(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** `ITEM_SPELL_KNOWN` ("Already known"): `true`, else `false` once the tooltip was read | `nil` (no API, no GlobalString, no or malformed tooltip, a secret answer or a secret line, which could hide the line) |
-| `ProfessionSkillLines()` | `GetProfessions`' five indices (cooking, fishing and archaeology included) → `GetProfessionInfo`'s 7th return, `skillLine`: `{ [skillLine] = true }`, and `{}` for a character with no profession | `nil` (no API, or a slot whose index or skill line is secret or unreadable: no answer is never read as "no profession") |
-| `TierTokenSlot(link)` | `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` over every line for one whose left text **equals** one of the localized `INVTYPE_HEAD`, `INVTYPE_SHOULDER`, `INVTYPE_CHEST`, `INVTYPE_HAND` or `INVTYPE_LEGS` GlobalStrings: that `INVTYPE_*` key (DW-CAT4; since TT-1 the second read of `NS.TierTokens.SlotOf`'s `use` rung, after the Use text) | `nil` (no API, no such line, a secret or malformed answer) |
-| `ItemUseText(link)` | `C_Item.GetItemSpell(link)`'s spell id → `C_Spell.GetSpellDescription`: what the item does when used (`Create a soulbound set hand item appropriate for your class.`); no use spell answers `nil` without a tooltip read. When the description cannot be read (no API, a secret spell id, a secret or empty text), `C_TooltipInfo.GetHyperlink` → `ReadTooltipLine` for the first line that starts with the client's `ITEM_SPELL_TRIGGER_ONUSE` (the locale table's `Use:` when unreadable), case-insensitively, its rest trimmed (TT-1; read per item that is not gear, when its facts are built). With no text, a second return names the use spell when its description came back empty, a spell the client has not loaded yet: `libs/LibKa0s/VerdictFacts.lua` then asks for it and reads again | `nil` (no use spell, a secret link, no API, no use line, a secret line); the second return `nil` but for an empty description |
-| `CanRequestSpellLoad()` | `C_Spell.RequestLoadSpellData` and `C_Timer.After` both present (TT-1: `ItemFacts.Request` waits on a use spell only then) | `false` |
-| `RequestSpellLoad(spellID)` | `C_Spell.RequestLoadSpellData(spellID)`: asks the client to load a spell, whose description then reads on a later call and `SPELL_TEXT_UPDATE` fires; answers `true` when asked (TT-1) | `false` (no API, a secret or non-positive id) |
 | `ClassDisplayName(classFile)` | `LOCALIZED_CLASS_NAMES_MALE[classFile]`, the client's name for a class (a tier token's Type cell) | `nil` (no table, an unknown class, a secret name) |
 | `ItemLinkByID(itemID)` | `C_Item.GetItemInfo(itemID)`'s second return, a `\|Hitem:` link: a curated simulator sample's link by its id (DW-CAT6) | `nil` (no API, not cached yet, a secret or non-hyperlink answer) |
 
-The verdict engine (`core/VerdictSetup.lua`'s instance of LibKa0s-Verdict-1.0) reads the
-collection members, and its facts `ItemUseText`, `CanRequestSpellLoad`, `RequestSpellLoad` and
-`TierTokenSlot` (TT-1); `modules/SimPool.lua` also reads `IsCosmeticItem` (plain gear) and
-`ItemLinkByID`; `modules/CollectCells.lua` and
+`modules/SimPool.lua` reads `IsCosmeticItem` (plain gear) and `ItemLinkByID`; `modules/CollectCells.lua` and
 `modules/InsightsRows.lua` read `ClassDisplayName`. `test_compat_collect` drives every member with its
 answer, its API absent and a secret answer, asserts the seam wraps each, and fails any other shipped
 file that names one of these APIs.
@@ -330,7 +305,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/TradeTimer.lua` | `TradeTimeRemaining`, `GetBagItemGUID`, `BagSlotCount`, `BagItemLink` |
 | `modules/TradeHelper.lua` | `InitiateTrade`, `InTradeRange` |
 | `modules/Asks.lua` | `ChatSender`, `GlobalString`; `InGroup`, `InRaid`, `InstanceGroupCategory` (`core/CompatWorld.lua`) |
-| `core/VerdictSetup.lua` | every read LibKa0s-Verdict-1.0's instance makes (its item facts, item reads, collection verdict, gear snapshot and scorers: `GetItemInfo`, `GetDetailedItemLevel`, `GetItemStats`, `GetItemSpecs`, `GetItemUniqueness`, `GetItemUpgradeInfo`, the binds, `ItemEquipLoc`, `CanRequestItemLoad`, `PlayerHasTransmog`, `ItemClassRestriction`, `ItemPrimaryStats`, `BagItemLevelQuality`, the inventory and bag reads, `PlayerSpecID`, `PlayerTalentTree`, `PlayerRole`, `UnitClass`, `UnitLevel`, the collection reads of `core/CompatCollect.lua`, the Pawn seam), resolved by name through `NS.Compat` at each call (`host.reads`), so the simulator's seam guards each one; the library's own default reads stand in only for a name `NS.Compat` lacks |
+| `core/VerdictSetup.lua` | `PlayerRole` alone (`host.reads`: this addon's role store, which the library's own read does not know); every other read LibKa0s-Verdict-1.0's instance makes is the library's `lib.Reads`, through `v.R`, which the simulator's seam covers in place (`Sim:Cover`, LibKa0s#111) |
 | `modules/Session.lua` | `IsSecret`; `InstanceState`, `InstanceInfo` (`core/CompatWorld.lua`: the instance map id This instance is kept by) |
 | `modules/History.lua` | `TradeItemLinks`, `TradePartnerName`, `IsTradeCompleteMessage` |
 | `modules/HistoryCard.lua` | `InsertChatLink` |
@@ -352,7 +327,6 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `core/DropWatcher.lua` | `InCombatLockdown` (`core/CompatWorld.lua`: test mode's refusal); `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line at logging on) |
 | `modules/TestMode.lua` | `UnitCharacterName`; `UnitClass`, `UnitGUID` (`core/CompatWorld.lua`: you, as a placeholder's looter) |
 | `modules/Diagnostics.lua` | `PawnIsReady`, `PawnVisibleScale`, `PawnScaleForSpec`, `PlayerRole`, `TransmogSource`; `IsAddOnLoaded` (`core/CompatWorld.lua`: the optional-addon line) |
-| `settings/PageEditors.lua` | `SpecName`; `PlayerSpecID` (the editors open on your spec); `UnitClass` (`core/CompatWorld.lua`) |
 | `settings/SlashVerbs.lua` | `BagSlotCount`, `BagItemLink` (`/dw offer` finds the bag item); `GetItemInfo` (an item list entry's name) |
 | `modules/Sim.lua` | `RestrictionTypes` |
 | `modules/SimPool.lua` | `JournalSelection`, `JournalSelect`, `JournalInstances`, `JournalEncounterName`, `JournalLoot`; `ItemEquipLoc`, `GetDetailedItemLevel`, `GetItemInfo` (the entries' facts); `IsCosmeticItem`, `ItemLinkByID` (`core/CompatCollect.lua`: plain gear, a curated sample's link); `InventoryItemLink`, `BagSlotCount`, `BagItemLink` (the own-items fallback, read past the seam) |
@@ -361,7 +335,7 @@ delimiter; `test_text_parse` drives the pure walk with the templates passed in.
 | `modules/SimEvents.lua` | `GroupSize`, `UnitCharacterName`, `UnitGUID`, `NameRealm`, `GlobalString`, `InCombatLockdown` (the encounter's group size, your own loot line, who shares your realm, the `LOOT_ITEM*` lines, the stop's combat check). Its providers answer `InCombatLockdown` and `PlayerInCombat` |
 
 The secret guards (`IsSecret`, `IsSafeKey`) are read by most of the edges above on every client
-payload. `DecodeDuration`, `ParseTradeTimeRemaining`, `ReadTooltipLine` and `PawnItemData` are
+payload. `DecodeDuration`, `ParseTradeTimeRemaining` and `ReadTooltipLine` are
 called inside the seam itself. Item buttons elsewhere (the detail card, the History tab, the toast,
 the Offer panel) reach `ItemIcon`, `InsertChatLink` and `DressUpItem` through
 `modules/WindowGroup.lua`'s shared item button.

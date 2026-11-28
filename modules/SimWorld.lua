@@ -29,7 +29,8 @@ local _, NS = ...
 -- with a GUID and a trade window: TradeTimeRemaining answers the seconds left until it closes, then
 -- nothing, as the tooltip line does. The trade timer, the gear snapshot and the Offer panel's Give
 -- read them through their usual members; their exact level and quality (BagItemLevelQuality) are
--- their link's, and their tooltip (TooltipBagItem) is their link's (DW-80).
+-- their link's (a provider for the verdict engine's own read, under the seam's cover of its
+-- reads, core/VerdictSetup.lua), and their tooltip (TooltipBagItem) is their link's (DW-80).
 --
 -- THE TRADE WINDOW. While a simulated trade is open (OpenTrade), its partner and both sides' items
 -- answer TradePartnerName and TradeItemLinks, and a UI_INFO_MESSAGE of type TRADE_COMPLETE is

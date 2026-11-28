@@ -132,6 +132,27 @@ test("sim e2e: the seam wraps every world read, the combat flags and the GlobalS
     end
 end)
 
+test("sim e2e: the seam covers the verdict instance's reads, PlayerRole once", function()
+    -- LibKa0s#111: Sim:Cover over NS.VerdictEngine.R (core/VerdictSetup.lua), so a provider or a
+    -- guard keyed by a read's name answers the instance's read, the library's own included.
+    -- red under: a host that hands its Compat copies over instead of covering v.R
+    local NS = T.newAddon()
+    local wrapped = {}
+    for _, key in ipairs(NS.SimSeam:Keys()) do wrapped[key] = true end
+    -- PlayerRole is the host's (NS.Compat's, wrapped already); the seam's pure keys (core/SimSetup.lua's
+    -- PURE, the NS.Compat members it leaves unwrapped) hold on the covered table too.
+    local function pure(name) return type(NS.Compat[name]) == "function" and not wrapped[name] end
+    local n = 0
+    for name, fn in pairs(NS.VerdictEngine.R) do
+        if type(fn) == "function" and name ~= "PlayerRole" and not pure(name) then
+            n = n + 1
+            assertTrue(wrapped[name], name .. " (the instance's read) is answered through the seam")
+        end
+    end
+    assertTrue(n >= 40, "the instance's reads were found: " .. n)
+    assertEqual(#NS.SimSeam:Unwrapped(), 0, "nothing on v.R escapes: " .. table.concat(NS.SimSeam:Unwrapped(), ", "))
+end)
+
 test("sim e2e: nothing escapes the seam", function()
     -- H2 (LibKa0s-Sim-1.0): every NS.Compat function is wrapped or pure after the whole addon
     -- loads. red under: a Compat member added by a file that loads after core/SimSetup.lua

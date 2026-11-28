@@ -256,43 +256,6 @@ test("compat: InventoryItemLevel prefers the line's number, then its text", func
     assertNil(Compat.InventoryItemLevel("party1", 2), "no number on the line and no global")
 end)
 
-test("compat: GetItemUpgradeInfo takes the API's table, plain fields only", function()
-    local Compat, m = fresh()
-    local link = "|cnIQ4:|Hitem:1::::::::|h[Ring]|h|r"
-    m.upgradeInfo[link] = { currentLevel = 2, maxLevel = 6, maxItemLevel = 645, trackString = "Hero",
-        trackStringID = 975 }
-    local info = Compat.GetItemUpgradeInfo(link)
-    assertEqual(info.trackString, "Hero"); assertEqual(info.trackStringID, 975)
-    assertEqual(info.currentLevel, 2); assertEqual(info.maxLevel, 6)
-    assertEqual(info.maxItemLevel, 645); assertEqual(info.source, "api")
-    assertTrue(info ~= m.upgradeInfo[link], "a copy, not the client's table")
-end)
-
-test("compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line", function()
-    local Compat, m = fresh()
-    local TT = m.Enum.TooltipDataLineType
-    local link = "|cnIQ4:|Hitem:2::::::::|h[Cloak]|h|r"
-    m.tooltips.hyperlink[link] = tooltip{ { TT.ItemUpgradeLevel, "Upgrade Level: Champion 3/6" } }
-    local info = Compat.GetItemUpgradeInfo(link)
-    assertEqual(info.trackString, "Champion"); assertEqual(info.currentLevel, 3)
-    assertEqual(info.maxLevel, 6); assertEqual(info.source, "tooltip")
-    assertNil(info.trackStringID)
-    m.C_Item.GetItemUpgradeInfo = nil
-    assertEqual(Compat.GetItemUpgradeInfo(link).trackString, "Champion", "the API absent")
-end)
-
-test("compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer", function()
-    local Compat, m = fresh()
-    installSecrets(m)
-    assertNil(Compat.GetItemUpgradeInfo("|Hitem:3|h[Plain]|h"))
-    assertNil(Compat.GetItemUpgradeInfo(nil))
-    assertNil(Compat.GetItemUpgradeInfo(T.secret("link")))
-    m.upgradeInfo.x = T.secret({ trackString = "Hero" })
-    assertNil(Compat.GetItemUpgradeInfo("x"))
-    m.C_Item, m.C_TooltipInfo = nil, nil
-    assertNil(Compat.GetItemUpgradeInfo("x"))
-end)
-
 -- ---------------------------------------------------------------------------------------------
 -- Restrictions
 -- ---------------------------------------------------------------------------------------------
@@ -358,24 +321,6 @@ end)
 -- Bind helpers
 -- ---------------------------------------------------------------------------------------------
 
-test("compat: the account-bind helpers read C_Item and answer false without it", function()
-    local Compat, m = fresh()
-    m.accountBound.a, m.accountBoundUE.b = true, true
-    assertTrue(Compat.IsItemBindToAccount("a")); assertFalse(Compat.IsItemBindToAccount("b"))
-    assertTrue(Compat.IsItemBindToAccountUntilEquip("b"))
-    assertFalse(Compat.IsItemBindToAccountUntilEquip("a"))
-    assertFalse(Compat.IsItemBindToAccount(nil))
-    m.C_Item = nil
-    assertFalse(Compat.IsItemBindToAccount("a")); assertFalse(Compat.IsItemBindToAccountUntilEquip("b"))
-end)
-
-test("compat: a secret bind answer reads as not bound", function()
-    local Compat, m = fresh()
-    installSecrets(m)
-    m.C_Item.IsItemBindToAccount = function() return T.secret(true) end
-    assertFalse(Compat.IsItemBindToAccount("a"))
-end)
-
 test("compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API", function()
     local Compat, m = fresh()
     m.bagGUIDs["0:1"] = "Item-1-0-ABC"
@@ -428,9 +373,6 @@ test("compat: a secret item answer is never copied", function()
     m.C_Item.GetItemInfo = function() return "Ring", RING, T.secret(4), 250 end
     local info = Compat.GetItemInfo(RING)
     assertNil(info.quality); assertEqual(info.itemLevel, 250)
-    m.C_Item.GetItemStats = function() return { ITEM_MOD_STAMINA_SHORT = T.secret(5), ITEM_MOD_HASTE_RATING_SHORT = 7 } end
-    local stats = Compat.GetItemStats(RING)
-    assertNil(stats.ITEM_MOD_STAMINA_SHORT); assertEqual(stats.ITEM_MOD_HASTE_RATING_SHORT, 7)
     assertNil(Compat.GetItemInfo(T.secret(RING)), "a secret link")
 end)
 
@@ -454,102 +396,6 @@ test("compat: GetDetailedItemLevel reads the effective level, nil without the AP
     assertEqual(Compat.GetDetailedItemLevel(RING), 263)
     m.C_Item.GetDetailedItemLevelInfo = nil
     assertNil(Compat.GetDetailedItemLevel(RING))
-end)
-
-test("compat: GetItemStats copies every key, unknown ones too, and is empty without an answer", function()
-    local Compat, m = fresh()
-    seedRing(m)
-    local stats = Compat.GetItemStats(RING)
-    assertEqual(stats.ITEM_MOD_CRIT_RATING_SHORT, 100); assertEqual(stats.ITEM_MOD_NEW_THING, 3)
-    assertEqual(next(Compat.GetItemStats("nope")), nil)
-    m.C_Item.GetItemStats = nil
-    assertEqual(next(Compat.GetItemStats(RING)), nil)
-end)
-
-test("compat: GetItemSpecs is a set, nil for an empty list or no API", function()
-    local Compat, m = fresh()
-    seedRing(m)
-    local specs = Compat.GetItemSpecs(RING)
-    assertTrue(specs[71]); assertTrue(specs[72]); assertNil(specs[73])
-    m.items[RING].specs = {}
-    assertNil(Compat.GetItemSpecs(RING))
-    m.C_Item.GetItemSpecInfo = nil
-    assertNil(Compat.GetItemSpecs(RING))
-end)
-
-test("compat: GetItemUniqueness reads the category and the item's own uniqueness", function()
-    local Compat, m = fresh()
-    seedRing(m)
-    local cat, max = Compat.GetItemUniqueness(RING)
-    assertEqual(cat, 55); assertEqual(max, 2)
-    m.items[RING].unique = { true, nil, nil, 0 }
-    cat, max = Compat.GetItemUniqueness(RING)
-    assertNil(cat); assertEqual(max, 1)
-    m.items[RING].unique = nil
-    cat, max = Compat.GetItemUniqueness(RING)
-    assertNil(cat); assertNil(max)
-    m.C_Item.GetItemUniquenessByID = nil
-    m.GetItemUniqueness = function() error("the removed global was called") end
-    assertNil((Compat.GetItemUniqueness(RING)))
-end)
-
-test("compat: PlayerHasTransmog answers the collection, nil when absent or secret", function()
-    local Compat, m = fresh()
-    seedRing(m, { transmog = true })
-    assertTrue(Compat.PlayerHasTransmog(RING))
-    m.items[RING].transmog = false
-    assertFalse(Compat.PlayerHasTransmog(RING))
-    installSecrets(m)
-    m.C_TransmogCollection.PlayerHasTransmogByItemInfo = function() return T.secret(true) end
-    assertNil(Compat.PlayerHasTransmog(RING))
-    m.C_TransmogCollection = nil
-    assertNil(Compat.PlayerHasTransmog(RING))
-end)
-
-test("compat: ItemClassRestriction reads the classes line by type, else by text", function()
-    local Compat, m = fresh()
-    m.tooltips.hyperlink[RING] = tooltip({ { 20, "Binds when picked up" },
-        { 21, "Classes: Warrior, Death Knight, Nobody" } })
-    local set = Compat.ItemClassRestriction(RING)
-    assertTrue(set.WARRIOR); assertTrue(set.DEATHKNIGHT); assertNil(set.PALADIN)
-    m.Enum.TooltipDataLineType.RestrictedRaceClass = nil
-    assertTrue(Compat.ItemClassRestriction(RING).DEATHKNIGHT, "the text fallback")
-    m.tooltips.hyperlink[RING] = tooltip({ { nil, "Classes: Nobody" } })
-    assertNil(Compat.ItemClassRestriction(RING), "no known class")
-    m.ITEM_CLASSES_ALLOWED = nil
-    assertNil(Compat.ItemClassRestriction(RING))
-    m.C_TooltipInfo = nil
-    assertNil(Compat.ItemClassRestriction(RING))
-end)
-
-test("compat: ItemPrimaryStats reads every primary stat line, the inactive ones too", function()
-    local Compat, m = fresh()
-    -- The Fireproof Drape as a hunter's client shows it: Agility active, the other two grayed.
-    m.tooltips.hyperlink[RING] = tooltip({ { nil, "Back" }, { nil, "+86 Agility" },
-        { nil, "+1,689 Stamina" }, { nil, "+38 Critical Strike" }, { nil, "+86 Intellect" },
-        { nil, "+86 Strength" } })
-    local p = Compat.ItemPrimaryStats(RING)
-    assertEqual(p.ITEM_MOD_AGILITY_SHORT, 86); assertEqual(p.ITEM_MOD_STRENGTH_SHORT, 86)
-    assertEqual(p.ITEM_MOD_INTELLECT_SHORT, 86)
-    assertNil(p.ITEM_MOD_STAMINA_SHORT, "primary stats only")
-    m.tooltips.hyperlink[RING] = tooltip({ { nil, "+1,689 Stamina" } })
-    assertNil(Compat.ItemPrimaryStats(RING), "no primary stat line")
-    m.ITEM_MOD_AGILITY, m.ITEM_MOD_STRENGTH, m.ITEM_MOD_INTELLECT = nil, nil, nil
-    m.tooltips.hyperlink[RING] = tooltip({ { nil, "+86 Agility" } })
-    assertNil(Compat.ItemPrimaryStats(RING), "no GlobalString to read the line with")
-    m.C_TooltipInfo = nil
-    assertNil(Compat.ItemPrimaryStats(RING))
-    assertNil(Compat.ItemPrimaryStats(nil))
-end)
-
-test("compat: CanRequestItemLoad needs the load request and a timer", function()
-    local Compat, m = fresh()
-    assertTrue(Compat.CanRequestItemLoad())
-    m.C_Timer = nil
-    assertFalse(Compat.CanRequestItemLoad())
-    local Compat2, m2 = fresh()
-    m2.C_Item.RequestLoadItemDataByID = nil
-    assertFalse(Compat2.CanRequestItemLoad())
 end)
 
 -- ---------------------------------------------------------------------------------------------
@@ -577,11 +423,8 @@ end
 test("compat: without Pawn every reader answers nil and nothing raises", function()
     local Compat = fresh()
     assertFalse(Compat.PawnIsReady())
-    assertNil(Compat.PawnItemData("up"))
-    assertNil(Compat.PawnUpgradeInfo("up"))
     assertNil(Compat.PawnScaleForSpec(1, 71))
     assertNil(Compat.PawnVisibleScale(1, 71))
-    assertNil(Compat.PawnItemValue("up", "S"))
 end)
 
 test("compat: Pawn's own PawnIsReady() is the readiness test, with no global flag", function()
@@ -597,25 +440,14 @@ test("compat: Pawn's own PawnIsReady() is the readiness test, with no global fla
 end)
 
 test("compat: Pawn loaded but not initialized is not ready", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index, so the scale would be asked
     installPawn(m)
     m.PawnIsReady = function() return nil end
     -- red under: a seam that calls Pawn without asking PawnIsReady
-    m.PawnGetItemData = function() error("called before Pawn initialized") end
+    m.PawnFindScaleForSpec = function() error("called before Pawn initialized") end
     assertFalse(Compat.PawnIsReady())
-    assertNil(Compat.PawnUpgradeInfo("up"))
-end)
-
-test("compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached", function()
-    local Compat, m = fresh()
-    installPawn(m)
-    assertTrue(Compat.PawnIsReady())
-    assertEqual(Compat.PawnUpgradeInfo("up")[1].PercentUpgrade, 0.12)
-    assertNil(next(Compat.PawnUpgradeInfo("same")), "not an upgrade is an empty list")
-    assertNil(Compat.PawnUpgradeInfo("uncached"), "uncached is pending")
-    assertNil(Compat.PawnItemValue("abc", "Other"))
-    assertNil(Compat.PawnItemValue("abc", nil))
-    assertNil(Compat.PawnItemValue("uncached", "S"))
+    assertNil(Compat.PawnScaleForSpec(1, 71))
 end)
 
 test("compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID", function()
@@ -629,21 +461,11 @@ test("compat: Pawn's scale for a spec is asked by the spec's place in its class,
     assertNil(Compat.PawnScaleForSpec(nil, 71))
 end)
 
-test("compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares", function()
-    local Compat, m = fresh()
-    installPawn(m)
-    -- red under: a seam that keeps the first (enchanted) value, which flatters your enchanted gear
-    assertEqual(Compat.PawnItemValue("abc", "S"), 3)
-    m.PawnGetSingleValueFromItem = function() return 7 end
-    assertEqual(Compat.PawnItemValue("abc", "S"), 7, "no unenchanted value: the one there is")
-end)
-
 test("compat: an error inside Pawn reads as not ready, never as this addon's error", function()
-    local Compat, m = fresh()
+    local Compat, m, NS = fresh()
+    T.retailList(NS)   -- Pawn's Retail spec index, so the scale is asked
     installPawn(m)
-    m.PawnIsItemAnUpgrade = function() error("Pawn broke") end
     m.PawnFindScaleForSpec = function() error("Pawn broke") end
-    assertNil(next(Compat.PawnUpgradeInfo("up")))
     assertNil(Compat.PawnScaleForSpec(1, 71))
 end)
 
@@ -697,32 +519,9 @@ test("compat: on Forever Pawn's scale is asked by the talent tree, the Druid's F
     }, { HUNTER1 = true, HUNTER2 = true })
     assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "HUNTER2")
     assertNil(Compat.PawnVisibleScale(3, 1485), "no tree: no visible scale")
-    assertNil(Compat.PawnCustomScale(3), "a starter scale is not a custom one")
     m.PawnCommon.Scales.Mine = {}
     m.PawnIsScaleVisible = function(name) return name ~= "HUNTER1" end
-    assertEqual(Compat.PawnCustomScale(3), "Mine", "your visible custom scale")
     assertEqual(Compat.PawnVisibleScale(3, 1485, 2), "Mine", "a custom scale before the tree's starter")
-end)
-
-test("compat: PawnClassScales lists a class's Classic scales by tree, shown or hidden", function()
-    local Compat, m = fresh()
-    installPawn(m)
-    installScales(m, {
-        HUNTER2 = { ClassID = 3, SpecID = 2, Provider = "Classic", ProviderActive = true },
-        HUNTER1 = { ClassID = 3, SpecID = 1, Provider = "Classic", ProviderActive = true },
-        Old = { ClassID = 3, SpecID = 3, Provider = "Gone" },
-        Mine = { ClassID = 3 },
-        MAGE1 = { ClassID = 8, SpecID = 1, Provider = "Classic", ProviderActive = true },
-    }, {})
-    local list = Compat.PawnClassScales(3)
-    assertEqual(#list, 2, "a custom, another class's and an abandoned provider's scale are left out")
-    assertEqual(list[1].name, "HUNTER1"); assertEqual(list[2].name, "HUNTER2")
-    assertNil(next(Compat.PawnClassScales(4)), "a class with none")
-    assertNil(next(Compat.PawnClassScales(nil)))
-    m.PawnCommon = nil
-    assertNil(next(Compat.PawnClassScales(3)), "no Pawn table: an empty list")
-    m.PawnIsReady = function() return nil end
-    assertNil(next(Compat.PawnClassScales(3)), "not ready: an empty list")
 end)
 
 test("compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts", function()
@@ -776,34 +575,6 @@ test("compat: NormalizedRealm reads the normalized realm, then the plain one str
     assertEqual(Compat.NormalizedRealm(), "MockSampleArea", "a secret answer is skipped")
     m.GetNormalizedRealmName, m.GetRealmName = nil, nil
     assertNil(Compat.NormalizedRealm())
-end)
-
--- Per profile (clients-§6): Retail answers through the deprecated globals the base mocks; WoW
--- Forever has no such globals, so its one class-wide spec (Hunter 1485) comes from
--- C_SpecializationInfo, which the case seeds there as the client carries it.
-test("compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library", function()
-    local Compat, m = fresh()
-    local forever = Compat.ClientKey() == "forever"
-    local index = 1
-    if forever then
-        m.C_SpecializationInfo = {
-            GetSpecialization = function() return index end,
-            GetSpecializationInfo = function(i) if i == 1 then return m.specID, "Hunter" end end,
-        }
-    else
-        m.GetSpecialization = function() return index end
-    end
-    m.specID = forever and 1485 or 72
-    assertEqual(Compat.PlayerSpecID(), forever and 1485 or 72)
-    index = nil
-    assertNil(Compat.PlayerSpecID(), "no spec chosen yet")
-    index = 1
-    installSecrets(m)
-    m.specID = T.secret(72)
-    assertNil(Compat.PlayerSpecID(), "a secret answer is never passed on")
-    local degraded, md = fresh{ skip = T.loadAddon.libFiles }
-    md.specID = 72
-    assertNil(degraded.PlayerSpecID(), "the library's reader stubs answer nil; no rung is re-implemented")
 end)
 
 test("compat: InventoryItemLink reads the worn link, nil when empty, secret or absent", function()

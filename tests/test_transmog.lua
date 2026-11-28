@@ -36,14 +36,14 @@ test("transmog compat: CanIMogIt answers first when it is loaded, else the clien
     local NS, _, m = T.newAddon()
     local Compat = NS.Compat
     m.addItem(CHEST, chestDef(false))
-    assertFalse(Compat.PlayerHasTransmog(CHEST), "the client says not collected")
+    assertFalse(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "the client says not collected")
     assertEqual(Compat.TransmogSource(), "C_TransmogCollection")
     m.CanIMogIt = cimi(true)
-    assertTrue(Compat.PlayerHasTransmog(CHEST), "CanIMogIt knows it from another source")
+    assertTrue(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "CanIMogIt knows it from another source")
     assertEqual(m.CanIMogIt.seen[1], CHEST)
     assertEqual(Compat.TransmogSource(), "CanIMogIt")
     m.CanIMogIt = cimi(false)
-    assertFalse(Compat.PlayerHasTransmog(CHEST))
+    assertFalse(NS.VerdictEngine.R.PlayerHasTransmog(CHEST))
 end)
 
 test("transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non-boolean falls back", function()
@@ -51,17 +51,17 @@ test("transmog compat: CanIMogIt's no-appearance answer is nil; a raise or a non
     local Compat = NS.Compat
     m.addItem(CHEST, chestDef(true))
     m.CanIMogIt = cimi(false, false)
-    assertNil(Compat.PlayerHasTransmog(CHEST), "nothing to collect")
+    assertNil(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "nothing to collect")
     m.CanIMogIt = { PlayerKnowsTransmog = function() error("boom") end }
-    assertTrue(Compat.PlayerHasTransmog(CHEST), "a raise falls back to the client")
+    assertTrue(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "a raise falls back to the client")
     m.CanIMogIt = { PlayerKnowsTransmog = function() return "yes" end }
-    assertTrue(Compat.PlayerHasTransmog(CHEST), "a non-boolean falls back to the client")
+    assertTrue(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "a non-boolean falls back to the client")
     m.CanIMogIt = "not a table"
-    assertTrue(Compat.PlayerHasTransmog(CHEST))
+    assertTrue(NS.VerdictEngine.R.PlayerHasTransmog(CHEST))
     m.CanIMogIt, m.C_TransmogCollection = nil, nil
-    assertNil(Compat.PlayerHasTransmog(CHEST), "no source answers")
+    assertNil(NS.VerdictEngine.R.PlayerHasTransmog(CHEST), "no source answers")
     assertEqual(Compat.TransmogSource(), "none")
-    assertNil(Compat.PlayerHasTransmog(nil))
+    assertNil(NS.VerdictEngine.R.PlayerHasTransmog(nil))
 end)
 
 test("transmog facts: the item facts read the look through CanIMogIt when it is loaded", function()

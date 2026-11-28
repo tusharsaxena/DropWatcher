@@ -650,14 +650,13 @@ L["Any class"] = "Any class"
 L["Your class"] = "Your class"
 L["Makes: %s"] = "Makes: %s"
 L["any slot"] = "any slot"
--- A tier token's own text, matched against the client's (TT-1; libs/LibKa0s/VerdictTierTokens.lua and
--- core/CompatCollect.lua, parsed by core/TextParse.lua). INPUT, not display: a documented
--- localization-§4 deviation (docs/ARCHITECTURE.md, Documented deviations). `Use:` stands in for
--- ITEM_SPELL_TRIGGER_ONUSE when the client's cannot be read. A translation keeps each value's shape:
--- the class phrase; the Use text's slot template with its one %s, and a space-separated list of the
+-- A tier token's own text, matched against the client's (TT-1; libs/LibKa0s/VerdictTierTokens.lua,
+-- handed this table by core/VerdictViews.lua). INPUT, not display: a documented localization-§4
+-- deviation (docs/ARCHITECTURE.md, Documented deviations). The use line's own `Use:` prefix is the
+-- library's read (LibKa0s-Verdict-1.0's ItemUseText, ITEM_SPELL_TRIGGER_ONUSE first, LibKa0s#111).
+-- A translation keeps each value's shape: the class phrase; the Use text's slot template with its one %s, and a space-separated list of the
 -- words that fill it, per slot; a space-separated list of the slot nouns of a token's name, per slot
 -- (head, shoulder, chest, hand, legs); the last word of an omni Curio's name.
-L["Use:"] = "Use:"
 L["appropriate for your class"] = "appropriate for your class"
 L["set %s item"] = "set %s item"
 L["head"] = "head"
