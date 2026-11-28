@@ -12,7 +12,7 @@ that moves the count. Push after B5 and after D1; no merge without the owner's g
 
 | Task | What | Findings | Status | Commit |
 |---|---|---|---|---|
-| U | File upstream issues; relabel DW#19 | U-1, U-3, U-4, U-5, U-6, F-005, DRW-18 | todo | |
+| U | File upstream issues; relabel DW#19 | U-1, U-3, U-4, U-5, U-6, F-005, DRW-18 | done: WAS#18 (U-1), #19 (U-4), #20 (U-5), #21 (U-6); LibKa0s#112 (U-3), #113 (F-005); DW#19 relabeled | n/a |
 | A1 | Docs and metadata: TOC comments, README keybinding sentence, compat count, §17 re-check note, README-H1 register row, `.pkgmeta`, v1.120.0 re-vendor bundle | DRW-12, -14, -07, -11, -13, -17, -16 | todo | |
 | A2 | Hub split: Event Subscriptions -> data-flow.md, Skins + Tooltip placement -> docs/skins.md, map registered, anchors fixed | DRW-03 | todo | |
 | B1 | Skin notice: no timer, held flag, two tests | F-001 | todo | |
