@@ -2879,9 +2879,9 @@ Total.
 
 ### test_vendor_sync.lua (3)
 
+- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
+- tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
-- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
-- tests/_kit is the test kit that shipped with that release (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
 
 ### test_locale.lua (7)
 
@@ -3205,7 +3205,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 1 |
+| test_vendor_sync.lua | 3 |
 | test_locale.lua | 7 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -3215,5 +3215,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 8 |
-| **Total** | **2671** |
+| Skipped | 6 |
+| **Total** | **2673** |
