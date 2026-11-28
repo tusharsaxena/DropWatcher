@@ -1,7 +1,7 @@
 -- tests/test_compat_client.lua — the client, Role and name reads of the compat family (Forever port
 -- design §4.1, §4.2; clients-§3, clients-§4, forever-quirks-§4): the client helpers routed from
 -- LibKa0s-Compat-1.0 (core/Compat.lua) on each kit profile, the whole character name, the
--- player's talent tree and role through LibKa0s-Role-1.0 (core/CompatClient.lua), the inspect spec
+-- player's role through LibKa0s-Role-1.0 (core/CompatClient.lua), the inspect spec
 -- ladder, and NS.FEATURE_EVENTS rows gated by their `clients`. Each case runs on both profiles
 -- (`KA0S_KIT_CLIENT=forever lua tests/run.lua`) and picks its expectation by ClientKey()
 -- (clients-§6).
@@ -90,61 +90,6 @@ end)
 
 -- ── the spec, the talent tree and the role (LibKa0s-Role-1.0) ──────────────────────────────
 
-local function groups(list)
-    return function() return list end
-end
-
-test("compat client: PlayerTalentTree is the group with most points; a tie is nil", function()
-    local Compat, m = fresh()
-    local Role = m.LibStub("LibKa0s-Role-1.0", true)
-    assertTrue(Role ~= nil, "Role is vendored")
-    Role.Groups = groups({
-        { index = 1, id = 11, name = "Arms", spent = 5 },
-        { index = 2, id = 12, name = "Fury", spent = 31 },
-        { index = 3, id = 13, name = "Protection", spent = 0 },
-    })
-    local tree = Compat.PlayerTalentTree()
-    assertEqual(tree and tree.index, 2)
-    assertEqual(tree and tree.name, "Fury")
-    Role.Groups = groups({
-        { index = 1, id = 11, name = "Arms", spent = 20 },
-        { index = 2, id = 12, name = "Fury", spent = 20 },
-    })
-    assertNil(Compat.PlayerTalentTree(), "a tie names no tree")
-    Role.Groups = groups({ { index = 1, id = 11, name = "Arms", spent = 0 } })
-    assertNil(Compat.PlayerTalentTree(), "no points spent names no tree")
-    Role.Groups = groups({})
-    assertNil(Compat.PlayerTalentTree(), "Retail: Role has no groups")
-    local degraded = fresh{ skip = T.loadAddon.libFiles }
-    assertNil(degraded.PlayerTalentTree(), "library absent")
-end)
-
--- The real LibKa0s Role.Groups(), not a stub (clients-§6): the mock's C_SpecializationInfo and
--- C_Traits answer the owner's Hunter probe (Forever port research R4 §3.1: Beast Mastery 10,
--- Marksmanship 3, Survival 0). Role reads the groups on WoW Forever alone.
-test("compat client: PlayerTalentTree on the live Role reads Forever's talent groups, nil on Retail", function()
-    local Compat, m = fresh()
-    m.__context.class, m.__context.classToken = "Hunter", "HUNTER"
-    m.seedTalents(1485, {
-        { name = "Beast Mastery", spent = 10 }, { name = "Marksmanship", spent = 3 }, { name = "Survival", spent = 0 },
-    })
-    if Compat.ClientKey() ~= "forever" then
-        assertNil(Compat.PlayerTalentTree(), "Retail: Role reads no talent groups")
-        return
-    end
-    local tree = Compat.PlayerTalentTree()
-    -- red under: a Groups() the library answers empty (a missed C_Traits read), or the stub's order
-    assertEqual(tree and tree.index, 1); assertEqual(tree and tree.name, "Beast Mastery")
-    m.talents[3].spent = 31
-    tree = Compat.PlayerTalentTree()
-    assertEqual(tree and tree.index, 3); assertEqual(tree and tree.name, "Survival")
-    m.talents[1].spent = 31
-    assertNil(Compat.PlayerTalentTree(), "a tie names no tree")
-    for _, g in ipairs(m.talents) do g.spent = 0 end
-    assertNil(Compat.PlayerTalentTree(), "no points spent names no tree")
-    assertEqual(Compat.PlayerSpecID(), 1485, "the class-wide spec, through Role.Spec()")
-end)
-
 test("compat client: PlayerRole resolves through Role over db.char.role, and the override sticks", function()
     local NS, _, m = T.bootAddon()
     local Compat = NS.Compat
@@ -164,15 +109,6 @@ test("compat client: PlayerRole resolves through Role over db.char.role, and the
     local degraded = T.newAddon{ skip = T.loadAddon.libFiles }
     assertNil(degraded.Compat.RoleStore(), "no database yet")
     assertNil((degraded.Compat.PlayerRole()))
-end)
-
-test("compat client: PlayerSpecID goes through Role.Spec", function()
-    local Compat, m = fresh()
-    local Role = m.LibStub("LibKa0s-Role-1.0", true)
-    Role.Spec = function() return 1485, "Hunter" end
-    assertEqual(Compat.PlayerSpecID(), 1485)
-    Role.Spec = function() return nil, nil end
-    assertNil(Compat.PlayerSpecID())
 end)
 
 test("compat client: InspectSpecID reads C_SpecializationInfo first, then the global", function()

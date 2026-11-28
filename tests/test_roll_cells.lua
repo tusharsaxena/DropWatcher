@@ -256,3 +256,40 @@ test("roll cells: the timer reads the time left on the history's clock, and the 
     cols, lines, shown = C.Grid(0, 760, 180, 10)
     assertEqual(cols, 1); assertEqual(lines, 0); assertEqual(shown, 0)
 end)
+
+-- DW#20 characterization: RC.Left's every branch, pinned before it was split into named helpers
+-- (behavior-neutral, CCN <= 15). The closed roll, the open one on the history's clock, past its end,
+-- the looping sample on GetTime()'s clock, a zero-length loop, and no clock at all.
+test("roll cells: RC.Left reads each case the same (DW#20 characterization)", function()
+    local NS, _, m = T.newAddon()
+    local C = NS.RollCells
+    assertNil(C.Left(nil, 110), "no table")
+    assertNil(C.Left("x", 110), "not a table")
+    local won = openRoll(); won.winner = { name = "Brakk" }
+    assertNil(C.Left(won, 110), "won: no time left")
+    local passed = openRoll(); passed.allPassed = true
+    assertNil(C.Left(passed, 110), "everyone passed")
+    assertEqual(C.Left(openRoll(), 110), 50, "start + duration - now")
+    assertEqual(C.Left(openRoll(), 200), 0, "past its end: never below zero")
+    assertNil(C.Left(openRoll(), nil), "no clock")
+    assertNil(C.Left({ rolls = {} }, 110), "no times")
+    local noDur = openRoll(); noDur.duration = nil
+    assertNil(C.Left(noDur, 110), "no duration")
+    -- The looping sample reads GetTime(), whatever `now` it is handed, and starts again at its end.
+    local loop = openRoll(); loop.loop = true
+    m.__now = 130
+    assertEqual(C.Left(loop, 999), 30, "GetTime()'s clock, not the one passed")
+    m.__now = 190
+    assertEqual(C.Left(loop, 110), 30, "ran out 30 s ago: 30 s into its next turn")
+    m.__now = 220
+    assertEqual(C.Left(loop, 110), 60, "exactly at a turn's end: a whole turn")
+    local still = openRoll(); still.loop, still.duration = true, 0
+    m.__now = 150
+    assertEqual(C.Left(still, 110), 0, "a zero-length loop never restarts")
+    local slow = openRoll(); slow.loop, slow.duration = true, 120000
+    assertNil(C.Left(slow, 110), "a looping roll in ms still reads no time")
+    -- A claimed popup's own timer wins while it reads time left, even for a closed-looking roll's clock.
+    m.lootRolls[11] = { link = "x", timeLeft = 7000 }
+    assertEqual(C.Left(openRoll(), 999, 11), 7, "the popup's own seconds")
+    assertNil(C.Left(won, 999, 11), "a won roll reads none, popup or not")
+end)

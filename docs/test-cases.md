@@ -1105,7 +1105,7 @@ Total.
 - drops strip: the compact layout's summary is shortened
 - mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
-### test_row_tooltip.lua (19)
+### test_row_tooltip.lua (20)
 
 - row tooltip: it opens beside the window, TOPLEFT a TIP_GAP right of its edge, level with the row
 - row tooltip: with no room on the right it opens left of the window, TOPRIGHT a TIP_GAP left
@@ -1126,6 +1126,7 @@ Total.
 - row tooltip: your own drops' rows on Drops and their Offer open beside the window
 - row tooltip: History rows and headers open beside the window
 - row tooltip: a column label opens beside the window; a tab is attached above itself
+- row tooltip: FlushOverlaps reads each case the same (DW#20 characterization)
 
 ### test_tooltip_placement.lua (5)
 
@@ -1135,7 +1136,7 @@ Total.
 - tooltip placement: the Insights charts' marks open beside the window group (host.group)
 - tooltip placement: the addon's own code names no cursor or corner anchor (anti-pattern #119)
 
-### test_test_mode.lua (54)
+### test_test_mode.lua (55)
 
 - test mode: Forever samples use only the nine classes
 - test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client
@@ -1191,6 +1192,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 - test mode: shows one open roll and a History drop with rolls
+- test mode data: each member's class, spec and GUID (DW#20 characterization)
 
 ### test_sample_names.lua (4)
 
@@ -1199,7 +1201,7 @@ Total.
 - sample names: the simulator's group and raiders are the session's seeded crowd, the same per seed
 - sample names: a running simulation's group is its seed's crowd, kept on the session
 
-### test_compat.lua (75)
+### test_compat.lua (59)
 
 - compat: the secret guards are the library's members on a live load
 - compat: the guards answer the library's answers under the same fixture, on both load paths
@@ -1221,44 +1223,28 @@ Total.
 - compat: without the enum member the reader falls back to the localized text
 - compat: the tooltip reader skips a secret line and survives a malformed answer
 - compat: InventoryItemLevel prefers the line's number, then its text
-- compat: GetItemUpgradeInfo takes the API's table, plain fields only
-- compat: GetItemUpgradeInfo falls back to the ItemUpgradeLevel tooltip line
-- compat: GetItemUpgradeInfo answers nil with no track, no API and a secret answer
 - compat: InChatMessagingLockdown reads the client, a secret as locked, absent as open
 - compat: IsRestrictionActive asks the client, falling back to the state
 - compat: IsRestrictionStateActive reads the state by the enum's Inactive
 - compat: IsRestrictionStateActive takes the event's boolean payload as it is
 - compat: RestrictionTypes is the enum, or an empty table
-- compat: the account-bind helpers read C_Item and answer false without it
-- compat: a secret bind answer reads as not bound
 - compat: GetBagItemGUID reads through an ItemLocation, nil for an empty slot or no API
 - compat: GetItemInfo copies the cached fields, nil while uncached or without a link
 - compat: GetItemInfo answers nil without C_Item.GetItemInfo; the dead global is never read
 - compat: a secret item answer is never copied
 - compat: ItemEquipLoc reads the instant info with no cache; nil when secret or absent
 - compat: GetDetailedItemLevel reads the effective level, nil without the API
-- compat: GetItemStats copies every key, unknown ones too, and is empty without an answer
-- compat: GetItemSpecs is a set, nil for an empty list or no API
-- compat: GetItemUniqueness reads the category and the item's own uniqueness
-- compat: PlayerHasTransmog answers the collection, nil when absent or secret
-- compat: ItemClassRestriction reads the classes line by type, else by text
-- compat: ItemPrimaryStats reads every primary stat line, the inactive ones too
-- compat: CanRequestItemLoad needs the load request and a timer
 - compat: without Pawn every reader answers nil and nothing raises
 - compat: Pawn's own PawnIsReady() is the readiness test, with no global flag
 - compat: Pawn loaded but not initialized is not ready
-- compat: Pawn ready answers the upgrade list, an empty list, or nil while uncached
 - compat: Pawn's scale for a spec is asked by the spec's place in its class, not its specID
-- compat: an item's Pawn value is its unenchanted one, the value Pawn's upgrade test compares
 - compat: an error inside Pawn reads as not ready, never as this addon's error
 - compat: your visible Pawn scale is the one you show, a custom one before a starter
 - compat: on Forever Pawn's scale is asked by the talent tree, the Druid's Feral by role
-- compat: PawnClassScales lists a class's Classic scales by tree, shown or hidden
 - compat: without PawnIsReady, a global PawnIsInitialized (flag or function) still counts
 - compat: InitiateTrade calls through, and reports false when absent
 - compat: InTradeRange reads interact distance 2; secret is out of range, no API lets it through
 - compat: NormalizedRealm reads the normalized realm, then the plain one stripped
-- compat: PlayerSpecID reads the index then its spec id, nil without an answer or the library
 - compat: InventoryItemLink reads the worn link, nil when empty, secret or absent
 - compat: the bag readers call C_Container, guard a secret answer, and answer empty without it
 - compat: the inspect gates answer plain booleans; a secret answer or no API is the safe side
@@ -1277,17 +1263,14 @@ Total.
 - compat: UnitLevel answers a plain level, nil for a secret, a skull, 0 or no API
 - compat: no other shipped file names a seam-only client API in code
 
-### test_compat_client.lua (11)
+### test_compat_client.lua (8)
 
 - compat client: ClientKey answers the kit profile
 - compat client: ForClient(nil) is true, ForClient({"retail"}) only on retail
 - compat client: a client that is neither answers nil and serves undeclared features only
 - compat client: UnitCharacterName joins name and surname on Forever, keeps one name on Retail
 - compat client: CharacterKey is the AceDB character key of this client
-- compat client: PlayerTalentTree is the group with most points; a tie is nil
-- compat client: PlayerTalentTree on the live Role reads Forever's talent groups, nil on Retail
 - compat client: PlayerRole resolves through Role over db.char.role, and the override sticks
-- compat client: PlayerSpecID goes through Role.Spec
 - compat client: InspectSpecID reads C_SpecializationInfo first, then the global
 - feature events: a retail-only row is not registered on forever
 
@@ -1298,24 +1281,9 @@ Total.
 - role override: the CLI reaches the row, and Reset all leaves a per-character pick
 - role override: the tooltip names what Automatic answers now, and its source
 
-### test_compat_collect.lua (21)
+### test_compat_collect.lua (6)
 
-- compat collect: MountFromItem answers the journal's mount id, else nil
-- compat collect: MountCollected answers isCollected, the 11th return, else nil
-- compat collect: PetSpeciesFromItem answers the 13th return, the species id, else nil
-- compat collect: PetCollected answers the count and the limit, else nil, nil
-- compat collect: IsToy answers whether GetToyInfo knows the item, false without
-- compat collect: ToyCollected answers PlayerHasToy, else nil
 - compat collect: IsCosmeticItem answers the client's flag, false without
-- compat collect: RecipeKnown reads the Already known line by its whole text
-- compat collect: RecipeKnown answers nil when it cannot tell
-- compat collect: ProfessionSkillLines maps every profession slot to its skill line
-- compat collect: TierTokenSlot reads a slot line by its whole text
-- compat collect: TierTokenSlot answers nil when it cannot tell
-- compat collect: ItemUseText answers the use spell's description, once per call
-- compat collect: ItemUseText falls back to the tooltip's use line when the spell cannot be read
-- compat collect: ItemUseText names a use spell not loaded yet; the spell load is asked for (TT-1)
-- compat collect: ItemUseText answers nil when it cannot tell
 - compat collect: ClassDisplayName answers the client's name for a class, else nil
 - compat collect: ItemLinkByID answers a cached item's link by its id, else nil (DW-CAT6)
 - compat collect: no member raises with every API gone
@@ -1381,14 +1349,19 @@ Total.
 - offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
 
-### test_verdict_setup.lua (14)
+### test_verdict_setup.lua (19)
 
 - verdict setup: one instance of the library's major, on this client
-- verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
+- verdict setup: the vendored minors this host is built on: Verdict 3, Sim 6
+- verdict setup: the host names PlayerRole alone; every other read is the library's, at the call
 - verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them
 - verdict setup: every event the instance registers has its row on this client, and no row is dead
+- verdict setup: the rows are the library's EventsFor of both clients, tagged by the set they are in
+- verdict setup: without the library the stand-in's EventsFor answers nothing, so no row is dead
 - verdict setup: the first read is lazy and quiet, a later change sends GearChanged
-- verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback
+- verdict setup: OnEnable stands the instance up lazily; the latch's stand-up reads at once
+- verdict setup: a gear event before the first ask reads the client and announces
+- verdict setup: a stand-up that throws at OnEnable keeps the settings category and its message
 - verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
 - verdict setup: the gear rebuild is timed while a capture is on, through the harness itself
 - verdict setup: the engine's collection change runs the feed's pass
@@ -1942,7 +1915,7 @@ Total.
 - askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
 - askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
-### test_roll_cells.lua (10)
+### test_roll_cells.lua (11)
 
 - roll cells: the count line is an icon and a count per choice
 - roll cells: Disenchant counts on Retail only
@@ -1954,6 +1927,7 @@ Total.
 - roll cells: your claimed popup's roll reads the client's own timer
 - roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
+- roll cells: RC.Left reads each case the same (DW#20 characterization)
 
 ### test_window_pending.lua (13)
 
@@ -2726,10 +2700,11 @@ Total.
 - sim e2e key: parsed drops, both verdicts, the ask held in the lockdown and flushed, countdowns, a trade
 - sim e2e raid: a large roster, auto-ask after its delay, a trade received, nothing sent or saved
 
-### test_sim_e2e.lua (21)
+### test_sim_e2e.lua (22)
 
 - sim e2e: no module reads the world the simulator answers except through NS.Compat
 - sim e2e: the seam wraps every world read, the combat flags and the GlobalStrings
+- sim e2e: the seam covers the verdict instance's reads, PlayerRole once
 - sim e2e: nothing escapes the seam
 - sim: every CompatLoot member is wrapped
 - sim e2e key, full: a run fills Drops, yours too, under the default filters
@@ -3132,19 +3107,19 @@ Total.
 | test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
-| test_row_tooltip.lua | 19 |
+| test_row_tooltip.lua | 20 |
 | test_tooltip_placement.lua | 5 |
-| test_test_mode.lua | 54 |
+| test_test_mode.lua | 55 |
 | test_sample_names.lua | 4 |
-| test_compat.lua | 75 |
-| test_compat_client.lua | 11 |
+| test_compat.lua | 59 |
+| test_compat_client.lua | 8 |
 | test_role_override.lua | 4 |
-| test_compat_collect.lua | 21 |
+| test_compat_collect.lua | 6 |
 | test_compat_loot.lua | 21 |
 | test_text_parse.lua | 10 |
 | test_constants.lua | 14 |
 | test_offspec.lua | 2 |
-| test_verdict_setup.lua | 14 |
+| test_verdict_setup.lua | 19 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -3164,7 +3139,7 @@ Total.
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
-| test_roll_cells.lua | 10 |
+| test_roll_cells.lua | 11 |
 | test_window_pending.lua | 13 |
 | test_roll_popup.lua | 24 |
 | test_rolls_panel.lua | 66 |
@@ -3197,7 +3172,7 @@ Total.
 | test_sim_pool.lua | 27 |
 | test_sim_events.lua | 37 |
 | test_sim_scenario.lua | 32 |
-| test_sim_e2e.lua | 21 |
+| test_sim_e2e.lua | 22 |
 | test_sim_report.lua | 18 |
 | test_sim_panel.lua | 22 |
 | test_sim_checkbox.lua | 11 |
@@ -3216,4 +3191,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 6 |
-| **Total** | **2673** |
+| **Total** | **2648** |

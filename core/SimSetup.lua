@@ -11,6 +11,13 @@ local _, NS = ...
 -- only caller (compat). A member added to NS.Compat after this file loads escapes the wrap; the seam's
 -- Unwrapped() lists it, and tests/test_sim_e2e.lua asserts that list is empty (the load-order guard).
 --
+-- THE VERDICT ENGINE'S READS. core/VerdictSetup.lua covers the verdict instance's read table
+-- (NS.VerdictEngine.R, LibKa0s-Verdict-1.0's own reads) with this seam (Sim:Cover, LibKa0s#111),
+-- before modules/Sim*.lua register: the same active flag, Live bypass, providers and guards hold on
+-- it by name, PURE's keys stay pure there too, and Unwrapped() takes it in. This addon keeps no
+-- copy of those reads; a provider keyed by one (modules/SimWorld.lua's BagItemLevelQuality)
+-- answers the instance's read.
+--
 -- PROVIDERS. The simulator registers `fn(fallback, ...)` per member name (NS.SimSeam:SetProvider)
 -- and answers what it invents, handing anything else to `fallback`. For an ordinary member the
 -- fallback is the live member, so the client still answers what the simulator does not invent

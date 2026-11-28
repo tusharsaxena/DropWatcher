@@ -1,10 +1,11 @@
 -- tests/test_verdict_setup.lua — core/VerdictSetup.lua and core/VerdictViews.lua (Item Search split
 -- plan, task C1): this addon on LibKa0s-Verdict-1.0. What is pinned is the host, not the engine
 -- (the library's own suites, and the golden suite, pin the verdicts): the one instance and its
--- client; every read through NS.Compat at call time (the simulator's seam) with this addon's own
--- PlayerRole; the instance's events as NS.FEATURE_EVENTS rows the simulator's replay reaches; the
--- gear change as GearChanged and the collection change as the feed's pass; the lazy, quiet first
--- read; the stand-down; the client named on every kernel view; the scorer from the settings; the
+-- client and the vendored minors it is built on; PlayerRole the one host read, every other the
+-- library's at call time (tests/test_sim_e2e.lua pins the seam's cover of them); the instance's
+-- events as NS.FEATURE_EVENTS rows read from the library's EventsFor that the simulator's replay
+-- reaches; the gear change as GearChanged and the collection change as the feed's pass; the lazy
+-- stand-up and the quiet first read; the stand-down; the client named on every kernel view; the scorer from the settings; the
 -- Comparison rows; and the library-absent stand-in's surface.
 
 local T = _G.DW_TEST
@@ -38,16 +39,31 @@ test("verdict setup: one instance of the library's major, on this client", funct
     assertTrue(NS.ClassData.SPECS == NS.Verdict.ClassData.ForClient(NS.Compat.ClientKey()).SPECS)
 end)
 
-test("verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it", function()
+test("verdict setup: the vendored minors this host is built on: Verdict 3, Sim 6", function()
+    local _, m = T.newAddon()
+    -- Verdict 3: v.R's forwarders and the lazy stand-up; Sim 6: Sim:Cover (LibKa0s v1.120.0).
+    -- red under: a re-vendor that moves either without this host's follow-through
+    assertEqual(m.LibStub("LibKa0s-Verdict-1.0").MODULES.Verdict, 3)
+    assertEqual(m.LibStub("LibKa0s-Sim-1.0").MODULES.Sim, 6)
+end)
+
+test("verdict setup: the host names PlayerRole alone; every other read is the library's, at the call", function()
     local NS = T.newAddon()
-    local R = NS.VerdictEngine.R
-    assertTrue(R.PlayerRole == NS.Compat.PlayerRole, "this addon's own role read (its role override)")
-    assertTrue(R.GetItemInfo == NS.Compat.GetItemInfo)
-    local spy = function() return nil end
-    NS.Compat.InventoryItemLink = spy
-    -- red under: a host that hands the reads over once, at load (a seam installed later is missed)
-    assertTrue(R.InventoryItemLink == spy, "looked up at each access")
-    assertTrue(R.LoadItem == NS.Item.LoadItem, "the item load is NS.Item's")
+    local R, reads = NS.VerdictEngine.R, NS.VerdictEngine.host.reads
+    local names = {}
+    for name in pairs(reads) do names[#names + 1] = name end
+    -- red under: a host handing every NS.Compat member over (a same-named copy shadowing the library)
+    assertEqual(table.concat(names, ","), "PlayerRole", "the one read the host answers itself")
+    assertTrue(reads.PlayerRole == NS.Compat.PlayerRole, "NS.Compat's, the seam-wrapped member")
+    -- Answers, not identities: from Verdict minor 3 a member of v.R is a forwarder, never rawequal
+    -- to the host's or the library's function (LibKa0s v1.120.0, docs/releasing.md step 8).
+    assertEqual(R.PlayerRole(), NS.Compat.PlayerRole(), "this addon's own role read (its role override)")
+    local lib, mark = NS.Verdict.Reads, {}
+    local was = lib.InventoryItemLink
+    lib.InventoryItemLink = function() return mark end
+    local ok, got = pcall(R.InventoryItemLink, "player", 11)
+    lib.InventoryItemLink = was
+    assertTrue(ok and got == mark, "the library's read, looked up at each call")
 end)
 
 test("verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them", function()
@@ -92,6 +108,47 @@ test("verdict setup: every event the instance registers has its row on this clie
     end
 end)
 
+-- The rows' clients tag, as a set key: "both" for a row with none.
+local function tagOf(row)
+    if row.clients == nil then return "both" end
+    local tags = {}
+    for _, c in ipairs(row.clients) do tags[#tags + 1] = c end
+    table.sort(tags)
+    return table.concat(tags, ",")
+end
+
+test("verdict setup: the rows are the library's EventsFor of both clients, tagged by the set they are in", function()
+    local NS = T.newAddon()
+    local want = {}
+    for _, client in ipairs({ "retail", "forever" }) do
+        for _, event in ipairs(NS.Verdict.EventsFor(client)) do
+            want[event] = want[event] and "both" or client
+        end
+    end
+    local got, n = {}, 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[2] == "OnVerdictEvent" then
+            assertNil(got[row[1]], row[1] .. " has one row")
+            got[row[1]], n = tagOf(row), n + 1
+        end
+    end
+    -- red under: a hand-kept list (an event a later library minor adds has no row)
+    for event, tag in pairs(want) do
+        assertEqual(got[event], tag, event .. "'s row")
+    end
+    for event in pairs(got) do assertTrue(want[event] ~= nil, event .. " is no client's event") end
+    assertTrue(n > 0, "the instance's events have rows")
+end)
+
+test("verdict setup: without the library the stand-in's EventsFor answers nothing, so no row is dead", function()
+    local NS = T.newAddon{ skip = T.loadAddon.libFiles }
+    -- red under: rows built from a list the stand-in's instance never registers
+    assertEqual(type(NS.Verdict.EventsFor), "function", "the stand-in carries EventsFor")
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        assertTrue(row[2] ~= "OnVerdictEvent", row[1] .. " is a row no instance listens to")
+    end
+end)
+
 test("verdict setup: the first read is lazy and quiet, a later change sends GearChanged", function()
     local NS, _, m = T.enableAddon()
     NS.ArmSkinPicker(false)
@@ -109,7 +166,36 @@ test("verdict setup: the first read is lazy and quiet, a later change sends Gear
     assertEqual(NS.State.gear.equipped[11].link, link(101))
 end)
 
-test("verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback", function()
+test("verdict setup: OnEnable stands the instance up lazily; the latch's stand-up reads at once", function()
+    local NS = T.bootAddon()
+    local got = {}
+    local standUp = NS.VerdictEngine.StandUp
+    NS.VerdictEngine.StandUp = function(self, opts)
+        got[#got + 1] = opts == nil and "plain" or (type(opts) == "table" and opts.lazy == true and "lazy") or "other"
+        return standUp(self, opts)
+    end
+    NS.addon:OnEnable()
+    -- red under: a host standing up with a plain StandUp() and a provisional re-read of its own
+    assertEqual(got[1], "lazy", "OnEnable's stand-up is the library's lazy one")
+    NS.VerdictStandUp()
+    assertEqual(got[#got], "plain", "the latch's stand-up reads and announces")
+    assertNil(NS.VerdictFresh, "no provisional re-read is left on the host")
+end)
+
+test("verdict setup: a gear event before the first ask reads the client and announces", function()
+    local NS, _, m = T.enableAddon()
+    NS.ArmSkinPicker(false)
+    local seen = listen(NS)
+    m.addItem(link(100), ring(600)); m.inventory.player[11] = link(100)
+    m.__fire("PLAYER_EQUIPMENT_CHANGED", 11, false)
+    m.advance(NS.Gear.THROTTLE)
+    assertEqual(seen.n, 1, "the rebuild before any ask is GearChanged")
+    assertEqual(NS.State.gear.equipped[11].link, link(100))
+    assertEqual(NS.Gear.Snapshot().equipped[11].link, link(100), "the ask keeps that snapshot")
+    assertEqual(seen.n, 1, "and announces nothing more")
+end)
+
+test("verdict setup: a stand-up that throws at OnEnable keeps the settings category and its message", function()
     local NS, _, m = T.bootAddon()
     local registered = false
     local register = NS.addon.Settings.Register
@@ -119,14 +205,12 @@ test("verdict setup: a stand-up that throws at OnEnable keeps the settings categ
     -- red under: the engine stood up ahead of the category (a throw there costs the settings panel)
     assertFalse(ok, "the stand-up's error still reaches the client")
     assertTrue(registered, "the settings category registered before the engine stood up")
-    -- red under: a re-raise of the bare message (where it came from is lost)
     assertTrue(tostring(err):find("verdict boom", 1, true) ~= nil, "the message is kept")
-    assertTrue(tostring(err):find("stack traceback", 1, true) ~= nil, "the traceback is kept")
     NS.VerdictEngine.StandUp = nil
     local seen = listen(NS)
     m.addItem(link(100), ring(600)); m.inventory.player[11] = link(100)
     NS.VerdictStandUp()
-    -- red under: the quiet flag left set by the throw (no gear change is ever announced again)
+    -- red under: a stand-up that stays quiet after a throw (no gear change is ever announced again)
     assertEqual(seen.n, 1, "a later stand-up announces its read")
 end)
 

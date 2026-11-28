@@ -27,6 +27,15 @@
 -- The seam's active flag is driven only by a bound session (Sim:New, below). Until one binds and
 -- starts, the seam is idle.
 --
+-- A SECOND TABLE (minor 6, LibKa0s#111). Sim:Cover(seam, tbl, opts) wraps another of the host's
+-- tables in place under the same seam: the same active flag, the same Live bypass and the same
+-- providers, keyed by member name, so a provider answers a same-named member of either table, each
+-- handed its own table's live member as the fallback. A key the seam guards is guarded on the
+-- covered table too, and opts.guarded guards keys of its own. The table a library hands its host
+-- for this is an instance's reads (LibKa0s-Verdict-1.0's v.R): the host covers it and drops its own
+-- copies of the library's reads. Cover is a library member, not a seam member, so the seam's four
+-- members (and every host's inert stub of them) do not move. A table is wrapped once.
+--
 -- ── THE SESSION ──────────────────────────────────────────────────────────────────────────────
 --
 -- Sim:New(d) runs when the host's simulator module loads and binds the seam it is handed: one seam
@@ -95,7 +104,8 @@ local core = LibStub and LibStub("LibKa0s-Core-1.0", true)
 local NEEDS_CORE = 1
 if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary; module absent
 
-local MAJOR, MINOR = "LibKa0s-Sim-1.0", 5
+-- Minor 6 (LibKa0s#111): Sim:Cover, a second table under one seam (the instance read seam).
+local MAJOR, MINOR = "LibKa0s-Sim-1.0", 6
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -158,25 +168,27 @@ local function checkOpts(compat, opts)
   end
 end
 
---- The keys NewSeam wraps: every function member not in `pure`, sorted.
-local function wrappableKeys(compat, pure)
+--- The keys NewSeam wraps: every function member not in `pure` (nor in `alsoPure`), sorted.
+local function wrappableKeys(compat, pure, alsoPure)
   local keys = {}
   for key, member in pairs(compat) do
-    if type(member) == "function" and not pure[key] then keys[#keys + 1] = key end
+    if type(member) == "function" and not pure[key] and not (alsoPure and alsoPure[key]) then
+      keys[#keys + 1] = key
+    end
   end
   sort(keys, function(a, b) return tostring(a) < tostring(b) end)
   return keys
 end
 
 --- Raise on a guarded entry that names no wrapped member or whose answer is not a function.
-local function checkGuarded(name, guarded, isKey)
+local function checkGuarded(who, guarded, isKey)
   for key, fn in pairs(guarded) do
     if not isKey[key] then
-      error(MAJOR .. ": NewSeam(" .. name .. "): guarded key '" .. tostring(key)
+      error(MAJOR .. ": " .. who .. ": guarded key '" .. tostring(key)
         .. "' is not a wrapped member (pure, unknown or not a function)", 3)
     end
     if type(fn) ~= "function" then
-      error(MAJOR .. ": NewSeam(" .. name .. "): guarded['" .. tostring(key) .. "'] must be a function", 3)
+      error(MAJOR .. ": " .. who .. ": guarded['" .. tostring(key) .. "'] must be a function", 3)
     end
   end
 end
@@ -229,12 +241,18 @@ local function seamMembers(state, compat)
     return out
   end
   function seam.Unwrapped()
-    local out = {}
-    for key, member in pairs(compat) do
-      if type(member) == "function" and not state.pure[key] and not rawequal(state.wrappers[key], member) then
-        out[#out + 1] = key
+    local out, seen = {}, {}
+    local function scan(tbl, wrappers, pure)
+      for key, member in pairs(tbl) do
+        if type(member) == "function" and not state.pure[key] and not (pure and pure[key])
+            and not rawequal(wrappers[key], member) and not seen[key] then
+          seen[key] = true
+          out[#out + 1] = key
+        end
       end
     end
+    scan(compat, state.wrappers)
+    for _, c in ipairs(state.covers) do scan(c.tbl, c.wrappers, c.pure) end
     sort(out, function(a, b) return tostring(a) < tostring(b) end)
     return out
   end
@@ -251,11 +269,12 @@ function lib:NewSeam(compat, opts)   -- luacheck: ignore 212/self
   local keys = wrappableKeys(compat, pure)
   local isKey = {}
   for _, key in ipairs(keys) do isKey[key] = true end
-  checkGuarded(opts.name, guarded, isKey)
+  checkGuarded("NewSeam(" .. opts.name .. ")", guarded, isKey)
 
   local state = {
     name = opts.name, debug = opts.debug, active = false, bypass = false,
-    pure = pure, keys = keys, isKey = isKey, providers = {}, wrappers = {},
+    pure = pure, guarded = guarded, keys = keys, isKey = isKey, providers = {}, wrappers = {},
+    covers = {},
   }
   for _, key in ipairs(keys) do
     local w = wrap(state, key, compat[key], guarded[key])
@@ -266,6 +285,53 @@ function lib:NewSeam(compat, opts)   -- luacheck: ignore 212/self
   STATE[seam] = state
   WRAPPED[compat] = true
   return seam
+end
+
+--- Raise unless `seam`, `tbl` and `opts` describe a table Cover can wrap; answer the seam's state.
+local function checkCover(seam, tbl, opts)
+  local state = STATE[seam]
+  if not state then error(MAJOR .. ": Cover(seam, tbl, opts): seam must come from Sim:NewSeam", 3) end
+  if type(tbl) ~= "table" then error(MAJOR .. ": Cover(" .. state.name .. "): tbl must be a table", 3) end
+  if opts ~= nil and type(opts) ~= "table" then
+    error(MAJOR .. ": Cover(" .. state.name .. "): opts must be a table or nil", 3)
+  end
+  if WRAPPED[tbl] then
+    error(MAJOR .. ": Cover(" .. state.name .. "): this table is already wrapped", 3)
+  end
+  return state
+end
+
+--- Wrap a second table of the host's in place under `seam` (minor 6): every function member not
+--- pure (the seam's or opts.pure) answers as a member of the seam's own table does, sharing its
+--- active flag, its Live bypass and its providers by key. A key guarded by the seam, or by
+--- opts.guarded, is guarded here. Answers the keys it wrapped, sorted (a fresh table).
+--- @param seam table from Sim:NewSeam
+--- @param tbl table the host's table (an instance's reads, LibKa0s-Verdict-1.0's v.R)
+--- @param opts table|nil { pure = {[key]=true}?, guarded = {[key]=fn}? }
+--- @return table keys
+function lib:Cover(seam, tbl, opts)   -- luacheck: ignore 212/self
+  local state = checkCover(seam, tbl, opts)
+  local pure, guarded = opts and opts.pure or {}, opts and opts.guarded or {}
+  local keys = wrappableKeys(tbl, state.pure, pure)
+  local isKey = {}
+  for _, key in ipairs(keys) do isKey[key] = true end
+  checkGuarded("Cover(" .. state.name .. ")", guarded, isKey)
+  local wrappers = {}
+  for _, key in ipairs(keys) do
+    local w = wrap(state, key, tbl[key], guarded[key] or state.guarded[key])
+    wrappers[key] = w
+    tbl[key] = w
+    if not state.isKey[key] then
+      state.isKey[key] = true
+      state.keys[#state.keys + 1] = key
+    end
+  end
+  sort(state.keys, function(a, b) return tostring(a) < tostring(b) end)
+  state.covers[#state.covers + 1] = { tbl = tbl, pure = pure, wrappers = wrappers }
+  WRAPPED[tbl] = true
+  local out = {}
+  for i, key in ipairs(keys) do out[i] = key end
+  return out
 end
 
 

@@ -6,24 +6,27 @@ standing rules. This file supplies Drop Watcher's procedure: the tool, the files
 precedent a ruling follows and the nuances of each client. The headings below are the interface
 the command reads, so keep their names.
 
-The seeds are the class lists (clients-§5), LibKa0s-Verdict-1.0's since the Item Search split
-(DropWatcher#19): `libs/LibKa0s/VerdictClassData.lua`, the vendored copy, holds Retail's
-(`RETAIL`) and WoW Forever's (`FOREVER`) lists, each built by `CD.Build`. This repo checks them
-read-only: a ruled edit is the library's, made in LibKa0s's `LibKa0s/VerdictClassData.lua` and
-re-vendored, and `apply` refuses to write under `libs/`. Every run also checks the
-item enum fallback literals in `core/Constants.lua` (`C.ITEM_CLASS`, `C.WEAPON_SUBCLASS`,
-`C.ARMOR_SUBCLASS`, `C.RECIPE_SUBCLASS`, `C.MISC_SUBCLASS`), the recipe skill lines
-(`C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s `PROFESSION`) and the library's `VerdictFacts.lua`
-`IR.GEAR_CLASSES`. These are name and existence checks only, with no candidates: they mirror the
+The seeds checked here are Drop Watcher's own files: the item enum fallback literals in
+`core/Constants.lua` (`C.ITEM_CLASS`, `C.WEAPON_SUBCLASS`, `C.ARMOR_SUBCLASS`, `C.RECIPE_SUBCLASS`,
+`C.MISC_SUBCLASS`) and the recipe skill lines (`C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s
+`PROFESSION`). These are name and existence checks only, with no candidates: they mirror the
 client's enums and are not a curated list. Nothing else in `core/` or `modules/` is a seed: the
-inventory slots (`C.SLOT`) are FrameXML constants that no DB2 table holds (the tier token override
-table and the track ids, `C.TIER_TOKENS` and `C.TRACK_TIER_BY_STRING_ID`, are the library's
-`VerdictConstants.lua` now, and empty), and `core/CompatJournal.lua`, `modules/TestData.lua` and the
-simulator's files hold reads or invented test data, not game ids.
+inventory slots (`C.SLOT`) are FrameXML constants that no DB2 table holds, and
+`core/CompatJournal.lua`, `modules/TestData.lua` and the simulator's files hold reads or invented
+test data, not game ids.
+
+**The class lists are LibKa0s's.** The hand-curated class lists (clients-§5: the class ids, armor
+and the level-40 switch, weapons, specs and talent trees, Titan's Grip, shields, dual wield, relics)
+are LibKa0s-Verdict-1.0's `VerdictClassData.lua` since the Item Search split (DropWatcher#19),
+vendored here at `libs/LibKa0s/`, and the gear classes (`IR.GEAR_CLASSES`) its `VerdictFacts.lua`.
+Their seed contract moved beside them (LibKa0s#109): LibKa0s's `tools/seeds/classseeds.py`, flavors
+`retail-classes` and `forever-classes` of LibKa0s's `docs/validate-seeds.md`, with the class-list
+rulings this repo held. A ruled edit there reaches Drop Watcher by a re-vendor.
 
 Each run ends in a frozen bundle under `docs/seed-research/<date>-<flavor>/`. The tool is
-`tools/seeds/seeds.py`, and its docstring is the reference for every candidate and flag kind. The
-first runs are `docs/seed-research/2026-11-15-retail/` and `docs/seed-research/2026-11-15-forever/`.
+`tools/seeds/seeds.py`, and its docstring is the reference for every flag kind. The first runs,
+`docs/seed-research/2026-11-15-retail/` and `docs/seed-research/2026-11-15-forever/`, checked the class
+lists too, while this repo held that contract; they stay as the frozen record.
 
 Item Search's two WoW Forever seeds, the generated recipe reagents (`core/RecipeReagentsForever.lua`,
 `tools/seeds/recipes.py`) and the hand-curated gathering nodes (`core/GatherNodes.lua`), went with
@@ -35,48 +38,30 @@ made while Drop Watcher held them.
 
 | Flavor | Source | Seed files | Tools |
 | --- | --- | --- | --- |
-| `retail` | wago.tools product `wow` (Retail live) | `libs/LibKa0s/VerdictClassData.lua`'s `RETAIL` (hand-curated in LibKa0s, tool-checked here; the ruled `RETAIL.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor retail` |
-| `forever` | wago.tools product `wowf` (WoW Forever) | `libs/LibKa0s/VerdictClassData.lua`'s `FOREVER` (hand-curated in LibKa0s, tool-checked here; the ruled `FOREVER.WEAPONS` edit is made in LibKa0s), plus the shared literals above (checked only) | `tools/seeds/seeds.py --flavor forever` |
+| `retail` | wago.tools product `wow` (Retail live) | `core/Constants.lua`'s enum literals and `C.RECIPE_SKILL_LINE`, `modules/CollectCells.lua`'s `PROFESSION` (checked only) | `tools/seeds/seeds.py --flavor retail` |
+| `forever` | wago.tools product `wowf` (WoW Forever) | the same files, against the Forever build (checked only) | `tools/seeds/seeds.py --flavor forever` |
+
+The class lists' flavors are LibKa0s's `retail-classes` and `forever-classes` (LibKa0s's
+`docs/validate-seeds.md`, `tools/seeds/classseeds.py`).
 
 ## Rules
 
-- **Only `apply` writes a WEAPONS set**, and only for an accepted `weapon:` candidate or a
-  `weapon-unlisted` flag ruled `remove`. Since the Item Search split the lists are vendored here
-  (`libs/LibKa0s/`), so `apply` stops with the edit it would make and the edit is made in LibKa0s
-  and re-vendored; the rulings stay this repo's. Every other row (class ids, armor, specs, trees, relics,
-  flags such as `D`, `T`, `S`) is a hand edit. An accepted hand candidate or a flag ruled `fix` makes
-  `apply` refuse until the file carries the edit and a `derive --replay` stops raising it.
+- **Nothing is written by the tool.** Every flag is ruled `keep` (the row stands, with its reason)
+  or `fix` (a hand edit is owed). `apply` is the gate: it refuses while anything is unruled or a
+  `fix` is open, and writes nothing. Once the file carries the edit, a `derive --replay` stops
+  raising the flag.
 - **Rulings are data.** They live in `tools/seeds/retail_rulings.json` and
   `tools/seeds/forever_rulings.json`, written only by `seeds.py rule`. A ruling is keyed
-  `<group>:<subject>` for a candidate or `shipped:<kind>:<subject>` for a flag, never by build, and it
-  holds until the thing it ruled on stops being proposed.
+  `shipped:<kind>:<subject>`, never by build, and it holds until the thing it ruled on stops being
+  proposed.
 - **Precedent, in this order, never re-litigated:**
   1. a ruling already in the flavor's rulings file;
-  2. the seed file's own header and comments. The one that decides most weapon candidates is
-     the class list file's note above `RETAIL.WEAPONS` (LibKa0s's `VerdictClassData.lua`): a skill the class has but no loot of its
-     primary stat drops for is left out, so a ranged weapon reads as the hunter's alone (its own
-     example is a warrior's bow). Devourer's weapon and off-hand rules stay a known limitation until
-     smoke-checked (FEED-7);
-  3. `docs/design-readings.md` (the class tables are a fallback: an item's own spec list wins when it
-     exists) and `docs/known-limitations.md`;
-  4. the Forever port's research and design, `docs/superpowers/research/2026-11-13-forever-port/`
-     (`04_DW_FOREVER_EXPOSURE.md` §5, the vanilla proficiencies) and
-     `docs/superpowers/specs/2026-11-13-drop-watcher-forever-port-design.md` §4.2. Those rows are
-     marked INFERRED until probed, so a build row that contradicts them is the owner's call, not
-     the tool's;
-  5. the assertions in LibKa0s's `tests/test_verdict_classdata.lua`, which pin today's lists. A ruling that
-     contradicts one goes to the owner.
-- **What "accept" means here.** Accept a proficiency only when the build grants it
-  (`SkillRaceClassInfo`, with `SkillLineAbility` as a second witness), the loot-relevance rule
-  admits it, and nothing above records otherwise. When in doubt, reject with
-  `needs owner review: <why>`. A rejection like that is meant to come back to the owner, not to
-  settle the question.
-- **Evidence.** The bundle's `raw/*.csv.gz`: `SkillRaceClassInfo` (`SkillID`, `ClassMask`,
-  `MinLevel`; a row with no race in either race mask is skipped), `SkillLineAbility` (the
-  proficiency spells' `ClassMask`), `ChrClasses` (`ArmorTypeMask`: bits 1 to 4 the armor types,
-  6 shields, 7 to 9 the relics), `ChrSpecialization` (`OrderIndex`, `PrimaryStatPriority`),
-  `SpecializationSpells` (Titan's Grip, 46917) and, on Forever, `TalentTab`. DB2 says what a class
-  can learn, not what a player wears, so a surprising row is checked in game before it ships.
+  2. the seed file's own header and comments (`core/Constants.lua`'s *Item ids* header: each literal
+     is the documented 12.x value, used only when `Enum` or the member is absent, and `fromEnum`
+     reads the client's own value first);
+  3. `docs/design-readings.md` and `docs/known-limitations.md`.
+- **Evidence.** The bundle's `raw/*.csv.gz`: `ItemClass` and `ItemSubClass` (the enum literals'
+  ids and names) and `SkillLine` (the recipe skill lines' names).
 - **Privacy.** No player name, realm or GUID goes into a bundle, a ruling or a commit.
 
 ## Flavor: retail
@@ -96,10 +81,10 @@ live `wow` build with the newest `*-retail` bundle.
 python3 tools/seeds/seeds.py derive --flavor retail --build <build> --bundle docs/seed-research/<date>-retail --date <date>
 ```
 
-It downloads eight small tables (about 1 MB, cached in `tools/seeds/.cache/`) and runs the coverage
-gate: the sentinel classes (Warrior 1, Rogue 4, Mage 8) and skill lines must be there, and every
-mapped armor and weapon skill line must still carry its name. **If the gate fails, stop**: fix the
-tool's map, not the rulings. Report the candidate and flag counts and the unruled count.
+It downloads three small tables (`SkillLine`, `ItemClass`, `ItemSubClass`, cached in
+`tools/seeds/.cache/`) and runs the coverage gate: the sentinel item classes (Weapon 2, Armor 4) and
+skill lines (Blacksmithing 164, Tailoring 197) must be there under those names. **If the gate fails,
+stop**: fix the tool, not the rulings. Report the flag count and the unruled count.
 
 ### Rule
 
@@ -110,16 +95,10 @@ python3 tools/seeds/seeds.py rule --tsv <scratchpad>/rulings.tsv --bundle docs/s
 
 `check` lists every unruled key and exits 1, and must print `OK` after `rule`.
 
-- **Candidates** (`accept` or `reject`): `weapon:<CLASS>:<SUB>` (written by `apply`), and the hand
-  candidates `class:`, `spec:` and `titanGrip:`.
-  - A warrior's or a rogue's bow, gun or crossbow is rejected under the loot-relevance note.
-  - A new spec (`spec:<id>`) needs its stat and its four flags, which DB2 cannot give: accept it
-    only with all of them known, and add its `SPEC_INDEX` row too.
-- **Flags** (`keep`, `fix` or `remove`): `class-id`, `armor`, `weapon-unlisted`, `spec-missing`,
-  `spec-class`, `spec-name`, `spec-index`, `spec-stat`, `titan-grip`, `shield`, `enum` and
-  `skill-line`. `remove` is legal on `weapon-unlisted` alone.
-- Retail's dual wield is not checked: it comes from spec passives that the skill tables do not
-  carry (Frost's 674 is the one `SpecializationSpells` row), so the `D` flags stay hand-kept.
+- **Flags** (`keep` or `fix`): `enum` (a fallback literal the build has not, or names otherwise) and
+  `skill-line` (a recipe skill line the build has not, or names otherwise).
+- A name that differs by design is an alias in the tool (`ENUM_ALIASES`: `GENERIC` is
+  Miscellaneous), not a ruling.
 
 ### Apply
 
@@ -128,25 +107,20 @@ python3 tools/seeds/seeds.py report --bundle docs/seed-research/<date>-retail --
 python3 tools/seeds/seeds.py apply  --bundle docs/seed-research/<date>-retail --date <date>
 ```
 
-`report` comes before `apply`, so `RULINGS.md` is written while the candidates still include what
-is about to be applied. `apply` refuses while anything is unruled or a hand edit is owed, rewrites
-only the changed `set(...)` entries (CRLF and the column wrap kept), and a second `apply` changes
-nothing.
+`report` writes the bundle's `RULINGS.md`; `apply` refuses while anything is unruled or a `fix` is
+open, and writes nothing.
 
 ### After
 
-- Roll any assertion in LibKa0s's `tests/test_verdict_classdata.lua` (and the other suites that read the list) that
-  pins a row the run changed.
-- Write the bundle's `ANALYSIS.md` by hand, in the 2026-11-15 bundles' shape: what the build
-  says, what was proposed, accepted and rejected and why, and what a later run should re-check.
-- Add a smoke check to `docs/smoke-tests.md` for every list that changed, with its
-  *Pending sign-off* note. A run that changes nothing adds none.
-- Re-resolve any `libs/LibKa0s/VerdictClassData.lua:N` citation the docs suite flags.
+- Write the bundle's `ANALYSIS.md` by hand: what the build says, what was flagged and how it was
+  ruled, and what a later run should re-check.
+- A `fix` is a hand edit to `core/Constants.lua` or `modules/CollectCells.lua`, with its test, under
+  this repo's green gate.
 
 ### Stage
 
-`tools/seeds/retail_rulings.json` (the list's edit is LibKa0s's), `docs/seed-research/<date>-retail`, plus any
-test, smoke or citation edits. Commit message: `Seeds (retail): re-validated against <build> (<date>)`.
+`tools/seeds/retail_rulings.json`, `docs/seed-research/<date>-retail`, plus any hand edit, test or
+citation edits. Commit message: `Seeds (retail): re-validated against <build> (<date>)`.
 
 ## Flavor: forever
 
@@ -165,9 +139,7 @@ newest `*-forever` bundle.
 python3 tools/seeds/seeds.py derive --flavor forever --build <build> --bundle docs/seed-research/<date>-forever --date <date>
 ```
 
-The same gate as Retail. Forever's own tables are `TalentTab` in place of `SpecializationSpells`;
-`ChrSpecialization` holds one class-wide spec row per class there, which the list does not seed (its
-rows are keyed `"<classFile>:<tree>"`).
+The same tables and the same gate as Retail.
 
 ### Rule
 
@@ -178,14 +150,6 @@ python3 tools/seeds/seeds.py rule --tsv <scratchpad>/rulings.tsv --bundle docs/s
 
 Nuances:
 
-- **Candidates:** `weapon:`, plus the hand candidates `class:`, `tree:<CLASS>:<n>`, `relic:`,
-  `dualWield:` and `armorEarly:`. **Flags:** the Retail kinds that apply, plus `armor-early`,
-  `armor-level`, `armor-lower`, `tree-missing`, `tree-name`, `relic` and `dual-wield`.
-- **The level-40 switch is data.** The heavier armor line's `MinLevel` is the switch: Plate Mail and
-  Mail answer 40 on 1.60.1, which is `ARMOR_LEVEL`.
-- **The vanilla proficiencies are INFERRED.** A build row that adds one (a druid's polearm, a rogue's
-  axe on 1.60.1) contradicts the research and LibKa0s's `tests/test_verdict_classdata.lua`, so it goes to the owner
-  (`needs owner review`) and is not accepted by a run.
 - **The shared literals are Retail's.** `core/Constants.lua` and `C.RECIPE_SKILL_LINE` are one table
   for both clients. A Retail-only subclass or skill line (Jewelcrafting, Inscription, Mount
   Equipment) is absent on Forever and is kept, because no Forever item ever carries it.
@@ -201,16 +165,13 @@ As for Retail: `report` first, then `apply`, which refuses on anything unruled o
 
 ### After
 
-- Roll any LibKa0s's `tests/test_verdict_classdata.lua` assertion that pins a changed row, under both kit profiles.
-- Write the bundle's `ANALYSIS.md` by hand, in the 2026-11-15 bundles' shape.
-- Add a FOREVER smoke check (or a `docs/forever-probes.md` probe) for every list that changed, with
-  its *Pending sign-off* note.
+- Write the bundle's `ANALYSIS.md` by hand.
+- A `fix` is a hand edit, under both kit profiles.
 
 ### Stage
 
-`tools/seeds/forever_rulings.json` (the list's edit is LibKa0s's) and
-`docs/seed-research/<date>-forever`, plus any test, smoke or citation edits. Commit message:
-`Seeds (forever): re-validated against <build> (<date>)`.
+`tools/seeds/forever_rulings.json` and `docs/seed-research/<date>-forever`, plus any hand edit, test
+or citation edits. Commit message: `Seeds (forever): re-validated against <build> (<date>)`.
 
 ## Gate
 
@@ -227,14 +188,15 @@ fixture tables, with no network.
 
 ## Notes
 
-- **Bundle size.** A bundle's `raw/` is about 200 KB (Retail) and 80 KB (Forever): only the tables
-  read, gzipped.
-- **The open owner questions of the first run** are each a `needs owner review` rejection in the
-  rulings files: the Retail Demon Hunter's daggers, and on Forever the druid's polearms, the rogue's
-  one-handed axes and the shaman's dual wield. The 2026-11-15 bundles' `ANALYSIS.md` gives the
-  in-game check for each. Once the owner rules, re-rule the key (a new `rule` line replaces the old
-  one) and apply.
-- **A ruling outlives its candidate.** After `apply`, an accepted id stops being proposed. Its
-  ruling stays in the file as provenance, and that is not an error.
+- **The class-list questions of the first run** (the Retail Demon Hunter's daggers, and on Forever
+  the druid's polearms, the rogue's one-handed axes and the shaman's dual wield, each a `needs owner
+  review` rejection) moved to LibKa0s with their rulings (`retail-classes_rulings.json`,
+  `forever-classes_rulings.json`); the 2026-11-15 bundles' `ANALYSIS.md` gives the in-game check for
+  each.
+- **The next Retail run** has a flag waiting: `C.ITEM_CLASS.TRADEGOODS` (added by DW-RG1 after the
+  2026-11-15 run) reads `Tradeskill` on the 12.1.5 build, so `shipped:enum:ITEM_CLASS:TRADEGOODS` comes
+  up for a ruling.
+- **A ruling outlives its flag.** Once a flag stops being raised its ruling stays in the file as
+  provenance, and that is not an error.
 - **A shared helper** for the build pin, the cache, the bundle and the rulings is LibKa0s#91's to
   decide; until then the tool copies AuraMaster's pattern and imports nothing across repos.

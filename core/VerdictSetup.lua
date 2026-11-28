@@ -16,10 +16,12 @@ local _, NS = ...
 --   client     NS.Compat.ClientKey(), once: the class list, the slots, the off-spec and transmog
 --              gates, the default verdict mode and the events are this client's.
 --   config     NS.LootFeed.VerdictConfig(): the six `comparison.*` values and LF.VERDICT_MODE.
---   reads      every read the instance makes goes to NS.Compat's member of the same name (NS.Item's
---              for ItemIDFromLink, QualityFromLink and LoadItem), looked up at each call, so the
---              simulator's seam (core/SimSetup.lua wraps every NS.Compat member) still guards each
---              one, and this addon's own PlayerRole (its role override) is the one read.
+--   reads      PlayerRole alone, NS.Compat's (this addon's role store: the override and the saved
+--              answer, which the library's own read does not know). Every other read is the
+--              library's (lib.Reads), resolved at each call through the instance's forwarders
+--              (v.R, Verdict minor 3, LibKa0s#111), and the simulator's seam covers v.R in place
+--              (Sim:Cover, below), so a provider or a guard keyed by a read's name answers the
+--              instance's read too.
 --   deferWhile NS.Restrictions.InCombat: a bag event in combat waits for the combat's end.
 --   events     registered through NS.FEATURE_EVENTS (core/DropWatcher.lua), one row per event the
 --              instance listens to, so the stand-down drops them with every other row and the
@@ -28,14 +30,17 @@ local _, NS = ...
 --   onChange   "gear" sends NS.MSG.GEAR_CHANGED; "collection" runs the feed's re-judge
 --              (NS.CollectFeed.OnCollectionsChanged).
 --
--- THE LIFECYCLE. The instance stands up at OnEnable (NS.VerdictEnable, core/DropWatcher.lua) and at
--- every stand-up (NS.VerdictStandUp), which registers its handlers and reads your gear; it stands
+-- THE LIFECYCLE. The instance stands up at OnEnable (NS.VerdictEnable, core/DropWatcher.lua) lazily
+-- (`v:StandUp{ lazy = true }`, LibKa0s#108): its handlers kept and no gear read, so the first ask for
+-- your gear reads it, quietly, and a gear event before that ask rebuilds and announces as ever. At
+-- every later stand-up (NS.VerdictStandUp) it reads your gear at once and announces it. It stands
 -- down with the addon (NS.STAND_DOWN), which drops its timers and caches.
 --
 -- Absent library: NS.Verdict is a stand-in whose kernel answers `unknown` for every item, and
 -- NS.VerdictEngine one that reads nothing, so every verdict reads "unknown" and nothing raises.
 
 local V = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
+local Sim = LibStub and LibStub("LibKa0s-Sim-1.0", true)
 
 -- ── the library-absent stand-in ────────────────────────────────────────────────────────────
 
@@ -87,6 +92,8 @@ local function stubLib()
             WeightsScore = function() return 0 end, HasWeights = function() return false end,
             Resolve = function() return "none" end, WeightsFor = none, WeightsScorer = function() return none end },
         Gear = { THROTTLE = 0.5, SlotsFor = empty },
+        -- No instance stands up, so it listens to nothing and no event gets a row.
+        EventsFor = empty,
     }
 end
 
@@ -121,31 +128,26 @@ NS.Verdict = V or stubLib()
 
 local CLIENT = NS.Compat.ClientKey()
 
--- The reads the instance takes from NS.Item rather than NS.Compat.
-local ITEM_READS = { ItemIDFromLink = true, QualityFromLink = true, LoadItem = true }
-
--- Each read the instance asks for, resolved at the call: NS.Compat's member (the simulator's
--- guarded one), else NS.Item's, else nil (the library's own default).
-local reads = setmetatable({}, { __index = function(_, name)
-    if ITEM_READS[name] then return NS.Item and NS.Item[name] end
-    return NS.Compat[name]
-end })
-
--- The instance's events, by client, as the library's API document lists them
--- (docs/api/Verdict, *The instance*). Each is one NS.FEATURE_EVENTS row whose handler hands the
--- event to the instance's handler for it (host.registerEvent).
-local EVENTS = {
-    { "PLAYER_EQUIPMENT_CHANGED" }, { "BAG_UPDATE_DELAYED" }, { "PLAYER_REGEN_ENABLED" },
-    { "SPELL_TEXT_UPDATE" }, { "NEW_MOUNT_ADDED" }, { "NEW_PET_ADDED" }, { "NEW_TOY_ADDED" },
-    { "NEW_RECIPE_LEARNED" }, { "SKILL_LINES_CHANGED" },
-    { "PLAYER_SPECIALIZATION_CHANGED", { "retail" } }, { "TRANSMOG_COLLECTION_UPDATED", { "retail" } },
-    { "TRAIT_CONFIG_UPDATED", { "forever" } }, { "CHARACTER_POINTS_CHANGED", { "forever" } },
-    { "PLAYER_LEVEL_UP", { "forever" } },
-}
-local ROUTED = {}
-for _, e in ipairs(EVENTS) do
-    ROUTED[e[1]] = true
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { e[1], "OnVerdictEvent", clients = e[2] }
+-- The instance's events, by client, read from the library (NS.Verdict.EventsFor, the stand-in's
+-- answering none), so an event a later minor adds gets its row with no edit here (DropWatcher#21).
+-- Each is one NS.FEATURE_EVENTS row whose handler hands the event to the instance's handler for it
+-- (host.registerEvent): an event both clients listen to carries no clients tag, one only a single
+-- client listens to carries that client's.
+local CLIENTS = { "retail", "forever" }
+local ROUTED, ORDER = {}, {}
+for _, client in ipairs(CLIENTS) do
+    for _, event in ipairs(NS.Verdict.EventsFor(client)) do
+        if ROUTED[event] then
+            ROUTED[event] = "both"
+        else
+            ROUTED[event], ORDER[#ORDER + 1] = client, event
+        end
+    end
+end
+for _, event in ipairs(ORDER) do
+    local only = ROUTED[event]
+    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnVerdictEvent",
+        clients = only ~= "both" and { only } or nil }
 end
 
 -- The instance's handler per event, kept while it is stood up.
@@ -156,18 +158,11 @@ function NS.addon.OnVerdictEvent(_, event, ...)
     if fn then fn(event, ...) end
 end
 
--- THE FIRST READ IS LAZY, as it was when the snapshot was this addon's own: nobody has judged
--- against an older one, so it announces nothing, and it reads the client when something first
--- asks for your gear. The instance reads your gear as it stands up, which at OnEnable is only so its
--- handlers are kept: that read is quiet (`quietGear`) and provisional, and the first ask through
--- NS.Gear (NS.VerdictFresh) reads again, quietly. A gear change the instance announces in between
--- makes its snapshot the real one. The latch's stand-up announces its read, as before.
-local quietGear, provisional = false, false
-
 local host = {
     client = CLIENT,
     L = NS.L,
-    reads = reads,
+    -- The one read this addon answers itself; NS.Compat's member is the seam-wrapped one.
+    reads = { PlayerRole = NS.Compat.PlayerRole },
     config = function() return NS.LootFeed and NS.LootFeed.VerdictConfig() or nil end,
     debug = function(tag, msg) NS.Debug(tag, "%s", msg) end,
     deferWhile = function() return NS.Restrictions ~= nil and NS.Restrictions.InCombat() end,
@@ -180,8 +175,6 @@ local host = {
     unregisterEvent = function(event) handlers[event] = nil end,
     onChange = function(kind)
         if kind == "gear" then
-            if quietGear then return end
-            provisional = false
             NS.State.gear = NS.VerdictEngine:Snapshot()   -- the mirror (core/VerdictViews.lua's NS.Gear)
             NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
         elseif kind == "collection" and NS.CollectFeed then
@@ -199,33 +192,24 @@ host.perf = NS.Perf
 
 NS.VerdictEngine = V and V:New(host) or stubEngine(CLIENT)
 
+-- The simulator's seam (core/SimSetup.lua) covers the instance's reads in place, before
+-- modules/Sim*.lua register their providers (the TOC loads this file first): a provider or guard
+-- keyed by a read's name answers v.R's member too, and the seam's Unwrapped() takes v.R in.
+-- PlayerRole is pure here: it is NS.Compat's member, wrapped already, so covering it again would
+-- consult its provider twice.
+if V and Sim then Sim:Cover(NS.SimSeam, NS.VerdictEngine.R, { pure = { PlayerRole = true } }) end
+
 --- Stand the instance up at the latch's stand-up: its handlers kept and your gear read and
 --- announced (NS.STAND_UP).
 function NS.VerdictStandUp()
-    provisional = false
     NS.VerdictEngine:StandUp()
 end
 
--- An error's message with the stack it was raised from: a re-raise of the message alone would
--- report it from here.
-local function withTraceback(err) return debug.traceback(tostring(err), 2) end
-
---- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept, its gear read
---- quietly and provisionally (see THE FIRST READ IS LAZY above). A throw lets the quiet read go and
---- is raised again with the stack it came from.
+--- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept and no gear read; the
+--- first ask reads it, quietly, as it did when the snapshot was this addon's own (nobody has judged
+--- against an older one).
 function NS.VerdictEnable()
-    quietGear = true
-    local ok, err = xpcall(function() NS.VerdictEngine:StandUp() end, withTraceback)
-    quietGear, provisional = false, true
-    if not ok then error(err, 0) end
-end
-
---- Before a gear read through NS.Gear: the stand-up's provisional snapshot read again, quietly,
---- once (core/VerdictViews.lua).
-function NS.VerdictFresh()
-    if not provisional then return end
-    provisional = false
-    NS.VerdictEngine:RefreshGear("lazy", true)
+    NS.VerdictEngine:StandUp{ lazy = true }
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

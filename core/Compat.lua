@@ -13,13 +13,14 @@ NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 local TextParse = NS.TextParse -- core/TextParse.lua, above in the TOC: the pure parsers
 local CompatLib = LibStub and LibStub("LibKa0s-Compat-1.0", true)
-local RoleLib = LibStub and LibStub("LibKa0s-Role-1.0", true)
 
 -- ── Secret guards: LibKa0s-Compat-1.0 ───────────────────────────────────────────────────────
 -- The library's answer, or the same one-rung body, on purpose: for a GUARD "the library is absent"
 -- is not "the client has no secrets" (LibKa0s docs/api/Compat/version-1-docs.md, "Degradation").
--- Of that major's spell and spec readers, only the spec two are wired, behind PlayerSpecID's
--- library-absent ladder; the client helpers and the character-name readers are routed below.
+-- Of that major's readers, the client helpers and the character-name readers are routed below.
+-- The player's spec, talent tree and the item, collection and Pawn reads the verdict engine makes
+-- are LibKa0s-Verdict-1.0's own (lib.Reads), covered by the simulator's seam over the instance's
+-- reads (core/VerdictSetup.lua, LibKa0s#111); this addon keeps no copy of them.
 
 --- True when `v` is a 12.0 secret value. Exactly one boolean.
 Compat.IsSecret = CompatLib and CompatLib.IsSecret or function(v)
@@ -222,40 +223,6 @@ function Compat.InventoryItemLevel(unit, slot)
         parseItemLevel)
 end
 
--- The track name and ranks on an ItemUpgradeLevel line, from ITEM_UPGRADE_TOOLTIP_FORMAT_STRING
--- ("Upgrade Level: %s %d/%d" in enUS).
-local function parseUpgradeLine(text)
-    local fmt = globalString("ITEM_UPGRADE_TOOLTIP_FORMAT_STRING")
-    return fmt and TextParse.UpgradeLine(text, fmt) or nil
-end
-
--- C_Item.GetItemUpgradeInfo's table, copied with plain fields only, or nil.
-local function upgradeFromApi(link)
-    local item = C_Item
-    if not (item and item.GetItemUpgradeInfo) then return nil end
-    local info = item.GetItemUpgradeInfo(link)
-    if Compat.IsSecret(info) or type(info) ~= "table" then return nil end
-    return {
-        currentLevel = plainNumber(info.currentLevel), maxLevel = plainNumber(info.maxLevel),
-        maxItemLevel = plainNumber(info.maxItemLevel), trackString = plainString(info.trackString),
-        trackStringID = plainNumber(info.trackStringID), source = "api",
-    }
-end
-
---- The upgrade track of an item link: `{ trackString, trackStringID, currentLevel, maxLevel,
---- maxItemLevel, source }`, from C_Item.GetItemUpgradeInfo, else from the hyperlink tooltip's
---- ItemUpgradeLevel line (no trackStringID there; source "tooltip"). Nil for an item with no
---- track, an uncached item, or a client with neither.
---- @param link string
---- @return table|nil
-function Compat.GetItemUpgradeInfo(link)
-    if not plainString(link) then return nil end
-    local info = upgradeFromApi(link)
-    if info and info.trackString then return info end
-    return Compat.ReadTooltipLine(tooltipData("GetHyperlink", link), "ItemUpgradeLevel",
-        parseUpgradeLine)
-end
-
 -- ── Restrictions (12.0) ─────────────────────────────────────────────────────────────────────
 
 --- True while the chat-messaging lockdown is in effect. A secret answer reads as locked; a client
@@ -343,20 +310,6 @@ end
 function Compat.CharacterKey()
     if not (CompatLib and CompatLib.CharacterKey) then return nil end
     return plainString(CompatLib.CharacterKey())
-end
-
---- The player's own specialization id: LibKa0s-Role-1.0's Spec() (class-wide on WoW Forever),
---- else LibKa0s-Compat-1.0's GetSpecialization and GetSpecializationInfo's first return. Nil before
---- the client knows, for a secret, and with the library absent (no rung is re-implemented here).
---- @return number|nil
-function Compat.PlayerSpecID()
-    if RoleLib and RoleLib.Spec then return plainNumber((RoleLib.Spec())) end
-    if not (CompatLib and CompatLib.GetSpecialization and CompatLib.GetSpecializationInfo) then
-        return nil
-    end
-    local index = plainNumber(CompatLib.GetSpecialization())
-    if not index then return nil end
-    return plainNumber((CompatLib.GetSpecializationInfo(index)))
 end
 
 -- ── Inventory and bags (the gear snapshot, design spec §4) ──────────────────────────────────
@@ -479,25 +432,6 @@ end
 
 -- ── Bind helpers ────────────────────────────────────────────────────────────────────────────
 
--- C_Item.<fn>(link) as a plain boolean; false when the API is absent or the answer is secret.
-local function itemFlag(fn, link)
-    local item = C_Item
-    if not (item and item[fn] and plainString(link)) then return false end
-    local v = item[fn](link)
-    if Compat.IsSecret(v) then return false end
-    return v == true
-end
-
---- True when the item binds to the account (warbound). Works on another player's link.
-function Compat.IsItemBindToAccount(link)
-    return itemFlag("IsItemBindToAccount", link)
-end
-
---- True when the item is warbound until equipped. Works on another player's link.
-function Compat.IsItemBindToAccountUntilEquip(link)
-    return itemFlag("IsItemBindToAccountUntilEquip", link)
-end
-
 --- The GUID of the item in bag `bag`, slot `slot` (the trade timer's key, spec §7.4), or nil.
 --- @return string|nil
 function Compat.GetBagItemGUID(bag, slot)
@@ -531,14 +465,6 @@ function Compat.ItemEquipLoc(link)
     return plainString(equipLoc)
 end
 
---- True when the client can be asked to load an item (C_Item.RequestLoadItemDataByID) and can
---- call back later (C_Timer.After): LibKa0s-Item-1.0's LoadItem is inert without either.
---- @return boolean
-function Compat.CanRequestItemLoad()
-    local item, timer = C_Item, C_Timer
-    return (item and item.RequestLoadItemDataByID and timer and timer.After) and true or false
-end
-
 --- The cached fields of an item link: `{ name, quality, itemLevel, equipLoc, classID, subClassID,
 --- bindType, setID }`, from C_Item.GetItemInfo. Nil while the item
 --- is not cached (the name is nil then), and for a secret or missing link.
@@ -569,107 +495,9 @@ function Compat.GetDetailedItemLevel(link)
     return plainNumber((fn(link)))
 end
 
---- The stats of a link as `{ [STAT_KEY] = n }` (keys such as ITEM_MOD_STRENGTH_SHORT), from
---- C_Item.GetItemStats. A key the addon does not know is copied all the same;
---- secret keys and values are skipped. An empty table when the client answers nothing.
---- @param link string
---- @return table
-function Compat.GetItemStats(link)
-    local fn = itemApi("GetItemStats")
-    local out = {}
-    if not (fn and plainString(link)) then return out end
-    local stats = fn(link)
-    if Compat.IsSecret(stats) or type(stats) ~= "table" then return out end
-    for key, value in pairs(stats) do
-        if plainString(key) and plainNumber(value) then out[key] = value end
-    end
-    return out
-end
-
---- The specializations an item is for, as a set `{ [specID] = true }`, from C_Item.GetItemSpecInfo.
---- Nil when the client answers no list or an empty one (the item names no spec).
---- @param link string
---- @return table|nil
-function Compat.GetItemSpecs(link)
-    local fn = itemApi("GetItemSpecInfo")
-    if not (fn and plainString(link)) then return nil end
-    local list = fn(link)
-    if Compat.IsSecret(list) or type(list) ~= "table" then return nil end
-    local set
-    for _, specID in ipairs(list) do
-        if plainNumber(specID) then
-            set = set or {}
-            set[specID] = true
-        end
-    end
-    return set
-end
-
--- C_Item.GetItemUniquenessByID's (isUnique, categoryName, categoryCount, categoryID).
-local function uniqueFromApi(fn, link)
-    local isUnique, _, count, catID = fn(link)
-    catID, count = plainNumber(catID), plainNumber(count)
-    if catID and catID > 0 then return catID, count or 1 end
-    if not Compat.IsSecret(isUnique) and isUnique == true then return nil, 1 end
-    return nil, nil
-end
-
---- How many of this item (or of its unique category) may be equipped at once: `(categoryID,
---- max)`, with categoryID nil when the item is unique on its own. `(nil, nil)` when it is not
---- unique or the client lacks C_Item.GetItemUniquenessByID.
---- @param link string
---- @return number|nil categoryID, number|nil max
-function Compat.GetItemUniqueness(link)
-    if not plainString(link) then return nil, nil end
-    local item = C_Item
-    if item and item.GetItemUniquenessByID then return uniqueFromApi(item.GetItemUniquenessByID, link) end
-    return nil, nil
-end
-
--- CanIMogIt (an optional dependency): its API is called, never copied, each call in pcall so its
--- error never becomes this addon's. `CanIMogIt:Method(link)`; nil for a missing method, a raise or
--- an answer that is not a plain boolean.
-local function canIMogIt(method, link)
-    local cimi = CanIMogIt
-    local fn = type(cimi) == "table" and cimi[method]
-    if type(fn) ~= "function" then return nil end
-    local ok, v = pcall(fn, cimi, link)
-    if not ok or Compat.IsSecret(v) or type(v) ~= "boolean" then return nil end
-    return v
-end
-
--- CanIMogIt's answer: true or false when it knows, nil to ask the client instead. An item it says
--- has no appearance to collect answers `nil, true`.
-local function transmogFromCanIMogIt(link)
-    if canIMogIt("IsTransmogable", link) == false then return nil, true end
-    return canIMogIt("PlayerKnowsTransmog", link), false
-end
-
--- The client's answer: C_TransmogCollection.PlayerHasTransmogByItemInfo, nil when absent or secret.
-local function transmogFromClient(link)
-    local tc = C_TransmogCollection
-    if not (tc and tc.PlayerHasTransmogByItemInfo) then return nil end
-    local known = tc.PlayerHasTransmogByItemInfo(link)
-    if Compat.IsSecret(known) or type(known) ~= "boolean" then return nil end
-    return known
-end
-
---- Whether you have collected this item's appearance (design spec §4, transmog-known): CanIMogIt's
---- PlayerKnowsTransmog when that addon is loaded (it knows the appearance from any source), else
---- C_TransmogCollection's PlayerHasTransmogByItemInfo. Nil when neither answers, the answer is
---- secret, or CanIMogIt says the item has no appearance to collect.
---- @param link string
---- @return boolean|nil
-function Compat.PlayerHasTransmog(link)
-    if not plainString(link) then return nil end
-    local known, noAppearance = transmogFromCanIMogIt(link)
-    if noAppearance then return nil end
-    if known ~= nil then return known end
-    return transmogFromClient(link)
-end
-
---- Which source answers PlayerHasTransmog now: "CanIMogIt", "C_TransmogCollection" or "none". For
---- the diagnostics' integrations section.
+--- Which source answers the verdict engine's PlayerHasTransmog read now (LibKa0s-Verdict-1.0's
+--- lib.Reads): "CanIMogIt", "C_TransmogCollection" or "none". For the diagnostics' integrations
+--- section.
 --- @return string
 function Compat.TransmogSource()
     local cimi = CanIMogIt
@@ -677,65 +505,6 @@ function Compat.TransmogSource()
     local tc = C_TransmogCollection
     if tc and tc.PlayerHasTransmogByItemInfo then return "C_TransmogCollection" end
     return "none"
-end
-
--- Localized class name -> classFile, from the client's LOCALIZED_CLASS_NAMES_MALE and _FEMALE.
-local function classFilesByName()
-    local out = {}
-    for _, map in ipairs({ LOCALIZED_CLASS_NAMES_MALE, LOCALIZED_CLASS_NAMES_FEMALE }) do
-        if type(map) == "table" then
-            for classFile, name in pairs(map) do
-                if plainString(name) and plainString(classFile) then out[name] = classFile end
-            end
-        end
-    end
-    return out
-end
-
--- The classes on a RestrictedRaceClass line ("Classes: Warrior, Paladin"), as a set of classFiles,
--- or nil when the line is not that one or names no class the client knows.
-local function parseClasses(text)
-    local fmt = globalString("ITEM_CLASSES_ALLOWED")
-    if not fmt then return nil end
-    return TextParse.ClassSet(text, fmt, globalString("LIST_DELIMITER"), classFilesByName)
-end
-
---- The classes an item is restricted to (a tier token, a class set piece), as a set
---- `{ [classFile] = true }`, read off the hyperlink tooltip's RestrictedRaceClass line with the
---- localized ITEM_CLASSES_ALLOWED. Nil when the item names no class.
---- @param link string
---- @return table|nil
-function Compat.ItemClassRestriction(link)
-    if not plainString(link) then return nil end
-    return Compat.ReadTooltipLine(tooltipData("GetHyperlink", link), "RestrictedRaceClass",
-        parseClasses)
-end
-
--- Each primary stat's tooltip GlobalString, by the GetItemStats key it answers for.
-local PRIMARY_STAT_LINES = {
-    ITEM_MOD_STRENGTH_SHORT = "ITEM_MOD_STRENGTH", ITEM_MOD_AGILITY_SHORT = "ITEM_MOD_AGILITY",
-    ITEM_MOD_INTELLECT_SHORT = "ITEM_MOD_INTELLECT",
-}
-
---- Every primary stat an item carries, as `{ [STAT_KEY] = n }`, read off its hyperlink tooltip with
---- the localized ITEM_MOD_* lines; nil when it shows none. GetItemStats answers the primary stat of
---- the spec playing alone, but the tooltip lists them all, the inactive ones grayed.
---- @param link string
---- @return table|nil
-function Compat.ItemPrimaryStats(link)
-    if not plainString(link) then return nil end
-    local data = tooltipData("GetHyperlink", link)
-    if type(data) ~= "table" or type(data.lines) ~= "table" then return nil end
-    local out
-    for key, name in pairs(PRIMARY_STAT_LINES) do
-        local fmt = globalString(name)
-        local value = fmt and scanLines(data.lines, nil, function(text) return TextParse.StatLine(text, fmt) end)
-        if value then
-            out = out or {}
-            out[key] = value
-        end
-    end
-    return out
 end
 
 -- ── The Pawn seam (optional dependency; design spec §5.4) ───────────────────────────────────
@@ -769,23 +538,6 @@ local function pawnCall(fn, ...)
     local ok, v, w = pcall(fn, ...)
     if not ok then return nil end
     return v, w
-end
-
---- Pawn's item object for a link (PawnGetItemData, line 1324), or nil while the item is not cached.
-function Compat.PawnItemData(link)
-    if not plainString(link) then return nil end
-    return (pawnCall(PawnGetItemData, link))
-end
-
---- Pawn's upgrade list for a link against YOUR gear (PawnIsItemAnUpgrade's first return, line
---- 3586): a list of `{ ScaleName, LocalizedScaleName, PercentUpgrade, ExistingItemLink }`, one per
---- visible scale it upgrades, empty when it upgrades nothing (Pawn answers nil); nil while not ready.
---- @return table|nil
-function Compat.PawnUpgradeInfo(link)
-    local data = Compat.PawnItemData(link)
-    if data == nil then return nil end
-    local list = pawnCall(PawnIsItemAnUpgrade, data)
-    return type(list) == "table" and list or {}
 end
 
 -- The classFile of a classID, read off the active class list's CLASS_ID.
@@ -856,60 +608,6 @@ function Compat.PawnVisibleScale(classID, specID, tree, role)
     local index = pawnIndex(classID, specID, tree, role)
     if index == nil then return nil end
     return (pawnCall(visibleScale, classID, index))
-end
-
---- Your visible custom scale for a class (one you made or imported: no provider, naming neither
---- another class nor a spec), or nil. What WoW Forever scores you with when no talent tree is known
---- and you picked a scale of your own (Forever port design §4.3).
---- @param classID number
---- @return string|nil
-function Compat.PawnCustomScale(classID)
-    if classID == nil then return nil end
-    return (pawnCall(visibleScale, classID, nil, true))
-end
-
--- The class's starter scales from active providers, sorted by spec index then name.
-local function classScales(classID)
-    local scales = type(PawnCommon) == "table" and PawnCommon.Scales
-    local out = {}
-    if type(scales) ~= "table" then return out end
-    for name, scale in pairs(scales) do
-        if type(name) == "string" and type(scale) == "table" and scale.ClassID == classID
-            and scale.Provider ~= nil and scale.ProviderActive then
-            out[#out + 1] = { name = name, index = scale.SpecID }
-        end
-    end
-    table.sort(out, function(a, b)
-        local x, y = tonumber(a.index) or math.huge, tonumber(b.index) or math.huge
-        if x ~= y then return x < y end
-        return a.name < b.name
-    end)
-    return out
-end
-
---- Every starter scale Pawn has for a class (WoW Forever's Classic scales, one per talent tree), as
---- `{ { name, index }, ... }` sorted by tree, shown or hidden: what another player, or you with no
---- talent tree, is scored with at best (Forever port design §4.3). Empty without Pawn, while it is
---- not ready, or for a class it has none for.
---- @param classID number
---- @return table
-function Compat.PawnClassScales(classID)
-    if classID == nil then return {} end
-    return pawnCall(classScales, classID) or {}
-end
-
---- One item's value on scale `scale`, or nil while not ready. PawnGetSingleValueFromItem (line
---- 1690) answers the enchanted and the unenchanted value; the unenchanted one is kept, the value
---- Pawn's own upgrade test compares (PawnIsItemAnUpgrade), so worn enchants and gems do not
---- outweigh a bare drop. A Pawn that answers one value gives that one.
---- @return number|nil
-function Compat.PawnItemValue(link, scale)
-    if scale == nil then return nil end
-    local data = Compat.PawnItemData(link)
-    if data == nil then return nil end
-    local v, unenchanted = pawnCall(PawnGetSingleValueFromItem, data, scale)
-    if type(unenchanted) == "number" then return unenchanted end
-    return type(v) == "number" and v or nil
 end
 
 -- ── Trade action (click-driven; the guards for range and combat are TradeHelper's, DW-29) ────

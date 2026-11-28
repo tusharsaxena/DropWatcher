@@ -185,9 +185,9 @@ test("parity: the Media seam publishes the same NS members on both paths", funct
 end)
 
 -- The LibKa0s-Compat-1.0 members core/Compat.lua does not publish: the six spell and spec readers
--- (nothing here reads a spell, and the two spec readers are called on the library inside
--- Compat.PlayerSpecID only: `grep -rnE "Compat\.(GetSpell|GetSpecialization)" core modules settings`
--- finds no call site), and one of Compat minor 4's character-identity four: nothing asks for the
+-- (nothing here reads a spell or the player's spec: the verdict engine's PlayerSpecID read is
+-- LibKa0s-Verdict-1.0's own, LibKa0s#111; `grep -rnE "Compat\.(GetSpell|GetSpecialization)" core
+-- modules settings` finds no call site), and one of Compat minor 4's character-identity four: nothing asks for the
 -- realm key. The four client helpers (Compat minor 2) and UnitCharacterName and CharacterKey are
 -- wired since DW-FP02; RegionalNames since DW-FP04 (core/CompatClient.lua's NameRealm and
 -- PlayerRecordKey ask it).

@@ -403,26 +403,39 @@ local function guidOf(key) return "Player-0-0000T0" .. key:sub(2) end
 
 local crowd, taken = crowdRows(), {}
 
+-- Each protagonist's class, Retail specID and Forever tree without the library (SAMPLE_KEYS' order).
+local FALLBACK = { { "HUNTER", 253, 1 }, { "PALADIN", 70, 3 }, { "MAGE", 63, 2 }, { "PRIEST", 257, 2 },
+    { "WARRIOR", 73, 3 } }
+
+-- A member's spec in the client's form: WoW Forever's `CLASS:tree`, else Retail's specID.
+local function specOf(classFile, specID, tree)
+    if CLIENT == "forever" then return classFile .. ":" .. tree end
+    return specID
+end
+
+-- One member: the library row's name (a numbered placeholder without one), its GUID, class and spec.
+local function member(key, row, classFile, spec)
+    return { name = row and nameOf(row) or placeholder(key), guid = guidOf(key), classFile = classFile,
+        specID = spec }
+end
+
+-- The i-th protagonist, from the library's sample row, each field it lacks from FALLBACK.
+local function protagonist(i, key, row)
+    local fb, r = FALLBACK[i], row or {}
+    local classFile = r.classFile or fb[1]
+    return member(key, row, classFile, specOf(classFile, r.specID or fb[2], r.tree or fb[3]))
+end
+
+-- One OTHERS slot: its client's class and spec, named by the crowd's first person of that class.
+local function otherMember(o)
+    local classFile = CLIENT == "forever" and o[4] or o[2]
+    return member(o[1], crowdPerson(crowd, taken, classFile), classFile, specOf(classFile, o[3], o[5]))
+end
+
 local function buildMembers()
     local out, rows = {}, sampleRows()
-    local FALLBACK = { { "HUNTER", 253, 1 }, { "PALADIN", 70, 3 }, { "MAGE", 63, 2 }, { "PRIEST", 257, 2 },
-        { "WARRIOR", 73, 3 } }
-    for i, key in ipairs(TD.SAMPLE_KEYS) do
-        local row = rows[i]
-        local classFile = row and row.classFile or FALLBACK[i][1]
-        local spec = CLIENT == "forever" and (classFile .. ":" .. (row and row.tree or FALLBACK[i][3]))
-            or (row and row.specID or FALLBACK[i][2])
-        out[key] = { name = row and nameOf(row) or placeholder(key), guid = guidOf(key), classFile = classFile,
-            specID = spec }
-    end
-    for _, o in ipairs(OTHERS) do
-        local key = o[1]
-        local classFile = CLIENT == "forever" and o[4] or o[2]
-        local spec = CLIENT == "forever" and (classFile .. ":" .. o[5]) or o[3]
-        local row = crowdPerson(crowd, taken, classFile)
-        out[key] = { name = row and nameOf(row) or placeholder(key), guid = guidOf(key), classFile = classFile,
-            specID = spec }
-    end
+    for i, key in ipairs(TD.SAMPLE_KEYS) do out[key] = protagonist(i, key, rows[i]) end
+    for _, o in ipairs(OTHERS) do out[o[1]] = otherMember(o) end
     return out
 end
 local MEMBERS = buildMembers()

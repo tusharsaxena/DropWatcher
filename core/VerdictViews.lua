@@ -174,7 +174,6 @@ local State = NS.State
 -- The instance's snapshot, mirrored on NS.State.gear: the snapshot this addon last saw, so a
 -- report can show it without reading the client (modules/Diagnostics.lua). Answers it.
 local function seen()
-    NS.VerdictFresh()
     local snap = engine():Snapshot()
     State.gear = snap
     return snap
@@ -192,7 +191,6 @@ NS.Gear = {
     OffSpecGear = function(specID) seen(); return engine():OffSpecGear(specID) end,
     --- Re-read now; GearChanged when it moved, unless `quiet`. Answers whether it moved.
     Refresh = function(cause, quiet, bagsOnly)
-        NS.VerdictFresh()
         local changed = engine():RefreshGear(cause, quiet, bagsOnly)
         seen()
         return changed

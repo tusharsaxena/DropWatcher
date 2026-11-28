@@ -395,3 +395,48 @@ test("row tooltip: a column label opens beside the window; a tab is attached abo
     local pts, _, x, y = T.tipPoint(m)
     assertEqual(pts, "BOTTOM>BOTTOMLEFT"); assertEqual(x, 250); assertEqual(y, 780 + GAP)
 end)
+
+-- DW#20 characterization: RT.FlushOverlaps' every branch, pinned before it was split into named
+-- helpers (behavior-neutral, CCN <= 15): the unreadable window, no room beside it, the tooltip's own
+-- scale, the flush spot's top clamped up to the tooltip's height and down to the screen's top, and a
+-- panel the flush spot meets, misses, or that is hidden.
+test("row tooltip: FlushOverlaps reads each case the same (DW#20 characterization)", function()
+    local NS, _, scr, tip = setup()
+    local RT = NS.RowTooltip
+    local win = box(scr, 700, 200, 1300, 900)
+    local row = box(scr, 700, 380, 1300, 400, { parent = win, tipRow = true })
+    assertTrue(RT.FlushOverlaps(tip, row, { main = win, panels = {} }) == false, "room right, no panels")
+    assertTrue(RT.FlushOverlaps(tip, row, { main = {}, panels = {} }) == true, "an unreadable window")
+    assertTrue(RT.FlushOverlaps(tip, {}, { main = win, panels = {} }) == true, "an unreadable row")
+    -- No room on either side of a wide window: unpredictable, so the whole group.
+    local wide = box(scr, 100, 200, 1800, 900)
+    local wideRow = box(scr, 100, 380, 1800, 400, { parent = wide, tipRow = true })
+    assertTrue(RT.FlushOverlaps(tip, wideRow, { main = wide, panels = {} }) == true, "no room beside it")
+    -- The tooltip's own scale: 300 wide at scale 2 is 600, too wide for either side of 400..1400.
+    local NS2, _, scr2, big = setup(1920, 300, 2)
+    local mid = box(scr2, 400, 200, 1400, 900)
+    local midRow = box(scr2, 400, 380, 1400, 400, { parent = mid, tipRow = true })
+    assertTrue(NS2.RowTooltip.FlushOverlaps(big, midRow, { main = mid, panels = {} }) == true, "scaled: no room")
+    local _, _, scr3, small = setup(1920, 300, 1)
+    local mid3 = box(scr3, 400, 200, 1400, 900)
+    local midRow3 = box(scr3, 400, 380, 1400, 400, { parent = mid3, tipRow = true })
+    assertTrue(NS2.RowTooltip.FlushOverlaps(small, midRow3, { main = mid3, panels = {} }) == false, "unscaled: room")
+    -- A row near the screen's bottom: the spot is raised to 0..100, so a panel at 70..90 is met
+    -- (unclamped, -50..50, it would miss).
+    local low = box(scr, 700, 30, 1300, 50, { parent = win, tipRow = true })
+    local lowPanel = box(scr, 1302, 70, 1590, 90, { parent = win, dock = "right", shown = true })
+    assertTrue(RT.FlushOverlaps(tip, low, { main = win, panels = { lowPanel } }) == true, "clamped up")
+    -- A row above the screen's top: the spot is lowered to 980..1080, meeting a panel at 1000..1050.
+    local high = box(scr, 700, 1180, 1300, 1200, { parent = win, tipRow = true })
+    local highPanel = box(scr, 1302, 1000, 1590, 1050, { parent = win, dock = "right", shown = true })
+    assertTrue(RT.FlushOverlaps(tip, high, { main = win, panels = { highPanel } }) == true, "clamped down")
+    -- A panel the spot misses, one it meets, and the same one hidden.
+    local far = box(scr, 1302, 600, 1590, 900, { parent = win, dock = "right", shown = true })
+    assertTrue(RT.FlushOverlaps(tip, row, { main = win, panels = { far } }) == false, "a panel it misses")
+    local near = box(scr, 1302, 250, 1590, 350, { parent = win, dock = "right", shown = true })
+    assertTrue(RT.FlushOverlaps(tip, row, { main = win, panels = { far, near } }) == true, "a panel it meets")
+    near:Hide()
+    assertTrue(RT.FlushOverlaps(tip, row, { main = win, panels = { far, near } }) == false, "hidden: no room taken")
+    -- An unmeasurable panel takes no room.
+    assertTrue(RT.FlushOverlaps(tip, row, { main = win, panels = { {} } }) == false, "an unmeasured panel")
+end)

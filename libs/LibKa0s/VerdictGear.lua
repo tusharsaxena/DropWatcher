@@ -36,7 +36,10 @@
 -- the same timer. A rebuild whose signature moved tells the host onChange("gear"). The first read,
 -- lazily from a caller, announces nothing. While the host's deferWhile() holds, a BAG_UPDATE_DELAYED
 -- arms nothing and the next PLAYER_REGEN_ENABLED rebuilds (Drop Watcher's is combat). Stood down,
--- the timer is canceled and the snapshot dropped; the stand-up rebuilds it.
+-- the timer is canceled and the snapshot dropped; the stand-up rebuilds it and announces the read,
+-- and a lazy stand-up (StandUp{ lazy = true }, LibKa0s#108) reads nothing, so the first ask reads it,
+-- quietly. A gear event before that ask rebuilds and announces, as ever: its snapshot is the real
+-- one.
 --
 -- THE JUDGE. v:JudgeFacts(facts, opts) is the collection verdict first (lib.Collect.Verdict, nil
 -- for gear and a tier token), else the kernel for your candidate (or `opts.candidate`) on the
@@ -52,10 +55,12 @@
 local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.C or not lib.Evaluate then return end
 
-local GEAR_MINOR = 1
+local GEAR_MINOR = 2
 local ORDER = 90   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B2): Drop Watcher's gear snapshot and the verdict half of its
 -- judge, per instance.
+-- Minor 2 (LibKa0s#108): the stand-up step reads nothing on a lazy stand-up (shell minor 2's
+-- StandUp{ lazy = true }), leaving the first read to the first ask.
 if lib.__gearMinor and lib.__gearMinor >= GEAR_MINOR
   and lib.__gearShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__gearMinor      = GEAR_MINOR
@@ -534,5 +539,9 @@ lib.__lifecycle.gear = { order = 30,
     if v.__scoreTimer then v.__scoreTimer:Cancel() end
     v.__scoreTimer, v.__scorePending = nil, nil
   end,
-  up = function(v) v:RefreshGear("standUp") end,
+  -- A lazy stand-up reads nothing: the first ask (Snapshot, through Judge) reads, quietly.
+  up = function(v, opts)
+    if opts and opts.lazy then return end
+    v:RefreshGear("standUp")
+  end,
 }

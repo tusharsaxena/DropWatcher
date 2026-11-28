@@ -18,35 +18,6 @@ local _, NS = ...
 NS.Compat = NS.Compat or {}
 local Compat = NS.Compat
 
-local function plainNumber(v)
-    if Compat.IsSecret(v) or type(v) ~= "number" then return nil end
-    return v
-end
-
--- The ItemLocation of an occupied bag slot, with C_Item; nil for an empty slot or no API.
-local function bagLocation(bag, slot)
-    local item, loc = C_Item, ItemLocation
-    if not (item and loc and loc.CreateFromBagAndSlot) then return nil, nil end
-    if type(bag) ~= "number" or type(slot) ~= "number" then return nil, nil end
-    local location = loc:CreateFromBagAndSlot(bag, slot)
-    if item.DoesItemExist and not item.DoesItemExist(location) then return nil, nil end
-    return location, item
-end
-
---- The exact item level and quality of the item in bag `bag`, slot `slot`: C_Item.GetCurrentItemLevel
---- and C_Item.GetItemQuality on its ItemLocation (every bonus, upgrade and scaling applied). Each
---- nil for an empty slot, a secret or missing answer, or no API.
---- @param bag number
---- @param slot number
---- @return number|nil level, number|nil quality
-function Compat.BagItemLevelQuality(bag, slot)
-    local location, item = bagLocation(bag, slot)
-    if not location then return nil, nil end
-    local level = item.GetCurrentItemLevel and plainNumber(item.GetCurrentItemLevel(location)) or nil
-    local quality = item.GetItemQuality and plainNumber(item.GetItemQuality(location)) or nil
-    return level, quality
-end
-
 -- tip[method](tip, ...) when the tooltip has it; true when called.
 local function setTooltip(tip, method, ...)
     if type(tip) ~= "table" or type(tip[method]) ~= "function" then return false end

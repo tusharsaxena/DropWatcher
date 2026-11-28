@@ -28,11 +28,13 @@ outside the green gate*), and a seed-validation run lists them in its `## Gate`.
 No authored `.lua` file may pass 1500 lines (layout-§1); the kit's `test_layout_cap` reads the
 census in [`ARCHITECTURE.md`](ARCHITECTURE.md). Toolchain: [`DEPENDENCIES.md`](../DEPENDENCIES.md).
 The suite needs a sibling `../LibKa0s` checkout for the vendor gate's two payload cases (they SKIP
-without it).
+without it, and, since kit revision 67, LibKa0s#110, when that checkout cannot resolve the tag the
+provenance line names, so a run before the tag is cut reads two fewer passes than
+[`test-cases.md`](test-cases.md)'s Total).
 
 ## The harness
 
-`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 59, never edited).
+`tests/run.lua` on the vendored LibKa0s kit (`tests/_kit/`, revision 67, never edited).
 `tests/loader.lua` builds a fresh, isolated addon per case from the TOC's own file list and the
 library files `libs/LibKa0s/LibKa0s.xml` names; `tests/wow_mock.lua` extends the kit's base mock with
 what this addon reads (combat state, the client's addon list, the chat sink, the launcher's two
@@ -407,8 +409,11 @@ LibKa0s-Verdict-1.0's since the Item Search split, pinned by the library's own s
 golden suite below), `test_offspec` (feedback-19 spec §0: the off-spec pass's gate in this addon,
 Retail's alone through `C.FEATURE.offSpec`, with its rows, template and words),
 `test_verdict_setup` (`core/VerdictSetup.lua` and `core/VerdictViews.lua`: the one instance and its
-client, every read through `NS.Compat` at the call, the events as `NS.FEATURE_EVENTS` rows the
-replay reaches (each event the instance registers has its row on the client, and no row is dead), the lazy and quiet first gear read and `GearChanged` after it, the stand-down, the
+client, the vendored Verdict 3 and Sim 6 minors, `PlayerRole` the one host read and every other the
+library's at the call, the events as `NS.FEATURE_EVENTS` rows read from `EventsFor` of both clients
+that the replay reaches (each event the instance registers has its row on the client, no row is dead,
+and the stand-in has none), the lazy stand-up at OnEnable, the quiet first gear read, a gear event
+before it announcing, and `GearChanged` after it, the stand-down, the
 collection change, the client named on every kernel view, the scorer from the settings, the
 Comparison rows and the stand-in's surface), `test_offspec_cells` (DW-O1: how
 off-spec looks: the `offspec` cyan, the verdict cell through `WindowCells.Verdict`, the Me cell from

@@ -194,7 +194,7 @@ Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5
 Ornate Bronze Lockbox), the same lockbox once picked, a bag and, on Forever, a quiver and an ammo pouch:
 `/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
 then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
-The code (rolls UX RX-04, RX-15: `libs/LibKa0s/VerdictCollect.lua` by class, `Compat.ItemOpens` for the
+The code (rolls UX RX-04, RX-15: `libs/LibKa0s/VerdictCollect.lua` by class, the library's `ItemOpens` read for the
 lines alone) takes any Container-class item (class 1) and
 any Quiver-class item (class 11: quivers and ammo pouches) as a container, `Container`, and a
 Miscellaneous Junk item (class 15, subclass 0) as a lockbox, `Lockbox`, only when one of its lines

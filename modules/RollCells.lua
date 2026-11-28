@@ -174,6 +174,24 @@ function RC.Rows(roll)
     return out
 end
 
+-- The clock an open roll reads: GetTime()'s for the looping sample (RC.Left), else `now`.
+local function clockOf(roll, now)
+    if roll.loop and type(GetTime) == "function" then return GetTime() end
+    return now
+end
+
+-- The time left on the roll's own times at `now`: startTime + duration - now, a looping roll's
+-- countdown started again once it runs out, never below zero; nil with no times, no `now`, or an
+-- implausible answer (over RC.MAX_LEFT).
+local function timesLeft(roll, now)
+    local start, dur = num(roll.startTime), num(roll.duration)
+    if not (start and dur and num(now)) then return nil end
+    local left = start + dur - now
+    if roll.loop and dur > 0 and left <= 0 then left = dur - ((now - start) % dur) end
+    if left > RC.MAX_LEFT then return nil end
+    return math.max(0, left)
+end
+
 --- The seconds left while the roll is open, or nil. Your claimed popup's roll (`rollID`) reads the
 --- client's timer while it reads time left; otherwise startTime + duration on the history's clock,
 --- nil with no times, `now` not read, or an implausible answer (over RC.MAX_LEFT: mismatched units).
@@ -186,15 +204,10 @@ end
 --- @return number|nil
 function RC.Left(roll, now, rollID)
     if type(roll) ~= "table" or roll.winner or roll.allPassed then return nil end
-    if roll.loop and type(GetTime) == "function" then now = GetTime() end
+    now = clockOf(roll, now)
     local own = rollID ~= nil and NS.Compat.LootRollTimeLeft(rollID) or nil
     if own and own > 0 then return own end
-    local start, dur = num(roll.startTime), num(roll.duration)
-    if not (start and dur and num(now)) then return nil end
-    local left = start + dur - now
-    if roll.loop and dur > 0 and left <= 0 then left = dur - ((now - start) % dur) end
-    if left > RC.MAX_LEFT then return nil end
-    return math.max(0, left)
+    return timesLeft(roll, now)
 end
 
 --- The roll's own length in seconds (its `duration`), the whole of a countdown bar (the Rolls panel,

@@ -4,7 +4,7 @@
 ![CurseForge Version](https://img.shields.io/curseforge/v/1748054)
 ![License](https://img.shields.io/badge/License-MIT-orange)
 ![Standard](https://img.shields.io/badge/Ka0s-WoW_Addon_Standard-yellow)
-![Tests](https://img.shields.io/badge/Tests-2673%2F2673_passing-green)
+![Tests](https://img.shields.io/badge/Tests-2648%2F2648_passing-green)
 
 Supports Retail and WoW Forever. When a piece of loot drops for somebody in your group, Drop Watcher tells you whether it beats yours, whether it beats theirs, and whether they could hand it over at all. If you want it, one click sends a polite whisper asking for it.
 
@@ -132,7 +132,7 @@ Please raise them on GitHub:
 
 | Version | Date | Highlights |
 |---|---|---|
-| Next | Unreleased | - Item Search, an item lookup window and tooltip block built during this version's development, ships as its own addon instead: [Ka0s Item Search](https://github.com/tusharsaxena/ItemSearch) (WoW Forever). Drop Watcher itself adds no Item Search window, tooltip block, `/dw search` or key |
+| Next | Unreleased | - Item Search, an item lookup window and tooltip block built during this version's development, ships as its own addon instead: [Ka0s Item Search](https://github.com/tusharsaxena/ItemSearch) (WoW Forever). Drop Watcher itself adds no Item Search window, tooltip block, `/dw search` or key<br>- Settings › Comparison › Weights sliders run from -5 to 20 (they ran from 0 to 5), and an imported weight outside that range shows its own value instead of sitting at the slider's end |
 | 1.1.0 | 2026-10-25 | - An upgrade you could actually get now glows on its icon, and Settings › Window › Icons sets every item icon's zoom and border<br>- Rings, trinkets and one-handers get a mark for each item you wear, and Trade says Yes, No or ? with a short reason<br>- Pawn works with no setup, and the toast is on for a new profile, with a size you can set<br>- The compact view is narrower, with Trade above You and Them on every card<br>- The settings pages are regrouped, you can bind a key to show the window, and a started simulation plays through on its own |
 | 1.0.0 | 2026-10-17 | - First release: the window's Drops and History tabs, with Me and Them verdicts, the trade estimate and a trade countdown on each drop<br>- Ask, Offer and Announce each send with one click, and wait while encounter restrictions block chat<br>- History keeps 30 days of drops across logouts and alts, and the Drops tab comes back after a `/reload`<br>- Pawn scores or your own stat weights, plus the opt-in toast and auto-ask<br>- The compact view for runs, the settings pages, the minimap button, `/dw test` and `/dw sim` |
 

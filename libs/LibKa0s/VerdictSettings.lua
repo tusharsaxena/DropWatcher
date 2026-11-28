@@ -61,10 +61,12 @@
 local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.ClassData or not lib.C or not lib.SubClassKey or not lib.Score then return end
 
-local SETTINGS_MINOR = 1
+local SETTINGS_MINOR = 2
 local ORDER = 100   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B3): Drop Watcher's six comparison rows, their defaults and the
 -- weights and unwanted-types editors.
+-- Minor 2 (LibKa0s#107): the weight slider runs -5..20 (was 0..5), and a stored weight beyond that
+-- stretches its own slider's ends (WeightRange), so an imported weight is never shown pinned.
 if lib.__settingsMinor and lib.__settingsMinor >= SETTINGS_MINOR
   and lib.__settingsShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__settingsMinor      = SETTINGS_MINOR
@@ -272,8 +274,22 @@ local STAT_LABEL = {
   ITEM_MOD_MASTERY_RATING_SHORT = "Mastery", ITEM_MOD_VERSATILITY = "Versatility",
 }
 
---- The slider's range: a Pawn scale's values sit well inside it.
-St.WEIGHT_MIN, St.WEIGHT_MAX, St.WEIGHT_STEP = 0, 5, 0.05
+--- The slider's range (LibKa0s#107, the owner's ruling: -5..20). The Pawn import and the rows'
+--- check take any signed number, so the range is a floor, not a clamp: see WeightRange.
+St.WEIGHT_MIN, St.WEIGHT_MAX, St.WEIGHT_STEP = -5, 20, 0.05
+
+--- A weight slider's ends for the stored weight `v`: WEIGHT_MIN..WEIGHT_MAX, an end stretched to
+--- the whole number at or past a finite `v` beyond it (so a step counted from the bottom stays on
+--- the grid). An imported 27 shows at 27, and a touch that lets go there writes 27 back, where a
+--- pinned slider would write 20 over it.
+--- @return number min, number max
+function St.WeightRange(v)
+  local lo, hi = St.WEIGHT_MIN, St.WEIGHT_MAX
+  if type(v) ~= "number" or v ~= v or v == math.huge or v == -math.huge then return lo, hi end
+  if v < lo then lo = math.floor(v) end
+  if v > hi then hi = math.ceil(v) end
+  return lo, hi
+end
 
 --- The stats a spec's weights cover: its primary stat (all three when `client`'s list does not
 --- know the spec), then Stamina and the four secondaries.
@@ -465,8 +481,11 @@ end
 
 local function weightRow(spec, key, stat)
   local get = getter(spec, "weights")
+  -- Read at draw time: every write that can move a weight past an end (the import, a profile
+  -- swap) redraws the page, which builds the row again.
+  local lo, hi = St.WeightRange(St.Weight(get(), key, stat))
   return {
-    type = "number", min = St.WEIGHT_MIN, max = St.WEIGHT_MAX, step = St.WEIGHT_STEP,
+    type = "number", min = lo, max = hi, step = St.WEIGHT_STEP,
     label = St.StatLabel(stat, _G, spec.L),
     tooltip = word(spec.L, "What one point of this stat is worth to this specialization. 0 leaves it out."),
     get = function() return St.Weight(get(), key, stat) end,

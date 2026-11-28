@@ -19,10 +19,10 @@
 --   ITEM_SPELL_KNOWN  the enUS "Already known" line a known recipe's tooltip carries
 --   LOCKED, ITEM_OPENABLE  the enUS "Locked" and "<Right Click to Open>" lines of a box that opens
 --   INVTYPE_HEAD, _SHOULDER, _CHEST, _HAND, _LEGS  the enUS slot names a tier token's tooltip may
---                carry (Compat.TierTokenSlot, DW-CAT4)
+--                carry (the verdict engine's TierTokenSlot read, DW-CAT4)
 --   itemSpells   C_Item.GetItemSpell(link) answers "Spell", itemSpells[link] (its spell id; nothing for
 --                an item with no use spell); spellTexts[spellID] is C_Spell.GetSpellDescription's
---                answer (Compat.ItemUseText, TT-1; "" is a spell not loaded yet).
+--                answer (the verdict engine's ItemUseText read, TT-1; "" is a spell not loaded yet).
 --                C_Spell.RequestLoadSpellData(spellID) appends the id to spellLoadRequests
 --
 -- The categories' Enum tables (ItemClass's Recipe, ItemMiscellaneousSubclass, ItemRecipeSubclass)
