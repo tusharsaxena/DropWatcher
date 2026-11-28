@@ -147,6 +147,47 @@ local function isShown(frame)
     return type(fn) ~= "function" or fn(frame) and true or false
 end
 
+-- The screen's width and height and the tooltip's, all in screen pixels (each times its effective
+-- scale), or nil when any of the four cannot be read.
+local function flushSizes(tip)
+    local ui = UIParent
+    local uiS = read(ui, "GetEffectiveScale") or 1
+    local sw, sh = read(ui, "GetWidth"), read(ui, "GetHeight")
+    local tw, th = read(tip, "GetWidth"), read(tip, "GetHeight")
+    if not (sw and sh and tw and th) then return nil end
+    local ts = read(tip, "GetEffectiveScale") or 1
+    return sw * uiS, sh * uiS, tw * ts, th * ts
+end
+
+-- The flush spot's left edge: TIP_GAP right of the window when a `tw`-wide tooltip fits there, else
+-- TIP_GAP left of it, else nil (no room beside the window).
+local function flushLeft(ml, mr, tw, sw)
+    local gap = K.TIP_GAP
+    if mr + gap + tw <= sw then return mr + gap end
+    if ml - gap - tw >= 0 then return ml - gap - tw end
+    return nil
+end
+
+-- The flush spot's top: the row's, clamped so a `th`-tall tooltip stays on a screen `sh` tall.
+local function flushTop(rt, th, sh)
+    local top = rt
+    if top - th < 0 then top = th end
+    if top > sh then top = sh end
+    return top
+end
+
+-- Whether the rect l, b, r, t overlaps a shown panel of `panels` (one that cannot be measured takes
+-- no room).
+local function overlapsPanel(panels, l, b, r, t)
+    for _, p in ipairs(panels) do
+        if isShown(p) then
+            local pl, pb, pr, pt = screenRect(p)
+            if pl and l < pr and pl < r and b < pt and pb < t then return true end
+        end
+    end
+    return false
+end
+
 --- Whether `tip` placed flush beside the window `group.main` (the body rule on the window alone:
 --- right when it fits, else left, TIP_GAP off, its top level with `row`'s, clamped on screen) would
 --- overlap a shown docked panel of `group`. True too when the flush spot cannot be predicted (no
@@ -157,30 +198,14 @@ end
 --- @param group table RT.GroupOf(row)
 --- @return boolean
 function RT.FlushOverlaps(tip, row, group)
-    local ui = UIParent
-    local uiS = read(ui, "GetEffectiveScale") or 1
-    local sw, sh = read(ui, "GetWidth"), read(ui, "GetHeight")
-    local tw, th = read(tip, "GetWidth"), read(tip, "GetHeight")
+    local sw, sh, tw, th = flushSizes(tip)
     local ml, _, mr = screenRect(group.main)
     local _, _, _, rt = screenRect(row)
-    if not (sw and sh and tw and th and ml and rt) then return true end
-    sw, sh = sw * uiS, sh * uiS
-    local ts = read(tip, "GetEffectiveScale") or 1
-    tw, th = tw * ts, th * ts
-    local gap = K.TIP_GAP
-    local l
-    if mr + gap + tw <= sw then l = mr + gap elseif ml - gap - tw >= 0 then l = ml - gap - tw else return true end
-    local top = rt
-    if top - th < 0 then top = th end
-    if top > sh then top = sh end
-    local r, b = l + tw, top - th
-    for _, p in ipairs(group.panels) do
-        if isShown(p) then
-            local pl, pb, pr, pt = screenRect(p)
-            if pl and l < pr and pl < r and b < pt and pb < top then return true end
-        end
-    end
-    return false
+    if not (sw and ml and rt) then return true end
+    local l = flushLeft(ml, mr, tw, sw)
+    if not l then return true end
+    local top = flushTop(rt, th, sh)
+    return overlapsPanel(group.panels, l, top - th, l + tw, top)
 end
 
 --- The main window's group, for a host the library places for (the Insights charts' `host.group`,

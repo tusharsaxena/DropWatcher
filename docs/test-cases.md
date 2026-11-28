@@ -1105,7 +1105,7 @@ Total.
 - drops strip: the compact layout's summary is shortened
 - mine cells: an upgrade's For them reads in the client's verdict terms (Forever port design §4.5)
 
-### test_row_tooltip.lua (19)
+### test_row_tooltip.lua (20)
 
 - row tooltip: it opens beside the window, TOPLEFT a TIP_GAP right of its edge, level with the row
 - row tooltip: with no room on the right it opens left of the window, TOPRIGHT a TIP_GAP left
@@ -1126,6 +1126,7 @@ Total.
 - row tooltip: your own drops' rows on Drops and their Offer open beside the window
 - row tooltip: History rows and headers open beside the window
 - row tooltip: a column label opens beside the window; a tab is attached above itself
+- row tooltip: FlushOverlaps reads each case the same (DW#20 characterization)
 
 ### test_tooltip_placement.lua (5)
 
@@ -1135,7 +1136,7 @@ Total.
 - tooltip placement: the Insights charts' marks open beside the window group (host.group)
 - tooltip placement: the addon's own code names no cursor or corner anchor (anti-pattern #119)
 
-### test_test_mode.lua (54)
+### test_test_mode.lua (55)
 
 - test mode: Forever samples use only the nine classes
 - test mode data: the five protagonists are LibKa0s-Sim-1.0's sample characters, per client
@@ -1191,6 +1192,7 @@ Total.
 - window: test mode's unique ring reads both rings, and only a tradeable upgrade glows (feedback-22)
 - window: test mode's item kinds read their collection words; only the tier token offers an Ask (issue #13)
 - test mode: shows one open roll and a History drop with rolls
+- test mode data: each member's class, spec and GUID (DW#20 characterization)
 
 ### test_sample_names.lua (4)
 
@@ -1942,7 +1944,7 @@ Total.
 - askML: a master looter read by GUID alone and gone from the roster is not known, never named by GUID
 - askML: a stand-down never reuses a pending id, so a new item never reads an old item's ask
 
-### test_roll_cells.lua (10)
+### test_roll_cells.lua (11)
 
 - roll cells: the count line is an icon and a count per choice
 - roll cells: Disenchant counts on Retail only
@@ -1954,6 +1956,7 @@ Total.
 - roll cells: your claimed popup's roll reads the client's own timer
 - roll cells: a time left in mismatched units reads no time, a normal one m:ss
 - roll cells: the timer reads the time left on the history's clock, and the grid flows rows
+- roll cells: RC.Left reads each case the same (DW#20 characterization)
 
 ### test_window_pending.lua (13)
 
@@ -3132,9 +3135,9 @@ Total.
 | test_offer_panel.lua | 24 |
 | test_offer_alone.lua | 16 |
 | test_mine_cells.lua | 16 |
-| test_row_tooltip.lua | 19 |
+| test_row_tooltip.lua | 20 |
 | test_tooltip_placement.lua | 5 |
-| test_test_mode.lua | 54 |
+| test_test_mode.lua | 55 |
 | test_sample_names.lua | 4 |
 | test_compat.lua | 75 |
 | test_compat_client.lua | 11 |
@@ -3164,7 +3167,7 @@ Total.
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
-| test_roll_cells.lua | 10 |
+| test_roll_cells.lua | 11 |
 | test_window_pending.lua | 13 |
 | test_roll_popup.lua | 24 |
 | test_rolls_panel.lua | 66 |
@@ -3216,4 +3219,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 6 |
-| **Total** | **2673** |
+| **Total** | **2676** |
