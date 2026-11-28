@@ -27,13 +27,6 @@ local PAGES = {
     { key = "window",     title = "Window",     strip = { "Layout", "Columns", "Starting view", "Icons" } },
     { key = "alerts",     title = "Alerts",     strip = { "Toast", "Upgrade glow" } },
 }
--- Item Search's page, WoW Forever's alone (Item Search spec §4.7, DropWatcher#17): its two schema
--- tabs, then the library's key editor over the Item Search key. tests/test_item_search_settings.lua
--- covers it; on Retail it is not registered.
-if os.getenv("KA0S_KIT_CLIENT") == "forever" then
-    PAGES[#PAGES + 1] = { key = "itemSearch", title = "Item Search",
-        strip = { "Item tooltip", "Item Search window", "Waypoints", "Keybindings" } }
-end
 
 local function gui(m) return m.__libs["AceGUI-3.0"] end
 
@@ -102,7 +95,7 @@ end
 
 -- ── the pages and their strips ──────────────────────────────────────────────────────────────
 
-test("pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order", function()
+test("pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order, on both clients", function()
     local NS = T.enableAddon()
     local built = {}
     for _, p in ipairs(NS.addon.Settings.Helpers.__pages()) do
@@ -1015,82 +1008,6 @@ test("pages: the Drops page's Defaults tooltip names the situations it now reset
 end)
 
 -- ── the editors' pure halves ────────────────────────────────────────────────────────────────
-
-test("editors: a weight write is a fresh map; 0 removes the stat and an emptied spec", function()
-    local E = T.newAddon().addon.Settings.Editors
-    local stored = { [62] = { ITEM_MOD_HASTE_RATING_SHORT = 1 } }
-    local out = E.WithWeight(stored, 62, "ITEM_MOD_CRIT_RATING_SHORT", 0.5)
-    assertEqual(stored[62].ITEM_MOD_CRIT_RATING_SHORT, nil, "the stored map is not touched")
-    assertEqual(out[62].ITEM_MOD_CRIT_RATING_SHORT, 0.5)
-    assertEqual(E.Weight(out, 62, "ITEM_MOD_HASTE_RATING_SHORT"), 1)
-    assertEqual(E.Weight(out, 63, "ITEM_MOD_HASTE_RATING_SHORT"), 0, "unset reads 0")
-    out = E.WithWeight(E.WithWeight(out, 62, "ITEM_MOD_CRIT_RATING_SHORT", 0), 62, "ITEM_MOD_HASTE_RATING_SHORT", 0)
-    assertTrue(out[62] == nil)
-    assertTrue(E.WithWeight(nil, 70, "ITEM_MOD_STRENGTH_SHORT", 1)[70].ITEM_MOD_STRENGTH_SHORT == 1, "from no map")
-end)
-
-test("editors: a spec's stats are its primary stat, Stamina and the four secondaries", function()
-    local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
-    local E = NS.addon.Settings.Editors
-    local fury = E.StatsFor(72)
-    assertEqual(fury[1], "ITEM_MOD_STRENGTH_SHORT")
-    assertEqual(#fury, 6)
-    local unknown = E.StatsFor(nil)
-    assertEqual(#unknown, 8, "all three primaries for an unknown spec")
-    assertEqual(E.StatLabel("ITEM_MOD_HASTE_RATING_SHORT", {}), "Haste")
-    assertEqual(E.StatLabel("ITEM_MOD_HASTE_RATING_SHORT", { ITEM_MOD_HASTE_RATING_SHORT = "Tempo" }), "Tempo",
-        "the client's own GlobalString first")
-end)
-
-test("editors: unwanted types are the class's weapons, then shields where a spec carries one", function()
-    local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
-    local E, K = NS.addon.Settings.Editors, NS.Constants
-    local keys = {}
-    for _, c in ipairs(E.UndesiredChoices("PALADIN")) do keys[#keys + 1] = c.key end
-    assertEqual(keys[#keys], NS.Evaluate.SubClassKey(K.ITEM_CLASS.ARMOR, K.ARMOR_SUBCLASS.SHIELD))
-    local rogue = E.UndesiredChoices("ROGUE")
-    assertEqual(#rogue, 5)
-    for _, c in ipairs(rogue) do assertTrue(c.key:match("^" .. K.ITEM_CLASS.WEAPON .. ":") ~= nil, c.key) end
-    assertEqual(#E.UndesiredChoices("NOPE"), 0)
-end)
-
-test("editors: an unwanted mark is a fresh map, and the last one cleared drops the spec", function()
-    local E = T.newAddon().addon.Settings.Editors
-    local stored = {}
-    local out = E.WithUndesired(stored, 62, "2:15", true)
-    assertTrue(next(stored) == nil, "the stored map is not touched")
-    assertTrue(E.IsUndesired(out, 62, "2:15"))
-    assertFalse(E.IsUndesired(out, 63, "2:15"))
-    assertTrue(E.WithUndesired(out, 62, "2:15", false)[62] == nil)
-end)
-
-test("editors: the spec strip keeps the remembered spec, else yours, else the first", function()
-    local NS = T.newAddon()
-    T.retailList(NS)   -- Retail's spec strip (Forever's talent trees have their own case)
-    local E = NS.addon.Settings.Editors
-    local list = E.ClassSpecs("MAGE", function(id) return id == 63 and "Fire" or nil end)
-    assertEqual(#list, 3)
-    assertEqual(list[2].label, "Fire")
-    assertEqual(list[1].label, "62", "an unnamed spec reads its id")
-    assertEqual(E.PickSpec(list, 64, 63), 64)
-    assertEqual(E.PickSpec(list, 250, 63), 63)
-    assertEqual(E.PickSpec(list, nil, 250), 62)
-    assertEqual(E.PickSpec({}, 62, 62), nil)
-end)
-
-test("editors: on Forever the strip lists your class's talent trees by name", function()
-    local NS = T.newAddon()
-    NS.ClassData.Install(NS.ClassData.LISTS.forever)
-    local E = NS.addon.Settings.Editors
-    local list = E.ClassSpecs("MAGE", E.SpecNamer(function() return "spec" end, { "Arcane", "Fire" }))
-    assertEqual(#list, 3)
-    assertEqual(list[1].key, "MAGE:1"); assertEqual(list[1].label, "Arcane")
-    assertEqual(list[3].key, "MAGE:3"); assertEqual(list[3].label, "Talent tree 3", "a tree the client does not name")
-    assertEqual(E.PickSpec(list, nil, "MAGE:2"), "MAGE:2")
-    assertEqual(E.SpecNamer(function(id) return id == 62 and "Arcane" end)(62), "Arcane", "a Retail spec by its name")
-end)
 
 test("editors: the counter label counts bytes and turns red past the limit", function()
     local E = T.newAddon().addon.Settings.Editors

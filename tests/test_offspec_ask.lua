@@ -1,6 +1,6 @@
 -- tests/test_offspec_ask.lua — Ask, the whisper and the toast for off-spec (feedback-19 spec §2,
 -- DW-O2): a drop your current spec cannot use but another spec of your class can (eval.offSpec,
--- modules/OffSpec.lua) is askable with its own template, `askOffSpec`. Case by case: the template's
+-- libs/LibKa0s/VerdictEvaluate.lua) is askable with its own template, `askOffSpec`. Case by case: the template's
 -- pick (main spec, then off-spec, then transmog), its default text and length, its settings row and
 -- editor, {mygain} read from the off-spec result (OffSpec.EvalFor), the Ask button's tooltip, the
 -- toast's third value and title, and auto-ask, where main spec always goes first.

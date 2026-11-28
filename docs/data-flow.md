@@ -442,7 +442,7 @@ the simulator are exclusive: each refuses while the other is on.
 the group body's refresh, the open row drawn ─> DetailCard.Paint(card, drop, width, now)
   ├─> DetailCells.Chips(drop)                                   (pure: the header's chips; Type is
   │                                                               WindowCells.ArmorType's, §3)
-  ├─> DetailCells.ForYou(drop, Scoring.InUse(), classFile, your gear)   (pure)
+  ├─> DetailCells.ForYou(drop, Scoring.InUse(vcfg), classFile, your gear)   (pure)
   ├─> DetailCells.ForLooter(drop, TestMode.InspectOf(drop), Compat.SpecName(specID), now,
   │     WindowOwn.IsRevealed(id), looterLeft(drop))                 (pure; left: the looter is no
   │     longer in your group, the drop's own read kept and Spec reading `not in your group`, never
@@ -579,8 +579,13 @@ the roster; the stand-up re-reads it.
 
 ## The item facts
 
+The facts cache is the verdict engine's (LibKa0s-Verdict-1.0's `VerdictFacts.lua`), held by this
+addon's one instance (`NS.VerdictEngine`, `core/VerdictSetup.lua`); `NS.ItemFacts` and `NS.ItemRead`
+(`core/VerdictViews.lua`) are views onto it, and every `Compat.*` read below is the host's `reads`
+(NS.Compat's member of that name, looked up at each call, so the simulator's seam still guards it).
+
 ```
-ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
+ItemFacts.Get(link) ─> v:Facts(link): the cache, else v:ReadFacts(link):
   Compat.GetItemInfo (nil: uncached) ─> name, base ilvl, equipLoc, classID, subClassID, bindType, setID
   ItemRead.QualityOf ─> quality + qualitySource (the client's for the link `item`, else its color `link`)
   ItemRead.EffectiveItemLevel ─> ilvl + ilvlSource (gear: `detailed`, else `base`;
@@ -596,7 +601,7 @@ ItemFacts.Get(link) ─> the cache, else ItemFacts.Read(link):
   Compat.PlayerHasTransmog ─> transmogKnown  (CanIMogIt when loaded, else C_TransmogCollection)
   Collectibles.Read ─> category, collect
 
-ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per link:
+ItemFacts.Request(link, cb) ─> v:Request: facts now ("ready"), else one shared load per link:
   NS.Item.LoadItem(id, retry) ─> retry reads again ─> facts: every waiter called back
                                                   └─> still uncached: LoadItem again, up to 5,
                                                       then every waiter with nil
@@ -607,19 +612,24 @@ ItemFacts.Request(link, cb) ─> facts now ("ready"), else one shared load per l
 
 `SPELL_TEXT_UPDATE` re-reads every cached item whose `useSpellLoading` is that spell (rereadToken).
 
-`TRANSMOG_COLLECTION_UPDATED` re-reads `transmogKnown` on the cached facts (from `rawEquipLoc`), then
-calls `Collectibles.Changed`. `RereadCollections` runs `Collectibles.Read` again on every cached
-collectible, for the collection re-read. The stand-down drops the
+`TRANSMOG_COLLECTION_UPDATED` (Retail) re-reads `transmogKnown` on the cached facts (from
+`rawEquipLoc`), then arms the engine's collection re-read (`v:CollectionsChanged`, see the feed
+below). `RereadCollections` runs `Collectibles.Read` again on every cached collectible, for that
+re-read and for the feed's regen pass. Each event reaches the instance through its
+`NS.FEATURE_EVENTS` row (`OnVerdictEvent`). The stand-down (the instance's `StandDown`) drops the
 cache and the loads; a load that answers after it is ignored.
 
 ## The gear snapshot
 
+The snapshot is the instance's too (LibKa0s-Verdict-1.0's `VerdictGear.lua`); `NS.Gear` is its view,
+and `NS.State.gear` mirrors the last snapshot this addon saw, for the diagnostics.
+
 ```
 PLAYER_EQUIPMENT_CHANGED ─┐
-BAG_UPDATE_DELAYED ───────┼─> Gear.Schedule ─> one 0.5 s timer (later events join it)
+BAG_UPDATE_DELAYED ───────┼─> v:ScheduleGear ─> one 0.5 s timer (later events join it)
 PLAYER_SPECIALIZATION_    │                          │
   CHANGED ("player") ─────┤                          v
-an item load answering ───┘   Gear.Refresh ─> Gear.Read:
+an item load answering ───┘   v:RefreshGear ─> v:ReadGear:
                                 UnitClass, Compat.PlayerSpecID ─> classFile, specID
                                 ClassData ─> dualWield, titanGrip
                                 every slot: Compat.InventoryItemLink ─> ItemFacts.Request
@@ -627,14 +637,21 @@ an item load answering ───┘   Gear.Refresh ─> Gear.Read:
                                 bags 0-4: Compat.BagSlotCount / BagItemLink ─> ItemFacts.Request
                                   ─> kept when Evaluate.Equippability says "ok"
                                 owned: each slot in id order takes the best unplaced item fitting it
-                              ─> State.gear; signature moved ─> GearChanged
+                              ─> the snapshot; signature moved ─> host.onChange("gear")
+                                 ─> State.gear (the mirror) ─> GearChanged
 Gear.Candidate() ─> { classFile, specID, dualWield, titanGrip, gear, owned }   (Evaluate, for you)
-Gear.Qualities() ─> { [slot] = quality | false }                             (QualityGate ctx.gear)
+Gear.Qualities() ─> { [slot] = quality | false }     (QualityGate ctx.gear; modules/GearQualities.lua)
 ```
 
+A bag event is held while the host's `deferWhile` holds (Drop Watcher's is combat,
+`NS.Restrictions.InCombat`, in `core/VerdictSetup.lua`), and the next `PLAYER_REGEN_ENABLED` rebuilds.
+
 A link the client has not cached is requested and its slot left out (unknown, not empty); its
-arrival arms the same timer. The first read, made lazily by a caller, announces nothing. The
-stand-down cancels the timer and drops the snapshot; the stand-up rebuilds it and announces it.
+arrival arms the same timer. The instance stands up at OnEnable (`NS.VerdictEnable`) and reads your
+gear then, quietly and provisionally; the first ask through `NS.Gear` reads it again, quietly
+(`NS.VerdictFresh`), so the first read a caller sees announces nothing and reflects the client at
+that ask. A gear change announced in between makes the snapshot the real one. The stand-down
+cancels the timer and drops the snapshot and the mirror; the stand-up rebuilds it and announces it.
 
 ## The loot parser
 
@@ -707,7 +724,8 @@ LootFeed.Receive   [Perf bucket `feed.add`]
     rolled on, a roll table on the drop or Pending's gate, with the `other` catch-all on: RX-04), a
     kind turned off, minimum item level) ─> hidden with its reason
   Evaluate(facts, your candidate)                       [Perf bucket `evaluate`, within `feed.add`]   ─> drop.me
-    (opts.scorer = Scoring.Scorer(): Pawn, your weights or none, read per judgment)
+    (opts from LootFeed.VerdictConfig(); opts.scorer = Scoring.Scorer(vcfg): Pawn, your weights or
+     none, read per judgment)
     a collectible (mount, pet, toy, recipe, cosmetic): Collectibles.Verdict(facts) instead ─> drop.me
       { verdict = newCollect | collected | collectUnknown | cantUse, collect = true }: feed-only
     a lockbox (`lockbox`), a bag, quiver or ammo pouch (`container`), a crafting reagent (`reagent`, DW-RG1)
@@ -735,10 +753,13 @@ TradeTimerTick ─> LootFeed.ReadBagItems: each own drop the timer matched, read
     cached facts as `current` / `location`) ─> re-judged ─> DropUpdated(id, "bag") when it moved
 a scorer answering "pending" ─> one shared 1s timer, five tries per drop ─> DropUpdated(id, "score")
 NEW_MOUNT_ADDED, NEW_PET_ADDED, NEW_TOY_ADDED, NEW_RECIPE_LEARNED, SKILL_LINES_CHANGED,
-  TRANSMOG_COLLECTION_UPDATED (after ItemFacts' own re-read) ─> Collectibles.Changed
-  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown ─> the same, for those alone
-    ─> one 0.5s timer per burst ─> ItemFacts.RereadCollections (the cache's one writer)
-    ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
+  TRANSMOG_COLLECTION_UPDATED (Retail; after the facts' own transmog re-read)
+    ─> the engine's v:CollectionsChanged ─> its one 0.5s timer per burst
+    ─> v:RereadCollections (the cache's one writer) ─> host.onChange("collection")
+    ─> CollectFeed.OnCollectionsChanged: every live collectible (the full pass)
+  PLAYER_REGEN_ENABLED, a live collectible at collectUnknown (OnCollectRegenEvent)
+    ─> CollectFeed's own REREAD_DELAY 0.5s timer ─> ItemFacts.RereadCollections, for those alone
+  either pass ─> each live collectible whose verdict moved: LootFeed.Refresh(rec, "collection")
        ─> re-judged ─> DropUpdated(id, "collection")
 ENCOUNTER_START / ENCOUNTER_END, CHALLENGE_MODE_START / COMPLETED ─> the grouping context
 ```
@@ -1224,39 +1245,3 @@ cancel: AskStateChanged(id, _, "ask") (you asked)   GROUP_ROSTER_UPDATE (looter 
         the stand-down
 first turned on ─> one-time notice ─> global.notices.autoAsk = true
 ```
-
-## Item Search (WoW Forever alone, DropWatcher#17)
-
-```
-the session's first PLAYER_ENTERING_WORLD ─> ItemSearch.Arm: a 5 s timer (C.ITEM_SEARCH.LOAD_DELAY),
-    only while ItemSearch.Wanted() (a switch on, not stood down)
-timer fires ─> ItemSearch.TryLoad: in combat? wait for PLAYER_REGEN_ENABLED ─> ForeverDB.Available()
-    (the one load) ─> the adapter's name and quest indexes, one per frame
-a switch turned on after the timer (settings/ItemSearchRows.lua's onChange) ─> ItemSearch.Refresh ─> TryLoad
-
-an item tooltip shows ─> TooltipDataProcessor post call ─> ItemSearchTip.OnTooltip(tip, data)
-    ─> on, not forbidden, a comparison tooltip only with its switch, Shift if Shift-only, not marked
-    ─> ItemSearch.State() == "loaded"? (never loads) ─> ItemSearch.Get(data.id)
-         (the static half kept per item; quest state, known recipes and ranks read live)
-    ─> ItemSearchTip.Lines(facts, Options()) (pure: the rule and title, the sections in the stored
-         order, the key hint) ─> Paint ─> tip:Show()          OnHide / OnTooltipCleared ─> the mark goes
-
-the key (CLICK DropWatcherItemSearch) ─> ItemSearchKey.Press ─> the shown item tooltip's item?
-    ─> open on it | switch to it | close (the same item, or none while open)
-the magnifier, /dw search [name|id] ─> ItemSearchWindow.Open / SlashSearch
-the search box ─> 0.25 s ─> an id: ForeverDB's row, else the client's cache | a name: SearchItems
-    ─> ShowItem(id) ─> ItemSearch.Get ─> ItemSearchCells.Build(facts, ItemSearch.Me, ctx) (pure,
-         each tab's rows in IS.Rank's order) ─> ItemSearchTabs.Tabs / View (the tab set; the tab's
-         filters and sort, a session view state) ─> ItemSearchGrid's header and table painted
-    a column's title, the Filter / Sort / Reset marks, the Crafting chip ─> the view state ─> Refresh
-    a match or the header's icon / name, shift-click ─> the item's link in chat (Compat.LinkInChat)
-    a row's map pin ─> ItemSearchWindow.SetPin ─> ItemSearchWaypoint.Set ─> Method() (itemSearch.waypoints:
-         Automatic = TomTom when loaded, else Drop Watcher's arrow) ─> Compat.AddTomTomWaypoint |
-         the LibKa0s-WaypointArrow-1.0 instance's SetTarget (never C_Map.SetUserWaypoint) ─> one chat line
-    the arrow: a drag, its Lock, Reset position ─> SchemaRuntime.Set(itemSearch.arrow.x / .y / .lock);
-         arrival ─> cleared, "You have arrived"; a row, a profile switch or a skin change ─> ApplySettings
-
-TRADE_SKILL_SHOW / TRADE_SKILL_LIST_UPDATE ─> 1 s after the burst, out of combat, Item Search on
-    ─> each listed recipe the shipped table lacks ─> global.itemSearch.learnedRecipes ─> Invalidate
-```
-

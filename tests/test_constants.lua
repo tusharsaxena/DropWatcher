@@ -96,9 +96,11 @@ test("constants: the categories in display order, the tier slots and the empty t
     for i, cat in ipairs(c.CATEGORIES) do keys[i] = cat.key; collectible[#collectible + 1] = tostring(cat.collectible) end
     assertEqual(table.concat(keys, ","), "equipment,tierToken,mount,pet,toy,recipe,cosmetic,lockbox,container,reagent,other")
     assertEqual(table.concat(collectible, ","), "false,false,true,true,true,true,true,false,false,false,false")
-    assertEqual(table.concat(c.TIER_SLOTS, ","), "INVTYPE_HEAD,INVTYPE_SHOULDER,INVTYPE_CHEST,INVTYPE_HAND,INVTYPE_LEGS")
-    for _, loc in ipairs(c.TIER_SLOTS) do assertTrue(c.SLOT_PLAN[loc] ~= nil, loc .. " has a slot plan") end
-    assertEqual(next(c.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")
+    -- The tier slots and the token table are the verdict engine's (LibKa0s-Verdict-1.0's C).
+    local v = (T.newAddon()).Verdict.C
+    assertEqual(table.concat(v.TIER_SLOTS, ","), "INVTYPE_HEAD,INVTYPE_SHOULDER,INVTYPE_CHEST,INVTYPE_HAND,INVTYPE_LEGS")
+    for _, loc in ipairs(v.TIER_SLOTS) do assertTrue(c.SLOT_PLAN[loc] ~= nil, loc .. " has a slot plan") end
+    assertEqual(next(v.TIER_TOKENS), nil, "seeded only from ids checked in the client (Q4)")
 end)
 
 test("constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)", function()
@@ -109,13 +111,6 @@ test("constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) a
     assertEqual(c.QUALITY_MODES[1], "fixed")
     assertEqual(c.QUALITY_MODES[2], "dynamicSlot")
     assertEqual(c.QUALITY_MODES[3], "dynamicCharacter")
-end)
-
-test("constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)", function()
-    local c = C()
-    local order = { "Explorer", "Adventurer", "Veteran", "Champion", "Hero", "Myth" }
-    for i, name in ipairs(order) do assertEqual(c.TRACK_TIER[name], i, name) end
-    assertEqual(#keysOf(c.TRACK_TIER), #order)
 end)
 
 test("constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone", function()

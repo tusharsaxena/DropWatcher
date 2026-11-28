@@ -121,15 +121,14 @@ local base = dofile("tests/_kit/mock_base.lua")
 local WINDOW_NAME = "DropWatcherWindow"
 local TOAST_NAME = "DropWatcherToast"
 local SIM_PANEL_NAME = "DropWatcherSimPanel"
-local ITEM_SEARCH_NAME = "DropWatcherItemSearchFrame"
 
 -- The main window and every frame built inside it, recorded (modules/Window.lua and the tabs it
 -- hosts): the kit's frame answers every unmodeled getter with the frame itself, so "the window went
 -- back to where it started" or "the badge reads `Encounter · 2 queued`" could not fail without this.
 -- A frame is decorated when it is the window, a toast (the first `DropWatcherToast`, and each the
 -- stack pools after it, `DropWatcherToast2`, ...: LibKa0s-Toast-1.0 minor 4, issue #14), the
--- simulation panel or the Item Search window (`DropWatcherItemSearchFrame`), or when its parent is
--- decorated (`__dwTree`), so the whole tree is, and nothing outside it changes.
+-- simulation panel, or when its parent is decorated (`__dwTree`), so the whole tree is, and nothing
+-- outside it changes.
 
 -- Text, color, font, texture, vertex color and check state, recorded on any widget or region of
 -- the tree (a font string never given a font answers the game's default face at 10 points).
@@ -305,7 +304,7 @@ local CLASS_NAMES = {
     MONK = "Monk", DRUID = "Druid", DEMONHUNTER = "Demon Hunter", EVOKER = "Evoker",
 }
 
--- The item cache behind C_Item's readers and the transmog collection (modules/ItemFacts.lua).
+-- The item cache behind C_Item's readers and the transmog collection (libs/LibKa0s/VerdictFacts.lua).
 -- Each reader answers only for a cached item (loadsNeeded 0 or nil); GetItemInfo's seventeen
 -- returns are the client's order.
 local function cachedItem(M, link)
@@ -446,7 +445,7 @@ local function installCompatSurface(M)
     end
     M.C_Container = {}
 
-    -- What the player wears and carries (modules/Gear.lua), and the spec the client answers.
+    -- What the player wears and carries (libs/LibKa0s/VerdictGear.lua), and the spec the client answers.
     M.inventory, M.bags = { player = {} }, {}
     M.GetInventoryItemLink = function(unit, slot)
         local worn = M.inventory[unit]
@@ -1022,7 +1021,7 @@ local function build()
         local f = baseCreateFrame(frameType, name, parent, template)
         local toast = type(name) == "string" and name:sub(1, #TOAST_NAME) == TOAST_NAME
             and name:sub(#TOAST_NAME + 1):match("^%d*$") ~= nil
-        if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME or name == ITEM_SEARCH_NAME
+        if name == WINDOW_NAME or toast or name == SIM_PANEL_NAME
             or (type(parent) == "table" and parent.__dwTree)
             or (M.__decorateUIParent and parent ~= nil and parent == M.UIParent) then
             decorateGeometry(M, f)

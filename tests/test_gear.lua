@@ -1,4 +1,7 @@
--- tests/test_gear.lua — modules/Gear.lua (design spec §4, §5.3, §6.2): the player's gear snapshot
+-- tests/test_gear.lua — your gear snapshot as this addon hosts it (design spec §4, §5.3, §6.2): the
+-- verdict engine's (LibKa0s-Verdict-1.0, its own suite for the snapshot's rules), reached through
+-- NS.Gear (core/VerdictViews.lua) with its events, its combat defer and GearChanged wired by
+-- core/VerdictSetup.lua. The player's gear snapshot
 -- (each worn slot at its current level, the best owned item per slot with the bags included), the
 -- candidate table the verdict kernel takes for you, the per-slot qualities the quality gate reads,
 -- the throttled rebuild on the gear events, GearChanged, items still loading, and the stand-down.
@@ -359,7 +362,7 @@ test("gear: OffSpecGear is the best item per slot that spec could wear, false wh
     G.Refresh("test")
     assertTrue(G.OffSpecGear(65) ~= holy, "a rebuild drops the memo")
     assertNil(G.OffSpecGear("x")); assertNil(G.OffSpecGear(71), "a spec of another class")
-end)
+end, T.RETAIL_ONLY)   -- off-spec is Retail's alone, and the instance's client is the profile's
 
 test("gear: a worn slot still loading leaves no off-spec gear until it loads", function()
     local NS, m, G = retailEnabled(function(m)
@@ -371,7 +374,7 @@ test("gear: a worn slot still loading leaves no off-spec gear until it loads", f
     assertNil(G.OffSpecGear(65), "nil while an item loads")
     m.__fireTimers(); m.__fireTimers()
     assertEqual(G.OffSpecGear(65)[SLOT.CHEST].link, link(3003))
-end)
+end, T.RETAIL_ONLY)   -- off-spec is Retail's alone, and the instance's client is the profile's
 
 test("gear: a bag item still loading leaves no off-spec gear, so no slot reads as empty", function()
     local NS, m, G = retailEnabled(function(m)
@@ -387,7 +390,7 @@ test("gear: a bag item still loading leaves no off-spec gear, so no slot reads a
     m.__fireTimers(); m.__fireTimers()
     assertEqual(seen.n, 1, "its arrival re-judges")
     assertEqual(G.OffSpecGear(65)[SLOT.MAINHAND].link, link(3010))
-end)
+end, T.RETAIL_ONLY)   -- off-spec is Retail's alone, and the instance's client is the profile's
 
 test("gear: the candidate brings its off-spec gear, and the kernel judges Holy against the bag mace", function()
     local NS, m, G = enabled(function(m)
@@ -395,8 +398,8 @@ test("gear: the candidate brings its off-spec gear, and the kernel judges Holy a
         carry(m, 0, 1, 3010, mace(600))
     end)
     local c = G.Candidate()
-    -- off-spec gear is Retail's alone (modules/OffSpec.lua): a Forever candidate carries none
-    if T.forever then assertNil(c.offSpecGear) else assertTrue(c.offSpecGear == G.OffSpecGear) end
+    -- off-spec gear is Retail's alone (libs/LibKa0s/VerdictEvaluate.lua): a Forever candidate carries none
+    if T.forever then assertNil(c.offSpecGear) else assertEqual(type(c.offSpecGear), "function") end
     assertTrue(c.gear == G.Snapshot().equipped, "gear and owned stay as they were")
     local drop = NS.ItemFacts.Get(m.addItem(link(3020), def("INVTYPE_WEAPON", 650, 2, 0, { stats = { [INT] = 100 } })))
     local r = NS.Evaluate.Evaluate(drop, c, {})
@@ -421,7 +424,7 @@ test("gear: a bag change that touches only an off-spec item still sends GearChan
     -- red under: the signature hashed the main spec's owned slots alone
     assertEqual(seen.n, 1)
     assertEqual(G.OffSpecGear(65)[SLOT.MAINHAND].link, link(3010))
-end)
+end, T.RETAIL_ONLY)   -- off-spec is Retail's alone, and the instance's client is the profile's
 
 test("gear: sorting your bags moves no gear, so it sends no GearChanged", function()
     local NS, m, G = retailEnabled(function(m)
@@ -495,6 +498,26 @@ test("gear: a bag event in combat arms nothing; the combat's end rebuilds once",
     m.__fire("PLAYER_EQUIPMENT_CHANGED", SLOT.MAINHAND, false)
     assertTrue(G.IsScheduled(), "a weapon swap in combat still rebuilds")
     assertTrue(NS ~= nil)
+end)
+
+test("gear: the bag defer is the engine host's deferWhile, NS.Restrictions.InCombat", function()
+    local NS, m, G = enabled(function(m) wear(m, SLOT.HEAD, 3001, leather("INVTYPE_HEAD", 600)) end)
+    G.Snapshot()
+    local held = false
+    NS.Restrictions.InCombat = function() return held end
+    held = true
+    m.__fire("BAG_UPDATE_DELAYED")
+    -- red under: a host whose deferWhile ignores the restriction tracker (core/VerdictSetup.lua)
+    assertFalse(G.IsScheduled(), "the tracker says combat: the bag event is held")
+    held = false
+    m.__fire("BAG_UPDATE_DELAYED")
+    assertTrue(G.IsScheduled(), "out of combat a bag event arms the rebuild")
+    m.advance(G.THROTTLE)
+    held = true
+    m.__fire("BAG_UPDATE_DELAYED")
+    held = false
+    m.__fire("PLAYER_REGEN_ENABLED")
+    assertTrue(G.IsScheduled(), "the combat's end rebuilds the held event")
 end)
 
 test("gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again", function()
@@ -620,7 +643,7 @@ test("gear: the stand-down cancels the rebuild and drops the snapshot; the stand
     assertFalse(G.IsScheduled())
     assertNil(NS.State.gear)
     assertEqual(m.__fireTimers(), 0, "the canceled rebuild never runs")
-    G.Schedule("late")
+    NS.VerdictEngine:ScheduleGear("late")
     assertFalse(G.IsScheduled(), "nothing arms while stood down")
     local seen = listen(NS)
     NS.addon:OnSlashCommand("enable")

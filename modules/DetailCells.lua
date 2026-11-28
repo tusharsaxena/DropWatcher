@@ -400,7 +400,7 @@ local function statsRow(eval, dropStats)
         trow(L["Secondary stats"], text))
 end
 
--- The score line by the scorer in use (modules/Scoring.lua's InUse): its label, and why there is
+-- The score line by the scorer in use (libs/LibKa0s/VerdictScore.lua's InUse): its label, and why there is
 -- no score when there is none.
 local SCORER_LINE = {
     pawn    = { label = L["Pawn"], none = { L["not scored by Pawn yet"] } },

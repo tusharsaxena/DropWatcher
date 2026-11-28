@@ -67,9 +67,7 @@ read, are [`forever-probes.md`](forever-probes.md).
 | SKIN-53 | [Skins](#skins) | LibKa0s v1.108.0's composer (SD-RV-DW): the tables' Font color gains Use the skin's color, on by default; a pick stored before keeps drawing (step 14) |
 | SKIN-54..55 | [Skins](#skins) | The skin-defaults audit (SD-SK-DW, LibKa0s#97): an expanded row's wash is the skin's selection (SKIN-54, U-18); the Edit message box's text is skinned (SKIN-55, U-19) |
 | ROLLS-1..22 | [Rolls](#rolls) | Everyone's loot rolls on Retail (Forever port design §5 to §7, DW-FP13 to DW-FP20): the Rolling now section live (ROLLS-1), the resolved drop's Rolls box and its History roll table (ROLLS-2), Drops › Rolls' three rows (ROLLS-3), the roll popup mark (ROLLS-4), two copies of one item (ROLLS-5), a `/reload` mid-roll (ROLLS-6), Guild Master Loot's awaiting item and Ask master looter (ROLLS-7); the rolls UX round on both clients: the icon count line and its tooltip (ROLLS-8, RX-06), the popup's side card and its flip (ROLLS-9, RX-07), the roll's time left (ROLLS-10, RX-02), lockboxes, containers and the catch-all (ROLLS-11, RX-04, RX-15); the Rolls panel (RX-17 to RX-19): the dungeon layout (ROLLS-12), the side and its flip (ROLLS-13), the linger and the hover (ROLLS-14), raid mode and the collapsers (ROLLS-15), the compact layout (ROLLS-16), a minimized or closed window, the close button and `/dw rolls` (ROLLS-17), test mode's sample in it (ROLLS-18); test mode's roll popup (ROLLS-19, RX-22); a Drops row's tooltip flush to the window unless it would cover the Rolls panel (ROLLS-20, AF-DW-TIP); the side card's Drop Watcher header (ROLLS-21, AF-DW-ROLLHDR); the countdown bar, winner wash and `[YOU]` in the skin's accent (ROLLS-22, SD-SK-DW) |
-| FOREVER-1..20 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01; 18 and 19 superseded by ITEM-SEARCH) |
-| ITEM-SEARCH-1..18 | [Item Search (WoW Forever)](#item-search-wow-forever) | Item Search (DropWatcher#17, IS-DW-01 to IS-DW-07): the tooltip block on every source (1), its sections and marks (2), Shift-only, title, hint and comparison tooltips (3), before and after the load and a login in combat (4), without ForeverDB (5), absent on Retail (6), the window's ways in (7), the key with and without a hover (8), name and id search (9), the detail pane, bars and pins (10), recent searches (11), Link in chat (12), the default key never stealing (13), the settings page and the section order (14), the window's settings (15), the Keybindings tab (16), the old chip gone (17), the profession-window fallback (18) |
-| ITEM-SEARCH-19..30 | [Item Search feedback](#item-search-feedback) | The Item Search feedback run (ISF-DW-01 to ISF-DW-08, ISF-REV): the key fires (19), objects named (20), the tooltip's title, ranking and cap (21), only your professions (22), the recipe glyphs (23), the window's frame and matches (24), the tabs, tables, headers and tooltips (25), waypoints with TomTom and the map pin (26), Drop Watcher's arrow (27), the settings page (28), a key cleared after the first build stays cleared (29), the Crafting filter following its setting and a smooth resize (30) |
+| FOREVER-1..21 | [WoW Forever](#wow-forever) | The Forever port (DW-FP01 to DW-FP21) on the WoW Forever client: the install through the `_forever_` folder (FOREVER-1); the Retail-only features absent (FOREVER-2); two-word names (FOREVER-3); the class data and armor by level (FOREVER-4); Pawn by talent tree and the weights strip (FOREVER-5); score-first verdicts (FOREVER-6); the ranged slot (FOREVER-7); BoE and BoP trade (FOREVER-8); the situations (FOREVER-9); rolls live and final (FOREVER-10, FOREVER-11); master-loot pending and Ask master looter (FOREVER-12); the roll popup mark and its BoP wording (FOREVER-13); the simulator (FOREVER-14); test mode (FOREVER-15); running the `both` checks on Forever (FOREVER-16); Forever's defaults, the open-world group and Fixed Uncommon (FOREVER-17, RX-01); the detail card's Sources chip with ForeverDB, without it, and absent on Retail (FOREVER-18..20, SF-DW-01; 18 and 19 superseded by Item Search, IS-DW-07); no Item Search left after it moved to Ka0s Item Search (FOREVER-21, DropWatcher#19) |
 | SKIN-34..36 | [Skins](#skins) | The findings remediation (2026-10-31): the tabs' labels (SKIN-34) and the tables' plain color (SKIN-35) after the repaint allocation fix, the tooltips after the locale split (SKIN-36); SIM-18 is the journal shims' move |
 
 ## Before you start
@@ -1752,7 +1750,7 @@ panel tooltips are unchanged prose. Result: passed in the client, 2026-10-23 (th
 
 **FEED-90. A gear grid right under the title, muted gold labels, an arrow on every worn item (feedback-21 H3).** Client: both.
 The headless `test_tip_marks` (every tooltip's grid on line 2, the labels' color), `test_side_cells` (each
-worn item's arrow) and `test_evaluate` (`ItemVerdict`) cover the data. `/dw test`, expand every group, then
+worn item's arrow) and LibKa0s-Verdict-1.0's `test_verdict_kernel` (`ItemVerdict`) cover the data. `/dw test`, expand every group, then
 hover a Me and a Them cell, a History Me and Them cell, the Offer panel's Their eq, your own drop's `Upgrade
 for N` and an off-spec (cyan) cell → each tooltip's gear line (`Seta  321  <item>  ▼10`) is the first line
 under the title, above every bullet row. Every row's bullet and label (`Slot`, `Inspected`, `Means`, ...)
@@ -1800,7 +1798,7 @@ it takes off. With the toast on, a trinket toast whose looter wears two reads `Y
 usual width. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-93. One mark where the drop was not judged against either worn item, or where two do not fit
-(feedback-21 R5).** Client: both. The headless `test_evaluate` (the kernel's `either`), `test_side_cells` (one mark for
+(feedback-21 R5).** Client: both. The headless LibKa0s-Verdict-1.0's `test_verdict_kernel` (the kernel's `either`), `test_side_cells` (one mark for
 a one-hander without dual wield, a two-hander against both hands, a bag baseline; the painted cell at a
 wider character measure), `test_compact_group` (line 3 at the least width, a wider measure) and
 `test_test_mode` cover the data. On a character that cannot dual wield (a Protection Paladin, a priest),
@@ -1814,7 +1812,7 @@ read reads `321/324 ▼10`, one mark, nothing running into the Trade column; in 
 line 3 reads the same and Trade stays on the line. Result: passed in the client, 2026-10-23 (the owner).
 
 **FEED-94. A ring slot always reads both rings, a unique-equipped copy too (feedback-22).** Client: both. The
-headless `test_evaluate` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
+headless LibKa0s-Verdict-1.0's `test_verdict_kernel` (the unique redirection's `either`), `test_side_cells` (`315 ▲3 / 295 ▲23`)
 and `test_test_mode` (the unique ring samples) cover the data. Wear a unique-equipped ring (say
 Pilfered Precious Band, 315) and another ring (295); when a 318 copy of it drops for someone else →
 the Drops row's Me, compact line 3, the detail card's FOR YOU Item level and the toast all read both
@@ -2162,7 +2160,7 @@ raised: …probe` line for each. Restore with
 
 ## Item facts
 
-The facts and the load are headless-tested (`test_item_facts`); these checks confirm the shapes the
+The facts and the load are headless-tested (LibKa0s-Verdict-1.0's `test_verdict_facts`); these checks confirm the shapes the
 client answers, which the mock models from the API documentation. Each is a `/dump` on an item link
 (shift-click the item into the chat box after `/dump `).
 
@@ -2323,7 +2321,7 @@ equipment tierToken mount pet toy recipe` (cosmetic only when turned on) and `co
 blacklist=n`, and each drop line names its `kind=`. Result: Passed (owner, 2026-11-05)
 
 **COLL-10. Crafting reagents (DW-RG1, owner report 2026-11-19: Jade never reached the feed).** Client:
-both (the report was WoW Forever). The headless `test_collectibles`, `test_feed`, `test_pending` and
+both (the report was WoW Forever). The headless LibKa0s-Verdict-1.0's `test_verdict_collect`, `test_feed`, `test_pending` and
 `test_feed_counts` cover the rule. Settings › Drops › Items › Item kinds → Crafting reagents (ticked)
 beside Containers, and Everything else that is rolled on alone on the last line. With the minimum
 quality at Uncommon (WoW Forever's default), a group member (or you) loots Jade (item 1529, Trade
@@ -4233,7 +4231,7 @@ all. At the end → `Roll ended` or the winner, never a negative time. Record on
 row read at the start and after your choice. Result:
 
 **ROLLS-11. Lockboxes, bags and the catch-all (RX-04, RX-15, rolls UX ruling 3; Review Focus 3).**
-Client: both. Probe P-BOX first. The headless `test_collectibles`, `test_pending` and `test_feed`
+Client: both. Probe P-BOX first. The headless LibKa0s-Verdict-1.0's `test_verdict_collect`, `test_pending` and `test_feed`
 cover the kinds. Settings › Drops › Items › Item kinds lists Lockboxes (ticked), Containers (ticked)
 and Everything else that is rolled on (unticked). A group roll on a lockbox (a Junkbox, a Heavy or
 Ornate Bronze Lockbox) → Rolling now shows it with `Lockbox` where gear shows a verdict, in the
@@ -4541,7 +4539,7 @@ your old profile → its stored values are unchanged. On Retail a new profile ke
 group untracked and Fixed at Rare (SIT-7, QUAL-1). Result:
 
 **FOREVER-18. Where a drop comes from, with ForeverDB (SF-DW-01, LibKa0s#105).** Superseded by
-ITEM-SEARCH (IS-DW-07 retired the chip; ITEM-SEARCH-1 to ITEM-SEARCH-17). Kept as the record. Client: WoW
+Item Search (IS-DW-07 retired the chip), which has since moved to its own addon (FOREVER-21). Kept as the record. Client: WoW
 Forever, with the ForeverDB addon installed and enabled (CurseForge `forever-db`), and no other addon
 that loads it at login. `/reload`, then `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`: Drop
 Watcher loads nothing at login. Settings › Window › Layout → a Detail card heading between Mode and
@@ -4562,8 +4560,8 @@ section's ForeverDB line reads present and loaded, with its version, build and h
 loaded before a card opened, a chip on an item ForeverDB knows nothing about, a chip that pushes out
 the item's own chips, or a Lua error. Result: Passed (owner, 2026-11-25).
 
-**FOREVER-19. Without ForeverDB (SF-DW-01).** Superseded by ITEM-SEARCH (ITEM-SEARCH-5,
-ITEM-SEARCH-17). Kept as the record. Client: WoW Forever. Disable ForeverDB in the addon
+**FOREVER-19. Without ForeverDB (SF-DW-01).** Superseded by Item Search, which has since
+moved to its own addon (FOREVER-21). Kept as the record. Client: WoW Forever. Disable ForeverDB in the addon
 list (or remove it) and `/reload`. Open any drop's detail card (`/dw test`) → the header is the one
 FOREVER-18 showed minus the Sources chip, and nothing else moved; no Lua error, no chat line. The
 Settings row is still there and its tooltip says it needs the ForeverDB addon. `/dw diagnostics` →
@@ -4576,783 +4574,20 @@ from row. `/dw test` → open a detail card → the header is unchanged from bef
 `/dump C_AddOns.IsAddOnLoaded("ForeverDB")` answers `false`. Fail: the row, the chip, or ForeverDB
 loaded. Result: Passed (owner, 2026-11-25).
 
-## Item Search (WoW Forever)
-
-Item Search (DropWatcher#17; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, IS-DW-01 to
-IS-DW-07). Client: WoW Forever unless a check says Retail, with the ForeverDB addon installed and
-enabled unless it says otherwise. ForeverDB loads about 5 seconds after login, out of combat: wait
-for it before a check that needs it (the Item Search window's footer names its state). Every value below comes
-from your own client; none is written into this file. They supersede FOREVER-18 and FOREVER-19 (the
-retired detail card chip).
-
-**ITEM-SEARCH-1. The block on every item tooltip.** `/reload`, wait 5 seconds, then hover an item in
-your bags → under the client's own lines and other addons', a rule and `Drop Watcher · Item Search`
-with a magnifier (superseded by ITEM-SEARCH-21, 2026-11-25: no magnifier before the title; then by
-ITEM-SEARCH-34, 2026-11-26: no title at all, a thin dim-gold line and a `Drop Watcher` label line with
-the badge), both in the skin's accent, then the sections, then `Ctrl-Alt-D: open in Item Search` (superseded by
-ITEM-SEARCH-19, 2026-11-25: the key is `Alt-Ctrl-D`, as the client writes it) (or whatever key is
-bound). Repeat on a chat link (click one: `ItemRefTooltip`), an item in
-the loot window, and another addon's item tooltip such as Loot History's History rows → the same
-block, once each. Hover the same item twice → never two blocks. Fail: a missing or doubled block, a
-block on a non-item tooltip, or a Lua error. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-2. The sections and their marks.** Hover an item with drop sources, a vendor, a quest
-that asks for it and a recipe that uses it (Linen Cloth is a good start) → **Drops from** lists the
-top 3 sources (superseded by ITEM-SEARCH-21, 2026-11-25: every section ranked for you and capped at
-Rows per section, 5 by default; superseded by ITEM-SEARCH-44, 2026-11-26: 3 by default) with their chances, then `and N more`, and a world drop its level; **Sold by** the
-cheapest vendor with its price (superseded by ITEM-SEARCH-38, 2026-11-26: each vendor with its own
-price); **Quests** `!` for one in your log, `?` for one not picked up, a tick
-for one done (hidden while Hide completed quests is on, the default) (superseded by ITEM-SEARCH-35,
-2026-11-26: the game's marks, a yellow `!` not picked up, a gray `?` in your log, a green `?` ready to
-turn in, a green check done); **Crafting** a filled dot in
-the skill-up color (orange, yellow, green, gray against your rank) for a recipe you know, a dashed
-ring for one you do not (superseded by ITEM-SEARCH-22 and 23, 2026-11-25: only your professions by
-default, and the glyphs are an up arrow in the skill-up color, a light gray dash and a dark gray
-padlock; then by ITEM-SEARCH-31, 2026-11-26: a thick up arrow and a gray two-way arrow), the profession on
-the right (superseded by ITEM-SEARCH-33, 2026-11-26: the recipe's skill levels in their colors). Fail: a wrong mark, a section with no rows, or
-an empty block. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-3. Shift-only, the title, the hint and comparison tooltips.** Settings › Item Search ›
-Item tooltip: tick Only while holding Shift → no block until you hold Shift as the tooltip opens.
-Untick Separator and title line → no rule and no title (superseded by ITEM-SEARCH-34, 2026-11-26: the
-row is Separator line, and it removes only the line; the block never has a title now); untick Keybind hint line → no hint (also
-gone while the key is unbound). Comparison tooltips too off (the default): Shift-hover gear to
-compare → the comparison tooltips carry no block; on → they do. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-4. Before and after the load, and a login in combat.** `/reload` and hover an item at
-once → no block for the first seconds (the Item Search window's footer reads `ForeverDB: loading…`); after about 5
-seconds → the block. Log in (or `/reload`) in combat → no load until combat ends, then the block
-appears within a few seconds. No hitch on a hover. Fail: a block before the load, a load in combat,
-or a hitch on hover. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-5. Without ForeverDB.** Disable ForeverDB in the addon list and `/reload` → no block on
-any tooltip, not even Crafting. Open the window (Ctrl-Alt-D) → a search by id (`2589`) shows the item
-and its CRAFTING rows; the window says `ForeverDB not installed: drop sources, quests and name search
-are unavailable`, and a name search finds nothing. No Lua error. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-6. Retail: absent.** Client: Retail. No block on any item tooltip, no magnifier in the
-window's title bar, no Item Search settings page, no Item Search row under General › Keybindings,
-`/dw search` is not a command (`/dw help` lists none), and a key bound to Item Search under the
-client's Key Bindings does nothing. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-7. The ways in.** The magnifier, the first mark in the main window's title bar (its
-tooltip `Item Search`) → opens the Item Search window, and again closes it. `/dw search` → opens it
-empty, the box focused; `/dw search 2589` → shows Linen Cloth at once; `/dw search linen` → the
-matches for linen. The window wears the skin, drags by its title bar (not while locked), keeps its
-place over a `/reload`, closes on Escape, and its lock · settings · close marks work (the gear opens
-Settings › Item Search) (superseded by ITEM-SEARCH-24, 2026-11-25: the window has no lock and is
-resizable). Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-8. The key, with and without a hover.** (Superseded in its key by ITEM-SEARCH-19,
-2026-11-25: press Alt-Ctrl-D, the chord the client matches; the press rules below stand.) With
-nothing under the pointer, Ctrl-Alt-D →
-the window opens empty with the search box focused; again → it closes. Hover an item in your bags,
-Ctrl-Alt-D → the window opens on that item; hover the same item, Ctrl-Alt-D → it closes; open it,
-hover a different item, Ctrl-Alt-D → it switches to that item. A chat link's tooltip and the
-comparison tooltips count as a hover. (Superseded by ITEM-SEARCH-41, 2026-11-26: over the item already
-shown the window stays open, and a pinned chat link's tooltip no longer counts as a hover.) Result: Passed (owner, 2026-11-25). The wrong default chord (Ctrl-Alt-D bound as `CTRL-ALT-D`, which no key press matches), reported in the owner's feedback the same day, is fixed by ISF-DW-01 (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`).
-
-**ITEM-SEARCH-9. Name and id search.** Type a name (`linen`) → after a short pause the matches list
-icons, names in their quality color and ids, prefix matches first; click one → it shows; Enter → the
-first match shows. Type digits → that id shows, even for an item the client has not cached yet
-(it fills in a moment later). Clear empties the box and the list. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-10. The detail pane, bars and pins.** On an item with drop sources → DROPS FROM lists
-every source with its level range, zone, a bar scaled to the likeliest and its %, and a pin on rows
-with a known spot; click a pin → a map waypoint there (TomTom's arrow when TomTom is installed)
-(superseded by ITEM-SEARCH-25 to 27, 2026-11-25: a tab of columns per section, and a pin sets
-TomTom's waypoint or Drop Watcher's arrow, never the client's map waypoint). A
-World drop row shows its minimum level. SOLD BY lists vendors with the lowest price (superseded by ITEM-SEARCH-38, 2026-11-26: each vendor's own
-price, recorded at the vendor or from ForeverDB); QUESTS marks,
-titles, zones and states; CRAFTING the breakpoints against your skill, or `learnable at N`; ALSO
-Reward from, Starts quest and Skinned from. The footer names ForeverDB's version and state and the
-key (superseded by ITEM-SEARCH-24, 2026-11-25: the footer no longer names the key). Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-11. Recent searches.** (Superseded by ITEM-SEARCH-24, 2026-11-25: Recent searches are
-gone, and what was saved is deleted; skip this row.) Show three items → they head Recent searches, newest first, at
-most 10, each clickable, and still there after a `/reload` and on another character. Untick Remember
-recent searches → the list hides and nothing new is added. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-12. Link in chat.** (Superseded by ITEM-SEARCH-24, 2026-11-25: the Link in chat
-button is gone; shift-click the item's icon or name, or a match, instead.) Show an item, click Link in chat → the item's link goes into the
-open chat box, or a new one opens with it. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-13. The default key never steals.** (Superseded in its key by ITEM-SEARCH-19 and 29,
-2026-11-25: the default is Alt-Ctrl-D; the never-steal rules stand.) On a new character with
-Ctrl-Alt-D unbound → after the first login Item Search is on Ctrl-Alt-D. On a character where Ctrl-Alt-D already runs
-something else → that binding stays and Item Search has no key (the hint line is gone). Clear the key
-by hand and `/reload` → it stays cleared. Result: Passed (owner, 2026-11-25). The wrong default chord (Ctrl-Alt-D bound as `CTRL-ALT-D`, which no key press matches), reported in the owner's feedback the same day, is fixed by ISF-DW-01 (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`).
-
-**ITEM-SEARCH-14. The settings page.** Settings › Item Search (after Alerts) → tabs Item tooltip,
-Item Search window, Keybindings. Item tooltip: Add Item Search to item tooltips alone on its line,
-its knobs dimmed while it is off; the section switches, Drop sources shown (1 to 10; 5 → the tooltip
-names 5) (superseded by ITEM-SEARCH-28, 2026-11-25: Rows per section, 1 to 20, for every section)
-and Hide completed quests; then Section order: drag Quests above Drops from by its handle →
-the tooltip writes Quests first, at once. Defaults → every row and the order back to the defaults,
-the key untouched. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-15. The window's settings.** Item Search window: untick Use the skin's color → the
-bars draw Bar color; Density Compact → shorter rows; Font size 16 → larger text; untick Zone and
-level columns → those columns go; untick Waypoint pins → no pins. Untick Enable the Item Search
-window → an open window closes and Ctrl-Alt-D, the magnifier and `/dw search` do not open it. Untick
-both it and Add Item Search to item tooltips and `/reload` → ForeverDB never loads
-(`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` → `false`). Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-16. The Keybindings tab.** Settings › Item Search › Keybindings → one row, Item Search,
-showing the bound key; click it and press a key → bound and saved, and General › Keybindings and the
-client's Key Bindings show the same key; Clear unbinds it. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-17. The old chip is gone.** Open a drop's detail card (`/dw test`) → the header has no
-`Drops from` / `Sold by` / `World drop` chip, and opening cards loads nothing. Settings › Window ›
-Layout → Mode then Tables, no Detail card heading. A profile that had Show where it comes from
-unticked loads without error. Result: Passed (owner, 2026-11-25).
-
-**ITEM-SEARCH-18. The profession-window fallback.** Open a profession window (out of combat) →
-after a second, any recipe the shipped table lacks is learned: hover one of its reagents → the
-recipe now shows under Crafting. Nothing is read
-in combat or with Item Search off. Result: Passed (owner, 2026-11-25).
-
-### Item Search feedback
-
-The Item Search feedback run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-*).
-Same client and ForeverDB setup as above. Where a check here contradicts an earlier ITEM-SEARCH row
-(the key's name, the tooltip's title, the dots), this one is current.
-
-**ITEM-SEARCH-19. The key fires (T1).** On a character that ran the first Item Search build (the
-key was set then but did nothing) → `/reload`, then hover an item and press Ctrl+Alt+D → the Item
-Search window opens on it; Settings › Item Search › Keybindings shows the key as `ALT-CTRL-D` (or
-however the client writes it), and the tooltip's last line names it, `Alt-Ctrl-D: open in Item
-Search`. Clear the key → `/reload` → it stays cleared and the tooltip has no key line. On a
-character where Alt-Ctrl-D already runs something else → that binding stays. Result:
-
-**ITEM-SEARCH-20. Objects have names (W15).** Search for an item that drops from chests (for example
-`/dw search Large Solid Chest`'s contents, or any item whose Drops from used to list `Object 153462`)
-→ every object row has a real name, a chest that comes under several spawn ids is one row (its chance
-the highest of them), and no `Object <number>` row is left in the tooltip or the window. With
-`/dw debug on`, the item's first look logs how many unnamed objects were left out. Result:
-
-**ITEM-SEARCH-21. The tooltip block's title, cap and order (T2, T3).** Hover an item with many
-sources (a common cloth or a low-level crafting reagent) → the block opens with the rule and `Drop
-Watcher · Item Search`, with no magnifier before it (superseded by ITEM-SEARCH-34, 2026-11-26: a thin line
-and the `Drop Watcher` label line, no title). Every section (Drops from, Sold by, Quests,
-Crafting, Skinned from; and Gathered from after Drops from since ITEM-SEARCH-37, 2026-11-26) shows at most 5 rows (superseded by ITEM-SEARCH-44, 2026-11-26: 3 by default), then `and N more`. Drop sources in your zone come first,
-then creatures near your level (from 5 below you to 3 above) with objects and containers, then the
-rest; vendors in your zone, then your continent, then elsewhere, the other faction's last; quests in
-your log, then the ones you can pick up now. Settings › Item Search › Rows per section to 2 → every
-section stops at 2; to 20 → more show. Result:
-
-**ITEM-SEARCH-22. Only the professions you know (T3).** On a character with, say, Tailoring and no
-First Aid, hover Linen Cloth → Crafting lists Tailoring recipes only, your known ones that still skill
-up first (orange, then yellow, then green), and ends with a dim `+N in professions you don't know`.
-Hover a reagent of a profession you don't have at all → the Crafting heading shows that one line
-alone. Untick Only professions you know → every recipe shows, the other professions last. Result:
-
-**ITEM-SEARCH-23. The recipe glyphs (T4).** In the tooltip and in the Item Search window's Crafting
-list, a recipe you know that gives a skill-up has an up arrow in its orange, yellow or green; one you
-know that is gray has a light gray dash; one you don't know has a dark gray padlock (superseded by
-ITEM-SEARCH-31, 2026-11-26: a thick up arrow, a gray two-way arrow, the padlock, all one size). No dots or rings
-are left anywhere, and the three shapes are told apart without their colors. Result:
-
-**ITEM-SEARCH-24. The window's frame (W1 to W7, W13, W14).** Open Item Search (the magnifier, the
-key or `/dw search`) → the title reads `Drop Watcher · Item Search` in the main window's title font;
-there is no lock mark (settings and close only), and the window moves by its title bar even with
-General › Master controls › Lock frame on. The footer says only ForeverDB's version and state, with
-no key text. Every text (the matches, the item header, the tabs, the tables) is in the main window's
-face and size: change Window › Layout › Row height and the Tables font → Item Search's rows follow,
-and the item's name is the size of a list row's title, not a large heading. There is no Recent
-searches list or setting. Clear's label sits in the middle of its button. Drag the bottom-right grip
-→ the window resizes, never under about 760 x 440; the table's Source and Zone columns widen with it
-while Type, Level and Chance keep their width; `/reload` → it comes back at the same size and place.
-Search `heavy` → the left pane's header reads `Matches · n` with a Sort mark (Best match, Name, Item
-id, each reorders the list); the rows alternate, light up under the pointer, show the item's game
-tooltip, and the one shown on the right is marked gold (in every skin: try Azeroth and Obsidian).
-Shift-click a match, the header's icon and the header's name → each links the item in the chat box;
-there is no Link in chat button. Result:
-
-**ITEM-SEARCH-25. The tabs and their tables (W8 to W10, W15).** Show Heavy Leather (or any item with
-drops, vendors, quests and recipes) → a tab strip under the header in the main window's tab look,
-one tab per section that has rows, in the order Drops from, Sold by, Quests, Crafting, Skinned from
-(Gathered from after Drops from since ITEM-SEARCH-37, 2026-11-26),
-each with its count; Crafting reads `Crafting 12 / 74` while only your professions show. Each tab is
-a table with its own columns (Drops: Source, Type, Level, Zone, Chance, pin; Sold by: Vendor, Level,
-Zone, Faction, Price, pin; Quests: mark, Quest, Role, Level, Min, Status, Giver, pin; Crafting:
-glyph, Recipe, Profession, Uses, Makes, Skill, Status; Skinned from: Creature, Level, Skill, Zone,
-Chance, pin). Levels are colored by how hard they are for you; a creature's name is red, an object's
-white, a container's in its quality color (superseded by ITEM-SEARCH-36, 2026-11-26: a creature's name and
-Type in its rank's color, no red; then by ITEM-SEARCH-47, 2026-11-26: each Type in its own color, every
-name plain). Above each table a section header (dark band, gold title,
-dim count, `sorted: Best for you`) with Filter, Sort and Reset marks, each with a tooltip: Filter
-toggles the tab's own filters (Drops: Creatures, Objects, Containers, Only my zone, Only my level
-band; Sold by: Only my faction (on to start with since ITEM-SEARCH-53, 2026-11-26); Quests: Hide completed; Crafting: Only my professions, Only known;
-Skinned from: Only my zone) and its funnel fills while one narrows the rows; Reset shows only then,
-or while a sort is picked, and puts Best for you back. Crafting's header has a My professions / All
-professions chip, not saved. Click a column's title → the table sorts by it with an arrow; click
-again → it flips (superseded by ITEM-SEARCH-32, 2026-11-26: a hover highlight and a solid triangle). Every row alternates, lights up under the pointer and has a tooltip (a title, label
-and value rows, dim hints last); a container's row and a recipe's Makes show the item's own tooltip,
-and shift-click links it. Pick Quests, then show another item with quests → Quests stays picked.
-Result:
-
-**ITEM-SEARCH-26. Waypoints with TomTom (W11, W12).** With TomTom installed and loaded, show an item
-with drop sources in the Item Search window → each row with a known spot has a small dim map pin at
-its right end (no white arrow), which brightens while the pointer is on its row. Hover the pin → a
-tooltip: Set a waypoint, the zone and coordinates, `Arrow  TomTom`, and the dim hint `Click: set a
-waypoint`. Click it → TomTom's arrow points there, chat prints one line `Waypoint set: <source>
-(<zone>, x, y), shown by TomTom.`, and the game's own map pin is not set (no pin of the client's on
-the world map). Settings › Item Search › Waypoints → Waypoints reads Automatic, and the Waypoint
-arrow, Arrow text and Arrow position rows below it are grayed out. Pick Drop Watcher's arrow → they
-come alive, and the next pin click points Drop Watcher's arrow instead (TomTom is not called).
-Result:
-
-**ITEM-SEARCH-27. Drop Watcher's arrow (W12).** With TomTom disabled in the addon list and
-`/reload`, Waypoints on Automatic → click a pin → a movable arrow appears near the screen's center,
-pointing toward the spot with the distance under it, the same arrow Skill Master draws; chat says
-`..., shown by Drop Watcher's arrow.` Walk → it turns and the distance counts down; its color fades
-from the skin's accent to green as you get near; within a few yards it disappears and chat says `You
-have arrived: <source>`. Drag it somewhere else, `/reload` and click a pin → it shows where you left
-it. Right-click it →
-the menu: Clear waypoint, Share in chat, Show on map, Lock the arrow, Reset position, Arrow
-settings... (opens Settings › Item Search). Pick TomTom in Waypoints with TomTom still disabled → a
-pin still uses Drop Watcher's arrow. Change Arrow style to Flat, Arrow scale to 1.5 and Text position
-to Above → the shown arrow changes at once. Click another pin → the arrow points at the new spot.
-`/dw disable` → the arrow goes. Result:
-
-**ITEM-SEARCH-28. The settings page (spec §9).** Settings › Item Search → tabs Item tooltip, Item
-Search window, Waypoints, Keybindings. Item tooltip's Tooltip block, top to bottom: Add Item Search to
-item tooltips, Comparison tooltips too, Rows per section (1 to 20, 5; superseded by ITEM-SEARCH-44, 2026-11-26: 3), Show the key hint, Only while
-holding Shift, Separator and title line (superseded by ITEM-SEARCH-43, 2026-11-26: Separator line, then the
-badge's two rows and Show recipe skill levels); then a Tooltip and window heading with Only professions you
-know; then Sections and Section order as before. There is no Drop sources shown row. Untick Show the
-key hint → the tooltip's last line (the key) goes. Item Search window: Enable the Item Search window
-and the bar color rows only (Record vendor prices and Load ForeverDB (Full) added since
-ITEM-SEARCH-43, 2026-11-26) (no Density, Font size, columns, recent searches, lock or pins rows).
-Waypoints: Waypoints (Automatic, TomTom, Drop Watcher's arrow) and Waypoint pins, then the arrow's
-blocks (Waypoint arrow, Arrow text, Arrow position with Reset position). Untick Waypoint pins → the
-window's rows have no pins. Defaults → every row back, Waypoints Automatic, the key untouched. A
-profile saved by the first Item Search build with Drop sources shown at 7 opens with Rows per section
-at 7. Result:
-
-**ITEM-SEARCH-29. A key cleared after the first build stays cleared (ISF-REV).** On a character that
-ran the first Item Search build and then cleared its (dead) Ctrl-Alt-D by hand in the client's Key
-Bindings → `/reload` on this build → Item Search still has no key, Alt-Ctrl-D runs whatever it ran
-before, and the tooltip has no key line. With `/dw debug on`, the login logs `default key not
-re-tried`. On a character that ran the first build and left the dead key alone → it gets Alt-Ctrl-D
-(ITEM-SEARCH-19). Result:
-
-**ITEM-SEARCH-30. The Crafting filter follows its setting; a smooth resize (ISF-REV).** Open the
-Item Search window on Linen Cloth, Crafting tab: the chip reads My professions. Settings › Item
-Search › Item tooltip: untick Only professions you know → the open window's chip reads All
-professions at once, and the section header shows no Reset; tick it again → My professions. Then
-on an item with many drop sources (Linen Cloth), drag the window's corner around for a few seconds →
-the table follows smoothly, with no stutter; sort a column and switch tabs → instant. Result:
-
-### Item Search round 3
-
-The Item Search round 3 run (Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00
-to ISR3-DW-09, LibKa0s v1.117.0). Same client and ForeverDB setup as above; ITEM-SEARCH-39 and 40
-also want the ForeverDB_Full addon installed. Where a check here contradicts an earlier ITEM-SEARCH
-row (the tooltip's title and rule, the quest marks, the recipe glyphs, a creature's red, the sort
-arrow, the vendor price, the key over the same item and over a chat link, the settings rows), this
-one is current, and each older row says so where it differs.
-
-**ITEM-SEARCH-31. One glyph size, a gray two-way arrow, the inset (items 1, 2, 12).** Hover Linen
-Cloth, then show it in the Item Search window's Crafting tab → a recipe that still skills up has the
-same thick up arrow, in its orange, yellow or green, at the same size in the tooltip and in the
-table; a known recipe with no skill-up shows a gray two-way arrow (↔), and one you don't know the
-dark gray padlock. The glyph column sits off the table's left edge with the glyph centered in it, and
-on every tab the first column starts a little in from the edge (the stripes and the hover wash still
-run the full width). Fail: two arrow sizes, a dash, or a column touching the edge. (Superseded in
-part by ITEM-SEARCH-55, owner feedback round 4: no skill-up is now a thick gray dash, not the two-way
-arrow.) Result:
-
-**ITEM-SEARCH-32. Clickable column titles and LootHistory's triangles (items 5, 11).** On any tab,
-move the pointer over a column title → it lights up in the link color, a tooltip names the column
-and ends `Click: sort by <title>; click again to reverse`, and a faint triangle shows the sort a click
-would give. Click → the table sorts by it, with a solid triangle (up ascending, down descending) as
-tall as the title's text; click again → it flips and the triangle turns over. The pin, glyph and mark
-columns have no title and do not react. Switch skin → the triangle repaints in the header's color.
-Result:
-
-**ITEM-SEARCH-33. Recipe skill levels in the tooltip (item 4).** Hover Peacebloom (or any reagent of
-a profession you have) → each Crafting row reads the recipe on the left and its skill levels on the
-right, such as `1 40 55 70`, each number in its skill-up color (orange, yellow, green, gray), the same
-numbers the window's Skill column shows (superseded by ITEM-SEARCH-50, 2026-11-26: the orange start
-always, your band bracketed and the rest dimmed); with recipes from two professions shown, ` · <Profession>`
-follows in a muted tone (superseded by ITEM-SEARCH-49, 2026-11-26: the profession in its own color). Settings › Item Search › Item tooltip: untick Show recipe skill levels → the
-right side is the profession alone again. Result:
-
-**ITEM-SEARCH-34. The block's head: the line and the label (items 14a, 14b).** Hover any item → the
-block has no `Drop Watcher · Item Search` title. A thin dim-gold line runs across the tooltip, about
-8 pixels in from each edge, one pixel tall, over an empty line; under it `Drop Watcher` in the muted
-gold at the left, the badge at the right (superseded by ITEM-SEARCH-52, 2026-11-26: the badge right
-after the label). Hold Shift over gear so the tooltip widens for the
-comparison → the line stays 8 pixels in from both edges. Untick Separator line → the line and its
-empty line go and `Drop Watcher` stays. The line never makes the tooltip wider than its text.
-Result:
-
-**ITEM-SEARCH-35. The game's quest marks, and the ready state (item 13).** In the tooltip and the
-Quests tab: a quest not picked up that your level allows shows the game's yellow `!`; one your level
-is too low for the same `!`, dimmed; one in your log not yet done a gray `?`; one in your log with
-its objectives done (not turned in) a green `?`, its Status reading `Ready to turn in`, sorted before
-the rest of your log; one turned in a green check with no box. Every mark is the glyphs' size.
-**Probe** (`forever-probes.md` P-QREADY and P-GOSSIP): `/dump C_QuestLog and C_QuestLog.ReadyForTurnIn, C_QuestLog and C_QuestLog.IsComplete, GetQuestLogTitle`
-on Forever, and record which exist, which one answers true for a finished quest, and whether the
-three GossipFrame textures draw. Result:
-
-**ITEM-SEARCH-36. Rank colors and no test rows (item 6).** Show Linen Cloth's Drops from → normal
-creatures white, elites gold, rares silver, rare elites a pale blue, bosses purple, in both the Source
-and the Type column (Type reads Creature, Elite, Rare, Rare Elite or Boss); objects white, containers
-in their quality color; no creature is red. The tooltip's Drops from and Skinned from rows and the
-Skinned from tab's Creature use the same colors (superseded by ITEM-SEARCH-47, 2026-11-26: the Type
-column alone is colored, each type its own color; every Source and creature name is plain). `TWO-SOLUTION TEST` and any other test, `(DND)`,
-`UNUSED` or `[PH]` source are gone from every tab (with `/dw debug on`, the item's first look logs
-how many were left out). Result:
-
-**ITEM-SEARCH-37. Gathered from (item 7).** Show Peacebloom → a Gathered from tab after Drops from:
-one `Peacebloom` node (Herbalism, skill 1) and School of Fish (Fishing, a dim dash for its skill),
-with zones, chances and pins; Drops from no longer lists them. Show Copper Ore → the Copper Veins
-under Mining with their skill; with Mining below a vein's skill, its Skill reads red. Its Filter
-mark offers Herbalism, Mining, Fishing, Only my professions and Only my zone, and the rows you can
-gather come first. The tooltip has a Gathered from section, `<Profession> <skill> · <chance>` per
-row (the profession in its own color since ITEM-SEARCH-49, 2026-11-26). Check a few skills against the node's own "Requires Herbalism N" tooltip in the world and note
-any that differ. Result:
-
-**ITEM-SEARCH-38. Recorded prices and "<Side> only" (item 8).** Visit a vendor and look at its
-wares, then search one of them → Sold by shows that vendor's price, and its row tooltip says `Seen
-here <date>` (and `for N` on a stack). A vendor you never visited shows ForeverDB's price
-(`Recorded by ForeverDB`) or a dim dash whose tooltip says to open the vendor once. On an Alliance
-character, a Horde vendor's Faction reads `Horde only` in red, and its tooltip explains that only
-Horde characters can buy there and that Only my faction hides it (and the same the other way round);
-the tooltip's Sold by row says the same (superseded by ITEM-SEARCH-53, 2026-11-26: with Hide the
-other faction's vendors on, the default, the tooltip leaves such a vendor out and counts it, and the
-window's Only my faction starts on; as written here with the setting off). Untick Record vendor prices, visit another vendor → nothing
-new is recorded. Result:
-
-**ITEM-SEARCH-39. Spots from world coordinates (items 8, 10).** Show Linen Cloth's Sold by → Maria
-Lumere, Hula'mahi and Selina Weston (or the vendors your build lists) show Stormwind City, The Barrens
-and Tirisfal Glades with pins, and a pin's waypoint leads to the vendor. A source with no spot at all
-says `No known spawn` in its row tooltip. **Probe** (`forever-probes.md` P-W2M): for one such
-vendor, run the snippet there and record whether `C_Map.GetMapPosFromWorldPos` exists and whether it
-names the same map within about 1%. Result:
-
-**ITEM-SEARCH-40. ForeverDB_Full on demand (items 8, 10).** With ForeverDB_Full installed and Load
-ForeverDB (Full) on When the Item Search window opens, `/dw debug on`, `/reload`, then open the
-window → it loads once: the footer reads `ForeverDB <version> · loaded · Full`, the debug log names
-the load's MB and ms (record them here and in `forever-probes.md` P-FULL), and more Sold by and
-Drops from rows have zones and pins. Hovering items before the window opens never loads it. `/reload`,
-enter combat, open the window → no load until combat ends, then it loads. Load ForeverDB (Full) on
-Never, `/reload`, open the window → no load. With ForeverDB_Full not installed → the row is grayed
-out and its tooltip says why. Result:
-
-**ITEM-SEARCH-41. The key: a hover shows, no hover toggles (item 9).** Alt-Ctrl-D over an item → the
-window opens on it; again over the same item → it stays open on the same tab; over a different item
-→ it switches. With the pointer over nothing → the key toggles the window. Click a chat link so its
-tooltip stays pinned, move the pointer off every item, press the key → the window toggles; the
-pinned link is ignored. Result:
-
-**ITEM-SEARCH-42. The Keep / Hold / Sell / Toss badge (item 14c).** With the badge on, hover: a quest
-item a quest in your log needs → `Keep` with a score and a reason line naming the quest; gray junk →
-`Sell` with `Sells for …`; a reagent of a profession you have → Keep or Hold by its recipes' colors,
-the reason naming the profession; an item no quest, recipe or vendor wants → Toss only with High or
-Medium confidence. After a fresh login, before opening your profession window, hover a reagent →
-Medium or Low with the hint `Open your profession window to rank recipes`, and never Toss
-(superseded by ITEM-SEARCH-52, 2026-11-26: the badge shows no confidence tier, and the hint carries no
-tier word); hover
-unwanted gear while Pawn is still scoring (the hint `Pawn is still scoring`) → Hold, never Toss. Untick
-Explain the badge → the reason lines go, the badge stays; untick Show the Keep / Hold / Sell / Toss
-badge → `Drop Watcher` stands alone and Explain the badge grays out. Drop Watcher never moves or
-deletes anything. Result:
-
-**ITEM-SEARCH-43. No hitch, and the settings page (all items).** Hover many items quickly with every
-section on, the badge and its reasons on → no hitch. Settings › Item Search › Item tooltip's Tooltip
-block, top to bottom: Add Item Search to item tooltips, Comparison tooltips too, Rows per section,
-Show the key hint, Only while holding Shift, Separator line, Show the Keep / Hold / Sell / Toss badge,
-Explain the badge (grayed out while the badge is off), Show recipe skill levels; then Tooltip and
-window (with Hide the other faction's vendors under Only professions you know since ITEM-SEARCH-53,
-2026-11-26); then Sections with Gathered from after Drops from, and Section order with Gathered from after
-Drops from (also on a profile that stored an order before this build). Item Search window: Enable
-the Item Search window, Record vendor prices, Load ForeverDB (Full), then the bars. Every row is
-grayed out where its prerequisite is off. Defaults puts them all back. Result:
-
-**ITEM-SEARCH-44. Three rows per section by default (ISR3-DW-07).** On a profile that never moved
-Rows per section, Settings › Item Search › Item tooltip → Rows per section reads 3 (1 to 20). Hover an
-item with more than three entries in a section (Linen Cloth's Drops from and Crafting) → every section
-(Drops from, Gathered from, Sold by, Quests, Crafting, Skinned from) shows at most 3 rows, then
-`and N more`. Set Rows per section to 8 → up to 8 show; `/reload` → still 8. Defaults → back to 3. A
-profile that stored another count before this build (say 10) keeps it. One that chose exactly 5, the
-old default, stored nothing (AceDB keeps no value equal to the default), so it now reads 3. Result:
-
-**ITEM-SEARCH-45. Where a recipe you don't know is learned (ISR3-DW-08).** On a Cooking character
-that does not know Roast Raptor, open the Item Search window on Raptor Flesh (`/dw search 12184`), with
-ForeverDB loaded → the Crafting tab: each recipe you don't know says where it is learned in its Status
-instead of `Not known`: Roast Raptor names its recipe item's best source (`Sold by <vendor> · <zone>`,
-else `Quest reward: <quest>`, else `Drops from <source> · <zone>`, else `World drop`); a recipe no item
-teaches says `Trainer`. Known recipes still say `Known`, and one you need more skill for still says
-`Learn at N`. Hover the Roast Raptor row → its tooltip (to the right of the row) lists Recipe item:
-Recipe: Roast Raptor, then every Sold by, Quest reward and Drops from line (at most 6 of each, then
-`and N more`) and the two hints; hover a `Trainer` row → Learn: from a profession trainer. Click the
-Roast Raptor row → the window shows Recipe: Roast Raptor, with its own Sold by or Drops from tab;
-shift-click it → the recipe item's link in chat. The item tooltip's Crafting section is unchanged (no
-source). Without ForeverDB (disable it, `/reload`) the row's Status is the recipe item's name and its
-tooltip says ForeverDB is not loaded. Result:
-
-**ITEM-SEARCH-46. Every Item Search tooltip opens where the Ka0s rule puts it (ISR3-DW-09).** With
-ForeverDB loaded, open the Item Search window on Raptor Flesh (`/dw search 12184`), Crafting tab, the
-window in the screen's left half. Hover a Makes cell for an item the client has not loaded yet (its
-tooltip first reads Retrieving item information, as Roast Raptor's did in the owner's Image #115) →
-the item's tooltip opens to the right of the window, its top level with the row, and stays there once
-the item loads and the tooltip grows; it never jumps to the screen's top right or over the window. Move the window to the screen's right
-edge and hover it again → it opens left of the window instead. The same for a match on the left, the
-header's icon and name, a row on every tab, a pin and a column title: each beside the window, level
-with its row. Hover a tab, Clear, the section header's Filter, Sort and Reset, the My professions
-chip, the matches' Sort, and the title bar's settings and close → each tooltip sits centered just
-above its control. Hold Shift over a Makes cell that makes gear → the comparison tooltips open
-further out on the same side, never back over the window. Hover Drop Watcher's waypoint arrow → its
-tooltip opens beside the arrow. Result:
-
-### Item Search owner feedback round 4
-
-The owner feedback round 4 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`,
-R4-DW-01 to R4-DW-09, and R4-DW-11 from its addendum A1; each row names its smoke id from that bundle's manifest). Same
-client and ForeverDB setup as above, on a character with Alchemy and Herbalism (Peacebloom is the
-owner's example item). Where a check here contradicts an earlier ITEM-SEARCH row (the drop source
-colors, the skill levels, the profession names, the badge, the other faction's vendors, the quest
-rows, the no-skill-up glyph), this one is current, and each older row says so where it differs.
-
-**ITEM-SEARCH-47. Each Type in its own color, names plain (R4-DW-01, R4-DW-SM1).** Show Linen
-Cloth (or any item with creature, elite, rare, object and container sources) in the Item Search
-window's Drops from tab → the Type column reads each type in its own color: Creature white, Elite
-gold, Rare teal, Rare Elite pale blue, Boss rose, Object (and `Object ×N`) tan, Container lavender;
-the World drop row's dash stays dim. Every Source name is plain white, whatever its rank or quality.
-The tooltip's Drops from and Skinned from rows and the Skinned from tab's Creature column are plain
-too. No Type color looks like a profession's (ITEM-SEARCH-49), and each reads clearly on the dark
-background. Result:
-
-**ITEM-SEARCH-48. Incense Candle reads Herbalism (R4-DW-03, R4-DW-SM3).** Show Peacebloom, Crafting
-tab → Incense Candle's Profession reads Herbalism and its Skill shows its levels (yellow and gray
-from 20), not a dash; Show Copper Ore → the smelting recipe reads Mining with its levels. The
-tooltip's Crafting rows say the same, and with Only professions you know on, Herbalism and Mining
-recipes count as yours when you have the profession. A recipe Drop Watcher knows only from your
-profession window (not in the shipped table) shows Skill `?`, and its row tooltip says `levels
-unknown: not in the shipped table`. Result:
-
-**ITEM-SEARCH-49. Each profession in its own color (R4-DW-04, R4-DW-SM4).** Hover Peacebloom, then
-Linen Cloth → in the tooltip's Crafting rows (the profession alone, or after the skill levels when
-professions mix) and the Gathered from rows, each profession's name has one fixed color: Alchemy,
-Herbalism, Tailoring, First Aid, Cooking and the rest each differ. The window's Crafting and
-Gathered from Profession columns use the same colors. None is orange, yellow, green, gray or red,
-none matches a Type color, none reads as plain white text (Mining is a verdigris teal; it was a pale
-near-white before round 4's review), and each reads clearly on the tooltip. Result:
-
-**ITEM-SEARCH-50. The orange start always, your band bracketed (R4-DW-05, R4-DW-SM5).** With Alchemy
-known, show Peacebloom's Crafting tab → Elixir of Minor Defense's Skill reads `1 55 75 95`: the
-orange start is always there (1 for a trainer recipe). The number where the band your rank is in
-starts is bracketed at full brightness, and the other numbers are dimmed. A recipe whose minimum is
-above your rank shows its start in red. Recipes you don't know get the same cue. No rank number is
-shown. Hover Peacebloom → the tooltip's Crafting rows match the window. Skill up once (or train) and
-hover again → the bracket moves with your band. Result:
-
-**ITEM-SEARCH-51. No flicker on the separator (R4-DW-06, R4-DW-SM6).** With Separator line on and
-other tooltip addons loaded (ItemTree, if you use it), hover Peacebloom in your bags and keep the
-pointer still for several seconds, then move between bag slots holding the same item and different
-items → the thin line above `Drop Watcher` never flickers, blinks or jumps, and no second dim line
-shows anywhere in the tooltip. Shift-hover gear for comparison tooltips → the same. Untick Separator
-line → the line goes for good. Result:
-
-**ITEM-SEARCH-52. The badge: two filled boxes right after the label (R4-DW-07, R4-DW-SM7).** Hover
-Peacebloom → `Drop Watcher`, then right after it a filled badge: the left box in the verdict's bright
-color holding the lock and the word (`Keep`), the right box in a darker shade of the same color
-holding the score (`65` or whatever yours reads). No `· High`, `Medium` or `Low` anywhere. The
-tooltip is wide enough for the badge. The reason lines add up: a Keep 65 names its two biggest parts
-and `Easy to buy again` (the part that pulls it down). Hover a Hold, a Sell (gray junk) and a Toss
-item → Hold yellow, Sell amber, Toss red. Before opening your profession window after a login, the
-fix hint (`Open your profession window to rank recipes`) still shows, without a tier word, and the
-badge never says Toss then. Switch skin → the badge keeps its colors. Result:
-
-**ITEM-SEARCH-53. The other faction's vendors hidden by default (R4-DW-08, R4-DW-SM8).** On a fresh
-profile, Settings › Item Search › Item tooltip → under Tooltip and window, Hide the other faction's
-vendors, on, right below Only professions you know (never grayed out). On an Alliance character,
-hover Peacebloom → Sold by lists Maria Lumere (with her price only if you recorded one or ForeverDB
-has one; no estimate), then a dim `+2 other-faction vendors` (Hula'mahi and Selina Weston are
-Horde's); an item whose vendors are all the other faction's shows the Sold by heading and that
-line alone; one other-faction vendor reads `+1 other-faction vendor`. Open the window on it, Sold by
-tab → Only my faction is on (the funnel filled, no Reset), only Maria Lumere listed; turn it off →
-the Horde vendors show with `Horde only` in red; Reset → Only my faction is on again. Untick Hide the
-other faction's vendors → the tooltip lists every vendor with `Horde only` in red and no count, the
-open window's filter turns off at once, and Reset keeps it off. A vendor ForeverDB names no faction
-for always shows. On a Horde character, the same the other way round. `/reload` → the setting
-holds. Result:
-
-**ITEM-SEARCH-54. Quest rows: Title (Level) and Giver - Zone (R4-DW-09, R4-DW-SM9).** Hover
-Peacebloom → the Quests row reads the mark, then `My First Alchemy Set (10)` on the left, the title
-and its level in the quest's difficulty color (yellow near your level, gray far below, red well
-above), and on the right the giver and their zone, muted, such as `<Giver> - <Zone>` (the owner's
-example: `Odd Child - Westfall`); no `level 10` on the right any more. A quest with no known giver
-has nothing on the right; a giver with no known spawn shows the name alone; a test-named giver is
-skipped for the next one. Open the window on Peacebloom, Quests tab → the Giver column reads the
-same `<Giver> - <Zone>`, with ` - ` instead of the old ` · `, and the same giver as the tooltip. Hover
-quickly over many quest items → no hitch. Result:
-
-**ITEM-SEARCH-55. No skill-up is a thick gray dash, in both homes (R4-DW-02, R4-DW-SM2).** After a full
-client restart (a new texture file), on a character whose rank leaves some known recipe gray (or one
-with no skill levels), hover the item, then show it in the Item Search window's Crafting tab → that
-recipe's glyph is a thick light gray dash with rounded ends, as wide as the skill-up arrow beside
-other rows and one solid line (not a blurred pair of rows), the same in the tooltip and in the
-table. The skill-up arrow and the padlock are unchanged. Fail: the old two-way arrow (↔) in either
-home, a thin or blurred line, a blank where the dash should be, or a dash of a different width
-between the tooltip and the window. Result:
-
-**ITEM-SEARCH-56. The verdict panel under Matches, while you hold the item (R4-DW-11, R4-DW-SM11).**
-On a character with Alchemy and Herbalism and a few Peacebloom in the bags, open the Item Search
-window on Peacebloom → at the bottom of the left column, under Matches, a `Verdict` header with
-`You have <n>` on its right, then the same two-box badge as the tooltip's (the word with its icon on
-the bright box, the score on the darker one), then one line per part that counted, each with its
-points on the right, in this order: the quests one by one, your known recipes by color
-(`Known recipes, orange skill-up (2)`), the recipes you could learn, other professions, gear, the
-dampers (`Easy to buy again -20`), a cap when one was hit (`Crafting counts 50 at most`), the poor
-cap or the quest-item floor when they apply; then `Score` with the badge's number, then the line the
-word comes from (`Keep from 50`). The points add up to the score, nothing reads 0, and no `High`,
-`Medium` or `Low` anywhere. Hover Peacebloom → the badge's word and score are the panel's. The
-Matches list ends above the panel and still shows at least five rows; drag the window down to its
-smallest → the panel gets shorter and scrolls its lines, the matches keep five rows. Put every
-Peacebloom in the bank and close the bank → the panel stays (`You have <n>`, the bank's count). Sell
-or destroy them all → within a second the panel goes and the Matches list runs down to the footer
-again; loot one → it comes back. Show an item you hold none of → no panel. Before opening your
-profession window after a login, a recipe item's panel ends with the plain hint `Open your
-profession window to rank recipes`. Equip a weapon you have no other copy of and show it → no
-panel (worn is not held); with a second one in the bags → `You have 1`. Show a gear item from your
-bags that reads `Upgrade for you`, then equip something better in that slot → within a second the
-panel's gear line and score change, and hovering the item shows the same word and score on the
-tooltip's badge. Show an item whose info is still loading on a fresh login, then another item, then
-come back → the panel works it out again rather than staying on `Item info is still loading`.
-Looting, moving bags and hovering items with the window open → no hitch. Result:
-
-### Item Search owner feedback round 5
-
-The owner feedback round 5 run (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND5/`,
-R5-DW-01 to R5-DW-11). Same client, ForeverDB and character setup as round 4 above (Alchemy and
-Herbalism, a few Peacebloom in the bags). Where a check here contradicts an earlier ITEM-SEARCH row
-(the badge, the skill levels, the crafting rows, the verdict panel's lines), this one is current.
-
-**ITEM-SEARCH-57. Money in gold, silver and copper coins (R5-DW-11).** Hover a gray junk item a
-vendor buys → the badge says Sell and its reason reads `Sells for` then the amount with the coin
-icons (for 30 copper: `30` and the copper coin; for 1 silver 20 copper: `1`, the silver coin, `20`,
-the copper coin), never a bare number. Open the Item Search window on an item with a recorded or
-ForeverDB vendor price, Sold by tab → the Price column and the tooltip's Sold by rows show coins
-the same way. Fail: any price or `Sells for` amount as a bare number, or a blank where a coin should
-be. Result:
-
-**ITEM-SEARCH-58. Your band first, the levels you passed left out (R5-DW-08).** With Alchemy known,
-show Peacebloom's Crafting tab → a recipe whose orange band you are in reads `[1] 55 75 95`, as
-before; a recipe you have passed into gray reads its gray start alone (the owner's Incense Candle at
-Herbalism 20 or more: `[20]`, not `1 20 20 [20]`); one in yellow or green starts at its bracketed
-number with the higher ones dimmed after it. A recipe whose start is above your rank still shows
-every number, the start red. Hover Peacebloom → the tooltip's Crafting rows match the Skill column.
-This replaces ITEM-SEARCH-50's "the orange start is always there". Fail: any number left of the
-bracket, or a bracket that is not your band. Result:
-
-**ITEM-SEARCH-59. Crafting rows as a table, every row naming its profession (R5-DW-09, R5-DW-10).**
-Hover Peacebloom (Alchemy, First Aid and Herbalism recipes), then Linen Cloth → under Crafting, each
-row reads the glyph and the recipe's name from the left, the glyphs in one column and the names
-starting at one edge; on the right the skill levels, ending at one edge, then the profession (Cooking,
-Alchemy, First Aid, Herbalism...) in its own color, right-aligned at the tooltip's right edge. Every
-row names its profession, including when all rows share one. The professions line up with each other
-and the skill levels line up with each other, whatever the profession names' lengths. Untick Show
-recipe skill levels → the professions stay in their column. Keep the pointer still for several
-seconds and move between bag slots → no flicker, no profession left behind on an item with no
-Crafting rows. With a larger tooltip font (an addon or a skin that enlarges the tooltip's text), hover
-an item with a Leatherworking or Blacksmithing recipe → the name is whole (R5-REV). Fail: a profession
-missing, glued to the skill levels (`95 · Alchemy`), overlapping them, cut short (`Leatherwor...`), or
-ragged from row to row. Result:
-
-**ITEM-SEARCH-60. The badge: one smooth pill that never covers the label (R5-DW-01, R5-DW-02).**
-After a full client restart, hover Peacebloom → `Drop Watcher`, then a gap, then one pill: the lock
-and `Keep 65` (or your score) in dark ink on a green fill, the corners smoothly rounded (no steps or
-jagged edges), the text clean with no outline or shadow, the pill no taller than the line. The
-`Drop Watcher` text is never under the pill. Set the UI scale to its lowest and its highest
-(Options → Graphics → UI Scale) and hover again each time → still a gap, still no overlap. Hover a
-Hold (yellow fill), a Sell (amber) and a Toss (gray) item → each in dark readable ink. Open the Item
-Search window on a held item → the verdict panel's badge is the same pill. Compare with ItemTree's
-badge at the bottom of the tooltip if you use it → a similar look. Switch skin → the text takes the
-skin's font and keeps its colors. This replaces ITEM-SEARCH-52's two boxes. Fail: the label under
-the pill, square or jagged corners, white or shadowed text, or a pill sticking out of the tooltip's
-right edge. Result:
-
-**ITEM-SEARCH-61. Quests you could pick up as a count (R5-DW-03).** On a character that has not
-picked up the quests Peacebloom serves (My First Alchemy Set, or any quest item's quest you could
-take), open the Item Search window on a held Peacebloom → the verdict panel reads `Quests you could
-pick up (1)` with its points (`+35`), not the quest's name; with two such quests, `(2)` and `+70` on
-one line. A quest already in your log still reads by name (`In your quest log: ...`). Hover it → the
-tooltip's reason says the same count. Result:
-
-**ITEM-SEARCH-62. The panel's numbers in color, no Score line, the verdict in plain words (R5-DW-04,
-R5-DW-05, R5-DW-06).** Open the Item Search window on a held Peacebloom → each part's points read
-green when they add (`+35`, `+60`) and red when they take away (`-20`, `-80`); no `Score` line under
-the parts (the score is in the badge); then one muted line in plain words: `Keep: a score of 50 or
-more` (a Hold reads `Hold: a score of 20 to 49`, a Sell `Vendor: a score under 20, and a vendor buys
-it` since R5-DW-15, or its Auction line, ITEM-SEARCH-66). No `Keep from 50` anywhere. Result:
-
-**ITEM-SEARCH-63. A (?) that explains the score (R5-DW-07).** Open the Item Search window on a held
-Peacebloom → a small (?) icon sits right after the verdict panel's badge. Hover it → a tooltip,
-`How the score works`, lists what adds (quests in your log +60 each, quests you could pick up +35
-each, a quest it starts, your recipes by skill-up color, recipes you could learn, other professions,
-gear, a new collectible), what takes away (easy to buy again -20 with its coin price, every use gray
-or done -15, the poor-quality cap and the quest-item floor), the verdict bands (Keep 50 or more, Hold
-20 to 49, under 20 Auction, Vendor or Toss, with the Auction rule, ITEM-SEARCH-66) and the confidence rule. The tooltip fits on screen and goes when
-the pointer leaves. Result:
-
-**ITEM-SEARCH-64. Auction or Vendor from Auctionator's prices (R5-DW-13, R5-DW-14, R5-DW-15).** With
-Auctionator installed and a full auction house scan done (open the house, scan, close it), hover a
-gray or white item a vendor buys whose auction price is well above its vendor price (a cloth or an
-ore that sells for more on the house) → the badge reads `Auction <score>` in a periwinkle blue with
-the gavel icon, and the reason line under it reads `Auction ~<coins> after the cut and
-deposit, vendor <coins>`, both in coin icons. Hover a vendor-trash item Auctionator prices at or
-under its vendor price → `Vendor <score>` in amber with the coins, and the reason `Vendor <coins>,
-auction ~<coins> after the cut and deposit`. An item Auctionator has no price for, or a soulbound or
-quest item → `Vendor`, with `Sells for <coins>`. Keep, Hold and Toss look as before. Result:
-
-**ITEM-SEARCH-65. The deposit and the cut match the game (R5-DW-14; the deposit rates are assumed).**
-At the auction house on WoW Forever, put an item in the sell slot and read the client's own deposit
-for 2, 8 and 24 hours against its vendor price → Drop Watcher assumes 5%, 20% and 60% of the vendor
-price (at least 1 silver a listing) and a 5% cut on a sale. Note any client value that differs in
-the Result, so `C.ITEM_SEARCH.AUCTION` can be corrected. Result:
-
-**ITEM-SEARCH-66. The verdict panel shows both prices; the (?) explains the rule (R5-DW-15).** Open
-the Item Search window on a held item the badge says Auction for → under the panel's word line
-(`Auction: a score under 20, and an auction beats the vendor by over 10%`), the lines `Vendor price`,
-`Auction price (Auctionator)` and `Auction after the cut and deposit`, each with its coins on the
-right, the net in the Auction blue. On a Vendor item with no price, `No auction price known
-(Auctionator)`. Hover the (?) → `Under 20: Auction or Vendor when a vendor buys it, else Toss.` and
-the rule with the live numbers (`less the 5% cut and the 8-hour deposit (20% of the vendor price),
-beats the vendor by over 10%`). Result:
-
-**ITEM-SEARCH-67. The Auction prices settings (R5-DW-16).** Settings → Item Search → Item tooltip →
-Auction prices: Compare with Auctionator prices (on), Auction duration (2, 8 or 24 hours, 8 picked),
-Auction house cut % (5) and Auction must beat vendor by % (10). With Auctionator disabled in the
-AddOns list and the UI reloaded, all four are dimmed and their tooltips say they need Auctionator,
-and every Sell reads Vendor. With it loaded: set the margin to 200 → the Auction item from
-ITEM-SEARCH-64 turns Vendor on the next hover; set it back → Auction again; change the duration to
-24 hours → the (?) help says the 24-hour deposit (60%); untick the comparison → the three rows dim
-and every Sell is Vendor. Result:
-
-### Item Search owner feedback round 6
-
-The owner feedback round 6 run (Ka0sAddonsCommonTasks `docs/2026-11-27-OWNER_FEEDBACK_ROUND6/`,
-R6-DW-01 to R6-DW-08 and GLYPH-02). Same client, ForeverDB and character setup as round 5 above. Where a check
-here contradicts an earlier ITEM-SEARCH row, this one is current.
-
-**ITEM-SEARCH-68. A smaller badge that never covers the line under it; the (?) its size
-(R6-DW-02).** Hover an item whose badge has a reason line under it (Ruined Leather Scraps, or any
-Auction or Vendor item) → the pill is no taller than its line, and never touches or covers the
-reason line below it or the line above it. Set the UI scale to its lowest and its highest and hover
-again → the same. Open the Item Search window on a held item → the verdict panel's pill is the same
-size as the tooltip's, and the (?) beside it is as tall as the pill (no larger). This replaces the
-pill size of ITEM-SEARCH-60. Fail: the pill reaching into the next line, or a (?) taller than the
-pill. Result:
-
-**ITEM-SEARCH-69. The (?) help in sections (R6-DW-03).** Open the Item Search window on a held item
-and hover the (?) beside the verdict panel's badge → `How the score works`, the line on what the
-score is, then four sections, each after a blank line: `Adds:`, `Takes away:`, `The verdict:` and
-`Confidence:`, each header in the muted gold of the tooltip's section headers, and every entry under
-it on its own line starting with an indented gold `·`. The wording is the same as before (ITEM-SEARCH-63),
-apart from the no-vendor-price Auction rule (ITEM-SEARCH-72). A long entry wraps onto the next line
-from the tooltip's left edge. Fail: a header in white, an entry with no bullet, or two sections with
-no blank line between them. Result:
-
-**ITEM-SEARCH-70. An unknown rate is a ? (R6-DW-04).** Open the Item Search window on an item some
-of whose sources ForeverDB has no rate for (the owner's Ruined Leather Scraps, or any item whose
-Drops from rows read `rate un...` before) → the Chance column reads a dim `?` with no bar for those
-rows, never `rate unknown` cut short; hover such a row → its tooltip's Chance line reads `rate
-unknown`. The same on the Gathered from and Skinned from tabs. Hover the item (Rows per section
-raised so the row shows) → its Drops from and Skinned from rows read a dim `?` on the right, and a
-Gathered from row ends `· ?`. Known rates read their percent as before. Fail: `rate unknown` or
-`rate un...` anywhere in a column or on a tooltip row's right. Result:
-
-**ITEM-SEARCH-71. A resize moves the verdict panel, never the Matches list (R6-DW-05).** Open the
-Item Search window on a held item → the Matches list is five rows tall and the verdict panel fills
-the rest of the left column, showing more lines than before (the owner's Liferoot: the parts, the
-word line, `Vendor price`, `Auction price (Auctionator)` and `Auction after the cut and deposit`, all
-without scrolling at the default size). Drag the corner down to make the window taller → only the
-panel grows, the Matches list stays five rows; drag it up to its smallest → the panel shrinks and
-scrolls its lines, the Matches list still five rows. Close and reopen → the window keeps the size
-you left it at. Show an item you do not hold → no panel, the Matches list down to the footer. This
-replaces the panel's 8-line height in the earlier panel checks. Fail: the Matches list growing or
-shrinking on a resize while the panel shows, or fewer than five match rows. Result:
-
-**ITEM-SEARCH-72. No vendor price but an auction price: Auction, not Toss (R6-DW-06).** With
-Auctionator loaded and a recent scan, hover an item no vendor buys (no `Sell Price` line) whose
-score is under 20 and that Auctionator prices above about 1 silver (a trade good or a crafting
-reagent with no vendor price; not soulbound) → the badge reads `Auction <score>` with the gavel, and
-the reason line `Auction ~<coins> after the cut and deposit; no vendor buys it`. Open the Item Search
-window on it while you hold one → the panel's word line reads `Auction: a score under 20, no vendor
-buys it, and an auction brings something after the cut and deposit`, then `No vendor buys it` (no
-vendor price in coins), `Auction price (Auctionator)` and `Auction after the cut and deposit`. Hover
-the (?) → under The verdict: `Under 20: Auction or Vendor when a vendor buys it. When none does,
-Auction if an auction brings anything after the cut and deposit, else Toss.` An item no vendor buys
-that Auctionator prices at under about 1 silver, has no price for, or a soulbound one → `Toss` as
-before; untick Compare with Auctionator prices → `Toss` again. Fail: a Toss for an unbound item Auctionator prices well above 1 silver, or Auction for a
-soulbound one. Result:
-
-**ITEM-SEARCH-73. The score says how sure: Liferoot reads Auction 100, a gray Vendor 80 (R6-DW-07,
-R6-DW-08).** With Auctionator loaded and a recent scan, hover Liferoot (the owner's image 45: a
-vendor price of 75 copper, Auctionator's well above it) → the badge reads `Auction 100` with the
-gavel, never `Auction 0`. Open the Item Search window on it while you hold one → under `Why this
-word` (a gold header) its parts as before (`Other professions use it`, its cap, `Easy to buy again`,
-`Every use is gray or done`), then `Use value -26 (Auction, Vendor or Toss under 20)` (no `The score
-is 0 at least` line), the vendor price, Auctionator's price and the net; then a blank line and `How
-sure` (a gold header): `Use value well under 20` 100%, `Auction beats vendor by <N>% (needs over 10%)`
-100% (N about 283 at the owner's price), `Evidence for Auction` 100%, `Data known` 100%, `Score` 100.
-Hover a gray (poor) item a vendor buys, with Compare with Auctionator prices unticked → `Vendor 80`;
-its How sure reads `Use value well under 20` 100%, `Compare with Auctionator prices is off` 60%,
-`Evidence for Vendor` 80%, `Score` 80. Tick it again → a gray Auctionator has no price for reads
-`Vendor 90` (`Auctionator has no price for it` 80%). A quest item for a quest in your log reads `Keep
-60` or so (`Use value 60, 10 past Keep's 50` 20%); an item whose info is still loading reads a low
-`Hold` such as `Hold 17`. The tooltip's reason lines under the badge are as before. This replaces
-the score's meaning in ITEM-SEARCH-60 to 72 (a use value then; how sure now) and ITEM-SEARCH-72's
-panel word line (`Auction: a score under 20, ...` is now `Use value <U> (Auction, Vendor or Toss
-under 20)`, with `No vendor buys it; an auction brings ~<coins>` under How sure). Fail: a disposal
-badge reading a low number for a clear call, a `0..100` clamp line, or a Score line that disagrees
-with the badge. Result:
-
-**ITEM-SEARCH-74. The (?) help explains both numbers (R6-DW-08).** Open the Item Search window on a
-held item and hover the (?) → `How the verdict and score work`, then `The word comes from the use
-value: ... The score, 0 to 100, is how sure Drop Watcher is of that word.`, then four gold sections,
-each after a blank line: `The use value adds:`, `The use value takes away:` (the same entries as
-ITEM-SEARCH-69), `The word:` (`Keep: a use value of 50 or more. Hold: 20 to 49.`, `A use value under
-20: Auction or Vendor ...`, and the live cut, length and margin) and `The score:` (`Score = evidence
-for the word x data known`, the edges and clear calls, the money part with `beats the vendor by 110%
-or more (it needs over 10%)`, the Hold fallback 25%, and the data-known rule with its 80% hint and
-50% never-Toss bars). Set the margin to 25% → the money entry reads `125% or more (it needs over
-25%)`. This replaces ITEM-SEARCH-69's headers and title and ITEM-SEARCH-72's help wording. Fail: a
-header in white, the old `How the score works`, or a margin that does not follow the setting.
-Result:
-
-**ITEM-SEARCH-75. The help mark and the missing-icon ring (GLYPH-02).** Open the Item Search window
-on a held item → the (?) beside the verdict panel's badge is a filled circle with the `?` cut out
-(Phosphor's question), tinted as before, never the old Open Iconic mark. Search for an item whose
-icon the client has not loaded yet (a fresh item id typed into the box, or right after a `/reload`)
-→ its Matches row and the item header draw an outlined ring with a `?` (Game-icons.net's help) until
-the icon arrives; the Drops tab's item buttons the same for a drop with no icon yet. Fail: a green
-square or an empty box in place of either mark. Result:
-
-**ITEM-SEARCH-76. A corner drag is smooth (R7-DW-01).** Open the Item Search window on an item with a
-long Drops from list (Linen Cloth: about 395 sources) that you hold, so the verdict panel shows. Drag
-the corner grip in circles for a few seconds → the window follows the cursor with no stutter, the
-table's columns widen and narrow with it, and the verdict panel grows and shrinks with the height.
-Let go → the table repaints once (names longer or shorter to fit), nothing jumps, and the size is
-kept after `/reload`. Fail: the drag lags behind the cursor, or a column stays at the old width after
-you let go. Result:
-
-**ITEM-SEARCH-77. Every verdict panel line has a tooltip (R7-DW-02).** On the same item, hover each
-line of the verdict panel in turn → each shows a title and a few plain lines: the headers what their
-section means, each part the rule behind it with its number (Quests you could pick up: "adds 35"; a
-cap such as Other professions count 9 at most: "Taken off here: N"), the use value line its bands,
-each How sure line how it is worked out, Data known its weights. On an item to sell, the auction
-lines name your own cut, length and margin (change the margin in Settings and hover again: the number
-follows). The blank line between the sections has no tooltip. Fail: a line with no tooltip, or a
-number that disagrees with the (?) help. Result:
-
-**ITEM-SEARCH-78. The first section reads Why this verdict (R7-DW-03).** The verdict panel's first
-gold header reads **Why this verdict**, never "Why this word". Result:
+**FOREVER-21. No Item Search left (DropWatcher#19).** Client: WoW Forever, then Retail. Item Search
+is now its own addon, Ka0s Item Search (https://github.com/tusharsaxena/ItemSearch); Drop Watcher
+keeps nothing of it. With Ka0s Item Search NOT installed and ForeverDB installed, log in on a
+character whose profile used Item Search, and `/reload`. Hover items in your bags, a chat link and
+the loot window → no Drop Watcher block under any item tooltip, and
+`/dump C_AddOns.IsAddOnLoaded("ForeverDB")` still answers `false` a minute after login: Drop
+Watcher loads nothing of it. The main window's title bar → lock, layout toggle, minimize, settings
+and close, no magnifier. `/dw search` → the unknown-verb line, and `/dw` lists no `search`. Settings
+→ no Item Search page after Alerts; General › Keybindings → the one Toggle drop feed row; Options →
+Keybindings → Ka0s Drop Watcher → the same one row. `/dw diagnostics` → the schema line reads
+`stored=19 code=19`, and no `itemSearch:` line. `/dump DropWatcherDB.global.itemSearch` and `/dump
+DropWatcherDB.profiles.Default.itemSearch` → `nil`. On Retail, the same title bar, slash list and
+settings pages. Fail: any Item Search surface, ForeverDB loaded, a stored `itemSearch` table, or a
+Lua error. Result:
 
 ## Pending sign-off
 
@@ -5417,11 +4652,7 @@ On 2026-11-24 the owner reported that the checks owed from the LibKa0s #94, #97,
 
 Owed by the seeds and ForeverDB run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-SEEDS_AND_FOREVERDB/`, SF-DW-01, LibKa0s v1.114.0): FOREVER-18, FOREVER-19 and FOREVER-20, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`.
 
-Owed by the Item Search run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH/`, DropWatcher#17, LibKa0s v1.115.0): ITEM-SEARCH-1 to ITEM-SEARCH-18, new. An agent never marks one passed. On 2026-11-25 the owner reported that every check the run owed passed; each one's `Result:` line records it as `Passed (owner, 2026-11-25)`. ITEM-SEARCH-8 and ITEM-SEARCH-13 also note the default key's wrong chord, which the owner's feedback the same day reported and ISF-DW-01 fixes.
-
-Owed by the Item Search feedback run (2026-11-25; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_FEEDBACK/`, ISF-DW-01 to ISF-DW-08 and ISF-REV, LibKa0s v1.116.0): ITEM-SEARCH-19 to ITEM-SEARCH-30, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 7 and 8's key and title, ITEM-SEARCH-10's pins, ITEM-SEARCH-11 and 12, ITEM-SEARCH-13's key, ITEM-SEARCH-14 and 15's rows), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-19 doubles as the probe of how GetBindingAction answers the stored dead chord, and ITEM-SEARCH-26 and 27 (the arrow's map position and facing on Forever) are owed before the run is finalized. An agent never marks one passed.
-
-Owed by the Item Search round 3 run (2026-11-26; Ka0sAddonsCommonTasks `docs/2026-11-25-ITEM_SEARCH_ROUND3/`, ISR3-DW-00 to ISR3-DW-09 and ISR3-REV, LibKa0s v1.117.0): ITEM-SEARCH-31 to ITEM-SEARCH-46, new. Where one contradicts an earlier ITEM-SEARCH row (ITEM-SEARCH-1, 2, 3, 8 and 10, which keep their passes for what they checked then, and the unrun ITEM-SEARCH-21, 23, 25 and 28), the newer row is current, and each older row says so where it differs. ITEM-SEARCH-35, 39 and 40 double as the probes P-QREADY, P-GOSSIP, P-W2M and P-FULL in `forever-probes.md`. An agent never marks one passed.
+Owed by the Item Search split run (2026-11-27; DropWatcher#19, plan task D1): FOREVER-21, new. The ITEM-SEARCH checks went with Item Search; they live on as Ka0s Item Search's own smoke tests. An agent never marks one passed.
 
 ### Review 2026-10-14 (M24) sign-off
 

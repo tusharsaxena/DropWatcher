@@ -608,7 +608,7 @@ function P.GetBagItemGUID(live, bag, slot)
     return live(bag, slot)
 end
 
--- A simulated bag item has no ItemLocation: its level and quality are its link's (core/ItemRead.lua).
+-- A simulated bag item has no ItemLocation: its level and quality are its link's (libs/LibKa0s/VerdictFacts.lua).
 function P.BagItemLevelQuality(live, bag, slot)
     local item = bagItem(bag, slot)
     if not item then return live(bag, slot) end

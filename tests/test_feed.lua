@@ -1108,3 +1108,63 @@ test("filter: a crafting reagent passes by default, rolled on or not; its switch
     pass, reason = gate(cloth, 2)
     assertFalse(pass); assertEqual(reason, "quality", "a Common reagent stays out")
 end)
+
+-- ---------------------------------------------------------------------------------------------
+-- The verdict's opts for the looter and the candidates (Item Search split plan, A2 review)
+-- ---------------------------------------------------------------------------------------------
+
+-- Every opts the kernel is handed for someone other than you, and each scorer the verdict engine
+-- made from a config naming the `weights` setting, on a party whose scorer setting is `weights`.
+local function spyOpts(NS)
+    assertTrue(NS.SchemaRuntime.Set("comparison.scorer", "weights"))
+    assertTrue(NS.SchemaRuntime.Set("comparison.weights", { [62] = { INTELLECT = 1 } }))
+    local made, seen = {}, {}
+    local V, E = NS.VerdictEngine, NS.Evaluate
+    local scorer, evaluate = V.Scorer, E.Evaluate
+    V.Scorer = function(self, cfg)
+        local fn = scorer(self, cfg)
+        if fn and type(cfg) == "table" and cfg.scorer == "weights" and self:ScorerInUse(cfg) == "weights" then
+            made[fn] = true
+        end
+        return fn
+    end
+    E.Evaluate = function(facts, cand, opts)
+        -- your own verdict alone carries heirloomProtect (judgeMe)
+        if type(opts) == "table" and opts.heirloomProtect == nil then seen[#seen + 1] = opts end
+        return evaluate(facts, cand, opts)
+    end
+    return made, seen
+end
+
+local function assertOpts(LF, made, seen, who)
+    assertTrue(#seen > 0, who .. " judged")
+    for _, opts in ipairs(seen) do
+        assertEqual(opts.verdictMode, LF.VERDICT_MODE, who .. ": the client's verdict mode")
+        assertTrue(opts.scorer ~= nil and made[opts.scorer] == true, who .. ": the weights scorer the setting names")
+    end
+end
+
+-- red under: judgeLooter handing evalOpts the feed's whole config, which has no verdictMode,
+-- scorer or weights at its top level (WoW Forever's scoreFirst lost, the scorer setting ignored)
+test("feed: the looter's verdict takes the client's verdict mode and the scorer setting", function()
+    local NS, m, LF = party()
+    local made, seen = spyOpts(NS)
+    m.addItem(link(300), ring(620))
+    brakkLoots(m, 300)
+    brakkWears(m, 630)
+    m.advance(0)
+    assertTrue(only(LF).them ~= nil, "Brakk judged")
+    assertOpts(LF, made, seen, "the looter")
+end)
+
+-- red under: candidateEntry handing evalOpts the feed's whole config
+test("own: each candidate's verdict takes the client's verdict mode and the scorer setting", function()
+    local NS, m, LF = party()
+    local made, seen = spyOpts(NS)
+    m.addItem(link(300), ring(590, T.forever and { bindType = 2 } or nil))
+    brakkWears(m, 580)
+    chat(m, "You receive loot: " .. link(300) .. ".")
+    m.advance(0)
+    assertEqual(only(LF).candidates[BRAKK].status, "ready")
+    assertOpts(LF, made, seen, "a candidate")
+end)

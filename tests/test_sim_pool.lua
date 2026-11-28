@@ -247,8 +247,10 @@ test("sim pool: plain gear is classed from its cheap facts, so a big pool reads 
     m.addItem(look, armor(600, "INVTYPE_HEAD", 5))
     entries[#entries + 1] = { link = reins, itemID = 6901, difficulty = 8 }
     entries[#entries + 1] = { link = look, itemID = 6902, difficulty = 8 }
-    local reads, read = 0, NS.ItemFacts.Read
-    NS.ItemFacts.Read = function(l) reads = reads + 1; return read(l) end
+    -- Each full read the facts cache makes (the verdict engine's instance, core/VerdictSetup.lua).
+    local E = NS.VerdictEngine
+    local reads, read = 0, E.ReadFacts
+    E.ReadFacts = function(self, l) reads = reads + 1; return read(self, l) end
     local byKind, all = P.Extras({ difficulty = 8, entries = entries })
     assertEqual(reads, 2, "the mount and the cosmetic helm alone")
     assertEqual(#all, 2)
@@ -506,7 +508,7 @@ test("sim roster: a party has four members, a raid nine to nineteen, each distin
             assertNil(guids[mem.guid], "distinct GUIDs"); guids[mem.guid] = true
             assertTrue(mem.guid:find("^Player%-%d+%-%x+$") ~= nil, "a client-shaped GUID")
             if T.forever then
-                -- Forever's spec is class-wide and the client's alone (core/ClassDataForever.lua)
+                -- Forever's spec is class-wide and the client's alone (libs/LibKa0s/VerdictClassData.lua)
                 assertNil(mem.specID, "no Retail specID on Forever")
                 assertTrue(CD.CLASS_SPECS[mem.classFile] ~= nil, "one of Forever's nine classes")
             else

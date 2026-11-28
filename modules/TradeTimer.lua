@@ -393,7 +393,7 @@ end
 
 -- ── events, messages and the lifecycle ──────────────────────────────────────────────────────
 
--- BAG_UPDATE_DELAYED is shared with modules/Gear.lua (core/DropWatcher.lua's dispatcher).
+-- BAG_UPDATE_DELAYED is shared with core/VerdictSetup.lua (the engine's gear row) (core/DropWatcher.lua's dispatcher).
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "BAG_UPDATE_DELAYED", "OnTradeTimerEvent" }
 NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { "LOOT_CLOSED", "OnTradeTimerEvent" }
 

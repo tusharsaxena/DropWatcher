@@ -26,7 +26,7 @@ Total.
 - repo: every authored file opens with the bootstrap and a comment naming its path
 - repo: the .pkgmeta has no externals and ignores the dev-only entries
 
-### test_surface_parity.lua (25)
+### test_surface_parity.lua (24)
 
 - parity: the degraded load really is library-absent, and the live one is not
 - parity: the Core seam's namespace surface survives the library's absence
@@ -44,7 +44,6 @@ Total.
 - parity: the Pool stub carries the LibKa0s-Pool-1.0 surface this addon calls
 - parity: the Item stub carries the LibKa0s-Item-1.0 surface this addon calls
 - parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface
-- parity: the ForeverDB stub carries the whole LibKa0s-ForeverDB-1.0 surface (SF-DW-01)
 - parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface
 - parity: the Perf stub carries every Perf member the addon reaches
 - parity: the Env seam publishes the same NS members on both paths
@@ -82,7 +81,7 @@ Total.
 - options: the degraded load completes, and the panel says once that it is unavailable
 - slash: without LibKa0s-Slash-1.0 a help row prints `cmd  desc` plainly (slash-commands-§1)
 
-### test_database.lua (17)
+### test_database.lua (19)
 
 - database: the defaults stamp schemaVersion 0, and the runner moves it to the code's target
 - database: the runner is idempotent, and a stored stamp at the target runs no step
@@ -97,6 +96,8 @@ Total.
 - database: step 6 retires feed.showOwn in every stored profile and keeps the rest
 - database: step 7 retires window.columns.myEq and theirEq in every stored profile and keeps the rest
 - database: step 15 retires window.itemSources in every stored profile and keeps the rest
+- database: step 19 deletes every stored itemSearch table and keeps the rest
+- database: a schema-15 account's itemSearch data runs steps 16 to 18 without raising and is gone
 - migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes
 - database: step 12 moves a stored Ka0s Friz Quadrata TT to Ka0s Ubuntu in every profile, Blizzard's Friz kept
 - database: step 13 turns a stored gearOnly = false into every item kind, carries includeTokens, in every profile
@@ -116,7 +117,7 @@ Total.
 - schema: degraded, `enabled` and `locked` are written through and still react
 - schema: degraded, a row-less path not in the list is still refused
 
-### test_schema_rows.lua (30)
+### test_schema_rows.lua (31)
 
 - settings: no Retail-only row on the Forever panel
 - defaults: WoW Forever's profile has none of the Retail-only features' defaults
@@ -128,6 +129,7 @@ Total.
 - rows: a value outside a row's list or range is refused and stores nothing
 - rows: the item lists take { [itemID] = true } whole and refuse any other shape, overlap included
 - rows: the per-spec maps take keyed values whole, and refuse a malformed one
+- rows: the verdict's config is the six comparison values and the client's verdict mode
 - rows: the feed, the situations and the messaging edge read the rows
 - rows: Drops › Items › Item kinds has one switch per category, in C.CATEGORIES' order
 - rows: the filter bar seeds a fresh tab from the rows
@@ -149,9 +151,9 @@ Total.
 - rows: the layout changes keep every stored path, its type and its default (DW-LY guard)
 - rows: Compact view in a run names a Mythic+ key and a delve on Retail alone (clients-§4)
 
-### test_settings_pages.lua (57)
+### test_settings_pages.lua (51)
 
-- pages: General, Drops, Comparison, Messages, Window, Alerts and (WoW Forever) Item Search are built, in that order
+- pages: General, Drops, Comparison, Messages, Window and Alerts are built, in that order, on both clients
 - pages: each page's strip is its own tabs, one per group, in declaration order
 - pages: a page's rows are the rows whose page is its key
 - pages: every schema row with a page but the Profiles page's is drawn by one of these pages
@@ -195,12 +197,6 @@ Total.
 - pages: Window's Columns note shows on Columns only; its Trade window mark and Starting view moved in
 - pages: a page's Defaults resets that page's rows and no other page's
 - pages: the Drops page's Defaults tooltip names the situations it now resets (DRO-L03)
-- editors: a weight write is a fresh map; 0 removes the stat and an emptied spec
-- editors: a spec's stats are its primary stat, Stamina and the four secondaries
-- editors: unwanted types are the class's weapons, then shields where a spec carries one
-- editors: an unwanted mark is a fresh map, and the last one cleared drops the spec
-- editors: the spec strip keeps the remembered spec, else yours, else the first
-- editors: on Forever the strip lists your class's talent trees by name
 - editors: the counter label counts bytes and turns red past the limit
 - editors: the preview's drop is the newest that fits its template, an upgrade for you first
 - editors: the preview's lines name who it goes to, the length and what is wrong
@@ -960,331 +956,6 @@ Total.
 - card: RetryInspect and TradeWithLooter say why they did nothing
 - card: RetryInspect refuses a collectible: it is judged for you alone, so the looter is not inspected
 
-### test_recipe_reagents.lua (6)
-
-- recipe reagents: on WoW Forever the table is built on the first ask, once, with its build (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- recipe reagents: every recipe has its ranks and reagents, and byReagent indexes each one exactly (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- recipe reagents: a recipe two professions teach lists both lines; the rest list none (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- recipe reagents: a recipe's teaching item is a number; taughtBy, when set, lists it first with the others (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- recipe reagents: the gathering lines' recipes are in the table with their breakpoints (round 4) (skipped: WoW Forever's alone (clients-§4): the Retail case below asserts it is inert)
-- recipe reagents: on Retail nothing is built and the table answers nil
-
-### test_item_search.lua (36)
-
-- item search: the skill-up color is orange, yellow, green, gray at the classic breakpoints
-- item search: a race or class mask lets in its bits, and nil or 0 means any
-- item search: SF-DW-01's percent and source merge moved here, and the retired chip's module is gone
-- item search: crafting rows are the table's recipes in its order, then the learned ones it lacks
-- item search: the static facts read ForeverDB's drops, vendors, quests and also-rows when loaded
-- item search: before the load (or without ForeverDB) the reader is never asked; crafting still answers
-- item search: the live half adds quest states, known marks, ranks, colors and the drops past the shown
-- item search: the learner keeps only recipes the table lacks, and counts what it changed
-- item search: an entry the shipped table now covers is dropped from the learned store
-- compat search: a quest's log and completion reads, nil for no API or a secret
-- compat search: QuestReady tries ReadyForTurnIn, then IsComplete, then the log title's flag; each guarded
-- item search: a quest's state is done, then ready, then in the log, else not picked up
-- compat search: the skill-line ranks answer a child line under its parent, else the professions
-- compat search: a known spell reads IsPlayerSpell, then C_SpellBook, then IsSpellKnown
-- compat search: a cached item by id, the build, and the player's race and class ids
-- compat search: the profession window's recipes and their basic reagents
-- item search: ForeverDB loads 5 s after the first PLAYER_ENTERING_WORLD, once, and never at login (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: a load due in combat waits for PLAYER_REGEN_ENABLED (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: a read before the load never loads, and shows no ForeverDB facts (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: switched off entirely, nothing loads; switched back on, it loads (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: without ForeverDB the state says so, nothing loads, and crafting still answers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: a stand-down takes the timer back and the stand-up arms it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: the facts read the fake: drops, vendors, each vendor's price, the quest it rewards (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: the quests are filtered by the player's race and class, each with its live state (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: an item's facts are kept for the session; a repeat read asks ForeverDB nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: crafting from the shipped table, known through IsPlayerSpell, colored by the rank (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: the profession window teaches a recipe the table lacks, out of combat, after the burst (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: a profession read in combat waits for its end; switched off, nothing is read (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: the first read of a session drops learned entries the shipped table covers (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: on Retail it is inert: no default, no read, no timer, no load, no learner
-- item search: the detail card draws exactly the cells' chips, ForeverDB installed, and opening it loads nothing
-- item search: same-named objects merge into one row: the highest chance, every id, creatures untouched
-- item search: an object with no name is dropped and counted, never an Object <id> row
-- item search: the fake's strongboxes are one row at the higher chance; the husk and the scrap go (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: an item's unnamed objects are logged once, when its facts are kept (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search: a merged object's window row unions its parts' spots and counts its kinds
-
-### test_item_search_tip.lua (34)
-
-- item search tip: one Item post call is registered at OnEnable, once a session (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: on Retail nothing is registered and nothing is written
-- item search tip: before ForeverDB's load there is no block at all, and a hover never loads it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: without ForeverDB (or a failed load) no block, not even Crafting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: separator, label line, Drops from and Sold by, in order; Also off; no hint unbound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: an unknown drop rate reads a ? on the right, never "rate unknown" (R6-DW-04) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a Horde player's Sold by hides the Alliance trainer by default and counts it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the hint names the bound key as the client writes it, and its switch hides it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator stays one physical pixel when the UI scale moves between two shows (R4-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the separator hangs from the spacer line on two invisible edges, 8 in, one pixel, dw.tipRule (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a refill of the same item keeps the separator up: no one-frame gap (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a refill never draws the separator at a second height: no ghost line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the post call never shows the tooltip mid-fill; a paint outside a fill does (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: Separator line off: no spacer and no hairline; the label line stays (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: sections follow their switches and the stored order; Also lists the rewarding quest (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the drop count setting caps the rows, the rest is "and N more" (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a quest row reads mark, Title (Level) in its tone on the left, Giver - Zone on the right (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: quest marks in the game's style: yellow !, dim !, gray ?, green ?, a green check; completed hidden by default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the window's quest marks are the tooltip's, at MARK_SIZE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: crafting glyphs: a fat up arrow for a skill-up, a thick gray dash for none, a dark gray lock for not known (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: recipe rows show their skill breakpoints in their hues, memoized per recipe and emptied by a skin switch (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: an item with nothing to show gets no block, title and hint included (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: never twice per show; the client's refresh, a hide and another item write it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: every item tooltip, comparison tooltips only with their setting (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: Shift-only writes the block only while Shift is held (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the tooltip switch, a stand-down and a forbidden tooltip write nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a fill nested in the post call (Pawn's private scan tooltip) is skipped, never recursed (R5-DW-00) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: an error inside the post call releases the guard (R5-DW-00) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: it reads only data.id and data.hyperlink, and a secret id writes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: the rows follow the player: the level band and the zone move a creature up (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: every section stops at Rows per section, the rest one "and N more" line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: only the professions you know: the rest counted on one dim line, or that line alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: crafting rows are a table: glyph and name left, skill levels and profession right in fixed columns (R5-DW-09, R5-DW-10) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search tip: a larger tooltip font widens the crafting profession column instead of cutting the name short (R5-REV) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-
-### test_item_search_window.lua (44)
-
-- item search view: the box's text is an id (all digits), a name (two letters or more), short or empty
-- item search view: an id is looked up directly, without ForeverDB from the client's cache, else a bare row
-- item search view: a name searches ForeverDB only once it is loaded; before it says loading, without it the spec line
-- item search view: a source's map is the one with the most spots (the lower id on a tie), its first spot the pin
-- item search view: the item line names quality, class, subclass, level and id; the footer names ForeverDB's state
-- item search view: the matches sort by Best match (SearchItems' order), Name or Item id
-- item search window: on Retail there is no window, no magnifier and no `search` verb
-- item search window: the main window's magnifier opens it, with the search box focused, and closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: `/dw search <id>` shows the item, `/dw search <name>` lists the matches, bare opens it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the search runs 0.25 s after the last key, and Enter shows the first match (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: without ForeverDB an id still shows the item, with Crafting and the spec §1 line (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: ForeverDB installed but not loading: the matches note agrees with the notice (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: before the load a name search says loading and reads nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the title says Drop Watcher, the footer ForeverDB alone, and there is no lock (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: it opens at 980 x 600, resizes from the corner down to 760 x 440, and keeps its size (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a wider window gives the tables' flex columns the room (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: every text takes the main window's table font and row height (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: recent searches are gone, and step 17 deletes what was saved (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the matches' header counts them and sorts them; Clear's label is centered (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the selected match wears the selection look; hover is its tooltip; shift-click links it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the header's icon and name show the item's tooltip and shift-click link it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the blade has a tab per section with rows, its count in the label, and remembers the pick (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the Quests tab's marks are the tooltip's, game-style at MARK_SIZE: ready, in the log, can pick up (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the section header counts the rows, names the sort and shows Reset only off the default (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a column's title sorts the table, and a second click flips it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a column title lights under the pointer and shows the triangle its click would give (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: every row has a tooltip under the Ka0s rules, a stripe on every other one and the hover wash (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: Linen's Crafting tab: the glyphs, the My professions chip and the filtered count (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a known recipe with no skill-up draws the tooltip's thick gray dash (R4-DW-02) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: not-known recipes say Trainer or name their recipe item, and a click opens it (ISR3-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: Sold by's Only my faction starts at Hide the other faction's vendors, and Reset returns to it (R4-DW-08) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the Crafting tab's filter follows Only professions you know when the setting moves (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a corner drag, a sort click or a tab pick re-lays the table without building it again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search waypoints: who draws the way, by the setting and what is loaded (pure)
-- item search window: with TomTom loaded, Automatic sets TomTom's waypoint at the spot; never the client's (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: without TomTom, Drop Watcher's arrow points at the spot; Drop Watcher's arrow wins over TomTom (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a pin is a dim map pin, lit on its row's hover, and its tooltip names the arrow (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a stand-down takes Drop Watcher's arrow down (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: the arrow's tooltip opens beside the arrow, owned at ANCHOR_NONE (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the arrow's rows are LibKa0s's, dimmed while TomTom draws the way (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search window: a stand-down closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search tooltips: the chrome opens attached to its control, every body tooltip beside the window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search tooltips: the Makes cell's item tooltip opens right of the window, level with its row (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search tooltips: an item tooltip that grows or is moved after Show is placed beside the window again (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-
-### test_item_search_tabs.lua (20)
-
-- item search tabs: one tab per section with rows, in spec order; Crafting counts my professions of all
-- item search tabs: each tab draws exactly the spec's columns, less the two with no client data
-- item search tabs: fixed columns keep their width, the flex ones share the rest, a narrow table scales the fixed
-- item search tabs: the columns start TABS.INSET in and end TABS.INSET short; glyphs and marks are centered
-- item search tabs: a column's click sorts by it, a second flips it; Best for you is the default
-- item search tabs: the view sorts by a column with unknowns last, ties by the ranking, the World drop row last
-- item search tabs: each tab's filters narrow its view; the funnel fills and Reset shows while one moved
-- item search cells: a level's difficulty color against yours, the game's quest colors
-- item search cells: DROPS FROM's rows: the type from its rank, the colored level, the zone, the container's tooltip
-- item search cells: SOLD BY's rows: the faction (Horde only for the other side), each row's own price
-- item search cells: QUESTS' rows join the objectives, the rewards and the one it starts, with a Role
-- item search cells: a Rewards it row with no level in the facts ranks by its quest row's level
-- item search cells: the leather's quests from the fake carry their giver and their zone (skipped: WoW Forever's alone (clients-§4): Item Search's window is not built on Retail)
-- item search cells: CRAFTING's rows: the breakpoints, the uses, what it makes and the status
-- item search cells: a not-known recipe's Status says where it is learned: a trainer, a vendor, a quest, a drop (ISR3-DW-08)
-- item search cells: a recipe source's tooltip caps each kind, and of several recipe items the best source wins
-- item search cells: Known, Learn at N and No <profession> keep their Status; the last two still open the recipe item
-- item search cells: the Skill cue: the orange start always, your band bracketed and bright, the rest dimmed
-- item search cells: a gathering line names its profession; a learned-only recipe's Skill is ? with a tip
-- item search cells: SKINNED FROM's Skill: level x 5 above 20, (level - 10) x 10 from 11, red above your rank
-
-### test_item_search_key.lua (19)
-
-- item search key: the press's decision follows the owner's table
-- item search key: a pinned chat link's tooltip is not a hover; only GameTooltip and its comparisons are read
-- item search key: with no item tooltip a press opens the window empty, and the next press closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: over an item tooltip it opens that item; over another it switches, over the same one it stays (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: a comparison tooltip counts; a hidden one and a pinned chat link's do not (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: with the window open on an item and a chat link pinned, a press with no hover closes it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: stood down, a press refuses with the one line and opens nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: on Retail a press does nothing and no key is set
-- item search key: Alt-Ctrl-D is bound at the first PLAYER_ENTERING_WORLD on a free key, saved to the set in force (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: a key that runs something else is never taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: a binding that already has a key keeps it (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: once per character: a key the player clears is not put back (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: in combat the default waits for the combat's end (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: the bound key's text reads through, and the window's footer carries no key hint (W2) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: every key constant the addon binds is in the client's canonical modifier order
-- item search key: a character the first try marked is re-tried once: the dead chord cleared, Alt-Ctrl-D bound (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: the re-try keeps the rules: a key the player bound stays, a taken Alt-Ctrl-D is not taken (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: a marked character whose dead chord is gone is not re-tried: a key the player cleared stays cleared (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search key: the re-try waits out combat before it clears anything (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-
-### test_item_search_settings.lua (12)
-
-- item search settings: every spec §4.7 row is on the page, in order, with its default and WoW Forever's client (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: a first-build profile runs steps 16 to 18 through the runner, to the code's target
-- item search settings: the defaults are the spec's (on, off, on, on, off; 3 rows, my professions; the window's) (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the seam refuses an out-of-range count, a fractional size and a bad order (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: a dimmed knob names what it needs; the block's switch dims its sub-rows (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the switches reach the load, and the window's switch closes an open window (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the section order is a drag list in the stored order; a move writes it whole (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: Moved is a pure splice, and an index outside the list changes nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: a render parks the list first; its host never rides a released placeholder (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the Keybindings tab shows and changes the Item Search key alone (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: the Item Search window's gear opens this page (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is absent)
-- item search settings: on Retail there is no page, no row and no default
-
-### test_item_search_rank.lua (15)
-
-- item search rank: the level band is [level - 5, level + 3], a range overlapping it is in
-- item search rank: drops: your zone first, then band creatures with objects and containers, then the rest
-- item search rank: drops: within a tier the higher chance first, an unknown chance last, then the name
-- item search rank: a source's spots are read once, whatever the zone, until ForgetSpots
-- item search rank: vendors: your zone, your continent, elsewhere, and last the other side's
-- item search rank: quests: in your log, can pick up, too high, completed; the lower level first
-- item search rank: quests: ready to turn in shares the log's tier and comes first in it
-- item search rank: crafting: known skill-ups orange, yellow, green, then gray, then not known, then other professions
-- item search rank: crafting: a row with no known mark asks the context, and its color comes from the rank
-- item search rank: skinned: your zone, then your band, then the rest; the higher chance first
-- item search rank: only the professions you know: the others counted; off, or skills unread, everything passes
-- item search rank: Ranked filters crafting before ranking it and ranks every section
-- item search rank: the cap shows the first n, counts the rest, and clamps n to a whole 1 to 20
-- item search rank: step 16 carries a stored dropsShown into rows, and the old key goes
-- item search rank: the defaults: rows 3, only the professions you know on, no dropsShown (skipped: WoW Forever's alone (clients-§4): Item Search has no defaults on Retail)
-
-### test_item_search_sources.lua (22)
-
-- item search sources: a test or dev name is caught, and a word that only contains "test" is not
-- item search sources: a quest's giver skips a test-named one for the next
-- item search sources: one giver helper for the tooltip and the window: the first named, non-test giver (R4-DW-09)
-- item search sources: the static facts resolve each quest's giver once (R4-DW-09) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
-- item search sources: a quest's giver is read from ForeverDB once, until its state moves (R4-REV) (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
-- item search sources: a test-named creature, object, vendor and skinned creature are left out and counted
-- item search sources: the test-named count reaches the debug log once per item
-- item search sources: GatherKind files fishing, then mining, then herbalism, else a drop
-- item search sources: the curated nodes name a herb and a vein with their skill; fishing has none (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
-- item search sources: the gathering nodes leave the drops, one row per name, each with its profession and skill
-- item search sources: Gathered from ranks a profession you have at your skill, then above it, then one you lack
-- item search sources: the Gathered from tab sits after Drops from with its columns and filters
-- item search sources: Gathered from's rows: the node, its profession, its skill against yours, zone and chance
-- item search sources: an unknown rate's Chance cell is a muted ?, its hover says the rate is unknown (R6-DW-04)
-- item search sources: every profession has its own fixed tone, clear of the skill-up hues, red and the Type tones
-- item search sources: the window's Crafting and Gathered from Profession cells carry the profession's tone
-- item search sources: the tooltip's crafting row names its profession in that profession's tone
-- item search sources: every Type has its own fixed tone; a source's name is plain everywhere
-- item search sources: the tooltip's Gathered from section, after Drops from, capped by Rows per section
-- item search sources: the tooltip draws every source's name plain, an unnamed one muted
-- item search sources: on WoW Forever a hovered herb's Gathered from section comes from the kit fake (skipped: WoW Forever's alone (clients-§4): the node table is empty on Retail)
-- item search sources: step 18 puts Gathered from after Drops from in a stored order, once
-
-### test_item_search_prices.lua (15)
-
-- item search prices: the merchant's npc id is the creature id in UnitGUID("npc"); anything else is none (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: the merchant's slots, a token slot left out, the legacy API as the second rung (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: MERCHANT_SHOW records each slot's price, quantity and time, account-wide (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: MERCHANT_UPDATE is debounced while open; a nil GUID, the setting off or a close records nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: a merchant opened in combat records at combat's end, if still open (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: on Retail a merchant records nothing
-- item search prices: past the cap the oldest tenth goes, and an emptied vendor with it
-- item search prices: a row's price: seen, else vendx, else vp, else the dash, each with its note
-- item search prices: the tooltip's vendor rows carry each one's price, and the other side's in red
-- item search prices: hiding the other faction's vendors: counted on one dim line, the unknown side kept (R4-DW-08)
-- item search prices: a source with no spot anywhere says No known spawn on its row tooltip
-- item search prices: the window's first open loads ForeverDB_Full once, empties the caches and the footer says Full (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: in combat the load waits for combat's end; Never and a missing Full load nothing (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: before ForeverDB loads the window's open waits, and Full follows the base's load (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-- item search prices: the diagnostics name ForeverDB_Full's state and its cost (skipped: WoW Forever's alone (clients-§4): the Retail case asserts it is inert)
-
-### test_item_search_verdict.lua (33)
-
-- verdict: quest parts: +60 in the log or ready, +35 one you can pick up, +50 a quest it starts, 80 in all
-- verdict: crafting parts: known orange 30, yellow 20, green 8, gray 0; learnable +10; 50 in all; others +3 to 9
-- verdict: gear: +70 an upgrade, +20 a sidegrade, nothing for an item you cannot wear
-- verdict: dampers: -20 easy to buy again (3 vendors, or 500 copper a unit), -15 every use gray or done
-- verdict: a poor item stays at 15 unless a quest wants it; a quest item is floored at 20
-- verdict: the bars: 19 sells, 20 and 49 hold, 50 keeps; Sell, Toss or Hold under 20 by the sell price
-- verdict: a new collectible is a Keep at 100, nothing else worked out
-- verdict: confidence tiers: High at 80, Medium from 50 to 79, Low under 50
-- verdict: each confidence input is needed only when the score needs it, and counts when answered
-- verdict: under High the hint names the heaviest unanswered input's fix
-- verdict: a Low confidence never says Toss: it holds
-- verdict: gear whose gear verdict has not answered never says Toss, at any confidence
-- verdict: the reasons are the top two by points; Sell and Toss name the price first
-- compat: money reads in gold, silver and copper coins on both clients, never a bare number (R5-DW-11)
-- verdict: the scoring help's collectible number is the scorer's own constant (R5-REV)
-- verdict: the scoring help reads in sections: gold headers, bulleted entries, a blank line between (R6-DW-03)
-- verdict: the reasons always carry the largest negative part, so the shown parts explain the score
-- verdict score: the use value picks the word, unclamped; the score is how sure (R6-DW-07)
-- verdict score: the design's worked examples (R6-DW-07)
-- verdict score: each word's evidence, edges 0.5 and clear calls 1 (R6-DW-07)
-- verdict score: the money part for Auction, Vendor and Toss (R6-DW-07, IAU.Money)
-- verdict score: Toss, Auction for no vendor, and a Low hold read their money and data known (R6-DW-07)
-- verdict score: the breakdown's lines add up to the use value; its score is the badge's (R6-DW-07)
-- verdict breakdown: How sure says each evidence part, the data known and the score (R6-DW-08)
-- verdict: the badge is one pill: icon and <Verdict> <score> in dark ink on the verdict's tone; no tier (R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: on the tooltip the pill hangs on the tooltip's right side, smooth, never measured, never over the label (R5-DW-01, R5-DW-02) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: the client's sell price and bind type reach the verdict; a cached item answers the item info (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict: the memo keeps one answer per item until a quest, skill, level or cache event, or its retry (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-- verdict breakdown: the score's parts in the order the score adds them, adding up to the score (R4-DW-11)
-- verdict breakdown: a zero part is left out; the dampers, the poor cap and the quest-item floor are listed
-- verdict breakdown: the word's line for each bar, a plain hint for a missing input, never the tier
-- verdict breakdown: the tooltip's verdict is unchanged by it, and builds no breakdown
-- verdict score: the memo keeps a new answer when the use value moves under the same score (R6-DW-07) (skipped: WoW Forever's alone (clients-§4): the badge rides the Item Search tooltip block)
-
-### test_item_search_auction.lua (15)
-
-- auction: the deposit is the vendor price's share by the auction's length, at least 1 silver a full stack
-- auction: Auction when the net beats the vendor by over the margin; else Vendor; bound, off or no price is Vendor
-- auction: the rule reads the settings, bounded; the words and the reason line
-- auction: the seam asks Auctionator's public API by link, then by id, as DropWatcher; nil without it or on an error
-- auction: a Sell keeps its key and says Auction or Vendor, with the prices; the reason names both
-- auction: no vendor price but an auction price: Auction where it was Toss, at any confidence (R6-DW-06)
-- auction: the hover reads Auctionator's price and the settings; the switch, a bind and the house closing move it (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction: the badge says Auction under the gavel in its own tone, Vendor under the coins in amber (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction: the (?) help explains Auction and Vendor from the live settings (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction: the verdict panel shows the vendor's price, Auctionator's and the net, after the word's line (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction settings: four rows under Auction prices, dimmed without Auctionator, the client's lengths, a change re-judges (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction: a profile switch, copy or reset makes every kept verdict stale (its auction settings came with it) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction settings: the Auction prices block follows the whole Tooltip block (no subgroup drawn twice) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction settings: the badge row says the badge sits on the tooltip's right side (R5-DW-12) (skipped: WoW Forever's alone (clients-§4): the verdict rides the Item Search tooltip block)
-- auction: How sure's money line stays on its word's side of the margin at the edge (R6-REV)
-
-### test_item_search_panel.lua (15)
-
-- verdict panel: shown under Matches while you hold the item in your bags, with the tooltip's badge (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: shown when the item is only in your bank (the client's cached count, bank closed) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: hidden when you hold none, the Matches list down to the footer (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: its lines are the verdict module's breakdown, in order, adding up to the score (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: + points green, - points red, the word's line in plain words, then How sure (R5-DW-04..06, R6-DW-08) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: a (?) beside the badge explains the score from the scorer's own numbers (R5-DW-07) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: the tooltip's pill, the panel's pill and its (?) are one size, within a tooltip line (R6-DW-02) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: a bag change for the item repaints it, throttled, and its hiding restores the Matches height (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: the Matches list keeps its 5 rows; the panel takes every other pixel, so a resize moves the panel alone (R6-DW-05) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: a corner drag re-lays it without working the breakdown out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: while the item's info is still loading it is worked out again on its own, four times at most (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: an item you only wear is not held; one worn, one in the bags and two banked reads You have 3 (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: a gear change works the breakdown out again, so it and the tooltip's badge agree (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: still loading after its retries, a repaint or coming back to the item works it out again (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-- verdict panel: the auction house closing repaints it, as the verdict reads Auctionator's prices again (R6-REV) (skipped: WoW Forever's alone (clients-§4): the panel rides the Item Search window)
-
 ### test_own_drops.lua (16)
 
 - own drops: Trade reads its word alone and counts the upgrades in its tooltip (feedback-7 spec §2)
@@ -1675,7 +1346,7 @@ Total.
 - rx30: RollPopupRight is nil for a secret, absent or unplaced right edge
 - rx30: RollPopupRight scales the edge into UIParent's units, and a secret scale counts as 1
 
-### test_text_parse.lua (12)
+### test_text_parse.lua (10)
 
 - textparse: the module is pure — it names no client global and reads no _G
 - textparse: EscapePattern makes every magic character literal
@@ -1687,10 +1358,8 @@ Total.
 - textparse: StatLine reads a primary stat line's value, grouping marks dropped
 - textparse: ClassSet maps the listed names and asks for the map only on a match
 - textparse: ScanLines answers the first parse over the wanted type, through the guards it is handed
-- textparse: WordMap, FirstWord and EndsWithWord read whole words, any case (TT-1)
-- textparse: TokenUseSlot reads the class phrase and the set <slot> item, in the words it is handed (TT-1)
 
-### test_constants.lua (15)
+### test_constants.lua (14)
 
 - constants: without Enum the item ids fall back to the documented literals
 - constants: with Enum present the ids are read from it, not from the literals
@@ -1698,7 +1367,6 @@ Total.
 - constants: each recipe subclass names its profession's skill line; book and first aid none
 - constants: the categories in display order, the tier slots and the empty token table
 - constants: the quality defaults are Rare fixed (Uncommon on WoW Forever) and an Uncommon floor (spec §6.2)
-- constants: the upgrade tracks ascend Explorer through Myth (spec §5.2 step 3)
 - constants: the inventory slot ids are the client's, 1 through 19, slot 18 on Forever alone
 - constants: every slot plan has a known kind and real slot ids
 - constants: the slot plan maps each equip location to the spec §5.2 kind
@@ -1708,90 +1376,27 @@ Total.
 - constants: the trade rules are the spec §7.2 table, and every situation has a rule
 - constants: the bind ids are Enum.ItemBind's, and the trade bind sets name BoE and account binds
 
-### test_class_data.lua (17)
+### test_offspec.lua (2)
 
-- class data: the active list is the client's, picked once at load
-- class data: Forever lists nine classes and no Death Knight, Monk, Demon Hunter or Evoker
-- class data: ArmorFor("HUNTER", 30) is leather, ArmorFor("HUNTER", 40) is mail
-- class data: Forever's rows are keyed by class and talent tree, with the Pawn index
-- classdata: thirteen classes with their client classIDs, each with an armor type
-- classdata: every spec row is well-formed and its class lists it
-- classdata: every spec has its place in its class, 1 to n with none twice
-- classdata: the Devourer Demon Hunter spec (1480) is an Intellect leather dual wielder
-- classdata: dual wield and Titan's Grip are the right specs
-- classdata: dual wield and Titan's Grip by spec, or by class when every spec agrees
-- classdata: shields go to Protection, Holy, Elemental and Restoration Shaman only
-- classdata: held off hands go to the caster and healer specs
-- classdata: a spec of another class is not trusted over the class
-- classdata: armor type is exact, and an unknown class or subclass cannot tell
-- classdata: weapon proficiencies by class
-- classdata: primary stat is the spec's, or the class's when every spec shares one
-- classdata: lookups never throw on junk input
-
-### test_evaluate.lua (47)
-
-- evaluate: every equip location in SLOT_PLAN compares against its slot
-- evaluate: an equip location with no plan is unknown (not gear)
-- evaluate: pair compares against the lower of the two slots
-- evaluate: an empty slot is an upgrade with the emptySlot reason
-- evaluate: a slot that is not known is unknown, never an upgrade
-- evaluate: a one-hander compares against the main hand only, unless the candidate dual wields
-- evaluate: a dual wielder holding a two-hander compares a one-hander against the two-hander
-- evaluate: a two-hander compares against the average of both hands
-- evaluate: Titan's Grip compares a two-hander as a pair over both hands
-- evaluate: `either` marks a baseline picked as the lower of two worn items the drop could take (feedback-21 R5)
-- evaluate: an off hand against a wielded two-hander compares with the two-hander, never an empty slot
-- evaluate: ranged weapons are two-handers for hunters and main hand for wand users
-- evaluate: a gun, crossbow or wand in the main hand is a two-hander for off hands and one-handers
-- evaluate: a unique-equipped drop compares against the item holding its category
-- evaluate: a unique drop whose own slot holds the category replaces that item
-- evaluate: compareOwned takes the better of equipped and owned per slot
-- evaluate: a known spec is judged by the item's own spec list
-- evaluate: a spec list read for another class leaves the candidate to the class tables
-- evaluate: the primary stat check takes every primary the item carries
-- evaluate: spec unknown falls back to ClassData for armor, jewelry, shields and off hands
-- evaluate: a known spec with no item spec list uses the spec's own class data
-- evaluate: the primary stat decides when every spec agrees, and is ambiguous otherwise
-- evaluate: an unknown class cannot be judged
-- evaluate: tier tokens are judged by their class list
-- evaluate: a class-restricted item refuses other classes
-- evaluate: an undesired subclass is doesntWant, but only when the item is usable
-- evaluate: the sidegrade band splits upgrade, sidegrade and downgrade
-- evaluate: ItemVerdict judges one item level as step 4 does, and the band is kept only when it is not 0
-- evaluate: with a score, the verdict takes the sign only when ilvl and score agree in sign
-- evaluate: the scorer is optional, may be pending, and may fail without harm
-- evaluate: a two-hander's score baseline is the average of both hands' scores
-- evaluate: scoreFirst, a lower item level with a higher score is an upgrade
-- evaluate: scoreFirst, a score within 1% defers to item level
-- evaluate: scoreFirst, no score is item level with reason noScore
-- evaluate: ilvlFirst unchanged
-- evaluate: verdict precedence is cant, then doesntWant, then unknown, then the comparison
-- evaluate: the track delta orders tracks by tier, then rank
-- evaluate: the output carries every field of spec 5.2 step 5
-- evaluate: nil and garbage inputs never throw and answer unknown with a reason
-- evaluate: garbage inside the tables never throws
-- evaluate: an internal failure is caught and reported as unknown
-- evaluate: heirloom protection keeps a slot holding an heirloom from being called an upgrade
-- evaluate: on Forever a mail drop for a level 30 Hunter is cantUse with reason armorLevel
-- evaluate: on Forever the item's spec list does not lift the armor level rule
-- evaluate: on Forever a relic is its class's alone: libram, idol, totem
-- evaluate: on Retail's class list a relic is not gear, never the relic reason
-- evaluate: on Forever an item with Strength for a Hunter is not cantUse by stat
-
-### test_offspec.lua (12)
-
-- offspec: a Protection paladin's Intellect axe is an off-spec upgrade for Holy over an empty hand
-- offspec: against the best Holy item owned, the off-spec verdict takes the band
-- offspec: a refusal on the class skips the pass; so does a drop the main spec can use
-- offspec: an unknown spec is skipped
-- offspec: the spec list and the dual-wield flag are spec refusals too
-- offspec: the best spec wins: verdict, then the larger difference (an empty slot largest), then the lower id
-- offspec: doesntWant, cantUse and unknown are never chosen; with none left there is no off-spec
-- offspec: item level only: the scorer is never asked, so it never waits on a score
-- offspec: junk off-spec gear and junk undesired lists are tolerated and skip the spec
-- offspec: Who derives a spec's candidate from ClassData, never from the main spec
-- offspec: WornGear keeps each worn item the spec could wear, false where it could not
+- offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
+
+### test_verdict_setup.lua (14)
+
+- verdict setup: one instance of the library's major, on this client
+- verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
+- verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them
+- verdict setup: every event the instance registers has its row on this client, and no row is dead
+- verdict setup: the first read is lazy and quiet, a later change sends GearChanged
+- verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback
+- verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
+- verdict setup: the gear rebuild is timed while a capture is on, through the harness itself
+- verdict setup: the engine's collection change runs the feed's pass
+- verdict views: every kernel call names the client in force, and the caller's opts stay unwritten
+- verdict setup: InUse and Scorer follow the settings and whether Pawn is initialized
+- verdict setup: the feed judges your drop with your weights once they are set
+- verdict setup: the Comparison rows are the library's six, their defaults the profile's
+- verdict setup: without the library the stand-in carries the instance's surface and judges unknown
 
 ### test_tier_token.lua (30)
 
@@ -1883,31 +1488,6 @@ Total.
 - off-spec offer: the candidate cell's gear is the item compared with, not the main spec's worn pair
 - off-spec offer: the Offer whisper's {gain} reads the candidate's off-spec gain
 - off-spec offer: the panel paints Kaelith 311 ▲ 14 Holy in the offspec cyan, with Offer
-
-### test_scoring.lua (22)
-
-- scoring: a Pawn v1 string imports its stats under GetItemStats' keys
-- scoring: an import that is empty, not a Pawn string, or has no stat is refused with its reason
-- scoring: ImportInto replaces one spec's weights in a fresh map and keeps the others
-- scoring: a weights score is the sum of stat times weight
-- scoring: a weight on an unknown stat key counts 0 and is logged once per key
-- scoring: HasWeights is true once any spec has a weight
-- scoring: Resolve picks the adapter for every setting, Pawn presence and weights
-- scoring: InUse and Scorer follow the settings and whether Pawn is initialized
-- scoring: for you, Pawn values the drop and the baseline on the drop's best visible scale
-- scoring: for you, a drop that upgrades no scale is valued on your spec's scale
-- scoring: for you, a drop that upgrades no scale is valued on the scale you show in Pawn
-- scoring: for a looter, Pawn uses the scale for their class and spec
-- scoring: Pawn answers pending while it is not ready or has not read the item
-- scoring: on Forever your score uses the scale of your top talent tree
-- scoring: with no tree, the best of your class's scales, how = bestOfClass
-- scoring: another player is scored with the best of their class's scales
-- scoring: Feral Druid tank uses Pawn 3, damage Pawn 2
-- scoring: on Forever the weights are keyed by class and talent tree
-- scoring: ScoreFor with your weights is how = custom, and none without a scorer
-- scoring: the kernel hands the scorer the drop beside each item
-- scoring: with weights, a higher item level that scores lower is a sidegrade
-- scoring: the feed judges your drop with your weights once they are set
 
 ### test_quality_gate.lua (26)
 
@@ -2052,56 +1632,6 @@ Total.
 - roster: NormalizeRealm drops spaces and hyphens
 - roster: stood down, the roster is dropped and the event is down; the stand-up re-reads
 
-### test_item_facts.lua (25)
-
-- item facts: a cached ring reads every field of spec §5.1
-- item facts: a chest reads its appearance, account binds and no specs or track
-- item facts: the stats carry every primary stat on the tooltip, not the playing spec's alone
-- item facts: the spec list says which class the client read it for
-- item facts: a three-stat cloak read on a hunter suits a Blood death knight and a Retribution paladin
-- item facts: the track tier, by string id first, then by enUS name, else unset
-- item facts: the track falls back to the tooltip's upgrade line
-- item facts: an item unique on its own takes its item id as the category
-- item facts: a token naming classes is a tier token; class gear carries classes only
-- item facts: a tier token's use text names the slot it makes, read once; gear's never (TT-1)
-- item facts: a relic is gear on Forever, not gear on Retail
-- item facts: the quality falls back to the link's color
-- item facts: the facts feed the verdict kernel
-- item facts: Get caches by link
-- item facts: at its cap the cache drops its least recently used quarter, never the whole
-- item facts: garbage links answer nil and never raise
-- item facts: learning an appearance re-reads the flag on the cached facts
-- item facts: rawEquipLoc and the category are filled on every item (issue #13)
-- item facts: the appearance event reads the raw equipLoc, not a slot set later
-- item facts: Request answers a cached item at once and never calls back
-- item facts: an uncached item loads, and every waiter is called back once
-- item facts: the callback retries until the item arrives
-- item facts: an item that never arrives is given up after MAX_LOAD_TRIES, with nil
-- item facts: a client that cannot load items answers unavailable
-- item facts: stood down, the cache and the loads are dropped and a late answer is ignored
-
-### test_collectibles.lua (19)
-
-- collectibles: CategoryOf names each category
-- collectibles: CategoryOf's precedence
-- collectibles: the out-of-scope classes are not watched
-- collectibles: IsCollectible is true for the collectible categories alone
-- collectibles: a lockbox is a lockbox; a bag, quiver and ammo pouch are containers; Trade Goods a reagent
-- collectibles: a lockbox reads lockbox, a bag container, an item of no kind item; no gain
-- collectibles: Verdict reads new, collected and no answer
-- collectibles: a pet carries its count, and a partial collection says n/limit
-- collectibles: a recipe for a profession you lack is can't use
-- collectibles: a cosmetic reads its live transmogKnown
-- collectibles: whitelisted items get the whitelisted reason; gear and the rest answer nil
-- collectibles: Read fills a mount's, a pet's and a toy's collection state
-- collectibles: Read fills a recipe's profession and known line
-- collectibles: Read tells a lockbox and a box that opens from Junk that does not
-- collectibles: Read files a bag, a quiver and an ammo pouch as containers
-- collectibles: Read tells cosmetics from gear, and spends the probes only where they decide
-- collectibles: a cosmetic's verdict follows a learned appearance, with no stale copy
-- collectibles: Read leaves a tier token's category to its flag and probes nothing
-- collectibles: Read answers its argument and survives no facts
-
 ### test_item_read.lua (25)
 
 - BUG-1 repro: chat first, the drop reads 311 Epic
@@ -2130,7 +1660,7 @@ Total.
 - BUG-2: a row's item button and its name show the real tooltip, the addon's line after the game's
 - BUG-2: the detail card's Replaces row keeps your worn slot for the real tooltip, never the looter's
 
-### test_gear.lua (29)
+### test_gear.lua (30)
 
 - gear: each worn slot is a copy of its facts at the current level; an empty slot is false
 - gear: the candidate carries the class-wide spec and your talent tree
@@ -2155,12 +1685,80 @@ Total.
 - gear: sorting your bags moves no gear, so it sends no GearChanged
 - gear: the gear events share one throttled rebuild, which announces a change once
 - gear: a bag event in combat arms nothing; the combat's end rebuilds once
+- gear: the bag defer is the engine host's deferWhile, NS.Restrictions.InCombat
 - gear: a bag-only rebuild keeps the worn slots as read; an equipment change reads them again
 - gear: the player's spec change rebuilds; another unit's does not
 - gear: on Forever a level gained rebuilds (the armor by level); Retail does not listen
 - gear: the first lazy read announces nothing
 - gear: an item still loading leaves its slot unknown, and its arrival rebuilds
 - gear: the stand-down cancels the rebuild and drops the snapshot; the stand-up rebuilds
+
+### test_verdict_golden.lua (64)
+
+- golden kernel: upgrade: a plate helm 10 levels over the worn one
+- golden kernel: downgrade: a plate helm 10 levels under
+- golden kernel: sidegrade: equal item level
+- golden kernel: sidegrade: at the band's edge (+10, band 10)
+- golden kernel: upgrade: one past the band's edge (+11, band 10)
+- golden kernel: downgrade: one past the band's lower edge (-11, band 10)
+- golden kernel: upgrade: an empty slot
+- golden kernel: upgrade: a ring against the lower of two worn rings
+- golden kernel: cantUse: plate for a mage
+- golden kernel: cantUse: an intellect plate helm for Arms (primary stat)
+- golden kernel: cantUse: the item's class list leaves the warrior out
+- golden kernel: doesntWant: plate is on Arms' undesired list
+- golden kernel: unknown: the slot was never read
+- golden kernel: unknown: a tabard is not gear
+- golden kernel: unknown: no item level
+- golden kernel: unknown: facts that are not a table
+- golden kernel: ilvlFirst: item level and score agree
+- golden kernel: ilvlFirst: the score disagrees, a sidegrade
+- golden kernel: ilvlFirst: Pawn pending, item level alone with scorePending
+- golden kernel: ilvlFirst: the weights scorer values strength
+- golden kernel: scoreFirst: the score decides over a lower item level
+- golden kernel: scoreFirst: a tie within 1% falls to item level
+- golden kernel: scoreFirst: no score, item level with noScore
+- golden kernel: scoreFirst: Pawn pending, scorePending and noScore
+- golden kernel: scoreFirst: the weights scorer by talent tree
+- golden kernel: forever: an intellect plate helm passes the soft stat gate
+- golden kernel: forever: plate below level 40 is cantUse (armorLevel)
+- golden kernel: compareOwned on: a better helm in the bags is the baseline
+- golden kernel: compareOwned off: the bags are not read
+- golden kernel: heirloomProtect on: an upgrade over an heirloom reads as a sidegrade
+- golden kernel: heirloomProtect off: the upgrade stands
+- golden kernel: tier token: an omni token folds to its best tier slot
+- golden kernel: tier token: another class's token is cantUse
+- golden kernel: group: a looter's upgrade over their inspected chest
+- golden kernel: group: the item's spec list leaves the looter's spec out
+- golden kernel: off-spec: a shield Fury cannot use is an upgrade for Protection
+- golden kernel: collect: a mount not yet learned is newCollect
+- golden kernel: collect: a known mount is collected
+- golden kernel: collect: a pet with no answer yet is collectUnknown
+- golden kernel: collect: a pet held 1 of 3 is collected, petPartial
+- golden kernel: collect: a recipe of a profession you lack is cantUse
+- golden kernel: collect: an appearance not learned is newCollect
+- golden kernel: collect: a whitelisted known mount adds whitelisted
+- golden kernel: collect: a lockbox answers its kind word
+- golden kernel: collect: a whitelisted lockbox adds whitelisted
+- golden kernel: collect: an item of no kind is item, category other
+- golden kernel: collect: gear has no collection verdict
+- golden kernel: collect: a forced item whose class is not read is unknown
+- golden me: retail: a leather helm over the worn one is an upgrade
+- golden me: retail: a plate helm is cantUse for a rogue
+- golden me: retail: the weights scorer disagrees, a sidegrade
+- golden me: retail: compareOwned reads the better helm in the bags
+- golden me: retail: leather on the spec's undesired list is doesntWant
+- golden me: retail: an upgrade over a worn heirloom is a sidegrade (the default protects)
+- golden me: retail: Pawn ready but the drop unread, scorePending
+- golden me: retail: Pawn values the drop and the helm on the drop's best scale
+- golden me: retail: a mount not yet learned is newCollect
+- golden me: retail: a box that reads Locked is a lockbox
+- golden me: retail: off-spec, a shield Fury cannot use is an upgrade for Protection
+- golden me: forever: a plate helm over the worn one, no score: item level, noScore (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: the weights scorer decides over a lower item level (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: Pawn ready but the drop unread, scorePending (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: plate at level 30 is cantUse (armorLevel) (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
+- golden me: forever: a box that reads Locked is a lockbox (skipped: pinned on the forever profile, where its client-gated module initializes (clients-§6))
 
 ### test_loot_parser.lua (29)
 
@@ -2231,7 +1829,7 @@ Total.
 - inspect: secret GUIDs, units and specs are never used
 - inspect: the stand-down clears this broker's inspect, every timer and the state
 
-### test_feed.lua (56)
+### test_feed.lua (58)
 
 - feed: a member's loot is added once, judged for you, and asks for the looter's inspect
 - feed: the looter's inspect re-judges the drop: their verdict and the trade estimate
@@ -2289,6 +1887,8 @@ Total.
 - candidate: your unwanted types are read by your spec key, on Forever your talent tree's
 - filter: a lockbox passes by default; an item of no kind only rolled on, with the catch-all on
 - filter: a crafting reagent passes by default, rolled on or not; its switch and the quality gate still hold
+- feed: the looter's verdict takes the client's verdict mode and the scorer setting
+- own: each candidate's verdict takes the client's verdict mode and the scorer setting
 
 ### test_pending.lua (18)
 
@@ -2480,7 +2080,7 @@ Total.
 - header: your own drop is listed in Drops with the others, never counted as hidden
 - header: History names its hidden drops too, and a long list is cut with a count
 
-### test_collect_feed.lua (15)
+### test_collect_feed.lua (16)
 
 - collect feed: someone else's mount reads its collection verdict, asks no inspect and has no Them
 - collect feed: your own mount is judged for nobody, none inspected, also when its trade leaves no
@@ -2490,6 +2090,7 @@ Total.
 - collect feed: combat's end reads again only the drops still at collectUnknown
 - collect feed: combat's end with no unknown collectible arms nothing
 - collect feed: a learned appearance re-judges a live cosmetic through the same re-read
+- collect feed: the collection events are the engine's, the feed's pass is CollectFeed's
 - collect feed: the stand-down cancels a waiting re-read
 - collect feed: RereadCollections is the cache's one writer and reads the collectibles alone
 - collect feed: Asks refuses an ask, an offer and an announce for a collectible
@@ -3213,7 +2814,7 @@ Total.
 
 - bindings: Bindings.xml puts every binding in the addon's own category, no header, no default, in NS.BINDINGS order, and the TOC does not list it
 - bindings: NS.BINDINGS is the one table, Show window first, with a localized tooltip, on a library-less install too
-- bindings: the Item Search button is a plain hidden Button registered for AnyDown, labeled Item Search
+- bindings: no Item Search button or label is left (DropWatcher#19)
 - bindings: the button is a plain hidden Button named DropWatcherToggleWindow, registered for AnyDown only
 - bindings: one press is one NS.Window.Toggle
 - bindings: the category label is the brand and the binding label is localized, with no brand in it
@@ -3278,9 +2879,9 @@ Total.
 
 ### test_vendor_sync.lua (3)
 
-- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles
-- tests/_kit is the test kit that shipped with that release
 - the automated-test runner is recorded executable (100755)
+- libs/LibKa0s is the LibKa0s release CLAUDE.md says this addon bundles (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
+- tests/_kit is the test kit that shipped with that release (skipped: LibKa0s v1.119.0 is not tagged yet in ./../LibKa0s (pre-tag until IS-G1) — the vendored payload was NOT compared)
 
 ### test_locale.lua (7)
 
@@ -3484,12 +3085,12 @@ Total.
 | Suite | Cases |
 |-------|------:|
 | test_harness.lua | 15 |
-| test_surface_parity.lua | 25 |
+| test_surface_parity.lua | 24 |
 | test_setup.lua | 25 |
-| test_database.lua | 17 |
+| test_database.lua | 19 |
 | test_schema.lua | 11 |
-| test_schema_rows.lua | 30 |
-| test_settings_pages.lua | 57 |
+| test_schema_rows.lua | 31 |
+| test_settings_pages.lua | 51 |
 | test_item_lists_panel.lua | 5 |
 | test_skin_setup.lua | 21 |
 | test_launcher_skin_entry.lua | 2 |
@@ -3524,18 +3125,6 @@ Total.
 | test_collect_cells.lua | 12 |
 | test_collect_surfaces.lua | 15 |
 | test_detail_card.lua | 35 |
-| test_recipe_reagents.lua | 1 |
-| test_item_search.lua | 21 |
-| test_item_search_tip.lua | 1 |
-| test_item_search_window.lua | 8 |
-| test_item_search_tabs.lua | 19 |
-| test_item_search_key.lua | 4 |
-| test_item_search_settings.lua | 2 |
-| test_item_search_rank.lua | 14 |
-| test_item_search_sources.lua | 18 |
-| test_item_search_prices.lua | 6 |
-| test_item_search_verdict.lua | 28 |
-| test_item_search_auction.lua | 7 |
 | test_own_drops.lua | 16 |
 | test_tip_marks.lua | 27 |
 | test_drops_strip.lua | 12 |
@@ -3552,29 +3141,26 @@ Total.
 | test_role_override.lua | 4 |
 | test_compat_collect.lua | 21 |
 | test_compat_loot.lua | 21 |
-| test_text_parse.lua | 12 |
-| test_constants.lua | 15 |
-| test_class_data.lua | 17 |
-| test_evaluate.lua | 47 |
-| test_offspec.lua | 12 |
+| test_text_parse.lua | 10 |
+| test_constants.lua | 14 |
+| test_offspec.lua | 2 |
+| test_verdict_setup.lua | 14 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
 | test_offspec_offer.lua | 11 |
-| test_scoring.lua | 22 |
 | test_quality_gate.lua | 26 |
 | test_situations.lua | 17 |
 | test_trade_rules.lua | 26 |
 | test_messaging.lua | 26 |
 | test_restrictions.lua | 16 |
 | test_roster.lua | 14 |
-| test_item_facts.lua | 25 |
-| test_collectibles.lua | 19 |
 | test_item_read.lua | 25 |
-| test_gear.lua | 29 |
+| test_gear.lua | 30 |
+| test_verdict_golden.lua | 59 |
 | test_loot_parser.lua | 29 |
 | test_inspect.lua | 34 |
-| test_feed.lua | 56 |
+| test_feed.lua | 58 |
 | test_pending.lua | 18 |
 | test_pending_ml.lua | 13 |
 | test_ask_ml.lua | 12 |
@@ -3583,7 +3169,7 @@ Total.
 | test_roll_popup.lua | 24 |
 | test_rolls_panel.lua | 66 |
 | test_feed_counts.lua | 10 |
-| test_collect_feed.lua | 15 |
+| test_collect_feed.lua | 16 |
 | test_item_lists.lua | 12 |
 | test_group_roster.lua | 13 |
 | test_group_place.lua | 15 |
@@ -3619,7 +3205,7 @@ Total.
 | test_disabled.lua | 13 |
 | test_diagnostics.lua | 16 |
 | test_debug_coverage.lua | 11 |
-| test_vendor_sync.lua | 3 |
+| test_vendor_sync.lua | 1 |
 | test_locale.lua | 7 |
 | test_eol.lua | 2 |
 | test_prose.lua | 15 |
@@ -3629,5 +3215,5 @@ Total.
 | test_skin_values.lua | 3 |
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
-| Skipped | 158 |
-| **Total** | **2872** |
+| Skipped | 8 |
+| **Total** | **2671** |

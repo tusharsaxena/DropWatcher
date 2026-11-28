@@ -144,10 +144,12 @@ end)
 -- Reading the collections again
 -- ---------------------------------------------------------------------------------------------
 
--- Spy on ItemFacts.RereadCollections: answers the call counter.
+-- Spy on the verdict engine's RereadCollections (its timer's and the regen pass's): answers the
+-- call counter.
 local function spyReread(NS)
-    local calls, real = { n = 0 }, NS.ItemFacts.RereadCollections
-    NS.ItemFacts.RereadCollections = function(...)
+    local E = NS.VerdictEngine
+    local calls, real = { n = 0 }, E.RereadCollections
+    E.RereadCollections = function(...)
         calls.n = calls.n + 1
         return real(...)
     end
@@ -167,7 +169,7 @@ test("collect feed: a burst of collection events reads once, and re-judges only 
     m.__fire("NEW_MOUNT_ADDED", 77)
     m.__fire("SKILL_LINES_CHANGED")
     assertEqual(calls.n, 0, "nothing read before the delay")
-    m.advance(NS.Collectibles.REREAD_DELAY)
+    m.advance(NS.CollectFeed.REREAD_DELAY)
     -- red under: one re-read per event, not one per burst
     assertEqual(calls.n, 1, "one re-read")
     assertEqual(learned.me.verdict, "collected")
@@ -188,7 +190,7 @@ test("collect feed: combat's end reads again only the drops still at collectUnkn
     assertEqual(unread.me.verdict, "collectUnknown")
     m.mounts.collected[77], m.mounts.collected[78] = true, true
     m.__fire("PLAYER_REGEN_ENABLED")
-    m.advance(NS.Collectibles.REREAD_DELAY)
+    m.advance(NS.CollectFeed.REREAD_DELAY)
     assertEqual(unread.me.verdict, "collected")
     assertEqual(count(seen, unread.id .. ":collection"), 1)
     -- red under: the regen pass widened to every collectible
@@ -202,7 +204,7 @@ test("collect feed: combat's end with no unknown collectible arms nothing", func
     brakkLoots(m, 300)
     local calls = spyReread(NS)
     m.__fire("PLAYER_REGEN_ENABLED")
-    m.advance(NS.Collectibles.REREAD_DELAY * 2)
+    m.advance(NS.CollectFeed.REREAD_DELAY * 2)
     assertEqual(calls.n, 0)
 end)
 
@@ -216,11 +218,30 @@ test("collect feed: a learned appearance re-judges a live cosmetic through the s
     assertEqual(rec.me.verdict, "newCollect")
     m.items[link(300)].transmog = true
     m.__fire("TRANSMOG_COLLECTION_UPDATED")
-    m.advance(NS.Collectibles.REREAD_DELAY)
-    -- red under: ItemFacts' transmog handler not calling Collectibles.Changed
+    m.advance(NS.CollectFeed.REREAD_DELAY)
+    -- red under: the engine's "collection" change not running the feed's pass
     assertEqual(rec.me.verdict, "collected")
     assertEqual(count(seen, rec.id .. ":collection"), 1)
 end, T.RETAIL_ONLY)
+
+test("collect feed: the collection events are the engine's, the feed's pass is CollectFeed's", function()
+    local NS = T.newAddon()
+    assertTrue(type(NS.CollectFeed.OnCollectionsChanged) == "function")
+    -- red under: the feed refresh left on NS.Collectibles (Item Search split plan, A2)
+    assertNil(NS.Collectibles.Changed); assertNil(NS.Collectibles.REREAD_DELAY)
+    -- red under: CollectFeed still declaring a collection event of its own beside the engine's (C1)
+    local engine = false
+    for _, r in ipairs(NS.FEATURE_EVENTS) do
+        if r[1] == "NEW_MOUNT_ADDED" then
+            assertTrue(r[2] ~= "OnCollectionEvent", "no feed row of its own")
+            engine = engine or r[2] == "OnVerdictEvent"
+        end
+    end
+    assertTrue(engine, "the engine's row")
+    for _, name in ipairs({ "Verdict", "Read", "CategoryOf", "IsCollectible" }) do
+        assertTrue(type(NS.Collectibles[name]) == "function", name .. " stays on Collectibles")
+    end
+end)
 
 test("collect feed: the stand-down cancels a waiting re-read", function()
     local NS, m = party()
@@ -229,7 +250,7 @@ test("collect feed: the stand-down cancels a waiting re-read", function()
     local calls = spyReread(NS)
     m.__fire("NEW_MOUNT_ADDED", 77)
     NS.addon:OnSlashCommand("disable")
-    m.advance(NS.Collectibles.REREAD_DELAY * 2)
+    m.advance(NS.CollectFeed.REREAD_DELAY * 2)
     -- red under: a stand-down that leaves the timer armed
     assertEqual(calls.n, 0)
 end)

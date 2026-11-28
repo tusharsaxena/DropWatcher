@@ -2,9 +2,9 @@ local _, NS = ...
 -- core/CompatCollect.lua — the collection reads (issue #13, categories design spec §2): mounts,
 -- battle pets, toys, the cosmetic flag, a recipe's "Already known" line and the player's
 -- professions, published on NS.Compat like the rest of the compat family, split out of
--- core/Compat.lua to keep it under the 1000-line band. modules/Collectibles.lua is the one caller of
+-- core/Compat.lua to keep it under the 1000-line band. libs/LibKa0s/VerdictCollect.lua is the one caller of
 -- those; the tier-token reads (the slot a token's tooltip names, an item's use text, a class's name) are
--- modules/ItemFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
+-- libs/LibKa0s/VerdictFacts.lua's and modules/CollectCells.lua's (categories design spec §7.1, DW-CAT4), and
 -- the link of a curated sample's id is modules/SimPool.lua's (spec §8, DW-CAT6).
 --
 -- THE RULES are core/Compat.lua's: globals read bare at call time, a value that may be secret
@@ -166,53 +166,6 @@ function Compat.ProfessionSkillLines()
     return out
 end
 
---- The player's rank in each profession, `{ [skillLine] = rank }` (GetProfessions' indices,
---- GetProfessionInfo's third and seventh returns; a slot whose rank or line is secret or
---- unreadable left out): Item Search's fallback when the client has no C_SkillInfo skill list
---- (core/CompatSearch.lua's SkillLineRanks). Nil for no API.
---- @return table|nil
-function Compat.ProfessionRanks()
-    if not (GetProfessions and GetProfessionInfo) then return nil end
-    local indices, out = { GetProfessions() }, {}
-    for i = 1, 5 do
-        local index = plainId(indices[i])
-        if index then
-            local _, _, rank, _, _, _, line = GetProfessionInfo(index)
-            rank, line = plainNumber(rank), plainId(line)
-            if rank and line then out[line] = rank end
-        end
-    end
-    return out
-end
-
--- The known-spell readers, first that exists wins: each answers a boolean-ish for a spell id.
-local function knownReaders()
-    local out = {}
-    if type(IsPlayerSpell) == "function" then out[#out + 1] = IsPlayerSpell end
-    local sb = C_SpellBook
-    if type(sb) == "table" and type(sb.IsSpellKnown) == "function" then out[#out + 1] = sb.IsSpellKnown end
-    if type(IsSpellKnown) == "function" then out[#out + 1] = IsSpellKnown end
-    return out
-end
-
---- Whether the player knows a spell (Item Search's recipe mark, core/CompatSearch.lua's callers):
---- IsPlayerSpell, falling back to C_SpellBook.IsSpellKnown and IsSpellKnown (neither bare name is
---- in the kit's API sets; each is read only where the client has it). True when any says so; false when every reader there
---- is said no; nil for no reader, or a secret answer before any true one.
---- @param spellID number
---- @return boolean|nil
-function Compat.SpellKnown(spellID)
-    if not plainId(spellID) then return nil end
-    local readers = knownReaders()
-    if #readers == 0 then return nil end
-    for _, fn in ipairs(readers) do
-        local known = fn(spellID)
-        if Compat.IsSecret(known) then return nil end
-        if known then return true end
-    end
-    return false
-end
-
 -- ── Tier tokens (DW-CAT4) ───────────────────────────────────────────────────────────────────
 
 -- An item's hyperlink tooltip data (C_TooltipInfo.GetHyperlink), or nil: no API, a secret link or
@@ -256,7 +209,7 @@ end
 --- equals ITEM_OPENABLE ("<Right Click to Open>"), false once the tooltip was read with neither; nil
 --- for no API, neither GlobalString (one alone is enough to read its line), a secret link, a missing
 --- or malformed tooltip or a secret line. It reads lines only: the item's class is the caller's.
---- modules/Collectibles.lua asks it of Miscellaneous Junk alone, the class a lockbox has, after the
+--- libs/LibKa0s/VerdictCollect.lua asks it of Miscellaneous Junk alone, the class a lockbox has, after the
 --- toy probe (a toy is never asked), and takes either answer as a lockbox (its Kind); a bag, quiver
 --- or ammo pouch is a container by its class there, and never asks it (RX-30).
 --- @param link string
@@ -307,7 +260,7 @@ end
 --- or none readable. The use spell's description first; when that cannot be read, the tooltip's
 --- use line. With no text, the second return is the use spell's id when its description came back
 --- empty: a spell the client has not loaded yet (Compat.RequestSpellLoad, then read again; the
---- caller is modules/ItemFacts.lua).
+--- caller is libs/LibKa0s/VerdictFacts.lua).
 --- @param link string
 --- @return string|nil text, number|nil loadingSpellID
 function Compat.ItemUseText(link)

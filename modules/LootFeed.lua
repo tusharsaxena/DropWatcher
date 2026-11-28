@@ -61,7 +61,7 @@ local _, NS = ...
 -- scorer answering "pending" is retried on one shared SCORE_RETRY timer, SCORE_TRIES times per
 -- drop; your own drop the trade timer matched to its bag item is read from it on each
 -- TradeTimerTick (ReadBagItems: the exact level and quality). Each sends DropUpdated(id, cause):
--- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/Collectibles.lua's re-read,
+-- `source`, `inspect`, `gear`, `score`, `bag` or `collection` (modules/CollectFeed.lua's re-read,
 -- through Refresh). A new drop sends DropAdded(id). Updates re-judge
 -- the verdicts and the trade only: a drop once shown stays shown.
 -- Test drops are never updated.
@@ -165,8 +165,22 @@ local function categories()
     return kinds
 end
 
---- The settings the feed reads: `feed.*`, `comparison.*` and `trade.rules.*`, each through the
---- schema seam (`feed.clearOnBossKill` is read at each kill instead).
+--- The settings your verdict reads, and nothing else: the six `comparison.*` values through the
+--- schema seam, and the client's verdict mode (LF.VERDICT_MODE). The shape the verdict engine's
+--- host config takes (Item Search split plan, task A2).
+--- @return table vcfg { sidegradeBand, compareOwned, undesired, heirloomProtect, scorer, weights, verdictMode }
+function LF.VerdictConfig()
+    return {
+        sidegradeBand = get("comparison.sidegradeBand"), compareOwned = get("comparison.compareOwned"),
+        undesired = get("comparison.undesired"), heirloomProtect = get("comparison.heirloomProtect"),
+        scorer = get("comparison.scorer"), weights = get("comparison.weights"),
+        verdictMode = LF.VERDICT_MODE,
+    }
+end
+
+--- The settings the feed reads: `feed.*` and `trade.rules.*` through the schema seam, and the
+--- verdict's own (LF.VerdictConfig) whole under `verdict` and only there, so a verdict read cannot
+--- take the feed's table for the verdict's (`feed.clearOnBossKill` is read at each kill instead).
 --- @return table cfg
 function LF.Config()
     return {
@@ -175,9 +189,7 @@ function LF.Config()
         relativeIlvl = get("feed.relativeIlvl"),
         qualityMode = get("feed.quality.mode"), fixed = get("feed.quality.fixed"),
         floor = get("feed.quality.floor"), upgradeOverride = get("feed.quality.upgradeOverride"),
-        sidegradeBand = get("comparison.sidegradeBand"), compareOwned = get("comparison.compareOwned"),
-        undesired = get("comparison.undesired"), heirloomProtect = get("comparison.heirloomProtect"),
-        rules = tradeRules(),
+        rules = tradeRules(), verdict = LF.VerdictConfig(),
     }
 end
 
@@ -241,15 +253,16 @@ local function groupSpec(s, encounterID, t) return NS.GroupPlace.Stamp(placeOf(s
 
 -- ── judging ─────────────────────────────────────────────────────────────────────────────────
 
-local function scorer()
+local function scorer(vcfg)
     local S = NS.Scoring
-    if type(S) == "table" and type(S.Scorer) == "function" then return S.Scorer() end
+    if type(S) == "table" and type(S.Scorer) == "function" then return S.Scorer(vcfg) end
     return nil
 end
 
-local function evalOpts(cfg)
-    return { sidegradeBand = cfg.sidegradeBand, compareOwned = cfg.compareOwned, scorer = scorer(),
-        verdictMode = LF.VERDICT_MODE }
+-- The kernel's opts from the verdict's config (LF.VerdictConfig, or LF.Config's `verdict`).
+local function evalOpts(vcfg)
+    return { sidegradeBand = vcfg.sidegradeBand, compareOwned = vcfg.compareOwned, scorer = scorer(vcfg),
+        verdictMode = vcfg.verdictMode }
 end
 
 local function evaluate(facts, candidate, opts)
@@ -266,7 +279,7 @@ local function myCandidate(cfg)
     local key = NS.ClassData.SpecKey(cand.classFile, cand.specID, cand.tree) or cand.specID
     local undesired = cfg.undesired and key and cfg.undesired[key]
     if type(undesired) == "table" then cand.prefs = { undesired = undesired } end
-    cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (modules/OffSpec.lua)
+    cand.undesiredBySpec = cfg.undesired   -- each off-spec's own list (libs/LibKa0s/VerdictEvaluate.lua)
     return cand
 end
 
@@ -278,12 +291,13 @@ end
 -- (`rec.forced`: FeedFilter's answer, or the list itself for a restored or test drop; Never watch
 -- wins), and every later judge (the score retry, a gear change, a refresh) keeps that answer: a
 -- list change applies to new drops only, so a shown drop never leaves the collect path untold.
-local function judgeMe(rec, cfg)
+-- `vcfg` is the verdict's config alone (LF.VerdictConfig, or LF.Config()'s `verdict`).
+local function judgeMe(rec, vcfg)
     rec.me = NS.Collectibles.Verdict(rec.facts, rec.forced == true)   -- nil for gear and a tier token
     if rec.me then return end
-    local opts = evalOpts(cfg)
-    opts.heirloomProtect = cfg.heirloomProtect == true
-    rec.me = evaluate(rec.facts, myCandidate(cfg), opts)
+    local opts = evalOpts(vcfg)
+    opts.heirloomProtect = vcfg.heirloomProtect == true
+    rec.me = evaluate(rec.facts, myCandidate(vcfg), opts)
 end
 
 -- Your average equipped item level (shirt and tabard aside), or nil (NS.FeedFilter.AverageIlvl).
@@ -304,7 +318,7 @@ local function gateCtx(rec, cfg)
         rolled = rec.rolled or rec.roll ~= nil,
         myIlvl = cfg.minIlvlMode == "relative" and myIlvl() or nil, gear = NS.Gear.Qualities(), passes = timedGate,
         mode = NS.QualityGate.ResolveMode(cfg.qualityMode, NS.Situations.QualityOverride(rec.situation)),
-        judge = function(forced) rec.forced = forced; judgeMe(rec, cfg); return rec.me end }
+        judge = function(forced) rec.forced = forced; judgeMe(rec, cfg.verdict); return rec.me end }
 end
 
 --- The feed's pre-looter gates for an item with no looter yet (modules/Pending.lua): `situation`'s
@@ -320,7 +334,7 @@ end
 --- with `forced` (GateFor's answer) kept as a shown drop keeps it.
 function LF.JudgeMe(facts, forced)
     local rec = { facts = facts, forced = forced }
-    judgeMe(rec, LF.Config())
+    judgeMe(rec, LF.VerdictConfig())
     return rec.me
 end
 
@@ -385,7 +399,7 @@ local function candidateEntry(rec, m, cfg, ask)
     local e = { guid = m.guid, name = m.fullName or m.name, classFile = m.classFile }
     local cand = NS.Inspect.Candidate(m.guid)
     if cand then
-        e.status, e.eval = "ready", evaluate(rec.facts, cand, evalOpts(cfg))
+        e.status, e.eval = "ready", evaluate(rec.facts, cand, evalOpts(cfg.verdict))
         return e
     end
     local entry = NS.Inspect.Get(m.guid)
@@ -429,7 +443,7 @@ local function judgeLooter(rec, cfg, request)
         if request and inGroup and not rec.test then NS.Inspect.Request(guid, NS.Inspect.PRIORITY.looter) end
         rec.inspect = inspectState(guid)
         local cand = inGroup and NS.Inspect.Candidate(guid) or nil
-        rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg)) or nil
+        rec.them = cand and evaluate(rec.facts, cand, evalOpts(cfg.verdict)) or nil
     end
     estimate(rec, rec.them, cfg, rec.inspect)
 end
@@ -462,7 +476,7 @@ retryScores = function()
         if rec.scoreTries and rec.scoreTries < LF.SCORE_TRIES then
             rec.scoreTries = rec.scoreTries + 1
             n = n + 1
-            judgeMe(rec, cfg)
+            judgeMe(rec, cfg.verdict)
             judgeLooter(rec, cfg, false)
             if scorePending(rec) and rec.scoreTries < LF.SCORE_TRIES then again = true end
             send(NS.MSG.DROP_UPDATED, rec.id, "score")
@@ -887,7 +901,7 @@ end
 local function rejudge(rec, facts, cause)
     rec.facts = facts
     local cfg = LF.Config()
-    judgeMe(rec, cfg)
+    judgeMe(rec, cfg.verdict)
     judgeLooter(rec, cfg, false)
     notePending(rec)
     NS.Debug("EVAL", "drop %s re-judged (%s): ilvl %s, me=%s them=%s trade=%s", rec.id, tostring(cause),
@@ -949,7 +963,7 @@ function LF.OnGearChanged()
     if stoodDown() then return end
     local cfg, drops = LF.Config(), store().live.drops
     for _, rec in ipairs(drops) do
-        judgeMe(rec, cfg)
+        judgeMe(rec, cfg.verdict)
         if rec.isMine then judgeLooter(rec, cfg, false) end
         notePending(rec)
         send(NS.MSG.DROP_UPDATED, rec.id, "gear")

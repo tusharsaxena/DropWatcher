@@ -48,31 +48,11 @@ end)
 BINDING_HEADER_DROPWATCHER = NS.BRAND
 rawset(_G, "BINDING_NAME_CLICK DropWatcherToggleWindow:LeftButton", NS.L["Toggle drop feed"])
 
--- ── the Item Search key binding (Item Search spec §4.6, DropWatcher#17) ─────────────────────
---
--- Bindings.xml's second row, beside the Show window one, which is unchanged: a CLICK binding on a
--- second plain, hidden, non-secure Button (launcher-§6's shape), labeled "Item Search" (the
--- owner's name for it). Its click is modules/ItemSearchKey.lua's NS.ItemSearchKey.Press, read at
--- press time: WoW Forever's alone, so on Retail the press does nothing (spec §1: the row may exist
--- on both clients, because the client reads one Bindings.xml for both). The default key is set at
--- run time, once per character and only on a free key (NS.ItemSearchKey.TryDefaultKey); the file
--- carries no `default` attribute. THE NAME IS PERMANENT, as the Show window button's.
-local searchButton = CreateFrame("Button", "DropWatcherItemSearch", UIParent)
-searchButton:Hide()
-searchButton:RegisterForClicks("AnyDown")
-searchButton:SetScript("OnClick", function()
-    if NS.ItemSearchKey then NS.ItemSearchKey.Press() end
-end)
-rawset(_G, "BINDING_NAME_CLICK DropWatcherItemSearch:LeftButton", NS.L["Item Search"])
-
 -- The one bindings table (launcher-§6), in Bindings.xml order, Show window first. General >
 -- Keybindings (settings/Panel.lua, O.KeybindingsTab, options-ui-§20) draws a row per entry, and
--- tests/test_bindings.lua holds Bindings.xml to it (Kit.assertBindingsXml). The Item Search row is
--- WoW Forever's alone (`clients`, OptionsKeybinds minor 8): no row on Retail.
+-- tests/test_bindings.lua holds Bindings.xml to it (Kit.assertBindingsXml).
 NS.BINDINGS = {
     { command = "CLICK DropWatcherToggleWindow:LeftButton", tooltip = NS.L["Shows or hides the drop feed."] },
-    { command = "CLICK DropWatcherItemSearch:LeftButton", clients = { "forever" },
-      tooltip = NS.L["Opens Item Search on the item under the pointer, or closes it."] },
 }
 
 if not lib then

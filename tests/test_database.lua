@@ -257,6 +257,59 @@ test("database: step 15 retires window.itemSources in every stored profile and k
     NS.RetireItemSources(nil); NS.RetireItemSources({}); NS.RetireItemSources({ window = 3 })
 end)
 
+-- The Item Search split (DropWatcher#19, plan task D1): Item Search moved to its own addon, Ka0s
+-- Item Search, and takes none of this data (no migration, R5), so step 19 deletes every stored
+-- itemSearch table: each profile's settings, the account-wide prices and learned recipes, and each
+-- character's key default mark.
+test("database: step 19 deletes every stored itemSearch table and keeps the rest", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 18, itemSearch = { prices = { [1] = { [2] = { p = 5 } } },
+            learnedRecipes = { [3] = true } }, minimap = { hide = true } },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        char = { ["Me - Realm"] = { itemSearch = { keyDefaultedV = 2 }, role = { mode = "tank" } } },
+        profiles = {
+            Default = { itemSearch = { tooltip = { rows = 7 }, window = { pins = false } },
+                window = { mode = "compact" } },
+            Alt = { itemSearch = {} },
+            Bare = { feed = { sort = "oldest" } },
+        },
+    }
+    -- red under: no step 19 (the stored tables stay)
+    NS.addon:OnInitialize()
+    local sv = _G.DropWatcherDB
+    assertNil(sv.global.itemSearch, "the account-wide prices and learned recipes go")
+    assertNil(sv.char["Me - Realm"].itemSearch, "the character's key default mark goes")
+    assertNil(sv.profiles.Default.itemSearch); assertNil(sv.profiles.Alt.itemSearch)
+    assertEqual(sv.global.minimap.hide, true, "the rest of global stays")
+    assertEqual(sv.char["Me - Realm"].role.mode, "tank", "the rest of the character's data stays")
+    assertEqual(sv.profiles.Default.window.mode, "compact", "the rest of the profile stays")
+    assertEqual(sv.profiles.Bare.feed.sort, "oldest")
+    assertTrue(NS.SCHEMA_VERSION >= 19)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+    assertNil(NS.addon.db.profile.itemSearch, "no default brings it back")
+    assertNil(NS.SchemaRuntime.FindRow("itemSearch.tooltip.enabled"), "no settings row")
+    NS.RetireItemSearchRows(nil); NS.RetireItemSearchRows({}); NS.RetireItemSearchRows({ global = 3, char = 3, profiles = 3 })
+end)
+
+-- An account stored before Item Search's own steps (16 to 18) runs them over data step 17 now
+-- deletes: nothing of it is left, and nothing raises. A regression guard for steps 16 and 18 meeting
+-- no itemSearch table, not evidence for step 19: step 17 alone empties it here (the case above, seeded
+-- at schema 18, is the one that is red without step 19).
+test("database: a schema-15 account's itemSearch data runs steps 16 to 18 without raising and is gone", function()
+    local NS = T.newAddon()
+    _G.DropWatcherDB = {
+        global = { schemaVersion = 15, itemSearch = { recent = { "Linen Cloth" } } },
+        profileKeys = { ["Me - Realm"] = "Default" },
+        profiles = { Default = { itemSearch = { tooltip = { dropsShown = 4, order = { "drops" } },
+            window = { density = "compact" } } } },
+    }
+    NS.addon:OnInitialize()
+    local sv = _G.DropWatcherDB
+    assertNil(sv.global.itemSearch); assertNil(sv.profiles.Default.itemSearch)
+    assertEqual(NS.addon.db.global.schemaVersion, NS.SCHEMA_VERSION)
+end)
+
 -- DW-04 (LibKa0s#54, OWNER_SCOPE C.11): the simulation panel's position is session-only, so the
 -- window-state key the retired DropWatcher panel wrote (`profile.simPanel`) goes.
 test("migrate 9: a stored simPanel point is retired, idempotently, and nothing else changes", function()

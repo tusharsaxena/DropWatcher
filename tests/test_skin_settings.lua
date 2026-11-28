@@ -80,8 +80,8 @@ local function textOf(w) return w.labelText or w.text end
 local OWN = {
     { page = "feed", tab = "Retention",
       mine = function(w) return w.type == "Button" and textOf(w) == "Clear history" end },
-    { page = "comparison", tab = "Weights",
-      mine = function(w) return w.type == "EditBox" and textOf(w) == "Import a Pawn scale" end },
+    -- The Comparison page's editors are LibKa0s-Verdict-1.0's Settings, drawn through the Options
+    -- instance's owner proxy like the library's own rows: not this addon's to paint (IS-C1).
     { page = "messages", tab = "Templates",
       mine = function(w) return w.type == "Button" and tostring(textOf(w)):sub(1, 1) == "{" end },
 }

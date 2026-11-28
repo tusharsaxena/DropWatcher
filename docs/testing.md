@@ -284,7 +284,7 @@ color, the swatch's mode for no quality), the Drops row, its Me icons, the detai
 compact card and the toast styled live, the glow's frame level over the border, and a profile copy
 re-reading it), the ten skin suites (the skinning rollout, DW-01 to DW-04, the skin fonts run's two,
 the full skinning run's `test_skin_flip` and `test_skin_host`, and round 5's `test_header_band`):
-`test_skin_setup` (the seam: the owner and its facade, the twenty-five `dw.*` owner tokens at Ka0s
+`test_skin_setup` (the seam: the owner and its facade, the twenty-three `dw.*` owner tokens at Ka0s
 Default's pixels and their follow tokens elsewhere, `C.TONE` refilled in place, the eight `skin.*`
 rows, `/dw set` on a skin, an exception and an override, the write seam, the Skin tab's place, one
 pick one repaint, the profile's skin applied after AceDB and on every profile event, the factories
@@ -401,13 +401,16 @@ row and never the table (Review Focus 2), the drop key under either client's nam
 unchanged as a view, an encounter's drops and name, the history clock, your open rolls and a roll's
 bind on pickup flag, the seam wrapping every member, and no other file naming the APIs),
 `test_text_parse` (the pure text parsers of `core/TextParse.lua`, the localized strings passed in,
-and that the module reads no global), `test_constants` and `test_class_data` (the game-data tables
-and their lookups, each spec's place in its class among them), `test_evaluate` (the verdict kernel,
-table-driven over every slot plan and every equippability path, the `either` of a baseline picked
-from two worn items (feedback-21 R5), plus nil and garbage inputs), `test_offspec` (feedback-19 spec
-§0: the off-spec verdict `modules/OffSpec.lua` attaches to a main-spec Can't use whose refusal
-depends on the spec, each other spec of the class judged against its own gear by item level, the
-best kept as `eval.offSpec`, the main verdict never changed), `test_offspec_cells` (DW-O1: how
+and that the module reads no global), `test_constants` (the game-data tables; the class lists, the
+verdict kernel, the off-spec pass, the scorers, the item facts and the collection verdict are
+LibKa0s-Verdict-1.0's since the Item Search split, pinned by the library's own suites and by the
+golden suite below), `test_offspec` (feedback-19 spec §0: the off-spec pass's gate in this addon,
+Retail's alone through `C.FEATURE.offSpec`, with its rows, template and words),
+`test_verdict_setup` (`core/VerdictSetup.lua` and `core/VerdictViews.lua`: the one instance and its
+client, every read through `NS.Compat` at the call, the events as `NS.FEATURE_EVENTS` rows the
+replay reaches (each event the instance registers has its row on the client, and no row is dead), the lazy and quiet first gear read and `GearChanged` after it, the stand-down, the
+collection change, the client named on every kernel view, the scorer from the settings, the
+Comparison rows and the stand-in's surface), `test_offspec_cells` (DW-O1: how
 off-spec looks: the `offspec` cyan, the verdict cell through `WindowCells.Verdict`, the Me cell from
 the off-spec baseline, the compact line, the marks' tone override, the detail card and the History
 snapshot and card, the filter bar and the legends; a Can't use with no off-spec pinned unchanged),
@@ -415,10 +418,7 @@ snapshot and card, the filter bar and the legends; a Can't use with no off-spec 
 off-spec result, the Ask button's tooltip, the toast and auto-ask, main spec first),
 `test_offspec_offer` (DW-O3: an off-spec Offer candidate ranked after every main-spec upgrade and
 equal, its Their eq cell `311 ▲14 Holy`, Upgrade for N and keep-hidden staying main-spec only, and
-the Offer whisper's {gain}), `test_scoring` (the scorers: the Pawn scale import, the weights score
-and its unknown keys, the adapter in use for each setting, the Pawn adapter's scales (for you, the
-scale you show in Pawn before a starter one you hid; feedback-21 R4) and `pending`, and the
-sidegrade item level and score reach through the kernel and the feed), `test_quality_gate` (the
+the Offer whisper's {gain}), `test_quality_gate` (the
 minimum-quality gate: each mode, the floor, empty slots, ties, both overrides), `test_situations`
 (the situation classifier's truth table for every key, the per-situation settings and their spec
 defaults, the six re-evaluation events and the stand-down), `test_trade_rules` (the trade estimator:
@@ -431,15 +431,7 @@ chat lockdown, the combat edges ahead of the client's flag, the event's numeric,
 payloads, `RestrictionChanged` and the stand-down), `test_roster` (the roster: solo, party and raid
 tokens, the realm normalization, resolving by GUID, Name-Realm and bare name, the same-name tie
 settled by classFile and by the player's realm, the re-read on a miss, the shared
-`GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down), `test_item_facts` (the item facts:
-every field of a cached item, the track tier by string id and by name, the tooltip track,
-uniqueness, tier tokens and class gear, the link-color quality, the facts feeding the verdict
-kernel, the cache and its cap, the appearance event (read from the raw equipLoc), the raw equipLoc
-and the category on every item, the load with its retries, the give-up, a client that cannot load,
-and the stand-down), `test_collectibles` (`modules/Collectibles.lua`, issue #13: `CategoryOf` for
-each category, its precedence and the classes not watched, `Verdict`'s new, collected, unknown, pet
-partial, recipe without the profession and whitelisted answers, and `Read` spending the probes only
-where they decide), `test_collect_feed` (DW-CAT3: a collectible through the feed: judged by its
+`GROUP_ROSTER_UPDATE`, secret unit answers and the stand-down), `test_collect_feed` (DW-CAT3: a collectible through the feed: judged by its
 collection verdict, no looter inspect, no Them and no candidates, also through the trade
 re-estimate; the trade estimate's `collectible`; the trade sweep dropping someone else's and keeping
 your own; `newCollect` through the quality gate's override; the collection events coalesced into one
@@ -475,7 +467,7 @@ skipped with the opts and the facts left untouched, the looter judged on their o
 token through the feed, the drops diagnostics' token line, the minimum item level, and the Slot,
 Type, Makes and Me cells), `test_item_read` (BUG-1 and BUG-2 of the M8 feedback, DW-80: the
 reproduction with realistic 12.x links per loot source and each hypothesis proved or refuted, the
-merge keeping the most complete link (loading and hidden drops included), `core/ItemRead.lua`'s link
+merge keeping the most complete link (loading and hidden drops included), `libs/LibKa0s/VerdictFacts.lua`'s link
 detail, better link, identity, effective level, location reads and quality, the bag match by
 identity, an own drop read from its bag item, the `drops` diagnostics line, and the real game
 tooltip: bag slot, worn slot, link, and the addon's line after the game's), `test_gear` (the gear
@@ -827,6 +819,8 @@ providers), `test_sim_pool` (the item pool and group), `test_sim_report` (the lo
 library case asserts the same line, the DW-02, DW-03 and DW-04 commit bodies record each mapping,
 DropWatcher case to library case.
 
+The golden verdict suite, `test_verdict_golden` (Item Search split plan, task A1), pins today's "my verdict on this item" engine over a plain-data table, `tests/fixtures/verdict_golden.lua`: its kernel half drives `NS.Evaluate.Evaluate` and `NS.Collectibles.Verdict` on both kit profiles with the case's class list installed, and its read half seeds the mock and judges a link through `NS.ItemFacts.Get` and `NS.LootFeed.JudgeMe`, each case on its own client's profile (a declared skip on the other). LibKa0s-Verdict-1.0's own golden suite ports the same table unchanged, so the move into the library keeps every verdict; since task C1 the seams it drives are `core/VerdictViews.lua`'s views over the library, and the suite and its fixture are byte-unchanged since A1 (`5dafd4e`). An expected value there is what the engine answers, never what it ought to: a surprise is recorded, not fixed.
+
 Write tests first for pure logic. Extend `tests/wow_mock.lua` for a new client API (a collection
 read in `tests/wow_mock_collect.lua`), never `tests/_kit/`.
 
@@ -875,9 +869,6 @@ pass does not have to rule on it again (verified 2026-10-31: no string-keyed dis
 | `TG.Painted` (`modules/TipGrid.lua`) | reads what the last grid paint drew |
 | `TT.TickerPeriod` (`modules/TradeTimer.lua`) | reads the private ticker's period |
 | `Window.TooltipOf` (`modules/Window.lua`) | reads exactly what a hover would show |
-| `ISW.ViewState`, `ISW.ShownTab`, `ISW.MatchRows`, `ISW.TableRows` (`modules/ItemSearchWindow.lua`) | read the Item Search window's session view state, the tab on screen and the rows its list and table draw (ISF-DW-05, ISF-DW-06) |
-| `ISG.Rows` (`modules/ItemSearchGrid.lua`) | reads the rows a table draws, in order |
-| `IST.RuleOf`, `IST.BadgeOf`, `IST.ColumnsOf`, `IST.ReasonLines` (`modules/ItemSearchTip.lua`) | read a tooltip's separator texture, its verdict badge's pill (R4-DW-07, R5-DW-02), its crafting rows' profession column (R5-DW-10), and a verdict's reason lines as the block writes them (ISR3-DW-02, ISR3-DW-05) |
 
 ## The four suites, and which checkpoint each gates
 

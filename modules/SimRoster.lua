@@ -126,7 +126,7 @@ local function unitOf(kind, i)
 end
 
 -- Member `i` from crowd person `row`. WoW Forever's spec is class-wide and the client's alone
--- (core/ClassDataForever.lua), so a Forever member has no specID, as an inspect of one that
+-- (libs/LibKa0s/VerdictClassData.lua), so a Forever member has no specID, as an inspect of one that
 -- answered nothing (Forever port design §4.2).
 local function makeMember(i, kind, row, opts, rnd)
     local name, realm, fullName = nameOf(row, opts, rnd)

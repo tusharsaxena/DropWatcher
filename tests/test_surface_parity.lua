@@ -123,14 +123,6 @@ test("parity: the Glow stub carries the whole LibKa0s-Glow-1.0 surface", functio
     T.assertSurfaceParity(degraded.GlowLib, "LibKa0s-Glow-1.0")
 end)
 
-test("parity: the ForeverDB stub carries the whole LibKa0s-ForeverDB-1.0 surface (SF-DW-01)", function()
-    -- red under: drop `ItemSources` from core/ForeverDBSetup.lua's stub
-    T.assertSurfaceParity(degraded.ForeverDB, "LibKa0s-ForeverDB-1.0")
-    -- The all-absent answers (the library's Degradation section): the card then shows no sources.
-    local ok, why = degraded.ForeverDB.Available()
-    T.assertEqual(tostring(ok) .. "," .. tostring(why), "false,missing")
-end)
-
 test("parity: the Toast stub carries the whole LibKa0s-Toast-1.0 instance surface", function()
     -- red under: drop `Hold` from core/ToastSetup.lua's stub
     T.assertSurfaceParity(live.NewToast({ build = function() end }), degraded.ToastStub, "Toast instance vs stub")

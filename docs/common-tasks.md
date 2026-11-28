@@ -82,7 +82,7 @@ A version-variant, deprecated or optional client API is called from `core/Compat
 ## Add a season's tier tokens
 
 Normally there is nothing to do. A tier token is judged as the piece it makes (categories design spec
-§7), and since TT-1 its slot is read from its own text (`modules/TierTokens.lua`, `SlotOf`): its Use
+§7), and since TT-1 its slot is read from its own text (LibKa0s-Verdict-1.0's TierTokens, `SlotOf`, handed this addon's words): its Use
 text's `set <slot> item ... appropriate for your class`, else a tooltip line that is exactly the slot's
 name, else a slot noun in its item name (`Gauntlets of the Foreseen Conqueror`), else it is judged in
 its best tier slot (`any`). An omni Curio is told by its name. The words are the enUS locale table's
@@ -99,7 +99,8 @@ To check a new season's wording:
 3. New wording, or a new slot word or name noun: change the words in `locales/enUS.lua`'s TT-1 block
    (never in the code), and add a case with the season's real text to `tests/test_tier_token.lua`.
 
-The override table, for an oddity the text misreads: `C.TIER_TOKENS` in `core/Constants.lua`, one
+The override table, for an oddity the text misreads: `C.TIER_TOKENS` in LibKa0s-Verdict-1.0's
+`VerdictConstants.lua` (a library change, released and re-vendored; never an edit to `libs/`), one
 row per token, `[itemID] = { slot = "INVTYPE_HEAD" }` (`INVTYPE_SHOULDER`, `INVTYPE_CHEST`,
 `INVTYPE_HAND`, `INVTYPE_LEGS`), or `{ slot = "any" }`, with the season and the reason in a comment.
 It is the first rung and makes the item a token on its own. Never guess an id into it; record the id

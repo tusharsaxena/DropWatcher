@@ -537,7 +537,7 @@ function I.Candidate(guid)
     return {
         classFile = classFile, specID = specID, level = e.level, isPlayer = false, gear = gear,
         dualWield = CD.DualWieldFor(classFile, specID), titanGrip = CD.TitanGripFor(classFile, specID),
-        -- Retail's alone (modules/OffSpec.lua): no off-spec gear where the pass is not initialized.
+        -- Retail's alone (libs/LibKa0s/VerdictEvaluate.lua): no off-spec gear where the pass is not initialized.
         offSpecGear = NS.OffSpec.Initialized() and function(x) return NS.OffSpec.WornGear(gear, NS.OffSpec.Who(classFile, x)) end or nil,
     }
 end

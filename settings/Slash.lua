@@ -99,11 +99,6 @@ local COMMANDS = {
     {"sim",      L["Simulate a group session through the real engine — `/dw sim` for its verbs"],
         function(rest) NS.Sim:RunVerb(rest) end},
 }
--- WoW Forever's alone (Item Search spec §4.5, clients-§4): no row on Retail.
-if NS.Constants.FEATURE.itemSearch then
-    COMMANDS[#COMMANDS + 1] = {"search", L["Open Item Search — `/dw search [name|id]`"],
-        function(rest) NS.ItemSearchWindow.SlashSearch(rest) end}
-end
 NS.COMMANDS = COMMANDS
 
 local lib = LibStub and LibStub("LibKa0s-Slash-1.0", true)
@@ -214,7 +209,7 @@ else
 end
 
 --- Open the settings panel (registering the category first if OnEnable has not run yet), on the
---- page `pageKey` when given (the Item Search window's gear opens Item Search's page).
+--- page `pageKey` when given.
 --- @param pageKey string|nil
 function DW:OpenSettings(pageKey)
     if self.Settings and self.Settings.Register then self.Settings.Register() end

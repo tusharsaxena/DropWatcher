@@ -511,7 +511,7 @@ end
 -- ── Item readers (the item facts, design spec §4 and §5.1) ──────────────────────────────────
 -- Each takes a link, calls C_Item's spelling, copies plain fields only and answers nil (or false)
 -- for an uncached item or a missing call. The bare globals are dead rungs (every client at this
--- interface has C_Item), so they are deleted, not shimmed. Caching is modules/ItemFacts.lua's.
+-- interface has C_Item), so they are deleted, not shimmed. Caching is libs/LibKa0s/VerdictFacts.lua's.
 
 -- C_Item[name], or nil.
 local function itemApi(name)
@@ -1036,24 +1036,6 @@ function Compat.InsertChatLink(link)
     if type(link) ~= "string" or not fn then return false end
     fn(link)
     return true
-end
-
---- Puts `link` in chat (Item Search's Link in chat): into the open edit box (Compat.InsertChatLink),
---- else opens the chat edit box with it (ChatFrameUtil.OpenChat, then ChatFrame_OpenChat). True when
---- one was called.
---- @param link string
---- @return boolean
-function Compat.LinkInChat(link)
-    if type(link) ~= "string" or Compat.IsSecret(link) then return false end
-    local box = type(ChatEdit_GetActiveWindow) == "function" and ChatEdit_GetActiveWindow() or nil
-    if box and Compat.InsertChatLink(link) then return true end
-    local util = ChatFrameUtil and ChatFrameUtil.OpenChat
-    local open = util or ChatFrame_OpenChat
-    if type(open) == "function" then
-        open(link)
-        return true
-    end
-    return Compat.InsertChatLink(link)
 end
 
 --- Shows `link` in the dressing room (an item button's ctrl-click): DressUpItemLink, then the

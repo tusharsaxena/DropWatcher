@@ -1,7 +1,7 @@
 -- tests/test_item_read.lua — BUG-1 of the M8 feedback (ui spec §0, DW-80): a real drop read wrongly
 -- (Lustrous Golden Plumage, item 159617, shown at its base level 19 and base quality Rare instead
 -- of 311 Epic). The reproduction with realistic 12.x links per loot source comes first, then
--- core/ItemRead.lua (the library-shaped reads: LinkDetail, BetterLink, QualityOf,
+-- libs/LibKa0s/VerdictFacts.lua (the library-shaped reads: LinkDetail, BetterLink, QualityOf,
 -- EffectiveItemLevel, ItemLevelAt, QualityAt), then the fixes it drives: the merge keeps
 -- the most complete link, an own drop matched to its bag item reads its level and quality from
 -- that bag item, the bag match tolerates non-identity fields, and the `drops` diagnostics line.
@@ -193,7 +193,7 @@ test("BUG-1: a drop the bare link's base quality hid comes back when the complet
 end)
 
 -- ---------------------------------------------------------------------------------------------
--- core/ItemRead.lua
+-- libs/LibKa0s/VerdictFacts.lua
 -- ---------------------------------------------------------------------------------------------
 
 test("ItemRead: LinkDetail reads the bonus ids, the modifiers, the context and how complete a link is", function()

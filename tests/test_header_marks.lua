@@ -5,10 +5,8 @@
 -- (standard v2.119.0, *Settings is on every window but a companion*) that opens this addon's settings
 -- through the opener its launcher registered.
 --
--- The windows: the main window (lock, layout, minimize, settings, close; on WoW Forever the Item
--- Search magnifier first) and, on WoW Forever, the Item Search window (settings, close: not a
--- companion, since its key opens it on its own and it keeps a saved position; its lock went in
--- ISF-DW-05, Item Search feedback spec §5.1, W13). Its companions carry no
+-- The window: the main window (lock, layout, minimize, settings, close; the Item Search magnifier
+-- went with Item Search, DropWatcher#19). Its companions carry no
 -- settings mark (FB-DW-01, W.HeaderButtons' companion = true): the Rolls panel (Expand all / Collapse
 -- all, close) and the Offer panel (close), both docked beside the window and showing only its drops,
 -- and the Edit message box (close), a modal over it. The detail card is the Drops table's expanded row
@@ -84,25 +82,14 @@ local function editBox()
     return NS, m, NS.DetailCard.OpenEditor(1, "announce")
 end
 
--- WoW Forever's main window carries the Item Search magnifier first (Item Search spec §4.5).
-local MAIN_ORDER = T.forever and { "search", "lock", "mode", "minimize", "settings", "close" }
-    or { "lock", "mode", "minimize", "settings", "close" }
+-- red under: the Item Search magnifier kept first on WoW Forever's main window
+local MAIN_ORDER = { "lock", "mode", "minimize", "settings", "close" }
 local MAIN_FIELDS = { lock = "lockButton", mode = "modeButton", minimize = "minimizeButton" }
-if T.forever then MAIN_FIELDS.search = "searchButton" end
-
-local function itemSearchWindow()
-    local NS, _, m = T.enableAddon{ skin = "ka0s" }
-    assertTrue(NS.ItemSearchWindow.Open(), "the Item Search window opens")
-    return NS, m, NS.ItemSearchWindow.Frame()
-end
 
 -- The window, what its marks are, left to right, and the field each extra is kept in.
 local WINDOWS = {
     { "the main window", mainWindow, MAIN_ORDER, MAIN_FIELDS },
 }
-if T.forever then
-    WINDOWS[#WINDOWS + 1] = { "the Item Search window", itemSearchWindow, { "settings", "close" }, {} }
-end
 
 -- The companions (FB-DW-01): docked beside the feed window or over it, each showing only its content.
 local COMPANIONS = {
@@ -238,7 +225,7 @@ test("header marks: the main window keeps its strip through minimize and the lay
     NS.SetWindowMode("compact")
     assertEqual(f.headerButtons.offsets.minimize, before, "the same offset in compact")
     local first = f.headerButtons.order[1]
-    assertEqual(first, T.forever and "search" or "lock", "the cluster's first mark")
+    assertEqual(first, "lock", "the cluster's first mark")
     assertEqual(NS.WindowTitleBar.ClusterWidth(f), -f.headerButtons.offsets[first] + f.headerButtons.extras[first]:GetWidth(),
         "the cluster reaches its first mark's left edge")
 end)
@@ -251,7 +238,7 @@ test("header marks: without LibKa0s-Widgets the window keeps its marks on the sa
     local hb = f.headerButtons
     assertTrue(type(hb) == "table", "the host's strip")
     assertTrue(hb.settings == nil, "no settings mark without the library's opener")
-    assertEqual(table.concat(hb.order, ","), T.forever and "search,lock,mode,minimize,close" or "lock,mode,minimize,close")
+    assertEqual(table.concat(hb.order, ","), "lock,mode,minimize,close")
     assertEqual(hb.offsets.minimize, -30, "6 in, 18 wide, 6 apart")
     f.minimizeButton:__fire("OnClick", "LeftButton")
     assertTrue(NS.Window.IsMinimized(), "minimize still works")

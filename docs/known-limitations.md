@@ -30,7 +30,7 @@ the code reads every case the design leaves open, module by module, is in
   client, is judged in its best tier slot (`Token: any slot`), never a wrong one. An omni Curio is
   told by its name ending in `Curio` (an epic Miscellaneous or Reagent item), so on a non-English
   client an unlisted Curio is not seen as a token. Legion's cloak tokens are not a tier slot here: a
-  cloak noun names no slot, and such a token reads `any`. `C.TIER_TOKENS` overrides any of this per
+  cloak noun names no slot, and such a token reads `any`. `C.TIER_TOKENS` (LibKa0s-Verdict-1.0's) overrides any of this per
   item id, and ships empty (categories design spec §7, DW-CAT4).
 - **Collectibles** (issue #13). A caged battle pet arrives as a `|Hbattlepet:` link and is never
   watched; only companion items are. A recipe's "known" state is the client's `ITEM_SPELL_KNOWN`
@@ -254,96 +254,9 @@ the code reads every case the design leaves open, module by module, is in
   headless mock does not model; PROFILE-1 is its in-game check.
 - **The logo** is a placeholder generated for the scaffold; the owner may replace the art
   (regenerate the TGAs with the recipe in `DEPENDENCIES.md`).
-- **Item Search is WoW Forever's alone** (DropWatcher#17, spec §1): Retail has no tooltip block, window,
-  key action or settings page; [DropWatcher#18](https://github.com/tusharsaxena/DropWatcher/issues/18)
-  looks for a Retail equivalent. ITEM-SEARCH-6 checks it is absent.
-- **Item Search needs the optional ForeverDB addon** for its drop sources, vendors, quests and name
-  search; without it, or before its load about 5 seconds after login, the tooltip shows nothing, and
-  the window searches by id and shows Crafting from the shipped table (ITEM-SEARCH-4, ITEM-SEARCH-5).
-- **Item Search's client hooks are assumed until probed**: the item tooltip post call and the
-  profession window's reads (`forever-quirks.md`, ITEM-SEARCH-1 to 4 and 18).
-- **Item Search's Sold by tab has no Stock or Requires column, and Quests no per-quest count**
-  (Item Search feedback spec §5.4 allows a column the client has no data for to go): the
-  LibKa0s-ForeverDB-1.0 reader carries no vendor stock or requirements and no objective counts. A
-  reader addition brings them back. Since round 3 every vendor row carries its own price (the one
-  recorded at that vendor, else ForeverDB's `vendx` or `vp`, else a dash), and the reader reads
-  `vendx` for prices alone (round 3 spec §9); the faction, profession and product icons are not drawn; and Sold by's ranking has no "unlimited
-  stock before limited" tie-break (it keys on the name alone within a tier) until the reader gives
-  the stock. A LibKa0s issue to expose ForeverDB's `vendx` (stock, requirements, per-vendor price)
-  and the quest objective counts is owed, or the owner's acceptance of the reduced columns, before
-  the feedback run is finalized (ISF-REV).
-- **Drop Watcher's arrow assumes the map reads answer on WoW Forever** (`C_Map.GetWorldPosFromMapPos`,
-  the player's map position and facing, as Skill Master's arrow uses them there): `forever-quirks.md`,
-  ITEM-SEARCH-27. The client's own user waypoint is never used, since it draws no arrow on Forever.
-- **Waypoints: TomTom is a choice of a dropdown, so it cannot be grayed out** while TomTom is not
-  loaded; picked then, a pin uses Drop Watcher's arrow, and the row's and the pin's tooltips say so.
-- **Item Search round 3** (Item Search round 3 spec §7):
-  - **A spawn converted from world coordinates can land on the wrong map near a zone border.** A
-    creature or object ForeverDB stores only as world coordinates (`spw`) is placed by
-    LibKa0s-ForeverDB-1.0's `WorldToMap`: its zone polygons pick the map, then the smallest
-    containing rectangle. Measured over the 1517 sources with both forms, the pick agreed with
-    ForeverDB's own map position on 94.1%; the rest land on a neighbor's map or the continent's, and
-    the pin still stands at the right place in the world. ITEM-SEARCH-39 compares it with
-    `C_Map.GetMapPosFromWorldPos` in game.
-  - **A recorded price includes your reputation discount** at that vendor, and is account-wide: a
-    character with another standing may pay a little more or less. A later visit overwrites it.
-  - **The test-source filter can only catch names**: a creature or object named "test", "(DND)",
-    "UNUSED" or "[PH]" is left out of every list, and a dev-only source with an ordinary name is
-    still listed. It has no setting.
-  - **ForeverDB_Full costs some 80 MB of memory while loaded** (82.3 MB measured offline after a
-    collect; its files are 20.6 MB on disk, `performance.md`). It loads on the window's first open
-    of a session unless Load ForeverDB (Full) says Never, and stays loaded until the next reload.
-  - **The gathering skills are hand-curated** (`core/GatherNodes.lua`, from the client's own
-    "Requires Herbalism N" node tooltips, not ForeverDB rows; `validate-seeds.md`): a node the
-    table lacks shows "?", and fishing has no per-node skill on this client, so its Skill cell is a
-    dim dash. ITEM-SEARCH-37 checks the values in game.
-  - **"Trainer" means no item teaches the recipe in the client's data** (ISR3-DW-08): the Crafting
-    tab's source for a recipe you don't know comes from the shipped table's teaching item (the item
-    whose `ItemEffect` teaches the recipe spell, `validate-seeds.md` -> Recipe reagents), and 518 of
-    the 2,493 recipes on 1.60.1.70938 have none. A recipe learned some other way (a quest's spell
-    reward, a book the client data does not tie to it) also says "Trainer". The Status names the
-    recipe item's best source by kind (a vendor, then a quest that rewards it, then a drop, then a
-    world drop), each kind's best by the tabs' own ranking; the row tooltip lists at most 6 of each,
-    and the recipe item's own page (a click on the row) has them all. A recipe of a profession you
-    lack keeps "No <profession>" and reads no source (its click still opens the first recipe item),
-    so a reagent like Rune Thread, with some 300 taught recipes, never reads them all. The tooltip
-    block's Crafting section names no source (ITEM-SEARCH-45).
-  - **A pinned chat link does not count as hovering** for the Item Search key: with the mouse off
-    every item, the key toggles the window even while a chat link's tooltip is open
-    (ITEM-SEARCH-41).
-  - **The Keep / Hold / Auction / Vendor / Toss badge is advice, never an action**: Drop Watcher moves, sells and
-    deletes nothing. Its word reads only what the client and ForeverDB answer, so before your
-    profession window or the gear verdict is read its confidence is Medium or Low (the badge's
-    score, how sure the word is, is the evidence times that confidence since R6-DW-07), a Low
-    confidence never says Toss, and neither does gear whose gear verdict has not answered yet
-    (ITEM-SEARCH-42). Either may still say Auction for an item no vendor buys (R6-DW-06): an
-    auction is not destructive, as a Vendor at any confidence is not.
-  - **The badge's score is how sure the word is, not how good the item is** (R6-DW-07,
-    ITEM-SEARCH-73): two items with the same word and score can be worth very different amounts.
-    Its money part reads Auctionator's last scan against the margin, so a stale scan gives a stale
-    score, and an item Auctionator has no price for reads 80% (Auctionator loaded) or 60% (not
-    loaded, or the comparison off) on the money side, constants of the design rather than
-    measurements. Nothing sorts on it: Item Search's Best for you ranks an item's sources.
-  - **Auction or Vendor rests on assumed deposit rates and Auctionator's last scan** (R5-DW-13,
-    R5-DW-14): the deposit is worked out from `C.ITEM_SEARCH.AUCTION.DEPOSIT` (WoW Forever 5%, 20%,
-    60% of the vendor price for 2, 8, 24 hours, the Classic faction house's rule, at least 1 silver a
-    full-stack listing), because the client's `GetAuctionDeposit` needs the item in the sell slot;
-    WoW Forever's own rates are unmeasured (ITEM-SEARCH-65). The price is the one Auctionator last
-    scanned, read again once the auction house closes, so a stale scan gives a stale answer. A bind
-    on equip item you have already equipped is soulbound, but its item id still says bind on equip,
-    so it can read Auction. No neutral auction house rule: set the cut to match one. An item no
-    vendor buys (R6-DW-06) pays only the least deposit (1 silver a full stack, as the share of a
-    vendor price of 0 is nothing), so its Auction rests on the assumed least too (ITEM-SEARCH-72).
-- **Item Search, owner feedback round 4** (Ka0sAddonsCommonTasks `docs/2026-11-26-OWNER_FEEDBACK_ROUND4/`):
-  - **"The other faction" is ForeverDB's word for it** (R4-DW-08): Hide the other faction's vendors
-    leaves out a vendor whose ForeverDB faction (`nfac`, Alliance, Horde or both) does not include
-    yours. A vendor ForeverDB names no faction for always shows, even if only one side can buy
-    there, and while the client has not told Drop Watcher your side nothing is hidden.
-  - **No vendor cost without a known price** (the owner skipped the estimate): a Sold by row shows a
-    price only once Drop Watcher saw it at that vendor or ForeverDB records one, so most rows show
-    none until you visit the vendor.
-  - **A quest names one giver** (R4-DW-09): the first giver ForeverDB lists whose name is not a test
-    one, in the tooltip and the window alike. Its zone is yours when it stands there, else the zone
-    with most of its spawns; until ForeverDB_Full loads (the window's first open of a session) a few
-    givers' zones are coarser or missing, in both homes. A long title with a giver and a zone widens
-    the tooltip; nothing is cut.
+- **Item Search is no longer here**: it moved to its own addon, Ka0s Item Search
+  (https://github.com/tusharsaxena/ItemSearch, WoW Forever; DropWatcher#19), with its known
+  limitations. Nothing of its data comes with it (the split design's R5): schema step 19 deletes
+  the `itemSearch` settings and recorded prices Drop Watcher kept, and a key bound to the old Item
+  Search binding stays bound in the game's own binding set to an action that no longer exists, until
+  the player clears or rebinds it.

@@ -194,7 +194,7 @@ Expected a nil spec list and a nil track; read which stat keys come back. (R4 #5
 Ornate Bronze Lockbox), the same lockbox once picked, a bag and, on Forever, a quiver and an ammo pouch:
 `/dump LOCKED, ITEM_OPENABLE, select(12, C_Item.GetItemInfo(<link>)), select(13, C_Item.GetItemInfo(<link>))`,
 then `/run for _,l in ipairs(C_TooltipInfo.GetHyperlink("<link>").lines) do print(l.type, l.leftText) end`.
-The code (rolls UX RX-04, RX-15: `modules/Collectibles.lua` by class, `Compat.ItemOpens` for the
+The code (rolls UX RX-04, RX-15: `libs/LibKa0s/VerdictCollect.lua` by class, `Compat.ItemOpens` for the
 lines alone) takes any Container-class item (class 1) and
 any Quiver-class item (class 11: quivers and ammo pouches) as a container, `Container`, and a
 Miscellaneous Junk item (class 15, subclass 0) as a lockbox, `Lockbox`, only when one of its lines
@@ -206,7 +206,7 @@ kind, and shows only through the catch-all, as `Item`. Result:
 
 **P-STATS. Which secondary stats the weights editor should offer.** The weights strip (Comparison ›
 Weights) offers Strength, Agility, Intellect, Stamina, Critical Strike, Haste, Mastery and Versatility
-on both clients (`settings/Editors.lua`'s `SECONDARY`). On Forever, link five drops across armor types
+on both clients (`libs/LibKa0s/VerdictSettings.lua`'s `SECONDARY`). On Forever, link five drops across armor types
 and slots (a caster's, a melee's, a tank's, a ranged weapon and a trinket) and run
 `/dump C_Item.GetItemStats(<link>)` on each. Read every key that comes back: is any of
 `ITEM_MOD_HASTE_RATING_SHORT`, `ITEM_MOD_MASTERY_RATING_SHORT` or `ITEM_MOD_VERSATILITY` ever there, and
@@ -238,39 +238,3 @@ Expected 0 or nil: the journal is disabled, so the simulator's pool is your own 
 **P-JOURNALS. The collection journals.**
 `/dump C_MountJournal.GetNumMounts(), C_ToyBox.GetNumToys(), C_PetJournal.GetNumPets()`. Read which
 journals hold anything: a collectible's verdict reads them. (R4 #12) Result:
-
-## Item Search (round 3)
-
-The reads Item Search round 3 leans on (Ka0sAddonsCommonTasks
-`docs/2026-11-25-ITEM_SEARCH_ROUND3/03_SPEC.md` §4.2, §4.6, §1.2). The smoke rows that carry them are
-ITEM-SEARCH-35, ITEM-SEARCH-39 and ITEM-SEARCH-40.
-
-**P-QREADY. Which quest-complete read answers.** With a quest in the log whose objectives are done
-but not turned in, and its id at hand:
-`/dump C_QuestLog and C_QuestLog.ReadyForTurnIn, C_QuestLog and C_QuestLog.IsComplete, GetQuestLogIndexByID, GetQuestLogTitle`,
-then `/dump C_QuestLog.ReadyForTurnIn(<id>), C_QuestLog.IsComplete(<id>)` for whichever exist. Record
-which members exist and which answers true. `Compat.QuestReady` tries them in that order, each in a
-pcall, and answers nil when none does, so the quest then reads as in the log (the gray `?`) rather
-than ready (the green `?`). (ITEM-SEARCH-35) Result:
-
-**P-GOSSIP. The game's quest-mark textures.**
-`/run local t=UIParent:CreateTexture() for _,p in ipairs({"AvailableQuestIcon","IncompleteQuestIcon","ActiveQuestIcon"}) do print(p, t:SetTexture("Interface\\GossipFrame\\"..p), t:GetTexture()) end`.
-Expected each to load (a true and a file id or path). Then look at the Quests tab and a quest item's
-tooltip: are the yellow `!`, the gray `?` and the green-tinted `?` legible at 14 px, and is the
-level-locked `!` visibly dimmer? A texture missing on this client draws an empty square: the mark
-would then need the fallback characters (`!`, `?`). (ITEM-SEARCH-35) Result:
-
-**P-FULL. ForeverDB_Full's load cost.** With ForeverDB_Full installed and Load ForeverDB (Full) on
-When the Item Search window opens: `/dw debug on`, reload, open the Item Search window, and read the
-debug log's "ForeverDB_Full loaded: N MB, N ms" line and the diagnostics' `itemSearch:` line
-(`fullMB=`, `fullMs=`). Offline it measured +82.3 MB after a collect and 487 to 521 ms
-([`performance.md`](performance.md)); record the client's numbers, and `/dump collectgarbage("count")`
-before and after for comparison. (ITEM-SEARCH-40) Result:
-
-**P-W2M. The adapter's world-to-map against the client's.** For a creature ForeverDB stores only as
-world coordinates (a vendor whose Sold by row got its zone in round 3), with its creature id `<id>`:
-`/run local L=LibStub("LibKa0s-ForeverDB-1.0") local r=ForeverDB.spw["c<id>"][1] local c,x,y=r[1],r[2],r[3] print("adapter", L.WorldToMap(c,x,y)) local m,p=C_Map.GetMapPosFromWorldPos(c,CreateVector2D(x,y)) print("client", m, p and p.x, p and p.y)`.
-Record whether `C_Map.GetMapPosFromWorldPos` exists on Forever, and whether the two answers name the
-same map and lie within about 1% of each other. If the axes disagree, try `CreateVector2D(y,x)` and
-record which matches. The adapter stays pure either way; a large gap is a LibKa0s finding.
-(ITEM-SEARCH-39) Result:

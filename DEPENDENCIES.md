@@ -24,43 +24,21 @@ marked as such rather than listed as a requirement.
   load first when installed, and reached only through `core/Compat.lua` (their API is called under
   `pcall`, never copied).
   **Pawn**, once it has initialized (its `PawnIsReady()`), drives the `pawn` scorer
-  (`modules/Scoring.lua`, design spec §5.4): `comparison.scorer` `auto` picks it then, and until
+  (LibKa0s-Verdict-1.0's `VerdictScore.lua`, through `core/VerdictSetup.lua`; design spec §5.4): `comparison.scorer` `auto` picks it then, and until
   then uses your weights. A nil answer from a ready Pawn reads `pending`, which the feed retries. Its scale strings can also be imported into your own weights.
   On WoW Forever (Pawn 2.14.1 there) Pawn has no specs and one Classic scale per talent tree, so you
   are scored with the scale of your top talent tree, and another player with the best of their
-  class's scales (`modules/Scoring.lua`, Forever port design §4.3). **CanIMogIt** serves transmog, which
+  class's scales (the same scorer, Forever port design §4.3). **CanIMogIt** serves transmog, which
   WoW Forever lacks, so it is read on Retail alone (design §4.4); when loaded, it answers the transmog-known flag (design spec §4) before `C_TransmogCollection` does.
   Without Pawn, the comparison uses your own weights when any are set, else item level alone;
   without CanIMogIt, the transmog flag comes from the client API. Whether each is loaded is
   reported by `core/DropWatcher.lua` `logDependencies` and the diagnostics' `integrations` and
   Scoring sections (`modules/Diagnostics.lua`), the latter naming the scorer actually in use.
-- **Optional: ForeverDB (WoW Forever only).** The WoW Forever data addon
-  (<https://github.com/foreverfraddons/forever-db>, CurseForge `forever-db`). Named in
-  `## OptionalDeps:` and under `.pkgmeta`'s `optional-dependencies`, never as a required dependency
-  (clients-§11): no player needs it. It is read only through LibKa0s-ForeverDB-1.0
-  (`core/ForeverDBSetup.lua`), whose first lookup loads it (LoadOnDemand, some 12 MB); this addon
-  makes that lookup once a session for Item Search (`modules/ItemSearch.lua`, DropWatcher#17), about
-  5 seconds after login and out of combat, and never while Item Search's tooltip block and window
-  are both switched off. With it, every item tooltip and the Item Search window say which creatures,
-  objects or containers drop an item, with their chances, who sells it, its quests and its name
-  search. Without it, the tooltip shows nothing of Item Search, and the window searches by id and
-  shows the recipes from the shipped table alone; on Retail there is no Item Search. Its data is GPL-3.0 and is
-  never copied into this repo, tests included (the kit's `tests/_kit/mock_foreverdb.lua` is invented).
-- **Optional: Auctionator (read on WoW Forever, where Item Search runs).** Named in `## OptionalDeps:`
-  so it loads first when installed, and reached only through `core/CompatSearch.lua`
-  (`Compat.AuctionatorLoaded`, `Compat.AuctionPrice`): its public API v1,
-  `Auctionator.API.v1.GetAuctionPriceByItemLink` then `GetAuctionPriceByItemID`, asked as
-  `"DropWatcher"` under `pcall` (its code is never copied). With it, the Item Search badge's Sell
-  says Auction or Vendor (`modules/ItemSearchAuction.lua`, R5-DW-13..16), an item no vendor buys says
-  Auction when an auction brings anything (R6-DW-06), and its price feeds the badge's how-sure score
-  (`modules/ItemSearchVerdict.lua`, R6-DW-07); without it, every Sell says Vendor and the Auction
-  prices rows are dimmed.
-- **Optional: TomTom (read on WoW Forever, where Item Search runs).** Not named in `## OptionalDeps:`:
-  it is looked up at call time only, through `core/CompatSearch.lua` (`Compat.TomTomLoaded`,
-  `Compat.AddTomTomWaypoint`, its `AddWaypoint` under `pcall`). With it, an Item Search row's map pin
-  can set a TomTom waypoint (`itemSearch.waypoints` `auto` or `tomtom`,
-  `modules/ItemSearchWaypoint.lua`); without it, a pin uses Drop Watcher's own arrow
-  (LibKa0s-WaypointArrow-1.0, vendored).
+- **Not ForeverDB, Auctionator or TomTom.** Only Item Search read them, and Item Search moved to its
+  own addon, Ka0s Item Search (<https://github.com/tusharsaxena/ItemSearch>, WoW Forever;
+  DropWatcher#19), so Drop Watcher no longer names ForeverDB or Auctionator in `## OptionalDeps:`
+  or `.pkgmeta` and reads none of the three. The vendored LibKa0s-ForeverDB-1.0 and
+  LibKa0s-WaypointArrow-1.0 load and are never called.
 - **Optional: EllesmereUI.** Named in `## OptionalDeps:` so it loads first when installed (skinning-§5).
   When it can skin this addon, Settings → General → Skin offers it as the skin source, through
   LibKa0s-Skin-1.0's own EllesmereUI provider; this addon calls no EllesmereUI API. Without it the
@@ -76,8 +54,8 @@ marked as such rather than listed as a requirement.
 | `lizard` | any recent | the `complexity` suite of `tests/_kit/run-automated-tests.sh`, which runs it over a sanitized shadow and checks function-count parity, because `lizard` alone is blind in Lua (automated-tests-§3); also the headless suite's one end-to-end lizard case, which SKIPs when lizard is not on PATH | `tests/_kit/run-automated-tests.sh`, `tests/_kit/test_lizard_sighted.lua`, the case "lizard sighted: lizard lists every function of a hazard fixture once it is sanitized" |
 | `git` | any recent | vendoring, the vendored-payload gate (`tests/test_vendor_sync.lua` reads the index and compares against the sibling `../LibKa0s` checkout) and the line-ending gate (`git check-attr`) | `tests/_kit/vendor_sync.lua`, `tests/_kit/test_eol.lua` |
 | POSIX shell (`bash`) | any | `tests/_kit/run-automated-tests.sh` and the commands in this file | the runner's shebang |
-| `python3` | **3.8+**, standard library only | the seed-validation tool `tools/seeds/seeds.py`, the recipe-reagent generator `tools/seeds/recipes.py` (run as `seeds.py recipes`), and their cases (`docs/validate-seeds.md`), part of the green gate; not needed to build or run the addon itself | `tools/seeds/seeds.py`'s and `tools/seeds/recipes.py`'s imports; `pytest` is optional (`python3 -m unittest discover -s tools/seeds` runs the same cases) |
-| network access to `wago.tools` | - | a new seed-validation run (`seeds.py status`, and `derive` without `--replay`, the `recipes` subcommand's included), which reads `https://wago.tools/api/builds` and the build's DB2 tables as CSV; a `--replay` and the tests run offline | `seeds.py`'s `BUILDS_URL` and `CSV_URL` |
+| `python3` | **3.8+**, standard library only | the seed-validation tool `tools/seeds/seeds.py` and its cases (`docs/validate-seeds.md`), part of the green gate; not needed to build or run the addon itself | `tools/seeds/seeds.py`'s imports; `pytest` is optional (`python3 -m unittest discover -s tools/seeds` runs the same cases) |
+| network access to `wago.tools` | - | a new seed-validation run (`seeds.py status`, and `derive` without `--replay`), which reads `https://wago.tools/api/builds` and the build's DB2 tables as CSV; a `--replay` and the tests run offline | `seeds.py`'s `BUILDS_URL` and `CSV_URL` |
 
 **Lua 5.1 is a requirement, not a preference.** The harness sandboxes each source file with
 `setfenv`, which was removed in 5.2 — "5.2 will probably work" is false and costs an hour to

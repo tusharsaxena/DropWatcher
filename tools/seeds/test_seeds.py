@@ -140,7 +140,7 @@ FOREVER_TABLES = dict(COMMON, **{
     "TalentTab": ("ID,Name_lang,OrderIndex,ClassMask\n161,Arms,0,1\n164,Fury,1,1\n182,Assassination,0,8\n"
                   "81,Arcane,0,128\n41,Fire,1,128\n"),
 })
-SEED_FILE = {"retail": ("core/ClassData.lua", RETAIL_SEED), "forever": ("core/ClassDataForever.lua", FOREVER_SEED)}
+SEED_FILE = {"retail": (seeds.CLASS_DATA, RETAIL_SEED), "forever": (seeds.CLASS_DATA, FOREVER_SEED)}
 BUILD = {"retail": "12.1.5.1", "forever": "1.60.1.1"}
 
 
@@ -258,7 +258,23 @@ class Apply(unittest.TestCase):
             self.apply()
         self.assertIn("hand edit is owed for spec:73", str(ctx.exception))
 
+    def test_apply_never_writes_the_vendored_library(self):
+        before = self.fx.seed.read_bytes()
+        self.fx.rule(self.base + [("spec:73", "reject", "fixture")])
+        with self.assertRaises(SystemExit) as ctx:
+            self.apply()
+        self.assertIn("never writes under libs/", str(ctx.exception))
+        self.assertEqual(self.fx.seed.read_bytes(), before)
+
     def test_apply_writes_weapons_keeps_crlf_and_is_idempotent(self):
+        # The mechanism, on a seed file of the repo's own (the class lists are vendored here now).
+        own = dict(seeds.FLAVORS["retail"], seed="core/ClassData.lua")
+        self.fx.seed = self.fx.root / own["seed"]
+        self.fx.seed.parent.mkdir(parents=True, exist_ok=True)
+        self.fx.seed.write_bytes(crlf(RETAIL_SEED))
+        saved = seeds.FLAVORS["retail"]
+        seeds.FLAVORS["retail"] = own
+        self.addCleanup(seeds.FLAVORS.__setitem__, "retail", saved)
         self.fx.rule(self.base + [("spec:73", "reject", "fixture")])
         self.apply()
         data = self.fx.seed.read_bytes()
@@ -378,8 +394,8 @@ class Pieces(unittest.TestCase):
 
     def test_the_real_seed_files_parse(self):
         repo = HERE.parent.parent
-        retail = seeds.read_class_data(repo / "core" / "ClassData.lua", "RETAIL")
-        forever = seeds.read_class_data(repo / "core" / "ClassDataForever.lua", "FOREVER")
+        retail = seeds.read_class_data(repo / seeds.CLASS_DATA, "RETAIL")
+        forever = seeds.read_class_data(repo / seeds.CLASS_DATA, "FOREVER")
         self.assertEqual(len(retail["SPECS"]), len(retail["SPEC_INDEX"]))
         self.assertEqual(set(retail["CLASS_ID"]), set(retail["WEAPONS"]))
         self.assertEqual(set(forever["CLASS_ID"]), set(forever["WEAPONS"]))

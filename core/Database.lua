@@ -374,7 +374,7 @@ end
 
 -- ── step 16: the tooltip's rows per section (ISF-DW-03, Item Search feedback spec §7) ──────
 
-local STEP16_ROWS = 5
+local STEP16_ROWS, STEP16_LATER = 5, 3
 
 --- Step 16's work on one stored profile: the drops-only `itemSearch.tooltip.dropsShown` (1 to 10)
 --- becomes `itemSearch.tooltip.rows` (every section's cap, 1 to 20). A stored count is carried
@@ -382,8 +382,9 @@ local STEP16_ROWS = 5
 --- default); the old key goes either way. A profile that never stored it (the default, 3) takes the
 --- `rows` default (5 then, 3 since ISR3-DW-07, which took no step). Idempotent. A `rows` equal to
 --- a default may be AceDB's default copied into the active profile, never the player's choice
---- beside a stored dropsShown: STEP16_ROWS, the default as of this step (frozen), or the running
---- build's (`NS.ItemSearch.TIP_ROWS`), the one AceDB copies in as the step runs (ISR3-DW-07).
+--- beside a stored dropsShown: STEP16_ROWS, the default as of this step (frozen), or STEP16_LATER,
+--- the one AceDB copied in once ISR3-DW-07 made it 3. Step 17 deletes the table it reshapes since
+--- the Item Search split, so the step's work is kept for the record and changes nothing that lasts.
 --- @param profile table a raw stored profile
 function NS.MigrateTipRows(profile)
     local is = type(profile) == "table" and profile.itemSearch
@@ -391,36 +392,28 @@ function NS.MigrateTipRows(profile)
     if type(tip) ~= "table" or tip.dropsShown == nil then return end
     local v = tonumber(tip.dropsShown)
     local r = tip.rows
-    if (r == nil or r == STEP16_ROWS or r == (NS.ItemSearch and NS.ItemSearch.TIP_ROWS)) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
+    if (r == nil or r == STEP16_ROWS or r == STEP16_LATER) and v then tip.rows = math.max(1, math.min(20, math.floor(v))) end
     tip.dropsShown = nil
 end
 
--- ── step 17: the Item Search window's retired rows (ISF-DW-05, Item Search feedback spec §5) ──
+-- ── steps 17 and 19: Item Search's stored data (ISF-DW-05; the Item Search split, DropWatcher#19) ──
 
--- The window's rows that went with ISF-DW-05: the recent searches' switch (§5.2, W4), and the
--- window's own density, font size and zone-and-level-columns switch, which the window no longer
--- reads (§5.1: every text takes the main window's table font and row height; §5.4: every tab draws
--- all its columns, so no switch sheds one).
-local STEP17_WINDOW_KEYS = { "recent", "density", "fontSize", "columns" }
-
---- Step 17's work: every stored profile's retired Item Search window rows, and the account-wide
---- recent searches (`global.itemSearch.recent`, the list W4 removed). The lock had no stored value
---- of the window's own (it read the main window's shared `locked`, which stays), so nothing of it is
---- deleted. A Retail account, which never stored any of it, passes through unchanged. Idempotent.
+--- Step 17's work, and step 19's (the Item Search split, DropWatcher#19): Item Search moved to its
+--- own addon, Ka0s Item Search, which reads none of Drop Watcher's data (no migration, the split
+--- design's R5), so every stored `itemSearch` table goes: the account-wide one
+--- (`global.itemSearch`: the recorded prices, the learned recipes and the recent searches W4
+--- removed), each character's (`char.<key>.itemSearch`, the key's one-time default mark) and each
+--- profile's (`profiles.<name>.itemSearch`, every Item Search setting). Step 17 first deleted the
+--- window's retired rows alone (ISF-DW-05); it calls this too, so an account stored before it
+--- reaches step 19 with nothing left. Nothing else is written; an account that never stored any of
+--- it (Retail's) passes through unchanged. Idempotent.
 --- @param sv table the raw SavedVariables table
 function NS.RetireItemSearchRows(sv)
     if type(sv) ~= "table" then return end
-    local g = sv.global
-    local gi = type(g) == "table" and g.itemSearch
-    if type(gi) == "table" then
-        gi.recent = nil
-        if next(gi) == nil then g.itemSearch = nil end
-    end
-    for _, profile in pairs(type(sv.profiles) == "table" and sv.profiles or {}) do
-        local is = type(profile) == "table" and profile.itemSearch
-        local w = type(is) == "table" and is.window
-        if type(w) == "table" then
-            for _, k in ipairs(STEP17_WINDOW_KEYS) do w[k] = nil end
+    if type(sv.global) == "table" then sv.global.itemSearch = nil end
+    for _, scope in ipairs({ "char", "profiles" }) do
+        for _, t in pairs(type(sv[scope]) == "table" and sv[scope] or {}) do
+            if type(t) == "table" then t.itemSearch = nil end
         end
     end
 end
@@ -478,9 +471,10 @@ NS.MIGRATIONS = {
       run = function(_, profile) NS.RetireItemSources(profile) end },
     { to = 16, perProfile = true,        -- 15 -> 16: the tooltip's drop count becomes its rows per section
       run = function(_, profile) NS.MigrateTipRows(profile) end },
-    { to = 17, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 16 -> 17: Item Search's retired rows
+    { to = 17, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 16 -> 17: Item Search's data (since the split)
     { to = 18, perProfile = true,        -- 17 -> 18: a stored tooltip section order gains Gathered from
       run = function(_, profile) NS.MigrateGatheredSection(profile) end },
+    { to = 19, run = function(sv) NS.RetireItemSearchRows(sv) end },   -- 18 -> 19: Item Search moved out; its data goes
 }
 
 -- The runner's target: the highest step's `to`.

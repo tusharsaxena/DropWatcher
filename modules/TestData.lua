@@ -328,7 +328,7 @@ end
 --
 -- THE PROTAGONISTS. The five first are the collection's own sample characters, Sim.Sample(client),
 -- the same five people in every Ka0s addon, with the library's class and spec (Retail's specID; on
--- Forever its talent tree as core/ClassDataForever.lua's "<classFile>:<tree>").
+-- Forever its talent tree as libs/LibKa0s/VerdictClassData.lua's "<classFile>:<tree>").
 -- THE OTHERS. The nineteen past them make up the raids (Retail's thirteen classes; WoW Forever's
 -- nine, no Death Knight, Monk, Demon Hunter or Evoker). Each slot's class and spec are the
 -- showcase's (a Monk's shoulders are the wrong armor type); its person is the first one of that
@@ -537,7 +537,7 @@ end
 -- baseline carries the drop's first slot, a bag one (`bag`) none, no change an empty slot (and the
 -- kernel's emptySlot reason, which the toast's gain test and the {mygain} words read).
 local function offSpecOf(src, item, off, mainSpecID)
-    -- Off-spec is Retail's alone (modules/OffSpec.lua): no sample has one on WoW Forever.
+    -- Off-spec is Retail's alone (libs/LibKa0s/VerdictEvaluate.lua): no sample has one on WoW Forever.
     if not (off and NS.OffSpec.Initialized()) then return nil end
     local base = baselineOf(src, item, off[3])
     local plan = C.SLOT_PLAN[item.facts.equipLoc]
@@ -1099,7 +1099,7 @@ end
 
 -- A History snapshot (NS.History's): an off-spec part as its own, { specID, mainSpecID, verdict, ilvlDelta },
 -- unless `plain` (the alt's: a Warlock has no Holy spec, so its Can't use stays plain). Off-spec is
--- Retail's alone (modules/OffSpec.lua): no History sample has one on WoW Forever.
+-- Retail's alone (libs/LibKa0s/VerdictEvaluate.lua): no History sample has one on WoW Forever.
 local function snap(spec, plain)
     if not spec then return nil end
     if spec.collect then

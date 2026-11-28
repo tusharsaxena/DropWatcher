@@ -64,7 +64,7 @@ end
 
 --- UnitLevel(unit) as a plain level: nil for a secret, a non-number, 0 or less (the client's "not
 --- known", and -1 for a skull), or no API. The armor a WoW Forever class wears depends on it
---- (core/ClassDataForever.lua, Forever port design §4.2).
+--- (libs/LibKa0s/VerdictClassData.lua, Forever port design §4.2).
 --- @param unit string
 --- @return number|nil
 function Compat.UnitLevel(unit)

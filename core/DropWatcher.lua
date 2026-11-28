@@ -659,8 +659,7 @@ end
 
 -- The three profile events share one reaction: migrations, the incoming profile's skin, panel
 -- refresh, the latch re-read (an incoming profile carries its own answer to `enabled`), auto-ask's
--- and the toast's `enabled` re-read (no row reaction runs on a switch), the kept Item Search
--- verdicts and the window's settings.
+-- and the toast's `enabled` re-read (no row reaction runs on a switch) and the window's settings.
 local function reloadProfile(self)
     -- The first-run skin picker down first (core/SkinSetup.lua), unmarked: its put-back of a
     -- pending preview must land BEFORE the new profile's skin is applied, never over it.
@@ -688,10 +687,6 @@ local function reloadProfile(self)
     if NS.Toast then NS.Toast.OnProfileReloaded() end
     if NS.Glow then NS.Glow.Refresh() end   -- the incoming profile's glow settings
     if NS.IconStyle then NS.IconStyle.Refresh() end   -- and its Window › Icons look
-    -- Every kept Item Search verdict: it was judged under the old profile's itemSearch.auction.*
-    -- (R5-DW-13..16), and a switch runs no row's onChange (R5-REV). Before the window repaints.
-    local IVD = NS.ItemSearchVerdict
-    if IVD and IVD.Bump then IVD.Bump() end
     if NS.Window then NS.Window.ApplySettings() end
 end
 
@@ -757,8 +752,13 @@ end
 function DW:OnEnable()
     registerFeatureEvents(self)
 
-    -- Eager category registration (options-ui-§1); bodies stay lazy.
+    -- Eager category registration (options-ui-§1); bodies stay lazy. First, so a throw below
+    -- never costs the panel the player would turn the addon off from.
     if self.Settings and self.Settings.Register then self.Settings.Register() end
+
+    -- The verdict engine's instance (core/VerdictSetup.lua): its event handlers kept and your gear
+    -- read, before anything below can judge an item.
+    if NS.VerdictEnable then NS.VerdictEnable() end
 
     -- The launcher needs db.global.minimap, which exists from OnInitialize.
     if NS.Launcher then NS.Launcher:Register() end
@@ -768,10 +768,6 @@ function DW:OnEnable()
     -- The roll popup mark's overlays and its one-way hooks on Blizzard's popups (modules/RollPopup.lua,
     -- Forever port design §7): installed once, whatever the latch says; the hooks gate on it.
     if NS.RollPopup then NS.RollPopup.Install() end
-
-    -- Item Search's block on every item tooltip (modules/ItemSearchTip.lua, WoW Forever's alone): one
-    -- TooltipDataProcessor post call, installed once, whatever the latch says; the call gates on it.
-    if NS.ItemSearchTip then NS.ItemSearchTip.Install() end
 
     -- The first-run skin picker's login fuse (core/SkinSetup.lua), before the latch: a profile
     -- stored disabled stands down below, which puts it out again.

@@ -76,10 +76,10 @@ local function retailOnlyRow(path)
         or path == "trade.warnAt" or path == "window.columns.tradeWindow" or path:match("^trade%.rules%.") ~= nil
 end
 
--- WoW Forever's alone: the role (Forever port design §11.4) and every Item Search row (Item Search
--- spec §1, §4.7; DropWatcher#17). SF-DW-01's `window.itemSources` is retired (schema step 15).
+-- WoW Forever's alone: the role (Forever port design §11.4). SF-DW-01's `window.itemSources` is
+-- retired (schema step 15), and every Item Search row went with Item Search (DropWatcher#19).
 local function foreverOnlyRow(path)
-    return path == "char.role" or path:match("^itemSearch%.") ~= nil
+    return path == "char.role"
 end
 
 -- clients-§6: on WoW Forever the schema holds none of the declared Retail-only rows (so the panel,
@@ -92,7 +92,7 @@ test("settings: no Retail-only row on the Forever panel", function()
     for _, row in ipairs(NS.addon.Settings.Schema) do
         local path = row.path or ""
         if foreverOnlyRow(path) then
-            -- WoW Forever's alone: Retail never reads the role, nor ForeverDB, nor Item Search.
+            -- WoW Forever's alone: Retail never reads the role.
             assertTrue(not retail, "a Forever-only row on Retail: " .. path)
             assertEqual(table.concat(row.clients or {}, ","), "forever", path .. " declares its client")
         elseif retailOnlyRow(path) then
@@ -236,7 +236,7 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertFalse(S.Set("comparison.undesired", { mage = { ["4:1"] = true } }), "a specID that is not a number")
     assertTrue(S.Set("comparison.weights", { [62] = { INTELLECT = 1, HASTE = 0.8 } }))
     assertFalse(S.Set("comparison.weights", { [62] = { INTELLECT = "high" } }))
-    local cfg = NS.LootFeed.Config()
+    local cfg = NS.LootFeed.Config().verdict
     assertTrue(cfg.undesired[62]["4:1"] == true, "the feed reads the stored map")
     assertEqual(NS.addon.Settings.FormatValue(S.FindRow("comparison.undesired"), cfg.undesired,
         function() return "lib" end), "{1}", "the CLI renders a map as its entry count")
@@ -245,6 +245,28 @@ test("rows: the per-spec maps take keyed values whole, and refuse a malformed on
     assertTrue(S.Set("comparison.undesired", { ["HUNTER:2"] = { ["4:1"] = true } }))
     assertFalse(S.Set("comparison.weights", { ["HUNTER"] = { INTELLECT = 1 } }), "a class with no tree")
     assertFalse(S.Set("comparison.weights", { ["hunter:x"] = { INTELLECT = 1 } }))
+end)
+
+test("rows: the verdict's config is the six comparison values and the client's verdict mode", function()
+    local NS = T.bootAddon()
+    local S = NS.SchemaRuntime
+    assertTrue(S.Set("comparison.sidegradeBand", 7))
+    assertTrue(S.Set("comparison.scorer", "weights"))
+    assertTrue(S.Set("comparison.weights", { [62] = { INTELLECT = 1 } }))
+    local v = NS.LootFeed.VerdictConfig()
+    local keys = {}
+    for k in pairs(v) do keys[#keys + 1] = k end
+    table.sort(keys)
+    assertEqual(table.concat(keys, ","),
+        "compareOwned,heirloomProtect,scorer,sidegradeBand,undesired,verdictMode,weights")
+    assertEqual(v.sidegradeBand, 7); assertEqual(v.scorer, "weights"); assertEqual(v.weights[62].INTELLECT, 1)
+    assertEqual(v.verdictMode, T.forever and "scoreFirst" or "ilvlFirst")
+    local cfg = NS.LootFeed.Config()
+    -- red under: the feed's config keeping some verdict fields at its top level, a second shape a
+    -- verdict read could take for the verdict's (A2 review: the looter judged with no verdict mode)
+    for k in pairs(v) do assertNil(cfg[k], "the feed's config carries no verdict field of its own: " .. k) end
+    assertEqual(cfg.verdict.sidegradeBand, 7, "it carries the verdict's whole")
+    assertEqual(cfg.verdict.scorer, "weights")
 end)
 
 test("rows: the feed, the situations and the messaging edge read the rows", function()
@@ -917,72 +939,8 @@ local PINNED_ROWS = {
     { "window.tableFontColorFromSkin", "bool", "true" },
     -- DW-FP22: General › Role, WoW Forever's alone (Forever port design §11.4), stored per character.
     { "char.role", "string", "\"auto\"" },
-    -- IS-DW-07: the Item Search page, WoW Forever's alone (Item Search spec §4.7, DropWatcher#17).
-    { "itemSearch.tooltip.enabled", "bool", "true" },
-    { "itemSearch.tooltip.shiftOnly", "bool", "false" },
-    { "itemSearch.tooltip.header", "bool", "true" },
-    -- ISR3-DW-02 (Item Search round 3 spec §4.2): the crafting rows' skill levels, on.
-    { "itemSearch.tooltip.craftSkill", "bool", "true" },
-    -- ISR3-DW-05 (Item Search round 3 spec §4.5): the Keep / Hold / Sell / Toss badge and its reasons, on.
-    { "itemSearch.tooltip.badge", "bool", "true" },
-    { "itemSearch.tooltip.reasons", "bool", "true" },
-    -- R5-DW-16: a Sell's Auction or Vendor comparison with Auctionator's prices (new keys with their
-    -- defaults: no schema step).
-    { "itemSearch.auction.enabled", "bool", "true" },
-    { "itemSearch.auction.duration", "number", "8" },
-    { "itemSearch.auction.cut", "number", "5" },
-    { "itemSearch.auction.margin", "number", "10" },
-    { "itemSearch.tooltip.hint", "bool", "true" },
-    { "itemSearch.tooltip.comparison", "bool", "false" },
-    { "itemSearch.tooltip.sections.drops", "bool", "true" },
-    -- ISR3-DW-03 (Item Search round 3 spec §4.3, §5): the Gathered from section, the recorded
-    -- prices and when ForeverDB_Full loads; a stored order gains "gathered" through schema step 18.
-    { "itemSearch.tooltip.sections.gathered", "bool", "true" },
-    { "itemSearch.tooltip.sections.vendors", "bool", "true" },
-    { "itemSearch.tooltip.sections.quests", "bool", "true" },
-    { "itemSearch.tooltip.sections.crafting", "bool", "true" },
-    { "itemSearch.tooltip.sections.also", "bool", "false" },
-    -- ISF-DW-04 (Item Search feedback spec §7): the tooltip's Skinned from section, on.
-    { "itemSearch.tooltip.sections.skinned", "bool", "true" },
-    -- ISF-DW-03 (Item Search feedback spec §4, §7): the rows per section replace the drop count
-    -- (schema step 16), and the profession filter covers the tooltip and the window.
-    { "itemSearch.tooltip.rows", "number", "3" },  -- 3 since ISR3-DW-07
-    { "itemSearch.myProfessionsOnly", "bool", "true" },
-    -- R4-DW-08: the other faction's vendors hidden in the tooltip and, to start with, the window.
-    { "itemSearch.hideOtherFaction", "bool", "true" },
-    { "itemSearch.tooltip.hideCompleted", "bool", "true" },
-    { "itemSearch.tooltip.order", "map", "{[1]=\"drops\",[2]=\"gathered\",[3]=\"vendors\",[4]=\"quests\",[5]=\"crafting\",[6]=\"skinned\",[7]=\"also\"}" },
-    { "itemSearch.window.enabled", "bool", "true" },
-    { "itemSearch.recordPrices", "bool", "true" },
-    { "itemSearch.fullDB", "string", "\"window\"" },
-    { "itemSearch.window.barColor", "color", "{[\"b\"]=0.3,[\"g\"]=0.75,[\"r\"]=0.9}" },
-    { "itemSearch.window.barFromSkin", "bool", "true" },
-    { "itemSearch.window.pins", "bool", "true" },
-    -- ISF-DW-07 (Item Search feedback spec §6): who draws the way, and Drop Watcher's arrow's
-    -- rows (LibKa0s-WaypointArrow-1.0's WaypointArrowSettings, the library's DEFAULTS).
-    { "itemSearch.waypoints", "string", "\"auto\"" },
-    { "itemSearch.arrow.style", "string", "\"raised\"" },
-    { "itemSearch.arrow.useSkinColors", "bool", "true" },
-    { "itemSearch.arrow.farColor", "color", "{[\"a\"]=1,[\"b\"]=0,[\"g\"]=0.82,[\"r\"]=1}" },
-    { "itemSearch.arrow.nearColor", "color", "{[\"a\"]=1,[\"b\"]=0.45,[\"g\"]=0.8,[\"r\"]=0.35}" },
-    { "itemSearch.arrow.scale", "number", "1" },
-    { "itemSearch.arrow.font", "string", "\"Ka0s Prototype\"" },
-    { "itemSearch.arrow.fontSize", "number", "12" },
-    { "itemSearch.arrow.fontColor", "color", "{[\"a\"]=1,[\"b\"]=1,[\"g\"]=1,[\"r\"]=1}" },
-    { "itemSearch.arrow.useClassColorFont", "bool", "false" },
-    { "itemSearch.arrow.fontFlags", "string", "\"@skin\"" },
-    { "itemSearch.arrow.fontShadow", "bool", "true" },
-    { "itemSearch.arrow.fontFromSkin", "bool", "true" },
-    { "itemSearch.arrow.fontColorFromSkin", "bool", "true" },
-    { "itemSearch.arrow.fontShadowFromSkin", "bool", "true" },
-    { "itemSearch.arrow.textPosition", "string", "\"BELOW\"" },
-    { "itemSearch.arrow.showLabel", "bool", "false" },
-    { "itemSearch.arrow.distanceUnits", "string", "\"yards\"" },
-    { "itemSearch.arrow.x", "number", "0" },
-    { "itemSearch.arrow.y", "number", "200" },
-    { "itemSearch.arrow.lock", "bool", "false" },
-    -- ISF-DW-05 (Item Search feedback spec §5.1, §5.2, §5.4): itemSearch.window.density, .fontSize,
-    -- .columns and .recent went on purpose, their stored values deleted by schema step 17.
+    -- The Item Search page's itemSearch.* rows went with Item Search (DropWatcher#19), their stored
+    -- values deleted by schema step 19.
 }
 
 test("rows: the layout changes keep every stored path, its type and its default (DW-LY guard)", function()
