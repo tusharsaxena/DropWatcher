@@ -309,7 +309,7 @@ session state in `ctx.activeSubTab`, keyed by the tab, never stored), on your ow
 WoW Forever the strip is your class's talent trees instead, named by the client
 (the library's `TalentTreeNames` read, else "Talent tree N") and keyed `"<classFile>:<tree>"`, on your top
 tree first (Forever port design §4.3).
-Weights draws a slider (0 to 5) per stat: the spec's primary stat, Stamina and the four secondaries,
+Weights draws a slider (-5 to 20, LibKa0s#107; a stored weight beyond that, such as an imported one, stretches its own slider's ends) per stat: the spec's primary stat, Stamina and the four secondaries,
 keyed by `GetItemStats`' own stat keys; 0 leaves a stat out. Under the sliders, **Import a Pawn
 scale** takes a Pawn scale string (`( Pawn: v1: "name": Key=value, ... )`): Enter replaces the
 weights of the spec on screen, the chat says how many came in and which Pawn keys are not scored,

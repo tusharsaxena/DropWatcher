@@ -41,7 +41,7 @@ the text as an issue comment).
 | L6 | LibKa0s | v1.120.0 bump, CHANGELOG, docs, release gate; push | todo | |
 | W1 | Standards | #15 seed-research frozen store; #16 clients-§11 Forever-only sentence; #17 narrow reading (+#13); counts if LibKa0s moved; v2.122.0; push | todo | |
 | D1 | DropWatcher | Re-vendor LibKa0s v1.120.0 (payload + kit) | todo | |
-| D2 | DropWatcher | #21 events from `lib.EventsFor`; #108 drop the provisional read; #111 drop duplicate compat reads; #109 drop class-list flavor + fixture writer test | todo | |
+| D2 | DropWatcher | #21 events from `lib.EventsFor`; #108 drop the provisional read; #111 drop duplicate compat reads; #109 drop class-list flavor + fixture writer test | done | a, b committed (02c3507, ea0b9d8); c, d green, commit pending (permission check) |
 | D3 | DropWatcher | #20 split RT.FlushOverlaps, buildMembers, RC.Left to CCN <= 15 | todo | |
 | D4 | DropWatcher | Docs/test-cases/badge, gate; #22 draft comment; push | todo | |
 | I1 | ItemSearch | Re-vendor v1.120.0; #6 events from `lib.EventsFor`; #108/#111 host follow-through | todo | |

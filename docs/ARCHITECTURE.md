@@ -11,7 +11,7 @@ A Retail and WoW Forever addon that watches the loot a party or raid receives, j
 looter, estimates whether it can be traded, and asks for it in one click ([`scope.md`](scope.md)).
 Ace3 (AceAddon, AceDB, AceEvent, AceTimer, AceConsole, AceGUI, AceConfig, AceDBOptions),
 LibSharedMedia, LibDataBroker, LibDBIcon and LibCustomGlow are vendored under `libs/`, and so is the
-LibKa0s v1.119.0 payload (twenty-seven majors; media/icons pruned to the declared subset,
+LibKa0s v1.120.0 payload (twenty-seven majors; media/icons pruned to the declared subset,
 media/sounds to none), twenty-one wired with one setup file each, two reached directly by the
 files that use them (`LibKa0s-Role-1.0` from `core/Compat.lua` and `core/CompatClient.lua`, and
 `LibKa0s-Tooltip-1.0` from `modules/RowTooltip.lua`) and four deliberately unwired:
@@ -27,7 +27,7 @@ nothing until a host calls it (`DEPENDENCIES.md` lists the toolchain):
 | Media | `core/MediaSetup.lua` | the icon catalog and the monospace face |
 | Env | `core/EnvSetup.lua` | the addon's own TOC metadata and version |
 | Pool | `core/PoolSetup.lua` | the row pool (for the drop tables) |
-| Item | `core/ItemSetup.lua` | link parsing, quality labels, the item load (for item facts) |
+| Item | `core/ItemSetup.lua` | link parsing, quality labels, the item load (this addon's own callers; the verdict engine's item reads are its library's own) |
 | Verdict | `core/VerdictSetup.lua` + `core/VerdictViews.lua` | the verdict engine (Item Search split, DropWatcher#19): the kernel and its off-spec pass, the class lists, the tier tokens, the collection verdict, the scorers, the item facts cache and your gear snapshot, through one instance (`NS.VerdictEngine`, `V:New(host)`: this client, the verdict's config, its one host read `PlayerRole` (every other read the library's own, under the simulator's seam through `Sim:Cover`, LibKa0s#111), the lazy stand-up (LibKa0s#108), the combat defer, its events as `NS.FEATURE_EVENTS` rows, `GearChanged` and the feed's collection pass on its changes) and the views the readers keep (`NS.Evaluate`, `NS.ClassData`, `NS.OffSpec`, `NS.TierTokens`, `NS.ItemRead`, `NS.ItemFacts`, `NS.Gear`, `NS.Scoring`, `NS.Collectibles`); the Comparison page's rows and editors (`Settings.Rows`, `Settings.Tabs`). Without it every verdict reads `unknown`, nothing is read and the Comparison page has no rows |
 | Bus | `core/Bus.lua` | the strict message catalog and the tracked receivers |
 | Lifecycle | `core/LifecycleSetup.lua` | the stand-down latch; `NS.StoodDownRefusal()`, the one stood-down refusal line (the dispatcher's under the `disabled` hold, `Not available during a performance capture.` under the `perf` hold alone) |
@@ -146,14 +146,14 @@ seed list; `C.FEATURE_CLIENTS` (`core/Constants.lua`) names the Retail-only feat
 DW-FP11 gate, and `C.FEATURE` holds each one's `ForClient` answer, read once. A default only a
 Retail-only feature reads is added on Retail alone (`defaults/Profile.lua`, DW-FP21).
 
-The two class lists are seed data (LibKa0s-Verdict-1.0's `VerdictClassData.lua` since the Item
-Search split, vendored at `libs/LibKa0s/`), and each is re-validated against its own client's DB2 on
-wago.tools (clients-§10): `tools/seeds/seeds.py` checks the vendored copy read-only, its Retail list
-against product `wow` and its Forever list against `wowf` (class ids, armor and the level-40 switch, weapon
-proficiencies, specs or talent trees, relics, the Titan's Grip, shield and dual-wield flags), plus
-`core/Constants.lua`'s enum fallback literals and the recipe skill lines; a ruled edit to a list is the
-library's, made in LibKa0s and re-vendored (`apply` never writes under `libs/`). Every candidate and flag is
-ruled as data (`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bundle under
+The two class lists are seed data, LibKa0s-Verdict-1.0's `VerdictClassData.lua` since the Item
+Search split (vendored at `libs/LibKa0s/`), and their seed contract is LibKa0s's since LibKa0s#109:
+its `tools/seeds/classseeds.py`, flavors `retail-classes` and `forever-classes` of its
+`docs/validate-seeds.md`. This repo's `tools/seeds/seeds.py` re-validates its own seeds against each
+client's DB2 on wago.tools (clients-§10, product `wow` for Retail and `wowf` for Forever):
+`core/Constants.lua`'s enum fallback literals and the recipe skill lines (`C.RECIPE_SKILL_LINE`,
+`modules/CollectCells.lua`'s `PROFESSION`). Every flag is ruled as data
+(`tools/seeds/<flavor>_rulings.json`) and each run is a frozen bundle under
 `docs/seed-research/`. The procedure is [`validate-seeds.md`](validate-seeds.md). The generated
 recipe-reagent table and the hand-curated gathering nodes went with Item Search to Ka0s Item
 Search (DropWatcher#19), with their generator `tools/seeds/recipes.py`.
@@ -824,7 +824,7 @@ checkpointed plan) and `docs/investigations/`.
 | Doc | Covers |
 |---|---|
 | `design-readings.md` | How the code reads every case the design spec leaves open, module by module (linked from `known-limitations.md`) |
-| `validate-seeds.md` | The seed-validation contract `/dev-copilot:validate-seeds` runs: the class lists' flavors (`retail` on `wow`, `forever` on `wowf`), `tools/seeds/seeds.py`'s steps, the precedent a ruling follows and the gate |
+| `validate-seeds.md` | The seed-validation contract `/dev-copilot:validate-seeds` runs: the enum-literal and skill-line flavors (`retail` on `wow`, `forever` on `wowf`; the class lists' are LibKa0s's `retail-classes` and `forever-classes`), `tools/seeds/seeds.py`'s steps, the precedent a ruling follows and the gate |
 | `forever-probes.md` | The WoW Forever port's in-game probe sheet: each open read of the port's design and research, a line to type and what to read (linked from `smoke-tests.md` and `known-limitations.md`) |
 
 ## Documented deviations
