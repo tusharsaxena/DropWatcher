@@ -53,12 +53,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.C or not lib.Evaluate then return end
 
 local GEAR_MINOR = 1
+local ORDER = 90   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B2): Drop Watcher's gear snapshot and the verdict half of its
 -- judge, per instance.
 if lib.__gearMinor and lib.__gearMinor >= GEAR_MINOR
-  and lib.__gearShellMinor == lib.MINOR then return end
+  and lib.__gearShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__gearMinor      = GEAR_MINOR
 lib.__gearShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictGear = GEAR_MINOR
@@ -489,7 +491,9 @@ end
 --- @param forced boolean|nil
 --- @return table|nil me, boolean pending
 function methods:Judge(link, forced)
-  local facts, status = self:Request(link, function(f, l) if f then self:Changed("item", l) end end)
+  -- One callback per instance, so a link judged again while it loads is announced once.
+  self.__onItem = self.__onItem or function(f, l) if f then self:Changed("item", l) end end
+  local facts, status = self:Request(link, self.__onItem)
   if not facts then return nil, status == "loading" end
   local me = self:JudgeFacts(facts, { forced = forced })
   if not scorePending(me) then return me, false end

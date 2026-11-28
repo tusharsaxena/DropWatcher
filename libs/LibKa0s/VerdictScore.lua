@@ -35,11 +35,13 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.ClassData then return end
 
 local SCORE_MINOR = 1
+local ORDER = 80   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B2): Drop Watcher's scorers, the settings the host's config.
 if lib.__scoreMinor and lib.__scoreMinor >= SCORE_MINOR
-  and lib.__scoreShellMinor == lib.MINOR then return end
+  and lib.__scoreShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__scoreMinor      = SCORE_MINOR
 lib.__scoreShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictScore = SCORE_MINOR

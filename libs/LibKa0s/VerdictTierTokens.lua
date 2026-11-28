@@ -41,12 +41,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.C then return end
 
 local TIERTOKENS_MINOR = 1
+local ORDER = 30   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B1): Drop Watcher's tier tokens, the words read from the host's
 -- locale table per call.
 if lib.__tierTokensMinor and lib.__tierTokensMinor >= TIERTOKENS_MINOR
-  and lib.__tierTokensShellMinor == lib.MINOR then return end
+  and lib.__tierTokensShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__tierTokensMinor      = TIERTOKENS_MINOR
 lib.__tierTokensShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictTierTokens = TIERTOKENS_MINOR

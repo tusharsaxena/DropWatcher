@@ -55,12 +55,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.C or not lib.ClassData then return end
 
 local EVALUATE_MINOR = 1
+local ORDER = 40   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B1): Drop Watcher's kernel and off-spec pass, the client named
 -- per call.
 if lib.__evaluateMinor and lib.__evaluateMinor >= EVALUATE_MINOR
-  and lib.__evaluateShellMinor == lib.MINOR then return end
+  and lib.__evaluateShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__evaluateMinor      = EVALUATE_MINOR
 lib.__evaluateShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictEvaluate = EVALUATE_MINOR

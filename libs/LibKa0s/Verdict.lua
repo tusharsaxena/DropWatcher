@@ -12,6 +12,8 @@
 --   VerdictFacts.lua      an item link's facts, cached per instance (lib.ItemRead; v:Facts, v:Request)
 --   VerdictScore.lua      the scorers (lib.Score; v:Scorer, v:ScoreFor)
 --   VerdictGear.lua       your gear snapshot and candidate, and the judge (v:Snapshot, v:Judge)
+--   VerdictSettings.lua   the Comparison section a host drops into its panel, its six rows,
+--                         defaults and two editors (lib.Settings)
 --
 -- == WHY THIS EXISTS ===========================================================================
 --
@@ -99,6 +101,33 @@ local instanceMeta = { __index = methods }
 lib.__events = lib.__events or {}
 lib.__lifecycle = lib.__lifecycle or {}
 
+-- Which secondary file ran last at which generation (`[order] = generation`; each file's ORDER is
+-- its place in LibKa0s.xml, spaced by ten). A secondary's minor gates it alone, but the files after
+-- it capture what it builds (lib.C, lib.ClassData) at their load: so when one runs, every file after
+-- it in load order runs again on what it built, even at a minor already loaded. Without that, a
+-- release that bumps VerdictConstants alone, loaded after an older copy, left the older copy's
+-- kernel judging on the constants it captured, and which set a verdict read hung on load order.
+lib.__ranAt = lib.__ranAt or {}
+lib.__generation = lib.__generation or 0
+
+--- Whether the secondary at `order` must run again: a file before it in load order ran after it did.
+--- @param order number
+--- @return boolean
+function lib.__Stale(order)
+  local mine = lib.__ranAt[order] or 0
+  for o, g in pairs(lib.__ranAt) do
+    if o < order and g > mine then return true end
+  end
+  return false
+end
+
+--- Record that the secondary at `order` ran.
+--- @param order number
+function lib.__Ran(order)
+  lib.__generation = lib.__generation + 1
+  lib.__ranAt[order] = lib.__generation
+end
+
 -- The read table of one host: host.reads' member, else lib.Reads', looked up at each access.
 local function readsFor(host)
   return setmetatable({}, { __index = function(_, name)
@@ -136,13 +165,22 @@ function methods:Client() return self.client end
 --- @return table
 function methods:ClassData() return lib.ClassData.ForClient(self.client) end
 
---- The host's verdict config now (host.config()), a fresh table, the verdict mode filled in from
---- the client when the host names none. A host with no config judges on the defaults.
+--- The host's verdict config now (host.config()), a fresh table: a key the host leaves out (or
+--- every key, with no config) reads lib.Settings.DEFAULTS' value, a map as a fresh copy, and the
+--- verdict mode is the client's when the host names none. A host with no config judges on the
+--- defaults, heirloom protection on.
 --- @return table
 function methods:Config()
   local cfg = type(self.host.config) == "function" and self.host.config() or nil
   local out = {}
   for k, v in pairs(type(cfg) == "table" and cfg or {}) do out[k] = v end
+  local St, defaults = lib.Settings, nil
+  for _, key in ipairs(St and St.KEYS or {}) do
+    if out[key] == nil then
+      defaults = defaults or St.Defaults()
+      out[key] = defaults[key]
+    end
+  end
   if out.verdictMode == nil then out.verdictMode = lib.VerdictModeFor(self.client) end
   return out
 end
@@ -217,19 +255,41 @@ local function eventsFor(client)
   return byEvent
 end
 
+--- The events an instance of `client` listens to, sorted, a fresh array: the set `StandUp` hands to
+--- host.registerEvent, for a host that registers it ahead of the instance (its SafeRegisterEvents
+--- rows), so an event a later minor adds reaches it with no edit.
+--- @param client string "retail" | "forever"
+--- @return table event names
+function lib.EventsFor(client)
+  local out = {}
+  for event in pairs(eventsFor(client)) do out[#out + 1] = event end
+  table.sort(out)
+  return out
+end
+
+--- The instance's events (lib.EventsFor of its client).
+--- @return table event names
+function methods:Events() return lib.EventsFor(self.client) end
+
 --- Register the instance's events through the host and run every stand-up step (the gear snapshot
---- is read again and announced). Safe to call twice.
+--- is read again and announced). Safe to call twice. Each registration is protected on its own
+--- (events-frames-taint-§1): one the host refuses costs that event, with a debug line, not the rest
+--- of the block or the stand-up.
 function methods:StandUp()
   self.down = false
   local host = self.host
   if not self.__registered and type(host.registerEvent) == "function" then
     self.__registered = {}
     for event, fns in pairs(eventsFor(self.client)) do
-      self.__registered[#self.__registered + 1] = event
-      host.registerEvent(event, function(_, ...)
+      local ok, err = pcall(host.registerEvent, event, function(_, ...)
         if self.down then return end
         for _, fn in ipairs(fns) do fn(self, event, ...) end
       end)
+      if ok then
+        self.__registered[#self.__registered + 1] = event
+      else
+        self:Debug("VERDICT", "StandUp: the host refused %s: %s", event, tostring(err))
+      end
     end
   end
   for _, s in ipairs(steps()) do

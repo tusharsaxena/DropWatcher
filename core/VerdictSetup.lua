@@ -108,7 +108,7 @@ local function stubEngine(client)
         OffSpecGear = none, ReadGear = answer(snap), RefreshGear = answer(false), ScheduleGear = nothing,
         GearScheduled = answer(false), OnGearEvent = nothing, OnGearDeferEnd = nothing, Scorer = none,
         ScorerInUse = answer("none"), ScoreFor = none,
-        CollectionsChanged = nothing, StandUp = nothing, StandDown = nothing, IsStoodDown = answer(false),
+        CollectionsChanged = nothing, Events = empty, StandUp = nothing, StandDown = nothing, IsStoodDown = answer(false),
     }
     -- Set apart: the compat gate reads a Pawn name in a table constructor as a client call.
     e.PawnScale, e.PawnScorer = none, none

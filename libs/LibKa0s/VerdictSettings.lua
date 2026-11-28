@@ -23,7 +23,7 @@
 --            get = function(path) -> value, -- the host's stored value (nil reads as the default)
 --            set = function(path, value),   -- the host's write seam; an editor hands it a fresh map
 --            page = string | nil,           -- Rows: every row's `page`
---            print = function(line) | nil,  -- the import's chat line (the global print when nil)
+--            print = function(line) | nil,  -- the import's chat line, prefixed (none when nil)
 --            reads = { [member] = fn } | nil }  -- overrides of lib.Reads for the player's class,
 --                                               -- spec and talent trees, as host.reads
 --
@@ -62,12 +62,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.ClassData or not lib.C or not lib.SubClassKey or not lib.Score then return end
 
 local SETTINGS_MINOR = 1
+local ORDER = 100   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B3): Drop Watcher's six comparison rows, their defaults and the
 -- weights and unwanted-types editors.
 if lib.__settingsMinor and lib.__settingsMinor >= SETTINGS_MINOR
-  and lib.__settingsShellMinor == lib.MINOR then return end
+  and lib.__settingsShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__settingsMinor      = SETTINGS_MINOR
 lib.__settingsShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictSettings = SETTINGS_MINOR
@@ -473,11 +475,11 @@ local function weightRow(spec, key, stat)
 end
 
 -- Enter in the import box: the pasted Pawn scale replaces this spec's weights through spec.set,
--- the chat says what came in, and the page redraws its sliders.
+-- the chat says what came in (through spec.print, the host's prefixed printer; with none, no line:
+-- the prefix is the host's brand, slash-commands-§4), and the page redraws its sliders.
 local function importScale(O, ctx, spec, key, text, box)
   local map, result = lib.Score.ImportInto(getter(spec, "weights")(), key, text)
-  local say = type(spec.print) == "function" and spec.print or print
-  say(St.ImportText(result, specLabel(spec, key), spec.L))
+  if type(spec.print) == "function" then spec.print(St.ImportText(result, specLabel(spec, key), spec.L)) end
   if not map then return end
   write(spec, "weights", map)
   box:SetText("")

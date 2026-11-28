@@ -30,11 +30,13 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.ClassData then return end
 
 local READS_MINOR = 1
+local ORDER = 50   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B2): Drop Watcher's compat reads the verdict engine makes.
 if lib.__readsMinor and lib.__readsMinor >= READS_MINOR
-  and lib.__readsShellMinor == lib.MINOR then return end
+  and lib.__readsShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__readsMinor      = READS_MINOR
 lib.__readsShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictReads = READS_MINOR

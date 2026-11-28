@@ -44,12 +44,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib or not lib.C then return end
 
 local COLLECT_MINOR = 1
+local ORDER = 60   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B2): Drop Watcher's category, collection verdict and read, the
 -- reads the instance's.
 if lib.__collectMinor and lib.__collectMinor >= COLLECT_MINOR
-  and lib.__collectShellMinor == lib.MINOR then return end
+  and lib.__collectShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__collectMinor      = COLLECT_MINOR
 lib.__collectShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictCollect = COLLECT_MINOR

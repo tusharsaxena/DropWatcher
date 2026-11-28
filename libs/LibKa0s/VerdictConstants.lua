@@ -20,12 +20,14 @@ local lib = LibStub and LibStub("LibKa0s-Verdict-1.0", true)
 if not lib then return end
 
 local CONSTANTS_MINOR = 1
+local ORDER = 10   -- its place in LibKa0s.xml (Verdict.lua, lib.__Stale)
 -- Minor 1 (DropWatcher#19, task B1): the subset of Drop Watcher's core/Constants.lua the kernel
 -- reads, both clients' slot plans kept.
 if lib.__constantsMinor and lib.__constantsMinor >= CONSTANTS_MINOR
-  and lib.__constantsShellMinor == lib.MINOR then return end
+  and lib.__constantsShellMinor == lib.MINOR and not lib.__Stale(ORDER) then return end
 lib.__constantsMinor      = CONSTANTS_MINOR
 lib.__constantsShellMinor = lib.MINOR
+lib.__Ran(ORDER)
 
 lib.MODULES = lib.MODULES or {}
 lib.MODULES.VerdictConstants = CONSTANTS_MINOR

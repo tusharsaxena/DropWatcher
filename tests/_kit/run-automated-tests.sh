@@ -86,11 +86,19 @@ else
     # survived five revisions: the kit's own repo could never execute its output path.
     # Identity is the repo directory; version is the newest semver tag, which for a library is
     # the only repo-wide number there is (its files carry per-file LibStub minors instead).
-    if [ ! -d .git ]; then
+    # A repository, not a `.git` directory: in a `git worktree` checkout `.git` is a file, and
+    # the folder is the worktree's, so the name is read off the repository's common git dir
+    # (kit revision 66).
+    if ! git rev-parse --git-dir >/dev/null 2>&1; then
         echo "no .toc here and no .git — run this from the addon or library repo root" >&2
         exit 2
     fi
-    ADDON="$(basename "$PWD")"
+    COMMON_DIR="$(cd "$(git rev-parse --git-common-dir)" && pwd)"
+    if [ "$(basename "$COMMON_DIR")" = ".git" ]; then
+        ADDON="$(basename "$(dirname "$COMMON_DIR")")"
+    else
+        ADDON="$(basename "$PWD")"
+    fi
     ADDON_VERSION="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' | tr -d '\r' || true)"
 fi
 [ -z "$ADDON_VERSION" ] && ADDON_VERSION="unknown"
