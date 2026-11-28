@@ -101,6 +101,47 @@ test("verdict setup: every event the instance registers has its row on this clie
     end
 end)
 
+-- The rows' clients tag, as a set key: "both" for a row with none.
+local function tagOf(row)
+    if row.clients == nil then return "both" end
+    local tags = {}
+    for _, c in ipairs(row.clients) do tags[#tags + 1] = c end
+    table.sort(tags)
+    return table.concat(tags, ",")
+end
+
+test("verdict setup: the rows are the library's EventsFor of both clients, tagged by the set they are in", function()
+    local NS = T.newAddon()
+    local want = {}
+    for _, client in ipairs({ "retail", "forever" }) do
+        for _, event in ipairs(NS.Verdict.EventsFor(client)) do
+            want[event] = want[event] and "both" or client
+        end
+    end
+    local got, n = {}, 0
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        if row[2] == "OnVerdictEvent" then
+            assertNil(got[row[1]], row[1] .. " has one row")
+            got[row[1]], n = tagOf(row), n + 1
+        end
+    end
+    -- red under: a hand-kept list (an event a later library minor adds has no row)
+    for event, tag in pairs(want) do
+        assertEqual(got[event], tag, event .. "'s row")
+    end
+    for event in pairs(got) do assertTrue(want[event] ~= nil, event .. " is no client's event") end
+    assertTrue(n > 0, "the instance's events have rows")
+end)
+
+test("verdict setup: without the library the stand-in's EventsFor answers nothing, so no row is dead", function()
+    local NS = T.newAddon{ skip = T.loadAddon.libFiles }
+    -- red under: rows built from a list the stand-in's instance never registers
+    assertEqual(type(NS.Verdict.EventsFor), "function", "the stand-in carries EventsFor")
+    for _, row in ipairs(NS.FEATURE_EVENTS) do
+        assertTrue(row[2] ~= "OnVerdictEvent", row[1] .. " is a row no instance listens to")
+    end
+end)
+
 test("verdict setup: the first read is lazy and quiet, a later change sends GearChanged", function()
     local NS, _, m = T.enableAddon()
     NS.ArmSkinPicker(false)

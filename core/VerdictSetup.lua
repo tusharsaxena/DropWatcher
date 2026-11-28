@@ -87,6 +87,8 @@ local function stubLib()
             WeightsScore = function() return 0 end, HasWeights = function() return false end,
             Resolve = function() return "none" end, WeightsFor = none, WeightsScorer = function() return none end },
         Gear = { THROTTLE = 0.5, SlotsFor = empty },
+        -- No instance stands up, so it listens to nothing and no event gets a row.
+        EventsFor = empty,
     }
 end
 
@@ -131,21 +133,26 @@ local reads = setmetatable({}, { __index = function(_, name)
     return NS.Compat[name]
 end })
 
--- The instance's events, by client, as the library's API document lists them
--- (docs/api/Verdict, *The instance*). Each is one NS.FEATURE_EVENTS row whose handler hands the
--- event to the instance's handler for it (host.registerEvent).
-local EVENTS = {
-    { "PLAYER_EQUIPMENT_CHANGED" }, { "BAG_UPDATE_DELAYED" }, { "PLAYER_REGEN_ENABLED" },
-    { "SPELL_TEXT_UPDATE" }, { "NEW_MOUNT_ADDED" }, { "NEW_PET_ADDED" }, { "NEW_TOY_ADDED" },
-    { "NEW_RECIPE_LEARNED" }, { "SKILL_LINES_CHANGED" },
-    { "PLAYER_SPECIALIZATION_CHANGED", { "retail" } }, { "TRANSMOG_COLLECTION_UPDATED", { "retail" } },
-    { "TRAIT_CONFIG_UPDATED", { "forever" } }, { "CHARACTER_POINTS_CHANGED", { "forever" } },
-    { "PLAYER_LEVEL_UP", { "forever" } },
-}
-local ROUTED = {}
-for _, e in ipairs(EVENTS) do
-    ROUTED[e[1]] = true
-    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { e[1], "OnVerdictEvent", clients = e[2] }
+-- The instance's events, by client, read from the library (NS.Verdict.EventsFor, the stand-in's
+-- answering none), so an event a later minor adds gets its row with no edit here (DropWatcher#21).
+-- Each is one NS.FEATURE_EVENTS row whose handler hands the event to the instance's handler for it
+-- (host.registerEvent): an event both clients listen to carries no clients tag, one only a single
+-- client listens to carries that client's.
+local CLIENTS = { "retail", "forever" }
+local ROUTED, ORDER = {}, {}
+for _, client in ipairs(CLIENTS) do
+    for _, event in ipairs(NS.Verdict.EventsFor(client)) do
+        if ROUTED[event] then
+            ROUTED[event] = "both"
+        else
+            ROUTED[event], ORDER[#ORDER + 1] = client, event
+        end
+    end
+end
+for _, event in ipairs(ORDER) do
+    local only = ROUTED[event]
+    NS.FEATURE_EVENTS[#NS.FEATURE_EVENTS + 1] = { event, "OnVerdictEvent",
+        clients = only ~= "both" and { only } or nil }
 end
 
 -- The instance's handler per event, kept while it is stood up.
