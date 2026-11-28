@@ -182,7 +182,10 @@ locally patched `tests/_kit/` breaks the gate's own byte-identity assertion; and
 it** — there is no sibling to compare against from inside the library repo, which is why
 `tests/test_kitsync.lua` is the library-side equivalent.
 
-When the sibling checkout is absent the cases report **SKIP** with the reason, never PASS. Its
+When the sibling checkout is absent the cases report **SKIP** with the reason, never PASS, and from
+kit revision 67 (LibKa0s#110) so does a sibling that is present but cannot resolve the tag the
+provenance line names: that is testing-§11's "the ref cannot be resolved", and nothing is compared.
+Where the tag resolves, a content difference, a missing file or an extra file still FAILS. Its
 comparison contract, including the one line-ending normalization and why it exists, is stated in the
 file's own header. Read that header before changing anything about how the bytes are compared.
 

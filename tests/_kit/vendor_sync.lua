@@ -689,12 +689,21 @@ function VendorSync.register(T, opts)
         return doc:match(PATTERN)
     end
 
-    --- The tag to compare against. A missing sibling checkout is the ONE case where
-    --- this pair may go quiet, and it now reports a SKIP carrying its reason rather
-    --- than returning early — a bare `return` here registered as PASS, so six repos
-    --- were reporting "checked, fine" for a comparison that never ran. Where the
-    --- folder IS there, a missing tag, a missing file, an extra file or a content
-    --- difference all FAIL.
+    --- The tag to compare against. testing-§11's precondition has two halves, and the pair goes
+    --- quiet, as a SKIP carrying its reason, on either: the sibling checkout is absent, or it is
+    --- there and cannot resolve the tag the provenance line names. A bare `return` here once
+    --- registered as PASS, so six repos were reporting "checked, fine" for a comparison that never
+    --- ran; a skip is neither that nor a failure.
+    ---
+    --- The unresolvable ref is a skip from kit revision 67 (LibKa0s#110). Until then it FAILED, while
+    --- §11 already said skip, and the commonest way to reach it is a consumer re-vendored from a
+    --- library branch ahead of its tag: every such consumer then hand-rolled a pre-tag shim around
+    --- this file. The question is asked of git alone (`rev-parse --verify <tag>^{commit}`), so a ref
+    --- the sibling has simply not fetched skips the same way.
+    ---
+    --- Where the tag DOES resolve, nothing is softened: a missing file, an extra file or a content
+    --- difference all FAIL. A provenance line that names no version at all FAILS too, since that is
+    --- this repo's own document being wrong, not a precondition of the host.
     local function siblingTag()
         if not gitShow(PROBE) then
             T.skip(SIBLING .. " checkout absent — the vendored payload was NOT compared")
@@ -702,6 +711,10 @@ function VendorSync.register(T, opts)
         local version = bundledVersion()
         T.assertTrue(version ~= nil,
             FILE .. " carries a `Bundles [LibKa0s](...) vX.Y.Z (MIT).` provenance line")
+        if not gitOut(('rev-parse --verify --quiet "%s^{commit}"'):format(version)) then
+            T.skip(("%s cannot resolve %s, the tag %s's provenance line names (not cut yet, or not "
+                .. "fetched) — the vendored payload was NOT compared"):format(SIBLING, version, FILE))
+        end
         return version
     end
 

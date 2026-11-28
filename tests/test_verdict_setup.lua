@@ -41,13 +41,22 @@ end)
 test("verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it", function()
     local NS = T.newAddon()
     local R = NS.VerdictEngine.R
-    assertTrue(R.PlayerRole == NS.Compat.PlayerRole, "this addon's own role read (its role override)")
-    assertTrue(R.GetItemInfo == NS.Compat.GetItemInfo)
-    local spy = function() return nil end
-    NS.Compat.InventoryItemLink = spy
+    -- Answers, not identities: from Verdict minor 3 a member of v.R is a forwarder, never rawequal
+    -- to the host's function (LibKa0s v1.120.0, docs/releasing.md step 8).
+    local function sentinel(owner, name)
+        local mark = {}
+        owner[name] = function() return mark end
+        return mark
+    end
+    local role = sentinel(NS.Compat, "PlayerRole")
+    assertTrue(R.PlayerRole() == role, "this addon's own role read (its role override)")
+    local info = sentinel(NS.Compat, "GetItemInfo")
+    assertTrue(R.GetItemInfo(1) == info)
     -- red under: a host that hands the reads over once, at load (a seam installed later is missed)
-    assertTrue(R.InventoryItemLink == spy, "looked up at each access")
-    assertTrue(R.LoadItem == NS.Item.LoadItem, "the item load is NS.Item's")
+    local slot = sentinel(NS.Compat, "InventoryItemLink")
+    assertTrue(R.InventoryItemLink("player", 11) == slot, "looked up at each call")
+    local load = sentinel(NS.Item, "LoadItem")
+    assertTrue(R.LoadItem(1) == load, "the item load is NS.Item's")
 end)
 
 test("verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them", function()

@@ -56,15 +56,26 @@
 --            registerEvent = function(event, handler), unregisterEvent = function(event),
 --            onChange = function(kind, ...) }           -- "gear" | "collection" | "score" | "item"
 --
--- THE READS. `v.R` is the instance's read table: `R.<member>` is `host.reads[member]` when the
--- host gave one, else `lib.Reads[member]`, looked up at every access (VerdictReads.lua's header).
+-- THE READS. `v.R` is the instance's read table: `R.<member>(...)` calls `host.reads[member]` when
+-- the host gave one, else `lib.Reads[member]`, looked up at every call (VerdictReads.lua's header).
+-- So a host names only the reads it must answer itself (Drop Watcher: PlayerRole, from its role
+-- store) and the library answers the rest. Since minor 3 (LibKa0s#111) every read is a real
+-- function member of `v.R`, a forwarder built at New for each name in lib.Reads and in a plain
+-- host.reads table, so a host's simulator wraps the instance's reads in place, as it wraps its own
+-- Compat table: `Sim:Cover(seam, v.R, opts)` (LibKa0s-Sim-1.0 minor 6) puts them under the seam's
+-- providers and guards with no host copy of a read. A name a newer minor adds after New still
+-- resolves, through the table's __index, outside any seam until the next reload. A forwarder is
+-- never the host's or the library's function itself (no rawequal); its answers are theirs.
 --
 -- THE LIFECYCLE. An instance answers from the moment it is made, reading lazily. Its events are
 -- registered by `v:StandUp()` (through host.registerEvent, one handler per event) and dropped by
 -- `v:StandDown()`, which also cancels every timer and drops every cache: while stood down nothing
--- arms and `onChange` never fires. The secondary files add their state lazily, their events to
--- lib.__events and their stand-down and stand-up steps to lib.__lifecycle, so an instance built
--- before a file loads still gets what it adds.
+-- arms and `onChange` never fires. `v:StandUp()` reads your gear at once and announces it
+-- (onChange("gear")); `v:StandUp{ lazy = true }` keeps the handlers and reads nothing, so the first
+-- `Judge` or gear ask reads your gear, quietly, as an instance never stood up does (LibKa0s#108).
+-- The secondary files add their state lazily, their events to lib.__events and their stand-down
+-- and stand-up steps to lib.__lifecycle, so an instance built before a file loads still gets what
+-- it adds.
 --
 -- == DEPENDENCIES ==============================================================================
 --
@@ -78,7 +89,9 @@ if not core or (core.MINOR or 0) < NEEDS_CORE then return end   -- no NewLibrary
 
 -- Minor 1 (DropWatcher#19, task B1 of Drop Watcher's
 -- docs/superpowers/plans/2026-11-27-itemsearch-split.md): the shell and the pure kernel.
-local MAJOR, MINOR = "LibKa0s-Verdict-1.0", 1
+-- Minor 2 (LibKa0s#108): StandUp(opts), `opts.lazy` handed to each stand-up step.
+-- Minor 3 (LibKa0s#111): v.R holds a forwarder per read, so a seam can wrap the instance's reads.
+local MAJOR, MINOR = "LibKa0s-Verdict-1.0", 3
 local lib = LibStub:NewLibrary(MAJOR, MINOR)
 if not lib then return end
 
@@ -97,7 +110,8 @@ local methods = lib.__methods
 local instanceMeta = { __index = methods }
 
 -- What the secondary files hang on the shell: their events (`[key] = { event, clients, fn }`,
--- fn(v, event, ...)) and their lifecycle steps (`[key] = { down = fn(v), up = fn(v), order }`).
+-- fn(v, event, ...)) and their lifecycle steps (`[key] = { down = fn(v), up = fn(v, opts), order }`,
+-- `opts` the stand-up's: `{ lazy = boolean }`).
 lib.__events = lib.__events or {}
 lib.__lifecycle = lib.__lifecycle or {}
 
@@ -128,13 +142,34 @@ function lib.__Ran(order)
   lib.__ranAt[order] = lib.__generation
 end
 
--- The read table of one host: host.reads' member, else lib.Reads', looked up at each access.
+-- The read `name` of one host now: host.reads' member, else lib.Reads'.
+local function resolveRead(host, name)
+  local own = type(host.reads) == "table" and host.reads[name] or nil
+  if own ~= nil then return own end
+  return lib.Reads and lib.Reads[name]
+end
+
+-- One read's forwarder: the host's or the library's member, resolved at each call; a read that
+-- resolves to nothing answers nothing.
+local function forwarder(host, name)
+  return function(...)
+    local fn = resolveRead(host, name)
+    if fn then return fn(...) end
+  end
+end
+
+-- The read table of one host: a forwarder for each function lib.Reads and a plain host.reads
+-- carry now, and any other name resolved at each access (a read a later minor adds).
 local function readsFor(host)
-  return setmetatable({}, { __index = function(_, name)
-    local own = type(host.reads) == "table" and host.reads[name] or nil
-    if own ~= nil then return own end
-    return lib.Reads and lib.Reads[name]
-  end })
+  local R = setmetatable({}, { __index = function(_, name) return resolveRead(host, name) end })
+  local sources = { lib.Reads }
+  if type(host.reads) == "table" then sources[2] = host.reads end
+  for _, source in ipairs(sources) do
+    for name, fn in pairs(source) do
+      if type(fn) == "function" and rawget(R, name) == nil then rawset(R, name, forwarder(host, name)) end
+    end
+  end
+  return R
 end
 
 --- An instance bound to `host` (see the header). Raises on a host that is not a table or names no
@@ -274,8 +309,13 @@ function methods:Events() return lib.EventsFor(self.client) end
 --- Register the instance's events through the host and run every stand-up step (the gear snapshot
 --- is read again and announced). Safe to call twice. Each registration is protected on its own
 --- (events-frames-taint-§1): one the host refuses costs that event, with a debug line, not the rest
---- of the block or the stand-up.
-function methods:StandUp()
+--- of the block or the stand-up. With `opts.lazy` the steps read nothing: the gear snapshot is read
+--- by the first Judge or gear ask, quietly (no onChange("gear") for that read), and a snapshot the
+--- instance still holds is kept. Anything but a table with `lazy = true` stands up as with no
+--- argument.
+--- @param opts table|nil { lazy = boolean }
+function methods:StandUp(opts)
+  local step = { lazy = type(opts) == "table" and opts.lazy == true }
   self.down = false
   local host = self.host
   if not self.__registered and type(host.registerEvent) == "function" then
@@ -293,7 +333,7 @@ function methods:StandUp()
     end
   end
   for _, s in ipairs(steps()) do
-    if s.step.up then s.step.up(self) end
+    if s.step.up then s.step.up(self, step) end
   end
 end
 
