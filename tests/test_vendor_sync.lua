@@ -2,16 +2,21 @@
 --
 -- libs/LibKa0s/ and tests/_kit/ must be byte-identical to what LibKa0s published at the tag the
 -- root CLAUDE.md provenance line names, and the runner must be recorded 100755 in the git index.
--- The comparison is the kit's; nothing is reimplemented here. The icon folder is held to the
--- `LibKa0s icons:` declaration directly under the provenance line.
+-- The comparison is the kit's. The icon folder is held to the `LibKa0s icons:` declaration
+-- directly under the provenance line.
 --
 -- PRE-TAG (until the Item Search split's close-out, IS-G1): the payloads were vendored from the
 -- LibKa0s release branch at v1.119.0 before its tag exists. While ../LibKa0s is checked out but
--- does not carry the provenance tag yet, the two payload cases are declared skips (registered with
+-- does not resolve the provenance tag, the two payload cases are declared skips (registered with
 -- their reason, so the inventory counts them as skips) saying the tag is missing, so the payload
--- was NOT compared, and only the runner case runs through the kit. Once the tag exists the kit registers all three with its defaults, with no edit here;
--- the close-out drops this pre-tag branch after the re-vendor check passes. An absent checkout
--- is the kit's own skip, with the kit's own reason.
+-- was NOT compared, and only the runner case runs through the kit. That is testing-§11's own rule
+-- (a ref that cannot be resolved is a skip carrying its reason, never a pass or a failure), which
+-- the kit does not yet follow: it fails the case (review 2026-11-28 F-012, LibKa0s's to fix). The
+-- one thing done here rather than by the kit is that check, reading the provenance tag and asking
+-- the sibling whether it resolves (`resolves`, `provenanceTag` below). Once the tag exists the kit
+-- registers all three with its defaults, with no edit here; the close-out drops this pre-tag branch
+-- after the re-vendor check passes, or when the kit skips an unresolved ref itself. An absent
+-- checkout is the kit's own skip, with the kit's own reason.
 local VendorSync = dofile("tests/_kit/vendor_sync.lua")
 local T = _G.DW_TEST
 
