@@ -752,12 +752,13 @@ end
 function DW:OnEnable()
     registerFeatureEvents(self)
 
+    -- Eager category registration (options-ui-§1); bodies stay lazy. First, so a throw below
+    -- never costs the panel the player would turn the addon off from.
+    if self.Settings and self.Settings.Register then self.Settings.Register() end
+
     -- The verdict engine's instance (core/VerdictSetup.lua): its event handlers kept and your gear
     -- read, before anything below can judge an item.
     if NS.VerdictEnable then NS.VerdictEnable() end
-
-    -- Eager category registration (options-ui-§1); bodies stay lazy.
-    if self.Settings and self.Settings.Register then self.Settings.Register() end
 
     -- The launcher needs db.global.minimap, which exists from OnInitialize.
     if NS.Launcher then NS.Launcher:Register() end

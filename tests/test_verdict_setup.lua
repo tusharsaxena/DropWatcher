@@ -109,6 +109,27 @@ test("verdict setup: the first read is lazy and quiet, a later change sends Gear
     assertEqual(NS.State.gear.equipped[11].link, link(101))
 end)
 
+test("verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback", function()
+    local NS, _, m = T.bootAddon()
+    local registered = false
+    local register = NS.addon.Settings.Register
+    NS.addon.Settings.Register = function(...) registered = true; return register(...) end
+    NS.VerdictEngine.StandUp = function() error("verdict boom") end
+    local ok, err = pcall(NS.addon.OnEnable, NS.addon)
+    -- red under: the engine stood up ahead of the category (a throw there costs the settings panel)
+    assertFalse(ok, "the stand-up's error still reaches the client")
+    assertTrue(registered, "the settings category registered before the engine stood up")
+    -- red under: a re-raise of the bare message (where it came from is lost)
+    assertTrue(tostring(err):find("verdict boom", 1, true) ~= nil, "the message is kept")
+    assertTrue(tostring(err):find("stack traceback", 1, true) ~= nil, "the traceback is kept")
+    NS.VerdictEngine.StandUp = nil
+    local seen = listen(NS)
+    m.addItem(link(100), ring(600)); m.inventory.player[11] = link(100)
+    NS.VerdictStandUp()
+    -- red under: the quiet flag left set by the throw (no gear change is ever announced again)
+    assertEqual(seen.n, 1, "a later stand-up announces its read")
+end)
+
 test("verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns", function()
     local NS = T.enableAddon()
     NS.ArmSkinPicker(false)

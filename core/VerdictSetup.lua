@@ -206,11 +206,16 @@ function NS.VerdictStandUp()
     NS.VerdictEngine:StandUp()
 end
 
+-- An error's message with the stack it was raised from: a re-raise of the message alone would
+-- report it from here.
+local function withTraceback(err) return debug.traceback(tostring(err), 2) end
+
 --- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept, its gear read
---- quietly and provisionally (see THE FIRST READ IS LAZY above).
+--- quietly and provisionally (see THE FIRST READ IS LAZY above). A throw lets the quiet read go and
+--- is raised again with the stack it came from.
 function NS.VerdictEnable()
     quietGear = true
-    local ok, err = pcall(NS.VerdictEngine.StandUp, NS.VerdictEngine)
+    local ok, err = xpcall(function() NS.VerdictEngine:StandUp() end, withTraceback)
     quietGear, provisional = false, true
     if not ok then error(err, 0) end
 end
