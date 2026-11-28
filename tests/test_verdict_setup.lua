@@ -120,6 +120,21 @@ test("verdict setup: the stand-down stands the instance down and drops the mirro
     assertFalse(NS.VerdictEngine:IsStoodDown())
 end)
 
+test("verdict setup: the gear rebuild is timed while a capture is on, through the harness itself", function()
+    local NS = T.enableAddon()
+    local noted = {}
+    NS.Perf.Note = function(key) noted[#noted + 1] = key end
+    NS.Perf.on = false
+    NS.Gear.Refresh("test")
+    assertEqual(#noted, 0, "no note while the capture is off")
+    NS.Perf.on = true
+    NS.Gear.Refresh("test")
+    NS.Perf.on = false
+    assertEqual(noted[1], "gear.rebuild", "the rebuild noted while it is on")
+    -- red under: a proxy whose `on` is a metatable lookup (a function call on every dormant bracket)
+    assertTrue(NS.VerdictEngine.host.perf == NS.Perf, "the host's perf is NS.Perf, `on` a plain field")
+end)
+
 test("verdict setup: the engine's collection change runs the feed's pass", function()
     local NS = T.newAddon()
     local ran = 0

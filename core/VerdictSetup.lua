@@ -190,12 +190,12 @@ local host = {
     end,
 }
 
--- The perf harness (core/PerfSetup.lua) times the instance's gear rebuild (`gear.rebuild`) while a
--- capture is on; `on` is read at each call. The feed times its own verdicts (modules/LootFeed.lua's
--- `evaluate`, inside `feed.add`): it judges through the kernel views, never v:JudgeFacts.
-host.perf = setmetatable({
-    Note = function(key, ms) NS.Perf.Note(key, ms) end,
-}, { __index = function(_, k) if k == "on" then return NS.Perf and NS.Perf.on end end })
+-- The perf harness (core/PerfSetup.lua, loaded before this file; its stand-in when the library is
+-- absent) times the instance's gear rebuild (`gear.rebuild`) while a capture is on: the host's perf
+-- is NS.Perf itself, so the dormant bracket reads its plain `on` field. The feed times its own
+-- verdicts (modules/LootFeed.lua's `evaluate`, inside `feed.add`): it judges through the kernel
+-- views, never v:JudgeFacts.
+host.perf = NS.Perf
 
 NS.VerdictEngine = V and V:New(host) or stubEngine(CLIENT)
 

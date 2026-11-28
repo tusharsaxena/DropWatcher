@@ -125,7 +125,8 @@ core\Bus.lua
 # LOAD-BEARING relative to core\PerfSetup.lua only, which hands NS.Lifecycle to lib:New at load.
 core\LifecycleSetup.lua
 # LOAD-BEARING: lib:New reads NS.Lifecycle (above) at load, and modules\Window.lua takes
-# `local Perf = NS.Perf` as a load-time upvalue (below).
+# `local Perf = NS.Perf` as a load-time upvalue and core\VerdictSetup.lua hands NS.Perf to its
+# instance as the host's perf at load (both below).
 core\PerfSetup.lua
 # LOAD-BEARING: the lib:New descriptor reads NS.Constants.FONT_MONO (core\Constants.lua, above) at
 # load; publishes NS.Debug before any call site runs.
@@ -135,8 +136,8 @@ core\DebugLogSetup.lua
 core\DropWatcher.lua
 # LOAD-BEARING: publishes NS.Verdict (LibKa0s-Verdict-1.0, or its library-absent stand-in) and
 # NS.VerdictEngine, this addon's one instance of it; appends its event rows to NS.FEATURE_EVENTS, its
-# handler to NS.addon and its teardown to NS.STAND_DOWN (core\DropWatcher.lua, the line above) at load.
-# NS.Compat, NS.Item, NS.LootFeed, NS.Restrictions and NS.CollectFeed are read at call time.
+# handler to NS.addon and its teardown to NS.STAND_DOWN (core\DropWatcher.lua, the line above) at load,
+# and hands NS.Perf (core\PerfSetup.lua, above) to the instance at load. NS.Compat, NS.Item, NS.LootFeed, NS.Restrictions and NS.CollectFeed are read at call time.
 core\VerdictSetup.lua
 # LOAD-BEARING: publishes the views Drop Watcher's readers reach the engine by (NS.ClassData,
 # NS.Evaluate, NS.OffSpec, NS.TierTokens), which modules\ and settings\ capture at load; reads

@@ -1381,7 +1381,7 @@ Total.
 - offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
 
-### test_verdict_setup.lua (12)
+### test_verdict_setup.lua (13)
 
 - verdict setup: one instance of the library's major, on this client
 - verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
@@ -1389,6 +1389,7 @@ Total.
 - verdict setup: every event the instance registers has its row on this client, and no row is dead
 - verdict setup: the first read is lazy and quiet, a later change sends GearChanged
 - verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
+- verdict setup: the gear rebuild is timed while a capture is on, through the harness itself
 - verdict setup: the engine's collection change runs the feed's pass
 - verdict views: every kernel call names the client in force, and the caller's opts stay unwritten
 - verdict setup: InUse and Scorer follow the settings and whether Pawn is initialized
@@ -3142,7 +3143,7 @@ Total.
 | test_text_parse.lua | 10 |
 | test_constants.lua | 14 |
 | test_offspec.lua | 2 |
-| test_verdict_setup.lua | 12 |
+| test_verdict_setup.lua | 13 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -3214,4 +3215,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 8 |
-| **Total** | **2669** |
+| **Total** | **2670** |
