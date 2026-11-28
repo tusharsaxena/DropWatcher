@@ -1401,3 +1401,45 @@ test("test mode: shows one open roll and a History drop with rolls", function()
     assertEqual(#P.All("test"), 0)
     assertNil(P.Get(item.id))
 end)
+
+-- DW#20 characterization: buildMembers' every member, pinned before it was split into named helpers
+-- (behavior-neutral, CCN <= 15). Each slot's class, spec (Retail's specID, Forever's `CLASS:tree`)
+-- and GUID, with LibKa0s and without it (the protagonists' fallback classes and specs).
+local MEMBER_SLOTS = {
+    -- key, Retail class, specID, Forever class, tree
+    m22 = { "HUNTER", 253, "HUNTER", 1 }, m05 = { "PALADIN", 70, "PALADIN", 3 }, m09 = { "MAGE", 63, "MAGE", 2 },
+    m01 = { "PRIEST", 257, "PRIEST", 2 }, m19 = { "WARRIOR", 73, "WARRIOR", 3 },
+    m02 = { "DRUID", 105, "DRUID", 2 }, m03 = { "ROGUE", 260, "ROGUE", 2 }, m04 = { "WARRIOR", 71, "WARRIOR", 2 },
+    m06 = { "MONK", 270, "HUNTER", 1 }, m07 = { "EVOKER", 1468, "MAGE", 2 }, m08 = { "MONK", 268, "WARRIOR", 3 },
+    m10 = { "DEATHKNIGHT", 250, "WARLOCK", 1 }, m11 = { "PRIEST", 256, "PRIEST", 2 },
+    m12 = { "SHAMAN", 263, "SHAMAN", 1 }, m13 = { "DEMONHUNTER", 577, "ROGUE", 1 },
+    m14 = { "PALADIN", 65, "PALADIN", 1 }, m15 = { "HUNTER", 254, "HUNTER", 2 },
+    m16 = { "WARLOCK", 265, "WARLOCK", 2 }, m17 = { "DRUID", 104, "DRUID", 3 },
+    m18 = { "EVOKER", 1467, "SHAMAN", 3 }, m20 = { "SHAMAN", 264, "SHAMAN", 2 }, m21 = { "MAGE", 64, "MAGE", 1 },
+    m23 = { "ROGUE", 261, "ROGUE", 3 }, m24 = { "DEATHKNIGHT", 251, "WARLOCK", 3 },
+}
+
+local function assertMemberSlots(TD, what, protagonistsToo)
+    local protagonist = {}
+    for _, key in ipairs(TD.SAMPLE_KEYS) do protagonist[key] = true end
+    local n = 0
+    for key, s in pairs(MEMBER_SLOTS) do
+        local who = TD.MEMBERS[key]
+        assertTrue(who ~= nil, what .. ": " .. key)
+        assertEqual(who.guid, "Player-0-0000T0" .. key:sub(2), what .. ": " .. key .. "'s GUID")
+        if protagonistsToo or not protagonist[key] then
+            local class = T.forever and s[3] or s[1]
+            assertEqual(who.classFile, class, what .. ": " .. key .. "'s class")
+            assertEqual(who.specID, T.forever and (class .. ":" .. s[4]) or s[2], what .. ": " .. key .. "'s spec")
+        end
+        n = n + 1
+    end
+    local all = 0
+    for _ in pairs(TD.MEMBERS) do all = all + 1 end
+    assertEqual(all, n, what .. ": twenty-four members, no more")
+end
+
+test("test mode data: each member's class, spec and GUID (DW#20 characterization)", function()
+    assertMemberSlots(T.newAddon().TestData, "with LibKa0s", false)
+    assertMemberSlots(T.enableAddon{ skip = T.loadAddon.libFiles }.TestData, "without LibKa0s", true)
+end)
