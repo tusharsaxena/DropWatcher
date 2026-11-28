@@ -186,14 +186,10 @@ NS.Gear = {
     SLOTS = V.Gear.SlotsFor(CLIENT),
     --- Your snapshot, read lazily (and quietly) on first use. Read it, never write it.
     Snapshot = function() return seen() end,
-    --- Your snapshot's signature, false when there is none.
-    Signature = function() seen(); return engine():Signature() end,
     --- Your candidate for the kernel: a fresh outer table over the snapshot's own gear.
     Candidate = function() seen(); return engine():Candidate() end,
     --- Another spec of your class's gear (Retail), nil while an item still loads.
     OffSpecGear = function(specID) seen(); return engine():OffSpecGear(specID) end,
-    --- A fresh snapshot read from the client, unstored.
-    Read = function(prevEquipped) return engine():ReadGear(prevEquipped) end,
     --- Re-read now; GearChanged when it moved, unless `quiet`. Answers whether it moved.
     Refresh = function(cause, quiet, bagsOnly)
         NS.VerdictFresh()
@@ -201,10 +197,7 @@ NS.Gear = {
         seen()
         return changed
     end,
-    Schedule = function(cause) return engine():ScheduleGear(cause) end,
     IsScheduled = function() return engine():GearScheduled() end,
-    OnEvent = function(event) return engine():OnGearEvent(event) end,
-    OnCombatEnd = function() return engine():OnGearDeferEnd() end,
 }
 
 -- ── NS.Scoring ─────────────────────────────────────────────────────────────────────────────

@@ -516,7 +516,7 @@ test("gear: the bag defer is the engine host's deferWhile, NS.Restrictions.InCom
     held = true
     m.__fire("BAG_UPDATE_DELAYED")
     held = false
-    G.OnCombatEnd()
+    m.__fire("PLAYER_REGEN_ENABLED")
     assertTrue(G.IsScheduled(), "the combat's end rebuilds the held event")
 end)
 
@@ -643,7 +643,7 @@ test("gear: the stand-down cancels the rebuild and drops the snapshot; the stand
     assertFalse(G.IsScheduled())
     assertNil(NS.State.gear)
     assertEqual(m.__fireTimers(), 0, "the canceled rebuild never runs")
-    G.Schedule("late")
+    NS.VerdictEngine:ScheduleGear("late")
     assertFalse(G.IsScheduled(), "nothing arms while stood down")
     local seen = listen(NS)
     NS.addon:OnSlashCommand("enable")

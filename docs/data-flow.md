@@ -626,10 +626,10 @@ and `NS.State.gear` mirrors the last snapshot this addon saw, for the diagnostic
 
 ```
 PLAYER_EQUIPMENT_CHANGED ─┐
-BAG_UPDATE_DELAYED ───────┼─> Gear.Schedule ─> one 0.5 s timer (later events join it)
+BAG_UPDATE_DELAYED ───────┼─> v:ScheduleGear ─> one 0.5 s timer (later events join it)
 PLAYER_SPECIALIZATION_    │                          │
   CHANGED ("player") ─────┤                          v
-an item load answering ───┘   Gear.Refresh ─> Gear.Read:
+an item load answering ───┘   v:RefreshGear ─> v:ReadGear:
                                 UnitClass, Compat.PlayerSpecID ─> classFile, specID
                                 ClassData ─> dualWield, titanGrip
                                 every slot: Compat.InventoryItemLink ─> ItemFacts.Request
