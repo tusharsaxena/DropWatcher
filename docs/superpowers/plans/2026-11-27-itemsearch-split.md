@@ -36,7 +36,7 @@
 | D1 | DW | Clean cut of Item Search; retire its data; docs; push | done | 830d610 |
 | E1 | STD | Roster row + library-stack-§7 ripple; push | done | STD 7b99af2 |
 | F1 | all | Reviews, Item Search standards audit, fix pass; push | done (LK, DW; IS its own pass) | LK 37bc229b, bd47d2b |
-| G1 | all | Owner go-ahead → merge, tag, re-verify, close #19, cleanup | todo | |
+| G1 | all | Owner go-ahead → merge, tag, re-verify, close #19, cleanup | done | LK bab286fb (tag v1.119.0), DW 1acdeae + 06e54e0, IS 9f8940c, STD 9a5f862 |
 
 C1 and C2/C3 run in parallel once B4 is green. D1 follows C1 and C3. E1 can run any time after B4.
 
