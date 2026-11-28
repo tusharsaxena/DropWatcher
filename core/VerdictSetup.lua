@@ -28,8 +28,10 @@ local _, NS = ...
 --   onChange   "gear" sends NS.MSG.GEAR_CHANGED; "collection" runs the feed's re-judge
 --              (NS.CollectFeed.OnCollectionsChanged).
 --
--- THE LIFECYCLE. The instance stands up at OnEnable (NS.VerdictEnable, core/DropWatcher.lua) and at
--- every stand-up (NS.VerdictStandUp), which registers its handlers and reads your gear; it stands
+-- THE LIFECYCLE. The instance stands up at OnEnable (NS.VerdictEnable, core/DropWatcher.lua) lazily
+-- (`v:StandUp{ lazy = true }`, LibKa0s#108): its handlers kept and no gear read, so the first ask for
+-- your gear reads it, quietly, and a gear event before that ask rebuilds and announces as ever. At
+-- every later stand-up (NS.VerdictStandUp) it reads your gear at once and announces it. It stands
 -- down with the addon (NS.STAND_DOWN), which drops its timers and caches.
 --
 -- Absent library: NS.Verdict is a stand-in whose kernel answers `unknown` for every item, and
@@ -163,14 +165,6 @@ function NS.addon.OnVerdictEvent(_, event, ...)
     if fn then fn(event, ...) end
 end
 
--- THE FIRST READ IS LAZY, as it was when the snapshot was this addon's own: nobody has judged
--- against an older one, so it announces nothing, and it reads the client when something first
--- asks for your gear. The instance reads your gear as it stands up, which at OnEnable is only so its
--- handlers are kept: that read is quiet (`quietGear`) and provisional, and the first ask through
--- NS.Gear (NS.VerdictFresh) reads again, quietly. A gear change the instance announces in between
--- makes its snapshot the real one. The latch's stand-up announces its read, as before.
-local quietGear, provisional = false, false
-
 local host = {
     client = CLIENT,
     L = NS.L,
@@ -187,8 +181,6 @@ local host = {
     unregisterEvent = function(event) handlers[event] = nil end,
     onChange = function(kind)
         if kind == "gear" then
-            if quietGear then return end
-            provisional = false
             NS.State.gear = NS.VerdictEngine:Snapshot()   -- the mirror (core/VerdictViews.lua's NS.Gear)
             NS.addon:SendMessage(NS.MSG.GEAR_CHANGED)
         elseif kind == "collection" and NS.CollectFeed then
@@ -209,30 +201,14 @@ NS.VerdictEngine = V and V:New(host) or stubEngine(CLIENT)
 --- Stand the instance up at the latch's stand-up: its handlers kept and your gear read and
 --- announced (NS.STAND_UP).
 function NS.VerdictStandUp()
-    provisional = false
     NS.VerdictEngine:StandUp()
 end
 
--- An error's message with the stack it was raised from: a re-raise of the message alone would
--- report it from here.
-local function withTraceback(err) return debug.traceback(tostring(err), 2) end
-
---- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept, its gear read
---- quietly and provisionally (see THE FIRST READ IS LAZY above). A throw lets the quiet read go and
---- is raised again with the stack it came from.
+--- Stand the instance up at OnEnable (core/DropWatcher.lua): its handlers kept and no gear read; the
+--- first ask reads it, quietly, as it did when the snapshot was this addon's own (nobody has judged
+--- against an older one).
 function NS.VerdictEnable()
-    quietGear = true
-    local ok, err = xpcall(function() NS.VerdictEngine:StandUp() end, withTraceback)
-    quietGear, provisional = false, true
-    if not ok then error(err, 0) end
-end
-
---- Before a gear read through NS.Gear: the stand-up's provisional snapshot read again, quietly,
---- once (core/VerdictViews.lua).
-function NS.VerdictFresh()
-    if not provisional then return end
-    provisional = false
-    NS.VerdictEngine:RefreshGear("lazy", true)
+    NS.VerdictEngine:StandUp{ lazy = true }
 end
 
 NS.STAND_DOWN[#NS.STAND_DOWN + 1] = function()

@@ -647,10 +647,11 @@ A bag event is held while the host's `deferWhile` holds (Drop Watcher's is comba
 `NS.Restrictions.InCombat`, in `core/VerdictSetup.lua`), and the next `PLAYER_REGEN_ENABLED` rebuilds.
 
 A link the client has not cached is requested and its slot left out (unknown, not empty); its
-arrival arms the same timer. The instance stands up at OnEnable (`NS.VerdictEnable`) and reads your
-gear then, quietly and provisionally; the first ask through `NS.Gear` reads it again, quietly
-(`NS.VerdictFresh`), so the first read a caller sees announces nothing and reflects the client at
-that ask. A gear change announced in between makes the snapshot the real one. The stand-down
+arrival arms the same timer. The instance stands up at OnEnable (`NS.VerdictEnable`) lazily
+(`v:StandUp{ lazy = true }`, LibKa0s#108) and reads no gear then; the first ask through `NS.Gear`
+reads it, quietly, so the first read a caller sees announces nothing and reflects the client at
+that ask. A gear event before that ask rebuilds and announces as ever, and the ask keeps that
+snapshot. The stand-down
 cancels the timer and drops the snapshot and the mirror; the stand-up rebuilds it and announces it.
 
 ## The loot parser

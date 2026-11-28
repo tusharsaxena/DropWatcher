@@ -159,7 +159,36 @@ test("verdict setup: the first read is lazy and quiet, a later change sends Gear
     assertEqual(NS.State.gear.equipped[11].link, link(101))
 end)
 
-test("verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback", function()
+test("verdict setup: OnEnable stands the instance up lazily; the latch's stand-up reads at once", function()
+    local NS = T.bootAddon()
+    local got = {}
+    local standUp = NS.VerdictEngine.StandUp
+    NS.VerdictEngine.StandUp = function(self, opts)
+        got[#got + 1] = opts == nil and "plain" or (type(opts) == "table" and opts.lazy == true and "lazy") or "other"
+        return standUp(self, opts)
+    end
+    NS.addon:OnEnable()
+    -- red under: a host standing up with a plain StandUp() and a provisional re-read of its own
+    assertEqual(got[1], "lazy", "OnEnable's stand-up is the library's lazy one")
+    NS.VerdictStandUp()
+    assertEqual(got[#got], "plain", "the latch's stand-up reads and announces")
+    assertNil(NS.VerdictFresh, "no provisional re-read is left on the host")
+end)
+
+test("verdict setup: a gear event before the first ask reads the client and announces", function()
+    local NS, _, m = T.enableAddon()
+    NS.ArmSkinPicker(false)
+    local seen = listen(NS)
+    m.addItem(link(100), ring(600)); m.inventory.player[11] = link(100)
+    m.__fire("PLAYER_EQUIPMENT_CHANGED", 11, false)
+    m.advance(NS.Gear.THROTTLE)
+    assertEqual(seen.n, 1, "the rebuild before any ask is GearChanged")
+    assertEqual(NS.State.gear.equipped[11].link, link(100))
+    assertEqual(NS.Gear.Snapshot().equipped[11].link, link(100), "the ask keeps that snapshot")
+    assertEqual(seen.n, 1, "and announces nothing more")
+end)
+
+test("verdict setup: a stand-up that throws at OnEnable keeps the settings category and its message", function()
     local NS, _, m = T.bootAddon()
     local registered = false
     local register = NS.addon.Settings.Register
@@ -169,14 +198,12 @@ test("verdict setup: a stand-up that throws at OnEnable keeps the settings categ
     -- red under: the engine stood up ahead of the category (a throw there costs the settings panel)
     assertFalse(ok, "the stand-up's error still reaches the client")
     assertTrue(registered, "the settings category registered before the engine stood up")
-    -- red under: a re-raise of the bare message (where it came from is lost)
     assertTrue(tostring(err):find("verdict boom", 1, true) ~= nil, "the message is kept")
-    assertTrue(tostring(err):find("stack traceback", 1, true) ~= nil, "the traceback is kept")
     NS.VerdictEngine.StandUp = nil
     local seen = listen(NS)
     m.addItem(link(100), ring(600)); m.inventory.player[11] = link(100)
     NS.VerdictStandUp()
-    -- red under: the quiet flag left set by the throw (no gear change is ever announced again)
+    -- red under: a stand-up that stays quiet after a throw (no gear change is ever announced again)
     assertEqual(seen.n, 1, "a later stand-up announces its read")
 end)
 

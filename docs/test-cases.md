@@ -1383,14 +1383,18 @@ Total.
 - offspec: Enabled(client) answers per client; the module's gate is C.FEATURE.offSpec (clients-§4)
 - offspec: not initialized, no rows, no askOffSpec on Forever
 
-### test_verdict_setup.lua (14)
+### test_verdict_setup.lua (18)
 
 - verdict setup: one instance of the library's major, on this client
 - verdict setup: every read is NS.Compat's member at the call, so the simulator's seam guards it
 - verdict setup: the instance's events are NS.FEATURE_EVENTS rows, the replay reaches them
 - verdict setup: every event the instance registers has its row on this client, and no row is dead
+- verdict setup: the rows are the library's EventsFor of both clients, tagged by the set they are in
+- verdict setup: without the library the stand-in's EventsFor answers nothing, so no row is dead
 - verdict setup: the first read is lazy and quiet, a later change sends GearChanged
-- verdict setup: a stand-up that throws at OnEnable keeps the settings category and its traceback
+- verdict setup: OnEnable stands the instance up lazily; the latch's stand-up reads at once
+- verdict setup: a gear event before the first ask reads the client and announces
+- verdict setup: a stand-up that throws at OnEnable keeps the settings category and its message
 - verdict setup: the stand-down stands the instance down and drops the mirror; the stand-up returns
 - verdict setup: the gear rebuild is timed while a capture is on, through the harness itself
 - verdict setup: the engine's collection change runs the feed's pass
@@ -3147,7 +3151,7 @@ Total.
 | test_text_parse.lua | 10 |
 | test_constants.lua | 14 |
 | test_offspec.lua | 2 |
-| test_verdict_setup.lua | 14 |
+| test_verdict_setup.lua | 18 |
 | test_tier_token.lua | 30 |
 | test_offspec_cells.lua | 23 |
 | test_offspec_ask.lua | 15 |
@@ -3219,4 +3223,4 @@ Total.
 | test_skin_switch.lua | 110 |
 | test_client_globals.lua | 3 |
 | Skipped | 6 |
-| **Total** | **2676** |
+| **Total** | **2680** |
